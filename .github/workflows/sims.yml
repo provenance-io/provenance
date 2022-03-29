@@ -201,6 +201,9 @@ jobs:
         with:
           key: ${{ runner.os }}-${{ needs.setup.outputs.cache-key-suffix }}
           path: ${{ needs.setup.outputs.cache-path }}
+      - name: Define test-logs
+        id: test-logs
+        run: echo "::set-output name=test-logs::${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
       - name: Install cleveldb
         if: matrix.db-backend == 'cleveldb'
         run: |
@@ -220,27 +223,24 @@ jobs:
           go-version: 1.17
       - name: Display go version
         run: go version
-      - name: run sim
-        id: run-sim
+      - name: Test
         run: |
-          test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}"
-          echo "::set-output name=test-logs::$test_logs"
           ec=0
           export DB_BACKEND=${{ matrix.db-backend }}
           make test-sim-${{ matrix.test }} || ec="$?"
           echo "Test exited with code $ec"
           if [[ "$ec" -ne '0' ]] && ls -d /tmp/sim-logs-*; then
-            mkdir "$test_logs"
+            mkdir "${{ steps.test-logs.outputs.test-logs }}"
             for logdir in $( ls -d /tmp/sim-logs-* ); do
-              cp -rv $logdir/* "$test_logs/" || :
+              cp -rv $logdir/* "${{ steps.test-logs.outputs.test-logs }}/" || :
             done
           fi
           exit "$ec"
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: ${{ steps.run-sim.outputs.test-logs }}
-          path: ${{ steps.run-sim.outputs.test-logs }}
+          name: ${{ steps.test-logs.outputs.test-logs }}
+          path: ${{ steps.test-logs.outputs.test-logs }}
 
   go-test-multi-db:
     # These are tests that use go test to run (see sims.mk), and that we want to test using different database backends.
@@ -262,6 +262,9 @@ jobs:
         with:
           key: ${{ runner.os }}-${{ needs.setup.outputs.cache-key-suffix }}
           path: ${{ needs.setup.outputs.cache-path }}
+      - name: Define test-logs
+        id: test-logs
+        run: echo "::set-output name=test-logs::${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
       - name: Install cleveldb
         if: matrix.db-backend == 'cleveldb'
         run: |
@@ -281,19 +284,16 @@ jobs:
           go-version: 1.17
       - name: Display go version
         run: go version
-      - name: run sim
-        id: run-sim
+      - name: Test
         run: |
-          test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}"
-          echo "::set-output name=test-logs::$test_logs"
           export DB_BACKEND=${{ matrix.db-backend }}
-          make test-sim-${{ matrix.test }} | tee "$test_logs.txt"
+          make test-sim-${{ matrix.test }} | tee "${{ steps.test-logs.outputs.test-logs }}.txt"
           exit "${PIPESTATUS[0]}"
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: ${{ steps.run-sim.outputs.test-logs }}
-          path: ${{ steps.run-sim.outputs.test-logs }}.txt
+          name: ${{ steps.test-logs.outputs.test-logs }}
+          path: ${{ steps.test-logs.outputs.test-logs }}.txt
 
   go-test-single-db:
     # These are tests that use go test to run (see sims.mk), and that we don't care about testing using different database backends.
@@ -314,23 +314,23 @@ jobs:
         with:
           key: ${{ runner.os }}-${{ needs.setup.outputs.cache-key-suffix }}
           path: ${{ needs.setup.outputs.cache-path }}
+      - name: Define test-logs
+        id: test-logs
+        run: echo "::set-output name=test-logs::${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.os }}"
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
       - name: Display go version
         run: go version
-      - name: run sim
-        id: run-sim
+      - name: Test
         run: |
-          test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}"
-          echo "::set-output name=test-logs::$test_logs"
-          make test-sim-${{ matrix.test }} | tee "$test_logs.txt"
+          make test-sim-${{ matrix.test }} | tee "${{ steps.test-logs.outputs.test-logs }}.txt"
           exit "${PIPESTATUS[0]}"
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: ${{ steps.run-sim.outputs.test-logs }}
-          path: ${{ steps.run-sim.outputs.test-logs }}.txt
+          name: ${{ steps.test-logs.outputs.test-logs }}
+          path: ${{ steps.test-logs.outputs.test-logs }}.txt
 
 # Sim tests that are not run in here:
 #   test-sim-multi-seed-long: runsim
