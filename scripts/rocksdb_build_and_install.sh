@@ -99,10 +99,10 @@ ROCKSDB_SUDO="$ROCKSDB_SUDO"
 ROCKSDB_DO_CLEANUP="$ROCKSDB_DO_CLEANUP"
 ROCKSDB_DO_BUILD="$ROCKSDB_DO_BUILD"
 ROCKSDB_DO_INSTALL="$ROCKSDB_DO_INSTALL"
-TAR_FILE="v${ROCKSDB_VERSION}.tar.gz"
+TAR_FILE="rocksdb-${ROCKSDB_VERSION}.tar.gz"
 
 if [[ ! -e "$TAR_FILE" ]]; then
-    wget "https://github.com/facebook/rocksdb/archive/refs/tags/$TAR_FILE"
+    wget "https://github.com/facebook/rocksdb/archive/refs/tags/v${ROCKSDB_VERSION}.tar.gz" -O "$TAR_FILE"
     tar zxf "$TAR_FILE"
 fi
 ROCKS_DB_DIR="$( tar --exclude='./*/*/*' -tf "$TAR_FILE" | head -n 1 )"
