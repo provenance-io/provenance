@@ -28,6 +28,10 @@ func DefaultGenesis() *GenesisState {
 		Minimum: 0,
 		Maximum: 1000,
 	})
+	_, ok := action.GetCachedValue().(RewardAction)
+	if !ok {
+		panic("something went wrong")
+	}
 	return NewGenesisState(
 		[]RewardProgram{
 			{
@@ -36,7 +40,7 @@ func DefaultGenesis() *GenesisState {
 				Coin:                  sdk.Coin{Denom: "nhash", Amount: sdk.NewInt(100000)},
 				EpochId:               "minute",
 				StartEpoch:            100,
-				NumberEpochs:          100,
+				NumberEpochs:          10000,
 				EligibilityCriteria: &EligibilityCriteria{
 					Name:   "transferDelegate",
 					Action: action,

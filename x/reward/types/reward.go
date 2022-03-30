@@ -159,10 +159,10 @@ func (ec *EligibilityCriteria) ValidateBasic() error {
 	if ec.Action == nil {
 		return errors.New("eligibility criteria must have an action")
 	}
-	_, ok := ec.Action.GetCachedValue().(RewardAction)
-	if !ok {
-		return errors.New("eligibility criteria action must implement RewardAction interface")
-	}
+	//_, ok := ec.Action.GetCachedValue().(RewardAction)
+	//if !ok {
+	//	return errors.New("eligibility criteria action must implement RewardAction interface")
+	//}
 	return nil
 }
 
