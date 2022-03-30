@@ -45,7 +45,7 @@ func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
 	rewardData.RewardClaims = []types.RewardClaim{types.NewRewardClaim("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", []*types.SharesPerEpochPerRewardsProgram{&sharesPerEpoch})}
 	rewardData.EligibilityCriterias = []types.EligibilityCriteria{types.NewEligibilityCriteria("delegate", &action)}
 	rewardData.EpochRewardDistributions = []types.EpochRewardDistribution{types.NewEpochRewardDistribution("day", 1,
-		&coin,
+		coin,
 		10,
 	)}
 	rewardData.ActionDelegate = types.NewActionDelegate(1, 100)

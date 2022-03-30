@@ -109,7 +109,7 @@ func (erd *EpochRewardDistribution) ValidateBasic() error {
 	if erd.RewardProgramId < 1 {
 		return errors.New("epoch reward distribution must have a valid reward program id")
 	}
-	if erd.TotalRewardsPool.IsPositive() {
+	if !erd.TotalRewardsPool.IsPositive() {
 		return errors.New("epoch reward distribution must have a reward pool")
 	}
 	return nil

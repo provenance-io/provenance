@@ -38,7 +38,7 @@ func DefaultGenesis() *GenesisState {
 				StartEpoch:            100,
 				NumberEpochs:          100,
 				EligibilityCriteria: &EligibilityCriteria{
-					Name:   "transferDelegate",
+					Name:   ActionTypeTransferDelegations,
 					Action: action,
 				},
 			}},
