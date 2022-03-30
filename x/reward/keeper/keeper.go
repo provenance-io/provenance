@@ -121,17 +121,17 @@ func (k Keeper) IterateRewardClaims(ctx sdk.Context, handle func(rewardClaim typ
 }
 
 // SetEpochRewardDistribution sets the EpochRewardDistribution in the keeper
-func (k Keeper) SetEpochRewardDistribution(ctx sdk.Context, epochRewardDistribution types.EpochRewardDistribution) error {
+func (k Keeper) SetEpochRewardDistribution(ctx sdk.Context, epochRewardDistribution *types.EpochRewardDistribution) error {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&epochRewardDistribution)
-	store.Set(types.GetEpochRewardDistributionKey(epochRewardDistribution.EpochId), bz)
+	bz := k.cdc.MustMarshal(epochRewardDistribution)
+	store.Set(types.GetEpochRewardDistributionKey(epochRewardDistribution.EpochId, string(epochRewardDistribution.RewardProgramId)), bz)
 	return nil
 }
 
 // GetEpochRewardDistribution returns a EpochRewardDistribution by id if it exists nil if it does not
-func (k Keeper) GetEpochRewardDistribution(ctx sdk.Context, id string) (*types.EpochRewardDistribution, error) {
+func (k Keeper) GetEpochRewardDistribution(ctx sdk.Context, epochId string, rewardId uint64) (*types.EpochRewardDistribution, error) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetEpochRewardDistributionKey(id)
+	key := types.GetEpochRewardDistributionKey(epochId,string(rewardId))
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return nil, nil

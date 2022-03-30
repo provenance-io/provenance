@@ -46,8 +46,9 @@ func GetRewardClaimsKey(addr []byte) []byte {
 	return append(RewardClaimKeyPrefix, address.MustLengthPrefix(addr)...)
 }
 
-func GetEpochRewardDistributionKey(id string) []byte {
-	return append(EpochRewardDistributionKeyPrefix, []byte(id)...)
+func GetEpochRewardDistributionKey(epochId string,rewardId string) []byte {
+	key:= append(EpochRewardDistributionKeyPrefix, []byte(epochId)...)
+	return append(key,[]byte(rewardId)...)
 }
 
 func GetEligibilityCriteriaKey(name string) []byte {
