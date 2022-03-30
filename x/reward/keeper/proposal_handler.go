@@ -16,7 +16,7 @@ func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddRewar
 	}
 
 	epochInfo := k.epochKeeper.GetEpochInfo(ctx, proposal.RewardProgram.EpochId)
-	if len(epochInfo.Identifier) == 0 {
+	if epochInfo == nil {
 		return fmt.Errorf("invalid epoch identifier: %s", proposal.RewardProgram.EpochId)
 	}
 

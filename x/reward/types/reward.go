@@ -65,6 +65,9 @@ func (rp *RewardProgram) ValidateBasic() error {
 	if err := rp.EligibilityCriteria.ValidateBasic(); err != nil {
 		return fmt.Errorf("eligibility criteria is not valid: %w", err)
 	}
+	if !rp.Coin.IsPositive() {
+		return fmt.Errorf("reward program requires coins: %v", rp.Coin)
+	}
 
 	return nil
 }
