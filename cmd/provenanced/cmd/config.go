@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	provenanceapp "github.com/provenance-io/provenance/app"
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -556,7 +555,8 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 
 // runConfigHomeCmd obtains the home directory.
 func runConfigHomeCmd(cmd *cobra.Command) error {
-	cmd.Println(provenanceapp.DefaultNodeHome)
+	clientCtx := client.GetClientContextFromCmd(cmd)
+	cmd.Println(clientCtx.HomeDir)
 	return nil
 }
 
