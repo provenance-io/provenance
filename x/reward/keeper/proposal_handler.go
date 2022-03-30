@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -11,6 +13,11 @@ import (
 func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddRewardProgramProposal, registry codectypes.InterfaceRegistry) error {
 	if err := proposal.ValidateBasic(); err != nil {
 		return err
+	}
+
+	epochInfo := k.epochKeeper.GetEpochInfo(ctx, proposal.RewardProgram.EpochId)
+	if len(epochInfo.Identifier) == 0 {
+		return fmt.Errorf("invalid epoch identifier: %s", proposal.RewardProgram.EpochId)
 	}
 
 	k.SetRewardProgram(ctx, *proposal.RewardProgram)
