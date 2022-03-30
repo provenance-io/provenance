@@ -40,6 +40,7 @@ func ConfigCmd() *cobra.Command {
 		ConfigGetCmd(),
 		ConfigSetCmd(),
 		ConfigChangedCmd(),
+		ConfigHomeCmd(),
 		ConfigPackCmd(),
 		ConfigUnpackCmd(),
 	)
@@ -169,6 +170,21 @@ $ %[1]s changed telemetry.service-name`, configCmdStart),
 				cmd.Printf("Error: %v\n", err)
 			}
 			return nil
+		},
+	}
+	return cmd
+}
+
+// ConfigHomeCmd returns a CLI command for ouputting the home directory
+func ConfigHomeCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "home",
+		Short:   "Output the home directory.",
+		Long:    fmt.Sprintf(`TODO`),
+		Example: fmt.Sprintf(`TODO`),
+		Args:    cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runConfigHomeCmd(cmd)
 		},
 	}
 	return cmd
@@ -531,6 +547,12 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 		}
 		return fmt.Errorf("%d configuration key%s not found: %s", len(unknownKeys), s, strings.Join(unknownKeys, ", "))
 	}
+	return nil
+}
+
+// runConfigHomeCmd obtains the home directory.
+func runConfigHomeCmd(cmd *cobra.Command) error {
+	// TODO
 	return nil
 }
 
