@@ -58,6 +58,12 @@ func GetCmdRewardProgramProposal() *cobra.Command {
 			var rewardProgram types.RewardProgram
 			clientCtx.Codec.MustUnmarshalJSON(contents, &rewardProgram)
 
+			var action types.RewardAction
+			err = clientCtx.Codec.UnpackAny(rewardProgram.EligibilityCriteria.Action, &action)
+			if err != nil {
+				return err
+			}
+
 			var proposal govtypes.Content
 			switch args[0] {
 			case "add":
