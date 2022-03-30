@@ -16,6 +16,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	ctx.Logger().Info(fmt.Sprintf("In epoch end for %s %d", epochIdentifier, epochNumber))
 	var rewardPrograms []types.RewardProgram
 	// get all the rewards programs
+	rew,_ := k.GetRewardProgram(ctx,1)
+	if rew!= nil {
+		ctx.Logger().Info(fmt.Sprintf("In epoch end for %v", rew))
+	}
 	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
 		// this is epoch that ended, and matches up with the reward program identifier
 		// check if any of the events match with any of the reward program running

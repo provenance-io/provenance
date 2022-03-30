@@ -161,18 +161,15 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState reward.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	// TODO
-	// keeper.InitGenesis(ctx, &genesisState)
+	am.keeper.InitGenesis(ctx, &genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the reward
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	// TODO
-	// gs := keeper.ExportGenesis(ctx)
-	// return cdc.MustMarshalJSON(gs)
-	return nil
+	gs := am.keeper.ExportGenesis(ctx)
+	return cdc.MustMarshalJSON(gs)
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
