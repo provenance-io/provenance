@@ -112,10 +112,9 @@ jobs:
         # Part of the cache, so don't need to redo it if it was restored.
         run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
       - name: Build provenanced
-        # Building provenanced so that, if it fails to build, you get one failure instead of 16, and saves a little github action effort.
-        run: |
-          make build
-          build/provenanced version --long
+        run: make build
+      - name: Provenanced version
+        run: build/provenanced version --long
 
   build-mac:
     # Note: Can't use a matrix to combine build-linux and build-mac because they'd both have the same job id and that would cause
@@ -175,10 +174,9 @@ jobs:
         # Part of the cache, so don't need to redo it if it was restored.
         run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
       - name: Build provenanced
-        # Building provenanced so that, if it fails to build, you get one failure instead of 16, and saves a little github action effort.
-        run: |
-          make build
-          build/provenanced version --long
+        run: make build
+      - name: Provenanced version
+        run: build/provenanced version --long
 
   runsim:
     # These tests are the ones that use the runsim program (see sims.mk).
