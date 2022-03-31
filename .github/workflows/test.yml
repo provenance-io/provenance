@@ -65,8 +65,8 @@ jobs:
   tests:
     needs: setup-tests
     # Note: There's a required check on this, and it must pass. A skip doesn't count as a pass.
-    #       So instead of a top-level if: needs.setup-tests.outputs.should-run on this job, it's
-    #       The steps below (except the checkout step).
+    #       So instead of a job-level if: needs.setup-tests.outputs.should-run on this job,
+    #       it's in the steps below (except the checkout step).
     strategy:
       fail-fast: false
       matrix:
@@ -101,8 +101,8 @@ jobs:
   upload-coverage-report:
     needs: [setup-tests, tests]
     # Note: There's a required check on this, and it must pass. A skip doesn't count as a pass.
-    #       So instead of a top-level if: needs.setup-tests.outputs.should-run on this job, it's
-    #       The steps below (except the checkout step).
+    #       So instead of a job-level if: needs.setup-tests.outputs.should-run on this job,
+    #       it's in the steps below (except the checkout step).
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -150,8 +150,8 @@ jobs:
   test-race:
     needs: setup-tests
     # Note: There's a required check on this, and it must pass. A skip doesn't count as a pass.
-    #       So instead of a top-level if: needs.setup-tests.outputs.should-run on this job, it's
-    #       The steps below (except the checkout step).
+    #       So instead of a job-level if: needs.setup-tests.outputs.should-run on this job,
+    #       it's in the steps below (except the checkout step).
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
