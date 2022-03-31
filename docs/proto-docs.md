@@ -924,10 +924,10 @@ EpochInfo defines characteristics of an eppoch defined by the platform
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `identifier` | [string](#string) |  |  |
-| `start_height` | [int64](#int64) |  | start height of the beginning of all epoch |
-| `duration` | [int64](#int64) |  | in blocks for e.g a month will be (30*24*7*60*60)/5 blocks |
-| `current_epoch` | [int64](#int64) |  |  |
-| `current_epoch_start_height` | [int64](#int64) |  | start height of the current epoch |
+| `start_height` | [uint64](#uint64) |  | start height of the beginning of all epoch |
+| `duration` | [uint64](#uint64) |  | in blocks for e.g a month will be (30*24*7*60*60)/5 blocks |
+| `current_epoch` | [uint64](#uint64) |  |  |
+| `current_epoch_start_height` | [uint64](#uint64) |  | start height of the current epoch |
 | `epoch_counting_started` | [bool](#bool) |  |  |
 
 
@@ -989,7 +989,7 @@ GenesisState defines the epochs module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `current_epoch` | [int64](#int64) |  |  |
+| `current_epoch` | [uint64](#uint64) |  |  |
 
 
 

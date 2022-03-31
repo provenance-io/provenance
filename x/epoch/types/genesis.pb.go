@@ -26,10 +26,10 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // EpochInfo defines characteristics of an eppoch defined by the platform
 type EpochInfo struct {
 	Identifier              string `protobuf:"bytes,1,opt,name=identifier,proto3" json:"identifier,omitempty"`
-	StartHeight             int64  `protobuf:"varint,2,opt,name=start_height,json=startHeight,proto3" json:"start_height,omitempty"`
-	Duration                int64  `protobuf:"varint,3,opt,name=duration,proto3" json:"duration,omitempty"`
-	CurrentEpoch            int64  `protobuf:"varint,4,opt,name=current_epoch,json=currentEpoch,proto3" json:"current_epoch,omitempty"`
-	CurrentEpochStartHeight int64  `protobuf:"varint,5,opt,name=current_epoch_start_height,json=currentEpochStartHeight,proto3" json:"current_epoch_start_height,omitempty"`
+	StartHeight             uint64 `protobuf:"varint,2,opt,name=start_height,json=startHeight,proto3" json:"start_height,omitempty"`
+	Duration                uint64 `protobuf:"varint,3,opt,name=duration,proto3" json:"duration,omitempty"`
+	CurrentEpoch            uint64 `protobuf:"varint,4,opt,name=current_epoch,json=currentEpoch,proto3" json:"current_epoch,omitempty"`
+	CurrentEpochStartHeight uint64 `protobuf:"varint,5,opt,name=current_epoch_start_height,json=currentEpochStartHeight,proto3" json:"current_epoch_start_height,omitempty"`
 	EpochCountingStarted    bool   `protobuf:"varint,6,opt,name=epoch_counting_started,json=epochCountingStarted,proto3" json:"epoch_counting_started,omitempty"`
 }
 
@@ -73,28 +73,28 @@ func (m *EpochInfo) GetIdentifier() string {
 	return ""
 }
 
-func (m *EpochInfo) GetStartHeight() int64 {
+func (m *EpochInfo) GetStartHeight() uint64 {
 	if m != nil {
 		return m.StartHeight
 	}
 	return 0
 }
 
-func (m *EpochInfo) GetDuration() int64 {
+func (m *EpochInfo) GetDuration() uint64 {
 	if m != nil {
 		return m.Duration
 	}
 	return 0
 }
 
-func (m *EpochInfo) GetCurrentEpoch() int64 {
+func (m *EpochInfo) GetCurrentEpoch() uint64 {
 	if m != nil {
 		return m.CurrentEpoch
 	}
 	return 0
 }
 
-func (m *EpochInfo) GetCurrentEpochStartHeight() int64 {
+func (m *EpochInfo) GetCurrentEpochStartHeight() uint64 {
 	if m != nil {
 		return m.CurrentEpochStartHeight
 	}
@@ -172,7 +172,7 @@ var fileDescriptor_6cd174a8a4f0a511 = []byte{
 	0xe2, 0xcc, 0x07, 0x9d, 0x56, 0x28, 0x42, 0xa1, 0x7d, 0x77, 0xfb, 0x95, 0xa1, 0xfd, 0xb7, 0x12,
 	0xae, 0x5f, 0x6f, 0x91, 0x3b, 0x3e, 0x13, 0x84, 0x62, 0xcc, 0xa6, 0xc0, 0x15, 0x9b, 0x31, 0x90,
 	0x26, 0xb2, 0x90, 0x5d, 0xf7, 0x0a, 0x0a, 0xe9, 0xe1, 0x66, 0xa2, 0x7c, 0xa9, 0xc6, 0x11, 0xb0,
-	0x30, 0x52, 0x66, 0xc9, 0x42, 0x76, 0xd9, 0x6b, 0x68, 0xed, 0x56, 0x4b, 0xa4, 0x83, 0x6b, 0xd3,
+	0x30, 0x52, 0x66, 0xc9, 0x42, 0x76, 0xc5, 0x6b, 0x68, 0xed, 0x56, 0x4b, 0xa4, 0x83, 0x6b, 0xd3,
 	0x54, 0xfa, 0x8a, 0x09, 0x6e, 0x96, 0xb5, 0xbd, 0xab, 0xc9, 0x3f, 0xfc, 0x3b, 0x48, 0xa5, 0x04,
 	0xae, 0xc6, 0x7a, 0x2d, 0xb3, 0xa2, 0x81, 0x66, 0x2e, 0xea, 0x3d, 0xc8, 0x05, 0xee, 0x1c, 0x40,
 	0xe3, 0x83, 0x89, 0xbf, 0x74, 0xe2, 0x6f, 0x31, 0x31, 0x2a, 0x4c, 0x3f, 0xc3, 0xed, 0x2c, 0x14,
@@ -183,8 +183,8 @@ var fileDescriptor_6cd174a8a4f0a511 = []byte{
 	0xd9, 0xf7, 0x1d, 0xc2, 0x72, 0x4d, 0xd1, 0x6a, 0x4d, 0xd1, 0xd7, 0x9a, 0xa2, 0xf7, 0x0d, 0x35,
 	0x56, 0x1b, 0x6a, 0x7c, 0x6c, 0xa8, 0x81, 0xdb, 0x4c, 0x1c, 0xeb, 0x79, 0x8f, 0x1e, 0x07, 0x21,
 	0x53, 0x51, 0x3a, 0x71, 0x02, 0xf1, 0xe4, 0xee, 0x89, 0xff, 0x4c, 0x14, 0x2a, 0xf7, 0x39, 0x7f,
-	0x03, 0xea, 0x25, 0x86, 0x64, 0x52, 0xd5, 0x3f, 0xf5, 0xf4, 0x27, 0x00, 0x00, 0xff, 0xff, 0x04,
-	0x39, 0xa0, 0xd9, 0x24, 0x02, 0x00, 0x00,
+	0x03, 0xea, 0x25, 0x86, 0x64, 0x52, 0xd5, 0x3f, 0xf5, 0xf4, 0x27, 0x00, 0x00, 0xff, 0xff, 0x0f,
+	0xe0, 0x22, 0xcd, 0x24, 0x02, 0x00, 0x00,
 }
 
 func (this *EpochInfo) Equal(that interface{}) bool {
@@ -487,7 +487,7 @@ func (m *EpochInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.StartHeight |= int64(b&0x7F) << shift
+				m.StartHeight |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -506,7 +506,7 @@ func (m *EpochInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Duration |= int64(b&0x7F) << shift
+				m.Duration |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -525,7 +525,7 @@ func (m *EpochInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CurrentEpoch |= int64(b&0x7F) << shift
+				m.CurrentEpoch |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -544,7 +544,7 @@ func (m *EpochInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CurrentEpochStartHeight |= int64(b&0x7F) << shift
+				m.CurrentEpochStartHeight |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

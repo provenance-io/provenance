@@ -17,7 +17,7 @@ func DefaultGenesis() *GenesisState {
 		{
 			Identifier:              "week",
 			StartHeight:             0,
-			Duration:                int64((24 * 60 * 60 * 7) / 5), //duration in blocks
+			Duration:                uint64((24 * 60 * 60 * 7) / 5), //duration in blocks
 			CurrentEpoch:            0,
 			CurrentEpochStartHeight: 0,
 			EpochCountingStarted:    false,
@@ -25,7 +25,7 @@ func DefaultGenesis() *GenesisState {
 		{
 			Identifier:              "day",
 			StartHeight:             0,
-			Duration:                int64((24 * 60 * 60) / 5),
+			Duration:                uint64((24 * 60 * 60) / 5),
 			CurrentEpoch:            0,
 			CurrentEpochStartHeight: 0,
 			EpochCountingStarted:    false,
@@ -33,7 +33,7 @@ func DefaultGenesis() *GenesisState {
 		{
 			Identifier:              "month",
 			StartHeight:             0,
-			Duration:                int64((60 * 60 * 24 * 30 * 7) / 5),
+			Duration:                uint64((60 * 60 * 24 * 30 * 7) / 5),
 			CurrentEpoch:            0,
 			CurrentEpochStartHeight: 0,
 			EpochCountingStarted:    false,
@@ -42,7 +42,7 @@ func DefaultGenesis() *GenesisState {
 		{
 			Identifier:              "minute",
 			StartHeight:             0,
-			Duration:                int64(60 / 5),
+			Duration:                uint64(60 / 5),
 			CurrentEpoch:            0,
 			CurrentEpochStartHeight: 0,
 			EpochCountingStarted:    false,

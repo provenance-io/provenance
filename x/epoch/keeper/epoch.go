@@ -82,5 +82,5 @@ func (k Keeper) NumBlocksSinceEpochStart(ctx sdk.Context, identifier string) (in
 	if epoch == nil {
 		return 0, fmt.Errorf("epoch with identifier %s not found", identifier)
 	}
-	return ctx.BlockHeight() - epoch.CurrentEpochStartHeight, nil
+	return ctx.BlockHeight() - int64(epoch.CurrentEpochStartHeight), nil
 }

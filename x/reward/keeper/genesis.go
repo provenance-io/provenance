@@ -79,7 +79,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	}
 
 	for _, epochRewardDistributions := range data.EpochRewardDistributions {
-		k.SetEpochRewardDistribution(ctx, epochRewardDistributions)
+		k.SetEpochRewardDistribution(ctx, &epochRewardDistributions)
 	}
 
 	for _, eligibilityCriteria := range data.EligibilityCriterias {

@@ -32,5 +32,5 @@ message QueryCurrentEpochRequest {
   string identifier = 1;
 }
 message QueryCurrentEpochResponse {
-  int64 current_epoch = 1;
+  uint64 current_epoch = 1;
 }

@@ -14,10 +14,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		// if epoch has default value, set Start height to current blockheight
 		// if set will be honored.
 		if epoch.StartHeight == 0 {
-			epoch.StartHeight = ctx.BlockHeight()
+			epoch.StartHeight = uint64(ctx.BlockHeight())
 		}
 		// same for current epoch start height
-		epoch.CurrentEpochStartHeight = ctx.BlockHeight()
+		epoch.CurrentEpochStartHeight = uint64(ctx.BlockHeight())
 
 		k.SetEpochInfo(ctx, epoch)
 	}

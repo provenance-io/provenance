@@ -17,13 +17,13 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		logger := k.Logger(ctx)
 
 		// Has it not started, and is the block height > initial epoch start height
-		shouldInitialEpochStart := !epochInfo.EpochCountingStarted && !(epochInfo.StartHeight > ctx.BlockHeight())
+		shouldInitialEpochStart := !epochInfo.EpochCountingStarted && !(epochInfo.StartHeight > uint64(ctx.BlockHeight()))
 
 		epochEndHeight := epochInfo.CurrentEpochStartHeight + epochInfo.Duration
-		shouldEpochStart := ctx.BlockHeight() > epochEndHeight && !shouldInitialEpochStart && !(epochInfo.StartHeight > ctx.BlockHeight())
+		shouldEpochStart := ctx.BlockHeight() > int64(epochEndHeight) && !shouldInitialEpochStart && !(int64(epochInfo.StartHeight) > ctx.BlockHeight())
 
 		if shouldInitialEpochStart || shouldEpochStart {
-			epochInfo.CurrentEpochStartHeight = ctx.BlockHeight()
+			epochInfo.CurrentEpochStartHeight = uint64(ctx.BlockHeight())
 
 			if shouldInitialEpochStart {
 				epochInfo.EpochCountingStarted = true
