@@ -5,9 +5,7 @@ WORKDIR /go/src/github.com/provenance-io/provenance
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y curl jq && \
-    apt-get install -y libleveldb-dev && \
-    apt-get install -y gcc libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+    apt-get install -y libleveldb-dev
 
 COPY client/ ./client/
 COPY app/ ./app/
@@ -16,10 +14,10 @@ COPY cmd/ ./cmd/
 COPY internal/ ./internal/
 COPY x/ ./x/
 COPY vendor/ ./vendor/
-COPY Makefile sims.mk ./
 COPY testutil/ ./testutil/
 COPY .git/ ./.git/
 COPY contrib/ ./contrib/
+COPY Makefile sims.mk ./
 
 
 # Build and install provenanced
@@ -29,7 +27,10 @@ RUN make VERSION=${VERSION} install
 ###
 FROM debian:buster-slim as run
 
-RUN apt-get clean && \
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y curl jq libleveldb-dev && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/
 
 COPY --from=build /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.so /lib/x86_64-linux-gnu/libwasmvm.so
