@@ -1,4 +1,4 @@
-name: Provenance Binary Release
+name: Provenance Build and Release
 
 on:
   pull_request:
