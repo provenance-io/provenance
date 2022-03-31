@@ -60,9 +60,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		b.Fatal(simErr)
 	}
 
-	if config.Commit {
-		PrintStats(config, db)
-	}
+	PrintStats(config, db)
 }
 
 func BenchmarkInvariants(b *testing.B) {
@@ -111,9 +109,7 @@ func BenchmarkInvariants(b *testing.B) {
 		b.Fatal(simErr)
 	}
 
-	if config.Commit {
-		PrintStats(config, db)
-	}
+	PrintStats(config, db)
 
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight() + 1})
 

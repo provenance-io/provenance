@@ -94,9 +94,7 @@ func TestFullAppSimulation(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, simErr)
 
-	if config.Commit {
-		PrintStats(config, db)
-	}
+	PrintStats(config, db)
 }
 
 func TestSimple(t *testing.T) {
@@ -129,9 +127,7 @@ func TestSimple(t *testing.T) {
 	)
 
 	require.NoError(t, simErr)
-	if config.Commit {
-		PrintStats(config, db)
-	}
+	PrintStats(config, db)
 }
 
 // Profile with:
@@ -174,9 +170,7 @@ func TestAppImportExport(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, simErr)
 
-	if config.Commit {
-		PrintStats(config, db)
-	}
+	PrintStats(config, db)
 
 	fmt.Printf("exporting genesis...\n")
 
@@ -275,9 +269,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, simErr)
 
-	if config.Commit {
-		PrintStats(config, db)
-	}
+	PrintStats(config, db)
 
 	if stopEarly {
 		fmt.Println("can't export or import a zero-validator genesis, exiting test...")
@@ -371,9 +363,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			if config.Commit {
-				PrintStats(config, db)
-			}
+			PrintStats(config, db)
 
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
@@ -403,7 +393,9 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 // PrintStats outputs the config and db info.
 func PrintStats(config simtypes.Config, db dbm.DB) {
 	PrintConfig(config)
-	PrintDBInfo(db)
+	if config.Commit {
+		PrintDBInfo(db)
+	}
 }
 
 // PrintConfig outputs the config.
