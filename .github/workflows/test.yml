@@ -1,5 +1,7 @@
 name: Tests / Code Coverage
 #  Tests / Code Coverage workflow runs unit tests and uploads a code coverage report
+
+
 #  This workflow is run on pushes to master & every Pull Request,
 #  if no *.go, go.mod or go.sum file is changed it will pass without running as these are required checks
 on:
@@ -7,70 +9,67 @@ on:
   push:
     branches:
       - main
+
+
 jobs:
   #  This action cleans up previously running instances of a workflow on the same branch. This accomplishes
   #  the task of automatically cancelling CI runs on pushes to the same branch, which is a common feature in
   #  most CI systems but currently not possible with GitHub actions.
   cleanup-runs:
+    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
     runs-on: ubuntu-latest
     steps:
     - uses: rokroskar/workflow-run-cleanup-action@v0.3.3
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
 
 
-  install-tparse:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
-      - name: install tparse
-        run: |
-          export GO111MODULE="on" && go get github.com/mfridman/tparse@v0.8.3
-      - uses: actions/cache@v3
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-tparse-binary
-
-
-  split-test-files:
+  setup-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: technote-space/get-diff-action@v6.0.1
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
       - name: Create a file with all the pkgs
         run: go list ./... > pkgs.txt
       - name: Split pkgs into 4 files
         run: split -d -n l/4 pkgs.txt pkgs.txt.part.
-      # cache multiple
       - uses: actions/upload-artifact@v2
         with:
-          name: "${{ github.sha }}-00"
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-00"
           path: ./pkgs.txt.part.00
       - uses: actions/upload-artifact@v2
         with:
-          name: "${{ github.sha }}-01"
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-01"
           path: ./pkgs.txt.part.01
       - uses: actions/upload-artifact@v2
         with:
-          name: "${{ github.sha }}-02"
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-02"
           path: ./pkgs.txt.part.02
       - uses: actions/upload-artifact@v2
         with:
-          name: "${{ github.sha }}-03"
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-03"
           path: ./pkgs.txt.part.03
+      - name: Define file prefix
+        id: file-prefix
+        run: echo "::set-output name=file-prefix::${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
+    outputs:
+      should-run: ${{ env.GIT_DIFF }}
+      file-prefix: ${{ steps.file-prefix.outputs.file-prefix }}
 
 
   tests:
-    runs-on: ubuntu-latest
-    needs: split-test-files
+    needs: setup-tests
+    if: needs.setup-tests.outputs.should-run
     strategy:
       fail-fast: false
       matrix:
         part: ["00", "01", "02", "03"]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -79,61 +78,43 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
       - uses: actions/download-artifact@v2
         with:
-          name: "${{ github.sha }}-${{ matrix.part }}"
-        if: env.GIT_DIFF
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-${{ matrix.part }}"
       - name: test & coverage report creation
         run: |
           cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='norace ledger test_ledger_mock'
-        if: env.GIT_DIFF
       - uses: actions/upload-artifact@v2
         with:
-          name: "${{ github.sha }}-${{ matrix.part }}-coverage"
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-${{ matrix.part }}-coverage"
           path: ./${{ matrix.part }}profile.out
 
 
   #  This action performs a code coverage assessment but filters out generated code from proto based types
   #  and grpc services
   upload-coverage-report:
+    needs: [setup-tests, tests]
+    if: needs.setup-tests.outputs.should-run
     runs-on: ubuntu-latest
-    needs: tests
     steps:
       - uses: actions/checkout@v3
         with:
           # CodeCov requires fetch-depth > 1
           fetch-depth: 2      
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
       - uses: actions/download-artifact@v2
         with:
-          name: "${{ github.sha }}-00-coverage"
-        if: env.GIT_DIFF
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-00-coverage"
       - uses: actions/download-artifact@v2
         with:
-          name: "${{ github.sha }}-01-coverage"
-        if: env.GIT_DIFF
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-01-coverage"
       - uses: actions/download-artifact@v2
         with:
-          name: "${{ github.sha }}-02-coverage"
-        if: env.GIT_DIFF
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-02-coverage"
       - uses: actions/download-artifact@v2
         with:
-          name: "${{ github.sha }}-03-coverage"
-        if: env.GIT_DIFF
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-03-coverage"
       - run: |
           cat ./*profile.out | grep -v "mode: atomic" >> coverage.txt
-        if: env.GIT_DIFF
       - name: filter out DONTCOVER
         run: |
           excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
@@ -145,16 +126,15 @@ jobs:
             echo "Excluding ${filename} from coverage report..."
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
-        if: env.GIT_DIFF
       - uses: codecov/codecov-action@v2.1.0
         with:
           file: ./coverage.txt
-        if: env.GIT_DIFF
 
 
   test-race:
+    needs: setup-tests
+    if: needs.setup-tests.outputs.should-run
     runs-on: ubuntu-latest
-    needs: split-test-files
     strategy:
       fail-fast: false
       matrix:
@@ -164,22 +144,14 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
       - uses: actions/download-artifact@v2
         with:
-          name: "${{ github.sha }}-${{ matrix.part }}"
-        if: env.GIT_DIFF
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-${{ matrix.part }}"
       - name: test & coverage report creation
         run: |
           xargs --arg-file=pkgs.txt.part.${{ matrix.part }} go test -mod=readonly -timeout 30m -race -tags='cgo ledger test_ledger_mock' | tee ${{ matrix.part }}-race-output.txt
           exit "${PIPESTATUS[0]}"
-        if: env.GIT_DIFF
       - uses: actions/upload-artifact@v2
         with:
-          name: "${{ github.sha }}-${{ matrix.part }}-race-output"
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-${{ matrix.part }}-race-output"
           path: ./${{ matrix.part }}-race-output.txt
