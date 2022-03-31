@@ -52,7 +52,7 @@ $ %s query epochs epoch-infos
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.EpochInfos(cmd.Context(), &types.QueryEpochsInfoRequest{})
+			res, err := queryClient.EpochInfos(cmd.Context(), &types.QueryEpochInfosRequest{})
 			if err != nil {
 				return err
 			}

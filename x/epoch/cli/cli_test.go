@@ -94,7 +94,7 @@ func (s *IntegrationTestSuite) TestGetCmdEpochsInfos() {
 	}{
 		{
 			"query epoch infos",
-			false, &types.QueryEpochsInfoResponse{},
+			false, &types.QueryEpochInfosResponse{},
 		},
 	}
 

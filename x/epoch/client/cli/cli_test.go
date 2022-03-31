@@ -51,7 +51,7 @@ func (s *IntegrationTestSuite) TestEpochInfosCmd() {
 	cmd := cli.EpochInfosCmd()
 	clientCtx := s.testnet.Validators[0].ClientCtx
 
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, "")
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{})
 	s.Require().NoError(err)
 	s.Require().Equal("", strings.TrimSpace(out.String()))
 }

@@ -15,7 +15,7 @@ import (
 func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 	var app *simapp.App
 	var ctx sdk.Context
-	var epochInfo types.EpochInfo
+	var epochInfo *types.EpochInfo
 
 	now := time.Now()
 
@@ -113,7 +113,7 @@ func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 					StartHeight:             1,
 					Duration:                (60 * 60 * 24 * 30 * 7) / 5,
 					CurrentEpoch:            0,
-					CurrentEpochStartHeight: ctx.BlockHeight(),
+					CurrentEpochStartHeight: uint64(ctx.BlockHeight()),
 					EpochCountingStarted:    false,
 				},
 			},
@@ -148,10 +148,10 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 		Epochs: []types.EpochInfo{
 			{
 				Identifier:              "monthly",
-				StartHeight:             ctx.BlockHeight() + (60*60*24*30*7)/5,
+				StartHeight: 			 uint64(ctx.BlockHeight() + (60*60*24*30*7)/5),
 				Duration:                (60 * 60 * 24 * 30 * 7) / 5,
 				CurrentEpoch:            0,
-				CurrentEpochStartHeight: initialBlockHeight,
+				CurrentEpochStartHeight: uint64(initialBlockHeight),
 				EpochCountingStarted:    false,
 			},
 		},

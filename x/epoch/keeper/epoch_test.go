@@ -10,7 +10,7 @@ func (suite *KeeperTestSuite) TestEpochLifeCycle() {
 	epochInfo := types.EpochInfo{
 		Identifier:              "monthly",
 		StartHeight:             0,
-		Duration:                int64((24 * 60 * 60 * 7 * 30) / 5),
+		Duration:                uint64((24 * 60 * 60 * 7 * 30) / 5),
 		CurrentEpoch:            0,
 		CurrentEpochStartHeight: 0,
 	}
