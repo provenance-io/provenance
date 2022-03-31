@@ -1,7 +1,7 @@
 name: Sims
-
 # Sims workflow runs multiple types of simulations (nondeterminism, import-export, after-import, multi-seed-short)
 # This workflow will run on all Pull Requests, if a .go, .mod or .sum file have been changed
+
 on:
   pull_request:
     paths:
@@ -17,16 +17,16 @@ env:
 
 jobs:
   cleanup-runs:
-    runs-on: ubuntu-latest
     if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
+    runs-on: ubuntu-latest
     steps:
       - uses: rokroskar/workflow-run-cleanup-action@v0.3.3
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
   setup:
-    runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: technote-space/get-diff-action@v6.0.1
@@ -55,9 +55,9 @@ jobs:
     # Note: Can't use a matrix to combine build-linux and build-mac because they'd both have the same job id and that would cause
     #       problems below with the "needs" directive on the tests. Basically, as soon as the first one finished, the tests
     #       would kick off for both OSes even though one might not be ready yet.
-    runs-on: ubuntu-latest
     needs: setup
     if: needs.setup.outputs.should-run
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Output setup
@@ -120,9 +120,9 @@ jobs:
     # Note: Can't use a matrix to combine build-linux and build-mac because they'd both have the same job id and that would cause
     #       problems below with the "needs" directive on the tests. Basically, as soon as the first one finished, the tests
     #       would kick off for both OSes even though one might not be ready yet.
-    runs-on: macos-latest
     needs: setup
     if: needs.setup.outputs.should-run
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
       - name: Output setup
@@ -171,7 +171,6 @@ jobs:
         run: go version
       - name: Install runsim
         if: steps.cache-setup.outputs.cache-hit != 'true'
-        # Part of the cache, so don't need to redo it if it was restored.
         run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
       - name: Build provenanced
         run: make build
@@ -180,7 +179,6 @@ jobs:
 
   runsim:
     # These tests are the ones that use the runsim program (see sims.mk).
-    runs-on: ${{ matrix.os }}
     needs: [setup, build-linux]
     if: needs.setup.outputs.should-run
     strategy:
@@ -197,6 +195,7 @@ jobs:
         #   b) They take longer than on ubuntu to begin with.
         #   c) Most of the devs use a mac, so it's less likely that a Mac-specific bug goes unnoticed without tests.
         os: ["ubuntu-latest"]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
@@ -246,7 +245,6 @@ jobs:
 
   go-test-multi-db:
     # These are tests that use go test to run (see sims.mk), and that we want to test using different database backends.
-    runs-on: ${{ matrix.os }}
     needs: [setup, build-linux, build-mac]
     if: needs.setup.outputs.should-run
     strategy:
@@ -258,6 +256,7 @@ jobs:
         test: ["simple"]
         db-backend: ["goleveldb", "cleveldb", "rocksdb", "badgerdb"]
         os: ["ubuntu-latest", "macos-latest"]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
@@ -299,7 +298,6 @@ jobs:
 
   go-test-single-db:
     # These are tests that use go test to run (see sims.mk), and that we don't care about testing using different database backends.
-    runs-on: ${{ matrix.os }}
     needs: [setup]
     if: needs.setup.outputs.should-run
     strategy:
@@ -310,6 +308,7 @@ jobs:
         #   "benchmark-invariants" removed due to failure, but should be added back with https://github.com/provenance-io/provenance/issues/754
         test: ["nondeterminism"]
         os: ["ubuntu-latest", "macos-latest"]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
       - name: Define test-logs
