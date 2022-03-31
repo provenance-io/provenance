@@ -27,24 +27,21 @@ jobs:
     runs-on: ubuntu-latest
     name: Build Init
     steps:
-      - id: version
+      - name: Define Version
+        id: version
         # ${GITHUB_REF##*/} removes everything before the last slash. E.g. 'refs/tags/v1.8.0' becomes 'v1.8.0'
         # ${GITHUB_SHA:0:7} gets the first 7 characters. E.g. `3e9928920f5a64c8fc4884ee085efe1983071c90` becomes `3e99289'
-        # TODO: Change is_release to 'true' in the if clause below.
         run: |
           version="${GITHUB_SHA:0:7}"
           is_release='false'
           if [[ "$GITHUB_REF" =~ ^refs/tags/ ]]; then
             version=${GITHUB_REF##*/}
-            is_release='false'
+            is_release='true'
           fi
           echo "version: '$version'"
           echo "is_release: $is_release"
           echo "::set-output name=version::$version"
           echo "::set-output name=is_release::$is_release"
-          if [[ 'refs/tags/v1.8.0' =~ ^refs/tags/ ]]; then
-            echo 'The if regex works as expected.'
-          fi
     outputs:
       version: ${{ steps.version.outputs.version }}
       is_release: ${{ steps.version.outputs.is_release }}
