@@ -1,7 +1,5 @@
 FROM golang:1.17-buster as build
 ARG VERSION
-ARG ROCKSDB_VERSION
-ARG ROCKSDB_JOBS
 
 WORKDIR /go/src/github.com/provenance-io/provenance
 
@@ -18,17 +16,11 @@ COPY cmd/ ./cmd/
 COPY internal/ ./internal/
 COPY x/ ./x/
 COPY vendor/ ./vendor/
-COPY scripts/rocksdb_build_and_install.sh ./scripts/
 COPY Makefile sims.mk ./
 COPY testutil/ ./testutil/
 COPY .git/ ./.git/
 COPY contrib/ ./contrib/
 
-
-# Build and install rocksdb
-ENV ROCKSDB_VERSION=$ROCKSDB_VERSION
-ENV ROCKSDB_JOBS=$ROCKSDB_JOBS
-RUN make rocksdb
 
 # Build and install provenanced
 ENV VERSION=$VERSION

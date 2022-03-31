@@ -16,33 +16,52 @@ Building `provenanced` requires [Go 1.17+](https://golang.org/dl/) (or higher).
 By default, `provenanced` is built with CLevelDB support.
 Building without CLevelDB support is also possible. See `WITH_CLEVELDB` in [Options](#options) below.
 
-CLevelDB can usually be installed using your system's software package manager.
-
-On a mac:
+To download, build, and install the C LevelDB library on your system:
 ```console
-$ brew install leveldb
+$ make cleveldb
 ```
 
-With apt-get:
-```console
-$ apt-get install libleveldb-dev
-```
+<details>
+<summary>Environment variables that can control the behavior of this command:</summary>
+
+* `CLEVELDBDB_VERSION` will install a version other than the one defined in the `Makefile`.
+  Do not include the `v` at the beginning of the version number.
+  Example: `CLEVELDBDB_VERSION=1.22 make cleveldb`.
+  The default is `1.23`
+* `CLEVELDB_JOBS` will control the number of parallel jobs used to build the library.
+  The default is the result of the `nproc` command.
+  More parallel jobs can speed up the build.
+  Fewer parallel jobs can alleviate memory problems/crashes that can be encountered during a build.
+* `CLEVELDB_DO_BUILD` defines whether to build cleveldb.
+  The default is `true`.
+* `CLEVELDB_DO_INSTALL` defines whether to install cleveldb.
+  The default is `true`.
+* `CLEVELDB_SUDO` defines whether to use `sudo` for the installation of the built library.
+  The difference between `sudo make cleveldb` and `CLEVELDB_SUDO=true make cleveldb`
+  is that the latter will use `sudo` only for the installation (the download and build still use your current user).
+  Some systems (e.g. Ubuntu) might require this.
+  The default is `true` if the `sudo` command is found, or `false` otherwise.
+* `CLEVELDB_DO_CLEANUP` defines whether to delete the downloaded and unpacked repo when done.
+  The default is `true`.
+</details>
 
 ### RocksDB
 
-By default, `provenanced` is built with RocksDB support.
-Building without RocksDB support is also possible. See `WITH_ROCKSDB` in [Options](#options) below.
+By default, `provenanced` is built without RocksDB support.
+Building with RocksDB support is also possible. See `WITH_ROCKSDB` in [Options](#options) below.
 
 To download, build, and install the RocksDB library on your system:
 ```console
 $ make rocksdb
 ```
 
-There are a few environment variables that can be used to control some behavior of this command.
+<details>
+<summary>Environment variables that can control the behavior of this command:</summary>
 
 * `ROCKSDB_VERSION` will install a version other than the one defined in the `Makefile`.
   Do not include the `v` at the beginning of the version number.
   Example: `ROCKSDB_VERSION=6.17.3 make rocksdb`.
+  The default is `6.29.4`
 * `ROCKSDB_JOBS` will control the number of parallel jobs used to build the library.
   The default is the result of the `nproc` command.
   More parallel jobs can speed up the build.
@@ -51,13 +70,18 @@ There are a few environment variables that can be used to control some behavior 
   The default is `true`.
 * `ROCKSDB_WITH_STATIC` defines whether to build and install the static library.
   The default is `false`.
+* `ROCKSDB_DO_BUILD` defines whether to build rocksdb.
+  The default is `true`.
+* `ROCKSDB_DO_INSTALL` defines whether to install rocksdb.
+  The default is `true`.
 * `ROCKSDB_SUDO` defines whether to use `sudo` for the installation of the built library.
   The difference between `sudo make rocksdb` and `ROCKSDB_SUDO=true make rocksdb`
   is that the latter will use `sudo` only for the installation (the download and build still use your current user).
   Some systems (e.g. Ubuntu) might require this.
-  The default is `false`.
+  The default is `true` if the `sudo` command is found, or `false` otherwise.
 * `ROCKSDB_DO_CLEANUP` defines whether to delete the downloaded and unpacked repo when done.
   The default is `true`.
+</details>
 
 ## Building or Installing `provenanced`
 
@@ -89,7 +113,7 @@ A few aspects of `make build` and `make install` can be controlled through envir
   This is only used if compiling with CLevelDB support on a Mac.
   The default is the result of `brew --prefix leveldb`.
 * `WITH_ROCKSDB`: Enables/Disables building with RocksDB support.
-  The default is `true`.
+  The default is `false`.
   If this is not `true` the built `provenanced`, executable will not be able to use RocksDB as a database backend.
 * `WITH_BADGERDB`: Enables/Disables building with BadgerDB support.
   The default is `true`.

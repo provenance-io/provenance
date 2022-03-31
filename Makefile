@@ -10,7 +10,7 @@ BUILDDIR ?= $(CURDIR)/build
 
 WITH_LEDGER ?= true
 WITH_CLEVELDB ?= true
-WITH_ROCKSDB ?= true
+WITH_ROCKSDB ?= false
 WITH_BADGERDB ?= true
 
 # We used to use 'yes' on these flags, so at least for now, change 'yes' into 'true'
@@ -425,7 +425,7 @@ vendor:
 
 # Full build inside a docker container for a clean release build
 docker-build: vendor
-	docker build --build-arg ROCKSDB_JOBS=2 -t provenance-io/blockchain . -f docker/blockchain/Dockerfile
+	docker build -t provenance-io/blockchain . -f docker/blockchain/Dockerfile
 
 # Quick build using local environment and go platform target options.
 docker-build-local: vendor

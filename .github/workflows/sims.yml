@@ -80,27 +80,31 @@ jobs:
       - name: Build cleveldb
         if: steps.cache-setup.outputs.cache-hit != 'true'
         run: |
-          export CLEVELDB_DO_CLEANUP='false'
+          export CLEVELDB_DO_BUILD='true'
           export CLEVELDB_DO_INSTALL='false'
+          export CLEVELDB_DO_CLEANUP='false'
           make cleveldb
       - name: Install cleveldb
         run: |
+          export CLEVELDB_DO_BUILD='false'
+          export CLEVELDB_DO_INSTALL='true'
           export CLEVELDB_SUDO='true'
           export CLEVELDB_DO_CLEANUP='false'
-          export CLEVELDB_DO_BUILD='false'
           make cleveldb
       - name: Build rocksdb
         if: steps.cache-setup.outputs.cache-hit != 'true'
         # This takes a while, but is cached (and doesn't change). So if the cache was restored, skip it.
         run: |
-          export ROCKSDB_DO_CLEANUP='false'
+          export ROCKSDB_DO_BUILD='true'
           export ROCKSDB_DO_INSTALL='false'
+          export ROCKSDB_DO_CLEANUP='false'
           make rocksdb
       - name: Install rocksdb
         run: |
+          export ROCKSDB_DO_BUILD='false'
+          export ROCKSDB_DO_INSTALL='true'
           export ROCKSDB_SUDO='true'
           export ROCKSDB_DO_CLEANUP='false'
-          export ROCKSDB_DO_BUILD='false'
           make rocksdb
       - uses: actions/setup-go@v3
         with:
@@ -142,27 +146,31 @@ jobs:
       - name: Build cleveldb
         if: steps.cache-setup.outputs.cache-hit != 'true'
         run: |
-          export CLEVELDB_DO_CLEANUP='false'
+          export CLEVELDB_DO_BUILD='true'
           export CLEVELDB_DO_INSTALL='false'
+          export CLEVELDB_DO_CLEANUP='false'
           make cleveldb
       - name: Install cleveldb
         run: |
+          export CLEVELDB_DO_BUILD='false'
+          export CLEVELDB_DO_INSTALL='true'
           export CLEVELDB_SUDO='true'
           export CLEVELDB_DO_CLEANUP='false'
-          export CLEVELDB_DO_BUILD='false'
           make cleveldb
       - name: Build rocksdb
         if: steps.cache-setup.outputs.cache-hit != 'true'
         # This takes a while, but is cached (and doesn't change). So if the cache was restored, skip it.
         run: |
-          export ROCKSDB_DO_CLEANUP='false'
+          export ROCKSDB_DO_BUILD='true'
           export ROCKSDB_DO_INSTALL='false'
+          export ROCKSDB_DO_CLEANUP='false'
           make rocksdb
       - name: Install rocksdb
         run: |
+          export ROCKSDB_DO_BUILD='false'
+          export ROCKSDB_DO_INSTALL='true'
           export ROCKSDB_SUDO='true'
           export ROCKSDB_DO_CLEANUP='false'
-          export ROCKSDB_DO_BUILD='false'
           make rocksdb
       - uses: actions/setup-go@v3
         with:
@@ -208,16 +216,18 @@ jobs:
       - name: Install cleveldb
         if: matrix.db-backend == 'cleveldb'
         run: |
+          export CLEVELDB_DO_BUILD='false'
+          export CLEVELDB_DO_INSTALL='true'
           export CLEVELDB_SUDO='true'
           export CLEVELDB_DO_CLEANUP='false'
-          export CLEVELDB_DO_BUILD='false'
           make cleveldb
       - name: Install rocksdb
         if: matrix.db-backend == 'rocksdb'
         run: |
+          export ROCKSDB_DO_BUILD='false'
+          export ROCKSDB_DO_INSTALL='true'
           export ROCKSDB_SUDO='true'
           export ROCKSDB_DO_CLEANUP='false'
-          export ROCKSDB_DO_BUILD='false'
           make rocksdb
       - uses: actions/setup-go@v3
         with:
@@ -269,16 +279,18 @@ jobs:
       - name: Install cleveldb
         if: matrix.db-backend == 'cleveldb'
         run: |
+          export CLEVELDB_DO_BUILD='false'
+          export CLEVELDB_DO_INSTALL='true'
           export CLEVELDB_SUDO='true'
           export CLEVELDB_DO_CLEANUP='false'
-          export CLEVELDB_DO_BUILD='false'
           make cleveldb
       - name: Install rocksdb
         if: matrix.db-backend == 'rocksdb'
         run: |
+          export ROCKSDB_DO_BUILD='false'
+          export ROCKSDB_DO_INSTALL='true'
           export ROCKSDB_SUDO='true'
           export ROCKSDB_DO_CLEANUP='false'
-          export ROCKSDB_DO_BUILD='false'
           make rocksdb
       - uses: actions/setup-go@v3
         with:
