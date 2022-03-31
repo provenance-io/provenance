@@ -16,14 +16,21 @@ type EvaluationResult struct {
 }
 
 // EvaluateRules takes in a Eligibility criteria and measure it against the events in the context
-func (k Keeper) EvaluateRules(ctx sdk.Context, epochIdentifier string, epochNumber uint64, criteria *types.EligibilityCriteria) {
+func (k Keeper) EvaluateRules(ctx sdk.Context, epochIdentifier string, epochNumber uint64, criteria *types.EligibilityCriteria) error {
 	// get the events from the context history
 	switch criteria.Action.TypeUrl  {
 	case  proto.MessageName(&types.ActionTransferDelegations{}):{
 		ctx.Logger().Info(fmt.Sprintf("The Action type is %s",proto.MessageName(&types.ActionTransferDelegations{})))
 		// check the event history
-		// for transfers
-		ctx.EventManager().GetABCIEventHistory()
+		// for transfers event and make sure there is a sender
+		evaluateRes,err:= Evaluate(ctx,"transfer","sender")
+		if err!=nil{
+			return err
+		}
+
+		// get the address from the eval and check if it has delegation
+		println(len(evaluateRes))
+
 
 	}
 	case  proto.MessageName(&types.ActionDelegate{}):{
@@ -33,10 +40,10 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochIdentifier string, epochNumb
 		// TODO throw an error or just log it? Leaning towards just logging it for now
 		ctx.Logger().Error(fmt.Sprintf("The Action type %s, cannot be evaluated",criteria.Action.TypeUrl))
 	}
+	return nil
 }
 
-func GetEvent(ctx sdk.Context, eventTypeToSearch string, attributeKey string, ) ([]EvaluationResult,error) {
-
+func Evaluate(ctx sdk.Context, eventTypeToSearch string, attributeKey string,) ([]EvaluationResult,error) {
 	result := ([]EvaluationResult)(nil)
 	for _, s := range ctx.EventManager().GetABCIEventHistory() {
 		ctx.Logger().Info(fmt.Sprintf("events type is %s", s.Type))
