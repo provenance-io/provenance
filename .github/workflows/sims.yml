@@ -244,6 +244,12 @@ jobs:
             for logdir in $( ls -d /tmp/sim-logs-* ); do
               cp -rv $logdir/* "${{ steps.test-logs.outputs.test-logs }}/" || :
             done
+            bad_seed="$( grep -Eo 'Seed [[:digit:]]+: FAILED' "${{ steps.test-logs.outputs.test-logs }}"/runsim_log | sed -E 's/[^[:digit:]]+//g' )" || :
+            if [[ -n "$bad_seed" ]]; then
+              echo "::group::last 500 lines of seed $bad_seed stdout"
+              tail -n 500 "${{ steps.test-logs.outputs.test-logs }}"/*-seed-$bad_seed-*.stdout || :
+              echo "::endgroup::"
+            fi
           fi
           exit "$ec"
       - uses: actions/upload-artifact@v3
