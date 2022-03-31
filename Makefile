@@ -122,8 +122,11 @@ endif
 ifeq ($(WITH_CLEVELDB),true)
   ifeq ($(UNAME_S),darwin)
     LEVELDB_PATH ?= $(shell brew --prefix leveldb 2> /dev/null)
-    cgo_cflags  += -I$(LEVELDB_PATH)/include
-    cgo_ldflags += -L$(LEVELDB_PATH)/lib
+    # Only do stuff if that LEVELDB_PATH exists. Otherwise, leave it up to already installed libraries.
+    ifneq ($(wildcard $(LEVELDB_PATH)/.),)
+      cgo_cflags  += -I$(LEVELDB_PATH)/include
+	  cgo_ldflags += -L$(LEVELDB_PATH)/lib
+	endif
   else ifeq ($(UNAME_S),linux)
     # Intentionally left blank to leave it up to already installed libraries.
   endif
