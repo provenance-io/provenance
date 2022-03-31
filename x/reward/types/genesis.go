@@ -2,7 +2,6 @@ package types
 
 import (
 	types1 "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func NewGenesisState(rewardProgram []RewardProgram,
@@ -34,18 +33,20 @@ func DefaultGenesis() *GenesisState {
 	}
 	return NewGenesisState(
 		[]RewardProgram{
-			{
-				Id:                    1,
-				DistributeFromAddress: "tp1sha7e07l5knw4vdw2vgc3k06gd0fscz9r32yv6",
-				Coin:                  sdk.Coin{Denom: "nhash", Amount: sdk.NewInt(100000)},
-				EpochId:               "minute",
-				StartEpoch:            100,
-				NumberEpochs:          10000,
-				EligibilityCriteria: &EligibilityCriteria{
-					Name:   ActionTypeTransferDelegations,
-					Action: action,
-				},
-			}},
+			// TODO remove only for testing
+			//{
+			//	Id:                    1,
+			//	DistributeFromAddress: "tp1sha7e07l5knw4vdw2vgc3k06gd0fscz9r32yv6",
+			//	Coin:                  sdk.Coin{Denom: "nhash", Amount: sdk.NewInt(100000)},
+			//	EpochId:               "minute",
+			//	StartEpoch:            100,
+			//	NumberEpochs:          10000,
+			//	EligibilityCriteria: &EligibilityCriteria{
+			//		Name:   ActionTypeTransferDelegations,
+			//		Action: action,
+			//	},
+			//}
+			},
 		[]RewardClaim{},
 		[]EpochRewardDistribution{},
 		[]EligibilityCriteria{},

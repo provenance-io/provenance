@@ -6,6 +6,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	epochtypes "github.com/provenance-io/provenance/x/epoch/types"
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
@@ -16,7 +17,7 @@ func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddRewar
 	}
 
 	epochInfo := k.epochKeeper.GetEpochInfo(ctx, proposal.RewardProgram.EpochId)
-	if epochInfo == nil {
+	if (epochInfo == epochtypes.EpochInfo{}) {
 		return fmt.Errorf("invalid epoch identifier: %s", proposal.RewardProgram.EpochId)
 	}
 

@@ -20,9 +20,9 @@ func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 	now := time.Now()
 
 	tests := []struct {
-		expectedCurrentEpochStartHeight int64
-		expectedStartHeight             int64
-		expectedCurrentEpoch            int64
+		expectedCurrentEpochStartHeight uint64
+		expectedStartHeight             uint64
+		expectedCurrentEpoch            uint64
 		fn                              func()
 	}{
 		{
@@ -159,9 +159,9 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 
 	// epoch not started yet
 	epochInfo := app.EpochKeeper.GetEpochInfo(ctx, "monthly")
-	require.Equal(t, epochInfo.CurrentEpoch, int64(0))
-	require.Equal(t, epochInfo.StartHeight, initialBlockHeight+(60*60*24*30*7)/5)
-	require.Equal(t, epochInfo.CurrentEpochStartHeight, ctx.BlockHeight())
+	require.Equal(t, epochInfo.CurrentEpoch, uint64(0))
+	require.Equal(t, epochInfo.StartHeight, uint64(initialBlockHeight+(60*60*24*30*7)/5))
+	require.Equal(t, epochInfo.CurrentEpochStartHeight, uint64(ctx.BlockHeight()))
 	require.Equal(t, epochInfo.EpochCountingStarted, false)
 
 	// after 1 week
@@ -170,9 +170,9 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 
 	// epoch not started yet
 	epochInfo = app.EpochKeeper.GetEpochInfo(ctx, "monthly")
-	require.Equal(t, epochInfo.CurrentEpoch, int64(0))
-	require.Equal(t, epochInfo.StartHeight, initialBlockHeight+(60*60*24*30*7)/5)
-	require.Equal(t, epochInfo.CurrentEpochStartHeight, initialBlockHeight)
+	require.Equal(t, epochInfo.CurrentEpoch, uint64(0))
+	require.Equal(t, epochInfo.StartHeight, uint64(initialBlockHeight+(60*60*24*30*7)/5))
+	require.Equal(t, epochInfo.CurrentEpochStartHeight, uint64(initialBlockHeight))
 	require.Equal(t, epochInfo.EpochCountingStarted, false)
 
 	// after 1 month
@@ -181,8 +181,8 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 
 	// epoch started
 	epochInfo = app.EpochKeeper.GetEpochInfo(ctx, "monthly")
-	require.Equal(t, epochInfo.CurrentEpoch, int64(1))
-	require.Equal(t, epochInfo.CurrentEpochStartHeight, ctx.BlockHeight())
-	require.Equal(t, epochInfo.StartHeight, ctx.BlockHeight())
+	require.Equal(t, epochInfo.CurrentEpoch, uint64(1))
+	require.Equal(t, epochInfo.CurrentEpochStartHeight, uint64(ctx.BlockHeight()))
+	require.Equal(t, epochInfo.StartHeight, uint64(ctx.BlockHeight()))
 	require.Equal(t, epochInfo.EpochCountingStarted, true)
 }

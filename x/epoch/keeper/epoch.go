@@ -10,18 +10,18 @@ import (
 )
 
 // GetEpochInfo returns epoch info by identifier
-func (k Keeper) GetEpochInfo(ctx sdk.Context, identifier string) *types.EpochInfo {
+func (k Keeper) GetEpochInfo(ctx sdk.Context, identifier string) types.EpochInfo {
 	epoch := types.EpochInfo{}
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(append(types.KeyPrefixEpoch, []byte(identifier)...))
 	if b == nil {
-		return nil
+		return epoch
 	}
 	err := proto.Unmarshal(b, &epoch)
 	if err != nil {
 		panic(err)
 	}
-	return &epoch
+	return epoch
 }
 
 // SetEpochInfo set epoch info
@@ -79,7 +79,7 @@ func (k Keeper) AllEpochInfos(ctx sdk.Context) []types.EpochInfo {
 // Calling it any point in block N+1 (assuming the epoch doesn't increment) would return 1.
 func (k Keeper) NumBlocksSinceEpochStart(ctx sdk.Context, identifier string) (int64, error) {
 	epoch := k.GetEpochInfo(ctx, identifier)
-	if epoch == nil {
+	if (epoch == types.EpochInfo{}) {
 		return 0, fmt.Errorf("epoch with identifier %s not found", identifier)
 	}
 	return ctx.BlockHeight() - int64(epoch.CurrentEpochStartHeight), nil
