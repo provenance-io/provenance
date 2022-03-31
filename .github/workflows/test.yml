@@ -64,7 +64,9 @@ jobs:
 
   tests:
     needs: setup-tests
-    if: needs.setup-tests.outputs.should-run
+    # Note: There's a required check on this, and it must pass. A skip doesn't count as a pass.
+    #       So instead of a top-level if: needs.setup-tests.outputs.should-run on this job, it's
+    #       The steps below (except the checkout step).
     strategy:
       fail-fast: false
       matrix:
@@ -76,15 +78,19 @@ jobs:
           # CodeCov requires fetch-depth > 1
           fetch-depth: 2
       - uses: actions/setup-go@v3
+        if: needs.setup-tests.outputs.should-run
         with:
           go-version: 1.17
       - uses: actions/download-artifact@v2
+        if: needs.setup-tests.outputs.should-run
         with:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-${{ matrix.part }}"
       - name: test & coverage report creation
+        if: needs.setup-tests.outputs.should-run
         run: |
           cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='norace ledger test_ledger_mock'
       - uses: actions/upload-artifact@v2
+        if: needs.setup-tests.outputs.should-run
         with:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-${{ matrix.part }}-coverage"
           path: ./${{ matrix.part }}profile.out
@@ -94,7 +100,9 @@ jobs:
   #  and grpc services
   upload-coverage-report:
     needs: [setup-tests, tests]
-    if: needs.setup-tests.outputs.should-run
+    # Note: There's a required check on this, and it must pass. A skip doesn't count as a pass.
+    #       So instead of a top-level if: needs.setup-tests.outputs.should-run on this job, it's
+    #       The steps below (except the checkout step).
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -102,20 +110,27 @@ jobs:
           # CodeCov requires fetch-depth > 1
           fetch-depth: 2      
       - uses: actions/download-artifact@v2
+        if: needs.setup-tests.outputs.should-run
         with:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-00-coverage"
       - uses: actions/download-artifact@v2
+        if: needs.setup-tests.outputs.should-run
         with:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-01-coverage"
       - uses: actions/download-artifact@v2
+        if: needs.setup-tests.outputs.should-run
         with:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-02-coverage"
       - uses: actions/download-artifact@v2
+        if: needs.setup-tests.outputs.should-run
         with:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-03-coverage"
-      - run: |
+      - name: Combine profiles
+        if: needs.setup-tests.outputs.should-run
+        run: |
           cat ./*profile.out | grep -v "mode: atomic" >> coverage.txt
       - name: filter out DONTCOVER
+        if: needs.setup-tests.outputs.should-run
         run: |
           excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
           excludelist+=" $(find ./ -type f -name '*.pb.go')"
@@ -127,13 +142,16 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
       - uses: codecov/codecov-action@v2.1.0
+        if: needs.setup-tests.outputs.should-run
         with:
           file: ./coverage.txt
 
 
   test-race:
     needs: setup-tests
-    if: needs.setup-tests.outputs.should-run
+    # Note: There's a required check on this, and it must pass. A skip doesn't count as a pass.
+    #       So instead of a top-level if: needs.setup-tests.outputs.should-run on this job, it's
+    #       The steps below (except the checkout step).
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -142,16 +160,20 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
+        if: needs.setup-tests.outputs.should-run
         with:
           go-version: 1.17
       - uses: actions/download-artifact@v2
+        if: needs.setup-tests.outputs.should-run
         with:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-${{ matrix.part }}"
       - name: test & coverage report creation
+        if: needs.setup-tests.outputs.should-run
         run: |
           xargs --arg-file=pkgs.txt.part.${{ matrix.part }} go test -mod=readonly -timeout 30m -race -tags='cgo ledger test_ledger_mock' | tee ${{ matrix.part }}-race-output.txt
           exit "${PIPESTATUS[0]}"
       - uses: actions/upload-artifact@v2
+        if: needs.setup-tests.outputs.should-run
         with:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-${{ matrix.part }}-race-output"
           path: ./${{ matrix.part }}-race-output.txt
