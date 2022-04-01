@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"io/ioutil"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -15,6 +14,17 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+)
+
+// Flag names and values
+const (
+	FlagRewardProgramId     = "reward-program-id"
+	FlagDistAddr            = "dist-address"
+	FlagCoin                = "coin"
+	FlagEpochId             = "epoch-id"
+	FlagEpochOffset         = "epoch-offset"
+	FlagNumEpochs           = "num-epochs"
+	FlagEligibilityCriteria = "eligibility-criteria"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -36,8 +46,8 @@ func NewTxCmd() *cobra.Command {
 
 func GetCmdRewardProgramProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "proposal [add|update|remove] [title] [description] [deposit] [reward-program-file]",
-		Args:  cobra.ExactArgs(5),
+		Use:   "proposal [add|update|remove] [title] [description] [deposit]",
+		Args:  cobra.ExactArgs(4),
 		Short: "Submit a reward program proposal along with an initial deposit",
 		Long: strings.TrimSpace(`Submit a reward program proposal along with an initial deposit.
 `),
@@ -50,24 +60,55 @@ func GetCmdRewardProgramProposal() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
-			contents, err := ioutil.ReadFile(args[4])
+			rewardProgramId, err := cmd.Flags().GetUint64(FlagRewardProgramId)
 			if err != nil {
 				return err
 			}
-			var rewardProgram types.RewardProgram
-			clientCtx.Codec.MustUnmarshalJSON(contents, &rewardProgram)
-
-			var action types.RewardAction
-			err = clientCtx.Codec.UnpackAny(rewardProgram.EligibilityCriteria.Action, &action)
+			distFromAddr, err := cmd.Flags().GetString(FlagDistAddr)
 			if err != nil {
 				return err
 			}
+			coinStr, err := cmd.Flags().GetString(FlagCoin)
+			if err != nil {
+				return err
+			}
+			coin, err := sdk.ParseCoinNormalized(coinStr)
+			if err != nil {
+				return err
+			}
+			epochId, err := cmd.Flags().GetString(FlagEpochId)
+			if err != nil {
+				return err
+			}
+			numEpochs, err := cmd.Flags().GetUint64(FlagNumEpochs)
+			if err != nil {
+				return err
+			}
+			epochOffset, err := cmd.Flags().GetUint64(FlagEpochOffset)
+			if err != nil {
+				return err
+			}
+			eligibilityCriteriaStr, err := cmd.Flags().GetString(FlagEligibilityCriteria)
+			if err != nil {
+				return err
+			}
+			var eligibilityCriteria types.EligibilityCriteria
+			clientCtx.Codec.MustUnmarshalJSON([]byte(eligibilityCriteriaStr), &eligibilityCriteria)
 
 			var proposal govtypes.Content
 			switch args[0] {
 			case "add":
-				//proposal = &types.AddRewardProgramProposal{Description: args[0], Title: args[1], RewardProgram: &rewardProgram}
+				proposal = types.NewAddRewardProgramProposal(
+					args[1],
+					args[2],
+					rewardProgramId,
+					distFromAddr,
+					coin,
+					epochId,
+					epochOffset,
+					numEpochs,
+					eligibilityCriteria,
+				)
 			default:
 				return fmt.Errorf("unknown proposal type %s", args[0])
 			}
@@ -86,5 +127,12 @@ func GetCmdRewardProgramProposal() *cobra.Command {
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().Uint64(FlagRewardProgramId, 0, "rewards program id")
+	cmd.Flags().String(FlagDistAddr, "", "distribution from address")
+	cmd.Flags().String(FlagCoin, "", "coins for reward program")
+	cmd.Flags().String(FlagEpochId, "", "epoch identifier (day, week, month)")
+	cmd.Flags().Uint64(FlagEpochOffset, 0, "epoch block offset used to calculate start of program")
+	cmd.Flags().Uint64(FlagNumEpochs, 0, "number of epochs for the reward program")
+	cmd.Flags().String(FlagEligibilityCriteria, "", "json of the eligibility criteria")
 	return cmd
 }
