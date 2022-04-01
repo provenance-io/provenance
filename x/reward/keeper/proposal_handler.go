@@ -15,13 +15,23 @@ func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddRewar
 	if err := proposal.ValidateBasic(); err != nil {
 		return err
 	}
-
-	epochInfo := k.epochKeeper.GetEpochInfo(ctx, proposal.RewardProgram.EpochId)
+	epochInfo := k.epochKeeper.GetEpochInfo(ctx, proposal.EpochId)
 	if (epochInfo == epochtypes.EpochInfo{}) {
-		return fmt.Errorf("invalid epoch identifier: %s", proposal.RewardProgram.EpochId)
+		return fmt.Errorf("invalid epoch identifier: %s", proposal.EpochId)
 	}
 
-	k.SetRewardProgram(ctx, *proposal.RewardProgram)
+	// calculate the start epoch height from current heigh + proposal offset height
+	startEpoch := uint64(ctx.BlockHeight()) + proposal.EpochStartOffset
+
+	rewardProgram := types.NewRewardProgram(proposal.RewardProgramId,
+		proposal.DistributeFromAddress,
+		proposal.Coin,
+		proposal.EpochId,
+		startEpoch,
+		proposal.NumberEpochs,
+		*proposal.EligibilityCriteria,
+	)
+	k.SetRewardProgram(ctx, rewardProgram)
 
 	return nil
 }

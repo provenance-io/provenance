@@ -6096,7 +6096,13 @@ AddRewardProgramProposal defines a governance proposal to add a rewards program
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
-| `reward_program` | [RewardProgram](#provenance.reward.v1.RewardProgram) |  |  |
+| `rewardProgramId` | [uint64](#uint64) |  |  |
+| `distribute_from_address` | [string](#string) |  | community pool for now |
+| `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `epoch_id` | [string](#string) |  | EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month) |
+| `epoch_start_offset` | [uint64](#uint64) |  | epoch_start_soffset defines the offset of the block height to start epoch after proposal passes |
+| `number_epochs` | [uint64](#uint64) |  | number of epochs this program will last for |
+| `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
 
 
 

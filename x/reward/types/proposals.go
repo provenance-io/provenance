@@ -1,8 +1,12 @@
 package types
 
 import (
+	"errors"
+	"fmt"
+
 	"gopkg.in/yaml.v2"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -23,11 +27,24 @@ func init() {
 func NewAddRewardProgramProposal(
 	title string,
 	description string,
-	rewardProgram RewardProgram) *AddRewardProgramProposal {
+	rewardProgramId uint64,
+	distributeFromAddress string,
+	coin sdk.Coin,
+	epochId string,
+	epochStartOffset uint64,
+	numberEpochs uint64,
+	eligibilityCriteria EligibilityCriteria,
+) *AddRewardProgramProposal {
 	return &AddRewardProgramProposal{
-		Title:         title,
-		Description:   description,
-		RewardProgram: &rewardProgram,
+		Title:                 title,
+		Description:           description,
+		RewardProgramId:       rewardProgramId,
+		DistributeFromAddress: distributeFromAddress,
+		Coin:                  coin,
+		EpochId:               epochId,
+		EpochStartOffset:      epochStartOffset,
+		NumberEpochs:          numberEpochs,
+		EligibilityCriteria:   &eligibilityCriteria,
 	}
 }
 
@@ -36,7 +53,28 @@ func (arpp AddRewardProgramProposal) ProposalRoute() string { return RouterKey }
 func (arpp AddRewardProgramProposal) ProposalType() string { return ProposalTypeAddRewardProgram }
 
 func (arpp AddRewardProgramProposal) ValidateBasic() error {
-	return arpp.RewardProgram.ValidateBasic()
+	if arpp.RewardProgramId < 1 {
+		return errors.New("reward program id is invalid")
+	}
+	if arpp.EpochStartOffset < 1 {
+		return errors.New("reward program epoch start offset is invalid")
+	}
+	if _, err := sdk.AccAddressFromBech32(arpp.DistributeFromAddress); err != nil {
+		return fmt.Errorf("invalid address for rewards program distribution from address: %w", err)
+	}
+	if len(arpp.EpochId) == 0 {
+		return errors.New("epoch id cannot be empty")
+	}
+	if arpp.EligibilityCriteria == nil {
+		return errors.New("eligibility criteria info cannot be null for rewards program")
+	}
+	if err := arpp.EligibilityCriteria.ValidateBasic(); err != nil {
+		return fmt.Errorf("eligibility criteria is not valid: %w", err)
+	}
+	if !arpp.Coin.IsPositive() {
+		return fmt.Errorf("reward program requires coins: %v", arpp.Coin)
+	}
+	return nil
 }
 
 func (arpp AddRewardProgramProposal) String() string {

@@ -17,8 +17,14 @@ message AddRewardProgramProposal {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  string title       = 1;
-  string description = 2;
-
-  provenance.reward.v1.RewardProgram reward_program = 3;
+  string                   title                   = 1;
+  string                   description             = 2;
+  uint64                   rewardProgramId         = 3;
+  string                   distribute_from_address = 4; // community pool for now
+  cosmos.base.v1beta1.Coin coin                    = 5 [(gogoproto.nullable) = false];
+  string epoch_id = 6; // EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month)
+  uint64 epoch_start_offset =
+      7; // epoch_start_soffset defines the offset of the block height to start epoch after proposal passes
+  uint64              number_epochs        = 8; // number of epochs this program will last for
+  EligibilityCriteria eligibility_criteria = 9;
 }

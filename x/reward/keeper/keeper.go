@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -86,7 +88,7 @@ func (k Keeper) SetRewardClaim(ctx sdk.Context, rewardProgram types.RewardClaim)
 }
 
 // GetRewardClaim returns a RewardClaim by id if it exists nil if it does not
-func (k Keeper) GetRewardClaim(ctx sdk.Context, addr []byte) (*types.RewardClaim, error) {
+func (k Keeper) GetRewardClaim(ctx sdk.Context, addr []byte, epochId uint64, rewardsId int64) (*types.RewardClaim, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRewardClaimsKey(addr)
 	bz := store.Get(key)
@@ -121,17 +123,17 @@ func (k Keeper) IterateRewardClaims(ctx sdk.Context, handle func(rewardClaim typ
 }
 
 // SetEpochRewardDistribution sets the EpochRewardDistribution in the keeper
-func (k Keeper) SetEpochRewardDistribution(ctx sdk.Context, epochRewardDistribution types.EpochRewardDistribution) error {
+func (k Keeper) SetEpochRewardDistribution(ctx sdk.Context, epochRewardDistribution *types.EpochRewardDistribution) error {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&epochRewardDistribution)
-	store.Set(types.GetEpochRewardDistributionKey(epochRewardDistribution.EpochId, string(epochRewardDistribution.RewardProgramId)), bz)
+	bz := k.cdc.MustMarshal(epochRewardDistribution)
+	store.Set(types.GetEpochRewardDistributionKey(epochRewardDistribution.EpochId, fmt.Sprintf("%d", epochRewardDistribution.RewardProgramId)), bz)
 	return nil
 }
 
 // GetEpochRewardDistribution returns a EpochRewardDistribution by id if it exists nil if it does not
 func (k Keeper) GetEpochRewardDistribution(ctx sdk.Context, epochId string, rewardId uint64) (*types.EpochRewardDistribution, error) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetEpochRewardDistributionKey(epochId,string(rewardId))
+	key := types.GetEpochRewardDistributionKey(epochId, fmt.Sprintf("%d", rewardId))
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return nil, nil

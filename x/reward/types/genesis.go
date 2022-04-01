@@ -1,9 +1,5 @@
 package types
 
-import (
-	types1 "github.com/cosmos/cosmos-sdk/codec/types"
-)
-
 func NewGenesisState(rewardProgram []RewardProgram,
 	rewardClaim []RewardClaim,
 	epochRewardDistribution []EpochRewardDistribution,
@@ -23,30 +19,8 @@ func NewGenesisState(rewardProgram []RewardProgram,
 
 // DefaultGenesis returns the default reward genesis state
 func DefaultGenesis() *GenesisState {
-	action, _ := types1.NewAnyWithValue(&ActionTransferDelegations{
-		Minimum: 0,
-		Maximum: 1000,
-	})
-	_, ok := action.GetCachedValue().(RewardAction)
-	if !ok {
-		panic("something went wrong")
-	}
 	return NewGenesisState(
-		[]RewardProgram{
-			// TODO remove only for testing
-			//{
-			//	Id:                    1,
-			//	DistributeFromAddress: "tp1sha7e07l5knw4vdw2vgc3k06gd0fscz9r32yv6",
-			//	Coin:                  sdk.Coin{Denom: "nhash", Amount: sdk.NewInt(100000)},
-			//	EpochId:               "minute",
-			//	StartEpoch:            100,
-			//	NumberEpochs:          100000,
-			//	EligibilityCriteria: &EligibilityCriteria{
-			//		Name:   ActionTypeTransferDelegations,
-			//		Action: action,
-			//	},
-			//	},
-		},
+		[]RewardProgram{},
 		[]RewardClaim{},
 		[]EpochRewardDistribution{},
 		[]EligibilityCriteria{},
