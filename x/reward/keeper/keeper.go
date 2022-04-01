@@ -86,7 +86,7 @@ func (k Keeper) SetRewardClaim(ctx sdk.Context, rewardProgram types.RewardClaim)
 }
 
 // GetRewardClaim returns a RewardClaim by id if it exists nil if it does not
-func (k Keeper) GetRewardClaim(ctx sdk.Context, addr []byte, epochId uint64, rewardsId int64) (*types.RewardClaim, error) {
+func (k Keeper) GetRewardClaim(ctx sdk.Context, addr []byte) (*types.RewardClaim, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRewardClaimsKey(addr)
 	bz := store.Get(key)
@@ -121,9 +121,9 @@ func (k Keeper) IterateRewardClaims(ctx sdk.Context, handle func(rewardClaim typ
 }
 
 // SetEpochRewardDistribution sets the EpochRewardDistribution in the keeper
-func (k Keeper) SetEpochRewardDistribution(ctx sdk.Context, epochRewardDistribution *types.EpochRewardDistribution) error {
+func (k Keeper) SetEpochRewardDistribution(ctx sdk.Context, epochRewardDistribution types.EpochRewardDistribution) error {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(epochRewardDistribution)
+	bz := k.cdc.MustMarshal(&epochRewardDistribution)
 	store.Set(types.GetEpochRewardDistributionKey(epochRewardDistribution.EpochId, string(epochRewardDistribution.RewardProgramId)), bz)
 	return nil
 }

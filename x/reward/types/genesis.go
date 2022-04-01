@@ -40,13 +40,13 @@ func DefaultGenesis() *GenesisState {
 			//	Coin:                  sdk.Coin{Denom: "nhash", Amount: sdk.NewInt(100000)},
 			//	EpochId:               "minute",
 			//	StartEpoch:            100,
-			//	NumberEpochs:          10000,
+			//	NumberEpochs:          100000,
 			//	EligibilityCriteria: &EligibilityCriteria{
 			//		Name:   ActionTypeTransferDelegations,
 			//		Action: action,
 			//	},
-			//}
-			},
+			//	},
+		},
 		[]RewardClaim{},
 		[]EpochRewardDistribution{},
 		[]EligibilityCriteria{},

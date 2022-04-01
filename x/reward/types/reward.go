@@ -96,12 +96,12 @@ func (rc *RewardClaim) String() string {
 	return string(out)
 }
 
-func NewEpochRewardDistribution(epochId string, rewardProgramId uint64, totalRewardsPool sdk.Coin, total_shares uint64) EpochRewardDistribution {
+func NewEpochRewardDistribution(epochId string, rewardProgramId uint64, totalRewardsPool sdk.Coin, totalShares int64) EpochRewardDistribution {
 	return EpochRewardDistribution{
 		EpochId:          epochId,
 		RewardProgramId:  rewardProgramId,
 		TotalRewardsPool: totalRewardsPool,
-		TotalShares:      total_shares,
+		TotalShares:      totalShares,
 	}
 }
 

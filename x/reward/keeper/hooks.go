@@ -41,12 +41,14 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		}
 		// epoch reward distribution does it exist till the block has ended, highly unlikely but could happen
 		if epochRewardDistibutionForEpoch.EpochId == ""{
-
+			epochRewardDistibutionForEpoch.EpochId = epochIdentifier
+			epochRewardDistibutionForEpoch.RewardProgramId = rewardProgram.Id
+			epochRewardDistibutionForEpoch.TotalShares = 0
+			epochRewardDistibutionForEpoch.EpochEnded = true
 		}else{
-			k.EvaluateRules(ctx,epochIdentifier,epochNumber,rewardProgram.EligibilityCriteria)
 			// end the epoch
 			epochRewardDistibutionForEpoch.EpochEnded = true
-			k.SetEpochRewardDistribution(ctx, epochRewardDistibutionForEpoch)
+			k.EvaluateRules(ctx,epochIdentifier,epochNumber,rewardProgram,*epochRewardDistibutionForEpoch)
 		}
 	}
 

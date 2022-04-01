@@ -16,9 +16,9 @@ type EvaluationResult struct {
 }
 
 // EvaluateRules takes in a Eligibility criteria and measure it against the events in the context
-func (k Keeper) EvaluateRules(ctx sdk.Context, epochIdentifier string, epochNumber uint64, criteria *types.EligibilityCriteria) error {
+func (k Keeper) EvaluateRules(ctx sdk.Context, epochIdentifier string, epochNumber uint64, program types.RewardProgram, distribution types.EpochRewardDistribution) error {
 	// get the events from the context history
-	switch criteria.Action.TypeUrl  {
+	switch program.EligibilityCriteria.Action.TypeUrl  {
 	case  proto.MessageName(&types.ActionTransferDelegations{}):{
 		ctx.Logger().Info(fmt.Sprintf("The Action type is %s",proto.MessageName(&types.ActionTransferDelegations{})))
 		// check the event history
@@ -30,6 +30,24 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochIdentifier string, epochNumb
 
 		// get the address from the eval and check if it has delegation
 		println(len(evaluateRes))
+		// it's an array so should be deterministic
+		for _,res := range evaluateRes{
+			// add a share to the final total
+			// we know the rewards it so update the epoch reward
+			distribution.TotalShares = distribution.TotalShares+res.shares
+			// add it to the claims
+			claim, errFromRewardClaims := k.GetRewardClaim(ctx,res.address.Bytes())
+			if errFromRewardClaims != nil {
+				return errFromRewardClaims
+			}
+			if claim != nil {
+				// set a new claim or add to a claim
+			}else{
+				//set a brand new claim
+			}
+		}
+		//set total rewards
+		k.SetEpochRewardDistribution(ctx,distribution)
 
 
 	}
@@ -38,7 +56,7 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochIdentifier string, epochNumb
 	}
 	default:
 		// TODO throw an error or just log it? Leaning towards just logging it for now
-		ctx.Logger().Error(fmt.Sprintf("The Action type %s, cannot be evaluated",criteria.Action.TypeUrl))
+		ctx.Logger().Error(fmt.Sprintf("The Action type %s, cannot be evaluated",program.EligibilityCriteria.Action.TypeUrl))
 	}
 	return nil
 }
