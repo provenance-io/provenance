@@ -67,7 +67,7 @@ func GetCmdRewardProgramProposal() *cobra.Command {
 			var proposal govtypes.Content
 			switch args[0] {
 			case "add":
-				proposal = &types.AddRewardProgramProposal{Description: args[0], Title: args[1], RewardProgram: &rewardProgram}
+				//proposal = &types.AddRewardProgramProposal{Description: args[0], Title: args[1], RewardProgram: &rewardProgram}
 			default:
 				return fmt.Errorf("unknown proposal type %s", args[0])
 			}
