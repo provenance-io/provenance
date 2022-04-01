@@ -73,6 +73,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * When the `start` command encounters an error, it no longer outputs command usage [#670](https://github.com/provenance-io/provenance/issues/670)
 * Add integration tests for smart contracts [#392](https://github.com/provenance-io/provenance/issues/392)
 * Change max length on marker unresticted denom from 64 to 83 [#719](https://github.com/provenance-io/provenance/issues/719)
+* Allow authz grants to work on scope value owners [#755](https://github.com/provenance-io/provenance/issues/755)
 
 ### Client Breaking
 
