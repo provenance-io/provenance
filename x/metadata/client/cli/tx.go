@@ -695,14 +695,16 @@ session-id        - a bech32 address string for the session this record belongs 
   Either a contract-spec-id or a session-id must be provided (but not both).
   If a contract-spec-id is provided, a new session will be created using it as the specification for the session, and the record will be part of that session.
   If a session-id is provided, the record will be part of that session (a new session is NOT created).`,
-		Example: fmt.Sprintf(`$ %[1]s tx metadata write-record recspec1qh... \
+		Example: fmt.Sprintf(`$ %[1]s tx metadata write-record scope1qp... \
+recspec1qh... \
 recordname \
 myprocessname,myhashvalue \
 input1name,input1hashvalue,input1typename,proposed;... \
 output1hash,pass;... \
 userid,owner;... \
 session123...
-$ %[1]s tx metadata write-record recspec1qh... \
+$ %[1]s tx metadata write-record scope1qp... \
+recspec1qh... \
 recordname \
 myprocessname,myhashvalue \
 input1name,input1hashvalue,input1typename,proposed;... \
