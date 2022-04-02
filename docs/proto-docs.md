@@ -6019,15 +6019,12 @@ RewardProgram
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `reward_program_id` | [uint64](#uint64) |  |  |
-| `shares` | [int64](#int64) |  |  |
-| `epoch_id` | [string](#string) |  |  |
-| `epoch_end_height` | [uint64](#uint64) |  |  |
-| `claimed` | [bool](#bool) |  |  |
-| `expiration_height` | [uint64](#uint64) |  |  |
-| `expired` | [bool](#bool) |  |  |
-| `total_shares` | [int64](#int64) |  | only populated at epoch end |
-| `total_rewards` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `reward_program_id` | [uint64](#uint64) |  | epoch id can be derived from reward program |
+| `total_shares` | [int64](#int64) |  | total shares accumulated, can be negative |
+| `latest_recorded_epoch` | [uint64](#uint64) |  | last epoch number that this reward program was triggerred for. |
+| `claimed` | [bool](#bool) |  | whether rewards has been claimed |
+| `expired` | [bool](#bool) |  | rewards have been expired, this is defined in RewardProgram |
+| `total_reward_claimed` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
 
 

@@ -77,7 +77,7 @@ func (rp *RewardProgram) String() string {
 	return string(out)
 }
 
-func NewRewardClaim(address string, sharesPerEpochPerRewardsProgram []*SharesPerEpochPerRewardsProgram) RewardClaim {
+func NewRewardClaim(address string, sharesPerEpochPerRewardsProgram []SharesPerEpochPerRewardsProgram) RewardClaim {
 	return RewardClaim{
 		Address:                 address,
 		SharesPerEpochPerReward: sharesPerEpochPerRewardsProgram,
@@ -226,25 +226,21 @@ func (atd *ActionTransferDelegations) IsEligible() error {
 
 func NewSharesPerEpochPerRewardsProgram(
 	rewardProgramId uint64,
-	shares int64,
+	totalShares int64,
 	epochId string,
-	epochEndHeight uint64,
+	latestRecordedEpoch uint64,
 	claimed bool,
 	expirationHeight uint64,
 	expired bool,
-	totalShares int64,
-	totalRewards sdk.Coin,
+	totalRewardsClaimed sdk.Coin,
 ) SharesPerEpochPerRewardsProgram {
 	return SharesPerEpochPerRewardsProgram{
-		RewardProgramId:  rewardProgramId,
-		Shares:           shares,
-		EpochId:          epochId,
-		EpochEndHeight:   epochEndHeight,
-		Claimed:          claimed,
-		ExpirationHeight: expirationHeight,
-		Expired:          expired,
-		TotalShares:      totalShares,
-		TotalRewards:     totalRewards,
+		RewardProgramId:     rewardProgramId,
+		TotalShares:         totalShares,
+		LatestRecordedEpoch: latestRecordedEpoch,
+		Claimed:             claimed,
+		Expired:             expired,
+		TotalRewardClaimed:  totalRewardsClaimed,
 	}
 }
 
@@ -252,8 +248,8 @@ func (apeprp *SharesPerEpochPerRewardsProgram) ValidateBasice() error {
 	if apeprp.RewardProgramId < 1 {
 		return errors.New("shares per epoch must have a valid reward program id")
 	}
-	if len(apeprp.EpochId) < 1 {
-		return errors.New("shares per epoch must have a valid epoch id")
+	if apeprp.LatestRecordedEpoch < 1 {
+		return errors.New("latest recorded epoch cannot be less than 1")
 	}
 	// TODO need more?
 	return nil

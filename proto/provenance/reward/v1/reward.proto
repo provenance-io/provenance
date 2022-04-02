@@ -46,7 +46,8 @@ message RewardClaim {
   string address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
 
   // array of shares calculated per epoch for each reward program
-  repeated SharesPerEpochPerRewardsProgram shares_per_epoch_per_reward = 4;
+  repeated SharesPerEpochPerRewardsProgram shares_per_epoch_per_reward = 4
+  [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"shares_per_epoch_per_reward\""];;
 }
 
 message SharesPerEpochPerRewardsProgram {
@@ -54,15 +55,12 @@ message SharesPerEpochPerRewardsProgram {
   option (gogoproto.goproto_getters)  = true;
   option (gogoproto.goproto_stringer) = false;
 
-  uint64                   reward_program_id = 1;
-  int64                    shares            = 2;
-  string                   epoch_id          = 3;
-  uint64                   epoch_end_height  = 4;
-  bool                     claimed           = 5;
-  uint64                   expiration_height = 6;
-  bool                     expired           = 7;
-  int64                    total_shares      = 8; // only populated at epoch end
-  cosmos.base.v1beta1.Coin total_rewards     = 9
+  uint64                   reward_program_id = 1; // epoch id can be derived from reward program
+  int64                    total_shares      = 2; // total shares accumulated, can be negative
+  uint64                   latest_recorded_epoch  = 3; // last epoch number that this reward program was triggerred for.
+  bool                     claimed           = 4; // whether rewards has been claimed
+  bool                     expired           = 5; // rewards have been expired, this is defined in RewardProgram
+  cosmos.base.v1beta1.Coin total_reward_claimed = 6  // total rewards claimed by that address, which is equal to min((total_shares/total_shares_in_epoch)* total_pool_funds)
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"total_rewards\""];
 }
 
