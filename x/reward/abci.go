@@ -8,21 +8,22 @@ import (
 )
 
 // EndBlocker called every block
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) error {
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	ctx.Logger().Info(fmt.Sprintf("In endblocker"))
 
 	// check if epoch has ended
 	ctx.Logger().Info(fmt.Sprintf("Size of events is %d", len(ctx.EventManager().GetABCIEventHistory())))
 	rewardPrograms, err := k.GetAllActiveRewards(ctx)
 	if err != nil {
-		return err
+		// TODO log it imo..we don't want blockchain to stop?
+		ctx.Logger().Error(err.Error())
 	}
 
 	// only rewards programs who are eligible will be iterated through here
 	for _, rewardProgram := range rewardPrograms {
 		epochRewardDistibutionForEpoch, err := k.GetEpochRewardDistribution(ctx, rewardProgram.EpochId, rewardProgram.Id)
 		if err != nil {
-			return err
+			ctx.Logger().Error(err.Error())
 		}
 		currentEpoch := k.EpochKeeper.GetEpochInfo(ctx,rewardProgram.EpochId)
 		// epoch reward distribution does it exist till the block has ended, highly unlikely but could happen
@@ -38,5 +39,4 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) error {
 			k.EvaluateRules(ctx, currentEpoch.CurrentEpoch, rewardProgram, *epochRewardDistibutionForEpoch)
 		}
 	}
-	return nil
 }
