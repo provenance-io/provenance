@@ -23,7 +23,7 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 			ctx.Logger().Info(fmt.Sprintf("The Action type is %s", proto.MessageName(&types.ActionTransferDelegations{})))
 			// check the event history
 			// for transfers event and make sure there is a sender
-			evaluateRes, err := Evaluate(ctx, "transfer", "sender")
+			evaluateRes, err := EvaluateTransferAndCheckDelegation(ctx, "transfer", "sender")
 			if err != nil {
 				return err
 			}
@@ -100,7 +100,7 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 	return nil
 }
 
-func Evaluate(ctx sdk.Context, eventTypeToSearch string, attributeKey string) ([]EvaluationResult, error) {
+func EvaluateTransferAndCheckDelegation(ctx sdk.Context, eventTypeToSearch string, attributeKey string) ([]EvaluationResult, error) {
 	result := ([]EvaluationResult)(nil)
 	for _, s := range ctx.EventManager().GetABCIEventHistory() {
 		ctx.Logger().Info(fmt.Sprintf("events type is %s", s.Type))
@@ -113,8 +113,11 @@ func Evaluate(ctx sdk.Context, eventTypeToSearch string, attributeKey string) ([
 				//4:24PM INF event attribute is transfer attribute_key:attribute_value  sender:tp1sha7e07l5knw4vdw2vgc3k06gd0fscz9r32yv6
 				//4:24PM INF event attribute is transfer attribute_key:attribute_value  amount:76200000000000nhash
 				if attributeKey == string(y.Key) {
+
 					// really not possible to get an error but could happen i guess
 					address, err := sdk.AccAddressFromBech32(string(y.Value))
+
+					//TODO check this address has a delegation
 					if err != nil {
 						return nil, err
 					}

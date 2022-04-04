@@ -13,6 +13,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 	// check if epoch has ended
 	ctx.Logger().Info(fmt.Sprintf("Size of events is %d", len(ctx.EventManager().GetABCIEventHistory())))
+	// Step 1
 	rewardPrograms, err := k.GetAllActiveRewards(ctx)
 	if err != nil {
 		// TODO log it imo..we don't want blockchain to stop?
@@ -20,6 +21,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	}
 
 	// only rewards programs who are eligible will be iterated through here
+	// Step 2
 	for _, rewardProgram := range rewardPrograms {
 		epochRewardDistibutionForEpoch, err := k.GetEpochRewardDistribution(ctx, rewardProgram.EpochId, rewardProgram.Id)
 		if err != nil {
