@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	epochtypes "github.com/provenance-io/provenance/x/epoch/types"
@@ -89,6 +90,10 @@ func (k Keeper) GetAllActiveRewards(ctx sdk.Context) ([]types.RewardProgram, err
 		return nil, err
 	}
 	return rewardPrograms, nil
+}
+
+func (k Keeper) CheckActiveDelegations(ctx sdk.Context, address sdk.AccAddress) []stakingtypes.Delegation {
+	return k.stakingKeeper.GetAllDelegatorDelegations(ctx,address)
 }
 
 // ___________________________________________________________________________________________________

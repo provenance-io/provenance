@@ -23,7 +23,7 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 			ctx.Logger().Info(fmt.Sprintf("The Action type is %s", proto.MessageName(&types.ActionTransferDelegations{})))
 			// check the event history
 			// for transfers event and make sure there is a sender
-			evaluateRes, err := EvaluateTransferAndCheckDelegation(ctx, "transfer", "sender")
+			evaluateRes, err := k.EvaluateTransferAndCheckDelegation(ctx, "transfer", "sender")
 			if err != nil {
 				return err
 			}
@@ -100,7 +100,7 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 	return nil
 }
 
-func EvaluateTransferAndCheckDelegation(ctx sdk.Context, eventTypeToSearch string, attributeKey string) ([]EvaluationResult, error) {
+func (k Keeper) EvaluateTransferAndCheckDelegation(ctx sdk.Context, eventTypeToSearch string, attributeKey string) ([]EvaluationResult, error) {
 	result := ([]EvaluationResult)(nil)
 	for _, s := range ctx.EventManager().GetABCIEventHistory() {
 		ctx.Logger().Info(fmt.Sprintf("events type is %s", s.Type))
@@ -121,12 +121,14 @@ func EvaluateTransferAndCheckDelegation(ctx sdk.Context, eventTypeToSearch strin
 					if err != nil {
 						return nil, err
 					}
-					result = append(result, EvaluationResult{
-						eventTypeToSearch: eventTypeToSearch,
-						attributeKey:      string(y.Key),
-						shares:            1,
-						address:           address,
-					})
+					if len(k.CheckActiveDelegations(ctx, address)) > 0 {
+						result = append(result, EvaluationResult{
+							eventTypeToSearch: eventTypeToSearch,
+							attributeKey:      string(y.Key),
+							shares:            1,
+							address:           address,
+						})
+					}
 				}
 			}
 		}
