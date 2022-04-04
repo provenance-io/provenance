@@ -341,6 +341,8 @@
     - [Msg](#provenance.metadata.v1.Msg)
   
 - [provenance/msgfees/v1/msgfees.proto](#provenance/msgfees/v1/msgfees.proto)
+    - [EventMsgFee](#provenance.msgfees.v1.EventMsgFee)
+    - [EventMsgFees](#provenance.msgfees.v1.EventMsgFees)
     - [MsgFee](#provenance.msgfees.v1.MsgFee)
     - [Params](#provenance.msgfees.v1.Params)
   
@@ -5299,6 +5301,38 @@ Msg defines the Metadata Msg service.
 <p align="right"><a href="#top">Top</a></p>
 
 ## provenance/msgfees/v1/msgfees.proto
+
+
+
+<a name="provenance.msgfees.v1.EventMsgFee"></a>
+
+### EventMsgFee
+EventMsgFee final event property for msg fee on type
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type` | [string](#string) |  |  |
+| `count` | [string](#string) |  |  |
+| `total` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.EventMsgFees"></a>
+
+### EventMsgFees
+EventMsgFees event emitted with summary of msg fees
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_fees` | [EventMsgFee](#provenance.msgfees.v1.EventMsgFee) | repeated |  |
+
+
+
 
 
 

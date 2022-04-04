@@ -30,7 +30,8 @@ var (
 
 // AddrAttributeKey creates a key for an account attribute
 func AddrAttributeKey(addr []byte, attr Attribute) []byte {
-	key := append(AttributeKeyPrefix, address.MustLengthPrefix(addr)...)
+	key := AttributeKeyPrefix
+	key = append(key, address.MustLengthPrefix(addr)...)
 	key = append(key, GetNameKeyBytes(attr.Name)...)
 	return append(key, attr.Hash()...)
 }
@@ -47,7 +48,8 @@ func AddrStrAttributesKeyPrefix(addr string) []byte {
 
 // AddrAttributesNameKeyPrefix returns a prefix key for all attributes with a given name on an account
 func AddrAttributesNameKeyPrefix(addr []byte, attributeName string) []byte {
-	key := append(AttributeKeyPrefix, address.MustLengthPrefix(addr)...)
+	key := AttributeKeyPrefix
+	key = append(key, address.MustLengthPrefix(addr)...)
 	return append(key, GetNameKeyBytes(attributeName)...)
 }
 
