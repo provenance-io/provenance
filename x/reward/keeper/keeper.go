@@ -16,7 +16,7 @@ const StoreKey = types.ModuleName
 type Keeper struct {
 	storeKey    sdk.StoreKey
 	cdc         codec.BinaryCodec
-	epochKeeper epochkeeper.Keeper
+	EpochKeeper epochkeeper.Keeper
 }
 
 func NewKeeper(
@@ -27,7 +27,7 @@ func NewKeeper(
 	return Keeper{
 		storeKey:    key,
 		cdc:         cdc,
-		epochKeeper: epochKeeper,
+		EpochKeeper: epochKeeper,
 	}
 }
 
