@@ -12,10 +12,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
+	provenance "github.com/provenance-io/provenance/app"
+	epochtypes "github.com/provenance-io/provenance/x/epoch/types"
 	rewardkeeper "github.com/provenance-io/provenance/x/reward/keeper"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
-
-	provenance "github.com/provenance-io/provenance/app"
 )
 
 type IntegrationTestSuite struct {
@@ -35,7 +35,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Height: 2})
 	s.k = rewardkeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(rewardtypes.ModuleName), s.app.EpochKeeper)
 	s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-
+	s.app.EpochKeeper.SetEpochInfo(s.ctx, epochtypes.EpochInfo{
+		Identifier:              "week",
+		StartHeight:             0,
+		Duration:                uint64((24 * 60 * 60 * 7) / 5), //duration in blocks
+		CurrentEpoch:            0,
+		CurrentEpochStartHeight: 0,
+		EpochCountingStarted:    false,
+	})
 	// s.app.BankKeeper.SendCoinsFromAccountToModule(s.ctx, s.accountAddr, rewardtypes.ModuleName)
 }
 
@@ -72,7 +79,7 @@ func (s *IntegrationTestSuite) TestRewardProposals() {
 				2,
 				s.accountAddr.String(),
 				sdk.NewCoin("nhash", sdk.NewInt(0)),
-				"day",
+				"week",
 				1,
 				100,
 				rewardtypes.NewEligibilityCriteria("delegation", &rewardtypes.ActionDelegate{}),
@@ -80,17 +87,17 @@ func (s *IntegrationTestSuite) TestRewardProposals() {
 			errors.New("reward program requires coins: 0nhash"),
 		},
 		{
-			"add reward - invalid start epoch size",
+			"add reward - successfully add proposal",
 			rewardtypes.NewAddRewardProgramProposal("title", "description",
 				2,
 				s.accountAddr.String(),
 				sdk.NewCoin("nhash", sdk.NewInt(100)),
-				"day",
-				0,
+				"week",
+				1,
 				1,
 				rewardtypes.NewEligibilityCriteria("delegation", &rewardtypes.ActionDelegate{}),
 			),
-			errors.New("start epoch 0 cannot be behind current blockheight 2"),
+			nil,
 		},
 	}
 
