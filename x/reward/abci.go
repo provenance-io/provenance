@@ -23,22 +23,21 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	// only rewards programs who are eligible will be iterated through here
 	// Step 2
 	for _, rewardProgram := range rewardPrograms {
-		epochRewardDistibutionForEpoch, err := k.GetEpochRewardDistribution(ctx, rewardProgram.EpochId, rewardProgram.Id)
+		epochRewardDistributionForEpoch, err := k.GetEpochRewardDistribution(ctx, rewardProgram.EpochId, rewardProgram.Id)
 		if err != nil {
 			ctx.Logger().Error(err.Error())
 		}
-		currentEpoch := k.EpochKeeper.GetEpochInfo(ctx,rewardProgram.EpochId)
+		currentEpoch := k.EpochKeeper.GetEpochInfo(ctx, rewardProgram.EpochId)
 		// epoch reward distribution does it exist till the block has ended, highly unlikely but could happen
-		if epochRewardDistibutionForEpoch.EpochId == "" {
-			epochRewardDistibutionForEpoch.EpochId = rewardProgram.EpochId
-			epochRewardDistibutionForEpoch.RewardProgramId = rewardProgram.Id
-			epochRewardDistibutionForEpoch.TotalShares = 0
-			epochRewardDistibutionForEpoch.EpochEnded = false
-			k.EvaluateRules(ctx, currentEpoch.CurrentEpoch, rewardProgram, *epochRewardDistibutionForEpoch)
-		} else if epochRewardDistibutionForEpoch.EpochEnded == false { // if hook epoch end has already been called, this should not get called.
+		if epochRewardDistributionForEpoch.EpochId == "" {
+			epochRewardDistributionForEpoch.EpochId = rewardProgram.EpochId
+			epochRewardDistributionForEpoch.RewardProgramId = rewardProgram.Id
+			epochRewardDistributionForEpoch.TotalShares = 0
+			epochRewardDistributionForEpoch.EpochEnded = false
+			k.EvaluateRules(ctx, currentEpoch.CurrentEpoch, rewardProgram, *epochRewardDistributionForEpoch)
+		} else if epochRewardDistributionForEpoch.EpochEnded == false { // if hook epoch end has already been called, this should not get called.
 			// end the epoch
-			epochRewardDistibutionForEpoch.EpochEnded = false
-			k.EvaluateRules(ctx, currentEpoch.CurrentEpoch, rewardProgram, *epochRewardDistibutionForEpoch)
+			k.EvaluateRules(ctx, currentEpoch.CurrentEpoch, rewardProgram, *epochRewardDistributionForEpoch)
 		}
 	}
 }
