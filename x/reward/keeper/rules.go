@@ -15,7 +15,7 @@ type EvaluationResult struct {
 }
 
 // EvaluateRules takes in a Eligibility criteria and measure it against the events in the context
-func (k Keeper) EvaluateRules(ctx sdk.Context, epochIdentifier string, epochNumber uint64, program types.RewardProgram, distribution types.EpochRewardDistribution) error {
+func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types.RewardProgram, distribution types.EpochRewardDistribution) error {
 	// get the events from the context history
 	switch program.EligibilityCriteria.Action.TypeUrl {
 	case proto.MessageName(&types.ActionTransferDelegations{}):

@@ -14,6 +14,35 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	// distribute logic goes here, i.e record the number of shares claimable in that epoch and the total rewards pool
 	// also unlock the module account?
 	ctx.Logger().Info(fmt.Sprintf("In epoch end for %s %d", epochIdentifier, epochNumber))
+	rewardPrograms, err := k.GetAllActiveRewardsForEpoch(ctx, epochIdentifier, epochNumber)
+	if err != nil {
+		return err
+	}
+
+	// only rewards programs who are eligible will be iterated through here
+	for _, rewardProgram := range rewardPrograms {
+		epochRewardDistibutionForEpoch, err := k.GetEpochRewardDistribution(ctx, epochIdentifier, rewardProgram.Id)
+		if err != nil {
+			return err
+		}
+		// epoch reward distribution does it exist till the block has ended, highly unlikely but could happen
+		if epochRewardDistibutionForEpoch.EpochId == "" {
+			epochRewardDistibutionForEpoch.EpochId = epochIdentifier
+			epochRewardDistibutionForEpoch.RewardProgramId = rewardProgram.Id
+			epochRewardDistibutionForEpoch.TotalShares = 0
+			epochRewardDistibutionForEpoch.EpochEnded = true
+			k.EvaluateRules(ctx, epochNumber, rewardProgram, *epochRewardDistibutionForEpoch)
+		} else {
+			// end the epoch
+			epochRewardDistibutionForEpoch.EpochEnded = true
+			k.EvaluateRules(ctx, epochNumber, rewardProgram, *epochRewardDistibutionForEpoch)
+		}
+	}
+
+	return nil
+}
+
+func (k Keeper) GetAllActiveRewardsForEpoch(ctx sdk.Context, epochIdentifier string, epochNumber uint64) ([]types.RewardProgram, error) {
 	var rewardPrograms []types.RewardProgram
 	// get all the rewards programs
 	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
@@ -30,29 +59,32 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		return false
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
+	return rewardPrograms, nil
+}
 
-	// only rewards programs who are eligible will be iterated through here
-	for _, rewardProgram := range rewardPrograms {
-		epochRewardDistibutionForEpoch,err := k.GetEpochRewardDistribution(ctx,epochIdentifier,rewardProgram.Id)
-		if err != nil {
-			return err
+func (k Keeper) GetAllActiveRewards(ctx sdk.Context) ([]types.RewardProgram, error) {
+	var rewardPrograms []types.RewardProgram
+	// get all the rewards programs
+	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
+		// this is epoch that ended, and matches up with the reward program identifier
+		// check if any of the events match with any of the reward program running
+		// e.g start epoch,current epoch .. start epoch + number of epochs program runs for > current epoch
+		// 1,1 .. 1+4 > 1
+		// 1,2 .. 1+4 > 2
+		// 1,3 .. 1+4 > 3
+		// 1,4 .. 1+4 > 4
+		currentEpoch := k.EpochKeeper.GetEpochInfo(ctx,rewardProgram.EpochId)
+		if rewardProgram.StartEpoch+rewardProgram.NumberEpochs > currentEpoch.CurrentEpoch {
+			rewardPrograms = append(rewardPrograms, rewardProgram)
 		}
-		// epoch reward distribution does it exist till the block has ended, highly unlikely but could happen
-		if epochRewardDistibutionForEpoch.EpochId == ""{
-			epochRewardDistibutionForEpoch.EpochId = epochIdentifier
-			epochRewardDistibutionForEpoch.RewardProgramId = rewardProgram.Id
-			epochRewardDistibutionForEpoch.TotalShares = 0
-			epochRewardDistibutionForEpoch.EpochEnded = true
-		}else{
-			// end the epoch
-			epochRewardDistibutionForEpoch.EpochEnded = true
-			k.EvaluateRules(ctx,epochIdentifier,epochNumber,rewardProgram,*epochRewardDistibutionForEpoch)
-		}
+		return false
+	})
+	if err != nil {
+		return nil, err
 	}
-
-	return nil
+	return rewardPrograms, nil
 }
 
 // ___________________________________________________________________________________________________

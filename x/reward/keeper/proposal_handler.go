@@ -15,7 +15,7 @@ func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddRewar
 	if err := proposal.ValidateBasic(); err != nil {
 		return err
 	}
-	epochInfo := k.epochKeeper.GetEpochInfo(ctx, proposal.EpochId)
+	epochInfo := k.EpochKeeper.GetEpochInfo(ctx, proposal.EpochId)
 	if (epochInfo == epochtypes.EpochInfo{}) {
 		return fmt.Errorf("invalid epoch identifier: %s", proposal.EpochId)
 	}
