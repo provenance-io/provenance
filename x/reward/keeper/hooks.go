@@ -68,7 +68,7 @@ func (k Keeper) GetAllActiveRewardsForEpoch(ctx sdk.Context, epochIdentifier str
 
 func (k Keeper) GetAllActiveRewards(ctx sdk.Context) ([]types.RewardProgram, error) {
 	var rewardPrograms []types.RewardProgram
-	var epochCache map[string]epochtypes.EpochInfo
+	//var epochCache map[string]epochtypes.EpochInfo
 
 	// get all the rewards programs
 	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
