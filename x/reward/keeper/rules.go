@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/provenance-io/provenance/x/reward/types"
@@ -20,6 +22,11 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 	switch program.EligibilityCriteria.Action.TypeUrl {
 	case proto.MessageName(&types.ActionTransferDelegations{}):
 		{
+			actionTransferDelegations, ok := program.EligibilityCriteria.Action.GetCachedValue().(types.ActionTransferDelegations)
+			if !ok {
+				return errors.New("unable to convert Action to ActionTransferDelegations")
+			}
+
 			ctx.Logger().Info(fmt.Sprintf("The Action type is %s", proto.MessageName(&types.ActionTransferDelegations{})))
 			// check the event history
 			// for transfers event and make sure there is a sender
@@ -45,18 +52,18 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 					var mutatedSharesPerEpochRewards []types.SharesPerEpochPerRewardsProgram
 					// set a new claim or add to a claim
 					for _, rewardClaimForAddress := range claim.SharesPerEpochPerReward {
-						if rewardClaimForAddress.RewardProgramId == program.Id {
+						if rewardClaimForAddress.RewardProgramId == program.Id && rewardClaimForAddress.TotalShares < actionTransferDelegations.Maximum {
 							rewardClaimForAddress.TotalShares = rewardClaimForAddress.TotalShares + 1
 							rewardClaimForAddress.LatestRecordedEpoch = epochNumber
-							mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards,rewardClaimForAddress)
+							mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, rewardClaimForAddress)
 							found = true
-						}else {
-							mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards,rewardClaimForAddress)
+						} else {
+							mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, rewardClaimForAddress)
 						}
 					}
 					if found {
 						claim.SharesPerEpochPerReward = mutatedSharesPerEpochRewards
-					}else{
+					} else {
 						mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, types.SharesPerEpochPerRewardsProgram{
 							RewardProgramId:     program.Id,
 							TotalShares:         1,
@@ -67,13 +74,13 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 						})
 					}
 					claim.SharesPerEpochPerReward = mutatedSharesPerEpochRewards
-					k.SetRewardClaim(ctx,*claim)
+					k.SetRewardClaim(ctx, *claim)
 				} else {
 					//set a brand new claim
 					var mutatedSharesPerEpochRewards []types.SharesPerEpochPerRewardsProgram
-					k.SetRewardClaim(ctx,types.RewardClaim{
-						Address:                 res.address.String(),
-						SharesPerEpochPerReward: append(mutatedSharesPerEpochRewards,types.SharesPerEpochPerRewardsProgram{
+					k.SetRewardClaim(ctx, types.RewardClaim{
+						Address: res.address.String(),
+						SharesPerEpochPerReward: append(mutatedSharesPerEpochRewards, types.SharesPerEpochPerRewardsProgram{
 							RewardProgramId:     program.Id,
 							TotalShares:         1,
 							LatestRecordedEpoch: epochNumber,
