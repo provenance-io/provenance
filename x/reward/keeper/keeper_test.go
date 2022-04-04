@@ -41,8 +41,8 @@ func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
 	rewardData.RewardPrograms = []types.RewardProgram{
 		types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, "day", 1, 10, types.NewEligibilityCriteria("criteria", &action)),
 	}
-	sharesPerEpoch := types.SharesPerEpochPerRewardsProgram{RewardProgramId: 1, Shares: 2, EpochId: "week", EpochEndHeight: 1000, Claimed: false, ExpirationHeight: 11000, Expired: false, TotalShares: 420, TotalRewards: coin}
-	rewardData.RewardClaims = []types.RewardClaim{types.NewRewardClaim("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", []*types.SharesPerEpochPerRewardsProgram{&sharesPerEpoch})}
+	sharesPerEpoch := types.SharesPerEpochPerRewardsProgram{RewardProgramId: 1, TotalShares: 2, LatestRecordedEpoch: 1000, Claimed: false, Expired: false, TotalRewardClaimed: coin}
+	rewardData.RewardClaims = []types.RewardClaim{types.NewRewardClaim("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", []types.SharesPerEpochPerRewardsProgram{sharesPerEpoch})}
 	rewardData.EligibilityCriterias = []types.EligibilityCriteria{types.NewEligibilityCriteria("delegate", &action)}
 	rewardData.EpochRewardDistributions = []types.EpochRewardDistribution{types.NewEpochRewardDistribution("day", 1,
 		coin,
