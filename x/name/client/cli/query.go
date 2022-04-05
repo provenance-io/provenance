@@ -102,8 +102,8 @@ func ReverseLookupCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "lookup [address]",
 		Short: "Reverse lookup of all names bound to a given address",
-		Example: fmt.Sprintf(`$ %[1]s query name loopup pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
-$ %[1]s query name loopup pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk --page=2 --limit=100
+		Example: fmt.Sprintf(`$ %[1]s query name lookup pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
+$ %[1]s query name lookup pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk --page=2 --limit=100
 `, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
