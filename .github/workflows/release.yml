@@ -25,8 +25,16 @@ jobs:
     steps:
       - id: version
         run: echo "::set-output name=version::${GITHUB_REF##*/}"
+      - id: prerelease
+        run: |
+          prerelease=false
+          if [[ '${{ steps.version.outputs.version }}' =~ -rc ]]; then
+            prerelease=true
+          fi
+          echo "::set-output name=prerelease::$prerelease"
     outputs:
       version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.prerelease.outputs.prerelease }}
       go_version: "1.17"
 
   build_osx:
@@ -117,7 +125,7 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
           draft: false
-          prerelease: false
+          prerelease: ${{ needs.build_init.outputs.prerelease }}
           body_path: RELEASE_CHANGELOG.md
     outputs:
       release_url: ${{ steps.create_release.outputs.upload_url }}
@@ -236,7 +244,7 @@ jobs:
           GPG_PASSWORD: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
         run: |
           cd protoBindings
-          ./gradlew publish $(if [ "${{github.event.release.prerelease}}" = "true" ]; then echo 'closeSonatypeStagingRepository'; else echo 'closeAndReleaseSonatypeStagingRepository'; fi) \
+          ./gradlew publish $(if [ "${{ needs.build_init.outputs.prerelease }}" = "true" ]; then echo 'closeSonatypeStagingRepository'; else echo 'closeAndReleaseSonatypeStagingRepository'; fi) \
             -PartifactVersion=$(echo "${{ needs.build_init.outputs.version }}" | sed -e 's/^v//') \
             -Psigning.keyId=B7D30ABE \
             -Psigning.password="${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}" \
