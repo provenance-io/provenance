@@ -37,6 +37,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+## [v1.8.0](https://github.com/provenance-io/provenance/releases/tag/v1.8.0) - 2022-03-17
+
+### Summary
+
+Provenance 1.8.0 is focused on improving the fee structures for transactions on the blockchain. While the Cosmos SDK has traditionally offered a generic fee structure focused on gas/resource utilization, the Provenance blockchain has found that certain transactions have additional long term costs and value beyond simple resources charges. This is the reason we are adding the new MsgFee module which allows governance based control of additional fee charges on certain message types.
+
+NOTE: The second major change in the 1.8.0 release is part of the migration process which removes many orphaned state objects that were left in 1.7.x chains. This cleanup process will require a significant amount of time to perform during the green upgrade handler execution. The upgrade will print status messages showing the progress of this process.
+
 ### Features
 
 * Add check for `authz` grants when there are missing signatures in `metadata` transactions [#516](https://github.com/provenance-io/provenance/issues/516)
@@ -68,13 +76,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `provenance.attribute.v1.MsgAddAttributeRequest` 10 hash (10,000,000,000 nhash)
   * `provenance.metadata.v1.MsgWriteScopeRequest`  10 hash (10,000,000,000 nhash)
   * `provenance.metadata.v1.MsgP8eMemorializeContractRequest` 10 hash (10,000,000,000 nhash)
-* Add integration tests for smart contracts [#392](https://github.com/provenance-io/provenance/issues/392)  
+* Add integration tests for smart contracts [#392](https://github.com/provenance-io/provenance/issues/392)
 * Use provwasm release artifact for smart contract tests [#731](https://github.com/provenance-io/provenance/issues/731)
 
 ### Client Breaking
 
 * Enforce a maximum gas limit on individual transactions so that at least 20 can fit in any given block. [#681](https://github.com/provenance-io/provenance/issues/681)
-  Previously transactions were only limited by their size in bytes as well as the overall gas limit on a given block.  
+  Previously transactions were only limited by their size in bytes as well as the overall gas limit on a given block.
 
   _With this update transactions must be no more than 5% of the maximum amount of gas allowed per block when a gas limit
   per block is set (this restriction has no effect when a gas limit has not been set).  The current limits on Provenance
