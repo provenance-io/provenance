@@ -374,6 +374,13 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 			signers:  []string{s.user3},
 			errorMsg: fmt.Sprintf("missing signature from existing value owner %s", s.user2),
 		},
+		{
+			name:     "setting value owner from nothing to non-owner only signed by non-owner should fail",
+			existing: types.Scope{scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""},
+			proposed: types.Scope{scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2},
+			signers:  []string{s.user2},
+			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
+		},
 	}
 
 	for _, tc := range cases {
