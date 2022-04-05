@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This script will download, compile, and install rocksdb, then clean up.
-DEFAULT_ROCKSDB_VERSION='6.29.4'
+DEFAULT_ROCKSDB_VERSION='6.29.5'
 
 can_sudo='false'
 command -v sudo > /dev/null 2>&1 && can_sudo='true'
