@@ -30,67 +30,14 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 			ctx.Logger().Info(fmt.Sprintf("The Action type is %s", proto.MessageName(&types.ActionTransferDelegations{})))
 			// check the event history
 			// for transfers event and make sure there is a sender
-			evaluateRes, err := k.EvaluateTransferAndCheckDelegation(ctx, "transfer", "sender")
+			evaluateRes, err := k.EvaluateTransferAndCheckDelegation(ctx)
 			if err != nil {
 				return err
 			}
 
-			// get the address from the eval and check if it has delegation
-			println(len(evaluateRes))
-			// it's an array so should be deterministic
-			for _, res := range evaluateRes {
-				// add a share to the final total
-				// we know the rewards it so update the epoch reward
-				distribution.TotalShares = distribution.TotalShares + res.shares
-				// add it to the claims
-				claim, errFromRewardClaims := k.GetRewardClaim(ctx, res.address.Bytes())
-				if errFromRewardClaims != nil {
-					return errFromRewardClaims
-				}
-				if claim != nil {
-					found := false
-					var mutatedSharesPerEpochRewards []types.SharesPerEpochPerRewardsProgram
-					// set a new claim or add to a claim
-					for _, rewardClaimForAddress := range claim.SharesPerEpochPerReward {
-						if rewardClaimForAddress.RewardProgramId == program.Id && rewardClaimForAddress.TotalShares < actionTransferDelegations.Maximum {
-							rewardClaimForAddress.TotalShares = rewardClaimForAddress.TotalShares + 1
-							rewardClaimForAddress.LatestRecordedEpoch = epochNumber
-							mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, rewardClaimForAddress)
-							found = true
-						} else {
-							mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, rewardClaimForAddress)
-						}
-					}
-					if found {
-						claim.SharesPerEpochPerReward = mutatedSharesPerEpochRewards
-					} else {
-						mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, types.SharesPerEpochPerRewardsProgram{
-							RewardProgramId:     program.Id,
-							TotalShares:         1,
-							LatestRecordedEpoch: epochNumber,
-							Claimed:             false,
-							Expired:             false,
-							TotalRewardClaimed:  sdk.Coin{},
-						})
-					}
-					claim.SharesPerEpochPerReward = mutatedSharesPerEpochRewards
-					k.SetRewardClaim(ctx, *claim)
-				} else {
-					//set a brand new claim
-					var mutatedSharesPerEpochRewards []types.SharesPerEpochPerRewardsProgram
-					k.SetRewardClaim(ctx, types.RewardClaim{
-						Address: res.address.String(),
-						SharesPerEpochPerReward: append(mutatedSharesPerEpochRewards, types.SharesPerEpochPerRewardsProgram{
-							RewardProgramId:     program.Id,
-							TotalShares:         1,
-							LatestRecordedEpoch: epochNumber,
-							Claimed:             false,
-							Expired:             false,
-							TotalRewardClaimed:  sdk.Coin{},
-						}),
-					})
-
-				}
+			errorRecordsClaim := k.RecordRewardClaims(ctx, epochNumber, program, distribution, evaluateRes, actionTransferDelegations)
+			if errorRecordsClaim != nil {
+				return errorRecordsClaim
 			}
 			//set total rewards
 			k.SetEpochRewardDistribution(ctx, distribution)
@@ -99,6 +46,25 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 	case proto.MessageName(&types.ActionDelegate{}):
 		{
 			ctx.Logger().Info(fmt.Sprintf("The Action type is %s", proto.MessageName(&types.ActionDelegate{})))
+			actionDelegations, ok := program.EligibilityCriteria.Action.GetCachedValue().(types.ActionDelegate)
+			if !ok {
+				return errors.New("unable to convert Action to ActionTransferDelegations")
+			}
+
+			ctx.Logger().Info(fmt.Sprintf("The Action type is %s", proto.MessageName(&types.ActionDelegate{})))
+			// check the event history
+			// for transfers event and make sure there is a sender
+			evaluateRes, err := k.EvaluateDelegation(ctx)
+			if err != nil {
+				return err
+			}
+
+			errorRecordsClaim := k.RecordRewardClaims(ctx, epochNumber, program, distribution, evaluateRes, actionDelegations)
+			if errorRecordsClaim != nil {
+				return errorRecordsClaim
+			}
+			//set total rewards
+			k.SetEpochRewardDistribution(ctx, distribution)
 		}
 	default:
 		// TODO throw an error or just log it? Leaning towards just logging it for now
@@ -107,7 +73,87 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 	return nil
 }
 
-func (k Keeper) EvaluateTransferAndCheckDelegation(ctx sdk.Context, eventTypeToSearch string, attributeKey string) ([]EvaluationResult, error) {
+func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program types.RewardProgram, distribution types.EpochRewardDistribution, evaluateRes []EvaluationResult, actionTransferDelegations types.ActionTransferDelegations) error {
+	// get the address from the eval and check if it has delegation
+	// it's an array so should be deterministic
+	for _, res := range evaluateRes {
+		// add a share to the final total
+		// we know the rewards it so update the epoch reward
+		distribution.TotalShares = distribution.TotalShares + res.shares
+		// add it to the claims
+		claim, errFromRewardClaims := k.GetRewardClaim(ctx, res.address.Bytes())
+		if errFromRewardClaims != nil {
+			return errFromRewardClaims
+		}
+		if claim != nil {
+			found := false
+			var mutatedSharesPerEpochRewards []types.SharesPerEpochPerRewardsProgram
+			// set a new claim or add to a claim
+			for _, rewardClaimForAddress := range claim.SharesPerEpochPerReward {
+				if rewardClaimForAddress.RewardProgramId == program.Id && rewardClaimForAddress.TotalShares < actionTransferDelegations.Maximum {
+					rewardClaimForAddress.TotalShares = rewardClaimForAddress.TotalShares + 1
+					rewardClaimForAddress.LatestRecordedEpoch = epochNumber
+					mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, rewardClaimForAddress)
+					found = true
+				} else {
+					mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, rewardClaimForAddress)
+				}
+			}
+			if found {
+				claim.SharesPerEpochPerReward = mutatedSharesPerEpochRewards
+			} else {
+				mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, types.SharesPerEpochPerRewardsProgram{
+					RewardProgramId:     program.Id,
+					TotalShares:         1,
+					LatestRecordedEpoch: epochNumber,
+					Claimed:             false,
+					Expired:             false,
+					TotalRewardClaimed:  sdk.Coin{},
+				})
+			}
+			claim.SharesPerEpochPerReward = mutatedSharesPerEpochRewards
+			k.SetRewardClaim(ctx, *claim)
+		} else {
+			//set a brand new claim
+			var mutatedSharesPerEpochRewards []types.SharesPerEpochPerRewardsProgram
+			k.SetRewardClaim(ctx, types.RewardClaim{
+				Address: res.address.String(),
+				SharesPerEpochPerReward: append(mutatedSharesPerEpochRewards, types.SharesPerEpochPerRewardsProgram{
+					RewardProgramId:     program.Id,
+					TotalShares:         1,
+					LatestRecordedEpoch: epochNumber,
+					Claimed:             false,
+					Expired:             false,
+					TotalRewardClaimed:  sdk.Coin{},
+				}),
+			})
+
+		}
+	}
+	return nil
+}
+
+func (k Keeper) EvaluateTransferAndCheckDelegation(ctx sdk.Context) ([]EvaluationResult, error) {
+	result := ([]EvaluationResult)(nil)
+	evaluateRes, err := k.EvaluateSearchEvents(ctx, "transfer", "sender")
+	if err != nil {
+		return nil, err
+	}
+	for _, s := range evaluateRes {
+		if len(k.CheckActiveDelegations(ctx, s.address)) > 0 {
+			result = append(result, s)
+		}
+	}
+	return result, nil
+}
+
+func (k Keeper) EvaluateDelegation(ctx sdk.Context) ([]EvaluationResult, error) {
+	evaluateRes, err := k.EvaluateSearchEvents(ctx, "staking", "sender")
+	return evaluateRes, err
+}
+
+
+func (k Keeper) EvaluateSearchEvents(ctx sdk.Context, eventTypeToSearch string, attributeKey string) ([]EvaluationResult, error) {
 	result := ([]EvaluationResult)(nil)
 	for _, s := range ctx.EventManager().GetABCIEventHistory() {
 		ctx.Logger().Info(fmt.Sprintf("events type is %s", s.Type))
@@ -128,14 +174,12 @@ func (k Keeper) EvaluateTransferAndCheckDelegation(ctx sdk.Context, eventTypeToS
 					if err != nil {
 						return nil, err
 					}
-					if len(k.CheckActiveDelegations(ctx, address)) > 0 {
-						result = append(result, EvaluationResult{
-							eventTypeToSearch: eventTypeToSearch,
-							attributeKey:      string(y.Key),
-							shares:            1,
-							address:           address,
-						})
-					}
+					result = append(result, EvaluationResult{
+						eventTypeToSearch: eventTypeToSearch,
+						attributeKey:      string(y.Key),
+						shares:            1,
+						address:           address,
+					})
 				}
 			}
 		}
