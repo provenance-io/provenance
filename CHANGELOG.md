@@ -47,6 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * When the `start` command encounters an error, it no longer outputs command usage [#670](https://github.com/provenance-io/provenance/issues/670)
 * Change max length on marker unresticted denom from 64 to 83 [#719](https://github.com/provenance-io/provenance/issues/719)
 * Set prerelease to `true` for release candidates. [#666](https://github.com/provenance-io/provenance/issues/666)
+* Allow authz grants to work on scope value owners [#755](https://github.com/provenance-io/provenance/issues/755)
 
 ## [v1.8.0](https://github.com/provenance-io/provenance/releases/tag/v1.8.0) - 2022-03-17
 
