@@ -27,8 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Build Init
     steps:
-      - name: Define Version
-        id: version
+      - name: Define Variables
+        id: vars
         # ${GITHUB_REF##*/} removes everything before the last slash. E.g. 'refs/tags/v1.8.0' becomes 'v1.8.0'
         # ${GITHUB_SHA:0:7} gets the first 7 characters. E.g. `3e9928920f5a64c8fc4884ee085efe1983071c90` becomes `3e99289'
         run: |
@@ -38,13 +38,20 @@ jobs:
             version=${GITHUB_REF##*/}
             is_release='true'
           fi
+          prerelease=false
+          if [[ "$version" =~ -rc ]]; then
+            prerelease=true
+          fi
           echo "version: '$version'"
           echo "is_release: $is_release"
+          echo "prerelease: $prerelease"
           echo "::set-output name=version::$version"
           echo "::set-output name=is_release::$is_release"
+          echo "::set-output name=prerelease::$prerelease"
     outputs:
-      version: ${{ steps.version.outputs.version }}
-      is_release: ${{ steps.version.outputs.is_release }}
+      version: ${{ steps.vars.outputs.version }}
+      is_release: ${{ steps.vars.outputs.is_release }}
+      prerelease: ${{ steps.vars.outputs.prerelease }}
       go_version: "1.17"
 
   build_osx:
@@ -143,7 +150,7 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
           draft: false
-          prerelease: false
+          prerelease: ${{ needs.build_init.outputs.prerelease }}
           body_path: RELEASE_CHANGELOG.md
     outputs:
       release_url: ${{ steps.create_release.outputs.upload_url }}
@@ -264,7 +271,7 @@ jobs:
           GPG_PASSWORD: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
         run: |
           cd protoBindings
-          ./gradlew publish $(if [ "${{github.event.release.prerelease}}" = "true" ]; then echo 'closeSonatypeStagingRepository'; else echo 'closeAndReleaseSonatypeStagingRepository'; fi) \
+          ./gradlew publish $(if [ "${{ needs.build_init.outputs.prerelease }}" = "true" ]; then echo 'closeSonatypeStagingRepository'; else echo 'closeAndReleaseSonatypeStagingRepository'; fi) \
             -PartifactVersion=$(echo "${{ needs.build_init.outputs.version }}" | sed -e 's/^v//') \
             -Psigning.keyId=B7D30ABE \
             -Psigning.password="${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}" \
