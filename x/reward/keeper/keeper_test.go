@@ -35,7 +35,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
-	action := types.NewActionDelegate(1, 100)
+	action := types.NewActionDelegate()
 	coin := sdk.NewInt64Coin("jackthecat", 100)
 	var rewardData types.GenesisState
 	rewardData.RewardPrograms = []types.RewardProgram{
@@ -48,8 +48,8 @@ func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
 		coin,
 		10,
 	)}
-	rewardData.ActionDelegate = types.NewActionDelegate(1, 100)
-	rewardData.ActionTransferDelegations = types.NewActionTransferDelegations(1, 100)
+	rewardData.ActionDelegate = types.NewActionDelegate()
+	rewardData.ActionTransferDelegations = types.NewActionTransferDelegations()
 	s.Assert().NotPanics(func() { s.app.RewardKeeper.InitGenesis(s.ctx, &rewardData) })
 	s.Assert().NotPanics(func() { s.app.RewardKeeper.ExportGenesis(s.ctx) })
 

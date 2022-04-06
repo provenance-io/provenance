@@ -1,11 +1,12 @@
 package epoch_test
 
 import (
+	"testing"
+	"time"
+
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/epoch"
 	"github.com/provenance-io/provenance/x/epoch/types"
-	"testing"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -148,7 +149,7 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 		Epochs: []types.EpochInfo{
 			{
 				Identifier:              "monthly",
-				StartHeight: 			 uint64(ctx.BlockHeight() + (60*60*24*30*7)/5),
+				StartHeight:             uint64(ctx.BlockHeight() + (60*60*24*30*7)/5),
 				Duration:                (60 * 60 * 24 * 30 * 7) / 5,
 				CurrentEpoch:            0,
 				CurrentEpochStartHeight: uint64(initialBlockHeight),

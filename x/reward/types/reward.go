@@ -174,14 +174,11 @@ func (ec *EligibilityCriteria) String() string {
 	return string(out)
 }
 
-func NewActionDelegate(ephemeral_count int64, maximum int64) ActionDelegate {
-	return ActionDelegate{EphemeralCount: ephemeral_count, Maximum: maximum}
+func NewActionDelegate() ActionDelegate {
+	return ActionDelegate{}
 }
 
 func (ad *ActionDelegate) ValidateBasic() error {
-	if ad.EphemeralCount < 0 || ad.Maximum < 0 {
-		return fmt.Errorf("rewards action delegate ephemeral count (%d) and maximum (%d) must be greater than 0", ad.EphemeralCount, ad.Maximum)
-	}
 	return nil
 }
 
@@ -199,14 +196,11 @@ func (ad *ActionDelegate) String() string {
 	return string(out)
 }
 
-func NewActionTransferDelegations(ephemeral_count int64, maximum int64) ActionTransferDelegations {
-	return ActionTransferDelegations{EphemeralCount: ephemeral_count, Maximum: maximum}
+func NewActionTransferDelegations() ActionTransferDelegations {
+	return ActionTransferDelegations{}
 }
 
 func (atd *ActionTransferDelegations) ValidateBasic() error {
-	if atd.EphemeralCount < 0 || atd.Maximum < 0 {
-		return fmt.Errorf("rewards action delegate ephemeral_count (%d) and maximum (%d) must be greater than 0", atd.EphemeralCount, atd.Maximum)
-	}
 	return nil
 }
 

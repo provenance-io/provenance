@@ -5945,12 +5945,6 @@ rule: ActionDelegate " when account delegates in epoch period,
 if above min and below max, increase shares earned for rewards pool by 1.
 
 
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `ephemeral_count` | [int64](#int64) |  |  |
-| `maximum` | [int64](#int64) |  |  |
-
-
 
 
 
@@ -5961,12 +5955,6 @@ if above min and below max, increase shares earned for rewards pool by 1.
 accounts that have made transfers, from accounts that have active delegations
 rule: ActionTransferDelegations "When transfer has occurred and the account has an active delegation,
 give it a share of the rewards pool, assuming it has not gone over max value and is above a min value" {
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `ephemeral_count` | [int64](#int64) |  |  |
-| `maximum` | [int64](#int64) |  |  |
 
 
 
@@ -6035,11 +6023,14 @@ RewardProgram
 | `id` | [uint64](#uint64) |  |  |
 | `distribute_from_address` | [string](#string) |  | community pool for now |
 | `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | maximum rewards amount per address |
 | `epoch_id` | [string](#string) |  | EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month) |
 | `start_epoch` | [uint64](#uint64) |  | start_epoch defines the epoch number at which the rewards program should begin at |
 | `number_epochs` | [uint64](#uint64) |  | number of epochs this program will last for |
 | `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
 | `expired` | [bool](#bool) |  | is the rewards program expired ( for efficient lookup) |
+| `minimum` | [uint64](#uint64) |  | minimum number of actions before shares are distributed |
+| `maximum` | [uint64](#uint64) |  | maximum number of actions before shares are no longer distributed |
 
 
 
@@ -6056,6 +6047,7 @@ RewardProgram
 | ----- | ---- | ----- | ----------- |
 | `reward_program_id` | [uint64](#uint64) |  | epoch id can be derived from reward program |
 | `total_shares` | [int64](#int64) |  | total shares accumulated( it is running total), can be negative |
+| `ephemeral_action_count` | [uint64](#uint64) |  | total number of times action has been taken by account |
 | `latest_recorded_epoch` | [uint64](#uint64) |  | last epoch number that this reward program was triggerred for. |
 | `claimed` | [bool](#bool) |  | whether rewards has been claimed |
 | `expired` | [bool](#bool) |  | rewards have been expired, this is defined in RewardProgram |

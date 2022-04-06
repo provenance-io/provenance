@@ -34,7 +34,6 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 			if err != nil {
 				return err
 			}
-
 			errorRecordsClaim := k.RecordRewardClaims(ctx, epochNumber, program, distribution, evaluateRes, actionTransferDelegations)
 			if errorRecordsClaim != nil {
 				return errorRecordsClaim
@@ -73,7 +72,7 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 	return nil
 }
 
-func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program types.RewardProgram, distribution types.EpochRewardDistribution, evaluateRes []EvaluationResult, actionTransferDelegations types.ActionTransferDelegations) error {
+func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program types.RewardProgram, distribution types.EpochRewardDistribution, evaluateRes []EvaluationResult, rewardAction types.RewardAction) error {
 	// get the address from the eval and check if it has delegation
 	// it's an array so should be deterministic
 	for _, res := range evaluateRes {
@@ -90,7 +89,10 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 			var mutatedSharesPerEpochRewards []types.SharesPerEpochPerRewardsProgram
 			// set a new claim or add to a claim
 			for _, rewardClaimForAddress := range claim.SharesPerEpochPerReward {
-				if rewardClaimForAddress.RewardProgramId == program.Id && rewardClaimForAddress.TotalShares < actionTransferDelegations.Maximum {
+				if rewardClaimForAddress.RewardProgramId == program.Id && rewardClaimForAddress.EphemeralActionCount < program.Minimum {
+					rewardClaimForAddress.EphemeralActionCount = rewardClaimForAddress.EphemeralActionCount + 1
+				} else if rewardClaimForAddress.RewardProgramId == program.Id && rewardClaimForAddress.EphemeralActionCount < program.Maximum {
+					rewardClaimForAddress.EphemeralActionCount = rewardClaimForAddress.EphemeralActionCount + 1
 					rewardClaimForAddress.TotalShares = rewardClaimForAddress.TotalShares + 1
 					rewardClaimForAddress.LatestRecordedEpoch = epochNumber
 					mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, rewardClaimForAddress)
@@ -151,7 +153,6 @@ func (k Keeper) EvaluateDelegation(ctx sdk.Context) ([]EvaluationResult, error) 
 	evaluateRes, err := k.EvaluateSearchEvents(ctx, "staking", "sender")
 	return evaluateRes, err
 }
-
 
 func (k Keeper) EvaluateSearchEvents(ctx sdk.Context, eventTypeToSearch string, attributeKey string) ([]EvaluationResult, error) {
 	result := ([]EvaluationResult)(nil)
