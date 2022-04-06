@@ -59,3 +59,20 @@ func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
 
 	s.Assert().Panics(func() { s.app.RewardKeeper.InitGenesis(s.ctx, &rewardData) })
 }
+
+// create a test that creates a reward program for an epoch
+// make a transfer, with delegation
+func (s *KeeperTestSuite) TestCreateRewardClaim() {
+	action := types.NewActionDelegate()
+	coin := sdk.NewInt64Coin("hotdog", 100)
+	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, "day", 1, 10, types.NewEligibilityCriteria("criteria", &action))
+	s.app.RewardKeeper.SetRewardProgram(s.ctx,rewardProgram)
+	rewardProgramGet,err := s.app.RewardKeeper.GetRewardProgram(s.ctx,1)
+	s.Assert().NoError(err)
+
+	s.Assert().Equal(rewardProgram.Coin,rewardProgramGet.Coin)
+	s.Assert().Equal(rewardProgram.Coin,rewardProgramGet.Coin)
+	s.Assert().Equal(rewardProgram.StartEpoch,rewardProgramGet.StartEpoch)
+	s.Assert().Equal(rewardProgram.Id,rewardProgramGet.Id)
+	s.Assert().Equal(rewardProgram.EligibilityCriteria.Action.TypeUrl,rewardProgramGet.EligibilityCriteria.Action.TypeUrl)
+}
