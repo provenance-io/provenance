@@ -23,9 +23,9 @@ func DefaultGenesis() *GenesisState {
 			EpochCountingStarted:    false,
 		},
 		{
-			Identifier:              "minute",
+			Identifier:              "day",
 			StartHeight:             0,
-			Duration:                uint64((60) / 5),
+			Duration:                uint64((24 * 60 * 60) / 5),
 			CurrentEpoch:            0,
 			CurrentEpochStartHeight: 0,
 			EpochCountingStarted:    false,
