@@ -133,21 +133,14 @@ func NewEligibilityCriteria(name string, action RewardAction) EligibilityCriteri
 }
 
 func (ec *EligibilityCriteria) SetAction(rewardAction RewardAction) error {
-	if rewardAction == nil {
-		ec.Action = nil
-		return nil
-	}
 	any, err := codectypes.NewAnyWithValue(rewardAction)
 	if err == nil {
-		ec.Action = any
+		ec.Action = *any
 	}
 	return err
 }
 
 func (ec *EligibilityCriteria) GetAction() RewardAction {
-	if ec.Action == nil {
-		return nil
-	}
 	content, ok := ec.Action.GetCachedValue().(RewardAction)
 	if !ok {
 		return nil
@@ -159,13 +152,6 @@ func (ec *EligibilityCriteria) ValidateBasic() error {
 	if len(ec.Name) < 1 {
 		return errors.New("eligibility criteria must have a name")
 	}
-	if ec.Action == nil {
-		return errors.New("eligibility criteria must have an action")
-	}
-	//_, ok := ec.Action.GetCachedValue().(RewardAction)
-	//if !ok {
-	//	return errors.New("eligibility criteria action must implement RewardAction interface")
-	//}
 	return nil
 }
 

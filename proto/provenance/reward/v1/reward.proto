@@ -93,5 +93,5 @@ message EligibilityCriteria {
   option (gogoproto.goproto_getters)  = false;
 
   string              name   = 1;
-  google.protobuf.Any action = 2;
+  google.protobuf.Any action = 2 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"action\""];
 }
