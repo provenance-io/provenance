@@ -13,10 +13,7 @@ a named smart contract on the blockchain.
 ## Contents
 
 1. **[State](01_state.md)**
-1. **[State_transitions](02_state_transitions.md)**
-1. **[Messages](03_messages.md)**
-1. **[Hooks](06_hooks.md)**
-1. **[Events](07_events.md)**
-1. **[Telemetry](08_telemetry.md)**
-1. **[Params](09_params.md)**
-1. **[Governance](10_governance.md)**
+1. **[Messages](02_messages.md)**
+1. **[Events](03_events.md)**
+1. **[Telemetry](04_telemetry.md)**
+1. **[Params](05_params.md)**
