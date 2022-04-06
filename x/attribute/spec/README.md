@@ -3,11 +3,12 @@
 ## Abstract
 
 The purpose of the Attributes Module is to act as a registry that allows an Address to store <Name, Value> pairs.
-Every Name must be registered by the Name Service, and an Address can have duplicate Names/Keys. Values are required
-to have a type, and they can be set or retrieved with a Name.
+Every Name must be registered by the Name Service, and an Address can have duplicate Names. Values are required
+to have a type, and they can be set or retrieved by Name.
 
-This feature provides the blockchain with the capability to store and retrieve values by name. It plays a major
-part in the creation of smart contracts. An Address can create and store a named contract on the blockchain.
+This feature provides the blockchain with the capability to store and retrieve values by Name. It plays a major
+part in some of our components such as smart contract creation process. It allows an Address to create and store 
+a named smart contract on the blockchain.
 
 ## Contents
 
