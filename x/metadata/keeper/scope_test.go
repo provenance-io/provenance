@@ -3,8 +3,12 @@ package keeper_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	simapp "github.com/provenance-io/provenance/app"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -15,11 +19,8 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 )
 
 type ScopeKeeperTestSuite struct {
@@ -183,6 +184,14 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 	scopeID := types.ScopeMetadataAddress(uuid.New())
 	scopeID2 := types.ScopeMetadataAddress(uuid.New())
 
+	// Give user 3 authority to sign for user 1 for scope updates.
+	now := s.ctx.BlockHeader().Time
+	s.Require().NotNil(now)
+	granter := s.user1Addr
+	grantee := s.user3Addr
+	a := authz.NewGenericAuthorization(types.TypeURLMsgWriteScopeRequest)
+	s.Require().NoError(s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour)), "authz SaveGrant user1 to user3")
+
 	cases := []struct {
 		name     string
 		existing types.Scope
@@ -323,11 +332,60 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 			signers:  []string{s.user1},
 			errorMsg: fmt.Sprintf("scope specification %s not found", types.ScopeSpecMetadataAddress(s.scopeUUID)),
 		},
+		{
+			name:     "adding data access with authz grant should be successful",
+			existing: types.Scope{scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1},
+			proposed: types.Scope{scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user2}, s.user1},
+			signers:  []string{s.user3}, // user 1 has granted scope-write to user 3
+			errorMsg: "",
+		},
+		{
+			name:     "multi owner adding data access with authz grant should be successful",
+			existing: types.Scope{scopeID, scopeSpecID, ownerPartyList(s.user1, s.user2), []string{}, s.user1},
+			proposed: types.Scope{scopeID, scopeSpecID, ownerPartyList(s.user1, s.user2), []string{s.user2}, s.user1},
+			signers:  []string{s.user2, s.user3}, // user 1 has granted scope-write to user 3
+			errorMsg: "",
+		},
+		{
+			name:     "changing value owner with authz grant should be successful",
+			existing: types.Scope{scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1},
+			proposed: types.Scope{scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2},
+			signers:  []string{s.user3}, // user 1 has granted scope-write to user 3
+			errorMsg: "",
+		},
+		{
+			name:     "changing value owner by authz granter should be successful",
+			existing: types.Scope{scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1},
+			proposed: types.Scope{scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2},
+			signers:  []string{s.user1},
+			errorMsg: "",
+		},
+		{
+			name:     "changing value owner by non-authz grantee should fail",
+			existing: types.Scope{scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1},
+			proposed: types.Scope{scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2},
+			signers:  []string{s.user2},
+			errorMsg: fmt.Sprintf("missing signature from existing value owner %s", s.user1),
+		},
+		{
+			name:     "changing value owner from non-authz granter with different signer should fail",
+			existing: types.Scope{scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2},
+			proposed: types.Scope{scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1},
+			signers:  []string{s.user3},
+			errorMsg: fmt.Sprintf("missing signature from existing value owner %s", s.user2),
+		},
+		{
+			name:     "setting value owner from nothing to non-owner only signed by non-owner should fail",
+			existing: types.Scope{scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""},
+			proposed: types.Scope{scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2},
+			signers:  []string{s.user2},
+			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
+		},
 	}
 
 	for _, tc := range cases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			err = s.app.MetadataKeeper.ValidateScopeUpdate(s.ctx, tc.existing, tc.proposed, tc.signers, types.TypeMsgWriteScopeRequest)
+			err = s.app.MetadataKeeper.ValidateScopeUpdate(s.ctx, tc.existing, tc.proposed, tc.signers, types.TypeURLMsgWriteScopeRequest)
 			if len(tc.errorMsg) > 0 {
 				assert.EqualError(t, err, tc.errorMsg, "ValidateScopeUpdate expected error")
 			} else {
