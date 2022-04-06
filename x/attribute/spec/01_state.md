@@ -1,8 +1,6 @@
 # State
 The attribute module inserts all attributes into a basic state store.
 
-
-
 # Attribute KV-Store
 
 The attribute module takes in an attribute supplied by the user and generates a key for it. This key is generated
