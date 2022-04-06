@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,11 +21,6 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 	switch program.EligibilityCriteria.Action.TypeUrl {
 	case proto.MessageName(&types.ActionTransferDelegations{}):
 		{
-			actionTransferDelegations, ok := program.EligibilityCriteria.Action.GetCachedValue().(types.ActionTransferDelegations)
-			if !ok {
-				return errors.New("unable to convert Action to ActionTransferDelegations")
-			}
-
 			ctx.Logger().Info(fmt.Sprintf("The Action type is %s", proto.MessageName(&types.ActionTransferDelegations{})))
 			// check the event history
 			// for transfers event and make sure there is a sender
@@ -34,7 +28,7 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 			if err != nil {
 				return err
 			}
-			errorRecordsClaim := k.RecordRewardClaims(ctx, epochNumber, program, distribution, evaluateRes, actionTransferDelegations)
+			errorRecordsClaim := k.RecordRewardClaims(ctx, epochNumber, program, distribution, evaluateRes, program.EligibilityCriteria.GetAction())
 			if errorRecordsClaim != nil {
 				return errorRecordsClaim
 			}
@@ -45,12 +39,6 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 	case proto.MessageName(&types.ActionDelegate{}):
 		{
 			ctx.Logger().Info(fmt.Sprintf("The Action type is %s", proto.MessageName(&types.ActionDelegate{})))
-			actionDelegations, ok := program.EligibilityCriteria.Action.GetCachedValue().(types.ActionDelegate)
-			if !ok {
-				return errors.New("unable to convert Action to ActionTransferDelegations")
-			}
-
-			ctx.Logger().Info(fmt.Sprintf("The Action type is %s", proto.MessageName(&types.ActionDelegate{})))
 			// check the event history
 			// for transfers event and make sure there is a sender
 			evaluateRes, err := k.EvaluateDelegation(ctx)
@@ -58,7 +46,7 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 				return err
 			}
 
-			errorRecordsClaim := k.RecordRewardClaims(ctx, epochNumber, program, distribution, evaluateRes, actionDelegations)
+			errorRecordsClaim := k.RecordRewardClaims(ctx, epochNumber, program, distribution, evaluateRes, program.EligibilityCriteria.GetAction())
 			if errorRecordsClaim != nil {
 				return errorRecordsClaim
 			}
