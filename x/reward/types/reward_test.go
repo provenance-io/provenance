@@ -5,6 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type RewardTypesTestSuite struct {
@@ -22,14 +24,127 @@ func (s *RewardTypesTestSuite) SetupSuite() {
 func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 	tests := []struct {
 		name          string
-		rewardProgram *RewardProgram
+		rewardProgram RewardProgram
 		want          string
 	}{
-		// SpecificationId tests.
 		{
-			"invalid scope specification id - wrong address type",
-			&RewardProgram{},
-			"TODO",
+			"invalid - wrong distribute from address format",
+			NewRewardProgram(
+				1,
+				"invalid-address",
+				sdk.NewInt64Coin("jackthecat", 1),
+				sdk.NewInt64Coin("jackthecat", 2),
+				"day",
+				1,
+				1,
+				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+				false,
+				1,
+				2,
+			),
+			"invalid address for rewards program distribution from address: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			"invalid - epoch id is empty",
+			NewRewardProgram(
+				1,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				sdk.NewInt64Coin("jackthecat", 1),
+				sdk.NewInt64Coin("jackthecat", 2),
+				"",
+				1,
+				1,
+				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+				false,
+				1,
+				2,
+			),
+			"epoch id cannot be empty",
+		},
+		{
+			"invalid - validate basic on ec fail",
+			NewRewardProgram(
+				1,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				sdk.NewInt64Coin("jackthecat", 1),
+				sdk.NewInt64Coin("jackthecat", 2),
+				"day",
+				1,
+				1,
+				NewEligibilityCriteria("", &ActionDelegate{}),
+				false,
+				1,
+				2,
+			),
+			"eligibility criteria is not valid: eligibility criteria must have a name",
+		},
+		{
+			"invalid - coin amount must be positive",
+			NewRewardProgram(
+				1,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				sdk.NewInt64Coin("jackthecat", 0),
+				sdk.NewInt64Coin("jackthecat", 2),
+				"day",
+				1,
+				1,
+				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+				false,
+				1,
+				2,
+			),
+			"reward program requires coins: 0jackthecat",
+		},
+		{
+			"invalid - MaxRewardByAddress amount must be positive",
+			NewRewardProgram(
+				1,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				sdk.NewInt64Coin("jackthecat", 1),
+				sdk.NewInt64Coin("jackthecat", 0),
+				"day",
+				1,
+				1,
+				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+				false,
+				1,
+				2,
+			),
+			"reward program requires positive max reward by address: 0jackthecat",
+		},
+		{
+			"invalid - Maximum must be larger than 0",
+			NewRewardProgram(
+				1,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				sdk.NewInt64Coin("jackthecat", 1),
+				sdk.NewInt64Coin("jackthecat", 2),
+				"day",
+				1,
+				1,
+				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+				false,
+				1,
+				0,
+			),
+			"maximum must be larger than 0",
+		},
+		{
+			"invalid - maximum cannot be smaller than minimum",
+			NewRewardProgram(
+				1,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				sdk.NewInt64Coin("jackthecat", 1),
+				sdk.NewInt64Coin("jackthecat", 2),
+				"day",
+				1,
+				1,
+				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+				false,
+				100,
+				2,
+			),
+			"minimum (100) cannot be larger than the maximum (2)",
 		},
 	}
 
