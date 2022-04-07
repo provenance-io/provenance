@@ -40,11 +40,10 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // SetRewardProgram sets the reward program in the keeper
-func (k Keeper) SetRewardProgram(ctx sdk.Context, rewardProgram types.RewardProgram) error {
+func (k Keeper) SetRewardProgram(ctx sdk.Context, rewardProgram types.RewardProgram) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&rewardProgram)
 	store.Set(types.GetRewardProgramKey(int64(rewardProgram.Id)), bz)
-	return nil
 }
 
 // GetRewardProgram returns a RewardProgram by id
@@ -79,11 +78,10 @@ func (k Keeper) IterateRewardPrograms(ctx sdk.Context, handle func(rewardProgram
 }
 
 // SetRewardClaim sets the reward program in the keeper
-func (k Keeper) SetRewardClaim(ctx sdk.Context, rewardProgram types.RewardClaim) error {
+func (k Keeper) SetRewardClaim(ctx sdk.Context, rewardProgram types.RewardClaim) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&rewardProgram)
 	store.Set(types.GetRewardClaimsKey([]byte(rewardProgram.Address)), bz)
-	return nil
 }
 
 // GetRewardClaim returns a RewardClaim by id
@@ -118,11 +116,10 @@ func (k Keeper) IterateRewardClaims(ctx sdk.Context, handle func(rewardClaim typ
 }
 
 // SetEpochRewardDistribution sets the EpochRewardDistribution in the keeper
-func (k Keeper) SetEpochRewardDistribution(ctx sdk.Context, epochRewardDistribution types.EpochRewardDistribution) error {
+func (k Keeper) SetEpochRewardDistribution(ctx sdk.Context, epochRewardDistribution types.EpochRewardDistribution) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&epochRewardDistribution)
 	store.Set(types.GetEpochRewardDistributionKey(epochRewardDistribution.EpochId, fmt.Sprintf("%d", epochRewardDistribution.RewardProgramId)), bz)
-	return nil
 }
 
 // GetEpochRewardDistribution returns a EpochRewardDistribution by epoch id and reward id
@@ -157,11 +154,10 @@ func (k Keeper) IterateEpochRewardDistributions(ctx sdk.Context, handle func(epo
 }
 
 // SetEligibilityCriteria sets the reward epoch reward distribution in the keeper
-func (k Keeper) SetEligibilityCriteria(ctx sdk.Context, eligibilityCriteria types.EligibilityCriteria) error {
+func (k Keeper) SetEligibilityCriteria(ctx sdk.Context, eligibilityCriteria types.EligibilityCriteria) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&eligibilityCriteria)
 	store.Set(types.GetEligibilityCriteriaKey(eligibilityCriteria.Name), bz)
-	return nil
 }
 
 // GetEligibilityCriteria returns a reward eligibility criteria by name if it exists nil if it does not
@@ -196,11 +192,10 @@ func (k Keeper) IterateEligibilityCriterias(ctx sdk.Context, handle func(eligibi
 }
 
 // SetActionDelegate sets the reward epoch reward distribution in the keeper
-func (k Keeper) SetActionDelegate(ctx sdk.Context, actionDelegate types.ActionDelegate) error {
+func (k Keeper) SetActionDelegate(ctx sdk.Context, actionDelegate types.ActionDelegate) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&actionDelegate)
 	store.Set(types.GetActionDelegateKey(), bz)
-	return nil
 }
 
 // GetActionDelegate returns a action delegate
@@ -216,11 +211,10 @@ func (k Keeper) GetActionDelegate(ctx sdk.Context) (actionDelegate types.ActionD
 }
 
 // SetActionTransferDelegations sets the reward epoch reward distribution in the keeper
-func (k Keeper) SetActionTransferDelegations(ctx sdk.Context, actionTransferDelegations types.ActionTransferDelegations) error {
+func (k Keeper) SetActionTransferDelegations(ctx sdk.Context, actionTransferDelegations types.ActionTransferDelegations) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&actionTransferDelegations)
 	store.Set(types.GetActionTransferDelegationsKey(), bz)
-	return nil
 }
 
 // GetActionTransferDelegations returns a action transfer delegations

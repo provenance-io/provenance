@@ -102,10 +102,7 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 				})
 			}
 			claim.SharesPerEpochPerReward = mutatedSharesPerEpochRewards
-			err := k.SetRewardClaim(ctx, claim)
-			if err != nil {
-				return err
-			}
+			k.SetRewardClaim(ctx, claim)
 		} else {
 			//set a brand new claim
 			var mutatedSharesPerEpochRewards []types.SharesPerEpochPerRewardsProgram
