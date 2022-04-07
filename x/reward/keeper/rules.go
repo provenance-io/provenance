@@ -68,9 +68,12 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 		// we know the rewards it so update the epoch reward
 		distribution.TotalShares = distribution.TotalShares + res.shares
 		// add it to the claims
-		claim, found := k.GetRewardClaim(ctx, res.address.Bytes())
+		claim, err := k.GetRewardClaim(ctx, res.address.Bytes())
+		if err != nil {
+			return err
+		}
 
-		if found {
+		if claim.Address == "" {
 			found := false
 			var mutatedSharesPerEpochRewards []types.SharesPerEpochPerRewardsProgram
 			// set a new claim or add to a claim

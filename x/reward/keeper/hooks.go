@@ -24,10 +24,12 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 	// only rewards programs who are eligible will be iterated through here
 	for _, rewardProgram := range rewardPrograms {
-		epochRewardDistibutionForEpoch, found := k.GetEpochRewardDistribution(ctx, epochIdentifier, rewardProgram.Id)
-
+		epochRewardDistibutionForEpoch, err := k.GetEpochRewardDistribution(ctx, epochIdentifier, rewardProgram.Id)
+		if err != nil {
+			return err
+		}
 		// epoch reward distribution does it exist till the block has ended, highly unlikely but could happen
-		if !found {
+		if epochRewardDistibutionForEpoch.EpochId == "" {
 			epochRewardDistibutionForEpoch.EpochId = epochIdentifier
 			epochRewardDistibutionForEpoch.RewardProgramId = rewardProgram.Id
 			epochRewardDistibutionForEpoch.TotalShares = 0
