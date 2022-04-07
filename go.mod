@@ -36,7 +36,7 @@ require (
 	filippo.io/edwards25519 v1.0.0-beta.2 // indirect
 	github.com/99designs/keyring v1.1.6 // indirect
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
-	github.com/CosmWasm/wasmvm v1.0.0-beta5 // indirect
+	github.com/CosmWasm/wasmvm v1.0.0-beta7 // indirect
 	github.com/Workiva/go-datastructures v1.0.53 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
@@ -68,6 +68,7 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.0.0 // indirect
+	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
@@ -85,6 +86,7 @@ require (
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/keybase/go-keychain v0.0.0-20190712205309-48d3d31d256d // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/kr/pretty v0.3.0 // indirect
 	github.com/lib/pq v1.10.4 // indirect
 	github.com/libp2p/go-buffer-pool v0.0.2 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
@@ -102,6 +104,7 @@ require (
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 // indirect
+	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/rs/cors v1.8.0 // indirect
 	github.com/sasha-s/go-deadlock v0.2.1-0.20190427202633-1595213edefa // indirect
 	github.com/spf13/afero v1.6.0 // indirect
@@ -114,8 +117,8 @@ require (
 	github.com/zondax/hid v0.9.0 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	golang.org/x/crypto v0.0.0-20211215165025-cf75a172585e // indirect
-	golang.org/x/net v0.0.0-20211005001312-d4b1ae081e3b // indirect
-	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
+	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f // indirect
+	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
@@ -135,7 +138,9 @@ replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
-// Fixes chain panic.  Should be removed once cosmwasm has fixed their release
-// Dockerfile also needs a reference that will need removing
-// TODO Remove it: https://github.com/CosmWasm/cosmwasm/pull/1223
-replace github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.0.0-beta7
+// Introduces a way to build for aarch64 and includes a prebuilt shared library for it
+// NOTE Make sure to update wasmd's wasmvm depdency if this ever changes
+replace github.com/CosmWasm/wasmvm => github.com/provenance-io/wasmvm v1.0.1-betaprov
+
+// NOTE Uses our wasmvm dependency based off of beta7 tag
+replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.22.0-m1supportv3

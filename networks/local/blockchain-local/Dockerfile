@@ -14,6 +14,11 @@ COPY internal/ ./internal/
 COPY x/ ./x/
 COPY vendor/ ./vendor/
 
+# Replace the lib with aarch64 lib if required
+RUN if [ "$(uname -m)" = "aarch64" ]; then \
+        mv vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.aarch64.so vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.so; \
+    fi
+
 # Build the binaries
 RUN go build -mod vendor \
     -tags cleveldb \
@@ -36,7 +41,11 @@ WORKDIR /provenance
 EXPOSE 26656 26657 1317 9090
 
 # Source binaries from the build above
-COPY --from=build /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.so /lib/x86_64-linux-gnu/libwasmvm.so
+COPY --from=build /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.so /lib/libwasmvm.so
+
+# Move the lib into the correct lib arch folder
+RUN export arch=$(uname -m); mv /lib/libwasmvm.so /lib/$arch-linux-gnu/libwasmvm.so;
+
 COPY --from=build /go/bin/provenanced /usr/bin/provenanced
 
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
