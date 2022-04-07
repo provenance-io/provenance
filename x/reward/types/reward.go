@@ -113,12 +113,13 @@ func (rc *RewardClaim) String() string {
 	return string(out)
 }
 
-func NewEpochRewardDistribution(epochId string, rewardProgramId uint64, totalRewardsPool sdk.Coin, totalShares int64) EpochRewardDistribution {
+func NewEpochRewardDistribution(epochId string, rewardProgramId uint64, totalRewardsPool sdk.Coin, totalShares int64, epochEnded bool) EpochRewardDistribution {
 	return EpochRewardDistribution{
 		EpochId:          epochId,
 		RewardProgramId:  rewardProgramId,
 		TotalRewardsPool: totalRewardsPool,
 		TotalShares:      totalShares,
+		EpochEnded:       epochEnded,
 	}
 }
 
@@ -224,24 +225,24 @@ func (atd *ActionTransferDelegations) IsEligible() error {
 func NewSharesPerEpochPerRewardsProgram(
 	rewardProgramId uint64,
 	totalShares int64,
-	epochId string,
+	ephemeralActionCount uint64,
 	latestRecordedEpoch uint64,
 	claimed bool,
-	expirationHeight uint64,
 	expired bool,
 	totalRewardsClaimed sdk.Coin,
 ) SharesPerEpochPerRewardsProgram {
 	return SharesPerEpochPerRewardsProgram{
-		RewardProgramId:     rewardProgramId,
-		TotalShares:         totalShares,
-		LatestRecordedEpoch: latestRecordedEpoch,
-		Claimed:             claimed,
-		Expired:             expired,
-		TotalRewardClaimed:  totalRewardsClaimed,
+		RewardProgramId:      rewardProgramId,
+		TotalShares:          totalShares,
+		EphemeralActionCount: ephemeralActionCount,
+		LatestRecordedEpoch:  latestRecordedEpoch,
+		Claimed:              claimed,
+		Expired:              expired,
+		TotalRewardClaimed:   totalRewardsClaimed,
 	}
 }
 
-func (apeprp *SharesPerEpochPerRewardsProgram) ValidateBasice() error {
+func (apeprp *SharesPerEpochPerRewardsProgram) ValidateBasic() error {
 	if apeprp.RewardProgramId < 1 {
 		return errors.New("shares per epoch must have a valid reward program id")
 	}

@@ -26,10 +26,14 @@ func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddRewar
 	rewardProgram := types.NewRewardProgram(proposal.RewardProgramId,
 		proposal.DistributeFromAddress,
 		proposal.Coin,
+		proposal.Coin,
 		proposal.EpochId,
 		startEpoch,
 		proposal.NumberEpochs,
 		*proposal.EligibilityCriteria,
+		false,
+		1,
+		2,
 	)
 	k.SetRewardProgram(ctx, rewardProgram)
 

@@ -180,9 +180,9 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 
 func (s *RewardTypesTestSuite) TestRewardClaimValidateBasic() {
 	tests := []struct {
-		name          string
-		rewardProgram RewardClaim
-		want          string
+		name        string
+		rewardClaim RewardClaim
+		want        string
 	}{
 		{
 			"invalid -  address format",
@@ -199,11 +199,143 @@ func (s *RewardTypesTestSuite) TestRewardClaimValidateBasic() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
+			err := tt.rewardClaim.ValidateBasic()
+			if err != nil {
+				assert.Equal(t, tt.want, err.Error())
+			} else if len(tt.want) > 0 {
+				t.Errorf("RewardClaim ValidateBasic error = nil, expected: %s", tt.want)
+			}
+		})
+	}
+}
+
+func (s *RewardTypesTestSuite) TestEpochRewardDistributionValidateBasic() {
+	tests := []struct {
+		name          string
+		rewardProgram EpochRewardDistribution
+		want          string
+	}{
+		{
+			"invalid -  address format",
+			NewEpochRewardDistribution("", 1, sdk.NewInt64Coin("jackthecat", 100), 0, false),
+			"epoch reward distribution must have a epoch id",
+		},
+		{
+			"invalid - reward program id",
+			NewEpochRewardDistribution("day", 0, sdk.NewInt64Coin("jackthecat", 100), 0, false),
+			"epoch reward distribution must have a valid reward program id",
+		},
+		{
+			"invalid - total rewards needs to be positive",
+			NewEpochRewardDistribution("day", 1, sdk.NewInt64Coin("jackthecat", 0), 0, false),
+			"epoch reward distribution must have a reward pool",
+		},
+		{
+			"should succeed validate basic",
+			NewEpochRewardDistribution("day", 1, sdk.NewInt64Coin("jackthecat", 1), 0, false),
+			"",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
 			err := tt.rewardProgram.ValidateBasic()
 			if err != nil {
 				assert.Equal(t, tt.want, err.Error())
 			} else if len(tt.want) > 0 {
-				t.Errorf("RewardProgram ValidateBasic error = nil, expected: %s", tt.want)
+				t.Errorf("EpochRewardDistribution ValidateBasic error = nil, expected: %s", tt.want)
+			}
+		})
+	}
+}
+
+func (s *RewardTypesTestSuite) TestEligibilityCriteriaValidateBasic() {
+	tests := []struct {
+		name string
+		ec   EligibilityCriteria
+		want string
+	}{
+		{
+			"invalid -  empty name",
+			NewEligibilityCriteria("", &ActionDelegate{}),
+			"eligibility criteria must have a name",
+		},
+		{
+			"should succeed validate basic",
+			NewEligibilityCriteria("name", &ActionDelegate{}),
+			"",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			err := tt.ec.ValidateBasic()
+			if err != nil {
+				assert.Equal(t, tt.want, err.Error())
+			} else if len(tt.want) > 0 {
+				t.Errorf("EligibilityCriteria ValidateBasic error = nil, expected: %s", tt.want)
+			}
+		})
+	}
+}
+
+func (s *RewardTypesTestSuite) TestSharesPerEpochPerRewardsProgramValidateBasic() {
+	tests := []struct {
+		name                            string
+		sharesPerEpochPerRewardsProgram SharesPerEpochPerRewardsProgram
+		want                            string
+	}{
+		{
+			"invalid -  rewards program id incorrect",
+			NewSharesPerEpochPerRewardsProgram(
+				0,
+				0,
+				0,
+				1,
+				false,
+				false,
+				sdk.NewInt64Coin("jackthecat", 1),
+			),
+			"shares per epoch must have a valid reward program id",
+		},
+		{
+			"invalid -  last recorded epoch incorrect",
+			NewSharesPerEpochPerRewardsProgram(
+				1,
+				0,
+				0,
+				0,
+				false,
+				false,
+				sdk.NewInt64Coin("jackthecat", 1),
+			),
+			"latest recorded epoch cannot be less than 1",
+		},
+		{
+			"should succeed validate basic",
+			NewSharesPerEpochPerRewardsProgram(
+				1,
+				0,
+				0,
+				1,
+				false,
+				false,
+				sdk.NewInt64Coin("jackthecat", 1),
+			),
+			"",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			err := tt.sharesPerEpochPerRewardsProgram.ValidateBasic()
+			if err != nil {
+				assert.Equal(t, tt.want, err.Error())
+			} else if len(tt.want) > 0 {
+				t.Errorf("SharesPerEpochPerRewardsProgram ValidateBasic error = nil, expected: %s", tt.want)
 			}
 		})
 	}
