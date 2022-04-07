@@ -60,7 +60,7 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 	return nil
 }
 
-func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program types.RewardProgram, distribution types.EpochRewardDistribution, evaluateRes []EvaluationResult, ) error {
+func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program types.RewardProgram, distribution types.EpochRewardDistribution, evaluateRes []EvaluationResult) error {
 	// get the address from the eval and check if it has delegation
 	// it's an array so should be deterministic
 	for _, res := range evaluateRes {
@@ -68,11 +68,9 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 		// we know the rewards it so update the epoch reward
 		distribution.TotalShares = distribution.TotalShares + res.shares
 		// add it to the claims
-		claim, errFromRewardClaims := k.GetRewardClaim(ctx, res.address.Bytes())
-		if errFromRewardClaims != nil {
-			return errFromRewardClaims
-		}
-		if claim != nil {
+		claim, found := k.GetRewardClaim(ctx, res.address.Bytes())
+
+		if found {
 			found := false
 			var mutatedSharesPerEpochRewards []types.SharesPerEpochPerRewardsProgram
 			// set a new claim or add to a claim
@@ -104,7 +102,7 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 				})
 			}
 			claim.SharesPerEpochPerReward = mutatedSharesPerEpochRewards
-			err := k.SetRewardClaim(ctx, *claim)
+			err := k.SetRewardClaim(ctx, claim)
 			if err != nil {
 				return err
 			}

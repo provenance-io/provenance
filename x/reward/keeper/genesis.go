@@ -44,23 +44,17 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
-	actionDelegate, err := k.GetActionDelegate(ctx)
-	if err != nil {
-		panic(err)
-	}
+	actionDelegate, _ := k.GetActionDelegate(ctx)
 
-	actionTransferDelegations, err := k.GetActionTransferDelegations(ctx)
-	if err != nil {
-		panic(err)
-	}
+	actionTransferDelegations, _ := k.GetActionTransferDelegations(ctx)
 
 	return types.NewGenesisState(
 		rewardPrograms,
 		rewardClaims,
 		epochRewardDistributions,
 		eligibilityCriterias,
-		*actionDelegate,
-		*actionTransferDelegations,
+		actionDelegate,
+		actionTransferDelegations,
 	)
 }
 

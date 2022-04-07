@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -13,9 +14,9 @@ import (
 const StoreKey = types.ModuleName
 
 type Keeper struct {
-	storeKey    sdk.StoreKey
-	cdc         codec.BinaryCodec
-	EpochKeeper epochkeeper.Keeper
+	storeKey      sdk.StoreKey
+	cdc           codec.BinaryCodec
+	EpochKeeper   epochkeeper.Keeper
 	stakingKeeper types.StakingKeeper
 }
 
@@ -26,9 +27,9 @@ func NewKeeper(
 	stakingKeeper types.StakingKeeper,
 ) Keeper {
 	return Keeper{
-		storeKey:    key,
-		cdc:         cdc,
-		EpochKeeper: epochKeeper,
+		storeKey:      key,
+		cdc:           cdc,
+		EpochKeeper:   epochKeeper,
 		stakingKeeper: stakingKeeper,
 	}
 }
@@ -46,21 +47,17 @@ func (k Keeper) SetRewardProgram(ctx sdk.Context, rewardProgram types.RewardProg
 	return nil
 }
 
-// GetRewardProgram returns a RewardProgram by id if it exists nil if it does not
-func (k Keeper) GetRewardProgram(ctx sdk.Context, id int64) (*types.RewardProgram, error) {
+// GetRewardProgram returns a RewardProgram by id
+func (k Keeper) GetRewardProgram(ctx sdk.Context, id int64) (rewardProgram types.RewardProgram, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRewardProgramKey(id)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return nil, nil
+		return rewardProgram, false
 	}
+	k.cdc.MustUnmarshal(bz, &rewardProgram)
 
-	var rewardProgram types.RewardProgram
-	if err := k.cdc.Unmarshal(bz, &rewardProgram); err != nil {
-		return nil, err
-	}
-
-	return &rewardProgram, nil
+	return rewardProgram, true
 }
 
 // IterateRewardPrograms iterates all reward programs with the given handler function.
@@ -89,21 +86,17 @@ func (k Keeper) SetRewardClaim(ctx sdk.Context, rewardProgram types.RewardClaim)
 	return nil
 }
 
-// GetRewardClaim returns a RewardClaim by id if it exists nil if it does not
-func (k Keeper) GetRewardClaim(ctx sdk.Context, addr []byte) (*types.RewardClaim, error) {
+// GetRewardClaim returns a RewardClaim by id
+func (k Keeper) GetRewardClaim(ctx sdk.Context, addr []byte) (rewardClaim types.RewardClaim, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRewardClaimsKey(addr)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return nil, nil
+		return types.RewardClaim{}, false
 	}
+	k.cdc.MustUnmarshal(bz, &rewardClaim)
 
-	var rewardClaim types.RewardClaim
-	if err := k.cdc.Unmarshal(bz, &rewardClaim); err != nil {
-		return nil, err
-	}
-
-	return &rewardClaim, nil
+	return rewardClaim, true
 }
 
 // IterateRewardClaims  iterates all reward claims with the given handler function.
@@ -132,21 +125,17 @@ func (k Keeper) SetEpochRewardDistribution(ctx sdk.Context, epochRewardDistribut
 	return nil
 }
 
-// GetEpochRewardDistribution returns a EpochRewardDistribution by id if it exists nil if it does not
-func (k Keeper) GetEpochRewardDistribution(ctx sdk.Context, epochId string, rewardId uint64) (*types.EpochRewardDistribution, error) {
+// GetEpochRewardDistribution returns a EpochRewardDistribution by epoch id and reward id
+func (k Keeper) GetEpochRewardDistribution(ctx sdk.Context, epochId string, rewardId uint64) (epochRewardDistribution types.EpochRewardDistribution, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetEpochRewardDistributionKey(epochId, fmt.Sprintf("%d", rewardId))
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return nil, nil
+		return epochRewardDistribution, false
 	}
+	k.cdc.MustUnmarshal(bz, &epochRewardDistribution)
 
-	var epochRewardDistribution types.EpochRewardDistribution
-	if err := k.cdc.Unmarshal(bz, &epochRewardDistribution); err != nil {
-		return nil, err
-	}
-
-	return &epochRewardDistribution, nil
+	return epochRewardDistribution, true
 }
 
 // IterateEpochRewardDistributions  iterates all epoch reward distributions with the given handler function.
@@ -176,20 +165,16 @@ func (k Keeper) SetEligibilityCriteria(ctx sdk.Context, eligibilityCriteria type
 }
 
 // GetEligibilityCriteria returns a reward eligibility criteria by name if it exists nil if it does not
-func (k Keeper) GetEligibilityCriteria(ctx sdk.Context, name string) (*types.EligibilityCriteria, error) {
+func (k Keeper) GetEligibilityCriteria(ctx sdk.Context, name string) (eligibilityCriteria types.EligibilityCriteria, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetEligibilityCriteriaKey(name)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return nil, nil
+		return types.EligibilityCriteria{}, false
 	}
+	k.cdc.MustUnmarshal(bz, &eligibilityCriteria)
 
-	var eligibilityCriteria types.EligibilityCriteria
-	if err := k.cdc.Unmarshal(bz, &eligibilityCriteria); err != nil {
-		return nil, err
-	}
-
-	return &eligibilityCriteria, nil
+	return eligibilityCriteria, true
 }
 
 // IterateEligibilityCriterias  iterates all reward eligibility criterions with the given handler function.
@@ -218,20 +203,16 @@ func (k Keeper) SetActionDelegate(ctx sdk.Context, actionDelegate types.ActionDe
 	return nil
 }
 
-// GetActionDelegate returns a reward eligibility criteria by name if it exists nil if it does not
-func (k Keeper) GetActionDelegate(ctx sdk.Context) (*types.ActionDelegate, error) {
+// GetActionDelegate returns a action delegate
+func (k Keeper) GetActionDelegate(ctx sdk.Context) (actionDelegate types.ActionDelegate, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetActionDelegateKey())
 	if len(bz) == 0 {
-		return nil, nil
+		return actionDelegate, false
 	}
+	k.cdc.MustUnmarshal(bz, &actionDelegate)
 
-	var actionDelegate types.ActionDelegate
-	if err := k.cdc.Unmarshal(bz, &actionDelegate); err != nil {
-		return nil, err
-	}
-
-	return &actionDelegate, nil
+	return actionDelegate, true
 }
 
 // SetActionTransferDelegations sets the reward epoch reward distribution in the keeper
@@ -242,18 +223,14 @@ func (k Keeper) SetActionTransferDelegations(ctx sdk.Context, actionTransferDele
 	return nil
 }
 
-// GetEligibilityCriteria returns a reward eligibility criteria by name if it exists nil if it does not
-func (k Keeper) GetActionTransferDelegations(ctx sdk.Context) (*types.ActionTransferDelegations, error) {
+// GetActionTransferDelegations returns a action transfer delegations
+func (k Keeper) GetActionTransferDelegations(ctx sdk.Context) (actionTransferDelegations types.ActionTransferDelegations, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetActionTransferDelegationsKey())
 	if len(bz) == 0 {
-		return nil, nil
+		return actionTransferDelegations, false
 	}
+	k.cdc.MustUnmarshal(bz, &actionTransferDelegations)
 
-	var actionTransferDelegations types.ActionTransferDelegations
-	if err := k.cdc.Unmarshal(bz, &actionTransferDelegations); err != nil {
-		return nil, err
-	}
-
-	return &actionTransferDelegations, nil
+	return actionTransferDelegations, true
 }

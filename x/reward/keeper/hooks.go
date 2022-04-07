@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,22 +24,20 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 	// only rewards programs who are eligible will be iterated through here
 	for _, rewardProgram := range rewardPrograms {
-		epochRewardDistibutionForEpoch, err := k.GetEpochRewardDistribution(ctx, epochIdentifier, rewardProgram.Id)
-		if err != nil {
-			return err
-		}
+		epochRewardDistibutionForEpoch, found := k.GetEpochRewardDistribution(ctx, epochIdentifier, rewardProgram.Id)
+
 		// epoch reward distribution does it exist till the block has ended, highly unlikely but could happen
-		if epochRewardDistibutionForEpoch.EpochId == "" {
+		if !found {
 			epochRewardDistibutionForEpoch.EpochId = epochIdentifier
 			epochRewardDistibutionForEpoch.RewardProgramId = rewardProgram.Id
 			epochRewardDistibutionForEpoch.TotalShares = 0
 			epochRewardDistibutionForEpoch.EpochEnded = true
-			k.EvaluateRules(ctx, epochNumber, rewardProgram, *epochRewardDistibutionForEpoch)
+			k.EvaluateRules(ctx, epochNumber, rewardProgram, epochRewardDistibutionForEpoch)
 			// TODO if shares are still 0 for epochRewardDistibutionForEpoch.TotalShares return all the rewards?
 		} else {
 			// end the epoch
 			epochRewardDistibutionForEpoch.EpochEnded = true
-			k.EvaluateRules(ctx, epochNumber, rewardProgram, *epochRewardDistibutionForEpoch)
+			k.EvaluateRules(ctx, epochNumber, rewardProgram, epochRewardDistibutionForEpoch)
 		}
 	}
 
@@ -80,7 +79,7 @@ func (k Keeper) GetAllActiveRewards(ctx sdk.Context) ([]types.RewardProgram, err
 		// 1,2 .. 1+4 > 2
 		// 1,3 .. 1+4 > 3
 		// 1,4 .. 1+4 > 4
-		currentEpoch := k.EpochKeeper.GetEpochInfo(ctx,rewardProgram.EpochId)
+		currentEpoch := k.EpochKeeper.GetEpochInfo(ctx, rewardProgram.EpochId)
 		if rewardProgram.StartEpoch+rewardProgram.NumberEpochs > currentEpoch.CurrentEpoch {
 			rewardPrograms = append(rewardPrograms, rewardProgram)
 		}
@@ -93,7 +92,7 @@ func (k Keeper) GetAllActiveRewards(ctx sdk.Context) ([]types.RewardProgram, err
 }
 
 func (k Keeper) CheckActiveDelegations(ctx sdk.Context, address sdk.AccAddress) []stakingtypes.Delegation {
-	return k.stakingKeeper.GetAllDelegatorDelegations(ctx,address)
+	return k.stakingKeeper.GetAllDelegatorDelegations(ctx, address)
 }
 
 // ___________________________________________________________________________________________________
