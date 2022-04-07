@@ -146,6 +146,54 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 			),
 			"minimum (100) cannot be larger than the maximum (2)",
 		},
+		{
+			"valid",
+			NewRewardProgram(
+				1,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				sdk.NewInt64Coin("jackthecat", 1),
+				sdk.NewInt64Coin("jackthecat", 2),
+				"day",
+				1,
+				1,
+				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+				false,
+				1,
+				2,
+			),
+			"",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			err := tt.rewardProgram.ValidateBasic()
+			if err != nil {
+				assert.Equal(t, tt.want, err.Error())
+			} else if len(tt.want) > 0 {
+				t.Errorf("RewardProgram ValidateBasic error = nil, expected: %s", tt.want)
+			}
+		})
+	}
+}
+
+func (s *RewardTypesTestSuite) TestRewardClaimValidateBasic() {
+	tests := []struct {
+		name          string
+		rewardProgram RewardClaim
+		want          string
+	}{
+		{
+			"invalid -  address format",
+			NewRewardClaim("invalid", []SharesPerEpochPerRewardsProgram{}),
+			"invalid address for reward claim address: decoding bech32 failed: invalid bech32 string length 7",
+		},
+		{
+			"should succeed validate basic",
+			NewRewardClaim("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", []SharesPerEpochPerRewardsProgram{}),
+			"",
+		},
 	}
 
 	for _, tt := range tests {
