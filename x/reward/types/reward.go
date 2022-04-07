@@ -53,7 +53,7 @@ func NewRewardProgram(
 		EpochId:               epochId,
 		StartEpoch:            startEpoch,
 		NumberEpochs:          numberEpochs,
-		EligibilityCriteria:   &eligibilityCriteria,
+		EligibilityCriteria:   eligibilityCriteria,
 		Expired:               expired,
 		Minimum:               minimum,
 		Maximum:               maximum,
@@ -66,9 +66,6 @@ func (rp *RewardProgram) ValidateBasic() error {
 	}
 	if len(rp.EpochId) == 0 {
 		return errors.New("epoch id cannot be empty")
-	}
-	if rp.EligibilityCriteria == nil {
-		return errors.New("eligibility criteria info cannot be null for rewards program")
 	}
 	if err := rp.EligibilityCriteria.ValidateBasic(); err != nil {
 		return fmt.Errorf("eligibility criteria is not valid: %w", err)

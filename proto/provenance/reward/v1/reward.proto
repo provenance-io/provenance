@@ -23,10 +23,12 @@ message RewardProgram {
   string epoch_id      = 5; // EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month)
   uint64 start_epoch   = 6; // start_epoch defines the epoch number at which the rewards program should begin at
   uint64 number_epochs = 7; // number of epochs this program will last for
-  EligibilityCriteria eligibility_criteria = 8;
-  bool                expired              = 9;  // is the rewards program expired ( for efficient lookup)
-  uint64              minimum              = 10; // minimum number of actions before shares are distributed
-  uint64              maximum              = 11; // maximum number of actions before shares are no longer distributed
+  EligibilityCriteria eligibility_criteria = 8
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"eligibility_criteria\""];
+  ;
+  bool   expired = 9;  // is the rewards program expired ( for efficient lookup)
+  uint64 minimum = 10; // minimum number of actions before shares are distributed
+  uint64 maximum = 11; // maximum number of actions before shares are no longer distributed
 }
 // EpochRewardDistribution, this will updated at the end of every epoch
 message EpochRewardDistribution {
