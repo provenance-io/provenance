@@ -25,6 +25,8 @@ const (
 	FlagEpochOffset         = "epoch-offset"
 	FlagNumEpochs           = "num-epochs"
 	FlagEligibilityCriteria = "eligibility-criteria"
+	FlagMinimum             = "minimum"
+	FlagMaximum             = "maximum"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -88,6 +90,14 @@ func GetCmdRewardProgramProposal() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			minimum, err := cmd.Flags().GetUint64(FlagMinimum)
+			if err != nil {
+				return err
+			}
+			maximum, err := cmd.Flags().GetUint64(FlagMaximum)
+			if err != nil {
+				return err
+			}
 			eligibilityCriteriaStr, err := cmd.Flags().GetString(FlagEligibilityCriteria)
 			if err != nil {
 				return err
@@ -108,6 +118,8 @@ func GetCmdRewardProgramProposal() *cobra.Command {
 					epochOffset,
 					numEpochs,
 					eligibilityCriteria,
+					minimum,
+					maximum,
 				)
 			default:
 				return fmt.Errorf("unknown proposal type %s", args[0])

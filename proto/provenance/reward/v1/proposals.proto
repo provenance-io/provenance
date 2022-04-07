@@ -26,5 +26,8 @@ message AddRewardProgramProposal {
   uint64 epoch_start_offset =
       7; // epoch_start_soffset defines the offset of the block height to start epoch after proposal passes
   uint64              number_epochs        = 8; // number of epochs this program will last for
-  EligibilityCriteria eligibility_criteria = 9;
+  EligibilityCriteria eligibility_criteria = 9
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"eligibility_criteria\""];
+  uint64 minimum = 10;
+  uint64 maximum = 11;
 }

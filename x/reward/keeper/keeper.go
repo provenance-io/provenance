@@ -55,7 +55,7 @@ func (k Keeper) GetRewardProgram(ctx sdk.Context, id int64) (rewardProgram types
 		return rewardProgram, nil
 	}
 	err = k.cdc.Unmarshal(bz, &rewardProgram)
-	return rewardProgram, nil
+	return rewardProgram, err
 }
 
 // IterateRewardPrograms iterates all reward programs with the given handler function.

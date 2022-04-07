@@ -67,7 +67,6 @@ func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
 // create a test that creates a reward program for an epoch
 // make a transfer, with delegation
 func (s *KeeperTestSuite) TestCreateRewardClaim() {
-	epoch.BeginBlocker(s.ctx, s.app.EpochKeeper)
 	action := types.NewActionDelegate()
 	coin := sdk.NewInt64Coin("hotdog", 10000)
 	maxCoin := sdk.NewInt64Coin("hotdog", 100)

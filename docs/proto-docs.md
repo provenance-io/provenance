@@ -6127,6 +6127,8 @@ AddRewardProgramProposal defines a governance proposal to add a rewards program
 | `epoch_start_offset` | [uint64](#uint64) |  | epoch_start_soffset defines the offset of the block height to start epoch after proposal passes |
 | `number_epochs` | [uint64](#uint64) |  | number of epochs this program will last for |
 | `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
+| `minimum` | [uint64](#uint64) |  |  |
+| `maximum` | [uint64](#uint64) |  |  |
 
 
 
