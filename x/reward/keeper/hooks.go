@@ -68,31 +68,6 @@ func (k Keeper) GetAllActiveRewardsForEpoch(ctx sdk.Context, epochIdentifier str
 	return rewardPrograms, nil
 }
 
-func (k Keeper) GetAllActiveRewards(ctx sdk.Context) ([]types.RewardProgram, error) {
-	var rewardPrograms []types.RewardProgram
-	//var epochCache map[string]epochtypes.EpochInfo
-
-	// get all the rewards programs
-	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
-		// this is epoch that ended, and matches up with the reward program identifier
-		// check if any of the events match with any of the reward program running
-		// e.g start epoch,current epoch .. start epoch + number of epochs program runs for > current epoch
-		// 1,1 .. 1+4 > 1
-		// 1,2 .. 1+4 > 2
-		// 1,3 .. 1+4 > 3
-		// 1,4 .. 1+4 > 4
-		currentEpoch := k.EpochKeeper.GetEpochInfo(ctx, rewardProgram.EpochId)
-		if rewardProgram.StartEpoch+rewardProgram.NumberEpochs > currentEpoch.CurrentEpoch {
-			rewardPrograms = append(rewardPrograms, rewardProgram)
-		}
-		return false
-	})
-	if err != nil {
-		return nil, err
-	}
-	return rewardPrograms, nil
-}
-
 func (k Keeper) CheckActiveDelegations(ctx sdk.Context, address sdk.AccAddress) []stakingtypes.Delegation {
 	return k.stakingKeeper.GetAllDelegatorDelegations(ctx, address)
 }
