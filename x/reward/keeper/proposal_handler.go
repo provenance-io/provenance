@@ -22,7 +22,7 @@ func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddRewar
 
 	// calculate the start epoch height from current heigh + proposal offset height
 	startEpoch := uint64(ctx.BlockHeight()) + proposal.EpochStartOffset
-
+	// TODO:
 	rewardProgram := types.NewRewardProgram(proposal.RewardProgramId,
 		proposal.DistributeFromAddress,
 		proposal.Coin,
@@ -30,10 +30,10 @@ func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddRewar
 		proposal.EpochId,
 		startEpoch,
 		proposal.NumberEpochs,
-		*proposal.EligibilityCriteria,
+		proposal.EligibilityCriteria,
 		false,
-		1,
-		2,
+		proposal.Minimum,
+		proposal.Maximum,
 	)
 	k.SetRewardProgram(ctx, rewardProgram)
 

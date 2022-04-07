@@ -34,6 +34,8 @@ func NewAddRewardProgramProposal(
 	epochStartOffset uint64,
 	numberEpochs uint64,
 	eligibilityCriteria EligibilityCriteria,
+	minimum uint64,
+	maximum uint64,
 ) *AddRewardProgramProposal {
 	return &AddRewardProgramProposal{
 		Title:                 title,
@@ -44,7 +46,7 @@ func NewAddRewardProgramProposal(
 		EpochId:               epochId,
 		EpochStartOffset:      epochStartOffset,
 		NumberEpochs:          numberEpochs,
-		EligibilityCriteria:   &eligibilityCriteria,
+		EligibilityCriteria:   eligibilityCriteria,
 	}
 }
 
@@ -65,14 +67,17 @@ func (arpp AddRewardProgramProposal) ValidateBasic() error {
 	if len(arpp.EpochId) == 0 {
 		return errors.New("epoch id cannot be empty")
 	}
-	if arpp.EligibilityCriteria == nil {
-		return errors.New("eligibility criteria info cannot be null for rewards program")
-	}
 	if err := arpp.EligibilityCriteria.ValidateBasic(); err != nil {
 		return fmt.Errorf("eligibility criteria is not valid: %w", err)
 	}
 	if !arpp.Coin.IsPositive() {
 		return fmt.Errorf("reward program requires coins: %v", arpp.Coin)
+	}
+	if arpp.Maximum == 0 {
+		return errors.New("maximum must be larger than 0")
+	}
+	if arpp.Minimum > arpp.Maximum {
+		return fmt.Errorf("minimum (%v) cannot be larger than the maximum (%v)", arpp.Minimum, arpp.Maximum)
 	}
 	return nil
 }
