@@ -40,7 +40,7 @@ func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
 	maxCoin := sdk.NewInt64Coin("jackthecat", 100)
 	var rewardData types.GenesisState
 	rewardData.RewardPrograms = []types.RewardProgram{
-		types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin,maxCoin, "day", 1, 10, types.NewEligibilityCriteria("criteria", &action),false,1,10),
+		types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, "day", 1, 10, types.NewEligibilityCriteria("criteria", &action), false, 1, 10),
 	}
 	sharesPerEpoch := types.SharesPerEpochPerRewardsProgram{RewardProgramId: 1, TotalShares: 2, LatestRecordedEpoch: 1000, Claimed: false, Expired: false, TotalRewardClaimed: coin}
 	rewardData.RewardClaims = []types.RewardClaim{types.NewRewardClaim("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", []types.SharesPerEpochPerRewardsProgram{sharesPerEpoch})}
@@ -56,7 +56,7 @@ func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
 	s.Assert().NotPanics(func() { s.app.RewardKeeper.ExportGenesis(s.ctx) })
 
 	rewardData.RewardPrograms = []types.RewardProgram{
-		types.NewRewardProgram(1, "", sdk.NewInt64Coin("nhash", 100),sdk.NewInt64Coin("nhash", 10), "day", 1, 10, types.NewEligibilityCriteria("criteria", &action),false,1,10),
+		types.NewRewardProgram(1, "", sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 10), "day", 1, 10, types.NewEligibilityCriteria("criteria", &action), false, 1, 10),
 	}
 
 	s.Assert().Panics(func() { s.app.RewardKeeper.InitGenesis(s.ctx, &rewardData) })
@@ -68,16 +68,13 @@ func (s *KeeperTestSuite) TestCreateRewardClaim() {
 	action := types.NewActionDelegate()
 	coin := sdk.NewInt64Coin("hotdog", 10000)
 	maxCoin := sdk.NewInt64Coin("hotdog", 100)
-	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin,maxCoin, "day", 1, 10, types.NewEligibilityCriteria("criteria", &action),false,1,10)
-	s.app.RewardKeeper.SetRewardProgram(s.ctx,rewardProgram)
-	rewardProgramGet,found := s.app.RewardKeeper.GetRewardProgram(s.ctx,1)
-	s.Assert().Equal(true,found,"reward program should be found.")
-
-	s.Assert().Equal(rewardProgram.Coin,rewardProgramGet.Coin)
-	s.Assert().Equal(rewardProgram.Coin,rewardProgramGet.Coin)
-	s.Assert().Equal(rewardProgram.StartEpoch,rewardProgramGet.StartEpoch)
-	s.Assert().Equal(rewardProgram.Id,rewardProgramGet.Id)
-	s.Assert().Equal(rewardProgram.EligibilityCriteria.Action.TypeUrl,rewardProgramGet.EligibilityCriteria.Action.TypeUrl)
-
+	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, "day", 1, 10, types.NewEligibilityCriteria("criteria", &action), false, 1, 10)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+	rewardProgramGet, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
+	s.Assert().NoError(err)
+	s.Assert().Equal(rewardProgram.Coin, rewardProgramGet.Coin)
+	s.Assert().Equal(rewardProgram.StartEpoch, rewardProgramGet.StartEpoch)
+	s.Assert().Equal(rewardProgram.Id, rewardProgramGet.Id)
+	s.Assert().Equal(rewardProgram.EligibilityCriteria.Action.TypeUrl, rewardProgramGet.EligibilityCriteria.Action.TypeUrl)
 
 }
