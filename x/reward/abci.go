@@ -13,7 +13,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 	// check if epoch has ended
 	ctx.Logger().Info(fmt.Sprintf("Size of events is %d", len(ctx.EventManager().GetABCIEventHistory())))
-	//logEvents(ctx)
+	logEvents(ctx)
 	// Step 1
 	rewardPrograms, err := k.GetAllActiveRewards(ctx)
 	if err != nil {
