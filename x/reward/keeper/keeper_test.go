@@ -171,7 +171,7 @@ func (s *KeeperTestSuite) TestCreateRewardClaim() {
 		{Type: stakingtypes.EventTypeDelegate, Attributes: []abci.EventAttribute{{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(delegation.Amount.String()), Index: true}}},
 		{Type: stakingtypes.EventTypeDelegate, Attributes: []abci.EventAttribute{{Key: []byte(stakingtypes.AttributeKeyNewShares), Value: []byte(sdk.NewDec(10).String()), Index: true}}},
 		{Type: sdk.EventTypeMessage, Attributes: []abci.EventAttribute{{Key: []byte(sdk.AttributeKeyModule), Value: []byte(stakingtypes.AttributeValueCategory), Index: true}}},
-		{Type: sdk.EventTypeMessage, Attributes: []abci.EventAttribute{{Key: []byte(stakingtypes.AttributeValueCategory), Value: []byte(addrDels[0].String()), Index: true}}},
+		{Type: sdk.EventTypeMessage, Attributes: []abci.EventAttribute{{Key: []byte(sdk.AttributeKeySender), Value: []byte(addrDels[0].String()), Index: true}}},
 	}
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManagerWithHistory(events))

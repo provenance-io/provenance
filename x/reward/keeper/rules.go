@@ -2,10 +2,10 @@ package keeper
 
 import (
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/provenance-io/provenance/x/reward/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 type EvaluationResult struct {
@@ -143,7 +143,7 @@ func (k Keeper) EvaluateTransferAndCheckDelegation(ctx sdk.Context) ([]Evaluatio
 }
 
 func (k Keeper) EvaluateDelegation(ctx sdk.Context) ([]EvaluationResult, error) {
-	evaluateRes, err := k.EvaluateSearchEvents(ctx, "staking", "sender")
+	evaluateRes, err := k.EvaluateDelegateEvents(ctx, "message", "staking", "sender")
 	return evaluateRes, err
 }
 
@@ -163,6 +163,44 @@ func (k Keeper) EvaluateSearchEvents(ctx sdk.Context, eventTypeToSearch string, 
 
 					// really not possible to get an error but could happen i guess
 					address, err := sdk.AccAddressFromBech32(string(y.Value))
+
+					//TODO check this address has a delegation
+					if err != nil {
+						return nil, err
+					}
+					result = append(result, EvaluationResult{
+						eventTypeToSearch: eventTypeToSearch,
+						attributeKey:      string(y.Key),
+						shares:            1,
+						address:           address,
+					})
+				}
+			}
+		}
+	}
+
+	return result, nil
+
+}
+
+// EvaluateDelegateEvents
+// unfortunately delegate events appear like this
+//10:38PM INF events type is message
+//10:38PM INF event attribute is message attribute_key:attribute_value  module:staking
+//10:38PM INF event attribute is message attribute_key:attribute_value  sender:tp1hsrqwfypd3w3py2kw7fajw4fzfqwv5qdel6vf6
+func (k Keeper) EvaluateDelegateEvents(ctx sdk.Context, eventTypeToSearch string, attributeValue string, attributeKey string) ([]EvaluationResult, error) {
+	result := ([]EvaluationResult)(nil)
+	for _, s := range ctx.EventManager().GetABCIEventHistory() {
+		ctx.Logger().Info(fmt.Sprintf("events type is %s", s.Type))
+		if s.Type == eventTypeToSearch {
+			// now look for the attribute
+			for _, y := range s.Attributes {
+				ctx.Logger().Info(fmt.Sprintf("event attribute is %s attribute_key:attribute_value  %s:%s", s.Type, y.Key, y.Value))
+
+				if attributeValue == string(y.Value) {
+
+					// really not possible to get an error but could happen i guess
+					address, err := searchValue(s.Attributes, attributeKey)
 
 					//TODO check this address has a delegation
 					if err != nil {
@@ -218,4 +256,20 @@ func (k Keeper) GetAllActiveRewards(ctx sdk.Context) ([]types.RewardProgram, err
 		k.SetRewardProgram(ctx, rewardProgram)
 	}
 	return rewardPrograms, nil
+}
+
+func searchValue(attributes []abci.EventAttribute, attributeKey string) (sdk.AccAddress, error) {
+	for _, y := range attributes {
+		if attributeKey == string(y.Key) {
+			// really not possible to get an error but could happen i guess
+			address, err := sdk.AccAddressFromBech32(string(y.Value))
+			return address, err
+			//TODO check this address has a delegation
+			if err != nil {
+				return nil, err
+			}
+
+		}
+	}
+	return nil, nil
 }
