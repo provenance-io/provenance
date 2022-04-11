@@ -47,6 +47,8 @@ func NewAddRewardProgramProposal(
 		EpochStartOffset:      epochStartOffset,
 		NumberEpochs:          numberEpochs,
 		EligibilityCriteria:   eligibilityCriteria,
+		Minimum:               minimum,
+		Maximum:               maximum,
 	}
 }
 

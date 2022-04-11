@@ -82,7 +82,6 @@ func (rp *RewardProgram) ValidateBasic() error {
 	if rp.Minimum > rp.Maximum {
 		return fmt.Errorf("minimum (%v) cannot be larger than the maximum (%v)", rp.Minimum, rp.Maximum)
 	}
-
 	return nil
 }
 
