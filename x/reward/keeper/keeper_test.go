@@ -188,4 +188,8 @@ func (s *KeeperTestSuite) TestCreateRewardClaim() {
 	epochRewardDistribution, err := s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, "day", 1)
 	s.Assert().Nil(err)
 	s.Assert().NotNil(epochRewardDistribution)
+	s.Assert().Equal(epochRewardDistribution.RewardProgramId, uint64(1))
+	s.Assert().Equal(epochRewardDistribution.EpochId, "day")
+	s.Assert().Equal(epochRewardDistribution.TotalShares, int64(1))
+	s.Assert().Equal(epochRewardDistribution.TotalRewardsPool, coin)
 }

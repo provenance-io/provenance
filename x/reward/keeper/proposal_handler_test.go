@@ -62,7 +62,7 @@ func (s *IntegrationTestSuite) TestRewardProposals() {
 	}{
 		{
 			"add reward - invalid epoch identifier",
-			*rewardtypes.NewAddRewardProgramProposal("title", "description",
+			rewardtypes.NewAddRewardProgramProposal("title", "description",
 				2,
 				s.accountAddr.String(),
 				sdk.NewCoin("nhash", sdk.NewInt(10)),
