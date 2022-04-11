@@ -156,8 +156,8 @@ func (s *KeeperTestSuite) TestCreateRewardClaim() {
 		{Type: stakingtypes.EventTypeDelegate, Attributes: []abci.EventAttribute{{Key: []byte(stakingtypes.AttributeKeyValidator), Value: []byte(validators[0].OperatorAddress), Index: true}}},
 		{Type: stakingtypes.EventTypeDelegate, Attributes: []abci.EventAttribute{{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(delegation.Amount.String()), Index: true}}},
 		{Type: stakingtypes.EventTypeDelegate, Attributes: []abci.EventAttribute{{Key: []byte(stakingtypes.AttributeKeyNewShares), Value: []byte(sdk.NewDec(10).String()), Index: true}}},
-		{Type: sdk.EventTypeMessage, Attributes: []abci.EventAttribute{{Key: []byte(sdk.AttributeKeyModule), Value: []byte(stakingtypes.AttributeValueCategory), Index: true}}},
-		{Type: sdk.EventTypeMessage, Attributes: []abci.EventAttribute{{Key: []byte(sdk.AttributeKeySender), Value: []byte(addrDels[0].String()), Index: true}}},
+		{Type: sdk.EventTypeMessage, Attributes: []abci.EventAttribute{{Key: []byte(sdk.AttributeKeyModule), Value: []byte(stakingtypes.AttributeValueCategory), Index: true},
+			{Key: []byte(sdk.AttributeKeySender), Value: []byte(addrDels[0].String()), Index: true}}},
 	}
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManagerWithHistory(events))
@@ -247,8 +247,8 @@ func (s *KeeperTestSuite) TestCreateRewardClaim_1() {
 		{Type: stakingtypes.EventTypeDelegate, Attributes: []abci.EventAttribute{{Key: []byte(stakingtypes.AttributeKeyValidator), Value: []byte(validators[0].OperatorAddress), Index: true}}},
 		{Type: stakingtypes.EventTypeDelegate, Attributes: []abci.EventAttribute{{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(delegation.Amount.String()), Index: true}}},
 		{Type: stakingtypes.EventTypeDelegate, Attributes: []abci.EventAttribute{{Key: []byte(stakingtypes.AttributeKeyNewShares), Value: []byte(sdk.NewDec(10).String()), Index: true}}},
-		{Type: sdk.EventTypeMessage, Attributes: []abci.EventAttribute{{Key: []byte(sdk.AttributeKeyModule), Value: []byte(stakingtypes.AttributeValueCategory), Index: true}}},
-		{Type: sdk.EventTypeMessage, Attributes: []abci.EventAttribute{{Key: []byte(sdk.AttributeKeySender), Value: []byte(addrDels[0].String()), Index: true}}},
+		{Type: sdk.EventTypeMessage, Attributes: []abci.EventAttribute{{Key: []byte(sdk.AttributeKeyModule), Value: []byte(stakingtypes.AttributeValueCategory), Index: true},
+			{Key: []byte(sdk.AttributeKeySender), Value: []byte(addrDels[0].String()), Index: true}}},
 	}
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManagerWithHistory(events))
@@ -282,5 +282,10 @@ func (s *KeeperTestSuite) TestCreateRewardClaim_1() {
 	s.Assert().Equal(epochRewardDistribution.TotalShares, int64(10), "Total shares should stay the same")
 	s.Assert().Equal(coin, epochRewardDistribution.TotalRewardsPool, "Reward pool totals are wrong")
 	s.Assert().Equal(true, epochRewardDistribution.EpochEnded, "Epoch should remain ended")
+
+	// now let's check rewards claims
+	rewardClaim, err := s.app.RewardKeeper.GetRewardClaim(s.ctx, addrDels[0].String())
+	s.Assert().Nil(err)
+	s.Assert().NotNil(rewardClaim)
 
 }

@@ -77,16 +77,16 @@ func (k Keeper) IterateRewardPrograms(ctx sdk.Context, handle func(rewardProgram
 }
 
 // SetRewardClaim sets the reward program in the keeper
-func (k Keeper) SetRewardClaim(ctx sdk.Context, rewardProgram types.RewardClaim) {
+func (k Keeper) SetRewardClaim(ctx sdk.Context, rewardClaim types.RewardClaim) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&rewardProgram)
-	store.Set(types.GetRewardClaimsKey([]byte(rewardProgram.Address)), bz)
+	bz := k.cdc.MustMarshal(&rewardClaim)
+	store.Set(types.GetRewardClaimsKey([]byte(rewardClaim.Address)), bz)
 }
 
 // GetRewardClaim returns a RewardClaim by id
-func (k Keeper) GetRewardClaim(ctx sdk.Context, addr []byte) (rewardClaim types.RewardClaim, err error) {
+func (k Keeper) GetRewardClaim(ctx sdk.Context, addr string) (rewardClaim types.RewardClaim, err error) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetRewardClaimsKey(addr)
+	key := types.GetRewardClaimsKey([]byte(addr))
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return rewardClaim, err
