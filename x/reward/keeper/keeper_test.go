@@ -188,7 +188,11 @@ func (s *KeeperTestSuite) TestCreateRewardClaim() {
 	s.Assert().Equal(epochRewardDistribution.TotalRewardsPool, coin)
 	s.Assert().Equal(epochRewardDistribution.EpochEnded, false)
 
-	// end the epoch
+	// goto the end of epoch
+	// ctx history always has the delegate event.
+	// call end blocker of rewards to increment rewards accumulated
+	// call begin blocker on epoch to signal end of blocker
+	// ^^ should not double count rewards
 	for i := 0; i < 5; i++ {
 		s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + ((24 * 60 * 60 * 30) / 5) + 1)
 		epoch.BeginBlocker(s.ctx, s.app.EpochKeeper)
@@ -203,5 +207,18 @@ func (s *KeeperTestSuite) TestCreateRewardClaim() {
 	s.Assert().Equal(epochRewardDistribution.EpochId, "day")
 	s.Assert().Equal(epochRewardDistribution.TotalShares, int64(7))
 	s.Assert().Equal(epochRewardDistribution.TotalRewardsPool, coin)
-	s.Assert().Equal(epochRewardDistribution.EpochEnded, false)
+	s.Assert().Equal(true, epochRewardDistribution.EpochEnded)
+
+	// epoch has ended, should not increment
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + ((24 * 60 * 60 * 30) / 5) + 1)
+	epoch.BeginBlocker(s.ctx, s.app.EpochKeeper)
+	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+	s.Assert().Nil(err)
+	s.Assert().NotNil(epochRewardDistribution)
+	s.Assert().Equal(epochRewardDistribution.RewardProgramId, uint64(1))
+	s.Assert().Equal(epochRewardDistribution.EpochId, "day")
+	s.Assert().Equal(epochRewardDistribution.TotalShares, int64(7))
+	s.Assert().Equal(epochRewardDistribution.TotalRewardsPool, coin)
+	s.Assert().Equal(epochRewardDistribution.EpochEnded, true)
+
 }

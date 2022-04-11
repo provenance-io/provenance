@@ -41,7 +41,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			// TODO if shares are still 0 for epochRewardDistibutionForEpoch.TotalShares return all the rewards?
 		} else {
 			// end the epoch
-			if rewardProgram.StartEpoch+rewardProgram.NumberEpochs <= epochNumber {
+			if (rewardProgram.StartEpoch + rewardProgram.NumberEpochs - 1) == epochNumber {
 				epochRewardDistibutionForEpoch.EpochEnded = true
 				k.EvaluateRules(ctx, epochNumber, rewardProgram, epochRewardDistibutionForEpoch)
 			}
