@@ -33,6 +33,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			epochRewardDistibutionForEpoch.EpochId = epochIdentifier
 			epochRewardDistibutionForEpoch.RewardProgramId = rewardProgram.Id
 			epochRewardDistibutionForEpoch.TotalShares = 0
+			epochRewardDistibutionForEpoch.TotalRewardsPool = rewardProgram.Coin
 			if rewardProgram.StartEpoch+rewardProgram.NumberEpochs == epochNumber {
 				epochRewardDistibutionForEpoch.EpochEnded = true
 			}

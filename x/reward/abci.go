@@ -34,6 +34,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 			epochRewardDistributionForEpoch.EpochId = rewardProgram.EpochId
 			epochRewardDistributionForEpoch.RewardProgramId = rewardProgram.Id
 			epochRewardDistributionForEpoch.TotalShares = 0
+			epochRewardDistributionForEpoch.TotalRewardsPool = rewardProgram.Coin
 			epochRewardDistributionForEpoch.EpochEnded = false
 			k.EvaluateRules(ctx, currentEpoch.CurrentEpoch, rewardProgram, epochRewardDistributionForEpoch)
 		} else if epochRewardDistributionForEpoch.EpochEnded == false { // if hook epoch end has already been called, this should not get called.

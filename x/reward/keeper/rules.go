@@ -33,8 +33,6 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 			if errorRecordsClaim != nil {
 				return errorRecordsClaim
 			}
-			//set total rewards
-			k.SetEpochRewardDistribution(ctx, distribution)
 
 		}
 	case "/" + proto.MessageName(&types.ActionDelegate{}):
@@ -52,8 +50,7 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 			if errorRecordsClaim != nil {
 				return errorRecordsClaim
 			}
-			//set total rewards
-			k.SetEpochRewardDistribution(ctx, distribution)
+
 		}
 	default:
 		// TODO throw an error or just log it? Leaning towards just logging it for now
@@ -125,6 +122,8 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 
 		}
 	}
+	//set total rewards
+	k.SetEpochRewardDistribution(ctx, distribution)
 	return nil
 }
 

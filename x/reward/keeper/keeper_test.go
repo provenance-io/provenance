@@ -183,4 +183,9 @@ func (s *KeeperTestSuite) TestCreateRewardClaim() {
 	s.Assert().Equal(rewardProgram.Id, rewardProgramGet.Id)
 	s.Assert().Equal(rewardProgram.EligibilityCriteria.Action.TypeUrl, rewardProgramGet.EligibilityCriteria.Action.TypeUrl)
 	s.Assert().Equal(rewardProgramGet.Expired, false)
+
+	// get reward epoch distribution
+	epochRewardDistribution, err := s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, "day", 1)
+	s.Assert().Nil(err)
+	s.Assert().NotNil(epochRewardDistribution)
 }
