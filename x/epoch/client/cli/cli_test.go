@@ -67,7 +67,7 @@ func (s *IntegrationTestSuite) TestEpochInfosCmd() {
 
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{})
 	s.Require().NoError(err)
-	s.Require().Equal("epochs:\n- current_epoch: \"1\"\n  current_epoch_start_height: \"1\"\n  duration: \"17280\"\n  epoch_counting_started: true\n  identifier: day\n  start_height: \"0\"\n- current_epoch: \"1\"\n  current_epoch_start_height: \"1\"\n  duration: \"3628800\"\n  epoch_counting_started: true\n  identifier: month\n  start_height: \"0\"\n- current_epoch: \"1\"\n  current_epoch_start_height: \"1\"\n  duration: \"120960\"\n  epoch_counting_started: true\n  identifier: week\n  start_height: \"0\"", strings.TrimSpace(out.String()))
+	s.Require().Equal("epochs:\n- current_epoch: \"1\"\n  current_epoch_start_height: \"1\"\n  duration: \"17280\"\n  epoch_counting_started: true\n  identifier: day\n  start_height: \"0\"\n- current_epoch: \"1\"\n  current_epoch_start_height: \"1\"\n  duration: \"518400\"\n  epoch_counting_started: true\n  identifier: month\n  start_height: \"0\"\n- current_epoch: \"1\"\n  current_epoch_start_height: \"1\"\n  duration: \"120960\"\n  epoch_counting_started: true\n  identifier: week\n  start_height: \"0\"", strings.TrimSpace(out.String()))
 }
 
 func (s *IntegrationTestSuite) TestCurrentEpochCmd() {
