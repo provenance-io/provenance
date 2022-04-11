@@ -33,7 +33,7 @@ func DefaultGenesis() *GenesisState {
 		{
 			Identifier:              "month",
 			StartHeight:             0,
-			Duration:                uint64((60 * 60 * 24 * 30 * 7) / 5),
+			Duration:                uint64((60 * 60 * 24 * 30) / 5),
 			CurrentEpoch:            0,
 			CurrentEpochStartHeight: 0,
 			EpochCountingStarted:    false,

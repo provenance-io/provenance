@@ -23,6 +23,13 @@ func (suite *KeeperTestSuite) TestQueryEpochInfos() {
 	suite.Require().Equal(epochInfosResponse.Epochs[0].Duration, uint64((24*60*60)/5))
 	suite.Require().Equal(epochInfosResponse.Epochs[0].CurrentEpoch, uint64(chainBlockHeight))
 	suite.Require().Equal(epochInfosResponse.Epochs[0].CurrentEpochStartHeight, uint64(0))
+
+	suite.Require().Equal(epochInfosResponse.Epochs[1].Identifier, "month")
+	suite.Require().Equal(epochInfosResponse.Epochs[1].StartHeight, uint64(0))
+	suite.Require().Equal(epochInfosResponse.Epochs[1].Duration, uint64((24*60*60*30)/5))
+	suite.Require().Equal(epochInfosResponse.Epochs[1].CurrentEpoch, uint64(chainBlockHeight))
+	suite.Require().Equal(epochInfosResponse.Epochs[1].CurrentEpochStartHeight, uint64(0))
+
 	suite.Require().Equal(epochInfosResponse.Epochs[2].Identifier, "week")
 	suite.Require().Equal(epochInfosResponse.Epochs[2].StartHeight, uint64(0))
 	suite.Require().Equal(epochInfosResponse.Epochs[2].Duration, uint64((24*60*60*7)/5))
