@@ -219,7 +219,7 @@ func (s *KeeperTestSuite) TestCreateRewardClaim_1() {
 	action := types.NewActionDelegate()
 	coin := sdk.NewInt64Coin("hotdog", 10000)
 	maxCoin := sdk.NewInt64Coin("hotdog", 100)
-	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, "day", 1, 10, types.NewEligibilityCriteria("criteria", &action), false, 1, 10)
+	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, "day", 1, 10, types.NewEligibilityCriteria("criteria", &action), false, 0, 10)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 	rewardProgramGet, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
 	s.Assert().NoError(err)
@@ -258,7 +258,6 @@ func (s *KeeperTestSuite) TestCreateRewardClaim_1() {
 		s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + ((24 * 60 * 60 * 30) / 5) + 1)
 		epoch.BeginBlocker(s.ctx, s.app.EpochKeeper)
 		reward.EndBlocker(s.ctx, s.app.RewardKeeper)
-
 	}
 
 	// get reward epoch distribution
@@ -287,5 +286,8 @@ func (s *KeeperTestSuite) TestCreateRewardClaim_1() {
 	rewardClaim, err := s.app.RewardKeeper.GetRewardClaim(s.ctx, addrDels[0].String())
 	s.Assert().Nil(err)
 	s.Assert().NotNil(rewardClaim)
+
+	s.Assert().Equal(addrDels[0].String(), rewardClaim.Address, "address should match event delegator address")
+	s.Assert().Equal(int64(10), rewardClaim.SharesPerEpochPerReward[0].TotalShares, "address should match event delegator address")
 
 }
