@@ -42,7 +42,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		} else {
 			// end the epoch
 			// because the start period is also included in the calculation, hence subtracting -1
-			// for e.g a reward that begins on epoch 1 and ends in 10 epochs shouls end in epoch 10
+			// for e.g a reward that begins on epoch 1 and ends in 10 epochs should end in epoch 10
 			if (rewardProgram.StartEpoch + rewardProgram.NumberEpochs - 1) == epochNumber {
 				epochRewardDistibutionForEpoch.EpochEnded = true
 				k.EvaluateRules(ctx, epochNumber, rewardProgram, epochRewardDistibutionForEpoch)
