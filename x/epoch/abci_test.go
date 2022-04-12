@@ -189,15 +189,18 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	require.Equal(t, epochInfo.EpochCountingStarted, true)
 }
 
+// Mock to capture arguments passed into hooks
 type EpochHooksMock struct {
 	AfterEpochNumber  *uint64
 	BeforeEpochNumber *uint64
 }
 
+// Stubs the AfterEpochEnd method to capture the epochNumber
 func (h EpochHooksMock) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber uint64) {
 	*h.AfterEpochNumber = epochNumber
 }
 
+// Stubs the BeforeEpochStart method to capture the epochNumber
 func (h EpochHooksMock) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber uint64) {
 	*h.BeforeEpochNumber = epochNumber
 }
@@ -206,15 +209,17 @@ func TestBeforeAndAfterHooks(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
+	// Setup Mock
+	// The stubbed functions will populate these variables
 	var beforeEpochNumber uint64
 	var afterEpochNumber uint64
-
 	hooksMock := EpochHooksMock{
 		AfterEpochNumber:  &afterEpochNumber,
 		BeforeEpochNumber: &beforeEpochNumber,
 	}
 	app.EpochKeeper = *keeper.NewKeeper(app.AppCodec(), app.GetKey("epoch"))
 	app.EpochKeeper.SetHooks(hooksMock)
+
 	epochInfos := app.EpochKeeper.AllEpochInfos(ctx)
 	now := time.Now()
 
@@ -237,13 +242,18 @@ func TestBeforeAndAfterHooks(t *testing.T) {
 		},
 	})
 
+	// Only the BeforeEpochStart hook should be called
+	// It should have the latest epochNumber
 	epoch.BeginBlocker(ctx, app.EpochKeeper)
 	epochInfo := app.EpochKeeper.GetEpochInfo(ctx, "minutely")
+	require.Equal(t, epochInfo.CurrentEpoch, uint64(1))
 	require.Equal(t, uint64(1), beforeEpochNumber)
 	require.Equal(t, uint64(0), afterEpochNumber)
 
+	// Both hooks should be called
+	// BeforeEpochStart should contain the new epochNumber
+	// AfterEpochEnd should contain the previous epochNumber
 	ctx = ctx.WithBlockHeight(14)
-
 	epoch.BeginBlocker(ctx, app.EpochKeeper)
 	epochInfo = app.EpochKeeper.GetEpochInfo(ctx, "minutely")
 	require.Equal(t, epochInfo.CurrentEpoch, uint64(2))
