@@ -78,18 +78,18 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 			// set a new claim or add to a claim
 			for _, rewardClaimForAddress := range claim.SharesPerEpochPerReward {
 				if rewardClaimForAddress.RewardProgramId == program.Id && (rewardClaimForAddress.EphemeralActionCount <= int64(program.Minimum) || rewardClaimForAddress.EphemeralActionCount >= int64(program.Maximum)) {
-					rewardClaimForAddress.EphemeralActionCount = rewardClaimForAddress.EphemeralActionCount + 1
+					rewardClaimForAddress.EphemeralActionCount = rewardClaimForAddress.EphemeralActionCount + res.shares
 					mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, rewardClaimForAddress)
 					found = true
 				} else if rewardClaimForAddress.RewardProgramId == program.Id && rewardClaimForAddress.EphemeralActionCount < int64(program.Maximum) {
-					rewardClaimForAddress.EphemeralActionCount = rewardClaimForAddress.EphemeralActionCount + 1
-					rewardClaimForAddress.TotalShares = rewardClaimForAddress.TotalShares + 1
+					rewardClaimForAddress.EphemeralActionCount = rewardClaimForAddress.EphemeralActionCount + res.shares
+					rewardClaimForAddress.TotalShares = rewardClaimForAddress.TotalShares + res.shares
 					rewardClaimForAddress.LatestRecordedEpoch = epochNumber
 					mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, rewardClaimForAddress)
 					found = true
 
 					// we know the rewards it so update the epoch reward
-					distribution.TotalShares = distribution.TotalShares + 1
+					distribution.TotalShares = distribution.TotalShares + res.shares
 				} else {
 					mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, rewardClaimForAddress)
 				}
@@ -99,15 +99,15 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 			} else {
 				mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, types.SharesPerEpochPerRewardsProgram{
 					RewardProgramId:      program.Id,
-					TotalShares:          1,
-					EphemeralActionCount: 1,
+					TotalShares:          res.shares,
+					EphemeralActionCount: res.shares,
 					LatestRecordedEpoch:  epochNumber,
 					Claimed:              false,
 					Expired:              false,
 					TotalRewardClaimed:   sdk.Coin{},
 				})
 				// we know the rewards it so update the epoch reward
-				distribution.TotalShares = distribution.TotalShares + 1
+				distribution.TotalShares = distribution.TotalShares + res.shares
 			}
 			claim.SharesPerEpochPerReward = mutatedSharesPerEpochRewards
 			k.SetRewardClaim(ctx, claim)
@@ -118,8 +118,8 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 				Address: res.address.String(),
 				SharesPerEpochPerReward: append(mutatedSharesPerEpochRewards, types.SharesPerEpochPerRewardsProgram{
 					RewardProgramId:      program.Id,
-					TotalShares:          1,
-					EphemeralActionCount: 1,
+					TotalShares:          res.shares,
+					EphemeralActionCount: res.shares,
 					LatestRecordedEpoch:  epochNumber,
 					Claimed:              false,
 					Expired:              false,
@@ -127,7 +127,7 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 				}),
 			})
 			// we know the rewards it so update the epoch reward
-			distribution.TotalShares = distribution.TotalShares + 1
+			distribution.TotalShares = distribution.TotalShares + res.shares
 
 		}
 	}
