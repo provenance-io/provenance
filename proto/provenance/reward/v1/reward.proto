@@ -64,7 +64,7 @@ message SharesPerEpochPerRewardsProgram {
 
   uint64                   reward_program_id = 1; // epoch id can be derived from reward program
   int64                    total_shares      = 2; // total shares accumulated( it is running total), can be negative
-  uint64                   ephemeral_action_count = 3; // total number of times action has been taken by account
+  int64                    ephemeral_action_count = 3; // total number of times action has been taken by account
   uint64                   latest_recorded_epoch  = 4; // last epoch number that this reward program was triggerred for.
   bool                     claimed                = 5; // whether rewards has been claimed
   bool                     expired                = 6; // rewards have been expired, this is defined in RewardProgram

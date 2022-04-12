@@ -6047,7 +6047,7 @@ RewardProgram
 | ----- | ---- | ----- | ----------- |
 | `reward_program_id` | [uint64](#uint64) |  | epoch id can be derived from reward program |
 | `total_shares` | [int64](#int64) |  | total shares accumulated( it is running total), can be negative |
-| `ephemeral_action_count` | [uint64](#uint64) |  | total number of times action has been taken by account |
+| `ephemeral_action_count` | [int64](#int64) |  | total number of times action has been taken by account |
 | `latest_recorded_epoch` | [uint64](#uint64) |  | last epoch number that this reward program was triggerred for. |
 | `claimed` | [bool](#bool) |  | whether rewards has been claimed |
 | `expired` | [bool](#bool) |  | rewards have been expired, this is defined in RewardProgram |

@@ -194,7 +194,7 @@ func (s *KeeperTestSuite) TestCreateRewardClaim() {
 	s.Assert().NotNil(epochRewardDistribution)
 	s.Assert().Equal(epochRewardDistribution.RewardProgramId, uint64(1))
 	s.Assert().Equal(epochRewardDistribution.EpochId, "day")
-	s.Assert().Equal(epochRewardDistribution.TotalShares, int64(6))
+	s.Assert().Equal(epochRewardDistribution.TotalShares, int64(5))
 	s.Assert().Equal(epochRewardDistribution.TotalRewardsPool, coin)
 	s.Assert().Equal(true, epochRewardDistribution.EpochEnded)
 
@@ -206,7 +206,7 @@ func (s *KeeperTestSuite) TestCreateRewardClaim() {
 	s.Assert().NotNil(epochRewardDistribution)
 	s.Assert().Equal(epochRewardDistribution.RewardProgramId, uint64(1))
 	s.Assert().Equal(epochRewardDistribution.EpochId, "day")
-	s.Assert().Equal(epochRewardDistribution.TotalShares, int64(6))
+	s.Assert().Equal(epochRewardDistribution.TotalShares, int64(5))
 	s.Assert().Equal(epochRewardDistribution.TotalRewardsPool, coin)
 	s.Assert().Equal(epochRewardDistribution.EpochEnded, true)
 
@@ -266,7 +266,7 @@ func (s *KeeperTestSuite) TestCreateRewardClaim_1() {
 	s.Assert().NotNil(epochRewardDistribution)
 	s.Assert().Equal(epochRewardDistribution.RewardProgramId, uint64(1))
 	s.Assert().Equal(epochRewardDistribution.EpochId, "day")
-	s.Assert().Equal(epochRewardDistribution.TotalShares, int64(10))
+	s.Assert().Equal(epochRewardDistribution.TotalShares, int64(9))
 	s.Assert().Equal(epochRewardDistribution.TotalRewardsPool, coin)
 	s.Assert().Equal(true, epochRewardDistribution.EpochEnded)
 
@@ -278,7 +278,7 @@ func (s *KeeperTestSuite) TestCreateRewardClaim_1() {
 	s.Assert().NotNil(epochRewardDistribution)
 	s.Assert().Equal(epochRewardDistribution.RewardProgramId, uint64(1))
 	s.Assert().Equal(epochRewardDistribution.EpochId, "day")
-	s.Assert().Equal(epochRewardDistribution.TotalShares, int64(10), "Total shares should stay the same")
+	s.Assert().Equal(epochRewardDistribution.TotalShares, int64(9), "Total shares should stay the same")
 	s.Assert().Equal(coin, epochRewardDistribution.TotalRewardsPool, "Reward pool totals are wrong")
 	s.Assert().Equal(true, epochRewardDistribution.EpochEnded, "Epoch should remain ended")
 
@@ -289,7 +289,7 @@ func (s *KeeperTestSuite) TestCreateRewardClaim_1() {
 
 	s.Assert().Equal(addrDels[0].String(), rewardClaim.Address, "address should match event delegator address")
 	s.Assert().Equal(int64(9), rewardClaim.SharesPerEpochPerReward[0].TotalShares, "total shares wrong")
-	s.Assert().Equal(uint64(10), rewardClaim.SharesPerEpochPerReward[0].EphemeralActionCount, "ephemeral shares wrong")
+	s.Assert().Equal(int64(10), rewardClaim.SharesPerEpochPerReward[0].EphemeralActionCount, "ephemeral shares wrong")
 
 }
 
@@ -355,6 +355,6 @@ func (s *KeeperTestSuite) TestCreateRewardClaimTestMin() {
 
 	s.Assert().Equal(addrDels[0].String(), rewardClaim.Address, "address should match event delegator address")
 	s.Assert().Equal(int64(10), rewardClaim.SharesPerEpochPerReward[0].TotalShares, "total shares wrong")
-	s.Assert().Equal(uint64(10), rewardClaim.SharesPerEpochPerReward[0].EphemeralActionCount, "ephemeral shares wrong")
+	s.Assert().Equal(int64(10), rewardClaim.SharesPerEpochPerReward[0].EphemeralActionCount, "ephemeral shares wrong")
 
 }

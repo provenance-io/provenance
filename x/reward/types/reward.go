@@ -221,7 +221,7 @@ func (atd *ActionTransferDelegations) IsEligible() error {
 func NewSharesPerEpochPerRewardsProgram(
 	rewardProgramId uint64,
 	totalShares int64,
-	ephemeralActionCount uint64,
+	ephemeralActionCount int64,
 	latestRecordedEpoch uint64,
 	claimed bool,
 	expired bool,
