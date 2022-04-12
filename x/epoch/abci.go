@@ -2,9 +2,10 @@ package epoch
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/provenance-io/provenance/x/epoch/keeper"
 	"github.com/provenance-io/provenance/x/epoch/types"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,7 +40,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 					),
 				)
 				ctx.Logger().Info(fmt.Sprintf("In(epoch module) epoch end for %s %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
-				k.AfterEpochEnd(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch)
+				k.AfterEpochEnd(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch-1)
 			}
 			k.SetEpochInfo(ctx, epochInfo)
 			ctx.EventManager().EmitEvent(
