@@ -358,3 +358,69 @@ func (s *KeeperTestSuite) TestCreateRewardClaimTestMin() {
 	s.Assert().Equal(int64(10), rewardClaim.SharesPerEpochPerReward[0].EphemeralActionCount, "ephemeral shares wrong")
 
 }
+
+func (s *KeeperTestSuite) TestCreateRewardClaimTestMax() {
+	action := types.NewActionDelegate()
+	coin := sdk.NewInt64Coin("hotdog", 10000)
+	maxCoin := sdk.NewInt64Coin("hotdog", 100)
+	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, "day", 1, 10, types.NewEligibilityCriteria("criteria", &action), false, 0, 5)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+	rewardProgramGet, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
+	s.Assert().NoError(err)
+
+	s.Assert().Equal(rewardProgram.Coin, rewardProgramGet.Coin)
+	s.Assert().Equal(rewardProgram.StartEpoch, rewardProgramGet.StartEpoch)
+	s.Assert().Equal(rewardProgram.Id, rewardProgramGet.Id)
+	s.Assert().Equal(rewardProgram.EligibilityCriteria.Action.TypeUrl, rewardProgramGet.EligibilityCriteria.Action.TypeUrl)
+	s.Assert().Equal(rewardProgram.Expired, false)
+
+	addrDels := simapp.AddTestAddrsIncremental(s.app, s.ctx, 3, sdk.NewInt(10000))
+	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
+	// add a delegation
+	//construct the validators
+	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
+	var validators [3]stakingtypes.Validator
+	for i, amt := range amts {
+		validators[i] = teststaking.NewValidator(s.T(), valAddrs[i], PKs[i])
+		validators[i], _ = validators[i].AddTokensFromDel(amt)
+	}
+
+	delegation := sdk.NewInt64Coin("hotdog", 10)
+
+	events := []abci.Event{
+		{Type: stakingtypes.EventTypeDelegate, Attributes: []abci.EventAttribute{{Key: []byte(stakingtypes.AttributeKeyValidator), Value: []byte(validators[0].OperatorAddress), Index: true}}},
+		{Type: stakingtypes.EventTypeDelegate, Attributes: []abci.EventAttribute{{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(delegation.Amount.String()), Index: true}}},
+		{Type: stakingtypes.EventTypeDelegate, Attributes: []abci.EventAttribute{{Key: []byte(stakingtypes.AttributeKeyNewShares), Value: []byte(sdk.NewDec(10).String()), Index: true}}},
+		{Type: sdk.EventTypeMessage, Attributes: []abci.EventAttribute{{Key: []byte(sdk.AttributeKeyModule), Value: []byte(stakingtypes.AttributeValueCategory), Index: true},
+			{Key: []byte(sdk.AttributeKeySender), Value: []byte(addrDels[0].String()), Index: true}}},
+	}
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManagerWithHistory(events))
+
+	// go past 10 epochs
+	for i := 0; i < 10; i++ {
+		s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + ((24 * 60 * 60 * 30) / 5) + 1)
+		epoch.BeginBlocker(s.ctx, s.app.EpochKeeper)
+		reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+	}
+
+	// get reward epoch distribution
+	epochRewardDistribution, err := s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, "day", 1)
+	s.Assert().Nil(err)
+	s.Assert().NotNil(epochRewardDistribution)
+	s.Assert().Equal(epochRewardDistribution.RewardProgramId, uint64(1))
+	s.Assert().Equal(epochRewardDistribution.EpochId, "day")
+	s.Assert().Equal(epochRewardDistribution.TotalShares, int64(5))
+	s.Assert().Equal(epochRewardDistribution.TotalRewardsPool, coin)
+	s.Assert().Equal(true, epochRewardDistribution.EpochEnded)
+
+	// now let's check rewards claims
+	rewardClaim, err := s.app.RewardKeeper.GetRewardClaim(s.ctx, addrDels[0].String())
+	s.Assert().Nil(err)
+	s.Assert().NotNil(rewardClaim)
+
+	s.Assert().Equal(addrDels[0].String(), rewardClaim.Address, "address should match event delegator address")
+	s.Assert().Equal(int64(5), rewardClaim.SharesPerEpochPerReward[0].TotalShares, "total shares wrong")
+	s.Assert().Equal(int64(10), rewardClaim.SharesPerEpochPerReward[0].EphemeralActionCount, "ephemeral shares wrong")
+
+}
