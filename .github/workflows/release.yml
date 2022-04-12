@@ -89,7 +89,7 @@ jobs:
       - name: Fix zip structure for cosmovisor
         run: |
           make VERSION=${{ needs.build_init.outputs.version }} build-release-rezip
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: osx-zip
           path: build/*.zip
@@ -125,7 +125,7 @@ jobs:
           make build-release-zip
       - name: Provenanced version
         run: build/provenanced version --long
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: linux-zip
           path: build/*.zip
@@ -173,13 +173,13 @@ jobs:
           go-version: ${{ needs.build_init.outputs.go_version }}
       -
         name: Download linux zip artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: linux-zip
           path: build/
       -
         name: Download osx zip artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: osx-zip
           path: build/
