@@ -77,7 +77,7 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 			var mutatedSharesPerEpochRewards []types.SharesPerEpochPerRewardsProgram
 			// set a new claim or add to a claim
 			for _, rewardClaimForAddress := range claim.SharesPerEpochPerReward {
-				if rewardClaimForAddress.RewardProgramId == program.Id && (rewardClaimForAddress.EphemeralActionCount < program.Minimum || rewardClaimForAddress.EphemeralActionCount >= program.Maximum) {
+				if rewardClaimForAddress.RewardProgramId == program.Id && (rewardClaimForAddress.EphemeralActionCount <= program.Minimum || rewardClaimForAddress.EphemeralActionCount >= program.Maximum) {
 					rewardClaimForAddress.EphemeralActionCount = rewardClaimForAddress.EphemeralActionCount + 1
 					mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, rewardClaimForAddress)
 					found = true
@@ -95,12 +95,13 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 				claim.SharesPerEpochPerReward = mutatedSharesPerEpochRewards
 			} else {
 				mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, types.SharesPerEpochPerRewardsProgram{
-					RewardProgramId:     program.Id,
-					TotalShares:         1,
-					LatestRecordedEpoch: epochNumber,
-					Claimed:             false,
-					Expired:             false,
-					TotalRewardClaimed:  sdk.Coin{},
+					RewardProgramId:      program.Id,
+					TotalShares:          1,
+					EphemeralActionCount: 1,
+					LatestRecordedEpoch:  epochNumber,
+					Claimed:              false,
+					Expired:              false,
+					TotalRewardClaimed:   sdk.Coin{},
 				})
 			}
 			claim.SharesPerEpochPerReward = mutatedSharesPerEpochRewards
@@ -111,12 +112,13 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 			k.SetRewardClaim(ctx, types.RewardClaim{
 				Address: res.address.String(),
 				SharesPerEpochPerReward: append(mutatedSharesPerEpochRewards, types.SharesPerEpochPerRewardsProgram{
-					RewardProgramId:     program.Id,
-					TotalShares:         1,
-					LatestRecordedEpoch: epochNumber,
-					Claimed:             false,
-					Expired:             false,
-					TotalRewardClaimed:  sdk.Coin{},
+					RewardProgramId:      program.Id,
+					TotalShares:          1,
+					EphemeralActionCount: 1,
+					LatestRecordedEpoch:  epochNumber,
+					Claimed:              false,
+					Expired:              false,
+					TotalRewardClaimed:   sdk.Coin{},
 				}),
 			})
 

@@ -289,7 +289,7 @@ func (s *KeeperTestSuite) TestCreateRewardClaim_1() {
 
 	s.Assert().Equal(addrDels[0].String(), rewardClaim.Address, "address should match event delegator address")
 	s.Assert().Equal(int64(9), rewardClaim.SharesPerEpochPerReward[0].TotalShares, "total shares wrong")
-	s.Assert().Equal(uint64(9), rewardClaim.SharesPerEpochPerReward[0].EphemeralActionCount, "ephemeral shares wrong")
+	s.Assert().Equal(uint64(10), rewardClaim.SharesPerEpochPerReward[0].EphemeralActionCount, "ephemeral shares wrong")
 
 }
 
@@ -355,6 +355,6 @@ func (s *KeeperTestSuite) TestCreateRewardClaimTestMin() {
 
 	s.Assert().Equal(addrDels[0].String(), rewardClaim.Address, "address should match event delegator address")
 	s.Assert().Equal(int64(10), rewardClaim.SharesPerEpochPerReward[0].TotalShares, "total shares wrong")
-	s.Assert().Equal(uint64(9), rewardClaim.SharesPerEpochPerReward[0].EphemeralActionCount, "ephemeral shares wrong")
+	s.Assert().Equal(uint64(10), rewardClaim.SharesPerEpochPerReward[0].EphemeralActionCount, "ephemeral shares wrong")
 
 }
