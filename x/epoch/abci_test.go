@@ -44,49 +44,49 @@ func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2)
 				epoch.BeginBlocker(ctx, app.EpochKeeper)
-				ctx = ctx.WithBlockHeight((60 * 60 * 24 * 30 * 7) / 5)
+				ctx = ctx.WithBlockHeight((60 * 60 * 24 * 30) / 5)
 				epoch.BeginBlocker(ctx, app.EpochKeeper)
 				epochInfo = app.EpochKeeper.GetEpochInfo(ctx, "monthly")
 			},
 		},
 		{
-			expectedCurrentEpochStartHeight: 3749760,
+			expectedCurrentEpochStartHeight: 535680,
 			expectedStartHeight:             1,
 			expectedCurrentEpoch:            2,
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2)
 				epoch.BeginBlocker(ctx, app.EpochKeeper)
-				ctx = ctx.WithBlockHeight((60 * 60 * 24 * 31 * 7) / 5)
+				ctx = ctx.WithBlockHeight((60 * 60 * 24 * 31) / 5)
 				epoch.BeginBlocker(ctx, app.EpochKeeper)
 				epochInfo = app.EpochKeeper.GetEpochInfo(ctx, "monthly")
 			},
 		},
 		{
-			expectedCurrentEpochStartHeight: 3749760,
+			expectedCurrentEpochStartHeight: 535680,
 			expectedStartHeight:             1,
 			expectedCurrentEpoch:            2,
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2)
 				epoch.BeginBlocker(ctx, app.EpochKeeper)
-				ctx = ctx.WithBlockHeight((60 * 60 * 24 * 31 * 7) / 5)
+				ctx = ctx.WithBlockHeight((60 * 60 * 24 * 31) / 5)
 				epoch.BeginBlocker(ctx, app.EpochKeeper)
-				ctx = ctx.WithBlockHeight((60 * 60 * 24 * 32 * 7) / 5)
+				ctx = ctx.WithBlockHeight((60 * 60 * 24 * 32) / 5)
 				epoch.BeginBlocker(ctx, app.EpochKeeper)
 				epochInfo = app.EpochKeeper.GetEpochInfo(ctx, "monthly")
 			},
 		},
 		{
-			expectedCurrentEpochStartHeight: 3749760,
+			expectedCurrentEpochStartHeight: 535680,
 			expectedStartHeight:             1,
 			expectedCurrentEpoch:            2,
 			fn: func() {
 				ctx = ctx.WithBlockHeight(2)
 				epoch.BeginBlocker(ctx, app.EpochKeeper)
-				ctx = ctx.WithBlockHeight((60 * 60 * 24 * 31 * 7) / 5)
+				ctx = ctx.WithBlockHeight((60 * 60 * 24 * 31) / 5)
 				epoch.BeginBlocker(ctx, app.EpochKeeper)
 				numBlocksSinceStart, _ := app.EpochKeeper.NumBlocksSinceEpochStart(ctx, "monthly")
 				require.Equal(t, int64(0), numBlocksSinceStart)
-				ctx = ctx.WithBlockHeight((60 * 60 * 24 * 32 * 7) / 5)
+				ctx = ctx.WithBlockHeight((60 * 60 * 24 * 32) / 5)
 				epoch.BeginBlocker(ctx, app.EpochKeeper)
 				epochInfo = app.EpochKeeper.GetEpochInfo(ctx, "monthly")
 			},
@@ -112,7 +112,7 @@ func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 				{
 					Identifier:              "monthly",
 					StartHeight:             1,
-					Duration:                (60 * 60 * 24 * 30 * 7) / 5,
+					Duration:                (60 * 60 * 24 * 30) / 5,
 					CurrentEpoch:            0,
 					CurrentEpochStartHeight: uint64(ctx.BlockHeight()),
 					EpochCountingStarted:    false,
@@ -124,7 +124,7 @@ func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 
 		require.Equal(t, epochInfo.Identifier, "monthly")
 		require.Equal(t, test.expectedCurrentEpochStartHeight, epochInfo.CurrentEpochStartHeight)
-		require.Equal(t, (60*60*24*30*7)/5, int(epochInfo.Duration))
+		require.Equal(t, (60*60*24*30)/5, int(epochInfo.Duration))
 		require.Equal(t, test.expectedCurrentEpoch, epochInfo.CurrentEpoch)
 		require.Equal(t, test.expectedStartHeight, epochInfo.StartHeight)
 		require.Equal(t, epochInfo.EpochCountingStarted, true)
@@ -149,8 +149,8 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 		Epochs: []types.EpochInfo{
 			{
 				Identifier:              "monthly",
-				StartHeight:             uint64(ctx.BlockHeight() + (60*60*24*30*7)/5),
-				Duration:                (60 * 60 * 24 * 30 * 7) / 5,
+				StartHeight:             uint64(ctx.BlockHeight() + (60*60*24*30)/5),
+				Duration:                (60 * 60 * 24 * 30) / 5,
 				CurrentEpoch:            0,
 				CurrentEpochStartHeight: uint64(initialBlockHeight),
 				EpochCountingStarted:    false,
@@ -161,7 +161,7 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	// epoch not started yet
 	epochInfo := app.EpochKeeper.GetEpochInfo(ctx, "monthly")
 	require.Equal(t, epochInfo.CurrentEpoch, uint64(0))
-	require.Equal(t, epochInfo.StartHeight, uint64(initialBlockHeight+(60*60*24*30*7)/5))
+	require.Equal(t, epochInfo.StartHeight, uint64(initialBlockHeight+(60*60*24*30)/5))
 	require.Equal(t, epochInfo.CurrentEpochStartHeight, uint64(ctx.BlockHeight()))
 	require.Equal(t, epochInfo.EpochCountingStarted, false)
 
@@ -172,12 +172,12 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	// epoch not started yet
 	epochInfo = app.EpochKeeper.GetEpochInfo(ctx, "monthly")
 	require.Equal(t, epochInfo.CurrentEpoch, uint64(0))
-	require.Equal(t, epochInfo.StartHeight, uint64(initialBlockHeight+(60*60*24*30*7)/5))
+	require.Equal(t, epochInfo.StartHeight, uint64(initialBlockHeight+(60*60*24*30)/5))
 	require.Equal(t, epochInfo.CurrentEpochStartHeight, uint64(initialBlockHeight))
 	require.Equal(t, epochInfo.EpochCountingStarted, false)
 
 	// after 1 month
-	ctx = ctx.WithBlockHeight((7*24*60*60*30)/5 + initialBlockHeight)
+	ctx = ctx.WithBlockHeight((24*60*60*30)/5 + initialBlockHeight)
 	epoch.BeginBlocker(ctx, app.EpochKeeper)
 
 	// epoch started
