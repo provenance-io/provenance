@@ -37,6 +37,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+## [v1.8.1](https://github.com/provenance-io/provenance/releases/tag/v1.8.1) - 2022-04-13
+
+### Summary
+
+Provenance 1.8.1 includes upgrades to the underlying Cosmos SDK and adds initial support for ADR-038.
+
+### Improvements
+
+* Update Provenance to use Cosmos SDK 0.45.3 Release [#781](https://github.com/provenance-io/provenance/issues/781)
+
 ## [v1.8.0](https://github.com/provenance-io/provenance/releases/tag/v1.8.0) - 2022-03-17
 
 ### Summary
