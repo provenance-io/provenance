@@ -413,7 +413,7 @@ func New(
 
 	app.EpochKeeper = *epochkeeper.NewKeeper(appCodec, keys[epochtypes.StoreKey])
 
-	app.RewardKeeper = rewardkeeper.NewKeeper(appCodec, keys[rewardtypes.StoreKey], app.EpochKeeper,app.StakingKeeper)
+	app.RewardKeeper = rewardkeeper.NewKeeper(appCodec, keys[rewardtypes.StoreKey], app.EpochKeeper, app.StakingKeeper, &app.GovKeeper, app.BankKeeper)
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
@@ -541,6 +541,12 @@ func New(
 	)
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
+
+	app.GovKeeper.SetHooks(
+		govtypes.NewMultiGovHooks(
+			app.RewardKeeper.GetGovHooks(),
+		),
+	)
 
 	/****  Module Options ****/
 

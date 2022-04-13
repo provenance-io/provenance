@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -86,11 +87,20 @@ type Hooks struct {
 	k Keeper
 }
 
+type GovHooks struct {
+	k Keeper
+}
+
 var _ epochtypes.EpochHooks = Hooks{}
+var _ govtypes.GovHooks = GovHooks{}
 
 // Return the wrapper struct
 func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
+}
+
+func (k Keeper) GetGovHooks() govtypes.GovHooks {
+	return GovHooks{k}
 }
 
 // epochs hooks
@@ -100,4 +110,65 @@ func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNu
 
 func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber uint64) {
 	h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
+}
+
+// AfterProposalSubmission - call hook if registered
+func (gh GovHooks) AfterProposalSubmission(ctx sdk.Context, proposalID uint64) {
+	gh.k.AfterProposalSubmission(ctx, proposalID)
+}
+
+func (k Keeper) AfterProposalSubmission(ctx sdk.Context, proposalID uint64) {
+	ctx.Logger().Info(fmt.Sprintf("AfterProposalSubmission: %v ... moving reward coins to escrow account", proposalID))
+	proposal, found := k.govKeeper.GetProposal(ctx, proposalID)
+	if found {
+		ctx.Logger().Info(fmt.Sprintf("AfterProposalSubmission: %v Content: %v", proposalID, string(proposal.Content.Value)))
+		var rewardProgram types.AddRewardProgramProposal
+		if err := k.cdc.Unmarshal(proposal.Content.Value, &rewardProgram); err != nil {
+			ctx.Logger().Info(fmt.Sprintf("AfterProposalSubmission: %v was not an AddRewardProgramProposal: %v ", proposalID, proposal.Content.TypeUrl))
+			return
+		}
+
+		// TODO: Escrow funds into a pool from distributed_from_address to module
+		// rewardPoolPath := fmt.Sprintf("%s/pool/%v", types.ModuleName, rewardProgram.RewardProgramId)
+
+		// if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(rewardProgram.DistributeFromAddress), rewardPoolPath, sdk.NewCoins(rewardProgram.Coin)); err != nil {
+		// 	return
+		// }
+	}
+}
+
+// AfterProposalDeposit - call hook if registered
+func (gh GovHooks) AfterProposalDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) {
+	ctx.Logger().Info("AfterProposalDeposit")
+}
+
+// AfterProposalVote - call hook if registered
+func (gh GovHooks) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
+	ctx.Logger().Info("AfterProposalVote")
+}
+
+// AfterProposalFailedMinDeposit - call hook if registered
+func (gh GovHooks) AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64) {
+	ctx.Logger().Info("AfterProposalFailedMinDeposit")
+}
+
+// AfterProposalVotingPeriodEnded - call hook if registered
+func (gh GovHooks) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64) {
+	gh.k.AfterProposalVotingPeriodEnded(ctx, proposalID)
+}
+
+// AfterProposalVotingPeriodEnded - call hook if registered
+func (k Keeper) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64) {
+	ctx.Logger().Info(fmt.Sprintf("AfterProposalVotingPeriodEnded: %v ...", proposalID))
+	proposal, found := k.govKeeper.GetProposal(ctx, proposalID)
+	if found {
+		ctx.Logger().Info(fmt.Sprintf("AfterProposalVotingPeriodEnded: %v Content: %v", proposalID, string(proposal.Content.Value)))
+		var rewardProgram types.AddRewardProgramProposal
+		if err := k.cdc.Unmarshal(proposal.Content.Value, &rewardProgram); err != nil {
+			ctx.Logger().Info(fmt.Sprintf("AfterProposalVotingPeriodEnded: %v was not an AddRewardProgramProposal: %v ", proposalID, proposal.Content.TypeUrl))
+			return
+		}
+
+		//TODO: check if proposal passed, if not return funds to distributed_from_address
+	}
 }

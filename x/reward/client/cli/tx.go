@@ -102,6 +102,7 @@ func GetCmdRewardProgramProposal() *cobra.Command {
 			if err != nil {
 				return err
 			}
+
 			var eligibilityCriteria types.EligibilityCriteria
 			clientCtx.Codec.MustUnmarshalJSON([]byte(eligibilityCriteriaStr), &eligibilityCriteria)
 
@@ -146,5 +147,7 @@ func GetCmdRewardProgramProposal() *cobra.Command {
 	cmd.Flags().Uint64(FlagEpochOffset, 0, "epoch block offset used to calculate start of program")
 	cmd.Flags().Uint64(FlagNumEpochs, 0, "number of epochs for the reward program")
 	cmd.Flags().String(FlagEligibilityCriteria, "", "json of the eligibility criteria")
+	cmd.Flags().Uint64(FlagMinimum, 0, "minimum amount of actions needed for reward program")
+	cmd.Flags().Uint64(FlagMaximum, 1, "maximum amount of actions allowed for reward program")
 	return cmd
 }

@@ -5,6 +5,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/tendermint/tendermint/libs/log"
 
 	epochkeeper "github.com/provenance-io/provenance/x/epoch/keeper"
@@ -18,6 +20,8 @@ type Keeper struct {
 	cdc           codec.BinaryCodec
 	EpochKeeper   epochkeeper.Keeper
 	stakingKeeper types.StakingKeeper
+	govKeeper     *govkeeper.Keeper
+	bankKeeper    bankkeeper.Keeper
 }
 
 func NewKeeper(
@@ -25,12 +29,16 @@ func NewKeeper(
 	key sdk.StoreKey,
 	epochKeeper epochkeeper.Keeper,
 	stakingKeeper types.StakingKeeper,
+	govKeeper *govkeeper.Keeper,
+	bankKeeper bankkeeper.Keeper,
 ) Keeper {
 	return Keeper{
 		storeKey:      key,
 		cdc:           cdc,
 		EpochKeeper:   epochKeeper,
 		stakingKeeper: stakingKeeper,
+		govKeeper:     govKeeper,
+		bankKeeper:    bankKeeper,
 	}
 }
 
