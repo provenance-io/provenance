@@ -1,16 +1,24 @@
 # State
 The attribute module inserts all attributes into a basic state store.
 
-# Attribute KV-Store
+<!-- TOC -->
+  - [Attribute KV-Store](#attribute-kv-store)
+    - [Key layout](#key-layout)
+    - [Attribute Record](#attribute-record)
+    - [Attribute Type](#attribute-type)
+
+
+
+## Attribute KV-Store
 
 The attribute module takes in an attribute supplied by the user and generates a key for it. This key is generated
 by combinining the attribute prefix, address, attribute name, and a hashed value of the attribute value. This
 can then be used to either store a marshalled attribute record, or retrieve the value it points to in the store.
 
-## Key layout
+### Key layout
 [0x02][address][attribute name][hashvalue]
 
-## Attribute Record
+### Attribute Record
 ```
 // Attribute holds a typed key/value structure for data associated with an account
 type Attribute struct {
@@ -28,7 +36,7 @@ type Attribute struct {
 }
 ```
 
-## Attribute Type
+### Attribute Type
 ```
 // AttributeType defines the type of the data stored in the attribute value
 type AttributeType int32

@@ -2,6 +2,14 @@
 
 In this section we describe the processing of the staking messages and the corresponding updates to the state.
 
+<!-- TOC -->
+  - [MsgAddAttributeRequest](#msgaddattributerequest)
+  - [MsgUpdateAttributeRequest](#msgupdateattributerequest)
+  - [MsgDeleteAttributeRequest](#msgdeleteattributerequest)
+  - [MsgDeleteDistinctAttributeRequest](#msgdeletedistinctattributerequest)
+
+
+
 ## MsgAddAttributeRequest
 
 An attribute record is created using the `MsgAddAttributeRequest` message.
