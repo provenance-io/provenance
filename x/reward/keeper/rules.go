@@ -247,6 +247,10 @@ func (k Keeper) GetAllActiveRewards(ctx sdk.Context) ([]types.RewardProgram, err
 		// 1,3 .. 1+4 > 3
 		// 1,4 .. 1+4 > 4
 		currentEpoch := k.EpochKeeper.GetEpochInfo(ctx, rewardProgram.EpochId)
+		// not yet started
+		if rewardProgram.StartEpoch > currentEpoch.CurrentEpoch-1 {
+			return false
+		}
 		if rewardProgram.StartEpoch+rewardProgram.NumberEpochs > currentEpoch.CurrentEpoch {
 			rewardPrograms = append(rewardPrograms, rewardProgram)
 		} else {
