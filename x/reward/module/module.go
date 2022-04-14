@@ -44,8 +44,7 @@ func (AppModuleBasic) Name() string {
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	// TODO
-	reward.RegisterQueryServer(cfg.QueryServer(), &reward.UnimplementedQueryServer{})
+	reward.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
 // RegisterLegacyAminoCodec registers the reward module's types for the given codec.
@@ -85,9 +84,7 @@ func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, m
 
 // GetQueryCmd returns the cli query commands for the reward module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	// TODO
-	// return cli.GetQueryCmd()
-	return nil
+	return cli.GetQueryCmd()
 }
 
 // GetTxCmd returns the transaction commands for the reward module
