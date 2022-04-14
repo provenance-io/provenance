@@ -51,7 +51,7 @@ This release addresses issues related to IAVL concurrency and Tendermint perform
 
 * Update Provenance to use Cosmos SDK 0.45.3 Release [\#781](https://github.com/provenance-io/provenance/issues/781)
 * Plugin architecture for ADR-038 + FileStreamingService plugin [\#10639](https://github.com/cosmos/cosmos-sdk/pull/10639)
-* Sporadic error: "panic: Value missing for hash" [\#611](https://github.com/provenance-io/provenance/issues/611) 
+* Fix for sporadic error "panic: Value missing for hash" [\#611](https://github.com/provenance-io/provenance/issues/611) 
 
 ## [v1.8.0](https://github.com/provenance-io/provenance/releases/tag/v1.8.0) - 2022-03-17
 
