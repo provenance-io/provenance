@@ -108,7 +108,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           # CodeCov requires fetch-depth > 1
-          fetch-depth: 2      
+          fetch-depth: 2
       - uses: actions/download-artifact@v3
         if: needs.setup-tests.outputs.should-run
         with:
@@ -141,7 +141,7 @@ jobs:
             echo "Excluding ${filename} from coverage report..."
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
-      - uses: codecov/codecov-action@v2.1.0
+      - uses: codecov/codecov-action@v3
         if: needs.setup-tests.outputs.should-run
         with:
           file: ./coverage.txt
