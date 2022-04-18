@@ -339,23 +339,23 @@ func New(
 		// if their names match those in the `plugins.enabled` list.
 		pluginLoader, err := loader.NewPluginLoader(appOpts, logger)
 		if err != nil {
-			tmos.Exit(err.Error())
+			panic("error while loading plugin: " + err.Error())
 		}
 
 		// initialize the loaded plugins
 		if err := pluginLoader.Initialize(); err != nil {
-			tmos.Exit(err.Error())
+			panic("error while initializing plugin: " + err.Error())
 		}
 
 		// register the plugin(s) with the BaseApp
 		if err := pluginLoader.Inject(bApp, appCodec, keys); err != nil {
-			tmos.Exit(err.Error())
+			panic("error while injecting plugin: " + err.Error())
 		}
 
 		// start the plugin services, optionally use wg to synchronize shutdown using io.Closer
 		wg := new(sync.WaitGroup)
 		if err := pluginLoader.Start(wg); err != nil {
-			tmos.Exit(err.Error())
+			panic("error while starting plugin: " + err.Error())
 		}
 	}
 
