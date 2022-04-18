@@ -5,8 +5,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	epochkeeper "github.com/provenance-io/provenance/x/epoch/keeper"
@@ -22,6 +24,7 @@ type Keeper struct {
 	stakingKeeper types.StakingKeeper
 	govKeeper     *govkeeper.Keeper
 	bankKeeper    bankkeeper.Keeper
+	authkeeper    authkeeper.AccountKeeper
 }
 
 func NewKeeper(
@@ -31,6 +34,7 @@ func NewKeeper(
 	stakingKeeper types.StakingKeeper,
 	govKeeper *govkeeper.Keeper,
 	bankKeeper bankkeeper.Keeper,
+	authKeeper authkeeper.AccountKeeper,
 ) Keeper {
 	return Keeper{
 		storeKey:      key,
@@ -39,6 +43,7 @@ func NewKeeper(
 		stakingKeeper: stakingKeeper,
 		govKeeper:     govKeeper,
 		bankKeeper:    bankKeeper,
+		authkeeper:    authKeeper,
 	}
 }
 

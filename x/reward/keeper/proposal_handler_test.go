@@ -33,7 +33,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.app = provenance.Setup(false)
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Height: 2})
-	s.k = rewardkeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(rewardtypes.ModuleName), s.app.EpochKeeper, s.app.StakingKeeper)
+	s.k = rewardkeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(rewardtypes.ModuleName), s.app.EpochKeeper, s.app.StakingKeeper, &s.app.GovKeeper, s.app.BankKeeper, s.app.AccountKeeper)
 	s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	s.app.EpochKeeper.SetEpochInfo(s.ctx, epochtypes.EpochInfo{
 		Identifier:              "week",
