@@ -3,8 +3,6 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/plugin"
-	"github.com/cosmos/cosmos-sdk/plugin/loader"
 	"io"
 	"net/http"
 	"os"
@@ -12,6 +10,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/cosmos/cosmos-sdk/plugin"
+	"github.com/cosmos/cosmos-sdk/plugin/loader"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
