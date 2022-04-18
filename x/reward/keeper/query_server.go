@@ -2,9 +2,9 @@ package keeper
 
 import (
 	"context"
-
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -18,9 +18,17 @@ func (k Keeper) RewardPrograms(ctx context.Context, req *types.RewardProgramsReq
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	fmt.Println("Made it into the QueryServer")
-
 	var rewardPrograms []types.RewardProgram
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	err := k.IterateRewardPrograms(sdkCtx, func(rewardProgram types.RewardProgram) (stop bool) {
+		rewardPrograms = append(rewardPrograms, rewardProgram)
+		return false
+	})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to iterate reward programs: %v", err))
+	}
+
 	return &types.RewardProgramsResponse{RewardPrograms: rewardPrograms}, nil
 }
 
