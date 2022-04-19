@@ -1,12 +1,15 @@
 package keeper_test
 
 import (
+	"testing"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	epoch "github.com/provenance-io/provenance/x/epoch"
 	"github.com/provenance-io/provenance/x/reward"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"testing"
 
 	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
@@ -33,10 +36,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app.Setup(false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
 
-	// queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
-	// TODO
-	// types.RegisterQueryServer(queryHelper, nil)
-	// suite.queryClient = types.NewQueryClient(queryHelper)
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, suite.app.RewardKeeper)
+	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
 func TestKeeperTestSuite(t *testing.T) {
