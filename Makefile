@@ -385,37 +385,42 @@ test-all: test-unit test-ledger-mock test-race test-cover
 TEST_PACKAGES=./...
 TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-race test-ledger test-race
 
+ifeq ($(WITH_CLEVELDB),true)
+	TAGS+= cleveldb
+endif
+
 # Test runs-specific rules. To add a new test target, just add
-# a new rule, customise ARGS or TEST_PACKAGES ad libitum, and
+# a new rule, customise TAGS, ARGS and/or TEST_PACKAGES ad libitum, and
 # append the new rule to the TEST_TARGETS list.
-test-unit: ARGS=-tags='cgo ledger test_ledger_mock norace'
-test-unit-amino: ARGS=-tags='ledger test_ledger_mock test_amino norace'
-test-ledger: ARGS=-tags='cgo ledger norace'
-test-ledger-mock: ARGS=-tags='ledger test_ledger_mock norace'
-test-race: ARGS=-race -tags='cgo ledger test_ledger_mock'
+test-unit: TAGS+=cgo ledger test_ledger_mock norace
+test-unit-amino: TAGS+=ledger test_ledger_mock test_amino norace
+test-ledger: TAGS+=cgo ledger norace
+test-ledger-mock: TAGS+=ledger test_ledger_mock norace
+test-race: ARGS+=-race
+test-race: TAGS+=cgo ledger test_ledger_mock
 test-race: TEST_PACKAGES=$(PACKAGES_NOSIMULATION)
 $(TEST_TARGETS): run-tests
 
 # check-* compiles and collects tests without running them
 # note: go test -c doesn't support multiple packages yet (https://github.com/golang/go/issues/15513)
 CHECK_TEST_TARGETS := check-test-unit check-test-unit-amino
-check-test-unit: ARGS=-tags='cgo ledger test_ledger_mock norace'
-check-test-unit-amino: ARGS=-tags='ledger test_ledger_mock test_amino norace'
-$(CHECK_TEST_TARGETS): EXTRA_ARGS=-run=none
+check-test-unit: TAGS+=cgo ledger test_ledger_mock norace
+check-test-unit-amino: TAGS+=ledger test_ledger_mock test_amino norace
+$(CHECK_TEST_TARGETS): ARGS+=-run=none
 $(CHECK_TEST_TARGETS): run-tests
 
 run-tests:
 ifneq (,$(shell which tparse 2>/dev/null))
-	go test -mod=readonly -json $(ARGS) $(EXTRA_ARGS) $(TEST_PACKAGES) | tparse
+	go test -mod=readonly -json $(ARGS) -tags='$(TAGS)'$(TEST_PACKAGES) | tparse
 else
-	go test -mod=readonly $(ARGS)  $(EXTRA_ARGS) $(TEST_PACKAGES)
+	go test -mod=readonly $(ARGS) -tags='$(TAGS)' $(TEST_PACKAGES)
 endif
 
 test-cover:
 	@export VERSION=$(VERSION); bash -x contrib/test_cover.sh
 
 benchmark:
-	@go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
+	go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
 
 .PHONY: test test-all test-unit test-race test-cover benchmark run-tests  $(TEST_TARGETS)
 

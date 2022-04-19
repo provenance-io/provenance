@@ -72,11 +72,15 @@ jobs:
       matrix:
         part: ["00", "01", "02", "03"]
     runs-on: ubuntu-latest
+    env:
+      LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
     steps:
       - uses: actions/checkout@v3
         with:
           # CodeCov requires fetch-depth > 1
           fetch-depth: 2
+      - name: Build and install cleveldb
+        run: make cleveldb
       - uses: actions/setup-go@v3
         if: needs.setup-tests.outputs.should-run
         with:
@@ -88,7 +92,7 @@ jobs:
       - name: test & coverage report creation
         if: needs.setup-tests.outputs.should-run
         run: |
-          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='norace ledger test_ledger_mock'
+          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='norace ledger test_ledger_mock cleveldb'
       - uses: actions/upload-artifact@v3
         if: needs.setup-tests.outputs.should-run
         with:
@@ -157,8 +161,12 @@ jobs:
       fail-fast: false
       matrix:
         part: ["00", "01", "02", "03"]
+    env:
+      LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
     steps:
       - uses: actions/checkout@v3
+      - name: Build and install cleveldb
+        run: make cleveldb
       - uses: actions/setup-go@v3
         if: needs.setup-tests.outputs.should-run
         with:
@@ -170,7 +178,7 @@ jobs:
       - name: test & coverage report creation
         if: needs.setup-tests.outputs.should-run
         run: |
-          xargs --arg-file=pkgs.txt.part.${{ matrix.part }} go test -mod=readonly -timeout 30m -race -tags='cgo ledger test_ledger_mock' | tee ${{ matrix.part }}-race-output.txt
+          xargs --arg-file=pkgs.txt.part.${{ matrix.part }} go test -mod=readonly -timeout 30m -race -tags='cgo ledger test_ledger_mock cleveldb' | tee ${{ matrix.part }}-race-output.txt
           exit "${PIPESTATUS[0]}"
       - uses: actions/upload-artifact@v3
         if: needs.setup-tests.outputs.should-run

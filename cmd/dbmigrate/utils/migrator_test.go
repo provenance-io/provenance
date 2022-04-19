@@ -781,22 +781,23 @@ func (s MigratorTestSuite) TestDetectDBType() {
 		assert.Equal(t, expected, actual, "DetectDBType BackendType")
 	})
 
-	s.T().Run("clevel", func(t *testing.T) {
-		AddPossibleDBType(tmdb.CLevelDBBackend)
-		defer func() {
-			delete(PossibleDBTypes, string(tmdb.CLevelDBBackend))
-		}()
-		expected := tmdb.CLevelDBBackend
-		name := "level3"
-		dataDir := filepath.Join(tDir, "level")
-		dbDir := filepath.Join(dataDir, name+".db")
-		require.NoError(t, os.MkdirAll(dbDir, 0700), "making dbDir")
-		require.NoError(t, os.WriteFile(filepath.Join(dbDir, "CURRENT"), []byte{}, 0600), "making CURRENT")
-		require.NoError(t, os.WriteFile(filepath.Join(dbDir, "LOG"), []byte{}, 0600), "making LOG")
-		actual, ok := DetectDBType(name, dataDir)
-		assert.True(t, ok, "DetectDBType bool")
-		assert.Equal(t, expected, actual, "DetectDBType BackendType")
-	})
+	// To run this test, you'll need to provide the tag 'cleveldb' to the test command.
+	// Both make test and the github action should have that tag, but you might need
+	// to tell your IDE about it in order to use it to run this test.
+	if IsPossibleDBType("cleveldb") {
+		s.T().Run("clevel", func(t *testing.T) {
+			expected := tmdb.CLevelDBBackend
+			name := "level3"
+			dataDir := filepath.Join(tDir, "level")
+			dbDir := filepath.Join(dataDir, name+".db")
+			require.NoError(t, os.MkdirAll(dbDir, 0700), "making dbDir")
+			require.NoError(t, os.WriteFile(filepath.Join(dbDir, "CURRENT"), []byte{}, 0600), "making CURRENT")
+			require.NoError(t, os.WriteFile(filepath.Join(dbDir, "LOG"), []byte{}, 0600), "making LOG")
+			actual, ok := DetectDBType(name, dataDir)
+			assert.True(t, ok, "DetectDBType bool")
+			assert.Equal(t, expected, actual, "DetectDBType BackendType")
+		})
+	}
 
 	s.T().Run("golevel", func(t *testing.T) {
 		expected := tmdb.GoLevelDBBackend
