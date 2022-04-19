@@ -905,11 +905,11 @@ func DetectDBType(name, dir string) (tmdb.BackendType, bool) {
 		return true
 	}
 
-	if IsPossibleDBType(string(tmdb.CLevelDBBackend)) && canOpenDB(tmdb.CLevelDBBackend) {
-		return tmdb.CLevelDBBackend, true
-	}
 	if canOpenDB(tmdb.GoLevelDBBackend) {
 		return tmdb.GoLevelDBBackend, true
+	}
+	if IsPossibleDBType(string(tmdb.CLevelDBBackend)) && canOpenDB(tmdb.CLevelDBBackend) {
+		return tmdb.CLevelDBBackend, true
 	}
 
 	return unknownDBBackend, false

@@ -786,13 +786,15 @@ func (s MigratorTestSuite) TestDetectDBType() {
 	// to tell your IDE about it in order to use it to run this test.
 	if IsPossibleDBType("cleveldb") {
 		s.T().Run("clevel", func(t *testing.T) {
-			expected := tmdb.CLevelDBBackend
+			// As far as I can tell, you can always open a cleveldb using goleveldb, but not vice versa.
+			// Since DetectDBType checks for goleveldb first, it should return as goleveldb in this test.
+			expected := tmdb.GoLevelDBBackend
 			name := "clevel3"
 			dataDir := filepath.Join(tDir, "clevel")
 			require.NoError(t, os.MkdirAll(dataDir, 0700), "making data dir")
 			// The reason the other db types aren't done this way (creating the db with NewDB) is that
 			// I didn't want to cause confusion with regard to build tags and external library dependencies.
-			db, err := tmdb.NewDB(name, expected, dataDir)
+			db, err := tmdb.NewDB(name, tmdb.CLevelDBBackend, dataDir)
 			require.NoError(t, err, "NewDB")
 			for i := 0; i < 15; i++ {
 				assert.NoError(t, db.Set([]byte(fmt.Sprintf("%s-key-%d", name, i)), []byte(fmt.Sprintf("%s-value-%d", name, i))), "setting key/value %d", i)
@@ -805,15 +807,6 @@ func (s MigratorTestSuite) TestDetectDBType() {
 	}
 
 	s.T().Run("golevel", func(t *testing.T) {
-		// In manual testing, sometimes a goleveldb could be opened using cleveldb, and sometimes not.
-		// But during unit testing, it didn't seem to matter.
-		// So make cleveldb not a possibility so we can make sure it doesn't get falsely labeled.
-		if IsPossibleDBType(string(tmdb.CLevelDBBackend)) {
-			delete(PossibleDBTypes, string(tmdb.CLevelDBBackend))
-			defer func() {
-				AddPossibleDBType(tmdb.CLevelDBBackend)
-			}()
-		}
 		expected := tmdb.GoLevelDBBackend
 		name := "golevel8"
 		dataDir := filepath.Join(tDir, "golevel")
