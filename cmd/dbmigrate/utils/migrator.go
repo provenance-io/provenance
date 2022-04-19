@@ -896,6 +896,12 @@ func DetectDBType(name, dir string) (tmdb.BackendType, bool) {
 		if iter.Error() != nil {
 			return false
 		}
+		if iter.Close() != nil {
+			return false
+		}
+		if db.Close() != nil {
+			return false
+		}
 		return true
 	}
 
