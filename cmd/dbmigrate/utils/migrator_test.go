@@ -787,12 +787,17 @@ func (s MigratorTestSuite) TestDetectDBType() {
 	if IsPossibleDBType("cleveldb") {
 		s.T().Run("clevel", func(t *testing.T) {
 			expected := tmdb.CLevelDBBackend
-			name := "level3"
-			dataDir := filepath.Join(tDir, "level")
-			dbDir := filepath.Join(dataDir, name+".db")
-			require.NoError(t, os.MkdirAll(dbDir, 0700), "making dbDir")
-			require.NoError(t, os.WriteFile(filepath.Join(dbDir, "CURRENT"), []byte{}, 0600), "making CURRENT")
-			require.NoError(t, os.WriteFile(filepath.Join(dbDir, "LOG"), []byte{}, 0600), "making LOG")
+			name := "clevel3"
+			dataDir := filepath.Join(tDir, "clevel")
+			require.NoError(t, os.MkdirAll(dataDir, 0700), "making data dir")
+			// The reason the other db types aren't done this way (creating the db with NewDB) is that
+			// I didn't want to cause confusion with regard to build tags and external library dependencies.
+			db, err := tmdb.NewDB(name, expected, dataDir)
+			require.NoError(t, err, "NewDB")
+			for i := 0; i < 15; i++ {
+				assert.NoError(t, db.Set([]byte(fmt.Sprintf("%s-key-%d", name, i)), []byte(fmt.Sprintf("%s-value-%d", name, i))), "setting key/value %d", i)
+			}
+			require.NoError(t, db.Close(), "closing db")
 			actual, ok := DetectDBType(name, dataDir)
 			assert.True(t, ok, "DetectDBType bool")
 			assert.Equal(t, expected, actual, "DetectDBType BackendType")
@@ -800,13 +805,27 @@ func (s MigratorTestSuite) TestDetectDBType() {
 	}
 
 	s.T().Run("golevel", func(t *testing.T) {
+		// In manual testing, sometimes a goleveldb could be opened using cleveldb, and sometimes not.
+		// But during unit testing, it didn't seem to matter.
+		// So make cleveldb not a possibility so we can make sure it doesn't get falsely labeled.
+		if IsPossibleDBType(string(tmdb.CLevelDBBackend)) {
+			delete(PossibleDBTypes, string(tmdb.CLevelDBBackend))
+			defer func() {
+				AddPossibleDBType(tmdb.CLevelDBBackend)
+			}()
+		}
 		expected := tmdb.GoLevelDBBackend
-		name := "level3"
-		dataDir := filepath.Join(tDir, "level")
-		dbDir := filepath.Join(dataDir, name+".db")
-		require.NoError(t, os.MkdirAll(dbDir, 0700), "making dbDir")
-		require.NoError(t, os.WriteFile(filepath.Join(dbDir, "CURRENT"), []byte{}, 0600), "making CURRENT")
-		require.NoError(t, os.WriteFile(filepath.Join(dbDir, "LOG"), []byte{}, 0600), "making LOG")
+		name := "golevel8"
+		dataDir := filepath.Join(tDir, "golevel")
+		require.NoError(t, os.MkdirAll(dataDir, 0700), "making data dir")
+		// The reason the other db types aren't done this way (creating the db with NewDB) is that
+		// I didn't want to cause confusion with regard to build tags and external library dependencies.
+		db, err := tmdb.NewDB(name, expected, dataDir)
+		require.NoError(t, err, "NewDB")
+		for i := 0; i < 15; i++ {
+			assert.NoError(t, db.Set([]byte(fmt.Sprintf("%s-key-%d", name, i)), []byte(fmt.Sprintf("%s-value-%d", name, i))), "setting key/value %d", i)
+		}
+		require.NoError(t, db.Close(), "closing db")
 		actual, ok := DetectDBType(name, dataDir)
 		assert.True(t, ok, "DetectDBType bool")
 		assert.Equal(t, expected, actual, "DetectDBType BackendType")
@@ -849,39 +868,11 @@ func (s MigratorTestSuite) TestDetectDBType() {
 
 	s.T().Run("does not exist", func(t *testing.T) {
 		expected := unknownDBBackend
-		name := "only-current6"
+		name := "does-not-exist6"
 		dataDir := filepath.Join(tDir, "only-current")
 		actual, ok := DetectDBType(name, dataDir)
 		assert.False(t, ok, "DetectDBType bool")
 		assert.Equal(t, expected, actual, "DetectDBType BackendType")
-	})
-}
-
-func (s MigratorTestSuite) TestGetBestType() {
-	origPosibleDBTypes := PossibleDBTypes
-	defer func() {
-		PossibleDBTypes = origPosibleDBTypes
-	}()
-
-	PossibleDBTypes = map[string]tmdb.BackendType{
-		"goleveldb": tmdb.GoLevelDBBackend,
-	}
-
-	dbTypes := []tmdb.BackendType{
-		tmdb.GoLevelDBBackend, tmdb.CLevelDBBackend, tmdb.BadgerDBBackend,
-		tmdb.RocksDBBackend, tmdb.BoltDBBackend, tmdb.BackendType("random"),
-	}
-	for _, expected := range dbTypes {
-		s.T().Run(string(expected)+" passthrough", func(t *testing.T) {
-			actual := getBestType(expected)
-			assert.Equal(t, expected, actual)
-		})
-	}
-
-	AddPossibleDBType(tmdb.CLevelDBBackend)
-	s.T().Run("goleveldb becomes cleveldb if possible", func(t *testing.T) {
-		actual := getBestType(tmdb.GoLevelDBBackend)
-		assert.Equal(t, tmdb.CLevelDBBackend, actual)
 	})
 }
 

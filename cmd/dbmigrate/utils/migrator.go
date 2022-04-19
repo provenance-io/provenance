@@ -481,7 +481,7 @@ func (m *migrationManager) MigrateDBDir(dbDir string) (summary string, err error
 	}
 
 	// If they're both the same type, just copy it and be done.
-	targetDBBackendType := getBestType(tmdb.BackendType(m.TargetDBType))
+	targetDBBackendType := tmdb.BackendType(m.TargetDBType)
 	if sourceDBType == targetDBBackendType {
 		m.Status = "copying db"
 		from := filepath.Join(m.SourceDataDir, dbDir)
@@ -862,19 +862,51 @@ func DetectDBType(name, dir string) (tmdb.BackendType, bool) {
 		return tmdb.RocksDBBackend, true
 	}
 
-	// There are no statically named files that are used by leveldb but not rocksdb. So at this point, just assume it's leveldb.
-	// GolevelDB and CLevelDB are both a LevelDB as far as the files go. And CLevelDB is much faster, so use that.
-	return getBestType(tmdb.GoLevelDBBackend), true
-}
-
-// getBestType returns CLevelDB when provided GoLevelDB. Anything is is returned as is.
-// This is because the performance of GoLevelDB is so much worse than CLevelDB.
-// We can say that we're using GoLevelDB, but use CLevelDB for all the interactions.
-func getBestType(dbType tmdb.BackendType) tmdb.BackendType {
-	if dbType == tmdb.GoLevelDBBackend && IsPossibleDBType(string(tmdb.CLevelDBBackend)) {
-		return tmdb.CLevelDBBackend
+	// At this point, we assume it's either cleveldb or goleveldb.
+	// Unfortunately, they both use the same files, but possibly with different formats.
+	// Sometimes you can treat a goleveldb as cleveldb and vice versa, but sometimes you can't.
+	// The only way I can think of to differentiate them here is to just try to open them.
+	// I didn't test like this with the other types because the tmdb.NewDB function will create
+	// a db if it doesn't exist which can cause weird behavior if trying with the wrong db type.
+	// Goleveldb and cleveldb are close enough, though that it won't cause problems.
+	canOpenDB := func(backend tmdb.BackendType) (rv bool) {
+		defer func() {
+			if r := recover(); r != nil {
+				rv = false
+			}
+		}()
+		db, err := tmdb.NewDB(name, backend, dir)
+		if err != nil {
+			return false
+		}
+		iter, err := db.Iterator(nil, nil)
+		if err != nil {
+			return false
+		}
+		// Check up to the first 10 entries. 10 randomly picked to not be t0o big, but bigger than 0 or 1.
+		i := 0
+		for ; iter.Valid(); iter.Next() {
+			_ = iter.Key()
+			_ = iter.Value()
+			i++
+			if i >= 10 {
+				break
+			}
+		}
+		if iter.Error() != nil {
+			return false
+		}
+		return true
 	}
-	return dbType
+
+	if IsPossibleDBType(string(tmdb.CLevelDBBackend)) && canOpenDB(tmdb.CLevelDBBackend) {
+		return tmdb.CLevelDBBackend, true
+	}
+	if canOpenDB(tmdb.GoLevelDBBackend) {
+		return tmdb.GoLevelDBBackend, true
+	}
+
+	return unknownDBBackend, false
 }
 
 // dirExists returns true if the path exists and is a directory.
