@@ -40,6 +40,23 @@ func (k Keeper) ModuleAccountBalance(context.Context, *types.QueryModuleAccountB
 	return &types.QueryModuleAccountBalanceResponse{}, nil
 }
 
-func (k Keeper) RewardProgramByID(context.Context, *types.RewardProgramByIDRequest) (*types.RewardProgramByIDResponse, error) {
-	return &types.RewardProgramByIDResponse{}, nil
+func (k Keeper) RewardProgramByID(ctx context.Context, req *types.RewardProgramByIDRequest) (*types.RewardProgramByIDResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	response := types.RewardProgramByIDResponse{}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	rewardProgram, err := k.GetRewardProgram(sdkCtx, int64(req.GetId()))
+	if err != nil {
+		return &response, err
+	}
+
+	// 0 is not a valid id. This means the program was not found
+	if rewardProgram.Id != 0 {
+		response.RewardProgram = &rewardProgram
+	}
+
+	return &response, nil
 }
