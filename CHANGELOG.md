@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
+* Enable ADR-038 State Listening [#785](https://github.com/provenance-io/provenance/issues/785)
+
 ## [v1.8.1](https://github.com/provenance-io/provenance/releases/tag/v1.8.1) - 2022-04-13
 
 ### Summary
