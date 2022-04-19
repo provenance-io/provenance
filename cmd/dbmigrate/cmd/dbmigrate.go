@@ -66,7 +66,11 @@ Valid <target type> values: %s
 
 Migration process:
 1. Copy the current data directory into a staging data directory, migrating any databases appropriately.
+   The staging directory is named data-dbmigrate-tmp-{timestamp}-{target dbtype}
+   and by default will be in the {home} directory.
 2. Move the current data directory to the backup location.
+   The backup directory is named data-dbmigrate-backup-{timestamp}-{dbtypes}
+   and by default will be in the {home} directoyr.
 3. Move the staging data directory into place as the current data directory.
 4. Update the config file to reflect the new database backend type.
 `, strings.Join(utils.GetPossibleDBTypes(), ", ")),
@@ -126,8 +130,8 @@ Migration process:
 			return nil
 		},
 	}
-	rv.Flags().String(FlagBackupDir, "", "directory to back up the current data directory to (default {home}/data-dbmigrate-backup-{timestamp}-{dbtypes})")
-	rv.Flags().String(FlagStagingDir, "", "staging directory to use (default {home}/data-dbmigrate-tmp-{timestamp}-{target dbtype})")
+	rv.Flags().String(FlagBackupDir, "", "directory to hold the backup directory (default {home})")
+	rv.Flags().String(FlagStagingDir, "", "directory to hold the staging directory (default {home})")
 	rv.Flags().Uint(FlagBatchSize, 2_048, "(in megabytes) after a batch reaches this size it is written and a new one is started (0 = unlimited)")
 	rv.Flags().Bool(FlagStageOnly, false, "only migrate/copy the data (do not backup and replace the data directory and do not update the config)")
 	return rv
