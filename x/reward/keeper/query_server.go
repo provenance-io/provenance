@@ -32,8 +32,22 @@ func (k Keeper) RewardPrograms(ctx context.Context, req *types.RewardProgramsReq
 	return &types.RewardProgramsResponse{RewardPrograms: rewardPrograms}, nil
 }
 
-func (k Keeper) ActiveRewardPrograms(context.Context, *types.ActiveRewardProgramsRequest) (*types.ActiveRewardProgramsResponse, error) {
-	return &types.ActiveRewardProgramsResponse{}, nil
+func (k Keeper) ActiveRewardPrograms(ctx context.Context, req *types.ActiveRewardProgramsRequest) (*types.ActiveRewardProgramsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	response := types.ActiveRewardProgramsResponse{}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	rewardPrograms, err := k.GetAllActiveRewards(sdkCtx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to obtain active reward programs: %v", err))
+	}
+
+	response.RewardPrograms = rewardPrograms
+
+	return &response, nil
 }
 
 func (k Keeper) ModuleAccountBalance(context.Context, *types.QueryModuleAccountBalanceRequest) (*types.QueryModuleAccountBalanceResponse, error) {
