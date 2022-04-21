@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"sort"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -22,7 +24,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -35,6 +36,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	cmdconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
@@ -61,6 +63,7 @@ func TestFullAppSimulation(t *testing.T) {
 	if skip {
 		t.Skip("skipping provenance application simulation")
 	}
+	PrintConfig(config)
 	require.NoError(t, err, "provenance simulation setup failed")
 
 	defer func() {
@@ -91,9 +94,7 @@ func TestFullAppSimulation(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, simErr)
 
-	if config.Commit {
-		sdksim.PrintStats(db)
-	}
+	PrintStats(config, db)
 }
 
 func TestSimple(t *testing.T) {
@@ -101,6 +102,7 @@ func TestSimple(t *testing.T) {
 	if skip {
 		t.Skip("skipping provenance application simulation")
 	}
+	PrintConfig(config)
 	require.NoError(t, err, "provenance simulation setup failed")
 
 	defer func() {
@@ -125,7 +127,7 @@ func TestSimple(t *testing.T) {
 	)
 
 	require.NoError(t, simErr)
-	sdksim.PrintStats(db)
+	PrintStats(config, db)
 }
 
 // Profile with:
@@ -138,6 +140,7 @@ func TestAppImportExport(t *testing.T) {
 	if skip {
 		t.Skip("skipping application import/export simulation")
 	}
+	PrintConfig(config)
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
@@ -167,9 +170,7 @@ func TestAppImportExport(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, simErr)
 
-	if config.Commit {
-		sdksim.PrintStats(db)
-	}
+	PrintStats(config, db)
 
 	fmt.Printf("exporting genesis...\n")
 
@@ -240,6 +241,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	if skip {
 		t.Skip("skipping application simulation after import")
 	}
+	PrintConfig(config)
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
@@ -267,9 +269,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, simErr)
 
-	if config.Commit {
-		sdksim.PrintStats(db)
-	}
+	PrintStats(config, db)
 
 	if stopEarly {
 		fmt.Println("can't export or import a zero-validator genesis, exiting test...")
@@ -324,6 +324,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.OnOperation = false
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
+	config.DBBackend = "memdb"
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
@@ -331,6 +332,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 	for i := 0; i < numSeeds; i++ {
 		config.Seed = rand.Int63()
+		PrintConfig(config)
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
@@ -361,9 +363,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			if config.Commit {
-				sdksim.PrintStats(db)
-			}
+			PrintStats(config, db)
 
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
@@ -388,4 +388,47 @@ func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
 // inter-block write-through cache.
 func interBlockCacheOpt() func(*baseapp.BaseApp) {
 	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
+}
+
+// PrintStats outputs the config and db info.
+func PrintStats(config simtypes.Config, db dbm.DB) {
+	PrintConfig(config)
+	if config.Commit {
+		PrintDBInfo(db)
+	}
+}
+
+// PrintConfig outputs the config.
+func PrintConfig(config simtypes.Config) {
+	fmt.Println("-vvv-  Config Info  -vvv-")
+	cfields := cmdconfig.MakeFieldValueMap(config, true)
+	for _, f := range cfields.GetSortedKeys() {
+		fmt.Printf("%s: %s\n", f, cfields.GetStringOf(f))
+	}
+	fmt.Println("-^^^-  Config Info  -^^^-")
+}
+
+// PrintDBInfo outputs the db.Stats map.
+func PrintDBInfo(db dbm.DB) {
+	fmt.Println("-vvv-  Database Info  -vvv-")
+	dbStats := db.Stats()
+	if len(dbStats) == 0 {
+		fmt.Println("No info to report.")
+	} else {
+		keys := make([]string, 0, len(dbStats))
+		for k := range dbStats {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			v := dbStats[k]
+			if strings.Contains(v, "\n") {
+				fmt.Printf("%s:\n", k)
+				fmt.Println(v)
+			} else {
+				fmt.Printf("%s: %q\n", k, v)
+			}
+		}
+	}
+	fmt.Println("-^^^-  Database Info  -^^^-")
 }

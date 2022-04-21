@@ -8,8 +8,25 @@ PACKAGES_SIMULATION    := $(filter     %/simulation%,$(PACKAGES))
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 
-LEDGER_ENABLED ?= true
-WITH_CLEVELDB ?= yes
+WITH_LEDGER ?= true
+WITH_CLEVELDB ?= true
+WITH_ROCKSDB ?= false
+WITH_BADGERDB ?= true
+
+# We used to use 'yes' on these flags, so at least for now, change 'yes' into 'true'
+ifeq ($(WITH_LEDGER),yes)
+  WITH_LEDGER=true
+endif
+ifeq ($(WITH_CLEVELDB),yes)
+  WITH_CLEVELDB=true
+endif
+ifeq ($(WITH_ROCKSDB),yes)
+  WITH_ROCKSDB=true
+endif
+ifeq ($(WITH_BADGERDB),yes)
+  WITH_BADGERDB=true
+endif
+
 
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
@@ -29,7 +46,7 @@ ifeq ("$(wildcard $(GOLANGCI_LINT))","")
     GOLANGCI_LINT = $(BINDIR)/golangci-lint
 endif
 
-GO := go
+GO ?= go
 
 HTTPS_GIT := https://github.com/provenance-io/provenance.git
 DOCKER := $(shell which docker)
@@ -44,58 +61,84 @@ GO_VERSION_VALIDATION_ERR_MSG = Golang version $(GO_MAJOR_VERSION).$(GO_MINOR_VE
 # The below include contains the tools target.
 include contrib/devtools/Makefile
 
+#Identify the system and if gcc is available.
+ifeq ($(OS),Windows_NT)
+  UNAME_S = 'windows_nt'
+else
+  UNAME_S = $(shell uname -s | tr '[A-Z]' '[a-z]')
+endif
+
+ifeq ($(UNAME_S),windows_nt)
+  ifneq ($(shell where gcc.exe 2> NUL),)
+    have_gcc = true
+  endif
+else
+  ifneq ($(shell command -v gcc 2> /dev/null),)
+    have_gcc = true
+  endif
+endif
+
 ##############################
 # Build Flags/Tags
 ##############################
+
 build_tags = netgo
-ifeq ($(WITH_CLEVELDB),yes)
-  build_tags += gcc
-  build_tags += cleveldb
+ifeq ($(WITH_CLEVELDB),true)
+  ifneq ($(have_gcc),true)
+    $(error gcc not installed for cleveldb support, please install or set WITH_CLEVELDB=false)
+  else
+    build_tags += gcc
+    build_tags += cleveldb
+  endif
+endif
+ifeq ($(WITH_ROCKSDB),true)
+  build_tags += rocksdb
+endif
+ifeq ($(WITH_BADGERDB),true)
+  build_tags += badgerdb
 endif
 
-ifeq ($(LEDGER_ENABLED),true)
-  ifeq ($(OS),Windows_NT)
-    GCCEXE = $(shell where gcc.exe 2> NUL)
-    ifeq ($(GCCEXE),)
-      $(error gcc.exe not installed for ledger support, please install or set LEDGER_ENABLED=false)
-    else
-      build_tags += ledger
-    endif
+ifeq ($(WITH_LEDGER),true)
+  ifeq ($(UNAME_S),openbsd)
+    $(warning OpenBSD detected, disabling ledger support (https://github.com/cosmos/cosmos-sdk/issues/1988))
+    WITH_LEDGER = false
+  else ifneq ($(have_gcc),true)
+    $(error gcc not installed for ledger support, please install or set WITH_LEDGER=false)
   else
-    UNAME_S = $(shell uname -s)
-    ifeq ($(UNAME_S),OpenBSD)
-      $(warning OpenBSD detected, disabling ledger support (https://github.com/cosmos/cosmos-sdk/issues/1988))
-    else
-      GCC = $(shell command -v gcc 2> /dev/null)
-      ifeq ($(GCC),)
-        $(error gcc not installed for ledger support, please install or set LEDGER_ENABLED=false)
-      else
-        build_tags += ledger
-      endif
-    endif
+    build_tags += ledger
   endif
 endif
 
 ### CGO Settings
-ifeq ($(UNAME_S),Darwin)
+ifeq ($(UNAME_S),darwin)
   # osx linker settings
-  CGO_LDFLAGS = -Wl,-rpath,@loader_path/.
-else ifeq ($(UNAME_S),Linux)
+  cgo_ldflags += -Wl,-rpath,@loader_path/.
+else ifeq ($(UNAME_S),linux)
   # linux liner settings
-  CGO_LDFLAGS = -Wl,-rpath,\$$ORIGIN
+  cgo_ldflags += -Wl,-rpath,\$$ORIGIN
 endif
 
 # cleveldb linker settings
-ifeq ($(WITH_CLEVELDB),yes)
-  ifeq ($(UNAME_S),Darwin)
-    LEVELDB_PATH = $(shell brew --prefix leveldb 2>/dev/null || echo "$(HOME)/Cellar/leveldb/1.22/include")
-    CGO_CFLAGS   = -I$(LEVELDB_PATH)/include
-    CGO_LDFLAGS += -L$(LEVELDB_PATH)/lib
-  else ifeq ($(UNAME_S),Linux)
+ifeq ($(WITH_CLEVELDB),true)
+  ifeq ($(UNAME_S),darwin)
+    LEVELDB_PATH ?= $(shell brew --prefix leveldb 2> /dev/null)
+    # Only do stuff if that LEVELDB_PATH exists. Otherwise, leave it up to already installed libraries.
+    ifneq ($(wildcard $(LEVELDB_PATH)/.),)
+      cgo_cflags  += -I$(LEVELDB_PATH)/include
+	  cgo_ldflags += -L$(LEVELDB_PATH)/lib
+	endif
+  else ifeq ($(UNAME_S),linux)
     # Intentionally left blank to leave it up to already installed libraries.
   endif
 endif
 
+cgo_ldflags += $(CGO_LDFLAGS)
+cgo_ldflags := $(strip $(cgo_ldflags))
+CGO_LDFLAGS := $(cgo_ldflags)
+
+cgo_cflags += $(CGO_CFLAGS)
+cgo_cflags := $(strip $(cgo_cflags))
+CGO_CFLAGS := $(cgo_cflags)
 
 build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
@@ -112,12 +155,13 @@ ldflags = -w -s \
 	-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
 	-X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TM_VERSION)
 
-ifeq ($(WITH_CLEVELDB),yes)
-	ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
-endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
-BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)' -trimpath
+
+build_flags = -mod=readonly -tags "$(build_tags)" -ldflags '$(ldflags)' -trimpath
+build_flags += $(BUILD_FLAGS)
+build_flags := $(strip $(build_flags))
+BUILD_FLAGS := $(build_flags)
 
 all: build format lint test
 
@@ -130,14 +174,14 @@ all: build format lint test
 
 # Install puts the binaries in the local environment path.
 install: go.sum
-	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install -mod=readonly $(BUILD_FLAGS) ./cmd/provenanced
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install $(BUILD_FLAGS) ./cmd/provenanced
 
 build: validate-go-version go.sum
 	mkdir -p $(BUILDDIR)
-	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/provenanced
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/provenanced
 
 build-linux: go.sum
-	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
+	WITH_LEDGER=false GOOS=linux GOARCH=amd64 $(MAKE) build
 
 # Run an instance of the daemon against a local config (create the config if it does not exit.)
 run-config: check-built
@@ -165,6 +209,17 @@ run: check-built run-config;
 .PHONY: install build build-linux run
 
 ##############################
+# Build DB Migration Tools   #
+##############################
+
+install-dbmigrate: go.sum
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install $(BUILD_FLAGS) ./cmd/dbmigrate
+
+build-dbmigrate: validate-go-version go.sum
+	mkdir -p $(BUILDDIR)
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/dbmigrate
+
+##############################
 # Release artifacts and plan #
 ##############################
 
@@ -177,7 +232,6 @@ RELEASE_PLAN=$(BUILDDIR)/plan-$(VERSION).json
 RELEASE_CHECKSUM_NAME=sha256sum.txt
 RELEASE_CHECKSUM=$(BUILDDIR)/$(RELEASE_CHECKSUM_NAME)
 
-UNAME_S = $(shell uname -s | tr '[A-Z]' '[a-z]')
 ifeq ($(UNAME_S),darwin)
     LIBWASMVM := $(LIBWASMVM).dylib
 else ifeq ($(UNAME_S),linux)
@@ -297,7 +351,15 @@ linkify:
 update-tocs:
 	scripts/update-toc.sh x
 
-.PHONY: go-mod-cache go.sum lint clean format check-built statik linkify update-tocs
+# Download, compile, and install rocksdb so that it can be used when doing a build.
+rocksdb:
+	scripts/rocksdb_build_and_install.sh
+
+# Download, compile, and install cleveldb so that it can be used when doing a build.
+cleveldb:
+	scripts/cleveldb_build_and_install.sh
+
+.PHONY: go-mod-cache go.sum lint clean format check-built statik linkify update-tocs rocksdb cleveldb
 
 
 validate-go-version: ## Validates the installed version of go against Provenance's minimum requirement.
@@ -323,37 +385,42 @@ test-all: test-unit test-ledger-mock test-race test-cover
 TEST_PACKAGES=./...
 TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-race test-ledger test-race
 
+ifeq ($(WITH_CLEVELDB),true)
+	TAGS+= cleveldb
+endif
+
 # Test runs-specific rules. To add a new test target, just add
-# a new rule, customise ARGS or TEST_PACKAGES ad libitum, and
+# a new rule, customise TAGS, ARGS and/or TEST_PACKAGES ad libitum, and
 # append the new rule to the TEST_TARGETS list.
-test-unit: ARGS=-tags='cgo ledger test_ledger_mock norace'
-test-unit-amino: ARGS=-tags='ledger test_ledger_mock test_amino norace'
-test-ledger: ARGS=-tags='cgo ledger norace'
-test-ledger-mock: ARGS=-tags='ledger test_ledger_mock norace'
-test-race: ARGS=-race -tags='cgo ledger test_ledger_mock'
+test-unit: TAGS+=cgo ledger test_ledger_mock norace
+test-unit-amino: TAGS+=ledger test_ledger_mock test_amino norace
+test-ledger: TAGS+=cgo ledger norace
+test-ledger-mock: TAGS+=ledger test_ledger_mock norace
+test-race: ARGS+=-race
+test-race: TAGS+=cgo ledger test_ledger_mock
 test-race: TEST_PACKAGES=$(PACKAGES_NOSIMULATION)
 $(TEST_TARGETS): run-tests
 
 # check-* compiles and collects tests without running them
 # note: go test -c doesn't support multiple packages yet (https://github.com/golang/go/issues/15513)
 CHECK_TEST_TARGETS := check-test-unit check-test-unit-amino
-check-test-unit: ARGS=-tags='cgo ledger test_ledger_mock norace'
-check-test-unit-amino: ARGS=-tags='ledger test_ledger_mock test_amino norace'
-$(CHECK_TEST_TARGETS): EXTRA_ARGS=-run=none
+check-test-unit: TAGS+=cgo ledger test_ledger_mock norace
+check-test-unit-amino: TAGS+=ledger test_ledger_mock test_amino norace
+$(CHECK_TEST_TARGETS): ARGS+=-run=none
 $(CHECK_TEST_TARGETS): run-tests
 
 run-tests:
 ifneq (,$(shell which tparse 2>/dev/null))
-	go test -mod=readonly -json $(ARGS) $(EXTRA_ARGS) $(TEST_PACKAGES) | tparse
+	go test -mod=readonly -json $(ARGS) -tags='$(TAGS)'$(TEST_PACKAGES) | tparse
 else
-	go test -mod=readonly $(ARGS)  $(EXTRA_ARGS) $(TEST_PACKAGES)
+	go test -mod=readonly $(ARGS) -tags='$(TAGS)' $(TEST_PACKAGES)
 endif
 
 test-cover:
 	@export VERSION=$(VERSION); bash -x contrib/test_cover.sh
 
 benchmark:
-	@go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
+	go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
 
 .PHONY: test test-all test-unit test-race test-cover benchmark run-tests  $(TEST_TARGETS)
 
@@ -366,8 +433,7 @@ vendor:
 
 # Full build inside a docker container for a clean release build
 docker-build: vendor
-	docker build -t provenance-io/blockchain . -f docker/blockchain/Dockerfile
-	docker build -t provenance-io/blockchain-gateway . -f docker/gateway/Dockerfile
+	docker build --build-arg VERSION=$(VERSION) -t provenance-io/blockchain . -f docker/blockchain/Dockerfile
 
 # Quick build using local environment and go platform target options.
 docker-build-local: vendor

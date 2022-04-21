@@ -3,7 +3,9 @@ ARG VERSION
 
 WORKDIR /go/src/github.com/provenance-io/provenance
 
-RUN apt-get update && apt-get upgrade -y && apt-get install -y libleveldb-dev
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y libleveldb-dev
 
 COPY client/ ./client/
 COPY app/ ./app/
@@ -17,7 +19,8 @@ COPY .git/ ./.git/
 COPY contrib/ ./contrib/
 COPY Makefile sims.mk ./
 
-# Build the binaries
+
+# Build and install provenanced
 ENV VERSION=$VERSION
 RUN make VERSION=${VERSION} install
 
@@ -36,6 +39,6 @@ COPY --from=build /go/bin/provenanced /usr/bin/provenanced
 ENV PIO_HOME=/home/provenance
 WORKDIR /home/provenance
 
-EXPOSE 9090 26656 26657
+EXPOSE 1317 9090 26656 26657
 CMD ["/usr/bin/provenanced"]
 

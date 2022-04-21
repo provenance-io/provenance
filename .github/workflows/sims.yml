@@ -1,6 +1,6 @@
 name: Sims
 # Sims workflow runs multiple types of simulations (nondeterminism, import-export, after-import, multi-seed-short)
-# This workflow will run on all Pull Requests, if a .go, .mod or .sum file have been changed
+
 on:
   pull_request:
     paths:
@@ -11,155 +11,348 @@ on:
     branches:
       - main
 
+env:
+  LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
+
 jobs:
   cleanup-runs:
-    runs-on: ubuntu-latest
     if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
+    runs-on: ubuntu-latest
     steps:
       - uses: rokroskar/workflow-run-cleanup-action@v0.3.3
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
-  build:
-    runs-on: ubuntu-latest
+  setup:
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Install leveldb
+      - uses: technote-space/get-diff-action@v6.0.1
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+          SET_ENV_NAME_INSERTIONS: 1
+          SET_ENV_NAME_LINES: 1
+      - name: Define file prefix
+        id: file-prefix
+        run: echo "::set-output name=file-prefix::sim-test-${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
+    outputs:
+      should-run: ${{ env.GIT_DIFF }}
+      file-prefix: ${{ steps.file-prefix.outputs.file-prefix }}
+      cache-key-suffix: sims-t15
+      cache-path: |
+        leveldb*.tar.gz
+        leveldb-*
+        rocksdb*.tar.gz
+        rocksdb-*
+        ~/go/bin
+
+  build-linux:
+    # Note: Can't use a matrix to combine build-linux and build-mac because they'd both have the same job id and that would cause
+    #       problems below with the "needs" directive on the tests. Basically, as soon as the first one finished, the tests
+    #       would kick off for both OSes even though one might not be ready yet.
+    needs: setup
+    if: needs.setup.outputs.should-run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Output setup
+        run: |
+          echo "      should-run: [${{ needs.setup.outputs.should-run }}]"
+          echo "     file-prefix: [${{ needs.setup.outputs.file-prefix }}]"
+          echo "cache-key-suffix: [${{ needs.setup.outputs.cache-key-suffix }}]"
+          echo "      cache-path: [${{ needs.setup.outputs.cache-path }}]"
+      - uses: actions/cache@v3
+        id: cache-setup
+        with:
+          key: ${{ runner.os }}-${{ needs.setup.outputs.cache-key-suffix }}
+          path: ${{ needs.setup.outputs.cache-path }}
+      - name: Setup build environment
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get update
-          sudo apt-get install -y libleveldb-dev
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
-      - run: make build
-
-  install-runsim:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
+          sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev wget curl build-essential cmake gcc sqlite3
+      - name: Build cleveldb
+        if: steps.cache-setup.outputs.cache-hit != 'true'
+        run: |
+          export CLEVELDB_DO_BUILD='true'
+          export CLEVELDB_DO_INSTALL='false'
+          export CLEVELDB_DO_CLEANUP='false'
+          make cleveldb
+      - name: Install cleveldb
+        run: |
+          export CLEVELDB_DO_BUILD='false'
+          export CLEVELDB_DO_INSTALL='true'
+          export CLEVELDB_SUDO='true'
+          export CLEVELDB_DO_CLEANUP='false'
+          make cleveldb
+      - name: Build rocksdb
+        if: steps.cache-setup.outputs.cache-hit != 'true'
+        # This takes a while, but is cached (and doesn't change). So if the cache was restored, skip it.
+        run: |
+          export ROCKSDB_DO_BUILD='true'
+          export ROCKSDB_DO_INSTALL='false'
+          export ROCKSDB_DO_CLEANUP='false'
+          make rocksdb
+      - name: Install rocksdb
+        run: |
+          export ROCKSDB_DO_BUILD='false'
+          export ROCKSDB_DO_INSTALL='true'
+          export ROCKSDB_SUDO='true'
+          export ROCKSDB_DO_CLEANUP='false'
+          make rocksdb
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
       - name: Display go version
         run: go version
       - name: Install runsim
+        if: steps.cache-setup.outputs.cache-hit != 'true'
+        # Part of the cache, so don't need to redo it if it was restored.
         run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
-      - uses: actions/cache@v3
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
+      - name: Build provenanced
+        run: make build
+      - name: Provenanced version
+        run: build/provenanced version --long
 
-  test-sim-simple:
-    runs-on: ubuntu-latest
-    needs: [ build, install-runsim ]
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2.1.5
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-          SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1
-      - uses: actions/cache@v3
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-        if: env.GIT_DIFF
-      - name: test-sim-simple
-        run: |
-          make test-sim-simple
-        if: env.GIT_DIFF
-
-  test-sim-nondeterminism:
-    runs-on: ubuntu-latest
-    needs: [build, install-runsim]
+  build-mac:
+    # Note: Can't use a matrix to combine build-linux and build-mac because they'd both have the same job id and that would cause
+    #       problems below with the "needs" directive on the tests. Basically, as soon as the first one finished, the tests
+    #       would kick off for both OSes even though one might not be ready yet.
+    needs: setup
+    if: needs.setup.outputs.should-run
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Output setup
+        run: |
+          echo "      should-run: [${{ needs.setup.outputs.should-run }}]"
+          echo "     file-prefix: [${{ needs.setup.outputs.file-prefix }}]"
+          echo "cache-key-suffix: [${{ needs.setup.outputs.cache-key-suffix }}]"
+          echo "      cache-path: [${{ needs.setup.outputs.cache-path }}]"
+      - uses: actions/cache@v3
+        id: cache-setup
+        with:
+          key: ${{ runner.os }}-${{ needs.setup.outputs.cache-key-suffix }}
+          path: ${{ needs.setup.outputs.cache-path }}
+      - name: Setup build environment
+        run: |
+          brew install cmake sqlite3
+      - name: Build cleveldb
+        if: steps.cache-setup.outputs.cache-hit != 'true'
+        run: |
+          export CLEVELDB_DO_BUILD='true'
+          export CLEVELDB_DO_INSTALL='false'
+          export CLEVELDB_DO_CLEANUP='false'
+          make cleveldb
+      - name: Install cleveldb
+        run: |
+          export CLEVELDB_DO_BUILD='false'
+          export CLEVELDB_DO_INSTALL='true'
+          export CLEVELDB_SUDO='true'
+          export CLEVELDB_DO_CLEANUP='false'
+          make cleveldb
+      - name: Build rocksdb
+        if: steps.cache-setup.outputs.cache-hit != 'true'
+        # This takes a while, but is cached (and doesn't change). So if the cache was restored, skip it.
+        run: |
+          export ROCKSDB_DO_BUILD='true'
+          export ROCKSDB_DO_INSTALL='false'
+          export ROCKSDB_DO_CLEANUP='false'
+          make rocksdb
+      - name: Install rocksdb
+        run: |
+          export ROCKSDB_DO_BUILD='false'
+          export ROCKSDB_DO_INSTALL='true'
+          export ROCKSDB_SUDO='true'
+          export ROCKSDB_DO_CLEANUP='false'
+          make rocksdb
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-      - uses: actions/cache@v3
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-        if: env.GIT_DIFF
-      - name: test-sim-nondeterminism
-        run: |
-          make test-sim-nondeterminism
-        if: env.GIT_DIFF
+      - name: Install runsim
+        if: steps.cache-setup.outputs.cache-hit != 'true'
+        run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
+      - name: Build provenanced
+        run: make build
+      - name: Provenanced version
+        run: build/provenanced version --long
 
-  test-sim-import-export:
-    runs-on: ubuntu-latest
-    needs: [build, install-runsim]
+  runsim:
+    # These tests are the ones that use the runsim program (see sims.mk).
+    needs: [setup, build-linux]
+    if: needs.setup.outputs.should-run
+    strategy:
+      fail-fast: false
+      matrix:
+        # The test-sim-import-export test can take up to two hours.
+        # The test-sim-after-import test can take even longer.
+        # The test-sim-multi-seed-short test should take 30-40 minutes.
+        #   "after-import" removed due to failure, but should be added back with https://github.com/provenance-io/provenance/issues/754
+        test: ["import-export", "multi-seed-short"]
+        db-backend: ["goleveldb", "cleveldb", "rocksdb", "badgerdb"]
+        # Not putting "macos-latest" in this because:
+        #   a) We're limited to 5 Mac runners at once so they end up queued up,
+        #   b) They take longer than on ubuntu to begin with.
+        #   c) Most of the devs use a mac, so it's less likely that a Mac-specific bug goes unnoticed without tests.
+        os: ["ubuntu-latest"]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          key: ${{ runner.os }}-${{ needs.setup.outputs.cache-key-suffix }}
+          path: ${{ needs.setup.outputs.cache-path }}
+      - name: Define test-logs
+        id: test-logs
+        run: echo "::set-output name=test-logs::${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
+      - name: Install cleveldb
+        if: matrix.db-backend == 'cleveldb'
+        run: |
+          export CLEVELDB_DO_BUILD='false'
+          export CLEVELDB_DO_INSTALL='true'
+          export CLEVELDB_SUDO='true'
+          export CLEVELDB_DO_CLEANUP='false'
+          make cleveldb
+      - name: Install rocksdb
+        if: matrix.db-backend == 'rocksdb'
+        run: |
+          export ROCKSDB_DO_BUILD='false'
+          export ROCKSDB_DO_INSTALL='true'
+          export ROCKSDB_SUDO='true'
+          export ROCKSDB_DO_CLEANUP='false'
+          make rocksdb
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-          SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1
-      - uses: actions/cache@v3
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-        if: env.GIT_DIFF
-      - name: test-sim-import-export
+      - name: Test
         run: |
-          make test-sim-import-export
-        if: env.GIT_DIFF
+          ec=0
+          export DB_BACKEND=${{ matrix.db-backend }}
+          make test-sim-${{ matrix.test }} || ec="$?"
+          echo "Test exited with code $ec"
+          if [[ "$ec" -ne '0' ]] && ls -d /tmp/sim-logs-*; then
+            mkdir "${{ steps.test-logs.outputs.test-logs }}"
+            for logdir in $( ls -d /tmp/sim-logs-* ); do
+              cp -rv $logdir/* "${{ steps.test-logs.outputs.test-logs }}/" || :
+            done
+            bad_seed="$( grep -Eo 'Seed [[:digit:]]+: FAILED' "${{ steps.test-logs.outputs.test-logs }}"/runsim_log | sed -E 's/[^[:digit:]]+//g' )" || :
+            if [[ -n "$bad_seed" ]]; then
+              echo "::group::last 500 lines of seed $bad_seed stdout"
+              tail -n 500 "${{ steps.test-logs.outputs.test-logs }}"/*-seed-$bad_seed-*.stdout || :
+              echo "::endgroup::"
+            fi
+          fi
+          exit "$ec"
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: ${{ steps.test-logs.outputs.test-logs }}
+          path: ${{ steps.test-logs.outputs.test-logs }}
 
-  test-sim-multi-seed-short:
-    runs-on: ubuntu-latest
-    needs: [build, install-runsim]
+  go-test-multi-db:
+    # These are tests that use go test to run (see sims.mk), and that we want to test using different database backends.
+    needs: [setup, build-linux, build-mac]
+    if: needs.setup.outputs.should-run
+    strategy:
+      fail-fast: false
+      matrix:
+        # The test-sim-simple test is pretty quick and should be able to identify glaring problems.
+        # The test-sim-benchmark is handy to have for each db type.
+        #   "benchmark" removed due to failure, but should be added back with https://github.com/provenance-io/provenance/issues/754
+        test: ["simple"]
+        db-backend: ["goleveldb", "cleveldb", "rocksdb", "badgerdb"]
+        os: ["ubuntu-latest", "macos-latest"]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          key: ${{ runner.os }}-${{ needs.setup.outputs.cache-key-suffix }}
+          path: ${{ needs.setup.outputs.cache-path }}
+      - name: Define test-logs
+        id: test-logs
+        run: echo "::set-output name=test-logs::${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
+      - name: Install cleveldb
+        if: matrix.db-backend == 'cleveldb'
+        run: |
+          export CLEVELDB_DO_BUILD='false'
+          export CLEVELDB_DO_INSTALL='true'
+          export CLEVELDB_SUDO='true'
+          export CLEVELDB_DO_CLEANUP='false'
+          make cleveldb
+      - name: Install rocksdb
+        if: matrix.db-backend == 'rocksdb'
+        run: |
+          export ROCKSDB_DO_BUILD='false'
+          export ROCKSDB_DO_INSTALL='true'
+          export ROCKSDB_SUDO='true'
+          export ROCKSDB_DO_CLEANUP='false'
+          make rocksdb
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-          SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1
-      - uses: actions/cache@v3
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-        if: env.GIT_DIFF
-      - name: test-sim-multi-seed-short
+      - name: Test
         run: |
-          make test-sim-multi-seed-short
-        if: env.GIT_DIFF
+          export DB_BACKEND=${{ matrix.db-backend }}
+          make test-sim-${{ matrix.test }} | tee "${{ steps.test-logs.outputs.test-logs }}.txt"
+          exit "${PIPESTATUS[0]}"
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: ${{ steps.test-logs.outputs.test-logs }}
+          path: ${{ steps.test-logs.outputs.test-logs }}.txt
+
+  go-test-single-db:
+    # These are tests that use go test to run (see sims.mk), and that we don't care about testing using different database backends.
+    needs: [setup]
+    if: needs.setup.outputs.should-run
+    strategy:
+      fail-fast: false
+      matrix:
+        # The test-sim-nondeterminism test hard-codes the db backend to use memdb.
+        # The test-sim-benchmark-invariants test can use different db backends, but to save resources, is down here.
+        #   "benchmark-invariants" removed due to failure, but should be added back with https://github.com/provenance-io/provenance/issues/754
+        test: ["nondeterminism"]
+        os: ["ubuntu-latest", "macos-latest"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Define test-logs
+        id: test-logs
+        run: echo "::set-output name=test-logs::${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.os }}"
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+      - name: Display go version
+        run: go version
+      - name: Test
+        run: |
+          make test-sim-${{ matrix.test }} | tee "${{ steps.test-logs.outputs.test-logs }}.txt"
+          exit "${PIPESTATUS[0]}"
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: ${{ steps.test-logs.outputs.test-logs }}
+          path: ${{ steps.test-logs.outputs.test-logs }}.txt
+
+# Sim tests that are not run in here:
+#   test-sim-multi-seed-long: runsim
+#     The short version does 50 blocks and takes 30-40 minutes. The long one does 500 blocks. Way too long.
+#   test-sim-custom-genesis-multi-seed: runsim
+#     This one requires a genesis file to be created, and I don't feel like doing that right now.
+#   test-sim-custom-genesis-fast:
+#     Same as test-sim-custom-genesis-multi-seed.
+#   test-sim-profile:
+#     This is the exact same thing as test-sim-benchmark except with a couple extra output files.
+#     Unless I add an upload for them, it's not worth doing it again.
