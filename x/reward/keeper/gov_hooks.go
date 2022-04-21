@@ -26,25 +26,21 @@ func (gh GovHooks) AfterProposalSubmission(ctx sdk.Context, proposalID uint64) {
 
 func (k Keeper) AfterProposalSubmission(ctx sdk.Context, proposalID uint64) {
 	ctx.Logger().Info(fmt.Sprintf("AfterProposalSubmission: %v ... moving reward coins to escrow account", proposalID))
-	proposal, found := k.govKeeper.GetProposal(ctx, proposalID)
-	if found {
-		ctx.Logger().Info(fmt.Sprintf("AfterProposalSubmission: %v Content: %v", proposalID, string(proposal.Content.Value)))
-		var rewardProgram types.AddRewardProgramProposal
-		if err := k.cdc.Unmarshal(proposal.Content.Value, &rewardProgram); err != nil {
-			ctx.Logger().Info(fmt.Sprintf("AfterProposalSubmission: %v was not an AddRewardProgramProposal: %v ", proposalID, proposal.Content.TypeUrl))
-			return
-		}
+	// proposal, found := k.govKeeper.GetProposal(ctx, proposalID)
+	// if found {
+	// 	ctx.Logger().Info(fmt.Sprintf("AfterProposalSubmission: %v Content: %v", proposalID, string(proposal.Content.Value)))
+	// 	var rewardProgram types.AddRewardProgramProposal
+	// 	if err := k.cdc.Unmarshal(proposal.Content.Value, &rewardProgram); err != nil {
+	// 		ctx.Logger().Info(fmt.Sprintf("AfterProposalSubmission: %v was not an AddRewardProgramProposal: %v ", proposalID, proposal.Content.TypeUrl))
+	// 		panic(err)
+	// 	}
 
-		// rewardPoolPath := fmt.Sprintf("%s/pool/%v", types.ModuleName, rewardProgram.RewardProgramId)
-		// acc := k.authkeeper.GetModuleAccount(ctx, rewardPoolPath)
-		// if acc == nil {
-		// 	acc = authtypes.NewEmptyModuleAccount(rewardPoolPath)
-		// 	k.authkeeper.SetModuleAccount(ctx, authtypes.NewEmptyModuleAccount(rewardPoolPath))
-		// }
-		// if err := k.bankKeeper.SendCoins(ctx, sdk.AccAddress(rewardProgram.DistributeFromAddress), acc.GetAddress(), sdk.NewCoins(rewardProgram.Coin)); err != nil {
-		// 	return
-		// }
-	}
+	// 	// err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(rewardProgram.DistributeFromAddress), types.ModuleName, sdk.NewCoins(rewardProgram.Coin))
+	// 	// if err != nil {
+	// 	// 	panic(err)
+	// 	// }
+	// 	ctx.Logger().Info(fmt.Sprintf("AfterProposalSubmission: finished"))
+	// }
 }
 
 // AfterProposalDeposit - call hook if registered

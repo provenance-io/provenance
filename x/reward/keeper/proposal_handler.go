@@ -22,7 +22,7 @@ func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddRewar
 
 	// calculate the start epoch height from current heigh + proposal offset height
 	startEpoch := uint64(ctx.BlockHeight()) + proposal.EpochStartOffset
-	// TODO:
+
 	rewardProgram := types.NewRewardProgram(proposal.RewardProgramId,
 		proposal.DistributeFromAddress,
 		proposal.Coin,
@@ -35,7 +35,17 @@ func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddRewar
 		proposal.Minimum,
 		proposal.Maximum,
 	)
+	err := rewardProgram.ValidateBasic()
+	if err != nil {
+		return err
+	}
+
 	k.SetRewardProgram(ctx, rewardProgram)
 
+	acc, _ := sdk.AccAddressFromBech32(rewardProgram.DistributeFromAddress)
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.ModuleName, sdk.NewCoins(rewardProgram.Coin))
+	if err != nil {
+		return fmt.Errorf("unable to send coin to module reward pool: %v", err)
+	}
 	return nil
 }

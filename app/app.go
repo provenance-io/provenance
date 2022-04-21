@@ -217,6 +217,7 @@ var (
 
 		markertypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 		wasm.ModuleName:        {authtypes.Burner},
+		rewardtypes.ModuleName: nil,
 	}
 )
 
