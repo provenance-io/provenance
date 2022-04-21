@@ -80,7 +80,7 @@ func QueryRewardProgramsCmd() *cobra.Command {
 
 func RewardProgramByIdCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "id",
+		Use:     "id [reward program id]",
 		Aliases: []string{},
 		Short:   "Output the reward program for the specified id",
 		Args:    cobra.ExactArgs(1),
