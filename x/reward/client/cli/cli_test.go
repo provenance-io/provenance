@@ -47,3 +47,15 @@ func (s *IntegrationTestSuite) TestQueryRewardProgramsById() {
 	//cli.RewardProgramByIdCmd()
 	// TODO Need a way to create a reward program before these can be implemented
 }
+
+func (s *IntegrationTestSuite) TestQueryRewardClaims() {
+	s.Assert().FailNow("not implemented")
+	//cli.QueryRewardProgramsCmd()
+	// TODO Need a way to create a reward claim before these can be implemented
+}
+
+func (s *IntegrationTestSuite) TestQueryRewardClaimsById() {
+	s.Assert().FailNow("not implemented")
+	//cli.QueryRewardProgramsCmd()
+	// TODO Need a way to create a reward claim before these can be implemented
+}
