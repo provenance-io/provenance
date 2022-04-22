@@ -382,6 +382,9 @@ validate-go-version: ## Validates the installed version of go against Provenance
 		exit 1; \
 	fi
 
+download-smart-contracts:
+	./scripts/download_smart_contracts.sh
+
 ##############################
 ### Test
 ##############################
