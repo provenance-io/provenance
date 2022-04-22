@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/testutil"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
@@ -81,6 +82,10 @@ func (s *SimulateTestSuite) SetupTest() {
 
 	_, err = s.testnet.WaitForHeight(1)
 	s.Require().NoError(err)
+}
+
+func (s *SimulateTestSuite) TearDownTest() {
+	testutil.CleanUp(s.testnet, s.T())
 }
 
 func TestSimulateTestSuite(t *testing.T) {

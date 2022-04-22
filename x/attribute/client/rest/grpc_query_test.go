@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -11,17 +12,13 @@ import (
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/provenance-io/provenance/testutil"
-
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
-
-	"github.com/gogo/protobuf/proto"
-
-	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 type IntegrationTestSuite struct {
@@ -96,9 +93,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.testnet.WaitForNextBlock()
-	s.T().Log("tearing down integration test suite")
-	s.testnet.Cleanup()
+	testutil.CleanUp(s.testnet, s.T())
 }
 
 func (s *IntegrationTestSuite) TestGRPCQueries() {

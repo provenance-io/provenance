@@ -295,7 +295,7 @@ func (k Keeper) ValidateScopeUpdate(
 		}
 	}
 
-	if err := k.validateScopeUpdateValueOwner(ctx, existing.ValueOwnerAddress, proposed.ValueOwnerAddress, signers); err != nil {
+	if err := k.validateScopeUpdateValueOwner(ctx, existing.ValueOwnerAddress, proposed.ValueOwnerAddress, signers, msgTypeURL); err != nil {
 		return err
 	}
 
@@ -309,14 +309,14 @@ func (k Keeper) ValidateScopeRemove(ctx sdk.Context, scope types.Scope, signers 
 		return err
 	}
 
-	if err := k.validateScopeUpdateValueOwner(ctx, scope.ValueOwnerAddress, "", signers); err != nil {
+	if err := k.validateScopeUpdateValueOwner(ctx, scope.ValueOwnerAddress, "", signers, msgTypeURL); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (k Keeper) validateScopeUpdateValueOwner(ctx sdk.Context, existing, proposed string, signers []string) error {
+func (k Keeper) validateScopeUpdateValueOwner(ctx sdk.Context, existing, proposed string, signers []string, msgTypeURL string) error {
 	// If they're the same, we don't need to do anything.
 	if existing == proposed {
 		return nil
@@ -330,11 +330,19 @@ func (k Keeper) validateScopeUpdateValueOwner(ctx sdk.Context, existing, propose
 			}
 		} else {
 			// If the existing isn't a marker, make sure they're one of the signers.
+			// Not using ValidateAllOwnersAreSignersWithAuthz here because we want a slightly different error message.
+			// Not using ValidateAllPartiesAreSignersWithAuthz here because of the error message and also it wants parties.
 			found := false
 			for _, signer := range signers {
 				if existing == signer {
 					found = true
 					break
+				}
+			}
+			if !found {
+				stillMissing := k.checkAuthzForMissing(ctx, []string{existing}, signers, msgTypeURL)
+				if len(stillMissing) == 0 {
+					found = true
 				}
 			}
 			if !found {

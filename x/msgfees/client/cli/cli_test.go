@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/testutil"
-
 	msgfeescli "github.com/provenance-io/provenance/x/msgfees/client/cli"
 )
 
@@ -64,8 +64,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
-	s.testnet.Cleanup()
+	testutil.CleanUp(s.testnet, s.T())
 }
 
 func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {

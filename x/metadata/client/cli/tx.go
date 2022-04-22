@@ -385,7 +385,7 @@ func WriteScopeSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "write-scope-specification [specification-id] [owner-addresses] [responsible-parties] [contract-specification-ids] [description-name, optional] [description, optional] [website-url, optional] [icon-url, optional]",
 		Short:   "Add/Update metadata scope specification to the provenance blockchain",
-		Example: fmt.Sprintf(`$ %[1]s tx metadata write-scope-specification scope1qzhpuff00wpy2yuf7xr0rp8aucqstsk0cn scopespec1qjpreurq8n7ylc4y5zw6gn255lkqle56sv pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42 pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42 pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42`, version.AppName),
+		Example: fmt.Sprintf(`$ %[1]s tx metadata write-scope-specification scopespec1qn7jh3jvw4gytq9r5x770e8yj74s9t479r pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42 "owner" contractspec1q0mnck3mqh75mg9qvykqq0jxzs2struaa8`, version.AppName),
 		Args:    cobra.RangeArgs(4, 8),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -695,14 +695,16 @@ session-id        - a bech32 address string for the session this record belongs 
   Either a contract-spec-id or a session-id must be provided (but not both).
   If a contract-spec-id is provided, a new session will be created using it as the specification for the session, and the record will be part of that session.
   If a session-id is provided, the record will be part of that session (a new session is NOT created).`,
-		Example: fmt.Sprintf(`$ %[1]s tx metadata write-record recspec1qh... \
+		Example: fmt.Sprintf(`$ %[1]s tx metadata write-record scope1qp... \
+recspec1qh... \
 recordname \
 myprocessname,myhashvalue \
 input1name,input1hashvalue,input1typename,proposed;... \
 output1hash,pass;... \
 userid,owner;... \
 session123...
-$ %[1]s tx metadata write-record recspec1qh... \
+$ %[1]s tx metadata write-record scope1qp... \
+recspec1qh... \
 recordname \
 myprocessname,myhashvalue \
 input1name,input1hashvalue,input1typename,proposed;... \
