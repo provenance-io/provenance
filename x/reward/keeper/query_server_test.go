@@ -102,6 +102,14 @@ func (s *KeeperTestSuite) TestRewardProgramByID() {
 	s.Assert().True(rewardProgram.Equal(*response.RewardProgram), "reward programs should match")
 }
 
+func (s *KeeperTestSuite) TestRewardClaims() {
+	s.Assert().Fail("not implemented")
+}
+
+func (s *KeeperTestSuite) TestRewardClaimById() {
+	s.Assert().Fail("not implemented")
+}
+
 func newRewardProgram(coinName string, id uint64, start uint64) *types.RewardProgram {
 	action := types.NewActionDelegate()
 	coin := sdk.NewInt64Coin(coinName, 10000)

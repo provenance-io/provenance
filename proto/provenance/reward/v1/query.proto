@@ -31,6 +31,16 @@ service Query {
   rpc ModuleAccountBalance(QueryModuleAccountBalanceRequest) returns (QueryModuleAccountBalanceResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/module_account_balance";
   }
+
+  // returns all RewardClaims
+  rpc RewardClaims(RewardClaimsRequest) returns (RewardClaimsResponse) {
+    option (google.api.http).get = "/provenance/rewards/v1/reward_claims";
+  }
+
+  // returns a RewardClaim by id
+  rpc RewardClaimByID(RewardClaimByIDRequest) returns (RewardClaimByIDResponse) {
+    option (google.api.http).get = "/provenance/rewards/v1/reward_claim_by_id/{id}";
+  }
 }
 
 message RewardProgramByIDRequest {
@@ -64,4 +74,18 @@ message QueryModuleAccountBalanceResponse {
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
+}
+
+message RewardClaimsRequest {}
+
+message RewardClaimsResponse{
+  repeated RewardClaim reward_claims = 1 [(gogoproto.nullable) = false];
+}
+
+message RewardClaimByIDRequest {
+  string id = 1;
+}
+
+message RewardClaimByIDResponse {
+  RewardClaim reward_claim = 1;
 }

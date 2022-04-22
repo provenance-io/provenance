@@ -412,6 +412,10 @@
     - [ActiveRewardProgramsResponse](#provenance.reward.v1.ActiveRewardProgramsResponse)
     - [QueryModuleAccountBalanceRequest](#provenance.reward.v1.QueryModuleAccountBalanceRequest)
     - [QueryModuleAccountBalanceResponse](#provenance.reward.v1.QueryModuleAccountBalanceResponse)
+    - [RewardClaimByIDRequest](#provenance.reward.v1.RewardClaimByIDRequest)
+    - [RewardClaimByIDResponse](#provenance.reward.v1.RewardClaimByIDResponse)
+    - [RewardClaimsRequest](#provenance.reward.v1.RewardClaimsRequest)
+    - [RewardClaimsResponse](#provenance.reward.v1.RewardClaimsResponse)
     - [RewardProgramByIDRequest](#provenance.reward.v1.RewardProgramByIDRequest)
     - [RewardProgramByIDResponse](#provenance.reward.v1.RewardProgramByIDResponse)
     - [RewardProgramsRequest](#provenance.reward.v1.RewardProgramsRequest)
@@ -6201,6 +6205,61 @@ QueryModuleAccountBalanceResponse is the response type for the Query/Params RPC 
 
 
 
+<a name="provenance.reward.v1.RewardClaimByIDRequest"></a>
+
+### RewardClaimByIDRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.RewardClaimByIDResponse"></a>
+
+### RewardClaimByIDResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_claim` | [RewardClaim](#provenance.reward.v1.RewardClaim) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.RewardClaimsRequest"></a>
+
+### RewardClaimsRequest
+
+
+
+
+
+
+
+<a name="provenance.reward.v1.RewardClaimsResponse"></a>
+
+### RewardClaimsResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_claims` | [RewardClaim](#provenance.reward.v1.RewardClaim) | repeated |  |
+
+
+
+
+
+
 <a name="provenance.reward.v1.RewardProgramByIDRequest"></a>
 
 ### RewardProgramByIDRequest
@@ -6273,6 +6332,8 @@ Query defines the gRPC querier service for reward module.
 | `RewardPrograms` | [RewardProgramsRequest](#provenance.reward.v1.RewardProgramsRequest) | [RewardProgramsResponse](#provenance.reward.v1.RewardProgramsResponse) | returns RewardPrograms both upcoming and active | GET|/provenance/rewards/v1/reward_programs|
 | `ActiveRewardPrograms` | [ActiveRewardProgramsRequest](#provenance.reward.v1.ActiveRewardProgramsRequest) | [ActiveRewardProgramsResponse](#provenance.reward.v1.ActiveRewardProgramsResponse) | returns active RewardPrograms | GET|/provenance/rewards/v1/active_reward_programs|
 | `ModuleAccountBalance` | [QueryModuleAccountBalanceRequest](#provenance.reward.v1.QueryModuleAccountBalanceRequest) | [QueryModuleAccountBalanceResponse](#provenance.reward.v1.QueryModuleAccountBalanceResponse) |  | GET|/provenance/rewards/v1/module_account_balance|
+| `RewardClaims` | [RewardClaimsRequest](#provenance.reward.v1.RewardClaimsRequest) | [RewardClaimsResponse](#provenance.reward.v1.RewardClaimsResponse) | returns all RewardClaims | GET|/provenance/rewards/v1/reward_claims|
+| `RewardClaimByID` | [RewardClaimByIDRequest](#provenance.reward.v1.RewardClaimByIDRequest) | [RewardClaimByIDResponse](#provenance.reward.v1.RewardClaimByIDResponse) | returns a RewardClaim by id | GET|/provenance/rewards/v1/reward_claim_by_id/{id}|
 
  <!-- end services -->
 

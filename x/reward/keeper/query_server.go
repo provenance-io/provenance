@@ -74,3 +74,12 @@ func (k Keeper) RewardProgramByID(ctx context.Context, req *types.RewardProgramB
 
 	return &response, nil
 }
+
+func (k Keeper) RewardClaims(ctx context.Context, req *types.RewardClaimsRequest) (*types.RewardClaimsResponse, error) {
+	return &types.RewardClaimsResponse{}, nil
+}
+
+// returns a RewardClaim by id
+func (k Keeper) RewardClaimByID(ctx context.Context, req *types.RewardClaimByIDRequest) (*types.RewardClaimByIDResponse, error) {
+	return &types.RewardClaimByIDResponse{}, nil
+}

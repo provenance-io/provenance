@@ -151,8 +151,6 @@ func outputRewardProgramById(cmd *cobra.Command, arg string) error {
 }
 
 func outputRewardClaimsAll(cmd *cobra.Command) error {
-	return fmt.Errorf("not implemented yet")
-
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err
