@@ -422,6 +422,7 @@ func TestAppStateDeterminismWithStateListening(t *testing.T) {
 
 	for i := 0; i < numSeeds; i++ {
 		config.Seed = rand.Int63()
+		PrintConfig(config)
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
@@ -474,7 +475,7 @@ func TestAppStateDeterminismWithStateListening(t *testing.T) {
 			require.NoError(t, err)
 
 			if config.Commit {
-				sdksim.PrintStats(db)
+				PrintStats(config, db)
 			}
 
 			appHash := app.LastCommitID().Hash
