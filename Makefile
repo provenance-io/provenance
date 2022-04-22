@@ -64,8 +64,10 @@ include contrib/devtools/Makefile
 #Identify the system and if gcc is available.
 ifeq ($(OS),Windows_NT)
   UNAME_S = 'windows_nt'
+  UNAME_M = 'unknown'
 else
   UNAME_S = $(shell uname -s | tr '[A-Z]' '[a-z]')
+  UNAME_M = $(shell uname -m | tr '[A-Z]' '[a-z]')
 endif
 
 ifeq ($(UNAME_S),windows_nt)
@@ -83,6 +85,13 @@ endif
 ##############################
 
 build_tags = netgo
+ifeq ($(UNAME_S),darwin)
+	ifeq ($(UNAME_M),arm64)
+		# Needed on M1 macs due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
+		build_tags += dynamic
+	endif
+endif
+
 ifeq ($(WITH_CLEVELDB),true)
   ifneq ($(have_gcc),true)
     $(error gcc not installed for cleveldb support, please install or set WITH_CLEVELDB=false)
