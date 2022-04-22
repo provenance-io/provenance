@@ -8,7 +8,7 @@
 ##                                      ##
 ##########################################
 
-export Provwasm_version="v1.0.0-beta3"
+export Provwasm_version="v1.0.0-beta7"
 
 wget "https://github.com/provenance-io/provwasm/releases/download/$Provwasm_version/provwasm_tutorial.zip"
 
