@@ -83,6 +83,14 @@ $ make rocksdb
   The default is `true`.
 </details>
 
+### librdkafka
+
+On M1 Macs (arm64), `librdkafka` is also required. Install it using `brew`.
+
+```console
+$ brew install librdkafka
+```
+
 ## Building or Installing `provenanced`
 
 To build the `provenanced` executable and place it in the `build/` directory:
