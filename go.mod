@@ -3,7 +3,7 @@ module github.com/provenance-io/provenance
 go 1.17
 
 require (
-	github.com/CosmWasm/wasmd v0.24.0
+	github.com/CosmWasm/wasmd v0.26.0
 	github.com/armon/go-metrics v0.3.10
 	github.com/btcsuite/btcd v0.22.0-beta
 	github.com/confluentinc/confluent-kafka-go v1.8.2
