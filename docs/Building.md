@@ -7,9 +7,9 @@
     - [CLevelDB](#cleveldb)
     - [RocksDB](#rocksdb)
     - [librdkafka](#librdkafka)
-  - [Building or Installing `provenanced`](#building-or-installing-provenanced-)
-  - [Options](#options)
-  - [Building `dbmigrate`](#building-dbmigrate-)
+  - [Building or Installing `provenanced`](#building-or-installing-provenanced)
+  - [Build Options](#build-options)
+  - [Building `dbmigrate`](#building-dbmigrate)
 
 
 
@@ -27,7 +27,7 @@ Building `provenanced` requires [Go 1.17+](https://golang.org/dl/) (or higher).
 ### CLevelDB
 
 By default, `provenanced` is built with CLevelDB support.
-Building without CLevelDB support is also possible. See `WITH_CLEVELDB` in [Options](#options) below.
+Building without CLevelDB support is also possible. See `WITH_CLEVELDB` in [Build Options](#build-options) below.
 
 To download, build, and install the C LevelDB library on your system:
 ```console
@@ -61,7 +61,7 @@ $ make cleveldb
 ### RocksDB
 
 By default, `provenanced` is built without RocksDB support.
-Building with RocksDB support is also possible. See `WITH_ROCKSDB` in [Options](#options) below.
+Building with RocksDB support is also possible. See `WITH_ROCKSDB` in [Build Options](#build-options) below.
 
 To download, build, and install the RocksDB library on your system:
 ```console
@@ -123,7 +123,7 @@ $ git checkout "v1.7.6" -b "tag-v1.7.6"
 $ make install
 ```
 
-## Options
+## Build Options
 
 A few aspects of `make build` and `make install` can be controlled through environment variables.
 
@@ -175,7 +175,7 @@ To build the `dbmigrate` executable and place it in your system's default Go `bi
 $ make install-dbmigrate
 ```
 
-Building `dbmigrate` uses the same [Options](#options) as `provenanced`.
+Building `dbmigrate` uses the same [Build Options](#build-options) as `provenanced`.
 
 The dbmigrate program will:
 1. Create a new `data/` directory, and copy the contents of the existing `data/` directory into it, converting the database files appropriately.
