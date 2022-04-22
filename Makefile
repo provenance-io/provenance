@@ -349,7 +349,7 @@ linkify:
 	python ./scripts/linkify.py CHANGELOG.md
 
 update-tocs:
-	scripts/update-toc.sh x
+	scripts/update-toc.sh x docs
 
 # Download, compile, and install rocksdb so that it can be used when doing a build.
 rocksdb:
