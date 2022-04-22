@@ -40,6 +40,8 @@ ifneq ($(tags),)
   SIMAPP := $(tags) $(SIMAPP)
 endif
 
+include sims-state-listening.mk
+
 # Runsim Usage: runsim [flags] <blocks> <period> <testname>
 # flags: [-Jobs maxprocs] [-ExitOnFail] [-Seeds comma-separated-seed-list]
 #        [-Genesis file-path] [-SimAppPkg file-path] [-Github] [-Slack] [-LogObjPrefix string]

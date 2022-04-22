@@ -18,6 +18,7 @@ COPY testutil/ ./testutil/
 COPY .git/ ./.git/
 COPY contrib/ ./contrib/
 COPY Makefile sims.mk ./
+COPY Makefile sims-state-listening.mk ./
 
 
 # Build and install provenanced
