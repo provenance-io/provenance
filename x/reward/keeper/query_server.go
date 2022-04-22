@@ -76,10 +76,42 @@ func (k Keeper) RewardProgramByID(ctx context.Context, req *types.RewardProgramB
 }
 
 func (k Keeper) RewardClaims(ctx context.Context, req *types.RewardClaimsRequest) (*types.RewardClaimsResponse, error) {
-	return &types.RewardClaimsResponse{}, nil
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	response := types.RewardClaimsResponse{}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	err := k.IterateRewardClaims(sdkCtx, func(rewardClaim types.RewardClaim) (stop bool) {
+		response.RewardClaims = append(response.RewardClaims, rewardClaim)
+		return false
+	})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to iterate reward programs: %v", err))
+	}
+
+	return &response, nil
 }
 
 // returns a RewardClaim by id
 func (k Keeper) RewardClaimByID(ctx context.Context, req *types.RewardClaimByIDRequest) (*types.RewardClaimByIDResponse, error) {
-	return &types.RewardClaimByIDResponse{}, nil
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	response := types.RewardClaimByIDResponse{}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	claim, err := k.GetRewardClaim(sdkCtx, req.GetId())
+	if err != nil {
+		return &response, err
+	}
+
+	// "" is not a valid address. This means the program was not found
+	if claim.Address != "" {
+		response.RewardClaim = &claim
+	}
+
+	return &response, nil
 }
