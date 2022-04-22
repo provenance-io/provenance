@@ -2,7 +2,6 @@ package cmd_test
 
 import (
 	"fmt"
-	"github.com/provenance-io/provenance/internal/antewrapper"
 	"os"
 	"path/filepath"
 	"testing"
