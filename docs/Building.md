@@ -1,5 +1,18 @@
 # Building Provenance Blockchain
 
+<!-- TOC -->
+  - [Overview](#overview)
+  - [Prerequisites](#prerequisites)
+    - [Go](#go)
+    - [CLevelDB](#cleveldb)
+    - [RocksDB](#rocksdb)
+    - [librdkafka](#librdkafka)
+  - [Building or Installing `provenanced`](#building-or-installing-provenanced-)
+  - [Options](#options)
+  - [Building `dbmigrate`](#building-dbmigrate-)
+
+
+
 ## Overview
 
 Provenance uses `make` to define build operations.
