@@ -1,9 +1,12 @@
 package cli_test
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -13,6 +16,7 @@ import (
 	"github.com/provenance-io/provenance/testutil"
 
 	epochtypes "github.com/provenance-io/provenance/x/epoch/types"
+	rewardcli "github.com/provenance-io/provenance/x/reward/client/cli"
 	"github.com/provenance-io/provenance/x/reward/types"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 )
@@ -119,4 +123,60 @@ func (s *IntegrationTestSuite) TestQueryRewardClaimsById() {
 	s.Assert().FailNow("not implemented")
 	//cli.QueryRewardProgramsCmd()
 	// TODO Need a way to create a reward claim before these can be implemented
+}
+
+func (s *IntegrationTestSuite) TestCmdRewardProgramProposal() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectErrMsg string
+		expectedCode uint32
+	}{
+		{"add reward program proposal - valid",
+			[]string{
+				"add",
+				"test add reward program",
+				"description",
+				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+				"--coin=580nhash",
+				"--reward-program-id=1",
+				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
+				"--epoch-id=day",
+				"--epoch-offset=100",
+				"--num-epochs=10",
+				"--minimum=3",
+				"--maximum=10",
+				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
+			},
+			false,
+			"",
+			0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.network.Validators[0].ClientCtx
+
+			args := []string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.network.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			}
+			tc.args = append(tc.args, args...)
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdRewardProgramProposal(), tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Assert().Equal(tc.expectErrMsg, err.Error())
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
+			}
+		})
+	}
 }
