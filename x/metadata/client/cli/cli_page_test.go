@@ -310,11 +310,7 @@ func (s *IntegrationCLIPageTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationCLIPageTestSuite) TearDownSuite() {
-	s.T().Log("teardown waiting for next block")
-	s.Require().NoError(s.testnet.WaitForNextBlock(), "waiting for next block")
-	s.T().Log("teardown cleaning up testnet")
-	s.testnet.Cleanup()
-	s.T().Log("teardown done")
+	testutil.CleanUp(s.testnet, s.T())
 }
 
 // Converts an integer to a written version of it. E.g. 1 => one, 83 => eightyThree.

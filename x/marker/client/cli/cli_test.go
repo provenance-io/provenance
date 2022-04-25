@@ -3,7 +3,6 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/provenance-io/provenance/internal/antewrapper"
 	"io/ioutil"
 	"os"
 	"sort"
@@ -27,6 +26,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/testutil"
 	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -243,9 +243,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.testnet.WaitForNextBlock()
-	s.T().Log("tearing down integration test suite")
-	s.testnet.Cleanup()
+	testutil.CleanUp(s.testnet, s.T())
 }
 
 // toWritten converts an integer to a written string version.

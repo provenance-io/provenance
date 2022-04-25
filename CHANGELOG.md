@@ -88,6 +88,46 @@ NOTE: The second major change in the 1.8.0 release is part of the migration proc
 
 ### Features
 
+* Add `add-genesis-msg-fee` command to add msg fees to genesis.json and update Makefile to have pre-defined msg fees [#667](https://github.com/provenance-io/provenance/issues/667)
+* Add msgfees summary event to be emitted when there are txs that have fees [#678](https://github.com/provenance-io/provenance/issues/678)
+* Adds home subcommand to the cli's config command [#620] (https://github.com/provenance-io/provenance/issues/620)
+* Add support for rocksdb and badgerdb [#702](https://github.com/provenance-io/provenance/issues/702)
+* Create `dbmigrate` utility for migrating a data folder to use a different db backend [#696](https://github.com/provenance-io/provenance/issues/696)
+* Enable ADR-038 State Listening [#785](https://github.com/provenance-io/provenance/issues/785)
+
+### Improvements
+
+* When the `start` command encounters an error, it no longer outputs command usage [#670](https://github.com/provenance-io/provenance/issues/670)
+* Change max length on marker unresticted denom from 64 to 83 [#719](https://github.com/provenance-io/provenance/issues/719)
+* Set prerelease to `true` for release candidates. [#666](https://github.com/provenance-io/provenance/issues/666)
+* Allow authz grants to work on scope value owners [#755](https://github.com/provenance-io/provenance/issues/755)
+
+## [v1.8.1](https://github.com/provenance-io/provenance/releases/tag/v1.8.1) - 2022-04-13
+
+### Summary
+
+Provenance 1.8.1 includes upgrades to the underlying Cosmos SDK and adds initial support for ADR-038.
+
+This release addresses issues related to IAVL concurrency and Tendermint performance that resulted in occasional panics when under high-load conditions such as replay from quicksync. In particular, nodes which experienced issues with "Value missing for hash" and similar panic conditions should work properly with this release. The underlying Cosmos SDK `0.45.3` release that has been incorporated includes a number of improvements around IAVL locking and performance characteristics.
+
+** NOTE: Although Provenance supports multiple database backends, some issues have been reported when using the `goleveldb` backend. If experiencing issues, using the `cleveldb` backend is preferred **
+
+### Improvements
+
+* Update Provenance to use Cosmos SDK 0.45.3 Release [\#781](https://github.com/provenance-io/provenance/issues/781)
+* Plugin architecture for ADR-038 + FileStreamingService plugin [\#10639](https://github.com/cosmos/cosmos-sdk/pull/10639)
+* Fix for sporadic error "panic: Value missing for hash" [\#611](https://github.com/provenance-io/provenance/issues/611) 
+
+## [v1.8.0](https://github.com/provenance-io/provenance/releases/tag/v1.8.0) - 2022-03-17
+
+### Summary
+
+Provenance 1.8.0 is focused on improving the fee structures for transactions on the blockchain. While the Cosmos SDK has traditionally offered a generic fee structure focused on gas/resource utilization, the Provenance blockchain has found that certain transactions have additional long term costs and value beyond simple resources charges. This is the reason we are adding the new MsgFee module which allows governance based control of additional fee charges on certain message types.
+
+NOTE: The second major change in the 1.8.0 release is part of the migration process which removes many orphaned state objects that were left in 1.7.x chains. This cleanup process will require a significant amount of time to perform during the green upgrade handler execution. The upgrade will print status messages showing the progress of this process.
+
+### Features
+
 * Add check for `authz` grants when there are missing signatures in `metadata` transactions [#516](https://github.com/provenance-io/provenance/issues/516)
 * Add support for publishing Java and Kotlin Protobuf compiled sources to Maven Central [#562](https://github.com/provenance-io/provenance/issues/562)
 * Adds support for creating root name governance proposals from the cli [#599](https://github.com/provenance-io/provenance/issues/599)

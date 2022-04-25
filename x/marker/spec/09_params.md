@@ -9,7 +9,7 @@ Param module and available for control via Governance proposal to change paramet
 |------------------------|----------|-----------------------------------|
 | MaxTotalSupply         | `uint64` | `"259200000000000"`               |
 | EnableGovernance       | `bool`   | `true`                            |
-| UnrestrictedDenomRegex | `string` | `"[a-zA-Z][a-zA-Z0-9\-\.]{7,64}"` |
+| UnrestrictedDenomRegex | `string` | `"[a-zA-Z][a-zA-Z0-9\-\.]{7,83}"` |
 
 
 ## Definitions

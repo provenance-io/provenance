@@ -15,7 +15,7 @@ const (
 	// DefaultMaxTotalSupply is the upper bound to enforce on supply for markers.
 	DefaultMaxTotalSupply = uint64(100000000000)
 	// DefaultUnrestrictedDenomRegex is a regex that denoms created by normal requests must pass.
-	DefaultUnrestrictedDenomRegex = `[a-zA-Z][a-zA-Z0-9\-\.]{2,64}`
+	DefaultUnrestrictedDenomRegex = `[a-zA-Z][a-zA-Z0-9\-\.]{2,83}`
 )
 
 var (

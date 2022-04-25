@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"fmt"
+	"testing"
 	"time"
 
 	tmrand "github.com/tendermint/tendermint/libs/rand"
@@ -13,18 +14,17 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	"github.com/cosmos/cosmos-sdk/testutil/network"
+	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	provenanceapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/app/params"
 )
 
 // NewAppConstructor returns a new provenanceapp AppConstructor
-func NewAppConstructor(encodingCfg params.EncodingConfig) network.AppConstructor {
-	return func(val network.Validator) servertypes.Application {
+func NewAppConstructor(encodingCfg params.EncodingConfig) testnet.AppConstructor {
+	return func(val testnet.Validator) servertypes.Application {
 		return provenanceapp.New(
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			encodingCfg,
@@ -36,9 +36,9 @@ func NewAppConstructor(encodingCfg params.EncodingConfig) network.AppConstructor
 }
 
 // DefaultTestNetworkConfig creates a network configuration for inproc testing
-func DefaultTestNetworkConfig() network.Config {
+func DefaultTestNetworkConfig() testnet.Config {
 	encCfg := provenanceapp.MakeEncodingConfig()
-	return network.Config{
+	return testnet.Config{
 		Codec:             encCfg.Marshaler,
 		TxConfig:          encCfg.TxConfig,
 		LegacyAmino:       encCfg.Amino,
@@ -59,4 +59,15 @@ func DefaultTestNetworkConfig() network.Config {
 		SigningAlgo:       string(hd.Secp256k1Type),
 		KeyringOptions:    []keyring.Option{},
 	}
+}
+
+func CleanUp(n *testnet.Network, t *testing.T) {
+	t.Log("teardown waiting for next block")
+	//nolint:errcheck // The test shouldn't fail because cleanup was a problem. So ignoring any error from this.
+	n.WaitForNextBlock()
+	t.Log("teardown cleaning up testnet")
+	n.Cleanup()
+	// Give things a chance to finish closing up. Hopefully will prevent things like address collisions. 100ms chosen randomly.
+	time.Sleep(100 * time.Millisecond)
+	t.Log("teardown done")
 }
