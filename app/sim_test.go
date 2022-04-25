@@ -7,34 +7,35 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/cosmos/cosmos-sdk/plugin"
-	"github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/spf13/cast"
-	"github.com/spf13/viper"
-	tmos "github.com/tendermint/tendermint/libs/os"
 	"math/rand"
 	"os"
+	"sort"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/spf13/cast"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/plugin"
 	kafkaplugin "github.com/cosmos/cosmos-sdk/plugin/plugins/kafka"
 	kafkaservice "github.com/cosmos/cosmos-sdk/plugin/plugins/kafka/service"
+	"github.com/cosmos/cosmos-sdk/server/types"
 	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -47,6 +48,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	cmdconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
@@ -81,6 +83,7 @@ func TestFullAppSimulation(t *testing.T) {
 	if skip {
 		t.Skip("skipping provenance application simulation")
 	}
+	PrintConfig(config)
 	require.NoError(t, err, "provenance simulation setup failed")
 
 	defer func() {
@@ -111,9 +114,40 @@ func TestFullAppSimulation(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, simErr)
 
-	if config.Commit {
-		sdksim.PrintStats(db)
+	PrintStats(config, db)
+}
+
+func TestSimple(t *testing.T) {
+	config, db, dir, logger, skip, err := sdksim.SetupSimulation("leveldb-app-sim", "Simulation")
+	if skip {
+		t.Skip("skipping provenance application simulation")
 	}
+	PrintConfig(config)
+	require.NoError(t, err, "provenance simulation setup failed")
+
+	defer func() {
+		db.Close()
+		require.NoError(t, os.RemoveAll(dir))
+	}()
+
+	app := New(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
+	require.Equal(t, "provenanced", app.Name())
+
+	// run randomized simulation
+	_, _, simErr := simulation.SimulateFromSeed(
+		t,
+		os.Stdout,
+		app.BaseApp,
+		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+		sdksim.SimulationOperations(app, app.AppCodec(), config),
+		app.ModuleAccountAddrs(),
+		config,
+		app.AppCodec(),
+	)
+
+	require.NoError(t, simErr)
+	PrintStats(config, db)
 }
 
 func TestSimple(t *testing.T) {
@@ -158,6 +192,7 @@ func TestAppImportExport(t *testing.T) {
 	if skip {
 		t.Skip("skipping application import/export simulation")
 	}
+	PrintConfig(config)
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
@@ -187,9 +222,7 @@ func TestAppImportExport(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, simErr)
 
-	if config.Commit {
-		sdksim.PrintStats(db)
-	}
+	PrintStats(config, db)
 
 	fmt.Printf("exporting genesis...\n")
 
@@ -260,6 +293,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	if skip {
 		t.Skip("skipping application simulation after import")
 	}
+	PrintConfig(config)
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
@@ -287,9 +321,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, simErr)
 
-	if config.Commit {
-		sdksim.PrintStats(db)
-	}
+	PrintStats(config, db)
 
 	if stopEarly {
 		fmt.Println("can't export or import a zero-validator genesis, exiting test...")
@@ -344,6 +376,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.OnOperation = false
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
+	config.DBBackend = "memdb"
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
@@ -351,6 +384,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 	for i := 0; i < numSeeds; i++ {
 		config.Seed = rand.Int63()
+		PrintConfig(config)
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
@@ -381,8 +415,99 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 			require.NoError(t, err)
 
+			PrintStats(config, db)
+
+			appHash := app.LastCommitID().Hash
+			appHashList[j] = appHash
+
+			if j != 0 {
+				require.Equal(
+					t, string(appHashList[0]), string(appHashList[j]),
+					"non-determinism in seed %d: %d/%d, attempt: %d/%d\n", config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+				)
+			}
+		}
+	}
+}
+
+// TestAppStateDeterminismStateListening non-deterministic
+// testing with state listing indexing plugins enabled
+func TestAppStateDeterminismWithStateListening(t *testing.T) {
+	if !sdksim.FlagEnabledValue {
+		t.Skip("skipping application simulation")
+	}
+
+	if StateListeningPlugin == "" {
+		t.Skip("state listening plugin flag not provided: -StateListeningPlugin=name")
+	}
+
+	config := sdksim.NewConfigFromFlags()
+	config.InitialBlockHeight = 1
+	config.ExportParamsPath = ""
+	config.OnOperation = false
+	config.AllInvariants = false
+	config.ChainID = helpers.SimAppChainID
+
+	numSeeds := 3
+	numTimesToRunPerSeed := 5
+	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
+
+	for i := 0; i < numSeeds; i++ {
+		config.Seed = rand.Int63()
+		PrintConfig(config)
+
+		for j := 0; j < numTimesToRunPerSeed; j++ {
+			var logger log.Logger
+			if sdksim.FlagVerboseValue {
+				logger = log.TestingLogger()
+			} else {
+				logger = log.NewNopLogger()
+			}
+
+			// load listening plugin(s)
+			appOpts := loadAppOptions()
+			key := fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_ENABLED_TOML_KEY)
+			enabledPlugins := cast.ToStringSlice(appOpts.Get(key))
+			for _, p := range enabledPlugins {
+				if kafkaplugin.PLUGIN_NAME == p {
+					prepKafkaTopics(appOpts)
+					break
+				}
+			}
+
+			db := dbm.NewMemDB()
+			app := New(logger,
+				db,
+				nil,
+				true, map[int64]bool{},
+				DefaultNodeHome,
+				sdksim.FlagPeriodValue,
+				MakeEncodingConfig(),
+				//sdksim.EmptyAppOptions{},
+				appOpts,
+				interBlockCacheOpt(),
+			)
+
+			fmt.Printf(
+				"running provenance non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
+				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+			)
+
+			_, _, err := simulation.SimulateFromSeed(
+				t,
+				os.Stdout,
+				app.BaseApp,
+				sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+				sdksim.SimulationOperations(app, app.AppCodec(), config),
+				app.ModuleAccountAddrs(),
+				config,
+				app.AppCodec(),
+			)
+			require.NoError(t, err)
+
 			if config.Commit {
-				sdksim.PrintStats(db)
+				PrintStats(config, db)
 			}
 
 			appHash := app.LastCommitID().Hash
@@ -648,4 +773,47 @@ func deleteTopics(topicPrefix string, topics []string, bootstrapServers string) 
 	}
 
 	a.Close()
+}
+
+// PrintStats outputs the config and db info.
+func PrintStats(config simtypes.Config, db dbm.DB) {
+	PrintConfig(config)
+	if config.Commit {
+		PrintDBInfo(db)
+	}
+}
+
+// PrintConfig outputs the config.
+func PrintConfig(config simtypes.Config) {
+	fmt.Println("-vvv-  Config Info  -vvv-")
+	cfields := cmdconfig.MakeFieldValueMap(config, true)
+	for _, f := range cfields.GetSortedKeys() {
+		fmt.Printf("%s: %s\n", f, cfields.GetStringOf(f))
+	}
+	fmt.Println("-^^^-  Config Info  -^^^-")
+}
+
+// PrintDBInfo outputs the db.Stats map.
+func PrintDBInfo(db dbm.DB) {
+	fmt.Println("-vvv-  Database Info  -vvv-")
+	dbStats := db.Stats()
+	if len(dbStats) == 0 {
+		fmt.Println("No info to report.")
+	} else {
+		keys := make([]string, 0, len(dbStats))
+		for k := range dbStats {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			v := dbStats[k]
+			if strings.Contains(v, "\n") {
+				fmt.Printf("%s:\n", k)
+				fmt.Println(v)
+			} else {
+				fmt.Printf("%s: %q\n", k, v)
+			}
+		}
+	}
+	fmt.Println("-^^^-  Database Info  -^^^-")
 }

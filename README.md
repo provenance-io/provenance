@@ -49,6 +49,7 @@ Developers can use a local checkout and the make targets `make run` and `make lo
 
 Note: Requires [Go 1.17+](https://golang.org/dl/)
 
+See Also: [Building](docs/Building.md)
 
 ## Active Networks
 

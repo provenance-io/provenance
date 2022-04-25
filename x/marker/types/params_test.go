@@ -38,7 +38,7 @@ func TestParamString(t *testing.T) {
 	p := DefaultParams()
 	require.Equal(t, `maxtotalsupply: 100000000000
 enablegovernance: true
-unrestricteddenomregex: '[a-zA-Z][a-zA-Z0-9\-\.]{2,64}'
+unrestricteddenomregex: '[a-zA-Z][a-zA-Z0-9\-\.]{2,83}'
 `, p.String())
 }
 
