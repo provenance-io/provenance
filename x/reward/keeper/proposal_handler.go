@@ -45,7 +45,7 @@ func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddRewar
 	acc, _ := sdk.AccAddressFromBech32(rewardProgram.DistributeFromAddress)
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.ModuleName, sdk.NewCoins(rewardProgram.Coin))
 	if err != nil {
-		return fmt.Errorf("unable to send coin to module reward pool: %v", err)
+		return fmt.Errorf("unable to send coin to module reward pool: %s", err)
 	}
 	return nil
 }

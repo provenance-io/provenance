@@ -26,8 +26,6 @@ type IntegrationTestSuite struct {
 	k   rewardkeeper.Keeper
 
 	accountAddr sdk.AccAddress
-
-	moduleAdd sdk.AccAddress
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -35,6 +33,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Height: 2})
 	s.k = rewardkeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(rewardtypes.ModuleName), s.app.EpochKeeper, s.app.StakingKeeper, &s.app.GovKeeper, s.app.BankKeeper, s.app.AccountKeeper)
 	s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	provenance.FundAccount(s.app, s.ctx, s.accountAddr, sdk.NewCoins(sdk.NewInt64Coin("nhash", 1000)))
 	s.app.EpochKeeper.SetEpochInfo(s.ctx, epochtypes.EpochInfo{
 		Identifier:              "week",
 		StartHeight:             0,
@@ -43,7 +42,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		CurrentEpochStartHeight: 0,
 		EpochCountingStarted:    false,
 	})
-	// s.app.BankKeeper.SendCoinsFromAccountToModule(s.ctx, s.accountAddr, rewardtypes.ModuleName)
+
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -89,6 +88,21 @@ func (s *IntegrationTestSuite) TestRewardProposals() {
 				2,
 			),
 			errors.New("reward program requires coins: 0nhash"),
+		},
+		{
+			"add reward - not enough funds",
+			rewardtypes.NewAddRewardProgramProposal("title", "description",
+				2,
+				s.accountAddr.String(),
+				sdk.NewCoin("nhash", sdk.NewInt(10000)),
+				"week",
+				1,
+				1,
+				rewardtypes.NewEligibilityCriteria("delegation", &rewardtypes.ActionDelegate{}),
+				1,
+				2,
+			),
+			errors.New("unable to send coin to module reward pool: 1000nhash is smaller than 10000nhash: insufficient funds"),
 		},
 		{
 			"add reward - successfully add proposal",
