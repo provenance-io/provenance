@@ -139,10 +139,10 @@ func (s *IntegrationTestSuite) TestCmdRewardProgramProposal() {
 				"test add reward program",
 				"description",
 				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--coin=580nhash",
+				fmt.Sprintf("--coin=580%s", s.cfg.BondDenom),
 				"--reward-program-id=1",
 				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
-				"--epoch-id=day",
+				"--epoch-id=minute",
 				"--epoch-offset=100",
 				"--num-epochs=10",
 				"--minimum=3",
@@ -350,12 +350,14 @@ func (s *IntegrationTestSuite) TestCmdRewardProgramProposal() {
 			tc.args = append(tc.args, args...)
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdRewardProgramProposal(), tc.args)
+			var response sdk.TxResponse
+			marshalErr := clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response)
 			if tc.expectErr {
-				s.Require().Error(err)
+				s.Assert().Error(err)
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
 			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
+				s.Assert().NoError(err)
+				s.Assert().NoError(marshalErr, out.String())
 			}
 		})
 	}
