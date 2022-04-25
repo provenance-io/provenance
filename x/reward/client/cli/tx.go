@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/provenance-io/provenance/x/reward/types"
 
@@ -51,12 +52,18 @@ func GetCmdRewardProgramProposal() *cobra.Command {
 		Use:   "proposal [add|update|remove] [title] [description] [deposit]",
 		Args:  cobra.ExactArgs(4),
 		Short: "Submit a reward program proposal along with an initial deposit",
-		Long: strings.TrimSpace(`Submit a reward program proposal along with an initial deposit.
-`),
-		// 		Example: fmt.Sprintf(`$ %[1]s tx msgfees add "adding" "adding MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612nhash
-		// $ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash
-		// $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest
-		// `, version.AppName),
+		Long:  strings.TrimSpace(`Submit a reward program proposal along with an initial deposit.`),
+		Example: fmt.Sprintf(`$ %[1]s tx reward add "adding" "adding MsgWriterRecordRequest fee"  10nhash 
+		--coin 580nhash \
+    	--reward-program-id 1 \
+    	--dist-address tp12345 \
+    	--epoch-id day \
+    	--epoch-offset 100 \
+    	--num-epochs 10 \
+    	--minimum 3 \
+    	--maximum 10 \
+    	--eligibility-criteria "{\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}"
+		`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
