@@ -104,7 +104,10 @@ func GetCmdRewardProgramProposal() *cobra.Command {
 			}
 
 			var eligibilityCriteria types.EligibilityCriteria
-			clientCtx.Codec.MustUnmarshalJSON([]byte(eligibilityCriteriaStr), &eligibilityCriteria)
+			err = clientCtx.Codec.UnmarshalJSON([]byte(eligibilityCriteriaStr), &eligibilityCriteria)
+			if err != nil {
+				return fmt.Errorf("unable to parse eligibility criteria : %s", err)
+			}
 
 			var proposal govtypes.Content
 			switch args[0] {
@@ -123,7 +126,7 @@ func GetCmdRewardProgramProposal() *cobra.Command {
 					maximum,
 				)
 			default:
-				return fmt.Errorf("unknown proposal type %s", args[0])
+				return fmt.Errorf("unknown proposal type : %s", args[0])
 			}
 
 			deposit, err := sdk.ParseCoinsNormalized(args[3])
