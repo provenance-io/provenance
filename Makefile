@@ -400,6 +400,12 @@ TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-
 ifeq ($(WITH_CLEVELDB),true)
 	TAGS+= cleveldb
 endif
+ifeq ($(UNAME_S),darwin)
+	ifeq ($(UNAME_M),arm64)
+		# Needed on M1 macs due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
+		TAGS += dynamic
+	endif
+endif
 
 # Test runs-specific rules. To add a new test target, just add
 # a new rule, customise TAGS, ARGS and/or TEST_PACKAGES ad libitum, and
