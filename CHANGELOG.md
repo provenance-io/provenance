@@ -84,13 +84,10 @@ This release addresses issues related to IAVL concurrency and Tendermint perform
 
 ** NOTE: Although Provenance supports multiple database backends, some issues have been reported when using the `goleveldb` backend. If experiencing issues, using the `cleveldb` backend is preferred **
 
-### Features
-
-* Enable ADR-038 State Listening [#785](https://github.com/provenance-io/provenance/issues/785)
-
 ### Improvements
 
 * Update Provenance to use Cosmos SDK 0.45.3 Release [\#781](https://github.com/provenance-io/provenance/issues/781)
+* Plugin architecture for ADR-038 + FileStreamingService plugin [\#10639](https://github.com/cosmos/cosmos-sdk/pull/10639)
 * Fix for sporadic error "panic: Value missing for hash" [\#611](https://github.com/provenance-io/provenance/issues/611) 
 
 ---
