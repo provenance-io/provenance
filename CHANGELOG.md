@@ -37,6 +37,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+None
+
+---
+
+## [v1.9.0](https://github.com/provenance-io/provenance/releases/tag/v1.9.0) - 2022-04-25
+
+### Summary
+
+Provenance 1.9.0 brings some minor features and security improvements.
+
 ### Features
 
 * Add `add-genesis-msg-fee` command to add msg fees to genesis.json and update Makefile to have pre-defined msg fees [#667](https://github.com/provenance-io/provenance/issues/667)
@@ -51,6 +61,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Change max length on marker unresticted denom from 64 to 83 [#719](https://github.com/provenance-io/provenance/issues/719)
 * Set prerelease to `true` for release candidates. [#666](https://github.com/provenance-io/provenance/issues/666)
 * Allow authz grants to work on scope value owners [#755](https://github.com/provenance-io/provenance/issues/755)
+* Bump wasmd to v0.26 (from v0.24). [#799](https://github.com/provenance-io/provenance/pull/799)
 
 ---
 
@@ -58,10 +69,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Summary
 
-Provenance 1.8.2 is a point release to fix an issue with "downgrade detection" in Cosmos SDK. A panic condition 
+Provenance 1.8.2 is a point release to fix an issue with "downgrade detection" in Cosmos SDK. A panic condition
 occurs in cases where no update handler is found for the last known upgrade, but the process for determining
 the last known upgrade is flawed in Cosmos SDK 0.45.3. This released uses an updated Cosmos fork to patch the
-issue until an official patch is released. Version 1.8.2 also adds some remaining pieces for  ADR-038 that were 
+issue until an official patch is released. Version 1.8.2 also adds some remaining pieces for  ADR-038 that were
 missing in the 1.8.1 release.
 
 ### Bug Fixes
@@ -88,7 +99,7 @@ This release addresses issues related to IAVL concurrency and Tendermint perform
 
 * Update Provenance to use Cosmos SDK 0.45.3 Release [\#781](https://github.com/provenance-io/provenance/issues/781)
 * Plugin architecture for ADR-038 + FileStreamingService plugin [\#10639](https://github.com/cosmos/cosmos-sdk/pull/10639)
-* Fix for sporadic error "panic: Value missing for hash" [\#611](https://github.com/provenance-io/provenance/issues/611) 
+* Fix for sporadic error "panic: Value missing for hash" [\#611](https://github.com/provenance-io/provenance/issues/611)
 
 ---
 
