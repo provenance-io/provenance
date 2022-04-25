@@ -1,17 +1,17 @@
 package types
 
 func NewGenesisState(rewardProgram []RewardProgram,
-	rewardClaim []RewardClaim,
-	epochRewardDistribution []EpochRewardDistribution,
-	eligibilityCriteria []EligibilityCriteria,
+	rewardClaims []RewardClaim,
+	epochRewardDistributions []EpochRewardDistribution,
+	eligibilityCriterias []EligibilityCriteria,
 	actionDelegate ActionDelegate,
 	actionTransferDelegations ActionTransferDelegations,
 ) *GenesisState {
 	return &GenesisState{
 		RewardPrograms:            rewardProgram,
-		RewardClaims:              rewardClaim,
-		EpochRewardDistributions:  epochRewardDistribution,
-		EligibilityCriterias:      eligibilityCriteria,
+		RewardClaims:              rewardClaims,
+		EpochRewardDistributions:  epochRewardDistributions,
+		EligibilityCriterias:      eligibilityCriterias,
 		ActionDelegate:            actionDelegate,
 		ActionTransferDelegations: actionTransferDelegations,
 	}
