@@ -115,3 +115,15 @@ func (k Keeper) RewardClaimByID(ctx context.Context, req *types.RewardClaimByIDR
 
 	return &response, nil
 }
+
+// returns all EpochRewardDistributions
+func (k Keeper) EpochRewardDistributions(ctx context.Context, req *types.EpochRewardDistributionRequest) (*types.EpochRewardDistributionResponse, error) {
+	response := types.EpochRewardDistributionResponse{}
+	return &response, nil
+}
+
+// returns a EpochRewardDistribution by rewardId and epochId
+func (k Keeper) EpochRewardDistributionsByID(ctx context.Context, req *types.EpochRewardDistributionByIDRequest) (*types.EpochRewardDistributionByIDResponse, error) {
+	response := types.EpochRewardDistributionByIDResponse{}
+	return &response, nil
+}

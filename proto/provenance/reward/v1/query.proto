@@ -41,6 +41,16 @@ service Query {
   rpc RewardClaimByID(RewardClaimByIDRequest) returns (RewardClaimByIDResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/reward_claim_by_id/{id}";
   }
+
+  // returns all EpochRewardDistributions
+  rpc EpochRewardDistributions(EpochRewardDistributionRequest) returns (EpochRewardDistributionResponse) {
+    option (google.api.http).get = "/provenance/rewards/v1/epoch_reward_distributions";
+  }
+
+  // returns a EpochRewardDistribution by rewardId and epochId
+  rpc EpochRewardDistributionsByID(EpochRewardDistributionByIDRequest) returns (EpochRewardDistributionByIDResponse) {
+    option (google.api.http).get = "/provenance/rewards/v1/epoch_reward_distributions/{rewardId}/epochs/{epochId}";
+  }
 }
 
 message RewardProgramByIDRequest {
@@ -88,4 +98,18 @@ message RewardClaimByIDRequest {
 
 message RewardClaimByIDResponse {
   RewardClaim reward_claim = 1;
+}
+
+message EpochRewardDistributionRequest {}
+message EpochRewardDistributionResponse {
+  repeated EpochRewardDistribution epoch_reward_distribution = 1 [(gogoproto.nullable) = false];
+}
+
+message EpochRewardDistributionByIDRequest {
+  uint64 rewardId = 1;
+  string epochId = 2;
+}
+
+message EpochRewardDistributionByIDResponse {
+  EpochRewardDistribution epoch_reward_distribution = 1;
 }
