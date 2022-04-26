@@ -141,22 +141,31 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 			0,
 			"{\"reward_programs\":[{\"id\":\"1\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"0\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"}]}",
 		},
+		{"query existing reward program by id",
+			[]string{
+				"1",
+			},
+			false,
+			"",
+			0,
+			"{\"reward_program\":{\"id\":\"1\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"0\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"}}",
+		},
+		{"query non-existing reward program by id",
+			[]string{
+				"3",
+			},
+			true,
+			"reward program 3 does not exist",
+			0,
+			"",
+		},
 	}
-
-	// Wait for block 2 just in case
-	s.network.WaitForNextBlock()
 
 	for _, tc := range testCases {
 		tc := tc
 
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
-
-			// Set the height of the client ctx just in case?
-			// Not sure if needed
-			latestHeight, _ := s.network.LatestHeight()
-			clientCtx.WithHeight(latestHeight)
-
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardProgramCmd(), tc.args)
 			if tc.expectErr {
 				s.Assert().Error(err)
