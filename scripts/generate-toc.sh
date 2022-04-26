@@ -86,6 +86,7 @@ generate_toc () {
       '{
           gsub(/#/,"  ",$1);
           gsub(/[^[:alnum:]_]+/,"-",$3);
+          gsub(/-+$/,"",$3);
           print $1 "- [" $2 "](#" tolower($3) ")";
         }'
 }
