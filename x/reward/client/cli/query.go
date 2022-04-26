@@ -189,10 +189,10 @@ func outputRewardClaimsAll(cmd *cobra.Command) error {
 
 	queryClient := types.NewQueryClient(clientCtx)
 
-	var response *types.RewardProgramsResponse
-	if response, err = queryClient.RewardPrograms(
+	var response *types.RewardClaimsResponse
+	if response, err = queryClient.RewardClaims(
 		context.Background(),
-		&types.RewardProgramsRequest{},
+		&types.RewardClaimsRequest{},
 	); err != nil {
 		return fmt.Errorf("failed to query reward programs: %s", err.Error())
 	}
@@ -206,21 +206,17 @@ func outputRewardClaimById(cmd *cobra.Command, arg string) error {
 		return err
 	}
 	queryClient := types.NewQueryClient(clientCtx)
-	id, err := strconv.Atoi(arg)
-	if err != nil {
-		return err
-	}
 
-	var response *types.RewardProgramByIDResponse
-	if response, err = queryClient.RewardProgramByID(
+	var response *types.RewardClaimByIDResponse
+	if response, err = queryClient.RewardClaimByID(
 		context.Background(),
-		&types.RewardProgramByIDRequest{Id: uint64(id)},
+		&types.RewardClaimByIDRequest{Id: arg},
 	); err != nil {
-		return fmt.Errorf("failed to query reward claim %d: %s", id, err.Error())
+		return fmt.Errorf("failed to query reward claim %s: %s", arg, err.Error())
 	}
 
-	if response.GetRewardProgram() == nil {
-		return fmt.Errorf("reward claim %d does not exist", id)
+	if response.GetRewardClaim() == nil {
+		return fmt.Errorf("reward claim %s does not exist", arg)
 	}
 
 	return clientCtx.PrintProto(response)
@@ -234,10 +230,10 @@ func outputEpochRewardDistributionAll(cmd *cobra.Command) error {
 
 	queryClient := types.NewQueryClient(clientCtx)
 
-	var response *types.RewardProgramsResponse
-	if response, err = queryClient.RewardPrograms(
+	var response *types.EpochRewardDistributionResponse
+	if response, err = queryClient.EpochRewardDistributions(
 		context.Background(),
-		&types.RewardProgramsRequest{},
+		&types.EpochRewardDistributionRequest{},
 	); err != nil {
 		return fmt.Errorf("failed to query reward programs: %s", err.Error())
 	}
@@ -256,16 +252,19 @@ func outputEpochRewardDistributionById(cmd *cobra.Command, rewardId, epochId str
 		return err
 	}
 
-	var response *types.RewardProgramByIDResponse
-	if response, err = queryClient.RewardProgramByID(
+	var response *types.EpochRewardDistributionByIDResponse
+	if response, err = queryClient.EpochRewardDistributionsByID(
 		context.Background(),
-		&types.RewardProgramByIDRequest{Id: uint64(id)},
+		&types.EpochRewardDistributionByIDRequest{
+			RewardId: uint64(id),
+			EpochId:  epochId,
+		},
 	); err != nil {
 		return fmt.Errorf("failed to query reward claim %d: %s", id, err.Error())
 	}
 
-	if response.GetRewardProgram() == nil {
-		return fmt.Errorf("reward claim %d does not exist", id)
+	if response.GetEpochRewardDistribution() == nil {
+		return fmt.Errorf("epoch reward does not exist for reward-id: %s epoch-id %s", rewardId, epochId)
 	}
 
 	return clientCtx.PrintProto(response)
