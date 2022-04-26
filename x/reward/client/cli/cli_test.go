@@ -89,7 +89,36 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				2,
 			),
 		},
-		[]rewardtypes.RewardClaim{},
+		[]rewardtypes.RewardClaim{
+			types.NewRewardClaim(
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				[]rewardtypes.SharesPerEpochPerRewardsProgram{
+					types.NewSharesPerEpochPerRewardsProgram(
+						1,
+						0,
+						0,
+						0,
+						false,
+						false,
+						sdk.NewInt64Coin("jackthecat", 0),
+					),
+				},
+			),
+			types.NewRewardClaim(
+				"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq",
+				[]rewardtypes.SharesPerEpochPerRewardsProgram{
+					types.NewSharesPerEpochPerRewardsProgram(
+						2,
+						0,
+						0,
+						0,
+						false,
+						false,
+						sdk.NewInt64Coin("jackthecat", 0),
+					),
+				},
+			),
+		},
 		[]rewardtypes.EpochRewardDistribution{},
 		[]rewardtypes.EligibilityCriteria{},
 		rewardtypes.ActionDelegate{},
@@ -131,7 +160,8 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 			false,
 			"",
 			0,
-			"{\"reward_programs\":[{\"id\":\"1\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"0\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"},{\"id\":\"2\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"100\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"}]}"},
+			"{\"reward_programs\":[{\"id\":\"1\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"0\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"},{\"id\":\"2\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"100\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"}]}",
+		},
 		{"query all active reward programs",
 			[]string{
 				"active",
@@ -179,24 +209,70 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 }
 
 func (s *IntegrationTestSuite) TestQueryRewardClaims() {
-	s.Assert().FailNow("not implemented")
-	//cli.QueryRewardProgramsCmd()
-	// TODO Need a way to create a reward claim before these can be implemented
-}
+	testCases := []struct {
+		name           string
+		args           []string
+		expectErr      bool
+		expectErrMsg   string
+		expectedCode   uint32
+		expectedOutput string
+	}{
+		{"query all reward claims",
+			[]string{
+				"all",
+			},
+			false,
+			"",
+			0,
+			"{\"reward_claims\":[{\"address\":\"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq\",\"shares_per_epoch_per_reward\":[{\"reward_program_id\":\"2\",\"total_shares\":\"0\",\"ephemeral_action_count\":\"0\",\"latest_recorded_epoch\":\"0\",\"claimed\":false,\"expired\":false,\"total_reward_claimed\":{\"denom\":\"jackthecat\",\"amount\":\"0\"}}]},{\"address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"shares_per_epoch_per_reward\":[{\"reward_program_id\":\"1\",\"total_shares\":\"0\",\"ephemeral_action_count\":\"0\",\"latest_recorded_epoch\":\"0\",\"claimed\":false,\"expired\":false,\"total_reward_claimed\":{\"denom\":\"jackthecat\",\"amount\":\"0\"}}]},{\"address\":\"cosmos1xmfpahwln43sykme4f9nftzsqq0p9le6hec8pz\",\"shares_per_epoch_per_reward\":[{\"reward_program_id\":\"1\",\"total_shares\":\"1\",\"ephemeral_action_count\":\"1\",\"latest_recorded_epoch\":\"1\",\"claimed\":false,\"expired\":false,\"total_reward_claimed\":{\"denom\":\"\",\"amount\":\"0\"}}]}]}",
+		},
+		{"query existing reward claim by address",
+			[]string{
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+			},
+			false,
+			"",
+			0,
+			"{\"reward_claim\":{\"address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"shares_per_epoch_per_reward\":[{\"reward_program_id\":\"1\",\"total_shares\":\"0\",\"ephemeral_action_count\":\"0\",\"latest_recorded_epoch\":\"0\",\"claimed\":false,\"expired\":false,\"total_reward_claimed\":{\"denom\":\"jackthecat\",\"amount\":\"0\"}}]}}",
+		},
+		{"query non-existing reward claim by address",
+			[]string{
+				"failure",
+			},
+			true,
+			"reward claim failure does not exist",
+			0,
+			"",
+		},
+		{"query non-existing reward claim by empty address",
+			[]string{
+				"",
+			},
+			true,
+			"reward claim  does not exist",
+			0,
+			"",
+		},
+	}
 
-func (s *IntegrationTestSuite) TestQueryRewardClaimsById() {
-	s.Assert().FailNow("not implemented")
-	//cli.QueryRewardProgramsCmd()
-	// TODO Need a way to create a reward claim before these can be implemented
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.network.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardClaimCmd(), tc.args)
+			if tc.expectErr {
+				s.Assert().Error(err)
+				s.Assert().Equal(tc.expectErrMsg, err.Error())
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+			}
+		})
+	}
 }
 
 func (s *IntegrationTestSuite) TestQueryEpochDistributionReward() {
-	s.Assert().FailNow("not implemented")
-	//cli.QueryRewardProgramsCmd()
-	// TODO Need a way to create a reward claim before these can be implemented
-}
-
-func (s *IntegrationTestSuite) TestQueryEpochDistributionRewardById() {
 	s.Assert().FailNow("not implemented")
 	//cli.QueryRewardProgramsCmd()
 	// TODO Need a way to create a reward claim before these can be implemented
