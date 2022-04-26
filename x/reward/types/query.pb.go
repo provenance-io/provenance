@@ -532,6 +532,182 @@ func (m *RewardClaimByIDResponse) GetRewardClaim() *RewardClaim {
 	return nil
 }
 
+type EpochRewardDistributionRequest struct {
+}
+
+func (m *EpochRewardDistributionRequest) Reset()         { *m = EpochRewardDistributionRequest{} }
+func (m *EpochRewardDistributionRequest) String() string { return proto.CompactTextString(m) }
+func (*EpochRewardDistributionRequest) ProtoMessage()    {}
+func (*EpochRewardDistributionRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_89e47dd1c3e4febf, []int{12}
+}
+func (m *EpochRewardDistributionRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EpochRewardDistributionRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EpochRewardDistributionRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EpochRewardDistributionRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EpochRewardDistributionRequest.Merge(m, src)
+}
+func (m *EpochRewardDistributionRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *EpochRewardDistributionRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_EpochRewardDistributionRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EpochRewardDistributionRequest proto.InternalMessageInfo
+
+type EpochRewardDistributionResponse struct {
+	EpochRewardDistribution []EpochRewardDistribution `protobuf:"bytes,1,rep,name=epoch_reward_distribution,json=epochRewardDistribution,proto3" json:"epoch_reward_distribution"`
+}
+
+func (m *EpochRewardDistributionResponse) Reset()         { *m = EpochRewardDistributionResponse{} }
+func (m *EpochRewardDistributionResponse) String() string { return proto.CompactTextString(m) }
+func (*EpochRewardDistributionResponse) ProtoMessage()    {}
+func (*EpochRewardDistributionResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_89e47dd1c3e4febf, []int{13}
+}
+func (m *EpochRewardDistributionResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EpochRewardDistributionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EpochRewardDistributionResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EpochRewardDistributionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EpochRewardDistributionResponse.Merge(m, src)
+}
+func (m *EpochRewardDistributionResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *EpochRewardDistributionResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_EpochRewardDistributionResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EpochRewardDistributionResponse proto.InternalMessageInfo
+
+func (m *EpochRewardDistributionResponse) GetEpochRewardDistribution() []EpochRewardDistribution {
+	if m != nil {
+		return m.EpochRewardDistribution
+	}
+	return nil
+}
+
+type EpochRewardDistributionByIDRequest struct {
+	RewardId uint64 `protobuf:"varint,1,opt,name=rewardId,proto3" json:"rewardId,omitempty"`
+	EpochId  string `protobuf:"bytes,2,opt,name=epochId,proto3" json:"epochId,omitempty"`
+}
+
+func (m *EpochRewardDistributionByIDRequest) Reset()         { *m = EpochRewardDistributionByIDRequest{} }
+func (m *EpochRewardDistributionByIDRequest) String() string { return proto.CompactTextString(m) }
+func (*EpochRewardDistributionByIDRequest) ProtoMessage()    {}
+func (*EpochRewardDistributionByIDRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_89e47dd1c3e4febf, []int{14}
+}
+func (m *EpochRewardDistributionByIDRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EpochRewardDistributionByIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EpochRewardDistributionByIDRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EpochRewardDistributionByIDRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EpochRewardDistributionByIDRequest.Merge(m, src)
+}
+func (m *EpochRewardDistributionByIDRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *EpochRewardDistributionByIDRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_EpochRewardDistributionByIDRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EpochRewardDistributionByIDRequest proto.InternalMessageInfo
+
+func (m *EpochRewardDistributionByIDRequest) GetRewardId() uint64 {
+	if m != nil {
+		return m.RewardId
+	}
+	return 0
+}
+
+func (m *EpochRewardDistributionByIDRequest) GetEpochId() string {
+	if m != nil {
+		return m.EpochId
+	}
+	return ""
+}
+
+type EpochRewardDistributionByIDResponse struct {
+	EpochRewardDistribution *EpochRewardDistribution `protobuf:"bytes,1,opt,name=epoch_reward_distribution,json=epochRewardDistribution,proto3" json:"epoch_reward_distribution,omitempty"`
+}
+
+func (m *EpochRewardDistributionByIDResponse) Reset()         { *m = EpochRewardDistributionByIDResponse{} }
+func (m *EpochRewardDistributionByIDResponse) String() string { return proto.CompactTextString(m) }
+func (*EpochRewardDistributionByIDResponse) ProtoMessage()    {}
+func (*EpochRewardDistributionByIDResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_89e47dd1c3e4febf, []int{15}
+}
+func (m *EpochRewardDistributionByIDResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EpochRewardDistributionByIDResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EpochRewardDistributionByIDResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EpochRewardDistributionByIDResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EpochRewardDistributionByIDResponse.Merge(m, src)
+}
+func (m *EpochRewardDistributionByIDResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *EpochRewardDistributionByIDResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_EpochRewardDistributionByIDResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EpochRewardDistributionByIDResponse proto.InternalMessageInfo
+
+func (m *EpochRewardDistributionByIDResponse) GetEpochRewardDistribution() *EpochRewardDistribution {
+	if m != nil {
+		return m.EpochRewardDistribution
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*RewardProgramByIDRequest)(nil), "provenance.reward.v1.RewardProgramByIDRequest")
 	proto.RegisterType((*RewardProgramByIDResponse)(nil), "provenance.reward.v1.RewardProgramByIDResponse")
@@ -545,59 +721,74 @@ func init() {
 	proto.RegisterType((*RewardClaimsResponse)(nil), "provenance.reward.v1.RewardClaimsResponse")
 	proto.RegisterType((*RewardClaimByIDRequest)(nil), "provenance.reward.v1.RewardClaimByIDRequest")
 	proto.RegisterType((*RewardClaimByIDResponse)(nil), "provenance.reward.v1.RewardClaimByIDResponse")
+	proto.RegisterType((*EpochRewardDistributionRequest)(nil), "provenance.reward.v1.EpochRewardDistributionRequest")
+	proto.RegisterType((*EpochRewardDistributionResponse)(nil), "provenance.reward.v1.EpochRewardDistributionResponse")
+	proto.RegisterType((*EpochRewardDistributionByIDRequest)(nil), "provenance.reward.v1.EpochRewardDistributionByIDRequest")
+	proto.RegisterType((*EpochRewardDistributionByIDResponse)(nil), "provenance.reward.v1.EpochRewardDistributionByIDResponse")
 }
 
 func init() { proto.RegisterFile("provenance/reward/v1/query.proto", fileDescriptor_89e47dd1c3e4febf) }
 
 var fileDescriptor_89e47dd1c3e4febf = []byte{
-	// 751 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x96, 0x31, 0x6f, 0xd3, 0x4c,
-	0x18, 0xc7, 0x73, 0x7d, 0xfb, 0xbe, 0x7a, 0xdf, 0x6b, 0xde, 0x54, 0x1c, 0x29, 0x6d, 0x43, 0x49,
-	0x52, 0x83, 0xaa, 0x50, 0x1a, 0x5f, 0x13, 0x44, 0x41, 0x4c, 0x34, 0xed, 0x02, 0x02, 0xa9, 0x78,
-	0x64, 0xb1, 0x2e, 0xf6, 0x61, 0x4e, 0x24, 0xbe, 0xd4, 0x67, 0x07, 0x22, 0xc4, 0xc2, 0x8e, 0x40,
-	0xea, 0xc8, 0xce, 0xc0, 0xc0, 0x04, 0x2b, 0x73, 0xc7, 0x4a, 0x2c, 0x4c, 0x05, 0xb5, 0x7c, 0x02,
-	0x3e, 0x01, 0xca, 0xf9, 0x4c, 0x9c, 0xd4, 0x24, 0xee, 0xc0, 0xd4, 0x3a, 0xcf, 0xff, 0x9e, 0xe7,
-	0x77, 0x8f, 0x9f, 0xff, 0x23, 0xc3, 0x72, 0xc7, 0xe3, 0x5d, 0xea, 0x12, 0xd7, 0xa2, 0xd8, 0xa3,
-	0x4f, 0x88, 0x67, 0xe3, 0x6e, 0x0d, 0xef, 0x06, 0xd4, 0xeb, 0xe9, 0x1d, 0x8f, 0xfb, 0x1c, 0xe5,
-	0x07, 0x0a, 0x3d, 0x54, 0xe8, 0xdd, 0x5a, 0x21, 0xef, 0x70, 0x87, 0x4b, 0x01, 0xee, 0xff, 0x17,
-	0x6a, 0x0b, 0x4b, 0x0e, 0xe7, 0x4e, 0x8b, 0x62, 0xd2, 0x61, 0x98, 0xb8, 0x2e, 0xf7, 0x89, 0xcf,
-	0xb8, 0x2b, 0x54, 0xb4, 0xa8, 0xa2, 0xf2, 0xa9, 0x19, 0x3c, 0xc4, 0x76, 0xe0, 0x49, 0x81, 0x8a,
-	0x97, 0x46, 0xe3, 0x3e, 0x6b, 0x53, 0xe1, 0x93, 0x76, 0x27, 0x4a, 0x60, 0x71, 0xd1, 0xe6, 0x02,
-	0x37, 0x89, 0xa0, 0xb8, 0x5b, 0x6b, 0x52, 0x9f, 0xd4, 0xb0, 0xc5, 0x59, 0x94, 0x60, 0x39, 0xf1,
-	0x32, 0x0a, 0x5a, 0x4a, 0xb4, 0x55, 0xb8, 0x60, 0xc8, 0xe7, 0x1d, 0x8f, 0x3b, 0x1e, 0x69, 0x37,
-	0x7a, 0xb7, 0xb7, 0x0d, 0xba, 0x1b, 0x50, 0xe1, 0xa3, 0x1c, 0x9c, 0x62, 0xf6, 0x02, 0x28, 0x83,
-	0xca, 0xb4, 0x31, 0xc5, 0x6c, 0xcd, 0x81, 0x8b, 0x09, 0x5a, 0xd1, 0xe1, 0xae, 0xa0, 0xe8, 0x0e,
-	0xcc, 0x85, 0x89, 0xcd, 0x4e, 0x18, 0x95, 0x07, 0x67, 0xea, 0x17, 0xf5, 0xa4, 0x7e, 0xe9, 0x43,
-	0x89, 0x8c, 0xff, 0xbd, 0xf8, 0xa3, 0x36, 0x0f, 0xe7, 0x86, 0xe2, 0x42, 0x11, 0x69, 0x2d, 0x78,
-	0x6e, 0x34, 0xa0, 0xca, 0x1b, 0x70, 0x76, 0xb8, 0xbc, 0x58, 0x00, 0xe5, 0xbf, 0x52, 0xd6, 0x6f,
-	0x4c, 0xef, 0x1f, 0x96, 0x32, 0x46, 0x6e, 0x88, 0x42, 0x68, 0x17, 0xe0, 0xf9, 0x4d, 0xcb, 0x67,
-	0x5d, 0x9a, 0x0c, 0xe3, 0xc1, 0xa5, 0xe4, 0xf0, 0x1f, 0x44, 0xd2, 0x60, 0xf9, 0x7e, 0x7f, 0x16,
-	0xef, 0x71, 0x3b, 0x68, 0xd1, 0x4d, 0xcb, 0xe2, 0x81, 0xeb, 0x37, 0x48, 0xab, 0x9f, 0x2a, 0xe2,
-	0xfa, 0x08, 0xe0, 0xf2, 0x18, 0x91, 0xa2, 0x7b, 0x05, 0x60, 0xbe, 0x9d, 0x20, 0x50, 0x8c, 0x8b,
-	0x7a, 0x38, 0x5b, 0x7a, 0x7f, 0xb6, 0x74, 0x35, 0x5b, 0xfa, 0x16, 0x67, 0x6e, 0xe3, 0x56, 0x9f,
-	0xec, 0xc7, 0x61, 0x29, 0xdb, 0x23, 0xed, 0xd6, 0x4d, 0xad, 0x3f, 0x6f, 0x42, 0x7b, 0xf7, 0xb5,
-	0x54, 0x71, 0x98, 0xff, 0x28, 0x68, 0xea, 0x16, 0x6f, 0x63, 0x35, 0x98, 0xe1, 0x9f, 0xaa, 0xb0,
-	0x1f, 0x63, 0xbf, 0xd7, 0xa1, 0x42, 0x26, 0x10, 0x46, 0x62, 0x61, 0x6d, 0x0e, 0x9e, 0x0d, 0x5b,
-	0xb0, 0xd5, 0x22, 0x6c, 0xd0, 0x66, 0x1b, 0xe6, 0x87, 0x7f, 0x56, 0x17, 0xb8, 0x0b, 0xd5, 0xd4,
-	0x98, 0x96, 0x0c, 0x28, 0xf0, 0xe5, 0x71, 0xcd, 0x95, 0x29, 0x54, 0x6b, 0xb3, 0x5e, 0x2c, 0xab,
-	0x56, 0x89, 0x26, 0x2b, 0x94, 0x24, 0xba, 0xe0, 0x3f, 0xe9, 0x02, 0x13, 0xce, 0x9f, 0x50, 0x2a,
-	0xa4, 0x6d, 0x98, 0x8d, 0x23, 0x29, 0x07, 0x4c, 0x26, 0x32, 0x66, 0x62, 0x2c, 0xf5, 0x97, 0xff,
-	0xc2, 0xbf, 0xe5, 0xfb, 0x43, 0xef, 0x01, 0x3c, 0x73, 0xc2, 0x71, 0x48, 0x4f, 0x33, 0x3e, 0x83,
-	0x0b, 0x14, 0x70, 0x6a, 0x7d, 0x78, 0x0d, 0xed, 0xc6, 0x8b, 0xcf, 0xdf, 0xf7, 0xa6, 0xea, 0x68,
-	0x1d, 0x9f, 0xd8, 0x1f, 0x62, 0xb0, 0x40, 0xa2, 0xa9, 0x36, 0x9b, 0x3d, 0x93, 0xd9, 0xf8, 0x19,
-	0xb3, 0x9f, 0xa3, 0x37, 0x00, 0xe6, 0x86, 0xdd, 0x80, 0xae, 0xa4, 0xa8, 0x1e, 0xbd, 0xeb, 0xc2,
-	0x5a, 0x3a, 0xb1, 0xe2, 0xd4, 0x25, 0x67, 0x05, 0xad, 0xa4, 0xe2, 0x14, 0xe8, 0x03, 0x80, 0xf9,
-	0x24, 0xc7, 0xa2, 0x5a, 0x72, 0xd9, 0x31, 0xe6, 0x2f, 0xd4, 0x4f, 0x73, 0x44, 0xf1, 0x5e, 0x93,
-	0xbc, 0x18, 0x55, 0x7f, 0xc3, 0x4b, 0xe4, 0x61, 0x73, 0x14, 0xfb, 0x13, 0x80, 0xf9, 0x24, 0x2b,
-	0xa3, 0x8d, 0x64, 0x86, 0x49, 0x0b, 0xa2, 0x70, 0xfd, 0xd4, 0xe7, 0x52, 0x5e, 0x20, 0xb4, 0xb5,
-	0x49, 0xc2, 0xd3, 0x66, 0x53, 0x71, 0xee, 0x01, 0x98, 0x8d, 0x5b, 0x18, 0x5d, 0x9e, 0xe8, 0x88,
-	0x5f, 0x7d, 0x5e, 0x4d, 0x23, 0x55, 0x78, 0x6b, 0x12, 0x6f, 0x05, 0x5d, 0x1a, 0x3f, 0x0f, 0xe1,
-	0xba, 0x40, 0x6f, 0x01, 0x9c, 0x1d, 0x31, 0x32, 0x5a, 0x9b, 0xbc, 0x3c, 0x62, 0xc6, 0xaa, 0xa6,
-	0x54, 0x2b, 0xbc, 0x0d, 0x89, 0xb7, 0x8e, 0xf4, 0x14, 0x78, 0x31, 0x53, 0x35, 0x9c, 0xfd, 0xa3,
-	0x22, 0x38, 0x38, 0x2a, 0x82, 0x6f, 0x47, 0x45, 0xf0, 0xfa, 0xb8, 0x98, 0x39, 0x38, 0x2e, 0x66,
-	0xbe, 0x1c, 0x17, 0x33, 0x70, 0x9e, 0xf1, 0x44, 0x84, 0x1d, 0xf0, 0xa0, 0x1e, 0x5b, 0xc6, 0x03,
-	0x49, 0x95, 0xf1, 0x78, 0xf1, 0xa7, 0xd1, 0x57, 0x81, 0x5c, 0xce, 0xcd, 0x7f, 0xe4, 0x27, 0xc1,
-	0xd5, 0x9f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x9a, 0x13, 0x87, 0x66, 0x04, 0x09, 0x00, 0x00,
+	// 928 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x96, 0xcf, 0x6f, 0xdc, 0x44,
+	0x14, 0xc7, 0x33, 0xa1, 0xfc, 0x7a, 0x09, 0xa9, 0x18, 0xb6, 0x64, 0xb3, 0x04, 0xef, 0xc6, 0x45,
+	0x55, 0x28, 0x59, 0x4f, 0x77, 0x4b, 0x4b, 0xcb, 0x89, 0x6e, 0xc3, 0x21, 0x88, 0x8a, 0x62, 0x89,
+	0x4b, 0x2f, 0x96, 0x7f, 0x0c, 0xee, 0x88, 0x5d, 0x8f, 0xeb, 0xb1, 0x17, 0x56, 0x51, 0x2e, 0xfc,
+	0x03, 0x54, 0xf4, 0xc8, 0x9d, 0x03, 0x07, 0x4e, 0x70, 0x05, 0x89, 0x53, 0x8f, 0x95, 0xb8, 0x70,
+	0x2a, 0x28, 0xe1, 0xc4, 0x91, 0xbf, 0x00, 0x79, 0x3c, 0xce, 0x7a, 0x13, 0x7b, 0xe3, 0x45, 0xea,
+	0x29, 0x99, 0xbc, 0xef, 0xbc, 0xf9, 0xbc, 0x97, 0x37, 0x5f, 0x0f, 0x74, 0xc2, 0x88, 0x8f, 0x69,
+	0x60, 0x07, 0x2e, 0x25, 0x11, 0xfd, 0xd2, 0x8e, 0x3c, 0x32, 0xee, 0x91, 0x07, 0x09, 0x8d, 0x26,
+	0x46, 0x18, 0xf1, 0x98, 0xe3, 0xc6, 0x54, 0x61, 0x64, 0x0a, 0x63, 0xdc, 0x6b, 0x35, 0x7c, 0xee,
+	0x73, 0x29, 0x20, 0xe9, 0x6f, 0x99, 0xb6, 0xb5, 0xe9, 0x73, 0xee, 0x0f, 0x29, 0xb1, 0x43, 0x46,
+	0xec, 0x20, 0xe0, 0xb1, 0x1d, 0x33, 0x1e, 0x08, 0x15, 0xd5, 0x54, 0x54, 0xae, 0x9c, 0xe4, 0x73,
+	0xe2, 0x25, 0x91, 0x14, 0xa8, 0x78, 0xfb, 0x64, 0x3c, 0x66, 0x23, 0x2a, 0x62, 0x7b, 0x14, 0xe6,
+	0x09, 0x5c, 0x2e, 0x46, 0x5c, 0x10, 0xc7, 0x16, 0x94, 0x8c, 0x7b, 0x0e, 0x8d, 0xed, 0x1e, 0x71,
+	0x39, 0xcb, 0x13, 0x6c, 0x95, 0x16, 0xa3, 0xa0, 0xa5, 0x44, 0xbf, 0x0c, 0x4d, 0x53, 0xae, 0xef,
+	0x46, 0xdc, 0x8f, 0xec, 0xd1, 0x60, 0xb2, 0xb7, 0x6b, 0xd2, 0x07, 0x09, 0x15, 0x31, 0x5e, 0x83,
+	0x65, 0xe6, 0x35, 0x51, 0x07, 0x6d, 0x9f, 0x33, 0x97, 0x99, 0xa7, 0xfb, 0xb0, 0x51, 0xa2, 0x15,
+	0x21, 0x0f, 0x04, 0xc5, 0x1f, 0xc1, 0x5a, 0x96, 0xd8, 0x0a, 0xb3, 0xa8, 0xdc, 0xb8, 0xd2, 0xbf,
+	0x68, 0x94, 0xf5, 0xcb, 0x98, 0x49, 0x64, 0xbe, 0x12, 0x15, 0x97, 0xfa, 0x3a, 0x5c, 0x98, 0x89,
+	0x0b, 0x45, 0xa4, 0x0f, 0xe1, 0xf5, 0x93, 0x01, 0x75, 0xbc, 0x09, 0xe7, 0x67, 0x8f, 0x17, 0x4d,
+	0xd4, 0x79, 0xae, 0xe6, 0xf9, 0x83, 0x73, 0x8f, 0x9f, 0xb6, 0x97, 0xcc, 0xb5, 0x19, 0x0a, 0xa1,
+	0xbf, 0x09, 0x6f, 0xdc, 0x72, 0x63, 0x36, 0xa6, 0xe5, 0x30, 0x11, 0x6c, 0x96, 0x87, 0x9f, 0x21,
+	0x92, 0x0e, 0x9d, 0x4f, 0xd3, 0x59, 0xbc, 0xc3, 0xbd, 0x64, 0x48, 0x6f, 0xb9, 0x2e, 0x4f, 0x82,
+	0x78, 0x60, 0x0f, 0xd3, 0x54, 0x39, 0xd7, 0xcf, 0x08, 0xb6, 0xe6, 0x88, 0x14, 0xdd, 0x37, 0x08,
+	0x1a, 0xa3, 0x12, 0x81, 0x62, 0xdc, 0x30, 0xb2, 0xd9, 0x32, 0xd2, 0xd9, 0x32, 0xd4, 0x6c, 0x19,
+	0xb7, 0x39, 0x0b, 0x06, 0x1f, 0xa4, 0x64, 0xff, 0x3e, 0x6d, 0xaf, 0x4e, 0xec, 0xd1, 0xf0, 0x7d,
+	0x3d, 0x9d, 0x37, 0xa1, 0xff, 0xf0, 0x67, 0x7b, 0xdb, 0x67, 0xf1, 0xfd, 0xc4, 0x31, 0x5c, 0x3e,
+	0x22, 0x6a, 0x30, 0xb3, 0x1f, 0x5d, 0xe1, 0x7d, 0x41, 0xe2, 0x49, 0x48, 0x85, 0x4c, 0x20, 0xcc,
+	0xd2, 0x83, 0xf5, 0x0b, 0xf0, 0x5a, 0xd6, 0x82, 0xdb, 0x43, 0x9b, 0x4d, 0xdb, 0xec, 0x41, 0x63,
+	0xf6, 0xcf, 0xaa, 0x80, 0x8f, 0x41, 0x4d, 0x8d, 0xe5, 0xca, 0x80, 0x02, 0xdf, 0x9a, 0xd7, 0x5c,
+	0x99, 0x42, 0xb5, 0x76, 0x35, 0x2a, 0x64, 0xd5, 0xb7, 0xf3, 0xc9, 0xca, 0x24, 0xa5, 0xb7, 0xe0,
+	0x65, 0x79, 0x0b, 0x2c, 0x58, 0x3f, 0xa5, 0x54, 0x48, 0xbb, 0xb0, 0x5a, 0x44, 0x52, 0x37, 0xe0,
+	0x6c, 0x22, 0x73, 0xa5, 0xc0, 0xa2, 0x77, 0x40, 0xfb, 0x30, 0xe4, 0xee, 0xfd, 0x4c, 0xb0, 0xcb,
+	0x44, 0x1c, 0x31, 0x27, 0x49, 0x7d, 0x21, 0x6f, 0xc9, 0xb7, 0x08, 0xda, 0x95, 0x12, 0xc5, 0xc2,
+	0x61, 0x83, 0xa6, 0x12, 0x4b, 0x11, 0x79, 0x05, 0x91, 0x6a, 0x55, 0xb7, 0x1c, 0xac, 0x22, 0xb3,
+	0x6a, 0xdb, 0x3a, 0x2d, 0x0f, 0xeb, 0xf7, 0x40, 0xaf, 0xda, 0x59, 0xe8, 0x66, 0x0b, 0x5e, 0xca,
+	0x4e, 0xda, 0xcb, 0x9d, 0xe5, 0x78, 0x8d, 0x9b, 0xf0, 0xa2, 0x4c, 0xbe, 0xe7, 0x35, 0x97, 0x65,
+	0xbb, 0xf3, 0xa5, 0xfe, 0x10, 0xc1, 0xc5, 0xb9, 0xc9, 0x55, 0xd1, 0x6c, 0x7e, 0xd1, 0x68, 0xe1,
+	0xa2, 0x2b, 0xcb, 0xed, 0xff, 0xba, 0x02, 0xcf, 0xcb, 0x5b, 0x86, 0x7f, 0x44, 0xf0, 0xea, 0x29,
+	0x5f, 0xc4, 0x46, 0x9d, 0x4b, 0x3e, 0x6d, 0x4c, 0x8b, 0xd4, 0xd6, 0x67, 0xb5, 0xea, 0x37, 0xbe,
+	0xfe, 0xfd, 0xef, 0x47, 0xcb, 0x7d, 0x7c, 0x85, 0x9c, 0x72, 0x79, 0x31, 0xb5, 0xf9, 0xdc, 0x7b,
+	0x2c, 0x67, 0x62, 0x31, 0x8f, 0xec, 0x33, 0xef, 0x00, 0x7f, 0x87, 0x60, 0x6d, 0xd6, 0xb3, 0xf0,
+	0x3b, 0x35, 0x4e, 0xcf, 0x6f, 0x64, 0x6b, 0xa7, 0x9e, 0x58, 0x71, 0x1a, 0x92, 0x73, 0x1b, 0x5f,
+	0xaa, 0xc5, 0x29, 0xf0, 0x4f, 0x08, 0x1a, 0x65, 0xbe, 0x8a, 0x7b, 0xe5, 0xc7, 0xce, 0xb1, 0xe8,
+	0x56, 0x7f, 0x91, 0x2d, 0x8a, 0xf7, 0x9a, 0xe4, 0x25, 0xb8, 0x5b, 0xc1, 0x6b, 0xcb, 0xcd, 0xd6,
+	0x49, 0xec, 0x5f, 0x10, 0x34, 0xca, 0x0c, 0x17, 0x5f, 0x2f, 0x67, 0x38, 0xcb, 0xc6, 0x5b, 0xef,
+	0x2d, 0xbc, 0xaf, 0x66, 0x01, 0x99, 0xf9, 0x5a, 0x76, 0xb6, 0xdb, 0x72, 0x14, 0xe7, 0x23, 0x04,
+	0xab, 0x45, 0xa3, 0xc5, 0x6f, 0x9f, 0xe9, 0x5b, 0xc7, 0x7d, 0xbe, 0x5c, 0x47, 0xaa, 0xf0, 0x76,
+	0x24, 0xde, 0x25, 0xfc, 0xd6, 0xfc, 0x79, 0xc8, 0x4c, 0x1d, 0x7f, 0x8f, 0xe0, 0xfc, 0x09, 0xbb,
+	0xc5, 0x3b, 0x67, 0x5b, 0x7c, 0xe1, 0x62, 0x75, 0x6b, 0xaa, 0x15, 0xde, 0x75, 0x89, 0x77, 0x05,
+	0x1b, 0x35, 0xf0, 0x8a, 0x97, 0xea, 0x37, 0x04, 0xcd, 0x0a, 0x13, 0x11, 0xf8, 0xdd, 0xc5, 0x4c,
+	0x47, 0x91, 0x5f, 0x5b, 0x70, 0x97, 0xaa, 0xe0, 0xa6, 0xac, 0xe0, 0x2a, 0xee, 0x55, 0x54, 0x50,
+	0xe9, 0x90, 0x02, 0xff, 0x83, 0x60, 0xb3, 0xaa, 0x08, 0xd9, 0xfa, 0x1b, 0x8b, 0x7d, 0x32, 0x0a,
+	0xff, 0x86, 0x9b, 0xff, 0x63, 0xa7, 0x2a, 0xe8, 0x33, 0x59, 0xd0, 0x27, 0xf8, 0xce, 0xc2, 0x05,
+	0x91, 0xfd, 0xfc, 0xe3, 0x72, 0x90, 0xa9, 0x04, 0xd9, 0x57, 0xdf, 0x94, 0x83, 0x81, 0xff, 0xf8,
+	0x50, 0x43, 0x4f, 0x0e, 0x35, 0xf4, 0xd7, 0xa1, 0x86, 0x1e, 0x1e, 0x69, 0x4b, 0x4f, 0x8e, 0xb4,
+	0xa5, 0x3f, 0x8e, 0xb4, 0x25, 0x58, 0x67, 0xbc, 0x94, 0xf6, 0x2e, 0xba, 0xd7, 0x2f, 0x3c, 0x72,
+	0xa6, 0x92, 0x2e, 0xe3, 0x45, 0xb6, 0xaf, 0xf2, 0xd7, 0xb6, 0x7c, 0xf4, 0x38, 0x2f, 0xc8, 0xa7,
+	0xf6, 0xd5, 0xff, 0x02, 0x00, 0x00, 0xff, 0xff, 0x39, 0x0e, 0xc2, 0x96, 0x5c, 0x0c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -623,6 +814,10 @@ type QueryClient interface {
 	RewardClaims(ctx context.Context, in *RewardClaimsRequest, opts ...grpc.CallOption) (*RewardClaimsResponse, error)
 	// returns a RewardClaim by id
 	RewardClaimByID(ctx context.Context, in *RewardClaimByIDRequest, opts ...grpc.CallOption) (*RewardClaimByIDResponse, error)
+	// returns all EpochRewardDistributions
+	EpochRewardDistributions(ctx context.Context, in *EpochRewardDistributionRequest, opts ...grpc.CallOption) (*EpochRewardDistributionResponse, error)
+	// returns a EpochRewardDistribution by rewardId and epochId
+	EpochRewardDistributionsByID(ctx context.Context, in *EpochRewardDistributionByIDRequest, opts ...grpc.CallOption) (*EpochRewardDistributionByIDResponse, error)
 }
 
 type queryClient struct {
@@ -687,6 +882,24 @@ func (c *queryClient) RewardClaimByID(ctx context.Context, in *RewardClaimByIDRe
 	return out, nil
 }
 
+func (c *queryClient) EpochRewardDistributions(ctx context.Context, in *EpochRewardDistributionRequest, opts ...grpc.CallOption) (*EpochRewardDistributionResponse, error) {
+	out := new(EpochRewardDistributionResponse)
+	err := c.cc.Invoke(ctx, "/provenance.reward.v1.Query/EpochRewardDistributions", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) EpochRewardDistributionsByID(ctx context.Context, in *EpochRewardDistributionByIDRequest, opts ...grpc.CallOption) (*EpochRewardDistributionByIDResponse, error) {
+	out := new(EpochRewardDistributionByIDResponse)
+	err := c.cc.Invoke(ctx, "/provenance.reward.v1.Query/EpochRewardDistributionsByID", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// returns RewardProgram by id
@@ -700,6 +913,10 @@ type QueryServer interface {
 	RewardClaims(context.Context, *RewardClaimsRequest) (*RewardClaimsResponse, error)
 	// returns a RewardClaim by id
 	RewardClaimByID(context.Context, *RewardClaimByIDRequest) (*RewardClaimByIDResponse, error)
+	// returns all EpochRewardDistributions
+	EpochRewardDistributions(context.Context, *EpochRewardDistributionRequest) (*EpochRewardDistributionResponse, error)
+	// returns a EpochRewardDistribution by rewardId and epochId
+	EpochRewardDistributionsByID(context.Context, *EpochRewardDistributionByIDRequest) (*EpochRewardDistributionByIDResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -723,6 +940,12 @@ func (*UnimplementedQueryServer) RewardClaims(ctx context.Context, req *RewardCl
 }
 func (*UnimplementedQueryServer) RewardClaimByID(ctx context.Context, req *RewardClaimByIDRequest) (*RewardClaimByIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RewardClaimByID not implemented")
+}
+func (*UnimplementedQueryServer) EpochRewardDistributions(ctx context.Context, req *EpochRewardDistributionRequest) (*EpochRewardDistributionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EpochRewardDistributions not implemented")
+}
+func (*UnimplementedQueryServer) EpochRewardDistributionsByID(ctx context.Context, req *EpochRewardDistributionByIDRequest) (*EpochRewardDistributionByIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EpochRewardDistributionsByID not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -837,6 +1060,42 @@ func _Query_RewardClaimByID_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_EpochRewardDistributions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EpochRewardDistributionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).EpochRewardDistributions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.reward.v1.Query/EpochRewardDistributions",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).EpochRewardDistributions(ctx, req.(*EpochRewardDistributionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_EpochRewardDistributionsByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EpochRewardDistributionByIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).EpochRewardDistributionsByID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.reward.v1.Query/EpochRewardDistributionsByID",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).EpochRewardDistributionsByID(ctx, req.(*EpochRewardDistributionByIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "provenance.reward.v1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -864,6 +1123,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RewardClaimByID",
 			Handler:    _Query_RewardClaimByID_Handler,
+		},
+		{
+			MethodName: "EpochRewardDistributions",
+			Handler:    _Query_EpochRewardDistributions_Handler,
+		},
+		{
+			MethodName: "EpochRewardDistributionsByID",
+			Handler:    _Query_EpochRewardDistributionsByID_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1238,6 +1505,136 @@ func (m *RewardClaimByIDResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
+func (m *EpochRewardDistributionRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EpochRewardDistributionRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EpochRewardDistributionRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *EpochRewardDistributionResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EpochRewardDistributionResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EpochRewardDistributionResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.EpochRewardDistribution) > 0 {
+		for iNdEx := len(m.EpochRewardDistribution) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.EpochRewardDistribution[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EpochRewardDistributionByIDRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EpochRewardDistributionByIDRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EpochRewardDistributionByIDRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.EpochId) > 0 {
+		i -= len(m.EpochId)
+		copy(dAtA[i:], m.EpochId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.EpochId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.RewardId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.RewardId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EpochRewardDistributionByIDResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EpochRewardDistributionByIDResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EpochRewardDistributionByIDResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.EpochRewardDistribution != nil {
+		{
+			size, err := m.EpochRewardDistribution.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -1391,6 +1788,59 @@ func (m *RewardClaimByIDResponse) Size() (n int) {
 	_ = l
 	if m.RewardClaim != nil {
 		l = m.RewardClaim.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *EpochRewardDistributionRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *EpochRewardDistributionResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.EpochRewardDistribution) > 0 {
+		for _, e := range m.EpochRewardDistribution {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *EpochRewardDistributionByIDRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.RewardId != 0 {
+		n += 1 + sovQuery(uint64(m.RewardId))
+	}
+	l = len(m.EpochId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *EpochRewardDistributionByIDResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.EpochRewardDistribution != nil {
+		l = m.EpochRewardDistribution.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
@@ -2237,6 +2687,327 @@ func (m *RewardClaimByIDResponse) Unmarshal(dAtA []byte) error {
 				m.RewardClaim = &RewardClaim{}
 			}
 			if err := m.RewardClaim.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EpochRewardDistributionRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EpochRewardDistributionRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EpochRewardDistributionRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EpochRewardDistributionResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EpochRewardDistributionResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EpochRewardDistributionResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EpochRewardDistribution", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.EpochRewardDistribution = append(m.EpochRewardDistribution, EpochRewardDistribution{})
+			if err := m.EpochRewardDistribution[len(m.EpochRewardDistribution)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EpochRewardDistributionByIDRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EpochRewardDistributionByIDRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EpochRewardDistributionByIDRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardId", wireType)
+			}
+			m.RewardId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RewardId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EpochId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.EpochId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EpochRewardDistributionByIDResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EpochRewardDistributionByIDResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EpochRewardDistributionByIDResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EpochRewardDistribution", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.EpochRewardDistribution == nil {
+				m.EpochRewardDistribution = &EpochRewardDistribution{}
+			}
+			if err := m.EpochRewardDistribution.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

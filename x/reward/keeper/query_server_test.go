@@ -193,6 +193,82 @@ func (s *KeeperTestSuite) TestRewardClaimById() {
 	s.Assert().Nil(response.GetRewardClaim(), "RewardClaim should be nil")
 }
 
+func (s *KeeperTestSuite) TestEpochDistributionRewards() {
+	s.SetupTest()
+	queryClient := s.queryClient
+
+	// Test against empty set
+	response, err := queryClient.EpochRewardDistributions(gocontext.Background(), &types.EpochRewardDistributionRequest{})
+	s.Assert().Nil(err, "error should be nil")
+	s.Assert().Equal(len(response.GetEpochRewardDistribution()), 0, "response should contain empty list")
+
+	// Test single entry
+	rewardDistribution := types.NewEpochRewardDistribution("day", 1, sdk.NewInt64Coin("jackthecat", 100), 5, false)
+	s.app.RewardKeeper.SetEpochRewardDistribution(s.ctx, rewardDistribution)
+	response, err = queryClient.EpochRewardDistributions(gocontext.Background(), &types.EpochRewardDistributionRequest{})
+	s.Assert().Nil(err)
+	s.Assert().Equal(1, len(response.GetEpochRewardDistribution()), "response should contain only 1 epoch reward distribution")
+	s.Assert().Equal(rewardDistribution.EpochId, response.GetEpochRewardDistribution()[0].EpochId, "epoch ids should match")
+	s.Assert().Equal(rewardDistribution.RewardProgramId, response.GetEpochRewardDistribution()[0].RewardProgramId, "reward ids should match")
+	s.Assert().Equal(rewardDistribution.TotalRewardsPool, response.GetEpochRewardDistribution()[0].TotalRewardsPool, "total rewards pool should match")
+	s.Assert().Equal(rewardDistribution.TotalShares, response.GetEpochRewardDistribution()[0].TotalShares, "total shares should match")
+	s.Assert().False(response.GetEpochRewardDistribution()[0].EpochEnded, "epoch should not be ended")
+
+	// Test multiple entry
+	rewardDistribution2 := types.NewEpochRewardDistribution("day", 2, sdk.NewInt64Coin("jackthecat", 200), 10, false)
+	rewardDistribution3 := types.NewEpochRewardDistribution("day", 3, sdk.NewInt64Coin("jackthecat", 300), 15, false)
+	s.app.RewardKeeper.SetEpochRewardDistribution(s.ctx, rewardDistribution2)
+	s.app.RewardKeeper.SetEpochRewardDistribution(s.ctx, rewardDistribution3)
+	response, err = queryClient.EpochRewardDistributions(gocontext.Background(), &types.EpochRewardDistributionRequest{})
+	s.Assert().Nil(err)
+	s.Assert().Equal(3, len(response.GetEpochRewardDistribution()), "response should contain exactly 3 epoch reward distribution")
+}
+
+func (s *KeeperTestSuite) TestEpochDistributionRewardsByID() {
+	s.SetupTest()
+	queryClient := s.queryClient
+
+	// Test against empty set
+	response, err := queryClient.EpochRewardDistributionsByID(gocontext.Background(), &types.EpochRewardDistributionByIDRequest{
+		RewardId: 1,
+		EpochId:  "day",
+	})
+	s.Assert().Nil(err, "error should be nil")
+	s.Assert().Nil(response.GetEpochRewardDistribution(), "epoch reward distribution should be nil")
+
+	// Test single entry
+	rewardDistribution := types.NewEpochRewardDistribution("day", 1, sdk.NewInt64Coin("jackthecat", 100), 5, false)
+	s.app.RewardKeeper.SetEpochRewardDistribution(s.ctx, rewardDistribution)
+	response, err = queryClient.EpochRewardDistributionsByID(gocontext.Background(), &types.EpochRewardDistributionByIDRequest{
+		RewardId: 1,
+		EpochId:  "day",
+	})
+	s.Assert().Nil(err)
+	s.Assert().NotNil(response.GetEpochRewardDistribution(), "epoch reward distribution should not be nil")
+	s.Assert().Equal(rewardDistribution.EpochId, response.GetEpochRewardDistribution().EpochId, "epoch ids should match")
+	s.Assert().Equal(rewardDistribution.RewardProgramId, response.GetEpochRewardDistribution().RewardProgramId, "reward ids should match")
+	s.Assert().Equal(rewardDistribution.TotalRewardsPool, response.GetEpochRewardDistribution().TotalRewardsPool, "total rewards pool should match")
+	s.Assert().Equal(rewardDistribution.TotalShares, response.GetEpochRewardDistribution().TotalShares, "total shares should match")
+	s.Assert().False(response.GetEpochRewardDistribution().EpochEnded, "epoch should not be ended")
+
+	// Test multiple entry
+	rewardDistribution2 := types.NewEpochRewardDistribution("day", 2, sdk.NewInt64Coin("jackthecat", 200), 10, false)
+	rewardDistribution3 := types.NewEpochRewardDistribution("day", 3, sdk.NewInt64Coin("jackthecat", 300), 15, false)
+	s.app.RewardKeeper.SetEpochRewardDistribution(s.ctx, rewardDistribution2)
+	s.app.RewardKeeper.SetEpochRewardDistribution(s.ctx, rewardDistribution3)
+	response, err = queryClient.EpochRewardDistributionsByID(gocontext.Background(), &types.EpochRewardDistributionByIDRequest{
+		RewardId: 2,
+		EpochId:  "day",
+	})
+	s.Assert().Nil(err)
+	s.Assert().NotNil(response.GetEpochRewardDistribution(), "epoch reward distribution should not be nil")
+	s.Assert().Equal(rewardDistribution2.EpochId, response.GetEpochRewardDistribution().EpochId, "epoch ids should match")
+	s.Assert().Equal(rewardDistribution2.RewardProgramId, response.GetEpochRewardDistribution().RewardProgramId, "reward ids should match")
+	s.Assert().Equal(rewardDistribution2.TotalRewardsPool, response.GetEpochRewardDistribution().TotalRewardsPool, "total rewards pool should match")
+	s.Assert().Equal(rewardDistribution2.TotalShares, response.GetEpochRewardDistribution().TotalShares, "total shares should match")
+	s.Assert().False(response.GetEpochRewardDistribution().EpochEnded, "epoch should not be ended")
+}
+
 func newRewardProgram(coinName string, id uint64, start uint64) *types.RewardProgram {
 	action := types.NewActionDelegate()
 	coin := sdk.NewInt64Coin(coinName, 10000)

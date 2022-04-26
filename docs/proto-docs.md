@@ -410,6 +410,10 @@
 - [provenance/reward/v1/query.proto](#provenance/reward/v1/query.proto)
     - [ActiveRewardProgramsRequest](#provenance.reward.v1.ActiveRewardProgramsRequest)
     - [ActiveRewardProgramsResponse](#provenance.reward.v1.ActiveRewardProgramsResponse)
+    - [EpochRewardDistributionByIDRequest](#provenance.reward.v1.EpochRewardDistributionByIDRequest)
+    - [EpochRewardDistributionByIDResponse](#provenance.reward.v1.EpochRewardDistributionByIDResponse)
+    - [EpochRewardDistributionRequest](#provenance.reward.v1.EpochRewardDistributionRequest)
+    - [EpochRewardDistributionResponse](#provenance.reward.v1.EpochRewardDistributionResponse)
     - [QueryModuleAccountBalanceRequest](#provenance.reward.v1.QueryModuleAccountBalanceRequest)
     - [QueryModuleAccountBalanceResponse](#provenance.reward.v1.QueryModuleAccountBalanceResponse)
     - [RewardClaimByIDRequest](#provenance.reward.v1.RewardClaimByIDRequest)
@@ -6180,6 +6184,62 @@ AddRewardProgramProposal defines a governance proposal to add a rewards program
 
 
 
+<a name="provenance.reward.v1.EpochRewardDistributionByIDRequest"></a>
+
+### EpochRewardDistributionByIDRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `rewardId` | [uint64](#uint64) |  |  |
+| `epochId` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.EpochRewardDistributionByIDResponse"></a>
+
+### EpochRewardDistributionByIDResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `epoch_reward_distribution` | [EpochRewardDistribution](#provenance.reward.v1.EpochRewardDistribution) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.EpochRewardDistributionRequest"></a>
+
+### EpochRewardDistributionRequest
+
+
+
+
+
+
+
+<a name="provenance.reward.v1.EpochRewardDistributionResponse"></a>
+
+### EpochRewardDistributionResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `epoch_reward_distribution` | [EpochRewardDistribution](#provenance.reward.v1.EpochRewardDistribution) | repeated |  |
+
+
+
+
+
+
 <a name="provenance.reward.v1.QueryModuleAccountBalanceRequest"></a>
 
 ### QueryModuleAccountBalanceRequest
@@ -6334,6 +6394,8 @@ Query defines the gRPC querier service for reward module.
 | `ModuleAccountBalance` | [QueryModuleAccountBalanceRequest](#provenance.reward.v1.QueryModuleAccountBalanceRequest) | [QueryModuleAccountBalanceResponse](#provenance.reward.v1.QueryModuleAccountBalanceResponse) |  | GET|/provenance/rewards/v1/module_account_balance|
 | `RewardClaims` | [RewardClaimsRequest](#provenance.reward.v1.RewardClaimsRequest) | [RewardClaimsResponse](#provenance.reward.v1.RewardClaimsResponse) | returns all RewardClaims | GET|/provenance/rewards/v1/reward_claims|
 | `RewardClaimByID` | [RewardClaimByIDRequest](#provenance.reward.v1.RewardClaimByIDRequest) | [RewardClaimByIDResponse](#provenance.reward.v1.RewardClaimByIDResponse) | returns a RewardClaim by id | GET|/provenance/rewards/v1/reward_claim_by_id/{id}|
+| `EpochRewardDistributions` | [EpochRewardDistributionRequest](#provenance.reward.v1.EpochRewardDistributionRequest) | [EpochRewardDistributionResponse](#provenance.reward.v1.EpochRewardDistributionResponse) | returns all EpochRewardDistributions | GET|/provenance/rewards/v1/epoch_reward_distributions|
+| `EpochRewardDistributionsByID` | [EpochRewardDistributionByIDRequest](#provenance.reward.v1.EpochRewardDistributionByIDRequest) | [EpochRewardDistributionByIDResponse](#provenance.reward.v1.EpochRewardDistributionByIDResponse) | returns a EpochRewardDistribution by rewardId and epochId | GET|/provenance/rewards/v1/epoch_reward_distributions/{rewardId}/epochs/{epochId}|
 
  <!-- end services -->
 

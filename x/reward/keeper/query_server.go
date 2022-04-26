@@ -115,3 +115,46 @@ func (k Keeper) RewardClaimByID(ctx context.Context, req *types.RewardClaimByIDR
 
 	return &response, nil
 }
+
+// returns all EpochRewardDistributions
+func (k Keeper) EpochRewardDistributions(ctx context.Context, req *types.EpochRewardDistributionRequest) (*types.EpochRewardDistributionResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	response := types.EpochRewardDistributionResponse{}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	rewardDistributions := []types.EpochRewardDistribution{}
+	err := k.IterateEpochRewardDistributions(sdkCtx, func(rewardDistribution types.EpochRewardDistribution) (stop bool) {
+		rewardDistributions = append(rewardDistributions, rewardDistribution)
+		return false
+	})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to obtain epoch reward distributions: %v", err))
+	}
+
+	response.EpochRewardDistribution = rewardDistributions
+
+	return &response, nil
+}
+
+// returns a EpochRewardDistribution by rewardId and epochId
+func (k Keeper) EpochRewardDistributionsByID(ctx context.Context, req *types.EpochRewardDistributionByIDRequest) (*types.EpochRewardDistributionByIDResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	response := types.EpochRewardDistributionByIDResponse{}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	epochReward, err := k.GetEpochRewardDistribution(sdkCtx, req.GetEpochId(), req.GetRewardId())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to obtain epoch reward distributions: %v", err))
+	}
+
+	if epochReward.RewardProgramId != 0 {
+		response.EpochRewardDistribution = &epochReward
+	}
+
+	return &response, nil
+}

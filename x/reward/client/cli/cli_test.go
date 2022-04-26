@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -74,6 +75,19 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				1,
 				2,
 			),
+			types.NewRewardProgram(
+				2,
+				s.accountAddr.String(),
+				sdk.NewInt64Coin("jackthecat", 1),
+				sdk.NewInt64Coin("jackthecat", 2),
+				"minute",
+				100,
+				1,
+				rewardtypes.NewEligibilityCriteria("action-name", &rewardtypes.ActionDelegate{}),
+				false,
+				1,
+				2,
+			),
 		},
 		[]rewardtypes.RewardClaim{},
 		[]rewardtypes.EpochRewardDistribution{},
@@ -102,15 +116,58 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
-	s.Assert().FailNow("not implemented")
-	//cli.QueryRewardProgramsCmd()
-	// TODO Need a way to create a reward program before these can be implemented
-}
+	testCases := []struct {
+		name           string
+		args           []string
+		expectErr      bool
+		expectErrMsg   string
+		expectedCode   uint32
+		expectedOutput string
+	}{
+		{"query all reward programs",
+			[]string{
+				"all",
+			},
+			false,
+			"",
+			0,
+			"{\"reward_programs\":[{\"id\":\"1\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"1\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"},{\"id\":\"2\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"100\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"}]}",
+		},
+		{"query all active reward programs",
+			[]string{
+				"active",
+			},
+			false,
+			"",
+			0,
+			"",
+		},
+	}
 
-func (s *IntegrationTestSuite) TestQueryRewardProgramsById() {
-	s.Assert().FailNow("not implemented")
-	//cli.RewardProgramByIdCmd()
-	// TODO Need a way to create a reward program before these can be implemented
+	// Wait for block 2 just in case
+	s.network.WaitForNextBlock()
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.network.Validators[0].ClientCtx
+
+			// Set the height of the client ctx just in case?
+			// Not sure if needed
+			latestHeight, _ := s.network.LatestHeight()
+			clientCtx.WithHeight(latestHeight)
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardProgramCmd(), tc.args)
+			if tc.expectErr {
+				s.Assert().Error(err)
+				s.Assert().Equal(tc.expectErrMsg, err.Error())
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+			}
+		})
+	}
 }
 
 func (s *IntegrationTestSuite) TestQueryRewardClaims() {
@@ -120,6 +177,18 @@ func (s *IntegrationTestSuite) TestQueryRewardClaims() {
 }
 
 func (s *IntegrationTestSuite) TestQueryRewardClaimsById() {
+	s.Assert().FailNow("not implemented")
+	//cli.QueryRewardProgramsCmd()
+	// TODO Need a way to create a reward claim before these can be implemented
+}
+
+func (s *IntegrationTestSuite) TestQueryEpochDistributionReward() {
+	s.Assert().FailNow("not implemented")
+	//cli.QueryRewardProgramsCmd()
+	// TODO Need a way to create a reward claim before these can be implemented
+}
+
+func (s *IntegrationTestSuite) TestQueryEpochDistributionRewardById() {
 	s.Assert().FailNow("not implemented")
 	//cli.QueryRewardProgramsCmd()
 	// TODO Need a way to create a reward claim before these can be implemented
