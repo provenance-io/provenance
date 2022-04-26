@@ -193,6 +193,82 @@ func (s *KeeperTestSuite) TestRewardClaimById() {
 	s.Assert().Nil(response.GetRewardClaim(), "RewardClaim should be nil")
 }
 
+func (s *KeeperTestSuite) TestEpochDistributionRewards() {
+	s.SetupTest()
+	queryClient := s.queryClient
+
+	// Test against empty set
+	response, err := queryClient.EpochRewardDistributions(gocontext.Background(), &types.EpochRewardDistributionRequest{})
+	s.Assert().Nil(err, "error should be nil")
+	s.Assert().Equal(len(response.GetEpochRewardDistribution()), 0, "response should contain empty list")
+
+	// Test single entry
+	rewardDistribution := types.NewEpochRewardDistribution("day", 1, sdk.NewInt64Coin("jackthecat", 100), 5, false)
+	s.app.RewardKeeper.SetEpochRewardDistribution(s.ctx, rewardDistribution)
+	response, err = queryClient.EpochRewardDistributions(gocontext.Background(), &types.EpochRewardDistributionRequest{})
+	s.Assert().Nil(err)
+	s.Assert().Equal(1, len(response.GetEpochRewardDistribution()), "response should contain only 1 epoch reward distribution")
+	s.Assert().Equal(rewardDistribution.EpochId, response.GetEpochRewardDistribution()[0].EpochId, "epoch ids should match")
+	s.Assert().Equal(rewardDistribution.RewardProgramId, response.GetEpochRewardDistribution()[0].RewardProgramId, "reward ids should match")
+	s.Assert().Equal(rewardDistribution.TotalRewardsPool, response.GetEpochRewardDistribution()[0].TotalRewardsPool, "total rewards pool should match")
+	s.Assert().Equal(rewardDistribution.TotalShares, response.GetEpochRewardDistribution()[0].TotalShares, "total shares should match")
+	s.Assert().False(response.GetEpochRewardDistribution()[0].EpochEnded, "epoch should not be ended")
+
+	// Test multiple entry
+	rewardDistribution2 := types.NewEpochRewardDistribution("day", 2, sdk.NewInt64Coin("jackthecat", 200), 10, false)
+	rewardDistribution3 := types.NewEpochRewardDistribution("day", 3, sdk.NewInt64Coin("jackthecat", 300), 15, false)
+	s.app.RewardKeeper.SetEpochRewardDistribution(s.ctx, rewardDistribution2)
+	s.app.RewardKeeper.SetEpochRewardDistribution(s.ctx, rewardDistribution3)
+	response, err = queryClient.EpochRewardDistributions(gocontext.Background(), &types.EpochRewardDistributionRequest{})
+	s.Assert().Nil(err)
+	s.Assert().Equal(3, len(response.GetEpochRewardDistribution()), "response should contain exactly 3 epoch reward distribution")
+}
+
+func (s *KeeperTestSuite) TestEpochDistributionRewardsByID() {
+	s.SetupTest()
+	queryClient := s.queryClient
+
+	// Test against empty set
+	response, err := queryClient.EpochRewardDistributionsByID(gocontext.Background(), &types.EpochRewardDistributionByIDRequest{
+		RewardId: 1,
+		EpochId:  "day",
+	})
+	s.Assert().Nil(err, "error should be nil")
+	s.Assert().Nil(response.GetEpochRewardDistribution(), "epoch reward distribution should be nil")
+
+	// Test single entry
+	rewardDistribution := types.NewEpochRewardDistribution("day", 1, sdk.NewInt64Coin("jackthecat", 100), 5, false)
+	s.app.RewardKeeper.SetEpochRewardDistribution(s.ctx, rewardDistribution)
+	response, err = queryClient.EpochRewardDistributionsByID(gocontext.Background(), &types.EpochRewardDistributionByIDRequest{
+		RewardId: 1,
+		EpochId:  "day",
+	})
+	s.Assert().Nil(err)
+	s.Assert().NotNil(response.GetEpochRewardDistribution(), "epoch reward distribution should not be nil")
+	s.Assert().Equal(rewardDistribution.EpochId, response.GetEpochRewardDistribution().EpochId, "epoch ids should match")
+	s.Assert().Equal(rewardDistribution.RewardProgramId, response.GetEpochRewardDistribution().RewardProgramId, "reward ids should match")
+	s.Assert().Equal(rewardDistribution.TotalRewardsPool, response.GetEpochRewardDistribution().TotalRewardsPool, "total rewards pool should match")
+	s.Assert().Equal(rewardDistribution.TotalShares, response.GetEpochRewardDistribution().TotalShares, "total shares should match")
+	s.Assert().False(response.GetEpochRewardDistribution().EpochEnded, "epoch should not be ended")
+
+	// Test multiple entry
+	rewardDistribution2 := types.NewEpochRewardDistribution("day", 2, sdk.NewInt64Coin("jackthecat", 200), 10, false)
+	rewardDistribution3 := types.NewEpochRewardDistribution("day", 3, sdk.NewInt64Coin("jackthecat", 300), 15, false)
+	s.app.RewardKeeper.SetEpochRewardDistribution(s.ctx, rewardDistribution2)
+	s.app.RewardKeeper.SetEpochRewardDistribution(s.ctx, rewardDistribution3)
+	response, err = queryClient.EpochRewardDistributionsByID(gocontext.Background(), &types.EpochRewardDistributionByIDRequest{
+		RewardId: 2,
+		EpochId:  "day",
+	})
+	s.Assert().Nil(err)
+	s.Assert().NotNil(response.GetEpochRewardDistribution(), "epoch reward distribution should not be nil")
+	s.Assert().Equal(rewardDistribution2.EpochId, response.GetEpochRewardDistribution().EpochId, "epoch ids should match")
+	s.Assert().Equal(rewardDistribution2.RewardProgramId, response.GetEpochRewardDistribution().RewardProgramId, "reward ids should match")
+	s.Assert().Equal(rewardDistribution2.TotalRewardsPool, response.GetEpochRewardDistribution().TotalRewardsPool, "total rewards pool should match")
+	s.Assert().Equal(rewardDistribution2.TotalShares, response.GetEpochRewardDistribution().TotalShares, "total shares should match")
+	s.Assert().False(response.GetEpochRewardDistribution().EpochEnded, "epoch should not be ended")
+}
+
 func newRewardProgram(coinName string, id uint64, start uint64) *types.RewardProgram {
 	action := types.NewActionDelegate()
 	coin := sdk.NewInt64Coin(coinName, 10000)
@@ -221,105 +297,4 @@ func setupEpoch(s *KeeperTestSuite, height uint64) {
 			},
 		},
 	})
-}
-
-func (s *KeeperTestSuite) TestEpochDistributionRewards() {
-	s.SetupTest()
-	queryClient := s.queryClient
-
-	// Test against empty set
-	response, err := queryClient.RewardClaims(gocontext.Background(), &types.RewardClaimsRequest{})
-	s.Assert().Nil(err, "error should be nil")
-	s.Assert().Equal(len(response.RewardClaims), 0, "response should contain empty list")
-
-	// Test with 1 item
-	rewardClaim := types.NewRewardClaim("testing", []types.SharesPerEpochPerRewardsProgram{
-		{
-			RewardProgramId:      1,
-			TotalShares:          2,
-			EphemeralActionCount: 3,
-			LatestRecordedEpoch:  4,
-			Claimed:              false,
-			Expired:              false,
-			TotalRewardClaimed:   sdk.NewInt64Coin("jackthecat", 100),
-		},
-	})
-	s.app.RewardKeeper.SetRewardClaim(s.ctx, rewardClaim)
-	response, err = queryClient.RewardClaims(gocontext.Background(), &types.RewardClaimsRequest{})
-	s.Assert().Nil(err, "error should be nil")
-	s.Assert().Equal(1, len(response.RewardClaims), "response should contain one reward claim")
-
-	// Test with multiple item
-	rewardClaim = types.NewRewardClaim("testing2", []types.SharesPerEpochPerRewardsProgram{
-		{
-			RewardProgramId:      2,
-			TotalShares:          3,
-			EphemeralActionCount: 4,
-			LatestRecordedEpoch:  5,
-			Claimed:              false,
-			Expired:              false,
-			TotalRewardClaimed:   sdk.NewInt64Coin("jackthecat", 200),
-		},
-	})
-	s.app.RewardKeeper.SetRewardClaim(s.ctx, rewardClaim)
-	response, err = queryClient.RewardClaims(gocontext.Background(), &types.RewardClaimsRequest{})
-	s.Assert().Nil(err, "error should be nil")
-	s.Assert().Equal(2, len(response.RewardClaims), "response should contain multiple reward claims")
-}
-
-func (s *KeeperTestSuite) TestEpochDistributionRewardsByID() {
-	s.SetupTest()
-	queryClient := s.queryClient
-
-	rewardClaim := types.NewRewardClaim("testing", []types.SharesPerEpochPerRewardsProgram{
-		{
-			RewardProgramId:      1,
-			TotalShares:          2,
-			EphemeralActionCount: 3,
-			LatestRecordedEpoch:  4,
-			Claimed:              false,
-			Expired:              false,
-			TotalRewardClaimed:   sdk.NewInt64Coin("jackthecat", 100),
-		},
-	})
-	s.app.RewardKeeper.SetRewardClaim(s.ctx, rewardClaim)
-	rewardClaim = types.NewRewardClaim("testing2", []types.SharesPerEpochPerRewardsProgram{
-		{
-			RewardProgramId:      2,
-			TotalShares:          3,
-			EphemeralActionCount: 4,
-			LatestRecordedEpoch:  5,
-			Claimed:              false,
-			Expired:              false,
-			TotalRewardClaimed:   sdk.NewInt64Coin("jackthecat", 200),
-		},
-	})
-	s.app.RewardKeeper.SetRewardClaim(s.ctx, rewardClaim)
-
-	response, err := queryClient.RewardClaimByID(gocontext.Background(), &types.RewardClaimByIDRequest{Id: "testing"})
-	s.Assert().Nil(err, "error should be nil")
-	s.Assert().NotNil(response.GetRewardClaim(), "RewardClaim should not be nil")
-	s.Assert().Equal(len(response.GetRewardClaim().SharesPerEpochPerReward), 1, "Length of shares should match")
-	s.Assert().Equal("testing", response.GetRewardClaim().Address, "RewardClaim address should match")
-	s.Assert().Equal(uint64(1), response.GetRewardClaim().SharesPerEpochPerReward[0].RewardProgramId, "RewardProgramId should match")
-	s.Assert().Equal(int64(2), response.GetRewardClaim().SharesPerEpochPerReward[0].TotalShares, "TotalShares should match")
-	s.Assert().Equal(int64(3), response.GetRewardClaim().SharesPerEpochPerReward[0].EphemeralActionCount, "EphemeralActionCount should match")
-	s.Assert().Equal(uint64(4), response.GetRewardClaim().SharesPerEpochPerReward[0].LatestRecordedEpoch, "LatestRecordedEpoch should match")
-	s.Assert().False(response.GetRewardClaim().SharesPerEpochPerReward[0].Claimed, "Claimed should match")
-	s.Assert().False(response.GetRewardClaim().SharesPerEpochPerReward[0].Expired, "Expired should match")
-	s.Assert().Equal(sdk.NewInt64Coin("jackthecat", 100), response.GetRewardClaim().SharesPerEpochPerReward[0].TotalRewardClaimed, "")
-
-	response, err = queryClient.RewardClaimByID(gocontext.Background(), &types.RewardClaimByIDRequest{Id: "testing3"})
-	s.Assert().Nil(err, "error should be nil")
-	s.Assert().Nil(response.GetRewardClaim(), "RewardClaim should be nil")
-}
-
-func newRewardProgram(coinName string, id uint64, start uint64) *types.RewardProgram {
-	action := types.NewActionDelegate()
-	coin := sdk.NewInt64Coin(coinName, 10000)
-	maxCoin := sdk.NewInt64Coin(coinName, 100)
-
-	rewardProgram := types.NewRewardProgram(id, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, "day", start, 2, types.NewEligibilityCriteria("criteria", &action), false, 1, 10)
-
-	return &rewardProgram
 }
