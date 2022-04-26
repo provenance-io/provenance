@@ -96,6 +96,7 @@ var handlers = map[string]appUpgrade{
 		}, // upgrade for pio-testnet-1 from v1.8.0-rc8 to v1.8.0-rc9
 	},
 	"kahlua": {}, // upgrade for pio-testnet-1 from v1.8.0-rc9 to v1.8.0
+	"lava":   {}, // 1.9.0
 	// TODO - Add new upgrade definitions here.
 }
 

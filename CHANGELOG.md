@@ -37,6 +37,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+None
+
+---
+
+## [v1.9.0](https://github.com/provenance-io/provenance/releases/tag/v1.9.0) - 2022-04-25
+
+### Summary
+
+Provenance 1.9.0 brings some minor features and security improvements.
+
 ### Features
 
 * Add `add-genesis-msg-fee` command to add msg fees to genesis.json and update Makefile to have pre-defined msg fees [#667](https://github.com/provenance-io/provenance/issues/667)
@@ -44,7 +54,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Adds home subcommand to the cli's config command [#620] (https://github.com/provenance-io/provenance/issues/620)
 * Add support for rocksdb and badgerdb [#702](https://github.com/provenance-io/provenance/issues/702)
 * Create `dbmigrate` utility for migrating a data folder to use a different db backend [#696](https://github.com/provenance-io/provenance/issues/696)
-* Enable ADR-038 State Listening [#785](https://github.com/provenance-io/provenance/issues/785)
 
 ### Improvements
 
@@ -52,6 +61,29 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Change max length on marker unresticted denom from 64 to 83 [#719](https://github.com/provenance-io/provenance/issues/719)
 * Set prerelease to `true` for release candidates. [#666](https://github.com/provenance-io/provenance/issues/666)
 * Allow authz grants to work on scope value owners [#755](https://github.com/provenance-io/provenance/issues/755)
+* Bump wasmd to v0.26 (from v0.24). [#799](https://github.com/provenance-io/provenance/pull/799)
+
+---
+
+## [v1.8.2](https://github.com/provenance-io/provenance/releases/tag/v1.8.2) - 2022-04-22
+
+### Summary
+
+Provenance 1.8.2 is a point release to fix an issue with "downgrade detection" in Cosmos SDK. A panic condition
+occurs in cases where no update handler is found for the last known upgrade, but the process for determining
+the last known upgrade is flawed in Cosmos SDK 0.45.3. This released uses an updated Cosmos fork to patch the
+issue until an official patch is released. Version 1.8.2 also adds some remaining pieces for  ADR-038 that were
+missing in the 1.8.1 release.
+
+### Bug Fixes
+
+* Order upgrades by block height rather than name to prevent panic [\#106](https://github.com/provenance-io/cosmos-sdk/pull/106)
+
+### Improvements
+
+* Add remaining updates for ADR-038 support [\#786](https://github.com/provenance-io/provenance/pull/786)
+
+---
 
 ## [v1.8.1](https://github.com/provenance-io/provenance/releases/tag/v1.8.1) - 2022-04-13
 
@@ -67,7 +99,9 @@ This release addresses issues related to IAVL concurrency and Tendermint perform
 
 * Update Provenance to use Cosmos SDK 0.45.3 Release [\#781](https://github.com/provenance-io/provenance/issues/781)
 * Plugin architecture for ADR-038 + FileStreamingService plugin [\#10639](https://github.com/cosmos/cosmos-sdk/pull/10639)
-* Fix for sporadic error "panic: Value missing for hash" [\#611](https://github.com/provenance-io/provenance/issues/611) 
+* Fix for sporadic error "panic: Value missing for hash" [\#611](https://github.com/provenance-io/provenance/issues/611)
+
+---
 
 ## [v1.8.0](https://github.com/provenance-io/provenance/releases/tag/v1.8.0) - 2022-03-17
 
