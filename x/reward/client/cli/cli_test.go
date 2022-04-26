@@ -68,7 +68,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				sdk.NewInt64Coin("jackthecat", 1),
 				sdk.NewInt64Coin("jackthecat", 2),
 				"minute",
-				1,
+				0,
 				1,
 				rewardtypes.NewEligibilityCriteria("action-name", &rewardtypes.ActionDelegate{}),
 				false,
@@ -106,7 +106,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.network = network.New(s.T(), s.cfg)
 
-	_, err = s.network.WaitForHeight(1)
+	_, err = s.network.WaitForHeight(3)
 	s.Require().NoError(err)
 }
 

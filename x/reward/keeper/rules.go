@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/provenance-io/provenance/x/reward/types"
@@ -248,15 +249,14 @@ func (k Keeper) GetAllActiveRewards(ctx sdk.Context) ([]types.RewardProgram, err
 		// 1,4 .. 1+4 > 4
 		currentEpoch := k.EpochKeeper.GetEpochInfo(ctx, rewardProgram.EpochId)
 		// not yet started
-		if rewardProgram.StartEpoch > currentEpoch.CurrentEpoch-1 {
+		if rewardProgram.StartEpoch >= currentEpoch.CurrentEpoch {
 			return false
 		}
-		if rewardProgram.StartEpoch+rewardProgram.NumberEpochs > currentEpoch.CurrentEpoch {
+		if rewardProgram.StartEpoch+rewardProgram.NumberEpochs >= currentEpoch.CurrentEpoch {
 			rewardPrograms = append(rewardPrograms, rewardProgram)
 		} else {
 			// reward has expired
 			rewardToExpire = append(rewardToExpire, rewardProgram)
-
 		}
 		return false
 	})
