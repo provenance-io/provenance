@@ -94,7 +94,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 				[]rewardtypes.SharesPerEpochPerRewardsProgram{
 					types.NewSharesPerEpochPerRewardsProgram(
-						1,
+						3,
 						0,
 						0,
 						0,
@@ -224,7 +224,7 @@ func (s *IntegrationTestSuite) TestQueryRewardClaims() {
 			false,
 			"",
 			0,
-			"{\"reward_claims\":[{\"address\":\"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq\",\"shares_per_epoch_per_reward\":[{\"reward_program_id\":\"2\",\"total_shares\":\"0\",\"ephemeral_action_count\":\"0\",\"latest_recorded_epoch\":\"0\",\"claimed\":false,\"expired\":false,\"total_reward_claimed\":{\"denom\":\"jackthecat\",\"amount\":\"0\"}}]},{\"address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"shares_per_epoch_per_reward\":[{\"reward_program_id\":\"1\",\"total_shares\":\"0\",\"ephemeral_action_count\":\"0\",\"latest_recorded_epoch\":\"0\",\"claimed\":false,\"expired\":false,\"total_reward_claimed\":{\"denom\":\"jackthecat\",\"amount\":\"0\"}}]},{\"address\":\"cosmos1xmfpahwln43sykme4f9nftzsqq0p9le6hec8pz\",\"shares_per_epoch_per_reward\":[{\"reward_program_id\":\"1\",\"total_shares\":\"1\",\"ephemeral_action_count\":\"1\",\"latest_recorded_epoch\":\"1\",\"claimed\":false,\"expired\":false,\"total_reward_claimed\":{\"denom\":\"\",\"amount\":\"0\"}}]}]}",
+			fmt.Sprintf("{\"reward_claims\":[{\"address\":\"%s\",\"shares_per_epoch_per_reward\":[{\"reward_program_id\":\"1\",\"total_shares\":\"1\",\"ephemeral_action_count\":\"1\",\"latest_recorded_epoch\":\"1\",\"claimed\":false,\"expired\":false,\"total_reward_claimed\":{\"denom\":\"\",\"amount\":\"0\"}}]},{\"address\":\"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq\",\"shares_per_epoch_per_reward\":[{\"reward_program_id\":\"2\",\"total_shares\":\"0\",\"ephemeral_action_count\":\"0\",\"latest_recorded_epoch\":\"0\",\"claimed\":false,\"expired\":false,\"total_reward_claimed\":{\"denom\":\"jackthecat\",\"amount\":\"0\"}}]},{\"address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"shares_per_epoch_per_reward\":[{\"reward_program_id\":\"3\",\"total_shares\":\"0\",\"ephemeral_action_count\":\"0\",\"latest_recorded_epoch\":\"0\",\"claimed\":false,\"expired\":false,\"total_reward_claimed\":{\"denom\":\"jackthecat\",\"amount\":\"0\"}}]}]}", s.network.Validators[0].Address.String()),
 		},
 		{"query existing reward claim by address",
 			[]string{
@@ -233,7 +233,7 @@ func (s *IntegrationTestSuite) TestQueryRewardClaims() {
 			false,
 			"",
 			0,
-			"{\"reward_claim\":{\"address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"shares_per_epoch_per_reward\":[{\"reward_program_id\":\"1\",\"total_shares\":\"0\",\"ephemeral_action_count\":\"0\",\"latest_recorded_epoch\":\"0\",\"claimed\":false,\"expired\":false,\"total_reward_claimed\":{\"denom\":\"jackthecat\",\"amount\":\"0\"}}]}}",
+			"{\"reward_claim\":{\"address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"shares_per_epoch_per_reward\":[{\"reward_program_id\":\"3\",\"total_shares\":\"0\",\"ephemeral_action_count\":\"0\",\"latest_recorded_epoch\":\"0\",\"claimed\":false,\"expired\":false,\"total_reward_claimed\":{\"denom\":\"jackthecat\",\"amount\":\"0\"}}]}}",
 		},
 		{"query non-existing reward claim by address",
 			[]string{
@@ -258,6 +258,7 @@ func (s *IntegrationTestSuite) TestQueryRewardClaims() {
 	for _, tc := range testCases {
 		tc := tc
 
+		fmt.Printf("Address: %s\n", s.network.Validators[0].Address.String())
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardClaimCmd(), tc.args)
