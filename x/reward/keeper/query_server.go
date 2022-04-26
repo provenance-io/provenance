@@ -68,6 +68,8 @@ func (k Keeper) RewardProgramByID(ctx context.Context, req *types.RewardProgramB
 	}
 
 	// 0 is not a valid id. This means the program was not found
+	// TODO - Since we are using the Null Object Pattern we may want extract the logic into an IsValid
+	// TODO - !keeper.RewardIsValid(rewardProgram)
 	if rewardProgram.Id != 0 {
 		response.RewardProgram = &rewardProgram
 	}
@@ -109,6 +111,8 @@ func (k Keeper) RewardClaimByID(ctx context.Context, req *types.RewardClaimByIDR
 	}
 
 	// "" is not a valid address. This means the program was not found
+	// TODO - Since we are using the Null Object Pattern we may want extract the logic into an IsValid
+	// TODO - !keeper.ClaimIsValid(claim)
 	if claim.Address != "" {
 		response.RewardClaim = &claim
 	}
@@ -152,6 +156,9 @@ func (k Keeper) EpochRewardDistributionsByID(ctx context.Context, req *types.Epo
 		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to obtain epoch reward distributions: %v", err))
 	}
 
+	// 0 is not a valid id. This means the program was not found
+	// TODO - Since we are using the Null Object Pattern we may want extract the logic into an IsValid
+	// TODO - !keeper.EpochRewardIsValid(epochReward)
 	if epochReward.RewardProgramId != 0 {
 		response.EpochRewardDistribution = &epochReward
 	}

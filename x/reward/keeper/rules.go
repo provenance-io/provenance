@@ -5,8 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
-	"github.com/provenance-io/provenance/x/reward/types"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/provenance-io/provenance/x/reward/types"
 )
 
 type EvaluationResult struct {
@@ -263,6 +264,9 @@ func (k Keeper) GetAllActiveRewards(ctx sdk.Context) ([]types.RewardProgram, err
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO - Do we want to extract this out?
+	// TODO - It's kind of unexpected by the "Get" function name
 	for _, rewardProgram := range rewardToExpire {
 		rewardProgram.Expired = true
 		k.SetRewardProgram(ctx, rewardProgram)
