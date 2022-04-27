@@ -27,6 +27,7 @@ func GetQueryCmd() *cobra.Command {
 		GetRewardProgramCmd(),
 		GetRewardClaimCmd(),
 		GetEpochRewardDistributionCmd(),
+		GetEligibilityCriteriaCmd(),
 	)
 	return queryCmd
 }
@@ -205,6 +206,7 @@ func outputRewardProgramById(cmd *cobra.Command, arg string) error {
 	return clientCtx.PrintProto(response)
 }
 
+// Query for all RewardClaims
 func outputRewardClaimsAll(cmd *cobra.Command) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
@@ -224,6 +226,7 @@ func outputRewardClaimsAll(cmd *cobra.Command) error {
 	return clientCtx.PrintProto(response)
 }
 
+// Query for a Reward Claim by Id
 func outputRewardClaimById(cmd *cobra.Command, arg string) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
@@ -246,6 +249,7 @@ func outputRewardClaimById(cmd *cobra.Command, arg string) error {
 	return clientCtx.PrintProto(response)
 }
 
+// Query for all EpochRewardDistributions
 func outputEpochRewardDistributionAll(cmd *cobra.Command) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
@@ -265,6 +269,7 @@ func outputEpochRewardDistributionAll(cmd *cobra.Command) error {
 	return clientCtx.PrintProto(response)
 }
 
+// Query for a EpochRewardDistribution by Id
 func outputEpochRewardDistributionById(cmd *cobra.Command, rewardId, epochId string) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
@@ -294,6 +299,7 @@ func outputEpochRewardDistributionById(cmd *cobra.Command, rewardId, epochId str
 	return clientCtx.PrintProto(response)
 }
 
+// Query for all EligibilityCriteria
 func outputEligibilityCriteriaAll(cmd *cobra.Command) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
@@ -313,6 +319,7 @@ func outputEligibilityCriteriaAll(cmd *cobra.Command) error {
 	return clientCtx.PrintProto(response)
 }
 
+// Query for a ElgibilityCriteria by name
 func outputEligibilityCriteriaByName(cmd *cobra.Command, name string) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
