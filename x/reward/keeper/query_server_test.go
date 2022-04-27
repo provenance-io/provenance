@@ -270,11 +270,49 @@ func (s *KeeperTestSuite) TestEpochDistributionRewardsByID() {
 }
 
 func (s *KeeperTestSuite) TestEligibilityCriteria() {
-	s.Assert().Fail("not implemented")
+	s.SetupTest()
+	queryClient := s.queryClient
+
+	// Test against empty set
+	response, err := queryClient.EligibilityCriteria(gocontext.Background(), &types.EligibilityCriteriaRequest{})
+	s.Assert().Nil(err, "error should be nil")
+	s.Assert().Equal(len(response.GetEligibilityCriteria()), 0, "response should contain empty list")
+
+	// Test single entry
+	criteria := types.NewEligibilityCriteria("test", &types.ActionDelegate{})
+	s.app.RewardKeeper.SetEligibilityCriteria(s.ctx, criteria)
+	response, err = queryClient.EligibilityCriteria(gocontext.Background(), &types.EligibilityCriteriaRequest{})
+	s.Assert().Nil(err)
+	s.Assert().Equal(1, len(response.GetEligibilityCriteria()), "response should contain only 1 eligibility criteria")
+	s.Assert().Equal(criteria.Name, response.GetEligibilityCriteria()[0].Name, "eligibility criteria names should match")
+
+	// Test multiple entry
+	criteria2 := types.NewEligibilityCriteria("test2", &types.ActionDelegate{})
+	criteria3 := types.NewEligibilityCriteria("test3", &types.ActionDelegate{})
+	s.app.RewardKeeper.SetEligibilityCriteria(s.ctx, criteria2)
+	s.app.RewardKeeper.SetEligibilityCriteria(s.ctx, criteria3)
+	response, err = queryClient.EligibilityCriteria(gocontext.Background(), &types.EligibilityCriteriaRequest{})
+	s.Assert().Nil(err)
+	s.Assert().Equal(3, len(response.GetEligibilityCriteria()), "response should contain exactly 3 eligibility criteria")
 }
 
 func (s *KeeperTestSuite) TestEligibilityCriteriaByName() {
-	s.Assert().Fail("not implemented")
+	s.SetupTest()
+	queryClient := s.queryClient
+
+	criteria := types.NewEligibilityCriteria("test", &types.ActionDelegate{})
+	criteria2 := types.NewEligibilityCriteria("test2", &types.ActionDelegate{})
+	s.app.RewardKeeper.SetEligibilityCriteria(s.ctx, criteria)
+	s.app.RewardKeeper.SetEligibilityCriteria(s.ctx, criteria2)
+
+	response, err := queryClient.EligibilityCriteriaByName(gocontext.Background(), &types.EligibilityCriteriaRequestByNameRequest{Name: "test"})
+	s.Assert().Nil(err, "error should be nil")
+	s.Assert().NotNil(response.GetEligibilityCriteria(), "EligibilityCriteria should not be nil")
+	s.Assert().Equal(criteria.Name, response.GetEligibilityCriteria().Name, 1, "EligibilityCriteria names should match")
+
+	response, err = queryClient.EligibilityCriteriaByName(gocontext.Background(), &types.EligibilityCriteriaRequestByNameRequest{Name: "test3"})
+	s.Assert().Nil(err, "error should be nil")
+	s.Assert().Nil(response.GetEligibilityCriteria(), "EligibilityCriteria should be nil")
 }
 
 func newRewardProgram(coinName string, id uint64, start uint64) *types.RewardProgram {

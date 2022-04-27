@@ -167,13 +167,45 @@ func (k Keeper) EpochRewardDistributionsByID(ctx context.Context, req *types.Epo
 }
 
 // returns all EligibilityCriterias
-func (k Keeper) EligibilityCriteria(context.Context, *types.EligibilityCriteriaRequest) (*types.EligibilityCriteriaResponse, error) {
+func (k Keeper) EligibilityCriteria(ctx context.Context, req *types.EligibilityCriteriaRequest) (*types.EligibilityCriteriaResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
 	response := types.EligibilityCriteriaResponse{}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	err := k.IterateEligibilityCriterias(sdkCtx, func(criteria types.EligibilityCriteria) (stop bool) {
+		response.EligibilityCriteria = append(response.EligibilityCriteria, criteria)
+		return false
+	})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to obtain eligibility criteria: %v", err))
+	}
+
 	return &response, nil
 }
 
 // returns a EligibilityCriteria by name
-func (k Keeper) EligibilityCriteriaByName(context.Context, *types.EligibilityCriteriaRequestByNameRequest) (*types.EligibilityCriteriaRequestByNameResponse, error) {
+func (k Keeper) EligibilityCriteriaByName(ctx context.Context, req *types.EligibilityCriteriaRequestByNameRequest) (*types.EligibilityCriteriaRequestByNameResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
 	response := types.EligibilityCriteriaRequestByNameResponse{}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	criteria, err := k.GetEligibilityCriteria(sdkCtx, req.GetName())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to obtain eligibility criteria: %v", err))
+	}
+
+	// 0 is not a valid name. This means the eligibility criteria was not found
+	// TODO - Since we are using the Null Object Pattern we may want extract the logic into an IsValid
+	// TODO - !keeper.EligibilityCriteriaIsValid(criteria)
+	if criteria.Name != "" {
+		response.EligibilityCriteria = &criteria
+	}
+
 	return &response, nil
 }
