@@ -119,7 +119,29 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				},
 			),
 		},
-		[]rewardtypes.EpochRewardDistribution{},
+		[]rewardtypes.EpochRewardDistribution{
+			types.NewEpochRewardDistribution(
+				"day",
+				1,
+				sdk.NewInt64Coin("jackthecat", 100),
+				5,
+				false,
+			),
+			types.NewEpochRewardDistribution(
+				"day",
+				2,
+				sdk.NewInt64Coin("jackthecat", 100),
+				3,
+				false,
+			),
+			types.NewEpochRewardDistribution(
+				"month",
+				1,
+				sdk.NewInt64Coin("jackthecat", 100),
+				10,
+				false,
+			),
+		},
 		[]rewardtypes.EligibilityCriteria{},
 		rewardtypes.ActionDelegate{},
 		rewardtypes.ActionTransferDelegations{},
@@ -274,9 +296,81 @@ func (s *IntegrationTestSuite) TestQueryRewardClaims() {
 }
 
 func (s *IntegrationTestSuite) TestQueryEpochDistributionReward() {
-	s.Assert().FailNow("not implemented")
-	//cli.QueryRewardProgramsCmd()
-	// TODO Need a way to create a reward claim before these can be implemented
+	testCases := []struct {
+		name           string
+		args           []string
+		expectErr      bool
+		expectErrMsg   string
+		expectedCode   uint32
+		expectedOutput string
+	}{
+		{"query all epoch distribution rewards",
+			[]string{
+				"all",
+			},
+			false,
+			"",
+			0,
+			"{\"epoch_reward_distribution\":[{\"epoch_id\":\"day\",\"reward_program_id\":\"1\",\"total_rewards_pool\":{\"denom\":\"jackthecat\",\"amount\":\"100\"},\"total_shares\":\"5\",\"epoch_ended\":false},{\"epoch_id\":\"day\",\"reward_program_id\":\"2\",\"total_rewards_pool\":{\"denom\":\"jackthecat\",\"amount\":\"100\"},\"total_shares\":\"3\",\"epoch_ended\":false},{\"epoch_id\":\"minute\",\"reward_program_id\":\"1\",\"total_rewards_pool\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"total_shares\":\"1\",\"epoch_ended\":false},{\"epoch_id\":\"month\",\"reward_program_id\":\"1\",\"total_rewards_pool\":{\"denom\":\"jackthecat\",\"amount\":\"100\"},\"total_shares\":\"10\",\"epoch_ended\":false}]}",
+		},
+		{"query existing epoch reward distribution by valid ids",
+			[]string{
+				"1",
+				"day",
+			},
+			false,
+			"",
+			0,
+			"{\"epoch_reward_distribution\":{\"epoch_id\":\"day\",\"reward_program_id\":\"1\",\"total_rewards_pool\":{\"denom\":\"jackthecat\",\"amount\":\"100\"},\"total_shares\":\"5\",\"epoch_ended\":false}}",
+		},
+		{"query epoch reward distribution by invalid reward program id",
+			[]string{
+				"10",
+				"day",
+			},
+			true,
+			"epoch reward does not exist for reward-id: 10 epoch-id day",
+			0,
+			"",
+		},
+		{"query epoch reward distribution by invalid epoch id",
+			[]string{
+				"1",
+				"blah",
+			},
+			true,
+			"epoch reward does not exist for reward-id: 1 epoch-id blah",
+			0,
+			"",
+		},
+		{"query epoch reward distribution by invalid reward program id and epoch id",
+			[]string{
+				"10",
+				"blah",
+			},
+			true,
+			"epoch reward does not exist for reward-id: 10 epoch-id blah",
+			0,
+			"",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		fmt.Printf("Address: %s\n", s.network.Validators[0].Address.String())
+		s.Run(tc.name, func() {
+			clientCtx := s.network.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetEpochRewardDistributionCmd(), tc.args)
+			if tc.expectErr {
+				s.Assert().Error(err)
+				s.Assert().Equal(tc.expectErrMsg, err.Error())
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+			}
+		})
+	}
 }
 
 func (s *IntegrationTestSuite) TestCmdRewardProgramProposal() {
