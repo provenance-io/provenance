@@ -373,6 +373,14 @@ func (s *IntegrationTestSuite) TestQueryEpochDistributionReward() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestEligibilityCriteriaCmd() {
+	s.Assert().Fail("not implemented")
+}
+
+func (s *IntegrationTestSuite) TestEligibilityCriteriaByNameCmd() {
+	s.Assert().Fail("not implemented")
+}
+
 func (s *IntegrationTestSuite) TestCmdRewardProgramProposal() {
 	testCases := []struct {
 		name         string

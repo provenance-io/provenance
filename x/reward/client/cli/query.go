@@ -116,6 +116,30 @@ func GetEpochRewardDistributionCmd() *cobra.Command {
 	return cmd
 }
 
+func GetEligibilityCriteriaCmd() *cobra.Command {
+	const all = "all"
+
+	cmd := &cobra.Command{
+		Use:     "eligibility-criteria {name|\"all\"}",
+		Aliases: []string{"ec", "eligibilitycriteria"},
+		Short:   "Query the current eligiblity criteria",
+		Long: fmt.Sprintf(`%[1]s eligibility-criteria {name} - gets the eligibility criteria that matches the name.
+%[1]s eligibility-criteria all - gets all the eligibility criteria`, cmdStart),
+		Args: cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`%[1]s eligibility-criteria "delegate"
+%[1]s eligibility-criteria all`, cmdStart),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			arg0 := strings.TrimSpace(args[0])
+			if arg0 == all {
+				return outputEligibilityCriteriaAll(cmd)
+			}
+
+			return outputEligibilityCriteriaByName(cmd, arg0)
+		},
+	}
+	return cmd
+}
+
 // Query for all Reward Programs
 func outputRewardProgramsAll(cmd *cobra.Command) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
@@ -265,6 +289,49 @@ func outputEpochRewardDistributionById(cmd *cobra.Command, rewardId, epochId str
 
 	if response.GetEpochRewardDistribution() == nil {
 		return fmt.Errorf("epoch reward does not exist for reward-id: %s epoch-id %s", rewardId, epochId)
+	}
+
+	return clientCtx.PrintProto(response)
+}
+
+func outputEligibilityCriteriaAll(cmd *cobra.Command) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+
+	queryClient := types.NewQueryClient(clientCtx)
+
+	var response *types.EligibilityCriteriaResponse
+	if response, err = queryClient.EligibilityCriteria(
+		context.Background(),
+		&types.EligibilityCriteriaRequest{},
+	); err != nil {
+		return fmt.Errorf("failed to query eligibility criteria: %s", err.Error())
+	}
+
+	return clientCtx.PrintProto(response)
+}
+
+func outputEligibilityCriteriaByName(cmd *cobra.Command, name string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+	queryClient := types.NewQueryClient(clientCtx)
+
+	var response *types.EligibilityCriteriaRequestByNameResponse
+	if response, err = queryClient.EligibilityCriteriaByName(
+		context.Background(),
+		&types.EligibilityCriteriaRequestByNameRequest{
+			Name: name,
+		},
+	); err != nil {
+		return fmt.Errorf("failed to query eligibility criteria %s: %s", name, err.Error())
+	}
+
+	if response.GetEligibilityCriteria() == nil {
+		return fmt.Errorf("eligibility criteria does not exist for name: %s", name)
 	}
 
 	return clientCtx.PrintProto(response)

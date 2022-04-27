@@ -410,6 +410,10 @@
 - [provenance/reward/v1/query.proto](#provenance/reward/v1/query.proto)
     - [ActiveRewardProgramsRequest](#provenance.reward.v1.ActiveRewardProgramsRequest)
     - [ActiveRewardProgramsResponse](#provenance.reward.v1.ActiveRewardProgramsResponse)
+    - [EligibilityCriteriaRequest](#provenance.reward.v1.EligibilityCriteriaRequest)
+    - [EligibilityCriteriaRequestByNameRequest](#provenance.reward.v1.EligibilityCriteriaRequestByNameRequest)
+    - [EligibilityCriteriaRequestByNameResponse](#provenance.reward.v1.EligibilityCriteriaRequestByNameResponse)
+    - [EligibilityCriteriaResponse](#provenance.reward.v1.EligibilityCriteriaResponse)
     - [EpochRewardDistributionByIDRequest](#provenance.reward.v1.EpochRewardDistributionByIDRequest)
     - [EpochRewardDistributionByIDResponse](#provenance.reward.v1.EpochRewardDistributionByIDResponse)
     - [EpochRewardDistributionRequest](#provenance.reward.v1.EpochRewardDistributionRequest)
@@ -6184,6 +6188,61 @@ AddRewardProgramProposal defines a governance proposal to add a rewards program
 
 
 
+<a name="provenance.reward.v1.EligibilityCriteriaRequest"></a>
+
+### EligibilityCriteriaRequest
+
+
+
+
+
+
+
+<a name="provenance.reward.v1.EligibilityCriteriaRequestByNameRequest"></a>
+
+### EligibilityCriteriaRequestByNameRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.EligibilityCriteriaRequestByNameResponse"></a>
+
+### EligibilityCriteriaRequestByNameResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.EligibilityCriteriaResponse"></a>
+
+### EligibilityCriteriaResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) | repeated |  |
+
+
+
+
+
+
 <a name="provenance.reward.v1.EpochRewardDistributionByIDRequest"></a>
 
 ### EpochRewardDistributionByIDRequest
@@ -6396,6 +6455,8 @@ Query defines the gRPC querier service for reward module.
 | `RewardClaimByID` | [RewardClaimByIDRequest](#provenance.reward.v1.RewardClaimByIDRequest) | [RewardClaimByIDResponse](#provenance.reward.v1.RewardClaimByIDResponse) | returns a RewardClaim by id | GET|/provenance/rewards/v1/reward_claim_by_id/{id}|
 | `EpochRewardDistributions` | [EpochRewardDistributionRequest](#provenance.reward.v1.EpochRewardDistributionRequest) | [EpochRewardDistributionResponse](#provenance.reward.v1.EpochRewardDistributionResponse) | returns all EpochRewardDistributions | GET|/provenance/rewards/v1/epoch_reward_distributions|
 | `EpochRewardDistributionsByID` | [EpochRewardDistributionByIDRequest](#provenance.reward.v1.EpochRewardDistributionByIDRequest) | [EpochRewardDistributionByIDResponse](#provenance.reward.v1.EpochRewardDistributionByIDResponse) | returns a EpochRewardDistribution by rewardId and epochId | GET|/provenance/rewards/v1/epoch_reward_distributions/{rewardId}/epochs/{epochId}|
+| `EligibilityCriteria` | [EligibilityCriteriaRequest](#provenance.reward.v1.EligibilityCriteriaRequest) | [EligibilityCriteriaResponse](#provenance.reward.v1.EligibilityCriteriaResponse) | returns all EligibilityCriterias | GET|/provenance/rewards/v1/eligibility_criterias|
+| `EligibilityCriteriaByName` | [EligibilityCriteriaRequestByNameRequest](#provenance.reward.v1.EligibilityCriteriaRequestByNameRequest) | [EligibilityCriteriaRequestByNameResponse](#provenance.reward.v1.EligibilityCriteriaRequestByNameResponse) | returns a EligibilityCriteria by name | GET|/provenance/rewards/v1/eligibility_criterias/{name}|
 
  <!-- end services -->
 

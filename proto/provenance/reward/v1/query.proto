@@ -51,6 +51,16 @@ service Query {
   rpc EpochRewardDistributionsByID(EpochRewardDistributionByIDRequest) returns (EpochRewardDistributionByIDResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/epoch_reward_distributions/{rewardId}/epochs/{epochId}";
   }
+
+  // returns all EligibilityCriterias
+  rpc EligibilityCriteria(EligibilityCriteriaRequest) returns (EligibilityCriteriaResponse) {
+    option (google.api.http).get = "/provenance/rewards/v1/eligibility_criterias";
+  }
+
+  // returns a EligibilityCriteria by name
+  rpc EligibilityCriteriaByName(EligibilityCriteriaRequestByNameRequest) returns (EligibilityCriteriaRequestByNameResponse) {
+    option (google.api.http).get = "/provenance/rewards/v1/eligibility_criterias/{name}";
+  }
 }
 
 message RewardProgramByIDRequest {
@@ -112,4 +122,17 @@ message EpochRewardDistributionByIDRequest {
 
 message EpochRewardDistributionByIDResponse {
   EpochRewardDistribution epoch_reward_distribution = 1;
+}
+
+message EligibilityCriteriaRequest{}
+message EligibilityCriteriaResponse {
+  repeated EligibilityCriteria eligibility_criteria = 1 [(gogoproto.nullable) = false];
+}
+
+message EligibilityCriteriaRequestByNameRequest {
+  string name = 2;
+}
+
+message EligibilityCriteriaRequestByNameResponse {
+  EligibilityCriteria eligibility_criteria = 1;
 }

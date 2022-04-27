@@ -165,3 +165,15 @@ func (k Keeper) EpochRewardDistributionsByID(ctx context.Context, req *types.Epo
 
 	return &response, nil
 }
+
+// returns all EligibilityCriterias
+func (k Keeper) EligibilityCriteria(context.Context, *types.EligibilityCriteriaRequest) (*types.EligibilityCriteriaResponse, error) {
+	response := types.EligibilityCriteriaResponse{}
+	return &response, nil
+}
+
+// returns a EligibilityCriteria by name
+func (k Keeper) EligibilityCriteriaByName(context.Context, *types.EligibilityCriteriaRequestByNameRequest) (*types.EligibilityCriteriaRequestByNameResponse, error) {
+	response := types.EligibilityCriteriaRequestByNameResponse{}
+	return &response, nil
+}

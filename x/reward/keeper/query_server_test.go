@@ -269,6 +269,14 @@ func (s *KeeperTestSuite) TestEpochDistributionRewardsByID() {
 	s.Assert().False(response.GetEpochRewardDistribution().EpochEnded, "epoch should not be ended")
 }
 
+func (s *KeeperTestSuite) TestEligibilityCriteria() {
+	s.Assert().Fail("not implemented")
+}
+
+func (s *KeeperTestSuite) TestEligibilityCriteriaByName() {
+	s.Assert().Fail("not implemented")
+}
+
 func newRewardProgram(coinName string, id uint64, start uint64) *types.RewardProgram {
 	action := types.NewActionDelegate()
 	coin := sdk.NewInt64Coin(coinName, 10000)
