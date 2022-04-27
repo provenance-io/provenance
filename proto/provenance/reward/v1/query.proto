@@ -54,12 +54,12 @@ service Query {
 
   // returns all EligibilityCriterias
   rpc EligibilityCriteria(EligibilityCriteriaRequest) returns (EligibilityCriteriaResponse) {
-    option (google.api.http).get = "/provenance/rewards/v1/eligibility_criterias";
+    option (google.api.http).get = "/provenance/rewards/v1/eligibility_criteria";
   }
 
   // returns a EligibilityCriteria by name
   rpc EligibilityCriteriaByName(EligibilityCriteriaRequestByNameRequest) returns (EligibilityCriteriaRequestByNameResponse) {
-    option (google.api.http).get = "/provenance/rewards/v1/eligibility_criterias/{name}";
+    option (google.api.http).get = "/provenance/rewards/v1/eligibility_criteria/{name}";
   }
 }
 
