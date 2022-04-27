@@ -142,7 +142,20 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				false,
 			),
 		},
-		[]rewardtypes.EligibilityCriteria{},
+		[]rewardtypes.EligibilityCriteria{
+			types.NewEligibilityCriteria(
+				"test1",
+				&rewardtypes.ActionDelegate{},
+			),
+			types.NewEligibilityCriteria(
+				"test2",
+				&rewardtypes.ActionDelegate{},
+			),
+			types.NewEligibilityCriteria(
+				"test3",
+				&rewardtypes.ActionDelegate{},
+			),
+		},
 		rewardtypes.ActionDelegate{},
 		rewardtypes.ActionTransferDelegations{},
 	)
@@ -373,12 +386,69 @@ func (s *IntegrationTestSuite) TestQueryEpochDistributionReward() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestEligibilityCriteriaCmd() {
-	s.Assert().Fail("not implemented")
-}
+func (s *IntegrationTestSuite) TestQueryEligibilityCriteria() {
+	testCases := []struct {
+		name           string
+		args           []string
+		expectErr      bool
+		expectErrMsg   string
+		expectedCode   uint32
+		expectedOutput string
+	}{
+		{"query all eligibility criteria",
+			[]string{
+				"all",
+			},
+			false,
+			"",
+			0,
+			"{\"eligibility_criteria\":[{\"name\":\"test1\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},{\"name\":\"test2\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},{\"name\":\"test3\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}]}",
+		},
+		{"query existing eligibility criteria by valid name",
+			[]string{
+				"test1",
+			},
+			false,
+			"",
+			0,
+			"{\"eligibility_criteria\":{\"name\":\"test1\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}}",
+		},
+		{"query eligibility criteria by invalid name",
+			[]string{
+				"blah",
+			},
+			true,
+			"eligibility criteria does not exist for name: blah",
+			0,
+			"",
+		},
+		{"query eligibility criteria with empty name",
+			[]string{
+				"",
+			},
+			true,
+			"eligibility criteria does not exist for name: ",
+			0,
+			"",
+		},
+	}
 
-func (s *IntegrationTestSuite) TestEligibilityCriteriaByNameCmd() {
-	s.Assert().Fail("not implemented")
+	for _, tc := range testCases {
+		tc := tc
+
+		fmt.Printf("Address: %s\n", s.network.Validators[0].Address.String())
+		s.Run(tc.name, func() {
+			clientCtx := s.network.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetEligibilityCriteriaCmd(), tc.args)
+			if tc.expectErr {
+				s.Assert().Error(err)
+				s.Assert().Equal(tc.expectErrMsg, err.Error())
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+			}
+		})
+	}
 }
 
 func (s *IntegrationTestSuite) TestCmdRewardProgramProposal() {
