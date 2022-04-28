@@ -7,6 +7,7 @@ on:
       - "**.go"
       - "go.mod"
       - "go.sum"
+      - ".github/workflows/sims.yml"
   push:
     branches:
       - main
@@ -34,6 +35,7 @@ jobs:
             **/**.go
             go.mod
             go.sum
+            .github/workflows/sims.yml
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
       - name: Define file prefix
