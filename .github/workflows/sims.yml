@@ -325,8 +325,8 @@ jobs:
       matrix:
         # The test-sim-nondeterminism test hard-codes the db backend to use memdb.
         # The test-sim-benchmark-invariants test can use different db backends, but to save resources, is down here.
-        test: ["nondeterminism"]
-        os: ["ubuntu-latest", "macos-latest", "benchmark-invariants"]
+        test: ["nondeterminism", "benchmark-invariants"]
+        os: ["ubuntu-latest", "macos-latest"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
