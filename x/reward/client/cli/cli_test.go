@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -244,6 +245,7 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 }
 
 func (s *IntegrationTestSuite) TestQueryRewardClaims() {
+	rewardClaimsJson := fmt.Sprintf(`{"reward_claims":[{"address":"%s","shares_per_epoch_per_reward":[{"reward_program_id":"1","total_shares":"1","ephemeral_action_count":"1","latest_recorded_epoch":"1","claimed":false,"expired":false,"total_reward_claimed":{"denom":"","amount":"0"}}]},{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","shares_per_epoch_per_reward":[{"reward_program_id":"2","total_shares":"0","ephemeral_action_count":"0","latest_recorded_epoch":"0","claimed":false,"expired":false,"total_reward_claimed":{"denom":"jackthecat","amount":"0"}}]},{"address":"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h","shares_per_epoch_per_reward":[{"reward_program_id":"3","total_shares":"0","ephemeral_action_count":"0","latest_recorded_epoch":"0","claimed":false,"expired":false,"total_reward_claimed":{"denom":"jackthecat","amount":"0"}}]}]}`, s.network.Validators[0].Address.String())
 	testCases := []struct {
 		name           string
 		args           []string
@@ -251,6 +253,7 @@ func (s *IntegrationTestSuite) TestQueryRewardClaims() {
 		expectErrMsg   string
 		expectedCode   uint32
 		expectedOutput string
+		compareLength  bool
 	}{
 		{"query all reward claims",
 			[]string{
@@ -259,7 +262,8 @@ func (s *IntegrationTestSuite) TestQueryRewardClaims() {
 			false,
 			"",
 			0,
-			fmt.Sprintf("{\"reward_claims\":[{\"address\":\"%s\",\"shares_per_epoch_per_reward\":[{\"reward_program_id\":\"1\",\"total_shares\":\"1\",\"ephemeral_action_count\":\"1\",\"latest_recorded_epoch\":\"1\",\"claimed\":false,\"expired\":false,\"total_reward_claimed\":{\"denom\":\"\",\"amount\":\"0\"}}]},{\"address\":\"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq\",\"shares_per_epoch_per_reward\":[{\"reward_program_id\":\"2\",\"total_shares\":\"0\",\"ephemeral_action_count\":\"0\",\"latest_recorded_epoch\":\"0\",\"claimed\":false,\"expired\":false,\"total_reward_claimed\":{\"denom\":\"jackthecat\",\"amount\":\"0\"}}]},{\"address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"shares_per_epoch_per_reward\":[{\"reward_program_id\":\"3\",\"total_shares\":\"0\",\"ephemeral_action_count\":\"0\",\"latest_recorded_epoch\":\"0\",\"claimed\":false,\"expired\":false,\"total_reward_claimed\":{\"denom\":\"jackthecat\",\"amount\":\"0\"}}]}]}", s.network.Validators[0].Address.String()),
+			"",
+			true,
 		},
 		{"query existing reward claim by address",
 			[]string{
@@ -269,6 +273,7 @@ func (s *IntegrationTestSuite) TestQueryRewardClaims() {
 			"",
 			0,
 			"{\"reward_claim\":{\"address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"shares_per_epoch_per_reward\":[{\"reward_program_id\":\"3\",\"total_shares\":\"0\",\"ephemeral_action_count\":\"0\",\"latest_recorded_epoch\":\"0\",\"claimed\":false,\"expired\":false,\"total_reward_claimed\":{\"denom\":\"jackthecat\",\"amount\":\"0\"}}]}}",
+			false,
 		},
 		{"query non-existing reward claim by address",
 			[]string{
@@ -278,6 +283,7 @@ func (s *IntegrationTestSuite) TestQueryRewardClaims() {
 			"reward claim failure does not exist",
 			0,
 			"",
+			false,
 		},
 		{"query non-existing reward claim by empty address",
 			[]string{
@@ -287,13 +293,13 @@ func (s *IntegrationTestSuite) TestQueryRewardClaims() {
 			"reward claim  does not exist",
 			0,
 			"",
+			false,
 		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 
-		fmt.Printf("Address: %s\n", s.network.Validators[0].Address.String())
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardClaimCmd(), tc.args)
@@ -302,7 +308,15 @@ func (s *IntegrationTestSuite) TestQueryRewardClaims() {
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
 			} else {
 				s.Assert().NoError(err)
-				s.Assert().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+				if tc.compareLength {
+					actualResponse := rewardtypes.RewardClaimsResponse{}
+					expectedResponse := rewardtypes.RewardClaimsResponse{}
+					json.Unmarshal([]byte(strings.TrimSpace(out.String())), &actualResponse)
+					json.Unmarshal([]byte(strings.TrimSpace(rewardClaimsJson)), &expectedResponse)
+					s.Assert().Equal(len(expectedResponse.GetRewardClaims()), len(actualResponse.GetRewardClaims()), "should have all reward claims")
+				} else {
+					s.Assert().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+				}
 			}
 		})
 	}
