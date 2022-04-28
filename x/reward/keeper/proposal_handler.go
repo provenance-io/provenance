@@ -47,5 +47,6 @@ func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddRewar
 	if err != nil {
 		return fmt.Errorf("unable to send coin to module reward pool: %s", err)
 	}
+	ctx.Logger().Info("NOTICE: Reward Program Proposal %s", rewardProgram)
 	return nil
 }

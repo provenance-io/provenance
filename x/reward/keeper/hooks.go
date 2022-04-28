@@ -16,7 +16,7 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber uint64) error {
 	// distribute logic goes here, i.e record the number of shares claimable in that epoch and the total rewards pool
 	// also unlock the module account?
-	ctx.Logger().Info(fmt.Sprintf("In epoch end for %s %d", epochIdentifier, epochNumber))
+	ctx.Logger().Info(fmt.Sprintf("NOTICE: In epoch end for %s %d", epochIdentifier, epochNumber))
 	rewardPrograms, err := k.GetAllActiveRewardsForEpoch(ctx, epochIdentifier, epochNumber)
 	if err != nil {
 		return err

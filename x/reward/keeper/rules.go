@@ -19,12 +19,12 @@ type EvaluationResult struct {
 
 // EvaluateRules takes in a Eligibility criteria and measure it against the events in the context
 func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types.RewardProgram, distribution types.EpochRewardDistribution) error {
-	println(proto.MessageName(&types.ActionTransferDelegations{}))
+	ctx.Logger().Info("NOTICE: EvaluateRules for msg type: %s", proto.MessageName(&types.ActionTransferDelegations{}))
 	// get the events from the context history
 	switch program.EligibilityCriteria.Action.TypeUrl {
 	case "/" + proto.MessageName(&types.ActionTransferDelegations{}):
 		{
-			ctx.Logger().Info(fmt.Sprintf("The Action type is %s", proto.MessageName(&types.ActionTransferDelegations{})))
+			ctx.Logger().Info(fmt.Sprintf("NOTICE: The Action type is %s", proto.MessageName(&types.ActionTransferDelegations{})))
 			// check the event history
 			// for transfers event and make sure there is a sender
 			evaluateRes, err := k.EvaluateTransferAndCheckDelegation(ctx)
@@ -39,7 +39,7 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types
 		}
 	case "/" + proto.MessageName(&types.ActionDelegate{}):
 		{
-			ctx.Logger().Info(fmt.Sprintf("The Action type is %s", proto.MessageName(&types.ActionDelegate{})))
+			ctx.Logger().Info(fmt.Sprintf("NOTICE: The Action type is %s", proto.MessageName(&types.ActionDelegate{})))
 			// check the event history
 			// for transfers event and make sure there is a sender
 			evaluateRes, err := k.EvaluateDelegation(ctx)
@@ -65,6 +65,7 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 	// get the address from the eval and check if it has delegation
 	// it's an array so should be deterministic
 	for _, res := range evaluateRes {
+		ctx.Logger().Info("NOTICE: RecordRewardClaims: %v %v %v %v", epochNumber, program, distribution, res)
 		// add a share to the final total
 		// we know the rewards it so update the epoch reward
 		//distribution.TotalShares = distribution.TotalShares + res.shares
