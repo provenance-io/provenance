@@ -1,8 +1,5 @@
 package app
 
-// Dummy comment to have a change in a .go file in order to kick off the sims github actions.
-// TODO: Remove these two comments (and one of the empty lines around it).
-
 import (
 	"encoding/json"
 	"fmt"
