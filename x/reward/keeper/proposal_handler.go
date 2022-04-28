@@ -20,8 +20,8 @@ func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddRewar
 		return fmt.Errorf("invalid epoch identifier: %s", proposal.EpochId)
 	}
 
-	// calculate the start epoch height from current heigh + proposal offset height
-	startEpoch := uint64(ctx.BlockHeight()) + proposal.EpochStartOffset
+	// calculate the start epoch from current epoch + proposal offset height
+	startEpoch := uint64(epochInfo.CurrentEpoch) + proposal.EpochStartOffset
 
 	rewardProgram := types.NewRewardProgram(proposal.RewardProgramId,
 		proposal.DistributeFromAddress,
@@ -47,6 +47,8 @@ func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddRewar
 	if err != nil {
 		return fmt.Errorf("unable to send coin to module reward pool: %s", err)
 	}
-	ctx.Logger().Info("NOTICE: Reward Program Proposal %s", rewardProgram)
+	//TODO: Add object to track all balances in the module
+
+	ctx.Logger().Info(fmt.Sprintf("NOTICE: Reward Program Proposal %v", rewardProgram))
 	return nil
 }

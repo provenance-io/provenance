@@ -64,7 +64,7 @@ func (k Keeper) GetAllActiveRewardsForEpoch(ctx sdk.Context, epochIdentifier str
 		// 1,2 .. 1+4 > 2
 		// 1,3 .. 1+4 > 3
 		// 1,4 .. 1+4 > 4
-		if rewardProgram.EpochId == epochIdentifier && epochNumber > rewardProgram.StartEpoch && rewardProgram.StartEpoch+rewardProgram.NumberEpochs > epochNumber {
+		if rewardProgram.EpochId == epochIdentifier && epochNumber >= rewardProgram.StartEpoch && rewardProgram.StartEpoch+rewardProgram.NumberEpochs > epochNumber {
 			rewardPrograms = append(rewardPrograms, rewardProgram)
 		}
 		return true
