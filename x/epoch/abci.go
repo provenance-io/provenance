@@ -29,17 +29,17 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 			if shouldInitialEpochStart {
 				epochInfo.EpochCountingStarted = true
 				epochInfo.CurrentEpoch = 1
-				logger.Info(fmt.Sprintf("Starting new epoch with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
+				logger.Info(fmt.Sprintf("NOTICE: Starting new epoch with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
 			} else {
 				epochInfo.CurrentEpoch += 1
-				logger.Info(fmt.Sprintf("Starting epoch with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
+				logger.Info(fmt.Sprintf("NOTICE: Starting epoch with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
 				ctx.EventManager().EmitEvent(
 					sdk.NewEvent(
 						types.EventTypeEpochEnd,
 						sdk.NewAttribute(types.AttributeEpochNumber, fmt.Sprintf("%d", epochInfo.CurrentEpoch)),
 					),
 				)
-				ctx.Logger().Info(fmt.Sprintf("In(epoch module) epoch end for %s %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
+				ctx.Logger().Info(fmt.Sprintf("NOTICE: In(epoch module) epoch end for %s %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
 				k.AfterEpochEnd(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch-1)
 			}
 			k.SetEpochInfo(ctx, epochInfo)
