@@ -237,6 +237,7 @@ jobs:
         run: go version
       - name: Test
         run: |
+          set -x
           ec=0
           export DB_BACKEND=${{ matrix.db-backend }}
           make test-sim-${{ matrix.test }} || ec="$?"
@@ -305,6 +306,7 @@ jobs:
         run: go version
       - name: Test
         run: |
+          set -x
           export DB_BACKEND=${{ matrix.db-backend }}
           make test-sim-${{ matrix.test }} | tee "${{ steps.test-logs.outputs.test-logs }}.txt"
           exit "${PIPESTATUS[0]}"
@@ -338,6 +340,7 @@ jobs:
         run: go version
       - name: Test
         run: |
+          set -x
           make test-sim-${{ matrix.test }} | tee "${{ steps.test-logs.outputs.test-logs }}.txt"
           exit "${PIPESTATUS[0]}"
       - uses: actions/upload-artifact@v3
@@ -371,6 +374,7 @@ jobs:
         run: go version
       - name: Test
         run: |
+          set -x
           make test-sim-nondeterminism-state-listening-${{ matrix.test }} | tee "${{ steps.test-logs.outputs.test-logs }}.txt"
           exit "${PIPESTATUS[0]}"
       - uses: actions/upload-artifact@v3
