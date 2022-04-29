@@ -65,7 +65,7 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 	// get the address from the eval and check if it has delegation
 	// it's an array so should be deterministic
 	for _, res := range evaluateRes {
-		ctx.Logger().Info("NOTICE: RecordRewardClaims: %v %v %v %v", epochNumber, program, distribution, res)
+		ctx.Logger().Info(fmt.Sprintf("NOTICE: RecordRewardClaims: %v %v %v %v", epochNumber, program, distribution, res))
 		// add a share to the final total
 		// we know the rewards it so update the epoch reward
 		//distribution.TotalShares = distribution.TotalShares + res.shares

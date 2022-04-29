@@ -6,6 +6,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	epochtypes "github.com/provenance-io/provenance/x/epoch/types"
 	"github.com/provenance-io/provenance/x/reward/types"
 )
@@ -64,7 +65,7 @@ func (k Keeper) GetAllActiveRewardsForEpoch(ctx sdk.Context, epochIdentifier str
 		// 1,2 .. 1+4 > 2
 		// 1,3 .. 1+4 > 3
 		// 1,4 .. 1+4 > 4
-		if rewardProgram.EpochId == epochIdentifier && epochNumber > rewardProgram.StartEpoch && rewardProgram.StartEpoch+rewardProgram.NumberEpochs > epochNumber {
+		if rewardProgram.EpochId == epochIdentifier && epochNumber >= rewardProgram.StartEpoch && rewardProgram.StartEpoch+rewardProgram.NumberEpochs > epochNumber {
 			rewardPrograms = append(rewardPrograms, rewardProgram)
 		}
 		return true
