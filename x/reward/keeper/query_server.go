@@ -67,10 +67,7 @@ func (k Keeper) RewardProgramByID(ctx context.Context, req *types.RewardProgramB
 		return &response, err
 	}
 
-	// 0 is not a valid id. This means the program was not found
-	// TODO - Since we are using the Null Object Pattern we may want extract the logic into an IsValid
-	// TODO - !keeper.RewardIsValid(rewardProgram)
-	if rewardProgram.Id != 0 {
+	if k.RewardProgramIsValid(&rewardProgram) {
 		response.RewardProgram = &rewardProgram
 	}
 
@@ -110,10 +107,7 @@ func (k Keeper) RewardClaimByID(ctx context.Context, req *types.RewardClaimByIDR
 		return &response, err
 	}
 
-	// "" is not a valid address. This means the program was not found
-	// TODO - Since we are using the Null Object Pattern we may want extract the logic into an IsValid
-	// TODO - !keeper.ClaimIsValid(claim)
-	if claim.Address != "" {
+	if k.RewardClaimIsValid(&claim) {
 		response.RewardClaim = &claim
 	}
 
@@ -156,10 +150,7 @@ func (k Keeper) EpochRewardDistributionsByID(ctx context.Context, req *types.Epo
 		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to obtain epoch reward distributions: %v", err))
 	}
 
-	// 0 is not a valid id. This means the program was not found
-	// TODO - Since we are using the Null Object Pattern we may want extract the logic into an IsValid
-	// TODO - !keeper.EpochRewardIsValid(epochReward)
-	if epochReward.RewardProgramId != 0 {
+	if k.EpochRewardDistributionIsValid(&epochReward) {
 		response.EpochRewardDistribution = &epochReward
 	}
 
@@ -200,10 +191,7 @@ func (k Keeper) EligibilityCriteriaByName(ctx context.Context, req *types.Eligib
 		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to obtain eligibility criteria: %v", err))
 	}
 
-	// 0 is not a valid name. This means the eligibility criteria was not found
-	// TODO - Since we are using the Null Object Pattern we may want extract the logic into an IsValid
-	// TODO - !keeper.EligibilityCriteriaIsValid(criteria)
-	if criteria.Name != "" {
+	if k.EligibilityCriteriaIsValid(&criteria) {
 		response.EligibilityCriteria = &criteria
 	}
 
