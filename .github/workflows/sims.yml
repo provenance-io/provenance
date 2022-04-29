@@ -3,13 +3,6 @@ name: Sims
 
 on:
   pull_request:
-    paths:
-      - "**.go"
-      - "go.mod"
-      - "go.sum"
-      - ".github/workflows/sims.yml"
-      - "sims.mk"
-      - "sims-state-listening.mk"
   push:
     branches:
       - main
