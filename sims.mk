@@ -44,7 +44,7 @@ ifeq ($(UNAME_S),darwin)
   endif
 endif
 ifeq ($(runsim_tag),)
-  runsim_tag = tags
+  runsim_tag = $(tags)
 endif
 
 # We have to use a hack to provide -tags with the runsim stuff, but it only allows us to provide one tag.
