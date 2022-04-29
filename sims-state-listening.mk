@@ -19,9 +19,9 @@ test-sim-nondeterminism-state-listening-trace:
 		-NumBlocks=50 -BlockSize=100 -Commit=true -Period=0 -v -timeout 24h \
 		-StateListeningPlugin=trace -HaltAppOnDeliveryError=true
 
-SIM_DOCKER_COMPOSE_YML ?= networks/local/kafka/docker-compose.yml
+SIM_DOCKER_COMPOSE_YML ?= vendor/github.com/cosmos/cosmos-sdk/plugin/plugins/kafka/docker-compose.yml
 
-test-sim-nondeterminism-state-listening-kafka:
+test-sim-nondeterminism-state-listening-kafka: vendor
 	@echo "Running non-determinism-state-listening-kafka test..."
 	@echo "Starting Kafka..."
 	docker-compose -f $(SIM_DOCKER_COMPOSE_YML) up -d zookeeper broker
