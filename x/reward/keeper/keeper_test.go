@@ -93,11 +93,11 @@ func (s *KeeperTestSuite) TestCheckRewardProgramExpired() {
 	s.Assert().Equal(rewardProgram.Expired, false)
 
 	// if we increase the block height
-	for i := 0; i < 11; i++ {
+	for i := 0; i < 12; i++ {
 		s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + ((24 * 60 * 60 * 30) / 5) + 1)
 		epoch.BeginBlocker(s.ctx, s.app.EpochKeeper)
+		reward.EndBlocker(s.ctx, s.app.RewardKeeper)
 	}
-	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
 	rewardProgramGet, err = s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
 	s.Assert().Equal(rewardProgram.Coin, rewardProgramGet.Coin)
 	s.Assert().Equal(rewardProgram.Coin, rewardProgramGet.Coin)

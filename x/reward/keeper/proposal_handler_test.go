@@ -128,7 +128,7 @@ func (s *IntegrationTestSuite) TestRewardProposals() {
 			var err error
 			switch c := tc.prop.(type) {
 			case *rewardtypes.AddRewardProgramProposal:
-				err = rewardkeeper.HandleAddMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
+				err = rewardkeeper.HandleAddRewardProgramProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
 			default:
 				panic("invalid proposal type")
 			}

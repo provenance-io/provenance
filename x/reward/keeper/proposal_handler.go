@@ -21,7 +21,7 @@ func HandleAddRewardProgramProposal(ctx sdk.Context, k Keeper, proposal *types.A
 	}
 
 	// calculate the start epoch height from current heigh + proposal offset height
-	startEpoch := uint64(ctx.BlockHeight()) + proposal.EpochStartOffset
+	startEpoch := uint64(epochInfo.CurrentEpoch) + proposal.EpochStartOffset
 
 	rewardProgram := types.NewRewardProgram(proposal.RewardProgramId,
 		proposal.DistributeFromAddress,
