@@ -70,7 +70,7 @@ include sims-state-listening.mk
 # That one makes sure runsim is installed. This one just outputs an alert if not using the requested db backend (M1 issue).
 # If you get rid of this one, you'll still want the targets below to depend on the runsim target.
 runsim:
-	@if [[ '$(DB_BACKEND)' != '$(RUNSIM_DB_BACKEND)' ]]; then printf '\n\033[93;100m Alert \033[0m Using $(RUNSIM_DB_BACKEND) instead of $(DB_BACKEND) due to M1 issue and limitations of runsim\n\n'; fi
+	@if [ '$(DB_BACKEND)' != '$(RUNSIM_DB_BACKEND)' ]; then printf '\n\033[93;100m Alert \033[0m Using $(RUNSIM_DB_BACKEND) instead of $(DB_BACKEND) due to M1 issue and limitations of runsim\n\n'; fi
 
 test-sim-import-export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
