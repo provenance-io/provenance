@@ -10,8 +10,8 @@ import (
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
-// HandleAddMsgFeeProposal handles an Add msg fees governance proposal request
-func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddRewardProgramProposal, registry codectypes.InterfaceRegistry) error {
+// HandleAddRewardProposal handles an Add reward program governance proposal request
+func HandleAddRewardProgramProposal(ctx sdk.Context, k Keeper, proposal *types.AddRewardProgramProposal, registry codectypes.InterfaceRegistry) error {
 	if err := proposal.ValidateBasic(); err != nil {
 		return err
 	}
