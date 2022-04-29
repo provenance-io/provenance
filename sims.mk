@@ -52,11 +52,11 @@ endif
 # With two tags, e.g. -tags 'foo bar', you'd end up with three args, "-tags", "'foo", and "bar'", and it'll get confused.
 # But we CAN provide a single tag in the -SimAppPkg value in order to trick it into including it in the `go test` commands.
 # We need to provide the -DBBackend flag to the runsim tests too, and use the same hack.
-SIM_APP_PKG = $(SIMAPP) -DBBackend=$(RUNSIM_DB_BACKEND)
+SIM_APP_PKG := $(SIMAPP) -DBBackend=$(RUNSIM_DB_BACKEND)
 ifneq ($(runsim_tag),)
-  SIM_APP_PKG := -tags $(runsim_tag) $(SIM_APP_PKG)
+  SIM_APP_PKG += -tags $(runsim_tag)
 endif
-SIMAPP := -tags '$(tags)' $(SIMAPP) -DBBackend=$(DB_BACKEND)
+SIMAPP += -DBBackend=$(DB_BACKEND) -tags '$(tags)'
 
 SIM_GENESIS ?= ${HOME}/.provenanced/config/genesis.json
 
