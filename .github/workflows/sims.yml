@@ -372,6 +372,9 @@ jobs:
           go-version: 1.17
       - name: Display go version
         run: go version
+      - name: Install Docker Compose
+        if: matrix.test == 'kafka'
+        run: brew install docker-compose
       - name: Test
         run: |
           set -x
