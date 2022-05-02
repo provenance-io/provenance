@@ -381,7 +381,7 @@ jobs:
         if: matrix.test == 'kafka'
         run: brew install docker-compose
       - name: setup-docker
-        if: mastrix.test == 'kafka'
+        if: matrix.test == 'kafka'
         uses: docker-practice/actions-setup-docker@1.0.9
       - name: Test
         run: |
