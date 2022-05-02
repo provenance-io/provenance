@@ -189,8 +189,7 @@ jobs:
   runsim:
     # These tests are the ones that use the runsim program (see sims.mk).
     needs: [setup, build-linux]
-    # TODO: Remove true == false
-    if: needs.setup.outputs.should-run || true == false
+    if: needs.setup.outputs.should-run
     strategy:
       fail-fast: false
       matrix:
@@ -265,8 +264,7 @@ jobs:
   go-test-multi-db:
     # These are tests that use go test to run (see sims.mk), and that we want to test using different database backends.
     needs: [setup, build-linux, build-mac]
-    # TODO: Remove true == false
-    if: needs.setup.outputs.should-run || true == false
+    if: needs.setup.outputs.should-run
     strategy:
       fail-fast: false
       matrix:
@@ -321,8 +319,7 @@ jobs:
   go-test-single-db:
     # These are tests that use go test to run (see sims.mk), and that we don't care about testing using different database backends.
     needs: [setup]
-    # TODO: Remove true == false
-    if: needs.setup.outputs.should-run || true == false
+    if: needs.setup.outputs.should-run
     strategy:
       fail-fast: false
       matrix:
@@ -355,9 +352,8 @@ jobs:
   state-listening:
     # These are tests that use go test to run (see sims.mk), and that we want to test using different database backends.
     needs: [setup, build-linux, build-mac]
-    # These tests are all disabled until the "panic: stored minter should not have been nil" error can be fixed.
-    #if: needs.setup.outputs.should-run || true == false
-    if: needs.setup.outputs.should-run
+    # TODO: get rid of the && true == false here once the state-listening sim test stops giving "panic: stored minter should not have been nil".
+    if: needs.setup.outputs.should-run && true == false
     strategy:
       fail-fast: false
       matrix:
@@ -377,10 +373,7 @@ jobs:
           go-version: 1.17
       - name: Display go version
         run: go version
-      - name: Install Docker Compose
-        if: matrix.test == 'kafka'
-        run: brew install docker-compose
-      - name: setup-docker
+      - name: Setup Docker
         if: matrix.test == 'kafka'
         uses: docker-practice/actions-setup-docker@1.0.9
       - name: Test
