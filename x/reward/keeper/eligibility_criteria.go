@@ -45,17 +45,17 @@ func (k Keeper) IterateEligibilityCriterias(ctx sdk.Context, handle func(eligibi
 
 // Gets all the Eligibility Criteria
 func (k Keeper) GetAllEligibilityCriteria(sdkCtx sdk.Context) ([]types.EligibilityCriteria, error) {
-	var criteria []types.EligibilityCriteria
+	var eligibilityCriteria []types.EligibilityCriteria
 
 	err := k.IterateEligibilityCriterias(sdkCtx, func(criteria types.EligibilityCriteria) (stop bool) {
-		criteria = append(criteria, criteria)
+		eligibilityCriteria = append(eligibilityCriteria, criteria)
 		return false
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return criteria, nil
+	return eligibilityCriteria, nil
 }
 
 // Checks if a Eligibility Criteria is valid
