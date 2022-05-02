@@ -22,15 +22,18 @@ test-sim-nondeterminism-state-listening-trace:
 SIM_DOCKER_COMPOSE_YML ?= vendor/github.com/cosmos/cosmos-sdk/plugin/plugins/kafka/docker-compose.yml
 
 test-sim-nondeterminism-state-listening-kafka: vendor
-	@echo "Running non-determinism-state-listening-kafka test..."
-	@echo "Starting Kafka..."
-	docker-compose -f $(SIM_DOCKER_COMPOSE_YML) up -d zookeeper broker
-	@echo "Running test..."
-	-go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminismWithStateListening -Enabled=true \
-		-NumBlocks=50 -BlockSize=100 -Commit=true -Period=0 -v -timeout 24h \
-		-StateListeningPlugin=kafka -HaltAppOnDeliveryError=false
-	@echo "Stopping Kafka..."
-	-docker-compose -f plugin/plugins/kafka/docker-compose.yml down
+	echo "Running non-determinism-state-listening-kafka test..."; \
+		echo "Starting Kafka..."; \
+		docker-compose -f $(SIM_DOCKER_COMPOSE_YML) up -d zookeeper broker || exit $$?; \
+		echo "Running test..."; \
+		go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminismWithStateListening -Enabled=true \
+			-NumBlocks=50 -BlockSize=100 -Commit=true -Period=0 -v -timeout 24h \
+			-StateListeningPlugin=kafka -HaltAppOnDeliveryError=false; \
+		ec=$$?; \
+		echo "test exited with code '$$ec'"; \
+		echo "Stopping Kafka..."; \
+		docker-compose -f $(SIM_DOCKER_COMPOSE_YML) down; \
+		exit $$ec;
 
 test-sim-nondeterminism-state-listening-all: \
 	test-sim-nondeterminism-state-listening-file \
