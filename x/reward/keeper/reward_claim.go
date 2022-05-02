@@ -43,6 +43,20 @@ func (k Keeper) IterateRewardClaims(ctx sdk.Context, handle func(rewardClaim typ
 	return nil
 }
 
+// Gets all the RewardClaims
+func (k Keeper) GetAllRewardClaims(sdkCtx sdk.Context) ([]types.RewardClaim, error) {
+	var rewardClaims []types.RewardClaim
+	err := k.IterateRewardClaims(sdkCtx, func(rewardClaim types.RewardClaim) (stop bool) {
+		rewardClaims = append(rewardClaims, rewardClaim)
+		return false
+	})
+	if err != nil {
+		return nil, err
+	}
+	return rewardClaims, nil
+}
+
+// Checks if a RewardClaim is valid
 func (k Keeper) RewardClaimIsValid(rewardClaim *types.RewardClaim) bool {
 	return rewardClaim.Address != ""
 }

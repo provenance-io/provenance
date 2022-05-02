@@ -43,6 +43,20 @@ func (k Keeper) IterateRewardPrograms(ctx sdk.Context, handle func(rewardProgram
 	return nil
 }
 
+// Gets all the RewardPrograms
+func (k Keeper) GetAllRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
+	var rewardPrograms []types.RewardProgram
+	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
+		rewardPrograms = append(rewardPrograms, rewardProgram)
+		return false
+	})
+	if err != nil {
+		return nil, err
+	}
+	return rewardPrograms, nil
+}
+
+// Check if a RewardProgram is valid
 func (k Keeper) RewardProgramIsValid(rewardProgram *types.RewardProgram) bool {
 	return rewardProgram.Id != 0
 }

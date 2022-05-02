@@ -45,6 +45,20 @@ func (k Keeper) IterateEpochRewardDistributions(ctx sdk.Context, handle func(epo
 	return nil
 }
 
+// Gets all the Epoch Reward Distributions
+func (k Keeper) GetAllEpochRewardDistributions(sdkCtx sdk.Context) ([]types.EpochRewardDistribution, error) {
+	var rewardDistributions []types.EpochRewardDistribution
+	err := k.IterateEpochRewardDistributions(sdkCtx, func(rewardDistribution types.EpochRewardDistribution) (stop bool) {
+		rewardDistributions = append(rewardDistributions, rewardDistribution)
+		return false
+	})
+	if err != nil {
+		return nil, err
+	}
+	return rewardDistributions, nil
+}
+
+// Checks if an Epoch Reward Distribution is valid
 func (k Keeper) EpochRewardDistributionIsValid(epochReward *types.EpochRewardDistribution) bool {
 	return epochReward.RewardProgramId != 0
 }
