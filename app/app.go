@@ -422,7 +422,7 @@ func New(
 	)
 
 	// set epoch start/end hooks here for the rewards module etc (other modules that reequire epoch hooks)
-	//app.EpochKeeper.SetHooks(epochtypes.NewMultiEpochHooks(app.RewardKeeper.Hooks()))
+	app.EpochKeeper.SetHooks(epochtypes.NewMultiEpochHooks())
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(
 		keys[authzkeeper.StoreKey], appCodec, app.BaseApp.MsgServiceRouter(),

@@ -11,7 +11,6 @@ type EpochHooks interface {
 	BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber uint64)
 }
 
-
 var _ EpochHooks = MultiEpochHooks{}
 
 // epoch hooks

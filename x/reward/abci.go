@@ -11,9 +11,9 @@ import (
 // EndBlocker called every block
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	ctx.Logger().Info(fmt.Sprintf("In endblocker"))
-
+	blockTime := ctx.BlockTime()
 	// check if epoch has ended
-	ctx.Logger().Info(fmt.Sprintf("Size of events is %d", len(ctx.EventManager().GetABCIEventHistory())))
+	ctx.Logger().Info(fmt.Sprintf("NOTICE: Block time: %v Size of events is %d", blockTime, len(ctx.EventManager().GetABCIEventHistory())))
 	logEvents(ctx)
 	// Step 1
 	rewardPrograms, err := k.GetAllActiveRewards(ctx)
