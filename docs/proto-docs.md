@@ -405,8 +405,6 @@
     - [GenesisState](#provenance.reward.v1.GenesisState)
   
 - [provenance/reward/v1/proposals.proto](#provenance/reward/v1/proposals.proto)
-    - [AddRewardProgramProposal](#provenance.reward.v1.AddRewardProgramProposal)
-  
 - [provenance/reward/v1/query.proto](#provenance/reward/v1/query.proto)
     - [ActiveRewardProgramsRequest](#provenance.reward.v1.ActiveRewardProgramsRequest)
     - [ActiveRewardProgramsResponse](#provenance.reward.v1.ActiveRewardProgramsResponse)
@@ -434,6 +432,8 @@
 - [provenance/reward/v1/tx.proto](#provenance/reward/v1/tx.proto)
     - [MsgAddToCriteraRequest](#provenance.reward.v1.MsgAddToCriteraRequest)
     - [MsgAddToCriteraResponse](#provenance.reward.v1.MsgAddToCriteraResponse)
+    - [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest)
+    - [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse)
     - [MsgWriteCriteraRequest](#provenance.reward.v1.MsgWriteCriteraRequest)
     - [MsgWriteCriteraResponse](#provenance.reward.v1.MsgWriteCriteraResponse)
   
@@ -6036,8 +6036,8 @@ RewardProgram
 | `distribute_from_address` | [string](#string) |  | community pool for now |
 | `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | maximum rewards amount per address |
-| `epoch_id` | [string](#string) |  | EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month) |
-| `start_epoch` | [uint64](#uint64) |  | start_epoch defines the epoch number at which the rewards program should begin at |
+| `epoch_type` | [string](#string) |  | EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month) |
+| `start_time` | [string](#string) |  | start_epoch defines the epoch number at which the rewards program should begin at |
 | `number_epochs` | [uint64](#uint64) |  | number of epochs this program will last for |
 | `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
 | `expired` | [bool](#bool) |  | is the rewards program expired ( for efficient lookup) |
@@ -6119,31 +6119,6 @@ GenesisState defines the reward module's genesis state.
 <p align="right"><a href="#top">Top</a></p>
 
 ## provenance/reward/v1/proposals.proto
-
-
-
-<a name="provenance.reward.v1.AddRewardProgramProposal"></a>
-
-### AddRewardProgramProposal
-AddRewardProgramProposal defines a governance proposal to add a rewards program
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `rewardProgramId` | [uint64](#uint64) |  |  |
-| `distribute_from_address` | [string](#string) |  | community pool for now |
-| `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `epoch_id` | [string](#string) |  | EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month) |
-| `epoch_start_offset` | [uint64](#uint64) |  | epoch_start_soffset defines the offset of the block height to start epoch after proposal passes |
-| `number_epochs` | [uint64](#uint64) |  | number of epochs this program will last for |
-| `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
-| `minimum` | [uint64](#uint64) |  |  |
-| `maximum` | [uint64](#uint64) |  |  |
-
-
-
 
 
  <!-- end messages -->
@@ -6489,6 +6464,26 @@ MsgAddToCriteraResponse
 
 
 
+<a name="provenance.reward.v1.MsgCreateRewardProgramRequest"></a>
+
+### MsgCreateRewardProgramRequest
+
+
+
+
+
+
+
+<a name="provenance.reward.v1.MsgCreateRewardProgramResponse"></a>
+
+### MsgCreateRewardProgramResponse
+
+
+
+
+
+
+
 <a name="provenance.reward.v1.MsgWriteCriteraRequest"></a>
 
 ### MsgWriteCriteraRequest
@@ -6522,6 +6517,7 @@ Msg
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `CreateRewardProgram` | [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest) | [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse) |  | |
 | `WriteCritera` | [MsgWriteCriteraRequest](#provenance.reward.v1.MsgWriteCriteraRequest) | [MsgWriteCriteraResponse](#provenance.reward.v1.MsgWriteCriteraResponse) | WriteCritera | |
 | `AddToCritera` | [MsgAddToCriteraRequest](#provenance.reward.v1.MsgAddToCriteraRequest) | [MsgAddToCriteraResponse](#provenance.reward.v1.MsgAddToCriteraResponse) | AddToCritera | |
 

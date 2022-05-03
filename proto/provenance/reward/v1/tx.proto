@@ -8,10 +8,20 @@ option java_multiple_files = true;
 // Msg
 service Msg {
 
+  rpc CreateRewardProgram(MsgCreateRewardProgramRequest) returns (MsgCreateRewardProgramResponse);
+
   // WriteCritera
   rpc WriteCritera(MsgWriteCriteraRequest) returns (MsgWriteCriteraResponse);
   // AddToCritera
   rpc AddToCritera(MsgAddToCriteraRequest) returns (MsgAddToCriteraResponse);
+}
+
+message MsgCreateRewardProgramRequest{
+
+}
+
+message MsgCreateRewardProgramResponse{
+
 }
 
 // MsgWriteCriteraRequest

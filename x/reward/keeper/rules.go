@@ -249,24 +249,17 @@ func (k Keeper) GetAllActiveRewards(ctx sdk.Context) ([]types.RewardProgram, err
 		// 1,2 .. 1+4 > 2
 		// 1,3 .. 1+4 > 3
 		// 1,4 .. 1+4 > 4
-
-		// TODO we are no longer connected to the Epoch module
-		// TODO we need to be connect this to time
-		// TODO Everything below here is broken
-		//currentEpoch := k.EpochKeeper.GetEpochInfo(ctx, rewardProgram.EpochId)
-		currentEpoch := uint64(0)
-		ctx.BlockTime()
-
-		// not yet started
-		if rewardProgram.StartEpoch >= currentEpoch {
-			return false
-		}
-		if rewardProgram.StartEpoch+rewardProgram.NumberEpochs >= currentEpoch {
-			rewardPrograms = append(rewardPrograms, rewardProgram)
-		} else {
-			// reward has expired
-			rewardToExpire = append(rewardToExpire, rewardProgram)
-		}
+		// currentEpoch := k.EpochKeeper.GetEpochInfo(ctx, rewardProgram.EpochId)
+		// // not yet started
+		// if rewardProgram.StartEpoch >= currentEpoch.CurrentEpoch {
+		// 	return false
+		// }
+		// if rewardProgram.StartEpoch+rewardProgram.NumberEpochs >= currentEpoch.CurrentEpoch {
+		// 	rewardPrograms = append(rewardPrograms, rewardProgram)
+		// } else {
+		// 	// reward has expired
+		// 	rewardToExpire = append(rewardToExpire, rewardProgram)
+		// }
 		return false
 	})
 	if err != nil {

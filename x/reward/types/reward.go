@@ -50,8 +50,6 @@ func NewRewardProgram(
 		DistributeFromAddress: distributeFromAddress,
 		Coin:                  coin,
 		MaxRewardByAddress:    maxRewardByAddress,
-		EpochId:               epochId,
-		StartEpoch:            startEpoch,
 		NumberEpochs:          numberEpochs,
 		EligibilityCriteria:   eligibilityCriteria,
 		Expired:               expired,
@@ -63,9 +61,6 @@ func NewRewardProgram(
 func (rp *RewardProgram) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(rp.DistributeFromAddress); err != nil {
 		return fmt.Errorf("invalid address for rewards program distribution from address: %w", err)
-	}
-	if len(rp.EpochId) == 0 {
-		return errors.New("epoch id cannot be empty")
 	}
 	if err := rp.EligibilityCriteria.ValidateBasic(); err != nil {
 		return fmt.Errorf("eligibility criteria is not valid: %w", err)
