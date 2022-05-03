@@ -6033,7 +6033,7 @@ RewardProgram
 | `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | maximum rewards amount per address |
 | `epoch_type` | [string](#string) |  | EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month) |
-| `start_time` | [string](#string) |  | start_epoch defines the epoch number at which the rewards program should begin at |
+| `start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `number_epochs` | [uint64](#uint64) |  | number of epochs this program will last for |
 | `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
 | `expired` | [bool](#bool) |  | is the rewards program expired ( for efficient lookup) |
