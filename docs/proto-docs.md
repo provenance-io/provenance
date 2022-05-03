@@ -430,12 +430,8 @@
     - [Query](#provenance.reward.v1.Query)
   
 - [provenance/reward/v1/tx.proto](#provenance/reward/v1/tx.proto)
-    - [MsgAddToCriteraRequest](#provenance.reward.v1.MsgAddToCriteraRequest)
-    - [MsgAddToCriteraResponse](#provenance.reward.v1.MsgAddToCriteraResponse)
     - [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest)
     - [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse)
-    - [MsgWriteCriteraRequest](#provenance.reward.v1.MsgWriteCriteraRequest)
-    - [MsgWriteCriteraResponse](#provenance.reward.v1.MsgWriteCriteraResponse)
   
     - [Msg](#provenance.reward.v1.Msg)
   
@@ -6444,26 +6440,6 @@ Query defines the gRPC querier service for reward module.
 
 
 
-<a name="provenance.reward.v1.MsgAddToCriteraRequest"></a>
-
-### MsgAddToCriteraRequest
-MsgAddToCriteraRequest
-
-
-
-
-
-
-<a name="provenance.reward.v1.MsgAddToCriteraResponse"></a>
-
-### MsgAddToCriteraResponse
-MsgAddToCriteraResponse
-
-
-
-
-
-
 <a name="provenance.reward.v1.MsgCreateRewardProgramRequest"></a>
 
 ### MsgCreateRewardProgramRequest
@@ -6478,26 +6454,6 @@ MsgAddToCriteraResponse
 
 ### MsgCreateRewardProgramResponse
 
-
-
-
-
-
-
-<a name="provenance.reward.v1.MsgWriteCriteraRequest"></a>
-
-### MsgWriteCriteraRequest
-MsgWriteCriteraRequest
-
-
-
-
-
-
-<a name="provenance.reward.v1.MsgWriteCriteraResponse"></a>
-
-### MsgWriteCriteraResponse
-MsgWriteCriteraResponse
 
 
 
@@ -6518,8 +6474,6 @@ Msg
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `CreateRewardProgram` | [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest) | [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse) |  | |
-| `WriteCritera` | [MsgWriteCriteraRequest](#provenance.reward.v1.MsgWriteCriteraRequest) | [MsgWriteCriteraResponse](#provenance.reward.v1.MsgWriteCriteraResponse) | WriteCritera | |
-| `AddToCritera` | [MsgAddToCriteraRequest](#provenance.reward.v1.MsgAddToCriteraRequest) | [MsgAddToCriteraResponse](#provenance.reward.v1.MsgAddToCriteraResponse) | AddToCritera | |
 
  <!-- end services -->
 

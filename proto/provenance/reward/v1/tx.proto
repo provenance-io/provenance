@@ -10,10 +10,10 @@ service Msg {
 
   rpc CreateRewardProgram(MsgCreateRewardProgramRequest) returns (MsgCreateRewardProgramResponse);
 
-  // WriteCritera
-  rpc WriteCritera(MsgWriteCriteraRequest) returns (MsgWriteCriteraResponse);
-  // AddToCritera
-  rpc AddToCritera(MsgAddToCriteraRequest) returns (MsgAddToCriteraResponse);
+  // // WriteCritera
+  // rpc WriteCritera(MsgWriteCriteraRequest) returns (MsgWriteCriteraResponse);
+  // // AddToCritera
+  // rpc AddToCritera(MsgAddToCriteraRequest) returns (MsgAddToCriteraResponse);
 }
 
 message MsgCreateRewardProgramRequest{
@@ -24,14 +24,14 @@ message MsgCreateRewardProgramResponse{
 
 }
 
-// MsgWriteCriteraRequest
-message MsgWriteCriteraRequest {}
+// // MsgWriteCriteraRequest
+// message MsgWriteCriteraRequest {}
 
-// MsgWriteCriteraResponse
-message MsgWriteCriteraResponse {}
+// // MsgWriteCriteraResponse
+// message MsgWriteCriteraResponse {}
 
-// MsgAddToCriteraRequest
-message MsgAddToCriteraRequest {}
+// // MsgAddToCriteraRequest
+// message MsgAddToCriteraRequest {}
 
-// MsgAddToCriteraResponse
-message MsgAddToCriteraResponse {}
+// // MsgAddToCriteraResponse
+// message MsgAddToCriteraResponse {}

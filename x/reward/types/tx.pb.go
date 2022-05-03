@@ -99,185 +99,28 @@ func (m *MsgCreateRewardProgramResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateRewardProgramResponse proto.InternalMessageInfo
 
-// MsgWriteCriteraRequest
-type MsgWriteCriteraRequest struct {
-}
-
-func (m *MsgWriteCriteraRequest) Reset()         { *m = MsgWriteCriteraRequest{} }
-func (m *MsgWriteCriteraRequest) String() string { return proto.CompactTextString(m) }
-func (*MsgWriteCriteraRequest) ProtoMessage()    {}
-func (*MsgWriteCriteraRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6a1c90eb8246d229, []int{2}
-}
-func (m *MsgWriteCriteraRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgWriteCriteraRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgWriteCriteraRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgWriteCriteraRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgWriteCriteraRequest.Merge(m, src)
-}
-func (m *MsgWriteCriteraRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgWriteCriteraRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgWriteCriteraRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgWriteCriteraRequest proto.InternalMessageInfo
-
-// MsgWriteCriteraResponse
-type MsgWriteCriteraResponse struct {
-}
-
-func (m *MsgWriteCriteraResponse) Reset()         { *m = MsgWriteCriteraResponse{} }
-func (m *MsgWriteCriteraResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgWriteCriteraResponse) ProtoMessage()    {}
-func (*MsgWriteCriteraResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6a1c90eb8246d229, []int{3}
-}
-func (m *MsgWriteCriteraResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgWriteCriteraResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgWriteCriteraResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgWriteCriteraResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgWriteCriteraResponse.Merge(m, src)
-}
-func (m *MsgWriteCriteraResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgWriteCriteraResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgWriteCriteraResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgWriteCriteraResponse proto.InternalMessageInfo
-
-// MsgAddToCriteraRequest
-type MsgAddToCriteraRequest struct {
-}
-
-func (m *MsgAddToCriteraRequest) Reset()         { *m = MsgAddToCriteraRequest{} }
-func (m *MsgAddToCriteraRequest) String() string { return proto.CompactTextString(m) }
-func (*MsgAddToCriteraRequest) ProtoMessage()    {}
-func (*MsgAddToCriteraRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6a1c90eb8246d229, []int{4}
-}
-func (m *MsgAddToCriteraRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgAddToCriteraRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgAddToCriteraRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgAddToCriteraRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAddToCriteraRequest.Merge(m, src)
-}
-func (m *MsgAddToCriteraRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgAddToCriteraRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAddToCriteraRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgAddToCriteraRequest proto.InternalMessageInfo
-
-// MsgAddToCriteraResponse
-type MsgAddToCriteraResponse struct {
-}
-
-func (m *MsgAddToCriteraResponse) Reset()         { *m = MsgAddToCriteraResponse{} }
-func (m *MsgAddToCriteraResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgAddToCriteraResponse) ProtoMessage()    {}
-func (*MsgAddToCriteraResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6a1c90eb8246d229, []int{5}
-}
-func (m *MsgAddToCriteraResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgAddToCriteraResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgAddToCriteraResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgAddToCriteraResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAddToCriteraResponse.Merge(m, src)
-}
-func (m *MsgAddToCriteraResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgAddToCriteraResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAddToCriteraResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgAddToCriteraResponse proto.InternalMessageInfo
-
 func init() {
 	proto.RegisterType((*MsgCreateRewardProgramRequest)(nil), "provenance.reward.v1.MsgCreateRewardProgramRequest")
 	proto.RegisterType((*MsgCreateRewardProgramResponse)(nil), "provenance.reward.v1.MsgCreateRewardProgramResponse")
-	proto.RegisterType((*MsgWriteCriteraRequest)(nil), "provenance.reward.v1.MsgWriteCriteraRequest")
-	proto.RegisterType((*MsgWriteCriteraResponse)(nil), "provenance.reward.v1.MsgWriteCriteraResponse")
-	proto.RegisterType((*MsgAddToCriteraRequest)(nil), "provenance.reward.v1.MsgAddToCriteraRequest")
-	proto.RegisterType((*MsgAddToCriteraResponse)(nil), "provenance.reward.v1.MsgAddToCriteraResponse")
 }
 
 func init() { proto.RegisterFile("provenance/reward/v1/tx.proto", fileDescriptor_6a1c90eb8246d229) }
 
 var fileDescriptor_6a1c90eb8246d229 = []byte{
-	// 278 bytes of a gzipped FileDescriptorProto
+	// 208 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x2d, 0x28, 0xca, 0x2f,
 	0x4b, 0xcd, 0x4b, 0xcc, 0x4b, 0x4e, 0xd5, 0x2f, 0x4a, 0x2d, 0x4f, 0x2c, 0x4a, 0xd1, 0x2f, 0x33,
 	0xd4, 0x2f, 0xa9, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x41, 0x48, 0xeb, 0x41, 0xa4,
 	0xf5, 0xca, 0x0c, 0x95, 0xe4, 0xb9, 0x64, 0x7d, 0x8b, 0xd3, 0x9d, 0x8b, 0x52, 0x13, 0x4b, 0x52,
 	0x83, 0xc0, 0xa2, 0x01, 0x45, 0xf9, 0xe9, 0x45, 0x89, 0xb9, 0x41, 0xa9, 0x85, 0xa5, 0xa9, 0xc5,
-	0x25, 0x4a, 0x0a, 0x5c, 0x72, 0xb8, 0x14, 0x14, 0x17, 0xe4, 0xe7, 0x15, 0xa7, 0x2a, 0x49, 0x70,
-	0x89, 0xf9, 0x16, 0xa7, 0x87, 0x17, 0x65, 0x96, 0xa4, 0x3a, 0x83, 0x88, 0xa2, 0x44, 0x98, 0x5e,
-	0x49, 0x2e, 0x71, 0x0c, 0x19, 0x14, 0x4d, 0x8e, 0x29, 0x29, 0x21, 0xf9, 0x58, 0x35, 0xa1, 0xca,
-	0x40, 0x34, 0x19, 0x3d, 0x62, 0xe2, 0x62, 0xf6, 0x2d, 0x4e, 0x17, 0x6a, 0x60, 0xe4, 0x12, 0xc6,
-	0xe2, 0x22, 0x21, 0x63, 0x3d, 0x6c, 0x7e, 0xd4, 0xc3, 0xeb, 0x41, 0x29, 0x13, 0xd2, 0x34, 0x41,
-	0x9c, 0x22, 0x94, 0xcd, 0xc5, 0x83, 0xec, 0x2f, 0x21, 0x1d, 0x9c, 0xa6, 0x60, 0x09, 0x18, 0x29,
-	0x5d, 0x22, 0x55, 0x23, 0x2c, 0x43, 0x0e, 0x0f, 0x3c, 0x96, 0x61, 0x09, 0x50, 0x3c, 0x96, 0x61,
-	0x0b, 0x64, 0xa7, 0xf4, 0x13, 0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e,
-	0x71, 0xc2, 0x63, 0x39, 0x86, 0x0b, 0x8f, 0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0xe0, 0x12, 0xcf,
-	0xcc, 0xc7, 0x6a, 0x54, 0x00, 0x63, 0x94, 0x51, 0x7a, 0x66, 0x49, 0x46, 0x69, 0x92, 0x5e, 0x72,
-	0x7e, 0xae, 0x3e, 0x42, 0x89, 0x6e, 0x66, 0x3e, 0x12, 0x4f, 0xbf, 0x02, 0x96, 0x2c, 0x4b, 0x2a,
-	0x0b, 0x52, 0x8b, 0x93, 0xd8, 0xc0, 0xe9, 0xd2, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0x98, 0x3c,
-	0xff, 0x82, 0xb8, 0x02, 0x00, 0x00,
+	0x25, 0x4a, 0x0a, 0x5c, 0x72, 0xb8, 0x14, 0x14, 0x17, 0xe4, 0xe7, 0x15, 0xa7, 0x1a, 0x75, 0x30,
+	0x72, 0x31, 0xfb, 0x16, 0xa7, 0x0b, 0x35, 0x30, 0x72, 0x09, 0x63, 0x51, 0x27, 0x64, 0xac, 0x87,
+	0xcd, 0x66, 0x3d, 0xbc, 0xd6, 0x4a, 0x99, 0x90, 0xa6, 0x09, 0xe2, 0x14, 0xa7, 0xf4, 0x13, 0x8f,
+	0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71, 0xc2, 0x63, 0x39, 0x86, 0x0b,
+	0x8f, 0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0xe0, 0x12, 0xcf, 0xcc, 0xc7, 0x6a, 0x62, 0x00, 0x63,
+	0x94, 0x51, 0x7a, 0x66, 0x49, 0x46, 0x69, 0x92, 0x5e, 0x72, 0x7e, 0xae, 0x3e, 0x42, 0x89, 0x6e,
+	0x66, 0x3e, 0x12, 0x4f, 0xbf, 0x02, 0x16, 0xa4, 0x25, 0x95, 0x05, 0xa9, 0xc5, 0x49, 0x6c, 0xe0,
+	0x30, 0x35, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0xa5, 0x82, 0x9b, 0x80, 0x74, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -293,10 +136,6 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
 	CreateRewardProgram(ctx context.Context, in *MsgCreateRewardProgramRequest, opts ...grpc.CallOption) (*MsgCreateRewardProgramResponse, error)
-	// WriteCritera
-	WriteCritera(ctx context.Context, in *MsgWriteCriteraRequest, opts ...grpc.CallOption) (*MsgWriteCriteraResponse, error)
-	// AddToCritera
-	AddToCritera(ctx context.Context, in *MsgAddToCriteraRequest, opts ...grpc.CallOption) (*MsgAddToCriteraResponse, error)
 }
 
 type msgClient struct {
@@ -316,31 +155,9 @@ func (c *msgClient) CreateRewardProgram(ctx context.Context, in *MsgCreateReward
 	return out, nil
 }
 
-func (c *msgClient) WriteCritera(ctx context.Context, in *MsgWriteCriteraRequest, opts ...grpc.CallOption) (*MsgWriteCriteraResponse, error) {
-	out := new(MsgWriteCriteraResponse)
-	err := c.cc.Invoke(ctx, "/provenance.reward.v1.Msg/WriteCritera", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) AddToCritera(ctx context.Context, in *MsgAddToCriteraRequest, opts ...grpc.CallOption) (*MsgAddToCriteraResponse, error) {
-	out := new(MsgAddToCriteraResponse)
-	err := c.cc.Invoke(ctx, "/provenance.reward.v1.Msg/AddToCritera", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	CreateRewardProgram(context.Context, *MsgCreateRewardProgramRequest) (*MsgCreateRewardProgramResponse, error)
-	// WriteCritera
-	WriteCritera(context.Context, *MsgWriteCriteraRequest) (*MsgWriteCriteraResponse, error)
-	// AddToCritera
-	AddToCritera(context.Context, *MsgAddToCriteraRequest) (*MsgAddToCriteraResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -349,12 +166,6 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) CreateRewardProgram(ctx context.Context, req *MsgCreateRewardProgramRequest) (*MsgCreateRewardProgramResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateRewardProgram not implemented")
-}
-func (*UnimplementedMsgServer) WriteCritera(ctx context.Context, req *MsgWriteCriteraRequest) (*MsgWriteCriteraResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method WriteCritera not implemented")
-}
-func (*UnimplementedMsgServer) AddToCritera(ctx context.Context, req *MsgAddToCriteraRequest) (*MsgAddToCriteraResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddToCritera not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -379,42 +190,6 @@ func _Msg_CreateRewardProgram_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_WriteCritera_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgWriteCriteraRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).WriteCritera(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/provenance.reward.v1.Msg/WriteCritera",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).WriteCritera(ctx, req.(*MsgWriteCriteraRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_AddToCritera_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgAddToCriteraRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).AddToCritera(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/provenance.reward.v1.Msg/AddToCritera",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).AddToCritera(ctx, req.(*MsgAddToCriteraRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "provenance.reward.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -422,14 +197,6 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateRewardProgram",
 			Handler:    _Msg_CreateRewardProgram_Handler,
-		},
-		{
-			MethodName: "WriteCritera",
-			Handler:    _Msg_WriteCritera_Handler,
-		},
-		{
-			MethodName: "AddToCritera",
-			Handler:    _Msg_AddToCritera_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -482,98 +249,6 @@ func (m *MsgCreateRewardProgramResponse) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgWriteCriteraRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgWriteCriteraRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgWriteCriteraRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgWriteCriteraResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgWriteCriteraResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgWriteCriteraResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgAddToCriteraRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgAddToCriteraRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgAddToCriteraRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgAddToCriteraResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgAddToCriteraResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgAddToCriteraResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -595,42 +270,6 @@ func (m *MsgCreateRewardProgramRequest) Size() (n int) {
 }
 
 func (m *MsgCreateRewardProgramResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *MsgWriteCriteraRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *MsgWriteCriteraResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *MsgAddToCriteraRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *MsgAddToCriteraResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -722,206 +361,6 @@ func (m *MsgCreateRewardProgramResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgCreateRewardProgramResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgWriteCriteraRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgWriteCriteraRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgWriteCriteraRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgWriteCriteraResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgWriteCriteraResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgWriteCriteraResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgAddToCriteraRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgAddToCriteraRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgAddToCriteraRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgAddToCriteraResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgAddToCriteraResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgAddToCriteraResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
