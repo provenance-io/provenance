@@ -132,7 +132,6 @@ import (
 	epochkeeper "github.com/provenance-io/provenance/x/epoch/keeper"
 	epochtypes "github.com/provenance-io/provenance/x/epoch/types"
 
-	"github.com/provenance-io/provenance/x/reward"
 	rewardkeeper "github.com/provenance-io/provenance/x/reward/keeper"
 	rewardmodule "github.com/provenance-io/provenance/x/reward/module"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
@@ -521,8 +520,8 @@ func New(
 		AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.WasmKeeper, wasm.EnableAllProposals)).
 		AddRoute(nametypes.ModuleName, name.NewProposalHandler(app.NameKeeper)).
 		AddRoute(markertypes.ModuleName, marker.NewProposalHandler(app.MarkerKeeper)).
-		AddRoute(msgfeestypes.ModuleName, msgfees.NewProposalHandler(app.MsgFeesKeeper, app.InterfaceRegistry())).
-		AddRoute(rewardtypes.ModuleName, reward.NewProposalHandler(app.RewardKeeper, app.InterfaceRegistry()))
+		AddRoute(msgfeestypes.ModuleName, msgfees.NewProposalHandler(app.MsgFeesKeeper, app.InterfaceRegistry()))
+	//AddRoute(rewardtypes.ModuleName, reward.NewProposalHandler(app.RewardKeeper, app.InterfaceRegistry()))
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, govRouter,

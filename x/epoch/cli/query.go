@@ -2,8 +2,9 @@ package cli
 
 import (
 	"fmt"
-	"github.com/provenance-io/provenance/x/epoch/types"
 	"strings"
+
+	"github.com/provenance-io/provenance/x/epoch/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

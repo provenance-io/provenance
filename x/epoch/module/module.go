@@ -3,12 +3,13 @@ package epoch
 import (
 	"context"
 	"encoding/json"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/provenance-io/provenance/x/epoch/simulation"
 	"math/rand"
 
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+
+	"github.com/provenance-io/provenance/x/epoch/simulation"
+
 	epochModule "github.com/provenance-io/provenance/x/epoch"
-	cli "github.com/provenance-io/provenance/x/epoch/client/cli"
 	"github.com/provenance-io/provenance/x/epoch/keeper"
 	epoch "github.com/provenance-io/provenance/x/epoch/types"
 
@@ -25,8 +26,8 @@ import (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the epoch module.
@@ -82,7 +83,7 @@ func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, m
 
 // GetQueryCmd returns the cli query commands for the epoch module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
+	return nil
 }
 
 // GetTxCmd returns the transaction commands for the epoch module
@@ -156,7 +157,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState epoch.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	epochModule.InitGenesis(ctx,am.keeper, genesisState)
+	epochModule.InitGenesis(ctx, am.keeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

@@ -141,7 +141,7 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 
 func (k Keeper) EvaluateTransferAndCheckDelegation(ctx sdk.Context) ([]EvaluationResult, error) {
 	result := ([]EvaluationResult)(nil)
-	evaluateRes, err := k.EvaluateSearchEvents(ctx, "transfer", "sender")
+	/*evaluateRes, err := k.EvaluateSearchEvents(ctx, "transfer", "sender")
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +149,7 @@ func (k Keeper) EvaluateTransferAndCheckDelegation(ctx sdk.Context) ([]Evaluatio
 		if len(k.CheckActiveDelegations(ctx, s.address)) > 0 {
 			result = append(result, s)
 		}
-	}
+	}*/
 	return result, nil
 }
 

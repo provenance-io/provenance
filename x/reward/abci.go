@@ -25,7 +25,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	// only rewards programs who are eligible will be iterated through here
 	// Step 2
 	for _, rewardProgram := range rewardPrograms {
-		epochRewardDistributionForEpoch, err := k.GetEpochRewardDistribution(ctx, rewardProgram.EpochId, rewardProgram.Id)
+		epochRewardDistributionForEpoch, err := k.GetEpochRewardDistribution(ctx, "", rewardProgram.Id)
+		//epochRewardDistributionForEpoch, err := k.GetEpochRewardDistribution(ctx, rewardProgram.EpochId, rewardProgram.Id)
 		if err != nil {
 			continue
 		}
@@ -35,7 +36,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		//currentEpoch := k.EpochKeeper.GetEpochInfo(ctx, rewardProgram.EpochId)
 		// epoch reward distribution does it exist till the block has ended, highly unlikely but could happen
 		if epochRewardDistributionForEpoch.EpochId == "" {
-			epochRewardDistributionForEpoch.EpochId = rewardProgram.EpochId
+			epochRewardDistributionForEpoch.EpochId = ""
+			//epochRewardDistributionForEpoch.EpochId = rewardProgram.EpochId
 			epochRewardDistributionForEpoch.RewardProgramId = rewardProgram.Id
 			epochRewardDistributionForEpoch.TotalShares = 0
 			epochRewardDistributionForEpoch.TotalRewardsPool = rewardProgram.Coin
