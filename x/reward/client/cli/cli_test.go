@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -17,7 +16,6 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/testutil"
 
-	epochtypes "github.com/provenance-io/provenance/x/epoch/types"
 	rewardcli "github.com/provenance-io/provenance/x/reward/client/cli"
 	"github.com/provenance-io/provenance/x/reward/types"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
@@ -48,18 +46,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	genesisState := s.cfg.GenesisState
 	s.cfg.NumValidators = 1
-
-	epochData := epochtypes.NewGenesisState([]epochtypes.EpochInfo{
-		{Identifier: "minute",
-			StartHeight:             0,
-			Duration:                uint64((60) / 5),
-			CurrentEpoch:            0,
-			CurrentEpochStartHeight: 0,
-		},
-	})
-	epochDataBz, err := s.cfg.Codec.MarshalJSON(epochData)
-	s.Require().NoError(err)
-	genesisState[epochtypes.ModuleName] = epochDataBz
 
 	rewardData := rewardtypes.NewGenesisState(
 		[]rewardtypes.RewardProgram{
@@ -465,240 +451,240 @@ func (s *IntegrationTestSuite) TestQueryEligibilityCriteria() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestCmdRewardProgramProposal() {
-	testCases := []struct {
-		name         string
-		args         []string
-		expectErr    bool
-		expectErrMsg string
-		expectedCode uint32
-	}{
-		{"add reward program proposal - valid",
-			[]string{
-				"add",
-				"test add reward program",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				fmt.Sprintf("--coin=580%s", s.cfg.BondDenom),
-				"--reward-program-id=1",
-				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
-				"--epoch-id=minute",
-				"--epoch-offset=100",
-				"--num-epochs=10",
-				"--minimum=3",
-				"--maximum=10",
-				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
-			},
-			false,
-			"",
-			0,
-		},
-		{"add reward program proposal - invalid reward id",
-			[]string{
-				"add",
-				"test add reward program",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--coin=580nhash",
-				"--reward-program-id=invalid",
-				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
-				"--epoch-id=day",
-				"--epoch-offset=100",
-				"--num-epochs=10",
-				"--minimum=3",
-				"--maximum=10",
-				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
-			},
-			true,
-			"invalid argument \"invalid\" for \"--reward-program-id\" flag: strconv.ParseUint: parsing \"invalid\": invalid syntax",
-			0,
-		},
-		{"add reward program proposal - invalid coin",
-			[]string{
-				"add",
-				"test add reward program",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--coin=invalid",
-				"--reward-program-id=1",
-				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
-				"--epoch-id=day",
-				"--epoch-offset=100",
-				"--num-epochs=10",
-				"--minimum=3",
-				"--maximum=10",
-				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
-			},
-			true,
-			"invalid decimal coin expression: invalid",
-			0,
-		},
-		{"add reward program proposal - invalid dist address",
-			[]string{
-				"add",
-				"test add reward program",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--coin=580nhash",
-				"--reward-program-id=1",
-				"--dist-address=invalid",
-				"--epoch-id=day",
-				"--epoch-offset=100",
-				"--num-epochs=10",
-				"--minimum=3",
-				"--maximum=10",
-				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
-			},
-			true,
-			"invalid address for rewards program distribution from address: decoding bech32 failed: invalid bech32 string length 7",
-			0,
-		},
-		{"add reward program proposal - invalid action",
-			[]string{
-				"invalid",
-				"test add reward program",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--coin=580nhash",
-				"--reward-program-id=1",
-				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
-				"--epoch-id=invalid",
-				"--epoch-offset=100",
-				"--num-epochs=10",
-				"--minimum=3",
-				"--maximum=10",
-				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
-			},
-			true,
-			"unknown proposal type : invalid",
-			0,
-		},
-		{"add reward program proposal - invalid epoch offset",
-			[]string{
-				"add",
-				"test add reward program",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--coin=580nhash",
-				"--reward-program-id=1",
-				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
-				"--epoch-id=day",
-				"--epoch-offset=invalid",
-				"--num-epochs=10",
-				"--minimum=3",
-				"--maximum=10",
-				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
-			},
-			true,
-			"invalid argument \"invalid\" for \"--epoch-offset\" flag: strconv.ParseUint: parsing \"invalid\": invalid syntax",
-			0,
-		},
-		{"add reward program proposal - invalid num epochs",
-			[]string{
-				"add",
-				"test add reward program",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--coin=580nhash",
-				"--reward-program-id=1",
-				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
-				"--epoch-id=day",
-				"--epoch-offset=100",
-				"--num-epochs=invalid",
-				"--minimum=3",
-				"--maximum=10",
-				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
-			},
-			true,
-			"invalid argument \"invalid\" for \"--num-epochs\" flag: strconv.ParseUint: parsing \"invalid\": invalid syntax",
-			0,
-		},
-		{"add reward program proposal - invalid minimum",
-			[]string{
-				"add",
-				"test add reward program",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--coin=580nhash",
-				"--reward-program-id=1",
-				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
-				"--epoch-id=day",
-				"--epoch-offset=100",
-				"--num-epochs=10",
-				"--minimum=invalid",
-				"--maximum=10",
-				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
-			},
-			true,
-			"invalid argument \"invalid\" for \"--minimum\" flag: strconv.ParseUint: parsing \"invalid\": invalid syntax",
-			0,
-		},
-		{"add reward program proposal - invalid maximum",
-			[]string{
-				"add",
-				"test add reward program",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--coin=580nhash",
-				"--reward-program-id=1",
-				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
-				"--epoch-id=day",
-				"--epoch-offset=100",
-				"--num-epochs=10",
-				"--minimum=3",
-				"--maximum=invalid",
-				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
-			},
-			true,
-			"invalid argument \"invalid\" for \"--maximum\" flag: strconv.ParseUint: parsing \"invalid\": invalid syntax",
-			0,
-		},
-		{"add reward program proposal - invalid eligibility criteria",
-			[]string{
-				"add",
-				"test add reward program",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--coin=580nhash",
-				"--reward-program-id=1",
-				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
-				"--epoch-id=day",
-				"--epoch-offset=100",
-				"--num-epochs=10",
-				"--minimum=3",
-				"--maximum=10",
-				"--eligibility-criteria=invalid",
-			},
-			true,
-			"unable to parse eligibility criteria : invalid character 'i' looking for beginning of value",
-			0,
-		},
-	}
+// func (s *IntegrationTestSuite) TestCmdRewardProgramProposal() {
+// 	testCases := []struct {
+// 		name         string
+// 		args         []string
+// 		expectErr    bool
+// 		expectErrMsg string
+// 		expectedCode uint32
+// 	}{
+// 		{"add reward program proposal - valid",
+// 			[]string{
+// 				"add",
+// 				"test add reward program",
+// 				"description",
+// 				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+// 				fmt.Sprintf("--coin=580%s", s.cfg.BondDenom),
+// 				"--reward-program-id=1",
+// 				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
+// 				"--epoch-id=minute",
+// 				"--epoch-offset=100",
+// 				"--num-epochs=10",
+// 				"--minimum=3",
+// 				"--maximum=10",
+// 				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
+// 			},
+// 			false,
+// 			"",
+// 			0,
+// 		},
+// 		{"add reward program proposal - invalid reward id",
+// 			[]string{
+// 				"add",
+// 				"test add reward program",
+// 				"description",
+// 				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+// 				"--coin=580nhash",
+// 				"--reward-program-id=invalid",
+// 				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
+// 				"--epoch-id=day",
+// 				"--epoch-offset=100",
+// 				"--num-epochs=10",
+// 				"--minimum=3",
+// 				"--maximum=10",
+// 				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
+// 			},
+// 			true,
+// 			"invalid argument \"invalid\" for \"--reward-program-id\" flag: strconv.ParseUint: parsing \"invalid\": invalid syntax",
+// 			0,
+// 		},
+// 		{"add reward program proposal - invalid coin",
+// 			[]string{
+// 				"add",
+// 				"test add reward program",
+// 				"description",
+// 				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+// 				"--coin=invalid",
+// 				"--reward-program-id=1",
+// 				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
+// 				"--epoch-id=day",
+// 				"--epoch-offset=100",
+// 				"--num-epochs=10",
+// 				"--minimum=3",
+// 				"--maximum=10",
+// 				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
+// 			},
+// 			true,
+// 			"invalid decimal coin expression: invalid",
+// 			0,
+// 		},
+// 		{"add reward program proposal - invalid dist address",
+// 			[]string{
+// 				"add",
+// 				"test add reward program",
+// 				"description",
+// 				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+// 				"--coin=580nhash",
+// 				"--reward-program-id=1",
+// 				"--dist-address=invalid",
+// 				"--epoch-id=day",
+// 				"--epoch-offset=100",
+// 				"--num-epochs=10",
+// 				"--minimum=3",
+// 				"--maximum=10",
+// 				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
+// 			},
+// 			true,
+// 			"invalid address for rewards program distribution from address: decoding bech32 failed: invalid bech32 string length 7",
+// 			0,
+// 		},
+// 		{"add reward program proposal - invalid action",
+// 			[]string{
+// 				"invalid",
+// 				"test add reward program",
+// 				"description",
+// 				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+// 				"--coin=580nhash",
+// 				"--reward-program-id=1",
+// 				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
+// 				"--epoch-id=invalid",
+// 				"--epoch-offset=100",
+// 				"--num-epochs=10",
+// 				"--minimum=3",
+// 				"--maximum=10",
+// 				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
+// 			},
+// 			true,
+// 			"unknown proposal type : invalid",
+// 			0,
+// 		},
+// 		{"add reward program proposal - invalid epoch offset",
+// 			[]string{
+// 				"add",
+// 				"test add reward program",
+// 				"description",
+// 				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+// 				"--coin=580nhash",
+// 				"--reward-program-id=1",
+// 				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
+// 				"--epoch-id=day",
+// 				"--epoch-offset=invalid",
+// 				"--num-epochs=10",
+// 				"--minimum=3",
+// 				"--maximum=10",
+// 				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
+// 			},
+// 			true,
+// 			"invalid argument \"invalid\" for \"--epoch-offset\" flag: strconv.ParseUint: parsing \"invalid\": invalid syntax",
+// 			0,
+// 		},
+// 		{"add reward program proposal - invalid num epochs",
+// 			[]string{
+// 				"add",
+// 				"test add reward program",
+// 				"description",
+// 				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+// 				"--coin=580nhash",
+// 				"--reward-program-id=1",
+// 				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
+// 				"--epoch-id=day",
+// 				"--epoch-offset=100",
+// 				"--num-epochs=invalid",
+// 				"--minimum=3",
+// 				"--maximum=10",
+// 				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
+// 			},
+// 			true,
+// 			"invalid argument \"invalid\" for \"--num-epochs\" flag: strconv.ParseUint: parsing \"invalid\": invalid syntax",
+// 			0,
+// 		},
+// 		{"add reward program proposal - invalid minimum",
+// 			[]string{
+// 				"add",
+// 				"test add reward program",
+// 				"description",
+// 				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+// 				"--coin=580nhash",
+// 				"--reward-program-id=1",
+// 				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
+// 				"--epoch-id=day",
+// 				"--epoch-offset=100",
+// 				"--num-epochs=10",
+// 				"--minimum=invalid",
+// 				"--maximum=10",
+// 				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
+// 			},
+// 			true,
+// 			"invalid argument \"invalid\" for \"--minimum\" flag: strconv.ParseUint: parsing \"invalid\": invalid syntax",
+// 			0,
+// 		},
+// 		{"add reward program proposal - invalid maximum",
+// 			[]string{
+// 				"add",
+// 				"test add reward program",
+// 				"description",
+// 				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+// 				"--coin=580nhash",
+// 				"--reward-program-id=1",
+// 				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
+// 				"--epoch-id=day",
+// 				"--epoch-offset=100",
+// 				"--num-epochs=10",
+// 				"--minimum=3",
+// 				"--maximum=invalid",
+// 				"--eligibility-criteria={\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}",
+// 			},
+// 			true,
+// 			"invalid argument \"invalid\" for \"--maximum\" flag: strconv.ParseUint: parsing \"invalid\": invalid syntax",
+// 			0,
+// 		},
+// 		{"add reward program proposal - invalid eligibility criteria",
+// 			[]string{
+// 				"add",
+// 				"test add reward program",
+// 				"description",
+// 				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+// 				"--coin=580nhash",
+// 				"--reward-program-id=1",
+// 				fmt.Sprintf("--dist-address=%s", s.network.Validators[0].Address.String()),
+// 				"--epoch-id=day",
+// 				"--epoch-offset=100",
+// 				"--num-epochs=10",
+// 				"--minimum=3",
+// 				"--maximum=10",
+// 				"--eligibility-criteria=invalid",
+// 			},
+// 			true,
+// 			"unable to parse eligibility criteria : invalid character 'i' looking for beginning of value",
+// 			0,
+// 		},
+// 	}
 
-	for _, tc := range testCases {
-		tc := tc
+// 	for _, tc := range testCases {
+// 		tc := tc
 
-		s.Run(tc.name, func() {
-			clientCtx := s.network.Validators[0].ClientCtx
+// 		s.Run(tc.name, func() {
+// 			clientCtx := s.network.Validators[0].ClientCtx
 
-			args := []string{
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.network.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			}
-			tc.args = append(tc.args, args...)
+// 			args := []string{
+// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.network.Validators[0].Address.String()),
+// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+// 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+// 			}
+// 			tc.args = append(tc.args, args...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdRewardProgramProposal(), tc.args)
-			var response sdk.TxResponse
-			marshalErr := clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response)
-			if tc.expectErr {
-				s.Assert().Error(err)
-				s.Assert().Equal(tc.expectErrMsg, err.Error())
-			} else {
-				s.Assert().NoError(err)
-				s.Assert().NoError(marshalErr, out.String())
-			}
-		})
-	}
-}
+// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdRewardProgramProposal(), tc.args)
+// 			var response sdk.TxResponse
+// 			marshalErr := clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response)
+// 			if tc.expectErr {
+// 				s.Assert().Error(err)
+// 				s.Assert().Equal(tc.expectErrMsg, err.Error())
+// 			} else {
+// 				s.Assert().NoError(err)
+// 				s.Assert().NoError(marshalErr, out.String())
+// 			}
+// 		})
+// 	}
+// }

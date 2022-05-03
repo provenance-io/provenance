@@ -58,7 +58,8 @@ service Query {
   }
 
   // returns a EligibilityCriteria by name
-  rpc EligibilityCriteriaByName(EligibilityCriteriaRequestByNameRequest) returns (EligibilityCriteriaRequestByNameResponse) {
+  rpc EligibilityCriteriaByName(EligibilityCriteriaRequestByNameRequest)
+      returns (EligibilityCriteriaRequestByNameResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/eligibility_criteria/{name}";
   }
 }
@@ -98,7 +99,7 @@ message QueryModuleAccountBalanceResponse {
 
 message RewardClaimsRequest {}
 
-message RewardClaimsResponse{
+message RewardClaimsResponse {
   repeated RewardClaim reward_claims = 1 [(gogoproto.nullable) = false];
 }
 
@@ -117,14 +118,14 @@ message EpochRewardDistributionResponse {
 
 message EpochRewardDistributionByIDRequest {
   uint64 rewardId = 1;
-  string epochId = 2;
+  string epochId  = 2;
 }
 
 message EpochRewardDistributionByIDResponse {
   EpochRewardDistribution epoch_reward_distribution = 1;
 }
 
-message EligibilityCriteriaRequest{}
+message EligibilityCriteriaRequest {}
 message EligibilityCriteriaResponse {
   repeated EligibilityCriteria eligibility_criteria = 1 [(gogoproto.nullable) = false];
 }

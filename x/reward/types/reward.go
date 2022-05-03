@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	fmt "fmt"
+	time "time"
 
 	// "github.com/gogo/protobuf/proto"
 	"gopkg.in/yaml.v2"
@@ -37,24 +38,24 @@ func NewRewardProgram(
 	distributeFromAddress string,
 	coin sdk.Coin,
 	maxRewardByAddress sdk.Coin,
-	epochId string,
-	startEpoch uint64,
+	programStartTime time.Time,
+	epochEndTime time.Time,
+	epochType string,
 	numberEpochs uint64,
 	eligibilityCriteria EligibilityCriteria,
 	expired bool,
-	minimum uint64,
-	maximum uint64,
 ) RewardProgram {
 	return RewardProgram{
 		Id:                    id,
 		DistributeFromAddress: distributeFromAddress,
 		Coin:                  coin,
 		MaxRewardByAddress:    maxRewardByAddress,
+		ProgramStartTime:      programStartTime,
+		EpochEndTime:          epochEndTime,
+		EpochType:             epochType,
 		NumberEpochs:          numberEpochs,
 		EligibilityCriteria:   eligibilityCriteria,
 		Expired:               expired,
-		Minimum:               minimum,
-		Maximum:               maximum,
 	}
 }
 
@@ -70,12 +71,6 @@ func (rp *RewardProgram) ValidateBasic() error {
 	}
 	if !rp.MaxRewardByAddress.IsPositive() {
 		return fmt.Errorf("reward program requires positive max reward by address: %v", rp.MaxRewardByAddress)
-	}
-	if rp.Maximum == 0 {
-		return errors.New("maximum must be larger than 0")
-	}
-	if rp.Minimum > rp.Maximum {
-		return fmt.Errorf("minimum (%v) cannot be larger than the maximum (%v)", rp.Minimum, rp.Maximum)
 	}
 	return nil
 }

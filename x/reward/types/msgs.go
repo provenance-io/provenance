@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -24,6 +25,7 @@ func (msg MsgCreateRewardProgramRequest) Type() string { return TypeMsgCreateRew
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgCreateRewardProgramRequest) ValidateBasic() error {
+
 	return nil
 }
 
@@ -39,4 +41,10 @@ func (msg MsgCreateRewardProgramRequest) GetSigners() []sdk.AccAddress {
 	// 	panic(err)
 	// }
 	return []sdk.AccAddress{}
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgCreateRewardProgramRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
 }
