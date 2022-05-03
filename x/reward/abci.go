@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/x/reward/keeper"
 )
 
@@ -28,7 +29,10 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		if err != nil {
 			continue
 		}
-		currentEpoch := k.EpochKeeper.GetEpochInfo(ctx, rewardProgram.EpochId)
+
+		// TODO We removed epoch so I am using 0 to just get it to compile
+		currentEpoch := uint64(0)
+		//currentEpoch := k.EpochKeeper.GetEpochInfo(ctx, rewardProgram.EpochId)
 		// epoch reward distribution does it exist till the block has ended, highly unlikely but could happen
 		if epochRewardDistributionForEpoch.EpochId == "" {
 			epochRewardDistributionForEpoch.EpochId = rewardProgram.EpochId
@@ -36,10 +40,10 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 			epochRewardDistributionForEpoch.TotalShares = 0
 			epochRewardDistributionForEpoch.TotalRewardsPool = rewardProgram.Coin
 			epochRewardDistributionForEpoch.EpochEnded = false
-			k.EvaluateRules(ctx, currentEpoch.CurrentEpoch, rewardProgram, epochRewardDistributionForEpoch)
+			k.EvaluateRules(ctx, currentEpoch, rewardProgram, epochRewardDistributionForEpoch)
 		} else if epochRewardDistributionForEpoch.EpochEnded == false { // if hook epoch end has already been called, this should not get called.
 			// end the epoch
-			k.EvaluateRules(ctx, currentEpoch.CurrentEpoch, rewardProgram, epochRewardDistributionForEpoch)
+			k.EvaluateRules(ctx, currentEpoch, rewardProgram, epochRewardDistributionForEpoch)
 		}
 	}
 }

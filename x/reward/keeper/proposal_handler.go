@@ -6,7 +6,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	epochtypes "github.com/provenance-io/provenance/x/epoch/types"
+	//epochtypes "github.com/provenance-io/provenance/x/epoch/types"
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
@@ -15,13 +15,16 @@ func HandleAddRewardProgramProposal(ctx sdk.Context, k Keeper, proposal *types.A
 	if err := proposal.ValidateBasic(); err != nil {
 		return err
 	}
-	epochInfo := k.EpochKeeper.GetEpochInfo(ctx, proposal.EpochId)
+	/*epochInfo := k.EpochKeeper.GetEpochInfo(ctx, proposal.EpochId)
 	if (epochInfo == epochtypes.EpochInfo{}) {
 		return fmt.Errorf("invalid epoch identifier: %s", proposal.EpochId)
-	}
+	}*/
 
 	// calculate the start epoch from current epoch + proposal offset height
-	startEpoch := uint64(epochInfo.CurrentEpoch) + proposal.EpochStartOffset
+	//startEpoch := uint64(epochInfo.CurrentEpoch) + proposal.EpochStartOffset
+
+	// TODO - We are moving away from epoch module. This should be related to block time
+	startEpoch := proposal.EpochStartOffset
 
 	rewardProgram := types.NewRewardProgram(proposal.RewardProgramId,
 		proposal.DistributeFromAddress,

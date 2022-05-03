@@ -9,7 +9,6 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	epochkeeper "github.com/provenance-io/provenance/x/epoch/keeper"
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
@@ -18,7 +17,6 @@ const StoreKey = types.ModuleName
 type Keeper struct {
 	storeKey      sdk.StoreKey
 	cdc           codec.BinaryCodec
-	EpochKeeper   epochkeeper.Keeper
 	stakingKeeper types.StakingKeeper
 	govKeeper     *govkeeper.Keeper
 	bankKeeper    bankkeeper.Keeper
@@ -28,7 +26,6 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	key sdk.StoreKey,
-	epochKeeper epochkeeper.Keeper,
 	stakingKeeper types.StakingKeeper,
 	govKeeper *govkeeper.Keeper,
 	bankKeeper bankkeeper.Keeper,
@@ -37,7 +34,6 @@ func NewKeeper(
 	return Keeper{
 		storeKey:      key,
 		cdc:           cdc,
-		EpochKeeper:   epochKeeper,
 		stakingKeeper: stakingKeeper,
 		govKeeper:     govKeeper,
 		bankKeeper:    bankKeeper,
