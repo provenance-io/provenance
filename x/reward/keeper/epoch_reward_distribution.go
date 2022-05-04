@@ -62,3 +62,15 @@ func (k Keeper) GetAllEpochRewardDistributions(sdkCtx sdk.Context) ([]types.Epoc
 func (k Keeper) EpochRewardDistributionIsValid(epochReward *types.EpochRewardDistribution) bool {
 	return epochReward.RewardProgramId != 0
 }
+
+// Removes an EpochRewardDistribution
+func (k Keeper) RemoveEpochRewardDistribution(ctx sdk.Context, epochId string, rewardId uint64) bool {
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetEpochRewardDistributionKey(epochId, fmt.Sprintf("%d", rewardId))
+	bz := store.Get(key)
+	keyExists := store.Has(bz)
+	if keyExists {
+		store.Delete(bz)
+	}
+	return keyExists
+}

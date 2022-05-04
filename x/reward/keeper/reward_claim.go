@@ -62,7 +62,7 @@ func (k Keeper) RewardClaimIsValid(rewardClaim *types.RewardClaim) bool {
 }
 
 // Removes a RewardClaim
-func (k Keeper) RemoveRewardClaim(sdkCtx sdk.Context, addr string) bool {
+func (k Keeper) RemoveRewardClaim(ctx sdk.Context, addr string) bool {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRewardClaimsKey([]byte(addr))
 	bz := store.Get(key)
