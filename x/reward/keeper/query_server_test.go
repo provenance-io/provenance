@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	gocontext "context"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -320,7 +321,7 @@ func newRewardProgram(coinName string, id uint64, start uint64) *types.RewardPro
 	coin := sdk.NewInt64Coin(coinName, 10000)
 	maxCoin := sdk.NewInt64Coin(coinName, 100)
 
-	rewardProgram := types.NewRewardProgram(id, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, "day", start, 2, types.NewEligibilityCriteria("criteria", &action), false, 1, 10)
+	rewardProgram := types.NewRewardProgram(id, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, time.Now().UTC(), time.Now().Add(time.Hour+24), "day", 2, types.NewEligibilityCriteria("criteria", &action), false)
 
 	return &rewardProgram
 }

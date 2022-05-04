@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
@@ -51,8 +52,10 @@ func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
 	coin := sdk.NewInt64Coin("jackthecat", 10000)
 	maxCoin := sdk.NewInt64Coin("jackthecat", 100)
 	var rewardData types.GenesisState
+	now := time.Now().UTC()
+	nextEpochTime := now.Add(time.Hour + 24)
 	rewardData.RewardPrograms = []types.RewardProgram{
-		types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, "day", 1, 10, types.NewEligibilityCriteria("criteria", &action), false, 1, 10),
+		types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, now, nextEpochTime, "day", 10, types.NewEligibilityCriteria("criteria", &action), false),
 	}
 	sharesPerEpoch := types.SharesPerEpochPerRewardsProgram{RewardProgramId: 1, TotalShares: 2, LatestRecordedEpoch: 1000, Claimed: false, Expired: false, TotalRewardClaimed: coin}
 	rewardData.RewardClaims = []types.RewardClaim{types.NewRewardClaim("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", []types.SharesPerEpochPerRewardsProgram{sharesPerEpoch})}
@@ -68,7 +71,7 @@ func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
 	s.Assert().NotPanics(func() { s.app.RewardKeeper.ExportGenesis(s.ctx) })
 
 	rewardData.RewardPrograms = []types.RewardProgram{
-		types.NewRewardProgram(1, "", sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 10), "day", 1, 10, types.NewEligibilityCriteria("criteria", &action), false, 1, 10),
+		types.NewRewardProgram(1, "", sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 10), time.Now().UTC(), time.Now().Add(time.Hour+24), "day", 10, types.NewEligibilityCriteria("criteria", &action), false),
 	}
 
 	s.Assert().Panics(func() { s.app.RewardKeeper.InitGenesis(s.ctx, &rewardData) })
@@ -80,14 +83,16 @@ func (s *KeeperTestSuite) TestCheckRewardProgramExpired() {
 	action := types.NewActionDelegate()
 	coin := sdk.NewInt64Coin("hotdog", 10000)
 	maxCoin := sdk.NewInt64Coin("hotdog", 100)
-	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, "day", 1, 10, types.NewEligibilityCriteria("criteria", &action), false, 1, 10)
+	now := time.Now().UTC()
+	nextEpochTime := now.Add(time.Hour + 24)
+	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, now, nextEpochTime, "day", 10, types.NewEligibilityCriteria("criteria", &action), false)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 	rewardProgramGet, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
 	s.Assert().NoError(err)
 
 	s.Assert().Equal(rewardProgram.Coin, rewardProgramGet.Coin)
 	s.Assert().Equal(rewardProgram.Coin, rewardProgramGet.Coin)
-	s.Assert().Equal(rewardProgram.StartEpoch, rewardProgramGet.StartEpoch)
+	s.Assert().Equal(rewardProgram.ProgramStartTime, rewardProgramGet.ProgramStartTime)
 	s.Assert().Equal(rewardProgram.Id, rewardProgramGet.Id)
 	s.Assert().Equal(rewardProgram.EligibilityCriteria.Action.TypeUrl, rewardProgramGet.EligibilityCriteria.Action.TypeUrl)
 	s.Assert().Equal(rewardProgram.Expired, false)
@@ -101,7 +106,7 @@ func (s *KeeperTestSuite) TestCheckRewardProgramExpired() {
 	rewardProgramGet, err = s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
 	s.Assert().Equal(rewardProgram.Coin, rewardProgramGet.Coin)
 	s.Assert().Equal(rewardProgram.Coin, rewardProgramGet.Coin)
-	s.Assert().Equal(rewardProgram.StartEpoch, rewardProgramGet.StartEpoch)
+	s.Assert().Equal(rewardProgram.ProgramStartTime, rewardProgramGet.ProgramStartTime)
 	s.Assert().Equal(rewardProgram.Id, rewardProgramGet.Id)
 	s.Assert().Equal(rewardProgram.EligibilityCriteria.Action.TypeUrl, rewardProgramGet.EligibilityCriteria.Action.TypeUrl)
 	s.Assert().Equal(rewardProgramGet.Expired, true)
@@ -113,13 +118,16 @@ func (s *KeeperTestSuite) TestCreateRewardClaim() {
 	action := types.NewActionDelegate()
 	coin := sdk.NewInt64Coin("hotdog", 10000)
 	maxCoin := sdk.NewInt64Coin("hotdog", 100)
-	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, "day", 1, 10, types.NewEligibilityCriteria("criteria", &action), false, 0, 10)
+	now := time.Now().UTC()
+	nextEpochTime := now.Add(time.Hour + 24)
+	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, now, nextEpochTime, "day", 10, types.NewEligibilityCriteria("criteria", &action), false)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 	rewardProgramGet, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
 	s.Assert().NoError(err)
 
 	s.Assert().Equal(rewardProgram.Coin, rewardProgramGet.Coin)
-	s.Assert().Equal(rewardProgram.StartEpoch, rewardProgramGet.StartEpoch)
+	s.Assert().Equal(rewardProgram.MaxRewardByAddress, rewardProgramGet.MaxRewardByAddress)
+	s.Assert().Equal(rewardProgram.ProgramStartTime, rewardProgramGet.ProgramStartTime)
 	s.Assert().Equal(rewardProgram.Id, rewardProgramGet.Id)
 	s.Assert().Equal(rewardProgram.EligibilityCriteria.Action.TypeUrl, rewardProgramGet.EligibilityCriteria.Action.TypeUrl)
 	s.Assert().Equal(false, rewardProgram.Expired)
@@ -236,13 +244,15 @@ func (s *KeeperTestSuite) TestCreateRewardClaim_1() {
 	action := types.NewActionDelegate()
 	coin := sdk.NewInt64Coin("hotdog", 10000)
 	maxCoin := sdk.NewInt64Coin("hotdog", 100)
-	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, "day", 1, 10, types.NewEligibilityCriteria("criteria", &action), false, 0, 10)
+	now := time.Now().UTC()
+	nextEpochTime := now.Add(time.Hour + 24)
+	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, now, nextEpochTime, "day", 10, types.NewEligibilityCriteria("criteria", &action), false)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 	rewardProgramGet, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
 	s.Assert().NoError(err)
 
 	s.Assert().Equal(rewardProgram.Coin, rewardProgramGet.Coin)
-	s.Assert().Equal(rewardProgram.StartEpoch, rewardProgramGet.StartEpoch)
+	s.Assert().Equal(rewardProgram.ProgramStartTime, rewardProgramGet.ProgramStartTime)
 	s.Assert().Equal(rewardProgram.Id, rewardProgramGet.Id)
 	s.Assert().Equal(rewardProgram.EligibilityCriteria.Action.TypeUrl, rewardProgramGet.EligibilityCriteria.Action.TypeUrl)
 	s.Assert().Equal(rewardProgram.Expired, false)
@@ -316,13 +326,15 @@ func (s *KeeperTestSuite) TestCreateRewardClaimTestMin() {
 	action := types.NewActionDelegate()
 	coin := sdk.NewInt64Coin("hotdog", 10000)
 	maxCoin := sdk.NewInt64Coin("hotdog", 100)
-	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, "day", 1, 10, types.NewEligibilityCriteria("criteria", &action), false, 1, 10)
+	now := time.Now().UTC()
+	nextEpochTime := now.Add(time.Hour + 24)
+	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, now, nextEpochTime, "day", 10, types.NewEligibilityCriteria("criteria", &action), false)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 	rewardProgramGet, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
 	s.Assert().NoError(err)
 
 	s.Assert().Equal(rewardProgram.Coin, rewardProgramGet.Coin)
-	s.Assert().Equal(rewardProgram.StartEpoch, rewardProgramGet.StartEpoch)
+	s.Assert().Equal(rewardProgram.ProgramStartTime, rewardProgramGet.ProgramStartTime)
 	s.Assert().Equal(rewardProgram.Id, rewardProgramGet.Id)
 	s.Assert().Equal(rewardProgram.EligibilityCriteria.Action.TypeUrl, rewardProgramGet.EligibilityCriteria.Action.TypeUrl)
 	s.Assert().Equal(rewardProgram.Expired, false)
@@ -382,13 +394,15 @@ func (s *KeeperTestSuite) TestCreateRewardClaimTestMax() {
 	action := types.NewActionDelegate()
 	coin := sdk.NewInt64Coin("hotdog", 10000)
 	maxCoin := sdk.NewInt64Coin("hotdog", 100)
-	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, "day", 1, 10, types.NewEligibilityCriteria("criteria", &action), false, 0, 5)
+	now := time.Now().UTC()
+	nextEpochTime := now.Add(time.Hour + 24)
+	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, now, nextEpochTime, "day", 10, types.NewEligibilityCriteria("criteria", &action), false)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 	rewardProgramGet, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
 	s.Assert().NoError(err)
 
 	s.Assert().Equal(rewardProgram.Coin, rewardProgramGet.Coin)
-	s.Assert().Equal(rewardProgram.StartEpoch, rewardProgramGet.StartEpoch)
+	s.Assert().Equal(rewardProgram.ProgramStartTime, rewardProgramGet.ProgramStartTime)
 	s.Assert().Equal(rewardProgram.Id, rewardProgramGet.Id)
 	s.Assert().Equal(rewardProgram.EligibilityCriteria.Action.TypeUrl, rewardProgramGet.EligibilityCriteria.Action.TypeUrl)
 	s.Assert().Equal(rewardProgram.Expired, false)

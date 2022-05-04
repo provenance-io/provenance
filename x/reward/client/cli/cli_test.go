@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -46,6 +47,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	genesisState := s.cfg.GenesisState
 	s.cfg.NumValidators = 1
+	now := time.Now().UTC()
+	nextEpochTime := now.Add(time.Hour + 24)
 
 	rewardData := rewardtypes.NewGenesisState(
 		[]rewardtypes.RewardProgram{
@@ -54,26 +57,24 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				s.accountAddr.String(),
 				sdk.NewInt64Coin("jackthecat", 1),
 				sdk.NewInt64Coin("jackthecat", 2),
+				now,
+				nextEpochTime,
 				"minute",
-				0,
 				1,
 				rewardtypes.NewEligibilityCriteria("action-name", &rewardtypes.ActionDelegate{}),
 				false,
-				1,
-				2,
 			),
 			types.NewRewardProgram(
 				2,
 				s.accountAddr.String(),
 				sdk.NewInt64Coin("jackthecat", 1),
 				sdk.NewInt64Coin("jackthecat", 2),
+				now,
+				nextEpochTime,
 				"minute",
-				100,
 				1,
 				rewardtypes.NewEligibilityCriteria("action-name", &rewardtypes.ActionDelegate{}),
 				false,
-				1,
-				2,
 			),
 		},
 		[]rewardtypes.RewardClaim{
