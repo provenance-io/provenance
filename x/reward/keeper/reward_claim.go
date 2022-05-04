@@ -60,3 +60,27 @@ func (k Keeper) GetAllRewardClaims(sdkCtx sdk.Context) ([]types.RewardClaim, err
 func (k Keeper) RewardClaimIsValid(rewardClaim *types.RewardClaim) bool {
 	return rewardClaim.Address != ""
 }
+
+// Removes a RewardClaim
+func (k Keeper) RemoveRewardClaim(sdkCtx sdk.Context, addr string) bool {
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetRewardClaimsKey([]byte(addr))
+	bz := store.Get(key)
+	keyExists := store.Has(bz)
+	if keyExists {
+		store.Delete(bz)
+	}
+	return keyExists
+}
+
+// Gets a RewardClaim's SharesPerEpochPerRewardsProgram that match the predicate
+func (k Keeper) GetRewardClaimShares(sdkCtx sdk.Context, rewardClaim *types.RewardClaim, matches func(*types.SharesPerEpochPerRewardsProgram) bool) []types.SharesPerEpochPerRewardsProgram {
+	shares := []types.SharesPerEpochPerRewardsProgram{}
+	for _, share := range rewardClaim.GetSharesPerEpochPerReward() {
+		if !matches(&share) {
+			continue
+		}
+		shares = append(shares, share)
+	}
+	return shares
+}
