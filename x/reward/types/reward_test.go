@@ -133,12 +133,12 @@ func (s *RewardTypesTestSuite) TestRewardClaimValidateBasic() {
 	}{
 		{
 			"invalid -  address format",
-			NewRewardClaim("invalid", []SharesPerEpochPerRewardsProgram{}),
+			NewRewardClaim("invalid", []SharesPerEpochPerRewardsProgram{}, false),
 			"invalid address for reward claim address: decoding bech32 failed: invalid bech32 string length 7",
 		},
 		{
 			"should succeed validate basic",
-			NewRewardClaim("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", []SharesPerEpochPerRewardsProgram{}),
+			NewRewardClaim("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", []SharesPerEpochPerRewardsProgram{}, false),
 			"",
 		},
 	}

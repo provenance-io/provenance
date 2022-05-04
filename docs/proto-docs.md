@@ -6013,6 +6013,7 @@ A RewardClaim is the metadata of reward data per address
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | address of user reward |
+| `expired` | [bool](#bool) |  | state of a reward claim |
 | `shares_per_epoch_per_reward` | [SharesPerEpochPerRewardsProgram](#provenance.reward.v1.SharesPerEpochPerRewardsProgram) | repeated | array of shares calculated per epoch for each reward program |
 
 

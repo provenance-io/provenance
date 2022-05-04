@@ -91,6 +91,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 						sdk.NewInt64Coin("jackthecat", 0),
 					),
 				},
+				false,
 			),
 			types.NewRewardClaim(
 				"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq",
@@ -105,6 +106,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 						sdk.NewInt64Coin("jackthecat", 0),
 					),
 				},
+				false,
 			),
 		},
 		[]rewardtypes.EpochRewardDistribution{

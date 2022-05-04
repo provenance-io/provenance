@@ -124,6 +124,7 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 					Expired:              false,
 					TotalRewardClaimed:   sdk.Coin{},
 				}),
+				Expired: false,
 			})
 			// we know the rewards it so update the epoch reward
 			distribution.TotalShares = distribution.TotalShares + res.shares

@@ -61,6 +61,9 @@ message RewardClaim {
   // address of user reward
   string address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
 
+  // state of a reward claim
+  bool expired = 2;
+
   // array of shares calculated per epoch for each reward program
   repeated SharesPerEpochPerRewardsProgram shares_per_epoch_per_reward = 4
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"shares_per_epoch_per_reward\""];

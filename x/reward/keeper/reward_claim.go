@@ -84,3 +84,21 @@ func (k Keeper) GetRewardClaimShares(sdkCtx sdk.Context, rewardClaim *types.Rewa
 	}
 	return shares
 }
+
+// Removes all Reward Claims that are expired
+func (k Keeper) RemoveExpiredRewardClaims(ctx sdk.Context) error {
+	rewardClaims, err := k.GetAllRewardClaims(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, claim := range rewardClaims {
+		if claim.GetExpired() {
+			continue
+		}
+
+		k.RemoveRewardClaim(ctx, claim.GetAddress())
+	}
+
+	return nil
+}

@@ -80,10 +80,11 @@ func (rp *RewardProgram) String() string {
 	return string(out)
 }
 
-func NewRewardClaim(address string, sharesPerEpochPerRewardsProgram []SharesPerEpochPerRewardsProgram) RewardClaim {
+func NewRewardClaim(address string, sharesPerEpochPerRewardsProgram []SharesPerEpochPerRewardsProgram, expired bool) RewardClaim {
 	return RewardClaim{
 		Address:                 address,
 		SharesPerEpochPerReward: sharesPerEpochPerRewardsProgram,
+		Expired:                 expired,
 	}
 }
 

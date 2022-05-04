@@ -123,7 +123,7 @@ func (s *KeeperTestSuite) TestRewardClaims() {
 			Expired:              false,
 			TotalRewardClaimed:   sdk.NewInt64Coin("jackthecat", 100),
 		},
-	})
+	}, false)
 	s.app.RewardKeeper.SetRewardClaim(s.ctx, rewardClaim)
 	response, err = queryClient.RewardClaims(gocontext.Background(), &types.RewardClaimsRequest{})
 	s.Assert().Nil(err, "error should be nil")
@@ -140,7 +140,7 @@ func (s *KeeperTestSuite) TestRewardClaims() {
 			Expired:              false,
 			TotalRewardClaimed:   sdk.NewInt64Coin("jackthecat", 200),
 		},
-	})
+	}, false)
 	s.app.RewardKeeper.SetRewardClaim(s.ctx, rewardClaim)
 	response, err = queryClient.RewardClaims(gocontext.Background(), &types.RewardClaimsRequest{})
 	s.Assert().Nil(err, "error should be nil")
@@ -161,7 +161,7 @@ func (s *KeeperTestSuite) TestRewardClaimById() {
 			Expired:              false,
 			TotalRewardClaimed:   sdk.NewInt64Coin("jackthecat", 100),
 		},
-	})
+	}, false)
 	s.app.RewardKeeper.SetRewardClaim(s.ctx, rewardClaim)
 	rewardClaim = types.NewRewardClaim("testing2", []types.SharesPerEpochPerRewardsProgram{
 		{
@@ -173,7 +173,7 @@ func (s *KeeperTestSuite) TestRewardClaimById() {
 			Expired:              false,
 			TotalRewardClaimed:   sdk.NewInt64Coin("jackthecat", 200),
 		},
-	})
+	}, false)
 	s.app.RewardKeeper.SetRewardClaim(s.ctx, rewardClaim)
 
 	response, err := queryClient.RewardClaimByID(gocontext.Background(), &types.RewardClaimByIDRequest{Id: "testing"})
