@@ -13,6 +13,18 @@ func (k Keeper) SetRewardProgram(ctx sdk.Context, rewardProgram types.RewardProg
 	store.Set(types.GetRewardProgramKey(int64(rewardProgram.Id)), bz)
 }
 
+// Removes a reward program in the keeper
+func (k Keeper) RemoveRewardProgram(ctx sdk.Context, id int64) bool {
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetRewardProgramKey(id)
+	bz := store.Get(key)
+	keyExists := store.Has(bz)
+	if keyExists {
+		store.Delete(bz)
+	}
+	return keyExists
+}
+
 // GetRewardProgram returns a RewardProgram by id
 func (k Keeper) GetRewardProgram(ctx sdk.Context, id int64) (rewardProgram types.RewardProgram, err error) {
 	store := ctx.KVStore(k.storeKey)
@@ -59,4 +71,20 @@ func (k Keeper) GetAllRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, er
 // Check if a RewardProgram is valid
 func (k Keeper) RewardProgramIsValid(rewardProgram *types.RewardProgram) bool {
 	return rewardProgram.Id != 0
+}
+
+// Removes all RewardPrograms that are expired
+func (k Keeper) RemoveExpiredPrograms(ctx sdk.Context) error {
+	rewardPrograms, err := k.GetAllRewardPrograms(ctx)
+	if err != nil {
+		return err
+	}
+	for _, rewardProgram := range rewardPrograms {
+		if !rewardProgram.GetExpired() {
+			continue
+		}
+
+		k.RemoveRewardProgram(ctx, int64(rewardProgram.GetId()))
+	}
+	return nil
 }
