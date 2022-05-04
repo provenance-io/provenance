@@ -79,18 +79,14 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 			found := false
 			var mutatedSharesPerEpochRewards []types.SharesPerEpochPerRewardsProgram
 			// set a new claim or add to a claim
+			// TODO: Need to do EC checking
 			for _, rewardClaimForAddress := range claim.SharesPerEpochPerReward {
-				if rewardClaimForAddress.RewardProgramId == program.Id && (rewardClaimForAddress.EphemeralActionCount <= int64(program.Minimum) || rewardClaimForAddress.EphemeralActionCount >= int64(program.Maximum)) {
-					rewardClaimForAddress.EphemeralActionCount = rewardClaimForAddress.EphemeralActionCount + res.shares
-					mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, rewardClaimForAddress)
-					found = true
-				} else if rewardClaimForAddress.RewardProgramId == program.Id && rewardClaimForAddress.EphemeralActionCount < int64(program.Maximum) {
+				if rewardClaimForAddress.RewardProgramId == program.Id {
 					rewardClaimForAddress.EphemeralActionCount = rewardClaimForAddress.EphemeralActionCount + res.shares
 					rewardClaimForAddress.TotalShares = rewardClaimForAddress.TotalShares + res.shares
 					rewardClaimForAddress.LatestRecordedEpoch = epochNumber
 					mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, rewardClaimForAddress)
 					found = true
-
 					// we know the rewards it so update the epoch reward
 					distribution.TotalShares = distribution.TotalShares + res.shares
 				} else {

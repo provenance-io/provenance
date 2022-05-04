@@ -6038,8 +6038,6 @@ RewardProgram
 | `number_epochs` | [uint64](#uint64) |  | number of epochs this program will last for |
 | `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
 | `expired` | [bool](#bool) |  | is the rewards program expired ( for efficient lookup) |
-| `minimum` | [uint64](#uint64) |  | minimum number of actions before shares are distributed |
-| `maximum` | [uint64](#uint64) |  | maximum number of actions before shares are no longer distributed |
 
 
 

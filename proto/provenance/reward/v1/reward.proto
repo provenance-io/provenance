@@ -38,9 +38,7 @@ message RewardProgram {
   EligibilityCriteria eligibility_criteria = 9
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"eligibility_criteria\""];
   ;
-  bool   expired = 10; // is the rewards program expired ( for efficient lookup)
-  uint64 minimum = 11; // minimum number of actions before shares are distributed
-  uint64 maximum = 12; // maximum number of actions before shares are no longer distributed
+  bool expired = 10; // is the rewards program expired ( for efficient lookup)
 }
 // EpochRewardDistribution, this will updated at the end of every epoch
 message EpochRewardDistribution {
