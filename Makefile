@@ -455,7 +455,7 @@ docker-build: vendor
 
 # Quick build using local environment and go platform target options.
 docker-build-local: vendor
-	docker build --tag provenance-io/blockchain-local -f networks/local/blockchain-local/Dockerfile .
+	docker build --target provenance-$(shell uname -m) --tag provenance-io/blockchain-local -f networks/local/blockchain-local/Dockerfile . --no-cache
 
 # Generate config files for a 4-node localnet
 localnet-generate: localnet-stop docker-build-local
