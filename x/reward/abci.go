@@ -76,18 +76,9 @@ func logEvents(ctx sdk.Context) {
 
 // New Implementation
 
-func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
-	ctx.Logger().Info("NOTICE: -Begin Blocker-")
-	ctx.Logger().Info(fmt.Sprintf("NOTICE: Block time: %v Size of events is %d", blockTime, len(ctx.EventManager().GetABCIEventHistory())))
-
-	// We want to do all timer checking here
-	// Start and end reward programs
-	// This is where we apply the detected shares from the EndBlocker
-	// All shares are valid because EndBlocker will not see expired RewardPrograms
-}
-
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	ctx.Logger().Info("NOTICE: -End Blocker-")
+	blockTime := ctx.BlockTime()
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: Block time: %v Size of events is %d", blockTime, len(ctx.EventManager().GetABCIEventHistory())))
 
 	// We have all the transactions at this point
