@@ -232,8 +232,6 @@ build-dbmigrate: validate-go-version go.sum
 # Release artifacts and plan #
 ##############################
 
-LIBWASMVM := libwasmvm
-
 RELEASE_BIN=$(BUILDDIR)/bin
 RELEASE_PROTO_NAME=protos-$(VERSION).zip
 RELEASE_PROTO=$(BUILDDIR)/$(RELEASE_PROTO_NAME)
@@ -241,13 +239,17 @@ RELEASE_PLAN=$(BUILDDIR)/plan-$(VERSION).json
 RELEASE_CHECKSUM_NAME=sha256sum.txt
 RELEASE_CHECKSUM=$(BUILDDIR)/$(RELEASE_CHECKSUM_NAME)
 
+UNAME_M = $(shell uname -m)
 ifeq ($(UNAME_S),darwin)
     LIBWASMVM := $(LIBWASMVM).dylib
 else ifeq ($(UNAME_S),linux)
-    LIBWASMVM := $(LIBWASMVM).so
+	ifeq ($(UNAME_M),x86_64)
+		LIBWASMVM := $(LIBWASMVM).$(UNAME_M).so
+	else
+		LIBWASMVM := $(LIBWASMVM).aarch64.so
+	endif
 endif
 
-UNAME_M = $(shell uname -m)
 ifeq ($(UNAME_M),x86_64)
 	ARCH=amd64
 endif
