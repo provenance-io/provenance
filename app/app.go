@@ -601,6 +601,7 @@ func New(
 		stakingtypes.ModuleName,
 		ibchost.ModuleName,
 		markertypes.ModuleName,
+		rewardtypes.ModuleName,
 
 		// no-ops
 		authtypes.ModuleName,
@@ -619,7 +620,6 @@ func New(
 		attributetypes.ModuleName,
 		vestingtypes.ModuleName,
 		epochtypes.ModuleName,
-		rewardtypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
