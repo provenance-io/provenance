@@ -232,6 +232,8 @@ build-dbmigrate: validate-go-version go.sum
 # Release artifacts and plan #
 ##############################
 
+LIBWASMVM := libwasmvm
+
 RELEASE_BIN=$(BUILDDIR)/bin
 RELEASE_PROTO_NAME=protos-$(VERSION).zip
 RELEASE_PROTO=$(BUILDDIR)/$(RELEASE_PROTO_NAME)
