@@ -35,7 +35,7 @@ WORKDIR /provenance
 EXPOSE 26656 26657 1317 9090
 
 # Source binaries from the build above
-COPY --from=build-x86_64 /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.x86_64.so /lib/x86_64-linux-gnu/
+COPY --from=build-x86_64 /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.x86_64.so /usr/local/lib/x86_64-linux-gnu/
 COPY --from=build-x86_64 /go/bin/provenanced /usr/bin/provenanced
 
 COPY networks/local/blockchain-local/entrypoint.sh /usr/bin/entrypoint.sh
@@ -92,7 +92,7 @@ WORKDIR /provenance
 EXPOSE 26656 26657 1317 9090
 
 # Source binaries from the build above
-COPY --from=build-arm64 /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.aarch64.so /lib/aarch64-linux-gnu/
+COPY --from=build-arm64 /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.aarch64.so /usr/local/lib/
 
 COPY --from=build-arm64 /go/bin/provenanced /usr/bin/provenanced
 
