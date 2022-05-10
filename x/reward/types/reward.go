@@ -43,7 +43,8 @@ func NewRewardProgram(
 	epochType string,
 	numberEpochs uint64,
 	eligibilityCriteria EligibilityCriteria,
-	expired bool,
+	started bool,
+	finished bool,
 ) RewardProgram {
 	return RewardProgram{
 		Id:                    id,
@@ -55,7 +56,8 @@ func NewRewardProgram(
 		EpochType:             epochType,
 		NumberEpochs:          numberEpochs,
 		EligibilityCriteria:   eligibilityCriteria,
-		Expired:               expired,
+		Started:               started,
+		Finished:              finished,
 	}
 }
 

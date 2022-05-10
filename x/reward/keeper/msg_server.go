@@ -39,6 +39,7 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		msg.NumberEpochs,
 		msg.EligibilityCriteria,
 		false,
+		false,
 	)
 	err := rewardProgram.ValidateBasic()
 	if err != nil {
