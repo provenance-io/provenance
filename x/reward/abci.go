@@ -10,7 +10,6 @@ import (
 
 // EndBlocker called every block
 /*func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
-	ctx.Logger().Info(fmt.Sprintf("In endblocker"))
 	blockTime := ctx.BlockTime()
 	// check if epoch has ended
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: Block time: %v Size of events is %d", blockTime, len(ctx.EventManager().GetABCIEventHistory())))
@@ -50,6 +49,13 @@ import (
 	}
 }*/
 
+// BeginBlocker called every block
+func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
+	blockTime := ctx.BlockTime()
+	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Block time: %v ", blockTime))
+	// TODO: determine if reward programs need to start or finish
+}
+
 // this method is only for testing
 func logEvents(ctx sdk.Context) {
 	ctx.Logger().Info(fmt.Sprintf("Size of events is %d", len(ctx.EventManager().GetABCIEventHistory())))
@@ -80,6 +86,19 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	ctx.Logger().Info("NOTICE: -End Blocker-")
 	blockTime := ctx.BlockTime()
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: Block time: %v Size of events is %d", blockTime, len(ctx.EventManager().GetABCIEventHistory())))
+	logEvents(ctx)
+
+	rewardPrograms, err := k.GetAllActiveRewards(ctx)
+	if err != nil {
+		// TODO log it imo..we don't want blockchain to stop?
+		ctx.Logger().Error(err.Error())
+	}
+
+	for _, rewardProgram := range rewardPrograms {
+		// Go through all the reward programs
+		k.EvaluateRules(ctx, &rewardProgram)
+
+	}
 
 	// We have all the transactions at this point
 	// We can review all the transactions

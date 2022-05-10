@@ -18,7 +18,7 @@ type EvaluationResult struct {
 }
 
 // EvaluateRules takes in a Eligibility criteria and measure it against the events in the context
-func (k Keeper) EvaluateRules(ctx sdk.Context, epochNumber uint64, program types.RewardProgram, distribution types.EpochRewardDistribution) error {
+func (k Keeper) EvaluateRules(ctx sdk.Context, program *types.RewardProgram) error {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: EvaluateRules for msg type url: %s", program.EligibilityCriteria.Action.TypeUrl))
 	// get the events from the context history
 	switch program.EligibilityCriteria.Action.TypeUrl {
@@ -229,45 +229,18 @@ func (k Keeper) EvaluateDelegateEvents(ctx sdk.Context, eventTypeToSearch string
 
 }
 
-func (k Keeper) GetAllActiveRewards(ctx sdk.Context) ([]types.RewardProgram, error) {
+func (k Keeper) GetAllActiveRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
 	var rewardPrograms []types.RewardProgram
-	var rewardToExpire []types.RewardProgram
-	//var epochCache map[string]epochtypes.EpochInfo
 
 	// get all the rewards programs
 	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
-		if rewardProgram.Expired == true {
-			return false
+		if rewardProgram.Active {
+			rewardPrograms = append(rewardPrograms, rewardProgram)
 		}
-		// this is epoch that ended, and matches up with the reward program identifier
-		// check if any of the events match with any of the reward program running
-		// e.g start epoch,current epoch .. start epoch + number of epochs program runs for > current epoch
-		// 1,1 .. 1+4 > 1
-		// 1,2 .. 1+4 > 2
-		// 1,3 .. 1+4 > 3
-		// 1,4 .. 1+4 > 4
-		// currentEpoch := k.EpochKeeper.GetEpochInfo(ctx, rewardProgram.EpochId)
-		// // not yet started
-		// if rewardProgram.StartEpoch >= currentEpoch.CurrentEpoch {
-		// 	return false
-		// }
-		// if rewardProgram.StartEpoch+rewardProgram.NumberEpochs >= currentEpoch.CurrentEpoch {
-		// 	rewardPrograms = append(rewardPrograms, rewardProgram)
-		// } else {
-		// 	// reward has expired
-		// 	rewardToExpire = append(rewardToExpire, rewardProgram)
-		// }
 		return false
 	})
 	if err != nil {
 		return nil, err
-	}
-
-	// TODO - Do we want to extract this out?
-	// TODO - It's kind of unexpected by the "Get" function name
-	for _, rewardProgram := range rewardToExpire {
-		rewardProgram.Expired = true
-		k.SetRewardProgram(ctx, rewardProgram)
 	}
 	return rewardPrograms, nil
 }
