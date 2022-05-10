@@ -10,7 +10,6 @@ import (
 
 // EndBlocker called every block
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
-	ctx.Logger().Info(fmt.Sprintf("In endblocker"))
 	blockTime := ctx.BlockTime()
 	// check if epoch has ended
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: Block time: %v Size of events is %d", blockTime, len(ctx.EventManager().GetABCIEventHistory())))
@@ -48,6 +47,13 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 			k.EvaluateRules(ctx, currentEpoch, rewardProgram, epochRewardDistributionForEpoch)
 		}
 	}
+}
+
+// BeginBlocker called every block
+func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
+	blockTime := ctx.BlockTime()
+	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Block time: %v ", blockTime))
+	// TODO: determine if reward programs need to start or finish
 }
 
 // this method is only for testing

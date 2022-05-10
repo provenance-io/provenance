@@ -173,8 +173,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	// TODO
-	// rewardmodule.BeginBlocker(ctx, am.keeper)
+	rewardModule.BeginBlocker(ctx, am.keeper)
 }
 
 // EndBlock does nothing
