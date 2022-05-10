@@ -6038,7 +6038,8 @@ RewardProgram
 | `epoch_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `number_epochs` | [uint64](#uint64) |  | number of epochs this program will last for |
 | `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
-| `expired` | [bool](#bool) |  | is the rewards program expired ( for efficient lookup) |
+| `started` | [bool](#bool) |  | has the rewards program started |
+| `finished` | [bool](#bool) |  | has the rewards program completed |
 
 
 
@@ -6057,7 +6058,9 @@ RewardProgram
 | `total_shares` | [int64](#int64) |  | total shares accumulated( it is running total), can be negative |
 | `ephemeral_action_count` | [int64](#int64) |  | total number of times action has been taken by account |
 | `latest_recorded_epoch` | [uint64](#uint64) |  | last epoch number that this reward program was triggerred for. |
-| `claimed` | [bool](#bool) |  | whether rewards has been claimed |
+| `claimed` | [bool](#bool) |  | action type
+
+whether rewards has been claimed |
 | `expired` | [bool](#bool) |  | rewards have been expired, this is defined in RewardProgram |
 | `total_reward_claimed` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 

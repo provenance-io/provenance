@@ -231,18 +231,14 @@ func (k Keeper) EvaluateDelegateEvents(ctx sdk.Context, eventTypeToSearch string
 
 func (k Keeper) GetAllActiveRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
 	var rewardPrograms []types.RewardProgram
-
 	// get all the rewards programs
 	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
-		if rewardProgram.Active {
+		if !rewardProgram.Finished && rewardProgram.Started {
 			rewardPrograms = append(rewardPrograms, rewardProgram)
 		}
 		return false
 	})
-	if err != nil {
-		return nil, err
-	}
-	return rewardPrograms, nil
+	return rewardPrograms, err
 }
 
 func searchValue(attributes []abci.EventAttribute, attributeKey string) (sdk.AccAddress, error) {

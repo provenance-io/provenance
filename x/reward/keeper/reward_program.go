@@ -80,7 +80,7 @@ func (k Keeper) RemoveExpiredPrograms(ctx sdk.Context) error {
 		return err
 	}
 	for _, rewardProgram := range rewardPrograms {
-		if !rewardProgram.GetExpired() {
+		if !rewardProgram.Finished {
 			continue
 		}
 

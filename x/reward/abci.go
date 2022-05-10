@@ -88,7 +88,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: Block time: %v Size of events is %d", blockTime, len(ctx.EventManager().GetABCIEventHistory())))
 	logEvents(ctx)
 
-	rewardPrograms, err := k.GetAllActiveRewards(ctx)
+	rewardPrograms, err := k.GetAllActiveRewardPrograms(ctx)
 	if err != nil {
 		// TODO log it imo..we don't want blockchain to stop?
 		ctx.Logger().Error(err.Error())

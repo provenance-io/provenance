@@ -36,7 +36,7 @@ func (k Keeper) ActiveRewardPrograms(ctx context.Context, req *types.ActiveRewar
 	response := types.ActiveRewardProgramsResponse{}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	rewardPrograms, err := k.GetAllActiveRewards(sdkCtx)
+	rewardPrograms, err := k.GetAllActiveRewardPrograms(sdkCtx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to obtain active reward programs: %v", err))
 	}
