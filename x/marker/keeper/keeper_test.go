@@ -526,22 +526,39 @@ func TestRemoveOrphanedSendEnabledEntries(t *testing.T) {
 	params := app.BankKeeper.GetParams(ctx)
 	require.Len(t, params.SendEnabled, 0)
 
-	// Add bad marker reference.
+	// Add orphaned marker reference.
 	params = app.BankKeeper.GetParams(ctx)
 	se := &banktypes.SendEnabled{Denom: "missing", Enabled: true}
 	params.SendEnabled = append(params.SendEnabled, se)
 	app.BankKeeper.SetParams(ctx, params)
 
+	// Create account for adding marker.
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	user := sdk.AccAddress(pubkey.Address())
+	existingSupply := sdk.NewCoin("hash", sdk.NewInt(10000))
+	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
+	simapp.FundAccount(app, ctx, user, sdk.NewCoins(existingSupply))
+
+	// Add new marker account with its own "send enabled" denom that should not be deleted.
+	mac := types.NewEmptyMarkerAccount("markerdenom", user.String(), []types.AccessGrant{*types.NewAccessGrant(user,
+		[]types.Access{types.Access_Mint, types.Access_Burn, types.Access_Withdraw, types.Access_Delete})})
+	mac.MarkerType = types.MarkerType_RestrictedCoin
+	require.NoError(t, mac.SetManager(user))
+	require.NoError(t, mac.SetSupply(sdk.NewCoin("markerdenom", sdk.NewInt(10000))))
+	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "markerdenom"))
+	require.NoError(t, app.MarkerKeeper.ActivateMarker(ctx, user, "markerdenom"))
+
 	// Make sure params reflect added reference.
 	params = app.BankKeeper.GetParams(ctx)
-	require.Len(t, params.SendEnabled, 1)
+	require.Len(t, params.SendEnabled, 2)
 
 	// Remove all for missing markers.
 	app.MarkerKeeper.RemoveSendEnabledForMissingMarkers(ctx)
 
 	// Make sure params reflect removed reference.
 	params = app.BankKeeper.GetParams(ctx)
-	require.Len(t, params.SendEnabled, 0)
+	require.Len(t, params.SendEnabled, 1)
 }
 
 func TestAccountRemoveDeletesSendEnabled(t *testing.T) {
