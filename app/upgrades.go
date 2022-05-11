@@ -101,7 +101,7 @@ var handlers = map[string]appUpgrade{
 			app.MarkerKeeper.RemoveSendEnabledForMissingMarkers(ctx)
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			return versionMap, nil
-		}, // upgrade for 1.9.1
+		}, // upgrade for 1.10.0
 	},
 	// TODO - Add new upgrade definitions here.
 }
