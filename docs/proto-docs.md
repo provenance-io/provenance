@@ -6080,6 +6080,7 @@ RewardProgram
 Owner of the share |
 | `claimed` | [bool](#bool) |  | Share has been claimed |
 | `expire_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time when share expires |
+| `amount` | [int64](#int64) |  |  |
 
 
 

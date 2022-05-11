@@ -97,7 +97,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	for _, rewardProgram := range rewardPrograms {
 		// Go through all the reward programs
 		k.EvaluateRules(ctx, &rewardProgram)
-
+		k.SetRewardProgram(ctx, rewardProgram)
 	}
 
 	// We have all the transactions at this point

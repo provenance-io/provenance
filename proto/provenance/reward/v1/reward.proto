@@ -109,6 +109,7 @@ message Share {
     (gogoproto.jsontag)  = "expire_time,omitempty",
     (gogoproto.moretags) = "yaml:\"expire_time,omitempty\""
   ];
+  int64 amount = 5;
 }
 
 message QualifyingAction {

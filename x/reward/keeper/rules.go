@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/provenance-io/provenance/x/reward/types"
 )
@@ -18,7 +19,7 @@ type EvaluationResult struct {
 
 // EvaluateRules takes in a Eligibility criteria and measure it against the events in the context
 func (k Keeper) EvaluateRules(ctx sdk.Context, program *types.RewardProgram) error {
-	ctx.Logger().Info(fmt.Sprintf("NOTICE: EvaluateRules for msg type url: %s", program.EligibilityCriteria.Action.TypeUrl))
+	ctx.Logger().Info(fmt.Sprintf("NOTICE: EvaluateRules for RewardProgram: %d", program.GetId()))
 
 	// Check if any of the transactions match the qualifying actions
 	for _, qualifyingAction := range program.GetQualifyingActions() {
@@ -32,7 +33,7 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, program *types.RewardProgram) err
 			// for transfers event and make sure there is a sender
 
 			// We probably want to check the criteria on the delegation within here
-			evaluateRes, err = k.EvaluateDelegation(ctx)
+			evaluateRes, err = k.EvaluateDelegation(ctx, &program.EligibilityCriteria)
 			if err != nil {
 				return err
 			}
@@ -40,7 +41,7 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, program *types.RewardProgram) err
 			ctx.Logger().Info(fmt.Sprintf("NOTICE: The Action type is %s", actionType))
 			// check the event history
 			// for transfers event and make sure there is a sender
-			evaluateRes, err = k.EvaluateTransferAndCheckDelegation(ctx)
+			evaluateRes, err = k.EvaluateTransferAndCheckDelegation(ctx, &program.EligibilityCriteria)
 			if err != nil {
 				return err
 			}
@@ -51,7 +52,7 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, program *types.RewardProgram) err
 		}
 
 		// Record any results
-		err = k.RecordRewardClaims(ctx, program, evaluateRes)
+		err = k.GrantRewardProgramShares(ctx, program, evaluateRes)
 		if err != nil {
 			return err
 		}
@@ -60,14 +61,25 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, program *types.RewardProgram) err
 	return nil
 }
 
-func (k Keeper) RecordRewardClaims(ctx sdk.Context, program *types.RewardProgram, evaluateRes []EvaluationResult) error {
+func (k Keeper) GrantRewardProgramShares(ctx sdk.Context, program *types.RewardProgram, evaluateRes []EvaluationResult) error {
+	for _, res := range evaluateRes {
+		ctx.Logger().Info(fmt.Sprintf("NOTICE: RecordRewardClaims: %v %v", program, res))
+		program.Shares = append(program.Shares, types.Share{
+			Address: "",
+			Claimed: false,
+			// TODO This needs to be set to the correct expiration time. Either universally or needs to be included in EvaluationResult
+			ExpireTime: timestamppb.Now().AsTime(),
+			Amount:     res.shares,
+		})
+	}
+	return nil
+}
+
+func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program *types.RewardProgram, distribution types.EpochRewardDistribution, evaluateRes []EvaluationResult) error {
 	// get the address from the eval and check if it has delegation
 	// it's an array so should be deterministic
 	for _, res := range evaluateRes {
-		ctx.Logger().Info(fmt.Sprintf("NOTICE: RecordRewardClaims: %v %v", program, res))
-	}
-	/*for _, res := range evaluateRes {
-		ctx.Logger().Info(fmt.Sprintf("NOTICE: RecordRewardClaims: %v %v", program, res))
+		ctx.Logger().Info(fmt.Sprintf("NOTICE: RecordRewardClaims: %v %v %v %v", epochNumber, program, distribution, res))
 		// add a share to the final total
 		// we know the rewards it so update the epoch reward
 		//distribution.TotalShares = distribution.TotalShares + res.shares
@@ -134,11 +146,11 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, program *types.RewardProgram
 		}
 	}
 	//set total rewards
-	k.SetEpochRewardDistribution(ctx, distribution)*/
+	k.SetEpochRewardDistribution(ctx, distribution)
 	return nil
 }
 
-func (k Keeper) EvaluateTransferAndCheckDelegation(ctx sdk.Context) ([]EvaluationResult, error) {
+func (k Keeper) EvaluateTransferAndCheckDelegation(ctx sdk.Context, criteria *types.EligibilityCriteria) ([]EvaluationResult, error) {
 	result := ([]EvaluationResult)(nil)
 	/*evaluateRes, err := k.EvaluateSearchEvents(ctx, "transfer", "sender")
 	if err != nil {
@@ -152,7 +164,7 @@ func (k Keeper) EvaluateTransferAndCheckDelegation(ctx sdk.Context) ([]Evaluatio
 	return result, nil
 }
 
-func (k Keeper) EvaluateDelegation(ctx sdk.Context) ([]EvaluationResult, error) {
+func (k Keeper) EvaluateDelegation(ctx sdk.Context, criteria *types.EligibilityCriteria) ([]EvaluationResult, error) {
 	evaluateRes, err := k.EvaluateDelegateEvents(ctx, "message", "staking", "sender")
 	return evaluateRes, err
 }
