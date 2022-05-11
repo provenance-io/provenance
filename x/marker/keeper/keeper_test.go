@@ -10,6 +10,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/stretchr/testify/require"
@@ -515,6 +516,81 @@ func TestAccountInsufficientExisting(t *testing.T) {
 	require.EqualValues(t, 1, app.MarkerKeeper.GetEscrow(ctx, m).AmountOf("testcoin").Int64())
 	// Amount of the total supply shall be 10001
 	require.EqualValues(t, 10001, m.GetSupply().Amount.Int64())
+}
+
+func TestRemoveOrphanedSendEnabledEntries(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	// Make sure "send enabled" are initially empty.
+	params := app.BankKeeper.GetParams(ctx)
+	require.Len(t, params.SendEnabled, 0)
+
+	// Add bad marker reference.
+	params = app.BankKeeper.GetParams(ctx)
+	se := &banktypes.SendEnabled{Denom: "missing", Enabled: true}
+	params.SendEnabled = append(params.SendEnabled, se)
+	app.BankKeeper.SetParams(ctx, params)
+
+	// Make sure params reflect added reference.
+	params = app.BankKeeper.GetParams(ctx)
+	require.Len(t, params.SendEnabled, 1)
+
+	// Remove all for missing markers.
+	app.MarkerKeeper.RemoveSendEnabledForMissingMarkers(ctx)
+
+	// Make sure params reflect removed reference.
+	params = app.BankKeeper.GetParams(ctx)
+	require.Len(t, params.SendEnabled, 0)
+}
+
+func TestAccountRemoveDeletesSendEnabled(t *testing.T) {
+	//app, ctx := createTestApp(true)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	user := sdk.AccAddress(pubkey.Address())
+
+	// setup an existing account with an existing balance (and matching supply)
+	existingSupply := sdk.NewCoin("testcoin", sdk.NewInt(10000))
+	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
+
+	simapp.FundAccount(app, ctx, user, sdk.NewCoins(existingSupply))
+
+	// create account and check default values
+	mac := types.NewEmptyMarkerAccount("testcoin", user.String(), []types.AccessGrant{*types.NewAccessGrant(user,
+		[]types.Access{types.Access_Mint, types.Access_Burn, types.Access_Withdraw, types.Access_Delete})})
+	mac.MarkerType = types.MarkerType_RestrictedCoin
+	require.NoError(t, mac.SetManager(user))
+	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(10000))))
+
+	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+
+	var err error
+	var m types.MarkerAccountI
+	m, err = app.MarkerKeeper.GetMarkerByDenom(ctx, "testcoin")
+	require.NoError(t, err)
+	require.NotNil(t, m)
+
+	// Make sure "send enabled" are initially empty.
+	params := app.BankKeeper.GetParams(ctx)
+	require.Len(t, params.SendEnabled, 0)
+
+	// Finalize and activate, which will add "send enabled" metadata.
+	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"))
+	require.NoError(t, app.MarkerKeeper.ActivateMarker(ctx, user, "testcoin"))
+
+	// Make sure "send enabled" are at 1 item.
+	params = app.BankKeeper.GetParams(ctx)
+	require.Len(t, params.SendEnabled, 1)
+
+	// Remove marker which removes "send enabled".
+	app.MarkerKeeper.RemoveMarker(ctx, m)
+
+	// Make sure "send enabled" are empty again.
+	params = app.BankKeeper.GetParams(ctx)
+	require.Len(t, params.SendEnabled, 0)
 }
 
 func TestAccountImplictControl(t *testing.T) {
