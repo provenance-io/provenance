@@ -241,13 +241,17 @@ RELEASE_PLAN=$(BUILDDIR)/plan-$(VERSION).json
 RELEASE_CHECKSUM_NAME=sha256sum.txt
 RELEASE_CHECKSUM=$(BUILDDIR)/$(RELEASE_CHECKSUM_NAME)
 
+UNAME_M = $(shell uname -m)
 ifeq ($(UNAME_S),darwin)
     LIBWASMVM := $(LIBWASMVM).dylib
 else ifeq ($(UNAME_S),linux)
-    LIBWASMVM := $(LIBWASMVM).so
+	ifeq ($(UNAME_M),x86_64)
+		LIBWASMVM := $(LIBWASMVM).$(UNAME_M).so
+	else
+		LIBWASMVM := $(LIBWASMVM).aarch64.so
+	endif
 endif
 
-UNAME_M = $(shell uname -m)
 ifeq ($(UNAME_M),x86_64)
 	ARCH=amd64
 endif
@@ -455,7 +459,7 @@ docker-build: vendor
 
 # Quick build using local environment and go platform target options.
 docker-build-local: vendor
-	docker build --tag provenance-io/blockchain-local -f networks/local/blockchain-local/Dockerfile .
+	docker build --target provenance-$(shell uname -m) --tag provenance-io/blockchain-local -f networks/local/blockchain-local/Dockerfile .
 
 # Generate config files for a 4-node localnet
 localnet-generate: localnet-stop docker-build-local
