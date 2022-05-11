@@ -6055,6 +6055,7 @@ RewardProgram
 | `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `epoch_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `number_epochs` | [uint64](#uint64) |  | number of epochs this program will last for |
+| `current_epoch` | [uint64](#uint64) |  | the current epoch reward program is on |
 | `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
 | `started` | [bool](#bool) |  | has the rewards program started |
 | `finished` | [bool](#bool) |  | has the rewards program completed |
