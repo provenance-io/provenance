@@ -6059,6 +6059,7 @@ RewardProgram
 | `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
 | `started` | [bool](#bool) |  | has the rewards program started |
 | `finished` | [bool](#bool) |  | has the rewards program completed |
+| `finished_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated |  |
 | `shares` | [Share](#provenance.reward.v1.Share) | repeated |  |
 

@@ -54,7 +54,7 @@ import (
 // BeginBlocker called every block
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	blockTime := ctx.BlockTime()
-	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Block time: %v ", blockTime))
+	// ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Block time: %v ", blockTime))
 	// TODO: determine if reward programs need to start or finish
 	var rewardPrograms []types.RewardProgram
 	// get all the rewards programs
@@ -65,12 +65,15 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		if !rewardProgram.Started && (blockTime.After(rewardProgram.ProgramStartTime) || blockTime.Equal(rewardProgram.ProgramStartTime)) {
 			ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Starting reward program: %v ", rewardProgram))
 			rewardProgram.Started = true
+			rewardProgram.EpochEndTime = blockTime.Add(time.Duration(rewardProgram.EpochSeconds) * time.Second)
+			rewardProgram.CurrentEpoch = 1
 			rewardPrograms = append(rewardPrograms, rewardProgram)
 		} else if rewardProgram.Started && !rewardProgram.Finished && (blockTime.After(rewardProgram.EpochEndTime) || blockTime.Equal(rewardProgram.EpochEndTime)) {
 			ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Epoch end hit for reward program %v ", rewardProgram))
 			rewardProgram.CurrentEpoch++
 			if rewardProgram.CurrentEpoch > rewardProgram.NumberEpochs {
 				rewardProgram.Finished = true
+				rewardProgram.FinishedTime = blockTime
 			} else {
 				rewardProgram.EpochEndTime = blockTime.Add(time.Duration(rewardProgram.EpochSeconds) * time.Second)
 			}
