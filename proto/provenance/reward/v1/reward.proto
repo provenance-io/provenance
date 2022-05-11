@@ -40,6 +40,10 @@ message RewardProgram {
   ;
   bool started  = 10; // has the rewards program started
   bool finished = 11; // has the rewards program completed
+  repeated QualifyingAction qualifying_actions = 12 // The actions that count towards the reward
+    [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"qualifying_actions"];
+  repeated Share shares = 13 // Share that have been created for the RewardProgram
+    [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"shares"];
 }
 // EpochRewardDistribution, this will updated at the end of every epoch
 message EpochRewardDistribution {
@@ -86,6 +90,33 @@ message SharesPerEpochPerRewardsProgram {
   cosmos.base.v1beta1.Coin total_reward_claimed = 7  // total rewards claimed by that address, which is equal to
                                                      // min((total_shares/total_shares_in_epoch)* total_pool_funds)
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"total_rewards\""];
+}
+
+// RewardProgram
+message Share {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  // address of share owner
+  string address = 2 [(gogoproto.moretags) = "yaml:\"address\""]; // Owner of the share
+  bool claimed = 3; // Share has been claimed
+
+  // Time when share expires
+  google.protobuf.Timestamp expire_time = 4 [
+    (gogoproto.stdtime)  = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "expire_time,omitempty",
+    (gogoproto.moretags) = "yaml:\"expire_time,omitempty\""
+  ];
+}
+
+message QualifyingAction {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+  oneof type {
+    ActionDelegate delegate = 1;
+    ActionTransferDelegations transferDelegations = 2;
+  }
 }
 
 // ActionDelegate, accounts that have delegated in an epoch period.

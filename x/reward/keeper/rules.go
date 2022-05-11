@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/provenance-io/provenance/x/reward/types"
@@ -20,52 +19,55 @@ type EvaluationResult struct {
 // EvaluateRules takes in a Eligibility criteria and measure it against the events in the context
 func (k Keeper) EvaluateRules(ctx sdk.Context, program *types.RewardProgram) error {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: EvaluateRules for msg type url: %s", program.EligibilityCriteria.Action.TypeUrl))
-	// get the events from the context history
-	switch program.EligibilityCriteria.Action.TypeUrl {
-	case "/" + proto.MessageName(&types.ActionTransferDelegations{}):
-		{
-			ctx.Logger().Info(fmt.Sprintf("NOTICE: The Action type is %s", proto.MessageName(&types.ActionTransferDelegations{})))
+
+	// Check if any of the transactions match the qualifying actions
+	for _, qualifyingAction := range program.GetQualifyingActions() {
+		var evaluateRes []EvaluationResult
+		var err error
+
+		switch actionType := qualifyingAction.GetType().(type) {
+		case *types.QualifyingAction_Delegate:
+			ctx.Logger().Info(fmt.Sprintf("NOTICE: The Action type is %s", actionType))
 			// check the event history
 			// for transfers event and make sure there is a sender
-			evaluateRes, err := k.EvaluateTransferAndCheckDelegation(ctx)
+
+			// We probably want to check the criteria on the delegation within here
+			evaluateRes, err = k.EvaluateDelegation(ctx)
 			if err != nil {
 				return err
 			}
-			errorRecordsClaim := k.RecordRewardClaims(ctx, epochNumber, program, distribution, evaluateRes)
-			if errorRecordsClaim != nil {
-				return errorRecordsClaim
-			}
-
-		}
-	case "/" + proto.MessageName(&types.ActionDelegate{}):
-		{
-			ctx.Logger().Info(fmt.Sprintf("NOTICE: The Action type is %s", proto.MessageName(&types.ActionDelegate{})))
+		case *types.QualifyingAction_TransferDelegations:
+			ctx.Logger().Info(fmt.Sprintf("NOTICE: The Action type is %s", actionType))
 			// check the event history
 			// for transfers event and make sure there is a sender
-			evaluateRes, err := k.EvaluateDelegation(ctx)
+			evaluateRes, err = k.EvaluateTransferAndCheckDelegation(ctx)
 			if err != nil {
 				return err
 			}
-
-			errorRecordsClaim := k.RecordRewardClaims(ctx, epochNumber, program, distribution, evaluateRes)
-
-			if errorRecordsClaim != nil {
-				return errorRecordsClaim
-			}
-
+		default:
+			// Skip any unsupported actions
+			ctx.Logger().Error(fmt.Sprintf("The Action type %s, cannot be evaluated", actionType))
+			continue
 		}
-	default:
-		// TODO throw an error or just log it? Leaning towards just logging it for now
-		ctx.Logger().Error(fmt.Sprintf("The Action type %s, cannot be evaluated", program.EligibilityCriteria.Action.TypeUrl))
+
+		// Record any results
+		err = k.RecordRewardClaims(ctx, program, evaluateRes)
+		if err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
 
-func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program types.RewardProgram, distribution types.EpochRewardDistribution, evaluateRes []EvaluationResult) error {
+func (k Keeper) RecordRewardClaims(ctx sdk.Context, program *types.RewardProgram, evaluateRes []EvaluationResult) error {
 	// get the address from the eval and check if it has delegation
 	// it's an array so should be deterministic
 	for _, res := range evaluateRes {
-		ctx.Logger().Info(fmt.Sprintf("NOTICE: RecordRewardClaims: %v %v %v %v", epochNumber, program, distribution, res))
+		ctx.Logger().Info(fmt.Sprintf("NOTICE: RecordRewardClaims: %v %v", program, res))
+	}
+	/*for _, res := range evaluateRes {
+		ctx.Logger().Info(fmt.Sprintf("NOTICE: RecordRewardClaims: %v %v", program, res))
 		// add a share to the final total
 		// we know the rewards it so update the epoch reward
 		//distribution.TotalShares = distribution.TotalShares + res.shares
@@ -132,7 +134,7 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 		}
 	}
 	//set total rewards
-	k.SetEpochRewardDistribution(ctx, distribution)
+	k.SetEpochRewardDistribution(ctx, distribution)*/
 	return nil
 }
 
@@ -246,12 +248,11 @@ func searchValue(attributes []abci.EventAttribute, attributeKey string) (sdk.Acc
 		if attributeKey == string(y.Key) {
 			// really not possible to get an error but could happen i guess
 			address, err := sdk.AccAddressFromBech32(string(y.Value))
-			return address, err
 			//TODO check this address has a delegation
 			if err != nil {
 				return nil, err
 			}
-
+			return address, err
 		}
 	}
 	return nil, nil

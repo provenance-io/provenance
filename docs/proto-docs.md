@@ -397,8 +397,10 @@
     - [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations)
     - [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria)
     - [EpochRewardDistribution](#provenance.reward.v1.EpochRewardDistribution)
+    - [QualifyingAction](#provenance.reward.v1.QualifyingAction)
     - [RewardClaim](#provenance.reward.v1.RewardClaim)
     - [RewardProgram](#provenance.reward.v1.RewardProgram)
+    - [Share](#provenance.reward.v1.Share)
     - [SharesPerEpochPerRewardsProgram](#provenance.reward.v1.SharesPerEpochPerRewardsProgram)
   
 - [provenance/reward/v1/genesis.proto](#provenance/reward/v1/genesis.proto)
@@ -6004,6 +6006,22 @@ EpochRewardDistribution, this will updated at the end of every epoch
 
 
 
+<a name="provenance.reward.v1.QualifyingAction"></a>
+
+### QualifyingAction
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegate` | [ActionDelegate](#provenance.reward.v1.ActionDelegate) |  |  |
+| `transferDelegations` | [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations) |  |  |
+
+
+
+
+
+
 <a name="provenance.reward.v1.RewardClaim"></a>
 
 ### RewardClaim
@@ -6040,6 +6058,27 @@ RewardProgram
 | `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
 | `started` | [bool](#bool) |  | has the rewards program started |
 | `finished` | [bool](#bool) |  | has the rewards program completed |
+| `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated |  |
+| `shares` | [Share](#provenance.reward.v1.Share) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.Share"></a>
+
+### Share
+RewardProgram
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address of share owner
+
+Owner of the share |
+| `claimed` | [bool](#bool) |  | Share has been claimed |
+| `expire_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time when share expires |
 
 
 
