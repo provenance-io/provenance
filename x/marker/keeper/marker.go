@@ -696,6 +696,30 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	return nil
 }
 
+// Loops through all "send enabled" bank metadata and removes all that don't have markers.
+func (k Keeper) RemoveSendEnabledForMissingMarkers(ctx sdk.Context) error {
+	ctx.Logger().Info("Removing SendEnabled for Missing Markers...")
+
+	// Loop through all "send enabled" entries and check whether marker exists.
+	bankParams := k.bankKeeper.GetParams(ctx)
+	toRemove := make([]string, 0)
+	for i := range bankParams.SendEnabled {
+		denom := bankParams.SendEnabled[i].Denom
+		_, err := k.GetMarkerByDenom(ctx, denom)
+		if err != nil {
+			toRemove = append(toRemove, denom)
+		}
+	}
+	// If missing markers were found, remove the "send enabled" status for each.
+	if len(toRemove) > 0 {
+		ctx.Logger().Info(fmt.Sprintf("Found %d Missing Markers (1/1). Removing.", len(toRemove)))
+		for _, denom := range toRemove {
+			k.removeSendEnabledStatus(ctx, denom)
+		}
+	}
+	return nil
+}
+
 func (k Keeper) authzHandler(ctx sdk.Context, admin sdk.AccAddress, from sdk.AccAddress, amount sdk.Coin) error {
 	markerAuth := types.MarkerTransferAuthorization{}
 	authorization, expireTime := k.authzKeeper.GetCleanAuthorization(ctx, admin, from, markerAuth.MsgTypeURL())
@@ -794,4 +818,19 @@ func (k Keeper) setSendEnabledStatus(ctx sdk.Context, denom string, sendEnabled 
 	// not found and set above so add a new explicit record here.
 	bankParams.SendEnabled = append(bankParams.SendEnabled, banktypes.NewSendEnabled(denom, sendEnabled))
 	k.bankKeeper.SetParams(ctx, bankParams)
+}
+
+// removeSendEnabledStatus will remove an existing explicit denom SendEnabled if it exists
+func (k Keeper) removeSendEnabledStatus(ctx sdk.Context, denom string) {
+	bankParams := k.bankKeeper.GetParams(ctx)
+	updated := make([]*banktypes.SendEnabled, 0)
+	for i, se := range bankParams.SendEnabled {
+		if bankParams.SendEnabled[i].Denom != denom {
+			updated = append(updated, se)
+		}
+	}
+	if len(updated) != len(bankParams.SendEnabled) {
+		bankParams.SendEnabled = updated
+		k.bankKeeper.SetParams(ctx, bankParams)
+	}
 }
