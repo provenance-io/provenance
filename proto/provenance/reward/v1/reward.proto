@@ -21,7 +21,7 @@ message RewardProgram {
   cosmos.base.v1beta1.Coin coin                    = 3 [(gogoproto.nullable) = false];
   cosmos.base.v1beta1.Coin max_reward_by_address   = 4
       [(gogoproto.nullable) = false]; // maximum rewards amount per address
-  string epoch_type = 5; // EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month)
+  uint64 epoch_seconds = 5; // EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month)
   google.protobuf.Timestamp program_start_time = 6 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
