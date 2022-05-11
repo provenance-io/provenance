@@ -697,7 +697,7 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 }
 
 // Loops through all "send enabled" bank metadata and removes all that don't have markers.
-func (k Keeper) RemoveSendEnabledForMissingMarkers(ctx sdk.Context) error {
+func (k Keeper) RemoveSendEnabledForMissingMarkers(ctx sdk.Context) {
 	ctx.Logger().Info("Removing SendEnabled for Missing Markers...")
 
 	// Loop through all "send enabled" entries and check whether marker exists.
@@ -717,7 +717,6 @@ func (k Keeper) RemoveSendEnabledForMissingMarkers(ctx sdk.Context) error {
 			k.removeSendEnabledStatus(ctx, denom)
 		}
 	}
-	return nil
 }
 
 func (k Keeper) authzHandler(ctx sdk.Context, admin sdk.AccAddress, from sdk.AccAddress, amount sdk.Coin) error {
