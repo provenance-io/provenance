@@ -6070,13 +6070,13 @@ RewardProgram
 <a name="provenance.reward.v1.Share"></a>
 
 ### Share
-RewardProgram
+Share
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `id` | [uint64](#uint64) |  | A unique id for the share |
 | `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this share belongs to |
+| `epoch_id` | [uint64](#uint64) |  | The id of the epoch that the share belongs to |
 | `address` | [string](#string) |  | Owner of the share |
 | `claimed` | [bool](#bool) |  | Share has been claimed |
 | `expire_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time when share expires |

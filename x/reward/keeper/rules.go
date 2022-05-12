@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/provenance-io/provenance/x/reward/types"
 )
@@ -62,15 +61,31 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, program *types.RewardProgram) err
 }
 
 func (k Keeper) RecordShares(ctx sdk.Context, rewardProgram *types.RewardProgram, evaluateRes []EvaluationResult) error {
+	ctx.Logger().Info(fmt.Sprintf("NOTICE: Recording shares for for rewardProgramId=%d, epochId=%d",
+		rewardProgram.GetId(), rewardProgram.GetCurrentEpoch()))
+
 	for _, res := range evaluateRes {
-		share := types.NewShare(
-			rewardProgram.GetId(),
-			res.address.String(),
-			false,
-			timestamppb.Now().AsTime(),
-			res.shares,
-		)
-		k.AddShare(ctx, &share)
+		share, err := k.GetShare(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentEpoch(), res.address.String())
+		if err != nil {
+			return err
+		}
+
+		// Share does not exist so create one
+		if share.ValidateBasic() != nil {
+			ctx.Logger().Info(fmt.Sprintf("NOTICE: Creating new share structure for rewardProgramId=%d, epochId=%d, addr=%s",
+				rewardProgram.GetId(), rewardProgram.GetCurrentEpoch(), res.address.String()))
+
+			share = types.NewShare(
+				rewardProgram.GetId(),
+				string(res.address),
+				false,
+				// TODO we want to set the time with an offset
+				ctx.BlockTime(),
+				0,
+			)
+		}
+		share.Amount += res.shares
+		k.SetShare(ctx, &share)
 	}
 
 	return nil

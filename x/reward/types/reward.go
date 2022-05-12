@@ -104,7 +104,6 @@ func (rc *RewardClaim) String() string {
 
 func NewShare(rewardProgramId uint64, address string, claimed bool, expireTime time.Time, amount int64) Share {
 	return Share{
-		Id:              0,
 		RewardProgramId: rewardProgramId,
 		Address:         address,
 		Claimed:         claimed,
@@ -116,6 +115,9 @@ func NewShare(rewardProgramId uint64, address string, claimed bool, expireTime t
 func (s *Share) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(s.Address); err != nil {
 		return fmt.Errorf("invalid address for share address: %w", err)
+	}
+	if id := s.GetRewardProgramId(); id == 0 {
+		return fmt.Errorf("invalid reward program id")
 	}
 	return nil
 }

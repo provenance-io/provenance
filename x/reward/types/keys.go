@@ -29,9 +29,8 @@ var (
 
 	EligibilityCriteriaKeyPrefix = []byte{0x04}
 
-	ActionKeyPrefix       = []byte{0x05}
-	ShareKeyPrefix        = []byte{0x06}
-	ShareCounterKeyPrefix = []byte("ShareCounterKey")
+	ActionKeyPrefix = []byte{0x05}
+	ShareKeyPrefix  = []byte{0x06}
 
 	ActionDelegateKey            = []byte("Delegate")
 	ActionTransferDelegationsKey = []byte("TransferDelegations")
@@ -43,22 +42,33 @@ func GetRewardProgramKey(id int64) []byte {
 	return append(RewardProgramKeyPrefix, idByte...)
 }
 
-// GetShareKey converts a reward program id into a share key
-func GetShareKey(rewardId uint64, shareId uint64) []byte {
-	key := GetRewardProgramShareKeyPrefix(rewardId)
-	shareIdByte := []byte(strconv.FormatUint(shareId, 10))
-	return append(key, []byte(shareIdByte)...)
+// GetShareKey converts a reward program id, epoch id, and address into a ShareKey
+func GetShareKey(rewardId uint64, epochId uint64, addr []byte) []byte {
+	key := ShareKeyPrefix
+	rewardByte := []byte(strconv.FormatUint(rewardId, 10))
+	epochByte := []byte(strconv.FormatUint(epochId, 10))
+	key = append(key, rewardByte...)
+	key = append(key, epochByte...)
+	key = append(key, address.MustLengthPrefix(addr)...)
+	return key
 }
 
-func GetRewardProgramShareKeyPrefix(rewardId uint64) []byte {
-	rewardIdByte := []byte(strconv.FormatUint(rewardId, 10))
-	return append(ShareKeyPrefix, rewardIdByte...)
+// GetRewardShareKeyPrefix converts a reward program id into a prefix for iterating
+func GetRewardShareKeyPrefix(rewardId uint64) []byte {
+	key := ShareKeyPrefix
+	rewardByte := []byte(strconv.FormatUint(rewardId, 10))
+	key = append(key, rewardByte...)
+	return key
 }
 
-// GetShareKey converts a reward program id into a share key
-func GetShareCounterKey(rewardId uint64) []byte {
-	rewardIdByte := []byte(strconv.FormatUint(rewardId, 10))
-	return append(ShareCounterKeyPrefix, []byte(rewardIdByte)...)
+// GetRewardEpochShareKeyPrefix converts a reward program id and epoch id into a prefix for iterating
+func GetRewardEpochShareKeyPrefix(rewardId uint64, epochId uint64) []byte {
+	key := ShareKeyPrefix
+	rewardByte := []byte(strconv.FormatUint(rewardId, 10))
+	epochByte := []byte(strconv.FormatUint(epochId, 10))
+	key = append(key, rewardByte...)
+	key = append(key, epochByte...)
+	return key
 }
 
 // GetRewardClaimsKey converts an reward claim
