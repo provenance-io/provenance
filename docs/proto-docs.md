@@ -6051,7 +6051,7 @@ RewardProgram
 | `distribute_from_address` | [string](#string) |  | community pool for now |
 | `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | maximum rewards amount per address |
-| `epoch_type` | [string](#string) |  | EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month) |
+| `epoch_seconds` | [uint64](#uint64) |  | EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month) |
 | `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `epoch_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `number_epochs` | [uint64](#uint64) |  | number of epochs this program will last for |
@@ -6059,6 +6059,7 @@ RewardProgram
 | `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
 | `started` | [bool](#bool) |  | has the rewards program started |
 | `finished` | [bool](#bool) |  | has the rewards program completed |
+| `finished_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated |  |
 
 
