@@ -29,7 +29,9 @@ var (
 
 	EligibilityCriteriaKeyPrefix = []byte{0x04}
 
-	ActionKeyPrefix = []byte{0x05}
+	ActionKeyPrefix       = []byte{0x05}
+	ShareKeyPrefix        = []byte{0x06}
+	ShareCounterKeyPrefix = []byte("ShareCounterKey")
 
 	ActionDelegateKey            = []byte("Delegate")
 	ActionTransferDelegationsKey = []byte("TransferDelegations")
@@ -41,14 +43,32 @@ func GetRewardProgramKey(id int64) []byte {
 	return append(RewardProgramKeyPrefix, idByte...)
 }
 
+// GetShareKey converts a reward program id into a share key
+func GetShareKey(rewardId uint64, shareId uint64) []byte {
+	key := GetRewardProgramShareKeyPrefix(rewardId)
+	shareIdByte := []byte(strconv.FormatUint(shareId, 10))
+	return append(key, []byte(shareIdByte)...)
+}
+
+func GetRewardProgramShareKeyPrefix(rewardId uint64) []byte {
+	rewardIdByte := []byte(strconv.FormatUint(rewardId, 10))
+	return append(ShareKeyPrefix, rewardIdByte...)
+}
+
+// GetShareKey converts a reward program id into a share key
+func GetShareCounterKey(rewardId uint64) []byte {
+	rewardIdByte := []byte(strconv.FormatUint(rewardId, 10))
+	return append(ShareCounterKeyPrefix, []byte(rewardIdByte)...)
+}
+
 // GetRewardClaimsKey converts an reward claim
 func GetRewardClaimsKey(addr []byte) []byte {
 	return append(RewardClaimKeyPrefix, address.MustLengthPrefix(addr)...)
 }
 
-func GetEpochRewardDistributionKey(epochId string,rewardId string) []byte {
-	key:= append(EpochRewardDistributionKeyPrefix, []byte(epochId)...)
-	return append(key,[]byte(rewardId)...)
+func GetEpochRewardDistributionKey(epochId string, rewardId string) []byte {
+	key := append(EpochRewardDistributionKeyPrefix, []byte(epochId)...)
+	return append(key, []byte(rewardId)...)
 }
 
 func GetEligibilityCriteriaKey(name string) []byte {

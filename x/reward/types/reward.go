@@ -102,6 +102,29 @@ func (rc *RewardClaim) String() string {
 	return string(out)
 }
 
+func NewShare(rewardProgramId uint64, address string, claimed bool, expireTime time.Time, amount int64) Share {
+	return Share{
+		Id:              0,
+		RewardProgramId: rewardProgramId,
+		Address:         address,
+		Claimed:         claimed,
+		ExpireTime:      expireTime,
+		Amount:          amount,
+	}
+}
+
+func (s *Share) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(s.Address); err != nil {
+		return fmt.Errorf("invalid address for share address: %w", err)
+	}
+	return nil
+}
+
+func (rc *Share) String() string {
+	out, _ := yaml.Marshal(rc)
+	return string(out)
+}
+
 func NewEpochRewardDistribution(epochId string, rewardProgramId uint64, totalRewardsPool sdk.Coin, totalShares int64, epochEnded bool) EpochRewardDistribution {
 	return EpochRewardDistribution{
 		EpochId:          epochId,

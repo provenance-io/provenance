@@ -52,7 +52,7 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, program *types.RewardProgram) err
 		}
 
 		// Record any results
-		err = k.GrantRewardProgramShares(ctx, program, evaluateRes)
+		err = k.RecordShares(ctx, program, evaluateRes)
 		if err != nil {
 			return err
 		}
@@ -61,17 +61,18 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, program *types.RewardProgram) err
 	return nil
 }
 
-func (k Keeper) GrantRewardProgramShares(ctx sdk.Context, program *types.RewardProgram, evaluateRes []EvaluationResult) error {
+func (k Keeper) RecordShares(ctx sdk.Context, rewardProgram *types.RewardProgram, evaluateRes []EvaluationResult) error {
 	for _, res := range evaluateRes {
-		ctx.Logger().Info(fmt.Sprintf("NOTICE: RecordRewardClaims: %v %v", program, res))
-		program.Shares = append(program.Shares, types.Share{
-			Address: "",
-			Claimed: false,
-			// TODO This needs to be set to the correct expiration time. Either universally or needs to be included in EvaluationResult
-			ExpireTime: timestamppb.Now().AsTime(),
-			Amount:     res.shares,
-		})
+		share := types.NewShare(
+			rewardProgram.GetId(),
+			res.address.String(),
+			false,
+			timestamppb.Now().AsTime(),
+			res.shares,
+		)
+		k.AddShare(ctx, &share)
 	}
+
 	return nil
 }
 
