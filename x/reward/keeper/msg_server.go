@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -34,14 +33,11 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		msg.Coin,
 		msg.MaxRewardByAddress,
 		msg.ProgramStartTime,
-		time.Now(), //TODO: Calculate end for next epoch .  Programstart time + epoch type
-		60,         // TODO : add a calculation from a type of day, week, month...
+		60, // TODO : add a calculation from a type of day, week, month...
 		msg.NumberEpochs,
 		msg.EligibilityCriteria,
-		false,
-		false,
 	)
-	err := rewardProgram.ValidateBasic()
+	err := rewardProgram.Validate()
 	if err != nil {
 		return nil, err
 	}

@@ -24,7 +24,6 @@ func (s *RewardTypesTestSuite) SetupSuite() {
 
 func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 	now := time.Now().UTC()
-	nextEpochTime := now.Add(time.Hour + 24)
 	tests := []struct {
 		name          string
 		rewardProgram RewardProgram
@@ -38,11 +37,9 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				sdk.NewInt64Coin("jackthecat", 1),
 				sdk.NewInt64Coin("jackthecat", 2),
 				now,
-				nextEpochTime,
-				"day",
+				60*24,
 				1,
 				NewEligibilityCriteria("action-name", &ActionDelegate{}),
-				false,
 			),
 			"invalid address for rewards program distribution from address: decoding bech32 failed: invalid separator index -1",
 		},
@@ -54,11 +51,9 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				sdk.NewInt64Coin("jackthecat", 1),
 				sdk.NewInt64Coin("jackthecat", 2),
 				now,
-				nextEpochTime,
-				"day",
+				60*24,
 				1,
 				NewEligibilityCriteria("", &ActionDelegate{}),
-				false,
 			),
 			"eligibility criteria is not valid: eligibility criteria must have a name",
 		},
@@ -70,11 +65,9 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				sdk.NewInt64Coin("jackthecat", 0),
 				sdk.NewInt64Coin("jackthecat", 2),
 				now,
-				nextEpochTime,
-				"day",
+				60*24,
 				1,
 				NewEligibilityCriteria("action-name", &ActionDelegate{}),
-				false,
 			),
 			"reward program requires coins: 0jackthecat",
 		},
@@ -86,11 +79,9 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				sdk.NewInt64Coin("jackthecat", 1),
 				sdk.NewInt64Coin("jackthecat", 0),
 				now,
-				nextEpochTime,
-				"day",
+				60*24,
 				1,
 				NewEligibilityCriteria("action-name", &ActionDelegate{}),
-				false,
 			),
 			"reward program requires positive max reward by address: 0jackthecat",
 		},
@@ -102,11 +93,9 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				sdk.NewInt64Coin("jackthecat", 1),
 				sdk.NewInt64Coin("jackthecat", 2),
 				now,
-				nextEpochTime,
-				"day",
+				60*24,
 				1,
 				NewEligibilityCriteria("action-name", &ActionDelegate{}),
-				false,
 			),
 			"",
 		},
@@ -115,7 +104,7 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := tt.rewardProgram.ValidateBasic()
+			err := tt.rewardProgram.Validate()
 			if err != nil {
 				assert.Equal(t, tt.want, err.Error())
 			} else if len(tt.want) > 0 {

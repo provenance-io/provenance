@@ -39,12 +39,9 @@ func NewRewardProgram(
 	coin sdk.Coin,
 	maxRewardByAddress sdk.Coin,
 	programStartTime time.Time,
-	epochEndTime time.Time,
 	epochSeconds uint64,
 	numberEpochs uint64,
 	eligibilityCriteria EligibilityCriteria,
-	started bool,
-	finished bool,
 ) RewardProgram {
 	return RewardProgram{
 		Id:                    id,
@@ -52,16 +49,15 @@ func NewRewardProgram(
 		Coin:                  coin,
 		MaxRewardByAddress:    maxRewardByAddress,
 		ProgramStartTime:      programStartTime,
-		EpochEndTime:          epochEndTime,
 		EpochSeconds:          epochSeconds,
 		NumberEpochs:          numberEpochs,
 		EligibilityCriteria:   eligibilityCriteria,
-		Started:               started,
-		Finished:              finished,
+		Started:               false,
+		Finished:              false,
 	}
 }
 
-func (rp *RewardProgram) ValidateBasic() error {
+func (rp *RewardProgram) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(rp.DistributeFromAddress); err != nil {
 		return fmt.Errorf("invalid address for rewards program distribution from address: %w", err)
 	}

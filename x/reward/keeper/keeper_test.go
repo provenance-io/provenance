@@ -55,7 +55,7 @@ func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
 	now := time.Now().UTC()
 	nextEpochTime := now.Add(time.Hour + 24)
 	rewardData.RewardPrograms = []types.RewardProgram{
-		types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, now, nextEpochTime, "day", 10, types.NewEligibilityCriteria("criteria", &action), false),
+		types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, now, nextEpochTime, 60*24, 10, types.NewEligibilityCriteria("criteria", &action), false, false),
 	}
 	sharesPerEpoch := types.SharesPerEpochPerRewardsProgram{RewardProgramId: 1, TotalShares: 2, LatestRecordedEpoch: 1000, Claimed: false, Expired: false, TotalRewardClaimed: coin}
 	rewardData.RewardClaims = []types.RewardClaim{types.NewRewardClaim("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", []types.SharesPerEpochPerRewardsProgram{sharesPerEpoch}, false)}
@@ -71,7 +71,7 @@ func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
 	s.Assert().NotPanics(func() { s.app.RewardKeeper.ExportGenesis(s.ctx) })
 
 	rewardData.RewardPrograms = []types.RewardProgram{
-		types.NewRewardProgram(1, "", sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 10), time.Now().UTC(), time.Now().Add(time.Hour+24), "day", 10, types.NewEligibilityCriteria("criteria", &action), false),
+		types.NewRewardProgram(1, "", sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 10), time.Now().UTC(), time.Now().Add(time.Hour+24), 60*24, 10, types.NewEligibilityCriteria("criteria", &action), false, false),
 	}
 
 	s.Assert().Panics(func() { s.app.RewardKeeper.InitGenesis(s.ctx, &rewardData) })
@@ -85,7 +85,7 @@ func (s *KeeperTestSuite) TestCheckRewardProgramExpired() {
 	maxCoin := sdk.NewInt64Coin("hotdog", 100)
 	now := time.Now().UTC()
 	nextEpochTime := now.Add(time.Hour + 24)
-	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, now, nextEpochTime, "day", 10, types.NewEligibilityCriteria("criteria", &action), false)
+	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, now, nextEpochTime, 60*24, 10, types.NewEligibilityCriteria("criteria", &action), false, false)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 	rewardProgramGet, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
 	s.Assert().NoError(err)
@@ -120,7 +120,7 @@ func (s *KeeperTestSuite) TestCreateRewardClaim() {
 	maxCoin := sdk.NewInt64Coin("hotdog", 100)
 	now := time.Now().UTC()
 	nextEpochTime := now.Add(time.Hour + 24)
-	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, now, nextEpochTime, "day", 10, types.NewEligibilityCriteria("criteria", &action), false)
+	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, now, nextEpochTime, 60*24, 10, types.NewEligibilityCriteria("criteria", &action), false, false)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 	rewardProgramGet, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
 	s.Assert().NoError(err)
@@ -145,7 +145,7 @@ func (s *KeeperTestSuite) TestCreateRewardClaim() {
 	s.Assert().Nil(err)
 	s.Assert().NotNil(epochRewardDistribution)
 	s.Assert().Equal(epochRewardDistribution.RewardProgramId, uint64(1))
-	s.Assert().Equal("day", epochRewardDistribution.EpochId)
+	s.Assert().Equal(60*24, epochRewardDistribution.EpochId)
 	s.Assert().Equal(int64(0), epochRewardDistribution.TotalShares)
 	s.Assert().Equal(coin, epochRewardDistribution.TotalRewardsPool)
 	s.Assert().Equal(false, epochRewardDistribution.EpochEnded)
@@ -179,11 +179,11 @@ func (s *KeeperTestSuite) TestCreateRewardClaim() {
 	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
 
 	// get reward epoch distribution
-	epochRewardDistribution, err = s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, "day", 1)
+	epochRewardDistribution, err = s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, 60*24, 1)
 	s.Assert().Nil(err)
 	s.Assert().NotNil(epochRewardDistribution)
 	s.Assert().Equal(uint64(1), epochRewardDistribution.RewardProgramId, "reward program id is wrong.")
-	s.Assert().Equal("day", epochRewardDistribution.EpochId, "epoch id is wrong.")
+	s.Assert().Equal(60*24, epochRewardDistribution.EpochId, "epoch id is wrong.")
 	s.Assert().Equal(int64(1), epochRewardDistribution.TotalShares, "total epoch distribution shares wrong.")
 	s.Assert().Equal(coin, epochRewardDistribution.TotalRewardsPool, "total rewards pool incorrect.")
 	s.Assert().Equal(false, epochRewardDistribution.EpochEnded, "epoch should not have ended.")
@@ -200,11 +200,11 @@ func (s *KeeperTestSuite) TestCreateRewardClaim() {
 	}
 
 	// get reward epoch distribution
-	epochRewardDistribution, err = s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, "day", 1)
+	epochRewardDistribution, err = s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, 60*24, 1)
 	s.Assert().Nil(err)
 	s.Assert().NotNil(epochRewardDistribution)
 	s.Assert().Equal(uint64(1), epochRewardDistribution.RewardProgramId)
-	s.Assert().Equal("day", epochRewardDistribution.EpochId)
+	s.Assert().Equal(60*24, epochRewardDistribution.EpochId)
 	s.Assert().Equal(int64(6), epochRewardDistribution.TotalShares)
 	s.Assert().Equal(coin, epochRewardDistribution.TotalRewardsPool)
 	s.Assert().Equal(false, epochRewardDistribution.EpochEnded)
@@ -213,11 +213,11 @@ func (s *KeeperTestSuite) TestCreateRewardClaim() {
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + ((24 * 60 * 60 * 30) / 5) + 1)
 	epoch.BeginBlocker(s.ctx, s.app.EpochKeeper)
 	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
-	epochRewardDistribution, err = s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, "day", 1)
+	epochRewardDistribution, err = s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, 60*24, 1)
 	s.Assert().Nil(err)
 	s.Assert().NotNil(epochRewardDistribution)
 	s.Assert().Equal(uint64(1), epochRewardDistribution.RewardProgramId)
-	s.Assert().Equal("day", epochRewardDistribution.EpochId)
+	s.Assert().Equal(60*24, epochRewardDistribution.EpochId)
 	s.Assert().Equal(int64(7), epochRewardDistribution.TotalShares)
 	s.Assert().Equal(coin, epochRewardDistribution.TotalRewardsPool)
 	s.Assert().Equal(true, epochRewardDistribution.EpochEnded)
@@ -226,11 +226,11 @@ func (s *KeeperTestSuite) TestCreateRewardClaim() {
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + ((24 * 60 * 60 * 30) / 5) + 1)
 	epoch.BeginBlocker(s.ctx, s.app.EpochKeeper)
 	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
-	epochRewardDistribution, err = s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, "day", 1)
+	epochRewardDistribution, err = s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, 60*24, 1)
 	s.Assert().Nil(err)
 	s.Assert().NotNil(epochRewardDistribution)
 	s.Assert().Equal(uint64(1), epochRewardDistribution.RewardProgramId)
-	s.Assert().Equal("day", epochRewardDistribution.EpochId)
+	s.Assert().Equal(60*24, epochRewardDistribution.EpochId)
 	s.Assert().Equal(int64(7), epochRewardDistribution.TotalShares)
 	s.Assert().Equal(coin, epochRewardDistribution.TotalRewardsPool)
 	s.Assert().Equal(true, epochRewardDistribution.EpochEnded)
@@ -246,7 +246,7 @@ func (s *KeeperTestSuite) TestCreateRewardClaim_1() {
 	maxCoin := sdk.NewInt64Coin("hotdog", 100)
 	now := time.Now().UTC()
 	nextEpochTime := now.Add(time.Hour + 24)
-	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, now, nextEpochTime, "day", 10, types.NewEligibilityCriteria("criteria", &action), false)
+	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, now, nextEpochTime, 60*24, 10, types.NewEligibilityCriteria("criteria", &action), false)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 	rewardProgramGet, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
 	s.Assert().NoError(err)
@@ -288,11 +288,11 @@ func (s *KeeperTestSuite) TestCreateRewardClaim_1() {
 	}
 
 	// get reward epoch distribution
-	epochRewardDistribution, err := s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, "day", 1)
+	epochRewardDistribution, err := s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, 60*24, 1)
 	s.Assert().Nil(err)
 	s.Assert().NotNil(epochRewardDistribution)
 	s.Assert().Equal(epochRewardDistribution.RewardProgramId, uint64(1))
-	s.Assert().Equal(epochRewardDistribution.EpochId, "day")
+	s.Assert().Equal(epochRewardDistribution.EpochId, 60*24)
 	s.Assert().Equal(epochRewardDistribution.TotalShares, int64(10))
 	s.Assert().Equal(epochRewardDistribution.TotalRewardsPool, coin)
 	s.Assert().Equal(true, epochRewardDistribution.EpochEnded)
@@ -301,12 +301,12 @@ func (s *KeeperTestSuite) TestCreateRewardClaim_1() {
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + ((24 * 60 * 60 * 30) / 5) + 1)
 	epoch.BeginBlocker(s.ctx, s.app.EpochKeeper)
 	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
-	epochRewardDistribution, err = s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, "day", 1)
+	epochRewardDistribution, err = s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, 60*24, 1)
 
 	s.Assert().Nil(err)
 	s.Assert().NotNil(epochRewardDistribution)
 	s.Assert().Equal(uint64(1), epochRewardDistribution.RewardProgramId, "reward program id incorrect.")
-	s.Assert().Equal("day", epochRewardDistribution.EpochId, "epoch id incorrect")
+	s.Assert().Equal(60*24, epochRewardDistribution.EpochId, "epoch id incorrect")
 	s.Assert().Equal(int64(10), epochRewardDistribution.TotalShares, "Total shares should stay the same")
 	s.Assert().Equal(coin, epochRewardDistribution.TotalRewardsPool, "Reward pool totals are wrong")
 	s.Assert().Equal(true, epochRewardDistribution.EpochEnded, "Epoch should remain ended")
@@ -328,7 +328,7 @@ func (s *KeeperTestSuite) TestCreateRewardClaimTestMin() {
 	maxCoin := sdk.NewInt64Coin("hotdog", 100)
 	now := time.Now().UTC()
 	nextEpochTime := now.Add(time.Hour + 24)
-	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, now, nextEpochTime, "day", 10, types.NewEligibilityCriteria("criteria", &action), false)
+	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, now, nextEpochTime, 60*24, 10, types.NewEligibilityCriteria("criteria", &action), false)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 	rewardProgramGet, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
 	s.Assert().NoError(err)
@@ -370,11 +370,11 @@ func (s *KeeperTestSuite) TestCreateRewardClaimTestMin() {
 	}
 
 	// get reward epoch distribution
-	epochRewardDistribution, err := s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, "day", 1)
+	epochRewardDistribution, err := s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, 60*24, 1)
 	s.Assert().Nil(err)
 	s.Assert().NotNil(epochRewardDistribution)
 	s.Assert().Equal(uint64(1), epochRewardDistribution.RewardProgramId, "reward program id incorrect.")
-	s.Assert().Equal("day", epochRewardDistribution.EpochId, "epoch id incorrect")
+	s.Assert().Equal(60*24, epochRewardDistribution.EpochId, "epoch id incorrect")
 	s.Assert().Equal(epochRewardDistribution.TotalShares, int64(9), "total shares wrong")
 	s.Assert().Equal(coin, epochRewardDistribution.TotalRewardsPool, "total reward pool wrong.")
 	s.Assert().Equal(true, epochRewardDistribution.EpochEnded)
@@ -396,7 +396,7 @@ func (s *KeeperTestSuite) TestCreateRewardClaimTestMax() {
 	maxCoin := sdk.NewInt64Coin("hotdog", 100)
 	now := time.Now().UTC()
 	nextEpochTime := now.Add(time.Hour + 24)
-	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, now, nextEpochTime, "day", 10, types.NewEligibilityCriteria("criteria", &action), false)
+	rewardProgram := types.NewRewardProgram(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", coin, maxCoin, now, nextEpochTime, 60*24, 10, types.NewEligibilityCriteria("criteria", &action), false)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 	rewardProgramGet, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
 	s.Assert().NoError(err)
@@ -438,11 +438,11 @@ func (s *KeeperTestSuite) TestCreateRewardClaimTestMax() {
 	}
 
 	// get reward epoch distribution
-	epochRewardDistribution, err := s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, "day", 1)
+	epochRewardDistribution, err := s.app.RewardKeeper.GetEpochRewardDistribution(s.ctx, 60*24, 1)
 	s.Assert().Nil(err)
 	s.Assert().NotNil(epochRewardDistribution)
 	s.Assert().Equal(epochRewardDistribution.RewardProgramId, uint64(1))
-	s.Assert().Equal(epochRewardDistribution.EpochId, "day")
+	s.Assert().Equal(epochRewardDistribution.EpochId, 60*24)
 	s.Assert().Equal(epochRewardDistribution.TotalShares, int64(5))
 	s.Assert().Equal(epochRewardDistribution.TotalRewardsPool, coin)
 	s.Assert().Equal(true, epochRewardDistribution.EpochEnded)
