@@ -98,9 +98,10 @@ func (rc *RewardClaim) String() string {
 	return string(out)
 }
 
-func NewShare(rewardProgramId uint64, address string, claimed bool, expireTime time.Time, amount int64) Share {
+func NewShare(rewardProgramId, epochId uint64, address string, claimed bool, expireTime time.Time, amount int64) Share {
 	return Share{
 		RewardProgramId: rewardProgramId,
+		EpochId:         epochId,
 		Address:         address,
 		Claimed:         claimed,
 		ExpireTime:      expireTime,
