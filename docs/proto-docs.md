@@ -6062,6 +6062,7 @@ RewardProgram
 | `started` | [bool](#bool) |  | has the rewards program started |
 | `finished` | [bool](#bool) |  | has the rewards program completed |
 | `finished_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `share_expiration_offset` | [uint64](#uint64) |  | Used to calculate the expiration time of a share in seconds. Currently, it is epoch_end_time + offset |
 | `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated |  |
 
 

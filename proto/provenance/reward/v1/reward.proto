@@ -50,7 +50,9 @@ message RewardProgram {
     (gogoproto.moretags) = "yaml:\"finished_time,omitempty\""
   ];
 
-  repeated QualifyingAction qualifying_actions = 16 // The actions that count towards the reward
+  uint64 share_expiration_offset = 16; // Used to calculate the expiration time of a share in seconds. Currently, it is epoch_end_time + offset
+
+  repeated QualifyingAction qualifying_actions = 17 // The actions that count towards the reward
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"qualifying_actions"];
 }
 // EpochRewardDistribution, this will updated at the end of every epoch

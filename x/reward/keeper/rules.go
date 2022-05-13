@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -80,8 +81,7 @@ func (k Keeper) RecordShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 				rewardProgram.GetCurrentEpoch(),
 				string(res.address),
 				false,
-				// TODO we want to set the time with an offset
-				ctx.BlockTime(),
+				rewardProgram.EpochEndTime.Add(time.Duration(rewardProgram.GetShareExpirationOffset())),
 				0,
 			)
 		}
