@@ -189,16 +189,15 @@ jobs:
   runsim:
     # These tests are the ones that use the runsim program (see sims.mk).
     needs: [setup, build-linux]
-    # TODO: Remove the after-import skip once the "after-import" sim is fixed: https://github.com/provenance-io/provenance/issues/754
-    # It's done like this (rather than just not putting it in the test list) so that it's more noticeable that we're skipping it.
-    if: needs.setup.outputs.should-run && matrix.test != "after-import"
+    if: needs.setup.outputs.should-run
     strategy:
       fail-fast: false
       matrix:
         # The test-sim-import-export test can take up to two hours.
         # The test-sim-after-import test can take even longer.
         # The test-sim-multi-seed-short test should take 30-40 minutes.
-        test: ["import-export", "multi-seed-short", "after-import"]
+        # TODO: Add the "after-import" test once it's fixed: https://github.com/provenance-io/provenance/issues/754
+        test: ["import-export", "multi-seed-short"]
         db-backend: ["goleveldb", "cleveldb", "rocksdb", "badgerdb"]
         # Not putting "macos-latest" in this because:
         #   a) They take longer than on ubuntu to begin with.
