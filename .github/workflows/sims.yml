@@ -189,20 +189,21 @@ jobs:
   runsim:
     # These tests are the ones that use the runsim program (see sims.mk).
     needs: [setup, build-linux]
-    if: needs.setup.outputs.should-run
+    # TODO: Remove the after-import skip once the "after-import" sim is fixed: https://github.com/provenance-io/provenance/issues/754
+    # It's done like this (rather than just not putting it in the test list) so that it's more noticeable that we're skipping it.
+    if: needs.setup.outputs.should-run && matrix.test != "after-import"
     strategy:
       fail-fast: false
       matrix:
         # The test-sim-import-export test can take up to two hours.
         # The test-sim-after-import test can take even longer.
         # The test-sim-multi-seed-short test should take 30-40 minutes.
-        #   "after-import" removed due to failure, but should be added back with https://github.com/provenance-io/provenance/issues/754
-        test: ["import-export", "multi-seed-short"]
+        test: ["import-export", "multi-seed-short", "after-import"]
         db-backend: ["goleveldb", "cleveldb", "rocksdb", "badgerdb"]
         # Not putting "macos-latest" in this because:
-        #   a) We're limited to 5 Mac runners at once so they end up queued up,
-        #   b) They take longer than on ubuntu to begin with.
-        #   c) Most of the devs use a mac, so it's less likely that a Mac-specific bug goes unnoticed without tests.
+        #   a) They take longer than on ubuntu to begin with.
+        #   b) We're limited to 5 Mac runners at once so they get queued up, taking even longer to finish all of them.
+        #   c) Most of the devs use a mac, so it's less likely that a Mac-specific bug goes unnoticed without these tests.
         os: ["ubuntu-latest"]
     runs-on: ${{ matrix.os }}
     steps:
@@ -350,9 +351,11 @@ jobs:
           path: ${{ steps.test-logs.outputs.test-logs }}.txt
 
   state-listening:
-    # These are tests that use go test to run (see sims.mk), and that we want to test using different database backends.
+    # These are tests defined in sims-state-listening.mk.
+    # They are disabled by default for now because they're giving "panic: stored minter should not have been nil".
+    # They're left here disabled so that it's more noticeable that they're not being run.
     needs: [setup, build-linux, build-mac]
-    # TODO: get rid of the && true == false here once the state-listening sim test stops giving "panic: stored minter should not have been nil".
+    # TODO: get rid of the && true == false here once they're fixed.
     if: needs.setup.outputs.should-run && true == false
     strategy:
       fail-fast: false
