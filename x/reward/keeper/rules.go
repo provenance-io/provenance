@@ -77,6 +77,7 @@ func (k Keeper) RecordShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 
 			share = types.NewShare(
 				rewardProgram.GetId(),
+				rewardProgram.GetCurrentEpoch(),
 				string(res.address),
 				false,
 				// TODO we want to set the time with an offset

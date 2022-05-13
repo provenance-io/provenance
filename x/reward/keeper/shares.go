@@ -10,9 +10,13 @@ import (
 func (k Keeper) RemoveShare(ctx sdk.Context, rewardProgramId, epochId uint64, addr string) bool {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetShareKey(rewardProgramId, epochId, []byte(addr))
-	bz := store.Get(key)
-	keyExists := store.Has(bz)
+	if key == nil {
+		return false
+	}
+
+	keyExists := store.Has(key)
 	if keyExists {
+		bz := store.Get(key)
 		store.Delete(bz)
 	}
 	return keyExists
