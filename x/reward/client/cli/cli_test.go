@@ -1,25 +1,13 @@
 package cli_test
 
 import (
-	"encoding/json"
-	"fmt"
-	"strings"
 	"testing"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/stretchr/testify/suite"
-
-	"github.com/provenance-io/provenance/internal/antewrapper"
-	"github.com/provenance-io/provenance/testutil"
-
-	rewardcli "github.com/provenance-io/provenance/x/reward/client/cli"
-	"github.com/provenance-io/provenance/x/reward/types"
-	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 )
 
 type IntegrationTestSuite struct {
@@ -36,7 +24,7 @@ func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
+/*func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
 	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
@@ -691,3 +679,4 @@ func (s *IntegrationTestSuite) TestQueryEligibilityCriteria() {
 // 		})
 // 	}
 // }
+*/
