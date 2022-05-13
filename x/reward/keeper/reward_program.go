@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/reward/types"
@@ -87,4 +89,22 @@ func (k Keeper) RemoveExpiredPrograms(ctx sdk.Context) error {
 		k.RemoveRewardProgram(ctx, int64(rewardProgram.GetId()))
 	}
 	return nil
+}
+
+// GetRewardProgramID gets the highest rewardprogram ID
+func (keeper Keeper) GetRewardProgramID(ctx sdk.Context) (rewardprogramID uint64, err error) {
+	store := ctx.KVStore(keeper.storeKey)
+	bz := store.Get(types.RewardProgramIdKey)
+	if bz == nil {
+		return 0, errors.New("initial rewardprogram ID hasn't been set")
+	}
+
+	rewardprogramID = types.GetRewardProgramIDFromBytes(bz)
+	return rewardprogramID, nil
+}
+
+// SetRewardProgramID sets the new rewardprogram ID to the store
+func (keeper Keeper) SetRewardProgramID(ctx sdk.Context, rewardprogramID uint64) {
+	store := ctx.KVStore(keeper.storeKey)
+	store.Set(types.RewardProgramIdKey, types.GetRewardProgramIDBytes(rewardprogramID))
 }

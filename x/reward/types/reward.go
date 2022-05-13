@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	fmt "fmt"
+	"strings"
 	time "time"
 
 	// "github.com/gogo/protobuf/proto"
@@ -11,6 +12,12 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	proto "github.com/gogo/protobuf/proto"
+)
+
+// Constants pertaining to a RewardProgram object
+const (
+	MaxDescriptionLength int = 10000
+	MaxTitleLength       int = 140
 )
 
 var (
@@ -34,6 +41,8 @@ type (
 )
 
 func NewRewardProgram(
+	title string,
+	description string,
 	id uint64,
 	distributeFromAddress string,
 	coin sdk.Coin,
@@ -44,6 +53,8 @@ func NewRewardProgram(
 	eligibilityCriteria EligibilityCriteria,
 ) RewardProgram {
 	return RewardProgram{
+		Title:                 title,
+		Description:           description,
 		Id:                    id,
 		DistributeFromAddress: distributeFromAddress,
 		Coin:                  coin,
@@ -58,6 +69,20 @@ func NewRewardProgram(
 }
 
 func (rp *RewardProgram) Validate() error {
+	title := rp.GetTitle()
+	if len(strings.TrimSpace(title)) == 0 {
+		return errors.New("reward program title cannot be blank")
+	}
+	if len(title) > MaxTitleLength {
+		return fmt.Errorf("reward program title is longer than max length of %d", MaxTitleLength)
+	}
+	description := rp.GetDescription()
+	if len(description) == 0 {
+		return errors.New("reward program description cannot be blank")
+	}
+	if len(description) > MaxDescriptionLength {
+		return fmt.Errorf("reward program description is longer than max length of %d", MaxDescriptionLength)
+	}
 	if _, err := sdk.AccAddressFromBech32(rp.DistributeFromAddress); err != nil {
 		return fmt.Errorf("invalid address for rewards program distribution from address: %w", err)
 	}

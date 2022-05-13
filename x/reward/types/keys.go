@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/binary"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -22,15 +23,16 @@ const (
 
 var (
 	RewardProgramKeyPrefix = []byte{0x01}
+	RewardProgramIdKey     = []byte{0x02}
 
-	RewardClaimKeyPrefix = []byte{0x02}
+	RewardClaimKeyPrefix = []byte{0x03}
 
-	EpochRewardDistributionKeyPrefix = []byte{0x03}
+	EpochRewardDistributionKeyPrefix = []byte{0x04}
 
-	EligibilityCriteriaKeyPrefix = []byte{0x04}
+	EligibilityCriteriaKeyPrefix = []byte{0x05}
 
-	ActionKeyPrefix = []byte{0x05}
-	ShareKeyPrefix  = []byte{0x06}
+	ActionKeyPrefix = []byte{0x06}
+	ShareKeyPrefix  = []byte{0x07}
 
 	ActionDelegateKey            = []byte("Delegate")
 	ActionTransferDelegationsKey = []byte("TransferDelegations")
@@ -59,6 +61,18 @@ func GetRewardShareKeyPrefix(rewardId uint64) []byte {
 	rewardByte := []byte(strconv.FormatUint(rewardId, 10))
 	key = append(key, rewardByte...)
 	return key
+}
+
+// GetRewardProgramIDBytes returns the byte representation of the rewardprogramID
+func GetRewardProgramIDBytes(rewardprogramID uint64) (rewardprogramIDBz []byte) {
+	rewardprogramIDBz = make([]byte, 8)
+	binary.BigEndian.PutUint64(rewardprogramIDBz, rewardprogramID)
+	return
+}
+
+// GetRewardProgramIDFromBytes returns rewardprogramID in uint64 format from a byte array
+func GetRewardProgramIDFromBytes(bz []byte) (rewardprogramID uint64) {
+	return binary.BigEndian.Uint64(bz)
 }
 
 // GetRewardEpochShareKeyPrefix converts a reward program id and epoch id into a prefix for iterating

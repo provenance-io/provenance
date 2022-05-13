@@ -21,6 +21,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
+// CreateRewardProgram creates new reward program from msg
 func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCreateRewardProgramRequest) (*types.MsgCreateRewardProgramResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -28,7 +29,17 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	rewardProgram := types.NewRewardProgram(msg.RewardProgramId,
+	rewardprogramID, err := s.Keeper.GetRewardProgramID(ctx)
+	if err != nil {
+		return &types.MsgCreateRewardProgramResponse{}, err
+	}
+
+	// TODO: get next epoch time by taking in day, week, month value and convert it to seconds for creating reward program
+
+	rewardProgram := types.NewRewardProgram(
+		msg.Title,
+		msg.Description,
+		rewardprogramID,
 		msg.DistributeFromAddress,
 		msg.Coin,
 		msg.MaxRewardByAddress,
@@ -37,12 +48,13 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		msg.NumberEpochs,
 		msg.EligibilityCriteria,
 	)
-	err := rewardProgram.Validate()
+	err = rewardProgram.Validate()
 	if err != nil {
 		return nil, err
 	}
 
 	s.Keeper.SetRewardProgram(ctx, rewardProgram)
+	s.Keeper.SetRewardProgramID(ctx, rewardprogramID+1)
 
 	acc, _ := sdk.AccAddressFromBech32(rewardProgram.DistributeFromAddress)
 	err = s.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.ModuleName, sdk.NewCoins(rewardProgram.Coin))
@@ -52,5 +64,13 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 	//TODO: Add object to track all balances in the module
 
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: Reward Program Proposal %v", rewardProgram))
+	// TODO: emit event
+	// ctx.EventManager().EmitEvent(
+	// 	sdk.NewEvent(
+	// 		types.EventTypeSubmitRewardProgram,
+	// 		sdk.NewAttribute(types.AttributeKeyRewardProgramID, fmt.Sprintf("%d", rewardprogramID)),
+	// 	),
+	// )
+
 	return nil, nil
 }
