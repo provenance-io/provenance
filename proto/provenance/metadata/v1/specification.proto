@@ -172,4 +172,8 @@ enum PartyType {
   PARTY_TYPE_OMNIBUS = 7;
   // PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
   PARTY_TYPE_PROVENANCE = 8;
+  // PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+  PARTY_TYPE_CONTROLLER = 10;
+  // PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
+  PARTY_TYPE_VALIDATOR = 11;
 }
