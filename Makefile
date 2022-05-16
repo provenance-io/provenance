@@ -372,6 +372,11 @@ rocksdb:
 cleveldb:
 	scripts/cleveldb_build_and_install.sh
 
+librdkafka:
+	@if [[ $(UNAME_S) == darwin && $(UNAME_M) == arm64 ]]; then \
+		scripts/m1_librdkafka_install.sh;\
+	fi
+
 .PHONY: go-mod-cache go.sum lint clean format check-built statik linkify update-tocs rocksdb cleveldb
 
 
