@@ -372,7 +372,13 @@ rocksdb:
 cleveldb:
 	scripts/cleveldb_build_and_install.sh
 
-.PHONY: go-mod-cache go.sum lint clean format check-built statik linkify update-tocs rocksdb cleveldb
+# Download and install librdkafka so that it can be used when doing a build.
+librdkafka:
+	@if [[ $(UNAME_S) == darwin && $(UNAME_M) == arm64 ]]; then \
+		scripts/m1_librdkafka_install.sh;\
+	fi
+
+.PHONY: go-mod-cache go.sum lint clean format check-built statik linkify update-tocs rocksdb cleveldb librdkafka
 
 
 validate-go-version: ## Validates the installed version of go against Provenance's minimum requirement.
