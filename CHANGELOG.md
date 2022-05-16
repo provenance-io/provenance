@@ -37,7 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-None
+### Features 
+
+  * Add CONTROLLER, and VALIDATOR PartyTypes for contract execution. 
+
+### Improvements 
 
 ---
 

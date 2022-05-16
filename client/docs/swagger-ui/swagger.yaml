@@ -30160,6 +30160,8 @@ paths:
                             - PARTY_TYPE_AFFILIATE
                             - PARTY_TYPE_OMNIBUS
                             - PARTY_TYPE_PROVENANCE
+                            - PARTY_TYPE_CONTROLLER
+                            - PARTY_TYPE_VALIDATOR
                           default: PARTY_TYPE_UNSPECIFIED
                           description: >-
                             - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is
@@ -30172,6 +30174,8 @@ paths:
                              - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                              - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                              - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                             - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                             - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                           title: >-
                             PartyType are the different roles parties on a
                             contract may use
@@ -30319,6 +30323,8 @@ paths:
                               - PARTY_TYPE_AFFILIATE
                               - PARTY_TYPE_OMNIBUS
                               - PARTY_TYPE_PROVENANCE
+                              - PARTY_TYPE_CONTROLLER
+                              - PARTY_TYPE_VALIDATOR
                             default: PARTY_TYPE_UNSPECIFIED
                             description: >-
                               - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -30331,6 +30337,8 @@ paths:
                                - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                               - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                               - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                             title: >-
                               PartyType are the different roles parties on a
                               contract may use
@@ -30593,6 +30601,8 @@ paths:
                             - PARTY_TYPE_AFFILIATE
                             - PARTY_TYPE_OMNIBUS
                             - PARTY_TYPE_PROVENANCE
+                            - PARTY_TYPE_CONTROLLER
+                            - PARTY_TYPE_VALIDATOR
                           default: PARTY_TYPE_UNSPECIFIED
                           description: >-
                             - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is
@@ -30605,6 +30615,8 @@ paths:
                              - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                              - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                              - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                             - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                             - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                           title: >-
                             PartyType are the different roles parties on a
                             contract may use
@@ -30883,6 +30895,8 @@ paths:
                               - PARTY_TYPE_AFFILIATE
                               - PARTY_TYPE_OMNIBUS
                               - PARTY_TYPE_PROVENANCE
+                              - PARTY_TYPE_CONTROLLER
+                              - PARTY_TYPE_VALIDATOR
                             default: PARTY_TYPE_UNSPECIFIED
                             description: >-
                               - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -30895,6 +30909,8 @@ paths:
                                - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                               - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                               - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                             title: >-
                               PartyType are the different roles parties on a
                               contract may use
@@ -31114,6 +31130,8 @@ paths:
                               - PARTY_TYPE_AFFILIATE
                               - PARTY_TYPE_OMNIBUS
                               - PARTY_TYPE_PROVENANCE
+                              - PARTY_TYPE_CONTROLLER
+                              - PARTY_TYPE_VALIDATOR
                             default: PARTY_TYPE_UNSPECIFIED
                             description: >-
                               - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -31126,6 +31144,8 @@ paths:
                                - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                               - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                               - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                             title: >-
                               PartyType are the different roles parties on a
                               contract may use
@@ -32305,6 +32325,8 @@ paths:
                                 - PARTY_TYPE_AFFILIATE
                                 - PARTY_TYPE_OMNIBUS
                                 - PARTY_TYPE_PROVENANCE
+                                - PARTY_TYPE_CONTROLLER
+                                - PARTY_TYPE_VALIDATOR
                               default: PARTY_TYPE_UNSPECIFIED
                               description: >-
                                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -32317,6 +32339,8 @@ paths:
                                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
@@ -32448,6 +32472,8 @@ paths:
                                   - PARTY_TYPE_AFFILIATE
                                   - PARTY_TYPE_OMNIBUS
                                   - PARTY_TYPE_PROVENANCE
+                                  - PARTY_TYPE_CONTROLLER
+                                  - PARTY_TYPE_VALIDATOR
                                 default: PARTY_TYPE_UNSPECIFIED
                                 description: >-
                                   - PARTY_TYPE_UNSPECIFIED:
@@ -32460,6 +32486,8 @@ paths:
                                    - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                    - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                    - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                   - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                   - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
@@ -33117,6 +33145,8 @@ paths:
                                 - PARTY_TYPE_AFFILIATE
                                 - PARTY_TYPE_OMNIBUS
                                 - PARTY_TYPE_PROVENANCE
+                                - PARTY_TYPE_CONTROLLER
+                                - PARTY_TYPE_VALIDATOR
                               default: PARTY_TYPE_UNSPECIFIED
                               description: >-
                                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -33129,6 +33159,8 @@ paths:
                                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
@@ -33260,6 +33292,8 @@ paths:
                                   - PARTY_TYPE_AFFILIATE
                                   - PARTY_TYPE_OMNIBUS
                                   - PARTY_TYPE_PROVENANCE
+                                  - PARTY_TYPE_CONTROLLER
+                                  - PARTY_TYPE_VALIDATOR
                                 default: PARTY_TYPE_UNSPECIFIED
                                 description: >-
                                   - PARTY_TYPE_UNSPECIFIED:
@@ -33272,6 +33306,8 @@ paths:
                                    - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                    - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                    - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                   - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                   - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
@@ -33935,6 +33971,8 @@ paths:
                                 - PARTY_TYPE_AFFILIATE
                                 - PARTY_TYPE_OMNIBUS
                                 - PARTY_TYPE_PROVENANCE
+                                - PARTY_TYPE_CONTROLLER
+                                - PARTY_TYPE_VALIDATOR
                               default: PARTY_TYPE_UNSPECIFIED
                               description: >-
                                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -33947,6 +33985,8 @@ paths:
                                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
@@ -34078,6 +34118,8 @@ paths:
                                   - PARTY_TYPE_AFFILIATE
                                   - PARTY_TYPE_OMNIBUS
                                   - PARTY_TYPE_PROVENANCE
+                                  - PARTY_TYPE_CONTROLLER
+                                  - PARTY_TYPE_VALIDATOR
                                 default: PARTY_TYPE_UNSPECIFIED
                                 description: >-
                                   - PARTY_TYPE_UNSPECIFIED:
@@ -34090,6 +34132,8 @@ paths:
                                    - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                    - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                    - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                   - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                   - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
@@ -35217,6 +35261,8 @@ paths:
                             - PARTY_TYPE_AFFILIATE
                             - PARTY_TYPE_OMNIBUS
                             - PARTY_TYPE_PROVENANCE
+                            - PARTY_TYPE_CONTROLLER
+                            - PARTY_TYPE_VALIDATOR
                           default: PARTY_TYPE_UNSPECIFIED
                           description: >-
                             - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is
@@ -35229,6 +35275,8 @@ paths:
                              - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                              - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                              - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                             - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                             - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                           title: >-
                             PartyType are the different roles parties on a
                             contract may use
@@ -35491,6 +35539,8 @@ paths:
                               - PARTY_TYPE_AFFILIATE
                               - PARTY_TYPE_OMNIBUS
                               - PARTY_TYPE_PROVENANCE
+                              - PARTY_TYPE_CONTROLLER
+                              - PARTY_TYPE_VALIDATOR
                             default: PARTY_TYPE_UNSPECIFIED
                             description: >-
                               - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -35503,6 +35553,8 @@ paths:
                                - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                               - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                               - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                             title: >-
                               PartyType are the different roles parties on a
                               contract may use
@@ -35850,6 +35902,8 @@ paths:
                                 - PARTY_TYPE_AFFILIATE
                                 - PARTY_TYPE_OMNIBUS
                                 - PARTY_TYPE_PROVENANCE
+                                - PARTY_TYPE_CONTROLLER
+                                - PARTY_TYPE_VALIDATOR
                               default: PARTY_TYPE_UNSPECIFIED
                               description: >-
                                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -35862,6 +35916,8 @@ paths:
                                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
@@ -35993,6 +36049,8 @@ paths:
                                   - PARTY_TYPE_AFFILIATE
                                   - PARTY_TYPE_OMNIBUS
                                   - PARTY_TYPE_PROVENANCE
+                                  - PARTY_TYPE_CONTROLLER
+                                  - PARTY_TYPE_VALIDATOR
                                 default: PARTY_TYPE_UNSPECIFIED
                                 description: >-
                                   - PARTY_TYPE_UNSPECIFIED:
@@ -36005,6 +36063,8 @@ paths:
                                    - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                    - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                    - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                   - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                   - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
@@ -36653,6 +36713,8 @@ paths:
                                 - PARTY_TYPE_AFFILIATE
                                 - PARTY_TYPE_OMNIBUS
                                 - PARTY_TYPE_PROVENANCE
+                                - PARTY_TYPE_CONTROLLER
+                                - PARTY_TYPE_VALIDATOR
                               default: PARTY_TYPE_UNSPECIFIED
                               description: >-
                                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -36665,6 +36727,8 @@ paths:
                                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
@@ -36796,6 +36860,8 @@ paths:
                                   - PARTY_TYPE_AFFILIATE
                                   - PARTY_TYPE_OMNIBUS
                                   - PARTY_TYPE_PROVENANCE
+                                  - PARTY_TYPE_CONTROLLER
+                                  - PARTY_TYPE_VALIDATOR
                                 default: PARTY_TYPE_UNSPECIFIED
                                 description: >-
                                   - PARTY_TYPE_UNSPECIFIED:
@@ -36808,6 +36874,8 @@ paths:
                                    - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                    - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                    - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                   - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                   - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
@@ -37490,6 +37558,8 @@ paths:
                                 - PARTY_TYPE_AFFILIATE
                                 - PARTY_TYPE_OMNIBUS
                                 - PARTY_TYPE_PROVENANCE
+                                - PARTY_TYPE_CONTROLLER
+                                - PARTY_TYPE_VALIDATOR
                               default: PARTY_TYPE_UNSPECIFIED
                               description: >-
                                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -37502,6 +37572,8 @@ paths:
                                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
@@ -37633,6 +37705,8 @@ paths:
                                   - PARTY_TYPE_AFFILIATE
                                   - PARTY_TYPE_OMNIBUS
                                   - PARTY_TYPE_PROVENANCE
+                                  - PARTY_TYPE_CONTROLLER
+                                  - PARTY_TYPE_VALIDATOR
                                 default: PARTY_TYPE_UNSPECIFIED
                                 description: >-
                                   - PARTY_TYPE_UNSPECIFIED:
@@ -37645,6 +37719,8 @@ paths:
                                    - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                    - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                    - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                   - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                   - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
@@ -38316,6 +38392,8 @@ paths:
                                 - PARTY_TYPE_AFFILIATE
                                 - PARTY_TYPE_OMNIBUS
                                 - PARTY_TYPE_PROVENANCE
+                                - PARTY_TYPE_CONTROLLER
+                                - PARTY_TYPE_VALIDATOR
                               default: PARTY_TYPE_UNSPECIFIED
                               description: >-
                                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -38328,6 +38406,8 @@ paths:
                                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
@@ -38459,6 +38539,8 @@ paths:
                                   - PARTY_TYPE_AFFILIATE
                                   - PARTY_TYPE_OMNIBUS
                                   - PARTY_TYPE_PROVENANCE
+                                  - PARTY_TYPE_CONTROLLER
+                                  - PARTY_TYPE_VALIDATOR
                                 default: PARTY_TYPE_UNSPECIFIED
                                 description: >-
                                   - PARTY_TYPE_UNSPECIFIED:
@@ -38471,6 +38553,8 @@ paths:
                                    - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                    - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                    - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                   - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                   - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
@@ -39153,6 +39237,8 @@ paths:
                                 - PARTY_TYPE_AFFILIATE
                                 - PARTY_TYPE_OMNIBUS
                                 - PARTY_TYPE_PROVENANCE
+                                - PARTY_TYPE_CONTROLLER
+                                - PARTY_TYPE_VALIDATOR
                               default: PARTY_TYPE_UNSPECIFIED
                               description: >-
                                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -39165,6 +39251,8 @@ paths:
                                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
@@ -39296,6 +39384,8 @@ paths:
                                   - PARTY_TYPE_AFFILIATE
                                   - PARTY_TYPE_OMNIBUS
                                   - PARTY_TYPE_PROVENANCE
+                                  - PARTY_TYPE_CONTROLLER
+                                  - PARTY_TYPE_VALIDATOR
                                 default: PARTY_TYPE_UNSPECIFIED
                                 description: >-
                                   - PARTY_TYPE_UNSPECIFIED:
@@ -39308,6 +39398,8 @@ paths:
                                    - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                    - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                    - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                   - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                   - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
@@ -39979,6 +40071,8 @@ paths:
                                 - PARTY_TYPE_AFFILIATE
                                 - PARTY_TYPE_OMNIBUS
                                 - PARTY_TYPE_PROVENANCE
+                                - PARTY_TYPE_CONTROLLER
+                                - PARTY_TYPE_VALIDATOR
                               default: PARTY_TYPE_UNSPECIFIED
                               description: >-
                                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -39991,6 +40085,8 @@ paths:
                                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
@@ -40122,6 +40218,8 @@ paths:
                                   - PARTY_TYPE_AFFILIATE
                                   - PARTY_TYPE_OMNIBUS
                                   - PARTY_TYPE_PROVENANCE
+                                  - PARTY_TYPE_CONTROLLER
+                                  - PARTY_TYPE_VALIDATOR
                                 default: PARTY_TYPE_UNSPECIFIED
                                 description: >-
                                   - PARTY_TYPE_UNSPECIFIED:
@@ -40134,6 +40232,8 @@ paths:
                                    - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                    - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                    - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                   - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                   - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
@@ -40801,6 +40901,8 @@ paths:
                                 - PARTY_TYPE_AFFILIATE
                                 - PARTY_TYPE_OMNIBUS
                                 - PARTY_TYPE_PROVENANCE
+                                - PARTY_TYPE_CONTROLLER
+                                - PARTY_TYPE_VALIDATOR
                               default: PARTY_TYPE_UNSPECIFIED
                               description: >-
                                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -40813,6 +40915,8 @@ paths:
                                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
@@ -40944,6 +41048,8 @@ paths:
                                   - PARTY_TYPE_AFFILIATE
                                   - PARTY_TYPE_OMNIBUS
                                   - PARTY_TYPE_PROVENANCE
+                                  - PARTY_TYPE_CONTROLLER
+                                  - PARTY_TYPE_VALIDATOR
                                 default: PARTY_TYPE_UNSPECIFIED
                                 description: >-
                                   - PARTY_TYPE_UNSPECIFIED:
@@ -40956,6 +41062,8 @@ paths:
                                    - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                    - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                    - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                   - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                   - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
@@ -41638,6 +41746,8 @@ paths:
                                 - PARTY_TYPE_AFFILIATE
                                 - PARTY_TYPE_OMNIBUS
                                 - PARTY_TYPE_PROVENANCE
+                                - PARTY_TYPE_CONTROLLER
+                                - PARTY_TYPE_VALIDATOR
                               default: PARTY_TYPE_UNSPECIFIED
                               description: >-
                                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -41650,6 +41760,8 @@ paths:
                                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
@@ -41781,6 +41893,8 @@ paths:
                                   - PARTY_TYPE_AFFILIATE
                                   - PARTY_TYPE_OMNIBUS
                                   - PARTY_TYPE_PROVENANCE
+                                  - PARTY_TYPE_CONTROLLER
+                                  - PARTY_TYPE_VALIDATOR
                                 default: PARTY_TYPE_UNSPECIFIED
                                 description: >-
                                   - PARTY_TYPE_UNSPECIFIED:
@@ -41793,6 +41907,8 @@ paths:
                                    - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                    - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                    - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                   - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                   - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
@@ -42416,6 +42532,8 @@ paths:
                                   - PARTY_TYPE_AFFILIATE
                                   - PARTY_TYPE_OMNIBUS
                                   - PARTY_TYPE_PROVENANCE
+                                  - PARTY_TYPE_CONTROLLER
+                                  - PARTY_TYPE_VALIDATOR
                                 default: PARTY_TYPE_UNSPECIFIED
                                 description: >-
                                   - PARTY_TYPE_UNSPECIFIED:
@@ -42428,6 +42546,8 @@ paths:
                                    - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                    - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                    - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                   - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                   - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
@@ -42766,6 +42886,8 @@ paths:
                             - PARTY_TYPE_AFFILIATE
                             - PARTY_TYPE_OMNIBUS
                             - PARTY_TYPE_PROVENANCE
+                            - PARTY_TYPE_CONTROLLER
+                            - PARTY_TYPE_VALIDATOR
                           default: PARTY_TYPE_UNSPECIFIED
                           description: >-
                             - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is
@@ -42778,6 +42900,8 @@ paths:
                              - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                              - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                              - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                             - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                             - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                           title: >-
                             PartyType are the different roles parties on a
                             contract may use
@@ -42940,6 +43064,8 @@ paths:
                               - PARTY_TYPE_AFFILIATE
                               - PARTY_TYPE_OMNIBUS
                               - PARTY_TYPE_PROVENANCE
+                              - PARTY_TYPE_CONTROLLER
+                              - PARTY_TYPE_VALIDATOR
                             default: PARTY_TYPE_UNSPECIFIED
                             description: >-
                               - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -42952,6 +43078,8 @@ paths:
                                - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                               - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                               - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                             title: >-
                               PartyType are the different roles parties on a
                               contract may use
@@ -43274,6 +43402,8 @@ paths:
                                 - PARTY_TYPE_AFFILIATE
                                 - PARTY_TYPE_OMNIBUS
                                 - PARTY_TYPE_PROVENANCE
+                                - PARTY_TYPE_CONTROLLER
+                                - PARTY_TYPE_VALIDATOR
                               default: PARTY_TYPE_UNSPECIFIED
                               description: >-
                                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -43286,6 +43416,8 @@ paths:
                                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
@@ -43417,6 +43549,8 @@ paths:
                                   - PARTY_TYPE_AFFILIATE
                                   - PARTY_TYPE_OMNIBUS
                                   - PARTY_TYPE_PROVENANCE
+                                  - PARTY_TYPE_CONTROLLER
+                                  - PARTY_TYPE_VALIDATOR
                                 default: PARTY_TYPE_UNSPECIFIED
                                 description: >-
                                   - PARTY_TYPE_UNSPECIFIED:
@@ -43429,6 +43563,8 @@ paths:
                                    - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                    - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                    - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                   - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                   - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
@@ -44092,6 +44228,8 @@ paths:
                                 - PARTY_TYPE_AFFILIATE
                                 - PARTY_TYPE_OMNIBUS
                                 - PARTY_TYPE_PROVENANCE
+                                - PARTY_TYPE_CONTROLLER
+                                - PARTY_TYPE_VALIDATOR
                               default: PARTY_TYPE_UNSPECIFIED
                               description: >-
                                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -44104,6 +44242,8 @@ paths:
                                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
@@ -44235,6 +44375,8 @@ paths:
                                   - PARTY_TYPE_AFFILIATE
                                   - PARTY_TYPE_OMNIBUS
                                   - PARTY_TYPE_PROVENANCE
+                                  - PARTY_TYPE_CONTROLLER
+                                  - PARTY_TYPE_VALIDATOR
                                 default: PARTY_TYPE_UNSPECIFIED
                                 description: >-
                                   - PARTY_TYPE_UNSPECIFIED:
@@ -44247,6 +44389,8 @@ paths:
                                    - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                    - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                    - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                   - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                   - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
@@ -44918,6 +45062,8 @@ paths:
                                 - PARTY_TYPE_AFFILIATE
                                 - PARTY_TYPE_OMNIBUS
                                 - PARTY_TYPE_PROVENANCE
+                                - PARTY_TYPE_CONTROLLER
+                                - PARTY_TYPE_VALIDATOR
                               default: PARTY_TYPE_UNSPECIFIED
                               description: >-
                                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -44930,6 +45076,8 @@ paths:
                                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
@@ -45061,6 +45209,8 @@ paths:
                                   - PARTY_TYPE_AFFILIATE
                                   - PARTY_TYPE_OMNIBUS
                                   - PARTY_TYPE_PROVENANCE
+                                  - PARTY_TYPE_CONTROLLER
+                                  - PARTY_TYPE_VALIDATOR
                                 default: PARTY_TYPE_UNSPECIFIED
                                 description: >-
                                   - PARTY_TYPE_UNSPECIFIED:
@@ -45073,6 +45223,8 @@ paths:
                                    - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                    - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                    - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                   - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                   - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
@@ -45740,6 +45892,8 @@ paths:
                                 - PARTY_TYPE_AFFILIATE
                                 - PARTY_TYPE_OMNIBUS
                                 - PARTY_TYPE_PROVENANCE
+                                - PARTY_TYPE_CONTROLLER
+                                - PARTY_TYPE_VALIDATOR
                               default: PARTY_TYPE_UNSPECIFIED
                               description: >-
                                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED
@@ -45752,6 +45906,8 @@ paths:
                                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
@@ -45883,6 +46039,8 @@ paths:
                                   - PARTY_TYPE_AFFILIATE
                                   - PARTY_TYPE_OMNIBUS
                                   - PARTY_TYPE_PROVENANCE
+                                  - PARTY_TYPE_CONTROLLER
+                                  - PARTY_TYPE_VALIDATOR
                                 default: PARTY_TYPE_UNSPECIFIED
                                 description: >-
                                   - PARTY_TYPE_UNSPECIFIED:
@@ -45895,6 +46053,8 @@ paths:
                                    - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                    - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                    - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                   - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                   - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
@@ -46509,6 +46669,8 @@ paths:
                                   - PARTY_TYPE_AFFILIATE
                                   - PARTY_TYPE_OMNIBUS
                                   - PARTY_TYPE_PROVENANCE
+                                  - PARTY_TYPE_CONTROLLER
+                                  - PARTY_TYPE_VALIDATOR
                                 default: PARTY_TYPE_UNSPECIFIED
                                 description: >-
                                   - PARTY_TYPE_UNSPECIFIED:
@@ -46521,6 +46683,8 @@ paths:
                                    - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                                    - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                                    - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                                   - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                                   - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
@@ -68993,6 +69157,8 @@ definitions:
             - PARTY_TYPE_AFFILIATE
             - PARTY_TYPE_OMNIBUS
             - PARTY_TYPE_PROVENANCE
+            - PARTY_TYPE_CONTROLLER
+            - PARTY_TYPE_VALIDATOR
           default: PARTY_TYPE_UNSPECIFIED
           description: >-
             - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an error
@@ -69005,6 +69171,8 @@ definitions:
              - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
              - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
              - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+             - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+             - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
           title: PartyType are the different roles parties on a contract may use
         title: >-
           a list of party roles that must be fullfilled when signing a
@@ -69101,6 +69269,8 @@ definitions:
                     - PARTY_TYPE_AFFILIATE
                     - PARTY_TYPE_OMNIBUS
                     - PARTY_TYPE_PROVENANCE
+                    - PARTY_TYPE_CONTROLLER
+                    - PARTY_TYPE_VALIDATOR
                   default: PARTY_TYPE_UNSPECIFIED
                   description: >-
                     - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an error
@@ -69113,6 +69283,8 @@ definitions:
                      - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                      - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                      - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                     - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                     - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                   title: >-
                     PartyType are the different roles parties on a contract may
                     use
@@ -69251,6 +69423,8 @@ definitions:
                       - PARTY_TYPE_AFFILIATE
                       - PARTY_TYPE_OMNIBUS
                       - PARTY_TYPE_PROVENANCE
+                      - PARTY_TYPE_CONTROLLER
+                      - PARTY_TYPE_VALIDATOR
                     default: PARTY_TYPE_UNSPECIFIED
                     description: >-
                       - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an
@@ -69263,6 +69437,8 @@ definitions:
                        - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                        - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                        - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                       - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                       - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                     title: >-
                       PartyType are the different roles parties on a contract
                       may use
@@ -69423,6 +69599,8 @@ definitions:
                 - PARTY_TYPE_AFFILIATE
                 - PARTY_TYPE_OMNIBUS
                 - PARTY_TYPE_PROVENANCE
+                - PARTY_TYPE_CONTROLLER
+                - PARTY_TYPE_VALIDATOR
               default: PARTY_TYPE_UNSPECIFIED
               description: >-
                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an error
@@ -69435,6 +69613,8 @@ definitions:
                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
               title: PartyType are the different roles parties on a contract may use
             title: >-
               a list of party roles that must be fullfilled when signing a
@@ -69605,6 +69785,8 @@ definitions:
                       - PARTY_TYPE_AFFILIATE
                       - PARTY_TYPE_OMNIBUS
                       - PARTY_TYPE_PROVENANCE
+                      - PARTY_TYPE_CONTROLLER
+                      - PARTY_TYPE_VALIDATOR
                     default: PARTY_TYPE_UNSPECIFIED
                     description: >-
                       - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an
@@ -69617,6 +69799,8 @@ definitions:
                        - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                        - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                        - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                       - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                       - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                     title: >-
                       PartyType are the different roles parties on a contract
                       may use
@@ -70459,6 +70643,8 @@ definitions:
           - PARTY_TYPE_AFFILIATE
           - PARTY_TYPE_OMNIBUS
           - PARTY_TYPE_PROVENANCE
+          - PARTY_TYPE_CONTROLLER
+          - PARTY_TYPE_VALIDATOR
         default: PARTY_TYPE_UNSPECIFIED
         description: |-
           - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an error condition
@@ -70470,6 +70656,8 @@ definitions:
            - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
            - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
            - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+           - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+           - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
         title: PartyType are the different roles parties on a contract may use
     title: A Party is an address with/in a given role associated with a contract
   provenance.metadata.v1.PartyType:
@@ -70484,6 +70672,8 @@ definitions:
       - PARTY_TYPE_AFFILIATE
       - PARTY_TYPE_OMNIBUS
       - PARTY_TYPE_PROVENANCE
+      - PARTY_TYPE_CONTROLLER
+      - PARTY_TYPE_VALIDATOR
     default: PARTY_TYPE_UNSPECIFIED
     description: |-
       - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an error condition
@@ -70495,6 +70685,8 @@ definitions:
        - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
        - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
        - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+       - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+       - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
     title: PartyType are the different roles parties on a contract may use
   provenance.metadata.v1.Process:
     type: object
@@ -70899,6 +71091,8 @@ definitions:
             - PARTY_TYPE_AFFILIATE
             - PARTY_TYPE_OMNIBUS
             - PARTY_TYPE_PROVENANCE
+            - PARTY_TYPE_CONTROLLER
+            - PARTY_TYPE_VALIDATOR
           default: PARTY_TYPE_UNSPECIFIED
           description: >-
             - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an error
@@ -70911,6 +71105,8 @@ definitions:
              - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
              - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
              - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+             - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+             - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
           title: PartyType are the different roles parties on a contract may use
         title: Type of party responsible for this record
     title: >-
@@ -71030,6 +71226,8 @@ definitions:
                     - PARTY_TYPE_AFFILIATE
                     - PARTY_TYPE_OMNIBUS
                     - PARTY_TYPE_PROVENANCE
+                    - PARTY_TYPE_CONTROLLER
+                    - PARTY_TYPE_VALIDATOR
                   default: PARTY_TYPE_UNSPECIFIED
                   description: >-
                     - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an error
@@ -71042,6 +71240,8 @@ definitions:
                      - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                      - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                      - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                     - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                     - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                   title: >-
                     PartyType are the different roles parties on a contract may
                     use
@@ -71231,6 +71431,8 @@ definitions:
                 - PARTY_TYPE_AFFILIATE
                 - PARTY_TYPE_OMNIBUS
                 - PARTY_TYPE_PROVENANCE
+                - PARTY_TYPE_CONTROLLER
+                - PARTY_TYPE_VALIDATOR
               default: PARTY_TYPE_UNSPECIFIED
               description: >-
                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an error
@@ -71243,6 +71445,8 @@ definitions:
                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
               title: PartyType are the different roles parties on a contract may use
             title: Type of party responsible for this record
         title: >-
@@ -71468,6 +71672,8 @@ definitions:
                       - PARTY_TYPE_AFFILIATE
                       - PARTY_TYPE_OMNIBUS
                       - PARTY_TYPE_PROVENANCE
+                      - PARTY_TYPE_CONTROLLER
+                      - PARTY_TYPE_VALIDATOR
                     default: PARTY_TYPE_UNSPECIFIED
                     description: >-
                       - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an
@@ -71480,6 +71686,8 @@ definitions:
                        - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                        - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                        - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                       - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                       - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                     title: >-
                       PartyType are the different roles parties on a contract
                       may use
@@ -71755,6 +71963,8 @@ definitions:
                       - PARTY_TYPE_AFFILIATE
                       - PARTY_TYPE_OMNIBUS
                       - PARTY_TYPE_PROVENANCE
+                      - PARTY_TYPE_CONTROLLER
+                      - PARTY_TYPE_VALIDATOR
                     default: PARTY_TYPE_UNSPECIFIED
                     description: >-
                       - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an
@@ -71767,6 +71977,8 @@ definitions:
                        - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                        - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                        - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                       - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                       - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                     title: >-
                       PartyType are the different roles parties on a contract
                       may use
@@ -72609,6 +72821,8 @@ definitions:
                         - PARTY_TYPE_AFFILIATE
                         - PARTY_TYPE_OMNIBUS
                         - PARTY_TYPE_PROVENANCE
+                        - PARTY_TYPE_CONTROLLER
+                        - PARTY_TYPE_VALIDATOR
                       default: PARTY_TYPE_UNSPECIFIED
                       description: >-
                         - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an
@@ -72621,6 +72835,8 @@ definitions:
                          - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                          - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                          - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                         - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                         - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                       title: >-
                         PartyType are the different roles parties on a contract
                         may use
@@ -72744,6 +72960,8 @@ definitions:
                           - PARTY_TYPE_AFFILIATE
                           - PARTY_TYPE_OMNIBUS
                           - PARTY_TYPE_PROVENANCE
+                          - PARTY_TYPE_CONTROLLER
+                          - PARTY_TYPE_VALIDATOR
                         default: PARTY_TYPE_UNSPECIFIED
                         description: >-
                           - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an
@@ -72756,6 +72974,8 @@ definitions:
                            - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                            - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                            - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                           - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                           - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                         title: >-
                           PartyType are the different roles parties on a
                           contract may use
@@ -73265,6 +73485,8 @@ definitions:
                 - PARTY_TYPE_AFFILIATE
                 - PARTY_TYPE_OMNIBUS
                 - PARTY_TYPE_PROVENANCE
+                - PARTY_TYPE_CONTROLLER
+                - PARTY_TYPE_VALIDATOR
               default: PARTY_TYPE_UNSPECIFIED
               description: >-
                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an error
@@ -73277,6 +73499,8 @@ definitions:
                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
               title: PartyType are the different roles parties on a contract may use
           title: >-
             A Party is an address with/in a given role associated with a
@@ -73403,6 +73627,8 @@ definitions:
                         - PARTY_TYPE_AFFILIATE
                         - PARTY_TYPE_OMNIBUS
                         - PARTY_TYPE_PROVENANCE
+                        - PARTY_TYPE_CONTROLLER
+                        - PARTY_TYPE_VALIDATOR
                       default: PARTY_TYPE_UNSPECIFIED
                       description: >-
                         - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an
@@ -73415,6 +73641,8 @@ definitions:
                          - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                          - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                          - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                         - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                         - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                       title: >-
                         PartyType are the different roles parties on a contract
                         may use
@@ -73538,6 +73766,8 @@ definitions:
                           - PARTY_TYPE_AFFILIATE
                           - PARTY_TYPE_OMNIBUS
                           - PARTY_TYPE_PROVENANCE
+                          - PARTY_TYPE_CONTROLLER
+                          - PARTY_TYPE_VALIDATOR
                         default: PARTY_TYPE_UNSPECIFIED
                         description: >-
                           - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an
@@ -73550,6 +73780,8 @@ definitions:
                            - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                            - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                            - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                           - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                           - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                         title: >-
                           PartyType are the different roles parties on a
                           contract may use
@@ -74069,6 +74301,8 @@ definitions:
             - PARTY_TYPE_AFFILIATE
             - PARTY_TYPE_OMNIBUS
             - PARTY_TYPE_PROVENANCE
+            - PARTY_TYPE_CONTROLLER
+            - PARTY_TYPE_VALIDATOR
           default: PARTY_TYPE_UNSPECIFIED
           description: >-
             - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an error
@@ -74081,6 +74315,8 @@ definitions:
              - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
              - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
              - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+             - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+             - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
           title: PartyType are the different roles parties on a contract may use
         title: >-
           A list of parties that must be present on a scope (and their
@@ -74159,6 +74395,8 @@ definitions:
                     - PARTY_TYPE_AFFILIATE
                     - PARTY_TYPE_OMNIBUS
                     - PARTY_TYPE_PROVENANCE
+                    - PARTY_TYPE_CONTROLLER
+                    - PARTY_TYPE_VALIDATOR
                   default: PARTY_TYPE_UNSPECIFIED
                   description: >-
                     - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an error
@@ -74171,6 +74409,8 @@ definitions:
                      - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                      - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                      - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                     - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                     - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                   title: >-
                     PartyType are the different roles parties on a contract may
                     use
@@ -74283,6 +74523,8 @@ definitions:
                 - PARTY_TYPE_AFFILIATE
                 - PARTY_TYPE_OMNIBUS
                 - PARTY_TYPE_PROVENANCE
+                - PARTY_TYPE_CONTROLLER
+                - PARTY_TYPE_VALIDATOR
               default: PARTY_TYPE_UNSPECIFIED
               description: >-
                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an error
@@ -74295,6 +74537,8 @@ definitions:
                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
               title: PartyType are the different roles parties on a contract may use
             title: >-
               A list of parties that must be present on a scope (and their
@@ -74454,6 +74698,8 @@ definitions:
                       - PARTY_TYPE_AFFILIATE
                       - PARTY_TYPE_OMNIBUS
                       - PARTY_TYPE_PROVENANCE
+                      - PARTY_TYPE_CONTROLLER
+                      - PARTY_TYPE_VALIDATOR
                     default: PARTY_TYPE_UNSPECIFIED
                     description: >-
                       - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an
@@ -74466,6 +74712,8 @@ definitions:
                        - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                        - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                        - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                       - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                       - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                     title: >-
                       PartyType are the different roles parties on a contract
                       may use
@@ -74647,6 +74895,8 @@ definitions:
                     - PARTY_TYPE_AFFILIATE
                     - PARTY_TYPE_OMNIBUS
                     - PARTY_TYPE_PROVENANCE
+                    - PARTY_TYPE_CONTROLLER
+                    - PARTY_TYPE_VALIDATOR
                   default: PARTY_TYPE_UNSPECIFIED
                   description: >-
                     - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an error
@@ -74659,6 +74909,8 @@ definitions:
                      - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                      - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                      - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                     - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                     - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                   title: >-
                     PartyType are the different roles parties on a contract may
                     use
@@ -74841,6 +75093,8 @@ definitions:
                           - PARTY_TYPE_AFFILIATE
                           - PARTY_TYPE_OMNIBUS
                           - PARTY_TYPE_PROVENANCE
+                          - PARTY_TYPE_CONTROLLER
+                          - PARTY_TYPE_VALIDATOR
                         default: PARTY_TYPE_UNSPECIFIED
                         description: >-
                           - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an
@@ -74853,6 +75107,8 @@ definitions:
                            - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                            - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                            - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                           - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                           - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                         title: >-
                           PartyType are the different roles parties on a
                           contract may use
@@ -75061,6 +75317,8 @@ definitions:
                 - PARTY_TYPE_AFFILIATE
                 - PARTY_TYPE_OMNIBUS
                 - PARTY_TYPE_PROVENANCE
+                - PARTY_TYPE_CONTROLLER
+                - PARTY_TYPE_VALIDATOR
               default: PARTY_TYPE_UNSPECIFIED
               description: >-
                 - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an error
@@ -75073,6 +75331,8 @@ definitions:
                  - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                  - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                  - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                 - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                 - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
               title: PartyType are the different roles parties on a contract may use
           title: >-
             A Party is an address with/in a given role associated with a
@@ -75214,6 +75474,8 @@ definitions:
                     - PARTY_TYPE_AFFILIATE
                     - PARTY_TYPE_OMNIBUS
                     - PARTY_TYPE_PROVENANCE
+                    - PARTY_TYPE_CONTROLLER
+                    - PARTY_TYPE_VALIDATOR
                   default: PARTY_TYPE_UNSPECIFIED
                   description: >-
                     - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an error
@@ -75226,6 +75488,8 @@ definitions:
                      - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                      - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                      - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                     - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                     - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                   title: >-
                     PartyType are the different roles parties on a contract may
                     use
@@ -75475,6 +75739,8 @@ definitions:
                           - PARTY_TYPE_AFFILIATE
                           - PARTY_TYPE_OMNIBUS
                           - PARTY_TYPE_PROVENANCE
+                          - PARTY_TYPE_CONTROLLER
+                          - PARTY_TYPE_VALIDATOR
                         default: PARTY_TYPE_UNSPECIFIED
                         description: >-
                           - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an
@@ -75487,6 +75753,8 @@ definitions:
                            - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                            - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                            - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                           - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                           - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                         title: >-
                           PartyType are the different roles parties on a
                           contract may use
@@ -75815,6 +76083,8 @@ definitions:
                         - PARTY_TYPE_AFFILIATE
                         - PARTY_TYPE_OMNIBUS
                         - PARTY_TYPE_PROVENANCE
+                        - PARTY_TYPE_CONTROLLER
+                        - PARTY_TYPE_VALIDATOR
                       default: PARTY_TYPE_UNSPECIFIED
                       description: >-
                         - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an
@@ -75827,6 +76097,8 @@ definitions:
                          - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                          - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                          - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                         - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                         - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                       title: >-
                         PartyType are the different roles parties on a contract
                         may use
@@ -75950,6 +76222,8 @@ definitions:
                           - PARTY_TYPE_AFFILIATE
                           - PARTY_TYPE_OMNIBUS
                           - PARTY_TYPE_PROVENANCE
+                          - PARTY_TYPE_CONTROLLER
+                          - PARTY_TYPE_VALIDATOR
                         default: PARTY_TYPE_UNSPECIFIED
                         description: >-
                           - PARTY_TYPE_UNSPECIFIED: PARTY_TYPE_UNSPECIFIED is an
@@ -75962,6 +76236,8 @@ definitions:
                            - PARTY_TYPE_AFFILIATE: PARTY_TYPE_AFFILIATE is a party with an affiliate agreement
                            - PARTY_TYPE_OMNIBUS: PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account
                            - PARTY_TYPE_PROVENANCE: PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action
+                           - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
+                           - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
                         title: >-
                           PartyType are the different roles parties on a
                           contract may use
@@ -77701,6 +77977,8 @@ definitions:
           - PARTY_TYPE_OMNIBUS
           - PARTY_TYPE_PROVENANCE
           - PARTY_TYPE_MARKER
+          - PARTY_TYPE_CONTROLLER
+          - PARTY_TYPE_VALIDATOR
         default: PARTY_TYPE_UNKNOWN
       input_specs:
         type: array
@@ -78345,6 +78623,8 @@ definitions:
                 - PARTY_TYPE_OMNIBUS
                 - PARTY_TYPE_PROVENANCE
                 - PARTY_TYPE_MARKER
+                - PARTY_TYPE_CONTROLLER
+                - PARTY_TYPE_VALIDATOR
               default: PARTY_TYPE_UNKNOWN
             signer:
               type: object
@@ -78621,6 +78901,8 @@ definitions:
             - PARTY_TYPE_OMNIBUS
             - PARTY_TYPE_PROVENANCE
             - PARTY_TYPE_MARKER
+            - PARTY_TYPE_CONTROLLER
+            - PARTY_TYPE_VALIDATOR
           default: PARTY_TYPE_UNKNOWN
       condition_specs:
         type: array
@@ -78849,6 +79131,8 @@ definitions:
                 - PARTY_TYPE_OMNIBUS
                 - PARTY_TYPE_PROVENANCE
                 - PARTY_TYPE_MARKER
+                - PARTY_TYPE_CONTROLLER
+                - PARTY_TYPE_VALIDATOR
               default: PARTY_TYPE_UNKNOWN
             input_specs:
               type: array
@@ -79421,6 +79705,8 @@ definitions:
       - PARTY_TYPE_OMNIBUS
       - PARTY_TYPE_PROVENANCE
       - PARTY_TYPE_MARKER
+      - PARTY_TYPE_CONTROLLER
+      - PARTY_TYPE_VALIDATOR
     default: PARTY_TYPE_UNKNOWN
   provenance.metadata.v1.p8e.ProposedFact:
     type: object
@@ -79535,6 +79821,8 @@ definitions:
           - PARTY_TYPE_OMNIBUS
           - PARTY_TYPE_PROVENANCE
           - PARTY_TYPE_MARKER
+          - PARTY_TYPE_CONTROLLER
+          - PARTY_TYPE_VALIDATOR
         default: PARTY_TYPE_UNKNOWN
       signer:
         type: object
@@ -79597,6 +79885,8 @@ definitions:
                 - PARTY_TYPE_OMNIBUS
                 - PARTY_TYPE_PROVENANCE
                 - PARTY_TYPE_MARKER
+                - PARTY_TYPE_CONTROLLER
+                - PARTY_TYPE_VALIDATOR
               default: PARTY_TYPE_UNKNOWN
             signer:
               type: object
