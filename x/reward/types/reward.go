@@ -123,6 +123,30 @@ func (rc *RewardClaim) String() string {
 	return string(out)
 }
 
+func NewAccountState(rewardProgramId, epochId uint64, address string) AccountState {
+	return AccountState{
+		RewardProgramId: rewardProgramId,
+		EpochId:         epochId,
+		Address:         address,
+		ActionCounter:   0,
+	}
+}
+
+func (s *AccountState) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(s.Address); err != nil {
+		return fmt.Errorf("invalid address for share address: %w", err)
+	}
+	if id := s.GetRewardProgramId(); id == 0 {
+		return fmt.Errorf("invalid reward program id")
+	}
+	return nil
+}
+
+func (as *AccountState) String() string {
+	out, _ := yaml.Marshal(as)
+	return string(out)
+}
+
 func NewShare(rewardProgramId, epochId uint64, address string, claimed bool, expireTime time.Time, amount int64) Share {
 	return Share{
 		RewardProgramId: rewardProgramId,

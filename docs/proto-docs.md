@@ -393,6 +393,7 @@
     - [Msg](#provenance.name.v1.Msg)
   
 - [provenance/reward/v1/reward.proto](#provenance/reward/v1/reward.proto)
+    - [AccountState](#provenance.reward.v1.AccountState)
     - [ActionDelegate](#provenance.reward.v1.ActionDelegate)
     - [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations)
     - [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria)
@@ -5944,6 +5945,24 @@ Msg defines the bank Msg service.
 <p align="right"><a href="#top">Top</a></p>
 
 ## provenance/reward/v1/reward.proto
+
+
+
+<a name="provenance.reward.v1.AccountState"></a>
+
+### AccountState
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this share belongs to |
+| `epoch_id` | [uint64](#uint64) |  | The id of the epoch that the share belongs to |
+| `address` | [string](#string) |  | Owner of the share |
+| `action_counter` | [uint64](#uint64) |  | The number of actions done by this account |
+
+
+
 
 
 

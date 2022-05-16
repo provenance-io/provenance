@@ -31,8 +31,9 @@ var (
 
 	EligibilityCriteriaKeyPrefix = []byte{0x05}
 
-	ActionKeyPrefix = []byte{0x06}
-	ShareKeyPrefix  = []byte{0x07}
+	ActionKeyPrefix       = []byte{0x06}
+	ShareKeyPrefix        = []byte{0x07}
+	AccountStateKeyPrefix = []byte{0x08}
 
 	ActionDelegateKey            = []byte("Delegate")
 	ActionTransferDelegationsKey = []byte("TransferDelegations")
@@ -52,6 +53,27 @@ func GetShareKey(rewardId uint64, epochId uint64, addr []byte) []byte {
 	key = append(key, rewardByte...)
 	key = append(key, epochByte...)
 	key = append(key, address.MustLengthPrefix(addr)...)
+	return key
+}
+
+// GetAccountStateKey converts a reward program id, epoch id, and address into an AccountStateKey
+func GetAccountStateKey(rewardId uint64, epochId uint64, addr []byte) []byte {
+	key := AccountStateKeyPrefix
+	rewardByte := []byte(strconv.FormatUint(rewardId, 10))
+	epochByte := []byte(strconv.FormatUint(epochId, 10))
+	key = append(key, rewardByte...)
+	key = append(key, epochByte...)
+	key = append(key, address.MustLengthPrefix(addr)...)
+	return key
+}
+
+// GetAccountStateKeyPrefix converts a reward program id and epoch id into a prefix for iterating
+func GetAccountStateKeyPrefix(rewardId uint64, epochId uint64) []byte {
+	key := AccountStateKeyPrefix
+	rewardByte := []byte(strconv.FormatUint(rewardId, 10))
+	epochByte := []byte(strconv.FormatUint(epochId, 10))
+	key = append(key, rewardByte...)
+	key = append(key, epochByte...)
 	return key
 }
 

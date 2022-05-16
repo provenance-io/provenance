@@ -86,6 +86,16 @@ message RewardClaim {
   ;
 }
 
+message AccountState {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  uint64 reward_program_id = 1; // The id of the reward program that this share belongs to
+  uint64 epoch_id          = 2; // The id of the epoch that the share belongs to
+  string address           = 3 [(gogoproto.moretags) = "yaml:\"address\""]; // Owner of the share
+  uint64 action_counter = 4;  // The number of actions done by this account
+}
+
 message SharesPerEpochPerRewardsProgram {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_getters)  = true;
