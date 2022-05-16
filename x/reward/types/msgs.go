@@ -74,11 +74,11 @@ func (msg MsgCreateRewardProgramRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the parent.
 func (msg MsgCreateRewardProgramRequest) GetSigners() []sdk.AccAddress {
-	// addr, err := sdk.AccAddressFromBech32(ms)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	return []sdk.AccAddress{}
+	addr, err := sdk.AccAddressFromBech32(msg.DistributeFromAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
 }
 
 // GetSignBytes encodes the message for signing

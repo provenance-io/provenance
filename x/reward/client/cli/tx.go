@@ -46,7 +46,7 @@ func NewTxCmd() *cobra.Command {
 func GetCmdRewardProgramAdd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "add-reward-program [title] [description]",
-		Args:    cobra.ExactArgs(2),
+		Args:    cobra.ExactArgs(3),
 		Aliases: []string{"arp"},
 		Short:   "Add a reward program",
 		Long:    strings.TrimSpace(`Add a reward program`),
@@ -124,6 +124,7 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 	}
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(FlagCoin, "", "coins for reward program")
+	cmd.Flags().String(FlagMaxRewardByAddress, "", "max amount of coins a single address can claim in rewards")
 	cmd.Flags().String(FlagStartTime, "", "time to start the rewards program, this must be a time in the future or within the first epoch")
 	cmd.Flags().String(FlagEpochType, "", "epoch type (day, week, month)")
 	cmd.Flags().Uint64(FlagNumEpochs, 0, "number of epochs for the reward program")

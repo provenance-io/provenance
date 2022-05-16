@@ -6516,6 +6516,11 @@ Query defines the gRPC querier service for reward module.
 
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  |  |
+
+
 
 
 

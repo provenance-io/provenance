@@ -43,7 +43,9 @@ message MsgCreateRewardProgramRequest {
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"eligibility_criteria\""];
 }
 
-message MsgCreateRewardProgramResponse {}
+message MsgCreateRewardProgramResponse {
+  uint64 id = 1;
+}
 
 // // MsgWriteCriteraRequest
 // message MsgWriteCriteraRequest {}
