@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -85,13 +86,21 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 			// 	return err
 			// }
 
-			epochType, err := cmd.Flags().GetString(FlagEpochType)
+			epochTypeKey, err := cmd.Flags().GetString(FlagEpochType)
 			if err != nil {
 				return err
 			}
+			epochTypeSeconds := types.EpochTypeToSeconds[epochTypeKey]
+			if epochTypeSeconds == 0 {
+				return fmt.Errorf("epoch type %s does not exist.", epochTypeKey)
+			}
+
 			numEpochs, err := cmd.Flags().GetUint64(FlagNumEpochs)
 			if err != nil {
 				return err
+			}
+			if numEpochs < 1 {
+				return errors.New("number of epochs must be larger than 0")
 			}
 			eligibilityCriteriaStr, err := cmd.Flags().GetString(FlagEligibilityCriteria)
 			if err != nil {
@@ -112,7 +121,7 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 				coin,
 				maxCoin,
 				time.Now(),
-				epochType,
+				epochTypeKey,
 				numEpochs,
 				eligibilityCriteria,
 			)

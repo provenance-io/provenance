@@ -1,6 +1,8 @@
 package types
 
-func NewGenesisState(rewardProgram []RewardProgram,
+func NewGenesisState(
+	startingRewardProgramID uint64,
+	rewardProgram []RewardProgram,
 	rewardClaims []RewardClaim,
 	epochRewardDistributions []EpochRewardDistribution,
 	eligibilityCriterias []EligibilityCriteria,
@@ -8,6 +10,7 @@ func NewGenesisState(rewardProgram []RewardProgram,
 	actionTransferDelegations ActionTransferDelegations,
 ) *GenesisState {
 	return &GenesisState{
+		StartingRewardProgramId:   startingRewardProgramID,
 		RewardPrograms:            rewardProgram,
 		RewardClaims:              rewardClaims,
 		EpochRewardDistributions:  epochRewardDistributions,
@@ -20,6 +23,7 @@ func NewGenesisState(rewardProgram []RewardProgram,
 // DefaultGenesis returns the default reward genesis state
 func DefaultGenesis() *GenesisState {
 	return NewGenesisState(
+		DefaultStartingRewardProgramID,
 		[]RewardProgram{},
 		[]RewardClaim{},
 		[]EpochRewardDistribution{},

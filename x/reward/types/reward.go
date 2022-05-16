@@ -14,11 +14,20 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 )
 
+// DefaultStartingRewardProgramID is 1
+const DefaultStartingRewardProgramID uint64 = 1
+
 // Constants pertaining to a RewardProgram object
 const (
 	MaxDescriptionLength int = 10000
 	MaxTitleLength       int = 140
 )
+
+var EpochTypeToSeconds = map[string]uint64{
+	"day":   60 * 60 * 24,
+	"week":  60 * 60 * 24 * 7,
+	"month": 60 * 60 * 24 * 30,
+}
 
 var (
 	_ RewardAction = &ActionDelegate{}

@@ -10,6 +10,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	cli "github.com/provenance-io/provenance/x/reward/client/cli"
+	"github.com/provenance-io/provenance/x/reward/types"
 
 	"github.com/provenance-io/provenance/x/reward/keeper"
 	reward "github.com/provenance-io/provenance/x/reward/types"
@@ -140,11 +141,7 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Deprecated: Route returns the message routing key for the reward module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-func (am AppModule) NewHandler() sdk.Handler {
-	return nil
+	return sdk.NewRoute(types.RouterKey, rewardModule.NewHandler(am.keeper))
 }
 
 // QuerierRoute returns the route we respond to for abci queries
