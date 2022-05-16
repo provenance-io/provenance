@@ -56,6 +56,10 @@ const (
 	PartyTypeProvenance PartyType = "provenance"
 	// PartyTypeServicer is a concrete party type.
 	PartyTypeServicer PartyType = "servicer"
+	// PartyTypeController is a concrete party type.
+	PartyTypeController PartyType = "controller"
+	// PartyTypeValidator is a concrete party type.
+	PartyTypeValidator PartyType = "validator"
 	// PartyTypeUnspecified is a concrete party type.
 	PartyTypeUnspecified PartyType = "unspecified"
 )
@@ -243,6 +247,10 @@ func (partyType *PartyType) convertToBaseType() types.PartyType {
 		return types.PartyType_PARTY_TYPE_OMNIBUS
 	case PartyTypeProvenance:
 		return types.PartyType_PARTY_TYPE_PROVENANCE
+	case PartyTypeController:
+		return types.PartyType_PARTY_TYPE_CONTROLLER
+	case PartyTypeValidator:
+		return types.PartyType_PARTY_TYPE_VALIDATOR
 	default:
 		return types.PartyType_PARTY_TYPE_UNSPECIFIED
 	}
@@ -453,6 +461,10 @@ func createRole(baseType types.PartyType) PartyType {
 		return PartyTypeOmnibus
 	case types.PartyType_PARTY_TYPE_PROVENANCE:
 		return PartyTypeProvenance
+	case types.PartyType_PARTY_TYPE_CONTROLLER:
+		return PartyTypeController
+	case types.PartyType_PARTY_TYPE_VALIDATOR:
+		return PartyTypeValidator
 	default:
 		return PartyTypeUnspecified
 	}
