@@ -11,6 +11,12 @@ brew_install() {
     fi
 }
 
+# Ensure homebrew is installed
+if [[ $(command -v brew) == "" ]]; then
+    echo "This script requires Homebrew. Please install and run again..."
+    exit 0
+fi
+
 # Install dependencies
 brew_install "librdkafka"
 brew_install "openssl"
