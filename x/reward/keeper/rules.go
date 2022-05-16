@@ -39,7 +39,7 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, program *types.RewardProgram) err
 			// for transfers event and make sure there is a sender
 
 			// We probably want to check the criteria on the delegation within here
-			evaluateRes, err = k.EvaluateDelegation(ctx, &program.EligibilityCriteria)
+			evaluateRes, err = k.EvaluateDelegation(ctx, program)
 			if err != nil {
 				return err
 			}
@@ -47,7 +47,7 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, program *types.RewardProgram) err
 			ctx.Logger().Info(fmt.Sprintf("NOTICE: The Action type is %s", actionType))
 			// check the event history
 			// for transfers event and make sure there is a sender
-			evaluateRes, err = k.EvaluateTransferAndCheckDelegation(ctx, &program.EligibilityCriteria)
+			evaluateRes, err = k.EvaluateTransferAndCheckDelegation(ctx, program)
 			if err != nil {
 				return err
 			}
@@ -173,11 +173,14 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 	return nil
 }
 
-func (k Keeper) EvaluateTransferAndCheckDelegation(ctx sdk.Context, criteria *types.EligibilityCriteria) ([]EvaluationResult, error) {
+func (k Keeper) EvaluateTransferAndCheckDelegation(ctx sdk.Context, rewardProgram *types.RewardProgram) ([]EvaluationResult, error) {
 	result, err := k.GetTransferEvents(ctx)
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO Apply actions to each account based on events
+	// TODO Filter out results that don't meet criteria.
 
 	/*for _, s := range result {
 		if len(k.CheckActiveDelegations(ctx, s.address)) > 0 {
@@ -221,15 +224,29 @@ func (k Keeper) IterateABCIEvents(ctx sdk.Context, eventCriteria *EventCriteria,
 	return nil
 }
 
-func (k Keeper) EvaluateDelegation(ctx sdk.Context, criteria *types.EligibilityCriteria) ([]EvaluationResult, error) {
-	evaluateRes, err := k.GetDelegationEvents(ctx)
+func (k Keeper) EvaluateDelegation(ctx sdk.Context, rewardProgram *types.RewardProgram) ([]EvaluationResult, error) {
+	events, err := k.GetDelegationEvents(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	// We want to filter with the criteria here
+	results := ([]EvaluationResult)(nil)
+	for _, res := range events {
+		state, err := k.GetAccountState(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentEpoch(), string(res.address))
+		if err != nil {
+			continue
+		}
 
-	return evaluateRes, err
+		state.ActionCounter += 1
+		k.SetAccountState(ctx, &state)
+
+		// We append to the new list only if
+		// If we match the condition then append to the results
+
+		results = append(results, res)
+	}
+
+	return results, err
 }
 
 // EvaluateDelegateEvents
