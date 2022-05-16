@@ -29,7 +29,7 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	rewardprogramID, err := s.Keeper.GetRewardProgramID(ctx)
+	rewardProgramID, err := s.Keeper.GetRewardProgramID(ctx)
 	if err != nil {
 		return &types.MsgCreateRewardProgramResponse{}, err
 	}
@@ -39,12 +39,12 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 	rewardProgram := types.NewRewardProgram(
 		msg.Title,
 		msg.Description,
-		rewardprogramID,
+		rewardProgramID,
 		msg.DistributeFromAddress,
 		msg.Coin,
 		msg.MaxRewardByAddress,
 		msg.ProgramStartTime,
-		60, // TODO : add a calculation from a type of day, week, month...
+		types.EpochTypeToSeconds[msg.EpochType],
 		msg.NumberEpochs,
 		msg.EligibilityCriteria,
 	)
@@ -54,7 +54,7 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 	}
 
 	s.Keeper.SetRewardProgram(ctx, rewardProgram)
-	s.Keeper.SetRewardProgramID(ctx, rewardprogramID+1)
+	s.Keeper.SetRewardProgramID(ctx, rewardProgramID+1)
 
 	acc, _ := sdk.AccAddressFromBech32(rewardProgram.DistributeFromAddress)
 	err = s.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.ModuleName, sdk.NewCoins(rewardProgram.Coin))
@@ -72,5 +72,5 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 	// 	),
 	// )
 
-	return nil, nil
+	return &types.MsgCreateRewardProgramResponse{Id: rewardProgramID}, nil
 }

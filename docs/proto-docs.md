@@ -6137,6 +6137,7 @@ GenesisState defines the reward module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `StartingRewardProgramId` | [uint64](#uint64) |  | starting_reward_program_id is the ID of the starting reward program. |
 | `reward_programs` | [RewardProgram](#provenance.reward.v1.RewardProgram) | repeated |  |
 | `reward_claims` | [RewardClaim](#provenance.reward.v1.RewardClaim) | repeated |  |
 | `epoch_reward_distributions` | [EpochRewardDistribution](#provenance.reward.v1.EpochRewardDistribution) | repeated |  |
