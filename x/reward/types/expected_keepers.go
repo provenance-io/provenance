@@ -14,5 +14,4 @@ type DistributionKeeper interface {
 type StakingKeeper interface {
 	// GetAllDelegatorDelegations return all delegations for a delegator
 	GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []stakingtypes.Delegation
-
 }

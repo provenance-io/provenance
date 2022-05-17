@@ -104,9 +104,9 @@ func (k Keeper) RemoveExpiredPrograms(ctx sdk.Context) error {
 }
 
 // GetRewardProgramID gets the highest rewardprogram ID
-func (keeper Keeper) GetRewardProgramID(ctx sdk.Context) (rewardprogramID uint64, err error) {
-	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(types.RewardProgramIdKey)
+func (k Keeper) GetRewardProgramID(ctx sdk.Context) (rewardprogramID uint64, err error) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.RewardProgramIDKey)
 	if bz == nil {
 		return 0, errors.New("initial rewardprogram ID hasn't been set")
 	}
@@ -116,7 +116,7 @@ func (keeper Keeper) GetRewardProgramID(ctx sdk.Context) (rewardprogramID uint64
 }
 
 // SetRewardProgramID sets the new rewardprogram ID to the store
-func (keeper Keeper) SetRewardProgramID(ctx sdk.Context, rewardprogramID uint64) {
-	store := ctx.KVStore(keeper.storeKey)
-	store.Set(types.RewardProgramIdKey, types.GetRewardProgramIDBytes(rewardprogramID))
+func (k Keeper) SetRewardProgramID(ctx sdk.Context, rewardprogramID uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.RewardProgramIDKey, types.GetRewardProgramIDBytes(rewardprogramID))
 }

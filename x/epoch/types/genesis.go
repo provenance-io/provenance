@@ -17,7 +17,7 @@ func DefaultGenesis() *GenesisState {
 		{
 			Identifier:              "minute",
 			StartHeight:             0,
-			Duration:                uint64(60), //duration in blocks
+			Duration:                uint64(60), // duration in blocks
 			CurrentEpoch:            0,
 			CurrentEpochStartHeight: 0,
 			EpochCountingStarted:    false,
@@ -25,7 +25,7 @@ func DefaultGenesis() *GenesisState {
 		{
 			Identifier:              "week",
 			StartHeight:             0,
-			Duration:                uint64((24 * 60 * 60 * 7) / 5), //duration in blocks
+			Duration:                uint64((24 * 60 * 60 * 7) / 5), // duration in blocks
 			CurrentEpoch:            0,
 			CurrentEpochStartHeight: 0,
 			EpochCountingStarted:    false,

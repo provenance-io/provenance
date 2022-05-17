@@ -31,7 +31,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 				epochInfo.CurrentEpoch = 1
 				logger.Info(fmt.Sprintf("NOTICE: Starting new epoch with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
 			} else {
-				epochInfo.CurrentEpoch += 1
+				epochInfo.CurrentEpoch++
 				logger.Info(fmt.Sprintf("NOTICE: Starting epoch with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
 				ctx.EventManager().EmitEvent(
 					sdk.NewEvent(

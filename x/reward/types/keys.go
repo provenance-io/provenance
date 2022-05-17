@@ -23,7 +23,7 @@ const (
 
 var (
 	RewardProgramKeyPrefix = []byte{0x01}
-	RewardProgramIdKey     = []byte{0x02}
+	RewardProgramIDKey     = []byte{0x02}
 
 	RewardClaimKeyPrefix = []byte{0x03}
 
@@ -46,10 +46,10 @@ func GetRewardProgramKey(id int64) []byte {
 }
 
 // GetShareKey converts a reward program id, epoch id, and address into a ShareKey
-func GetShareKey(rewardId uint64, epochId uint64, addr []byte) []byte {
+func GetShareKey(rewardID uint64, epochID uint64, addr []byte) []byte {
 	key := ShareKeyPrefix
-	rewardByte := []byte(strconv.FormatUint(rewardId, 10))
-	epochByte := []byte(strconv.FormatUint(epochId, 10))
+	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
+	epochByte := []byte(strconv.FormatUint(epochID, 10))
 	key = append(key, rewardByte...)
 	key = append(key, epochByte...)
 	key = append(key, address.MustLengthPrefix(addr)...)
@@ -57,10 +57,10 @@ func GetShareKey(rewardId uint64, epochId uint64, addr []byte) []byte {
 }
 
 // GetAccountStateKey converts a reward program id, epoch id, and address into an AccountStateKey
-func GetAccountStateKey(rewardId uint64, epochId uint64, addr []byte) []byte {
+func GetAccountStateKey(rewardID uint64, epochID uint64, addr []byte) []byte {
 	key := AccountStateKeyPrefix
-	rewardByte := []byte(strconv.FormatUint(rewardId, 10))
-	epochByte := []byte(strconv.FormatUint(epochId, 10))
+	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
+	epochByte := []byte(strconv.FormatUint(epochID, 10))
 	key = append(key, rewardByte...)
 	key = append(key, epochByte...)
 	key = append(key, address.MustLengthPrefix(addr)...)
@@ -68,19 +68,19 @@ func GetAccountStateKey(rewardId uint64, epochId uint64, addr []byte) []byte {
 }
 
 // GetAccountStateKeyPrefix converts a reward program id and epoch id into a prefix for iterating
-func GetAccountStateKeyPrefix(rewardId uint64, epochId uint64) []byte {
+func GetAccountStateKeyPrefix(rewardID uint64, epochID uint64) []byte {
 	key := AccountStateKeyPrefix
-	rewardByte := []byte(strconv.FormatUint(rewardId, 10))
-	epochByte := []byte(strconv.FormatUint(epochId, 10))
+	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
+	epochByte := []byte(strconv.FormatUint(epochID, 10))
 	key = append(key, rewardByte...)
 	key = append(key, epochByte...)
 	return key
 }
 
 // GetRewardShareKeyPrefix converts a reward program id into a prefix for iterating
-func GetRewardShareKeyPrefix(rewardId uint64) []byte {
+func GetRewardShareKeyPrefix(rewardID uint64) []byte {
 	key := ShareKeyPrefix
-	rewardByte := []byte(strconv.FormatUint(rewardId, 10))
+	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
 	key = append(key, rewardByte...)
 	return key
 }
@@ -98,10 +98,10 @@ func GetRewardProgramIDFromBytes(bz []byte) (rewardprogramID uint64) {
 }
 
 // GetRewardEpochShareKeyPrefix converts a reward program id and epoch id into a prefix for iterating
-func GetRewardEpochShareKeyPrefix(rewardId uint64, epochId uint64) []byte {
+func GetRewardEpochShareKeyPrefix(rewardID uint64, epochID uint64) []byte {
 	key := ShareKeyPrefix
-	rewardByte := []byte(strconv.FormatUint(rewardId, 10))
-	epochByte := []byte(strconv.FormatUint(epochId, 10))
+	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
+	epochByte := []byte(strconv.FormatUint(epochID, 10))
 	key = append(key, rewardByte...)
 	key = append(key, epochByte...)
 	return key
@@ -112,9 +112,9 @@ func GetRewardClaimsKey(addr []byte) []byte {
 	return append(RewardClaimKeyPrefix, address.MustLengthPrefix(addr)...)
 }
 
-func GetEpochRewardDistributionKey(epochId string, rewardId string) []byte {
-	key := append(EpochRewardDistributionKeyPrefix, []byte(epochId)...)
-	return append(key, []byte(rewardId)...)
+func GetEpochRewardDistributionKey(epochID string, rewardID string) []byte {
+	key := append(EpochRewardDistributionKeyPrefix, []byte(epochID)...)
+	return append(key, []byte(rewardID)...)
 }
 
 func GetEligibilityCriteriaKey(name string) []byte {

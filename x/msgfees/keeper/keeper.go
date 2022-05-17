@@ -11,7 +11,6 @@ import (
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
-
 const StoreKey = types.ModuleName
 
 type baseAppSimulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, sdk.Context, error)

@@ -7,9 +7,9 @@ import (
 )
 
 // Removes an account state
-func (k Keeper) RemoveAccountState(ctx sdk.Context, rewardProgramId, epochId uint64, addr string) bool {
+func (k Keeper) RemoveAccountState(ctx sdk.Context, rewardProgramID, epochID uint64, addr string) bool {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetAccountStateKey(rewardProgramId, epochId, []byte(addr))
+	key := types.GetAccountStateKey(rewardProgramID, epochID, []byte(addr))
 	if key == nil {
 		return false
 	}
@@ -22,9 +22,9 @@ func (k Keeper) RemoveAccountState(ctx sdk.Context, rewardProgramId, epochId uin
 	return keyExists
 }
 
-func (k Keeper) GetAccountState(ctx sdk.Context, rewardProgramId, epochId uint64, addr string) (state types.AccountState, err error) {
+func (k Keeper) GetAccountState(ctx sdk.Context, rewardProgramID, epochID uint64, addr string) (state types.AccountState, err error) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetAccountStateKey(rewardProgramId, epochId, []byte(addr))
+	key := types.GetAccountStateKey(rewardProgramID, epochID, []byte(addr))
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return state, nil
@@ -41,9 +41,9 @@ func (k Keeper) SetAccountState(ctx sdk.Context, state *types.AccountState) {
 }
 
 // Iterates over ALL the account states for a reward program's epoch
-func (k Keeper) IterateAccountStates(ctx sdk.Context, rewardProgramId, epochId uint64, handle func(state types.AccountState) (stop bool)) error {
+func (k Keeper) IterateAccountStates(ctx sdk.Context, rewardProgramID, epochID uint64, handle func(state types.AccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetAccountStateKeyPrefix(rewardProgramId, epochId))
+	iterator := sdk.KVStorePrefixIterator(store, types.GetAccountStateKeyPrefix(rewardProgramID, epochID))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

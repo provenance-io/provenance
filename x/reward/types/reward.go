@@ -132,10 +132,10 @@ func (rc *RewardClaim) String() string {
 	return string(out)
 }
 
-func NewAccountState(rewardProgramId, epochId uint64, address string) AccountState {
+func NewAccountState(rewardProgramID, epochID uint64, address string) AccountState {
 	return AccountState{
-		RewardProgramId: rewardProgramId,
-		EpochId:         epochId,
+		RewardProgramId: rewardProgramID,
+		EpochId:         epochID,
 		Address:         address,
 		ActionCounter:   0,
 	}
@@ -151,15 +151,15 @@ func (s *AccountState) ValidateBasic() error {
 	return nil
 }
 
-func (as *AccountState) String() string {
-	out, _ := yaml.Marshal(as)
+func (s *AccountState) String() string {
+	out, _ := yaml.Marshal(s)
 	return string(out)
 }
 
-func NewShare(rewardProgramId, epochId uint64, address string, claimed bool, expireTime time.Time, amount int64) Share {
+func NewShare(rewardProgramID, epochID uint64, address string, claimed bool, expireTime time.Time, amount int64) Share {
 	return Share{
-		RewardProgramId: rewardProgramId,
-		EpochId:         epochId,
+		RewardProgramId: rewardProgramID,
+		EpochId:         epochID,
 		Address:         address,
 		Claimed:         claimed,
 		ExpireTime:      expireTime,
@@ -177,15 +177,15 @@ func (s *Share) ValidateBasic() error {
 	return nil
 }
 
-func (rc *Share) String() string {
-	out, _ := yaml.Marshal(rc)
+func (s *Share) String() string {
+	out, _ := yaml.Marshal(s)
 	return string(out)
 }
 
-func NewEpochRewardDistribution(epochId string, rewardProgramId uint64, totalRewardsPool sdk.Coin, totalShares int64, epochEnded bool) EpochRewardDistribution {
+func NewEpochRewardDistribution(epochID string, rewardProgramID uint64, totalRewardsPool sdk.Coin, totalShares int64, epochEnded bool) EpochRewardDistribution {
 	return EpochRewardDistribution{
-		EpochId:          epochId,
-		RewardProgramId:  rewardProgramId,
+		EpochId:          epochID,
+		RewardProgramId:  rewardProgramID,
 		TotalRewardsPool: totalRewardsPool,
 		TotalShares:      totalShares,
 		EpochEnded:       epochEnded,
@@ -305,7 +305,7 @@ func (atd *ActionTransferDelegations) IsEligible() error {
 }
 
 func NewSharesPerEpochPerRewardsProgram(
-	rewardProgramId uint64,
+	rewardProgramID uint64,
 	totalShares int64,
 	ephemeralActionCount int64,
 	latestRecordedEpoch uint64,
@@ -314,7 +314,7 @@ func NewSharesPerEpochPerRewardsProgram(
 	totalRewardsClaimed sdk.Coin,
 ) SharesPerEpochPerRewardsProgram {
 	return SharesPerEpochPerRewardsProgram{
-		RewardProgramId:      rewardProgramId,
+		RewardProgramId:      rewardProgramID,
 		TotalShares:          totalShares,
 		EphemeralActionCount: ephemeralActionCount,
 		LatestRecordedEpoch:  latestRecordedEpoch,

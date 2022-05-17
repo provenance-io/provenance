@@ -105,7 +105,7 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 		ctx.Logger().Info(fmt.Sprintf("NOTICE: RecordRewardClaims: %v %v %v %v", epochNumber, program, distribution, res))
 		// add a share to the final total
 		// we know the rewards it so update the epoch reward
-		//distribution.TotalShares = distribution.TotalShares + res.shares
+		// distribution.TotalShares = distribution.TotalShares + res.shares
 		// add it to the claims
 		claim, err := k.GetRewardClaim(ctx, res.address.String())
 		if err != nil {
@@ -119,13 +119,13 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 			// TODO: Need to do EC checking
 			for _, rewardClaimForAddress := range claim.SharesPerEpochPerReward {
 				if rewardClaimForAddress.RewardProgramId == program.Id {
-					rewardClaimForAddress.EphemeralActionCount = rewardClaimForAddress.EphemeralActionCount + res.shares
-					rewardClaimForAddress.TotalShares = rewardClaimForAddress.TotalShares + res.shares
+					rewardClaimForAddress.EphemeralActionCount += res.shares
+					rewardClaimForAddress.TotalShares += res.shares
 					rewardClaimForAddress.LatestRecordedEpoch = epochNumber
 					mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, rewardClaimForAddress)
 					found = true
 					// we know the rewards it so update the epoch reward
-					distribution.TotalShares = distribution.TotalShares + res.shares
+					distribution.TotalShares += res.shares
 				} else {
 					mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, rewardClaimForAddress)
 				}
@@ -143,12 +143,12 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 					TotalRewardClaimed:   sdk.Coin{},
 				})
 				// we know the rewards it so update the epoch reward
-				distribution.TotalShares = distribution.TotalShares + res.shares
+				distribution.TotalShares += res.shares
 			}
 			claim.SharesPerEpochPerReward = mutatedSharesPerEpochRewards
 			k.SetRewardClaim(ctx, claim)
 		} else {
-			//set a brand new claim
+			// set a brand new claim
 			var mutatedSharesPerEpochRewards []types.SharesPerEpochPerRewardsProgram
 			k.SetRewardClaim(ctx, types.RewardClaim{
 				Address: res.address.String(),
@@ -164,10 +164,10 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 				Expired: false,
 			})
 			// we know the rewards it so update the epoch reward
-			distribution.TotalShares = distribution.TotalShares + res.shares
+			distribution.TotalShares += res.shares
 		}
 	}
-	//set total rewards
+	// set total rewards
 	k.SetEpochRewardDistribution(ctx, distribution)
 	return nil
 }
@@ -230,12 +230,13 @@ func (k Keeper) EvaluateDelegation(ctx sdk.Context, rewardProgram *types.RewardP
 
 	results := ([]EvaluationResult)(nil)
 	for _, res := range events {
-		state, err := k.GetAccountState(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentEpoch(), string(res.address))
+		var state types.AccountState
+		state, err = k.GetAccountState(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentEpoch(), string(res.address))
 		if err != nil {
 			continue
 		}
 
-		state.ActionCounter += 1
+		state.ActionCounter++
 		k.SetAccountState(ctx, &state)
 
 		matched := true
@@ -256,7 +257,6 @@ func (k Keeper) EvaluateDelegation(ctx sdk.Context, rewardProgram *types.RewardP
 		if matched {
 			results = append(results, res)
 		}
-
 	}
 
 	return results, err
@@ -279,7 +279,7 @@ func (k Keeper) GetDelegationEvents(ctx sdk.Context) ([]EvaluationResult, error)
 		// really not possible to get an error but could happen i guess
 		address, err := searchValue(event.Attributes, string(attribute.Key))
 
-		//TODO check this address has a delegation
+		// TODO check this address has a delegation
 		if err != nil {
 			return err
 		}
@@ -309,7 +309,7 @@ func (k Keeper) GetTransferEvents(ctx sdk.Context) ([]EvaluationResult, error) {
 		// really not possible to get an error but could happen i guess
 		address, err := sdk.AccAddressFromBech32(string(attribute.Value))
 
-		//TODO check this address has a delegation
+		// TODO check this address has a delegation
 		if err != nil {
 			return err
 		}
@@ -334,7 +334,7 @@ func searchValue(attributes []abci.EventAttribute, attributeKey string) (sdk.Acc
 		if attributeKey == string(y.Key) {
 			// really not possible to get an error but could happen i guess
 			address, err := sdk.AccAddressFromBech32(string(y.Value))
-			//TODO check this address has a delegation
+			// TODO check this address has a delegation
 			if err != nil {
 				return nil, err
 			}

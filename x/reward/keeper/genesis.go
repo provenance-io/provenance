@@ -8,7 +8,7 @@ import (
 
 // ExportGenesis returns a GenesisState for a given context.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	rewardProgramId, err := k.GetRewardProgramID(ctx)
+	rewardProgramID, err := k.GetRewardProgramID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -53,7 +53,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	actionTransferDelegations, _ := k.GetActionTransferDelegations(ctx)
 
 	return types.NewGenesisState(
-		rewardProgramId,
+		rewardProgramID,
 		rewardPrograms,
 		rewardClaims,
 		epochRewardDistributions,
