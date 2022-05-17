@@ -118,6 +118,27 @@ func (rp *RewardProgram) String() string {
 	return string(out)
 }
 
+func NewRewardProgramBalance(
+	rewardProgramID uint64,
+	distributionAddress string,
+	balance sdk.Coin,
+) RewardProgramBalance {
+	return RewardProgramBalance{
+		RewardProgramId:     rewardProgramID,
+		DistributionAddress: distributionAddress,
+		Balance:             balance,
+	}
+}
+
+func (rpb *RewardProgramBalance) Validate() error {
+	return nil
+}
+
+func (rpb *RewardProgramBalance) String() string {
+	out, _ := yaml.Marshal(rpb)
+	return string(out)
+}
+
 func NewRewardClaim(address string, sharesPerEpochPerRewardsProgram []SharesPerEpochPerRewardsProgram, expired bool) RewardClaim {
 	return RewardClaim{
 		Address:                 address,

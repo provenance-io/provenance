@@ -403,6 +403,7 @@
     - [QualifyingAction](#provenance.reward.v1.QualifyingAction)
     - [RewardClaim](#provenance.reward.v1.RewardClaim)
     - [RewardProgram](#provenance.reward.v1.RewardProgram)
+    - [RewardProgramBalance](#provenance.reward.v1.RewardProgramBalance)
     - [Share](#provenance.reward.v1.Share)
     - [SharesPerEpochPerRewardsProgram](#provenance.reward.v1.SharesPerEpochPerRewardsProgram)
   
@@ -6117,6 +6118,24 @@ RewardProgram
 | `share_expiration_offset` | [uint64](#uint64) |  | Used to calculate the expiration time of a share in seconds. Currently, it is epoch_end_time + offset |
 | `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated |  |
 | `constraints` | [Constraint](#provenance.reward.v1.Constraint) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.RewardProgramBalance"></a>
+
+### RewardProgramBalance
+RewardProgramBalance will display the balance for a distribution address for specific rewards program
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_program_id` | [uint64](#uint64) |  |  |
+| `distribution_address` | [string](#string) |  |  |
+| `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `funds_claimable` | [bool](#bool) |  | When rewards program is over and the time for participants to claim funds is over. Program creator can reclaim their remaining funds. |
 
 
 

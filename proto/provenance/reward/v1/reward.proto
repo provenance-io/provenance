@@ -58,6 +58,19 @@ message RewardProgram {
   repeated Constraint constraints = 18 // Conditions that must be met by qualifying actions
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"constraints"];
 }
+
+// RewardProgramBalance will display the balance for a distribution address for specific rewards program
+message RewardProgramBalance {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  uint64                   reward_program_id    = 1;
+  string                   distribution_address = 2;
+  cosmos.base.v1beta1.Coin balance              = 3 [(gogoproto.nullable) = false];
+  bool funds_claimable = 4; // When rewards program is over and the time for participants to claim funds is over.
+                            // Program creator can reclaim their remaining funds.
+}
+
 // EpochRewardDistribution, this will updated at the end of every epoch
 message EpochRewardDistribution {
   option (gogoproto.equal)            = true;
@@ -95,7 +108,7 @@ message AccountState {
   uint64 reward_program_id = 1; // The id of the reward program that this share belongs to
   uint64 epoch_id          = 2; // The id of the epoch that the share belongs to
   string address           = 3 [(gogoproto.moretags) = "yaml:\"address\""]; // Owner of the share
-  uint64 action_counter = 4;  // The number of actions done by this account
+  uint64 action_counter    = 4; // The number of actions done by this account
 }
 
 message SharesPerEpochPerRewardsProgram {
@@ -180,9 +193,7 @@ message Constraint {
   message Range {
     option (gogoproto.equal)            = true;
     option (gogoproto.goproto_stringer) = false;
-    int64 minimum = 1;
-    int64 maximum = 2;
+    int64 minimum                       = 1;
+    int64 maximum                       = 2;
   }
 }
-
-
