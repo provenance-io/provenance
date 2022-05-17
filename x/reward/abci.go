@@ -110,7 +110,6 @@ func logEvents(ctx sdk.Context) {
 			//4:24PM INF event attribute is transfer attribute_key:attribute_value  recipient:tp17xpfvakm2amg962yls6f84z3kell8c5l2udfyt
 			//4:24PM INF event attribute is transfer attribute_key:attribute_value  sender:tp1sha7e07l5knw4vdw2vgc3k06gd0fscz9r32yv6
 			//4:24PM INF event attribute is transfer attribute_key:attribute_value  amount:76200000000000nhash
-
 		}
 	}
 }

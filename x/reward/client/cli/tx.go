@@ -80,19 +80,21 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			// TODO: figure out the best format to parse with
-			// startTimeStr, err := cmd.Flags().GetString(FlagStartTime)
-			// if err != nil {
-			// 	return err
-			// }
-
+			startTimeStr, err := cmd.Flags().GetString(FlagStartTime)
+			if err != nil || len(startTimeStr) == 0 {
+				return err
+			}
+			startTime, err := time.Parse(time.RFC3339, startTimeStr)
+			if err != nil {
+				return err
+			}
 			epochTypeKey, err := cmd.Flags().GetString(FlagEpochType)
 			if err != nil {
 				return err
 			}
 			epochTypeSeconds := types.EpochTypeToSeconds[epochTypeKey]
 			if epochTypeSeconds == 0 {
-				return fmt.Errorf("epoch type %s does not exist.", epochTypeKey)
+				return fmt.Errorf("epoch type %s does not exist", epochTypeKey)
 			}
 
 			numEpochs, err := cmd.Flags().GetUint64(FlagNumEpochs)
@@ -120,7 +122,7 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 				callerAddr.String(),
 				coin,
 				maxCoin,
-				time.Now(),
+				startTime,
 				epochTypeKey,
 				numEpochs,
 				eligibilityCriteria,
@@ -134,7 +136,7 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(FlagCoin, "", "coins for reward program")
 	cmd.Flags().String(FlagMaxRewardByAddress, "", "max amount of coins a single address can claim in rewards")
-	cmd.Flags().String(FlagStartTime, "", "time to start the rewards program, this must be a time in the future or within the first epoch")
+	cmd.Flags().String(FlagStartTime, "", "time to start the rewards program, this must be a time in the future or within the first epoch of format YYYY-MM-DDTHH:MM:SSZ00:00 (2012-11-01T22:08:41+07:00)")
 	cmd.Flags().String(FlagEpochType, "", "epoch type (day, week, month)")
 	cmd.Flags().Uint64(FlagNumEpochs, 0, "number of epochs for the reward program")
 	cmd.Flags().String(FlagEligibilityCriteria, "", "json of the eligibility criteria")

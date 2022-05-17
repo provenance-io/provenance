@@ -107,6 +107,9 @@ import (
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	attributewasm "github.com/provenance-io/provenance/x/attribute/wasm"
+	epochkeeper "github.com/provenance-io/provenance/x/epoch/keeper"
+	epochmodule "github.com/provenance-io/provenance/x/epoch/module"
+	epochtypes "github.com/provenance-io/provenance/x/epoch/types"
 	"github.com/provenance-io/provenance/x/marker"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -124,14 +127,6 @@ import (
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	namewasm "github.com/provenance-io/provenance/x/name/wasm"
-
-	epoch "github.com/provenance-io/provenance/x/epoch/module"
-	epochmodule "github.com/provenance-io/provenance/x/epoch/module"
-
-	// epochclient "github.com/provenance-io/provenance/x/epoch/client"
-	epochkeeper "github.com/provenance-io/provenance/x/epoch/keeper"
-	epochtypes "github.com/provenance-io/provenance/x/epoch/types"
-
 	rewardkeeper "github.com/provenance-io/provenance/x/reward/keeper"
 	rewardmodule "github.com/provenance-io/provenance/x/reward/module"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
@@ -579,7 +574,7 @@ func New(
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
-		epoch.NewAppModule(appCodec, app.EpochKeeper, app.interfaceRegistry),
+		epochmodule.NewAppModule(appCodec, app.EpochKeeper, app.interfaceRegistry),
 		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.interfaceRegistry),
 
 		// IBC

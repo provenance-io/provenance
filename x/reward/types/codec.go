@@ -15,7 +15,6 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 // ignoring RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
 // double check
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-
 	registry.RegisterImplementations(
 		(*RewardAction)(nil),
 		&ActionTransferDelegations{},

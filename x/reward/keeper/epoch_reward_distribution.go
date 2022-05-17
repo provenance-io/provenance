@@ -16,9 +16,9 @@ func (k Keeper) SetEpochRewardDistribution(ctx sdk.Context, epochRewardDistribut
 }
 
 // GetEpochRewardDistribution returns a EpochRewardDistribution by epoch id and reward id
-func (k Keeper) GetEpochRewardDistribution(ctx sdk.Context, epochId string, rewardId uint64) (epochRewardDistribution types.EpochRewardDistribution, err error) {
+func (k Keeper) GetEpochRewardDistribution(ctx sdk.Context, epochID string, rewardId uint64) (epochRewardDistribution types.EpochRewardDistribution, err error) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetEpochRewardDistributionKey(epochId, fmt.Sprintf("%d", rewardId))
+	key := types.GetEpochRewardDistributionKey(epochID, fmt.Sprintf("%d", rewardId))
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return epochRewardDistribution, nil
@@ -64,9 +64,9 @@ func (k Keeper) EpochRewardDistributionIsValid(epochReward *types.EpochRewardDis
 }
 
 // Removes an EpochRewardDistribution
-func (k Keeper) RemoveEpochRewardDistribution(ctx sdk.Context, epochId string, rewardId uint64) bool {
+func (k Keeper) RemoveEpochRewardDistribution(ctx sdk.Context, epochID string, rewardId uint64) bool {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetEpochRewardDistributionKey(epochId, fmt.Sprintf("%d", rewardId))
+	key := types.GetEpochRewardDistributionKey(epochID, fmt.Sprintf("%d", rewardId))
 	bz := store.Get(key)
 	keyExists := store.Has(bz)
 	if keyExists {

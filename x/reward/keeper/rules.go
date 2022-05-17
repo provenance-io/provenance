@@ -165,7 +165,6 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 			})
 			// we know the rewards it so update the epoch reward
 			distribution.TotalShares = distribution.TotalShares + res.shares
-
 		}
 	}
 	//set total rewards
@@ -217,7 +216,6 @@ func (k Keeper) IterateABCIEvents(ctx sdk.Context, eventCriteria *EventCriteria,
 			if err != nil {
 				return err
 			}
-
 		}
 	}
 
