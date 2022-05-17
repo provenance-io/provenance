@@ -12,11 +12,11 @@ import (
 func (k Keeper) SetRewardProgram(ctx sdk.Context, rewardProgram types.RewardProgram) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&rewardProgram)
-	store.Set(types.GetRewardProgramKey(int64(rewardProgram.Id)), bz)
+	store.Set(types.GetRewardProgramKey(rewardProgram.Id), bz)
 }
 
 // Removes a reward program in the keeper
-func (k Keeper) RemoveRewardProgram(ctx sdk.Context, id int64) bool {
+func (k Keeper) RemoveRewardProgram(ctx sdk.Context, id uint64) bool {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRewardProgramKey(id)
 	bz := store.Get(key)
@@ -28,7 +28,7 @@ func (k Keeper) RemoveRewardProgram(ctx sdk.Context, id int64) bool {
 }
 
 // GetRewardProgram returns a RewardProgram by id
-func (k Keeper) GetRewardProgram(ctx sdk.Context, id int64) (rewardProgram types.RewardProgram, err error) {
+func (k Keeper) GetRewardProgram(ctx sdk.Context, id uint64) (rewardProgram types.RewardProgram, err error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRewardProgramKey(id)
 	bz := store.Get(key)
@@ -98,7 +98,7 @@ func (k Keeper) RemoveExpiredPrograms(ctx sdk.Context) error {
 			continue
 		}
 
-		k.RemoveRewardProgram(ctx, int64(rewardProgram.GetId()))
+		k.RemoveRewardProgram(ctx, rewardProgram.GetId())
 	}
 	return nil
 }

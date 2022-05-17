@@ -58,7 +58,7 @@ func (k Keeper) RewardProgramByID(ctx context.Context, req *types.RewardProgramB
 	response := types.RewardProgramByIDResponse{}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	rewardProgram, err := k.GetRewardProgram(sdkCtx, int64(req.GetId()))
+	rewardProgram, err := k.GetRewardProgram(sdkCtx, req.GetId())
 	if err != nil {
 		return &response, status.Errorf(codes.Internal, fmt.Sprintf("unable to query for reward program: %v", err))
 	}

@@ -22,27 +22,33 @@ const (
 )
 
 var (
-	RewardProgramKeyPrefix = []byte{0x01}
-	RewardProgramIDKey     = []byte{0x02}
+	RewardProgramKeyPrefix        = []byte{0x01}
+	RewardProgramIDKey            = []byte{0x02}
+	RewardProgramBalanceKeyPrefix = []byte{0x03}
 
-	RewardClaimKeyPrefix = []byte{0x03}
+	RewardClaimKeyPrefix = []byte{0x04}
 
-	EpochRewardDistributionKeyPrefix = []byte{0x04}
+	EpochRewardDistributionKeyPrefix = []byte{0x05}
 
-	EligibilityCriteriaKeyPrefix = []byte{0x05}
+	EligibilityCriteriaKeyPrefix = []byte{0x06}
 
-	ActionKeyPrefix       = []byte{0x06}
-	ShareKeyPrefix        = []byte{0x07}
-	AccountStateKeyPrefix = []byte{0x08}
+	ActionKeyPrefix       = []byte{0x07}
+	ShareKeyPrefix        = []byte{0x08}
+	AccountStateKeyPrefix = []byte{0x09}
 
 	ActionDelegateKey            = []byte("Delegate")
 	ActionTransferDelegationsKey = []byte("TransferDelegations")
 )
 
 // GetRewardProgramKey converts a name into key format.
-func GetRewardProgramKey(id int64) []byte {
-	idByte := []byte(strconv.FormatInt(id, 10))
+func GetRewardProgramKey(id uint64) []byte {
+	idByte := []byte(strconv.FormatUint(id, 10))
 	return append(RewardProgramKeyPrefix, idByte...)
+}
+
+func GetRewardProgramBalanceKey(rewardProgramID uint64) []byte {
+	idByte := []byte(strconv.FormatUint(rewardProgramID, 10))
+	return append(RewardProgramBalanceKeyPrefix, idByte...)
 }
 
 // GetShareKey converts a reward program id, epoch id, and address into a ShareKey
