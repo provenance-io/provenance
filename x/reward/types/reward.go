@@ -247,6 +247,19 @@ func (ec *EligibilityCriteria) String() string {
 	return string(out)
 }
 
+func NewRangeConstraint() Constraint_Range {
+	return Constraint_Range{}
+}
+
+func (c *Constraint_Range) ValidateBasic() error {
+	return nil
+}
+
+func (c *Constraint_Range) String() string {
+	out, _ := yaml.Marshal(c)
+	return string(out)
+}
+
 func NewActionDelegate() ActionDelegate {
 	return ActionDelegate{}
 }

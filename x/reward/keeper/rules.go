@@ -240,10 +240,25 @@ func (k Keeper) EvaluateDelegation(ctx sdk.Context, rewardProgram *types.RewardP
 		state.ActionCounter += 1
 		k.SetAccountState(ctx, &state)
 
-		// We append to the new list only if
-		// If we match the condition then append to the results
+		matched := true
+		for _, constraint := range rewardProgram.GetConstraints() {
+			switch constraintType := constraint.GetType().(type) {
+			case *types.Constraint_Range_:
+				ctx.Logger().Info(fmt.Sprintf("NOTICE: The constraint type is %s", constraintType))
+				rangeConstraint := constraint.GetRange()
+				matched = state.ActionCounter >= uint64(rangeConstraint.GetMinimum()) && state.ActionCounter <= uint64(rangeConstraint.GetMaximum())
+				ctx.Logger().Info(fmt.Sprintf("NOTICE: Constraint matched %t", matched))
+			default:
+				// Skip any unsupported constraints
+				ctx.Logger().Error(fmt.Sprintf("The constraint type %s, cannot be evaluated", constraintType))
+				continue
+			}
+		}
 
-		results = append(results, res)
+		if matched {
+			results = append(results, res)
+		}
+
 	}
 
 	return results, err
