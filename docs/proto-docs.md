@@ -410,7 +410,6 @@
 - [provenance/reward/v1/genesis.proto](#provenance/reward/v1/genesis.proto)
     - [GenesisState](#provenance.reward.v1.GenesisState)
   
-- [provenance/reward/v1/proposals.proto](#provenance/reward/v1/proposals.proto)
 - [provenance/reward/v1/query.proto](#provenance/reward/v1/query.proto)
     - [ActiveRewardProgramsRequest](#provenance.reward.v1.ActiveRewardProgramsRequest)
     - [ActiveRewardProgramsResponse](#provenance.reward.v1.ActiveRewardProgramsResponse)
@@ -6135,7 +6134,7 @@ RewardProgramBalance will display the balance for a distribution address for spe
 | `reward_program_id` | [uint64](#uint64) |  |  |
 | `distribution_address` | [string](#string) |  |  |
 | `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `funds_claimable` | [bool](#bool) |  | When rewards program is over and the time for participants to claim funds is over. Program creator can reclaim their remaining funds. |
+| `funds_claimable` | [bool](#bool) |  | When rewards program is over and the time for participants to claim funds is over. |
 
 
 
@@ -6219,22 +6218,6 @@ GenesisState defines the reward module's genesis state.
 
 
 
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="provenance/reward/v1/proposals.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/reward/v1/proposals.proto
 
 
  <!-- end messages -->

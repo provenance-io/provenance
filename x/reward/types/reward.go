@@ -77,7 +77,7 @@ func NewRewardProgram(
 	}
 }
 
-func (rp *RewardProgram) Validate() error {
+func (rp *RewardProgram) ValidateBasic() error {
 	title := rp.GetTitle()
 	if len(strings.TrimSpace(title)) == 0 {
 		return errors.New("reward program title cannot be blank")
@@ -130,7 +130,13 @@ func NewRewardProgramBalance(
 	}
 }
 
-func (rpb *RewardProgramBalance) Validate() error {
+func (rpb *RewardProgramBalance) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(rpb.DistributionAddress); err != nil {
+		return fmt.Errorf("invalid address for reward program balance: %w", err)
+	}
+	if rpb.RewardProgramId < 1 {
+		return errors.New("reward program id must be larger than 0")
+	}
 	return nil
 }
 

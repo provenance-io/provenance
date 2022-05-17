@@ -214,11 +214,59 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := tt.rewardProgram.Validate()
+			err := tt.rewardProgram.ValidateBasic()
 			if err != nil {
 				assert.Equal(t, tt.want, err.Error())
 			} else if len(tt.want) > 0 {
 				t.Errorf("RewardProgram ValidateBasic error = nil, expected: %s", tt.want)
+			}
+		})
+	}
+}
+
+func (s *RewardTypesTestSuite) TestRewardProgramBalanceValidateBasic() {
+	tests := []struct {
+		name                 string
+		rewardProgramBalance RewardProgramBalance
+		want                 string
+	}{
+		{
+			"valid",
+			NewRewardProgramBalance(
+				1,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				sdk.NewInt64Coin("jackthecat", 1),
+			),
+			"",
+		},
+		{
+			"invalid - reward id is 0",
+			NewRewardProgramBalance(
+				0,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				sdk.NewInt64Coin("jackthecat", 1),
+			),
+			"reward program id must be larger than 0",
+		},
+		{
+			"invalid - address is incorrect",
+			NewRewardProgramBalance(
+				1,
+				"invalid",
+				sdk.NewInt64Coin("jackthecat", 1),
+			),
+			"invalid address for reward program balance: decoding bech32 failed: invalid bech32 string length 7",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			err := tt.rewardProgramBalance.ValidateBasic()
+			if err != nil {
+				assert.Equal(t, tt.want, err.Error())
+			} else if len(tt.want) > 0 {
+				t.Errorf("RewardProgramBalance ValidateBasic error = nil, expected: %s", tt.want)
 			}
 		})
 	}
