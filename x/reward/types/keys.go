@@ -113,7 +113,8 @@ func GetRewardClaimsKey(addr []byte) []byte {
 }
 
 func GetEpochRewardDistributionKey(epochID string, rewardID string) []byte {
-	key := append(EpochRewardDistributionKeyPrefix, []byte(epochID)...)
+	key := EpochRewardDistributionKeyPrefix
+	key = append(key, []byte(epochID)...)
 	return append(key, []byte(rewardID)...)
 }
 

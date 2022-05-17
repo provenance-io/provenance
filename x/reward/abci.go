@@ -130,7 +130,11 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 	for _, rewardProgram := range rewardPrograms {
 		// Go through all the reward programs
-		k.EvaluateRules(ctx, &rewardProgram)
+		rewardProgram := rewardProgram
+		err := k.EvaluateRules(ctx, &rewardProgram)
+		if err != nil {
+			ctx.Logger().Error(err.Error())
+		}
 	}
 
 	// We have all the transactions at this point

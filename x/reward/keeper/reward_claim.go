@@ -77,6 +77,7 @@ func (k Keeper) RemoveRewardClaim(ctx sdk.Context, addr string) bool {
 func (k Keeper) GetRewardClaimShares(sdkCtx sdk.Context, rewardClaim *types.RewardClaim, matches func(*types.SharesPerEpochPerRewardsProgram) bool) []types.SharesPerEpochPerRewardsProgram {
 	shares := []types.SharesPerEpochPerRewardsProgram{}
 	for _, share := range rewardClaim.GetSharesPerEpochPerReward() {
+		share := share
 		if !matches(&share) {
 			continue
 		}

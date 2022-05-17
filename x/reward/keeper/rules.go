@@ -192,6 +192,7 @@ func (k Keeper) EvaluateTransferAndCheckDelegation(ctx sdk.Context, rewardProgra
 
 func (k Keeper) IterateABCIEvents(ctx sdk.Context, eventCriteria *EventCriteria, action func(*abci.Event, *abci.EventAttribute) error) error {
 	for _, event := range ctx.EventManager().GetABCIEventHistory() {
+		event := event
 		ctx.Logger().Info(fmt.Sprintf("events type is %s", event.Type))
 
 		// Event types must match or wildcard/empty must be present
@@ -200,6 +201,7 @@ func (k Keeper) IterateABCIEvents(ctx sdk.Context, eventCriteria *EventCriteria,
 		}
 
 		for _, attribute := range event.Attributes {
+			attribute := attribute
 			ctx.Logger().Info(fmt.Sprintf("event attribute is %s attribute_key:attribute_value  %s:%s", event.Type, attribute.Key, attribute.Value))
 
 			// Attribute names must match or wildcard/empty must be present
