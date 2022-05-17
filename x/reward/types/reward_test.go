@@ -193,6 +193,22 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 			),
 			"reward program requires positive max reward by address: 0jackthecat",
 		},
+		{
+			"invalid - number of epochs must be larger than 0",
+			NewRewardProgram(
+				"title",
+				"description",
+				1,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				sdk.NewInt64Coin("jackthecat", 1),
+				sdk.NewInt64Coin("jackthecat", 2),
+				now,
+				60*24,
+				0,
+				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+			),
+			"reward program number of epochs must be larger than 0",
+		},
 	}
 
 	for _, tt := range tests {
