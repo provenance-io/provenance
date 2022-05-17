@@ -92,6 +92,9 @@ func (rp *RewardProgram) Validate() error {
 	if len(description) > MaxDescriptionLength {
 		return fmt.Errorf("reward program description is longer than max length of %d", MaxDescriptionLength)
 	}
+	if rp.Id < 1 {
+		return fmt.Errorf("reward program id must be larger than 0")
+	}
 	if _, err := sdk.AccAddressFromBech32(rp.DistributeFromAddress); err != nil {
 		return fmt.Errorf("invalid address for rewards program distribution from address: %w", err)
 	}

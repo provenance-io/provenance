@@ -24,16 +24,22 @@ func (s *RewardTypesTestSuite) SetupSuite() {
 
 func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 	now := time.Now().UTC()
+	lTitle := make([]byte, MaxTitleLength+1)
+	longTitle := string(lTitle)
+	lDescription := make([]byte, MaxDescriptionLength+1)
+	longDescription := string(lDescription)
 	tests := []struct {
 		name          string
 		rewardProgram RewardProgram
 		want          string
 	}{
 		{
-			"invalid - wrong distribute from address format",
+			"valid",
 			NewRewardProgram(
+				"title",
+				"description",
 				1,
-				"invalid-address",
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 				sdk.NewInt64Coin("jackthecat", 1),
 				sdk.NewInt64Coin("jackthecat", 2),
 				now,
@@ -41,11 +47,109 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				1,
 				NewEligibilityCriteria("action-name", &ActionDelegate{}),
 			),
-			"invalid address for rewards program distribution from address: decoding bech32 failed: invalid separator index -1",
+			"",
 		},
 		{
-			"invalid - validate basic on ec fail",
+			"invalid - title is blank",
 			NewRewardProgram(
+				"",
+				"description",
+				1,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				sdk.NewInt64Coin("jackthecat", 1),
+				sdk.NewInt64Coin("jackthecat", 2),
+				now,
+				60*24,
+				1,
+				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+			),
+			"reward program title cannot be blank",
+		},
+		{
+			"invalid - title is too long",
+			NewRewardProgram(
+				longTitle,
+				"description",
+				1,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				sdk.NewInt64Coin("jackthecat", 1),
+				sdk.NewInt64Coin("jackthecat", 2),
+				now,
+				60*24,
+				1,
+				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+			),
+			"reward program title is longer than max length of 140",
+		},
+		{
+			"invalid - description is blank",
+			NewRewardProgram(
+				"title",
+				"",
+				1,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				sdk.NewInt64Coin("jackthecat", 1),
+				sdk.NewInt64Coin("jackthecat", 2),
+				now,
+				60*24,
+				1,
+				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+			),
+			"reward program description cannot be blank",
+		},
+		{
+			"invalid - description is too long",
+			NewRewardProgram(
+				"title",
+				longDescription,
+				1,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				sdk.NewInt64Coin("jackthecat", 1),
+				sdk.NewInt64Coin("jackthecat", 2),
+				now,
+				60*24,
+				1,
+				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+			),
+			"reward program description is longer than max length of 10000",
+		},
+		{
+			"invalid - reward id must be greater than 0",
+			NewRewardProgram(
+				"title",
+				"description",
+				0,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				sdk.NewInt64Coin("jackthecat", 1),
+				sdk.NewInt64Coin("jackthecat", 2),
+				now,
+				60*24,
+				1,
+				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+			),
+			"reward program id must be larger than 0",
+		},
+		{
+			"invalid - invalid address",
+			NewRewardProgram(
+				"title",
+				"description",
+				1,
+				"invalid",
+				sdk.NewInt64Coin("jackthecat", 1),
+				sdk.NewInt64Coin("jackthecat", 2),
+				now,
+				60*24,
+				1,
+				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+			),
+			"invalid address for rewards program distribution from address: decoding bech32 failed: invalid bech32 string length 7",
+		},
+		{
+			"invalid - ec validation fail",
+			NewRewardProgram(
+				"title",
+				"description",
 				1,
 				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 				sdk.NewInt64Coin("jackthecat", 1),
@@ -58,8 +162,10 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 			"eligibility criteria is not valid: eligibility criteria must have a name",
 		},
 		{
-			"invalid - coin amount must be positive",
+			"invalid - coin must be positive",
 			NewRewardProgram(
+				"title",
+				"description",
 				1,
 				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 				sdk.NewInt64Coin("jackthecat", 0),
@@ -72,8 +178,10 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 			"reward program requires coins: 0jackthecat",
 		},
 		{
-			"invalid - MaxRewardByAddress amount must be positive",
+			"invalid - max reward must be positive",
 			NewRewardProgram(
+				"title",
+				"description",
 				1,
 				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 				sdk.NewInt64Coin("jackthecat", 1),
@@ -84,20 +192,6 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				NewEligibilityCriteria("action-name", &ActionDelegate{}),
 			),
 			"reward program requires positive max reward by address: 0jackthecat",
-		},
-		{
-			"valid",
-			NewRewardProgram(
-				1,
-				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-				sdk.NewInt64Coin("jackthecat", 1),
-				sdk.NewInt64Coin("jackthecat", 2),
-				now,
-				60*24,
-				1,
-				NewEligibilityCriteria("action-name", &ActionDelegate{}),
-			),
-			"",
 		},
 	}
 
