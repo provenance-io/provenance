@@ -64,6 +64,25 @@ func (msg MsgCreateRewardProgramRequest) ValidateBasic() error {
 	if len(description) > MaxDescriptionLength {
 		return fmt.Errorf("reward program description is longer than max length of %d", MaxDescriptionLength)
 	}
+	if _, err := sdk.AccAddressFromBech32(msg.DistributeFromAddress); err != nil {
+		return fmt.Errorf("invalid address for rewards program distribution from address: %w", err)
+	}
+	if err := msg.EligibilityCriteria.ValidateBasic(); err != nil {
+		return fmt.Errorf("eligibility criteria is not valid: %w", err)
+	}
+	if !msg.Coin.IsPositive() {
+		return fmt.Errorf("reward program requires coins: %v", msg.Coin)
+	}
+	if !msg.MaxRewardByAddress.IsPositive() {
+		return fmt.Errorf("reward program requires positive max reward by address: %v", msg.MaxRewardByAddress)
+	}
+	epochSeconds := EpochTypeToSeconds[msg.EpochType]
+	if epochSeconds == 0 {
+		return fmt.Errorf("epoch type not found: %s", msg.EpochType)
+	}
+	if msg.NumberEpochs < 1 {
+		return errors.New("reward program number of epochs must be larger than 0")
+	}
 	return nil
 }
 
