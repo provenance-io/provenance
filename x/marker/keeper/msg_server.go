@@ -43,8 +43,8 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *types.MsgGrantAllo
 	if err != nil {
 		return nil, err
 	}
-	k.Keeper.feegrantKeeper.GrantAllowance(ctx, m.GetAddress(), sdk.AccAddress(msg.Grantee), allowance)
-	return &types.MsgGrantAllowanceResponse{}, nil
+	err = k.Keeper.feegrantKeeper.GrantAllowance(ctx, m.GetAddress(), sdk.AccAddress(msg.Grantee), allowance)
+	return &types.MsgGrantAllowanceResponse{}, err
 }
 
 // Handle a message to add a new marker account.
