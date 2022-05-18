@@ -10,55 +10,47 @@ import (
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
-type EventCriteria struct {
-	eventType      string
-	attribute      string
-	attributeValue string
-}
-
-type EvaluationResult struct {
-	eventTypeToSearch string
-	attributeKey      string
-	shares            int64
-	address           sdk.AccAddress // shares to attribute to this address
-}
-
 // EvaluateRules takes in a Eligibility criteria and measure it against the events in the context
 func (k Keeper) EvaluateRules(ctx sdk.Context, program *types.RewardProgram) error {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: EvaluateRules for RewardProgram: %d", program.GetId()))
 
 	// Check if any of the transactions match the qualifying actions
 	for _, qualifyingAction := range program.GetQualifyingActions() {
-		var evaluateRes []EvaluationResult
-		var err error
-
-		switch actionType := qualifyingAction.GetType().(type) {
-		case *types.QualifyingAction_Delegate:
-			ctx.Logger().Info(fmt.Sprintf("NOTICE: The Action type is %s", actionType))
-			// check the event history
-			// for transfers event and make sure there is a sender
-
-			// We probably want to check the criteria on the delegation within here
-			evaluateRes, err = k.EvaluateDelegation(ctx, program)
-			if err != nil {
-				return err
-			}
-		case *types.QualifyingAction_TransferDelegations:
-			ctx.Logger().Info(fmt.Sprintf("NOTICE: The Action type is %s", actionType))
-			// check the event history
-			// for transfers event and make sure there is a sender
-			evaluateRes, err = k.EvaluateTransferAndCheckDelegation(ctx, program)
-			if err != nil {
-				return err
-			}
-		default:
-			// Skip any unsupported actions
-			ctx.Logger().Error(fmt.Sprintf("The Action type %s, cannot be evaluated", actionType))
+		// Get the appropriate RewardAction
+		// If it's unsupported we skip it
+		action, err := qualifyingAction.GetRewardAction(ctx)
+		if err != nil {
 			continue
 		}
 
+		// Get all events that the action will use
+		eventCriteria := action.GetEventCriteria()
+		events, err := k.GetMatchingEvents(ctx, &eventCriteria)
+		if err != nil {
+			return err
+		}
+		// We want to evaluate each of these actions
+		matchedEvents := []types.EvaluationResult(nil)
+		for _, event := range events {
+			// Get the AccountState for the triggering account
+			var state types.AccountState
+			state, err = k.GetAccountState(ctx, program.GetId(), program.GetCurrentEpoch(), string(event.Address))
+			if err != nil {
+				continue
+			}
+
+			// We want to evaluate it
+			// If it passes then it should be added to the list
+			if action.Evaluate(ctx, &state) {
+				matchedEvents = append(matchedEvents, event)
+			}
+
+			// Update the account state because evaluate may modify it
+			k.SetAccountState(ctx, &state)
+		}
+
 		// Record any results
-		err = k.RecordShares(ctx, program, evaluateRes)
+		err = k.RecordShares(ctx, program, matchedEvents)
 		if err != nil {
 			return err
 		}
@@ -67,12 +59,12 @@ func (k Keeper) EvaluateRules(ctx sdk.Context, program *types.RewardProgram) err
 	return nil
 }
 
-func (k Keeper) RecordShares(ctx sdk.Context, rewardProgram *types.RewardProgram, evaluateRes []EvaluationResult) error {
+func (k Keeper) RecordShares(ctx sdk.Context, rewardProgram *types.RewardProgram, evaluateRes []types.EvaluationResult) error {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: Recording shares for for rewardProgramId=%d, epochId=%d",
 		rewardProgram.GetId(), rewardProgram.GetCurrentEpoch()))
 
 	for _, res := range evaluateRes {
-		share, err := k.GetShare(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentEpoch(), res.address.String())
+		share, err := k.GetShare(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentEpoch(), res.Address.String())
 		if err != nil {
 			return err
 		}
@@ -80,25 +72,25 @@ func (k Keeper) RecordShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 		// Share does not exist so create one
 		if share.ValidateBasic() != nil {
 			ctx.Logger().Info(fmt.Sprintf("NOTICE: Creating new share structure for rewardProgramId=%d, epochId=%d, addr=%s",
-				rewardProgram.GetId(), rewardProgram.GetCurrentEpoch(), res.address.String()))
+				rewardProgram.GetId(), rewardProgram.GetCurrentEpoch(), res.Address.String()))
 
 			share = types.NewShare(
 				rewardProgram.GetId(),
 				rewardProgram.GetCurrentEpoch(),
-				string(res.address),
+				string(res.Address),
 				false,
 				rewardProgram.EpochEndTime.Add(time.Duration(rewardProgram.GetShareExpirationOffset())),
 				0,
 			)
 		}
-		share.Amount += res.shares
+		share.Amount += res.Shares
 		k.SetShare(ctx, &share)
 	}
 
 	return nil
 }
 
-func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program *types.RewardProgram, distribution types.EpochRewardDistribution, evaluateRes []EvaluationResult) error {
+func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program *types.RewardProgram, distribution types.EpochRewardDistribution, evaluateRes []types.EvaluationResult) error {
 	// get the address from the eval and check if it has delegation
 	// it's an array so should be deterministic
 	for _, res := range evaluateRes {
@@ -107,7 +99,7 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 		// we know the rewards it so update the epoch reward
 		// distribution.TotalShares = distribution.TotalShares + res.shares
 		// add it to the claims
-		claim, err := k.GetRewardClaim(ctx, res.address.String())
+		claim, err := k.GetRewardClaim(ctx, res.Address.String())
 		if err != nil {
 			return err
 		}
@@ -119,13 +111,13 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 			// TODO: Need to do EC checking
 			for _, rewardClaimForAddress := range claim.SharesPerEpochPerReward {
 				if rewardClaimForAddress.RewardProgramId == program.Id {
-					rewardClaimForAddress.EphemeralActionCount += res.shares
-					rewardClaimForAddress.TotalShares += res.shares
+					rewardClaimForAddress.EphemeralActionCount += res.Shares
+					rewardClaimForAddress.TotalShares += res.Shares
 					rewardClaimForAddress.LatestRecordedEpoch = epochNumber
 					mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, rewardClaimForAddress)
 					found = true
 					// we know the rewards it so update the epoch reward
-					distribution.TotalShares += res.shares
+					distribution.TotalShares += res.Shares
 				} else {
 					mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, rewardClaimForAddress)
 				}
@@ -135,15 +127,15 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 			} else {
 				mutatedSharesPerEpochRewards = append(mutatedSharesPerEpochRewards, types.SharesPerEpochPerRewardsProgram{
 					RewardProgramId:      program.Id,
-					TotalShares:          res.shares,
-					EphemeralActionCount: res.shares,
+					TotalShares:          res.Shares,
+					EphemeralActionCount: res.Shares,
 					LatestRecordedEpoch:  epochNumber,
 					Claimed:              false,
 					Expired:              false,
 					TotalRewardClaimed:   sdk.Coin{},
 				})
 				// we know the rewards it so update the epoch reward
-				distribution.TotalShares += res.shares
+				distribution.TotalShares += res.Shares
 			}
 			claim.SharesPerEpochPerReward = mutatedSharesPerEpochRewards
 			k.SetRewardClaim(ctx, claim)
@@ -151,11 +143,11 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 			// set a brand new claim
 			var mutatedSharesPerEpochRewards []types.SharesPerEpochPerRewardsProgram
 			k.SetRewardClaim(ctx, types.RewardClaim{
-				Address: res.address.String(),
+				Address: res.Address.String(),
 				SharesPerEpochPerReward: append(mutatedSharesPerEpochRewards, types.SharesPerEpochPerRewardsProgram{
 					RewardProgramId:      program.Id,
-					TotalShares:          res.shares,
-					EphemeralActionCount: res.shares,
+					TotalShares:          res.Shares,
+					EphemeralActionCount: res.Shares,
 					LatestRecordedEpoch:  epochNumber,
 					Claimed:              false,
 					Expired:              false,
@@ -164,7 +156,7 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 				Expired: false,
 			})
 			// we know the rewards it so update the epoch reward
-			distribution.TotalShares += res.shares
+			distribution.TotalShares += res.Shares
 		}
 	}
 	// set total rewards
@@ -172,7 +164,7 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 	return nil
 }
 
-func (k Keeper) EvaluateTransferAndCheckDelegation(ctx sdk.Context, rewardProgram *types.RewardProgram) ([]EvaluationResult, error) {
+func (k Keeper) EvaluateTransferAndCheckDelegation(ctx sdk.Context, rewardProgram *types.RewardProgram) ([]types.EvaluationResult, error) {
 	result, err := k.GetTransferEvents(ctx)
 	if err != nil {
 		return nil, err
@@ -190,13 +182,13 @@ func (k Keeper) EvaluateTransferAndCheckDelegation(ctx sdk.Context, rewardProgra
 	return result, nil
 }
 
-func (k Keeper) IterateABCIEvents(ctx sdk.Context, eventCriteria *EventCriteria, action func(*abci.Event, *abci.EventAttribute) error) error {
+func (k Keeper) IterateABCIEvents(ctx sdk.Context, eventCriteria *types.EventCriteria, action func(*abci.Event, *abci.EventAttribute) error) error {
 	for _, event := range ctx.EventManager().GetABCIEventHistory() {
 		event := event
 		ctx.Logger().Info(fmt.Sprintf("events type is %s", event.Type))
 
 		// Event types must match or wildcard/empty must be present
-		if event.Type != eventCriteria.eventType && eventCriteria.eventType != "" {
+		if event.Type != eventCriteria.EventType && eventCriteria.EventType != "" {
 			continue
 		}
 
@@ -205,12 +197,12 @@ func (k Keeper) IterateABCIEvents(ctx sdk.Context, eventCriteria *EventCriteria,
 			ctx.Logger().Info(fmt.Sprintf("event attribute is %s attribute_key:attribute_value  %s:%s", event.Type, attribute.Key, attribute.Value))
 
 			// Attribute names must match or wildcard/empty must be present
-			if eventCriteria.attribute != string(attribute.Key) && eventCriteria.attribute != "" {
+			if eventCriteria.Attribute != string(attribute.Key) && eventCriteria.Attribute != "" {
 				continue
 			}
 
 			// Attribute values must match or wildcard/empty must be present
-			if eventCriteria.attributeValue != string(attribute.Value) && eventCriteria.attributeValue != "" {
+			if eventCriteria.AttributeValue != string(attribute.Value) && eventCriteria.AttributeValue != "" {
 				continue
 			}
 
@@ -224,72 +216,32 @@ func (k Keeper) IterateABCIEvents(ctx sdk.Context, eventCriteria *EventCriteria,
 	return nil
 }
 
-func (k Keeper) EvaluateDelegation(ctx sdk.Context, rewardProgram *types.RewardProgram) ([]EvaluationResult, error) {
-	events, err := k.GetDelegationEvents(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	results := ([]EvaluationResult)(nil)
-	for _, res := range events {
-		var state types.AccountState
-		state, err = k.GetAccountState(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentEpoch(), string(res.address))
-		if err != nil {
-			continue
-		}
-
-		state.ActionCounter++
-		k.SetAccountState(ctx, &state)
-
-		matched := true
-		for _, constraint := range rewardProgram.GetConstraints() {
-			switch constraintType := constraint.GetType().(type) {
-			case *types.Constraint_Range_:
-				ctx.Logger().Info(fmt.Sprintf("NOTICE: The constraint type is %s", constraintType))
-				rangeConstraint := constraint.GetRange()
-				matched = state.ActionCounter >= uint64(rangeConstraint.GetMinimum()) && state.ActionCounter <= uint64(rangeConstraint.GetMaximum())
-				ctx.Logger().Info(fmt.Sprintf("NOTICE: Constraint matched %t", matched))
-			default:
-				// Skip any unsupported constraints
-				ctx.Logger().Error(fmt.Sprintf("The constraint type %s, cannot be evaluated", constraintType))
-				continue
-			}
-		}
-
-		if matched {
-			results = append(results, res)
-		}
-	}
-
-	return results, err
-}
-
 // EvaluateDelegateEvents
 // unfortunately delegate events appear like this
 //10:38PM INF events type is message
 //10:38PM INF event attribute is message attribute_key:attribute_value  module:staking
 //10:38PM INF event attribute is message attribute_key:attribute_value  sender:tp1hsrqwfypd3w3py2kw7fajw4fzfqwv5qdel6vf6
-func (k Keeper) GetDelegationEvents(ctx sdk.Context) ([]EvaluationResult, error) {
-	result := ([]EvaluationResult)(nil)
-	eventCriteria := EventCriteria{
-		eventType:      "message",
-		attribute:      "staking",
-		attributeValue: "sender",
+func (k Keeper) GetDelegationEvents(ctx sdk.Context) ([]types.EvaluationResult, error) {
+	result := ([]types.EvaluationResult)(nil)
+	eventCriteria := types.EventCriteria{
+		EventType:      "message",
+		Attribute:      "staking",
+		AttributeValue: "sender",
 	}
 
 	err := k.IterateABCIEvents(ctx, &eventCriteria, func(event *abci.Event, attribute *abci.EventAttribute) error {
 		// really not possible to get an error but could happen i guess
-		address, err := searchValue(event.Attributes, string(attribute.Key))
+		address, err := sdk.AccAddressFromBech32(string(attribute.Value))
 
 		// TODO check this address has a delegation
 		if err != nil {
 			return err
 		}
-		result = append(result, EvaluationResult{
-			eventTypeToSearch: event.Type,
-			attributeKey:      string(attribute.Key),
-			shares:            1,
-			address:           address,
+		result = append(result, types.EvaluationResult{
+			EventTypeToSearch: event.Type,
+			AttributeKey:      string(attribute.Key),
+			Shares:            1,
+			Address:           address,
 		})
 		return nil
 	})
@@ -300,11 +252,11 @@ func (k Keeper) GetDelegationEvents(ctx sdk.Context) ([]EvaluationResult, error)
 	return result, nil
 }
 
-func (k Keeper) GetTransferEvents(ctx sdk.Context) ([]EvaluationResult, error) {
-	result := ([]EvaluationResult)(nil)
-	eventCriteria := EventCriteria{
-		eventType: "transfer",
-		attribute: "sender",
+func (k Keeper) GetTransferEvents(ctx sdk.Context) ([]types.EvaluationResult, error) {
+	result := ([]types.EvaluationResult)(nil)
+	eventCriteria := types.EventCriteria{
+		EventType: "transfer",
+		Attribute: "sender",
 	}
 
 	err := k.IterateABCIEvents(ctx, &eventCriteria, func(event *abci.Event, attribute *abci.EventAttribute) error {
@@ -316,11 +268,11 @@ func (k Keeper) GetTransferEvents(ctx sdk.Context) ([]EvaluationResult, error) {
 			return err
 		}
 
-		result = append(result, EvaluationResult{
-			eventTypeToSearch: event.Type,
-			attributeKey:      string(attribute.Key),
-			shares:            1,
-			address:           address,
+		result = append(result, types.EvaluationResult{
+			EventTypeToSearch: event.Type,
+			AttributeKey:      string(attribute.Key),
+			Shares:            1,
+			Address:           address,
 		})
 		return nil
 	})
@@ -331,7 +283,34 @@ func (k Keeper) GetTransferEvents(ctx sdk.Context) ([]EvaluationResult, error) {
 	return result, nil
 }
 
-func searchValue(attributes []abci.EventAttribute, attributeKey string) (sdk.AccAddress, error) {
+func (k Keeper) GetMatchingEvents(ctx sdk.Context, eventCriteria *types.EventCriteria) ([]types.EvaluationResult, error) {
+	result := ([]types.EvaluationResult)(nil)
+
+	err := k.IterateABCIEvents(ctx, eventCriteria, func(event *abci.Event, attribute *abci.EventAttribute) error {
+		// really not possible to get an error but could happen i guess
+		address, err := sdk.AccAddressFromBech32(string(attribute.Value))
+
+		// TODO check this address has a delegation
+		if err != nil {
+			return err
+		}
+
+		result = append(result, types.EvaluationResult{
+			EventTypeToSearch: event.Type,
+			AttributeKey:      string(attribute.Key),
+			Shares:            1,
+			Address:           address,
+		})
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+/*func searchValue(attributes []abci.EventAttribute, attributeKey string) (sdk.AccAddress, error) {
 	for _, y := range attributes {
 		if attributeKey == string(y.Key) {
 			// really not possible to get an error but could happen i guess
@@ -344,4 +323,4 @@ func searchValue(attributes []abci.EventAttribute, attributeKey string) (sdk.Acc
 		}
 	}
 	return nil, nil
-}
+}*/

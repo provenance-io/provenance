@@ -9,9 +9,7 @@ import (
 	// "github.com/gogo/protobuf/proto"
 	"gopkg.in/yaml.v2"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	proto "github.com/gogo/protobuf/proto"
 )
 
 // DefaultStartingRewardProgramID is 1
@@ -39,13 +37,25 @@ const (
 	ActionTypeTransferDelegations = "ActionTransferDelegations"
 )
 
+type EventCriteria struct {
+	EventType      string
+	Attribute      string
+	AttributeValue string
+}
+
+type EvaluationResult struct {
+	EventTypeToSearch string
+	AttributeKey      string
+	Shares            int64
+	Address           sdk.AccAddress // shares to attribute to this address
+}
+
 type (
 	// RewardAction defines the interface that actions need to implement
 	RewardAction interface {
-		proto.Message
-
 		ActionType() string
-		IsEligible() error
+		Evaluate(ctx sdk.Context, state *AccountState) bool
+		GetEventCriteria() EventCriteria
 	}
 )
 
@@ -218,20 +228,20 @@ func (erd *EpochRewardDistribution) String() string {
 
 func NewEligibilityCriteria(name string, action RewardAction) EligibilityCriteria {
 	ec := EligibilityCriteria{Name: name}
-	err := ec.SetAction(action)
+	/*err := ec.SetAction(action)
 	if err != nil {
 		panic(err)
-	}
+	}*/
 	return ec
 }
 
-func (ec *EligibilityCriteria) SetAction(rewardAction RewardAction) error {
+/*func (ec *EligibilityCriteria) SetAction(rewardAction RewardAction) error {
 	any, err := codectypes.NewAnyWithValue(rewardAction)
 	if err == nil {
 		ec.Action = *any
 	}
 	return err
-}
+}*/
 
 func (ec *EligibilityCriteria) GetAction() RewardAction {
 	content, ok := ec.Action.GetCachedValue().(RewardAction)
@@ -253,19 +263,6 @@ func (ec *EligibilityCriteria) String() string {
 	return string(out)
 }
 
-func NewRangeConstraint() Constraint_Range {
-	return Constraint_Range{}
-}
-
-func (c *Constraint_Range) ValidateBasic() error {
-	return nil
-}
-
-func (c *Constraint_Range) String() string {
-	out, _ := yaml.Marshal(c)
-	return string(out)
-}
-
 func NewActionDelegate() ActionDelegate {
 	return ActionDelegate{}
 }
@@ -278,9 +275,19 @@ func (ad *ActionDelegate) ActionType() string {
 	return ActionTypeDelegate
 }
 
-func (ad *ActionDelegate) IsEligible() error {
-	// TODO execute all the rules for action?
-	return nil
+func (ad *ActionDelegate) GetEventCriteria() EventCriteria {
+	return EventCriteria{
+		EventType:      "message",
+		Attribute:      "staking",
+		AttributeValue: "sender",
+	}
+}
+
+func (ad *ActionDelegate) Evaluate(ctx sdk.Context, state *AccountState) bool {
+	// TODO Maybe move this out so Evaluate is const
+	state.ActionCounter++
+
+	return state.ActionCounter > ad.GetMinimumActions() && state.ActionCounter <= ad.GetMaximumActions()
 }
 
 func (ad *ActionDelegate) String() string {
@@ -296,6 +303,13 @@ func (atd *ActionTransferDelegations) ValidateBasic() error {
 	return nil
 }
 
+func (atd *ActionTransferDelegations) GetEventCriteria() EventCriteria {
+	return EventCriteria{
+		EventType: "transfer",
+		Attribute: "sender",
+	}
+}
+
 func (atd *ActionTransferDelegations) String() string {
 	out, _ := yaml.Marshal(atd)
 	return string(out)
@@ -305,9 +319,29 @@ func (atd *ActionTransferDelegations) ActionType() string {
 	return ActionTypeDelegate
 }
 
-func (atd *ActionTransferDelegations) IsEligible() error {
+func (atd *ActionTransferDelegations) Evaluate(ctx sdk.Context, state *AccountState) bool {
 	// TODO execute all the rules for action?
-	return nil
+	return false
+}
+
+func (qa *QualifyingAction) GetRewardAction(ctx sdk.Context) (RewardAction, error) {
+	var action RewardAction
+
+	switch actionType := qa.GetType().(type) {
+	case *QualifyingAction_Delegate:
+		action = qa.GetDelegate()
+	case *QualifyingAction_TransferDelegations:
+		action = qa.GetTransferDelegations()
+	default:
+		// Skip any unsupported actions
+		message := fmt.Sprintf("The Action type %s is not supported", actionType)
+		ctx.Logger().Error(message)
+		return nil, errors.New(message)
+	}
+
+	ctx.Logger().Info(fmt.Sprintf("NOTICE: The Action type is %s", action.ActionType()))
+
+	return action, nil
 }
 
 func NewSharesPerEpochPerRewardsProgram(

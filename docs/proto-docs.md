@@ -396,8 +396,6 @@
     - [AccountState](#provenance.reward.v1.AccountState)
     - [ActionDelegate](#provenance.reward.v1.ActionDelegate)
     - [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations)
-    - [Constraint](#provenance.reward.v1.Constraint)
-    - [Constraint.Range](#provenance.reward.v1.Constraint.Range)
     - [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria)
     - [EpochRewardDistribution](#provenance.reward.v1.EpochRewardDistribution)
     - [QualifyingAction](#provenance.reward.v1.QualifyingAction)
@@ -5976,6 +5974,13 @@ rule: ActionDelegate " when account delegates in epoch period,
 if above min and below max, increase shares earned for rewards pool by 1.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `minimum_actions` | [uint64](#uint64) |  |  |
+| `maximum_actions` | [uint64](#uint64) |  |  |
+| `minimum_delegation_amount` | [uint64](#uint64) |  |  |
+
+
 
 
 
@@ -5986,37 +5991,6 @@ if above min and below max, increase shares earned for rewards pool by 1.
 accounts that have made transfers, from accounts that have active delegations
 rule: ActionTransferDelegations "When transfer has occurred and the account has an active delegation,
 give it a share of the rewards pool, assuming it has not gone over max value and is above a min value" {
-
-
-
-
-
-
-<a name="provenance.reward.v1.Constraint"></a>
-
-### Constraint
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `range` | [Constraint.Range](#provenance.reward.v1.Constraint.Range) |  |  |
-
-
-
-
-
-
-<a name="provenance.reward.v1.Constraint.Range"></a>
-
-### Constraint.Range
-An integer must be within the defined inclusive range
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `minimum` | [int64](#int64) |  |  |
-| `maximum` | [int64](#int64) |  |  |
 
 
 
@@ -6116,7 +6090,6 @@ RewardProgram
 | `finished_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `share_expiration_offset` | [uint64](#uint64) |  | Used to calculate the expiration time of a share in seconds. Currently, it is epoch_end_time + offset |
 | `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated |  |
-| `constraints` | [Constraint](#provenance.reward.v1.Constraint) | repeated |  |
 
 
 
