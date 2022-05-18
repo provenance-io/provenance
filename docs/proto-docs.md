@@ -2839,6 +2839,8 @@ PartyType are the different roles parties on a contract may use
 | PARTY_TYPE_AFFILIATE | 6 | PARTY_TYPE_AFFILIATE is a party with an affiliate agreement |
 | PARTY_TYPE_OMNIBUS | 7 | PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account |
 | PARTY_TYPE_PROVENANCE | 8 | PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action |
+| PARTY_TYPE_CONTROLLER | 10 | PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote) |
+| PARTY_TYPE_VALIDATOR | 11 | PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain |
 
 
  <!-- end enums -->
@@ -3545,6 +3547,8 @@ A Timestamp represents a point in time using values relative to the epoch.
 | PARTY_TYPE_OMNIBUS | 7 |  |
 | PARTY_TYPE_PROVENANCE | 8 |  |
 | PARTY_TYPE_MARKER | 9 |  |
+| PARTY_TYPE_CONTROLLER | 10 |  |
+| PARTY_TYPE_VALIDATOR | 11 |  |
 
 
 
