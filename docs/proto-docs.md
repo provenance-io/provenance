@@ -124,6 +124,8 @@
     - [MsgDeleteResponse](#provenance.marker.v1.MsgDeleteResponse)
     - [MsgFinalizeRequest](#provenance.marker.v1.MsgFinalizeRequest)
     - [MsgFinalizeResponse](#provenance.marker.v1.MsgFinalizeResponse)
+    - [MsgGrantAllowance](#provenance.marker.v1.MsgGrantAllowance)
+    - [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse)
     - [MsgMintRequest](#provenance.marker.v1.MsgMintRequest)
     - [MsgMintResponse](#provenance.marker.v1.MsgMintResponse)
     - [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest)
@@ -2030,6 +2032,35 @@ MsgFinalizeResponse defines the Msg/Finalize response type
 
 
 
+<a name="provenance.marker.v1.MsgGrantAllowance"></a>
+
+### MsgGrantAllowance
+MsgGrantAllowance adds permission for Grantee to spend up to Allowance
+of fees from the account of Granter.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `administrator` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  | grantee is the address of the user being granted an allowance of another user's funds. |
+| `allowance` | [google.protobuf.Any](#google.protobuf.Any) |  | allowance can be any of basic and filtered fee allowance (fee FeeGrant module). |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgGrantAllowanceResponse"></a>
+
+### MsgGrantAllowanceResponse
+MsgGrantAllowanceResponse defines the Msg/GrantAllowanceResponse response type.
+
+
+
+
+
+
 <a name="provenance.marker.v1.MsgMintRequest"></a>
 
 ### MsgMintRequest
@@ -2163,6 +2194,7 @@ Msg defines the Marker Msg service.
 | `AddMarker` | [MsgAddMarkerRequest](#provenance.marker.v1.MsgAddMarkerRequest) | [MsgAddMarkerResponse](#provenance.marker.v1.MsgAddMarkerResponse) | AddMarker | |
 | `Transfer` | [MsgTransferRequest](#provenance.marker.v1.MsgTransferRequest) | [MsgTransferResponse](#provenance.marker.v1.MsgTransferResponse) | Transfer marker denominated coin between accounts | |
 | `SetDenomMetadata` | [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest) | [MsgSetDenomMetadataResponse](#provenance.marker.v1.MsgSetDenomMetadataResponse) | Allows Denom Metadata (see bank module) to be set for the Marker's Denom | |
+| `GrantAllowance` | [MsgGrantAllowance](#provenance.marker.v1.MsgGrantAllowance) | [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse) | GrantAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
 
  <!-- end services -->
 

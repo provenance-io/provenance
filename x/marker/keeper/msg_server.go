@@ -25,6 +25,28 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
+// GrantAllowance grants an allowance from the marker's funds to be used by the grantee.
+func (k msgServer) GrantAllowance(goCtx context.Context, msg *types.MsgGrantAllowance) (*types.MsgGrantAllowanceResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	m, err := k.GetMarkerByDenom(ctx, msg.Denom)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	admin, err := sdk.AccAddressFromBech32(msg.Administrator)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	if !m.AddressHasAccess(admin, types.Access_Admin) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "administrator must have admin grant on marker")
+	}
+	allowance, err := msg.GetFeeAllowanceI()
+	if err != nil {
+		return nil, err
+	}
+	k.Keeper.feegrantKeeper.GrantAllowance(ctx, m.GetAddress(), sdk.AccAddress(msg.Grantee), allowance)
+	return &types.MsgGrantAllowanceResponse{}, nil
+}
+
 // Handle a message to add a new marker account.
 func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerRequest) (*types.MsgAddMarkerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
