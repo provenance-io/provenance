@@ -14,6 +14,7 @@ import (
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // PioMsgServiceRouter routes fully-qualified Msg service methods to their handler with additional fee processing of msgs.
@@ -152,6 +153,14 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 				}
 
 				feeGasMeter.ConsumeFee(fee.AdditionalFee, msgTypeURL)
+			}
+
+			if msgTypeURL == sdk.MsgTypeURL(&msgfeestypes.MsgAssessCustomMsgFeeRequest{}) {
+				assessCustomFee, ok := req.(*msgfeestypes.MsgAssessCustomMsgFeeRequest)
+				if !ok {
+					panic("could not convert request msg to MsgAssessCustomMsgFeeRequest")
+				}
+				ctx.Logger().Debug(fmt.Sprintf("Tx Msg is an assess custom msg fee of %v ", assessCustomFee))
 			}
 
 			// original sdk implementation of msg service router

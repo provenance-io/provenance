@@ -2,6 +2,16 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	yaml "gopkg.in/yaml.v2"
+)
+
+const (
+	TypeAssessCustomMsgFee = "assess_custom_msg_fee"
+)
+
+// Compile time interface checks.
+var (
+	_ sdk.Msg = &MsgAssessCustomMsgFeeRequest{}
 )
 
 func NewMsgFee(msgTypeURL string, additionalFee sdk.Coin) MsgFee {
@@ -23,4 +33,27 @@ func (msg *MsgFee) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+func (acmfr MsgAssessCustomMsgFeeRequest) ValidateBasic() error {
+	return nil
+}
+
+func (acmfr MsgAssessCustomMsgFeeRequest) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{}
+}
+
+func (acmfr MsgAssessCustomMsgFeeRequest) String() string {
+	out, _ := yaml.Marshal(acmfr)
+	return string(out)
+}
+
+// Route returns the module route
+func (acmfr MsgAssessCustomMsgFeeRequest) Route() string {
+	return ModuleName
+}
+
+// Type returns the type name for this msg
+func (acmfr MsgAssessCustomMsgFeeRequest) Type() string {
+	return TypeAssessCustomMsgFee
 }

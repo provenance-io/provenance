@@ -352,6 +352,12 @@
   
     - [Query](#provenance.msgfees.v1.Query)
   
+- [provenance/msgfees/v1/tx.proto](#provenance/msgfees/v1/tx.proto)
+    - [MsgAssessCustomMsgFeeRequest](#provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest)
+    - [MsgAssessCustomMsgFeeResponse](#provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse)
+  
+    - [Msg](#provenance.msgfees.v1.Msg)
+  
 - [provenance/name/v1/name.proto](#provenance/name/v1/name.proto)
     - [CreateRootNameProposal](#provenance.name.v1.CreateRootNameProposal)
     - [EventNameBound](#provenance.name.v1.EventNameBound)
@@ -850,7 +856,7 @@ MsgUpdateAttributeResponse defines the Msg/Vote response type.
 <a name="provenance.attribute.v1.Msg"></a>
 
 ### Msg
-Msg defines the bank Msg service.
+Msg defines the attribute module Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
@@ -5417,6 +5423,59 @@ Query defines the gRPC querier service for marker module.
 | `Params` | [QueryParamsRequest](#provenance.msgfees.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.msgfees.v1.QueryParamsResponse) | Params queries the parameters for x/msgfees | GET|/provenance/msgfees/v1/params|
 | `QueryAllMsgFees` | [QueryAllMsgFeesRequest](#provenance.msgfees.v1.QueryAllMsgFeesRequest) | [QueryAllMsgFeesResponse](#provenance.msgfees.v1.QueryAllMsgFeesResponse) | Query all Msgs which have fees associated with them. | GET|/provenance/msgfees/v1/all|
 | `CalculateTxFees` | [CalculateTxFeesRequest](#provenance.msgfees.v1.CalculateTxFeesRequest) | [CalculateTxFeesResponse](#provenance.msgfees.v1.CalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees. | POST|/provenance/tx/v1/calculate_msg_based_fee|
+
+ <!-- end services -->
+
+
+
+<a name="provenance/msgfees/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/msgfees/v1/tx.proto
+
+
+
+<a name="provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest"></a>
+
+### MsgAssessCustomMsgFeeRequest
+MsgBindNameRequest defines an sdk.Msg type
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `holder_address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse"></a>
+
+### MsgAssessCustomMsgFeeResponse
+MsgBindNameResponse defines the Msg/BindName response type.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.msgfees.v1.Msg"></a>
+
+### Msg
+Msg defines the msgfees Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `AssessCustomMsgFee` | [MsgAssessCustomMsgFeeRequest](#provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest) | [MsgAssessCustomMsgFeeResponse](#provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse) | AssessCustomMsgFee . | |
 
  <!-- end services -->
 
