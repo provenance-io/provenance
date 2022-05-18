@@ -37,7 +37,7 @@ func DefaultGenesis() *GenesisState {
 // failure.
 func (gs GenesisState) Validate() error {
 	for _, rewardProgram := range gs.RewardPrograms {
-		if err := rewardProgram.Validate(); err != nil {
+		if err := rewardProgram.ValidateBasic(); err != nil {
 			return err
 		}
 	}

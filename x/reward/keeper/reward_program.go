@@ -12,11 +12,11 @@ import (
 func (k Keeper) SetRewardProgram(ctx sdk.Context, rewardProgram types.RewardProgram) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&rewardProgram)
-	store.Set(types.GetRewardProgramKey(int64(rewardProgram.Id)), bz)
+	store.Set(types.GetRewardProgramKey(rewardProgram.Id), bz)
 }
 
 // Removes a reward program in the keeper
-func (k Keeper) RemoveRewardProgram(ctx sdk.Context, id int64) bool {
+func (k Keeper) RemoveRewardProgram(ctx sdk.Context, id uint64) bool {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRewardProgramKey(id)
 	bz := store.Get(key)
@@ -28,7 +28,7 @@ func (k Keeper) RemoveRewardProgram(ctx sdk.Context, id int64) bool {
 }
 
 // GetRewardProgram returns a RewardProgram by id
-func (k Keeper) GetRewardProgram(ctx sdk.Context, id int64) (rewardProgram types.RewardProgram, err error) {
+func (k Keeper) GetRewardProgram(ctx sdk.Context, id uint64) (rewardProgram types.RewardProgram, err error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRewardProgramKey(id)
 	bz := store.Get(key)
@@ -98,7 +98,7 @@ func (k Keeper) RemoveExpiredPrograms(ctx sdk.Context) error {
 			continue
 		}
 
-		k.RemoveRewardProgram(ctx, int64(rewardProgram.GetId()))
+		k.RemoveRewardProgram(ctx, rewardProgram.GetId())
 	}
 	return nil
 }
@@ -119,4 +119,35 @@ func (k Keeper) GetRewardProgramID(ctx sdk.Context) (rewardprogramID uint64, err
 func (k Keeper) SetRewardProgramID(ctx sdk.Context, rewardprogramID uint64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.RewardProgramIDKey, types.GetRewardProgramIDBytes(rewardprogramID))
+}
+
+// SetRewardProgram sets the reward program in the keeper
+func (k Keeper) SetRewardProgramBalance(ctx sdk.Context, rewardProgramBalance types.RewardProgramBalance) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&rewardProgramBalance)
+	store.Set(types.GetRewardProgramBalanceKey(rewardProgramBalance.RewardProgramId), bz)
+}
+
+// Removes a reward program in the keeper
+func (k Keeper) RemoveRewardProgramBalance(ctx sdk.Context, id uint64) bool {
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetRewardProgramBalanceKey(id)
+	bz := store.Get(key)
+	keyExists := store.Has(bz)
+	if keyExists {
+		store.Delete(bz)
+	}
+	return keyExists
+}
+
+// GetRewardProgram returns a RewardProgram by id
+func (k Keeper) GetRewardProgramBalance(ctx sdk.Context, id uint64) (rewardProgramBalance types.RewardProgram, err error) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetRewardProgramBalanceKey(id)
+	bz := store.Get(key)
+	if len(bz) == 0 {
+		return rewardProgramBalance, nil
+	}
+	err = k.cdc.Unmarshal(bz, &rewardProgramBalance)
+	return rewardProgramBalance, err
 }

@@ -401,13 +401,13 @@
     - [QualifyingAction](#provenance.reward.v1.QualifyingAction)
     - [RewardClaim](#provenance.reward.v1.RewardClaim)
     - [RewardProgram](#provenance.reward.v1.RewardProgram)
+    - [RewardProgramBalance](#provenance.reward.v1.RewardProgramBalance)
     - [Share](#provenance.reward.v1.Share)
     - [SharesPerEpochPerRewardsProgram](#provenance.reward.v1.SharesPerEpochPerRewardsProgram)
   
 - [provenance/reward/v1/genesis.proto](#provenance/reward/v1/genesis.proto)
     - [GenesisState](#provenance.reward.v1.GenesisState)
   
-- [provenance/reward/v1/proposals.proto](#provenance/reward/v1/proposals.proto)
 - [provenance/reward/v1/query.proto](#provenance/reward/v1/query.proto)
     - [ActiveRewardProgramsRequest](#provenance.reward.v1.ActiveRewardProgramsRequest)
     - [ActiveRewardProgramsResponse](#provenance.reward.v1.ActiveRewardProgramsResponse)
@@ -6096,6 +6096,24 @@ RewardProgram
 
 
 
+<a name="provenance.reward.v1.RewardProgramBalance"></a>
+
+### RewardProgramBalance
+RewardProgramBalance will display the balance for a distribution address for specific rewards program
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_program_id` | [uint64](#uint64) |  |  |
+| `distribution_address` | [string](#string) |  |  |
+| `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `funds_claimable` | [bool](#bool) |  | When rewards program is over and the time for participants to claim funds is over. |
+
+
+
+
+
+
 <a name="provenance.reward.v1.Share"></a>
 
 ### Share
@@ -6173,22 +6191,6 @@ GenesisState defines the reward module's genesis state.
 
 
 
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="provenance/reward/v1/proposals.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/reward/v1/proposals.proto
 
 
  <!-- end messages -->
