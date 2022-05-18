@@ -6,9 +6,12 @@ import (
 	"math/rand"
 
 	"github.com/provenance-io/provenance/x/msgfees/simulation"
+	"github.com/provenance-io/provenance/x/msgfees/types"
 
+	msgfeesmodule "github.com/provenance-io/provenance/x/msgfees"
 	"github.com/provenance-io/provenance/x/msgfees/client/cli"
 	"github.com/provenance-io/provenance/x/msgfees/keeper"
+	msgfees "github.com/provenance-io/provenance/x/msgfees/types"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,8 +24,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
-
-	msgfees "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 var (
@@ -118,11 +119,7 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Deprecated: Route returns the message routing key for the msgfees module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-func (am AppModule) NewHandler() sdk.Handler {
-	return nil
+	return sdk.NewRoute(types.RouterKey, msgfeesmodule.NewHandler(am.keeper))
 }
 
 // QuerierRoute returns the route we respond to for abci queries
