@@ -516,7 +516,7 @@ func New(
 		AddRoute(nametypes.ModuleName, name.NewProposalHandler(app.NameKeeper)).
 		AddRoute(markertypes.ModuleName, marker.NewProposalHandler(app.MarkerKeeper)).
 		AddRoute(msgfeestypes.ModuleName, msgfees.NewProposalHandler(app.MsgFeesKeeper, app.InterfaceRegistry()))
-	//AddRoute(rewardtypes.ModuleName, reward.NewProposalHandler(app.RewardKeeper, app.InterfaceRegistry()))
+	// AddRoute(rewardtypes.ModuleName, reward.NewProposalHandler(app.RewardKeeper, app.InterfaceRegistry()))
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, govRouter,
