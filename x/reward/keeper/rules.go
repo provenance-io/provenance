@@ -11,55 +11,59 @@ import (
 )
 
 // EvaluateRules takes in a Eligibility criteria and measure it against the events in the context
-func (k Keeper) EvaluateRules(ctx sdk.Context, program *types.RewardProgram) error {
+func (k Keeper) DetectQualifyingActions(ctx sdk.Context, program *types.RewardProgram) ([]types.EvaluationResult, error) {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: EvaluateRules for RewardProgram: %d", program.GetId()))
+	qualifyingActions := []types.EvaluationResult(nil)
 
-	// Check if any of the transactions match the qualifying actions
-	for _, qualifyingAction := range program.GetQualifyingActions() {
+	// Check if any of the transactions are qualifying actions
+	for _, supportedAction := range program.GetQualifyingActions() {
 		// Get the appropriate RewardAction
 		// If it's unsupported we skip it
-		action, err := qualifyingAction.GetRewardAction(ctx)
+		action, err := supportedAction.GetRewardAction(ctx)
 		if err != nil {
+			ctx.Logger().Error(err.Error())
 			continue
 		}
 
-		// Get all events that the action will use
+		// Get all events that the qualyfing action type uses
 		eventCriteria := action.GetEventCriteria()
-		events, err := k.GetMatchingEvents(ctx, &eventCriteria)
+		abciEvents, err := k.GetMatchingEvents(ctx, &eventCriteria)
 		if err != nil {
-			return err
-		}
-		// We want to evaluate each of these actions
-		matchedEvents := []types.EvaluationResult(nil)
-		for _, event := range events {
-			// Get the AccountState for the triggering account
-			var state types.AccountState
-			state, err = k.GetAccountState(ctx, program.GetId(), program.GetCurrentEpoch(), string(event.Address))
-			if err != nil {
-				continue
-			}
-
-			// We want to evaluate it
-			// If it passes then it should be added to the list
-			if action.Evaluate(ctx, &state) {
-				matchedEvents = append(matchedEvents, event)
-			}
-
-			// Update the account state because evaluate may modify it
-			k.SetAccountState(ctx, &state)
+			return nil, err
 		}
 
-		// Record any results
-		err = k.RecordShares(ctx, program, matchedEvents)
+		// Obtain the events that were successfully evaluted
+		detectedActions := k.FindQualifyingActions(ctx, program, action, abciEvents)
+		qualifyingActions = append(qualifyingActions, detectedActions...)
+	}
+
+	return qualifyingActions, nil
+}
+
+func (k Keeper) FindQualifyingActions(ctx sdk.Context, program *types.RewardProgram, action types.RewardAction, abciEvents []types.EvaluationResult) []types.EvaluationResult {
+	detectedEvents := []types.EvaluationResult(nil)
+
+	for _, event := range abciEvents {
+		// Get the AccountState for the triggering account
+		var state types.AccountState
+		state, err := k.GetAccountState(ctx, program.GetId(), program.GetCurrentEpoch(), string(event.Address))
 		if err != nil {
-			return err
+			continue
+		}
+		state.ActionCounter++
+		k.SetAccountState(ctx, &state)
+
+		// We want to evaluate it
+		// If it passes then it should be added to the list
+		if action.Evaluate(ctx, state) {
+			detectedEvents = append(detectedEvents, event)
 		}
 	}
 
-	return nil
+	return detectedEvents
 }
 
-func (k Keeper) RecordShares(ctx sdk.Context, rewardProgram *types.RewardProgram, evaluateRes []types.EvaluationResult) error {
+func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram, evaluateRes []types.EvaluationResult) error {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: Recording shares for for rewardProgramId=%d, epochId=%d",
 		rewardProgram.GetId(), rewardProgram.GetCurrentEpoch()))
 
