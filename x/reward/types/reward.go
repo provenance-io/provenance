@@ -37,6 +37,17 @@ const (
 	ActionTypeTransferDelegations = "ActionTransferDelegations"
 )
 
+type (
+	// RewardAction defines the interface that actions need to implement
+	RewardAction interface {
+		ActionType() string
+		Evaluate(ctx sdk.Context, state *AccountState) bool
+		GetEventCriteria() EventCriteria
+	}
+)
+
+//============ Shared structs ============
+
 type EventCriteria struct {
 	EventType      string
 	Attribute      string
@@ -50,14 +61,7 @@ type EvaluationResult struct {
 	Address           sdk.AccAddress // shares to attribute to this address
 }
 
-type (
-	// RewardAction defines the interface that actions need to implement
-	RewardAction interface {
-		ActionType() string
-		Evaluate(ctx sdk.Context, state *AccountState) bool
-		GetEventCriteria() EventCriteria
-	}
-)
+//============ Reward Program ============
 
 func NewRewardProgram(
 	title string,
@@ -128,6 +132,8 @@ func (rp *RewardProgram) String() string {
 	return string(out)
 }
 
+//============ Reward Program Balance ============
+
 func NewRewardProgramBalance(
 	rewardProgramID uint64,
 	distributionAddress string,
@@ -155,6 +161,8 @@ func (rpb *RewardProgramBalance) String() string {
 	return string(out)
 }
 
+//============ Reward Claim * Not Used * ============
+
 func NewRewardClaim(address string, sharesPerEpochPerRewardsProgram []SharesPerEpochPerRewardsProgram, expired bool) RewardClaim {
 	return RewardClaim{
 		Address:                 address,
@@ -174,6 +182,8 @@ func (rc *RewardClaim) String() string {
 	out, _ := yaml.Marshal(rc)
 	return string(out)
 }
+
+//============ Account State ============
 
 func NewAccountState(rewardProgramID, epochID uint64, address string) AccountState {
 	return AccountState{
@@ -198,6 +208,8 @@ func (s *AccountState) String() string {
 	out, _ := yaml.Marshal(s)
 	return string(out)
 }
+
+//============ Share ============
 
 func NewShare(rewardProgramID, epochID uint64, address string, claimed bool, expireTime time.Time, amount int64) Share {
 	return Share{
@@ -224,6 +236,8 @@ func (s *Share) String() string {
 	out, _ := yaml.Marshal(s)
 	return string(out)
 }
+
+//============ Epoch Reward Distribution ============
 
 func NewEpochRewardDistribution(epochID string, rewardProgramID uint64, totalRewardsPool sdk.Coin, totalShares int64, epochEnded bool) EpochRewardDistribution {
 	return EpochRewardDistribution{
@@ -252,6 +266,8 @@ func (erd *EpochRewardDistribution) String() string {
 	out, _ := yaml.Marshal(erd)
 	return string(out)
 }
+
+//============ Eligibility Criteria ============
 
 func NewEligibilityCriteria(name string, action RewardAction) EligibilityCriteria {
 	ec := EligibilityCriteria{Name: name}
@@ -290,6 +306,8 @@ func (ec *EligibilityCriteria) String() string {
 	return string(out)
 }
 
+//============ Action Delegate ============
+
 func NewActionDelegate() ActionDelegate {
 	return ActionDelegate{}
 }
@@ -322,6 +340,8 @@ func (ad *ActionDelegate) String() string {
 	return string(out)
 }
 
+//============ Action Transfer Delegations ============
+
 func NewActionTransferDelegations() ActionTransferDelegations {
 	return ActionTransferDelegations{}
 }
@@ -351,6 +371,8 @@ func (atd *ActionTransferDelegations) Evaluate(ctx sdk.Context, state *AccountSt
 	return false
 }
 
+//============ Qualifying Action ============
+
 func (qa *QualifyingAction) GetRewardAction(ctx sdk.Context) (RewardAction, error) {
 	var action RewardAction
 
@@ -370,6 +392,8 @@ func (qa *QualifyingAction) GetRewardAction(ctx sdk.Context) (RewardAction, erro
 
 	return action, nil
 }
+
+//============ SharesPerEpochPerRewardsProgram * Not used * ============
 
 func NewSharesPerEpochPerRewardsProgram(
 	rewardProgramID uint64,
