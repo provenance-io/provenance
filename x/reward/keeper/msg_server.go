@@ -61,7 +61,13 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 	if err != nil {
 		return nil, fmt.Errorf("unable to send coin to module reward pool: %s", err)
 	}
-	//TODO: Add object to track all balances in the module
+
+	rewardProgramBalance := types.NewRewardProgramBalance(rewardProgramID, rewardProgram.DistributeFromAddress, rewardProgram.Coin)
+	err = rewardProgramBalance.ValidateBasic()
+	if err != nil {
+		return nil, err
+	}
+	s.Keeper.SetRewardProgramBalance(ctx, rewardProgramBalance)
 
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: Reward Program Proposal %v", rewardProgram))
 	// TODO: emit event
