@@ -650,10 +650,12 @@ Examples:
 		),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			denom := args[0]
+			err := cmd.Flags().Set(flags.FlagFrom, args[1])
+			if err != nil {
+				return err
+			}
 
-			cmd.Flags().Set(flags.FlagFrom, args[1])
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -709,7 +711,8 @@ Examples:
 
 			// Check any of period or periodLimit flags set, If set consider it as periodic fee allowance.
 			if periodClock > 0 || periodLimitVal != "" {
-				periodLimit, err := sdk.ParseCoinsNormalized(periodLimitVal)
+				var periodLimit sdk.Coins
+				periodLimit, err = sdk.ParseCoinsNormalized(periodLimitVal)
 				if err != nil {
 					return err
 				}
