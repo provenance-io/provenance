@@ -4,9 +4,13 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/gogo/protobuf/proto"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 const (
@@ -22,6 +26,7 @@ const (
 	TypeWithdrawRequest     = "withdraw"
 	TypeTransferRequest     = "transfer"
 	TypeSetMetadataRequest  = "setmetadata"
+	TypeGrantAllowance      = "grantallowance"
 )
 
 // Compile time interface check.
@@ -37,6 +42,7 @@ var (
 	_ sdk.Msg = &MsgBurnRequest{}
 	_ sdk.Msg = &MsgWithdrawRequest{}
 	_ sdk.Msg = &MsgTransferRequest{}
+	_ sdk.Msg = &MsgGrantAllowance{}
 )
 
 // Type returns the message action.
@@ -74,6 +80,9 @@ func (msg MsgTransferRequest) Type() string { return TypeTransferRequest }
 
 // Type returns the message action.
 func (msg MsgSetDenomMetadataRequest) Type() string { return TypeSetMetadataRequest }
+
+// Type returns the message action.
+func (msg MsgGrantAllowance) Type() string { return TypeGrantAllowance }
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
 func NewMsgAddMarkerRequest(
@@ -540,6 +549,84 @@ func (msg MsgSetDenomMetadataRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgSetDenomMetadataRequest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+// GetFeeAllowanceI returns unpacked FeeAllowance
+func (msg MsgGrantAllowance) GetFeeAllowanceI() (feegranttypes.FeeAllowanceI, error) {
+	allowance, ok := msg.Allowance.GetCachedValue().(feegranttypes.FeeAllowanceI)
+	if !ok {
+		return nil, sdkerrors.Wrap(feegranttypes.ErrNoAllowance, "failed to get allowance")
+	}
+
+	return allowance, nil
+}
+
+// NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
+func NewMsgGrantAllowance(
+	denom string, admin sdk.AccAddress, grantee sdk.AccAddress, allowance feegranttypes.FeeAllowanceI, // nolint:interfacer
+) (*MsgGrantAllowance, error) {
+	msg, ok := allowance.(proto.Message)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", msg)
+	}
+	any, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return &MsgGrantAllowance{
+		Denom:         denom,
+		Administrator: admin.String(),
+		Grantee:       grantee.String(),
+		Allowance:     any,
+	}, nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgGrantAllowance) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var allowance feegranttypes.FeeAllowanceI
+	return unpacker.UnpackAny(msg.Allowance, &allowance)
+}
+
+// Route returns the name of the module.
+func (msg MsgGrantAllowance) Route() string { return ModuleName }
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgGrantAllowance) ValidateBasic() error {
+	if msg.Denom == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "missing marker denom")
+	}
+	if msg.Administrator == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing administrator address")
+	}
+	if msg.Grantee == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
+	}
+	if msg.Grantee == msg.Administrator {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
+	}
+
+	allowance, err := msg.GetFeeAllowanceI()
+	if err != nil {
+		return err
+	}
+
+	return allowance.ValidateBasic()
+}
+
+// GetSignBytes encodes the message for signing.
+func (msg MsgGrantAllowance) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners indicates that the message must have been signed by the address provided.
+func (msg MsgGrantAllowance) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
 	if err != nil {
 		panic(err)
