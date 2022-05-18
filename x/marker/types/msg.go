@@ -607,9 +607,6 @@ func (msg MsgGrantAllowance) ValidateBasic() error {
 	if msg.Grantee == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
 	}
-	if msg.Grantee == msg.Administrator {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
-	}
 
 	allowance, err := msg.GetFeeAllowanceI()
 	if err != nil {

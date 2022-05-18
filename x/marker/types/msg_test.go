@@ -63,7 +63,7 @@ func TestMsgGrantAllowance(t *testing.T) {
 			grantee:       addr,
 			administrator: addr,
 			allowance:     basic,
-			valid:         false,
+			valid:         true,
 		},
 	}
 

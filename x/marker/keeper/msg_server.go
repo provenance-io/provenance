@@ -36,6 +36,10 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *types.MsgGrantAllo
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
 	if !m.AddressHasAccess(admin, types.Access_Admin) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "administrator must have admin grant on marker")
 	}
@@ -43,7 +47,7 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *types.MsgGrantAllo
 	if err != nil {
 		return nil, err
 	}
-	err = k.Keeper.feegrantKeeper.GrantAllowance(ctx, m.GetAddress(), sdk.AccAddress(msg.Grantee), allowance)
+	err = k.Keeper.feegrantKeeper.GrantAllowance(ctx, m.GetAddress(), grantee, allowance)
 	return &types.MsgGrantAllowanceResponse{}, err
 }
 

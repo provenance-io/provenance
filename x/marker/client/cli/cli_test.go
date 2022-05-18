@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
@@ -30,6 +31,11 @@ import (
 	"github.com/provenance-io/provenance/testutil"
 	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+)
+
+const (
+	oneYear = 365 * 24 * 60 * 60
+	oneHour = 60 * 60
 )
 
 type IntegrationTestSuite struct {
@@ -763,6 +769,31 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			},
 			false, &sdk.TxResponse{}, 0,
 		},
+		{
+			"create simple feegrant allowance",
+			markercli.GetCmdFeeGrant(),
+			[]string{
+				"hotdog",
+				s.testnet.Validators[0].Address.String(),
+				s.accountAddresses[0].String(),
+				fmt.Sprintf("--%s=%s", markercli.FlagSpendLimit, sdk.NewCoin("stake", sdk.NewInt(100))),
+				fmt.Sprintf("--%s=%s", markercli.FlagExpiration, getFormattedExpiration(oneYear)),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"create periodic feegrant allowance",
+			markercli.GetCmdFeeGrant(),
+			[]string{
+				"hotdog",
+				s.testnet.Validators[0].Address.String(),
+				s.accountAddresses[0].String(),
+				fmt.Sprintf("--%s=%v", markercli.FlagPeriod, oneHour),
+				fmt.Sprintf("--%s=%s", markercli.FlagPeriodLimit, sdk.NewCoin("stake", sdk.NewInt(100))),
+				fmt.Sprintf("--%s=%s", markercli.FlagExpiration, getFormattedExpiration(oneYear)),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -1163,4 +1194,8 @@ func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 			require.NotEqual(t, results[i-1], results[i], "no two balances should be equal here")
 		}
 	})
+}
+
+func getFormattedExpiration(duration int64) string {
+	return time.Now().Add(time.Duration(duration) * time.Second).Format(time.RFC3339)
 }
