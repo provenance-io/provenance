@@ -2,10 +2,10 @@ package keeper
 
 import (
 	"fmt"
+	"reflect"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/provenance-io/provenance/x/reward/types"
 )
@@ -21,7 +21,7 @@ func (k Keeper) DetectQualifyingActions(ctx sdk.Context, program *types.RewardPr
 		// If it's unsupported we skip it
 		action, err := supportedAction.GetRewardAction(ctx)
 		if err != nil {
-			ctx.Logger().Error(err.Error())
+			ctx.Logger().Info(err.Error())
 			continue
 		}
 
@@ -46,7 +46,7 @@ func (k Keeper) FindQualifyingActions(ctx sdk.Context, program *types.RewardProg
 	for _, event := range abciEvents {
 		// Get the AccountState for the triggering account
 		var state types.AccountState
-		state, err := k.GetAccountState(ctx, program.GetId(), program.GetCurrentEpoch(), string(event.Address))
+		state, err := k.GetAccountState(ctx, program.GetId(), program.GetCurrentEpoch(), event.Address.String())
 		if err != nil {
 			continue
 		}
@@ -55,6 +55,8 @@ func (k Keeper) FindQualifyingActions(ctx sdk.Context, program *types.RewardProg
 
 		// We want to evaluate it
 		// If it passes then it should be added to the list
+
+		// TODO The action has a eligibility criteria
 		if action.Evaluate(ctx, state) {
 			detectedEvents = append(detectedEvents, event)
 		}
@@ -81,7 +83,7 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 			share = types.NewShare(
 				rewardProgram.GetId(),
 				rewardProgram.GetCurrentEpoch(),
-				string(res.Address),
+				res.Address.String(),
 				false,
 				rewardProgram.EpochEndTime.Add(time.Duration(rewardProgram.GetShareExpirationOffset())),
 				0,
@@ -168,25 +170,7 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 	return nil
 }
 
-func (k Keeper) EvaluateTransferAndCheckDelegation(ctx sdk.Context, rewardProgram *types.RewardProgram) ([]types.EvaluationResult, error) {
-	result, err := k.GetTransferEvents(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO Apply actions to each account based on events
-	// TODO Filter out results that don't meet criteria.
-
-	/*for _, s := range result {
-		if len(k.CheckActiveDelegations(ctx, s.address)) > 0 {
-			result = append(result, s)
-		}
-	}*/
-
-	return result, nil
-}
-
-func (k Keeper) IterateABCIEvents(ctx sdk.Context, eventCriteria *types.EventCriteria, action func(*abci.Event, *abci.EventAttribute) error) error {
+func (k Keeper) IterateABCIEvents(ctx sdk.Context, eventCriteria *types.EventCriteria, action func(string, *map[string][]byte) error) error {
 	for _, event := range ctx.EventManager().GetABCIEventHistory() {
 		event := event
 		ctx.Logger().Info(fmt.Sprintf("events type is %s", event.Type))
@@ -196,112 +180,50 @@ func (k Keeper) IterateABCIEvents(ctx sdk.Context, eventCriteria *types.EventCri
 			continue
 		}
 
+		// Convert the attributes into a map
+		attributes := make(map[string][]byte)
 		for _, attribute := range event.Attributes {
-			attribute := attribute
-			ctx.Logger().Info(fmt.Sprintf("event attribute is %s attribute_key:attribute_value  %s:%s", event.Type, attribute.Key, attribute.Value))
+			attributes[string(attribute.Key)] = attribute.Value
+		}
 
-			// Attribute names must match or wildcard/empty must be present
-			if eventCriteria.Attribute != string(attribute.Key) && eventCriteria.Attribute != "" {
-				continue
+		// Go through each defined attribute in the criteria
+		// Verify each of them exist and their value matches
+		// Nil is a wildcard
+		valid := true
+		for key, value := range eventCriteria.Attributes {
+			v, exists := attributes[key]
+			if !exists || (reflect.DeepEqual(value, v) || value == nil) {
+				valid = false
+				break
 			}
+		}
+		if !valid {
+			continue
+		}
 
-			// Attribute values must match or wildcard/empty must be present
-			if eventCriteria.AttributeValue != string(attribute.Value) && eventCriteria.AttributeValue != "" {
-				continue
-			}
-
-			err := action(&event, &attribute)
-			if err != nil {
-				return err
-			}
+		err := action(event.Type, &attributes)
+		if err != nil {
+			return err
 		}
 	}
 
 	return nil
 }
 
-// EvaluateDelegateEvents
-// unfortunately delegate events appear like this
-//10:38PM INF events type is message
-//10:38PM INF event attribute is message attribute_key:attribute_value  module:staking
-//10:38PM INF event attribute is message attribute_key:attribute_value  sender:tp1hsrqwfypd3w3py2kw7fajw4fzfqwv5qdel6vf6
-func (k Keeper) GetDelegationEvents(ctx sdk.Context) ([]types.EvaluationResult, error) {
-	result := ([]types.EvaluationResult)(nil)
-	eventCriteria := types.EventCriteria{
-		EventType:      "message",
-		Attribute:      "staking",
-		AttributeValue: "sender",
-	}
-
-	err := k.IterateABCIEvents(ctx, &eventCriteria, func(event *abci.Event, attribute *abci.EventAttribute) error {
-		// really not possible to get an error but could happen i guess
-		address, err := sdk.AccAddressFromBech32(string(attribute.Value))
-
-		// TODO check this address has a delegation
-		if err != nil {
-			return err
-		}
-		result = append(result, types.EvaluationResult{
-			EventTypeToSearch: event.Type,
-			AttributeKey:      string(attribute.Key),
-			Shares:            1,
-			Address:           address,
-		})
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
-}
-
-func (k Keeper) GetTransferEvents(ctx sdk.Context) ([]types.EvaluationResult, error) {
-	result := ([]types.EvaluationResult)(nil)
-	eventCriteria := types.EventCriteria{
-		EventType: "transfer",
-		Attribute: "sender",
-	}
-
-	err := k.IterateABCIEvents(ctx, &eventCriteria, func(event *abci.Event, attribute *abci.EventAttribute) error {
-		// really not possible to get an error but could happen i guess
-		address, err := sdk.AccAddressFromBech32(string(attribute.Value))
-
-		// TODO check this address has a delegation
-		if err != nil {
-			return err
-		}
-
-		result = append(result, types.EvaluationResult{
-			EventTypeToSearch: event.Type,
-			AttributeKey:      string(attribute.Key),
-			Shares:            1,
-			Address:           address,
-		})
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
-}
-
 func (k Keeper) GetMatchingEvents(ctx sdk.Context, eventCriteria *types.EventCriteria) ([]types.EvaluationResult, error) {
 	result := ([]types.EvaluationResult)(nil)
 
-	err := k.IterateABCIEvents(ctx, eventCriteria, func(event *abci.Event, attribute *abci.EventAttribute) error {
+	err := k.IterateABCIEvents(ctx, eventCriteria, func(eventType string, attributes *map[string][]byte) error {
 		// really not possible to get an error but could happen i guess
-		address, err := sdk.AccAddressFromBech32(string(attribute.Value))
-
-		// TODO check this address has a delegation
+		address := (*attributes)["address"]
+		address, err := sdk.AccAddressFromBech32(string(address))
 		if err != nil {
 			return err
 		}
 
 		result = append(result, types.EvaluationResult{
-			EventTypeToSearch: event.Type,
-			AttributeKey:      string(attribute.Key),
+			EventTypeToSearch: eventType,
+			AttributeKey:      "address",
 			Shares:            1,
 			Address:           address,
 		})

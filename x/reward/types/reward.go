@@ -49,9 +49,8 @@ type (
 // ============ Shared structs ============
 
 type EventCriteria struct {
-	EventType      string
-	Attribute      string
-	AttributeValue string
+	EventType  string
+	Attributes map[string][]byte
 }
 
 type EvaluationResult struct {
@@ -199,7 +198,7 @@ func (s *AccountState) ValidateBasic() error {
 		return fmt.Errorf("invalid address for share address: %w", err)
 	}
 	if id := s.GetRewardProgramId(); id == 0 {
-		return fmt.Errorf("invalid reward program id")
+		return fmt.Errorf("reward program id must be greater than 0")
 	}
 	return nil
 }
@@ -322,14 +321,24 @@ func (ad *ActionDelegate) ActionType() string {
 
 func (ad *ActionDelegate) GetEventCriteria() EventCriteria {
 	return EventCriteria{
-		EventType:      "message",
-		Attribute:      "staking",
-		AttributeValue: "sender",
+		EventType: "message",
+		Attributes: map[string][]byte{
+			"module": []byte("staking"),
+		},
 	}
 }
 
 func (ad *ActionDelegate) Evaluate(ctx sdk.Context, state AccountState) bool {
 	// May want to check if they have sufficient balance?
+	// How much it is delegating
+	// Only supports minimum and maximum delegation
+	// Validator they are delegating against is some percentage of the maximum stake - In or out of top 10/20
+
+	// How do we get the address' ranking?
+	// How do we get how much they staked?
+	// Do we use the staking module?
+
+	// How do validators work
 	return state.ActionCounter >= ad.GetMinimumActions() && state.ActionCounter <= ad.GetMaximumActions()
 }
 
@@ -350,8 +359,8 @@ func (atd *ActionTransferDelegations) ValidateBasic() error {
 
 func (atd *ActionTransferDelegations) GetEventCriteria() EventCriteria {
 	return EventCriteria{
-		EventType: "transfer",
-		Attribute: "sender",
+		EventType:  "transfer",
+		Attributes: map[string][]byte{},
 	}
 }
 

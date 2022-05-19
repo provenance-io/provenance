@@ -482,3 +482,17 @@ func (s *RewardTypesTestSuite) TesAccountStateValidateBasic() {
 		})
 	}
 }
+
+func (s *RewardTypesTestSuite) TestActionDelegateCreation() {
+	action := NewActionDelegate()
+	s.Assert().Nil(action.ValidateBasic(), "validate basic must have no error")
+	s.Assert().Equal("ActionDelegate", action.ActionType(), "must have appropriate action type")
+	s.Assert().Equal("message", action.GetEventCriteria().EventType, "must have correct event type criteria")
+	//s.Assert().Equal("staking", action.GetEventCriteria().Attributes, "must have correct attribute criteria")
+	//s.Assert().Equal("sender", action.GetEventCriteria().AttributeValue, "must have correct attribute value criteria")
+}
+
+func (s *RewardTypesTestSuite) TestActionDelegateEvaluate() {
+	//action := NewActionDelegate()
+	s.Assert().Fail("Not implemented")
+}
