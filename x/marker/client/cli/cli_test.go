@@ -1069,16 +1069,6 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestMarkerGetTxCmd() {
-	s.Run("marker cli tx commands not nil", func() {
-		tx := markercli.NewTxCmd()
-		s.Require().NotNil(tx)
-		s.Require().Equal(len(tx.Commands()), 14)
-		s.Require().Equal(tx.Use, markertypes.ModuleName)
-		s.Require().Equal(tx.Short, "Transaction commands for the marker module")
-	})
-}
-
 func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 	asJson := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
 
