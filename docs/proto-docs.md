@@ -5446,6 +5446,7 @@ MsgBindNameRequest defines an sdk.Msg type
 | `name` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `holder_address` | [string](#string) |  |  |
+| `from` | [string](#string) |  |  |
 
 
 

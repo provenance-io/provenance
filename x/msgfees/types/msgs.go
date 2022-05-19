@@ -35,25 +35,34 @@ func (msg *MsgFee) ValidateBasic() error {
 	return nil
 }
 
-func (acmfr MsgAssessCustomMsgFeeRequest) ValidateBasic() error {
+func (msg MsgAssessCustomMsgFeeRequest) ValidateBasic() error {
 	return nil
 }
 
-func (acmfr MsgAssessCustomMsgFeeRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{}
+func (msg MsgAssessCustomMsgFeeRequest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.From)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
 }
 
-func (acmfr MsgAssessCustomMsgFeeRequest) String() string {
-	out, _ := yaml.Marshal(acmfr)
+func (msg MsgAssessCustomMsgFeeRequest) GetSignerBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg MsgAssessCustomMsgFeeRequest) String() string {
+	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // Route returns the module route
-func (acmfr MsgAssessCustomMsgFeeRequest) Route() string {
+func (msg MsgAssessCustomMsgFeeRequest) Route() string {
 	return ModuleName
 }
 
 // Type returns the type name for this msg
-func (acmfr MsgAssessCustomMsgFeeRequest) Type() string {
+func (msg MsgAssessCustomMsgFeeRequest) Type() string {
 	return TypeAssessCustomMsgFee
 }

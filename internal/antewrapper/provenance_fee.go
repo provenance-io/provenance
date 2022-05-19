@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
@@ -17,7 +18,7 @@ import (
 // CONTRACT: Tx must implement FeeTx interface to use ProvenanceDeductFeeDecorator
 type ProvenanceDeductFeeDecorator struct {
 	ak             authante.AccountKeeper
-	bankKeeper     types.BankKeeper
+	bankKeeper     bankkeeper.Keeper
 	feegrantKeeper authante.FeegrantKeeper
 	msgFeeKeeper   msgfeestypes.MsgFeesKeeper
 }
@@ -27,7 +28,7 @@ var (
 	AttributeKeyAdditionalFee = "additionalfee"
 )
 
-func NewProvenanceDeductFeeDecorator(ak authante.AccountKeeper, bk types.BankKeeper, fk msgfeestypes.FeegrantKeeper, mbfk msgfeestypes.MsgFeesKeeper) ProvenanceDeductFeeDecorator {
+func NewProvenanceDeductFeeDecorator(ak authante.AccountKeeper, bk bankkeeper.Keeper, fk msgfeestypes.FeegrantKeeper, mbfk msgfeestypes.MsgFeesKeeper) ProvenanceDeductFeeDecorator {
 	return ProvenanceDeductFeeDecorator{
 		ak:             ak,
 		bankKeeper:     bk,
@@ -58,14 +59,14 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	// deduct the fees
 	// Compute msg additionalFees
 	msgs := feeTx.GetMsgs()
-	additionalFees, errFromCalculateAdditionalFeesToBePaid := CalculateAdditionalFeesToBePaid(ctx, dfd.msgFeeKeeper, msgs...)
+	feeDist, errFromCalculateAdditionalFeesToBePaid := CalculateAdditionalFeesToBePaid(ctx, dfd.msgFeeKeeper, msgs...)
 	if errFromCalculateAdditionalFeesToBePaid != nil {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, errFromCalculateAdditionalFeesToBePaid.Error())
 	}
 	feeToDeduct := feeTx.GetFee()
-	if additionalFees != nil && len(additionalFees) > 0 {
+	if feeDist != nil && len(feeDist.TotalFees) > 0 {
 		var hasNeg bool
-		feeToDeduct, hasNeg = feeToDeduct.SafeSub(additionalFees)
+		feeToDeduct, hasNeg = feeToDeduct.SafeSub(feeDist.TotalFees)
 		if hasNeg && !simulate {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", feeToDeduct)
 		}
@@ -91,7 +92,7 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	}
 	// deduct total fees (base fee + additional fee)
 	if !feeToDeduct.IsZero() && !simulate {
-		err = DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, feeToDeduct)
+		err = DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, feeDist)
 		if err != nil {
 			return ctx, err
 		}
@@ -107,14 +108,27 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 }
 
 // DeductFees deducts fees from the given account.
-func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc types.AccountI, fees sdk.Coins) error {
-	if !fees.IsValid() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", fees)
+func DeductFees(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc types.AccountI, feeDist *MsgFeesDistribution) error {
+	if !feeDist.TotalFees.IsValid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", feeDist.TotalFees)
 	}
 
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fees)
+	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, feeDist.AdditionalFees)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+	}
+	if len(feeDist.HolderDistributions) != 0 {
+		for holder, coin := range feeDist.HolderDistributions {
+			holderAcc, err := sdk.AccAddressFromBech32(holder)
+			if err != nil {
+				return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, err.Error())
+			}
+
+			err = bankKeeper.SendCoins(ctx, acc.GetAddress(), holderAcc, sdk.Coins{coin})
+			if err != nil {
+				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			}
+		}
 	}
 
 	return nil

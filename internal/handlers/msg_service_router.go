@@ -155,12 +155,16 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 				feeGasMeter.ConsumeFee(fee.AdditionalFee, msgTypeURL)
 			}
 
+			// TODO: make sure we ensure funds exists.
 			if msgTypeURL == sdk.MsgTypeURL(&msgfeestypes.MsgAssessCustomMsgFeeRequest{}) {
 				assessCustomFee, ok := req.(*msgfeestypes.MsgAssessCustomMsgFeeRequest)
 				if !ok {
 					panic("could not convert request msg to MsgAssessCustomMsgFeeRequest")
 				}
-				ctx.Logger().Debug(fmt.Sprintf("Tx Msg is an assess custom msg fee of %v ", assessCustomFee))
+				ctx.Logger().Debug(fmt.Sprintf("NOTICE: Tx Msg is an assess custom msg fee of %v ", assessCustomFee))
+				if assessCustomFee.Amount.IsPositive() {
+					feeGasMeter.ConsumeFee(assessCustomFee.Amount, msgTypeURL)
+				}
 			}
 
 			// original sdk implementation of msg service router

@@ -41,6 +41,12 @@ func NewMsgFeesDecorator(bankKeeper banktypes.Keeper, accountKeeper cosmosante.A
 	}
 }
 
+type MsgFeesDistribution struct {
+	AdditionalFees      sdk.Coins
+	HolderDistributions map[string]sdk.Coin
+	TotalFees           sdk.Coins
+}
+
 // AnteHandle handles msg fee checking
 // has two functions ensures,
 // 1. has enough fees to add to Mempool (this involves CheckTx)
@@ -64,7 +70,8 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 	msgs := feeTx.GetMsgs()
 
 	// Compute msg additionalFees
-	additionalFees, err := CalculateAdditionalFeesToBePaid(ctx, afd.msgFeeKeeper, msgs...)
+	msgFeesDistribution, err := CalculateAdditionalFeesToBePaid(ctx, afd.msgFeeKeeper, msgs...)
+	additionalFees := msgFeesDistribution.AdditionalFees
 	if err != nil {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, err.Error())
 	}
@@ -239,10 +246,11 @@ func checkFloorGasFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins,
 }
 
 // CalculateAdditionalFeesToBePaid computes the stability tax on MsgSend and MsgMultiSend.
-func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesKeeper, msgs ...sdk.Msg) (sdk.Coins, error) {
+func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesKeeper, msgs ...sdk.Msg) (*MsgFeesDistribution, error) {
 	// get the msg fee
-	additionalFees := sdk.Coins{}
-
+	msgFeesDistribution := MsgFeesDistribution{
+		HolderDistributions: make(map[string]sdk.Coin),
+	}
 	for _, msg := range msgs {
 		typeURL := sdk.MsgTypeURL(msg)
 		msgFees, err := mbfk.GetMsgFee(ctx, typeURL)
@@ -250,13 +258,34 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 		}
 
-		if msgFees == nil {
-			continue
+		if msgFees != nil {
+			if msgFees.AdditionalFee.IsPositive() {
+				msgFeesDistribution.AdditionalFees = msgFeesDistribution.AdditionalFees.Add(msgFees.AdditionalFee)
+				msgFeesDistribution.TotalFees = msgFeesDistribution.AdditionalFees
+			}
 		}
-		if msgFees.AdditionalFee.IsPositive() {
-			additionalFees = additionalFees.Add(msgFees.AdditionalFee)
+		if typeURL == sdk.MsgTypeURL(&msgfeestypes.MsgAssessCustomMsgFeeRequest{}) {
+			assessFee, ok := msg.(*msgfeestypes.MsgAssessCustomMsgFeeRequest)
+			if !ok {
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "unable to convert msg to MsgAssessCustomMsgFeeRequest")
+			}
+			if assessFee.Amount.IsPositive() {
+				if len(assessFee.HolderAddress) != 0 {
+					addFeeToPay := assessFee.Amount.Amount.Int64()
+					addFeeToPay = addFeeToPay / 2
+					coin := sdk.NewCoin(assessFee.Amount.Denom, sdk.NewInt(addFeeToPay))
+					msgFeesDistribution.HolderDistributions[assessFee.HolderAddress] = coin
+					addFees := assessFee.Amount.Sub(coin)
+					msgFeesDistribution.AdditionalFees = msgFeesDistribution.AdditionalFees.Add(addFees)
+					msgFeesDistribution.TotalFees = msgFeesDistribution.AdditionalFees.Add(addFees).Add(coin)
+
+				} else {
+					msgFeesDistribution.AdditionalFees = msgFeesDistribution.AdditionalFees.Add(assessFee.Amount)
+					msgFeesDistribution.TotalFees = msgFeesDistribution.AdditionalFees
+				}
+			}
 		}
 	}
 
-	return additionalFees, nil
+	return &msgFeesDistribution, nil
 }
