@@ -330,7 +330,7 @@ func (ad *ActionDelegate) GetEventCriteria() EventCriteria {
 
 func (ad *ActionDelegate) Evaluate(ctx sdk.Context, state AccountState) bool {
 	// May want to check if they have sufficient balance?
-	return state.ActionCounter > ad.GetMinimumActions() && state.ActionCounter <= ad.GetMaximumActions()
+	return state.ActionCounter >= ad.GetMinimumActions() && state.ActionCounter <= ad.GetMaximumActions()
 }
 
 func (ad *ActionDelegate) String() string {

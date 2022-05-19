@@ -145,9 +145,4 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 			ctx.Logger().Error(err.Error())
 		}
 	}
-
-	// We have all the transactions at this point
-	// We can review all the transactions
-	// We can see if there are any qualifying actions and if their constraints are met
-	// If they are then we can give them a share
 }

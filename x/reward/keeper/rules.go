@@ -33,8 +33,8 @@ func (k Keeper) DetectQualifyingActions(ctx sdk.Context, program *types.RewardPr
 		}
 
 		// Obtain the events that were successfully evaluted
-		detectedActions := k.FindQualifyingActions(ctx, program, action, abciEvents)
-		qualifyingActions = append(qualifyingActions, detectedActions...)
+		actions := k.FindQualifyingActions(ctx, program, action, abciEvents)
+		qualifyingActions = append(qualifyingActions, actions...)
 	}
 
 	return qualifyingActions, nil
