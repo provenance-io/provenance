@@ -13,7 +13,6 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/testutil"
 	rewardcli "github.com/provenance-io/provenance/x/reward/client/cli"
-	"github.com/provenance-io/provenance/x/reward/types"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 
 	"github.com/stretchr/testify/suite"
@@ -76,73 +75,73 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			// ),
 		},
 		[]rewardtypes.RewardClaim{
-			types.NewRewardClaim(
-				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-				[]rewardtypes.SharesPerEpochPerRewardsProgram{
-					types.NewSharesPerEpochPerRewardsProgram(
-						3,
-						0,
-						0,
-						0,
-						false,
-						false,
-						sdk.NewInt64Coin("jackthecat", 0),
-					),
-				},
-				false,
-			),
-			types.NewRewardClaim(
-				"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq",
-				[]rewardtypes.SharesPerEpochPerRewardsProgram{
-					types.NewSharesPerEpochPerRewardsProgram(
-						2,
-						0,
-						0,
-						0,
-						false,
-						false,
-						sdk.NewInt64Coin("jackthecat", 0),
-					),
-				},
-				false,
-			),
+			// types.NewRewardClaim(
+			// 	"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+			// 	[]rewardtypes.SharesPerEpochPerRewardsProgram{
+			// 		types.NewSharesPerEpochPerRewardsProgram(
+			// 			3,
+			// 			0,
+			// 			0,
+			// 			0,
+			// 			false,
+			// 			false,
+			// 			sdk.NewInt64Coin("jackthecat", 0),
+			// 		),
+			// 	},
+			// 	false,
+			// ),
+			// types.NewRewardClaim(
+			// 	"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq",
+			// 	[]rewardtypes.SharesPerEpochPerRewardsProgram{
+			// 		types.NewSharesPerEpochPerRewardsProgram(
+			// 			2,
+			// 			0,
+			// 			0,
+			// 			0,
+			// 			false,
+			// 			false,
+			// 			sdk.NewInt64Coin("jackthecat", 0),
+			// 		),
+			// 	},
+			// 	false,
+			// ),
 		},
 		[]rewardtypes.EpochRewardDistribution{
-			types.NewEpochRewardDistribution(
-				"day",
-				1,
-				sdk.NewInt64Coin("jackthecat", 100),
-				5,
-				false,
-			),
-			types.NewEpochRewardDistribution(
-				"day",
-				2,
-				sdk.NewInt64Coin("jackthecat", 100),
-				3,
-				false,
-			),
-			types.NewEpochRewardDistribution(
-				"month",
-				1,
-				sdk.NewInt64Coin("jackthecat", 100),
-				10,
-				false,
-			),
+			// types.NewEpochRewardDistribution(
+			// 	"day",
+			// 	1,
+			// 	sdk.NewInt64Coin("jackthecat", 100),
+			// 	5,
+			// 	false,
+			// ),
+			// types.NewEpochRewardDistribution(
+			// 	"day",
+			// 	2,
+			// 	sdk.NewInt64Coin("jackthecat", 100),
+			// 	3,
+			// 	false,
+			// ),
+			// types.NewEpochRewardDistribution(
+			// 	"month",
+			// 	1,
+			// 	sdk.NewInt64Coin("jackthecat", 100),
+			// 	10,
+			// 	false,
+			// ),
 		},
 		[]rewardtypes.EligibilityCriteria{
-			types.NewEligibilityCriteria(
-				"test1",
-				&rewardtypes.ActionDelegate{},
-			),
-			types.NewEligibilityCriteria(
-				"test2",
-				&rewardtypes.ActionDelegate{},
-			),
-			types.NewEligibilityCriteria(
-				"test3",
-				&rewardtypes.ActionDelegate{},
-			),
+			// types.NewEligibilityCriteria(
+			// 	"test1",
+			// 	&rewardtypes.ActionDelegate{},
+			// ),
+			// types.NewEligibilityCriteria(
+			// 	"test2",
+			// 	&rewardtypes.ActionDelegate{},
+			// ),
+			// types.NewEligibilityCriteria(
+			// 	"test3",
+			// 	&rewardtypes.ActionDelegate{},
+			// ),
 		},
 		rewardtypes.ActionDelegate{},
 		rewardtypes.ActionTransferDelegations{},

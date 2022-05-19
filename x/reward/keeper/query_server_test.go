@@ -1,16 +1,6 @@
 package keeper_test
 
-import (
-	gocontext "context"
-	"time"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	epoch "github.com/provenance-io/provenance/x/epoch"
-	epochTypes "github.com/provenance-io/provenance/x/epoch/types"
-	"github.com/provenance-io/provenance/x/reward/types"
-)
-
+/*
 func (s *KeeperTestSuite) TestQueryRewardPrograms() {
 	s.SetupTest()
 	queryClient := s.queryClient
@@ -345,3 +335,4 @@ func setupEpoch(s *KeeperTestSuite, height uint64) {
 		},
 	})
 }
+*/

@@ -434,3 +434,51 @@ func (s *RewardTypesTestSuite) TestSharesPerEpochPerRewardsProgramValidateBasic(
 		})
 	}
 }
+
+func (s *RewardTypesTestSuite) TesAccountStateValidateBasic() {
+	tests := []struct {
+		name         string
+		accountState AccountState
+		want         string
+	}{
+		{
+			"valid",
+			NewAccountState(
+				1,
+				2,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+			),
+			"",
+		},
+		{
+			"invalid reward id",
+			NewAccountState(
+				0,
+				2,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+			),
+			"reward program id must be greater than 0",
+		},
+		{
+			"invalid - address is incorrect",
+			NewAccountState(
+				1,
+				2,
+				"test",
+			),
+			"invalid address for reward program balance: decoding bech32 failed: invalid bech32 string length 7",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			err := tt.accountState.ValidateBasic()
+			if err != nil {
+				assert.Equal(t, tt.want, err.Error())
+			} else if len(tt.want) > 0 {
+				t.Errorf("AccountState ValidateBasic error = nil, expected: %s", tt.want)
+			}
+		})
+	}
+}

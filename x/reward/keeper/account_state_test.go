@@ -7,16 +7,16 @@ import (
 func (suite *KeeperTestSuite) TestNewAccountState() {
 	suite.SetupTest()
 
-	share := types.NewAccountState(
+	accountState := types.NewAccountState(
 		1,
 		2,
 		"test",
 	)
 
-	suite.Assert().Equal(uint64(1), share.GetRewardProgramId(), "reward program id must match")
-	suite.Assert().Equal(uint64(2), share.GetEpochId(), "epoch id must match")
-	suite.Assert().Equal("test", share.GetAddress(), "address must match")
-	suite.Assert().Equal(0, share.GetActionCounter(), "action counter must match")
+	suite.Assert().Equal(uint64(1), accountState.GetRewardProgramId(), "reward program id must match")
+	suite.Assert().Equal(uint64(2), accountState.GetEpochId(), "epoch id must match")
+	suite.Assert().Equal("test", accountState.GetAddress(), "address must match")
+	suite.Assert().Equal(uint64(0), accountState.GetActionCounter(), "action counter must match")
 }
 
 func (suite *KeeperTestSuite) TestGetSetAccountState() {
@@ -63,7 +63,7 @@ func (suite *KeeperTestSuite) TestRemoveValidAccountState() {
 	)
 
 	suite.app.RewardKeeper.SetAccountState(suite.ctx, &expectedState)
-	removed := suite.app.RewardKeeper.RemoveShare(suite.ctx,
+	removed := suite.app.RewardKeeper.RemoveAccountState(suite.ctx,
 		expectedState.GetRewardProgramId(),
 		expectedState.GetEpochId(),
 		expectedState.GetAddress())
@@ -111,7 +111,7 @@ func (suite *KeeperTestSuite) TestIterateAccountStates() {
 	suite.app.RewardKeeper.SetAccountState(suite.ctx, &state5)
 
 	counter := 0
-	suite.app.RewardKeeper.IterateAccountStates(suite.ctx, 2, 2, func(share types.AccountState) bool {
+	suite.app.RewardKeeper.IterateAccountStates(suite.ctx, 2, 2, func(state types.AccountState) bool {
 		counter += 1
 		return false
 	})

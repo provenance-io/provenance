@@ -36,7 +36,7 @@ func (k Keeper) GetAccountState(ctx sdk.Context, rewardProgramID, epochID uint64
 func (k Keeper) SetAccountState(ctx sdk.Context, state *types.AccountState) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(state)
-	key := types.GetShareKey(state.GetRewardProgramId(), state.GetEpochId(), []byte(state.GetAddress()))
+	key := types.GetAccountStateKey(state.GetRewardProgramId(), state.GetEpochId(), []byte(state.GetAddress()))
 	store.Set(key, bz)
 }
 
