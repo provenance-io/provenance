@@ -67,7 +67,7 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeCharged() {
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	suite.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
-		feeGasMeter.ConsumeFee(sdk.NewCoin("nhash", sdk.NewInt(1000000)), msgType)
+		feeGasMeter.ConsumeFee(sdk.NewCoin("nhash", sdk.NewInt(1000000)), msgType, "")
 		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))})
 	}, "panicked on adding fees")
 	suite.ctx = suite.ctx.WithGasMeter(feeGasMeter)
@@ -111,7 +111,7 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	suite.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
-		feeGasMeter.ConsumeFee(sdk.NewCoin("nhash", sdk.NewInt(1000000)), msgType)
+		feeGasMeter.ConsumeFee(sdk.NewCoin("nhash", sdk.NewInt(1000000)), msgType, "")
 		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))})
 	}, "panicked on adding fees")
 	suite.ctx = suite.ctx.WithGasMeter(feeGasMeter)

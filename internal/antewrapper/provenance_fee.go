@@ -63,12 +63,12 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	if errFromCalculateAdditionalFeesToBePaid != nil {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, errFromCalculateAdditionalFeesToBePaid.Error())
 	}
-	feeToDeduct := feeTx.GetFee()
+	baseFeeToDeduct := feeTx.GetFee()
 	if feeDist != nil && len(feeDist.TotalAdditionalFees) > 0 {
 		var hasNeg bool
-		feeToDeduct, hasNeg = feeToDeduct.SafeSub(feeDist.TotalAdditionalFees)
+		baseFeeToDeduct, hasNeg = baseFeeToDeduct.SafeSub(feeDist.TotalAdditionalFees)
 		if hasNeg && !simulate {
-			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", feeToDeduct)
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", baseFeeToDeduct)
 		}
 	}
 
@@ -76,7 +76,7 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		if dfd.feegrantKeeper == nil {
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
 		} else if !feeGranter.Equals(feePayer) {
-			err = dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, feeToDeduct, tx.GetMsgs())
+			err = dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, baseFeeToDeduct, tx.GetMsgs())
 
 			if err != nil {
 				return ctx, sdkerrors.Wrapf(err, "%q not allowed to pay fees from %q", feeGranter, feePayer)
@@ -91,12 +91,12 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %q does not exist", payerAccount)
 	}
 	// deduct base fee from account
-	if !feeToDeduct.IsZero() && !simulate {
-		err = DeductBaseFees(dfd.bankKeeper, ctx, deductFeesFromAcc, feeToDeduct)
+	if !baseFeeToDeduct.IsZero() && !simulate {
+		err = DeductBaseFees(dfd.bankKeeper, ctx, deductFeesFromAcc, baseFeeToDeduct)
 		if err != nil {
 			return ctx, err
 		}
-		feeGasMeter.ConsumeBaseFee(feeToDeduct)
+		feeGasMeter.ConsumeBaseFee(baseFeeToDeduct)
 	}
 
 	events := sdk.Events{sdk.NewEvent(sdk.EventTypeTx,

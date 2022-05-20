@@ -1,6 +1,9 @@
 package types
 
 import (
+	"errors"
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -36,6 +39,16 @@ func (msg *MsgFee) ValidateBasic() error {
 }
 
 func (msg MsgAssessCustomMsgFeeRequest) ValidateBasic() error {
+	if len(msg.Recipient) != 0 {
+		_, err := sdk.AccAddressFromBech32(msg.From)
+		return err
+	}
+	if !msg.Amount.IsPositive() {
+		return errors.New("amount must be greater than zero")
+	}
+	if msg.Amount.Denom != "usd" && msg.Amount.Denom != "nhash" {
+		return fmt.Errorf("denom must be in usd or nhash : %s", msg.Amount.Denom)
+	}
 	return nil
 }
 

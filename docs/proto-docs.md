@@ -5179,6 +5179,7 @@ it consists of two parts
 | ----- | ---- | ----- | ----------- |
 | `msg_type_url` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | additional_fee can pay in any Coin( basically a Denom and Amount, Amount can be zero) |
+| `recipient` | [string](#string) |  |  |
 
 
 
@@ -5445,7 +5446,7 @@ MsgBindNameRequest defines an sdk.Msg type
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `holder_address` | [string](#string) |  |  |
+| `recipient` | [string](#string) |  |  |
 | `from` | [string](#string) |  |  |
 
 

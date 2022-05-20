@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TODO: modify to express account distributions
 func NewEventMsgs(totalCalls map[string]uint64, totalFees map[string]sdk.Coin) *EventMsgFees {
 	sortedKeys := sortAndReduce(totalCalls, totalFees)
 	events := make([]EventMsgFee, len(sortedKeys))

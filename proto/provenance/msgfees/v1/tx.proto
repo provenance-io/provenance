@@ -21,10 +21,10 @@ message MsgAssessCustomMsgFeeRequest {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
-  string                   name           = 1;
-  cosmos.base.v1beta1.Coin amount         = 2 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"amount\""];
-  string                   holder_address = 3;
-  string                   from           = 4;
+  string                   name      = 1;
+  cosmos.base.v1beta1.Coin amount    = 2 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"amount\""];
+  string                   recipient = 3;
+  string                   from      = 4;
 }
 
 // MsgBindNameResponse defines the Msg/BindName response type.

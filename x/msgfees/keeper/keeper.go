@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -21,7 +22,7 @@ type Keeper struct {
 	storeKey         sdk.StoreKey
 	cdc              codec.BinaryCodec
 	paramSpace       paramtypes.Subspace
-	feeCollectorName string // name of the FeeCollector ModuleAccount
+	FeeCollectorName string // name of the FeeCollector ModuleAccount
 	defaultFeeDenom  string
 	simulateFunc     baseAppSimulateFunc
 	txDecoder        sdk.TxDecoder
@@ -46,7 +47,7 @@ func NewKeeper(
 		storeKey:         key,
 		cdc:              cdc,
 		paramSpace:       paramSpace,
-		feeCollectorName: feeCollectorName,
+		FeeCollectorName: feeCollectorName,
 		defaultFeeDenom:  defaultFeeDenom,
 		simulateFunc:     simulateFunc,
 		txDecoder:        txDecoder,
@@ -59,7 +60,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k Keeper) GetFeeCollectorName() string {
-	return k.feeCollectorName
+	return k.FeeCollectorName
 }
 
 // GetFloorGasPrice  returns the current minimum gas price in sdk.Coin used in calculations for charging additional fees
@@ -132,14 +133,50 @@ func (k Keeper) IterateMsgFees(ctx sdk.Context, handle func(msgFees types.MsgFee
 
 // DeductFees deducts fees from the given account, the only reason it exists is that the
 // cosmos method does not take in the custom fee collector which is a feature desired from msg fees.
-func (k Keeper) DeductFees(bankKeeper cosmosauthtypes.BankKeeper, ctx sdk.Context, acc cosmosauthtypes.AccountI, fees sdk.Coins) error {
+func (k Keeper) DeductFees(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc cosmosauthtypes.AccountI, fees sdk.Coins) error {
 	if !fees.IsValid() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", fees)
 	}
 
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, fees)
+	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.FeeCollectorName, fees)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 	}
+	return nil
+}
+
+func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc cosmosauthtypes.AccountI, remainingFees sdk.Coins, fees map[string]sdk.Coins) error {
+	sentCoins := sdk.NewCoins()
+	for key, coins := range fees {
+		if !coins.IsValid() {
+			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", fees)
+		}
+		if len(key) == 0 {
+			err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.FeeCollectorName, coins)
+			if err != nil {
+				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			}
+		} else {
+			recipient, err := sdk.AccAddressFromBech32(key)
+			if err != nil {
+				return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, err.Error())
+			}
+			err = bankKeeper.SendCoins(ctx, acc.GetAddress(), recipient, coins)
+			if err != nil {
+				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			}
+		}
+		sentCoins = sentCoins.Add(coins...)
+	}
+	remainingFee, neg := remainingFees.SafeSub(sentCoins)
+	if neg {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "negative balance after sending coins to accounts and fee collector")
+	}
+	// sweep the rest of the fees to module
+	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.FeeCollectorName, remainingFee)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+	}
+
 	return nil
 }

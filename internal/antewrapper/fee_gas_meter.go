@@ -2,6 +2,7 @@ package antewrapper
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/armon/go-metrics"
 
@@ -107,18 +108,26 @@ func (g *FeeGasMeter) String() string {
 }
 
 // ConsumeFee increments the amount of msg fee required by a msg type.
-func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string) {
-	cur := g.usedFees[msgType]
+func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string, recipient string) {
+	key := g.getCompositeKey(msgType, recipient)
+	cur := g.usedFees[key]
 	if !cur.Amount.IsNil() {
-		g.usedFees[msgType] = cur.Add(amount)
+		g.usedFees[key] = cur.Add(amount)
 	} else {
-		g.usedFees[msgType] = amount
+		g.usedFees[key] = amount
 	}
-	g.feeCalls[msgType]++
+	g.feeCalls[key]++
 }
 
-func (g *FeeGasMeter) FeeConsumedForType(msgType string) sdk.Coin {
-	return g.usedFees[msgType]
+func (g *FeeGasMeter) FeeConsumedForType(msgType string, recipient string) sdk.Coin {
+	return g.usedFees[g.getCompositeKey(msgType, recipient)]
+}
+
+func (g FeeGasMeter) getCompositeKey(msgType string, recipient string) string {
+	if len(recipient) == 0 {
+		return msgType
+	}
+	return fmt.Sprintf("%s+%s", msgType, recipient)
 }
 
 // FeeConsumed returns total fee consumed in the current fee gas meter, is returned Sorted.
@@ -130,6 +139,26 @@ func (g *FeeGasMeter) FeeConsumed() sdk.Coins {
 		i++
 	}
 	return consumedFees.Sort()
+}
+
+// FeeConsumedDistributions returns fees by distribution either to module or address
+func (g *FeeGasMeter) FeeConsumedDistributions() map[string]sdk.Coins {
+	additionalFeeDistributions := make(map[string]sdk.Coins)
+	for key, coin := range g.usedFees {
+		addressKey := ""
+		msgAccountPair := strings.Split(key, "+")
+		if len(msgAccountPair) == 2 && len(msgAccountPair[0]) > 0 {
+			addressKey = msgAccountPair[1]
+		}
+		// else it will go to the fee module...update later to support other modules
+		cur := additionalFeeDistributions[addressKey]
+		if !coin.Amount.IsNil() {
+			additionalFeeDistributions[key] = cur.Add(coin)
+		} else {
+			additionalFeeDistributions[key] = sdk.NewCoins(coin)
+		}
+	}
+	return additionalFeeDistributions
 }
 
 // FeeConsumedByMsg total fee consumed for a particular MsgType

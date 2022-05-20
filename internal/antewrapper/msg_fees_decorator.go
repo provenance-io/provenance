@@ -270,11 +270,11 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "unable to convert msg to MsgAssessCustomMsgFeeRequest")
 			}
 			if assessFee.Amount.IsPositive() {
-				if len(assessFee.HolderAddress) != 0 {
+				if len(assessFee.Recipient) != 0 {
 					addFeeToPay := assessFee.Amount.Amount.Int64()
 					addFeeToPay = addFeeToPay / 2
 					coin := sdk.NewCoin(assessFee.Amount.Denom, sdk.NewInt(addFeeToPay))
-					msgFeesDistribution.RecipientDistributions[assessFee.HolderAddress] = coin
+					msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = coin
 					addFees := assessFee.Amount.Sub(coin)
 					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(addFees)
 					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.AdditionalModuleFees.Add(addFees).Add(coin)
