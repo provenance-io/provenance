@@ -54,7 +54,7 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "GasMeter not a FeeGasMeter")
 	}
 
-	deductFeesFrom := feePayer
+	payerAccount := feePayer
 
 	// deduct the fees
 	// Compute msg additionalFees
@@ -64,9 +64,9 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, errFromCalculateAdditionalFeesToBePaid.Error())
 	}
 	feeToDeduct := feeTx.GetFee()
-	if feeDist != nil && len(feeDist.TotalFees) > 0 {
+	if feeDist != nil && len(feeDist.TotalAdditionalFees) > 0 {
 		var hasNeg bool
-		feeToDeduct, hasNeg = feeToDeduct.SafeSub(feeDist.TotalFees)
+		feeToDeduct, hasNeg = feeToDeduct.SafeSub(feeDist.TotalAdditionalFees)
 		if hasNeg && !simulate {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", feeToDeduct)
 		}
@@ -83,16 +83,16 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 			}
 		}
 
-		deductFeesFrom = feeGranter
+		payerAccount = feeGranter
 	}
 
-	deductFeesFromAcc := dfd.ak.GetAccount(ctx, deductFeesFrom)
+	deductFeesFromAcc := dfd.ak.GetAccount(ctx, payerAccount)
 	if deductFeesFromAcc == nil {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %q does not exist", deductFeesFrom)
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %q does not exist", payerAccount)
 	}
-	// deduct total fees (base fee + additional fee)
+	// deduct base fee from account
 	if !feeToDeduct.IsZero() && !simulate {
-		err = DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, feeDist)
+		err = DeductBaseFees(dfd.bankKeeper, ctx, deductFeesFromAcc, feeToDeduct)
 		if err != nil {
 			return ctx, err
 		}
@@ -107,29 +107,15 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	return next(ctx, tx, simulate)
 }
 
-// DeductFees deducts fees from the given account.
-func DeductFees(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc types.AccountI, feeDist *MsgFeesDistribution) error {
-	if !feeDist.TotalFees.IsValid() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", feeDist.TotalFees)
+// DeductBaseFees deducts fees from the given account.
+func DeductBaseFees(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc types.AccountI, fee sdk.Coins) error {
+	if !fee.IsValid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", fee)
 	}
 
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, feeDist.AdditionalFees)
+	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fee)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 	}
-	if len(feeDist.HolderDistributions) != 0 {
-		for holder, coin := range feeDist.HolderDistributions {
-			holderAcc, err := sdk.AccAddressFromBech32(holder)
-			if err != nil {
-				return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, err.Error())
-			}
-
-			err = bankKeeper.SendCoins(ctx, acc.GetAddress(), holderAcc, sdk.Coins{coin})
-			if err != nil {
-				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
-			}
-		}
-	}
-
 	return nil
 }

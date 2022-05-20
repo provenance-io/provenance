@@ -1,11 +1,14 @@
 package antewrapper_test
 
 import (
+	"testing"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/stretchr/testify/suite"
 
 	pioante "github.com/provenance-io/provenance/internal/antewrapper"
 )
@@ -103,6 +106,10 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	_, err = antehandler(suite.ctx, tx, false)
 
 	suite.Require().Nil(err, "Tx errored after account has been set with sufficient funds")
+}
+
+func TestAnteFeeTestSuite(t *testing.T) {
+	suite.Run(t, new(AnteTestSuite))
 }
 
 func (suite *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
