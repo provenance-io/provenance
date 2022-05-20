@@ -147,15 +147,15 @@ func (g *FeeGasMeter) FeeConsumedDistributions() map[string]sdk.Coins {
 	for key, coin := range g.usedFees {
 		addressKey := ""
 		msgAccountPair := strings.Split(key, "+")
-		if len(msgAccountPair) == 2 && len(msgAccountPair[0]) > 0 {
+		if len(msgAccountPair) == 2 && len(msgAccountPair[1]) > 0 {
 			addressKey = msgAccountPair[1]
 		}
 		// else it will go to the fee module...update later to support other modules
 		cur := additionalFeeDistributions[addressKey]
 		if !coin.Amount.IsNil() {
-			additionalFeeDistributions[key] = cur.Add(coin)
+			additionalFeeDistributions[addressKey] = cur.Add(coin)
 		} else {
-			additionalFeeDistributions[key] = sdk.NewCoins(coin)
+			additionalFeeDistributions[addressKey] = sdk.NewCoins(coin)
 		}
 	}
 	return additionalFeeDistributions
