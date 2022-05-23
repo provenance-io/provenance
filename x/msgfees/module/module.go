@@ -5,13 +5,11 @@ import (
 	"encoding/json"
 	"math/rand"
 
-	"github.com/provenance-io/provenance/x/msgfees/simulation"
-	"github.com/provenance-io/provenance/x/msgfees/types"
-
 	msgfeesmodule "github.com/provenance-io/provenance/x/msgfees"
 	"github.com/provenance-io/provenance/x/msgfees/client/cli"
 	"github.com/provenance-io/provenance/x/msgfees/keeper"
-	msgfees "github.com/provenance-io/provenance/x/msgfees/types"
+	"github.com/provenance-io/provenance/x/msgfees/simulation"
+	"github.com/provenance-io/provenance/x/msgfees/types"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -39,14 +37,14 @@ type AppModuleBasic struct {
 
 // Name returns the msgfee module's name.
 func (AppModuleBasic) Name() string {
-	return msgfees.ModuleName
+	return types.ModuleName
 }
 
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	msgfees.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
 // RegisterLegacyAminoCodec registers the msgfee module's types for the given codec.
@@ -54,20 +52,20 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 
 // RegisterInterfaces registers the msgfees module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	msgfees.RegisterInterfaces(registry)
+	types.RegisterInterfaces(registry)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the msgfees
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(msgfees.DefaultGenesisState())
+	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the msgfee module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
-	var data msgfees.GenesisState
+	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return sdkerrors.Wrapf(err, "failed to unmarshal %q genesis state", msgfees.ModuleName)
+		return sdkerrors.Wrapf(err, "failed to unmarshal %q genesis state", types.ModuleName)
 	}
 
 	return data.Validate()
@@ -79,7 +77,7 @@ func (AppModuleBasic) RegisterRESTRoutes(_ sdkclient.Context, _ *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the msgfee module.
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
-	if err := msgfees.RegisterQueryHandlerClient(context.Background(), mux, msgfees.NewQueryClient(clientCtx)); err != nil {
+	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
@@ -112,7 +110,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, registry cdctypes.Inter
 
 // Name returns the msgfees module's name.
 func (AppModule) Name() string {
-	return msgfees.ModuleName
+	return types.ModuleName
 }
 
 // RegisterInvariants does nothing, there are no invariants to enforce
@@ -134,7 +132,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // InitGenesis performs genesis initialization for the msgfees module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState msgfees.GenesisState
+	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 	am.keeper.InitGenesis(ctx, &genesisState)
 	return []abci.ValidatorUpdate{}

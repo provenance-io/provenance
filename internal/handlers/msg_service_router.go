@@ -158,7 +158,8 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 
 			// TODO: make sure we ensure funds exists.
 			if msgTypeURL == sdk.MsgTypeURL(&msgfeestypes.MsgAssessCustomMsgFeeRequest{}) {
-				assessCustomFee, ok := req.(*msgfeestypes.MsgAssessCustomMsgFeeRequest)
+				var assessCustomFee *msgfeestypes.MsgAssessCustomMsgFeeRequest
+				assessCustomFee, ok = req.(*msgfeestypes.MsgAssessCustomMsgFeeRequest)
 				if !ok {
 					panic("could not convert request msg to MsgAssessCustomMsgFeeRequest")
 				}
@@ -186,12 +187,11 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 					} // else fee is in nhash already, this is checked in validate basic
 					if len(assessCustomFee.Recipient) != 0 {
 						addFeeToPay := msgFeeCoin.Amount.Uint64()
-						addFeeToPay = addFeeToPay / 2
+						addFeeToPay /= 2
 						recipientCoins := sdk.NewCoin(msgFeeCoin.Denom, sdk.NewIntFromUint64(addFeeToPay))
 						feeGasMeter.ConsumeFee(recipientCoins, msgTypeURL, assessCustomFee.Recipient)
 						feePayerCoins := msgFeeCoin.Sub(recipientCoins)
 						feeGasMeter.ConsumeFee(feePayerCoins, msgTypeURL, "")
-
 					} else {
 						feeGasMeter.ConsumeFee(assessCustomFee.Amount, msgTypeURL, "")
 					}
