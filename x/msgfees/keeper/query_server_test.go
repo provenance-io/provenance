@@ -46,7 +46,8 @@ type QueryServerTestSuite struct {
 	user2Addr sdk.AccAddress
 	acct2     authtypes.AccountI
 
-	minGasPrice sdk.Coin
+	minGasPrice       sdk.Coin
+	usdConversionRate uint64
 }
 
 func (s *QueryServerTestSuite) SetupTest() {
@@ -63,7 +64,8 @@ func (s *QueryServerTestSuite) SetupTest() {
 		Denom:  s.cfg.BondDenom,
 		Amount: sdk.NewInt(10),
 	}
-	s.app.MsgFeesKeeper.SetParams(s.ctx, types.NewParams(s.minGasPrice))
+	s.usdConversionRate = 7
+	s.app.MsgFeesKeeper.SetParams(s.ctx, types.NewParams(s.minGasPrice, s.usdConversionRate))
 
 	s.privkey1 = secp256k1.GenPrivKey()
 	s.pubkey1 = s.privkey1.PubKey()

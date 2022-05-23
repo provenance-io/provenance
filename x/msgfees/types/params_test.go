@@ -12,20 +12,21 @@ func TestCreateParams(t *testing.T) {
 	msgFeeParam := NewParams(sdk.Coin{
 		Denom:  "steak",
 		Amount: sdk.NewInt(2000),
-	})
+	}, uint64(7))
 	require.Equal(t, sdk.Coin{
 		Denom:  "steak",
 		Amount: sdk.NewInt(2000),
 	}, msgFeeParam.FloorGasPrice)
+	require.Equal(t, uint64(7), msgFeeParam.UsdConversionRate)
 }
 
 func TestCreateParamSet(t *testing.T) {
 	msgFeeParam := NewParams(sdk.Coin{
 		Denom:  "nhash",
 		Amount: sdk.NewInt(3000),
-	})
+	}, uint64(7))
 	paramsetPair := msgFeeParam.ParamSetPairs()
-	require.Equal(t, 1, len(paramsetPair))
+	require.Equal(t, 2, len(paramsetPair))
 }
 
 func TestValidateMinGasPriceParamI(t *testing.T) {
@@ -33,6 +34,10 @@ func TestValidateMinGasPriceParamI(t *testing.T) {
 		Denom:  "steak",
 		Amount: sdk.NewInt(2000),
 	}))
+}
+
+func TestValidateUsdConversionRateParamI(t *testing.T) {
+	require.NoError(t, validateUsdConversionRateParam(uint64(7)))
 }
 
 func TestMsgFeeParamKeyTable(t *testing.T) {
@@ -43,9 +48,13 @@ func TestMsgFeeParamKeyTable(t *testing.T) {
 			Amount: sdk.NewInt(5000),
 		}, validateCoinParam))
 	})
+	require.Panics(t, func() {
+		keyTable.RegisterType(paramtypes.NewParamSetPair(ParamStoreKeyUsdConversionRate, uint64(7), validateUsdConversionRateParam))
+	})
 }
 
 func TestDefault(t *testing.T) {
 	metadataData := DefaultParams()
 	require.Equal(t, DefaultFloorGasPrice, metadataData.FloorGasPrice)
+	require.Equal(t, DefaultUsdConversionRate, metadataData.UsdConversionRate)
 }

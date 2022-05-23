@@ -63,13 +63,22 @@ func (k Keeper) GetFeeCollectorName() string {
 	return k.FeeCollectorName
 }
 
-// GetFloorGasPrice  returns the current minimum gas price in sdk.Coin used in calculations for charging additional fees
+// GetFloorGasPrice returns the current minimum gas price in sdk.Coin used in calculations for charging additional fees
 func (k Keeper) GetFloorGasPrice(ctx sdk.Context) sdk.Coin {
 	min := types.DefaultFloorGasPrice
 	if k.paramSpace.Has(ctx, types.ParamStoreKeyFloorGasPrice) {
 		k.paramSpace.Get(ctx, types.ParamStoreKeyFloorGasPrice, &min)
 	}
 	return min
+}
+
+// GetUsdConversionRate returns the current usd to hash (1000000000nhash) conversion rate in cents
+func (k Keeper) GetUsdConversionRate(ctx sdk.Context) uint64 {
+	rateInCents := types.DefaultParams().UsdConversionRate
+	if k.paramSpace.Has(ctx, types.ParamStoreKeyUsdConversionRate) {
+		k.paramSpace.Get(ctx, types.ParamStoreKeyUsdConversionRate, &rateInCents)
+	}
+	return rateInCents
 }
 
 // SetMsgFee sets the additional fee schedule for a Msg
