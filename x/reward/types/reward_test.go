@@ -487,7 +487,7 @@ func (s *RewardTypesTestSuite) TestActionDelegateCreation() {
 	action := NewActionDelegate()
 	s.Assert().Nil(action.ValidateBasic(), "validate basic must have no error")
 	s.Assert().Equal("ActionDelegate", action.ActionType(), "must have appropriate action type")
-	s.Assert().Equal("message", action.GetEventCriteria().EventType, "must have correct event type criteria")
+	//s.Assert().Equal("message", action.GetEventCriteria().EventType, "must have correct event type criteria")
 	//s.Assert().Equal("staking", action.GetEventCriteria().Attributes, "must have correct attribute criteria")
 	//s.Assert().Equal("sender", action.GetEventCriteria().AttributeValue, "must have correct attribute value criteria")
 }
@@ -495,4 +495,74 @@ func (s *RewardTypesTestSuite) TestActionDelegateCreation() {
 func (s *RewardTypesTestSuite) TestActionDelegateEvaluate() {
 	//action := NewActionDelegate()
 	s.Assert().Fail("Not implemented")
+}
+
+func (s *RewardTypesTestSuite) TestNewEventCriteria() {
+	event1 := ABCIEvent{
+		Type: "type1",
+		Attributes: map[string][]byte{
+			"attribute1": []byte("value1"),
+		},
+	}
+	event2 := ABCIEvent{
+		Type: "type2",
+		Attributes: map[string][]byte{
+			"attribute3": []byte("value3"),
+			"attribute4": []byte("value4"),
+		},
+	}
+	events := []ABCIEvent{event1, event2}
+
+	criteria := NewEventCriteria(events)
+	s.Assert().Equal(criteria.Events["type1"].Type, "type1", "element must exist and type must match")
+	s.Assert().Equal(criteria.Events["type1"].Attributes["attribute1"], []byte("value1"), "the attribute should still exist and contain the correct value")
+	s.Assert().Equal(criteria.Events["type2"].Type, "type2", "element must exist and type must match")
+	s.Assert().Equal(criteria.Events["type2"].Attributes["attribute3"], []byte("value3"), "the attribute should still exist and contain the correct value")
+	s.Assert().Equal(criteria.Events["type2"].Attributes["attribute4"], []byte("value4"), "the attribute should still exist and contain the correct value")
+
+	nilCriteria := NewEventCriteria(nil)
+	s.Assert().Nil(nilCriteria.Events, "events should be nil")
+}
+
+func (s *RewardTypesTestSuite) TestMatchesAttribute() {
+	event := ABCIEvent{
+		Type: "type1",
+		Attributes: map[string][]byte{
+			"attribute1": []byte("value1"),
+			"attribute3": nil,
+		},
+	}
+	s.Assert().True(event.MatchesAttribute("attribute1", []byte("value1")), "attribute and value must match")
+	s.Assert().True(event.MatchesAttribute("attribute3", []byte("blah")), "only attribute needs to match")
+	s.Assert().False(event.MatchesAttribute("attribute2", []byte("blah")), "must fail when attribute doesn't exist")
+	s.Assert().False(event.MatchesAttribute("attribute1", []byte("value2")), "must fail when attribute's value doesn't match")
+}
+
+func (s *RewardTypesTestSuite) TestMatchesEvent() {
+	event1 := ABCIEvent{
+		Type: "type1",
+		Attributes: map[string][]byte{
+			"attribute1": []byte("value1"),
+		},
+	}
+	event2 := ABCIEvent{
+		Type: "type2",
+		Attributes: map[string][]byte{
+			"attribute3": []byte("value3"),
+			"attribute4": []byte("value4"),
+		},
+	}
+
+	nilCriteria := NewEventCriteria(nil)
+	s.Assert().True(nilCriteria.MatchesEvent("blah"), "a nil criteria must match everything")
+
+	events := []ABCIEvent{}
+	criteria := NewEventCriteria(events)
+	s.Assert().True(criteria.MatchesEvent("blah"), "a empty criteria must match everything")
+
+	events = []ABCIEvent{event1, event2}
+	criteria = NewEventCriteria(events)
+
+	s.Assert().True(criteria.MatchesEvent("type1"), "criteria must match against valid event type")
+	s.Assert().False(criteria.MatchesEvent("blah"), "criteria must fail against invalid event type")
 }

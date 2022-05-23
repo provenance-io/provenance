@@ -52,11 +52,6 @@ func (k Keeper) FindQualifyingActions(ctx sdk.Context, program *types.RewardProg
 		state.ActionCounter++
 		k.SetAccountState(ctx, &state)
 
-		// We want to evaluate it
-		// If it passes then it should be added to the list
-
-		// TODO The action has a eligibility criteria
-
 		if action.Evaluate(ctx, k, state, event) {
 			detectedEvents = append(detectedEvents, event)
 		}
@@ -273,18 +268,3 @@ func (k Keeper) GetDistributionKeeper() types.DistributionKeeper {
 func (k Keeper) GetStakingKeeper() types.StakingKeeper {
 	return k.stakingKeeper
 }
-
-/*func searchValue(attributes []abci.EventAttribute, attributeKey string) (sdk.AccAddress, error) {
-	for _, y := range attributes {
-		if attributeKey == string(y.Key) {
-			// really not possible to get an error but could happen i guess
-			address, err := sdk.AccAddressFromBech32(string(y.Value))
-			// TODO check this address has a delegation
-			if err != nil {
-				return nil, err
-			}
-			return address, err
-		}
-	}
-	return nil, nil
-}*/

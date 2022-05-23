@@ -63,6 +63,10 @@ type EventCriteria struct {
 // We are assuming this takes ownership of events
 func NewEventCriteria(events []ABCIEvent) *EventCriteria {
 	criteria := EventCriteria{}
+	if events == nil || len(events) <= 0 {
+		return &criteria
+	}
+	criteria.Events = make(map[string]ABCIEvent)
 	for _, event := range events {
 		criteria.Events[event.Type] = event
 	}
