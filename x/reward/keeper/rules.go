@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"reflect"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,7 +26,7 @@ func (k Keeper) DetectQualifyingActions(ctx sdk.Context, program *types.RewardPr
 
 		// Get all events that the qualyfing action type uses
 		eventCriteria := action.GetEventCriteria()
-		abciEvents, err := k.GetMatchingEvents(ctx, &eventCriteria)
+		abciEvents, err := k.GetMatchingEvents(ctx, eventCriteria)
 		if err != nil {
 			return nil, err
 		}
@@ -57,7 +56,8 @@ func (k Keeper) FindQualifyingActions(ctx sdk.Context, program *types.RewardProg
 		// If it passes then it should be added to the list
 
 		// TODO The action has a eligibility criteria
-		if action.Evaluate(ctx, state) {
+
+		if action.Evaluate(ctx, k, state, event) {
 			detectedEvents = append(detectedEvents, event)
 		}
 	}
@@ -170,13 +170,16 @@ func (k Keeper) RecordRewardClaims(ctx sdk.Context, epochNumber uint64, program 
 	return nil
 }
 
-func (k Keeper) IterateABCIEvents(ctx sdk.Context, eventCriteria *types.EventCriteria, action func(string, *map[string][]byte) error) error {
+// Iterates through all the ABCIEvents that match the eventCriteria.
+// Nil criteria means to iterate over everything.
+func (k Keeper) IterateABCIEvents(ctx sdk.Context, criteria *types.EventCriteria, action func(string, *map[string][]byte) error) error {
 	for _, event := range ctx.EventManager().GetABCIEventHistory() {
 		event := event
 		ctx.Logger().Info(fmt.Sprintf("events type is %s", event.Type))
 
-		// Event types must match or wildcard/empty must be present
-		if event.Type != eventCriteria.EventType && eventCriteria.EventType != "" {
+		// Event type must match the criteria
+		// nil criteria is considered to match everything
+		if criteria != nil && !criteria.MatchesEvent(event.Type) {
 			continue
 		}
 
@@ -186,15 +189,16 @@ func (k Keeper) IterateABCIEvents(ctx sdk.Context, eventCriteria *types.EventCri
 			attributes[string(attribute.Key)] = attribute.Value
 		}
 
-		// Go through each defined attribute in the criteria
-		// Verify each of them exist and their value matches
-		// Nil is a wildcard
 		valid := true
-		for key, value := range eventCriteria.Attributes {
-			v, exists := attributes[key]
-			if !exists || (reflect.DeepEqual(value, v) || value == nil) {
-				valid = false
-				break
+		if criteria != nil {
+			// Ensure each attribute matches the required criteria
+			// If a single attribute does not match then we don't continue with the event
+			eventCriteria := criteria.Events[event.Type]
+			for key := range eventCriteria.Attributes {
+				valid = eventCriteria.MatchesAttribute(key, attributes[key])
+				if !valid {
+					break
+				}
 			}
 		}
 		if !valid {
@@ -215,18 +219,44 @@ func (k Keeper) GetMatchingEvents(ctx sdk.Context, eventCriteria *types.EventCri
 
 	err := k.IterateABCIEvents(ctx, eventCriteria, func(eventType string, attributes *map[string][]byte) error {
 		// really not possible to get an error but could happen i guess
-		address := (*attributes)["address"]
-		address, err := sdk.AccAddressFromBech32(string(address))
-		if err != nil {
-			return err
+
+		// This logic is specific to one type of event
+		if eventType == "delegate" {
+			address := (*attributes)["validator"]
+			validator, err := sdk.ValAddressFromBech32(string(address))
+			if err != nil {
+				return err
+			}
+			result = append(result, types.EvaluationResult{
+				EventTypeToSearch: eventType,
+				AttributeKey:      "address",
+				Shares:            1,
+				Validator:         validator,
+			})
+		} else if eventType == "create_validator" {
+			address := (*attributes)["validator"]
+			validator, err := sdk.ValAddressFromBech32(string(address))
+			if err != nil {
+				return err
+			}
+			result = append(result, types.EvaluationResult{
+				EventTypeToSearch: eventType,
+				AttributeKey:      "address",
+				Shares:            1,
+				Validator:         validator,
+			})
+		} else if eventType == "message" {
+			// Update the last result to have the delegator's address
+			address := (*attributes)["sender"]
+			address, err := sdk.AccAddressFromBech32(string(address))
+			if err != nil {
+				return err
+			}
+
+			result[len(result)-1].Address = address
+			result[len(result)-1].Delegator = address
 		}
 
-		result = append(result, types.EvaluationResult{
-			EventTypeToSearch: eventType,
-			AttributeKey:      "address",
-			Shares:            1,
-			Address:           address,
-		})
 		return nil
 	})
 	if err != nil {
@@ -234,6 +264,14 @@ func (k Keeper) GetMatchingEvents(ctx sdk.Context, eventCriteria *types.EventCri
 	}
 
 	return result, nil
+}
+
+func (k Keeper) GetDistributionKeeper() types.DistributionKeeper {
+	return nil
+}
+
+func (k Keeper) GetStakingKeeper() types.StakingKeeper {
+	return k.stakingKeeper
 }
 
 /*func searchValue(attributes []abci.EventAttribute, attributeKey string) (sdk.AccAddress, error) {

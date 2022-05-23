@@ -3,12 +3,14 @@ package types
 import (
 	"errors"
 	fmt "fmt"
+	"reflect"
 	"strings"
 	time "time"
 
 	// "github.com/gogo/protobuf/proto"
 	"gopkg.in/yaml.v2"
 
+	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -41,16 +43,49 @@ type (
 	// RewardAction defines the interface that actions need to implement
 	RewardAction interface {
 		ActionType() string
-		Evaluate(ctx sdk.Context, state AccountState) bool
-		GetEventCriteria() EventCriteria
+		Evaluate(ctx sdk.Context, provider KeeperProvider, state AccountState, event EvaluationResult) bool
+		GetEventCriteria() *EventCriteria
 	}
 )
 
 // ============ Shared structs ============
 
-type EventCriteria struct {
-	EventType  string
+type ABCIEvent struct {
+	Type       string
 	Attributes map[string][]byte
+}
+
+type EventCriteria struct {
+	Events map[string]ABCIEvent
+}
+
+// Performs a shallow copy of the map
+// We are assuming this takes ownership of events
+func NewEventCriteria(events []ABCIEvent) *EventCriteria {
+	criteria := EventCriteria{}
+	for _, event := range events {
+		criteria.Events[event.Type] = event
+	}
+	return &criteria
+}
+
+func (ec *EventCriteria) MatchesEvent(eventType string) bool {
+	// If we have no Events then we match everything
+	if ec.Events == nil {
+		return true
+	}
+
+	// If we don't have the event then we don't match it
+	_, exists := ec.Events[eventType]
+	return exists
+}
+
+func (ec *ABCIEvent) MatchesAttribute(name string, value []byte) bool {
+	attribute, exists := ec.Attributes[name]
+	if !exists {
+		return false
+	}
+	return attribute == nil || reflect.DeepEqual(attribute, value)
 }
 
 type EvaluationResult struct {
@@ -58,6 +93,8 @@ type EvaluationResult struct {
 	AttributeKey      string
 	Shares            int64
 	Address           sdk.AccAddress // shares to attribute to this address
+	Validator         sdk.ValAddress // Address of the validator
+	Delegator         sdk.AccAddress // Address of the delegator
 }
 
 // ============ Reward Program ============
@@ -319,27 +356,46 @@ func (ad *ActionDelegate) ActionType() string {
 	return ActionTypeDelegate
 }
 
-func (ad *ActionDelegate) GetEventCriteria() EventCriteria {
-	return EventCriteria{
-		EventType: "message",
-		Attributes: map[string][]byte{
-			"module": []byte("staking"),
+func (ad *ActionDelegate) GetEventCriteria() *EventCriteria {
+	return NewEventCriteria([]ABCIEvent{
+		{
+			Type: "message",
+			Attributes: map[string][]byte{
+				"module": []byte("staking"),
+			},
 		},
-	}
+		{
+			Type:       "delegate",
+			Attributes: map[string][]byte{},
+		},
+		{
+			Type:       "create_validator",
+			Attributes: map[string][]byte{},
+		},
+	})
 }
 
-func (ad *ActionDelegate) Evaluate(ctx sdk.Context, state AccountState) bool {
-	// May want to check if they have sufficient balance?
-	// How much it is delegating
-	// Only supports minimum and maximum delegation
-	// Validator they are delegating against is some percentage of the maximum stake - In or out of top 10/20
+func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, state AccountState, event EvaluationResult) bool {
+	validator := event.Validator
+	delegator := event.Delegator
+	delegations := provider.GetStakingKeeper().GetValidatorDelegations(ctx, validator)
 
-	// How do we get the address' ranking?
-	// How do we get how much they staked?
-	// Do we use the staking module?
+	validatorShares := types.NewDec(0)
+	delegatorShares := types.NewDec(0)
+	for _, delegation := range delegations {
+		validatorShares.Add(delegation.GetShares())
+		if !delegator.Equals(delegation.GetDelegatorAddr()) {
+			continue
+		}
+		delegatorShares.Add(delegation.GetShares())
+	}
 
-	// How do validators work
-	return state.ActionCounter >= ad.GetMinimumActions() && state.ActionCounter <= ad.GetMaximumActions()
+	percentage := float64(validatorShares.BigInt().Uint64()) / float64(validatorShares.BigInt().Uint64()) * 100
+	hasValidActionCount := state.ActionCounter >= ad.GetMinimumActions() && state.ActionCounter <= ad.GetMaximumActions()
+	hasValidDelegationAmount := delegatorShares.BigInt().Uint64() >= ad.GetMinimumDelegationAmount() && delegatorShares.BigInt().Uint64() <= ad.GetMaximumDelegationAmount()
+	hasValidDelegationPercentage := percentage >= ad.GetMinimumDelegationPercentage() && percentage <= ad.GetMaximumDelegationPercentage()
+
+	return hasValidActionCount && hasValidDelegationAmount && hasValidDelegationPercentage
 }
 
 func (ad *ActionDelegate) String() string {
@@ -357,11 +413,13 @@ func (atd *ActionTransferDelegations) ValidateBasic() error {
 	return nil
 }
 
-func (atd *ActionTransferDelegations) GetEventCriteria() EventCriteria {
-	return EventCriteria{
-		EventType:  "transfer",
-		Attributes: map[string][]byte{},
-	}
+func (atd *ActionTransferDelegations) GetEventCriteria() *EventCriteria {
+	return NewEventCriteria([]ABCIEvent{
+		{
+			Type:       "transfer",
+			Attributes: map[string][]byte{},
+		},
+	})
 }
 
 func (atd *ActionTransferDelegations) String() string {
@@ -373,7 +431,7 @@ func (atd *ActionTransferDelegations) ActionType() string {
 	return ActionTypeDelegate
 }
 
-func (atd *ActionTransferDelegations) Evaluate(ctx sdk.Context, state AccountState) bool {
+func (atd *ActionTransferDelegations) Evaluate(ctx sdk.Context, provider KeeperProvider, state AccountState, event EvaluationResult) bool {
 	// TODO execute all the rules for action?
 	return false
 }
