@@ -46,7 +46,7 @@ func NewParams(
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(ParamStoreKeyFloorGasPrice, &p.FloorGasPrice, validateCoinParam),
-		paramtypes.NewParamSetPair(ParamStoreKeyUsdConversionRate, &p.UsdConversionRate, validateCoinParam),
+		paramtypes.NewParamSetPair(ParamStoreKeyUsdConversionRate, &p.UsdConversionRate, validateUsdConversionRateParam),
 	}
 }
 
@@ -54,7 +54,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 func DefaultParams() Params {
 	return NewParams(
 		DefaultFloorGasPrice,
-		uint64(DefaultUsdConversionRate),
+		DefaultUsdConversionRate,
 	)
 }
 
