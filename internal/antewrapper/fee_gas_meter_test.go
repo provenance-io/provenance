@@ -6,12 +6,12 @@ import (
 
 	sdkgas "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 )
 
 func TestFeeGasMeter(t *testing.T) {
-
 	casesFeeGas := []struct {
 		limit sdkgas.Gas
 		usage []sdkgas.Gas
@@ -28,7 +28,7 @@ func TestFeeGasMeter(t *testing.T) {
 	for tcnum, tc := range casesFeeGas {
 		meter := NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(tc.limit), false).(*FeeGasMeter)
 		used := uint64(0)
-		usedFee := sdk.NewCoins()
+		var usedFee sdk.Coins
 
 		for unum, usage := range tc.usage {
 			usage := usage
@@ -46,14 +46,18 @@ func TestFeeGasMeter(t *testing.T) {
 		// fees
 		for msgType, fee := range tc.fees {
 			usageFee := fee
-			usedFee = usedFee.Add(usageFee)
+			if usedFee.Empty() {
+				usedFee = sdk.NewCoins(usageFee)
+			} else {
+				usedFee = usedFee.Add(usageFee)
+			}
 			require.NotPanics(t, func() { meter.ConsumeFee(usageFee, msgType, "") }, "panicked on adding fees")
 		}
 
 		require.Panics(t, func() { meter.ConsumeGas(1, "") }, "Exceeded but not panicked. tc #%d", tcnum)
 		require.Equal(t, meter.GasConsumedToLimit(), meter.Limit(), "sdkgas.Gas consumption (to limit) not match limit")
 		require.Equal(t, meter.GasConsumed(), meter.Limit()+1, "sdkgas.Gas consumption not match limit+1")
-		require.Equal(t, meter.FeeConsumed().Sort(), usedFee.Sort(), "FeeConsumed does not match all Fees")
+		assert.Equal(t, meter.FeeConsumed().Sort(), usedFee.Sort(), "FeeConsumed does not match all Fees")
 		meter2 := NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100), false).(*FeeGasMeter)
 		meter2.ConsumeGas(sdkgas.Gas(50), "consume half max")
 		meter2.ConsumeFee(sdk.NewCoin("nhash", sdk.NewInt(1000000)), "/cosmos.bank.v1beta1.MsgSend", "")
@@ -70,8 +74,9 @@ func TestFeeGasMeter(t *testing.T) {
 		require.Equalf(t, "map[/cosmos.bank.v1beta1.MsgSend:3000000nhash]", fmt.Sprintf("%v", meter2.FeeConsumedByMsg()), "expect string output to match")
 		meter2.ConsumeFee(sdk.NewCoin("doge", sdk.NewInt(2000000)), "/provenance.marker.v1.MsgAddMarkerRequest", "")
 		meter2.ConsumeFee(sdk.NewCoin("jackthecat", sdk.NewInt(420)), "/provenance.marker.v1.MsgAddMarkerRequest", "")
-		require.Equalf(t, "2000000doge,3000000nhash", meter2.FeeConsumed().String(), "expect string output to match")
-		require.Equalf(t, "2000000doge", meter2.FeeConsumedForType("/provenance.marker.v1.MsgAddMarkerRequest", "").String(), "expect string output to match")
+		meter2FeesConsumed := meter2.FeeConsumed()
+		require.Equalf(t, "2000000doge,420jackthecat,3000000nhash", meter2FeesConsumed.String(), "expect string output to match")
+		require.Equalf(t, "2000000doge,420jackthecat", meter2.FeeConsumedForType("/provenance.marker.v1.MsgAddMarkerRequest", "").String(), "expect string output to match")
 		require.Equalf(t, "3000000nhash", meter2.FeeConsumedForType("/cosmos.bank.v1beta1.MsgSend", "").String(), "expect string output to match")
 		require.Equalf(t, false, meter2.IsSimulate(), "simulate should be false")
 	}

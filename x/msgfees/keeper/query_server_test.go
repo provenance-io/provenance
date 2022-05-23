@@ -101,7 +101,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFees() {
 	expectedTotalFees := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*s.minGasPrice.Amount.Int64())))
 	s.Assert().Equal(expectedTotalFees.String(), response.TotalFees.String())
 
-	// do send with an additional fee
+	// // do send with an additional fee
 	sendAddFee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))
 	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee("/cosmos.bank.v1beta1.MsgSend", sendAddFee)))
 	response, err = s.queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)

@@ -8,7 +8,7 @@ import (
 )
 
 // TODO: modify to express account distributions
-func NewEventMsgs(totalCalls map[string]uint64, totalFees map[string]sdk.Coin) *EventMsgFees {
+func NewEventMsgs(totalCalls map[string]uint64, totalFees map[string]sdk.Coins) *EventMsgFees {
 	sortedKeys := sortAndReduce(totalCalls, totalFees)
 	events := make([]EventMsgFee, len(sortedKeys))
 	for i, typeURL := range sortedKeys {
@@ -25,7 +25,7 @@ func NewEventMsgs(totalCalls map[string]uint64, totalFees map[string]sdk.Coin) *
 }
 
 // sortAndReduce returns a sorted list of keys that are contained in both totalCalls and totalFees
-func sortAndReduce(totalCalls map[string]uint64, totalFees map[string]sdk.Coin) []string {
+func sortAndReduce(totalCalls map[string]uint64, totalFees map[string]sdk.Coins) []string {
 	keys := make([]string, 0, len(totalCalls))
 	totalAdded := 0
 	for k := range totalCalls {
