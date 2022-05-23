@@ -175,9 +175,9 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 				// TODO: extract into it's own method with unit tests
 				if assessCustomFee.Amount.IsPositive() {
 					if len(assessCustomFee.Recipient) != 0 {
-						addFeeToPay := assessCustomFee.Amount.Amount.Int64()
+						addFeeToPay := assessCustomFee.Amount.Amount.Uint64()
 						addFeeToPay = addFeeToPay / 2
-						recipientCoins := sdk.NewCoin(assessCustomFee.Amount.Denom, sdk.NewInt(addFeeToPay))
+						recipientCoins := sdk.NewCoin(assessCustomFee.Amount.Denom, sdk.NewIntFromUint64(addFeeToPay))
 						feeGasMeter.ConsumeFee(recipientCoins, msgTypeURL, assessCustomFee.Recipient)
 						feePayerCoins := assessCustomFee.Amount.Sub(recipientCoins)
 						feeGasMeter.ConsumeFee(feePayerCoins, msgTypeURL, "")
