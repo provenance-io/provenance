@@ -54,14 +54,20 @@ func NewMsgAssessCustomMsgFeeRequest(
 
 func (msg MsgAssessCustomMsgFeeRequest) ValidateBasic() error {
 	if len(msg.Recipient) != 0 {
-		_, err := sdk.AccAddressFromBech32(msg.From)
-		return err
+		_, err := sdk.AccAddressFromBech32(msg.Recipient)
+		if err != nil {
+			return err
+		}
 	}
-	if !msg.Amount.IsPositive() {
-		return errors.New("amount must be greater than zero")
+	_, err := sdk.AccAddressFromBech32(msg.From)
+	if err != nil {
+		return err
 	}
 	if msg.Amount.Denom != "usd" && msg.Amount.Denom != "nhash" {
 		return fmt.Errorf("denom must be in usd or nhash : %s", msg.Amount.Denom)
+	}
+	if !msg.Amount.IsPositive() {
+		return errors.New("amount must be greater than zero")
 	}
 	return nil
 }
