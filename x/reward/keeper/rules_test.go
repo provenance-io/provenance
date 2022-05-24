@@ -4,29 +4,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkTypes "github.com/cosmos/cosmos-sdk/types"
 
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/provenance-io/provenance/x/reward/types"
 )
-
-/*func (suite *KeeperTestSuite) TestNewShare() {
-	suite.SetupTest()
-
-	time := timestamppb.Now().AsTime()
-	share := types.NewShare(
-		1,
-		2,
-		"test",
-		true,
-		time,
-		5,
-	)
-
-	suite.Assert().Equal(uint64(1), share.GetRewardProgramId(), "reward program id must match")
-	suite.Assert().Equal(uint64(2), share.GetEpochId(), "epoch id must match")
-	suite.Assert().Equal("test", share.GetAddress(), "address must match")
-	suite.Assert().Equal(true, share.GetClaimed(), "claim status must match")
-	suite.Assert().Equal(time, share.GetExpireTime(), "expiration time must match")
-	suite.Assert().Equal(int64(5), share.GetAmount(), "share amount must match")
-}*/
 
 func setupEventHistory(suite *KeeperTestSuite) {
 	attributes1 := []sdkTypes.Attribute{
@@ -313,3 +294,248 @@ func (suite *KeeperTestSuite) TestFindQualifyingActionsWithNil() {
 	results := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, nil, nil, nil)
 	suite.Assert().Equal(0, len(results), "should handle nil input")
 }
+
+// Test ActionDelegate Evaluate
+
+type MockKeeperProvider struct {
+}
+
+func (m MockKeeperProvider) GetDistributionKeeper() types.DistributionKeeper {
+	return nil
+}
+
+func (m MockKeeperProvider) GetStakingKeeper() types.StakingKeeper {
+	return MockStakingKeeper{}
+}
+
+type MockStakingKeeper struct {
+}
+
+func (m MockStakingKeeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []stakingtypes.Delegation {
+	return nil
+}
+
+func (m MockStakingKeeper) GetValidatorDelegations(ctx sdk.Context, valAddr sdk.ValAddress) (delegations []stakingtypes.Delegation) {
+	delegations = []stakingtypes.Delegation{
+		{
+			DelegatorAddress: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+			ValidatorAddress: "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun",
+			Shares:           sdkTypes.NewDec(1),
+		},
+		{
+			DelegatorAddress: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+			ValidatorAddress: "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun",
+			Shares:           sdkTypes.NewDec(1),
+		},
+		{
+			DelegatorAddress: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+			ValidatorAddress: "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun",
+			Shares:           sdkTypes.NewDec(1),
+		},
+	}
+
+	return delegations
+}
+
+func (suite *KeeperTestSuite) TestActionDelegateEvaluatePasses() {
+	suite.SetupTest()
+
+	action := types.NewActionDelegate()
+	action.MinimumActions = 1
+	action.MaximumActions = 2
+	action.MinimumDelegationAmount = sdkTypes.NewDec(2).BigInt().Uint64()
+	action.MaximumDelegationAmount = sdkTypes.NewDec(10).BigInt().Uint64()
+	action.MinimumDelegationPercentage = .5
+	action.MaximumDelegationPercentage = 1.0
+
+	keeperProvider := MockKeeperProvider{}
+	state := types.NewAccountState(0, 0, "")
+	state.ActionCounter += 1
+
+	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
+	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
+	event := types.EvaluationResult{
+		Validator: validator,
+		Delegator: delegator,
+	}
+
+	passed := action.Evaluate(suite.ctx, keeperProvider, state, event)
+	suite.Assert().True(passed, "evaluate should pass when criteria are met")
+}
+
+func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActionsNotMet() {
+	suite.SetupTest()
+
+	action := types.NewActionDelegate()
+	action.MinimumActions = 1
+	action.MaximumActions = 2
+	action.MinimumDelegationAmount = sdkTypes.NewDec(2).BigInt().Uint64()
+	action.MaximumDelegationAmount = sdkTypes.NewDec(10).BigInt().Uint64()
+	action.MinimumDelegationPercentage = .5
+	action.MaximumDelegationPercentage = 1.0
+
+	keeperProvider := MockKeeperProvider{}
+	state := types.NewAccountState(0, 0, "")
+
+	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
+	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
+	event := types.EvaluationResult{
+		Validator: validator,
+		Delegator: delegator,
+	}
+
+	passed := action.Evaluate(suite.ctx, keeperProvider, state, event)
+	suite.Assert().False(passed, "test should fail when minimum actions not met")
+}
+
+func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumActionsNotMet() {
+	suite.SetupTest()
+
+	action := types.NewActionDelegate()
+	action.MinimumActions = 1
+	action.MaximumActions = 2
+	action.MinimumDelegationAmount = sdkTypes.NewDec(2).BigInt().Uint64()
+	action.MaximumDelegationAmount = sdkTypes.NewDec(10).BigInt().Uint64()
+	action.MinimumDelegationPercentage = .5
+	action.MaximumDelegationPercentage = 1.0
+
+	keeperProvider := MockKeeperProvider{}
+	state := types.NewAccountState(0, 0, "")
+	state.ActionCounter += 3
+
+	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
+	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
+	event := types.EvaluationResult{
+		Validator: validator,
+		Delegator: delegator,
+	}
+
+	passed := action.Evaluate(suite.ctx, keeperProvider, state, event)
+	suite.Assert().False(passed, "test should fail when maximum actions not met")
+}
+
+func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegationAmountNotMet() {
+	suite.SetupTest()
+
+	action := types.NewActionDelegate()
+	action.MinimumActions = 1
+	action.MaximumActions = 2
+	action.MinimumDelegationAmount = sdkTypes.NewDec(1).BigInt().Uint64()
+	action.MaximumDelegationAmount = sdkTypes.NewDec(1).BigInt().Uint64()
+	action.MinimumDelegationPercentage = .5
+	action.MaximumDelegationPercentage = 1.0
+
+	keeperProvider := MockKeeperProvider{}
+	state := types.NewAccountState(0, 0, "")
+	state.ActionCounter += 1
+
+	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
+	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
+	event := types.EvaluationResult{
+		Validator: validator,
+		Delegator: delegator,
+	}
+
+	passed := action.Evaluate(suite.ctx, keeperProvider, state, event)
+	suite.Assert().False(passed, "test should fail when maximum delegation amount not met")
+}
+
+func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumDelegationAmountNotMet() {
+	suite.SetupTest()
+
+	action := types.NewActionDelegate()
+	action.MinimumActions = 1
+	action.MaximumActions = 2
+	action.MinimumDelegationAmount = sdkTypes.NewDec(5).BigInt().Uint64()
+	action.MaximumDelegationAmount = sdkTypes.NewDec(10).BigInt().Uint64()
+	action.MinimumDelegationPercentage = .5
+	action.MaximumDelegationPercentage = 1.0
+
+	keeperProvider := MockKeeperProvider{}
+	state := types.NewAccountState(0, 0, "")
+	state.ActionCounter += 1
+
+	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
+	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
+	event := types.EvaluationResult{
+		Validator: validator,
+		Delegator: delegator,
+	}
+
+	passed := action.Evaluate(suite.ctx, keeperProvider, state, event)
+	suite.Assert().False(passed, "test should fail when minimum delegation amount not met")
+}
+
+func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumDelegationPercentageNotMet() {
+	suite.SetupTest()
+
+	action := types.NewActionDelegate()
+	action.MinimumActions = 1
+	action.MaximumActions = 2
+	action.MinimumDelegationAmount = sdkTypes.NewDec(1).BigInt().Uint64()
+	action.MaximumDelegationAmount = sdkTypes.NewDec(10).BigInt().Uint64()
+	action.MinimumDelegationPercentage = 1.1
+	action.MaximumDelegationPercentage = 1.0
+
+	keeperProvider := MockKeeperProvider{}
+	state := types.NewAccountState(0, 0, "")
+	state.ActionCounter += 1
+
+	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
+	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
+	event := types.EvaluationResult{
+		Validator: validator,
+		Delegator: delegator,
+	}
+
+	passed := action.Evaluate(suite.ctx, keeperProvider, state, event)
+	suite.Assert().False(passed, "test should fail when minimum delegation percentage not met")
+}
+
+func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegationPercentageNotMet() {
+	suite.SetupTest()
+
+	action := types.NewActionDelegate()
+	action.MinimumActions = 1
+	action.MaximumActions = 2
+	action.MinimumDelegationAmount = sdkTypes.NewDec(1).BigInt().Uint64()
+	action.MaximumDelegationAmount = sdkTypes.NewDec(10).BigInt().Uint64()
+	action.MinimumDelegationPercentage = 0.0
+	action.MaximumDelegationPercentage = 0.5
+
+	keeperProvider := MockKeeperProvider{}
+	state := types.NewAccountState(0, 0, "")
+	state.ActionCounter += 1
+
+	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
+	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
+	event := types.EvaluationResult{
+		Validator: validator,
+		Delegator: delegator,
+	}
+
+	passed := action.Evaluate(suite.ctx, keeperProvider, state, event)
+	suite.Assert().False(passed, "test should fail when maximum delegation percentage not met")
+}
+
+// Test GetRewardAction
+
+func (suite *KeeperTestSuite) TestGetRewardActionHandlesUnsupportedActions() {
+	suite.SetupTest()
+	qa := types.QualifyingAction{}
+	_, err := qa.GetRewardAction(suite.ctx)
+	suite.Assert().Error(err, "should throw error when an action is not supported")
+}
+
+func (suite *KeeperTestSuite) TestGetRewardActionHandlesActionDelegate() {
+	suite.SetupTest()
+	delegate := types.QualifyingAction_Delegate{}
+	qa := types.QualifyingAction{
+		Type: &delegate,
+	}
+	action, err := qa.GetRewardAction(suite.ctx)
+	suite.Assert().NoError(err, "should not throw error when action is supported")
+	suite.Assert().Equal(types.ActionTypeDelegate, action.ActionType(), "should return the correct action type")
+}
+
+// Test Detect Qualifying Actions

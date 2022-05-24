@@ -387,14 +387,14 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	validatorShares := types.NewDec(0)
 	delegatorShares := types.NewDec(0)
 	for _, delegation := range delegations {
-		validatorShares.Add(delegation.GetShares())
+		validatorShares = validatorShares.Add(delegation.GetShares())
 		if !delegator.Equals(delegation.GetDelegatorAddr()) {
 			continue
 		}
-		delegatorShares.Add(delegation.GetShares())
+		delegatorShares = delegatorShares.Add(delegation.GetShares())
 	}
 
-	percentage := float64(validatorShares.BigInt().Uint64()) / float64(validatorShares.BigInt().Uint64()) * 100
+	percentage := float64(validatorShares.BigInt().Uint64()) / float64(validatorShares.BigInt().Uint64())
 	hasValidActionCount := state.ActionCounter >= ad.GetMinimumActions() && state.ActionCounter <= ad.GetMaximumActions()
 	hasValidDelegationAmount := delegatorShares.BigInt().Uint64() >= ad.GetMinimumDelegationAmount() && delegatorShares.BigInt().Uint64() <= ad.GetMaximumDelegationAmount()
 	hasValidDelegationPercentage := percentage >= ad.GetMinimumDelegationPercentage() && percentage <= ad.GetMaximumDelegationPercentage()
