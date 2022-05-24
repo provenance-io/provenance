@@ -41,6 +41,9 @@ func (k Keeper) DetectQualifyingActions(ctx sdk.Context, program *types.RewardPr
 
 func (k Keeper) FindQualifyingActions(ctx sdk.Context, program *types.RewardProgram, action types.RewardAction, abciEvents []types.EvaluationResult) []types.EvaluationResult {
 	detectedEvents := []types.EvaluationResult(nil)
+	if program == nil || action == nil || abciEvents == nil {
+		return detectedEvents
+	}
 
 	for _, event := range abciEvents {
 		// Get the AccountState for the triggering account

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkTypes "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/reward/types"
@@ -257,4 +258,58 @@ func (suite *KeeperTestSuite) TestGetMatchingEventsWithoutDelegates() {
 	events, err := suite.app.RewardKeeper.GetMatchingEvents(suite.ctx, criteria)
 	suite.Assert().NoError(err, "should throw no error when handling no events")
 	suite.Assert().Equal(0, len(events), "should have no events when no delegates are made")
+}
+
+// FindQualifyingActions
+
+type MockAction struct {
+	PassEvaluate bool
+}
+
+func (m MockAction) ActionType() string {
+	return ""
+}
+
+func (m MockAction) Evaluate(ctx sdk.Context, provider types.KeeperProvider, state types.AccountState, event types.EvaluationResult) bool {
+	return m.PassEvaluate
+}
+
+func (m MockAction) GetEventCriteria() *types.EventCriteria {
+	return nil
+}
+
+func (suite *KeeperTestSuite) TestFindQualifyingActionsWithNoAbciEvents() {
+	suite.SetupTest()
+	program := types.RewardProgram{}
+	action := MockAction{PassEvaluate: false}
+	results := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, &program, action, []types.EvaluationResult{})
+	suite.Assert().Equal(0, len(results), "should have no results for empty list of abci events")
+}
+
+func (suite *KeeperTestSuite) TestFindQualifyingActionsWithNoMatchingResults() {
+	suite.SetupTest()
+	program := types.RewardProgram{}
+	action := MockAction{PassEvaluate: false}
+	results := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, &program, action, []types.EvaluationResult{
+		{},
+		{},
+	})
+	suite.Assert().Equal(0, len(results), "should have empty lists when no results match the evaluation")
+}
+
+func (suite *KeeperTestSuite) TestFindQualifyingActionsWithMatchingResults() {
+	suite.SetupTest()
+	program := types.RewardProgram{}
+	action := MockAction{PassEvaluate: true}
+	results := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, &program, action, []types.EvaluationResult{
+		{},
+		{},
+	})
+	suite.Assert().Equal(2, len(results), "should have all results that evaluate to true")
+}
+
+func (suite *KeeperTestSuite) TestFindQualifyingActionsWithNil() {
+	suite.SetupTest()
+	results := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, nil, nil, nil)
+	suite.Assert().Equal(0, len(results), "should handle nil input")
 }
