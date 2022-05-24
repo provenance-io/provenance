@@ -34,7 +34,8 @@ type MsgAssessCustomMsgFeeRequest struct {
 	Name      string     `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Amount    types.Coin `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount" yaml:"amount"`
 	Recipient string     `protobuf:"bytes,3,opt,name=recipient,proto3" json:"recipient,omitempty"`
-	From      string     `protobuf:"bytes,4,opt,name=from,proto3" json:"from,omitempty"`
+	// empty, whole amount goes to fee module
+	From string `protobuf:"bytes,4,opt,name=from,proto3" json:"from,omitempty"`
 }
 
 func (m *MsgAssessCustomMsgFeeRequest) Reset()      { *m = MsgAssessCustomMsgFeeRequest{} }
@@ -153,7 +154,8 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
 	// AssessCustomMsgFee endpoint executes the additional fee charges.
-	// Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient for executing contracts
+	// Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient
+	// for executing contracts
 	AssessCustomMsgFee(ctx context.Context, in *MsgAssessCustomMsgFeeRequest, opts ...grpc.CallOption) (*MsgAssessCustomMsgFeeResponse, error)
 }
 
@@ -177,7 +179,8 @@ func (c *msgClient) AssessCustomMsgFee(ctx context.Context, in *MsgAssessCustomM
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// AssessCustomMsgFee endpoint executes the additional fee charges.
-	// Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient for executing contracts
+	// Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient
+	// for executing contracts
 	AssessCustomMsgFee(context.Context, *MsgAssessCustomMsgFeeRequest) (*MsgAssessCustomMsgFeeResponse, error)
 }
 

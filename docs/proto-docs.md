@@ -5180,7 +5180,6 @@ it consists of two parts
 | ----- | ---- | ----- | ----------- |
 | `msg_type_url` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | additional_fee can pay in any Coin( basically a Denom and Amount, Amount can be zero) |
-| `recipient` | [string](#string) |  |  |
 
 
 
@@ -5448,8 +5447,10 @@ MsgAssessCustomMsgFeeRequest defines an sdk.Msg type
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  | optional short name for custom msg fee |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | amount of additional fee that must be paid |
-| `recipient` | [string](#string) |  | optional recipient address, the amount is split 50/50 between recipient and fee module. If empty, whole amount goes to fee module |
-| `from` | [string](#string) |  | the signer of the msg |
+| `recipient` | [string](#string) |  | optional recipient address, the amount is split 50/50 between recipient and fee module. If |
+| `from` | [string](#string) |  | empty, whole amount goes to fee module
+
+the signer of the msg |
 
 
 
