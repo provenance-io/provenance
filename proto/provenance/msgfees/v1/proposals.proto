@@ -54,3 +54,14 @@ message RemoveMsgFeeProposal {
 
   string msg_type_url = 3;
 }
+
+// UpdateUsdConversionRateProposal defines a governance proposal to update the usd conversion rate param
+message UpdateUsdConversionRateProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title       = 1;
+  string description = 2;
+
+  uint64 usd_conversion_rate = 3;
+}

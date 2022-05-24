@@ -341,6 +341,7 @@
     - [AddMsgFeeProposal](#provenance.msgfees.v1.AddMsgFeeProposal)
     - [RemoveMsgFeeProposal](#provenance.msgfees.v1.RemoveMsgFeeProposal)
     - [UpdateMsgFeeProposal](#provenance.msgfees.v1.UpdateMsgFeeProposal)
+    - [UpdateUsdConversionRateProposal](#provenance.msgfees.v1.UpdateUsdConversionRateProposal)
   
 - [provenance/msgfees/v1/query.proto](#provenance/msgfees/v1/query.proto)
     - [CalculateTxFeesRequest](#provenance.msgfees.v1.CalculateTxFeesRequest)
@@ -5297,6 +5298,23 @@ UpdateMsgFeeProposal defines a governance proposal to update a current msg based
 | `description` | [string](#string) |  |  |
 | `msg_type_url` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.UpdateUsdConversionRateProposal"></a>
+
+### UpdateUsdConversionRateProposal
+UpdateUsdConversionRateProposal defines a governance proposal to update the usd conversion rate param
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `usd_conversion_rate` | [uint64](#uint64) |  |  |
 
 
 
