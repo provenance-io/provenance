@@ -67,6 +67,11 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: Recording shares for for rewardProgramId=%d, epochId=%d",
 		rewardProgram.GetId(), rewardProgram.GetCurrentEpoch()))
 
+	err := rewardProgram.ValidateBasic()
+	if rewardProgram == nil || err != nil {
+		return err
+	}
+
 	for _, res := range evaluateRes {
 		share, err := k.GetShare(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentEpoch(), res.Address.String())
 		if err != nil {

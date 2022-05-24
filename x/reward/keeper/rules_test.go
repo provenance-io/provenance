@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkTypes "github.com/cosmos/cosmos-sdk/types"
 
@@ -538,4 +540,166 @@ func (suite *KeeperTestSuite) TestGetRewardActionHandlesActionDelegate() {
 	suite.Assert().Equal(types.ActionTypeDelegate, action.ActionType(), "should return the correct action type")
 }
 
-// Test Detect Qualifying Actions
+// Test DetectQualifyingActions
+func (suite *KeeperTestSuite) TestDetectQualifyingActions() {
+	suite.SetupTest()
+}
+
+// Test RewardShares
+func (suite *KeeperTestSuite) TestRewardSharesSingle() {
+	suite.SetupTest()
+
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdkTypes.NewInt64Coin("hotdog", 10000),
+		sdkTypes.NewInt64Coin("hotdog", 10000),
+		time.Now(),
+		5,
+		5,
+		types.NewEligibilityCriteria("reward-action", &types.ActionDelegate{}),
+	)
+
+	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
+	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
+	results := []types.EvaluationResult{
+		{
+			EventTypeToSearch: "delegate",
+			AttributeKey:      "attribute",
+			Shares:            1,
+			Address:           delegator,
+			Validator:         validator,
+			Delegator:         delegator,
+		},
+	}
+
+	err := suite.app.RewardKeeper.RewardShares(suite.ctx, &rewardProgram, results)
+	share, _ := suite.app.RewardKeeper.GetShare(suite.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentEpoch(), delegator.String())
+	suite.Assert().NoError(err, "should return no error on success")
+	suite.Assert().Equal(int64(1), share.Amount, "share amount should increment")
+	suite.Assert().Equal(rewardProgram.GetId(), share.GetRewardProgramId(), "reward program id should match")
+	suite.Assert().Equal(rewardProgram.GetCurrentEpoch(), share.GetEpochId(), "epoch id should match")
+	suite.Assert().Equal(delegator.String(), share.GetAddress(), "address should match delegator")
+	suite.Assert().Equal(false, share.GetClaimed(), "claimed should be set to false")
+	suite.Assert().Equal(rewardProgram.GetEpochEndTime().Add(time.Duration(rewardProgram.GetShareExpirationOffset())), share.GetExpireTime(), "expiration time should match epoch end time + offset")
+}
+
+func (suite *KeeperTestSuite) TestRewardSharesMultiple() {
+	suite.SetupTest()
+
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdkTypes.NewInt64Coin("hotdog", 10000),
+		sdkTypes.NewInt64Coin("hotdog", 10000),
+		time.Now(),
+		5,
+		5,
+		types.NewEligibilityCriteria("reward-action", &types.ActionDelegate{}),
+	)
+
+	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
+	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
+	results := []types.EvaluationResult{
+		{
+			EventTypeToSearch: "delegate",
+			AttributeKey:      "attribute",
+			Shares:            1,
+			Address:           delegator,
+			Validator:         validator,
+			Delegator:         delegator,
+		},
+		{
+			EventTypeToSearch: "delegate",
+			AttributeKey:      "attribute",
+			Shares:            1,
+			Address:           delegator,
+			Validator:         validator,
+			Delegator:         delegator,
+		},
+	}
+
+	err := suite.app.RewardKeeper.RewardShares(suite.ctx, &rewardProgram, results)
+	share, _ := suite.app.RewardKeeper.GetShare(suite.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentEpoch(), delegator.String())
+	suite.Assert().NoError(err, "should return no error on success")
+	suite.Assert().Equal(int64(2), share.Amount, "share amount should increment")
+	suite.Assert().Equal(rewardProgram.GetId(), share.GetRewardProgramId(), "reward program id should match")
+	suite.Assert().Equal(rewardProgram.GetCurrentEpoch(), share.GetEpochId(), "epoch id should match")
+	suite.Assert().Equal(delegator.String(), share.GetAddress(), "address should match delegator")
+	suite.Assert().Equal(false, share.GetClaimed(), "claimed should be set to false")
+	suite.Assert().Equal(rewardProgram.GetEpochEndTime().Add(time.Duration(rewardProgram.GetShareExpirationOffset())), share.GetExpireTime(), "expiration time should match epoch end time + offset")
+}
+
+func (suite *KeeperTestSuite) TestRewardSharesInvalidRewardProgram() {
+	suite.SetupTest()
+
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		0,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdkTypes.NewInt64Coin("hotdog", 10000),
+		sdkTypes.NewInt64Coin("hotdog", 10000),
+		time.Now(),
+		5,
+		5,
+		types.NewEligibilityCriteria("reward-action", &types.ActionDelegate{}),
+	)
+
+	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
+	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
+	results := []types.EvaluationResult{
+		{
+			EventTypeToSearch: "delegate",
+			AttributeKey:      "attribute",
+			Shares:            1,
+			Address:           delegator,
+			Validator:         validator,
+			Delegator:         delegator,
+		},
+	}
+
+	err := suite.app.RewardKeeper.RewardShares(suite.ctx, &rewardProgram, results)
+	share, _ := suite.app.RewardKeeper.GetShare(suite.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentEpoch(), delegator.String())
+	suite.Assert().Error(err, "should return an error on invalid program")
+	suite.Assert().Equal(int64(0), share.Amount, "share amount should not increment")
+}
+
+func (suite *KeeperTestSuite) TestRewardSharesInvalidAddress() {
+	suite.SetupTest()
+
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdkTypes.NewInt64Coin("hotdog", 10000),
+		sdkTypes.NewInt64Coin("hotdog", 10000),
+		time.Now(),
+		5,
+		5,
+		types.NewEligibilityCriteria("reward-action", &types.ActionDelegate{}),
+	)
+
+	validator, _ := sdk.ValAddressFromBech32("blah")
+	delegator, _ := sdk.AccAddressFromBech32("blah")
+	results := []types.EvaluationResult{
+		{
+			EventTypeToSearch: "delegate",
+			AttributeKey:      "attribute",
+			Shares:            1,
+			Address:           delegator,
+			Validator:         validator,
+			Delegator:         delegator,
+		},
+	}
+
+	err := suite.app.RewardKeeper.RewardShares(suite.ctx, &rewardProgram, results)
+	share, _ := suite.app.RewardKeeper.GetShare(suite.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentEpoch(), delegator.String())
+	suite.Assert().NoError(err, "should return no error on invalid address")
+	suite.Assert().Equal(int64(1), share.Amount, "share amount should not increment")
+}
