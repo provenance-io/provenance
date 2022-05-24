@@ -118,8 +118,8 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 			)
 		}
 
+		// provenance specific modification to msg service router that handles additional fees and assessed fee msgs
 		msr.routes[requestTypeName] = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error) {
-			// provenance specific modification to msg service router
 			msgTypeURL := sdk.MsgTypeURL(req)
 
 			feeGasMeter, ok := ctx.GasMeter().(*antewrapper.FeeGasMeter)
@@ -175,7 +175,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 				}
 				if msgFeeCoin.IsPositive() {
 					if len(assessCustomFee.Recipient) != 0 {
-						recipientCoin, feePayoutCoin := assessCustomFee.SplitAmount()
+						recipientCoin, feePayoutCoin := msgfeestypes.SplitAmount(msgFeeCoin)
 						feeGasMeter.ConsumeFee(recipientCoin, msgTypeURL, assessCustomFee.Recipient)
 						feeGasMeter.ConsumeFee(feePayoutCoin, msgTypeURL, "")
 					} else {

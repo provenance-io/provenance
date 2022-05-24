@@ -365,6 +365,27 @@ func TestMsgServiceAuthzAdditionalMsgFeeInDefaultDenom(t *testing.T) {
 	assert.Equal(t, "[{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"10atom\"}]", string(res.Events[15].Attributes[0].Value))
 }
 
+func TestMsgServiceAssessMsgFee(t *testing.T) {
+	encCfg := simapp.MakeTestEncodingConfig()
+	priv, _, addr := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin("atom", 1000), sdk.NewInt64Coin("nhash", 1_190_500_000))
+	app := piosimapp.SetupWithGenesisAccounts([]authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+
+	msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", sdk.NewInt64Coin("usd", 7), addr2.String(), addr.String())
+	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("nhash", 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &msg)
+	require.NoError(t, err)
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+	assert.Equal(t, 11, len(res.Events))
+	assert.Equal(t, "tx", res.Events[4].Type)
+	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
+	assert.Equal(t, "150atom,1190500000nhash", string(res.Events[4].Attributes[0].Value))
+}
+
 func SignTxAndGetBytes(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey types.PubKey, privKey types.PrivKey, acct authtypes.BaseAccount, chainId string, msg ...sdk.Msg) ([]byte, error) {
 	txBuilder := encCfg.TxConfig.NewTxBuilder()
 	txBuilder.SetFeeAmount(fees)

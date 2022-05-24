@@ -38,6 +38,20 @@ func (msg *MsgFee) ValidateBasic() error {
 	return nil
 }
 
+func NewMsgAssessCustomMsgFeeRequest(
+	name string,
+	amount sdk.Coin,
+	recipient string,
+	from string,
+) MsgAssessCustomMsgFeeRequest {
+	return MsgAssessCustomMsgFeeRequest{
+		Name:      name,
+		Amount:    amount,
+		Recipient: recipient,
+		From:      from,
+	}
+}
+
 func (msg MsgAssessCustomMsgFeeRequest) ValidateBasic() error {
 	if len(msg.Recipient) != 0 {
 		_, err := sdk.AccAddressFromBech32(msg.From)
@@ -81,10 +95,10 @@ func (msg MsgAssessCustomMsgFeeRequest) Type() string {
 }
 
 // SplitAmount returns split of Amount to be used for coin recipient and one for payout of fee, NOTE: this should only be used if a Recipient address exists
-func (msg MsgAssessCustomMsgFeeRequest) SplitAmount() (recipientCoin sdk.Coin, feePayoutCoin sdk.Coin) {
-	addFeeToPay := msg.Amount.Amount.Uint64()
+func SplitAmount(coin sdk.Coin) (recipientCoin sdk.Coin, feePayoutCoin sdk.Coin) {
+	addFeeToPay := coin.Amount.Uint64()
 	addFeeToPay /= 2
-	recipientCoin = sdk.NewCoin(msg.Amount.Denom, sdk.NewIntFromUint64(addFeeToPay))
-	feePayoutCoin = msg.Amount.Sub(recipientCoin)
+	recipientCoin = sdk.NewCoin(coin.Denom, sdk.NewIntFromUint64(addFeeToPay))
+	feePayoutCoin = coin.Sub(recipientCoin)
 	return recipientCoin, feePayoutCoin
 }

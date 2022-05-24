@@ -275,10 +275,10 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 			}
 			if msgFeeCoin.IsPositive() {
 				if len(assessFee.Recipient) != 0 {
-					recipientCoin, feePayoutCoin := assessFee.SplitAmount()
+					recipientCoin, feePayoutCoin := msgfeestypes.SplitAmount(msgFeeCoin)
 					msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = recipientCoin
 					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(feePayoutCoin)
-					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.AdditionalModuleFees.Add(feePayoutCoin).Add(recipientCoin)
+					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.AdditionalModuleFees.Add(recipientCoin)
 				} else {
 					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFeeCoin)
 					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.AdditionalModuleFees
