@@ -50,6 +50,34 @@ func setupEventHistory(suite *KeeperTestSuite) {
 	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
 }
 
+func setupEventHistoryWithDelegates(suite *KeeperTestSuite) {
+	attributes1 := []sdkTypes.Attribute{
+		sdkTypes.NewAttribute("validator", "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun"),
+		sdkTypes.NewAttribute("amount", "1000000000000000nhash"),
+	}
+	attributes2 := []sdkTypes.Attribute{
+		sdkTypes.NewAttribute("module", "staking"),
+		sdkTypes.NewAttribute("sender", "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+	}
+	attributes3 := []sdkTypes.Attribute{
+		sdkTypes.NewAttribute("validator", "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun"),
+		sdkTypes.NewAttribute("amount", "50000000000000nhash"),
+		sdkTypes.NewAttribute("new_shares", "50000000000000.000000000000000000"),
+	}
+	event1 := sdkTypes.NewEvent("create_validator", attributes1...)
+	event2 := sdkTypes.NewEvent("message", attributes2...)
+	event3 := sdkTypes.NewEvent("delegate", attributes3...)
+	event4 := sdkTypes.NewEvent("message", attributes2...)
+	loggedEvents := sdkTypes.Events{
+		event1,
+		event2,
+		event3,
+		event4,
+	}
+	eventManagerStub := sdkTypes.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
+	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
+}
+
 func (suite *KeeperTestSuite) TestIterateABCIEventsWildcard() {
 	suite.SetupTest()
 	setupEventHistory(suite)
@@ -176,4 +204,57 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsNonAttributeValueMatch() {
 		return nil
 	})
 	suite.Assert().Equal(0, counter, "should not iterate if attribute doesn't match")
+}
+
+func (suite *KeeperTestSuite) TestGetMatchingEventsWithDelegates() {
+	suite.SetupTest()
+	setupEventHistoryWithDelegates(suite)
+	criteria := types.NewEventCriteria([]types.ABCIEvent{
+		{
+			Type: "message",
+			Attributes: map[string][]byte{
+				"module": []byte("staking"),
+			},
+		},
+		{
+			Type:       "delegate",
+			Attributes: map[string][]byte{},
+		},
+		{
+			Type:       "create_validator",
+			Attributes: map[string][]byte{},
+		},
+	})
+
+	events, err := suite.app.RewardKeeper.GetMatchingEvents(suite.ctx, criteria)
+	suite.Assert().NoError(err, "should throw no error when handling no events")
+	suite.Assert().Equal(2, len(events), "should find the two delegate events")
+	for _, event := range events {
+		suite.Assert().Equal(event.Shares, int64(1), "shares must be 1")
+		suite.Assert().Equal(event.Delegator.String(), "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "delegator address must be correct")
+		suite.Assert().Equal(event.Validator.String(), "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun", "validator address must be correct")
+	}
+}
+
+func (suite *KeeperTestSuite) TestGetMatchingEventsWithoutDelegates() {
+	suite.SetupTest()
+	criteria := types.NewEventCriteria([]types.ABCIEvent{
+		{
+			Type: "message",
+			Attributes: map[string][]byte{
+				"module": []byte("staking"),
+			},
+		},
+		{
+			Type:       "delegate",
+			Attributes: map[string][]byte{},
+		},
+		{
+			Type:       "create_validator",
+			Attributes: map[string][]byte{},
+		},
+	})
+	events, err := suite.app.RewardKeeper.GetMatchingEvents(suite.ctx, criteria)
+	suite.Assert().NoError(err, "should throw no error when handling no events")
+	suite.Assert().Equal(0, len(events), "should have no events when no delegates are made")
 }

@@ -209,6 +209,7 @@ func (k Keeper) IterateABCIEvents(ctx sdk.Context, criteria *types.EventCriteria
 	return nil
 }
 
+// TODO This is currently written for only the delegate logic. We will want to refactor to accommodate other events
 func (k Keeper) GetMatchingEvents(ctx sdk.Context, eventCriteria *types.EventCriteria) ([]types.EvaluationResult, error) {
 	result := ([]types.EvaluationResult)(nil)
 
