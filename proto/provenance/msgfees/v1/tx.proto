@@ -11,21 +11,27 @@ option java_multiple_files = true;
 
 // Msg defines the msgfees Msg service.
 service Msg {
-  // AssessCustomMsgFee .
+  // AssessCustomMsgFee endpoint executes the additional fee charges.
+  // Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient
+  // for executing contracts
   rpc AssessCustomMsgFee(MsgAssessCustomMsgFeeRequest) returns (MsgAssessCustomMsgFeeResponse);
 }
 
-// MsgBindNameRequest defines an sdk.Msg type
+// MsgAssessCustomMsgFeeRequest defines an sdk.Msg type
 message MsgAssessCustomMsgFeeRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
-  string                   name      = 1;
-  cosmos.base.v1beta1.Coin amount    = 2 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"amount\""];
-  string                   recipient = 3;
-  string                   from      = 4;
+  string                   name   = 1; // optional short name for custom msg fee
+  cosmos.base.v1beta1.Coin amount = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"amount\""
+  ];                    // amount of additional fee that must be paid
+  string recipient = 3; // optional recipient address, the amount is split 50/50 between recipient and fee module. If
+                        // empty, whole amount goes to fee module
+  string from = 4;      // the signer of the msg
 }
 
-// MsgBindNameResponse defines the Msg/BindName response type.
+// MsgAssessCustomMsgFeeResponse defines the Msg/AssessCustomMsgFeee response type.
 message MsgAssessCustomMsgFeeResponse {}

@@ -5145,6 +5145,7 @@ EventMsgFee final event property for msg fee on type
 | `msg_type` | [string](#string) |  |  |
 | `count` | [string](#string) |  |  |
 | `total` | [string](#string) |  |  |
+| `recipient` | [string](#string) |  |  |
 
 
 
@@ -5440,15 +5441,15 @@ Query defines the gRPC querier service for marker module.
 <a name="provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest"></a>
 
 ### MsgAssessCustomMsgFeeRequest
-MsgBindNameRequest defines an sdk.Msg type
+MsgAssessCustomMsgFeeRequest defines an sdk.Msg type
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `name` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `recipient` | [string](#string) |  |  |
-| `from` | [string](#string) |  |  |
+| `name` | [string](#string) |  | optional short name for custom msg fee |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | amount of additional fee that must be paid |
+| `recipient` | [string](#string) |  | optional recipient address, the amount is split 50/50 between recipient and fee module. If empty, whole amount goes to fee module |
+| `from` | [string](#string) |  | the signer of the msg |
 
 
 
@@ -5458,7 +5459,7 @@ MsgBindNameRequest defines an sdk.Msg type
 <a name="provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse"></a>
 
 ### MsgAssessCustomMsgFeeResponse
-MsgBindNameResponse defines the Msg/BindName response type.
+MsgAssessCustomMsgFeeResponse defines the Msg/AssessCustomMsgFeee response type.
 
 
 
@@ -5478,7 +5479,7 @@ Msg defines the msgfees Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `AssessCustomMsgFee` | [MsgAssessCustomMsgFeeRequest](#provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest) | [MsgAssessCustomMsgFeeResponse](#provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse) | AssessCustomMsgFee . | |
+| `AssessCustomMsgFee` | [MsgAssessCustomMsgFeeRequest](#provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest) | [MsgAssessCustomMsgFeeResponse](#provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse) | AssessCustomMsgFee endpoint executes the additional fee charges. Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient for executing contracts | |
 
  <!-- end services -->
 

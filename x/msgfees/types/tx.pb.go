@@ -29,7 +29,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgBindNameRequest defines an sdk.Msg type
+// MsgAssessCustomMsgFeeRequest defines an sdk.Msg type
 type MsgAssessCustomMsgFeeRequest struct {
 	Name      string     `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Amount    types.Coin `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount" yaml:"amount"`
@@ -69,7 +69,7 @@ func (m *MsgAssessCustomMsgFeeRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAssessCustomMsgFeeRequest proto.InternalMessageInfo
 
-// MsgBindNameResponse defines the Msg/BindName response type.
+// MsgAssessCustomMsgFeeResponse defines the Msg/AssessCustomMsgFeee response type.
 type MsgAssessCustomMsgFeeResponse struct {
 }
 
@@ -152,7 +152,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// AssessCustomMsgFee .
+	// AssessCustomMsgFee endpoint executes the additional fee charges.
+	// Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient for executing contracts
 	AssessCustomMsgFee(ctx context.Context, in *MsgAssessCustomMsgFeeRequest, opts ...grpc.CallOption) (*MsgAssessCustomMsgFeeResponse, error)
 }
 
@@ -175,7 +176,8 @@ func (c *msgClient) AssessCustomMsgFee(ctx context.Context, in *MsgAssessCustomM
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// AssessCustomMsgFee .
+	// AssessCustomMsgFee endpoint executes the additional fee charges.
+	// Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient for executing contracts
 	AssessCustomMsgFee(context.Context, *MsgAssessCustomMsgFeeRequest) (*MsgAssessCustomMsgFeeResponse, error)
 }
 

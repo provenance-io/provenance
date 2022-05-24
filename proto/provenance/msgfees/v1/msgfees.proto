@@ -33,9 +33,10 @@ message MsgFee {
 
 // EventMsgFee final event property for msg fee on type
 message EventMsgFee {
-  string msg_type = 1;
-  string count    = 2;
-  string total    = 3;
+  string msg_type  = 1;
+  string count     = 2;
+  string total     = 3;
+  string recipient = 4;
 }
 
 // EventMsgFees event emitted with summary of msg fees
