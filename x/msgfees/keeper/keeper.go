@@ -7,6 +7,7 @@ import (
 	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
@@ -188,4 +189,17 @@ func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Co
 	}
 
 	return nil
+}
+
+// ConvertDenomToHash converts coin to nhash coin using conversion rate.  Currently, usd is only supported with conversion rate coming from params
+func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, error) {
+	if coin.Denom == "usd" {
+		hashAmount := coin.Amount.Int64() / int64(k.GetUsdConversionRate(ctx))
+		nhashAmount := sdk.NewInt(1_000_000_000).Mul(sdk.NewInt(hashAmount))
+		msgFeeCoin := sdk.NewCoin("nhash", nhashAmount)
+		return msgFeeCoin, nil
+	} else if coin.Denom == "nhash" {
+		return coin, nil
+	}
+	return sdk.Coin{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "denom not supported for conversion %s", coin.Denom)
 }

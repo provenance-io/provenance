@@ -269,20 +269,16 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 			if !ok {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "unable to convert msg to MsgAssessCustomMsgFeeRequest")
 			}
-			msgFeeCoin := assessFee.Amount
-			if msgFeeCoin.Denom == "usd" {
-				nhashConversion := mbfk.GetUsdConversionRate(ctx) * uint64(1_000_000_000)
-				msgFeeCoin = sdk.NewCoin("nhash", sdk.NewIntFromUint64(nhashConversion))
-			} // else fee is in nhash already, this is checked in validate basic
+			msgFeeCoin, err := mbfk.ConvertDenomToHash(ctx, assessFee.Amount)
+			if err != nil {
+				return nil, err
+			}
 			if msgFeeCoin.IsPositive() {
 				if len(assessFee.Recipient) != 0 {
-					addFeeToPay := msgFeeCoin.Amount.Int64()
-					addFeeToPay /= 2
-					coin := sdk.NewCoin(msgFeeCoin.Denom, sdk.NewInt(addFeeToPay))
-					msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = coin
-					addFees := msgFeeCoin.Sub(coin)
-					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(addFees)
-					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.AdditionalModuleFees.Add(addFees).Add(coin)
+					recipientCoin, feePayoutCoin := assessFee.SplitAmount()
+					msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = recipientCoin
+					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(feePayoutCoin)
+					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.AdditionalModuleFees.Add(feePayoutCoin).Add(recipientCoin)
 				} else {
 					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFeeCoin)
 					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.AdditionalModuleFees

@@ -79,3 +79,12 @@ func (msg MsgAssessCustomMsgFeeRequest) Route() string {
 func (msg MsgAssessCustomMsgFeeRequest) Type() string {
 	return TypeAssessCustomMsgFee
 }
+
+// SplitAmount returns split of Amount to be used for coin recipient and one for payout of fee, NOTE: this should only be used if a Recipient address exists
+func (msg MsgAssessCustomMsgFeeRequest) SplitAmount() (recipientCoin sdk.Coin, feePayoutCoin sdk.Coin) {
+	addFeeToPay := msg.Amount.Amount.Uint64()
+	addFeeToPay /= 2
+	recipientCoin = sdk.NewCoin(msg.Amount.Denom, sdk.NewIntFromUint64(addFeeToPay))
+	feePayoutCoin = msg.Amount.Sub(recipientCoin)
+	return recipientCoin, feePayoutCoin
+}

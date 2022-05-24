@@ -141,11 +141,11 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 			if err != nil {
 				return nil, err
 			}
+			isAssessMsgFee := msgTypeURL == sdk.MsgTypeURL(&msgfeestypes.MsgAssessCustomMsgFeeRequest{})
+
 			if fee != nil && fee.AdditionalFee.IsPositive() {
 				ctx.Logger().Debug(fmt.Sprintf("Tx Msg %v has an additional fee of %v ", msgTypeURL, fee.AdditionalFee))
-
-				// TODO: extract to method... for sharing
-				if !feeGasMeter.IsSimulate() {
+				if !feeGasMeter.IsSimulate() && !isAssessMsgFee {
 					err = antewrapper.EnsureSufficientFees(runtimeGasForMsg(ctx), feeTx.GetFee(), feeGasMeter.FeeConsumed().Add(fee.AdditionalFee),
 						msr.msgFeesKeeper.GetFloorGasPrice(ctx))
 					if err != nil {
@@ -155,22 +155,17 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 
 				feeGasMeter.ConsumeFee(fee.AdditionalFee, msgTypeURL, "")
 			}
-
-			// TODO: make sure we ensure funds exists.
-			if msgTypeURL == sdk.MsgTypeURL(&msgfeestypes.MsgAssessCustomMsgFeeRequest{}) {
+			if isAssessMsgFee {
 				var assessCustomFee *msgfeestypes.MsgAssessCustomMsgFeeRequest
 				assessCustomFee, ok = req.(*msgfeestypes.MsgAssessCustomMsgFeeRequest)
 				if !ok {
 					panic("could not convert request msg to MsgAssessCustomMsgFeeRequest")
 				}
 				ctx.Logger().Debug(fmt.Sprintf("NOTICE: Tx Msg is an assess custom msg fee of %v ", assessCustomFee))
-				msgFeeCoin := assessCustomFee.Amount
-				if msgFeeCoin.Denom == "usd" {
-					nhashConversion := msr.msgFeesKeeper.GetUsdConversionRate(ctx) * uint64(1_000_000_000)
-					msgFeeCoin = sdk.NewCoin("nhash", sdk.NewIntFromUint64(nhashConversion))
+				msgFeeCoin, err := msr.msgFeesKeeper.ConvertDenomToHash(ctx, assessCustomFee.Amount)
+				if err != nil {
+					return nil, err
 				}
-
-				// TODO: extract to method... for sharing
 				if !feeGasMeter.IsSimulate() {
 					err = antewrapper.EnsureSufficientFees(runtimeGasForMsg(ctx), feeTx.GetFee(), feeGasMeter.FeeConsumed().Add(msgFeeCoin),
 						msr.msgFeesKeeper.GetFloorGasPrice(ctx))
@@ -178,20 +173,11 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 						return nil, err
 					}
 				}
-				// TODO: extract into it's own method with unit tests
-				if assessCustomFee.Amount.IsPositive() {
-					msgFeeCoin := assessCustomFee.Amount
-					if msgFeeCoin.Denom == "usd" {
-						nhashConversion := msr.msgFeesKeeper.GetUsdConversionRate(ctx) * uint64(1_000_000_000)
-						msgFeeCoin = sdk.NewCoin("nhash", sdk.NewIntFromUint64(nhashConversion))
-					} // else fee is in nhash already, this is checked in validate basic
+				if msgFeeCoin.IsPositive() {
 					if len(assessCustomFee.Recipient) != 0 {
-						addFeeToPay := msgFeeCoin.Amount.Uint64()
-						addFeeToPay /= 2
-						recipientCoins := sdk.NewCoin(msgFeeCoin.Denom, sdk.NewIntFromUint64(addFeeToPay))
-						feeGasMeter.ConsumeFee(recipientCoins, msgTypeURL, assessCustomFee.Recipient)
-						feePayerCoins := msgFeeCoin.Sub(recipientCoins)
-						feeGasMeter.ConsumeFee(feePayerCoins, msgTypeURL, "")
+						recipientCoin, feePayoutCoin := assessCustomFee.SplitAmount()
+						feeGasMeter.ConsumeFee(recipientCoin, msgTypeURL, assessCustomFee.Recipient)
+						feeGasMeter.ConsumeFee(feePayoutCoin, msgTypeURL, "")
 					} else {
 						feeGasMeter.ConsumeFee(assessCustomFee.Amount, msgTypeURL, "")
 					}

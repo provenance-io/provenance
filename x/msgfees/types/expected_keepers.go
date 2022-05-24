@@ -29,6 +29,7 @@ type MsgFeesKeeper interface {
 	DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc authtypes.AccountI, remainingFees sdk.Coins, fees map[string]sdk.Coins) error
 	GetFloorGasPrice(ctx sdk.Context) sdk.Coin
 	GetUsdConversionRate(ctx sdk.Context) uint64
+	ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, error)
 }
 
 // FeegrantKeeper defines the expected feegrant keeper.
