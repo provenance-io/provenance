@@ -166,3 +166,71 @@ func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {
 		})
 	}
 }
+
+func (s *IntegrationTestSuite) TestUpdateUsdConversionRateProposal() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectErrMsg string
+		expectedCode uint32
+	}{
+		{"update usd conversion rate proposal - valid",
+			[]string{
+				"title",
+				"description",
+				"10",
+				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+			},
+			false,
+			"",
+			0,
+		},
+		{"update usd conversion rate proposal - invalid - rate param error",
+			[]string{
+				"title",
+				"description",
+				"invalid-rate",
+				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+			},
+			true,
+			"unable to parse rate value: invalid-rate",
+			0,
+		},
+		{"update usd conversion rate proposal - invalid - deposit param",
+			[]string{
+				"title",
+				"description",
+				"10",
+				"invalid-deposit",
+			},
+			true,
+			"invalid decimal coin expression: invalid-deposit",
+			0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			args := []string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			}
+			tc.args = append(tc.args, args...)
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, msgfeescli.GetUpdateUsdConversionRateProposal(), tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Assert().Equal(tc.expectErrMsg, err.Error())
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
+			}
+		})
+	}
+}

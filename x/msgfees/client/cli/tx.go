@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -9,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
 
@@ -35,23 +35,27 @@ func NewTxCmd() *cobra.Command {
 
 	txCmd.AddCommand(
 		GetCmdMsgFeesProposal(),
+		GetUpdateUsdConversionRateProposal(),
 	)
 
 	return txCmd
 }
 
+// TODO: fix examples
+
 func GetCmdMsgFeesProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "proposal [add|update|remove] [title] [description] [deposit]",
-		Args:  cobra.ExactArgs(4),
-		Short: "Submit a msg based fee proposal along with an initial deposit",
+		Use:     "proposal [add|update|remove] [title] [description] [deposit]",
+		Args:    cobra.ExactArgs(4),
+		Aliases: []string{"p"},
+		Short:   "Submit a msg based fee proposal along with an initial deposit",
 		Long: strings.TrimSpace(`Submit a msg fees proposal along with an initial deposit.
 For add, update, and removal of msg fees amount and min fee and/or rate fee must be set.
 `),
-		Example: fmt.Sprintf(`$ %[1]s tx msgfees add "adding" "adding MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612nhash
-$ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash 
-$ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest
-`, version.AppName),
+		// 		Example: fmt.Sprintf(`$ %[1]s tx msgfees add "adding" "adding MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612nhash
+		// $ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash
+		// $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest
+		// `, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -132,5 +136,45 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(FlagMsgType, "", "proto type url for msg type")
 	cmd.Flags().String(FlagMinFee, "", "additional fee for msg based fee")
+	return cmd
+}
+
+func GetUpdateUsdConversionRateProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "usd-conversion-proposal [title] [description] [rate] [deposit]",
+		Aliases: []string{"ucp", "u-c-p"},
+		Args:    cobra.ExactArgs(4),
+		Short:   "Submit a update usd conversion rate proposal along with an initial deposit",
+		Long: strings.TrimSpace(`Submit a update usd conversion rate proposal along with an initial deposit.
+The conversion rate is the cost for 1 unit of hash (1,000,000,000nhash).  Example: $1.023 would be represented as 1023 and $0.023 as 23.
+`),
+		// Example: fmt.Sprintf(`$ %[1]s tx msgfees add "adding" "adding MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612nhash
+		// $ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash
+		// $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest
+		// `, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			title, description, rateArg, depositArg := args[0], args[1], args[2], args[3]
+			rate, err := strconv.ParseUint(rateArg, 0, 64)
+			if err != nil {
+				return fmt.Errorf("unable to parse rate value: %s", rateArg)
+			}
+			proposal := types.NewUpdateUsdConversionRateProposal(title, description, rate)
+			deposit, err := sdk.ParseCoinsNormalized(depositArg)
+			if err != nil {
+				return err
+			}
+			callerAddr := clientCtx.GetFromAddress()
+			msg, err := govtypes.NewMsgSubmitProposal(proposal, deposit, callerAddr)
+			if err != nil {
+				return fmt.Errorf("invalid governance proposal. Error: %q", err)
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
