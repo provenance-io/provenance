@@ -17,7 +17,7 @@ var DefaultFloorGasPrice = sdk.Coin{
 	Denom:  "nhash",
 }
 
-var DefaultUsdConversionRate = uint64(7)
+var DefaultUsdConversionRate = uint64(70)
 
 var (
 	// ParamStoreKeyFloorGasPrice if msg fees are paid in the same denom as base default gas is paid, then use this to differentiate between base price
