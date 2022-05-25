@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
 
@@ -41,8 +42,6 @@ func NewTxCmd() *cobra.Command {
 	return txCmd
 }
 
-// TODO: fix examples
-
 func GetCmdMsgFeesProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "proposal [add|update|remove] [title] [description] [deposit]",
@@ -52,10 +51,10 @@ func GetCmdMsgFeesProposal() *cobra.Command {
 		Long: strings.TrimSpace(`Submit a msg fees proposal along with an initial deposit.
 For add, update, and removal of msg fees amount and min fee and/or rate fee must be set.
 `),
-		// 		Example: fmt.Sprintf(`$ %[1]s tx msgfees add "adding" "adding MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612nhash
-		// $ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash
-		// $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest
-		// `, version.AppName),
+		Example: fmt.Sprintf(`$ %[1]s tx msgfees add "adding" "adding MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612nhash
+		$ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash
+		$ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest
+		`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -148,10 +147,9 @@ func GetUpdateUsdConversionRateProposal() *cobra.Command {
 		Long: strings.TrimSpace(`Submit a update usd conversion rate proposal along with an initial deposit.
 The conversion rate is the cost for 1 unit of hash (1,000,000,000nhash).  Example: $1.023 would be represented as 1023 and $0.023 as 23.
 `),
-		// Example: fmt.Sprintf(`$ %[1]s tx msgfees add "adding" "adding MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612nhash
-		// $ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash
-		// $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest
-		// `, version.AppName),
+		Example: fmt.Sprintf(`$ %[1]s tx msgfees usd-conversion-proposal "updating usd conversion" "updating usd conversion to $1.234"  1234 1000000000nhash
+		$ %[1]s tx msgfees ucp "updating usd conversion" "updating usd conversion to $1.234"  1234 1000000000nhash
+		`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

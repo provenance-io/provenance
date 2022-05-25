@@ -5314,7 +5314,7 @@ UpdateUsdConversionRateProposal defines a governance proposal to update the usd 
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
-| `usd_conversion_rate` | [uint64](#uint64) |  |  |
+| `usd_conversion_rate` | [uint64](#uint64) |  | usd_conversion_rate is cost of 1hash in usd ($1.234 = 1234) |
 
 
 

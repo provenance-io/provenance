@@ -222,8 +222,9 @@ func (m *RemoveMsgFeeProposal) GetMsgTypeUrl() string {
 
 // UpdateUsdConversionRateProposal defines a governance proposal to update the usd conversion rate param
 type UpdateUsdConversionRateProposal struct {
-	Title             string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description       string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	// usd_conversion_rate is cost of 1hash in usd ($1.234 = 1234)
 	UsdConversionRate uint64 `protobuf:"varint,3,opt,name=usd_conversion_rate,json=usdConversionRate,proto3" json:"usd_conversion_rate,omitempty"`
 }
 

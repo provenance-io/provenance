@@ -62,6 +62,6 @@ message UpdateUsdConversionRateProposal {
 
   string title       = 1;
   string description = 2;
-
+  // usd_conversion_rate is cost of 1hash in usd ($1.234 = 1234)
   uint64 usd_conversion_rate = 3;
 }
