@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -101,7 +102,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFees() {
 	expectedTotalFees := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*s.minGasPrice.Amount.Int64())))
 	s.Assert().Equal(expectedTotalFees.String(), response.TotalFees.String())
 
-	// // do send with an additional fee
+	// do send with an additional fee
 	sendAddFee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))
 	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee("/cosmos.bank.v1beta1.MsgSend", sendAddFee)))
 	response, err = s.queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
@@ -160,6 +161,31 @@ func (s *QueryServerTestSuite) TestCalculateTxFeesAuthz() {
 	s.Assert().NoError(err)
 	s.Assert().NotNil(response)
 	s.Assert().True(response.AdditionalFees.Empty())
+}
+
+func (s *QueryServerTestSuite) TestCalculateTxFeesWithAssessCustomFees() {
+	additionalAccessedFeesCoin := sdk.NewInt64Coin("nhash", 100)
+	assessCustomFeeMsg := types.NewMsgAssessCustomMsgFeeRequest("name", additionalAccessedFeesCoin, s.user2, s.user1)
+	simulateReq := s.createTxFeesRequest(s.pubkey1, s.privkey1, s.acct1, &assessCustomFeeMsg)
+
+	// do assessCustomFee
+	response, err := s.queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
+	s.Assert().NoError(err)
+	s.Assert().NotNil(response)
+	s.Assert().Equal(sdk.NewCoins(additionalAccessedFeesCoin), response.AdditionalFees)
+	expectedGasFees := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*s.minGasPrice.Amount.Int64())))
+	s.Assert().Equal(fmt.Sprintf("%s,%s", additionalAccessedFeesCoin.String(), expectedGasFees.String()), response.TotalFees.String())
+
+	// do assessCustomFee where custom fee has a message fee associated with it
+	additionalAccessedFeesCoin = sdk.NewInt64Coin("nhash", 100)
+	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee(sdk.MsgTypeURL(&assessCustomFeeMsg), additionalAccessedFeesCoin)))
+	response, err = s.queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
+	s.Assert().NoError(err)
+	s.Assert().NotNil(response)
+	additionalAccessedFeesCoin = sdk.NewInt64Coin("nhash", 200)
+	s.Assert().Equal(sdk.NewCoins(additionalAccessedFeesCoin), response.AdditionalFees)
+	expectedGasFees = sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*s.minGasPrice.Amount.Int64())))
+	s.Assert().Equal(fmt.Sprintf("%s,%s", additionalAccessedFeesCoin.String(), expectedGasFees.String()), response.TotalFees.String())
 }
 
 func (s *QueryServerTestSuite) createTxFeesRequest(pubKey cryptotypes.PubKey, privKey cryptotypes.PrivKey, acct authtypes.AccountI, msgs ...sdk.Msg) types.CalculateTxFeesRequest {
