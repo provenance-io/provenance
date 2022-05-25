@@ -347,8 +347,8 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluatePasses() {
 	action.MaximumActions = 2
 	action.MinimumDelegationAmount = sdkTypes.NewDec(2).BigInt().Uint64()
 	action.MaximumDelegationAmount = sdkTypes.NewDec(10).BigInt().Uint64()
-	action.MinimumDelegationPercentage = .5
-	action.MaximumDelegationPercentage = 1.0
+	action.MinimumActiveStakePercentage = .5
+	action.MaximumActiveStakePercentage = 1.0
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -373,8 +373,8 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActionsN
 	action.MaximumActions = 2
 	action.MinimumDelegationAmount = sdkTypes.NewDec(2).BigInt().Uint64()
 	action.MaximumDelegationAmount = sdkTypes.NewDec(10).BigInt().Uint64()
-	action.MinimumDelegationPercentage = .5
-	action.MaximumDelegationPercentage = 1.0
+	action.MinimumActiveStakePercentage = .5
+	action.MaximumActiveStakePercentage = 1.0
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -398,8 +398,8 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumActionsN
 	action.MaximumActions = 2
 	action.MinimumDelegationAmount = sdkTypes.NewDec(2).BigInt().Uint64()
 	action.MaximumDelegationAmount = sdkTypes.NewDec(10).BigInt().Uint64()
-	action.MinimumDelegationPercentage = .5
-	action.MaximumDelegationPercentage = 1.0
+	action.MinimumActiveStakePercentage = .5
+	action.MaximumActiveStakePercentage = 1.0
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -424,8 +424,8 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegati
 	action.MaximumActions = 2
 	action.MinimumDelegationAmount = sdkTypes.NewDec(1).BigInt().Uint64()
 	action.MaximumDelegationAmount = sdkTypes.NewDec(1).BigInt().Uint64()
-	action.MinimumDelegationPercentage = .5
-	action.MaximumDelegationPercentage = 1.0
+	action.MinimumActiveStakePercentage = .5
+	action.MaximumActiveStakePercentage = 1.0
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -450,8 +450,8 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumDelegati
 	action.MaximumActions = 2
 	action.MinimumDelegationAmount = sdkTypes.NewDec(5).BigInt().Uint64()
 	action.MaximumDelegationAmount = sdkTypes.NewDec(10).BigInt().Uint64()
-	action.MinimumDelegationPercentage = .5
-	action.MaximumDelegationPercentage = 1.0
+	action.MinimumActiveStakePercentage = .5
+	action.MaximumActiveStakePercentage = 1.0
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -468,7 +468,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumDelegati
 	suite.Assert().False(passed, "test should fail when minimum delegation amount not met")
 }
 
-func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumDelegationPercentageNotMet() {
+func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActiveStakePercentageNotMet() {
 	suite.SetupTest()
 
 	action := types.NewActionDelegate()
@@ -476,8 +476,8 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumDelegati
 	action.MaximumActions = 2
 	action.MinimumDelegationAmount = sdkTypes.NewDec(1).BigInt().Uint64()
 	action.MaximumDelegationAmount = sdkTypes.NewDec(10).BigInt().Uint64()
-	action.MinimumDelegationPercentage = 1.1
-	action.MaximumDelegationPercentage = 1.0
+	action.MinimumActiveStakePercentage = 1.1
+	action.MaximumActiveStakePercentage = 1.0
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -502,8 +502,8 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegati
 	action.MaximumActions = 2
 	action.MinimumDelegationAmount = sdkTypes.NewDec(1).BigInt().Uint64()
 	action.MaximumDelegationAmount = sdkTypes.NewDec(10).BigInt().Uint64()
-	action.MinimumDelegationPercentage = 0.0
-	action.MaximumDelegationPercentage = 0.5
+	action.MinimumActiveStakePercentage = 0.0
+	action.MaximumActiveStakePercentage = 0.5
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -561,12 +561,12 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction()
 	rewardProgram.QualifyingActions = append(rewardProgram.QualifyingActions, types.QualifyingAction{
 		Type: &types.QualifyingAction_Delegate{
 			Delegate: &types.ActionDelegate{
-				MinimumActions:              0,
-				MaximumActions:              1,
-				MinimumDelegationAmount:     sdkTypes.NewDec(0).BigInt().Uint64(),
-				MaximumDelegationAmount:     sdkTypes.NewDec(10).BigInt().Uint64(),
-				MinimumDelegationPercentage: 0,
-				MaximumDelegationPercentage: 1,
+				MinimumActions:               0,
+				MaximumActions:               1,
+				MinimumDelegationAmount:      sdkTypes.NewDec(0).BigInt().Uint64(),
+				MaximumDelegationAmount:      sdkTypes.NewDec(10).BigInt().Uint64(),
+				MinimumActiveStakePercentage: 0,
+				MaximumActiveStakePercentage: 1,
 			},
 		},
 	})
@@ -596,24 +596,24 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction()
 		types.QualifyingAction{
 			Type: &types.QualifyingAction_Delegate{
 				Delegate: &types.ActionDelegate{
-					MinimumActions:              0,
-					MaximumActions:              1,
-					MinimumDelegationAmount:     sdkTypes.NewDec(0).BigInt().Uint64(),
-					MaximumDelegationAmount:     sdkTypes.NewDec(10).BigInt().Uint64(),
-					MinimumDelegationPercentage: 0,
-					MaximumDelegationPercentage: 1,
+					MinimumActions:               0,
+					MaximumActions:               1,
+					MinimumDelegationAmount:      sdkTypes.NewDec(0).BigInt().Uint64(),
+					MaximumDelegationAmount:      sdkTypes.NewDec(10).BigInt().Uint64(),
+					MinimumActiveStakePercentage: 0,
+					MaximumActiveStakePercentage: 1,
 				},
 			},
 		},
 		types.QualifyingAction{
 			Type: &types.QualifyingAction_Delegate{
 				Delegate: &types.ActionDelegate{
-					MinimumActions:              0,
-					MaximumActions:              1,
-					MinimumDelegationAmount:     sdkTypes.NewDec(0).BigInt().Uint64(),
-					MaximumDelegationAmount:     sdkTypes.NewDec(10).BigInt().Uint64(),
-					MinimumDelegationPercentage: 0,
-					MaximumDelegationPercentage: 1,
+					MinimumActions:               0,
+					MaximumActions:               1,
+					MinimumDelegationAmount:      sdkTypes.NewDec(0).BigInt().Uint64(),
+					MaximumDelegationAmount:      sdkTypes.NewDec(10).BigInt().Uint64(),
+					MinimumActiveStakePercentage: 0,
+					MaximumActiveStakePercentage: 1,
 				},
 			},
 		})
@@ -665,12 +665,12 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoMatchingQualifyin
 	rewardProgram.QualifyingActions = append(rewardProgram.QualifyingActions, types.QualifyingAction{
 		Type: &types.QualifyingAction_Delegate{
 			Delegate: &types.ActionDelegate{
-				MinimumActions:              1000,
-				MaximumActions:              1000,
-				MinimumDelegationAmount:     sdkTypes.NewDec(0).BigInt().Uint64(),
-				MaximumDelegationAmount:     sdkTypes.NewDec(10).BigInt().Uint64(),
-				MinimumDelegationPercentage: 0,
-				MaximumDelegationPercentage: 1,
+				MinimumActions:               1000,
+				MaximumActions:               1000,
+				MinimumDelegationAmount:      sdkTypes.NewDec(0).BigInt().Uint64(),
+				MaximumDelegationAmount:      sdkTypes.NewDec(10).BigInt().Uint64(),
+				MinimumActiveStakePercentage: 0,
+				MaximumActiveStakePercentage: 1,
 			},
 		},
 	})
