@@ -378,7 +378,7 @@ func (ad *ActionDelegate) GetEventCriteria() *EventCriteria {
 	})
 }
 
-func getSharesFromValidator(ctx sdk.Context, provider KeeperProvider, validator sdk.ValAddress, delegator sdk.AccAddress) sdk.Dec {
+func (ad *ActionDelegate) getSharesFromValidator(ctx sdk.Context, provider KeeperProvider, validator sdk.ValAddress, delegator sdk.AccAddress) sdk.Dec {
 	delegations := provider.GetStakingKeeper().GetValidatorDelegations(ctx, validator)
 	delegatorShares := sdk.NewDec(0)
 	for _, delegation := range delegations {
@@ -392,7 +392,7 @@ func getSharesFromValidator(ctx sdk.Context, provider KeeperProvider, validator 
 
 // The percentile is dictated by its placement in the BondedValidator list
 // If there are 5 validators and the first validator matches then that validator is in the top 20%
-func getValidatorRankPercentile(ctx sdk.Context, provider KeeperProvider, validator sdk.ValAddress) float64 {
+func (ad *ActionDelegate) getValidatorRankPercentile(ctx sdk.Context, provider KeeperProvider, validator sdk.ValAddress) float64 {
 	validators := provider.GetStakingKeeper().GetBondedValidatorsByPower(ctx)
 	numValidators := len(validators)
 	rank := numValidators
@@ -412,8 +412,8 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	validator := event.Validator
 	delegator := event.Delegator
 
-	delegatorShares := getSharesFromValidator(ctx, provider, validator, delegator)
-	percentile := getValidatorRankPercentile(ctx, provider, validator)
+	delegatorShares := ad.getSharesFromValidator(ctx, provider, validator, delegator)
+	percentile := ad.getValidatorRankPercentile(ctx, provider, validator)
 
 	hasValidActionCount := state.ActionCounter >= ad.GetMinimumActions() && state.ActionCounter <= ad.GetMaximumActions()
 	hasValidDelegationAmount := delegatorShares.BigInt().Uint64() >= ad.GetMinimumDelegationAmount() && delegatorShares.BigInt().Uint64() <= ad.GetMaximumDelegationAmount()
