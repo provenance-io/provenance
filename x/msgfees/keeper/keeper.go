@@ -141,20 +141,9 @@ func (k Keeper) IterateMsgFees(ctx sdk.Context, handle func(msgFees types.MsgFee
 	return nil
 }
 
-// DeductFees deducts fees from the given account, the only reason it exists is that the
-// cosmos method does not take in the custom fee collector which is a feature desired from msg fees.
-func (k Keeper) DeductFees(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc cosmosauthtypes.AccountI, fees sdk.Coins) error {
-	if !fees.IsValid() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", fees)
-	}
-
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.FeeCollectorName, fees)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
-	}
-	return nil
-}
-
+// DeductFeesDistributions deducts fees from the given account.  The fees map contains a key of bech32 addresses to distribute funds to.
+// If the key in the map is an empty string, those will go to the fee collector.  After all the accounts in fees map are paid out,
+// the remainder of remainingFees will be swept to the fee collector account.
 func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc cosmosauthtypes.AccountI, remainingFees sdk.Coins, fees map[string]sdk.Coins) error {
 	sentCoins := sdk.NewCoins()
 	for key, coins := range fees {

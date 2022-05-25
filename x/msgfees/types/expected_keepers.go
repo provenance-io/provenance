@@ -25,7 +25,6 @@ type AccountKeeper interface {
 type MsgFeesKeeper interface {
 	GetMsgFee(ctx sdk.Context, msgType string) (*MsgFee, error)
 	GetFeeCollectorName() string
-	DeductFees(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins) error
 	DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc authtypes.AccountI, remainingFees sdk.Coins, fees map[string]sdk.Coins) error
 	GetFloorGasPrice(ctx sdk.Context) sdk.Coin
 	GetUsdConversionRate(ctx sdk.Context) uint64
