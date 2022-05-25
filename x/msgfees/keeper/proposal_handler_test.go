@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -93,13 +94,22 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 			msgfeestypes.NewRemoveMsgFeeProposal("title remove", "description", ""),
 			msgfeestypes.ErrEmptyMsgType,
 		},
+		{
+			"update conversion rate - invalid - validate basic fail",
+			msgfeestypes.NewUpdateUsdConversionRateProposal("title update conversion", "", 10),
+			errors.New("proposal description cannot be blank: invalid proposal content"),
+		},
+		{
+			"update conversion rate - valid",
+			msgfeestypes.NewUpdateUsdConversionRateProposal("title update conversion", "description", 1),
+			nil,
+		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 
 		s.T().Run(tc.name, func(t *testing.T) {
-
 			var err error
 			switch c := tc.prop.(type) {
 			case *msgfeestypes.AddMsgFeeProposal:
@@ -108,6 +118,8 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 				err = msgfeeskeeper.HandleUpdateMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
 			case *msgfeestypes.RemoveMsgFeeProposal:
 				err = msgfeeskeeper.HandleRemoveMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
+			case *msgfeestypes.UpdateUsdConversionRateProposal:
+				err = msgfeeskeeper.HandleUpdateUsdConversionRateProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
 			default:
 				panic("invalid proposal type")
 			}
