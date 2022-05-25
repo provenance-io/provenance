@@ -541,8 +541,142 @@ func (suite *KeeperTestSuite) TestGetRewardActionHandlesActionDelegate() {
 }
 
 // Test DetectQualifyingActions
-func (suite *KeeperTestSuite) TestDetectQualifyingActions() {
+func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction() {
 	suite.SetupTest()
+	setupEventHistoryWithDelegates(suite)
+	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdkTypes.NewInt64Coin("hotdog", 10000),
+		sdkTypes.NewInt64Coin("hotdog", 10000),
+		time.Now(),
+		5,
+		5,
+		types.NewEligibilityCriteria("reward-action", &types.ActionDelegate{}),
+	)
+	rewardProgram.QualifyingActions = append(rewardProgram.QualifyingActions, types.QualifyingAction{
+		Type: &types.QualifyingAction_Delegate{
+			Delegate: &types.ActionDelegate{
+				MinimumActions:              0,
+				MaximumActions:              1,
+				MinimumDelegationAmount:     sdkTypes.NewDec(0).BigInt().Uint64(),
+				MaximumDelegationAmount:     sdkTypes.NewDec(10).BigInt().Uint64(),
+				MinimumDelegationPercentage: 0,
+				MaximumDelegationPercentage: 1,
+			},
+		},
+	})
+	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
+	suite.Assert().NoError(err, "must not error")
+	suite.Assert().Equal(2, len(qualifyingActions), "must find two qualifying actions")
+}
+
+func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction() {
+	suite.SetupTest()
+	setupEventHistoryWithDelegates(suite)
+	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdkTypes.NewInt64Coin("hotdog", 10000),
+		sdkTypes.NewInt64Coin("hotdog", 10000),
+		time.Now(),
+		5,
+		5,
+		types.NewEligibilityCriteria("reward-action", &types.ActionDelegate{}),
+	)
+	rewardProgram.QualifyingActions = append(rewardProgram.QualifyingActions,
+		types.QualifyingAction{
+			Type: &types.QualifyingAction_Delegate{
+				Delegate: &types.ActionDelegate{
+					MinimumActions:              0,
+					MaximumActions:              1,
+					MinimumDelegationAmount:     sdkTypes.NewDec(0).BigInt().Uint64(),
+					MaximumDelegationAmount:     sdkTypes.NewDec(10).BigInt().Uint64(),
+					MinimumDelegationPercentage: 0,
+					MaximumDelegationPercentage: 1,
+				},
+			},
+		},
+		types.QualifyingAction{
+			Type: &types.QualifyingAction_Delegate{
+				Delegate: &types.ActionDelegate{
+					MinimumActions:              0,
+					MaximumActions:              1,
+					MinimumDelegationAmount:     sdkTypes.NewDec(0).BigInt().Uint64(),
+					MaximumDelegationAmount:     sdkTypes.NewDec(10).BigInt().Uint64(),
+					MinimumDelegationPercentage: 0,
+					MaximumDelegationPercentage: 1,
+				},
+			},
+		})
+	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
+	suite.Assert().NoError(err, "must not error")
+	suite.Assert().Equal(4, len(qualifyingActions), "must find two qualifying actions")
+}
+
+func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoQualifyingAction() {
+	suite.SetupTest()
+	setupEventHistoryWithDelegates(suite)
+	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdkTypes.NewInt64Coin("hotdog", 10000),
+		sdkTypes.NewInt64Coin("hotdog", 10000),
+		time.Now(),
+		5,
+		5,
+		types.NewEligibilityCriteria("reward-action", &types.ActionDelegate{}),
+	)
+
+	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
+	suite.Assert().NoError(err, "must not error")
+	suite.Assert().Equal(0, len(qualifyingActions), "must find two qualifying actions")
+}
+
+func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoMatchingQualifyingAction() {
+	suite.SetupTest()
+	setupEventHistoryWithDelegates(suite)
+	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdkTypes.NewInt64Coin("hotdog", 10000),
+		sdkTypes.NewInt64Coin("hotdog", 10000),
+		time.Now(),
+		5,
+		5,
+		types.NewEligibilityCriteria("reward-action", &types.ActionDelegate{}),
+	)
+	rewardProgram.QualifyingActions = append(rewardProgram.QualifyingActions, types.QualifyingAction{
+		Type: &types.QualifyingAction_Delegate{
+			Delegate: &types.ActionDelegate{
+				MinimumActions:              1000,
+				MaximumActions:              1000,
+				MinimumDelegationAmount:     sdkTypes.NewDec(0).BigInt().Uint64(),
+				MaximumDelegationAmount:     sdkTypes.NewDec(10).BigInt().Uint64(),
+				MinimumDelegationPercentage: 0,
+				MaximumDelegationPercentage: 1,
+			},
+		},
+	})
+	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
+	suite.Assert().NoError(err, "must not error")
+	suite.Assert().Equal(0, len(qualifyingActions), "must find two qualifying actions")
 }
 
 // Test RewardShares

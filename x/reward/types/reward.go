@@ -10,7 +10,6 @@ import (
 	// "github.com/gogo/protobuf/proto"
 	"gopkg.in/yaml.v2"
 
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -63,7 +62,7 @@ type EventCriteria struct {
 // We are assuming this takes ownership of events
 func NewEventCriteria(events []ABCIEvent) *EventCriteria {
 	criteria := EventCriteria{}
-	if events == nil || len(events) <= 0 {
+	if len(events) == 0 {
 		return &criteria
 	}
 	criteria.Events = make(map[string]ABCIEvent)
@@ -384,8 +383,8 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	delegator := event.Delegator
 	delegations := provider.GetStakingKeeper().GetValidatorDelegations(ctx, validator)
 
-	validatorShares := types.NewDec(0)
-	delegatorShares := types.NewDec(0)
+	validatorShares := sdk.NewDec(0)
+	delegatorShares := sdk.NewDec(0)
 	for _, delegation := range delegations {
 		validatorShares = validatorShares.Add(delegation.GetShares())
 		if !delegator.Equals(delegation.GetDelegatorAddr()) {

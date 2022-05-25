@@ -277,3 +277,7 @@ func (k Keeper) GetDistributionKeeper() types.DistributionKeeper {
 func (k Keeper) GetStakingKeeper() types.StakingKeeper {
 	return k.stakingKeeper
 }
+
+func (k *Keeper) SetStakingKeeper(newKeeper types.StakingKeeper) {
+	k.stakingKeeper = newKeeper
+}
