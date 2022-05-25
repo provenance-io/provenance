@@ -378,27 +378,48 @@ func (ad *ActionDelegate) GetEventCriteria() *EventCriteria {
 	})
 }
 
-func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, state AccountState, event EvaluationResult) bool {
-	validator := event.Validator
-	delegator := event.Delegator
+func getSharesFromValidator(ctx sdk.Context, provider KeeperProvider, validator sdk.ValAddress, delegator sdk.AccAddress) sdk.Dec {
 	delegations := provider.GetStakingKeeper().GetValidatorDelegations(ctx, validator)
-
-	validatorShares := sdk.NewDec(0)
 	delegatorShares := sdk.NewDec(0)
 	for _, delegation := range delegations {
-		validatorShares = validatorShares.Add(delegation.GetShares())
 		if !delegator.Equals(delegation.GetDelegatorAddr()) {
 			continue
 		}
 		delegatorShares = delegatorShares.Add(delegation.GetShares())
 	}
+	return delegatorShares
+}
 
-	percentage := float64(validatorShares.BigInt().Uint64()) / float64(validatorShares.BigInt().Uint64())
+// The percentile is dictated by its placement in the BondedValidator list
+// If there are 5 validators and the first validator matches then that validator is in the top 20%
+func getValidatorRankPercentile(ctx sdk.Context, provider KeeperProvider, validator sdk.ValAddress) float64 {
+	validators := provider.GetStakingKeeper().GetBondedValidatorsByPower(ctx)
+	numValidators := len(validators)
+	rank := numValidators
+	for i := 0; i < numValidators; i++ {
+		v := validators[i]
+		validatorString := validator.String()
+		if v.OperatorAddress == validatorString {
+			rank = i + 1
+			break
+		}
+	}
+	percentile := float64(numValidators-rank) / float64(numValidators)
+	return percentile
+}
+
+func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, state AccountState, event EvaluationResult) bool {
+	validator := event.Validator
+	delegator := event.Delegator
+
+	delegatorShares := getSharesFromValidator(ctx, provider, validator, delegator)
+	percentile := getValidatorRankPercentile(ctx, provider, validator)
+
 	hasValidActionCount := state.ActionCounter >= ad.GetMinimumActions() && state.ActionCounter <= ad.GetMaximumActions()
 	hasValidDelegationAmount := delegatorShares.BigInt().Uint64() >= ad.GetMinimumDelegationAmount() && delegatorShares.BigInt().Uint64() <= ad.GetMaximumDelegationAmount()
-	hasValidActivePercentage := percentage >= ad.GetMinimumActiveStakePercentage() && percentage <= ad.GetMaximumActiveStakePercentage()
+	hasValidActivePercentile := percentile >= ad.GetMinimumActiveStakePercentile() && percentile <= ad.GetMaximumActiveStakePercentile()
 
-	return hasValidActionCount && hasValidDelegationAmount && hasValidActivePercentage
+	return hasValidActionCount && hasValidDelegationAmount && hasValidActivePercentile
 }
 
 func (ad *ActionDelegate) String() string {

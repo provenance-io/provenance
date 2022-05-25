@@ -166,8 +166,8 @@ message ActionDelegate {
   uint64 maximum_actions                 = 2;
   uint64 minimum_delegation_amount       = 3;
   uint64 maximum_delegation_amount       = 4;
-  double minimum_active_stake_percentage = 5;
-  double maximum_active_stake_percentage = 6;
+  double minimum_active_stake_percentile = 5;
+  double maximum_active_stake_percentile = 6;
 }
 // accounts that have made transfers, from accounts that have active delegations
 // rule: ActionTransferDelegations "When transfer has occurred and the account has an active delegation,

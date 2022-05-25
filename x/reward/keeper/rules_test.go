@@ -4,61 +4,66 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkTypes "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
+var (
+	testValidators = []stakingtypes.Validator{}
+)
+
 func setupEventHistory(suite *KeeperTestSuite) {
-	attributes1 := []sdkTypes.Attribute{
-		sdkTypes.NewAttribute("key1", "value1"),
-		sdkTypes.NewAttribute("key2", "value2"),
-		sdkTypes.NewAttribute("key3", "value3"),
+	attributes1 := []sdk.Attribute{
+		sdk.NewAttribute("key1", "value1"),
+		sdk.NewAttribute("key2", "value2"),
+		sdk.NewAttribute("key3", "value3"),
 	}
-	attributes2 := []sdkTypes.Attribute{
-		sdkTypes.NewAttribute("key1", "value1"),
-		sdkTypes.NewAttribute("key3", "value2"),
-		sdkTypes.NewAttribute("key4", "value3"),
+	attributes2 := []sdk.Attribute{
+		sdk.NewAttribute("key1", "value1"),
+		sdk.NewAttribute("key3", "value2"),
+		sdk.NewAttribute("key4", "value3"),
 	}
-	event1 := sdkTypes.NewEvent("event1", attributes1...)
-	event2 := sdkTypes.NewEvent("event2", attributes2...)
-	event3 := sdkTypes.NewEvent("event1", attributes1...)
-	loggedEvents := sdkTypes.Events{
+	event1 := sdk.NewEvent("event1", attributes1...)
+	event2 := sdk.NewEvent("event2", attributes2...)
+	event3 := sdk.NewEvent("event1", attributes1...)
+	loggedEvents := sdk.Events{
 		event1,
 		event2,
 		event3,
 	}
-	eventManagerStub := sdkTypes.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
+	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
 	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
 }
 
 func setupEventHistoryWithDelegates(suite *KeeperTestSuite) {
-	attributes1 := []sdkTypes.Attribute{
-		sdkTypes.NewAttribute("validator", "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun"),
-		sdkTypes.NewAttribute("amount", "1000000000000000nhash"),
+	attributes1 := []sdk.Attribute{
+		sdk.NewAttribute("validator", "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun"),
+		sdk.NewAttribute("amount", "1000000000000000nhash"),
 	}
-	attributes2 := []sdkTypes.Attribute{
-		sdkTypes.NewAttribute("module", "staking"),
-		sdkTypes.NewAttribute("sender", "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+	attributes2 := []sdk.Attribute{
+		sdk.NewAttribute("module", "staking"),
+		sdk.NewAttribute("sender", "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
 	}
-	attributes3 := []sdkTypes.Attribute{
-		sdkTypes.NewAttribute("validator", "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun"),
-		sdkTypes.NewAttribute("amount", "50000000000000nhash"),
-		sdkTypes.NewAttribute("new_shares", "50000000000000.000000000000000000"),
+	attributes3 := []sdk.Attribute{
+		sdk.NewAttribute("validator", "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun"),
+		sdk.NewAttribute("amount", "50000000000000nhash"),
+		sdk.NewAttribute("new_shares", "50000000000000.000000000000000000"),
 	}
-	event1 := sdkTypes.NewEvent("create_validator", attributes1...)
-	event2 := sdkTypes.NewEvent("message", attributes2...)
-	event3 := sdkTypes.NewEvent("delegate", attributes3...)
-	event4 := sdkTypes.NewEvent("message", attributes2...)
-	loggedEvents := sdkTypes.Events{
+	event1 := sdk.NewEvent("create_validator", attributes1...)
+	event2 := sdk.NewEvent("message", attributes2...)
+	event3 := sdk.NewEvent("delegate", attributes3...)
+	event4 := sdk.NewEvent("message", attributes2...)
+	loggedEvents := sdk.Events{
 		event1,
 		event2,
 		event3,
 		event4,
 	}
-	eventManagerStub := sdkTypes.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
+	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
 	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
 }
 
@@ -322,21 +327,56 @@ func (m MockStakingKeeper) GetValidatorDelegations(ctx sdk.Context, valAddr sdk.
 		{
 			DelegatorAddress: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 			ValidatorAddress: "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun",
-			Shares:           sdkTypes.NewDec(1),
+			Shares:           sdk.NewDec(1),
 		},
 		{
 			DelegatorAddress: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 			ValidatorAddress: "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun",
-			Shares:           sdkTypes.NewDec(1),
+			Shares:           sdk.NewDec(1),
 		},
 		{
 			DelegatorAddress: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 			ValidatorAddress: "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun",
-			Shares:           sdkTypes.NewDec(1),
+			Shares:           sdk.NewDec(1),
 		},
 	}
 
 	return delegations
+}
+
+func (suite *KeeperTestSuite) createTestValidators(amount int) {
+	addrDels := simapp.AddTestAddrsIncremental(suite.app, suite.ctx, amount, sdk.NewInt(10000))
+	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
+
+	var validators []stakingtypes.Validator
+	for i := 0; i < amount; i++ {
+		validators = append(validators, teststaking.NewValidator(suite.T(), valAddrs[i], PKs[i]))
+		validators[i], _ = validators[i].AddTokensFromDel(sdk.NewInt(int64(i)))
+	}
+
+	testValidators = validators
+}
+
+func getTestValidators(start, end int) []stakingtypes.Validator {
+	validators := []stakingtypes.Validator{}
+	for i := start; i <= end; i++ {
+		validators = append(validators, testValidators[i])
+	}
+	return validators
+}
+
+func (m MockStakingKeeper) GetBondedValidatorsByPower(ctx sdk.Context) []stakingtypes.Validator {
+	validatorAddress, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
+	validator, _ := stakingtypes.NewValidator(
+		validatorAddress,
+		PKs[100],
+		stakingtypes.Description{},
+	)
+	validators := getTestValidators(1, 3)
+	validators = append(validators, validator)
+	validators = append(validators, getTestValidators(4, 6)...)
+
+	return validators
 }
 
 func (suite *KeeperTestSuite) TestActionDelegateEvaluatePasses() {
@@ -345,10 +385,10 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluatePasses() {
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
-	action.MinimumDelegationAmount = sdkTypes.NewDec(2).BigInt().Uint64()
-	action.MaximumDelegationAmount = sdkTypes.NewDec(10).BigInt().Uint64()
-	action.MinimumActiveStakePercentage = .5
-	action.MaximumActiveStakePercentage = 1.0
+	action.MinimumDelegationAmount = sdk.NewDec(2).BigInt().Uint64()
+	action.MaximumDelegationAmount = sdk.NewDec(10).BigInt().Uint64()
+	action.MinimumActiveStakePercentile = .4
+	action.MaximumActiveStakePercentile = 1.0
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -371,10 +411,10 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActionsN
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
-	action.MinimumDelegationAmount = sdkTypes.NewDec(2).BigInt().Uint64()
-	action.MaximumDelegationAmount = sdkTypes.NewDec(10).BigInt().Uint64()
-	action.MinimumActiveStakePercentage = .5
-	action.MaximumActiveStakePercentage = 1.0
+	action.MinimumDelegationAmount = sdk.NewDec(2).BigInt().Uint64()
+	action.MaximumDelegationAmount = sdk.NewDec(10).BigInt().Uint64()
+	action.MinimumActiveStakePercentile = .5
+	action.MaximumActiveStakePercentile = 1.0
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -396,10 +436,10 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumActionsN
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
-	action.MinimumDelegationAmount = sdkTypes.NewDec(2).BigInt().Uint64()
-	action.MaximumDelegationAmount = sdkTypes.NewDec(10).BigInt().Uint64()
-	action.MinimumActiveStakePercentage = .5
-	action.MaximumActiveStakePercentage = 1.0
+	action.MinimumDelegationAmount = sdk.NewDec(2).BigInt().Uint64()
+	action.MaximumDelegationAmount = sdk.NewDec(10).BigInt().Uint64()
+	action.MinimumActiveStakePercentile = .5
+	action.MaximumActiveStakePercentile = 1.0
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -422,10 +462,10 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegati
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
-	action.MinimumDelegationAmount = sdkTypes.NewDec(1).BigInt().Uint64()
-	action.MaximumDelegationAmount = sdkTypes.NewDec(1).BigInt().Uint64()
-	action.MinimumActiveStakePercentage = .5
-	action.MaximumActiveStakePercentage = 1.0
+	action.MinimumDelegationAmount = sdk.NewDec(1).BigInt().Uint64()
+	action.MaximumDelegationAmount = sdk.NewDec(1).BigInt().Uint64()
+	action.MinimumActiveStakePercentile = .5
+	action.MaximumActiveStakePercentile = 1.0
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -448,10 +488,10 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumDelegati
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
-	action.MinimumDelegationAmount = sdkTypes.NewDec(5).BigInt().Uint64()
-	action.MaximumDelegationAmount = sdkTypes.NewDec(10).BigInt().Uint64()
-	action.MinimumActiveStakePercentage = .5
-	action.MaximumActiveStakePercentage = 1.0
+	action.MinimumDelegationAmount = sdk.NewDec(5).BigInt().Uint64()
+	action.MaximumDelegationAmount = sdk.NewDec(10).BigInt().Uint64()
+	action.MinimumActiveStakePercentile = .5
+	action.MaximumActiveStakePercentile = 1.0
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -468,16 +508,16 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumDelegati
 	suite.Assert().False(passed, "test should fail when minimum delegation amount not met")
 }
 
-func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActiveStakePercentageNotMet() {
+func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActiveStakePercentileNotMet() {
 	suite.SetupTest()
 
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
-	action.MinimumDelegationAmount = sdkTypes.NewDec(1).BigInt().Uint64()
-	action.MaximumDelegationAmount = sdkTypes.NewDec(10).BigInt().Uint64()
-	action.MinimumActiveStakePercentage = 1.1
-	action.MaximumActiveStakePercentage = 1.0
+	action.MinimumDelegationAmount = sdk.NewDec(1).BigInt().Uint64()
+	action.MaximumDelegationAmount = sdk.NewDec(10).BigInt().Uint64()
+	action.MinimumActiveStakePercentile = 1.1
+	action.MaximumActiveStakePercentile = 1.0
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -500,10 +540,10 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegati
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
-	action.MinimumDelegationAmount = sdkTypes.NewDec(1).BigInt().Uint64()
-	action.MaximumDelegationAmount = sdkTypes.NewDec(10).BigInt().Uint64()
-	action.MinimumActiveStakePercentage = 0.0
-	action.MaximumActiveStakePercentage = 0.5
+	action.MinimumDelegationAmount = sdk.NewDec(1).BigInt().Uint64()
+	action.MaximumDelegationAmount = sdk.NewDec(10).BigInt().Uint64()
+	action.MinimumActiveStakePercentile = 0.5
+	action.MaximumActiveStakePercentile = 1.0
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -551,8 +591,8 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction()
 		"description",
 		1,
 		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-		sdkTypes.NewInt64Coin("hotdog", 10000),
-		sdkTypes.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
 		time.Now(),
 		5,
 		5,
@@ -563,10 +603,10 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction()
 			Delegate: &types.ActionDelegate{
 				MinimumActions:               0,
 				MaximumActions:               1,
-				MinimumDelegationAmount:      sdkTypes.NewDec(0).BigInt().Uint64(),
-				MaximumDelegationAmount:      sdkTypes.NewDec(10).BigInt().Uint64(),
-				MinimumActiveStakePercentage: 0,
-				MaximumActiveStakePercentage: 1,
+				MinimumDelegationAmount:      sdk.NewDec(0).BigInt().Uint64(),
+				MaximumDelegationAmount:      sdk.NewDec(10).BigInt().Uint64(),
+				MinimumActiveStakePercentile: 0,
+				MaximumActiveStakePercentile: 1,
 			},
 		},
 	})
@@ -585,8 +625,8 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction()
 		"description",
 		1,
 		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-		sdkTypes.NewInt64Coin("hotdog", 10000),
-		sdkTypes.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
 		time.Now(),
 		5,
 		5,
@@ -598,10 +638,10 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction()
 				Delegate: &types.ActionDelegate{
 					MinimumActions:               0,
 					MaximumActions:               1,
-					MinimumDelegationAmount:      sdkTypes.NewDec(0).BigInt().Uint64(),
-					MaximumDelegationAmount:      sdkTypes.NewDec(10).BigInt().Uint64(),
-					MinimumActiveStakePercentage: 0,
-					MaximumActiveStakePercentage: 1,
+					MinimumDelegationAmount:      sdk.NewDec(0).BigInt().Uint64(),
+					MaximumDelegationAmount:      sdk.NewDec(10).BigInt().Uint64(),
+					MinimumActiveStakePercentile: 0,
+					MaximumActiveStakePercentile: 1,
 				},
 			},
 		},
@@ -610,16 +650,16 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction()
 				Delegate: &types.ActionDelegate{
 					MinimumActions:               0,
 					MaximumActions:               1,
-					MinimumDelegationAmount:      sdkTypes.NewDec(0).BigInt().Uint64(),
-					MaximumDelegationAmount:      sdkTypes.NewDec(10).BigInt().Uint64(),
-					MinimumActiveStakePercentage: 0,
-					MaximumActiveStakePercentage: 1,
+					MinimumDelegationAmount:      sdk.NewDec(0).BigInt().Uint64(),
+					MaximumDelegationAmount:      sdk.NewDec(10).BigInt().Uint64(),
+					MinimumActiveStakePercentile: 0,
+					MaximumActiveStakePercentile: 1,
 				},
 			},
 		})
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(4, len(qualifyingActions), "must find two qualifying actions")
+	suite.Assert().Equal(4, len(qualifyingActions), "must find four qualifying actions")
 }
 
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoQualifyingAction() {
@@ -632,8 +672,8 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoQualifyingAction(
 		"description",
 		1,
 		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-		sdkTypes.NewInt64Coin("hotdog", 10000),
-		sdkTypes.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
 		time.Now(),
 		5,
 		5,
@@ -642,7 +682,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoQualifyingAction(
 
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(0, len(qualifyingActions), "must find two qualifying actions")
+	suite.Assert().Equal(0, len(qualifyingActions), "must find no qualifying actions")
 }
 
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoMatchingQualifyingAction() {
@@ -655,8 +695,8 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoMatchingQualifyin
 		"description",
 		1,
 		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-		sdkTypes.NewInt64Coin("hotdog", 10000),
-		sdkTypes.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
 		time.Now(),
 		5,
 		5,
@@ -667,16 +707,16 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoMatchingQualifyin
 			Delegate: &types.ActionDelegate{
 				MinimumActions:               1000,
 				MaximumActions:               1000,
-				MinimumDelegationAmount:      sdkTypes.NewDec(0).BigInt().Uint64(),
-				MaximumDelegationAmount:      sdkTypes.NewDec(10).BigInt().Uint64(),
-				MinimumActiveStakePercentage: 0,
-				MaximumActiveStakePercentage: 1,
+				MinimumDelegationAmount:      sdk.NewDec(0).BigInt().Uint64(),
+				MaximumDelegationAmount:      sdk.NewDec(10).BigInt().Uint64(),
+				MinimumActiveStakePercentile: 0,
+				MaximumActiveStakePercentile: 1,
 			},
 		},
 	})
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(0, len(qualifyingActions), "must find two qualifying actions")
+	suite.Assert().Equal(0, len(qualifyingActions), "must find no qualifying actions")
 }
 
 // Test RewardShares
@@ -688,8 +728,8 @@ func (suite *KeeperTestSuite) TestRewardSharesSingle() {
 		"description",
 		1,
 		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-		sdkTypes.NewInt64Coin("hotdog", 10000),
-		sdkTypes.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
 		time.Now(),
 		5,
 		5,
@@ -728,8 +768,8 @@ func (suite *KeeperTestSuite) TestRewardSharesMultiple() {
 		"description",
 		1,
 		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-		sdkTypes.NewInt64Coin("hotdog", 10000),
-		sdkTypes.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
 		time.Now(),
 		5,
 		5,
@@ -776,8 +816,8 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidRewardProgram() {
 		"description",
 		0,
 		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-		sdkTypes.NewInt64Coin("hotdog", 10000),
-		sdkTypes.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
 		time.Now(),
 		5,
 		5,
@@ -811,8 +851,8 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidAddress() {
 		"description",
 		1,
 		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-		sdkTypes.NewInt64Coin("hotdog", 10000),
-		sdkTypes.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
 		time.Now(),
 		5,
 		5,
