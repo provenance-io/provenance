@@ -195,8 +195,15 @@ func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Co
 // Currently, usd is only supported with conversion rate coming from params
 func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, error) {
 	if coin.Denom == "usd" {
-		hashAmount := coin.Amount.Int64() / int64(k.GetUsdConversionRate(ctx))
-		nhashAmount := sdk.NewInt(1_000_000_000).Mul(sdk.NewInt(hashAmount))
+		var nhashAmount sdk.Int
+		conversionRate := int64(k.GetUsdConversionRate(ctx))
+		if conversionRate > coin.Amount.Int64() {
+			hashAmount := conversionRate / coin.Amount.Int64()
+			nhashAmount = sdk.NewInt(100_000_000).Mul(sdk.NewInt(hashAmount))
+		} else {
+			hashAmount := coin.Amount.Int64() / conversionRate
+			nhashAmount = sdk.NewInt(1_000_000_000).Mul(sdk.NewInt(hashAmount))
+		}
 		msgFeeCoin := sdk.NewCoin("nhash", nhashAmount)
 		return msgFeeCoin, nil
 	} else if coin.Denom == "nhash" {

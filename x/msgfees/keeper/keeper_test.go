@@ -87,6 +87,11 @@ func (s *TestSuite) TestConvertDenomToHash() {
 	s.Assert().NoError(err)
 	s.Assert().Equal(sdk.NewCoin("nhash", sdk.NewInt(14_000_000_000)), nhash)
 
+	usdDollar = sdk.NewCoin("usd", sdk.NewInt(10))
+	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
+	s.Assert().NoError(err)
+	s.Assert().Equal(sdk.NewCoin("nhash", sdk.NewInt(700000000)), nhash)
+
 	jackTheCat := sdk.NewCoin("jackThecat", sdk.NewInt(70))
 	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, jackTheCat)
 	s.Assert().Equal("denom not supported for conversion jackThecat: invalid type", err.Error())
