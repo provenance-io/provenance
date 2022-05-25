@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAddScopeDataAccessValidateBasic(t *testing.T) {
+func TestMsgAssessCustomMsgFeeValidateBasic(t *testing.T) {
 	validAddress := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
 
 	cases := map[string]struct {
