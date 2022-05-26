@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"math/rand"
 
-	msgfeesmodule "github.com/provenance-io/provenance/x/msgfees"
 	"github.com/provenance-io/provenance/x/msgfees/client/cli"
 	"github.com/provenance-io/provenance/x/msgfees/keeper"
 	"github.com/provenance-io/provenance/x/msgfees/simulation"
@@ -118,7 +117,7 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Deprecated: Route returns the message routing key for the msgfees module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, msgfeesmodule.NewHandler(am.keeper))
+	return sdk.Route{}
 }
 
 // QuerierRoute returns the route we respond to for abci queries
