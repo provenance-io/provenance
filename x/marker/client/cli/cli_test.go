@@ -557,6 +557,21 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			true, &sdk.TxResponse{}, 0,
 		},
 		{
+			"fail to create feegrant not admin",
+			markercli.GetCmdFeeGrant(),
+			[]string{
+				"hotdog",
+				s.testnet.Validators[0].Address.String(),
+				s.accountAddresses[0].String(),
+				fmt.Sprintf("--%s=%s", markercli.FlagSpendLimit, sdk.NewCoin("stake", sdk.NewInt(100))),
+				fmt.Sprintf("--%s=%s", markercli.FlagExpiration, getFormattedExpiration(oneYear)),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 4,
+		},
+		{
 			"add single access",
 			markercli.GetCmdAddAccess(),
 			[]string{
