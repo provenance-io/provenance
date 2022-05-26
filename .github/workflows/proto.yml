@@ -3,8 +3,10 @@ name: Protobuf lint
 # This workflow is only run when a .proto file has been changed.
 on:
   pull_request:
-    paths:
-      - "**/**.proto"
+    types:
+      - opened
+#    paths:
+#      - "**/**.proto"
 jobs:
   env_init:
     runs-on: ubuntu-latest
