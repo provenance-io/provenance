@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#set -ex
+set -ex
 
 #
 # Check go.mod for any version updates of tendermint or cosmos-sdk.
