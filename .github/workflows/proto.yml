@@ -2,10 +2,9 @@ name: Protobuf lint
 # Protobuf lint runs `buf lint` and `buf breaking` against https://buf.build/provenance-io repository.
 # This workflow is only run when a .proto file has been changed.
 on:
-  push
-#  pull_request:
-#    paths:
-#      - "**/**.proto"
+  pull_request:
+    paths:
+      - "**/**.proto"
 jobs:
   env_init:
     runs-on: ubuntu-latest
