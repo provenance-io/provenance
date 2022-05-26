@@ -7,6 +7,7 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/reward"
 	"github.com/provenance-io/provenance/x/reward/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -452,3 +453,105 @@ func (s *KeeperTestSuite) TestCreateRewardClaimTestMax() {
 	s.Assert().Equal(int64(10), rewardClaim.SharesPerEpochPerReward[0].EphemeralActionCount, "ephemeral shares wrong")
 
 }*/
+
+// Test no reward programs. Nothing should happen
+func (s *KeeperTestSuite) TestDelegateAgainstNoRewardPrograms() {
+	s.SetupTest()
+	SetupEventHistoryWithDelegates(s)
+
+	// Advance one day
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + (24 * 60 * 60))
+	s.Assert().NotPanics(func() {
+		reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+	})
+}
+
+// Test against inactive reward programs. They should not be updated
+func (s *KeeperTestSuite) TestDelegateAgainstInactiveRewardPrograms() {
+	s.SetupTest()
+	SetupEventHistoryWithDelegates(s)
+
+	// Advance one day
+	/*s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + (24 * 60 * 60))
+	s.Assert().NotPanics(func() {
+		reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+	})*/
+
+	/*action := types.NewActionDelegate()
+	action.MaximumActions = 10
+	action.MinimumActions = 2
+
+	action.MinimumActiveStakePercentile = 0.7
+	action.MaximumActiveStakePercentile = 1.0
+
+	// This probably needs to be in Coin format
+	// Does it need to be a Coin type?
+	action.MinimumDelegationAmount = 100
+	action.MaximumDelegationAmount = 100
+
+	coin := sdk.NewInt64Coin("hotdog", 10000)
+	maxCoin := sdk.NewInt64Coin("hotdog", 100)
+
+	now := time.Now().UTC()
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		coin,
+		maxCoin,
+		now,
+		60*60,
+		3,
+		types.NewEligibilityCriteria("criteria", &action),
+	)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+
+	_, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
+	s.Assert().NoError(err)*/
+}
+
+// Test against delegate reward program. No delegate happens.
+func (s *KeeperTestSuite) TestNonDelegateAgainstRewardProgram() {
+
+}
+
+// Test against delegate reward program. Grant 1 share
+func (s *KeeperTestSuite) TestSingleDelegate() {
+
+}
+
+// Test against delegate reward program. Grant 2 share
+func (s *KeeperTestSuite) TestMultipleDelegate() {
+
+}
+
+// Test against delegate reward program. Not enough actions
+func (s *KeeperTestSuite) TestDelegateBelowMinimumActions() {
+
+}
+
+// Test against delegate reward program. Too many actions
+func (s *KeeperTestSuite) TestDelegateAboveMaximumActions() {
+
+}
+
+// Test against delegate reward program. Below delegation amount
+func (s *KeeperTestSuite) TestDelegateBelowMinimumDelegation() {
+
+}
+
+// Test against delegate reward program. Above delegation amount
+func (s *KeeperTestSuite) TestDelegateAboveMaximumDelegation() {
+
+}
+
+// Test against delegate reward program. Below percentile
+func (s *KeeperTestSuite) TestDelegateBelowMinimumPercentile() {
+
+}
+
+// Test against delegate reward program. Above percentile
+func (s *KeeperTestSuite) TestDelegateAboveMaximumPercentile() {
+
+}

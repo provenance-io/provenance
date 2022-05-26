@@ -39,7 +39,7 @@ func setupEventHistory(suite *KeeperTestSuite) {
 	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
 }
 
-func setupEventHistoryWithDelegates(suite *KeeperTestSuite) {
+func SetupEventHistoryWithDelegates(suite *KeeperTestSuite) {
 	attributes1 := []sdk.Attribute{
 		sdk.NewAttribute("validator", "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun"),
 		sdk.NewAttribute("amount", "1000000000000000nhash"),
@@ -197,7 +197,7 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsNonAttributeValueMatch() {
 
 func (suite *KeeperTestSuite) TestGetMatchingEventsWithDelegates() {
 	suite.SetupTest()
-	setupEventHistoryWithDelegates(suite)
+	SetupEventHistoryWithDelegates(suite)
 	criteria := types.NewEventCriteria([]types.ABCIEvent{
 		{
 			Type: "message",
@@ -583,7 +583,7 @@ func (suite *KeeperTestSuite) TestGetRewardActionHandlesActionDelegate() {
 // Test DetectQualifyingActions
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction() {
 	suite.SetupTest()
-	setupEventHistoryWithDelegates(suite)
+	SetupEventHistoryWithDelegates(suite)
 	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 
 	rewardProgram := types.NewRewardProgram(
@@ -617,7 +617,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction()
 
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction() {
 	suite.SetupTest()
-	setupEventHistoryWithDelegates(suite)
+	SetupEventHistoryWithDelegates(suite)
 	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 
 	rewardProgram := types.NewRewardProgram(
@@ -664,7 +664,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction()
 
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoQualifyingAction() {
 	suite.SetupTest()
-	setupEventHistoryWithDelegates(suite)
+	SetupEventHistoryWithDelegates(suite)
 	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 
 	rewardProgram := types.NewRewardProgram(
@@ -687,7 +687,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoQualifyingAction(
 
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoMatchingQualifyingAction() {
 	suite.SetupTest()
-	setupEventHistoryWithDelegates(suite)
+	SetupEventHistoryWithDelegates(suite)
 	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 
 	rewardProgram := types.NewRewardProgram(
