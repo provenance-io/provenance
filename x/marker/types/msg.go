@@ -42,7 +42,7 @@ var (
 	_ sdk.Msg = &MsgBurnRequest{}
 	_ sdk.Msg = &MsgWithdrawRequest{}
 	_ sdk.Msg = &MsgTransferRequest{}
-	_ sdk.Msg = &MsgGrantAllowance{}
+	_ sdk.Msg = &MsgGrantAllowanceRequest{}
 )
 
 // Type returns the message action.
@@ -82,7 +82,7 @@ func (msg MsgTransferRequest) Type() string { return TypeTransferRequest }
 func (msg MsgSetDenomMetadataRequest) Type() string { return TypeSetMetadataRequest }
 
 // Type returns the message action.
-func (msg MsgGrantAllowance) Type() string { return TypeGrantAllowance }
+func (msg MsgGrantAllowanceRequest) Type() string { return TypeGrantAllowance }
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
 func NewMsgAddMarkerRequest(
@@ -557,7 +557,7 @@ func (msg MsgSetDenomMetadataRequest) GetSigners() []sdk.AccAddress {
 }
 
 // GetFeeAllowanceI returns unpacked FeeAllowance
-func (msg MsgGrantAllowance) GetFeeAllowanceI() (feegranttypes.FeeAllowanceI, error) {
+func (msg MsgGrantAllowanceRequest) GetFeeAllowanceI() (feegranttypes.FeeAllowanceI, error) {
 	allowance, ok := msg.Allowance.GetCachedValue().(feegranttypes.FeeAllowanceI)
 	if !ok {
 		return nil, sdkerrors.Wrap(feegranttypes.ErrNoAllowance, "failed to get allowance")
@@ -569,7 +569,7 @@ func (msg MsgGrantAllowance) GetFeeAllowanceI() (feegranttypes.FeeAllowanceI, er
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
 func NewMsgGrantAllowance(
 	denom string, admin sdk.AccAddress, grantee sdk.AccAddress, allowance feegranttypes.FeeAllowanceI, // nolint:interfacer
-) (*MsgGrantAllowance, error) {
+) (*MsgGrantAllowanceRequest, error) {
 	msg, ok := allowance.(proto.Message)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", msg)
@@ -579,7 +579,7 @@ func NewMsgGrantAllowance(
 		return nil, err
 	}
 
-	return &MsgGrantAllowance{
+	return &MsgGrantAllowanceRequest{
 		Denom:         denom,
 		Administrator: admin.String(),
 		Grantee:       grantee.String(),
@@ -588,16 +588,16 @@ func NewMsgGrantAllowance(
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (msg MsgGrantAllowance) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (msg MsgGrantAllowanceRequest) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var allowance feegranttypes.FeeAllowanceI
 	return unpacker.UnpackAny(msg.Allowance, &allowance)
 }
 
 // Route returns the name of the module.
-func (msg MsgGrantAllowance) Route() string { return ModuleName }
+func (msg MsgGrantAllowanceRequest) Route() string { return ModuleName }
 
 // ValidateBasic runs stateless validation checks on the message.
-func (msg MsgGrantAllowance) ValidateBasic() error {
+func (msg MsgGrantAllowanceRequest) ValidateBasic() error {
 	if msg.Denom == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "missing marker denom")
 	}
@@ -617,13 +617,13 @@ func (msg MsgGrantAllowance) ValidateBasic() error {
 }
 
 // GetSignBytes encodes the message for signing.
-func (msg MsgGrantAllowance) GetSignBytes() []byte {
+func (msg MsgGrantAllowanceRequest) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgGrantAllowance) GetSigners() []sdk.AccAddress {
+func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
 	if err != nil {
 		panic(err)
