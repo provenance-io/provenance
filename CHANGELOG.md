@@ -41,6 +41,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
   * Add CONTROLLER, and VALIDATOR PartyTypes for contract execution. 
 
+### Bug Fixes
+
+  * Move buf.build push action to occur after PRs are merged to main branch [#838](https://github.com/provenance-io/provenance/issues/838)
+
 ### Improvements 
 
 ---
