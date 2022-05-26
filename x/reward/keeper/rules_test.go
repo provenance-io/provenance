@@ -597,19 +597,22 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction()
 		5,
 		5,
 		types.NewEligibilityCriteria("reward-action", &types.ActionDelegate{}),
-	)
-	rewardProgram.QualifyingActions = append(rewardProgram.QualifyingActions, types.QualifyingAction{
-		Type: &types.QualifyingAction_Delegate{
-			Delegate: &types.ActionDelegate{
-				MinimumActions:               0,
-				MaximumActions:               1,
-				MinimumDelegationAmount:      sdk.NewDec(0).BigInt().Uint64(),
-				MaximumDelegationAmount:      sdk.NewDec(10).BigInt().Uint64(),
-				MinimumActiveStakePercentile: 0,
-				MaximumActiveStakePercentile: 1,
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               1,
+						MinimumDelegationAmount:      sdk.NewDec(0).BigInt().Uint64(),
+						MaximumDelegationAmount:      sdk.NewDec(10).BigInt().Uint64(),
+						MinimumActiveStakePercentile: 0,
+						MaximumActiveStakePercentile: 1,
+					},
+				},
 			},
 		},
-	})
+	)
+	rewardProgram.QualifyingActions = append(rewardProgram.QualifyingActions)
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
 	suite.Assert().Equal(2, len(qualifyingActions), "must find two qualifying actions")
@@ -631,32 +634,34 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction()
 		5,
 		5,
 		types.NewEligibilityCriteria("reward-action", &types.ActionDelegate{}),
-	)
-	rewardProgram.QualifyingActions = append(rewardProgram.QualifyingActions,
-		types.QualifyingAction{
-			Type: &types.QualifyingAction_Delegate{
-				Delegate: &types.ActionDelegate{
-					MinimumActions:               0,
-					MaximumActions:               1,
-					MinimumDelegationAmount:      sdk.NewDec(0).BigInt().Uint64(),
-					MaximumDelegationAmount:      sdk.NewDec(10).BigInt().Uint64(),
-					MinimumActiveStakePercentile: 0,
-					MaximumActiveStakePercentile: 1,
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               1,
+						MinimumDelegationAmount:      sdk.NewDec(0).BigInt().Uint64(),
+						MaximumDelegationAmount:      sdk.NewDec(10).BigInt().Uint64(),
+						MinimumActiveStakePercentile: 0,
+						MaximumActiveStakePercentile: 1,
+					},
+				},
+			},
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               1,
+						MinimumDelegationAmount:      sdk.NewDec(0).BigInt().Uint64(),
+						MaximumDelegationAmount:      sdk.NewDec(10).BigInt().Uint64(),
+						MinimumActiveStakePercentile: 0,
+						MaximumActiveStakePercentile: 1,
+					},
 				},
 			},
 		},
-		types.QualifyingAction{
-			Type: &types.QualifyingAction_Delegate{
-				Delegate: &types.ActionDelegate{
-					MinimumActions:               0,
-					MaximumActions:               1,
-					MinimumDelegationAmount:      sdk.NewDec(0).BigInt().Uint64(),
-					MaximumDelegationAmount:      sdk.NewDec(10).BigInt().Uint64(),
-					MinimumActiveStakePercentile: 0,
-					MaximumActiveStakePercentile: 1,
-				},
-			},
-		})
+	)
+	rewardProgram.QualifyingActions = append(rewardProgram.QualifyingActions)
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
 	suite.Assert().Equal(4, len(qualifyingActions), "must find four qualifying actions")
@@ -678,6 +683,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoQualifyingAction(
 		5,
 		5,
 		types.NewEligibilityCriteria("reward-action", &types.ActionDelegate{}),
+		[]types.QualifyingAction{},
 	)
 
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
@@ -701,19 +707,21 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoMatchingQualifyin
 		5,
 		5,
 		types.NewEligibilityCriteria("reward-action", &types.ActionDelegate{}),
-	)
-	rewardProgram.QualifyingActions = append(rewardProgram.QualifyingActions, types.QualifyingAction{
-		Type: &types.QualifyingAction_Delegate{
-			Delegate: &types.ActionDelegate{
-				MinimumActions:               1000,
-				MaximumActions:               1000,
-				MinimumDelegationAmount:      sdk.NewDec(0).BigInt().Uint64(),
-				MaximumDelegationAmount:      sdk.NewDec(10).BigInt().Uint64(),
-				MinimumActiveStakePercentile: 0,
-				MaximumActiveStakePercentile: 1,
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               1000,
+						MaximumActions:               1000,
+						MinimumDelegationAmount:      sdk.NewDec(0).BigInt().Uint64(),
+						MaximumDelegationAmount:      sdk.NewDec(10).BigInt().Uint64(),
+						MinimumActiveStakePercentile: 0,
+						MaximumActiveStakePercentile: 1,
+					},
+				},
 			},
 		},
-	})
+	)
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
 	suite.Assert().Equal(0, len(qualifyingActions), "must find no qualifying actions")
@@ -734,6 +742,7 @@ func (suite *KeeperTestSuite) TestRewardSharesSingle() {
 		5,
 		5,
 		types.NewEligibilityCriteria("reward-action", &types.ActionDelegate{}),
+		[]types.QualifyingAction{},
 	)
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
@@ -774,6 +783,7 @@ func (suite *KeeperTestSuite) TestRewardSharesMultiple() {
 		5,
 		5,
 		types.NewEligibilityCriteria("reward-action", &types.ActionDelegate{}),
+		[]types.QualifyingAction{},
 	)
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
@@ -822,6 +832,7 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidRewardProgram() {
 		5,
 		5,
 		types.NewEligibilityCriteria("reward-action", &types.ActionDelegate{}),
+		[]types.QualifyingAction{},
 	)
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
@@ -857,6 +868,7 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidAddress() {
 		5,
 		5,
 		types.NewEligibilityCriteria("reward-action", &types.ActionDelegate{}),
+		[]types.QualifyingAction{},
 	)
 
 	validator, _ := sdk.ValAddressFromBech32("blah")

@@ -47,6 +47,9 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		types.EpochTypeToSeconds[msg.EpochType],
 		msg.NumberEpochs,
 		msg.EligibilityCriteria,
+
+		// TODO - We need to update this to be part of the message
+		[]types.QualifyingAction{},
 	)
 	err = rewardProgram.ValidateBasic()
 	if err != nil {

@@ -113,6 +113,7 @@ func NewRewardProgram(
 	epochSeconds uint64,
 	numberEpochs uint64,
 	eligibilityCriteria EligibilityCriteria,
+	qualifyingActions []QualifyingAction,
 ) RewardProgram {
 	return RewardProgram{
 		Title:                 title,
@@ -127,6 +128,7 @@ func NewRewardProgram(
 		EligibilityCriteria:   eligibilityCriteria,
 		Started:               false,
 		Finished:              false,
+		QualifyingActions:     qualifyingActions,
 	}
 }
 

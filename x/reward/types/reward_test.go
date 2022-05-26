@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/provenance-io/provenance/x/reward/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -46,6 +48,7 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				60*24,
 				1,
 				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+				[]types.QualifyingAction{},
 			),
 			"",
 		},
@@ -62,6 +65,7 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				60*24,
 				1,
 				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+				[]types.QualifyingAction{},
 			),
 			"reward program title cannot be blank",
 		},
@@ -78,6 +82,7 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				60*24,
 				1,
 				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+				[]types.QualifyingAction{},
 			),
 			"reward program title is longer than max length of 140",
 		},
@@ -94,6 +99,7 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				60*24,
 				1,
 				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+				[]types.QualifyingAction{},
 			),
 			"reward program description cannot be blank",
 		},
@@ -110,6 +116,7 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				60*24,
 				1,
 				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+				[]types.QualifyingAction{},
 			),
 			"reward program description is longer than max length of 10000",
 		},
@@ -126,6 +133,7 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				60*24,
 				1,
 				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+				[]types.QualifyingAction{},
 			),
 			"reward program id must be larger than 0",
 		},
@@ -142,6 +150,7 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				60*24,
 				1,
 				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+				[]types.QualifyingAction{},
 			),
 			"invalid address for rewards program distribution from address: decoding bech32 failed: invalid bech32 string length 7",
 		},
@@ -158,6 +167,7 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				60*24,
 				1,
 				NewEligibilityCriteria("", &ActionDelegate{}),
+				[]types.QualifyingAction{},
 			),
 			"eligibility criteria is not valid: eligibility criteria must have a name",
 		},
@@ -174,6 +184,7 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				60*24,
 				1,
 				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+				[]types.QualifyingAction{},
 			),
 			"reward program requires coins: 0jackthecat",
 		},
@@ -190,6 +201,7 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				60*24,
 				1,
 				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+				[]types.QualifyingAction{},
 			),
 			"reward program requires positive max reward by address: 0jackthecat",
 		},
@@ -206,6 +218,7 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				60*24,
 				0,
 				NewEligibilityCriteria("action-name", &ActionDelegate{}),
+				[]types.QualifyingAction{},
 			),
 			"reward program number of epochs must be larger than 0",
 		},
