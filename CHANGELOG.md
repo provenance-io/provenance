@@ -44,6 +44,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements 
 
+* Add restricted status info to name module cli queries [#806](https://github.com/provenance-io/provenance/issues/806)
+
 ---
 
 ## [v1.10.0](https://github.com/provenance-io/provenance/releases/tag/v1.10.0) - 2022-05-11
