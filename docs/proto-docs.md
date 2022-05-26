@@ -5460,6 +5460,7 @@ Event emitted when name is bound.
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
 | `name` | [string](#string) |  |  |
+| `restricted` | [bool](#bool) |  |  |
 
 
 
@@ -5476,6 +5477,7 @@ Event emitted when name is unbound.
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
 | `name` | [string](#string) |  |  |
+| `restricted` | [bool](#bool) |  |  |
 
 
 
@@ -5614,6 +5616,7 @@ QueryResolveResponse is the response type for the Query/Resolve method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | a string containing the address the name resolves to |
+| `restricted` | [bool](#bool) |  | Whether owner signature is required to add sub-names. |
 
 
 
