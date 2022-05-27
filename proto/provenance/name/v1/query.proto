@@ -51,6 +51,8 @@ message QueryResolveRequest {
 message QueryResolveResponse {
   // a string containing the address the name resolves to
   string address = 1;
+  // Whether owner signature is required to add sub-names.
+  bool restricted = 2;
 }
 
 // QueryReverseLookupRequest is the request type for the Query/ReverseLookup method.
