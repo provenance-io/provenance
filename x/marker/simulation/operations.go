@@ -104,9 +104,9 @@ func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 			sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx))),
 			simAccount.Address,
 			mgrAccount.Address,
-			types.MarkerType(r.Intn(1)+1), // coin or restricted_coin
-			r.Intn(1) > 0,                 // fixed supply
-			r.Intn(1) > 0,                 // allow gov
+			types.MarkerType(r.Intn(2)+1), // coin or restricted_coin
+			r.Intn(2) > 0,                 // fixed supply
+			r.Intn(2) > 0,                 // allow gov
 		)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
