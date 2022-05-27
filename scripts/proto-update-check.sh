@@ -12,7 +12,7 @@ yellow='\e[1;33m'
 off='\e[0m'
 
 regex='github.com/cosmos/cosmos-sdk|github.com/tendermint/tendermint'
-output=$(git diff HEAD:go.mod..origin/main:go.mod | grep -E -c $regex)
+output=$(git diff ..origin/main -- go.mod | grep -E -c $regex)
 dir="$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )"
 
 if [[ $output -gt 0 ]]; then
