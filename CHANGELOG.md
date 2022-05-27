@@ -39,7 +39,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features 
 
-  * Add CONTROLLER, and VALIDATOR PartyTypes for contract execution. 
+* Add CONTROLLER, and VALIDATOR PartyTypes for contract execution. [\#824](https://github.com/provenance-io/provenance/pull/824])
+* Add FeeGrant allowance support for marker escrow accounts [#406](https://github.com/provenance-io/provenance/issues/406)
 
 ### Improvements 
 
