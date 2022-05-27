@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - "**/**.proto"
+      - "**/go.mod"
 jobs:
   env_init:
     runs-on: ubuntu-latest
