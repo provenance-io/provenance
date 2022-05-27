@@ -5,12 +5,29 @@ set -ex
 # Download third_party proto files from the versions declared in go.mod
 #
 
+green='\e[0;32m'
+off='\e[0m'
+
+__generate_usage () {
+  echo -e "${green}Updates third_party Protobuf files
+
+Usage: ./proto-update-deps.sh [dest]
+
+The dest is optional.
+  The default location is ./third_party/proto/
+  If a dest is supplied then the path becomes ./<dest>/third_party/proto/.${off}
+
+"
+}
+__generate_usage
 
 dir="$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )"
+# update dir if a destination is supplied as an argument.
+[[ ! -z "$1" ]] && dir="$dir"/"$1"
+
 EXT_PROTO_DIR="$dir"/third_party
 
-# clean
-#rm -rf "${EXT_PROTO_DIR:?}/"*
+echo "$EXT_PROTO_DIR"
 
 # Retrieve versions from go.mod (single source of truth)
 CONFIO_PROTO_URL=https://raw.githubusercontent.com/confio/ics23/go/$(go list -m github.com/confio/ics23/go | sed 's:.* ::')/proofs.proto
