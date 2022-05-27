@@ -1,34 +1,45 @@
-name: Protobuf
-# Protobuf runs buf (https://buf.build/) lint and check-breakage
-# This workflow is only run when a .proto file has been changed
+name: Protobuf lint
+# Protobuf lint runs `buf lint` and `buf breaking` against https://buf.build/provenance-io repository.
+# This workflow is only run when a .proto file has been changed.
 on:
   pull_request:
     paths:
       - "**/**.proto"
 jobs:
-  buf_push:
+  env_init:
     runs-on: ubuntu-latest
+    name: Define Variables
+    outputs:
+      go_version: "1.17"
+
+  buf_lint:
+    runs-on: ubuntu-latest
+    needs:
+      - env_init
+    name: Buf lint
     steps:
-      - uses: actions/checkout@v3
-      - uses: bufbuild/buf-setup-action@v1.4.0
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ needs.env_init.outputs.go_version }}
+      - name: Protobuf third_party update check
+        run: make proto-update-check
+      - name: Protobuf lint
+        uses: bufbuild/buf-setup-action@v1.4.0
       - uses: bufbuild/buf-lint-action@v1
         with:
           input: 'proto'
-      - uses: bufbuild/buf-breaking-action@v1
+      - name: Protobuf check breaking proto/
+        uses: bufbuild/buf-breaking-action@v1
         with:
           input: 'proto'
           # The 'main' branch of the GitHub repository that defines the module.
           against: 'buf.build/provenance-io/provenance'
-      - uses: bufbuild/buf-breaking-action@v1
+      - name: Protobuf check breaking third_party/proto
+        uses: bufbuild/buf-breaking-action@v1
         with:
           input: 'third_party/proto'
           # The 'main' branch of the GitHub repository that defines the module.
           against: 'buf.build/provenance-io/third-party'
-      - uses: bufbuild/buf-push-action@v1
-        with:
-          input: 'proto'
-          buf_token: ${{ secrets.BUF_TOKEN }}
-      - uses: bufbuild/buf-push-action@v1
-        with:
-          input: 'third_party/proto'
-          buf_token: ${{ secrets.BUF_TOKEN }}
