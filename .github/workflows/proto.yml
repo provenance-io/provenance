@@ -9,7 +9,13 @@ on:
 jobs:
   env_init:
     runs-on: ubuntu-latest
-    name: Define Variables
+    name: Environment init
+    steps:
+      - name: Define Variables
+        id: vars
+        # run an empty echo to prevent
+        # "Expected format {org}/{repo}[/path]@ref. Actual '' Input string was not in a correct format."
+        run: echo ""
     outputs:
       go_version: "1.17"
 
