@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/stretchr/testify/require"
@@ -651,6 +652,48 @@ func TestAccountImplictControl(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, user2, user, user2, sdk.NewCoin("testcoin", sdk.NewInt(10))))
 	// fails if the admin user does not have transfer authority
 	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, user, user2, user, sdk.NewCoin("testcoin", sdk.NewInt(10))))
+}
+
+func TestMarkerFeeGrant(t *testing.T) {
+	//app, ctx := createTestApp(true)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+
+	addr := types.MustGetMarkerAddress("testcoin")
+	user := testUserAddress("admin")
+
+	// no account before its created
+	acc := app.AccountKeeper.GetAccount(ctx, addr)
+	require.Nil(t, acc)
+
+	// create account and check default values
+	acc = types.NewEmptyMarkerAccount("testcoin", user.String(), nil)
+	mac, ok := acc.(types.MarkerAccountI)
+	require.True(t, ok)
+	require.NotNil(t, mac)
+	require.Equal(t, addr, mac.GetAddress())
+	require.EqualValues(t, nil, mac.GetPubKey())
+
+	// NewAccount doesn't call Set, so it's still nil
+	require.Nil(t, app.AccountKeeper.GetAccount(ctx, addr))
+
+	// set some values on the account and save it
+	require.NoError(t, mac.GrantAccess(types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})))
+
+	app.AccountKeeper.SetAccount(ctx, mac)
+
+	existingSupply := sdk.NewCoin("testcoin", sdk.NewInt(10000))
+	simapp.FundAccount(app, ctx, user, sdk.NewCoins(existingSupply))
+
+	allowance, err := types.NewMsgGrantAllowance(
+		"testcoin",
+		user,
+		testUserAddress("grantee"),
+		&feegrant.BasicAllowance{SpendLimit: sdk.NewCoins(sdk.NewCoin("testcoin", sdk.OneInt()))})
+	require.NoError(t, err, "basic allowance creation failed")
+	_, err = server.GrantAllowance(sdk.WrapSDKContext(ctx), allowance)
+	require.NoError(t, err, "failed to grant basic allowance from admin")
 }
 
 // testUserAddress gives a quick way to make a valid test address (no keys though)
