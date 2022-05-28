@@ -19,25 +19,24 @@ if [[ $output -gt 0 ]]; then
   echo -e "${lite_blue}Downloading latest third_party proto files for comparison...${off}"
 
   # Download third_party proto files int build/ directory for comparison against $dir /third_party
-  . "$dir"/proto-update-deps.sh build
+  . "$dir"/scripts/proto-update-deps.sh build
 
-  echo -e "${lite_blue}Checking Protobuf files for differences..."
+  echo -e "\n${lite_blue}Checking Protobuf files for differences...${off}\n"
 
-  check_diff=$(diff -r -q -x '*.yaml' "$dir"/build/third_party "$dir"/third_party)
-  if [[ -z "$check_diff" ]]; then
-    echo -e "${lite_blue}Diff log:
-    ${yellow}${check_diff}${off}"
+  DIFF=$(diff -rq -x '*.yaml' --exclude=google "$dir"/build/third_party "$dir"/third_party || true)
+  if [[ -n "$DIFF" ]]; then
+    echo -e "${lite_blue}\n\nDiff log:\n$DIFF${off}\n\n"
 
-    echo -e "
-    ${red}Found differences in Protobuf files.
+    echo -e "${red}\nFound differences in Protobuf files.\n
     This indicates a version change was detected in one of the following libraries:
       - github.com/cosmos/cosmos-sdk
       - github.com/tendermint/tendermint
 
     Review the diff log above and update accordingly. Perform the following steps locally.
-      1. run: make proto-update-check${off} (repeat until no diffs are found)
-      ${red}2. run: make proto-update-deps\n${off} (to update to latest version)
-      ${red}3. commit updates and push" >&2
+      1. run: make proto-update-deps
+      2. run: make proto-update-check
+      3. run: diff -rq -x '*.yaml' --exclude=google build/third_party third_party
+      4. commit updates and push\n${off}" >&2
 
     exit 1
   fi

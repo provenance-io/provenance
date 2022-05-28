@@ -22,10 +22,11 @@ The dest is optional.
 __generate_usage
 
 dir="$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )"
+dest="$dir"
 # update dir if a destination is supplied as an argument.
-[[ ! -z "$1" ]] && dir="$dir"/"$1"
+[[ ! -z "$1" ]] && dest="$dir"/"$1"
 
-EXT_PROTO_DIR="$dir"/third_party
+EXT_PROTO_DIR="$dest"/third_party
 
 echo "$EXT_PROTO_DIR"
 
