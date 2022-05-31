@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Protobuf Setup
-        uses: bufbuild/buf-setup-action@v1.4.0
+        uses: bufbuild/buf-setup-action@v1.5.0
       - name: Protobuf Lint
         uses: bufbuild/buf-lint-action@v1
         with:
@@ -28,7 +28,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Protobuf Setup
-        uses: bufbuild/buf-setup-action@v1.4.0
+        uses: bufbuild/buf-setup-action@v1.5.0
       - name: Check for breaking proto updates
         uses: bufbuild/buf-breaking-action@v1
         with:
@@ -54,7 +54,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Protobuf Setup
-        uses: bufbuild/buf-setup-action@v1.4.0
+        uses: bufbuild/buf-setup-action@v1.5.0
       - name: Check third_party for breaking proto updates
         uses: bufbuild/buf-breaking-action@v1
         with:
