@@ -5,39 +5,54 @@ on:
   pull_request:
     paths:
       - "**/**.proto"
-jobs:
-  env_init:
-    runs-on: ubuntu-latest
-    name: Define Variables
-    outputs:
-      go_version: "1.17"
 
+jobs:
   buf_lint:
     runs-on: ubuntu-latest
-    needs:
-      - env_init
-    name: Buf lint
+    name: Protobuf Lint Check
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Setup go
-        uses: actions/setup-go@v3
-        with:
-          go-version: ${{ needs.env_init.outputs.go_version }}
-      - name: Protobuf third_party update check
-        run: make proto-update-check
-      - name: Protobuf lint
+      - name: Protobuf Setup
         uses: bufbuild/buf-setup-action@v1.4.0
-      - uses: bufbuild/buf-lint-action@v1
+      - name: Protobuf Lint
+        uses: bufbuild/buf-lint-action@v1
         with:
           input: 'proto'
-      - name: Protobuf check breaking proto/
+
+  buf_breaking:
+    runs-on: ubuntu-latest
+    name: Protobuf Breaking Check
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Protobuf Setup
+        uses: bufbuild/buf-setup-action@v1.4.0
+      - name: Check for breaking proto updates
         uses: bufbuild/buf-breaking-action@v1
         with:
           input: 'proto'
           # The 'main' branch of the GitHub repository that defines the module.
           against: 'buf.build/provenance-io/provenance'
-      - name: Protobuf check breaking third_party/proto
+
+  buf_third_party_changes:
+    runs-on: ubuntu-latest
+    name: Protobuf third_party checks
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Check third_party for proto updates
+        run: make proto-update-check
+
+  buf_third_party_breaking:
+    runs-on: ubuntu-latest
+    name: Protobuf third_party checks
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Protobuf Setup
+        uses: bufbuild/buf-setup-action@v1.4.0
+      - name: Check third_party for breaking proto updates
         uses: bufbuild/buf-breaking-action@v1
         with:
           input: 'third_party/proto'
