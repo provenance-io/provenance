@@ -35,7 +35,7 @@ func (keeper Keeper) Resolve(c context.Context, request *types.QueryResolveReque
 	if record == nil {
 		return nil, types.ErrNameNotBound
 	}
-	return &types.QueryResolveResponse{Address: record.Address}, nil
+	return &types.QueryResolveResponse{Address: record.Address, Restricted: record.Restricted}, nil
 }
 
 // ReverseLookup gets all names bound to an address.

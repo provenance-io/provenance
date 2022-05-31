@@ -124,6 +124,8 @@
     - [MsgDeleteResponse](#provenance.marker.v1.MsgDeleteResponse)
     - [MsgFinalizeRequest](#provenance.marker.v1.MsgFinalizeRequest)
     - [MsgFinalizeResponse](#provenance.marker.v1.MsgFinalizeResponse)
+    - [MsgGrantAllowanceRequest](#provenance.marker.v1.MsgGrantAllowanceRequest)
+    - [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse)
     - [MsgMintRequest](#provenance.marker.v1.MsgMintRequest)
     - [MsgMintResponse](#provenance.marker.v1.MsgMintResponse)
     - [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest)
@@ -2037,6 +2039,35 @@ MsgFinalizeResponse defines the Msg/Finalize response type
 
 
 
+<a name="provenance.marker.v1.MsgGrantAllowanceRequest"></a>
+
+### MsgGrantAllowanceRequest
+MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If
+successful a feegrant is recorded where the marker account itself is the grantor
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `administrator` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  | grantee is the address of the user being granted an allowance of another user's funds. |
+| `allowance` | [google.protobuf.Any](#google.protobuf.Any) |  | allowance can be any of basic and filtered fee allowance (fee FeeGrant module). |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgGrantAllowanceResponse"></a>
+
+### MsgGrantAllowanceResponse
+MsgGrantAllowanceResponse defines the Msg/GrantAllowanceResponse response type.
+
+
+
+
+
+
 <a name="provenance.marker.v1.MsgMintRequest"></a>
 
 ### MsgMintRequest
@@ -2170,6 +2201,7 @@ Msg defines the Marker Msg service.
 | `AddMarker` | [MsgAddMarkerRequest](#provenance.marker.v1.MsgAddMarkerRequest) | [MsgAddMarkerResponse](#provenance.marker.v1.MsgAddMarkerResponse) | AddMarker | |
 | `Transfer` | [MsgTransferRequest](#provenance.marker.v1.MsgTransferRequest) | [MsgTransferResponse](#provenance.marker.v1.MsgTransferResponse) | Transfer marker denominated coin between accounts | |
 | `SetDenomMetadata` | [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest) | [MsgSetDenomMetadataResponse](#provenance.marker.v1.MsgSetDenomMetadataResponse) | Allows Denom Metadata (see bank module) to be set for the Marker's Denom | |
+| `GrantAllowance` | [MsgGrantAllowanceRequest](#provenance.marker.v1.MsgGrantAllowanceRequest) | [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse) | GrantAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
 
  <!-- end services -->
 
@@ -5542,6 +5574,7 @@ Event emitted when name is bound.
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
 | `name` | [string](#string) |  |  |
+| `restricted` | [bool](#bool) |  |  |
 
 
 
@@ -5558,6 +5591,7 @@ Event emitted when name is unbound.
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
 | `name` | [string](#string) |  |  |
+| `restricted` | [bool](#bool) |  |  |
 
 
 
@@ -5696,6 +5730,7 @@ QueryResolveResponse is the response type for the Query/Resolve method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | a string containing the address the name resolves to |
+| `restricted` | [bool](#bool) |  | Whether owner signature is required to add sub-names. |
 
 
 
