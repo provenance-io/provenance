@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - "**/**.proto"
+      - ".github/workflows/proto.yml"
 
 jobs:
   buf_lint:
