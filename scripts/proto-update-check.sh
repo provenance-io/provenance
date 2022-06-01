@@ -15,7 +15,7 @@ regex='github.com/cosmos/cosmos-sdk|github.com/tendermint/tendermint'
 output=$(git diff ..origin/main -- go.mod | grep -E -c $regex)
 dir="$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )"
 
-if [[ $output -gt 0 ]]; then
+if [[ "$output" -gt 0 ]]; then
   echo -e "${lite_blue}Downloading latest third_party proto files for comparison...${off}"
 
   # Download third_party proto files int build/ directory for comparison against $dir /third_party
