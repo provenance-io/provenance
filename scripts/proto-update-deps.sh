@@ -24,7 +24,8 @@ __generate_usage
 dir="$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )"
 dest="$dir"
 # update dir if a destination is supplied as an argument.
-[[ ! -z "$1" ]] && dest="$dir"/"$1"
+# single brackets because of `set -e` option above.
+[ ! -z "$1" ] && dest="$dir"/"$1"
 
 EXT_PROTO_DIR="$dest"/third_party
 

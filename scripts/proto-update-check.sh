@@ -14,16 +14,17 @@ regex='github.com/cosmos/cosmos-sdk|github.com/tendermint/tendermint'
 output=$(git diff ..origin/main -- go.mod | grep -E -c $regex)
 dir="$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )"
 
-if [[ "$output" -gt 0 ]]; then
+# single brackets because of `set -e` option above.
+if [ "$output" -gt 0 ]; then
   echo -e "${lite_blue}Downloading latest third_party proto files for comparison...${off}"
 
   # Download third_party proto files int build/ directory for comparison against $dir /third_party
-  /bin/bash "$dir"/scripts/proto-update-deps.sh build
+  bash "$dir"/scripts/proto-update-deps.sh build
 
   echo -e "\n${lite_blue}Checking Protobuf files for differences...${off}\n"
 
   DIFF=$(diff -rq -x '*.yaml' --exclude=google "$dir"/build/third_party "$dir"/third_party || true)
-  if [[ -n "$DIFF" ]]; then
+  if [ -n "$DIFF" ]; then
     echo -e "${lite_blue}\n\nDiff log:\n$DIFF${off}\n\n"
 
     echo -e "${red}\nFound differences in Protobuf files.\n
