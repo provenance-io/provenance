@@ -545,11 +545,11 @@ proto-check-breaking:
 
 proto-update-check:
 	@echo "Checking for third_party Protobuf updates"
-	sh ./scripts/proto-update-check.sh
+	bash ./scripts/proto-update-check.sh
 
 proto-update-deps:
 	@echo "Updating Protobuf files"
-	sh ./scripts/proto-update-deps.sh
+	bash ./scripts/proto-update-deps.sh
 
 .PHONY: proto-all proto-gen proto-format proto-gen-any proto-lint proto-check-breaking proto-update-deps proto-update-check
 
