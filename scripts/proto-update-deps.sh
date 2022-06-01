@@ -50,7 +50,7 @@ PROTO_EXPR="*/proto/**/*.proto"
 
 # gnu tar on ubuntu requires the '--wildcards' flag
 # check and warn user to install gnu tar to be able to also run the script on macOS.
-if ! command -v gtar &> /dev/null; then
+if [[ "$OSTYPE" == "darwin"* ]] && [[ $(command -v gtar) == "" ]]; then
  echo -e "${red}\nYou must install GNU Tar in order to use the '--wildcards' flag with the tar command.
  Run: brew install gnu-tar\n
  If you need ot use it as \"tar\", you can add a \"gnubin\" directory
