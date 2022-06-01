@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
   * Move buf.build push action to occur after PRs are merged to main branch [#838](https://github.com/provenance-io/provenance/issues/838)
+  * Unblock proto update check in workflow [#842](https://github.com/provenance-io/provenance/issues/842)
 
 ### Improvements 
 
