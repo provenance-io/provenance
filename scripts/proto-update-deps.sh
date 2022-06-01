@@ -5,6 +5,7 @@ set -ex
 # Download third_party proto files from the versions declared in go.mod
 #
 
+red='\e[0;31m'
 green='\e[0;32m'
 off='\e[0m'
 
@@ -46,15 +47,27 @@ mkdir -p "$EXT_PROTO_DIR"/proto
 #cp -r "$dir"/third_party/proto/google "$EXT_PROTO_DIR"/proto || exit $?
 cd "$EXT_PROTO_DIR"
 PROTO_EXPR="*/proto/**/*.proto"
+
+# gnu tar on ubuntu requires the '--wildcards' flag
+# check and warn user to install gnu tar to be able to also run the script on macOS.
+if ! command -v gtar &> /dev/null; then
+ echo -e "${red}\nYou must install GNU Tar in order to use the '--wildcards' flag with the tar command.
+ Run: brew install gnu-tar\n
+ If you need ot use it as \"tar\", you can add a \"gnubin\" directory
+ to your PATH from your bashrc like:\n
+    PATH=\"\$(brew --prefix)/opt/gnu-tar/libexec/gnubin:\$PATH\"${off}\n"
+ exit 1
+fi
+
 curl -f -sSL "$CONFIO_PROTO_URL" -o proto/proofs.proto.orig --create-dirs
 curl -f -sSL "$GOGO_PROTO_URL" -o proto/gogoproto/gogo.proto --create-dirs
 curl -f -sSL "$COSMOS_PROTO_URL" -o proto/cosmos_proto/cosmos.proto --create-dirs
-curl -f -sSL "$COSMWASM_TARBALL_URL" | tar zx --strip-components 1 --exclude="*/third_party" "$PROTO_EXPR"
-curl -f -sSL "$COSMWASM_TARBALL_URL" | tar zx --strip-components 1 --exclude="*/third_party" "$PROTO_EXPR"
-curl -f -sSL "$WASMD_TARBALL_URL" | tar zx --strip-components 1 --exclude="*/third_party" --exclude="*/proto/ibc" "$PROTO_EXPR"
-curl -f -sSL "$IBC_GO_TARBALL_URL" | tar zx --strip-components 1 --exclude="*/third_party" "$PROTO_EXPR"
-curl -f -sSL "$COSMOS_TARBALL_URL" | tar zx --strip-components 1 --exclude="*/third_party" --exclude="*/testutil" "$PROTO_EXPR"
-curl -f -sSL "$TM_TARBALL_URL" | tar zx --strip-components 1 --exclude="*/third_party" "$PROTO_EXPR"
+curl -f -sSL "$COSMWASM_TARBALL_URL" | tar zx --wildcards --strip-components 1 --exclude="*/third_party" "$PROTO_EXPR"
+curl -f -sSL "$COSMWASM_TARBALL_URL" | tar zx --wildcards --strip-components 1 --exclude="*/third_party" "$PROTO_EXPR"
+curl -f -sSL "$WASMD_TARBALL_URL" | tar zx --wildcards --strip-components 1 --exclude="*/third_party" --exclude="*/proto/ibc" "$PROTO_EXPR"
+curl -f -sSL "$IBC_GO_TARBALL_URL" | tar zx --wildcards --strip-components 1 --exclude="*/third_party" "$PROTO_EXPR"
+curl -f -sSL "$COSMOS_TARBALL_URL" | tar zx --wildcards --strip-components 1 --exclude="*/third_party" --exclude="*/testutil" "$PROTO_EXPR"
+curl -f -sSL "$TM_TARBALL_URL" | tar zx --wildcards --strip-components 1 --exclude="*/third_party" "$PROTO_EXPR"
 
 ## insert go, java package option into proofs.proto file
 ## Issue link: https://github.com/confio/ics23/issues/32 (instead of a simple sed we need 4 lines cause bsd sed -i is incompatible)
