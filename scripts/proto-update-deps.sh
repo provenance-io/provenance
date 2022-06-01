@@ -5,18 +5,14 @@ set -ex
 # Download third_party proto files from the versions declared in go.mod
 #
 
-red='\033[1;31m'
-green='\033[;32m'
-off='\033[0m'
-
 __generate_usage () {
-  echo -e "${green}Updates third_party Protobuf files
+  echo -e "Updates third_party Protobuf files
 
 Usage: ./proto-update-deps.sh [dest]
 
 The dest is optional.
   The default location is ./third_party/proto/
-  If a dest is supplied then the path becomes ./<dest>/third_party/proto/.${off}
+  If a dest is supplied then the path becomes ./<dest>/third_party/proto/.
 
 "
 }
@@ -51,11 +47,11 @@ PROTO_EXPR="*/proto/**/*.proto"
 # gnu tar on ubuntu requires the '--wildcards' flag
 # check and warn user to install gnu tar to be able to also run the script on macOS.
 if [[ "$OSTYPE" == "darwin"* ]] && [[ $(command -v gtar) == "" ]]; then
- echo -e "${red}\nYou must install GNU Tar in order to use the '--wildcards' flag with the tar command.
+ echo -e "\nYou must install GNU Tar in order to use the '--wildcards' flag with the tar command.
  Run: brew install gnu-tar\n
  If you need ot use it as \"tar\", you can add a \"gnubin\" directory
  to your PATH from your bashrc like:\n
-    PATH=\"\$(brew --prefix)/opt/gnu-tar/libexec/gnubin:\$PATH\"${off}\n"
+    PATH=\"\$(brew --prefix)/opt/gnu-tar/libexec/gnubin:\$PATH\"\n"
  exit 1
 fi
 
