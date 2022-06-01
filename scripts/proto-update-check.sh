@@ -6,9 +6,9 @@ set -ex
 # Warn user to update third_party libraries and push again.
 #
 
-red='\e[0;31m'
-lite_blue='\e[1;34m'
-off='\e[0m'
+COLOR_RED=$(TPUT setaf 1)
+COLOR_BLUE=$(TPUT setaf 4)
+COLOR_OFF=$(TPUT sgr0)
 
 regex='github.com/cosmos/cosmos-sdk|github.com/tendermint/tendermint'
 output=$(git diff ..origin/main -- go.mod | grep -E -c $regex)
@@ -16,18 +16,18 @@ dir="$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )"
 
 # single brackets because of `set -e` option above.
 if [ "$output" -gt 0 ]; then
-  echo -e "${lite_blue}Downloading latest third_party proto files for comparison...${off}"
+  echo -e "${COLOR_BLUE}Downloading latest third_party proto files for comparison...${COLOR_OFF}"
 
   # Download third_party proto files int build/ directory for comparison against $dir /third_party
   bash "$dir"/scripts/proto-update-deps.sh build
 
-  echo -e "\n${lite_blue}Checking Protobuf files for differences...${off}\n"
+  echo -e "\n${COLOR_BLUE}Checking Protobuf files for differences...${COLOR_OFF}\n"
 
   DIFF=$(diff -rq -x '*.yaml' --exclude=google "$dir"/build/third_party "$dir"/third_party || true)
   if [ -n "$DIFF" ]; then
-    echo -e "${lite_blue}\n\nDiff log:\n$DIFF${off}\n\n"
+    echo -e "${COLOR_BLUE}\n\nDiff log:\n\n$DIFF${COLOR_OFF}\n\n"
 
-    echo -e "${red}\nFound differences in Protobuf files.\n
+    echo -e "${COLOR_RED}\nFound differences in Protobuf files.\n
     This indicates a version change was detected in one of the following libraries:
       - github.com/cosmos/cosmos-sdk
       - github.com/tendermint/tendermint
@@ -36,7 +36,7 @@ if [ "$output" -gt 0 ]; then
       1. run: make proto-update-deps
       2. run: make proto-update-check
       3. run: diff -rq -x '*.yaml' --exclude=google build/third_party third_party
-      4. commit updates and push\n${off}" >&2
+      4. commit updates and push\n${COLOR_OFF}" >&2
 
     exit 1
   fi
