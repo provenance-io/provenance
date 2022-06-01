@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -ex
 
 #
@@ -8,7 +8,6 @@ set -ex
 
 red='\e[0;31m'
 lite_blue='\e[1;34m'
-yellow='\e[1;33m'
 off='\e[0m'
 
 regex='github.com/cosmos/cosmos-sdk|github.com/tendermint/tendermint'
@@ -19,7 +18,7 @@ if [[ "$output" -gt 0 ]]; then
   echo -e "${lite_blue}Downloading latest third_party proto files for comparison...${off}"
 
   # Download third_party proto files int build/ directory for comparison against $dir /third_party
-  . "$dir"/scripts/proto-update-deps.sh build
+  /bin/bash "$dir"/scripts/proto-update-deps.sh build
 
   echo -e "\n${lite_blue}Checking Protobuf files for differences...${off}\n"
 
