@@ -381,19 +381,21 @@ func (ad *ActionDelegate) GetEventCriteria() *EventCriteria {
 }
 
 func (ad *ActionDelegate) getSharesFromValidator(ctx sdk.Context, provider KeeperProvider, validator sdk.ValAddress, delegator sdk.AccAddress) sdk.Dec {
-	delegations := provider.GetStakingKeeper().GetValidatorDelegations(ctx, validator)
+	stakingKeeper := provider.GetStakingKeeper()
+	delegations := stakingKeeper.GetValidatorDelegations(ctx, validator)
 	delegatorShares := sdk.NewDec(0)
 	for _, delegation := range delegations {
 		if !delegator.Equals(delegation.GetDelegatorAddr()) {
 			continue
 		}
-		delegatorShares = delegatorShares.Add(delegation.GetShares())
+		shares := delegation.GetShares()
+		delegatorShares = delegatorShares.Add(shares)
 	}
 	return delegatorShares
 }
 
 // The percentile is dictated by its placement in the BondedValidator list
-// If there are 5 validators and the first validator matches then that validator is in the top 20%
+// If there are 5 validators and the first validator matches then that validator is in the top 80%
 func (ad *ActionDelegate) getValidatorRankPercentile(ctx sdk.Context, provider KeeperProvider, validator sdk.ValAddress) float64 {
 	validators := provider.GetStakingKeeper().GetBondedValidatorsByPower(ctx)
 	numValidators := len(validators)
@@ -418,7 +420,14 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	percentile := ad.getValidatorRankPercentile(ctx, provider, validator)
 
 	hasValidActionCount := state.ActionCounter >= ad.GetMinimumActions() && state.ActionCounter <= ad.GetMaximumActions()
-	hasValidDelegationAmount := delegatorShares.BigInt().Uint64() >= ad.GetMinimumDelegationAmount() && delegatorShares.BigInt().Uint64() <= ad.GetMaximumDelegationAmount()
+
+	// Create the BigInt here
+	minAmount := sdk.NewIntFromUint64(ad.GetMinimumDelegationAmount())
+	minDelegation := sdk.NewDecFromBigInt(minAmount.BigInt())
+	maxAmount := sdk.NewIntFromUint64(ad.GetMaximumDelegationAmount())
+	maxDelegation := sdk.NewDecFromBigInt(maxAmount.BigInt())
+
+	hasValidDelegationAmount := delegatorShares.GTE(minDelegation) && delegatorShares.LTE(maxDelegation)
 	hasValidActivePercentile := percentile >= ad.GetMinimumActiveStakePercentile() && percentile <= ad.GetMaximumActiveStakePercentile()
 
 	return hasValidActionCount && hasValidDelegationAmount && hasValidActivePercentile

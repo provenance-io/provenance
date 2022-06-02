@@ -222,8 +222,6 @@ func (k Keeper) GetMatchingEvents(ctx sdk.Context, eventCriteria *types.EventCri
 	result := ([]types.EvaluationResult)(nil)
 
 	err := k.IterateABCIEvents(ctx, eventCriteria, func(eventType string, attributes *map[string][]byte) error {
-		// really not possible to get an error but could happen i guess
-
 		// This logic is specific to one type of event
 		if eventType == "delegate" {
 			address := (*attributes)["validator"]

@@ -5,6 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	staking "github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -36,6 +39,11 @@ func setupEventHistory(suite *KeeperTestSuite) {
 		event3,
 	}
 	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
+	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
+}
+
+func SetupEventHistory(suite *KeeperTestSuite, events sdk.Events) {
+	eventManagerStub := sdk.NewEventManagerWithHistory(events.ToABCIEvents())
 	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
 }
 
@@ -348,11 +356,34 @@ func (suite *KeeperTestSuite) createTestValidators(amount int) {
 	addrDels := simapp.AddTestAddrsIncremental(suite.app, suite.ctx, amount, sdk.NewInt(10000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
 
+	totalSupply := sdk.NewCoins(sdk.NewCoin(suite.app.StakingKeeper.BondDenom(suite.ctx), sdk.NewInt(1000000000)))
+	notBondedPool := suite.app.StakingKeeper.GetNotBondedPool(suite.ctx)
+	suite.app.AccountKeeper.SetModuleAccount(suite.ctx, notBondedPool)
+
+	suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, totalSupply)
+	suite.app.BankKeeper.SendCoinsFromModuleToModule(suite.ctx, minttypes.ModuleName, notBondedPool.GetName(), totalSupply)
+
 	var validators []stakingtypes.Validator
 	for i := 0; i < amount; i++ {
-		validators = append(validators, teststaking.NewValidator(suite.T(), valAddrs[i], PKs[i]))
-		validators[i], _ = validators[i].AddTokensFromDel(sdk.NewInt(int64(i)))
+		validator := teststaking.NewValidator(suite.T(), valAddrs[i], PKs[i])
+		tokens := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, int64(1+amount-i))
+		validator, _ = validator.AddTokensFromDel(tokens)
+		validator = keeper.TestingUpdateValidator(suite.app.StakingKeeper, suite.ctx, validator, true)
+		validators = append(validators, validator)
+
+		// Create the delegations
+		bond := stakingtypes.NewDelegation(addrDels[i], valAddrs[i], sdk.NewDec(9))
+		bond.Shares = sdk.NewDec(int64((i + 1) * 10))
+		suite.app.StakingKeeper.SetDelegation(suite.ctx, bond)
+
+		// We want even validators to be bonded
+		if i%2 == 0 {
+			suite.app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(suite.ctx)
+			validator.ABCIValidatorUpdate(suite.app.StakingKeeper.PowerReduction(suite.ctx))
+		}
 	}
+
+	staking.EndBlocker(suite.ctx, suite.app.StakingKeeper)
 
 	testValidators = validators
 }
@@ -612,7 +643,6 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction()
 			},
 		},
 	)
-	rewardProgram.QualifyingActions = append(rewardProgram.QualifyingActions)
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
 	suite.Assert().Equal(2, len(qualifyingActions), "must find two qualifying actions")
@@ -661,7 +691,6 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction()
 			},
 		},
 	)
-	rewardProgram.QualifyingActions = append(rewardProgram.QualifyingActions)
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
 	suite.Assert().Equal(4, len(qualifyingActions), "must find four qualifying actions")

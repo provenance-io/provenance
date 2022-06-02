@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
@@ -464,6 +465,14 @@ func (s *KeeperTestSuite) TestDelegateAgainstNoRewardPrograms() {
 	s.Assert().NotPanics(func() {
 		reward.EndBlocker(s.ctx, s.app.RewardKeeper)
 	})
+
+	count := 0
+	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
+		count += 1
+		return true
+	})
+	s.Assert().NoError(err, "iterate should not throw error")
+	s.Assert().Equal(0, count, "no shares should be created")
 }
 
 // Test against inactive reward programs. They should not be updated
@@ -471,21 +480,12 @@ func (s *KeeperTestSuite) TestDelegateAgainstInactiveRewardPrograms() {
 	s.SetupTest()
 	SetupEventHistoryWithDelegates(s)
 
-	// Advance one day
-	/*s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + (24 * 60 * 60))
-	s.Assert().NotPanics(func() {
-		reward.EndBlocker(s.ctx, s.app.RewardKeeper)
-	})*/
-
-	/*action := types.NewActionDelegate()
+	// Create inactive reward program
+	action := types.NewActionDelegate()
 	action.MaximumActions = 10
-	action.MinimumActions = 2
-
-	action.MinimumActiveStakePercentile = 0.7
+	action.MinimumActions = 1
+	action.MinimumActiveStakePercentile = 0.0
 	action.MaximumActiveStakePercentile = 1.0
-
-	// This probably needs to be in Coin format
-	// Does it need to be a Coin type?
 	action.MinimumDelegationAmount = 100
 	action.MaximumDelegationAmount = 100
 
@@ -504,21 +504,207 @@ func (s *KeeperTestSuite) TestDelegateAgainstInactiveRewardPrograms() {
 		60*60,
 		3,
 		types.NewEligibilityCriteria("criteria", &action),
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               10,
+						MinimumDelegationAmount:      sdk.NewDec(0).BigInt().Uint64(),
+						MaximumDelegationAmount:      sdk.NewDec(10).BigInt().Uint64(),
+						MinimumActiveStakePercentile: 0,
+						MaximumActiveStakePercentile: 1,
+					},
+				},
+			},
+		},
 	)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
-	_, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
-	s.Assert().NoError(err)*/
+	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+
+	// Ensure no shares are granted
+	count := 0
+	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
+		count += 1
+		return true
+	})
+	s.Assert().NoError(err, "iterate should not throw error")
+	s.Assert().Equal(0, count, "no shares should be created")
+
+	programs, err := s.app.RewardKeeper.GetAllRewardPrograms(s.ctx)
+	s.Assert().Equal(1, len(programs))
+	s.Assert().NoError(err, "get all reward programs should not throw error")
+
+	activePrograms, err := s.app.RewardKeeper.GetAllActiveRewardPrograms(s.ctx)
+	s.Assert().NoError(err, "get all active reward programs should not throw error")
+	s.Assert().Equal(0, len(activePrograms))
 }
 
 // Test against delegate reward program. No delegate happens.
 func (s *KeeperTestSuite) TestNonDelegateAgainstRewardProgram() {
+	s.SetupTest()
+	setupEventHistory(s)
 
+	// Create inactive reward program
+	action := types.NewActionDelegate()
+	action.MaximumActions = 10
+	action.MinimumActions = 1
+	action.MinimumActiveStakePercentile = 0.0
+	action.MaximumActiveStakePercentile = 1.0
+	action.MinimumDelegationAmount = 100
+	action.MaximumDelegationAmount = 100
+
+	coin := sdk.NewInt64Coin("hotdog", 10000)
+	maxCoin := sdk.NewInt64Coin("hotdog", 100)
+
+	now := time.Now().UTC()
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		coin,
+		maxCoin,
+		now,
+		60*60,
+		3,
+		types.NewEligibilityCriteria("criteria", &action),
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               10,
+						MinimumDelegationAmount:      sdk.NewDec(0).BigInt().Uint64(),
+						MaximumDelegationAmount:      sdk.NewDec(10).BigInt().Uint64(),
+						MinimumActiveStakePercentile: 0,
+						MaximumActiveStakePercentile: 1,
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.Started = true
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+
+	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+
+	// Ensure no shares are granted
+	count := 0
+	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
+		count += 1
+		return true
+	})
+	s.Assert().NoError(err, "iterate should not throw error")
+	s.Assert().Equal(0, count, "no shares should be created")
+
+	programs, err := s.app.RewardKeeper.GetAllRewardPrograms(s.ctx)
+	s.Assert().Equal(1, len(programs))
+	s.Assert().NoError(err, "get all reward programs should not throw error")
+
+	activePrograms, err := s.app.RewardKeeper.GetAllActiveRewardPrograms(s.ctx)
+	s.Assert().NoError(err, "get all active reward programs should not throw error")
+	s.Assert().Equal(1, len(activePrograms))
+}
+
+func (suite *KeeperTestSuite) createDelegateEvents(validator, amount, sender, shares string) sdk.Events {
+	attributes2 := []sdk.Attribute{
+		sdk.NewAttribute("module", "staking"),
+		sdk.NewAttribute("sender", sender),
+	}
+	attributes1 := []sdk.Attribute{
+		sdk.NewAttribute("validator", validator),
+		sdk.NewAttribute("amount", amount),
+		sdk.NewAttribute("new_shares", shares),
+	}
+	event1 := sdk.NewEvent("delegate", attributes1...)
+	event2 := sdk.NewEvent("message", attributes2...)
+	events := sdk.Events{
+		event1,
+		event2,
+	}
+	return events
+}
+
+func (suite *KeeperTestSuite) createValidatorEvent(validator, amount, sender string) sdk.Events {
+	attributes1 := []sdk.Attribute{
+		sdk.NewAttribute("validator", validator),
+		sdk.NewAttribute("amount", amount),
+	}
+	attributes2 := []sdk.Attribute{
+		sdk.NewAttribute("module", "staking"),
+		sdk.NewAttribute("sender", sender),
+	}
+	event1 := sdk.NewEvent("create_validator", attributes1...)
+	event2 := sdk.NewEvent("message", attributes2...)
+	events := sdk.Events{
+		event1,
+		event2,
+	}
+	return events
 }
 
 // Test against delegate reward program. Grant 1 share
 func (s *KeeperTestSuite) TestSingleDelegate() {
+	s.SetupTest()
 
+	// Create inactive reward program
+	action := types.NewActionDelegate()
+	action.MaximumActions = 10
+	action.MinimumActions = 1
+	action.MinimumActiveStakePercentile = 0.0
+	action.MaximumActiveStakePercentile = 1.0
+	action.MinimumDelegationAmount = 100
+	action.MaximumDelegationAmount = 100
+
+	coin := sdk.NewInt64Coin("hotdog", 10000)
+	maxCoin := sdk.NewInt64Coin("hotdog", 100)
+
+	now := time.Now().UTC()
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		coin,
+		maxCoin,
+		now,
+		60*60,
+		3,
+		types.NewEligibilityCriteria("criteria", &action),
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               10,
+						MinimumDelegationAmount:      sdk.NewDec(0).BigInt().Uint64(),
+						MaximumDelegationAmount:      sdk.NewDec(10).BigInt().Uint64(),
+						MinimumActiveStakePercentile: 0,
+						MaximumActiveStakePercentile: 1,
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.Started = true
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+
+	// We want to set the events here
+	validators := getTestValidators(6, 6)
+	delegates := s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
+	SetupEventHistory(s, delegates)
+	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+
+	// Ensure one share is granted
+	count := 0
+	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
+		count += 1
+		return true
+	})
+	s.Assert().NoError(err, "iterate should not throw error")
+	s.Assert().Equal(1, count, "1 share should be created")
 }
 
 // Test against delegate reward program. Grant 2 share
