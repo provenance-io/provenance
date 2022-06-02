@@ -707,7 +707,7 @@ func (s *KeeperTestSuite) TestSingleDelegate() {
 	// Ensure one share is granted
 	count := 0
 	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
-		count += 1
+		count += int(share.GetAmount())
 		return true
 	})
 	s.Assert().NoError(err, "iterate should not throw error")
@@ -716,7 +716,68 @@ func (s *KeeperTestSuite) TestSingleDelegate() {
 
 // Test against delegate reward program. Grant 2 share
 func (s *KeeperTestSuite) TestMultipleDelegate() {
+	s.SetupTest()
 
+	// Create inactive reward program
+	action := types.NewActionDelegate()
+	action.MaximumActions = 10
+	action.MinimumActions = 1
+	action.MinimumActiveStakePercentile = 0.0
+	action.MaximumActiveStakePercentile = 1.0
+
+	minimumDelegation := sdk.NewInt64Coin("nhash", 0)
+	maximumDelegation := sdk.NewInt64Coin("nhash", 100)
+	action.MinimumDelegationAmount = &minimumDelegation
+	action.MaximumDelegationAmount = &maximumDelegation
+
+	coin := sdk.NewInt64Coin("hotdog", 10000)
+	maxCoin := sdk.NewInt64Coin("hotdog", 100)
+
+	now := time.Now().UTC()
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		coin,
+		maxCoin,
+		now,
+		60*60,
+		3,
+		types.NewEligibilityCriteria("criteria", &action),
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               10,
+						MinimumDelegationAmount:      &minimumDelegation,
+						MaximumDelegationAmount:      &maximumDelegation,
+						MinimumActiveStakePercentile: 0,
+						MaximumActiveStakePercentile: 1,
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.Started = true
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+
+	// We want to set the events here
+	validators := getTestValidators(6, 6)
+	delegates := s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
+	delegates = delegates.AppendEvents(s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
+	SetupEventHistory(s, delegates)
+	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+
+	// Ensure one share is granted
+	count := 0
+	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
+		count += int(share.GetAmount())
+		return true
+	})
+	s.Assert().NoError(err, "iterate should not throw error")
+	s.Assert().Equal(2, count, "1 share should be created")
 }
 
 // Test against delegate reward program. Not enough actions
