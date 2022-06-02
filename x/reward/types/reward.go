@@ -380,9 +380,9 @@ func (ad *ActionDelegate) GetEventCriteria() *EventCriteria {
 	})
 }
 
-func (ad *ActionDelegate) getSharesFromValidator(ctx sdk.Context, provider KeeperProvider, validator sdk.ValAddress, delegator sdk.AccAddress) sdk.Dec {
+func (ad *ActionDelegate) getTokensFromValidator(ctx sdk.Context, provider KeeperProvider, validatorAddr sdk.ValAddress, delegator sdk.AccAddress) (sdk.Dec, bool) {
 	stakingKeeper := provider.GetStakingKeeper()
-	delegations := stakingKeeper.GetValidatorDelegations(ctx, validator)
+	delegations := stakingKeeper.GetValidatorDelegations(ctx, validatorAddr)
 	delegatorShares := sdk.NewDec(0)
 	for _, delegation := range delegations {
 		if !delegator.Equals(delegation.GetDelegatorAddr()) {
@@ -391,7 +391,13 @@ func (ad *ActionDelegate) getSharesFromValidator(ctx sdk.Context, provider Keepe
 		shares := delegation.GetShares()
 		delegatorShares = delegatorShares.Add(shares)
 	}
-	return delegatorShares
+
+	validator, found := stakingKeeper.GetValidator(ctx, validatorAddr)
+	if !found {
+		return sdk.NewDec(0), found
+	}
+	tokens := validator.TokensFromShares(delegatorShares)
+	return tokens, found
 }
 
 // The percentile is dictated by its placement in the BondedValidator list
@@ -416,18 +422,20 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	validator := event.Validator
 	delegator := event.Delegator
 
-	delegatorShares := ad.getSharesFromValidator(ctx, provider, validator, delegator)
+	tokens, found := ad.getTokensFromValidator(ctx, provider, validator, delegator)
+	if !found {
+		return false
+	}
 	percentile := ad.getValidatorRankPercentile(ctx, provider, validator)
 
 	hasValidActionCount := state.ActionCounter >= ad.GetMinimumActions() && state.ActionCounter <= ad.GetMaximumActions()
 
-	// Create the BigInt here
-	minAmount := sdk.NewIntFromUint64(ad.GetMinimumDelegationAmount())
-	minDelegation := sdk.NewDecFromBigInt(minAmount.BigInt())
-	maxAmount := sdk.NewIntFromUint64(ad.GetMaximumDelegationAmount())
-	maxDelegation := sdk.NewDecFromBigInt(maxAmount.BigInt())
+	// TODO Is this correct to round the tokens?
+	delegatedHash := sdk.NewInt64Coin("nhash", tokens.RoundInt64())
+	minDelegation := ad.GetMinimumDelegationAmount()
+	maxDelegation := ad.GetMaximumDelegationAmount()
 
-	hasValidDelegationAmount := delegatorShares.GTE(minDelegation) && delegatorShares.LTE(maxDelegation)
+	hasValidDelegationAmount := delegatedHash.IsGTE(*minDelegation) && (delegatedHash.IsLT(*maxDelegation) || delegatedHash.IsEqual(*maxDelegation))
 	hasValidActivePercentile := percentile >= ad.GetMinimumActiveStakePercentile() && percentile <= ad.GetMaximumActiveStakePercentile()
 
 	return hasValidActionCount && hasValidDelegationAmount && hasValidActivePercentile

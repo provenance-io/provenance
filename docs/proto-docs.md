@@ -5978,8 +5978,8 @@ if above min and below max, increase shares earned for rewards pool by 1.
 | ----- | ---- | ----- | ----------- |
 | `minimum_actions` | [uint64](#uint64) |  |  |
 | `maximum_actions` | [uint64](#uint64) |  |  |
-| `minimum_delegation_amount` | [uint64](#uint64) |  |  |
-| `maximum_delegation_amount` | [uint64](#uint64) |  |  |
+| `minimum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `maximum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `minimum_active_stake_percentile` | [double](#double) |  |  |
 | `maximum_active_stake_percentile` | [double](#double) |  |  |
 
