@@ -5495,7 +5495,7 @@ MsgAssessCustomMsgFeeRequest defines an sdk.Msg type
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `name` | [string](#string) |  | optional short name for custom msg fee |
+| `name` | [string](#string) |  | optional short name for custom msg fee, this will be emitted as a property of the event |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | amount of additional fee that must be paid |
 | `recipient` | [string](#string) |  | optional recipient address, the amount is split 50/50 between recipient and fee module. If |
 | `from` | [string](#string) |  | empty, whole amount goes to fee module
@@ -5530,7 +5530,7 @@ Msg defines the msgfees Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `AssessCustomMsgFee` | [MsgAssessCustomMsgFeeRequest](#provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest) | [MsgAssessCustomMsgFeeResponse](#provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse) | AssessCustomMsgFee endpoint executes the additional fee charges. Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient for executing contracts | |
+| `AssessCustomMsgFee` | [MsgAssessCustomMsgFeeRequest](#provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest) | [MsgAssessCustomMsgFeeResponse](#provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse) | AssessCustomMsgFee endpoint executes the additional fee charges. This will only emit the event and not persist it to the keeper. Fees are handled with the custom msg fee handlers Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient for executing contracts | |
 
  <!-- end services -->
 
