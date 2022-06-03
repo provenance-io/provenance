@@ -94,6 +94,7 @@ jobs:
         run: |
           make cleveldb
           make build
+          go get github.com/jmhodges/levigo
     outputs:
       should-run: ${{ env.GIT_DIFF }}
       file-prefix: ${{ steps.file-prefix.outputs.file-prefix }}
