@@ -92,7 +92,7 @@ jobs:
       - name: Build Cache
         if: steps.cache-setup.outputs.cache-hit != 'true'
         run: |
-          make cleveldb
+          CLEVELDB_DO_CLEANUP=false make cleveldb
           make build
           go get github.com/jmhodges/levigo
     outputs:
@@ -131,7 +131,7 @@ jobs:
           key: ${{ needs.setup-tests.outputs.cache-key }}
       - name: Build and install cleveldb
         if: needs.setup-tests.outputs.should-run
-        run: make cleveldb
+        run: CLEVELDB_DO_CLEANUP=false make cleveldb
       - uses: actions/setup-go@v3
         if: needs.setup-tests.outputs.should-run
         with:
@@ -227,7 +227,7 @@ jobs:
           key: ${{ needs.setup-tests.outputs.cache-key }}
       - name: Build and install cleveldb
         if: needs.setup-tests.outputs.should-run
-        run: make cleveldb
+        run: CLEVELDB_DO_CLEANUP=false make cleveldb
       - uses: actions/setup-go@v3
         if: needs.setup-tests.outputs.should-run
         with:
