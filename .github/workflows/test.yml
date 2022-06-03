@@ -40,7 +40,7 @@ jobs:
         run: echo "::set-output name=go-version::1.17"
       - name: Define cache key
         id: cache-key
-        run: echo "::set-output name=cache-key::${{ runner.os }}-unit-tests-${{ steps.go-version.outputs.go-version }}-${{ hashFiles('**/go.sum') }}"
+        run: echo "::set-output name=cache-key::${{ runner.os }}-unit-tests-${{ hashFiles('**/go.sum', '.github/workflows/test.yml') }}"
       - name: Define file prefix
         id: file-prefix
         run: echo "::set-output name=file-prefix::${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
@@ -71,6 +71,9 @@ jobs:
         with:
           name: "${{ steps.file-prefix.outputs.file-prefix }}-mrkrsim"
           path: ./pkgs.txt.part.mrkrsim
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ steps.cache-key.outputs.go-version }}
       - uses: actions/cache@v3
         id: cache-setup
         with:
