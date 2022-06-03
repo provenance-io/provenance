@@ -91,10 +91,7 @@ jobs:
           go-version: ${{ steps.cache-key.outputs.go-version }}
       - name: Build Cache
         if: steps.cache-setup.outputs.cache-hit != 'true'
-        run: |
-          CLEVELDB_DO_CLEANUP=false make cleveldb
-          make build
-          go get github.com/jmhodges/levigo
+        run: CLEVELDB_DO_CLEANUP=false make cleveldb
     outputs:
       should-run: ${{ env.GIT_DIFF }}
       file-prefix: ${{ steps.file-prefix.outputs.file-prefix }}
