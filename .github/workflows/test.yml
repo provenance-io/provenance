@@ -45,8 +45,11 @@ jobs:
         run: echo "::set-output name=file-prefix::${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
       - name: Create a file with all the pkgs
         run: go list ./... > pkgs.txt
-      - name: Split pkgs into 4 files
-        run: split -d -n l/4 pkgs.txt pkgs.txt.part.
+      - name: Split pkgs into parts
+        run: |
+          printf 'github.com/provenance-io/provenance/x/marker/simulation\n' > pkgs.txt.part.mrkrsim
+          grep -vF 'github.com/provenance-io/provenance/x/marker/simulation' pkgs.txt > pkgs.txt.tmp
+          split -d -n l/4 pkgs.txt.tmp pkgs.txt.part.
       - uses: actions/upload-artifact@v3
         with:
           name: "${{ steps.file-prefix.outputs.file-prefix }}-00"
@@ -63,6 +66,10 @@ jobs:
         with:
           name: "${{ steps.file-prefix.outputs.file-prefix }}-03"
           path: ./pkgs.txt.part.03
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "${{ steps.file-prefix.outputs.file-prefix }}-mrkrsim"
+          path: ./pkgs.txt.part.mrkrsim
       - uses: actions/cache@v3
         id: cache-setup
         with:
@@ -104,7 +111,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        part: ["00", "01", "02", "03"]
+        part: ["00", "01", "02", "03", "mrkrsim"]
     runs-on: ubuntu-latest
     env:
       LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
@@ -169,6 +176,10 @@ jobs:
         if: needs.setup-tests.outputs.should-run
         with:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-03-coverage"
+      - uses: actions/download-artifact@v3
+        if: needs.setup-tests.outputs.should-run
+        with:
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-mrkrsim-coverage"
       - name: Combine profiles
         if: needs.setup-tests.outputs.should-run
         run: |
@@ -200,7 +211,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        part: ["00", "01", "02", "03"]
+        part: ["00", "01", "02", "03", "mrkrsim"]
     env:
       LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
     steps:
