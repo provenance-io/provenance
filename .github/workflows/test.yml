@@ -71,9 +71,6 @@ jobs:
         with:
           name: "${{ steps.file-prefix.outputs.file-prefix }}-mrkrsim"
           path: ./pkgs.txt.part.mrkrsim
-      - uses: actions/setup-go@v3
-        with:
-          go-version: ${{ steps.cache-key.outputs.go-version }}
       - uses: actions/cache@v3
         id: cache-setup
         with:
@@ -86,9 +83,12 @@ jobs:
           path: |
             leveldb*.tar.gz
             leveldb-*
-            ~/go/pkg/mod
             ~/.cache/go-build
           key: ${{ steps.cache-key.outputs.cache-key }}
+      - uses: actions/setup-go@v3
+        if: steps.cache-setup.outputs.cache-hit != 'true'
+        with:
+          go-version: ${{ steps.cache-key.outputs.go-version }}
       - name: Build Cache
         if: steps.cache-setup.outputs.cache-hit != 'true'
         run: |
@@ -103,7 +103,6 @@ jobs:
       cache-path: |
         leveldb*.tar.gz
         leveldb-*
-        ~/go/pkg/mod
         ~/.cache/go-build
 
 
