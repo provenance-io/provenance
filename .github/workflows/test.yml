@@ -34,6 +34,12 @@ jobs:
             **/**.go
             go.mod
             go.sum
+      - name: Define Go version
+        id: go-version
+        run: echo "::set-output name=go-version::1.17"
+      - name: Define cache key
+        id: cache-key
+        run: echo "::set-output name=cache-key::${{ runner.os }}-unit-tests-${{ steps.go-version.outputs.go-version }}-${{ hashFiles('**/go.sum') }}"
       - name: Define file prefix
         id: file-prefix
         run: echo "::set-output name=file-prefix::${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
@@ -57,9 +63,37 @@ jobs:
         with:
           name: "${{ steps.file-prefix.outputs.file-prefix }}-03"
           path: ./pkgs.txt.part.03
+      - uses: actions/cache@v3
+        id: cache-setup
+        with:
+          # In order:
+          # * The leveldb repo tarball
+          # * The directory extracted from the leveldb tarball
+          # * Module download cache
+          # * Build cache (Linux)
+          # Note: this needs to match the cache-path: entries in the outputs below.
+          path: |
+            leveldb*.tar.gz
+            leveldb-*
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ steps.cache-key.outputs.cache-key }}
+      - name: Build Cache
+        if: steps.cache-setup.outputs.cache-hit != 'true'
+        run: |
+          make cleveldb
+          make build
     outputs:
       should-run: ${{ env.GIT_DIFF }}
       file-prefix: ${{ steps.file-prefix.outputs.file-prefix }}
+      go-version: ${{ steps.go-version.outputs.go-version }}
+      cache-key: ${{ steps.cache-key.outputs.cache-key }}
+      # Note: this needs to match the path: entries in the actions/cache step above.
+      cache-path: |
+        leveldb*.tar.gz
+        leveldb-*
+        ~/go/pkg/mod
+        ~/.cache/go-build
 
 
   tests:
@@ -79,12 +113,18 @@ jobs:
         with:
           # CodeCov requires fetch-depth > 1
           fetch-depth: 2
+      - uses: actions/cache@v3
+        if: needs.setup-tests.outputs.should-run
+        with:
+          path: ${{ needs.setup-tests.outputs.cache-path }}
+          key: ${{ needs.setup-tests.outputs.cache-key }}
       - name: Build and install cleveldb
+        if: needs.setup-tests.outputs.should-run
         run: make cleveldb
       - uses: actions/setup-go@v3
         if: needs.setup-tests.outputs.should-run
         with:
-          go-version: 1.17
+          go-version: ${{ needs.setup-tests.outputs.go-version }}
       - uses: actions/download-artifact@v3
         if: needs.setup-tests.outputs.should-run
         with:
@@ -165,12 +205,18 @@ jobs:
       LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        if: needs.setup-tests.outputs.should-run
+        with:
+          path: ${{ needs.setup-tests.outputs.cache-path }}
+          key: ${{ needs.setup-tests.outputs.cache-key }}
       - name: Build and install cleveldb
+        if: needs.setup-tests.outputs.should-run
         run: make cleveldb
       - uses: actions/setup-go@v3
         if: needs.setup-tests.outputs.should-run
         with:
-          go-version: 1.17
+          go-version: ${{ needs.setup-tests.outputs.go-version }}
       - uses: actions/download-artifact@v3
         if: needs.setup-tests.outputs.should-run
         with:
