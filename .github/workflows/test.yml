@@ -34,6 +34,7 @@ jobs:
             **/**.go
             go.mod
             go.sum
+            .github/workflows/test.yml
       - name: Define Go version
         id: go-version
         run: echo "::set-output name=go-version::1.17"
