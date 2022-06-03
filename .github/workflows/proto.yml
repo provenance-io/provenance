@@ -1,61 +1,35 @@
-name: Protobuf lint
-# Protobuf lint runs `buf lint` and `buf breaking` against https://buf.build/provenance-io repository.
-# This workflow is only run when a .proto file has been changed.
+name: Protobuf Checks
+# This workflow runs some Protobuf related checks.
 on:
   pull_request:
     paths:
       - "**/**.proto"
+      - "**/go.mod"
       - ".github/workflows/proto.yml"
 
 jobs:
   buf_lint:
     runs-on: ubuntu-latest
-    name: Protobuf Lint Check
+    name: Protobuf Checks
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Protobuf Setup
-        uses: bufbuild/buf-setup-action@v1.5.0
-      - name: Protobuf Lint
-        uses: bufbuild/buf-lint-action@v1
+      - uses: bufbuild/buf-setup-action@v1.5.0
+      - uses: bufbuild/buf-lint-action@v1
+        if: always()
         with:
           input: 'proto'
-
-  buf_breaking:
-    runs-on: ubuntu-latest
-    name: Protobuf Breaking Check
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Protobuf Setup
-        uses: bufbuild/buf-setup-action@v1.5.0
-      - name: Check for breaking proto updates
-        uses: bufbuild/buf-breaking-action@v1
+      - uses: bufbuild/buf-breaking-action@v1
+        if: always()
         with:
           input: 'proto'
           # The 'main' branch of the GitHub repository that defines the module.
           against: 'buf.build/provenance-io/provenance'
-
-  buf_third_party_changes:
-    runs-on: ubuntu-latest
-    name: Protobuf third_party checks
-    # TODO: Remove this always false if statement once this part is fixed.
-    if: true == false
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Check third_party for proto updates
+      - name: proto-update-check
+        if: always()
         run: make proto-update-check
-
-  buf_third_party_breaking:
-    runs-on: ubuntu-latest
-    name: Protobuf third_party checks
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Protobuf Setup
-        uses: bufbuild/buf-setup-action@v1.5.0
-      - name: Check third_party for breaking proto updates
+      - name: third_party breaking
+        if: always()
         uses: bufbuild/buf-breaking-action@v1
         with:
           input: 'third_party/proto'
