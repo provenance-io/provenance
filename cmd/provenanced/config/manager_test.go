@@ -79,7 +79,7 @@ func (s *ConfigManagerTestSuite) TestConfigIndexEventsWriteReadCanary() {
 	vpr := viper.New()
 	vpr.SetConfigFile(confFile)
 	err := vpr.ReadInConfig()
-	s.Require().EqualError(err, "While parsing config: (61, 17): no value can start with k", "reading config file into viper")
+	s.Require().EqualError(err, "While parsing config: toml: incomplete number", "reading config file into viper")
 }
 
 func (s *ConfigManagerTestSuite) TestConfigIndexEventsWriteRead() {
