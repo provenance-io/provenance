@@ -68,14 +68,14 @@ jobs:
             pkgs.txt > pkgs.txt.tmp
           split -d -n l/4 pkgs.txt.tmp pkgs.txt.part.
           printf 'github.com/provenance-io/provenance/x/marker/simulation\n' > pkgs.txt.part.mrkrsim
-          printf 'github.com/provenance-io/provenance/x/metadata/client/cli\n' >> pkgs.txt.part.01
-          printf 'github.com/provenance-io/provenance/x/marker/client/cli\n' >> pkgs.txt.part.02
-          printf 'github.com/provenance-io/provenance/x/attribute/client/cli\n' >> pkgs.txt.part.03
-          printf 'github.com/provenance-io/provenance/x/metadata/client/rest\n' >> pkgs.txt.part.03
-          printf 'github.com/provenance-io/provenance/x/attribute/client/rest\n' >> pkgs.txt.part.03
-          printf 'github.com/provenance-io/provenance/x/name/client/cli\n' >> pkgs.txt.part.04
-          printf 'github.com/provenance-io/provenance/x/msgfees/client/cli\n' >> pkgs.txt.part.04
-          printf 'github.com/provenance-io/provenance/cmd/provenanced/cmd\n' >> pkgs.txt.part.04
+          printf 'github.com/provenance-io/provenance/x/metadata/client/cli\n' >> pkgs.txt.part.00
+          printf 'github.com/provenance-io/provenance/x/marker/client/cli\n' >> pkgs.txt.part.01
+          printf 'github.com/provenance-io/provenance/x/attribute/client/cli\n' >> pkgs.txt.part.02
+          printf 'github.com/provenance-io/provenance/x/metadata/client/rest\n' >> pkgs.txt.part.02
+          printf 'github.com/provenance-io/provenance/x/attribute/client/rest\n' >> pkgs.txt.part.02
+          printf 'github.com/provenance-io/provenance/x/name/client/cli\n' >> pkgs.txt.part.03
+          printf 'github.com/provenance-io/provenance/x/msgfees/client/cli\n' >> pkgs.txt.part.03
+          printf 'github.com/provenance-io/provenance/cmd/provenanced/cmd\n' >> pkgs.txt.part.03
       - uses: actions/upload-artifact@v3
         with:
           name: "${{ steps.file-prefix.outputs.file-prefix }}-00"
