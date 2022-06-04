@@ -78,23 +78,27 @@ jobs:
           printf 'github.com/provenance-io/provenance/cmd/provenanced/cmd\n' >> pkgs.txt.part.03
       - uses: actions/upload-artifact@v3
         with:
-          name: "${{ steps.file-prefix.outputs.file-prefix }}-00"
+          name: "${{ steps.file-prefix.outputs.file-prefix }}-pkgs.txt"
+          path: ./pkgs.txt
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "${{ steps.file-prefix.outputs.file-prefix }}-pkgs.txt.part.00"
           path: ./pkgs.txt.part.00
       - uses: actions/upload-artifact@v3
         with:
-          name: "${{ steps.file-prefix.outputs.file-prefix }}-01"
+          name: "${{ steps.file-prefix.outputs.file-prefix }}-pkgs.txt.part.01"
           path: ./pkgs.txt.part.01
       - uses: actions/upload-artifact@v3
         with:
-          name: "${{ steps.file-prefix.outputs.file-prefix }}-02"
+          name: "${{ steps.file-prefix.outputs.file-prefix }}-pkgs.txt.part.02"
           path: ./pkgs.txt.part.02
       - uses: actions/upload-artifact@v3
         with:
-          name: "${{ steps.file-prefix.outputs.file-prefix }}-03"
+          name: "${{ steps.file-prefix.outputs.file-prefix }}-pkgs.txt.part.03"
           path: ./pkgs.txt.part.03
       - uses: actions/upload-artifact@v3
         with:
-          name: "${{ steps.file-prefix.outputs.file-prefix }}-mrkrsim"
+          name: "${{ steps.file-prefix.outputs.file-prefix }}-pkgs.txt.part.mrkrsim"
           path: ./pkgs.txt.part.mrkrsim
       - uses: actions/cache@v3
         id: cache-setup
@@ -157,7 +161,7 @@ jobs:
       - uses: actions/download-artifact@v3
         if: needs.setup-tests.outputs.should-run
         with:
-          name: "${{ needs.setup-tests.outputs.file-prefix }}-${{ matrix.part }}"
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-pkgs.txt.part.${{ matrix.part }}"
       - name: test & coverage report creation
         if: needs.setup-tests.outputs.should-run
         run: |
@@ -253,7 +257,7 @@ jobs:
       - uses: actions/download-artifact@v3
         if: needs.setup-tests.outputs.should-run
         with:
-          name: "${{ needs.setup-tests.outputs.file-prefix }}-${{ matrix.part }}"
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-pkgs.txt.part.${{ matrix.part }}"
       - name: test & coverage report creation
         if: needs.setup-tests.outputs.should-run
         run: |
