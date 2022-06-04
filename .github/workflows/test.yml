@@ -47,10 +47,35 @@ jobs:
       - name: Create a file with all the pkgs
         run: go list ./... > pkgs.txt
       - name: Split pkgs into parts
+        # There are a few sets of tests that take significantly longer than others.
+        # After some analysis, they were identified so that they can be evenly distributed
+        # among the parts.
+        # To identify them, I just looked at the github action output for the test runs
+        # and found the ones that take longer than 2 seconds.
+        # The 'github.com/provenance-io/provenance/x/marker/simulation' tests only take 20ish seconds,
+        # but it takes 6 minutes in the race test. That's why it's so special.
         run: |
-          printf 'github.com/provenance-io/provenance/x/marker/simulation\n' > pkgs.txt.part.mrkrsim
-          grep -vF 'github.com/provenance-io/provenance/x/marker/simulation' pkgs.txt > pkgs.txt.tmp
+          grep -vF \
+            -e 'github.com/provenance-io/provenance/x/marker/simulation' \
+            -e 'github.com/provenance-io/provenance/x/metadata/client/cli' \
+            -e 'github.com/provenance-io/provenance/x/marker/client/cli' \
+            -e 'github.com/provenance-io/provenance/x/attribute/client/cli' \
+            -e 'github.com/provenance-io/provenance/x/metadata/client/rest' \
+            -e 'github.com/provenance-io/provenance/x/attribute/client/rest' \
+            -e 'github.com/provenance-io/provenance/x/name/client/cli' \
+            -e 'github.com/provenance-io/provenance/x/msgfees/client/cli' \
+            -e 'github.com/provenance-io/provenance/cmd/provenanced/cmd' \
+            pkgs.txt > pkgs.txt.tmp
           split -d -n l/4 pkgs.txt.tmp pkgs.txt.part.
+          printf 'github.com/provenance-io/provenance/x/marker/simulation\n' > pkgs.txt.part.mrkrsim
+          printf 'github.com/provenance-io/provenance/x/metadata/client/cli\n' >> pkgs.txt.part.01
+          printf 'github.com/provenance-io/provenance/x/marker/client/cli\n' >> pkgs.txt.part.02
+          printf 'github.com/provenance-io/provenance/x/attribute/client/cli\n' >> pkgs.txt.part.03
+          printf 'github.com/provenance-io/provenance/x/metadata/client/rest\n' >> pkgs.txt.part.03
+          printf 'github.com/provenance-io/provenance/x/attribute/client/rest\n' >> pkgs.txt.part.03
+          printf 'github.com/provenance-io/provenance/x/name/client/cli\n' >> pkgs.txt.part.04
+          printf 'github.com/provenance-io/provenance/x/msgfees/client/cli\n' >> pkgs.txt.part.04
+          printf 'github.com/provenance-io/provenance/cmd/provenanced/cmd\n' >> pkgs.txt.part.04
       - uses: actions/upload-artifact@v3
         with:
           name: "${{ steps.file-prefix.outputs.file-prefix }}-00"
