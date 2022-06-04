@@ -40,7 +40,7 @@ jobs:
         run: echo "::set-output name=go-version::1.17"
       - name: Define cache key
         id: cache-key
-        run: echo "::set-output name=cache-key::${{ runner.os }}-unit-tests-${{ hashFiles('**/go.sum', '.github/workflows/test.yml') }}"
+        run: echo "::set-output name=cache-key::${{ runner.os }}-unit-tests-${{ hashFiles('scripts/cleveldb_build_and_install.sh', '.github/workflows/test.yml') }}"
       - name: Define file prefix
         id: file-prefix
         run: echo "::set-output name=file-prefix::${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
@@ -102,13 +102,10 @@ jobs:
           # In order:
           # * The leveldb repo tarball
           # * The directory extracted from the leveldb tarball
-          # * Module download cache
-          # * Build cache (Linux)
           # Note: this needs to match the cache-path: entries in the outputs below.
           path: |
             leveldb*.tar.gz
             leveldb-*
-            ~/.cache/go-build
           key: ${{ steps.cache-key.outputs.cache-key }}
       - uses: actions/setup-go@v3
         if: steps.cache-setup.outputs.cache-hit != 'true'
@@ -126,7 +123,6 @@ jobs:
       cache-path: |
         leveldb*.tar.gz
         leveldb-*
-        ~/.cache/go-build
 
 
   tests:
