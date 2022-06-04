@@ -35,17 +35,18 @@ jobs:
             go.mod
             go.sum
             .github/workflows/test.yml
-      - name: Define Go version
-        id: go-version
-        run: echo "::set-output name=go-version::1.17"
-      - name: Define cache key
-        id: cache-key
-        run: echo "::set-output name=cache-key::${{ runner.os }}-unit-tests-${{ hashFiles('scripts/cleveldb_build_and_install.sh', '.github/workflows/test.yml') }}"
-      - name: Define file prefix
-        id: file-prefix
-        run: echo "::set-output name=file-prefix::${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
+      - name: Define Variables
+        id: def-vars
+        run: |
+          echo "::set-output name=go-version::1.17"
+          echo "::set-output name=cache-key::${{ runner.os }}-unit-tests-${{ hashFiles('scripts/cleveldb_build_and_install.sh', '.github/workflows/test.yml') }}"
+          echo "::set-output name=file-prefix::${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
       - name: Create a file with all the pkgs
         run: go list ./... > pkgs.txt
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt"
+          path: ./pkgs.txt
       - name: Split pkgs into parts
         # There are a few sets of tests that take significantly longer than others.
         # After some analysis, they were identified so that they can be evenly distributed
@@ -77,23 +78,19 @@ jobs:
           printf 'github.com/provenance-io/provenance/x/marker/simulation\n' > pkgs.txt.part.03
       - uses: actions/upload-artifact@v3
         with:
-          name: "${{ steps.file-prefix.outputs.file-prefix }}-pkgs.txt"
-          path: ./pkgs.txt
-      - uses: actions/upload-artifact@v3
-        with:
-          name: "${{ steps.file-prefix.outputs.file-prefix }}-pkgs.txt.part.00"
+          name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.00"
           path: ./pkgs.txt.part.00
       - uses: actions/upload-artifact@v3
         with:
-          name: "${{ steps.file-prefix.outputs.file-prefix }}-pkgs.txt.part.01"
+          name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.01"
           path: ./pkgs.txt.part.01
       - uses: actions/upload-artifact@v3
         with:
-          name: "${{ steps.file-prefix.outputs.file-prefix }}-pkgs.txt.part.02"
+          name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.02"
           path: ./pkgs.txt.part.02
       - uses: actions/upload-artifact@v3
         with:
-          name: "${{ steps.file-prefix.outputs.file-prefix }}-pkgs.txt.part.03"
+          name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.03"
           path: ./pkgs.txt.part.03
       - uses: actions/cache@v3
         id: cache-setup
@@ -105,19 +102,15 @@ jobs:
           path: |
             leveldb*.tar.gz
             leveldb-*
-          key: ${{ steps.cache-key.outputs.cache-key }}
-      - uses: actions/setup-go@v3
-        if: steps.cache-setup.outputs.cache-hit != 'true'
-        with:
-          go-version: ${{ steps.cache-key.outputs.go-version }}
+          key: ${{ steps.def-vars.outputs.cache-key }}
       - name: Build Cache
         if: steps.cache-setup.outputs.cache-hit != 'true'
         run: CLEVELDB_DO_CLEANUP=false make cleveldb
     outputs:
       should-run: ${{ env.GIT_DIFF }}
-      file-prefix: ${{ steps.file-prefix.outputs.file-prefix }}
-      go-version: ${{ steps.go-version.outputs.go-version }}
-      cache-key: ${{ steps.cache-key.outputs.cache-key }}
+      go-version: ${{ steps.def-vars.outputs.go-version }}
+      cache-key: ${{ steps.def-vars.outputs.cache-key }}
+      file-prefix: ${{ steps.def-vars.outputs.file-prefix }}
       # Note: this needs to match the path: entries in the actions/cache step above.
       cache-path: |
         leveldb*.tar.gz
