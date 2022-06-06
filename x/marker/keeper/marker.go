@@ -696,7 +696,8 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	return nil
 }
 
-// Loops through all "send enabled" bank metadata and removes all that don't have markers.
+// RemoveSendEnabledForMissingMarkers loops through all "send enabled" bank metadata and removes all that don't have markers.
+// WARNING: This is for an upgrade migration and should not be called otherwise.
 func (k Keeper) RemoveSendEnabledForMissingMarkers(ctx sdk.Context) {
 	ctx.Logger().Info("Removing SendEnabled for Missing Markers...")
 
