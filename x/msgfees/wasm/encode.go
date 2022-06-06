@@ -4,6 +4,7 @@ package wasm
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/provenance-io/provenance/internal/provwasm"
 	"github.com/provenance-io/provenance/x/msgfees/types"
 
