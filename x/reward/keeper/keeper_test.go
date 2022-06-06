@@ -777,35 +777,401 @@ func (s *KeeperTestSuite) TestMultipleDelegate() {
 		return true
 	})
 	s.Assert().NoError(err, "iterate should not throw error")
-	s.Assert().Equal(2, count, "1 share should be created")
+	s.Assert().Equal(2, count, "2 shares should be created")
 }
 
 // Test against delegate reward program. Not enough actions
 func (s *KeeperTestSuite) TestDelegateBelowMinimumActions() {
+	s.SetupTest()
 
+	// Create inactive reward program
+	action := types.NewActionDelegate()
+	action.MaximumActions = 10
+	action.MinimumActions = 1
+	action.MinimumActiveStakePercentile = 0.0
+	action.MaximumActiveStakePercentile = 1.0
+
+	minimumDelegation := sdk.NewInt64Coin("nhash", 0)
+	maximumDelegation := sdk.NewInt64Coin("nhash", 100)
+	action.MinimumDelegationAmount = &minimumDelegation
+	action.MaximumDelegationAmount = &maximumDelegation
+
+	coin := sdk.NewInt64Coin("hotdog", 10000)
+	maxCoin := sdk.NewInt64Coin("hotdog", 100)
+
+	now := time.Now().UTC()
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		coin,
+		maxCoin,
+		now,
+		60*60,
+		3,
+		types.NewEligibilityCriteria("criteria", &action),
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               10,
+						MaximumActions:               20,
+						MinimumDelegationAmount:      &minimumDelegation,
+						MaximumDelegationAmount:      &maximumDelegation,
+						MinimumActiveStakePercentile: 0,
+						MaximumActiveStakePercentile: 1,
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.Started = true
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+
+	// We want to set the events here
+	validators := getTestValidators(6, 6)
+	delegates := s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
+	delegates = delegates.AppendEvents(s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
+	SetupEventHistory(s, delegates)
+	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+
+	// Ensure no share is granted
+	count := 0
+	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
+		count += int(share.GetAmount())
+		return true
+	})
+	s.Assert().NoError(err, "iterate should not throw error")
+	s.Assert().Equal(0, count, "no share should be created when below minimum actions")
 }
 
 // Test against delegate reward program. Too many actions
 func (s *KeeperTestSuite) TestDelegateAboveMaximumActions() {
+	s.SetupTest()
 
+	// Create inactive reward program
+	action := types.NewActionDelegate()
+	action.MaximumActions = 10
+	action.MinimumActions = 1
+	action.MinimumActiveStakePercentile = 0.0
+	action.MaximumActiveStakePercentile = 1.0
+
+	minimumDelegation := sdk.NewInt64Coin("nhash", 0)
+	maximumDelegation := sdk.NewInt64Coin("nhash", 100)
+	action.MinimumDelegationAmount = &minimumDelegation
+	action.MaximumDelegationAmount = &maximumDelegation
+
+	coin := sdk.NewInt64Coin("hotdog", 10000)
+	maxCoin := sdk.NewInt64Coin("hotdog", 100)
+
+	now := time.Now().UTC()
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		coin,
+		maxCoin,
+		now,
+		60*60,
+		3,
+		types.NewEligibilityCriteria("criteria", &action),
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               0,
+						MinimumDelegationAmount:      &minimumDelegation,
+						MaximumDelegationAmount:      &maximumDelegation,
+						MinimumActiveStakePercentile: 0,
+						MaximumActiveStakePercentile: 1,
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.Started = true
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+
+	// We want to set the events here
+	validators := getTestValidators(6, 6)
+	delegates := s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
+	delegates = delegates.AppendEvents(s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
+	SetupEventHistory(s, delegates)
+	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+
+	// Ensure no share is granted
+	count := 0
+	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
+		count += int(share.GetAmount())
+		return true
+	})
+	s.Assert().NoError(err, "iterate should not throw error")
+	s.Assert().Equal(0, count, "no share should be created when above maximum actions")
 }
 
 // Test against delegate reward program. Below delegation amount
 func (s *KeeperTestSuite) TestDelegateBelowMinimumDelegation() {
+	s.SetupTest()
 
+	// Create inactive reward program
+	action := types.NewActionDelegate()
+	action.MaximumActions = 10
+	action.MinimumActions = 1
+	action.MinimumActiveStakePercentile = 0.0
+	action.MaximumActiveStakePercentile = 1.0
+
+	minimumDelegation := sdk.NewInt64Coin("nhash", 100)
+	maximumDelegation := sdk.NewInt64Coin("nhash", 200)
+	action.MinimumDelegationAmount = &minimumDelegation
+	action.MaximumDelegationAmount = &maximumDelegation
+
+	coin := sdk.NewInt64Coin("hotdog", 10000)
+	maxCoin := sdk.NewInt64Coin("hotdog", 100)
+
+	now := time.Now().UTC()
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		coin,
+		maxCoin,
+		now,
+		60*60,
+		3,
+		types.NewEligibilityCriteria("criteria", &action),
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               10,
+						MinimumDelegationAmount:      &minimumDelegation,
+						MaximumDelegationAmount:      &maximumDelegation,
+						MinimumActiveStakePercentile: 0,
+						MaximumActiveStakePercentile: 1,
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.Started = true
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+
+	// We want to set the events here
+	validators := getTestValidators(6, 6)
+	delegates := s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
+	delegates = delegates.AppendEvents(s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
+	SetupEventHistory(s, delegates)
+	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+
+	// Ensure no share is granted
+	count := 0
+	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
+		count += int(share.GetAmount())
+		return true
+	})
+	s.Assert().NoError(err, "iterate should not throw error")
+	s.Assert().Equal(0, count, "no share should be created when below minimum delegation amount")
 }
 
 // Test against delegate reward program. Above delegation amount
 func (s *KeeperTestSuite) TestDelegateAboveMaximumDelegation() {
+	s.SetupTest()
 
+	// Create inactive reward program
+	action := types.NewActionDelegate()
+	action.MaximumActions = 10
+	action.MinimumActions = 1
+	action.MinimumActiveStakePercentile = 0.0
+	action.MaximumActiveStakePercentile = 1.0
+
+	minimumDelegation := sdk.NewInt64Coin("nhash", 0)
+	maximumDelegation := sdk.NewInt64Coin("nhash", 50)
+	action.MinimumDelegationAmount = &minimumDelegation
+	action.MaximumDelegationAmount = &maximumDelegation
+
+	coin := sdk.NewInt64Coin("hotdog", 10000)
+	maxCoin := sdk.NewInt64Coin("hotdog", 100)
+
+	now := time.Now().UTC()
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		coin,
+		maxCoin,
+		now,
+		60*60,
+		3,
+		types.NewEligibilityCriteria("criteria", &action),
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               10,
+						MinimumDelegationAmount:      &minimumDelegation,
+						MaximumDelegationAmount:      &maximumDelegation,
+						MinimumActiveStakePercentile: 0,
+						MaximumActiveStakePercentile: 1,
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.Started = true
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+
+	// We want to set the events here
+	validators := getTestValidators(6, 6)
+	delegates := s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
+	delegates = delegates.AppendEvents(s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
+	SetupEventHistory(s, delegates)
+	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+
+	// Ensure no share is granted
+	count := 0
+	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
+		count += int(share.GetAmount())
+		return true
+	})
+	s.Assert().NoError(err, "iterate should not throw error")
+	s.Assert().Equal(0, count, "no share should be created when above maximum delegation amount")
 }
 
 // Test against delegate reward program. Below percentile
 func (s *KeeperTestSuite) TestDelegateBelowMinimumPercentile() {
+	s.SetupTest()
 
+	// Create inactive reward program
+	action := types.NewActionDelegate()
+	action.MaximumActions = 10
+	action.MinimumActions = 1
+	action.MinimumActiveStakePercentile = 0.0
+	action.MaximumActiveStakePercentile = 1.0
+
+	minimumDelegation := sdk.NewInt64Coin("nhash", 0)
+	maximumDelegation := sdk.NewInt64Coin("nhash", 100)
+	action.MinimumDelegationAmount = &minimumDelegation
+	action.MaximumDelegationAmount = &maximumDelegation
+
+	coin := sdk.NewInt64Coin("hotdog", 10000)
+	maxCoin := sdk.NewInt64Coin("hotdog", 100)
+
+	now := time.Now().UTC()
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		coin,
+		maxCoin,
+		now,
+		60*60,
+		3,
+		types.NewEligibilityCriteria("criteria", &action),
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               10,
+						MinimumDelegationAmount:      &minimumDelegation,
+						MaximumDelegationAmount:      &maximumDelegation,
+						MinimumActiveStakePercentile: 0.70,
+						MaximumActiveStakePercentile: 1.0,
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.Started = true
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+
+	// We want to set the events here
+	validators := getTestValidators(6, 6)
+	delegates := s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
+	delegates = delegates.AppendEvents(s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
+	SetupEventHistory(s, delegates)
+	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+
+	// Ensure no share is granted
+	count := 0
+	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
+		count += int(share.GetAmount())
+		return true
+	})
+	s.Assert().NoError(err, "iterate should not throw error")
+	s.Assert().Equal(0, count, "no share should be created when below minimum delegation percentage")
 }
 
 // Test against delegate reward program. Above percentile
 func (s *KeeperTestSuite) TestDelegateAboveMaximumPercentile() {
+	s.SetupTest()
 
+	// Create inactive reward program
+	action := types.NewActionDelegate()
+	action.MaximumActions = 10
+	action.MinimumActions = 1
+	action.MinimumActiveStakePercentile = 0.0
+	action.MaximumActiveStakePercentile = 1.0
+
+	minimumDelegation := sdk.NewInt64Coin("nhash", 0)
+	maximumDelegation := sdk.NewInt64Coin("nhash", 100)
+	action.MinimumDelegationAmount = &minimumDelegation
+	action.MaximumDelegationAmount = &maximumDelegation
+
+	coin := sdk.NewInt64Coin("hotdog", 10000)
+	maxCoin := sdk.NewInt64Coin("hotdog", 100)
+
+	now := time.Now().UTC()
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		coin,
+		maxCoin,
+		now,
+		60*60,
+		3,
+		types.NewEligibilityCriteria("criteria", &action),
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               10,
+						MinimumDelegationAmount:      &minimumDelegation,
+						MaximumDelegationAmount:      &maximumDelegation,
+						MinimumActiveStakePercentile: 0.0,
+						MaximumActiveStakePercentile: 0.20,
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.Started = true
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+
+	// We want to set the events here
+	validators := getTestValidators(6, 6)
+	delegates := s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
+	delegates = delegates.AppendEvents(s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
+	SetupEventHistory(s, delegates)
+	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+
+	// Ensure no share is granted
+	count := 0
+	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
+		count += int(share.GetAmount())
+		return true
+	})
+	s.Assert().NoError(err, "iterate should not throw error")
+	s.Assert().Equal(0, count, "no share should be created when above maximum delegation percentage")
 }

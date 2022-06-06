@@ -27,7 +27,3 @@ func TestEndBlockWithNoActiveRewards(t *testing.T) {
 		reward.EndBlocker(ctx, app.RewardKeeper)
 	})
 }
-
-func TestEndBlockWithActiveRewards(t *testing.T) {
-	require.Fail(t, "Not yet implemented")
-}

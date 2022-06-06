@@ -503,11 +503,6 @@ func (s *RewardTypesTestSuite) TestActionDelegateCreation() {
 	//s.Assert().Equal("sender", action.GetEventCriteria().AttributeValue, "must have correct attribute value criteria")
 }
 
-func (s *RewardTypesTestSuite) TestActionDelegateEvaluate() {
-	//action := NewActionDelegate()
-	s.Assert().Fail("Not implemented")
-}
-
 func (s *RewardTypesTestSuite) TestNewEventCriteria() {
 	event1 := ABCIEvent{
 		Type: "type1",
