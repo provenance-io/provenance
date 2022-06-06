@@ -10,7 +10,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -413,12 +412,12 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.CancelMarker(ctx, user, "testcoin"))
 
 	// Set an escrow balance
-	simapp.FundAccount(app, ctx, addr, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())))
+	require.NoError(t, simapp.FundAccount(app, ctx, addr, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()))), "funding account")
 	// Fails because there are coins in escrow.
 	require.Error(t, app.MarkerKeeper.DeleteMarker(ctx, user, "testcoin"))
 
 	// Remove escrow balance from account
-	app.BankKeeper.SendCoinsFromAccountToModule(ctx, addr, "mint", sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())))
+	require.NoError(t, app.BankKeeper.SendCoinsFromAccountToModule(ctx, addr, "mint", sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()))), "sending coins to module")
 
 	// Succeeds because the bond denom coin was removed.
 	require.NoError(t, app.MarkerKeeper.DeleteMarker(ctx, user, "testcoin"))
@@ -486,7 +485,7 @@ func TestAccountInsufficientExisting(t *testing.T) {
 	existingSupply := sdk.NewCoin("testcoin", sdk.NewInt(10000))
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
 
-	simapp.FundAccount(app, ctx, user, sdk.NewCoins(existingSupply))
+	require.NoError(t, simapp.FundAccount(app, ctx, user, sdk.NewCoins(existingSupply)), "funding account")
 
 	//prevSupply := app.BankKeeper.GetSupply(ctx, "testcoin")
 	//app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(prevSupply.Amount.Add(existingSupply.Amount)))
@@ -524,42 +523,41 @@ func TestRemoveOrphanedSendEnabledEntries(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	// Make sure "send enabled" are initially empty.
-	params := app.BankKeeper.GetParams(ctx)
-	require.Len(t, params.SendEnabled, 0)
+	allSendEnabled := app.BankKeeper.GetAllSendEnabledEntries(ctx)
+	require.Len(t, allSendEnabled, 0, "initial send enabled count")
 
 	// Add orphaned marker reference.
-	params = app.BankKeeper.GetParams(ctx)
-	se := &banktypes.SendEnabled{Denom: "missing", Enabled: true}
-	params.SendEnabled = append(params.SendEnabled, se)
-	app.BankKeeper.SetParams(ctx, params)
+	app.BankKeeper.SetSendEnabled(ctx, "missing", true)
 
 	// Create account for adding marker.
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	user := sdk.AccAddress(pubkey.Address())
 	existingSupply := sdk.NewCoin("hash", sdk.NewInt(10000))
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
-	simapp.FundAccount(app, ctx, user, sdk.NewCoins(existingSupply))
+	require.NoError(t, simapp.FundAccount(app, ctx, user, sdk.NewCoins(existingSupply)), "funding account")
 
 	// Add new marker account with its own "send enabled" denom that should not be deleted.
 	mac := types.NewEmptyMarkerAccount("markerdenom", user.String(), []types.AccessGrant{*types.NewAccessGrant(user,
 		[]types.Access{types.Access_Mint, types.Access_Burn, types.Access_Withdraw, types.Access_Delete})})
 	mac.MarkerType = types.MarkerType_RestrictedCoin
-	require.NoError(t, mac.SetManager(user))
-	require.NoError(t, mac.SetSupply(sdk.NewCoin("markerdenom", sdk.NewInt(10000))))
-	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
-	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "markerdenom"))
-	require.NoError(t, app.MarkerKeeper.ActivateMarker(ctx, user, "markerdenom"))
+	require.NoError(t, mac.SetManager(user), "setting marker manager")
+	require.NoError(t, mac.SetSupply(sdk.NewCoin("markerdenom", sdk.NewInt(10000))), "setting marker supply")
+	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac), "adding marker account")
+	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "markerdenom"), "finalizing marker")
+	require.NoError(t, app.MarkerKeeper.ActivateMarker(ctx, user, "markerdenom"), "activating marker")
 
 	// Make sure params reflect added reference.
-	params = app.BankKeeper.GetParams(ctx)
-	require.Len(t, params.SendEnabled, 2)
+	allSendEnabled = app.BankKeeper.GetAllSendEnabledEntries(ctx)
+	require.Len(t, allSendEnabled, 2, "send enabled entry count before cleanup")
+	require.ElementsMatch(t, []string{"missing", "markerdenom"}, []string{allSendEnabled[0].Denom, allSendEnabled[1].Denom}, "send enabled denoms before cleanup")
 
 	// Remove all for missing markers.
 	app.MarkerKeeper.RemoveSendEnabledForMissingMarkers(ctx)
 
 	// Make sure params reflect removed reference.
-	params = app.BankKeeper.GetParams(ctx)
-	require.Len(t, params.SendEnabled, 1)
+	allSendEnabled = app.BankKeeper.GetAllSendEnabledEntries(ctx)
+	require.Len(t, allSendEnabled, 1, "send enabled count after cleanup")
+	require.Equal(t, "markerdenom", allSendEnabled[0].Denom, "send enabled denoms after cleanup")
 }
 
 func TestAccountRemoveDeletesSendEnabled(t *testing.T) {
@@ -574,7 +572,7 @@ func TestAccountRemoveDeletesSendEnabled(t *testing.T) {
 	existingSupply := sdk.NewCoin("testcoin", sdk.NewInt(10000))
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
 
-	simapp.FundAccount(app, ctx, user, sdk.NewCoins(existingSupply))
+	require.NoError(t, simapp.FundAccount(app, ctx, user, sdk.NewCoins(existingSupply)), "funding account")
 
 	// create account and check default values
 	mac := types.NewEmptyMarkerAccount("testcoin", user.String(), []types.AccessGrant{*types.NewAccessGrant(user,
@@ -592,23 +590,24 @@ func TestAccountRemoveDeletesSendEnabled(t *testing.T) {
 	require.NotNil(t, m)
 
 	// Make sure "send enabled" are initially empty.
-	params := app.BankKeeper.GetParams(ctx)
-	require.Len(t, params.SendEnabled, 0)
+	allSendEnabled := app.BankKeeper.GetAllSendEnabledEntries(ctx)
+	require.Len(t, allSendEnabled, 0, "initial send enabled count")
 
 	// Finalize and activate, which will add "send enabled" metadata.
-	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"))
-	require.NoError(t, app.MarkerKeeper.ActivateMarker(ctx, user, "testcoin"))
+	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"), "finalizing marker")
+	require.NoError(t, app.MarkerKeeper.ActivateMarker(ctx, user, "testcoin"), "activating marker")
 
 	// Make sure "send enabled" are at 1 item.
-	params = app.BankKeeper.GetParams(ctx)
-	require.Len(t, params.SendEnabled, 1)
+	allSendEnabled = app.BankKeeper.GetAllSendEnabledEntries(ctx)
+	require.Len(t, allSendEnabled, 1, "send enabled count before removal")
+	require.Equal(t, "testcoin", allSendEnabled[0].Denom, "send enabled denom")
 
 	// Remove marker which removes "send enabled".
 	app.MarkerKeeper.RemoveMarker(ctx, m)
 
 	// Make sure "send enabled" are empty again.
-	params = app.BankKeeper.GetParams(ctx)
-	require.Len(t, params.SendEnabled, 0)
+	allSendEnabled = app.BankKeeper.GetAllSendEnabledEntries(ctx)
+	require.Len(t, allSendEnabled, 0, "send enabled count after removal")
 }
 
 func TestAccountImplictControl(t *testing.T) {
@@ -631,10 +630,10 @@ func TestAccountImplictControl(t *testing.T) {
 	// Moves to finalized, mints required supply, moves to active status.
 	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"))
 	// No send enabled flag enforced yet, default is allowed
-	require.True(t, app.BankKeeper.IsSendEnabledCoin(ctx, sdk.NewCoin("testcoin", sdk.NewInt(10))))
+	require.True(t, app.BankKeeper.IsSendEnabledDenom(ctx, "testcoin"))
 	require.NoError(t, app.MarkerKeeper.ActivateMarker(ctx, user, "testcoin"))
 	// Activated restricted coins can not be sent directly, verify is false now
-	require.False(t, app.BankKeeper.IsSendEnabledCoin(ctx, sdk.NewCoin("testcoin", sdk.NewInt(10))))
+	require.False(t, app.BankKeeper.IsSendEnabledDenom(ctx, "testcoin"))
 
 	// Must fail because user2 does not have any access
 	require.Error(t, app.MarkerKeeper.AddAccess(ctx, user2, "testcoin", types.NewAccessGrant(user2,
@@ -684,7 +683,7 @@ func TestMarkerFeeGrant(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, mac)
 
 	existingSupply := sdk.NewCoin("testcoin", sdk.NewInt(10000))
-	simapp.FundAccount(app, ctx, user, sdk.NewCoins(existingSupply))
+	require.NoError(t, simapp.FundAccount(app, ctx, user, sdk.NewCoins(existingSupply)), "funding accont")
 
 	allowance, err := types.NewMsgGrantAllowance(
 		"testcoin",
