@@ -789,8 +789,12 @@ func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress,
 // ensureSendEnabledStatus checks to see if the configuration of SendEnabled for the current network matches
 // the requested value, sets
 func (k Keeper) ensureSendEnabledStatus(ctx sdk.Context, denom string, sendEnabled bool) {
-	se, found := k.bankKeeper.GetSendEnabledEntry(ctx, denom)
-	if !found || se.Enabled != sendEnabled {
-		k.bankKeeper.SetSendEnabled(ctx, denom, sendEnabled)
+	if k.bankKeeper.IsSendEnabledDenom(ctx, denom) != sendEnabled {
+		switch k.bankKeeper.GetParams(ctx).DefaultSendEnabled {
+		case sendEnabled:
+			k.bankKeeper.DeleteSendEnabled(ctx, denom)
+		default:
+			k.bankKeeper.SetSendEnabled(ctx, denom, sendEnabled)
+		}
 	}
 }
