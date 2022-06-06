@@ -81,7 +81,7 @@ func TestExistingAccounts(t *testing.T) {
 
 	// prefund the marker address so an account gets created before the marker does.
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
-	simapp.FundAccount(app, ctx, addr, sdk.NewCoins(existingBalance))
+	require.NoError(t, simapp.FundAccount(app, ctx, addr, sdk.NewCoins(existingBalance)), "funding account")
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balance must be set")
 
 	// Creating a marker over an account with zero sequence is fine.
