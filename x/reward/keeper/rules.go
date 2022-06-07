@@ -9,6 +9,32 @@ import (
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
+func (k Keeper) ProcessTransactions(ctx sdk.Context) {
+	// Get all Active Reward Programs
+	rewardPrograms, err := k.GetAllActiveRewardPrograms(ctx)
+	if err != nil {
+		ctx.Logger().Error(err.Error())
+		return
+	}
+
+	// Grant shares for qualifying actions
+	for _, program := range rewardPrograms {
+		// Go through all the reward programs
+		program := program
+		actions, err := k.DetectQualifyingActions(ctx, &program)
+		if err != nil {
+			ctx.Logger().Error(err.Error())
+			continue
+		}
+
+		// Record any results
+		err = k.RewardShares(ctx, &program, actions)
+		if err != nil {
+			ctx.Logger().Error(err.Error())
+		}
+	}
+}
+
 // EvaluateRules takes in a Eligibility criteria and measure it against the events in the context
 func (k Keeper) DetectQualifyingActions(ctx sdk.Context, program *types.RewardProgram) ([]types.EvaluationResult, error) {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: EvaluateRules for RewardProgram: %d", program.GetId()))
