@@ -5,12 +5,11 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/x/reward/types"
 )
 
 func (k Keeper) Update(ctx sdk.Context) {
-	blockTime := ctx.BlockTime()
-	// ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Block time: %v ", blockTime))
-
 	outstanding, err := k.GetOutstandingRewardPrograms(ctx)
 	if err != nil {
 		ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - error iterating reward programs: %v ", err))
@@ -19,19 +18,9 @@ func (k Keeper) Update(ctx sdk.Context) {
 
 	for _, rewardProgram := range outstanding {
 		if rewardProgram.IsStarting(ctx) {
-			ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Starting reward program: %v ", rewardProgram))
-			rewardProgram.Started = true
-			rewardProgram.EpochEndTime = blockTime.Add(time.Duration(rewardProgram.EpochSeconds) * time.Second)
-			rewardProgram.CurrentEpoch = 1
+			k.startRewardProgram(ctx, &rewardProgram)
 		} else if rewardProgram.IsEndingEpoch(ctx) {
-			ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Epoch end hit for reward program %v ", rewardProgram))
-			rewardProgram.CurrentEpoch++
-			if rewardProgram.IsEnding(ctx) {
-				rewardProgram.Finished = true
-				rewardProgram.FinishedTime = blockTime
-			} else {
-				rewardProgram.EpochEndTime = blockTime.Add(time.Duration(rewardProgram.EpochSeconds) * time.Second)
-			}
+			k.endRewardProgramEpoch(ctx, &rewardProgram)
 		}
 	}
 
@@ -50,4 +39,30 @@ func (k Keeper) Cleanup(ctx sdk.Context) {
 	if err != nil {
 		ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - error removing dead reward programs: %v ", err))
 	}
+}
+
+func (k Keeper) startRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) {
+	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Starting reward program: %v ", rewardProgram))
+	blockTime := ctx.BlockTime()
+	rewardProgram.Started = true
+	rewardProgram.EpochEndTime = blockTime.Add(time.Duration(rewardProgram.EpochSeconds) * time.Second)
+	rewardProgram.CurrentEpoch = 1
+}
+
+func (k Keeper) endRewardProgramEpoch(ctx sdk.Context, rewardProgram *types.RewardProgram) {
+	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Epoch end hit for reward program %v ", rewardProgram))
+	blockTime := ctx.BlockTime()
+	rewardProgram.CurrentEpoch++
+	if rewardProgram.IsEnding(ctx) {
+		k.endRewardProgram(ctx, rewardProgram)
+	} else {
+		rewardProgram.EpochEndTime = blockTime.Add(time.Duration(rewardProgram.EpochSeconds) * time.Second)
+	}
+}
+
+func (k Keeper) endRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) {
+	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Ending reward program %v ", rewardProgram))
+	blockTime := ctx.BlockTime()
+	rewardProgram.Finished = true
+	rewardProgram.FinishedTime = blockTime
 }
