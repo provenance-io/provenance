@@ -96,12 +96,7 @@ var handlers = map[string]appUpgrade{
 		}, // upgrade for pio-testnet-1 from v1.8.0-rc8 to v1.8.0-rc9
 	},
 	"kahlua": {}, // upgrade for pio-testnet-1 from v1.8.0-rc9 to v1.8.0
-	"lava": {
-		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
-			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			return versionMap, nil
-		}, // upgrade for 1.10.0
-	},
+	"lava":   {},
 	// TODO - Add new upgrade definitions here.
 }
 
