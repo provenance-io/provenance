@@ -35,17 +35,19 @@ jobs:
             sims-state-listening.mk
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
-      - name: Define file prefix
-        id: file-prefix
-        run: echo "::set-output name=file-prefix::sim-test-${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
+      - name: Define Variables
+        id: def-vars
+        run: |
+          echo "::set-output name=file-prefix::sim-test-${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
+          echo "::set-output name=cache-key-suffix::sims-t18-${{ hashFiles('scripts/cleveldb_build_and_install.sh', 'scripts/rocksdb_build_and_install.sh') }}"
       - name: Update provwasm contract
         run: |
           make download-smart-contracts
     outputs:
       go-version: 1.17
       should-run: ${{ env.GIT_DIFF }}
-      file-prefix: ${{ steps.file-prefix.outputs.file-prefix }}
-      cache-key-suffix: sims-t18-${{ hashFiles('scripts/cleveldb_build_and_install.sh', 'scripts/rocksdb_build_and_install.sh') }}
+      file-prefix: ${{ steps.def-vars.outputs.file-prefix }}
+      cache-key-suffix: ${{ steps.def-vars.outputs.cache-key-suffix }}
       # In Order:
       # * The leveldb repo tarball
       # * The directory extracted from the leveldb tarball
