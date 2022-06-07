@@ -147,8 +147,8 @@ func GetUpdateUsdConversionRateProposal() *cobra.Command {
 		Long: strings.TrimSpace(`Submit a update usd conversion rate proposal along with an initial deposit.
 The conversion rate is the cost for 1 unit of hash (1,000,000,000nhash).  Example: $1.023 would be represented as 1023 and $0.023 as 23.
 `),
-		Example: fmt.Sprintf(`$ %[1]s tx msgfees usd-conversion-proposal "updating usd conversion" "updating usd conversion to $1.234"  1234 1000000000nhash
-		$ %[1]s tx msgfees ucp "updating usd conversion" "updating usd conversion to $1.234"  1234 1000000000nhash
+		Example: fmt.Sprintf(`$ %[1]s tx msgfees usd-conversion-proposal "updating usd conversion" "changes the usd conversion rate to $1.234."  1234 1000000000nhash
+		$ %[1]s tx msgfees ucp "updating usd conversion" "changes the usd conversion rate to $1.234."  1234 1000000000nhash
 		`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
