@@ -696,29 +696,6 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	return nil
 }
 
-// RemoveSendEnabledForMissingMarkers loops through all "send enabled" bank metadata and removes all that don't have markers.
-// WARNING: This is for an upgrade migration and should not be called otherwise.
-func (k Keeper) RemoveSendEnabledForMissingMarkers(ctx sdk.Context) {
-	ctx.Logger().Info("Removing SendEnabled for Missing Markers...")
-
-	// Loop through all "send enabled" entries and check whether marker exists.
-	toRemove := make([]string, 0)
-	k.bankKeeper.IterateSendEnabledEntries(ctx, func(denom string, _ bool) (stop bool) {
-		_, err := k.GetMarkerByDenom(ctx, denom)
-		if err != nil {
-			toRemove = append(toRemove, denom)
-		}
-		return false
-	})
-	// If missing markers were found, remove the "send enabled" status for each.
-	if len(toRemove) > 0 {
-		ctx.Logger().Info(fmt.Sprintf("Found %d Missing Markers (1/1). Removing.", len(toRemove)))
-		for _, denom := range toRemove {
-			k.bankKeeper.DeleteSendEnabled(ctx, denom)
-		}
-	}
-}
-
 func (k Keeper) authzHandler(ctx sdk.Context, admin sdk.AccAddress, from sdk.AccAddress, amount sdk.Coin) error {
 	markerAuth := types.MarkerTransferAuthorization{}
 	authorization, expireTime := k.authzKeeper.GetCleanAuthorization(ctx, admin, from, markerAuth.MsgTypeURL())

@@ -518,48 +518,6 @@ func TestAccountInsufficientExisting(t *testing.T) {
 	require.EqualValues(t, 10001, m.GetSupply().Amount.Int64())
 }
 
-func TestRemoveOrphanedSendEnabledEntries(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	// Make sure "send enabled" are initially empty.
-	allSendEnabled := app.BankKeeper.GetAllSendEnabledEntries(ctx)
-	require.Len(t, allSendEnabled, 0, "initial send enabled count")
-
-	// Add orphaned marker reference.
-	app.BankKeeper.SetSendEnabled(ctx, "missing", true)
-
-	// Create account for adding marker.
-	pubkey := secp256k1.GenPrivKey().PubKey()
-	user := sdk.AccAddress(pubkey.Address())
-	existingSupply := sdk.NewCoin("hash", sdk.NewInt(10000))
-	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
-	require.NoError(t, simapp.FundAccount(app, ctx, user, sdk.NewCoins(existingSupply)), "funding account")
-
-	// Add new marker account with its own "send enabled" denom that should not be deleted.
-	mac := types.NewEmptyMarkerAccount("markerdenom", user.String(), []types.AccessGrant{*types.NewAccessGrant(user,
-		[]types.Access{types.Access_Mint, types.Access_Burn, types.Access_Withdraw, types.Access_Delete})})
-	mac.MarkerType = types.MarkerType_RestrictedCoin
-	require.NoError(t, mac.SetManager(user), "setting marker manager")
-	require.NoError(t, mac.SetSupply(sdk.NewCoin("markerdenom", sdk.NewInt(10000))), "setting marker supply")
-	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac), "adding marker account")
-	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "markerdenom"), "finalizing marker")
-	require.NoError(t, app.MarkerKeeper.ActivateMarker(ctx, user, "markerdenom"), "activating marker")
-
-	// Make sure params reflect added reference.
-	allSendEnabled = app.BankKeeper.GetAllSendEnabledEntries(ctx)
-	require.Len(t, allSendEnabled, 2, "send enabled entry count before cleanup")
-	require.ElementsMatch(t, []string{"missing", "markerdenom"}, []string{allSendEnabled[0].Denom, allSendEnabled[1].Denom}, "send enabled denoms before cleanup")
-
-	// Remove all for missing markers.
-	app.MarkerKeeper.RemoveSendEnabledForMissingMarkers(ctx)
-
-	// Make sure params reflect removed reference.
-	allSendEnabled = app.BankKeeper.GetAllSendEnabledEntries(ctx)
-	require.Len(t, allSendEnabled, 1, "send enabled count after cleanup")
-	require.Equal(t, "markerdenom", allSendEnabled[0].Denom, "send enabled denoms after cleanup")
-}
-
 func TestAccountRemoveDeletesSendEnabled(t *testing.T) {
 	//app, ctx := createTestApp(true)
 	app := simapp.Setup(false)
