@@ -20,10 +20,9 @@ func (k Keeper) SetRewardProgram(ctx sdk.Context, rewardProgram types.RewardProg
 func (k Keeper) RemoveRewardProgram(ctx sdk.Context, id uint64) bool {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRewardProgramKey(id)
-	bz := store.Get(key)
-	keyExists := store.Has(bz)
+	keyExists := store.Has(key)
 	if keyExists {
-		store.Delete(bz)
+		store.Delete(key)
 	}
 	return keyExists
 }
@@ -147,10 +146,9 @@ func (k Keeper) SetRewardProgramBalance(ctx sdk.Context, rewardProgramBalance ty
 func (k Keeper) RemoveRewardProgramBalance(ctx sdk.Context, id uint64) bool {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRewardProgramBalanceKey(id)
-	bz := store.Get(key)
-	keyExists := store.Has(bz)
+	keyExists := store.Has(key)
 	if keyExists {
-		store.Delete(bz)
+		store.Delete(key)
 	}
 	return keyExists
 }
