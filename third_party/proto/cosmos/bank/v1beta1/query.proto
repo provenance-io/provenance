@@ -21,6 +21,12 @@ service Query {
     option (google.api.http).get = "/cosmos/bank/v1beta1/balances/{address}";
   }
 
+  // SpendableBalances queries the spenable balance of all coins for a single
+  // account.
+  rpc SpendableBalances(QuerySpendableBalancesRequest) returns (QuerySpendableBalancesResponse) {
+    option (google.api.http).get = "/cosmos/bank/v1beta1/spendable_balances/{address}";
+  }
+
   // TotalSupply queries the total supply of all coins.
   rpc TotalSupply(QueryTotalSupplyRequest) returns (QueryTotalSupplyResponse) {
     option (google.api.http).get = "/cosmos/bank/v1beta1/supply";
@@ -44,6 +50,15 @@ service Query {
   // DenomsMetadata queries the client metadata for all registered coin denominations.
   rpc DenomsMetadata(QueryDenomsMetadataRequest) returns (QueryDenomsMetadataResponse) {
     option (google.api.http).get = "/cosmos/bank/v1beta1/denoms_metadata";
+  }
+
+  // SendEnabled queries for SendEnabled entries.
+  //
+  // This query only returns denominations that have specific SendEnabled settings.
+  // Any denomination that does not have a specific setting will use the default
+  // params.default_send_enabled, and will not be returned by this query.
+  rpc SendEnabled(QuerySendEnabledRequest) returns (QuerySendEnabledResponse) {
+    option (google.api.http).get = "/cosmos/bank/v1beta1/send_enabled";
   }
 }
 
@@ -83,6 +98,30 @@ message QueryAllBalancesResponse {
   // balances is the balances of all the coins.
   repeated cosmos.base.v1beta1.Coin balances = 1
   [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QuerySpendableBalancesRequest defines the gRPC request structure for querying
+// an account's spendable balances.
+message QuerySpendableBalancesRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // address is the address to query spendable balances for.
+  string address = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QuerySpendableBalancesResponse defines the gRPC response structure for querying
+// an account's spendable balances.
+message QuerySpendableBalancesResponse {
+  // balances is the spendable balances of all the coins.
+  repeated cosmos.base.v1beta1.Coin balances = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -160,4 +199,19 @@ message QueryDenomMetadataRequest {
 message QueryDenomMetadataResponse {
   // metadata describes and provides all the client information for the requested token.
   Metadata metadata = 1 [(gogoproto.nullable) = false];
+}
+
+// QuerySendEnabledRequest defines the RPC request for looking up SendEnabled entries.
+message QuerySendEnabledRequest {
+  // denoms is the specific denoms you want look up. Leave empty to get all entries.
+  repeated string denoms = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QuerySendEnabledResponse defines the RPC response of a SendEnable query.
+message QuerySendEnabledResponse {
+  repeated SendEnabled send_enabled = 1;
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
