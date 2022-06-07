@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/reward/types"
@@ -47,6 +49,18 @@ func (k Keeper) CleanupRewardProgramShares(ctx sdk.Context, rewardProgram *types
 	return nil
 }
 
+// Clean up the shared and expired shares
+func (k Keeper) RemoveDeadShares(ctx sdk.Context) (err error) {
+	err = k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
+		err := k.CleanupRewardProgramShares(ctx, &rewardProgram)
+		if err != nil {
+			ctx.Logger().Info(fmt.Sprintf("NOTICE: RemoveDeadShares - error cleaning up shares for reward program %d: %v ", rewardProgram.Id, err))
+		}
+		return false
+	})
+	return err
+}
+
 func (k Keeper) GetShare(ctx sdk.Context, rewardProgramID, epochID uint64, addr string) (share types.Share, err error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetShareKey(rewardProgramID, epochID, []byte(addr))
@@ -63,6 +77,15 @@ func (k Keeper) SetShare(ctx sdk.Context, share *types.Share) {
 	bz := k.cdc.MustMarshal(share)
 	key := types.GetShareKey(share.GetRewardProgramId(), share.GetEpochId(), []byte(share.GetAddress()))
 	store.Set(key, bz)
+}
+
+func (k Keeper) HasShares(ctx sdk.Context, rewardProgramID uint64) (bool, error) {
+	hasShares := false
+	err := k.IterateRewardShares(ctx, rewardProgramID, func(share types.Share) (stop bool) {
+		hasShares = true
+		return true
+	})
+	return hasShares, err
 }
 
 // Iterates over ALL the shares

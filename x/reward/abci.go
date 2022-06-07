@@ -90,7 +90,15 @@ func update(ctx sdk.Context, k keeper.Keeper) {
 }
 
 func cleanup(ctx sdk.Context, k keeper.Keeper) {
-	// This is where we want to remove shares
+	err := k.RemoveDeadShares(ctx)
+	if err != nil {
+		ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - error removing dead shares: %v ", err))
+	}
+
+	err = k.RemoveDeadPrograms(ctx)
+	if err != nil {
+		ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - error removing dead reward programs: %v ", err))
+	}
 }
 
 // this method is only for testing
