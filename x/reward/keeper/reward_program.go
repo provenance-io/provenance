@@ -57,6 +57,17 @@ func (k Keeper) IterateRewardPrograms(ctx sdk.Context, handle func(rewardProgram
 	return nil
 }
 
+func (k Keeper) GetOutstandingRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
+	var rewardPrograms []types.RewardProgram
+	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
+		if !rewardProgram.Finished {
+			rewardPrograms = append(rewardPrograms, rewardProgram)
+		}
+		return false
+	})
+	return rewardPrograms, err
+}
+
 func (k Keeper) GetAllActiveRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
 	var rewardPrograms []types.RewardProgram
 	// get all the rewards programs

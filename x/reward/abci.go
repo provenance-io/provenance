@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/reward/keeper"
-	"github.com/provenance-io/provenance/x/reward/types"
 )
 
 // EndBlocker called every block
@@ -53,42 +52,45 @@ import (
 
 // BeginBlocker called every block
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
+	update(ctx, k)
+	cleanup(ctx, k)
+}
+
+func update(ctx sdk.Context, k keeper.Keeper) {
 	blockTime := ctx.BlockTime()
 	// ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Block time: %v ", blockTime))
-	// TODO: determine if reward programs need to start or finish
-	var rewardPrograms []types.RewardProgram
-	// get all the rewards programs
-	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
-		if rewardProgram.Finished {
-			return false
-		}
-		if !rewardProgram.Started && (blockTime.After(rewardProgram.ProgramStartTime) || blockTime.Equal(rewardProgram.ProgramStartTime)) {
+
+	outstanding, err := k.GetOutstandingRewardPrograms(ctx)
+	if err != nil {
+		ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - error iterating reward programs: %v ", err))
+		return
+	}
+
+	for _, rewardProgram := range outstanding {
+		if rewardProgram.IsStarting(ctx) {
 			ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Starting reward program: %v ", rewardProgram))
 			rewardProgram.Started = true
 			rewardProgram.EpochEndTime = blockTime.Add(time.Duration(rewardProgram.EpochSeconds) * time.Second)
 			rewardProgram.CurrentEpoch = 1
-			rewardPrograms = append(rewardPrograms, rewardProgram)
-		} else if rewardProgram.Started && !rewardProgram.Finished && (blockTime.After(rewardProgram.EpochEndTime) || blockTime.Equal(rewardProgram.EpochEndTime)) {
+		} else if rewardProgram.IsEndingEpoch(ctx) {
 			ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Epoch end hit for reward program %v ", rewardProgram))
 			rewardProgram.CurrentEpoch++
-			if rewardProgram.CurrentEpoch > rewardProgram.NumberEpochs {
+			if rewardProgram.IsEnding(ctx) {
 				rewardProgram.Finished = true
 				rewardProgram.FinishedTime = blockTime
 			} else {
 				rewardProgram.EpochEndTime = blockTime.Add(time.Duration(rewardProgram.EpochSeconds) * time.Second)
 			}
-			rewardPrograms = append(rewardPrograms, rewardProgram)
 		}
-		// TODO: do reward calculations for previous epoch
-		return false
-	})
-	if err != nil {
-		ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - error iterating reward programs: %v ", err))
-		return
 	}
-	for _, rewardProgram := range rewardPrograms {
+
+	for _, rewardProgram := range outstanding {
 		k.SetRewardProgram(ctx, rewardProgram)
 	}
+}
+
+func cleanup(ctx sdk.Context, k keeper.Keeper) {
+	// This is where we want to remove shares
 }
 
 // this method is only for testing

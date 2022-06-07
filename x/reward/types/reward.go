@@ -132,6 +132,20 @@ func NewRewardProgram(
 	}
 }
 
+func (rp *RewardProgram) IsStarting(ctx sdk.Context) bool {
+	blockTime := ctx.BlockTime()
+	return !rp.Started && (blockTime.After(rp.ProgramStartTime) || rp.Equal(rp.ProgramStartTime))
+}
+
+func (rp *RewardProgram) IsEndingEpoch(ctx sdk.Context) bool {
+	blockTime := ctx.BlockTime()
+	return rp.Started && !rp.Finished && (blockTime.After(rp.EpochEndTime) || blockTime.Equal(rp.EpochEndTime))
+}
+
+func (rp *RewardProgram) IsEnding(ctx sdk.Context) bool {
+	return rp.CurrentEpoch > rp.NumberEpochs
+}
+
 func (rp *RewardProgram) ValidateBasic() error {
 	title := rp.GetTitle()
 	if len(strings.TrimSpace(title)) == 0 {

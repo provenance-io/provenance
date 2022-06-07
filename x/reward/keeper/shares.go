@@ -22,6 +22,31 @@ func (k Keeper) RemoveShare(ctx sdk.Context, rewardProgramID, epochID uint64, ad
 	return keyExists
 }
 
+// Clean up the shared and expired shares
+func (k Keeper) CleanupRewardProgramShares(ctx sdk.Context, rewardProgram *types.RewardProgram) (err error) {
+	blockTime := ctx.BlockTime()
+	var deadShares []types.Share
+
+	// Find all the dead shares
+	err = k.IterateRewardShares(ctx, rewardProgram.Id, func(share types.Share) (stop bool) {
+		// Share has been claimed or expired we can remove it
+		if share.Claimed || blockTime.After(share.ExpireTime) || blockTime.Equal(share.ExpireTime) {
+			deadShares = append(deadShares, share)
+		}
+		return false
+	})
+	if err != nil {
+		return err
+	}
+
+	// Remove all the dead shares
+	for _, share := range deadShares {
+		k.RemoveShare(ctx, share.RewardProgramId, share.EpochId, share.Address)
+	}
+
+	return nil
+}
+
 func (k Keeper) GetShare(ctx sdk.Context, rewardProgramID, epochID uint64, addr string) (share types.Share, err error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetShareKey(rewardProgramID, epochID, []byte(addr))
