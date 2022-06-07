@@ -57,6 +57,7 @@ func (k Keeper) IterateRewardPrograms(ctx sdk.Context, handle func(rewardProgram
 	return nil
 }
 
+// Gets all RewardPrograms that have not finished
 func (k Keeper) GetOutstandingRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
 	var rewardPrograms []types.RewardProgram
 	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
@@ -68,6 +69,7 @@ func (k Keeper) GetOutstandingRewardPrograms(ctx sdk.Context) ([]types.RewardPro
 	return rewardPrograms, err
 }
 
+// Gets all RewardPrograms that have started, but not have not finished
 func (k Keeper) GetAllActiveRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
 	var rewardPrograms []types.RewardProgram
 	// get all the rewards programs
