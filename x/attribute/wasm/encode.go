@@ -135,8 +135,8 @@ func (params *DeleteDistinctAttributeParams) Encode(contract sdk.AccAddress) ([]
 	return []sdk.Msg{msg}, nil
 }
 
-// Encode creates a MsgDeleteAttribute.
-// The contract must be the owner of the name of the attribute being deleted.
+// Encode creates a MsgUpdateAttribute.
+// The contract must be the owner of the name of the attribute being updated.
 func (params *UpdateAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
 	if err := types.ValidateAttributeAddress(params.Address); err != nil {
 		return nil, fmt.Errorf("wasm: invalid address: %w", err)
