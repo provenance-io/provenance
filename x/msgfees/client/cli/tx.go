@@ -44,7 +44,7 @@ func NewTxCmd() *cobra.Command {
 
 func GetCmdMsgFeesProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "proposal [add|update|remove] [title] [description] [deposit]",
+		Use:     "proposal {add|update|remove} <title> <description> <deposit>",
 		Args:    cobra.ExactArgs(4),
 		Aliases: []string{"p"},
 		Short:   "Submit a msg based fee proposal along with an initial deposit",
@@ -52,8 +52,8 @@ func GetCmdMsgFeesProposal() *cobra.Command {
 For add, update, and removal of msg fees amount and min fee and/or rate fee must be set.
 `),
 		Example: fmt.Sprintf(`$ %[1]s tx msgfees add "adding" "adding MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612nhash
-		$ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash
-		$ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest
+$ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash
+$ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest
 		`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -140,12 +140,12 @@ For add, update, and removal of msg fees amount and min fee and/or rate fee must
 
 func GetUpdateUsdConversionRateProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "usd-conversion-proposal [title] [description] [rate] [deposit]",
+		Use:     "usd-conversion-proposal <title> <description> <rate> <deposit>",
 		Aliases: []string{"ucp", "u-c-p"},
 		Args:    cobra.ExactArgs(4),
-		Short:   "Submit a update usd conversion rate proposal along with an initial deposit",
-		Long: strings.TrimSpace(`Submit a update usd conversion rate proposal along with an initial deposit.
-The conversion rate is the cost for 1 unit of hash (1,000,000,000nhash).  Example: $1.023 would be represented as 1023 and $0.023 as 23.
+		Short:   "Submit a usd conversion rate update proposal along with an initial deposit",
+		Long: strings.TrimSpace(`Submit a usd conversion rate update proposal along with an initial deposit.
+		The conversion rate is the cost in thousandths of USD (1/10 of a cent) for 1 unit of hash (1,000,000,000nhash).  Example: For example, $1.098/Hash, is a rate of 1098, and $0.035/Hash is a rate of 35
 `),
 		Example: fmt.Sprintf(`$ %[1]s tx msgfees usd-conversion-proposal "updating usd conversion" "changes the usd conversion rate to $1.234."  1234 1000000000nhash
 		$ %[1]s tx msgfees ucp "updating usd conversion" "changes the usd conversion rate to $1.234."  1234 1000000000nhash
