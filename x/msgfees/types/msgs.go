@@ -42,13 +42,13 @@ func NewMsgAssessCustomMsgFeeRequest(
 	name string,
 	amount sdk.Coin,
 	recipient string,
-	from string,
+	signer string,
 ) MsgAssessCustomMsgFeeRequest {
 	return MsgAssessCustomMsgFeeRequest{
 		Name:      name,
 		Amount:    amount,
 		Recipient: recipient,
-		From:      from,
+		Signer:      signer,
 	}
 }
 
@@ -59,7 +59,7 @@ func (msg MsgAssessCustomMsgFeeRequest) ValidateBasic() error {
 			return err
 		}
 	}
-	_, err := sdk.AccAddressFromBech32(msg.From)
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (msg MsgAssessCustomMsgFeeRequest) ValidateBasic() error {
 }
 
 func (msg MsgAssessCustomMsgFeeRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.From)
+	addr, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
 		panic(err)
 	}

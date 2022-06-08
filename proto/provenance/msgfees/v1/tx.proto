@@ -31,7 +31,7 @@ message MsgAssessCustomMsgFeeRequest {
   ];                    // amount of additional fee that must be paid
   string recipient = 3; // optional recipient address, the amount is split 50/50 between recipient and fee module. If
                         // empty, whole amount goes to fee module
-  string from = 4;      // the signer of the msg
+  string signer = 4;    // the signer of the msg
 }
 
 // MsgAssessCustomMsgFeeResponse defines the Msg/AssessCustomMsgFeee response type.
