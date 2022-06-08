@@ -21,6 +21,8 @@ type AttributeMsgParams struct {
 	Add *AddAttributeParams `json:"add_attribute"`
 	// A request to encode a MsgDeleteAttribute
 	Del *DeleteAttributeParams `json:"delete_attribute"`
+	// A request to encode a MsgUpdateAttribute
+	Update *UpdateAttributeParams `json:"update_attribute"`
 }
 
 // AddAttributeParams are params for encoding a MsgAddAttribute
@@ -43,6 +45,22 @@ type DeleteAttributeParams struct {
 	Name string `json:"name"`
 }
 
+// UpdateAttributeParams are params for encoding a MsgUpdateAttributeRequest
+type UpdateAttributeParams struct {
+	// The address of the account on the attribute
+	Address string `json:"address"`
+	// The attribute name.
+	Name string `json:"name"`
+	// The original attribute value.
+	OriginalValue []byte `json:"original_value"`
+	// The original attribute value type.
+	OriginalValueType string `json:"original_value_type"`
+	// The new attribute value.
+	UpdatedValue []byte `json:"updated_value"`
+	// The new attribute value type.
+	UpdatedValueType string `json:"updated_value_type"`
+}
+
 // Encoder returns a smart contract message encoder for the attribute module.
 func Encoder(contract sdk.AccAddress, msg json.RawMessage, version string) ([]sdk.Msg, error) {
 	wrapper := struct {
@@ -60,6 +78,8 @@ func Encoder(contract sdk.AccAddress, msg json.RawMessage, version string) ([]sd
 		return params.Add.Encode(contract)
 	case params.Del != nil:
 		return params.Del.Encode(contract)
+	case params.Update != nil:
+		return params.Update.Encode(contract)
 	default:
 		return nil, fmt.Errorf("wasm: invalid attribute encoder params: %s", string(msg))
 	}
@@ -88,6 +108,24 @@ func (params *DeleteAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg,
 		return nil, fmt.Errorf("wasm: invalid address: %w", err)
 	}
 	msg := types.NewMsgDeleteAttributeRequest(params.Address, contract, params.Name)
+	return []sdk.Msg{msg}, nil
+}
+
+// Encode creates a MsgDeleteAttribute.
+// The contract must be the owner of the name of the attribute being deleted.
+func (params *UpdateAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
+	if err := types.ValidateAttributeAddress(params.Address); err != nil {
+		return nil, fmt.Errorf("wasm: invalid address: %w", err)
+	}
+	msg := types.NewMsgUpdateAttributeRequest(
+		params.Address,
+		contract,
+		params.Name,
+		params.OriginalValue,
+		params.UpdatedValue,
+		encodeType(params.OriginalValueType),
+		encodeType(params.UpdatedValueType),
+	)
 	return []sdk.Msg{msg}, nil
 }
 
