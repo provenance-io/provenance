@@ -113,9 +113,8 @@ func CalculateBaseFee(ctx sdk.Context, feeTx sdk.FeeTx, msgfeekeeper msgfeestype
 		amount := msgfeekeeper.GetFloorGasPrice(ctx).Amount.Mul(sdk.NewIntFromUint64(gasWanted))
 		baseFeeToDeduct := sdk.NewCoins(sdk.NewCoin(floorPrice.Denom, amount))
 		return baseFeeToDeduct
-	} else {
-		return DetermineTestBaseFeeAmount(ctx, feeTx)
 	}
+	return DetermineTestBaseFeeAmount(ctx, feeTx)
 }
 
 // DetermineTestBaseFeeAmount determines the type of test that is running.  ChainID = "" is a simple unit
@@ -123,9 +122,9 @@ func CalculateBaseFee(ctx sdk.Context, feeTx sdk.FeeTx, msgfeekeeper msgfeestype
 func DetermineTestBaseFeeAmount(ctx sdk.Context, feeTx sdk.FeeTx) sdk.Coins {
 	if len(ctx.ChainID()) == 0 {
 		return feeTx.GetFee()
-	} else {
-		return sdk.NewCoins()
 	}
+	return sdk.NewCoins()
+
 }
 
 // DeductBaseFees deducts fees from the given account.

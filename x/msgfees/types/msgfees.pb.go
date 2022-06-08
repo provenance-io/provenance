@@ -28,7 +28,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type Params struct {
 	// constant used to calculate fees when gas fees shares denom with msg fee
 	FloorGasPrice types.Coin `protobuf:"bytes,2,opt,name=floor_gas_price,json=floorGasPrice,proto3" json:"floor_gas_price" yaml:"floor_gas_price"`
-	// conversion rate of usd cents to 1 hash
+	// conversion rate of usd mils to 1 hash
 	UsdConversionRate uint64 `protobuf:"varint,3,opt,name=usd_conversion_rate,json=usdConversionRate,proto3" json:"usd_conversion_rate,omitempty"`
 }
 

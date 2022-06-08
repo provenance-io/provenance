@@ -2,7 +2,6 @@ package antewrapper
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/armon/go-metrics"
 
@@ -35,8 +34,6 @@ type FeeGasMeter struct {
 
 	simulate bool
 }
-
-var CompositeKeyDelimiter = "\n"
 
 // NewFeeGasMeterWrapper returns a reference to a new tracing gas meter that will track calls to the base gas meter
 func NewFeeGasMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter, isSimulate bool) sdkgas.GasMeter {
@@ -111,7 +108,7 @@ func (g *FeeGasMeter) String() string {
 
 // ConsumeFee increments the amount of msg fee required by a msg type.
 func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string, recipient string) {
-	key := getCompositeKey(msgType, recipient)
+	key := msgfeestypes.GetCompositeKey(msgType, recipient)
 	cur := g.usedFees[key]
 	if cur.Empty() {
 		g.usedFees[key] = sdk.NewCoins(amount)
@@ -122,14 +119,7 @@ func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string, recipient stri
 }
 
 func (g *FeeGasMeter) FeeConsumedForType(msgType string, recipient string) sdk.Coins {
-	return g.usedFees[getCompositeKey(msgType, recipient)]
-}
-
-func getCompositeKey(msgType string, recipient string) string {
-	if len(recipient) == 0 {
-		return msgType
-	}
-	return fmt.Sprintf("%s%s%s", msgType, CompositeKeyDelimiter, recipient)
+	return g.usedFees[msgfeestypes.GetCompositeKey(msgType, recipient)]
 }
 
 // FeeConsumed returns total fee consumed in the current fee gas meter, is returned Sorted.
@@ -145,20 +135,10 @@ func (g *FeeGasMeter) FeeConsumed() sdk.Coins {
 func (g *FeeGasMeter) FeeConsumedDistributions() map[string]sdk.Coins {
 	additionalFeeDistributions := make(map[string]sdk.Coins)
 	for key, coins := range g.usedFees {
-		_, addressKey := splitCompositeKey(key)
+		_, addressKey := msgfeestypes.SplitCompositeKey(key)
 		additionalFeeDistributions[addressKey] = additionalFeeDistributions[addressKey].Add(coins...)
 	}
 	return additionalFeeDistributions
-}
-
-// splitCompositKey splits the composite key into msgType and recipient, if recipient is empty then it is for the fee module
-func splitCompositeKey(key string) (msgType, recipient string) {
-	msgAccountPair := strings.Split(key, CompositeKeyDelimiter)
-	addressKey := ""
-	if len(msgAccountPair) == 2 && len(msgAccountPair[1]) > 0 {
-		addressKey = msgAccountPair[1]
-	}
-	return msgAccountPair[0], addressKey
 }
 
 // FeeConsumedByMsg total fee consumed for a particular MsgType
