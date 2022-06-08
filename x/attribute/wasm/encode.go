@@ -100,7 +100,7 @@ func Encoder(contract sdk.AccAddress, msg json.RawMessage, version string) ([]sd
 }
 
 // Encode creates a MsgAddAttribute.
-// The contract must be the owner of the name of the attribute being added.
+// INFO: The contract must be the owner of the name of the attribute being added.
 func (params *AddAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
 	if err := types.ValidateAttributeAddress(params.Address); err != nil {
 		return nil, fmt.Errorf("wasm: invalid address: %w", err)
@@ -116,7 +116,7 @@ func (params *AddAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, er
 }
 
 // Encode creates a MsgDeleteAttribute.
-// The contract must be the owner of the name of the attribute being deleted.
+// INFO: The contract must be the owner of the name of the attribute being deleted.
 func (params *DeleteAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
 	if err := types.ValidateAttributeAddress(params.Address); err != nil {
 		return nil, fmt.Errorf("wasm: invalid address: %w", err)
@@ -126,7 +126,7 @@ func (params *DeleteAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg,
 }
 
 // Encode creates a MsgDeleteDistinctAttribute.
-// The contract must be the owner of the name of the attribute being deleted.
+// INFO: The contract must be the owner of the name of the attribute being deleted.
 func (params *DeleteDistinctAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
 	if err := types.ValidateAttributeAddress(params.Address); err != nil {
 		return nil, fmt.Errorf("wasm: invalid address: %w", err)
@@ -136,7 +136,7 @@ func (params *DeleteDistinctAttributeParams) Encode(contract sdk.AccAddress) ([]
 }
 
 // Encode creates a MsgUpdateAttribute.
-// The contract must be the owner of the name of the attribute being updated.
+// INFO: The contract must be the owner of the name of the attribute being updated.
 func (params *UpdateAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
 	if err := types.ValidateAttributeAddress(params.Address); err != nil {
 		return nil, fmt.Errorf("wasm: invalid address: %w", err)
