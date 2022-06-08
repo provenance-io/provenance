@@ -86,6 +86,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 }
 
 func TestMsgService(t *testing.T) {
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	encCfg := simapp.MakeTestEncodingConfig()
 	priv, _, addr := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()

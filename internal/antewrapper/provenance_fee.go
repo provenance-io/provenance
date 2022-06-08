@@ -57,16 +57,15 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	payerAccount := feePayer
 
 	// deduct the fees
-	// Compute msg additionalFees
+	baseFeeToDeduct := CalculateBaseFee(ctx, feeTx, dfd.msgFeeKeeper)
 	msgs := feeTx.GetMsgs()
 	feeDist, errFromCalculateAdditionalFeesToBePaid := CalculateAdditionalFeesToBePaid(ctx, dfd.msgFeeKeeper, msgs...)
 	if errFromCalculateAdditionalFeesToBePaid != nil {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, errFromCalculateAdditionalFeesToBePaid.Error())
 	}
-	baseFeeToDeduct := feeTx.GetFee()
 	if feeDist != nil && len(feeDist.TotalAdditionalFees) > 0 {
 		var hasNeg bool
-		baseFeeToDeduct, hasNeg = baseFeeToDeduct.SafeSub(feeDist.TotalAdditionalFees)
+		_, hasNeg = baseFeeToDeduct.SafeSub(feeDist.TotalAdditionalFees)
 		if hasNeg && !simulate {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", baseFeeToDeduct)
 		}
@@ -105,6 +104,28 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	ctx.EventManager().EmitEvents(events)
 
 	return next(ctx, tx, simulate)
+}
+
+func CalculateBaseFee(ctx sdk.Context, feeTx sdk.FeeTx, msgfeekeeper msgfeestypes.MsgFeesKeeper) sdk.Coins {
+	if shouldIgnoreChecksForTests(ctx) {
+		gasWanted := feeTx.GetGas()
+		floorPrice := msgfeekeeper.GetFloorGasPrice(ctx)
+		amount := msgfeekeeper.GetFloorGasPrice(ctx).Amount.Mul(sdk.NewIntFromUint64(gasWanted))
+		baseFeeToDeduct := sdk.NewCoins(sdk.NewCoin(floorPrice.Denom, amount))
+		return baseFeeToDeduct
+	} else {
+		return DetermineTestBaseFeeAmount(ctx, feeTx)
+	}
+}
+
+// DetermineTestBaseFeeAmount determines the type of test that is running.  ChainID = "" is a simple unit
+// We need this because of how tests are setup using atom and we have nhash specific code for msgfees
+func DetermineTestBaseFeeAmount(ctx sdk.Context, feeTx sdk.FeeTx) sdk.Coins {
+	if len(ctx.ChainID()) == 0 {
+		return feeTx.GetFee()
+	} else {
+		return sdk.NewCoins()
+	}
 }
 
 // DeductBaseFees deducts fees from the given account.

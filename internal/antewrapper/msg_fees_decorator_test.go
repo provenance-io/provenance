@@ -1,16 +1,24 @@
 package antewrapper_test
 
 import (
+	"testing"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	"github.com/stretchr/testify/suite"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/antewrapper"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
+
+func TestAnteFeeDecoratorTestSuite(t *testing.T) {
+	suite.Run(t, new(AnteTestSuite))
+}
 
 // checkTx true, high min gas price(high enough so that additional fee in same denom tips it over,
 //and this is what sets it apart from MempoolDecorator which has already been run)
@@ -36,6 +44,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees() {
 // checkTx true, fees supplied that do not meet floor gas price requirement (floor gas price * gas wanted)
 func (suite *AnteTestSuite) TestEnsureFloorGasPriceNotMet() {
 	err, antehandler := setUpApp(suite, true, "nhash", 0)
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("nhash", 1905)
 	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 100000)))
 	suite.Require().NoError(err)
 	// Set IsCheckTx to true
@@ -51,7 +60,7 @@ func (suite *AnteTestSuite) TestEnsureFloorGasPriceNotMet() {
 // checkTx true, fees supplied that do meet floor gas price requirement (floor gas price * gas wanted), and should not error.
 func (suite *AnteTestSuite) TestEnsureFloorGasPriceMet() {
 	err, antehandler := setUpApp(suite, true, "nhash", 0)
-	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 190500000)))
+	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
 	suite.Require().NoError(err)
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
@@ -68,6 +77,7 @@ func (suite *AnteTestSuite) TestEnsureFloorGasPriceMet() {
 //and this is what sets it apart from MempoolDecorator which has already been run)
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesNoAdditionalFeesLowGas() {
 	err, antehandler := setUpApp(suite, true, "nhash", 0)
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("nhash", 1905)
 	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 100000)))
 	suite.Require().NoError(err)
 	// Set IsCheckTx to true
@@ -82,6 +92,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesNoAdditionalFeesLowGas() 
 
 // checkTx true, high min gas price irrespective of additional fees
 func (suite *AnteTestSuite) TestEnsureMempoolHighMinGasPrice() {
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	err, antehandler := setUpApp(suite, true, "atom", 100)
 	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
 	suite.Require().NoError(err)
@@ -195,6 +206,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant() {
 
 // fee grantee incorrect
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant_1() {
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	err, antehandler := setUpApp(suite, true, "atom", 100)
 
 	// keys and addresses
@@ -295,6 +307,7 @@ func (suite *AnteTestSuite) TestEnsureNonCheckTxPassesAllChecks() {
 
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_1() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	tx, acct1 := createTestTx(suite, err, NewTestFeeAmountMultiple())
 
 	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(100)))))
@@ -306,6 +319,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_1() {
 // wrong denom passed in, errors with insufficient fee
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_2() {
 	err, antehandler := setUpApp(suite, false, "nhash", 100)
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	tx, acct1 := createTestTx(suite, err, testdata.NewTestFeeAmount())
 
 	tx, acct1 = createTestTx(suite, err, NewTestFeeAmountMultiple())
@@ -324,11 +338,14 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_2() {
 	suite.Require().Contains(err.Error(), "not enough fees; after deducting fees required,got: \"-100nhash,10000steak\", required additional fee: \"100nhash\"", "wrong error message")
 }
 
-// additional fee denom as default base fee denom, fails because gas passed in * floor gas price (module param) exceeds fess passed in.
+// additional fee denom as default base fee denom, fails because gas passed in * floor gas price (module param) exceeds fees passed in.
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_3() {
 	err, antehandler := setUpApp(suite, false, "nhash", 100)
 	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 10000)))
 	suite.ctx = suite.ctx.WithChainID("test-chain")
+	params := suite.app.MsgFeesKeeper.GetParams(suite.ctx)
+	params.FloorGasPrice = sdk.NewInt64Coin("nhash", 1905)
+	suite.app.MsgFeesKeeper.SetParams(suite.ctx, params)
 	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(10000)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")

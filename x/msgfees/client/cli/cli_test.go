@@ -14,6 +14,7 @@ import (
 
 	"github.com/provenance-io/provenance/testutil"
 	msgfeescli "github.com/provenance-io/provenance/x/msgfees/client/cli"
+	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type IntegrationTestSuite struct {
@@ -56,7 +57,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cfg.GenesisState = genesisState
 
 	s.cfg = cfg
-
+	msgfeetypes.DefaultFloorGasPrice = sdk.NewCoin("atom", sdk.NewInt(0))
 	s.testnet = testnet.New(s.T(), cfg)
 
 	_, err = s.testnet.WaitForHeight(1)

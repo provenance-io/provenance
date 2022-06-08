@@ -11,9 +11,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	pioante "github.com/provenance-io/provenance/internal/antewrapper"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 func (suite *AnteTestSuite) TestEnsureMempoolFees() {
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -66,6 +68,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 }
 
 func (suite *AnteTestSuite) TestDeductFees() {
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	suite.SetupTest(false) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -113,6 +116,7 @@ func TestAnteFeeTestSuite(t *testing.T) {
 }
 
 func (suite *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	// given
 	suite.SetupTest(true)
 	newCoin := sdk.NewInt64Coin("steak", 100)
