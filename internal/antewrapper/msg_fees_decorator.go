@@ -251,6 +251,7 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 	msgFeesDistribution := MsgFeesDistribution{
 		RecipientDistributions: make(map[string]sdk.Coin),
 	}
+	assessCustomMsgTypeUrl := sdk.MsgTypeURL(&msgfeestypes.MsgAssessCustomMsgFeeRequest{})
 	for _, msg := range msgs {
 		typeURL := sdk.MsgTypeURL(msg)
 		msgFees, err := mbfk.GetMsgFee(ctx, typeURL)
@@ -261,10 +262,10 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 		if msgFees != nil {
 			if msgFees.AdditionalFee.IsPositive() {
 				msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFees.AdditionalFee)
-				msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.AdditionalModuleFees
+				msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFeesDistribution.AdditionalModuleFees...)
 			}
 		}
-		if typeURL == sdk.MsgTypeURL(&msgfeestypes.MsgAssessCustomMsgFeeRequest{}) {
+		if typeURL == assessCustomMsgTypeUrl {
 			assessFee, ok := msg.(*msgfeestypes.MsgAssessCustomMsgFeeRequest)
 			if !ok {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "unable to convert msg to MsgAssessCustomMsgFeeRequest")
@@ -276,12 +277,16 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 			if msgFeeCoin.IsPositive() {
 				if len(assessFee.Recipient) != 0 {
 					recipientCoin, feePayoutCoin := msgfeestypes.SplitAmount(msgFeeCoin)
-					msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = recipientCoin
+					if len(msgFeesDistribution.RecipientDistributions[assessFee.Recipient].Denom) == 0 {
+						msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = recipientCoin
+					} else {
+						msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = msgFeesDistribution.RecipientDistributions[assessFee.Recipient].Add(recipientCoin)
+					}
 					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(feePayoutCoin)
 					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.AdditionalModuleFees.Add(recipientCoin)
 				} else {
 					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFeeCoin)
-					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.AdditionalModuleFees
+					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFeesDistribution.AdditionalModuleFees...)
 				}
 			}
 		}
