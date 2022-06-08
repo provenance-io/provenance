@@ -183,7 +183,8 @@ func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Co
 // ConvertDenomToHash converts coin to nhash coin using conversion rate represented as dollar mill ($1.234 = 1234).
 // Currently, usd is only supported with conversion rate coming from params
 func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, error) {
-	if coin.Denom == "usd" {
+	switch coin.Denom {
+	case "usd":
 		var nhashAmount sdk.Int
 		conversionRate := int64(k.GetUsdConversionRate(ctx))
 		if conversionRate > coin.Amount.Int64() {
@@ -195,8 +196,14 @@ func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, er
 		}
 		msgFeeCoin := sdk.NewCoin("nhash", nhashAmount)
 		return msgFeeCoin, nil
-	} else if coin.Denom == "nhash" {
+	case "hash":
+		hashAmount := coin.Amount.Int64()
+		nhashAmount := sdk.NewInt(1_000_000_000).Mul(sdk.NewInt(hashAmount))
+		msgFeeCoin := sdk.NewCoin("nhash", nhashAmount)
+		return msgFeeCoin, nil
+	case "nhash":
 		return coin, nil
+	default:
+		return sdk.Coin{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "denom not supported for conversion %s", coin.Denom)
 	}
-	return sdk.Coin{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "denom not supported for conversion %s", coin.Denom)
 }
