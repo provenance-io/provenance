@@ -3,7 +3,6 @@ package types
 import (
 	"fmt"
 	"sort"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -24,16 +23,13 @@ func NewEventMsgs(totalCalls map[string]uint64, totalFees map[string]sdk.Coins) 
 	sortedKeys := sortAndReduce(totalCalls, totalFees)
 	events := make([]EventMsgFee, len(sortedKeys))
 	for i, compositeKey := range sortedKeys {
-		addressKey := ""
-		msgAccountPair := strings.Split(compositeKey, "+")
-		if len(msgAccountPair) == 2 && len(msgAccountPair[1]) > 0 {
-			addressKey = msgAccountPair[1]
-		}
+		msgType, recipient := SplitCompositeKey(compositeKey)
+
 		events[i] = EventMsgFee{
-			MsgType:   msgAccountPair[0],
+			MsgType:   msgType,
 			Count:     fmt.Sprintf("%v", totalCalls[compositeKey]),
 			Total:     totalFees[compositeKey].String(),
-			Recipient: addressKey,
+			Recipient: recipient,
 		}
 	}
 

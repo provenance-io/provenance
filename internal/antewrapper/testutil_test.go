@@ -43,8 +43,6 @@ type AnteTestSuite struct {
 	txBuilder   client.TxBuilder
 }
 
-var testMsgType = sdk.MsgTypeURL(&testdata.TestMsg{})
-
 // returns context and app with params set on account keeper
 func createTestApp(isCheckTx bool) (*simapp.App, sdk.Context) {
 	app := simapp.Setup(isCheckTx)

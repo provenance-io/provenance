@@ -2,7 +2,6 @@ package antewrapper
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/armon/go-metrics"
 
@@ -109,7 +108,7 @@ func (g *FeeGasMeter) String() string {
 
 // ConsumeFee increments the amount of msg fee required by a msg type.
 func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string, recipient string) {
-	key := g.getCompositeKey(msgType, recipient)
+	key := msgfeestypes.GetCompositeKey(msgType, recipient)
 	cur := g.usedFees[key]
 	if cur.Empty() {
 		g.usedFees[key] = sdk.NewCoins(amount)
@@ -120,45 +119,24 @@ func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string, recipient stri
 }
 
 func (g *FeeGasMeter) FeeConsumedForType(msgType string, recipient string) sdk.Coins {
-	return g.usedFees[g.getCompositeKey(msgType, recipient)]
-}
-
-func (g FeeGasMeter) getCompositeKey(msgType string, recipient string) string {
-	if len(recipient) == 0 {
-		return msgType
-	}
-	return fmt.Sprintf("%s+%s", msgType, recipient)
+	return g.usedFees[msgfeestypes.GetCompositeKey(msgType, recipient)]
 }
 
 // FeeConsumed returns total fee consumed in the current fee gas meter, is returned Sorted.
 func (g *FeeGasMeter) FeeConsumed() sdk.Coins {
 	var consumedFees sdk.Coins
 	for _, coins := range g.usedFees {
-		if consumedFees.Empty() {
-			consumedFees = sdk.NewCoins(coins...)
-		} else {
-			consumedFees = consumedFees.Add(coins...)
-		}
+		consumedFees = consumedFees.Add(coins...)
 	}
 	return consumedFees.Sort()
 }
 
-// FeeConsumedDistributions returns fees by distribution either to module or address
+// FeeConsumedDistributions returns fees by distribution either to fee module when key is empty or address
 func (g *FeeGasMeter) FeeConsumedDistributions() map[string]sdk.Coins {
 	additionalFeeDistributions := make(map[string]sdk.Coins)
 	for key, coins := range g.usedFees {
-		addressKey := ""
-		msgAccountPair := strings.Split(key, "+")
-		if len(msgAccountPair) == 2 && len(msgAccountPair[1]) > 0 {
-			addressKey = msgAccountPair[1]
-		}
-		// else it will go to the fee module...update later to support other modules
-		cur := additionalFeeDistributions[addressKey]
-		if !coins.Empty() {
-			additionalFeeDistributions[addressKey] = cur.Add(coins...)
-		} else {
-			additionalFeeDistributions[addressKey] = coins
-		}
+		_, addressKey := msgfeestypes.SplitCompositeKey(key)
+		additionalFeeDistributions[addressKey] = additionalFeeDistributions[addressKey].Add(coins...)
 	}
 	return additionalFeeDistributions
 }

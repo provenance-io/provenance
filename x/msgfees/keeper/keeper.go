@@ -73,13 +73,13 @@ func (k Keeper) GetFloorGasPrice(ctx sdk.Context) sdk.Coin {
 	return min
 }
 
-// GetUsdConversionRate returns the current usd to hash (1000000000nhash) conversion rate in cents
+// GetUsdConversionRate returns the current usd to hash (1000000000nhash) conversion rate in mils
 func (k Keeper) GetUsdConversionRate(ctx sdk.Context) uint64 {
-	rateInCents := types.DefaultParams().UsdConversionRate
+	rateInMils := types.DefaultParams().UsdConversionRate
 	if k.paramSpace.Has(ctx, types.ParamStoreKeyUsdConversionRate) {
-		k.paramSpace.Get(ctx, types.ParamStoreKeyUsdConversionRate, &rateInCents)
+		k.paramSpace.Get(ctx, types.ParamStoreKeyUsdConversionRate, &rateInMils)
 	}
-	return rateInCents
+	return rateInMils
 }
 
 // SetMsgFee sets the additional fee schedule for a Msg
