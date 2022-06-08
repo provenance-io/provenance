@@ -89,12 +89,12 @@ func (s *TestSuite) TestConvertDenomToHash() {
 	usdDollar = sdk.NewCoin("usd", sdk.NewInt(1_000)) // $1 == 14.2hash
 	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
 	s.Assert().NoError(err)
-	s.Assert().Equal(sdk.NewCoin("nhash", sdk.NewInt(14_000_000_000)), nhash)
+	s.Assert().Equal(sdk.NewCoin("nhash", sdk.NewInt(14_285_714_285)), nhash)
 
 	usdDollar = sdk.NewCoin("usd", sdk.NewInt(10))
 	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
 	s.Assert().NoError(err)
-	s.Assert().Equal(sdk.NewCoin("nhash", sdk.NewInt(700000000)), nhash)
+	s.Assert().Equal(sdk.NewCoin("nhash", sdk.NewInt(142_857_142)), nhash)
 
 	jackTheCat := sdk.NewCoin("jackThecat", sdk.NewInt(70))
 	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, jackTheCat)

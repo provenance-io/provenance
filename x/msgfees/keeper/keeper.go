@@ -185,16 +185,11 @@ func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Co
 func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, error) {
 	switch coin.Denom {
 	case "usd":
-		var nhashAmount sdk.Int
 		conversionRate := int64(k.GetUsdConversionRate(ctx))
-		if conversionRate > coin.Amount.Int64() {
-			hashAmount := conversionRate / coin.Amount.Int64()
-			nhashAmount = sdk.NewInt(100_000_000).Mul(sdk.NewInt(hashAmount))
-		} else {
-			hashAmount := coin.Amount.Int64() / conversionRate
-			nhashAmount = sdk.NewInt(1_000_000_000).Mul(sdk.NewInt(hashAmount))
-		}
-		msgFeeCoin := sdk.NewCoin("nhash", nhashAmount)
+		amount := coin.Amount.Mul(sdk.NewInt(1_000_000_000))
+		rate := sdk.NewInt(conversionRate)
+		nhashAmount := amount.BigInt().Div(amount.BigInt(), rate.BigInt())
+		msgFeeCoin := sdk.NewCoin("nhash", sdk.NewIntFromBigInt(nhashAmount))
 		return msgFeeCoin, nil
 	case "hash":
 		hashAmount := coin.Amount.Int64()
