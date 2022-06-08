@@ -21,6 +21,8 @@ type AttributeMsgParams struct {
 	Add *AddAttributeParams `json:"add_attribute"`
 	// A request to encode a MsgDeleteAttribute
 	Del *DeleteAttributeParams `json:"delete_attribute"`
+	// A request to encode a MsgDeleteAttribute
+	DelDistinct *DeleteDistinctAttributeParams `json:"delete_distinct_attribute"`
 	// A request to encode a MsgUpdateAttribute
 	Update *UpdateAttributeParams `json:"update_attribute"`
 }
@@ -43,6 +45,16 @@ type DeleteAttributeParams struct {
 	Address string `json:"address"`
 	// The attribute name.
 	Name string `json:"name"`
+}
+
+// DeleteDistinctAttributeParams are params for encoding a MsgDeleteDistinctAttribute
+type DeleteDistinctAttributeParams struct {
+	// The address of the account to delete the attribute from.
+	Address string `json:"address"`
+	// The attribute name.
+	Name string `json:"name"`
+	// The attribute value.
+	Value []byte `json:"value"`
 }
 
 // UpdateAttributeParams are params for encoding a MsgUpdateAttributeRequest
@@ -78,6 +90,8 @@ func Encoder(contract sdk.AccAddress, msg json.RawMessage, version string) ([]sd
 		return params.Add.Encode(contract)
 	case params.Del != nil:
 		return params.Del.Encode(contract)
+	case params.DelDistinct != nil:
+		return params.DelDistinct.Encode(contract)
 	case params.Update != nil:
 		return params.Update.Encode(contract)
 	default:
@@ -108,6 +122,16 @@ func (params *DeleteAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg,
 		return nil, fmt.Errorf("wasm: invalid address: %w", err)
 	}
 	msg := types.NewMsgDeleteAttributeRequest(params.Address, contract, params.Name)
+	return []sdk.Msg{msg}, nil
+}
+
+// Encode creates a MsgDeleteDistinctAttribute.
+// The contract must be the owner of the name of the attribute being deleted.
+func (params *DeleteDistinctAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
+	if err := types.ValidateAttributeAddress(params.Address); err != nil {
+		return nil, fmt.Errorf("wasm: invalid address: %w", err)
+	}
+	msg := types.NewMsgDeleteDistinctAttributeRequest(params.Address, contract, params.Name, params.Value)
 	return []sdk.Msg{msg}, nil
 }
 
