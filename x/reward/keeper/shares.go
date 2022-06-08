@@ -18,8 +18,7 @@ func (k Keeper) RemoveShare(ctx sdk.Context, rewardProgramID, epochID uint64, ad
 
 	keyExists := store.Has(key)
 	if keyExists {
-		bz := store.Get(key)
-		store.Delete(bz)
+		store.Delete(key)
 	}
 	return keyExists
 }

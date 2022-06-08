@@ -18,13 +18,11 @@ func (k Keeper) Update(ctx sdk.Context) {
 
 	for _, rewardProgram := range outstanding {
 		if rewardProgram.IsStarting(ctx) {
-			k.startRewardProgram(ctx, &rewardProgram)
+			k.StartRewardProgram(ctx, &rewardProgram)
 		} else if rewardProgram.IsEndingEpoch(ctx) {
-			k.endRewardProgramEpoch(ctx, &rewardProgram)
+			k.EndRewardProgramEpoch(ctx, &rewardProgram)
 		}
-	}
 
-	for _, rewardProgram := range outstanding {
 		k.SetRewardProgram(ctx, rewardProgram)
 	}
 }
@@ -41,7 +39,7 @@ func (k Keeper) Cleanup(ctx sdk.Context) {
 	}
 }
 
-func (k Keeper) startRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) {
+func (k Keeper) StartRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Starting reward program: %v ", rewardProgram))
 	blockTime := ctx.BlockTime()
 	rewardProgram.Started = true
@@ -49,18 +47,18 @@ func (k Keeper) startRewardProgram(ctx sdk.Context, rewardProgram *types.RewardP
 	rewardProgram.CurrentEpoch = 1
 }
 
-func (k Keeper) endRewardProgramEpoch(ctx sdk.Context, rewardProgram *types.RewardProgram) {
+func (k Keeper) EndRewardProgramEpoch(ctx sdk.Context, rewardProgram *types.RewardProgram) {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Epoch end hit for reward program %v ", rewardProgram))
 	blockTime := ctx.BlockTime()
 	rewardProgram.CurrentEpoch++
 	if rewardProgram.IsEnding(ctx) {
-		k.endRewardProgram(ctx, rewardProgram)
+		k.EndRewardProgram(ctx, rewardProgram)
 	} else {
 		rewardProgram.EpochEndTime = blockTime.Add(time.Duration(rewardProgram.EpochSeconds) * time.Second)
 	}
 }
 
-func (k Keeper) endRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) {
+func (k Keeper) EndRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Ending reward program %v ", rewardProgram))
 	blockTime := ctx.BlockTime()
 	rewardProgram.Finished = true

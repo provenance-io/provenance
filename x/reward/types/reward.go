@@ -134,7 +134,7 @@ func NewRewardProgram(
 
 func (rp *RewardProgram) IsStarting(ctx sdk.Context) bool {
 	blockTime := ctx.BlockTime()
-	return !rp.Started && (blockTime.After(rp.ProgramStartTime) || rp.Equal(rp.ProgramStartTime))
+	return !rp.Started && (blockTime.After(rp.ProgramStartTime) || blockTime.Equal(rp.ProgramStartTime))
 }
 
 func (rp *RewardProgram) IsEndingEpoch(ctx sdk.Context) bool {
