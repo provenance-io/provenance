@@ -68,9 +68,9 @@ type UpdateAttributeParams struct {
 	// The original attribute value type.
 	OriginalValueType string `json:"original_value_type"`
 	// The new attribute value.
-	UpdatedValue []byte `json:"updated_value"`
+	UpdateValue []byte `json:"update_value"`
 	// The new attribute value type.
-	UpdatedValueType string `json:"updated_value_type"`
+	UpdateValueType string `json:"update_value_type"`
 }
 
 // Encoder returns a smart contract message encoder for the attribute module.
@@ -146,9 +146,9 @@ func (params *UpdateAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg,
 		contract,
 		params.Name,
 		params.OriginalValue,
-		params.UpdatedValue,
+		params.UpdateValue,
 		encodeType(params.OriginalValueType),
-		encodeType(params.UpdatedValueType),
+		encodeType(params.UpdateValueType),
 	)
 	return []sdk.Msg{msg}, nil
 }
