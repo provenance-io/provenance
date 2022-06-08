@@ -57,7 +57,7 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	payerAccount := feePayer
 
 	// deduct the fees
-	baseFeeToDeduct := CalculateBaseFee(ctx, feeTx, dfd.msgFeeKeeper)
+	fee := feeTx.GetFee()
 	msgs := feeTx.GetMsgs()
 	feeDist, errFromCalculateAdditionalFeesToBePaid := CalculateAdditionalFeesToBePaid(ctx, dfd.msgFeeKeeper, msgs...)
 	if errFromCalculateAdditionalFeesToBePaid != nil {
@@ -65,9 +65,9 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	}
 	if feeDist != nil && len(feeDist.TotalAdditionalFees) > 0 {
 		var hasNeg bool
-		_, hasNeg = baseFeeToDeduct.SafeSub(feeDist.TotalAdditionalFees)
+		_, hasNeg = fee.SafeSub(feeDist.TotalAdditionalFees)
 		if hasNeg && !simulate {
-			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", baseFeeToDeduct)
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", fee)
 		}
 	}
 
@@ -75,7 +75,7 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		if dfd.feegrantKeeper == nil {
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
 		} else if !feeGranter.Equals(feePayer) {
-			err = dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, baseFeeToDeduct, tx.GetMsgs())
+			err = dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, tx.GetMsgs())
 
 			if err != nil {
 				return ctx, sdkerrors.Wrapf(err, "%q not allowed to pay fees from %q", feeGranter, feePayer)
@@ -90,12 +90,13 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %q does not exist", payerAccount)
 	}
 	// deduct base fee from account
-	if !baseFeeToDeduct.IsZero() && !simulate {
-		err = DeductBaseFees(dfd.bankKeeper, ctx, deductFeesFromAcc, baseFeeToDeduct)
+	baseFeeToConsume := CalculateBaseFee(ctx, feeTx, dfd.msgFeeKeeper)
+	if !baseFeeToConsume.IsZero() && !simulate {
+		err = DeductBaseFees(dfd.bankKeeper, ctx, deductFeesFromAcc, baseFeeToConsume)
 		if err != nil {
 			return ctx, err
 		}
-		feeGasMeter.ConsumeBaseFee(baseFeeToDeduct)
+		feeGasMeter.ConsumeBaseFee(baseFeeToConsume)
 	}
 
 	events := sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
@@ -124,7 +125,6 @@ func DetermineTestBaseFeeAmount(ctx sdk.Context, feeTx sdk.FeeTx) sdk.Coins {
 		return feeTx.GetFee()
 	}
 	return sdk.NewCoins()
-
 }
 
 // DeductBaseFees deducts fees from the given account.

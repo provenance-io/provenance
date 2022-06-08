@@ -48,7 +48,7 @@ func NewMsgAssessCustomMsgFeeRequest(
 		Name:      name,
 		Amount:    amount,
 		Recipient: recipient,
-		Signer:      signer,
+		Signer:    signer,
 	}
 }
 
