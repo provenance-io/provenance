@@ -262,7 +262,7 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 		if msgFees != nil {
 			if msgFees.AdditionalFee.IsPositive() {
 				msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFees.AdditionalFee)
-				msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFeesDistribution.AdditionalModuleFees...)
+				msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFees.AdditionalFee)
 			}
 		}
 		if typeURL == assessCustomMsgTypeURL {
@@ -283,10 +283,10 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 						msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = msgFeesDistribution.RecipientDistributions[assessFee.Recipient].Add(recipientCoin)
 					}
 					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(feePayoutCoin)
-					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.AdditionalModuleFees.Add(recipientCoin)
+					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFeeCoin)
 				} else {
 					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFeeCoin)
-					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFeesDistribution.AdditionalModuleFees...)
+					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFeeCoin)
 				}
 			}
 		}
