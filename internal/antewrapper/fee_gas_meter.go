@@ -134,11 +134,7 @@ func (g FeeGasMeter) getCompositeKey(msgType string, recipient string) string {
 func (g *FeeGasMeter) FeeConsumed() sdk.Coins {
 	var consumedFees sdk.Coins
 	for _, coins := range g.usedFees {
-		if consumedFees.Empty() {
-			consumedFees = sdk.NewCoins(coins...)
-		} else {
-			consumedFees = consumedFees.Add(coins...)
-		}
+		consumedFees = consumedFees.Add(coins...)
 	}
 	return consumedFees.Sort()
 }
