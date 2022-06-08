@@ -51,6 +51,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add restricted status info to name module cli queries [#806](https://github.com/provenance-io/provenance/issues/806)
 * Store the bank module's SendEnabled flags directly in state instead of as part of Params. This will drastically reduce the costs of sending coins and managing markers. [PR 850](https://github.com/provenance-io/provenance/pull/850)
+* Add State Sync readme [#859](https://github.com/provenance-io/provenance/issues/859)
 
 ### State Machine Breaking
 
