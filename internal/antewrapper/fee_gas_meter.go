@@ -131,7 +131,7 @@ func (g *FeeGasMeter) FeeConsumed() sdk.Coins {
 	return consumedFees.Sort()
 }
 
-// FeeConsumedDistributions returns fees by distribution either to module or address
+// FeeConsumedDistributions returns fees by distribution either to fee module when key is empty or address
 func (g *FeeGasMeter) FeeConsumedDistributions() map[string]sdk.Coins {
 	additionalFeeDistributions := make(map[string]sdk.Coins)
 	for key, coins := range g.usedFees {
