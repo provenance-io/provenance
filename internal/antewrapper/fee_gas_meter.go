@@ -146,13 +146,7 @@ func (g *FeeGasMeter) FeeConsumedDistributions() map[string]sdk.Coins {
 	additionalFeeDistributions := make(map[string]sdk.Coins)
 	for key, coins := range g.usedFees {
 		_, addressKey := splitCompositeKey(key)
-		// else it will go to the fee module...update later to support other modules
-		cur := additionalFeeDistributions[addressKey]
-		if !coins.Empty() {
-			additionalFeeDistributions[addressKey] = cur.Add(coins...)
-		} else {
-			additionalFeeDistributions[addressKey] = coins
-		}
+		additionalFeeDistributions[addressKey] = additionalFeeDistributions[addressKey].Add(coins...)
 	}
 	return additionalFeeDistributions
 }
