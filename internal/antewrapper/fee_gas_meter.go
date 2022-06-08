@@ -36,6 +36,8 @@ type FeeGasMeter struct {
 	simulate bool
 }
 
+var CompositeKeyDelimiter = "\n"
+
 // NewFeeGasMeterWrapper returns a reference to a new tracing gas meter that will track calls to the base gas meter
 func NewFeeGasMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter, isSimulate bool) sdkgas.GasMeter {
 	return &FeeGasMeter{
@@ -109,7 +111,7 @@ func (g *FeeGasMeter) String() string {
 
 // ConsumeFee increments the amount of msg fee required by a msg type.
 func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string, recipient string) {
-	key := g.getCompositeKey(msgType, recipient)
+	key := getCompositeKey(msgType, recipient)
 	cur := g.usedFees[key]
 	if cur.Empty() {
 		g.usedFees[key] = sdk.NewCoins(amount)
@@ -120,14 +122,14 @@ func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string, recipient stri
 }
 
 func (g *FeeGasMeter) FeeConsumedForType(msgType string, recipient string) sdk.Coins {
-	return g.usedFees[g.getCompositeKey(msgType, recipient)]
+	return g.usedFees[getCompositeKey(msgType, recipient)]
 }
 
-func (g FeeGasMeter) getCompositeKey(msgType string, recipient string) string {
+func getCompositeKey(msgType string, recipient string) string {
 	if len(recipient) == 0 {
 		return msgType
 	}
-	return fmt.Sprintf("%s+%s", msgType, recipient)
+	return fmt.Sprintf("%s%s%s", msgType, CompositeKeyDelimiter, recipient)
 }
 
 // FeeConsumed returns total fee consumed in the current fee gas meter, is returned Sorted.
@@ -143,11 +145,7 @@ func (g *FeeGasMeter) FeeConsumed() sdk.Coins {
 func (g *FeeGasMeter) FeeConsumedDistributions() map[string]sdk.Coins {
 	additionalFeeDistributions := make(map[string]sdk.Coins)
 	for key, coins := range g.usedFees {
-		addressKey := ""
-		msgAccountPair := strings.Split(key, "+")
-		if len(msgAccountPair) == 2 && len(msgAccountPair[1]) > 0 {
-			addressKey = msgAccountPair[1]
-		}
+		_, addressKey := splitCompositeKey(key)
 		// else it will go to the fee module...update later to support other modules
 		cur := additionalFeeDistributions[addressKey]
 		if !coins.Empty() {
@@ -157,6 +155,16 @@ func (g *FeeGasMeter) FeeConsumedDistributions() map[string]sdk.Coins {
 		}
 	}
 	return additionalFeeDistributions
+}
+
+// splitCompositKey splits the composite key into msgType and recipient, if recipient is empty then it is for the fee module
+func splitCompositeKey(key string) (msgType, recipient string) {
+	msgAccountPair := strings.Split(key, CompositeKeyDelimiter)
+	addressKey := ""
+	if len(msgAccountPair) == 2 && len(msgAccountPair[1]) > 0 {
+		addressKey = msgAccountPair[1]
+	}
+	return msgAccountPair[0], addressKey
 }
 
 // FeeConsumedByMsg total fee consumed for a particular MsgType
