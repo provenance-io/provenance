@@ -54,7 +54,7 @@ For add, update, and removal of msg fees amount and min fee and/or rate fee must
 		Example: fmt.Sprintf(`$ %[1]s tx msgfees add "adding" "adding MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612nhash
 $ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash
 $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest
-		`, version.AppName),
+`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -145,11 +145,11 @@ func GetUpdateUsdConversionRateProposal() *cobra.Command {
 		Args:    cobra.ExactArgs(4),
 		Short:   "Submit a usd conversion rate update proposal along with an initial deposit",
 		Long: strings.TrimSpace(`Submit a usd conversion rate update proposal along with an initial deposit.
-		The conversion rate is the cost in thousandths of USD (1/10 of a cent) for 1 unit of hash (1,000,000,000nhash).  Example: For example, $1.098/Hash, is a rate of 1098, and $0.035/Hash is a rate of 35
+The conversion rate is the cost in thousandths of USD (1/10 of a cent) for 1 unit of hash (1,000,000,000nhash).  Example: For example, $1.098/Hash, is a rate of 1098, and $0.035/Hash is a rate of 35
 `),
 		Example: fmt.Sprintf(`$ %[1]s tx msgfees usd-conversion-proposal "updating usd conversion" "changes the usd conversion rate to $1.234."  1234 1000000000nhash
-		$ %[1]s tx msgfees ucp "updating usd conversion" "changes the usd conversion rate to $1.234."  1234 1000000000nhash
-		`, version.AppName),
+$ %[1]s tx msgfees ucp "updating usd conversion" "changes the usd conversion rate to $1.234."  1234 1000000000nhash
+`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
