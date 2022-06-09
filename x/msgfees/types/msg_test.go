@@ -16,17 +16,17 @@ func TestMsgAssessCustomMsgFeeValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		"should succeed to validate basic, usd coin type": {
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin("usd", 10), validAddress, validAddress),
+			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 10), validAddress, validAddress),
 			false,
 			"",
 		},
 		"should succeed to validate basic, nhash coin type": {
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin("usd", 10), validAddress, validAddress),
+			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 10), validAddress, validAddress),
 			false,
 			"",
 		},
 		"should succeed to validate basic, non positive coin": {
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin("usd", 0), validAddress, validAddress),
+			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 0), validAddress, validAddress),
 			true,
 			"amount must be greater than zero",
 		},
@@ -36,17 +36,17 @@ func TestMsgAssessCustomMsgFeeValidateBasic(t *testing.T) {
 			"denom must be in usd or nhash : jackthecat",
 		},
 		"should succeed to validate basic, without recipient": {
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin("usd", 10), "", validAddress),
+			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 10), "", validAddress),
 			false,
 			"",
 		},
 		"should fail to validate basic, invalid address": {
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin("nhash", 10), "invalid", validAddress),
+			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(NhashDenom, 10), "invalid", validAddress),
 			true,
 			"decoding bech32 failed: invalid bech32 string length 7",
 		},
 		"should fail to validate basic, invalid address from address": {
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin("nhash", 10), "", "invalid"),
+			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(NhashDenom, 10), "", "invalid"),
 			true,
 			"decoding bech32 failed: invalid bech32 string length 7",
 		},

@@ -14,7 +14,7 @@ import (
 // cannot be a const unfortunately because it's a custom type.
 var DefaultFloorGasPrice = sdk.Coin{
 	Amount: sdk.NewInt(1905),
-	Denom:  "nhash",
+	Denom:  NhashDenom,
 }
 
 var DefaultUsdConversionRate = uint64(70)

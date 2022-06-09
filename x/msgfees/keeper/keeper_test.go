@@ -78,23 +78,23 @@ func (s *TestSuite) TestKeeper() {
 
 func (s *TestSuite) TestConvertDenomToHash() {
 	app, ctx, _ := s.app, s.ctx, s.addrs
-	usdDollar := sdk.NewCoin("usd", sdk.NewInt(7_000)) // $7.00 == 100hash
+	usdDollar := sdk.NewCoin(types.UsdDenom, sdk.NewInt(7_000)) // $7.00 == 100hash
 	nhash, err := app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
 	s.Assert().NoError(err)
-	s.Assert().Equal(sdk.NewCoin("nhash", sdk.NewInt(100_000_000_000)), nhash)
-	usdDollar = sdk.NewCoin("usd", sdk.NewInt(70)) // $7 == 1hash
+	s.Assert().Equal(sdk.NewCoin(types.NhashDenom, sdk.NewInt(100_000_000_000)), nhash)
+	usdDollar = sdk.NewCoin(types.UsdDenom, sdk.NewInt(70)) // $7 == 1hash
 	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
 	s.Assert().NoError(err)
-	s.Assert().Equal(sdk.NewCoin("nhash", sdk.NewInt(1_000_000_000)), nhash)
-	usdDollar = sdk.NewCoin("usd", sdk.NewInt(1_000)) // $1 == 14.2hash
+	s.Assert().Equal(sdk.NewCoin(types.NhashDenom, sdk.NewInt(1_000_000_000)), nhash)
+	usdDollar = sdk.NewCoin(types.UsdDenom, sdk.NewInt(1_000)) // $1 == 14.2hash
 	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
 	s.Assert().NoError(err)
-	s.Assert().Equal(sdk.NewCoin("nhash", sdk.NewInt(14_285_714_285)), nhash)
+	s.Assert().Equal(sdk.NewCoin(types.NhashDenom, sdk.NewInt(14_285_714_285)), nhash)
 
-	usdDollar = sdk.NewCoin("usd", sdk.NewInt(10))
+	usdDollar = sdk.NewCoin(types.UsdDenom, sdk.NewInt(10))
 	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
 	s.Assert().NoError(err)
-	s.Assert().Equal(sdk.NewCoin("nhash", sdk.NewInt(142_857_142)), nhash)
+	s.Assert().Equal(sdk.NewCoin(types.NhashDenom, sdk.NewInt(142_857_142)), nhash)
 
 	jackTheCat := sdk.NewCoin("jackThecat", sdk.NewInt(70))
 	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, jackTheCat)

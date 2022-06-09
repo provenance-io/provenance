@@ -22,7 +22,7 @@ func TestCreateParams(t *testing.T) {
 
 func TestCreateParamSet(t *testing.T) {
 	msgFeeParam := NewParams(sdk.Coin{
-		Denom:  "nhash",
+		Denom:  NhashDenom,
 		Amount: sdk.NewInt(3000),
 	}, uint64(7))
 	paramsetPair := msgFeeParam.ParamSetPairs()
@@ -44,7 +44,7 @@ func TestMsgFeeParamKeyTable(t *testing.T) {
 	keyTable := ParamKeyTable()
 	require.Panics(t, func() {
 		keyTable.RegisterType(paramtypes.NewParamSetPair(ParamStoreKeyFloorGasPrice, sdk.Coin{
-			Denom:  "nhash",
+			Denom:  NhashDenom,
 			Amount: sdk.NewInt(5000),
 		}, validateCoinParam))
 	})

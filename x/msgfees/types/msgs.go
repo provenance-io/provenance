@@ -63,7 +63,7 @@ func (msg MsgAssessCustomMsgFeeRequest) ValidateBasic() error {
 	if err != nil {
 		return err
 	}
-	if msg.Amount.Denom != "usd" && msg.Amount.Denom != "nhash" {
+	if msg.Amount.Denom != UsdDenom && msg.Amount.Denom != NhashDenom {
 		return fmt.Errorf("denom must be in usd or nhash : %s", msg.Amount.Denom)
 	}
 	if !msg.Amount.IsPositive() {

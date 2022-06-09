@@ -164,7 +164,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFeesAuthz() {
 }
 
 func (s *QueryServerTestSuite) TestCalculateTxFeesWithAssessCustomFees() {
-	additionalAccessedFeesCoin := sdk.NewInt64Coin("nhash", 100)
+	additionalAccessedFeesCoin := sdk.NewInt64Coin(types.NhashDenom, 100)
 	assessCustomFeeMsg := types.NewMsgAssessCustomMsgFeeRequest("name", additionalAccessedFeesCoin, s.user2, s.user1)
 	simulateReq := s.createTxFeesRequest(s.pubkey1, s.privkey1, s.acct1, &assessCustomFeeMsg)
 
@@ -177,12 +177,12 @@ func (s *QueryServerTestSuite) TestCalculateTxFeesWithAssessCustomFees() {
 	s.Assert().Equal(fmt.Sprintf("%s,%s", additionalAccessedFeesCoin.String(), expectedGasFees.String()), response.TotalFees.String())
 
 	// do assessCustomFee where custom fee has a message fee associated with it
-	additionalAccessedFeesCoin = sdk.NewInt64Coin("nhash", 100)
+	additionalAccessedFeesCoin = sdk.NewInt64Coin(types.NhashDenom, 100)
 	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee(sdk.MsgTypeURL(&assessCustomFeeMsg), additionalAccessedFeesCoin)))
 	response, err = s.queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
 	s.Assert().NoError(err)
 	s.Assert().NotNil(response)
-	additionalAccessedFeesCoin = sdk.NewInt64Coin("nhash", 200)
+	additionalAccessedFeesCoin = sdk.NewInt64Coin(types.NhashDenom, 200)
 	s.Assert().Equal(sdk.NewCoins(additionalAccessedFeesCoin), response.AdditionalFees)
 	expectedGasFees = sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*s.minGasPrice.Amount.Int64())))
 	s.Assert().Equal(fmt.Sprintf("%s,%s", additionalAccessedFeesCoin.String(), expectedGasFees.String()), response.TotalFees.String())

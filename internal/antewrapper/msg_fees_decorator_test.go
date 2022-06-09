@@ -45,9 +45,9 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees() {
 
 // checkTx true, fees supplied that do not meet floor gas price requirement (floor gas price * gas wanted)
 func (suite *AnteTestSuite) TestEnsureFloorGasPriceNotMet() {
-	err, antehandler := setUpApp(suite, true, "nhash", 0)
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("nhash", 1905)
-	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 100000)))
+	err, antehandler := setUpApp(suite, true, msgfeestypes.NhashDenom, 0)
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1905)
+	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 100000)))
 	suite.Require().NoError(err)
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
@@ -61,14 +61,14 @@ func (suite *AnteTestSuite) TestEnsureFloorGasPriceNotMet() {
 
 // checkTx true, fees supplied that do meet floor gas price requirement (floor gas price * gas wanted), and should not error.
 func (suite *AnteTestSuite) TestEnsureFloorGasPriceMet() {
-	err, antehandler := setUpApp(suite, true, "nhash", 0)
+	err, antehandler := setUpApp(suite, true, msgfeestypes.NhashDenom, 0)
 	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
 	suite.Require().NoError(err)
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
 	suite.ctx = suite.ctx.WithChainID("test-chain")
 
-	gasPrice := []sdk.DecCoin{sdk.NewDecCoinFromDec("nhash", sdk.NewDec(1905))}
+	gasPrice := []sdk.DecCoin{sdk.NewDecCoinFromDec(msgfeestypes.NhashDenom, sdk.NewDec(1905))}
 	suite.ctx = suite.ctx.WithMinGasPrices(gasPrice)
 	// antehandler does not error.
 	_, err = antehandler(suite.ctx, tx, false)
@@ -78,9 +78,9 @@ func (suite *AnteTestSuite) TestEnsureFloorGasPriceMet() {
 // checkTx true, high min gas price(high enough so that additional fee in same denom tips it over,
 //and this is what sets it apart from MempoolDecorator which has already been run)
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesNoAdditionalFeesLowGas() {
-	err, antehandler := setUpApp(suite, true, "nhash", 0)
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("nhash", 1905)
-	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 100000)))
+	err, antehandler := setUpApp(suite, true, msgfeestypes.NhashDenom, 0)
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1905)
+	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 100000)))
 	suite.Require().NoError(err)
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
@@ -320,7 +320,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_1() {
 
 // wrong denom passed in, errors with insufficient fee
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_2() {
-	err, antehandler := setUpApp(suite, false, "nhash", 100)
+	err, antehandler := setUpApp(suite, false, msgfeestypes.NhashDenom, 100)
 	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	tx, acct1 := createTestTx(suite, err, testdata.NewTestFeeAmount())
 
@@ -331,7 +331,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_2() {
 	tx, acct1 = createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
 	_, err = antehandler(suite.ctx, tx, false)
 
-	hashPrice := sdk.NewDecCoinFromDec("nhash", sdk.NewDec(100))
+	hashPrice := sdk.NewDecCoinFromDec(msgfeestypes.NhashDenom, sdk.NewDec(100))
 	lowGasPrice := []sdk.DecCoin{hashPrice}
 	suite.ctx = suite.ctx.WithMinGasPrices(lowGasPrice)
 
@@ -342,13 +342,13 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_2() {
 
 // additional fee denom as default base fee denom, fails because gas passed in * floor gas price (module param) exceeds fees passed in.
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_3() {
-	err, antehandler := setUpApp(suite, false, "nhash", 100)
-	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 10000)))
+	err, antehandler := setUpApp(suite, false, msgfeestypes.NhashDenom, 100)
+	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 10000)))
 	suite.ctx = suite.ctx.WithChainID("test-chain")
 	params := suite.app.MsgFeesKeeper.GetParams(suite.ctx)
-	params.FloorGasPrice = sdk.NewInt64Coin("nhash", 1905)
+	params.FloorGasPrice = sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1905)
 	suite.app.MsgFeesKeeper.SetParams(suite.ctx, params)
-	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(10000)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(10000)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
 	// TODO revisit this
@@ -357,14 +357,14 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_3() {
 
 // additional fee same denom as default base fee denom, fails because of insufficient fee and then passes when enough fee is present.
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_4() {
-	err, antehandler := setUpApp(suite, false, "nhash", 100)
-	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 190500200)))
-	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(190500100)))))
+	err, antehandler := setUpApp(suite, false, msgfeestypes.NhashDenom, 100)
+	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 190500200)))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(190500100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
 	suite.Require().Contains(err.Error(), "fee payer account does not have enough balance to pay for \"190500200nhash\"", "wrong error message")
 	// add some nhash
-	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(100)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "Decorator should not have errored for insufficient additional fee")
 }
@@ -372,8 +372,8 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_4() {
 // additional fee same denom as default base fee denom, fails because of insufficient fee and then passes when enough fee is present.
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_5() {
 	err, antehandler := setUpApp(suite, false, "atom", 100)
-	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 190500200)))
-	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(190500100)))))
+	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 190500200)))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(190500100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
 	suite.Require().Contains(err.Error(), "not enough fees; after deducting fees required,got: \"-100atom,190500200nhash\", required additional fee: \"100atom\"", "wrong error message")
@@ -382,9 +382,9 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_5() {
 // checkTx true, but additional fee not provided
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_6() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)
-	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("nhash", 190500200)))
-	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(190500100)))))
-	hashPrice := sdk.NewDecCoinFromDec("nhash", sdk.NewDec(1))
+	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 190500200)))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(190500100)))))
+	hashPrice := sdk.NewDecCoinFromDec(msgfeestypes.NhashDenom, sdk.NewDec(1))
 	highGasPrice := []sdk.DecCoin{hashPrice}
 	suite.ctx = suite.ctx.WithMinGasPrices(highGasPrice)
 	_, err = antehandler(suite.ctx, tx, false)
@@ -400,8 +400,8 @@ func (suite *AnteTestSuite) TestCalculateAdditionalFeesToBePaid() {
 	someAddress := suite.clientCtx.FromAddress
 	sendTypeURL := sdk.MsgTypeURL(&banktypes.MsgSend{})
 	assessFeeTypeURL := sdk.MsgTypeURL(&msgfeestypes.MsgAssessCustomMsgFeeRequest{})
-	oneHash := sdk.NewInt64Coin("nhash", 1_000_000_000)
-	twoHash := sdk.NewInt64Coin("nhash", 2_000_000_000)
+	oneHash := sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_000_000_000)
+	twoHash := sdk.NewInt64Coin(msgfeestypes.NhashDenom, 2_000_000_000)
 	msgSend := banktypes.NewMsgSend(someAddress, someAddress, sdk.NewCoins(oneHash))
 	suite.app.MsgFeesKeeper.SetMsgFee(suite.ctx, msgfeestypes.NewMsgFee(sendTypeURL, oneHash))
 
@@ -421,9 +421,9 @@ func (suite *AnteTestSuite) TestCalculateAdditionalFeesToBePaid() {
 	result, err = antewrapper.CalculateAdditionalFeesToBePaid(suite.ctx, suite.app.MsgFeesKeeper, msgSend, &assessFee)
 	suite.Require().NoError(err)
 	suite.Assert().Equal(sdk.NewCoins(twoHash), result.TotalAdditionalFees)
-	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin("nhash", 1_500_000_000)), result.AdditionalModuleFees)
+	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_500_000_000)), result.AdditionalModuleFees)
 	suite.Assert().Equal(1, len(result.RecipientDistributions))
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 500_000_000), result.RecipientDistributions["recipient1"])
+	suite.Assert().Equal(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 500_000_000), result.RecipientDistributions["recipient1"])
 
 	assessFee = msgfeestypes.NewMsgAssessCustomMsgFeeRequest("", oneHash, "", someAddress.String())
 	result, err = antewrapper.CalculateAdditionalFeesToBePaid(suite.ctx, suite.app.MsgFeesKeeper, msgSend, &assessFee)
@@ -436,25 +436,25 @@ func (suite *AnteTestSuite) TestCalculateAdditionalFeesToBePaid() {
 	assessFee2 := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("", oneHash, "recipient2", someAddress.String())
 	result, err = antewrapper.CalculateAdditionalFeesToBePaid(suite.ctx, suite.app.MsgFeesKeeper, msgSend, &assessFee1, &assessFee2)
 	suite.Require().NoError(err)
-	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin("nhash", 3_000_000_000)), result.TotalAdditionalFees)
+	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 3_000_000_000)), result.TotalAdditionalFees)
 	suite.Assert().Equal(sdk.NewCoins(twoHash), result.AdditionalModuleFees)
 	suite.Assert().Equal(2, len(result.RecipientDistributions))
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 500_000_000), result.RecipientDistributions["recipient1"])
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 500_000_000), result.RecipientDistributions["recipient2"])
+	suite.Assert().Equal(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 500_000_000), result.RecipientDistributions["recipient1"])
+	suite.Assert().Equal(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 500_000_000), result.RecipientDistributions["recipient2"])
 
 	suite.app.MsgFeesKeeper.SetMsgFee(suite.ctx, msgfeestypes.NewMsgFee(assessFeeTypeURL, oneHash))
 	result, err = antewrapper.CalculateAdditionalFeesToBePaid(suite.ctx, suite.app.MsgFeesKeeper, msgSend, &assessFee)
 	suite.Require().NoError(err)
-	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin("nhash", 3_000_000_000)), result.TotalAdditionalFees)
-	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin("nhash", 3_000_000_000)), result.AdditionalModuleFees)
+	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 3_000_000_000)), result.TotalAdditionalFees)
+	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 3_000_000_000)), result.AdditionalModuleFees)
 	suite.Assert().Equal(0, len(result.RecipientDistributions))
 
 	result, err = antewrapper.CalculateAdditionalFeesToBePaid(suite.ctx, suite.app.MsgFeesKeeper, msgSend, &assessFee1)
 	suite.Require().NoError(err)
-	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin("nhash", 3_000_000_000)), result.TotalAdditionalFees)
-	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin("nhash", 2_500_000_000)), result.AdditionalModuleFees)
+	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 3_000_000_000)), result.TotalAdditionalFees)
+	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 2_500_000_000)), result.AdditionalModuleFees)
 	suite.Assert().Equal(1, len(result.RecipientDistributions))
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 500_000_000), result.RecipientDistributions["recipient1"])
+	suite.Assert().Equal(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 500_000_000), result.RecipientDistributions["recipient1"])
 
 }
 
