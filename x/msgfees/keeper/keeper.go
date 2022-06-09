@@ -73,7 +73,7 @@ func (k Keeper) GetFloorGasPrice(ctx sdk.Context) sdk.Coin {
 	return min
 }
 
-// GetUsdConversionRate returns the current usd to hash (1000000000nhash) conversion rate in mils
+// GetUsdConversionRate returns the current usd to hash (1000000000nhash) conversion rate in mils per hash.
 func (k Keeper) GetUsdConversionRate(ctx sdk.Context) uint64 {
 	rateInMils := types.DefaultParams().UsdConversionRate
 	if k.paramSpace.Has(ctx, types.ParamStoreKeyUsdConversionRate) {
