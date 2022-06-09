@@ -191,11 +191,6 @@ func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, er
 		nhashAmount := amount.BigInt().Div(amount.BigInt(), rate.BigInt())
 		msgFeeCoin := sdk.NewCoin("nhash", sdk.NewIntFromBigInt(nhashAmount))
 		return msgFeeCoin, nil
-	case "hash":
-		hashAmount := coin.Amount.Int64()
-		nhashAmount := sdk.NewInt(1_000_000_000).Mul(sdk.NewInt(hashAmount))
-		msgFeeCoin := sdk.NewCoin("nhash", nhashAmount)
-		return msgFeeCoin, nil
 	case "nhash":
 		return coin, nil
 	default:
