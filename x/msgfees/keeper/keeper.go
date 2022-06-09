@@ -73,11 +73,11 @@ func (k Keeper) GetFloorGasPrice(ctx sdk.Context) sdk.Coin {
 	return min
 }
 
-// GetUsdConversionRate returns the current usd to hash (1000000000nhash) conversion rate in mils per hash.
-func (k Keeper) GetUsdConversionRate(ctx sdk.Context) uint64 {
-	rateInMils := types.DefaultParams().UsdConversionRate
-	if k.paramSpace.Has(ctx, types.ParamStoreKeyUsdConversionRate) {
-		k.paramSpace.Get(ctx, types.ParamStoreKeyUsdConversionRate, &rateInMils)
+// GetNhashPerUsdMil returns the current nhash amount per usd mil
+func (k Keeper) GetNhashPerUsdMil(ctx sdk.Context) uint64 {
+	rateInMils := types.DefaultParams().NhashPerUsdMil
+	if k.paramSpace.Has(ctx, types.ParamStoreKeyNhashPerUsdMil) {
+		k.paramSpace.Get(ctx, types.ParamStoreKeyNhashPerUsdMil, &rateInMils)
 	}
 	return rateInMils
 }
@@ -180,16 +180,14 @@ func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Co
 	return nil
 }
 
-// ConvertDenomToHash converts coin to nhash coin using conversion rate represented as dollar mill ($1.234 = 1234).
-// Currently, usd is only supported with conversion rate coming from params
+// ConvertDenomToHash converts usd coin to nhash coin using nhash per usd mil.
+// Currently, usd is only supported with nhash to usd mil coming from params
 func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, error) {
 	switch coin.Denom {
 	case types.UsdDenom:
-		conversionRate := int64(k.GetUsdConversionRate(ctx))
-		amount := coin.Amount.Mul(sdk.NewInt(1_000_000_000))
-		rate := sdk.NewInt(conversionRate)
-		nhashAmount := amount.BigInt().Div(amount.BigInt(), rate.BigInt())
-		msgFeeCoin := sdk.NewCoin(types.NhashDenom, sdk.NewIntFromBigInt(nhashAmount))
+		nhashPerMil := int64(k.GetNhashPerUsdMil(ctx))
+		amount := coin.Amount.Mul(sdk.NewInt(nhashPerMil))
+		msgFeeCoin := sdk.NewInt64Coin(types.NhashDenom, amount.Int64())
 		return msgFeeCoin, nil
 	case types.NhashDenom:
 		return coin, nil

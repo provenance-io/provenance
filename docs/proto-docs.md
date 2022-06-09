@@ -343,7 +343,7 @@
     - [AddMsgFeeProposal](#provenance.msgfees.v1.AddMsgFeeProposal)
     - [RemoveMsgFeeProposal](#provenance.msgfees.v1.RemoveMsgFeeProposal)
     - [UpdateMsgFeeProposal](#provenance.msgfees.v1.UpdateMsgFeeProposal)
-    - [UpdateUsdConversionRateProposal](#provenance.msgfees.v1.UpdateUsdConversionRateProposal)
+    - [UpdateNhashPerUsdMilProposal](#provenance.msgfees.v1.UpdateNhashPerUsdMilProposal)
   
 - [provenance/msgfees/v1/query.proto](#provenance/msgfees/v1/query.proto)
     - [CalculateTxFeesRequest](#provenance.msgfees.v1.CalculateTxFeesRequest)
@@ -5228,7 +5228,7 @@ Params defines the set of params for the msgfees module.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | constant used to calculate fees when gas fees shares denom with msg fee |
-| `usd_conversion_rate` | [uint64](#uint64) |  | conversion rate of usd mils to 1 hash |
+| `nhash_per_usd_mil` | [uint64](#uint64) |  | total nhash per usd mil for converting usd to nhash |
 
 
 
@@ -5336,17 +5336,17 @@ UpdateMsgFeeProposal defines a governance proposal to update a current msg based
 
 
 
-<a name="provenance.msgfees.v1.UpdateUsdConversionRateProposal"></a>
+<a name="provenance.msgfees.v1.UpdateNhashPerUsdMilProposal"></a>
 
-### UpdateUsdConversionRateProposal
-UpdateUsdConversionRateProposal defines a governance proposal to update the usd conversion rate param
+### UpdateNhashPerUsdMilProposal
+UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
-| `usd_conversion_rate` | [uint64](#uint64) |  | usd_conversion_rate is cost of 1hash in usd ($1.234 = 1234) |
+| `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is number of nhash per usd mil |
 
 
 

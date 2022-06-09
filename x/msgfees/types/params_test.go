@@ -17,7 +17,7 @@ func TestCreateParams(t *testing.T) {
 		Denom:  "steak",
 		Amount: sdk.NewInt(2000),
 	}, msgFeeParam.FloorGasPrice)
-	require.Equal(t, uint64(7), msgFeeParam.UsdConversionRate)
+	require.Equal(t, uint64(7), msgFeeParam.NhashPerUsdMil)
 }
 
 func TestCreateParamSet(t *testing.T) {
@@ -37,7 +37,7 @@ func TestValidateMinGasPriceParamI(t *testing.T) {
 }
 
 func TestValidateUsdConversionRateParamI(t *testing.T) {
-	require.NoError(t, validateUsdConversionRateParam(uint64(7)))
+	require.NoError(t, validateNhashPerUsdMilParam(uint64(7)))
 }
 
 func TestMsgFeeParamKeyTable(t *testing.T) {
@@ -49,12 +49,12 @@ func TestMsgFeeParamKeyTable(t *testing.T) {
 		}, validateCoinParam))
 	})
 	require.Panics(t, func() {
-		keyTable.RegisterType(paramtypes.NewParamSetPair(ParamStoreKeyUsdConversionRate, uint64(7), validateUsdConversionRateParam))
+		keyTable.RegisterType(paramtypes.NewParamSetPair(ParamStoreKeyNhashPerUsdMil, uint64(7), validateNhashPerUsdMilParam))
 	})
 }
 
 func TestDefault(t *testing.T) {
 	metadataData := DefaultParams()
 	require.Equal(t, DefaultFloorGasPrice, metadataData.FloorGasPrice)
-	require.Equal(t, DefaultUsdConversionRate, metadataData.UsdConversionRate)
+	require.Equal(t, DefaultNhashPerUsdMil, metadataData.NhashPerUsdMil)
 }

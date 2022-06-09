@@ -24,7 +24,7 @@ var (
 	_ govtypes.Content = &AddMsgFeeProposal{}
 	_ govtypes.Content = &UpdateMsgFeeProposal{}
 	_ govtypes.Content = &RemoveMsgFeeProposal{}
-	_ govtypes.Content = &UpdateUsdConversionRateProposal{}
+	_ govtypes.Content = &UpdateNhashPerUsdMilProposal{}
 )
 
 func init() {
@@ -37,7 +37,7 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeRemoveMsgFee)
 	govtypes.RegisterProposalTypeCodec(RemoveMsgFeeProposal{}, "provenance/msgfees/RemoveMsgFeeProposal")
 	govtypes.RegisterProposalType(ProposalTypeUpdateUsdConversionRate)
-	govtypes.RegisterProposalTypeCodec(UpdateUsdConversionRateProposal{}, "provenance/msgfees/UpdateUsdConversionRateProposal")
+	govtypes.RegisterProposalTypeCodec(UpdateNhashPerUsdMilProposal{}, "provenance/msgfees/UpdateNhashPerUsdMilProposal")
 }
 
 func NewAddMsgFeeProposal(
@@ -150,37 +150,37 @@ func (p RemoveMsgFeeProposal) String() string {
 	return b.String()
 }
 
-func NewUpdateUsdConversionRateProposal(
+func NewUpdateNhashPerUsdMilProposal(
 	title string,
 	description string,
-	usdConversionRate uint64,
-) *UpdateUsdConversionRateProposal {
-	return &UpdateUsdConversionRateProposal{
-		Title:             title,
-		Description:       description,
-		UsdConversionRate: usdConversionRate,
+	nhashPerUsdMil uint64,
+) *UpdateNhashPerUsdMilProposal {
+	return &UpdateNhashPerUsdMilProposal{
+		Title:          title,
+		Description:    description,
+		NhashPerUsdMil: nhashPerUsdMil,
 	}
 }
 
-func (p UpdateUsdConversionRateProposal) ProposalRoute() string { return RouterKey }
+func (p UpdateNhashPerUsdMilProposal) ProposalRoute() string { return RouterKey }
 
-func (p UpdateUsdConversionRateProposal) ProposalType() string {
+func (p UpdateNhashPerUsdMilProposal) ProposalType() string {
 	return ProposalTypeUpdateUsdConversionRate
 }
 
-func (p UpdateUsdConversionRateProposal) ValidateBasic() error {
-	if p.UsdConversionRate < 1 {
-		return errors.New("conversion rate must be greater than 0")
+func (p UpdateNhashPerUsdMilProposal) ValidateBasic() error {
+	if p.NhashPerUsdMil < 1 {
+		return errors.New("nhash per usd mil must be greater than 0")
 	}
 	return govtypes.ValidateAbstract(&p)
 }
 
-func (p UpdateUsdConversionRateProposal) String() string {
+func (p UpdateNhashPerUsdMilProposal) String() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Update Usd Conversion Rate Proposal:
+	b.WriteString(fmt.Sprintf(`Update Nhash to Usd Mil Proposal:
   Title:             %s
   Description:       %s
-  UsdConversionRate: %v
-`, p.Title, p.Description, p.UsdConversionRate))
+  NhashPerUsdMil:    %v
+`, p.Title, p.Description, p.NhashPerUsdMil))
 	return b.String()
 }

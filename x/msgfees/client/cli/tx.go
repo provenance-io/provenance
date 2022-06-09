@@ -36,7 +36,7 @@ func NewTxCmd() *cobra.Command {
 
 	txCmd.AddCommand(
 		GetCmdMsgFeesProposal(),
-		GetUpdateUsdConversionRateProposal(),
+		GetUpdateNhashPerUsdMilProposal(),
 	)
 
 	return txCmd
@@ -138,29 +138,29 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 	return cmd
 }
 
-func GetUpdateUsdConversionRateProposal() *cobra.Command {
+func GetUpdateNhashPerUsdMilProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "usd-conversion-proposal <title> <description> <rate> <deposit>",
-		Aliases: []string{"ucp", "u-c-p"},
+		Use:     "nhash-per-usd-mil <title> <description> <nhash-per-usd-mil> <deposit>",
+		Aliases: []string{"npum", "n-p-u-m"},
 		Args:    cobra.ExactArgs(4),
-		Short:   "Submit a usd conversion rate update proposal along with an initial deposit",
-		Long: strings.TrimSpace(`Submit a usd conversion rate update proposal along with an initial deposit.
-The conversion rate is the cost in thousandths of USD (1/10 of a cent) for 1 unit of hash (1,000,000,000nhash).  Example: For example, $1.098/Hash, is a rate of 1098, and $0.035/Hash is a rate of 35
+		Short:   "Submit a nhash per usd mil update proposal along with an initial deposit",
+		Long: strings.TrimSpace(`Submit a nhash per usd mil update proposal along with an initial deposit.
+The nhash per usd mil is the number of nhash that will be multiplied by the usd mil amount.  Example: $1.000 usd where 1 mil equals 2000nhash will equate to 1000 * 2000 = 2000000nhash
 `),
-		Example: fmt.Sprintf(`$ %[1]s tx msgfees usd-conversion-proposal "updating usd conversion" "changes the usd conversion rate to $1.234."  1234 1000000000nhash
-$ %[1]s tx msgfees ucp "updating usd conversion" "changes the usd conversion rate to $1.234."  1234 1000000000nhash
+		Example: fmt.Sprintf(`$ %[1]s tx msgfees nhash-per-usd-mil "updating nhash to usd mil" "changes the nhash per mil to 1234nhash"  1234 1000000000nhash
+$ %[1]s tx msgfees npum nhash-per-usd-mil "updating nhash to usd mil" "changes the nhash per mil to 1234nhash"   1234 1000000000nhash
 `, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			title, description, rateArg, depositArg := args[0], args[1], args[2], args[3]
-			rate, err := strconv.ParseUint(rateArg, 0, 64)
+			title, description, nhash, depositArg := args[0], args[1], args[2], args[3]
+			rate, err := strconv.ParseUint(nhash, 0, 64)
 			if err != nil {
-				return fmt.Errorf("unable to parse rate value: %s", rateArg)
+				return fmt.Errorf("unable to parse nhash value: %s", nhash)
 			}
-			proposal := types.NewUpdateUsdConversionRateProposal(title, description, rate)
+			proposal := types.NewUpdateNhashPerUsdMilProposal(title, description, rate)
 			deposit, err := sdk.ParseCoinsNormalized(depositArg)
 			if err != nil {
 				return err

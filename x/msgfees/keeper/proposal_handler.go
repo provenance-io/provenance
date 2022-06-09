@@ -97,13 +97,13 @@ func HandleRemoveMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.Remov
 	return k.RemoveMsgFee(ctx, proposal.MsgTypeUrl)
 }
 
-// HandleUpdateUsdConversionRateProposal handles update of usd conversion rate governance proposal request
-func HandleUpdateUsdConversionRateProposal(ctx sdk.Context, k Keeper, proposal *types.UpdateUsdConversionRateProposal, registry codectypes.InterfaceRegistry) error {
+// HandleUpdateNhashPerUsdMilProposal handles update of nhash per usd mil governance proposal request
+func HandleUpdateNhashPerUsdMilProposal(ctx sdk.Context, k Keeper, proposal *types.UpdateNhashPerUsdMilProposal, registry codectypes.InterfaceRegistry) error {
 	if err := proposal.ValidateBasic(); err != nil {
 		return err
 	}
 	params := k.GetParams(ctx)
-	params.UsdConversionRate = proposal.UsdConversionRate
+	params.NhashPerUsdMil = proposal.NhashPerUsdMil
 	k.SetParams(ctx, params)
 	return nil
 }

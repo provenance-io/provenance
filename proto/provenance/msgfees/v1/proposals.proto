@@ -55,13 +55,13 @@ message RemoveMsgFeeProposal {
   string msg_type_url = 3;
 }
 
-// UpdateUsdConversionRateProposal defines a governance proposal to update the usd conversion rate param
-message UpdateUsdConversionRateProposal {
+// UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
+message UpdateNhashPerUsdMilProposal {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
   string title       = 1;
   string description = 2;
-  // usd_conversion_rate is cost of 1hash in usd ($1.234 = 1234)
-  uint64 usd_conversion_rate = 3;
+  // nhash_per_usd_mil is number of nhash per usd mil
+  uint64 nhash_per_usd_mil = 3;
 }

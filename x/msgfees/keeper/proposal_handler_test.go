@@ -95,13 +95,13 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 			msgfeestypes.ErrEmptyMsgType,
 		},
 		{
-			"update conversion rate - invalid - validate basic fail",
-			msgfeestypes.NewUpdateUsdConversionRateProposal("title update conversion", "", 10),
+			"update nhash to usd mil - invalid - validate basic fail",
+			msgfeestypes.NewUpdateNhashPerUsdMilProposal("title update conversion", "", 10),
 			errors.New("proposal description cannot be blank: invalid proposal content"),
 		},
 		{
-			"update conversion rate - valid",
-			msgfeestypes.NewUpdateUsdConversionRateProposal("title update conversion", "description", 1),
+			"update nhash to usd mil - valid",
+			msgfeestypes.NewUpdateNhashPerUsdMilProposal("title update conversion", "description", 1),
 			nil,
 		},
 	}
@@ -118,8 +118,8 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 				err = msgfeeskeeper.HandleUpdateMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
 			case *msgfeestypes.RemoveMsgFeeProposal:
 				err = msgfeeskeeper.HandleRemoveMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
-			case *msgfeestypes.UpdateUsdConversionRateProposal:
-				err = msgfeeskeeper.HandleUpdateUsdConversionRateProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
+			case *msgfeestypes.UpdateNhashPerUsdMilProposal:
+				err = msgfeeskeeper.HandleUpdateNhashPerUsdMilProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
 			default:
 				panic("invalid proposal type")
 			}

@@ -396,13 +396,13 @@ func TestMsgServiceAssessMsgFee(t *testing.T) {
 	assert.Equal(t, addr2.String(), string(res.Events[8].Attributes[2].Value))
 	assert.Equal(t, "tx", res.Events[9].Type)
 	assert.Equal(t, antewrapper.AttributeKeyAdditionalFee, string(res.Events[9].Attributes[0].Key))
-	assert.Equal(t, "100000000nhash", string(res.Events[9].Attributes[0].Value))
+	assert.Equal(t, "99999998nhash", string(res.Events[9].Attributes[0].Value))
 	assert.Equal(t, "tx", res.Events[10].Type)
 	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[10].Attributes[0].Key))
-	assert.Equal(t, "150atom,1090500000nhash", string(res.Events[10].Attributes[0].Value))
+	assert.Equal(t, "150atom,1090500002nhash", string(res.Events[10].Attributes[0].Value))
 	assert.Equal(t, "provenance.msgfees.v1.EventMsgFees", res.Events[11].Type)
 	assert.Equal(t, "msg_fees", string(res.Events[11].Attributes[0].Key))
-	assert.Equal(t, fmt.Sprintf("[{\"msg_type\":\"/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest\",\"count\":\"1\",\"total\":\"50000000nhash\",\"recipient\":\"\"},{\"msg_type\":\"/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest\",\"count\":\"1\",\"total\":\"50000000nhash\",\"recipient\":\"%s\"}]", addr2.String()), string(res.Events[11].Attributes[0].Value))
+	assert.Equal(t, fmt.Sprintf("[{\"msg_type\":\"/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest\",\"count\":\"1\",\"total\":\"49999999nhash\",\"recipient\":\"\"},{\"msg_type\":\"/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest\",\"count\":\"1\",\"total\":\"49999999nhash\",\"recipient\":\"%s\"}]", addr2.String()), string(res.Events[11].Attributes[0].Value))
 
 }
 

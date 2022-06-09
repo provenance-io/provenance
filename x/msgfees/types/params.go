@@ -17,13 +17,13 @@ var DefaultFloorGasPrice = sdk.Coin{
 	Denom:  NhashDenom,
 }
 
-var DefaultUsdConversionRate = uint64(70)
+var DefaultNhashPerUsdMil = uint64(14285714)
 
 var (
 	// ParamStoreKeyFloorGasPrice if msg fees are paid in the same denom as base default gas is paid, then use this to differentiate between base price
 	// and additional fees.
-	ParamStoreKeyFloorGasPrice     = []byte("FloorGasPrice")
-	ParamStoreKeyUsdConversionRate = []byte("UsdConversionRate")
+	ParamStoreKeyFloorGasPrice  = []byte("FloorGasPrice")
+	ParamStoreKeyNhashPerUsdMil = []byte("NhashPerUsdMil")
 )
 
 // ParamKeyTable for marker module
@@ -34,11 +34,11 @@ func ParamKeyTable() paramtypes.KeyTable {
 // NewParams creates a new parameter object
 func NewParams(
 	floorGasPrice sdk.Coin,
-	usdConversionRate uint64,
+	nhashPerUsdMil uint64,
 ) Params {
 	return Params{
-		FloorGasPrice:     floorGasPrice,
-		UsdConversionRate: usdConversionRate,
+		FloorGasPrice:  floorGasPrice,
+		NhashPerUsdMil: nhashPerUsdMil,
 	}
 }
 
@@ -46,7 +46,7 @@ func NewParams(
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(ParamStoreKeyFloorGasPrice, &p.FloorGasPrice, validateCoinParam),
-		paramtypes.NewParamSetPair(ParamStoreKeyUsdConversionRate, &p.UsdConversionRate, validateUsdConversionRateParam),
+		paramtypes.NewParamSetPair(ParamStoreKeyNhashPerUsdMil, &p.NhashPerUsdMil, validateNhashPerUsdMilParam),
 	}
 }
 
@@ -54,7 +54,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 func DefaultParams() Params {
 	return NewParams(
 		DefaultFloorGasPrice,
-		DefaultUsdConversionRate,
+		DefaultNhashPerUsdMil,
 	)
 }
 
@@ -101,7 +101,7 @@ func validateCoinParam(i interface{}) error {
 	return nil
 }
 
-func validateUsdConversionRateParam(i interface{}) error {
+func validateNhashPerUsdMilParam(i interface{}) error {
 	_, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

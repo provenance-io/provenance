@@ -21,7 +21,7 @@ type MsgFeesKeeper interface {
 	GetFeeCollectorName() string
 	DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc authtypes.AccountI, remainingFees sdk.Coins, fees map[string]sdk.Coins) error
 	GetFloorGasPrice(ctx sdk.Context) sdk.Coin
-	GetUsdConversionRate(ctx sdk.Context) uint64
+	GetNhashPerUsdMil(ctx sdk.Context) uint64
 	ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, error)
 }
 

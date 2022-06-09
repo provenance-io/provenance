@@ -136,32 +136,32 @@ func (s *MsgFeesProposalTestSuite) TestRemoveMsgFeeProposalType() {
 }
 
 func (s *MsgFeesProposalTestSuite) TestUpdateUsdConversionRateProposalValidateBasic() {
-	m := NewUpdateUsdConversionRateProposal("title", "description", 70)
+	m := NewUpdateNhashPerUsdMilProposal("title", "description", 70)
 	s.Assert().Equal(
-		`Update Usd Conversion Rate Proposal:
+		`Update Nhash to Usd Mil Proposal:
   Title:             title
   Description:       description
-  UsdConversionRate: 70
+  NhashPerUsdMil:    70
 `, m.String())
 
 	tests := []struct {
 		name        string
-		proposal    *UpdateUsdConversionRateProposal
+		proposal    *UpdateNhashPerUsdMilProposal
 		expectedErr string
 	}{
 		{
 			"Empty type error",
-			NewUpdateUsdConversionRateProposal("title", "description", 0),
-			"conversion rate must be greater than 0",
+			NewUpdateNhashPerUsdMilProposal("title", "description", 0),
+			"nhash per usd mil must be greater than 0",
 		},
 		{
 			"Invalid proposal details",
-			NewUpdateUsdConversionRateProposal("title", "", 70),
+			NewUpdateNhashPerUsdMilProposal("title", "", 70),
 			"proposal description cannot be blank: invalid proposal content",
 		},
 		{
 			"Valid proposal",
-			NewUpdateUsdConversionRateProposal("title", "description", 70),
+			NewUpdateNhashPerUsdMilProposal("title", "description", 70),
 			"",
 		},
 	}
