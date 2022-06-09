@@ -33,7 +33,7 @@ make clean install
 
 # initialize node
 provenanced init choose-a-moniker --chain-id pio-mainnet-1
-curl https://raw.githubusercontent.com/provenance-io/mainnet/main/pio-mainnet-1/genesis.json> genesis.json
+curl https://raw.githubusercontent.com/provenance-io/mainnet/main/pio-mainnet-1/genesis.json > genesis.json
 mv genesis.json $PIO_HOME/config
 
 # update config to use 'cleveldb'
