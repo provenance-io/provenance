@@ -137,9 +137,9 @@ import (
 
 const (
 	// DefaultBondDenom is the denomination of coin to use for bond/staking
-	DefaultBondDenom = msgfeestypes.NhashDenom // nano-hash
+	DefaultBondDenom = "nhash" // nano-hash
 	// DefaultFeeDenom is the denomination of coin to use for fees
-	DefaultFeeDenom = msgfeestypes.NhashDenom // nano-hash
+	DefaultFeeDenom = "nhash" // nano-hash
 	// DefaultMinGasPrices is the minimum gas prices coin value.
 	DefaultMinGasPrices = "1905" + DefaultFeeDenom
 	// DefaultReDnmString is the allowed denom regex expression
