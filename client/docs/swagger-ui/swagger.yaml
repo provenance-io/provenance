@@ -47424,6 +47424,10 @@ paths:
               address:
                 type: string
                 title: a string containing the address the name resolves to
+              restricted:
+                type: boolean
+                format: boolean
+                description: Whether owner signature is required to add sub-names.
             description: >-
               QueryResolveResponse is the response type for the Query/Resolve
               method.
@@ -69041,6 +69045,11 @@ definitions:
   provenance.marker.v1.MsgFinalizeResponse:
     type: object
     title: MsgFinalizeResponse defines the Msg/Finalize response type
+  provenance.marker.v1.MsgGrantAllowanceResponse:
+    type: object
+    description: >-
+      MsgGrantAllowanceResponse defines the Msg/GrantAllowanceResponse response
+      type.
   provenance.marker.v1.MsgMintResponse:
     type: object
     title: MsgMintResponse defines the Msg/Mint response type
@@ -80137,6 +80146,10 @@ definitions:
       address:
         type: string
         title: a string containing the address the name resolves to
+      restricted:
+        type: boolean
+        format: boolean
+        description: Whether owner signature is required to add sub-names.
     description: QueryResolveResponse is the response type for the Query/Resolve method.
   provenance.name.v1.QueryReverseLookupResponse:
     type: object
