@@ -23,7 +23,7 @@ type Keeper struct {
 	storeKey         sdk.StoreKey
 	cdc              codec.BinaryCodec
 	paramSpace       paramtypes.Subspace
-	FeeCollectorName string // name of the FeeCollector ModuleAccount
+	feeCollectorName string // name of the FeeCollector ModuleAccount
 	defaultFeeDenom  string
 	simulateFunc     baseAppSimulateFunc
 	txDecoder        sdk.TxDecoder
@@ -48,7 +48,7 @@ func NewKeeper(
 		storeKey:         key,
 		cdc:              cdc,
 		paramSpace:       paramSpace,
-		FeeCollectorName: feeCollectorName,
+		feeCollectorName: feeCollectorName,
 		defaultFeeDenom:  defaultFeeDenom,
 		simulateFunc:     simulateFunc,
 		txDecoder:        txDecoder,
@@ -61,7 +61,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k Keeper) GetFeeCollectorName() string {
-	return k.FeeCollectorName
+	return k.feeCollectorName
 }
 
 // GetFloorGasPrice returns the current minimum gas price in sdk.Coin used in calculations for charging additional fees
@@ -151,7 +151,7 @@ func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Co
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", fees)
 		}
 		if len(key) == 0 {
-			err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.FeeCollectorName, coins)
+			err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, coins)
 			if err != nil {
 				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 			}
@@ -172,7 +172,7 @@ func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Co
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "negative balance after sending coins to accounts and fee collector")
 	}
 	// sweep the rest of the fees to module
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.FeeCollectorName, remainingFee)
+	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, remainingFee)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 	}
