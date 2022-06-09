@@ -143,7 +143,11 @@ func (g *FeeGasMeter) FeeConsumedDistributions() map[string]sdk.Coins {
 
 // FeeConsumedByMsg total fee consumed for a particular MsgType
 func (g *FeeGasMeter) FeeConsumedByMsg() map[string]sdk.Coins {
-	return g.usedFees
+	consumedByMsg := make(map[string]sdk.Coins)
+	for msg, coins := range g.usedFees {
+		consumedByMsg[msg] = sdk.NewCoins(coins...)
+	}
+	return consumedByMsg
 }
 
 func (g *FeeGasMeter) IsSimulate() bool {
