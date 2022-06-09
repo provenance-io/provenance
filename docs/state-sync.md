@@ -2,7 +2,7 @@
 
 ## What is State sync?
 
-The Provenance 1.10.0 release comes with Tenderming Core 0.34 which includes support for state sync. State sync allows a new node to join a network by fetching a snapshot of the application state at a recent height vs. fetching and replaying all historical blocks (which can take days). This can reduce the time needed to sync with the network down to minutes.
+The Provenance 1.10.0+ release comes with Tendermint Core 0.34 which includes support for state sync. State sync allows a new node to join a network by fetching a snapshot of the application state at a recent height vs. fetching and replaying all historical blocks (which can take days). This can reduce the time needed to sync with the network down to minutes.
 
 <!-- TOC -->
 - [What is State sync?](#what-is-state-sync)
@@ -44,6 +44,7 @@ sed -i.orig -E "s|^(db_backend[[:space:]]+=[[:space:]]+).*$|\1\"cleveldb\"| ;" $
 
 ```  
 # setup sync node
+# Chose one of three available host: rpc-{0, 1 or 2}.provenance.io
 PIO_RPC=`host rpc-0.provenance.io | awk '{print $4}'`:26657
 
 # State Sync Configuration Options
@@ -52,7 +53,7 @@ TRUST_HEIGHT=$((LATEST_HEIGHT - 1000)); \
 TRUST_HASH=$(curl -s "$PIO_RPC/block?height=$TRUST_HEIGHT" | jq -r .result.block_id.hash); \
 echo -e "\nLATEST_HEIGH=$LATEST_HEIGHT\nTRUST_HEIGHT=$TRUST_HEIGHT\nTRUST_HASH=$TRUST_HASH\n"
 
-# Enable sate sync
+# Enable state sync
 sed -i.bak -E "s|^(enable[[:space:]]+=[[:space:]]+).*$|\1true| ; \
     s|^(rpc_servers[[:space:]]+=[[:space:]]+).*$|\1\"$PIO_RPC,$PIO_RPC\"| ; \
     s|^(trust_height[[:space:]]+=[[:space:]]+).*$|\1$TRUST_HEIGHT| ; \
@@ -108,7 +109,7 @@ TRUST_HEIGHT=$((LATEST_HEIGHT - 1000)); \
 TRUST_HASH=$(curl -s "$PIO_RPC/block?height=$TRUST_HEIGHT" | jq -r .result.block_id.hash); \
 echo -e "\nLATEST_HEIGH=$LATEST_HEIGHT\nTRUST_HEIGHT=$TRUST_HEIGHT\nTRUST_HASH=$TRUST_HASH\n"
 
-# Enable sate sync
+# Enable state sync
 sed -i.bak -E "s|^(enable[[:space:]]+=[[:space:]]+).*$|\1true| ; \
     s|^(rpc_servers[[:space:]]+=[[:space:]]+).*$|\1\"$PIO_RPC,$PIO_RPC\"| ; \
     s|^(trust_height[[:space:]]+=[[:space:]]+).*$|\1$TRUST_HEIGHT| ; \
