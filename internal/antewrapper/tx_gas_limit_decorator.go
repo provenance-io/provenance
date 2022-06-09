@@ -46,7 +46,7 @@ func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 
 	// TODO - remove "gasTxLimit > 0" with SDK 0.46 which fixes the infinite gas meter to use max int vs zero for the limit.
-	if shouldIgnoreChecksForTests(ctx) && gasTxLimit > 0 && gas > gasTxLimit && !hasGovMsg {
+	if isTestContext(ctx) && gasTxLimit > 0 && gas > gasTxLimit && !hasGovMsg {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrTxTooLarge, "transaction gas exceeds maximum allowed; got: %d max allowed: %d", gas, gasTxLimit)
 	}
 	return next(ctx, tx, simulate)

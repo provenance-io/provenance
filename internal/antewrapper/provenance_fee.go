@@ -108,7 +108,7 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 }
 
 func CalculateBaseFee(ctx sdk.Context, feeTx sdk.FeeTx, msgfeekeeper msgfeestypes.MsgFeesKeeper) sdk.Coins {
-	if shouldIgnoreChecksForTests(ctx) {
+	if !isTestContext(ctx) {
 		gasWanted := feeTx.GetGas()
 		floorPrice := msgfeekeeper.GetFloorGasPrice(ctx)
 		amount := msgfeekeeper.GetFloorGasPrice(ctx).Amount.Mul(sdk.NewIntFromUint64(gasWanted))
