@@ -37,17 +37,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-### Features 
+### Features
 
 * Add CONTROLLER, and VALIDATOR PartyTypes for contract execution. [\#824](https://github.com/provenance-io/provenance/pull/824])
 * Add FeeGrant allowance support for marker escrow accounts [#406](https://github.com/provenance-io/provenance/issues/406)
 
 ### Bug Fixes
 
-  * Move buf.build push action to occur after PRs are merged to main branch [#838](https://github.com/provenance-io/provenance/issues/838)
-  * Unblock proto update check in workflow [#842](https://github.com/provenance-io/provenance/issues/842)
+* Move buf.build push action to occur after PRs are merged to main branch [#838](https://github.com/provenance-io/provenance/issues/838)
+* Update third party proto dependencies [#842](https://github.com/provenance-io/provenance/issues/842)
 
-### Improvements 
+### Improvements
 
 * Add restricted status info to name module cli queries [#806](https://github.com/provenance-io/provenance/issues/806)
 
