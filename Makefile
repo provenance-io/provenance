@@ -354,10 +354,6 @@ check-built:
 		exit 1; \
 	fi
 
-statik:
-	$(GO) get -u github.com/rakyll/statik
-	$(GO) generate ./api/...
-
 linkify:
 	python ./scripts/linkify.py CHANGELOG.md
 
@@ -378,7 +374,7 @@ librdkafka:
 		scripts/m1_librdkafka_install.sh;\
 	fi
 
-.PHONY: go-mod-cache go.sum lint clean format check-built statik linkify update-tocs rocksdb cleveldb librdkafka
+.PHONY: go-mod-cache go.sum lint clean format check-built linkify update-tocs rocksdb cleveldb librdkafka
 
 
 validate-go-version: ## Validates the installed version of go against Provenance's minimum requirement.
