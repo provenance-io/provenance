@@ -6,23 +6,39 @@ set -ex
 # Warn user to update third_party libraries and push again.
 #
 
-red='\e[0;31m'
-green='\e[0;32m'
-off='\e[0m'
-
 regex='github.com/cosmos/cosmos-sdk|github.com/tendermint/tendermint'
-output=$(git diff HEAD:go.mod..origin/main:go.mod | grep -E -c $regex)
+output=$(git diff ..origin/main -- go.mod | grep -E -c "$regex" || true)
 
-if [[ $output -gt 0 ]]; then
-  echo -e "
-  ${red}A version change was detected in one of the following libraries:
-    - github.com/cosmos/cosmos-sdk
-    - github.com/tendermint/tendermint
+# single brackets because the github runners don't have the enhanced (double-bracket) version.
+if [ "$output" -gt "0" ]; then
+  printf 'Downloading latest third_party proto files for comparison...\n'
 
-  Run the command below to update the third_party proto files and push again.
-    $ make proto-update-deps\n${off}" >&2
-  exit 1
-else
-  echo -e "${green}third_party Protobuf files are up to date.\n${off}"
+  # Download third_party proto files in the build/ directory for comparison against $dir /third_party
+  dir="$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )"
+  bash "$dir/scripts/proto-update-deps.sh" build
+
+  printf '\nChecking Protobuf files for differences...\n'
+
+  DIFF=$( diff -rq -x '*.yaml' --exclude=google "$dir/build/third_party" "$dir/third_party" || true )
+  if [ -n "$DIFF" ]; then
+    printf '\n\nDiff log:\n\n%s\n\n' "$DIFF"
+    cat << EOF >&2
+Found differences in Protobuf files.
+This indicates a version change was detected in one of the following libraries:
+  - github.com/cosmos/cosmos-sdk
+  - github.com/tendermint/tendermint
+
+Review the diff log above and update accordingly. Perform the following steps locally.
+  1. run: make proto-update-deps
+  2. rerun: make proto-update-check  and make sure it passes.
+  3. commit updates and push
+
+EOF
+    exit 1
+  fi
+
+  # Version change detected but Protobuf files are already up to date
   exit 0
 fi
+
+exit 0
