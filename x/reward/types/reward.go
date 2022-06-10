@@ -416,11 +416,11 @@ func (ad *ActionDelegate) getTokensFromValidator(ctx sdk.Context, provider Keepe
 
 // The percentile is dictated by its placement in the BondedValidator list
 // If there are 5 validators and the first validator matches then that validator is in the top 80%
-func (ad *ActionDelegate) getValidatorRankPercentile(ctx sdk.Context, provider KeeperProvider, validator sdk.ValAddress) float64 {
+func (ad *ActionDelegate) getValidatorRankPercentile(ctx sdk.Context, provider KeeperProvider, validator sdk.ValAddress) sdk.Dec {
 	validators := provider.GetStakingKeeper().GetBondedValidatorsByPower(ctx)
-	numValidators := len(validators)
+	numValidators := int64(len(validators))
 	rank := numValidators
-	for i := 0; i < numValidators; i++ {
+	for i := int64(0); i < numValidators; i++ {
 		v := validators[i]
 		validatorString := validator.String()
 		if v.OperatorAddress == validatorString {
@@ -428,7 +428,10 @@ func (ad *ActionDelegate) getValidatorRankPercentile(ctx sdk.Context, provider K
 			break
 		}
 	}
-	percentile := float64(numValidators-rank) / float64(numValidators)
+	placement := sdk.NewDec(numValidators - rank)
+	vals := sdk.NewDec(numValidators)
+	percentile := placement.Quo(vals)
+
 	return percentile
 }
 
@@ -448,9 +451,11 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	delegatedHash := sdk.NewInt64Coin("nhash", tokens.RoundInt64())
 	minDelegation := ad.GetMinimumDelegationAmount()
 	maxDelegation := ad.GetMaximumDelegationAmount()
+	minPercentile := ad.GetMinimumActiveStakePercentile()
+	maxPercentile := ad.GetMaximumActiveStakePercentile()
 
 	hasValidDelegationAmount := delegatedHash.IsGTE(*minDelegation) && (delegatedHash.IsLT(*maxDelegation) || delegatedHash.IsEqual(*maxDelegation))
-	hasValidActivePercentile := percentile >= ad.GetMinimumActiveStakePercentile() && percentile <= ad.GetMaximumActiveStakePercentile()
+	hasValidActivePercentile := percentile.GTE(minPercentile) && percentile.LTE(maxPercentile)
 
 	return hasValidActionCount && hasValidDelegationAmount && hasValidActivePercentile
 }
@@ -458,6 +463,20 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 func (ad *ActionDelegate) String() string {
 	out, _ := yaml.Marshal(ad)
 	return string(out)
+}
+
+func (ad *ActionDelegate) GetMinimumActiveStakePercentile() sdk.Dec {
+	if ad != nil {
+		return ad.MinimumActiveStakePercentile
+	}
+	return sdk.NewDec(0)
+}
+
+func (ad *ActionDelegate) GetMaximumActiveStakePercentile() sdk.Dec {
+	if ad != nil {
+		return ad.MaximumActiveStakePercentile
+	}
+	return sdk.NewDec(0)
 }
 
 // ============ Action Transfer Delegations ============

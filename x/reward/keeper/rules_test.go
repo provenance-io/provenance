@@ -432,8 +432,8 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluatePasses() {
 	maxDelegation := sdk.NewInt64Coin("nhash", 10)
 	action.MinimumDelegationAmount = &minDelegation
 	action.MaximumDelegationAmount = &maxDelegation
-	action.MinimumActiveStakePercentile = .4
-	action.MaximumActiveStakePercentile = 1.0
+	action.MinimumActiveStakePercentile = sdk.NewDecWithPrec(4, 1)
+	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -460,8 +460,8 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActionsN
 	maxDelegation := sdk.NewInt64Coin("nhash", 10)
 	action.MinimumDelegationAmount = &minDelegation
 	action.MaximumDelegationAmount = &maxDelegation
-	action.MinimumActiveStakePercentile = .5
-	action.MaximumActiveStakePercentile = 1.0
+	action.MinimumActiveStakePercentile = sdk.NewDecWithPrec(5, 1)
+	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -487,8 +487,8 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumActionsN
 	maxDelegation := sdk.NewInt64Coin("nhash", 10)
 	action.MinimumDelegationAmount = &minDelegation
 	action.MaximumDelegationAmount = &maxDelegation
-	action.MinimumActiveStakePercentile = .5
-	action.MaximumActiveStakePercentile = 1.0
+	action.MinimumActiveStakePercentile = sdk.NewDecWithPrec(5, 1)
+	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -515,8 +515,8 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegati
 	maxDelegation := sdk.NewInt64Coin("nhash", 1)
 	action.MinimumDelegationAmount = &minDelegation
 	action.MaximumDelegationAmount = &maxDelegation
-	action.MinimumActiveStakePercentile = .5
-	action.MaximumActiveStakePercentile = 1.0
+	action.MinimumActiveStakePercentile = sdk.NewDecWithPrec(5, 1)
+	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -543,8 +543,8 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumDelegati
 	maxDelegation := sdk.NewInt64Coin("nhash", 10)
 	action.MinimumDelegationAmount = &minDelegation
 	action.MaximumDelegationAmount = &maxDelegation
-	action.MinimumActiveStakePercentile = .5
-	action.MaximumActiveStakePercentile = 1.0
+	action.MinimumActiveStakePercentile = sdk.NewDecWithPrec(5, 1)
+	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -571,8 +571,8 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActiveSt
 	maxDelegation := sdk.NewInt64Coin("nhash", 10)
 	action.MinimumDelegationAmount = &minDelegation
 	action.MaximumDelegationAmount = &maxDelegation
-	action.MinimumActiveStakePercentile = 1.1
-	action.MaximumActiveStakePercentile = 1.0
+	action.MinimumActiveStakePercentile = sdk.NewDecWithPrec(11, 1)
+	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -599,8 +599,8 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegati
 	maxDelegation := sdk.NewInt64Coin("nhash", 10)
 	action.MinimumDelegationAmount = &minDelegation
 	action.MaximumDelegationAmount = &maxDelegation
-	action.MinimumActiveStakePercentile = 0.5
-	action.MaximumActiveStakePercentile = 1.0
+	action.MinimumActiveStakePercentile = sdk.NewDecWithPrec(5, 1)
+	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewAccountState(0, 0, "")
@@ -664,8 +664,8 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction()
 						MaximumActions:               1,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: 0,
-						MaximumActiveStakePercentile: 1,
+						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -702,8 +702,8 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction()
 						MaximumActions:               1,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: 0,
-						MaximumActiveStakePercentile: 1,
+						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -714,8 +714,8 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction()
 						MaximumActions:               1,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: 0,
-						MaximumActiveStakePercentile: 1,
+						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -776,8 +776,8 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoMatchingQualifyin
 						MaximumActions:               1000,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: 0,
-						MaximumActiveStakePercentile: 1,
+						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
 					},
 				},
 			},

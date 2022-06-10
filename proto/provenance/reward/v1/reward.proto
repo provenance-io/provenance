@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 import "provenance/epoch/v1/genesis.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/reward/types";
@@ -166,8 +167,10 @@ message ActionDelegate {
   uint64                   maximum_actions                 = 2;
   cosmos.base.v1beta1.Coin minimum_delegation_amount       = 3;
   cosmos.base.v1beta1.Coin maximum_delegation_amount       = 4;
-  double                   minimum_active_stake_percentile = 5;
-  double                   maximum_active_stake_percentile = 6;
+  string                   minimum_active_stake_percentile = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string maximum_active_stake_percentile = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 // accounts that have made transfers, from accounts that have active delegations
 // rule: ActionTransferDelegations "When transfer has occurred and the account has an active delegation,
