@@ -40,55 +40,60 @@ func (k Keeper) ProcessTransactions(ctx sdk.Context) {
 // EvaluateRules takes in a Eligibility criteria and measure it against the events in the context
 func (k Keeper) DetectQualifyingActions(ctx sdk.Context, program *types.RewardProgram) ([]types.EvaluationResult, error) {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: EvaluateRules for RewardProgram: %d", program.GetId()))
-	qualifyingActions := []types.EvaluationResult(nil)
+	results := []types.EvaluationResult(nil)
 
 	// Check if any of the transactions are qualifying actions
 	for _, supportedAction := range program.GetQualifyingActions() {
 		// Get the appropriate RewardAction
-		// If it's unsupported we skip it
+		// If it's not supported we skip it
 		action, err := supportedAction.GetRewardAction(ctx)
 		if err != nil {
 			ctx.Logger().Info(err.Error())
 			continue
 		}
 
-		// Get all events that the qualyfing action type uses
-		eventCriteria := action.GetEventCriteria()
-		abciEvents, err := k.GetMatchingEvents(ctx, eventCriteria)
+		// Build all the qualifying actions from the abci events
+		actions, err := k.FindQualifyingActions(ctx, action)
 		if err != nil {
 			return nil, err
 		}
 
-		// Obtain the events that were successfully evaluted
-		actions := k.FindQualifyingActions(ctx, program, action, abciEvents)
-		qualifyingActions = append(qualifyingActions, actions...)
+		// Process actions and get the results
+		actions = k.ProcessQualifyingActions(ctx, program, action, actions)
+		results = append(results, actions...)
 	}
 
-	return qualifyingActions, nil
+	return results, nil
 }
 
-func (k Keeper) FindQualifyingActions(ctx sdk.Context, program *types.RewardProgram, action types.RewardAction, abciEvents []types.EvaluationResult) []types.EvaluationResult {
-	detectedEvents := []types.EvaluationResult(nil)
-	if program == nil || action == nil || abciEvents == nil {
-		return detectedEvents
+func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardProgram, processor types.RewardAction, actions []types.EvaluationResult) []types.EvaluationResult {
+	successfulActions := []types.EvaluationResult(nil)
+	if program == nil || processor == nil || actions == nil {
+		return successfulActions
 	}
 
-	for _, event := range abciEvents {
+	for _, action := range actions {
 		// Get the AccountState for the triggering account
 		var state types.AccountState
-		state, err := k.GetAccountState(ctx, program.GetId(), program.GetCurrentEpoch(), event.Address.String())
+
+		// TODO Move this into the action's Pre-evaluate
+		state, err := k.GetAccountState(ctx, program.GetId(), program.GetCurrentEpoch(), action.Address.String())
 		if err != nil {
 			continue
 		}
 		state.ActionCounter++
 		k.SetAccountState(ctx, &state)
 
-		if action.Evaluate(ctx, k, state, event) {
-			detectedEvents = append(detectedEvents, event)
+		// TODO We want to create an Evaluation Result here.
+		// TODO We can get the share amount from the action
+		if processor.Evaluate(ctx, k, state, action) {
+			successfulActions = append(successfulActions, action)
 		}
+
+		// TODO Do a PostEvaluate
 	}
 
-	return detectedEvents
+	return successfulActions
 }
 
 func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram, evaluateRes []types.EvaluationResult) error {
@@ -245,47 +250,30 @@ func (k Keeper) IterateABCIEvents(ctx sdk.Context, criteria *types.EventCriteria
 	return nil
 }
 
-// TODO This is currently written for only the delegate logic. We will want to refactor to accommodate other events
-func (k Keeper) GetMatchingEvents(ctx sdk.Context, eventCriteria *types.EventCriteria) ([]types.EvaluationResult, error) {
+func (k Keeper) FindQualifyingActions(ctx sdk.Context, action types.RewardAction) ([]types.EvaluationResult, error) {
 	result := ([]types.EvaluationResult)(nil)
+	builder := action.GetBuilder()
 
-	err := k.IterateABCIEvents(ctx, eventCriteria, func(eventType string, attributes *map[string][]byte) error {
-		// This logic is specific to one type of event
-		if eventType == "delegate" {
-			address := (*attributes)["validator"]
-			validator, err := sdk.ValAddressFromBech32(string(address))
-			if err != nil {
-				return err
-			}
-			result = append(result, types.EvaluationResult{
-				EventTypeToSearch: eventType,
-				AttributeKey:      "address",
-				Shares:            1,
-				Validator:         validator,
-			})
-		} else if eventType == "create_validator" {
-			address := (*attributes)["validator"]
-			validator, err := sdk.ValAddressFromBech32(string(address))
-			if err != nil {
-				return err
-			}
-			result = append(result, types.EvaluationResult{
-				EventTypeToSearch: eventType,
-				AttributeKey:      "address",
-				Shares:            1,
-				Validator:         validator,
-			})
-		} else if eventType == "message" {
-			// Update the last result to have the delegator's address
-			address := (*attributes)["sender"]
-			address, err := sdk.AccAddressFromBech32(string(address))
-			if err != nil {
-				return err
-			}
-
-			result[len(result)-1].Address = address
-			result[len(result)-1].Delegator = address
+	err := k.IterateABCIEvents(ctx, builder.GetEventCriteria(), func(eventType string, attributes *map[string][]byte) error {
+		// Add the event to the builder
+		err := builder.AddEvent(eventType, attributes)
+		if err != nil {
+			return err
 		}
+
+		// Not finished building skip attempting to build
+		if !builder.CanBuild() {
+			return nil
+		}
+
+		// Attempt to build
+		action, err := builder.BuildAction()
+		if err != nil {
+			return err
+		}
+		result = append(result, action)
+
+		builder.Reset()
 
 		return nil
 	})

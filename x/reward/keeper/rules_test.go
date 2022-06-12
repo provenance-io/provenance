@@ -203,7 +203,7 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsNonAttributeValueMatch() {
 	suite.Assert().Equal(0, counter, "should not iterate if attribute doesn't match")
 }
 
-func (suite *KeeperTestSuite) TestGetMatchingEventsWithDelegates() {
+func (suite *KeeperTestSuite) TestFindQualifyingActionsWithDelegates() {
 	suite.SetupTest()
 	SetupEventHistoryWithDelegates(suite)
 	criteria := types.NewEventCriteria([]types.ABCIEvent{
@@ -223,7 +223,8 @@ func (suite *KeeperTestSuite) TestGetMatchingEventsWithDelegates() {
 		},
 	})
 
-	events, err := suite.app.RewardKeeper.GetMatchingEvents(suite.ctx, criteria)
+	action := MockAction{Criteria: criteria, Builder: &types.DelegateActionBuilder{}}
+	events, err := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, action)
 	suite.Assert().NoError(err, "should throw no error when handling no events")
 	suite.Assert().Equal(2, len(events), "should find the two delegate events")
 	for _, event := range events {
@@ -233,7 +234,7 @@ func (suite *KeeperTestSuite) TestGetMatchingEventsWithDelegates() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetMatchingEventsWithoutDelegates() {
+func (suite *KeeperTestSuite) TestFindQualifyingActionsWithoutDelegates() {
 	suite.SetupTest()
 	criteria := types.NewEventCriteria([]types.ABCIEvent{
 		{
@@ -251,7 +252,8 @@ func (suite *KeeperTestSuite) TestGetMatchingEventsWithoutDelegates() {
 			Attributes: map[string][]byte{},
 		},
 	})
-	events, err := suite.app.RewardKeeper.GetMatchingEvents(suite.ctx, criteria)
+	action := MockAction{Criteria: criteria, Builder: &types.DelegateActionBuilder{}}
+	events, err := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, action)
 	suite.Assert().NoError(err, "should throw no error when handling no events")
 	suite.Assert().Equal(0, len(events), "should have no events when no delegates are made")
 }
@@ -260,6 +262,8 @@ func (suite *KeeperTestSuite) TestGetMatchingEventsWithoutDelegates() {
 
 type MockAction struct {
 	PassEvaluate bool
+	Criteria     *types.EventCriteria
+	Builder      types.ActionBuilder
 }
 
 func (m MockAction) ActionType() string {
@@ -271,33 +275,37 @@ func (m MockAction) Evaluate(ctx sdk.Context, provider types.KeeperProvider, sta
 }
 
 func (m MockAction) GetEventCriteria() *types.EventCriteria {
-	return nil
+	return m.Criteria
 }
 
-func (suite *KeeperTestSuite) TestFindQualifyingActionsWithNoAbciEvents() {
+func (m MockAction) GetBuilder() types.ActionBuilder {
+	return m.Builder
+}
+
+func (suite *KeeperTestSuite) TestProcessQualifyingActionsWithNoAbciEvents() {
 	suite.SetupTest()
 	program := types.RewardProgram{}
 	action := MockAction{PassEvaluate: false}
-	results := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, &program, action, []types.EvaluationResult{})
+	results := suite.app.RewardKeeper.ProcessQualifyingActions(suite.ctx, &program, action, []types.EvaluationResult{})
 	suite.Assert().Equal(0, len(results), "should have no results for empty list of abci events")
 }
 
-func (suite *KeeperTestSuite) TestFindQualifyingActionsWithNoMatchingResults() {
+func (suite *KeeperTestSuite) TestProcessQualifyingActionsWithNoMatchingResults() {
 	suite.SetupTest()
 	program := types.RewardProgram{}
 	action := MockAction{PassEvaluate: false}
-	results := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, &program, action, []types.EvaluationResult{
+	results := suite.app.RewardKeeper.ProcessQualifyingActions(suite.ctx, &program, action, []types.EvaluationResult{
 		{},
 		{},
 	})
 	suite.Assert().Equal(0, len(results), "should have empty lists when no results match the evaluation")
 }
 
-func (suite *KeeperTestSuite) TestFindQualifyingActionsWithMatchingResults() {
+func (suite *KeeperTestSuite) TestProcessQualifyingActionsWithMatchingResults() {
 	suite.SetupTest()
 	program := types.RewardProgram{}
 	action := MockAction{PassEvaluate: true}
-	results := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, &program, action, []types.EvaluationResult{
+	results := suite.app.RewardKeeper.ProcessQualifyingActions(suite.ctx, &program, action, []types.EvaluationResult{
 		{},
 		{},
 	})
@@ -306,7 +314,7 @@ func (suite *KeeperTestSuite) TestFindQualifyingActionsWithMatchingResults() {
 
 func (suite *KeeperTestSuite) TestFindQualifyingActionsWithNil() {
 	suite.SetupTest()
-	results := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, nil, nil, nil)
+	results := suite.app.RewardKeeper.ProcessQualifyingActions(suite.ctx, nil, nil, nil)
 	suite.Assert().Equal(0, len(results), "should handle nil input")
 }
 

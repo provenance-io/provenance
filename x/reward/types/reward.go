@@ -43,7 +43,7 @@ type (
 	RewardAction interface {
 		ActionType() string
 		Evaluate(ctx sdk.Context, provider KeeperProvider, state AccountState, event EvaluationResult) bool
-		GetEventCriteria() *EventCriteria
+		GetBuilder() ActionBuilder
 	}
 )
 
@@ -375,23 +375,8 @@ func (ad *ActionDelegate) ActionType() string {
 	return ActionTypeDelegate
 }
 
-func (ad *ActionDelegate) GetEventCriteria() *EventCriteria {
-	return NewEventCriteria([]ABCIEvent{
-		{
-			Type: "message",
-			Attributes: map[string][]byte{
-				"module": []byte("staking"),
-			},
-		},
-		{
-			Type:       "delegate",
-			Attributes: map[string][]byte{},
-		},
-		{
-			Type:       "create_validator",
-			Attributes: map[string][]byte{},
-		},
-	})
+func (ad *ActionDelegate) GetBuilder() ActionBuilder {
+	return &DelegateActionBuilder{}
 }
 
 func (ad *ActionDelegate) getTokensFromValidator(ctx sdk.Context, provider KeeperProvider, validatorAddr sdk.ValAddress, delegator sdk.AccAddress) (sdk.Dec, bool) {
@@ -489,13 +474,8 @@ func (atd *ActionTransferDelegations) ValidateBasic() error {
 	return nil
 }
 
-func (atd *ActionTransferDelegations) GetEventCriteria() *EventCriteria {
-	return NewEventCriteria([]ABCIEvent{
-		{
-			Type:       "transfer",
-			Attributes: map[string][]byte{},
-		},
-	})
+func (ad *ActionTransferDelegations) GetBuilder() ActionBuilder {
+	return &DelegateTransferActionBuilder{}
 }
 
 func (atd *ActionTransferDelegations) String() string {
