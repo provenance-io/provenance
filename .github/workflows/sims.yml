@@ -60,7 +60,7 @@ jobs:
         leveldb-*
         rocksdb*.tar.gz
         rocksdb-*
-      go-cache-key-suffix: sims-go1-${{ steps.def-vars.outputs.go-cache-key-hash }}
+      go-cache-key-suffix: sims-go2-${{ steps.def-vars.outputs.go-cache-key-hash }}
       # In Order:
       # * Go binary directory
       # * Go module directory
@@ -376,7 +376,7 @@ jobs:
 
   go-test-single-db:
     # These are tests that use go test to run (see sims.mk), and that we don't care about testing using different database backends.
-    needs: [setup]
+    needs: [setup, build-linux, build-mac]
     if: needs.setup.outputs.should-run
     strategy:
       fail-fast: false
