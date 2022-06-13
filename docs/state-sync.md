@@ -1,14 +1,11 @@
 # State Sync
 
-## What is State sync?
-
 The Provenance 1.10.0+ release comes with Tendermint Core 0.34 which includes support for state sync. State sync allows a new node to join a network by fetching a snapshot of the application state at a recent height vs. fetching and replaying all historical blocks (which can take days). This can reduce the time needed to sync with the network down to minutes.
 
 <!-- TOC -->
-- [What is State sync?](#what-is-state-sync)
-    - [Prerequisites](#prerequisites)
-        - [provenanced binary](#provenanced-binary)
-        - [data directory](#data-directory)
+- [Prerequisites](#prerequisites)
+    - [provenanced binary](#provenanced-binary)
+    - [data directory](#data-directory)
     - [Starting a new node from State Sync](#starting-a-new-node-from-state-sync)
         - [Mainnet](#mainnet)
         - [Testnet](#testnet)
