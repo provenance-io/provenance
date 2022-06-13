@@ -1,0 +1,38 @@
+syntax = "proto3";
+package provenance.msgfees.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/msgfees/types";
+
+option java_package        = "io.provenance.msgfees.v1";
+option java_multiple_files = true;
+
+// Msg defines the msgfees Msg service.
+service Msg {
+  // AssessCustomMsgFee endpoint executes the additional fee charges.
+  // This will only emit the event and not persist it to the keeper.  Fees are handled with the custom msg fee handlers
+  // Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient
+  // for executing contracts
+  rpc AssessCustomMsgFee(MsgAssessCustomMsgFeeRequest) returns (MsgAssessCustomMsgFeeResponse);
+}
+
+// MsgAssessCustomMsgFeeRequest defines an sdk.Msg type
+message MsgAssessCustomMsgFeeRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string name = 1; // optional short name for custom msg fee, this will be emitted as a property of the event
+  cosmos.base.v1beta1.Coin amount = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"amount\""
+  ];                    // amount of additional fee that must be paid
+  string recipient = 3; // optional recipient address, the amount is split 50/50 between recipient and fee module. If
+                        // empty, whole amount goes to fee module
+  string from = 4;      // the signer of the msg
+}
+
+// MsgAssessCustomMsgFeeResponse defines the Msg/AssessCustomMsgFeee response type.
+message MsgAssessCustomMsgFeeResponse {}
