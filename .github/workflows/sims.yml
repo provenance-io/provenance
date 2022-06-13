@@ -51,10 +51,6 @@ jobs:
       # * The directory extracted from the leveldb tarball
       # * The rocksdb repo tarball
       # * The directory extracted from the rocksdb tarball
-      # * Go binary directory
-      # * Go module directory
-      # * Go build cache (Linux)
-      # * Go build cache (Mac)
       db-cache-path: |
         leveldb*.tar.gz
         leveldb-*
