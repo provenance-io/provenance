@@ -187,7 +187,11 @@ jobs:
           brew install cmake sqlite3
       - name: Build cleveldb
         if: steps.db-cache-setup.outputs.cache-hit != 'true'
+        # As of 2022-06-13 (it was a Monday), the macos-latest runners do not have the nproc command.
+        # But have 3 cores according to https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+        # The linux runners have nproc, so we don't need to set the _JOBS in that job.
         run: |
+          export CLEVELDB_JOBS=3
           export CLEVELDB_DO_BUILD='true'
           export CLEVELDB_DO_INSTALL='false'
           export CLEVELDB_DO_CLEANUP='false'
@@ -202,6 +206,7 @@ jobs:
       - name: Build rocksdb
         if: steps.db-cache-setup.outputs.cache-hit != 'true'
         run: |
+          export ROCKSDB_JOBS=3
           export ROCKSDB_DO_BUILD='true'
           export ROCKSDB_DO_INSTALL='false'
           export ROCKSDB_DO_CLEANUP='false'
