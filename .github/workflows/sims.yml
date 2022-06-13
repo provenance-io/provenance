@@ -45,7 +45,7 @@ jobs:
       go-version: 1.17
       should-run: ${{ env.GIT_DIFF }}
       file-prefix: ${{ steps.def-vars.outputs.file-prefix }}
-      db-cache-key-suffix: sims-db1-${{ steps.def-vars.outputs.db-cache-key-hash }}
+      db-cache-key-suffix: sims-db3-${{ steps.def-vars.outputs.db-cache-key-hash }}
       # In Order:
       # * The leveldb repo tarball
       # * The directory extracted from the leveldb tarball
@@ -60,7 +60,7 @@ jobs:
         leveldb-*
         rocksdb*.tar.gz
         rocksdb-*
-      go-cache-key-suffix: sims-go2-${{ steps.def-vars.outputs.go-cache-key-hash }}
+      go-cache-key-suffix: sims-go3-${{ steps.def-vars.outputs.go-cache-key-hash }}
       # In Order:
       # * Go binary directory
       # * Go module directory
