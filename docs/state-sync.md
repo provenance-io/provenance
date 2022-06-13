@@ -70,7 +70,7 @@ cp $PIO_HOME/config/config.toml $PIO_HOME/config/config.toml.orig
 provenanced config set db_backend "cleveldb"
 
 # setup sync node
-# PIO_RPC="$( host rpc-$(( $RANDOM % 3 )).provenance.io | awk '{print $4}' ):26657"
+# PIO_RPC="$( host rpc-$(( $RANDOM % 3 )).test.provenance.io | awk '{print $4}' ):26657"
 # (Temporary workaround due to how the tesntet hosts are currently configured)
 PIO_RPC=34.66.209.228:26657
 
