@@ -40,14 +40,13 @@ cp $PIO_HOME/config/config.toml $PIO_HOME/config/config.toml.orig
 provenanced config set db_backend "cleveldb"
 
 # setup sync node
-# Chose one of three available host: rpc-{0, 1 or 2}.provenance.io
-PIO_RPC=`host rpc-0.provenance.io | awk '{print $4}'`:26657
+PIO_RPC="$( host rpc-$(( $RANDOM % 3 )).provenance.io | awk '{print $4}' ):26657"
 
 # State Sync Configuration Options
-LATEST_HEIGHT=$(curl -s $PIO_RPC/block | jq -r .result.block.header.height); \
-TRUST_HEIGHT=$((LATEST_HEIGHT - 1000)); \
-TRUST_HASH=$(curl -s "$PIO_RPC/block?height=$TRUST_HEIGHT" | jq -r .result.block_id.hash); \
-echo -e "\nPIO_RPC=$PIO_RPC\nLATEST_HEIGH=$LATEST_HEIGHT\nTRUST_HEIGHT=$TRUST_HEIGHT\nTRUST_HASH=$TRUST_HASH\n"
+LATEST_HEIGHT="$(curl -s "$PIO_RPC/block" | jq -r .result.block.header.height)"
+TRUST_HEIGHT="$((LATEST_HEIGHT - 1000))"
+TRUST_HASH="$(curl -s "$PIO_RPC/block?height=$TRUST_HEIGHT" | jq -r .result.block_id.hash)"
+echo -e "PIO_RPC=$PIO_RPC\nLATEST_HEIGH=$LATEST_HEIGHT\nTRUST_HEIGHT=$TRUST_HEIGHT\nTRUST_HASH=$TRUST_HASH\n"
 
 # Enable state sync
 provenanced config set \
@@ -74,13 +73,15 @@ cp $PIO_HOME/config/config.toml $PIO_HOME/config/config.toml.orig
 provenanced config set db_backend "cleveldb"
 
 # setup sync node
+# PIO_RPC="$( host rpc-$(( $RANDOM % 3 )).provenance.io | awk '{print $4}' ):26657"
+# (Temporary workaround due to how the tesntet hosts are currently configured)
 PIO_RPC=34.66.209.228:26657
 
 # State Sync Configuration Options
-LATEST_HEIGHT=$(curl -s $PIO_RPC/block | jq -r .result.block.header.height); \
-TRUST_HEIGHT=$((LATEST_HEIGHT - 1000)); \
-TRUST_HASH=$(curl -s "$PIO_RPC/block?height=$TRUST_HEIGHT" | jq -r .result.block_id.hash); \
-echo -e "\nPIO_RPC=$PIO_RPC\nLATEST_HEIGH=$LATEST_HEIGHT\nTRUST_HEIGHT=$TRUST_HEIGHT\nTRUST_HASH=$TRUST_HASH\n"
+LATEST_HEIGHT="$(curl -s "$PIO_RPC/block" | jq -r .result.block.header.height)"
+TRUST_HEIGHT="$((LATEST_HEIGHT - 1000))"
+TRUST_HASH="$(curl -s "$PIO_RPC/block?height=$TRUST_HEIGHT" | jq -r .result.block_id.hash)"
+echo -e "PIO_RPC=$PIO_RPC\nLATEST_HEIGH=$LATEST_HEIGHT\nTRUST_HEIGHT=$TRUST_HEIGHT\nTRUST_HASH=$TRUST_HASH\n"
 
 # Enable state sync
 provenanced config set \
