@@ -55,6 +55,7 @@ func (s *SimulateTestSuite) SetupTest() {
 		Denom:  "stake",
 		Amount: sdk.NewInt(1000),
 	}
+	msgfeestypes.DefaultFloorGasPrice = s.floorGasPrice
 
 	s.sendMsgTypeUrl = "/cosmos.bank.v1beta1.MsgSend"
 	s.sendMsgAdditionalFee = sdk.NewCoin("stake", sdk.NewInt(1))

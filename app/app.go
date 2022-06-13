@@ -123,6 +123,7 @@ import (
 	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 	msgfeesmodule "github.com/provenance-io/provenance/x/msgfees/module"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
+	msgfeeswasm "github.com/provenance-io/provenance/x/msgfees/wasm"
 	"github.com/provenance-io/provenance/x/name"
 	nameclient "github.com/provenance-io/provenance/x/name/client"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
@@ -478,6 +479,7 @@ func New(
 	encoderRegistry.RegisterEncoder(attributetypes.RouterKey, attributewasm.Encoder)
 	encoderRegistry.RegisterEncoder(markertypes.RouterKey, markerwasm.Encoder)
 	encoderRegistry.RegisterEncoder(metadatatypes.RouterKey, metadatawasm.Encoder)
+	encoderRegistry.RegisterEncoder(msgfeestypes.RouterKey, msgfeeswasm.Encoder)
 
 	// Init CosmWasm query integrations
 	querierRegistry := provwasm.NewQuerierRegistry()

@@ -343,6 +343,7 @@
     - [AddMsgFeeProposal](#provenance.msgfees.v1.AddMsgFeeProposal)
     - [RemoveMsgFeeProposal](#provenance.msgfees.v1.RemoveMsgFeeProposal)
     - [UpdateMsgFeeProposal](#provenance.msgfees.v1.UpdateMsgFeeProposal)
+    - [UpdateNhashPerUsdMilProposal](#provenance.msgfees.v1.UpdateNhashPerUsdMilProposal)
   
 - [provenance/msgfees/v1/query.proto](#provenance/msgfees/v1/query.proto)
     - [CalculateTxFeesRequest](#provenance.msgfees.v1.CalculateTxFeesRequest)
@@ -353,6 +354,12 @@
     - [QueryParamsResponse](#provenance.msgfees.v1.QueryParamsResponse)
   
     - [Query](#provenance.msgfees.v1.Query)
+  
+- [provenance/msgfees/v1/tx.proto](#provenance/msgfees/v1/tx.proto)
+    - [MsgAssessCustomMsgFeeRequest](#provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest)
+    - [MsgAssessCustomMsgFeeResponse](#provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse)
+  
+    - [Msg](#provenance.msgfees.v1.Msg)
   
 - [provenance/name/v1/name.proto](#provenance/name/v1/name.proto)
     - [CreateRootNameProposal](#provenance.name.v1.CreateRootNameProposal)
@@ -852,7 +859,7 @@ MsgUpdateAttributeResponse defines the Msg/Vote response type.
 <a name="provenance.attribute.v1.Msg"></a>
 
 ### Msg
-Msg defines the bank Msg service.
+Msg defines the attribute module Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
@@ -5171,6 +5178,7 @@ EventMsgFee final event property for msg fee on type
 | `msg_type` | [string](#string) |  |  |
 | `count` | [string](#string) |  |  |
 | `total` | [string](#string) |  |  |
+| `recipient` | [string](#string) |  |  |
 
 
 
@@ -5220,6 +5228,7 @@ Params defines the set of params for the msgfees module.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | constant used to calculate fees when gas fees shares denom with msg fee |
+| `nhash_per_usd_mil` | [uint64](#uint64) |  | total nhash per usd mil for converting usd to nhash |
 
 
 
@@ -5321,6 +5330,23 @@ UpdateMsgFeeProposal defines a governance proposal to update a current msg based
 | `description` | [string](#string) |  |  |
 | `msg_type_url` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.UpdateNhashPerUsdMilProposal"></a>
+
+### UpdateNhashPerUsdMilProposal
+UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is number of nhash per usd mil |
 
 
 
@@ -5449,6 +5475,62 @@ Query defines the gRPC querier service for marker module.
 | `Params` | [QueryParamsRequest](#provenance.msgfees.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.msgfees.v1.QueryParamsResponse) | Params queries the parameters for x/msgfees | GET|/provenance/msgfees/v1/params|
 | `QueryAllMsgFees` | [QueryAllMsgFeesRequest](#provenance.msgfees.v1.QueryAllMsgFeesRequest) | [QueryAllMsgFeesResponse](#provenance.msgfees.v1.QueryAllMsgFeesResponse) | Query all Msgs which have fees associated with them. | GET|/provenance/msgfees/v1/all|
 | `CalculateTxFees` | [CalculateTxFeesRequest](#provenance.msgfees.v1.CalculateTxFeesRequest) | [CalculateTxFeesResponse](#provenance.msgfees.v1.CalculateTxFeesResponse) | CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees. | POST|/provenance/tx/v1/calculate_msg_based_fee|
+
+ <!-- end services -->
+
+
+
+<a name="provenance/msgfees/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/msgfees/v1/tx.proto
+
+
+
+<a name="provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest"></a>
+
+### MsgAssessCustomMsgFeeRequest
+MsgAssessCustomMsgFeeRequest defines an sdk.Msg type
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | optional short name for custom msg fee, this will be emitted as a property of the event |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | amount of additional fee that must be paid |
+| `recipient` | [string](#string) |  | optional recipient address, the amount is split 50/50 between recipient and fee module. If |
+| `from` | [string](#string) |  | empty, whole amount goes to fee module
+
+the signer of the msg |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse"></a>
+
+### MsgAssessCustomMsgFeeResponse
+MsgAssessCustomMsgFeeResponse defines the Msg/AssessCustomMsgFeee response type.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.msgfees.v1.Msg"></a>
+
+### Msg
+Msg defines the msgfees Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `AssessCustomMsgFee` | [MsgAssessCustomMsgFeeRequest](#provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest) | [MsgAssessCustomMsgFeeResponse](#provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse) | AssessCustomMsgFee endpoint executes the additional fee charges. This will only emit the event and not persist it to the keeper. Fees are handled with the custom msg fee handlers Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient for executing contracts | |
 
  <!-- end services -->
 

@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -15,6 +16,11 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&AddMsgFeeProposal{},
 		&UpdateMsgFeeProposal{},
 		&RemoveMsgFeeProposal{},
+		&UpdateNhashPerUsdMilProposal{},
+	)
+	registry.RegisterImplementations(
+		(*sdk.Msg)(nil),
+		&MsgAssessCustomMsgFeeRequest{},
 	)
 }
 

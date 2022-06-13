@@ -29,7 +29,7 @@ func TestProposalContents(t *testing.T) {
 
 	// execute ProposalContents function
 	weightedProposalContent := simulation.ProposalContents(keeper.NewKeeper(app.AppCodec(), app.GetKey(types.ModuleName),
-		app.GetSubspace(types.ModuleName), "", "nhash", nil, nil))
+		app.GetSubspace(types.ModuleName), "", types.NhashDenom, nil, nil))
 	require.Len(t, weightedProposalContent, 2)
 
 	w0 := weightedProposalContent[0]
