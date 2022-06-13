@@ -12,7 +12,7 @@ if [[ "$1" == '-h' || "$1" == '--help' || "$1" == 'help' ]]; then
     echo 'The arguments can also be defined using environment variables:'
     echo "  CLEVELDBDB_VERSION for the <version>. Default is $DEFAULT_CLEVELDB_VERSION."
     echo 'Additional parameters definable using environment variables:'
-    echo "  CLEVELDB_JOBS is the number of parallel jobs for make to use. Default is the result of nproc (=$( nproc ))."
+    echo "  CLEVELDB_JOBS is the number of parallel jobs for make to use. Default is the result of nproc (=$( nproc )), or 1 if nproc isn't availble."
     echo '  CLEVELDB_DO_BUILD controls whether to build. Default is true.'
     echo '  CLEVELDB_DO_INSTALL controls whether to install. Default is true.'
     echo "  CLEVELDB_SUDO controls whether to use sudo when installing the built libraries. Default is $can_sudo."
@@ -32,7 +32,11 @@ if [[ -n "$CLEVELDB_VERSION" && "$CLEVELDB_VERSION" =~ ^v ]]; then
 fi
 
 if [[ -z "$CLEVELDB_JOBS" ]]; then
-    CLEVELDB_JOBS="$( nproc )"
+    if command -v nproc > /dev/null 2>&1; then
+        CLEVELDB_JOBS="$( nproc )"
+    else
+        CLEVELDB_JOBS=1
+    fi
 fi
 
 if [[ -n "$CLEVELDB_JOBS" && ( "$CLEVELDB_JOBS" =~ [^[:digit:]] || $CLEVELDB_JOBS -lt '1' ) ]]; then
