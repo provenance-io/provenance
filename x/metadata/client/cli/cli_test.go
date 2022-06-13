@@ -30,6 +30,7 @@ import (
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type IntegrationCLITestSuite struct {
@@ -444,6 +445,7 @@ owner: %s`,
 	genesisState[metadatatypes.ModuleName] = metadataDataBz
 
 	cfg.GenesisState = genesisState
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewCoin("atom", sdk.NewInt(0))
 
 	s.cfg = cfg
 	cfg.ChainID = antewrapper.SimAppChainID

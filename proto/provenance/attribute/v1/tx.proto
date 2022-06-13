@@ -9,7 +9,7 @@ option java_multiple_files = true;
 import "gogoproto/gogo.proto";
 import "provenance/attribute/v1/attribute.proto";
 
-// Msg defines the bank Msg service.
+// Msg defines the attribute module Msg service.
 service Msg {
   // AddAttribute defines a method to verify a particular invariance.
   rpc AddAttribute(MsgAddAttributeRequest) returns (MsgAddAttributeResponse);

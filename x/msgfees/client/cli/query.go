@@ -25,6 +25,7 @@ func GetQueryCmd() *cobra.Command {
 	}
 	queryCmd.AddCommand(
 		AllMsgFeesCmd(),
+		ListParamsCmd(),
 	)
 	return queryCmd
 }
@@ -60,8 +61,39 @@ func AllMsgFeesCmd() *cobra.Command {
 		},
 	}
 
-	flags.AddPaginationFlagsToCmd(cmd, "markers")
+	flags.AddPaginationFlagsToCmd(cmd, "msgfees")
 	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// ListParamsCmd is the CLI command for listing all params.
+func ListParamsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "params",
+		Aliases: []string{"p"},
+		Short:   "List the msg fees params on the Provenance Blockchain",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			if err != nil {
+				return err
+			}
+
+			var response *types.QueryParamsResponse
+			if response, err = queryClient.Params(
+				context.Background(),
+				&types.QueryParamsRequest{},
+			); err != nil {
+				fmt.Printf("failed to query msg fees params: %s\n", err.Error())
+				return nil
+			}
+			return clientCtx.PrintProto(response)
+		},
+	}
 	return cmd
 }
 

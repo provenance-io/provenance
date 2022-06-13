@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
@@ -17,7 +18,7 @@ import (
 // CONTRACT: Tx must implement FeeTx interface to use ProvenanceDeductFeeDecorator
 type ProvenanceDeductFeeDecorator struct {
 	ak             authante.AccountKeeper
-	bankKeeper     types.BankKeeper
+	bankKeeper     bankkeeper.Keeper
 	feegrantKeeper authante.FeegrantKeeper
 	msgFeeKeeper   msgfeestypes.MsgFeesKeeper
 }
@@ -27,7 +28,7 @@ var (
 	AttributeKeyAdditionalFee = "additionalfee"
 )
 
-func NewProvenanceDeductFeeDecorator(ak authante.AccountKeeper, bk types.BankKeeper, fk msgfeestypes.FeegrantKeeper, mbfk msgfeestypes.MsgFeesKeeper) ProvenanceDeductFeeDecorator {
+func NewProvenanceDeductFeeDecorator(ak authante.AccountKeeper, bk bankkeeper.Keeper, fk msgfeestypes.FeegrantKeeper, mbfk msgfeestypes.MsgFeesKeeper) ProvenanceDeductFeeDecorator {
 	return ProvenanceDeductFeeDecorator{
 		ak:             ak,
 		bankKeeper:     bk,
@@ -53,21 +54,20 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "GasMeter not a FeeGasMeter")
 	}
 
-	deductFeesFrom := feePayer
+	payerAccount := feePayer
 
 	// deduct the fees
-	// Compute msg additionalFees
+	fee := feeTx.GetFee()
 	msgs := feeTx.GetMsgs()
-	additionalFees, errFromCalculateAdditionalFeesToBePaid := CalculateAdditionalFeesToBePaid(ctx, dfd.msgFeeKeeper, msgs...)
+	feeDist, errFromCalculateAdditionalFeesToBePaid := CalculateAdditionalFeesToBePaid(ctx, dfd.msgFeeKeeper, msgs...)
 	if errFromCalculateAdditionalFeesToBePaid != nil {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, errFromCalculateAdditionalFeesToBePaid.Error())
 	}
-	feeToDeduct := feeTx.GetFee()
-	if additionalFees != nil && len(additionalFees) > 0 {
+	if feeDist != nil && len(feeDist.TotalAdditionalFees) > 0 {
 		var hasNeg bool
-		feeToDeduct, hasNeg = feeToDeduct.SafeSub(additionalFees)
+		_, hasNeg = fee.SafeSub(feeDist.TotalAdditionalFees)
 		if hasNeg && !simulate {
-			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", feeToDeduct)
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", fee)
 		}
 	}
 
@@ -75,27 +75,28 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		if dfd.feegrantKeeper == nil {
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
 		} else if !feeGranter.Equals(feePayer) {
-			err = dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, feeToDeduct, tx.GetMsgs())
+			err = dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, tx.GetMsgs())
 
 			if err != nil {
 				return ctx, sdkerrors.Wrapf(err, "%q not allowed to pay fees from %q", feeGranter, feePayer)
 			}
 		}
 
-		deductFeesFrom = feeGranter
+		payerAccount = feeGranter
 	}
 
-	deductFeesFromAcc := dfd.ak.GetAccount(ctx, deductFeesFrom)
+	deductFeesFromAcc := dfd.ak.GetAccount(ctx, payerAccount)
 	if deductFeesFromAcc == nil {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %q does not exist", deductFeesFrom)
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %q does not exist", payerAccount)
 	}
-	// deduct total fees (base fee + additional fee)
-	if !feeToDeduct.IsZero() && !simulate {
-		err = DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, feeToDeduct)
+	// deduct base fee from account
+	baseFeeToConsume := CalculateBaseFee(ctx, feeTx, dfd.msgFeeKeeper)
+	if !baseFeeToConsume.IsZero() && !simulate {
+		err = DeductBaseFees(dfd.bankKeeper, ctx, deductFeesFromAcc, baseFeeToConsume)
 		if err != nil {
 			return ctx, err
 		}
-		feeGasMeter.ConsumeBaseFee(feeToDeduct)
+		feeGasMeter.ConsumeBaseFee(baseFeeToConsume)
 	}
 
 	events := sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
@@ -106,16 +107,35 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	return next(ctx, tx, simulate)
 }
 
-// DeductFees deducts fees from the given account.
-func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc types.AccountI, fees sdk.Coins) error {
-	if !fees.IsValid() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", fees)
+func CalculateBaseFee(ctx sdk.Context, feeTx sdk.FeeTx, msgfeekeeper msgfeestypes.MsgFeesKeeper) sdk.Coins {
+	if !isTestContext(ctx) {
+		gasWanted := feeTx.GetGas()
+		floorPrice := msgfeekeeper.GetFloorGasPrice(ctx)
+		amount := msgfeekeeper.GetFloorGasPrice(ctx).Amount.Mul(sdk.NewIntFromUint64(gasWanted))
+		baseFeeToDeduct := sdk.NewCoins(sdk.NewCoin(floorPrice.Denom, amount))
+		return baseFeeToDeduct
+	}
+	return DetermineTestBaseFeeAmount(ctx, feeTx)
+}
+
+// DetermineTestBaseFeeAmount determines the type of test that is running.  ChainID = "" is a simple unit
+// We need this because of how tests are setup using atom and we have nhash specific code for msgfees
+func DetermineTestBaseFeeAmount(ctx sdk.Context, feeTx sdk.FeeTx) sdk.Coins {
+	if len(ctx.ChainID()) == 0 {
+		return feeTx.GetFee()
+	}
+	return sdk.NewCoins()
+}
+
+// DeductBaseFees deducts fees from the given account.
+func DeductBaseFees(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc types.AccountI, fee sdk.Coins) error {
+	if !fee.IsValid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", fee)
 	}
 
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fees)
+	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fee)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 	}
-
 	return nil
 }
