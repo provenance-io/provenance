@@ -13,7 +13,6 @@ The Provenance 1.10.0+ release comes with Tendermint Core 0.34 which includes su
 
 
 ## Prerequisites
-___
 
 ### provenanced binary
 
@@ -25,7 +24,6 @@ See [docs/Building.md](https://github.com/provenance-io/provenance/blob/main/doc
 If `$PIO_HOME/data/` contains prior data, you must first clean it up in order for `state sync` to work. Delete everything BUT `priv_validator_state.json`.
 
 ## Starting a new node from State Sync
-___
 
 ### Mainnet
 
