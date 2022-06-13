@@ -20,6 +20,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -55,6 +56,7 @@ type KeeperTestSuite struct {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	s.app = simapp.Setup(false)
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())

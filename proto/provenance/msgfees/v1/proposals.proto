@@ -54,3 +54,14 @@ message RemoveMsgFeeProposal {
 
   string msg_type_url = 3;
 }
+
+// UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
+message UpdateNhashPerUsdMilProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title       = 1;
+  string description = 2;
+  // nhash_per_usd_mil is number of nhash per usd mil
+  uint64 nhash_per_usd_mil = 3;
+}

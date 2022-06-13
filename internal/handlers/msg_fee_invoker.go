@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
@@ -12,14 +13,14 @@ import (
 
 type MsgFeeInvoker struct {
 	msgFeeKeeper   msgfeestypes.MsgFeesKeeper
-	bankKeeper     msgfeestypes.BankKeeper
+	bankKeeper     bankkeeper.Keeper
 	accountKeeper  msgfeestypes.AccountKeeper
 	feegrantKeeper msgfeestypes.FeegrantKeeper
 	txDecoder      sdk.TxDecoder
 }
 
 // NewMsgFeeInvoker concrete impl of how to charge Msg Based Fees
-func NewMsgFeeInvoker(bankKeeper msgfeestypes.BankKeeper, accountKeeper msgfeestypes.AccountKeeper,
+func NewMsgFeeInvoker(bankKeeper bankkeeper.Keeper, accountKeeper msgfeestypes.AccountKeeper,
 	feegrantKeeper msgfeestypes.FeegrantKeeper, msgFeeKeeper msgfeestypes.MsgFeesKeeper, decoder sdk.TxDecoder) MsgFeeInvoker {
 	return MsgFeeInvoker{
 		msgFeeKeeper,
@@ -100,7 +101,8 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins
 			}
 
 			if len(chargedFees) > 0 && chargedFees.IsAllPositive() {
-				err = afd.msgFeeKeeper.DeductFees(afd.bankKeeper, ctx, deductFeesFromAcc, chargedFees)
+				// deduct fees from chargedFees and distribute
+				err = afd.msgFeeKeeper.DeductFeesDistributions(afd.bankKeeper, ctx, deductFeesFromAcc, chargedFees, feeGasMeter.FeeConsumedDistributions())
 				if err != nil {
 					return nil, nil, err
 				}
