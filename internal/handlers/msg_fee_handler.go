@@ -5,6 +5,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 

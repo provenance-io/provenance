@@ -36,8 +36,6 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins
 	eventsToReturn := sdk.Events{}
 
 	if ctx.TxBytes() != nil && len(ctx.TxBytes()) != 0 {
-		originalGasMeter := ctx.GasMeter()
-
 		tx, err := afd.txDecoder(ctx.TxBytes())
 		if err != nil {
 			panic(fmt.Errorf("error in chargeFees() while getting txBytes: %w", err))
@@ -123,8 +121,6 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins
 				eventsToReturn = append(eventsToReturn, msgFeesSummaryEvent)
 			}
 		}
-
-		ctx = ctx.WithGasMeter(originalGasMeter)
 	}
 
 	return chargedFees, eventsToReturn, nil
