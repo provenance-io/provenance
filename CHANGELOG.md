@@ -45,6 +45,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add `mango` upgrade handler.
 
+---
+
 ## [v1.11.0](https://github.com/provenance-io/provenance/releases/tag/v1.11.0) - 2022-06-13
 
 ### Features
