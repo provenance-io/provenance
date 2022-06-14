@@ -17,9 +17,9 @@ var (
 	_ sdk.Msg = &MsgAssessCustomMsgFeeRequest{}
 )
 
-func NewMsgFee(msgTypeURL string, additionalFee sdk.Coin) MsgFee {
+func NewMsgFee(msgTypeURL string, additionalFee sdk.Coin, recipient string) MsgFee {
 	return MsgFee{
-		MsgTypeUrl: msgTypeURL, AdditionalFee: additionalFee,
+		MsgTypeUrl: msgTypeURL, AdditionalFee: additionalFee, Recipient: recipient,
 	}
 }
 
@@ -33,6 +33,12 @@ func (msg *MsgFee) ValidateBasic() error {
 	}
 	if err := msg.AdditionalFee.Validate(); err == nil {
 		return err
+	}
+	if len(msg.Recipient) != 0 {
+		_, err := sdk.AccAddressFromBech32(msg.Recipient)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

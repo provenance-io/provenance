@@ -5213,6 +5213,7 @@ it consists of two parts
 | ----- | ---- | ----- | ----------- |
 | `msg_type_url` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | additional_fee can pay in any Coin( basically a Denom and Amount, Amount can be zero) |
+| `recipient` | [string](#string) |  | optional recipient address, the amount is split 50/50 between recipient and fee module. If |
 
 
 
@@ -5295,6 +5296,7 @@ AddMsgFeeProposal defines a governance proposal to add additional msg based fee
 | `description` | [string](#string) |  |  |
 | `msg_type_url` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `recipient` | [string](#string) |  | optional recipient address, the amount is split 50/50 between recipient and fee module. If |
 
 
 
@@ -5330,6 +5332,7 @@ UpdateMsgFeeProposal defines a governance proposal to update a current msg based
 | `description` | [string](#string) |  |  |
 | `msg_type_url` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `recipient` | [string](#string) |  | optional recipient address, the amount is split 50/50 between recipient and fee module. If |
 
 
 

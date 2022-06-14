@@ -403,7 +403,7 @@ func (suite *AnteTestSuite) TestCalculateAdditionalFeesToBePaid() {
 	oneHash := sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_000_000_000)
 	twoHash := sdk.NewInt64Coin(msgfeestypes.NhashDenom, 2_000_000_000)
 	msgSend := banktypes.NewMsgSend(someAddress, someAddress, sdk.NewCoins(oneHash))
-	suite.app.MsgFeesKeeper.SetMsgFee(suite.ctx, msgfeestypes.NewMsgFee(sendTypeURL, oneHash))
+	suite.app.MsgFeesKeeper.SetMsgFee(suite.ctx, msgfeestypes.NewMsgFee(sendTypeURL, oneHash, ""))
 
 	result, err := antewrapper.CalculateAdditionalFeesToBePaid(suite.ctx, suite.app.MsgFeesKeeper, msgSend)
 	suite.Require().NoError(err)
@@ -442,7 +442,7 @@ func (suite *AnteTestSuite) TestCalculateAdditionalFeesToBePaid() {
 	suite.Assert().Equal(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 500_000_000), result.RecipientDistributions["recipient1"])
 	suite.Assert().Equal(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 500_000_000), result.RecipientDistributions["recipient2"])
 
-	suite.app.MsgFeesKeeper.SetMsgFee(suite.ctx, msgfeestypes.NewMsgFee(assessFeeTypeURL, oneHash))
+	suite.app.MsgFeesKeeper.SetMsgFee(suite.ctx, msgfeestypes.NewMsgFee(assessFeeTypeURL, oneHash, ""))
 	result, err = antewrapper.CalculateAdditionalFeesToBePaid(suite.ctx, suite.app.MsgFeesKeeper, msgSend, &assessFee)
 	suite.Require().NoError(err)
 	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 3_000_000_000)), result.TotalAdditionalFees)
