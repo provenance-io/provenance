@@ -37,6 +37,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+---
+
+## [v1.11.1-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.11.1-rc1) - 2022-06-14
+
+### Bug Fixes
+
+* Add `mango` upgrade handler.
+
+---
+
+## [v1.11.0](https://github.com/provenance-io/provenance/releases/tag/v1.11.0) - 2022-06-13
+
 ### Features
 
 * Add CONTROLLER, and VALIDATOR PartyTypes for contract execution. [\#824](https://github.com/provenance-io/provenance/pull/824])
