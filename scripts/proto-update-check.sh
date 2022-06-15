@@ -6,8 +6,12 @@ set -ex
 # Warn user to update third_party libraries and push again.
 #
 
-regex='github.com/cosmos/cosmos-sdk|github.com/tendermint/tendermint'
-output=$(git diff ..origin/main -- go.mod | grep -E -c "$regex" || true)
+if [ "$1" == '--force' ]; then
+    output='1'
+else
+    regex='github.com/cosmos/cosmos-sdk|github.com/tendermint/tendermint'
+    output=$(git diff ..origin/main -- go.mod | grep -E -c "$regex" || true)
+fi
 
 # single brackets because the github runners don't have the enhanced (double-bracket) version.
 if [ "$output" -gt "0" ]; then
@@ -21,8 +25,12 @@ if [ "$output" -gt "0" ]; then
 
   DIFF=$( diff -rq -x '*.yaml' --exclude=google "$dir/build/third_party" "$dir/third_party" || true )
   if [ -n "$DIFF" ]; then
-    printf '\n\nDiff log:\n\n%s\n\n' "$DIFF"
     cat << EOF >&2
+
+Diff log:
+
+$DIFF
+
 Found differences in Protobuf files.
 This indicates a version change was detected in one of the following libraries:
   - github.com/cosmos/cosmos-sdk
