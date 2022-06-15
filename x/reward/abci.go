@@ -6,6 +6,7 @@ import (
 	"github.com/provenance-io/provenance/x/reward/keeper"
 )
 
+// BeginBlocker called every block
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	k.Update(ctx)
 	k.Cleanup(ctx)
