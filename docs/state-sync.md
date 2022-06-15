@@ -28,6 +28,13 @@ If `$PIO_HOME/data/` contains prior data, you must first clean it up in order fo
 ### Mainnet
 
 ```  
+# Initialization is required ONLY on first time setups. Otherwise, skip this step.
+mkdir ~/.provenanced
+export PIO_HOME=~/.provenanced
+provenanced init choose-a-moniker --chain-id pio-mainnet-1
+curl https://raw.githubusercontent.com/provenance-io/mainnet/main/pio-mainnet-1/genesis.json > genesis.json
+mv genesis.json $PIO_HOME/config
+
 # backup config
 cp $PIO_HOME/config/config.toml $PIO_HOME/config/config.toml.orig
 
@@ -61,6 +68,13 @@ provenanced start --x-crisis-skip-assert-invariants --log_level=info &>> pio.log
 ### Testnet
 
 ```
+# Initialization is required ONLY on first time setups. Otherwise, skip this step.
+mkdir ~/.provenanced
+export PIO_HOME=~/.provenanced
+provenanced init --testnet choose-a-moniker --chain-id pio-testnet-1
+curl https://raw.githubusercontent.com/provenance-io/testnet/main/pio-testnet-1/genesis.json > genesis.json
+mv genesis.json $PIO_HOME/config
+
 # backup config
 cp $PIO_HOME/config/config.toml $PIO_HOME/config/config.toml.orig
 
