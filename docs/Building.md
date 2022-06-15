@@ -10,6 +10,8 @@
   - [Building or Installing `provenanced`](#building-or-installing-provenanced)
   - [Build Options](#build-options)
   - [Building `dbmigrate`](#building-dbmigrate)
+  - [Initializing your node](#initializing-your-node)
+    - [Syncing your node with the Provenance network](#syncing-your-node-with-the-provenance-network)
 
 
 
@@ -192,3 +194,35 @@ The dbmigrate program will:
 
 The `dbmigrate` utility uses the same configs, environment variables, and flags as `provenanced`.
 For example, if you have the environment variable PIO_HOME defined, then `dbmigrate` will use that as the `--home` directory (unless a `--home` is provided in the command line arguments).
+
+## Initializing your node
+
+Create home directory for your node:
+```
+// or directory of your choosing.
+$ mkdir ~/.provenanced
+$ export PIO_HOME=~/.provenanced
+```
+
+Initialize your node
+
+`mainnet`:
+```
+$ provenanced init choose-a-moniker --chain-id pio-mainnet-1
+$ curl https://raw.githubusercontent.com/provenance-io/mainnet/main/pio-mainnet-1/genesis.json> genesis.json
+$ mv genesis.json $PIO_HOME/config
+```
+
+`testnet`:
+```
+$ provenanced init --testnet choose-a-moniker --chain-id pio-testnet-1
+$ curl https://raw.githubusercontent.com/provenance-io/testnet/main/pio-testnet-1/genesis.json > genesis.json
+$ mv genesis.json $PIO_HOME/config
+```
+
+### Syncing your node with the Provenance network
+
+To sync up with the Provenance network, see [docs/state-sync.md](https://github.com/provenance-io/provenance/blob/main/docs/state-sync.md).
+Alternatively, you can download a `quicksync` file, extract it in `$PIO_HOME` and start your node.
+- `mainnet` [provenance.io/quicksync](https://provenance.io/quicksync)
+- `testnet` [test.provenance.io/quicksync](https://test.provenance.io/quicksync)

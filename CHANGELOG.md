@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Bug Fixes
+
+* Add initialization steps to `docs/Building.md` instructions [#869](https://github.com/provenance-io/provenance/issues/869)
+
 ---
 
 ## [v1.11.1-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.11.1-rc1) - 2022-06-14
