@@ -35,7 +35,7 @@ var handlers = map[string]appUpgrade{
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			return versionMap, nil
 		},
-	}, // upgrade for 1.11.1
+	}, // upgrade for 1.11.x
 	// TODO - Add new upgrade definitions here.
 }
 
