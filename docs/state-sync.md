@@ -69,6 +69,7 @@ provenanced start --x-crisis-skip-assert-invariants --log_level=info &>> pio.log
 ```
 # Initialization is required ONLY on first time setups. Otherwise, skip this step.
 export PIO_HOME=~/.provenanced
+# Change "choose-a-moniker" below to your own moniker, e.g. pio-node-1
 provenanced init --testnet choose-a-moniker --chain-id pio-testnet-1
 curl https://raw.githubusercontent.com/provenance-io/testnet/main/pio-testnet-1/genesis.json > "$PIO_HOME/config/genesis.json"
 
