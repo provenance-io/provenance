@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Bug Fixes
+
+* Add new `msgfees` `NhashPerUsdMil`  default param to param space store on upgrade (PR [#875](https://github.com/provenance-io/provenance/issues/875))
+
 ---
 
 ## [v1.11.1-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.11.1-rc1) - 2022-06-14

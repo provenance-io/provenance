@@ -7,14 +7,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
-	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
-	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
 var (
@@ -34,38 +27,16 @@ type appUpgrade struct {
 }
 
 var handlers = map[string]appUpgrade{
-	"lava":  {}, // upgrade for 1.10.0
-	"mango": {}, // upgrade for 1.11.1
+	"lava": {}, // upgrade for 1.10.0
+	"mango": {
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+			params := app.MsgFeesKeeper.GetParams(ctx)
+			app.MsgFeesKeeper.SetParams(ctx, params)
+			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+			return versionMap, nil
+		},
+	}, // upgrade for 1.11.x
 	// TODO - Add new upgrade definitions here.
-}
-
-// AddMsgBasedFees adds pio specific msg based fees for BindName, AddMarker, AddAttribute, WriteScope, P8EMemorializeContract requests for v1.8.0 upgrade
-func AddMsgBasedFees(app *App, ctx sdk.Context) error {
-	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgBindNameRequest (1/6)")
-	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&nametypes.MsgBindNameRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
-		return err
-	}
-	ctx.Logger().Info("Adding a 100 hash (100,000,000,000 nhash) msg fee to MsgAddMarkerRequest (2/6)")
-	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}), sdk.NewCoin("nhash", sdk.NewInt(100_000_000_000)))); err != nil {
-		return err
-	}
-	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgAddAttributeRequest (3/6)")
-	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&attributetypes.MsgAddAttributeRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
-		return err
-	}
-	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgWriteScopeRequest (4/6)")
-	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&metadatatypes.MsgWriteScopeRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
-		return err
-	}
-	ctx.Logger().Info("Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgP8EMemorializeContractRequest (5/6)")
-	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&metadatatypes.MsgP8EMemorializeContractRequest{}), sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)))); err != nil {
-		return err
-	}
-	ctx.Logger().Info("Adding a 100 hash (100,000,000,000 nhash) msg fee to MsgSubmitProposal (6/6)")
-	if err := app.MsgFeesKeeper.SetMsgFee(ctx, msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{}), sdk.NewCoin("nhash", sdk.NewInt(100_000_000_000)))); err != nil {
-		return err
-	}
-	return nil
 }
 
 func InstallCustomUpgradeHandlers(app *App) {
