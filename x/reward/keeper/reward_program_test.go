@@ -35,8 +35,8 @@ func (suite *KeeperTestSuite) TestNewRewardProgram() {
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 100000), program.GetCoin(), "coin should match input")
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 1000), program.GetMaxRewardByAddress(), "max reward by address should match")
 	suite.Assert().Equal(time, program.GetProgramStartTime(), "program start time should match input")
-	suite.Assert().Equal(uint64(60*60), program.GetEpochSeconds(), "epoch seconds should match input")
-	suite.Assert().Equal(uint64(3), program.GetNumberEpochs(), "number of epochs should match input")
+	suite.Assert().Equal(uint64(60*60), program.GetSubPeriodSeconds(), "sub period seconds should match input")
+	suite.Assert().Equal(uint64(3), program.GetSubPeriods(), "sub periods should match input")
 	suite.Assert().Equal("Criteria", program.GetEligibilityCriteria().Name, "eligibility criteria should match input")
 	suite.Assert().Equal(0, len(program.GetQualifyingActions()), "qualifying actions should match input")
 }
@@ -73,8 +73,8 @@ func (suite *KeeperTestSuite) TestGetSetRewardProgram() {
 	suite.Assert().Equal(program.GetCoin(), program2.GetCoin(), "coin should match")
 	suite.Assert().Equal(program.GetMaxRewardByAddress(), program2.GetMaxRewardByAddress(), "max reward by address should")
 	suite.Assert().Equal(program.GetProgramStartTime(), program2.GetProgramStartTime(), "program start time should match")
-	suite.Assert().Equal(program.GetEpochSeconds(), program2.GetEpochSeconds(), "epoch seconds should match")
-	suite.Assert().Equal(program.GetNumberEpochs(), program2.GetNumberEpochs(), "number of epochs should match")
+	suite.Assert().Equal(program.GetSubPeriodSeconds(), program2.GetSubPeriodSeconds(), "sub period seconds should match")
+	suite.Assert().Equal(program.GetSubPeriods(), program2.GetSubPeriods(), "number of sub periods should match")
 	suite.Assert().Equal(program.GetEligibilityCriteria().Name, program2.GetEligibilityCriteria().Name, "eligibility criteria should match")
 	suite.Assert().Equal(len(program.GetQualifyingActions()), len(program2.GetQualifyingActions()), "qualifying actions should match")
 }

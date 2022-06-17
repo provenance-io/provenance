@@ -22,7 +22,7 @@ const (
 	MaxTitleLength       int = 140
 )
 
-var EpochTypeToSeconds = map[string]uint64{
+var PeriodTypeToSeconds = map[string]uint64{
 	"day":   60 * 60 * 24,
 	"week":  60 * 60 * 24 * 7,
 	"month": 60 * 60 * 24 * 30,
@@ -110,8 +110,8 @@ func NewRewardProgram(
 	coin sdk.Coin,
 	maxRewardByAddress sdk.Coin,
 	programStartTime time.Time,
-	epochSeconds uint64,
-	numberEpochs uint64,
+	subPeriodSeconds uint64,
+	subPeriods uint64,
 	eligibilityCriteria EligibilityCriteria,
 	qualifyingActions []QualifyingAction,
 ) RewardProgram {
@@ -123,8 +123,8 @@ func NewRewardProgram(
 		Coin:                  coin,
 		MaxRewardByAddress:    maxRewardByAddress,
 		ProgramStartTime:      programStartTime,
-		EpochSeconds:          epochSeconds,
-		NumberEpochs:          numberEpochs,
+		SubPeriodSeconds:      subPeriodSeconds,
+		SubPeriods:            subPeriods,
 		EligibilityCriteria:   eligibilityCriteria,
 		Started:               false,
 		Finished:              false,
@@ -137,13 +137,13 @@ func (rp *RewardProgram) IsStarting(ctx sdk.Context) bool {
 	return !rp.Started && (blockTime.After(rp.ProgramStartTime) || blockTime.Equal(rp.ProgramStartTime))
 }
 
-func (rp *RewardProgram) IsEndingEpoch(ctx sdk.Context) bool {
+func (rp *RewardProgram) IsEndingSubPeriod(ctx sdk.Context) bool {
 	blockTime := ctx.BlockTime()
-	return rp.Started && !rp.Finished && (blockTime.After(rp.EpochEndTime) || blockTime.Equal(rp.EpochEndTime))
+	return rp.Started && !rp.Finished && (blockTime.After(rp.SubPeriodEndTime) || blockTime.Equal(rp.SubPeriodEndTime))
 }
 
 func (rp *RewardProgram) IsEnding(ctx sdk.Context) bool {
-	return rp.CurrentEpoch > rp.NumberEpochs
+	return rp.CurrentSubPeriod > rp.SubPeriods
 }
 
 func (rp *RewardProgram) ValidateBasic() error {
@@ -176,8 +176,8 @@ func (rp *RewardProgram) ValidateBasic() error {
 	if !rp.MaxRewardByAddress.IsPositive() {
 		return fmt.Errorf("reward program requires positive max reward by address: %v", rp.MaxRewardByAddress)
 	}
-	if rp.NumberEpochs < 1 {
-		return errors.New("reward program number of epochs must be larger than 0")
+	if rp.SubPeriods < 1 {
+		return errors.New("reward program number of sub periods must be larger than 0")
 	}
 	return nil
 }
@@ -240,10 +240,10 @@ func (rc *RewardClaim) String() string {
 
 // ============ Account State ============
 
-func NewAccountState(rewardProgramID, epochID uint64, address string) AccountState {
+func NewAccountState(rewardProgramID, subPeriod uint64, address string) AccountState {
 	return AccountState{
 		RewardProgramId: rewardProgramID,
-		EpochId:         epochID,
+		SubPeriodId:     subPeriod,
 		Address:         address,
 		ActionCounter:   0,
 	}
@@ -266,10 +266,10 @@ func (s *AccountState) String() string {
 
 // ============ Share ============
 
-func NewShare(rewardProgramID, epochID uint64, address string, claimed bool, expireTime time.Time, amount int64) Share {
+func NewShare(rewardProgramID, subPeriod uint64, address string, claimed bool, expireTime time.Time, amount int64) Share {
 	return Share{
 		RewardProgramId: rewardProgramID,
-		EpochId:         epochID,
+		SubPeriodId:     subPeriod,
 		Address:         address,
 		Claimed:         claimed,
 		ExpireTime:      expireTime,

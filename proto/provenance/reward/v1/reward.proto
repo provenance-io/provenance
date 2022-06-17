@@ -24,21 +24,21 @@ message RewardProgram {
   cosmos.base.v1beta1.Coin coin                    = 5 [(gogoproto.nullable) = false];
   cosmos.base.v1beta1.Coin max_reward_by_address   = 6
       [(gogoproto.nullable) = false]; // maximum rewards amount per address
-  uint64 epoch_seconds = 7; // EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month)
+  uint64 sub_period_seconds = 7; // EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month)
   google.protobuf.Timestamp program_start_time = 8 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "program_start_time,omitempty",
     (gogoproto.moretags) = "yaml:\"program_start_time,omitempty\""
   ];
-  google.protobuf.Timestamp epoch_end_time = 9 [
+  google.protobuf.Timestamp sub_period_end_time = 9 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "epoch_end_time,omitempty",
     (gogoproto.moretags) = "yaml:\"epoch_end_time,omitempty\""
   ];
-  uint64              number_epochs        = 10; // number of epochs this program will last for
-  uint64              current_epoch        = 11; // the current epoch reward program is on
+  uint64              sub_periods          = 10; // number of epochs this program will last for
+  uint64              current_sub_period   = 11; // the current epoch reward program is on
   EligibilityCriteria eligibility_criteria = 12
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"eligibility_criteria\""];
   ;
@@ -105,7 +105,7 @@ message AccountState {
   option (gogoproto.goproto_stringer) = false;
 
   uint64 reward_program_id = 1; // The id of the reward program that this share belongs to
-  uint64 epoch_id          = 2; // The id of the epoch that the share belongs to
+  uint64 sub_period_id     = 2; // The id of the sub period that the share belongs to
   string address           = 3 [(gogoproto.moretags) = "yaml:\"address\""]; // Owner of the share
   uint64 action_counter    = 4; // The number of actions done by this account
 }
@@ -133,7 +133,7 @@ message Share {
   option (gogoproto.goproto_stringer) = false;
 
   uint64 reward_program_id = 1; // The id of the reward program that this share belongs to
-  uint64 epoch_id          = 2; // The id of the epoch that the share belongs to
+  uint64 sub_period_id     = 2; // The id of the sub period that the share belongs to
   string address           = 3 [(gogoproto.moretags) = "yaml:\"address\""]; // Owner of the share
   bool   claimed           = 4;                                             // Share has been claimed
 

@@ -77,7 +77,7 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 		var state types.AccountState
 
 		// TODO Move this into the action's Pre-evaluate
-		state, err := k.GetAccountState(ctx, program.GetId(), program.GetCurrentEpoch(), action.Address.String())
+		state, err := k.GetAccountState(ctx, program.GetId(), program.GetCurrentSubPeriod(), action.Address.String())
 		if err != nil {
 			continue
 		}
@@ -97,8 +97,8 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 }
 
 func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram, evaluateRes []types.EvaluationResult) error {
-	ctx.Logger().Info(fmt.Sprintf("NOTICE: Recording shares for for rewardProgramId=%d, epochId=%d",
-		rewardProgram.GetId(), rewardProgram.GetCurrentEpoch()))
+	ctx.Logger().Info(fmt.Sprintf("NOTICE: Recording shares for for rewardProgramId=%d, subPeriod=%d",
+		rewardProgram.GetId(), rewardProgram.GetCurrentSubPeriod()))
 
 	err := rewardProgram.ValidateBasic()
 	if rewardProgram == nil || err != nil {
@@ -106,22 +106,22 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 	}
 
 	for _, res := range evaluateRes {
-		share, err := k.GetShare(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentEpoch(), res.Address.String())
+		share, err := k.GetShare(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentSubPeriod(), res.Address.String())
 		if err != nil {
 			return err
 		}
 
 		// Share does not exist so create one
 		if share.ValidateBasic() != nil {
-			ctx.Logger().Info(fmt.Sprintf("NOTICE: Creating new share structure for rewardProgramId=%d, epochId=%d, addr=%s",
-				rewardProgram.GetId(), rewardProgram.GetCurrentEpoch(), res.Address.String()))
+			ctx.Logger().Info(fmt.Sprintf("NOTICE: Creating new share structure for rewardProgramId=%d, subPeriod=%d, addr=%s",
+				rewardProgram.GetId(), rewardProgram.GetCurrentSubPeriod(), res.Address.String()))
 
 			share = types.NewShare(
 				rewardProgram.GetId(),
-				rewardProgram.GetCurrentEpoch(),
+				rewardProgram.GetCurrentSubPeriod(),
 				res.Address.String(),
 				false,
-				rewardProgram.EpochEndTime.Add(time.Duration(rewardProgram.GetShareExpirationOffset())),
+				rewardProgram.SubPeriodEndTime.Add(time.Duration(rewardProgram.GetShareExpirationOffset())),
 				0,
 			)
 		}
@@ -302,7 +302,7 @@ func logEvents(ctx sdk.Context) {
 	blockTime := ctx.BlockTime()
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: Block time: %v Size of events is %d", blockTime, len(history)))
 
-	// check if epoch has ended
+	// check if sub period has ended
 	for _, s := range ctx.EventManager().GetABCIEventHistory() {
 		// ctx.Logger().Info(fmt.Sprintf("events type is %s", s.Type))
 		ctx.Logger().Info(fmt.Sprintf("------- %s -------\n", s.Type))

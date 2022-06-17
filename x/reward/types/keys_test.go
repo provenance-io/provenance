@@ -41,8 +41,8 @@ func TestScopeKey(t *testing.T) {
 	assert.EqualValues(t, ShareKeyPrefix, rewardShareKeyPrefix[0:1])
 	assert.EqualValues(t, []byte(strconv.FormatUint(1, 10)), rewardShareKeyPrefix[1:2])
 
-	// Test GetRewardEpochShareKeyPrefix
-	rewardEpochShareKeyPrefix := GetRewardEpochShareKeyPrefix(1, 2)
-	assert.EqualValues(t, ShareKeyPrefix, rewardEpochShareKeyPrefix[0:1])
-	assert.EqualValues(t, []byte(strconv.FormatUint(1, 10)), rewardEpochShareKeyPrefix[1:2])
+	// Test GetRewardSubPeriodShareKeyPrefix
+	rewardSubPeriodShareKeyPrefix := GetRewardSubPeriodShareKeyPrefix(1, 2)
+	assert.EqualValues(t, ShareKeyPrefix, rewardSubPeriodShareKeyPrefix[0:1])
+	assert.EqualValues(t, []byte(strconv.FormatUint(1, 10)), rewardSubPeriodShareKeyPrefix[1:2])
 }

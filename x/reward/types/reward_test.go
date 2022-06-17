@@ -204,7 +204,7 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 			"reward program requires positive max reward by address: 0jackthecat",
 		},
 		{
-			"invalid - number of epochs must be larger than 0",
+			"invalid - number of sub periods must be larger than 0",
 			NewRewardProgram(
 				"title",
 				"description",
@@ -218,7 +218,7 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				NewEligibilityCriteria("action-name", &ActionDelegate{}),
 				[]QualifyingAction{},
 			),
-			"reward program number of epochs must be larger than 0",
+			"reward program number of sub periods must be larger than 0",
 		},
 	}
 

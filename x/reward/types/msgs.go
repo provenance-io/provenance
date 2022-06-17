@@ -25,8 +25,8 @@ func NewMsgCreateRewardProgramRequest(
 	coin sdk.Coin,
 	maxRewardByAddress sdk.Coin,
 	programStartTime time.Time,
-	epochType string,
-	numberEpochs uint64,
+	subPeriodType string,
+	subPeriods uint64,
 	eligibilityCriteria EligibilityCriteria,
 ) *MsgCreateRewardProgramRequest {
 	return &MsgCreateRewardProgramRequest{
@@ -36,8 +36,8 @@ func NewMsgCreateRewardProgramRequest(
 		Coin:                  coin,
 		MaxRewardByAddress:    maxRewardByAddress,
 		ProgramStartTime:      programStartTime,
-		EpochType:             epochType,
-		NumberEpochs:          numberEpochs,
+		SubPeriodType:         subPeriodType,
+		SubPeriods:            subPeriods,
 		EligibilityCriteria:   eligibilityCriteria,
 	}
 }
@@ -76,12 +76,12 @@ func (msg MsgCreateRewardProgramRequest) ValidateBasic() error {
 	if !msg.MaxRewardByAddress.IsPositive() {
 		return fmt.Errorf("reward program requires positive max reward by address: %v", msg.MaxRewardByAddress)
 	}
-	epochSeconds := EpochTypeToSeconds[msg.EpochType]
-	if epochSeconds == 0 {
-		return fmt.Errorf("epoch type not found: %s", msg.EpochType)
+	subPeriodSeconds := PeriodTypeToSeconds[msg.SubPeriodType]
+	if subPeriodSeconds == 0 {
+		return fmt.Errorf("sub period type not found: %s", msg.SubPeriodType)
 	}
-	if msg.NumberEpochs < 1 {
-		return errors.New("reward program number of epochs must be larger than 0")
+	if msg.SubPeriods < 1 {
+		return errors.New("reward program number of sub periods must be larger than 0")
 	}
 	return nil
 }

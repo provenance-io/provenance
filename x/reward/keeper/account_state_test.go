@@ -14,7 +14,7 @@ func (suite *KeeperTestSuite) TestNewAccountState() {
 	)
 
 	suite.Assert().Equal(uint64(1), accountState.GetRewardProgramId(), "reward program id must match")
-	suite.Assert().Equal(uint64(2), accountState.GetEpochId(), "epoch id must match")
+	suite.Assert().Equal(uint64(2), accountState.GetSubPeriodId(), "sub period id must match")
 	suite.Assert().Equal("test", accountState.GetAddress(), "address must match")
 	suite.Assert().Equal(uint64(0), accountState.GetActionCounter(), "action counter must match")
 }
@@ -31,12 +31,12 @@ func (suite *KeeperTestSuite) TestGetSetAccountState() {
 	suite.app.RewardKeeper.SetAccountState(suite.ctx, &expectedState)
 	actualState, err := suite.app.RewardKeeper.GetAccountState(suite.ctx,
 		expectedState.GetRewardProgramId(),
-		expectedState.GetEpochId(),
+		expectedState.GetSubPeriodId(),
 		expectedState.GetAddress())
 
 	suite.Assert().Nil(err, "must not have error")
 	suite.Assert().Equal(expectedState.GetRewardProgramId(), actualState.GetRewardProgramId(), "reward program id must match")
-	suite.Assert().Equal(expectedState.GetEpochId(), actualState.GetEpochId(), "epoch id must match")
+	suite.Assert().Equal(expectedState.GetSubPeriodId(), actualState.GetSubPeriodId(), "sub period id must match")
 	suite.Assert().Equal(expectedState.GetAddress(), actualState.GetAddress(), "address must match")
 	suite.Assert().Equal(expectedState.GetActionCounter(), actualState.GetActionCounter(), "action counter must match")
 }
@@ -65,12 +65,12 @@ func (suite *KeeperTestSuite) TestRemoveValidAccountState() {
 	suite.app.RewardKeeper.SetAccountState(suite.ctx, &expectedState)
 	removed := suite.app.RewardKeeper.RemoveAccountState(suite.ctx,
 		expectedState.GetRewardProgramId(),
-		expectedState.GetEpochId(),
+		expectedState.GetSubPeriodId(),
 		expectedState.GetAddress())
 
 	actualState, err := suite.app.RewardKeeper.GetAccountState(suite.ctx,
 		expectedState.GetRewardProgramId(),
-		expectedState.GetEpochId(),
+		expectedState.GetSubPeriodId(),
 		expectedState.GetAddress())
 
 	suite.Assert().True(removed, "account state should successfully be removed")
@@ -89,7 +89,7 @@ func (suite *KeeperTestSuite) TestRemoveInvalidAccountState() {
 
 	removed := suite.app.RewardKeeper.RemoveAccountState(suite.ctx,
 		expectedState.GetRewardProgramId(),
-		expectedState.GetEpochId(),
+		expectedState.GetSubPeriodId(),
 		expectedState.GetAddress())
 
 	suite.Assert().False(removed, "account state should be unable to be removed")

@@ -5957,7 +5957,7 @@ Msg defines the bank Msg service.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this share belongs to |
-| `epoch_id` | [uint64](#uint64) |  | The id of the epoch that the share belongs to |
+| `sub_period_id` | [uint64](#uint64) |  | The id of the sub period that the share belongs to |
 | `address` | [string](#string) |  | Owner of the share |
 | `action_counter` | [uint64](#uint64) |  | The number of actions done by this account |
 
@@ -6082,11 +6082,11 @@ RewardProgram
 | `distribute_from_address` | [string](#string) |  | community pool for now |
 | `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | maximum rewards amount per address |
-| `epoch_seconds` | [uint64](#uint64) |  | EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month) |
+| `sub_period_seconds` | [uint64](#uint64) |  | EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month) |
 | `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `epoch_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `number_epochs` | [uint64](#uint64) |  | number of epochs this program will last for |
-| `current_epoch` | [uint64](#uint64) |  | the current epoch reward program is on |
+| `sub_period_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `sub_periods` | [uint64](#uint64) |  | number of epochs this program will last for |
+| `current_sub_period` | [uint64](#uint64) |  | the current epoch reward program is on |
 | `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
 | `started` | [bool](#bool) |  | has the rewards program started |
 | `finished` | [bool](#bool) |  | has the rewards program completed |
@@ -6126,7 +6126,7 @@ Share
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this share belongs to |
-| `epoch_id` | [uint64](#uint64) |  | The id of the epoch that the share belongs to |
+| `sub_period_id` | [uint64](#uint64) |  | The id of the sub period that the share belongs to |
 | `address` | [string](#string) |  | Owner of the share |
 | `claimed` | [bool](#bool) |  | Share has been claimed |
 | `expire_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time when share expires |
@@ -6533,8 +6533,8 @@ Query defines the gRPC querier service for reward module.
 | `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `epoch_type` | [string](#string) |  | EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month) |
-| `number_epochs` | [uint64](#uint64) |  | number of epochs this program will last for |
+| `sub_period_type` | [string](#string) |  | EpochInfo defines the type of sub period attributed to this program.(e.g day,week,month) |
+| `sub_periods` | [uint64](#uint64) |  | number of sub periods this program will last for |
 | `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
 
 

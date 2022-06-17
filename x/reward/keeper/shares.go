@@ -9,9 +9,9 @@ import (
 )
 
 // Removes a share
-func (k Keeper) RemoveShare(ctx sdk.Context, rewardProgramID, epochID uint64, addr string) bool {
+func (k Keeper) RemoveShare(ctx sdk.Context, rewardProgramID, subPeriod uint64, addr string) bool {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetShareKey(rewardProgramID, epochID, []byte(addr))
+	key := types.GetShareKey(rewardProgramID, subPeriod, []byte(addr))
 	if key == nil {
 		return false
 	}
@@ -42,7 +42,7 @@ func (k Keeper) CleanupRewardProgramShares(ctx sdk.Context, rewardProgram *types
 
 	// Remove all the dead shares
 	for _, share := range deadShares {
-		k.RemoveShare(ctx, share.RewardProgramId, share.EpochId, share.Address)
+		k.RemoveShare(ctx, share.RewardProgramId, share.SubPeriodId, share.Address)
 	}
 
 	return nil
@@ -60,9 +60,9 @@ func (k Keeper) RemoveDeadShares(ctx sdk.Context) (err error) {
 	return err
 }
 
-func (k Keeper) GetShare(ctx sdk.Context, rewardProgramID, epochID uint64, addr string) (share types.Share, err error) {
+func (k Keeper) GetShare(ctx sdk.Context, rewardProgramID, subPeriod uint64, addr string) (share types.Share, err error) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetShareKey(rewardProgramID, epochID, []byte(addr))
+	key := types.GetShareKey(rewardProgramID, subPeriod, []byte(addr))
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return share, nil
@@ -74,7 +74,7 @@ func (k Keeper) GetShare(ctx sdk.Context, rewardProgramID, epochID uint64, addr 
 func (k Keeper) SetShare(ctx sdk.Context, share *types.Share) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(share)
-	key := types.GetShareKey(share.GetRewardProgramId(), share.GetEpochId(), []byte(share.GetAddress()))
+	key := types.GetShareKey(share.GetRewardProgramId(), share.GetSubPeriodId(), []byte(share.GetAddress()))
 	store.Set(key, bz)
 }
 
@@ -124,9 +124,9 @@ func (k Keeper) IterateRewardShares(ctx sdk.Context, rewardProgramID uint64, han
 }
 
 // Iterates over ALL the shares for a reward program's epoch
-func (k Keeper) IterateRewardEpochShares(ctx sdk.Context, rewardProgramID, epochID uint64, handle func(share types.Share) (stop bool)) error {
+func (k Keeper) IterateRewardSubPeriodShares(ctx sdk.Context, rewardProgramID, subPeriod uint64, handle func(share types.Share) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetRewardEpochShareKeyPrefix(rewardProgramID, epochID))
+	iterator := sdk.KVStorePrefixIterator(store, types.GetRewardSubPeriodShareKeyPrefix(rewardProgramID, subPeriod))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

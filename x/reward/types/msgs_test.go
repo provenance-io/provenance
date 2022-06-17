@@ -166,10 +166,10 @@ func (s *RewardMsgTypesTestSuite) TestMsgCreateRewardProgramRequestValidateBasic
 				1,
 				NewEligibilityCriteria("name", &ActionDelegate{}),
 			),
-			"epoch type not found: blah",
+			"sub period type not found: blah",
 		},
 		{
-			"invalid - number of epochs is 0",
+			"invalid - number of sub periods is 0",
 			*NewMsgCreateRewardProgramRequest(
 				"title",
 				"description",
@@ -181,7 +181,7 @@ func (s *RewardMsgTypesTestSuite) TestMsgCreateRewardProgramRequestValidateBasic
 				0,
 				NewEligibilityCriteria("name", &ActionDelegate{}),
 			),
-			"reward program number of epochs must be larger than 0",
+			"reward program number of sub periods must be larger than 0",
 		},
 		{
 			"invalid - ec validation failure",

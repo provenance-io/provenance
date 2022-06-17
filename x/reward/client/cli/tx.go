@@ -22,8 +22,8 @@ const (
 	FlagCoin                = "coin"
 	FlagMaxRewardByAddress  = "max-reward-by-address"
 	FlagStartTime           = "start-time"
-	FlagEpochType           = "epoch-type"
-	FlagNumEpochs           = "num-epochs"
+	FlagSubPeriodType       = "sub-period-type"
+	FlagSubPeriods          = "sub-periods"
 	FlagEligibilityCriteria = "eligibility-criteria"
 )
 
@@ -54,9 +54,9 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 		Example: fmt.Sprintf(`$ %[1]s tx reward new 
 		--coin 580nhash \
 		--max-reward-by-address 10nhash \
-    	--epoch-type day \
+    	--sub-period-type day \
     	--start-time 2022-05-10\
-    	--num-epochs 10 \
+    	--sub-periods 10 \
     	--eligibility-criteria "{\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}"
 		`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -88,21 +88,21 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			epochTypeKey, err := cmd.Flags().GetString(FlagEpochType)
+			subPeriodTypeKey, err := cmd.Flags().GetString(FlagSubPeriodType)
 			if err != nil {
 				return err
 			}
-			epochTypeSeconds := types.EpochTypeToSeconds[epochTypeKey]
-			if epochTypeSeconds == 0 {
-				return fmt.Errorf("epoch type %s does not exist", epochTypeKey)
+			subPeriodTypeSeconds := types.PeriodTypeToSeconds[subPeriodTypeKey]
+			if subPeriodTypeSeconds == 0 {
+				return fmt.Errorf("sub period type %s does not exist", subPeriodTypeKey)
 			}
 
-			numEpochs, err := cmd.Flags().GetUint64(FlagNumEpochs)
+			subPeriods, err := cmd.Flags().GetUint64(FlagSubPeriods)
 			if err != nil {
 				return err
 			}
-			if numEpochs < 1 {
-				return errors.New("number of epochs must be larger than 0")
+			if subPeriods < 1 {
+				return errors.New("number of sub periods must be larger than 0")
 			}
 			eligibilityCriteriaStr, err := cmd.Flags().GetString(FlagEligibilityCriteria)
 			if err != nil {
@@ -123,8 +123,8 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 				coin,
 				maxCoin,
 				startTime,
-				epochTypeKey,
-				numEpochs,
+				subPeriodTypeKey,
+				subPeriods,
 				eligibilityCriteria,
 			)
 			if err != nil {
@@ -137,8 +137,8 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 	cmd.Flags().String(FlagCoin, "", "coins for reward program")
 	cmd.Flags().String(FlagMaxRewardByAddress, "", "max amount of coins a single address can claim in rewards")
 	cmd.Flags().String(FlagStartTime, "", "time to start the rewards program, this must be a time in the future or within the first epoch of format YYYY-MM-DDTHH:MM:SSZ00:00 (2012-11-01T22:08:41+07:00)")
-	cmd.Flags().String(FlagEpochType, "", "epoch type (day, week, month)")
-	cmd.Flags().Uint64(FlagNumEpochs, 0, "number of epochs for the reward program")
+	cmd.Flags().String(FlagSubPeriodType, "", "sub period type (day, week, month)")
+	cmd.Flags().Uint64(FlagSubPeriods, 0, "number of sub periods for the reward program")
 	cmd.Flags().String(FlagEligibilityCriteria, "", "json of the eligibility criteria")
 	return cmd
 }

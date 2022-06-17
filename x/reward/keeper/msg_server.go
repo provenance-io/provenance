@@ -34,7 +34,7 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		return &types.MsgCreateRewardProgramResponse{}, err
 	}
 
-	// TODO: get next epoch time by taking in day, week, month value and convert it to seconds for creating reward program
+	// TODO: get next sub period time by taking in day, week, month value and convert it to seconds for creating reward program
 
 	rewardProgram := types.NewRewardProgram(
 		msg.Title,
@@ -44,8 +44,8 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		msg.Coin,
 		msg.MaxRewardByAddress,
 		msg.ProgramStartTime,
-		types.EpochTypeToSeconds[msg.EpochType],
-		msg.NumberEpochs,
+		types.PeriodTypeToSeconds[msg.SubPeriodType],
+		msg.SubPeriods,
 		msg.EligibilityCriteria,
 
 		// TODO - We need to update this to be part of the message

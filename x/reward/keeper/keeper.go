@@ -46,7 +46,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// SetActionDelegate sets the reward epoch reward distribution in the keeper
+// SetActionDelegate sets the action delegate in the keeper
 func (k Keeper) SetActionDelegate(ctx sdk.Context, actionDelegate types.ActionDelegate) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&actionDelegate)
@@ -64,7 +64,7 @@ func (k Keeper) GetActionDelegate(ctx sdk.Context) (actionDelegate types.ActionD
 	return actionDelegate, err
 }
 
-// SetActionTransferDelegations sets the reward epoch reward distribution in the keeper
+// SetActionTransferDelegations sets the action transfer delegations in the keeper
 func (k Keeper) SetActionTransferDelegations(ctx sdk.Context, actionTransferDelegations types.ActionTransferDelegations) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&actionTransferDelegations)

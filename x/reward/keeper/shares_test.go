@@ -20,7 +20,7 @@ func (suite *KeeperTestSuite) TestNewShare() {
 	)
 
 	suite.Assert().Equal(uint64(1), share.GetRewardProgramId(), "reward program id must match")
-	suite.Assert().Equal(uint64(2), share.GetEpochId(), "epoch id must match")
+	suite.Assert().Equal(uint64(2), share.GetSubPeriodId(), "sub period id must match")
 	suite.Assert().Equal("test", share.GetAddress(), "address must match")
 	suite.Assert().Equal(true, share.GetClaimed(), "claim status must match")
 	suite.Assert().Equal(time, share.GetExpireTime(), "expiration time must match")
@@ -43,12 +43,12 @@ func (suite *KeeperTestSuite) TestGetSetShare() {
 	suite.app.RewardKeeper.SetShare(suite.ctx, &expectedShare)
 	actualShare, err := suite.app.RewardKeeper.GetShare(suite.ctx,
 		expectedShare.GetRewardProgramId(),
-		expectedShare.GetEpochId(),
+		expectedShare.GetSubPeriodId(),
 		expectedShare.GetAddress())
 
 	suite.Assert().Nil(err, "must not have error")
 	suite.Assert().Equal(expectedShare.GetRewardProgramId(), actualShare.GetRewardProgramId(), "reward program id must match")
-	suite.Assert().Equal(expectedShare.GetEpochId(), actualShare.GetEpochId(), "epoch id must match")
+	suite.Assert().Equal(expectedShare.GetSubPeriodId(), actualShare.GetSubPeriodId(), "sub period id must match")
 	suite.Assert().Equal(expectedShare.GetAddress(), actualShare.GetAddress(), "address must match")
 	suite.Assert().Equal(expectedShare.GetClaimed(), actualShare.GetClaimed(), "claim status must match")
 	suite.Assert().Equal(expectedShare.GetExpireTime(), actualShare.GetExpireTime(), "expiration time must match")
@@ -83,12 +83,12 @@ func (suite *KeeperTestSuite) TestRemoveValidShare() {
 	suite.app.RewardKeeper.SetShare(suite.ctx, &expectedShare)
 	removed := suite.app.RewardKeeper.RemoveShare(suite.ctx,
 		expectedShare.GetRewardProgramId(),
-		expectedShare.GetEpochId(),
+		expectedShare.GetSubPeriodId(),
 		expectedShare.GetAddress())
 
 	actualShare, err := suite.app.RewardKeeper.GetShare(suite.ctx,
 		expectedShare.GetRewardProgramId(),
-		expectedShare.GetEpochId(),
+		expectedShare.GetSubPeriodId(),
 		expectedShare.GetAddress())
 
 	suite.Assert().True(removed, "share should successfully be removed")
@@ -111,7 +111,7 @@ func (suite *KeeperTestSuite) TestRemoveInvalidShare() {
 
 	removed := suite.app.RewardKeeper.RemoveShare(suite.ctx,
 		expectedShare.GetRewardProgramId(),
-		expectedShare.GetEpochId(),
+		expectedShare.GetSubPeriodId(),
 		expectedShare.GetAddress())
 
 	suite.Assert().False(removed, "share should be unable to be removed")
@@ -251,7 +251,7 @@ func (suite *KeeperTestSuite) TestIterateRewardSharesHalt() {
 	suite.Assert().Equal(1, counter, "should have correct number of iterations")
 }
 
-func (suite *KeeperTestSuite) TestIterateRewardEpochShares() {
+func (suite *KeeperTestSuite) TestIterateRewardSubPeriodShares() {
 	suite.SetupTest()
 
 	time := timestamppb.Now().AsTime()
@@ -268,7 +268,7 @@ func (suite *KeeperTestSuite) TestIterateRewardEpochShares() {
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share5)
 
 	counter := 0
-	suite.app.RewardKeeper.IterateRewardEpochShares(suite.ctx, 2, 2, func(share types.Share) bool {
+	suite.app.RewardKeeper.IterateRewardSubPeriodShares(suite.ctx, 2, 2, func(share types.Share) bool {
 		counter += 1
 		return false
 	})
@@ -276,7 +276,7 @@ func (suite *KeeperTestSuite) TestIterateRewardEpochShares() {
 	suite.Assert().Equal(2, counter, "should have correct number of iterations")
 }
 
-func (suite *KeeperTestSuite) TestEmptyIterateRewardEpochShares() {
+func (suite *KeeperTestSuite) TestEmptyIterateRewardSubPeriodShares() {
 	suite.SetupTest()
 
 	time := timestamppb.Now().AsTime()
@@ -293,7 +293,7 @@ func (suite *KeeperTestSuite) TestEmptyIterateRewardEpochShares() {
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share5)
 
 	counter := 0
-	suite.app.RewardKeeper.IterateRewardEpochShares(suite.ctx, 1, 4, func(share types.Share) bool {
+	suite.app.RewardKeeper.IterateRewardSubPeriodShares(suite.ctx, 1, 4, func(share types.Share) bool {
 		counter += 1
 		return false
 	})
@@ -301,7 +301,7 @@ func (suite *KeeperTestSuite) TestEmptyIterateRewardEpochShares() {
 	suite.Assert().Equal(0, counter, "should have correct number of iterations")
 }
 
-func (suite *KeeperTestSuite) TestIterateRewardSharesEpochHalt() {
+func (suite *KeeperTestSuite) TestIterateRewardSharesSubPeriodHalt() {
 	suite.SetupTest()
 
 	time := timestamppb.Now().AsTime()
@@ -318,7 +318,7 @@ func (suite *KeeperTestSuite) TestIterateRewardSharesEpochHalt() {
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share5)
 
 	counter := 0
-	suite.app.RewardKeeper.IterateRewardEpochShares(suite.ctx, 1, 2, func(share types.Share) bool {
+	suite.app.RewardKeeper.IterateRewardSubPeriodShares(suite.ctx, 1, 2, func(share types.Share) bool {
 		counter += 1
 		return counter == 1
 	})
