@@ -25,9 +25,7 @@ func GetQueryCmd() *cobra.Command {
 	}
 	queryCmd.AddCommand(
 		GetRewardProgramCmd(),
-		GetRewardClaimCmd(),
 		GetEpochRewardDistributionCmd(),
-		GetEligibilityCriteriaCmd(),
 	)
 	return queryCmd
 }
@@ -62,31 +60,6 @@ func GetRewardProgramCmd() *cobra.Command {
 	return cmd
 }
 
-func GetRewardClaimCmd() *cobra.Command {
-	const all = "all"
-
-	cmd := &cobra.Command{
-		Use:     "reward-claim {address|\"all\"}",
-		Aliases: []string{"rc", "rewardclaim"},
-		Short:   "Query the current reward claims",
-		Long: fmt.Sprintf(`%[1]s reward-claim {address} - gets the reward claim for the address.
-%[1]s reward-claim all - gets all the reward claims`, cmdStart),
-		Args: cobra.ExactArgs(1),
-		Example: fmt.Sprintf(`%[1]s reward-claim "pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk"
-%[1]s reward-claim all`, cmdStart),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			arg0 := strings.TrimSpace(args[0])
-			if arg0 == all {
-				return outputRewardClaimsAll(cmd)
-			}
-
-			return outputRewardClaimByID(cmd, arg0)
-		},
-	}
-
-	return cmd
-}
-
 func GetEpochRewardDistributionCmd() *cobra.Command {
 	const all = "all"
 
@@ -114,30 +87,6 @@ func GetEpochRewardDistributionCmd() *cobra.Command {
 		},
 	}
 
-	return cmd
-}
-
-func GetEligibilityCriteriaCmd() *cobra.Command {
-	const all = "all"
-
-	cmd := &cobra.Command{
-		Use:     "eligibility-criteria {name|\"all\"}",
-		Aliases: []string{"ec", "eligibilitycriteria"},
-		Short:   "Query the current eligiblity criteria",
-		Long: fmt.Sprintf(`%[1]s eligibility-criteria {name} - gets the eligibility criteria that matches the name.
-%[1]s eligibility-criteria all - gets all the eligibility criteria`, cmdStart),
-		Args: cobra.ExactArgs(1),
-		Example: fmt.Sprintf(`%[1]s eligibility-criteria "delegate"
-%[1]s eligibility-criteria all`, cmdStart),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			arg0 := strings.TrimSpace(args[0])
-			if arg0 == all {
-				return outputEligibilityCriteriaAll(cmd)
-			}
-
-			return outputEligibilityCriteriaByName(cmd, arg0)
-		},
-	}
 	return cmd
 }
 
@@ -206,49 +155,6 @@ func outputRewardProgramByID(cmd *cobra.Command, arg string) error {
 	return clientCtx.PrintProto(response)
 }
 
-// Query for all RewardClaims
-func outputRewardClaimsAll(cmd *cobra.Command) error {
-	clientCtx, err := client.GetClientQueryContext(cmd)
-	if err != nil {
-		return err
-	}
-
-	queryClient := types.NewQueryClient(clientCtx)
-
-	var response *types.RewardClaimsResponse
-	if response, err = queryClient.RewardClaims(
-		context.Background(),
-		&types.RewardClaimsRequest{},
-	); err != nil {
-		return fmt.Errorf("failed to query reward programs: %s", err.Error())
-	}
-
-	return clientCtx.PrintProto(response)
-}
-
-// Query for a Reward Claim by Id
-func outputRewardClaimByID(cmd *cobra.Command, arg string) error {
-	clientCtx, err := client.GetClientQueryContext(cmd)
-	if err != nil {
-		return err
-	}
-	queryClient := types.NewQueryClient(clientCtx)
-
-	var response *types.RewardClaimByIDResponse
-	if response, err = queryClient.RewardClaimByID(
-		context.Background(),
-		&types.RewardClaimByIDRequest{Id: arg},
-	); err != nil {
-		return fmt.Errorf("failed to query reward claim %s: %s", arg, err.Error())
-	}
-
-	if response.GetRewardClaim() == nil {
-		return fmt.Errorf("reward claim %s does not exist", arg)
-	}
-
-	return clientCtx.PrintProto(response)
-}
-
 // Query for all EpochRewardDistributions
 func outputEpochRewardDistributionAll(cmd *cobra.Command) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
@@ -294,51 +200,6 @@ func outputEpochRewardDistributionByID(cmd *cobra.Command, rewardID, epochID str
 
 	if response.GetEpochRewardDistribution() == nil {
 		return fmt.Errorf("epoch reward does not exist for reward-id: %s epoch-id %s", rewardID, epochID)
-	}
-
-	return clientCtx.PrintProto(response)
-}
-
-// Query for all EligibilityCriteria
-func outputEligibilityCriteriaAll(cmd *cobra.Command) error {
-	clientCtx, err := client.GetClientQueryContext(cmd)
-	if err != nil {
-		return err
-	}
-
-	queryClient := types.NewQueryClient(clientCtx)
-
-	var response *types.EligibilityCriteriaResponse
-	if response, err = queryClient.EligibilityCriteria(
-		context.Background(),
-		&types.EligibilityCriteriaRequest{},
-	); err != nil {
-		return fmt.Errorf("failed to query eligibility criteria: %s", err.Error())
-	}
-
-	return clientCtx.PrintProto(response)
-}
-
-// Query for a ElgibilityCriteria by name
-func outputEligibilityCriteriaByName(cmd *cobra.Command, name string) error {
-	clientCtx, err := client.GetClientQueryContext(cmd)
-	if err != nil {
-		return err
-	}
-	queryClient := types.NewQueryClient(clientCtx)
-
-	var response *types.EligibilityCriteriaRequestByNameResponse
-	if response, err = queryClient.EligibilityCriteriaByName(
-		context.Background(),
-		&types.EligibilityCriteriaRequestByNameRequest{
-			Name: name,
-		},
-	); err != nil {
-		return fmt.Errorf("failed to query eligibility criteria %s: %s", name, err.Error())
-	}
-
-	if response.GetEligibilityCriteria() == nil {
-		return fmt.Errorf("eligibility criteria does not exist for name: %s", name)
 	}
 
 	return clientCtx.PrintProto(response)

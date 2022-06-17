@@ -22,9 +22,6 @@ func (suite *KeeperTestSuite) TestNewRewardProgram() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 
@@ -37,7 +34,6 @@ func (suite *KeeperTestSuite) TestNewRewardProgram() {
 	suite.Assert().Equal(time, program.GetProgramStartTime(), "program start time should match input")
 	suite.Assert().Equal(uint64(60*60), program.GetSubPeriodSeconds(), "sub period seconds should match input")
 	suite.Assert().Equal(uint64(3), program.GetSubPeriods(), "sub periods should match input")
-	suite.Assert().Equal("Criteria", program.GetEligibilityCriteria().Name, "eligibility criteria should match input")
 	suite.Assert().Equal(0, len(program.GetQualifyingActions()), "qualifying actions should match input")
 }
 
@@ -55,9 +51,6 @@ func (suite *KeeperTestSuite) TestGetSetRewardProgram() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 
@@ -75,7 +68,6 @@ func (suite *KeeperTestSuite) TestGetSetRewardProgram() {
 	suite.Assert().Equal(program.GetProgramStartTime(), program2.GetProgramStartTime(), "program start time should match")
 	suite.Assert().Equal(program.GetSubPeriodSeconds(), program2.GetSubPeriodSeconds(), "sub period seconds should match")
 	suite.Assert().Equal(program.GetSubPeriods(), program2.GetSubPeriods(), "number of sub periods should match")
-	suite.Assert().Equal(program.GetEligibilityCriteria().Name, program2.GetEligibilityCriteria().Name, "eligibility criteria should match")
 	suite.Assert().Equal(len(program.GetQualifyingActions()), len(program2.GetQualifyingActions()), "qualifying actions should match")
 }
 
@@ -93,9 +85,6 @@ func (suite *KeeperTestSuite) TestRemoveValidRewardProgram() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 
@@ -128,9 +117,6 @@ func (suite *KeeperTestSuite) TestIterateRewardPrograms() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -143,9 +129,6 @@ func (suite *KeeperTestSuite) TestIterateRewardPrograms() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -158,9 +141,6 @@ func (suite *KeeperTestSuite) TestIterateRewardPrograms() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 
@@ -190,9 +170,6 @@ func (suite *KeeperTestSuite) TestIterateRewardProgramsHalt() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -205,9 +182,6 @@ func (suite *KeeperTestSuite) TestIterateRewardProgramsHalt() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -220,9 +194,6 @@ func (suite *KeeperTestSuite) TestIterateRewardProgramsHalt() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 
@@ -265,9 +236,6 @@ func (suite *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -280,9 +248,6 @@ func (suite *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -295,9 +260,6 @@ func (suite *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	program2.Started = true
@@ -334,9 +296,6 @@ func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -349,9 +308,6 @@ func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -364,9 +320,6 @@ func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	program2.Started = true
@@ -402,9 +355,6 @@ func (suite *KeeperTestSuite) TestGetAllRewardPrograms() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -417,9 +367,6 @@ func (suite *KeeperTestSuite) TestGetAllRewardPrograms() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -432,9 +379,6 @@ func (suite *KeeperTestSuite) TestGetAllRewardPrograms() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	program2.Started = true
@@ -472,9 +416,6 @@ func (suite *KeeperTestSuite) TestRewardProgramIsValidOnValid() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	suite.Assert().True(suite.app.RewardKeeper.RewardProgramIsValid(&program), "valid should be true when reward program is valid")
@@ -493,9 +434,6 @@ func (suite *KeeperTestSuite) TestRewardProgramIsValidOnInvalid() {
 		time,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	suite.Assert().False(suite.app.RewardKeeper.RewardProgramIsValid(&program), "valid should be false when reward program is invalid")
@@ -514,9 +452,6 @@ func (suite *KeeperTestSuite) TestRemoveDeadPrograms() {
 		currentTime,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -529,9 +464,6 @@ func (suite *KeeperTestSuite) TestRemoveDeadPrograms() {
 		currentTime.Add(time.Hour),
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -544,9 +476,6 @@ func (suite *KeeperTestSuite) TestRemoveDeadPrograms() {
 		currentTime,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	program1.Finished = true

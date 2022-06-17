@@ -37,14 +37,11 @@ message RewardProgram {
     (gogoproto.jsontag)  = "epoch_end_time,omitempty",
     (gogoproto.moretags) = "yaml:\"epoch_end_time,omitempty\""
   ];
-  uint64              sub_periods          = 10; // number of epochs this program will last for
-  uint64              current_sub_period   = 11; // the current epoch reward program is on
-  EligibilityCriteria eligibility_criteria = 12
-      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"eligibility_criteria\""];
-  ;
-  bool                      started       = 13; // has the rewards program started
-  bool                      finished      = 14; // has the rewards program completed
-  google.protobuf.Timestamp finished_time = 15 [
+  uint64                    sub_periods        = 10; // number of epochs this program will last for
+  uint64                    current_sub_period = 11; // the current epoch reward program is on
+  bool                      started            = 13; // has the rewards program started
+  bool                      finished           = 14; // has the rewards program completed
+  google.protobuf.Timestamp finished_time      = 15 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "finished_time,omitempty",
@@ -83,23 +80,6 @@ message EpochRewardDistribution {
   bool  epoch_ended  = 5;
 }
 
-// A RewardClaim is the metadata of reward data per address
-message RewardClaim {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
-
-  // address of user reward
-  string address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
-
-  // state of a reward claim
-  bool expired = 2;
-
-  // array of shares calculated per epoch for each reward program
-  repeated SharesPerEpochPerRewardsProgram shares_per_epoch_per_reward = 4
-      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"shares_per_epoch_per_reward\""];
-  ;
-}
-
 message AccountState {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
@@ -108,23 +88,6 @@ message AccountState {
   uint64 sub_period_id     = 2; // The id of the sub period that the share belongs to
   string address           = 3 [(gogoproto.moretags) = "yaml:\"address\""]; // Owner of the share
   uint64 action_counter    = 4; // The number of actions done by this account
-}
-
-message SharesPerEpochPerRewardsProgram {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_getters)  = true;
-  option (gogoproto.goproto_stringer) = false;
-
-  uint64 reward_program_id      = 1; // epoch id can be derived from reward program
-  int64  total_shares           = 2; // total shares accumulated( it is running total), can be negative
-  int64  ephemeral_action_count = 3; // total number of times action has been taken by account
-  uint64 latest_recorded_epoch  = 4; // last epoch number that this reward program was triggerred for.
-  // action type
-  bool                     claimed              = 5; // whether rewards has been claimed
-  bool                     expired              = 6; // rewards have been expired, this is defined in RewardProgram
-  cosmos.base.v1beta1.Coin total_reward_claimed = 7  // total rewards claimed by that address, which is equal to
-                                                     // min((total_shares/total_shares_in_epoch)* total_pool_funds)
-      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"total_rewards\""];
 }
 
 // Share
@@ -178,14 +141,4 @@ message ActionDelegate {
 message ActionTransferDelegations {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
-}
-
-// EligibilityCriteria defines an Action which accrues rewards for a running RewardProgram
-message EligibilityCriteria {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.goproto_getters)  = false;
-
-  string              name   = 1;
-  google.protobuf.Any action = 2 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"action\""];
 }

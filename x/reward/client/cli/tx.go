@@ -19,12 +19,11 @@ import (
 
 // Flag names and values
 const (
-	FlagCoin                = "coin"
-	FlagMaxRewardByAddress  = "max-reward-by-address"
-	FlagStartTime           = "start-time"
-	FlagSubPeriodType       = "sub-period-type"
-	FlagSubPeriods          = "sub-periods"
-	FlagEligibilityCriteria = "eligibility-criteria"
+	FlagCoin               = "coin"
+	FlagMaxRewardByAddress = "max-reward-by-address"
+	FlagStartTime          = "start-time"
+	FlagSubPeriodType      = "sub-period-type"
+	FlagSubPeriods         = "sub-periods"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -57,7 +56,6 @@ func GetCmdRewardProgramAdd() *cobra.Command {
     	--sub-period-type day \
     	--start-time 2022-05-10\
     	--sub-periods 10 \
-    	--eligibility-criteria "{\"name\":\"name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}}"
 		`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -104,16 +102,6 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 			if subPeriods < 1 {
 				return errors.New("number of sub periods must be larger than 0")
 			}
-			eligibilityCriteriaStr, err := cmd.Flags().GetString(FlagEligibilityCriteria)
-			if err != nil {
-				return err
-			}
-
-			var eligibilityCriteria types.EligibilityCriteria
-			err = clientCtx.Codec.UnmarshalJSON([]byte(eligibilityCriteriaStr), &eligibilityCriteria)
-			if err != nil {
-				return fmt.Errorf("unable to parse eligibility criteria : %s", err)
-			}
 
 			callerAddr := clientCtx.GetFromAddress()
 			msg := types.NewMsgCreateRewardProgramRequest(
@@ -125,7 +113,6 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 				startTime,
 				subPeriodTypeKey,
 				subPeriods,
-				eligibilityCriteria,
 			)
 			if err != nil {
 				return fmt.Errorf("invalid governance proposal. Error: %q", err)
@@ -139,6 +126,5 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 	cmd.Flags().String(FlagStartTime, "", "time to start the rewards program, this must be a time in the future or within the first epoch of format YYYY-MM-DDTHH:MM:SSZ00:00 (2012-11-01T22:08:41+07:00)")
 	cmd.Flags().String(FlagSubPeriodType, "", "sub period type (day, week, month)")
 	cmd.Flags().Uint64(FlagSubPeriods, 0, "number of sub periods for the reward program")
-	cmd.Flags().String(FlagEligibilityCriteria, "", "json of the eligibility criteria")
 	return cmd
 }

@@ -21,30 +21,12 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
-	rewardClaims := make([]types.RewardClaim, 0)
-	rewardClaimRecords := func(rewardClaim types.RewardClaim) bool {
-		rewardClaims = append(rewardClaims, rewardClaim)
-		return false
-	}
-	if err := k.IterateRewardClaims(ctx, rewardClaimRecords); err != nil {
-		panic(err)
-	}
-
 	epochRewardDistributions := make([]types.EpochRewardDistribution, 0)
 	epochRewardDistributionRecords := func(epochRewardDistribution types.EpochRewardDistribution) bool {
 		epochRewardDistributions = append(epochRewardDistributions, epochRewardDistribution)
 		return false
 	}
 	if err := k.IterateEpochRewardDistributions(ctx, epochRewardDistributionRecords); err != nil {
-		panic(err)
-	}
-
-	eligibilityCriterias := make([]types.EligibilityCriteria, 0)
-	eligibilityCriteriaRecords := func(eligibilityCriteria types.EligibilityCriteria) bool {
-		eligibilityCriterias = append(eligibilityCriterias, eligibilityCriteria)
-		return false
-	}
-	if err := k.IterateEligibilityCriterias(ctx, eligibilityCriteriaRecords); err != nil {
 		panic(err)
 	}
 
@@ -55,9 +37,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return types.NewGenesisState(
 		rewardProgramID,
 		rewardPrograms,
-		rewardClaims,
 		epochRewardDistributions,
-		eligibilityCriterias,
 		actionDelegate,
 		actionTransferDelegations,
 	)
@@ -75,16 +55,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 		k.SetRewardProgram(ctx, rewardProgram)
 	}
 
-	for _, rewardClaims := range data.RewardClaims {
-		k.SetRewardClaim(ctx, rewardClaims)
-	}
-
 	for _, epochRewardDistributions := range data.EpochRewardDistributions {
 		k.SetEpochRewardDistribution(ctx, epochRewardDistributions)
-	}
-
-	for _, eligibilityCriteria := range data.EligibilityCriterias {
-		k.SetEligibilityCriteria(ctx, eligibilityCriteria)
 	}
 
 	k.SetActionDelegate(ctx, data.ActionDelegate)

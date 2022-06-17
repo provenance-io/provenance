@@ -23,9 +23,6 @@ func (suite *KeeperTestSuite) TestStartRewardProgram() {
 		currentTime,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 
@@ -51,9 +48,6 @@ func (suite *KeeperTestSuite) TestEndRewardProgram() {
 		currentTime,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 
@@ -78,9 +72,6 @@ func (suite *KeeperTestSuite) TestRewardProgramSubPeriodEnd() {
 		currentTime,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 
@@ -107,9 +98,6 @@ func (suite *KeeperTestSuite) TestRewardProgramSubPeriodEndTransition() {
 		currentTime,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 
@@ -140,9 +128,6 @@ func (suite *KeeperTestSuite) TestCleanup() {
 		currentTime,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	hasShares.Finished = true
@@ -157,9 +142,6 @@ func (suite *KeeperTestSuite) TestCleanup() {
 		currentTime,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	hasExpiredShares.Finished = true
@@ -174,9 +156,6 @@ func (suite *KeeperTestSuite) TestCleanup() {
 		currentTime,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	hasNoShares.Finished = true
@@ -191,9 +170,6 @@ func (suite *KeeperTestSuite) TestCleanup() {
 		currentTime,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 
@@ -241,9 +217,6 @@ func (suite *KeeperTestSuite) TestUpdate() {
 		blockTime.Add(time.Duration(time.Hour)),
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 
@@ -258,9 +231,6 @@ func (suite *KeeperTestSuite) TestUpdate() {
 		blockTime,
 		60*60,
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 
@@ -275,9 +245,6 @@ func (suite *KeeperTestSuite) TestUpdate() {
 		blockTime,
 		uint64(time.Hour),
 		3,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &nextSubPeriod)
@@ -294,9 +261,6 @@ func (suite *KeeperTestSuite) TestUpdate() {
 		blockTime,
 		uint64(time.Hour),
 		1,
-		types.EligibilityCriteria{
-			Name: "Criteria",
-		},
 		[]types.QualifyingAction{},
 	)
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &ending)

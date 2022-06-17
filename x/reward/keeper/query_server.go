@@ -70,44 +70,6 @@ func (k Keeper) RewardProgramByID(ctx context.Context, req *types.RewardProgramB
 	return &response, nil
 }
 
-func (k Keeper) RewardClaims(ctx context.Context, req *types.RewardClaimsRequest) (*types.RewardClaimsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	response := types.RewardClaimsResponse{}
-
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	rewardClaims, err := k.GetAllRewardClaims(sdkCtx)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to query reward claims: %v", err))
-	}
-	response.RewardClaims = rewardClaims
-
-	return &response, nil
-}
-
-// returns a RewardClaim by id
-func (k Keeper) RewardClaimByID(ctx context.Context, req *types.RewardClaimByIDRequest) (*types.RewardClaimByIDResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	response := types.RewardClaimByIDResponse{}
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	claim, err := k.GetRewardClaim(sdkCtx, req.GetId())
-	if err != nil {
-		return &response, status.Errorf(codes.Internal, fmt.Sprintf("unable to query for reward claim: %v", err))
-	}
-
-	if k.RewardClaimIsValid(&claim) {
-		response.RewardClaim = &claim
-	}
-
-	return &response, nil
-}
-
 // returns all EpochRewardDistributions
 func (k Keeper) EpochRewardDistributions(ctx context.Context, req *types.EpochRewardDistributionRequest) (*types.EpochRewardDistributionResponse, error) {
 	if req == nil {
@@ -141,45 +103,6 @@ func (k Keeper) EpochRewardDistributionsByID(ctx context.Context, req *types.Epo
 
 	if k.EpochRewardDistributionIsValid(&epochReward) {
 		response.EpochRewardDistribution = &epochReward
-	}
-
-	return &response, nil
-}
-
-// returns all EligibilityCriterias
-func (k Keeper) EligibilityCriteria(ctx context.Context, req *types.EligibilityCriteriaRequest) (*types.EligibilityCriteriaResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	response := types.EligibilityCriteriaResponse{}
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	criteria, err := k.GetAllEligibilityCriteria(sdkCtx)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to query all eligibility criteria: %v", err))
-	}
-	response.EligibilityCriteria = criteria
-
-	return &response, nil
-}
-
-// returns a EligibilityCriteria by name
-func (k Keeper) EligibilityCriteriaByName(ctx context.Context, req *types.EligibilityCriteriaRequestByNameRequest) (*types.EligibilityCriteriaRequestByNameResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	response := types.EligibilityCriteriaRequestByNameResponse{}
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	criteria, err := k.GetEligibilityCriteria(sdkCtx, req.GetName())
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to query eligibility criteria: %v", err))
-	}
-
-	if k.EligibilityCriteriaIsValid(&criteria) {
-		response.EligibilityCriteria = &criteria
 	}
 
 	return &response, nil

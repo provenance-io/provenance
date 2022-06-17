@@ -112,7 +112,6 @@ func NewRewardProgram(
 	programStartTime time.Time,
 	subPeriodSeconds uint64,
 	subPeriods uint64,
-	eligibilityCriteria EligibilityCriteria,
 	qualifyingActions []QualifyingAction,
 ) RewardProgram {
 	return RewardProgram{
@@ -125,7 +124,6 @@ func NewRewardProgram(
 		ProgramStartTime:      programStartTime,
 		SubPeriodSeconds:      subPeriodSeconds,
 		SubPeriods:            subPeriods,
-		EligibilityCriteria:   eligibilityCriteria,
 		Started:               false,
 		Finished:              false,
 		QualifyingActions:     qualifyingActions,
@@ -166,9 +164,6 @@ func (rp *RewardProgram) ValidateBasic() error {
 	}
 	if _, err := sdk.AccAddressFromBech32(rp.DistributeFromAddress); err != nil {
 		return fmt.Errorf("invalid address for rewards program distribution from address: %w", err)
-	}
-	if err := rp.EligibilityCriteria.ValidateBasic(); err != nil {
-		return fmt.Errorf("eligibility criteria is not valid: %w", err)
 	}
 	if !rp.Coin.IsPositive() {
 		return fmt.Errorf("reward program requires coins: %v", rp.Coin)
@@ -213,28 +208,6 @@ func (rpb *RewardProgramBalance) ValidateBasic() error {
 
 func (rpb *RewardProgramBalance) String() string {
 	out, _ := yaml.Marshal(rpb)
-	return string(out)
-}
-
-// ============ Reward Claim * Not Used * ============
-
-func NewRewardClaim(address string, sharesPerEpochPerRewardsProgram []SharesPerEpochPerRewardsProgram, expired bool) RewardClaim {
-	return RewardClaim{
-		Address:                 address,
-		SharesPerEpochPerReward: sharesPerEpochPerRewardsProgram,
-		Expired:                 expired,
-	}
-}
-
-func (rc *RewardClaim) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(rc.Address); err != nil {
-		return fmt.Errorf("invalid address for reward claim address: %w", err)
-	}
-	return nil
-}
-
-func (rc *RewardClaim) String() string {
-	out, _ := yaml.Marshal(rc)
 	return string(out)
 }
 
@@ -319,45 +292,6 @@ func (erd *EpochRewardDistribution) ValidateBasic() error {
 
 func (erd *EpochRewardDistribution) String() string {
 	out, _ := yaml.Marshal(erd)
-	return string(out)
-}
-
-// ============ Eligibility Criteria ============
-
-func NewEligibilityCriteria(name string, action RewardAction) EligibilityCriteria {
-	ec := EligibilityCriteria{Name: name}
-	/*err := ec.SetAction(action)
-	if err != nil {
-		panic(err)
-	}*/
-	return ec
-}
-
-/*func (ec *EligibilityCriteria) SetAction(rewardAction RewardAction) error {
-	any, err := codectypes.NewAnyWithValue(rewardAction)
-	if err == nil {
-		ec.Action = *any
-	}
-	return err
-}*/
-
-func (ec *EligibilityCriteria) GetAction() RewardAction {
-	content, ok := ec.Action.GetCachedValue().(RewardAction)
-	if !ok {
-		return nil
-	}
-	return content
-}
-
-func (ec *EligibilityCriteria) ValidateBasic() error {
-	if len(ec.Name) < 1 {
-		return errors.New("eligibility criteria must have a name")
-	}
-	return nil
-}
-
-func (ec *EligibilityCriteria) String() string {
-	out, _ := yaml.Marshal(ec)
 	return string(out)
 }
 
@@ -511,42 +445,4 @@ func (qa *QualifyingAction) GetRewardAction(ctx sdk.Context) (RewardAction, erro
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: The Action type is %s", action.ActionType()))
 
 	return action, nil
-}
-
-// ============ SharesPerEpochPerRewardsProgram * Not used * ============
-
-func NewSharesPerEpochPerRewardsProgram(
-	rewardProgramID uint64,
-	totalShares int64,
-	ephemeralActionCount int64,
-	latestRecordedEpoch uint64,
-	claimed bool,
-	expired bool,
-	totalRewardsClaimed sdk.Coin,
-) SharesPerEpochPerRewardsProgram {
-	return SharesPerEpochPerRewardsProgram{
-		RewardProgramId:      rewardProgramID,
-		TotalShares:          totalShares,
-		EphemeralActionCount: ephemeralActionCount,
-		LatestRecordedEpoch:  latestRecordedEpoch,
-		Claimed:              claimed,
-		Expired:              expired,
-		TotalRewardClaimed:   totalRewardsClaimed,
-	}
-}
-
-func (apeprp *SharesPerEpochPerRewardsProgram) ValidateBasic() error {
-	if apeprp.RewardProgramId < 1 {
-		return errors.New("shares per epoch must have a valid reward program id")
-	}
-	if apeprp.LatestRecordedEpoch < 1 {
-		return errors.New("latest recorded epoch cannot be less than 1")
-	}
-	// TODO need more?
-	return nil
-}
-
-func (apeprp *SharesPerEpochPerRewardsProgram) String() string {
-	out, _ := yaml.Marshal(apeprp)
-	return string(out)
 }

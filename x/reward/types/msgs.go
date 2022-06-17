@@ -27,7 +27,6 @@ func NewMsgCreateRewardProgramRequest(
 	programStartTime time.Time,
 	subPeriodType string,
 	subPeriods uint64,
-	eligibilityCriteria EligibilityCriteria,
 ) *MsgCreateRewardProgramRequest {
 	return &MsgCreateRewardProgramRequest{
 		Title:                 title,
@@ -38,7 +37,6 @@ func NewMsgCreateRewardProgramRequest(
 		ProgramStartTime:      programStartTime,
 		SubPeriodType:         subPeriodType,
 		SubPeriods:            subPeriods,
-		EligibilityCriteria:   eligibilityCriteria,
 	}
 }
 
@@ -66,9 +64,6 @@ func (msg MsgCreateRewardProgramRequest) ValidateBasic() error {
 	}
 	if _, err := sdk.AccAddressFromBech32(msg.DistributeFromAddress); err != nil {
 		return fmt.Errorf("invalid address for rewards program distribution from address: %w", err)
-	}
-	if err := msg.EligibilityCriteria.ValidateBasic(); err != nil {
-		return fmt.Errorf("eligibility criteria is not valid: %w", err)
 	}
 	if !msg.Coin.IsPositive() {
 		return fmt.Errorf("reward program requires coins: %v", msg.Coin)

@@ -46,7 +46,6 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		msg.ProgramStartTime,
 		types.PeriodTypeToSeconds[msg.SubPeriodType],
 		msg.SubPeriods,
-		msg.EligibilityCriteria,
 
 		// TODO - We need to update this to be part of the message
 		[]types.QualifyingAction{},

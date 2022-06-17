@@ -396,14 +396,11 @@
     - [AccountState](#provenance.reward.v1.AccountState)
     - [ActionDelegate](#provenance.reward.v1.ActionDelegate)
     - [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations)
-    - [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria)
     - [EpochRewardDistribution](#provenance.reward.v1.EpochRewardDistribution)
     - [QualifyingAction](#provenance.reward.v1.QualifyingAction)
-    - [RewardClaim](#provenance.reward.v1.RewardClaim)
     - [RewardProgram](#provenance.reward.v1.RewardProgram)
     - [RewardProgramBalance](#provenance.reward.v1.RewardProgramBalance)
     - [Share](#provenance.reward.v1.Share)
-    - [SharesPerEpochPerRewardsProgram](#provenance.reward.v1.SharesPerEpochPerRewardsProgram)
   
 - [provenance/reward/v1/genesis.proto](#provenance/reward/v1/genesis.proto)
     - [GenesisState](#provenance.reward.v1.GenesisState)
@@ -411,20 +408,12 @@
 - [provenance/reward/v1/query.proto](#provenance/reward/v1/query.proto)
     - [ActiveRewardProgramsRequest](#provenance.reward.v1.ActiveRewardProgramsRequest)
     - [ActiveRewardProgramsResponse](#provenance.reward.v1.ActiveRewardProgramsResponse)
-    - [EligibilityCriteriaRequest](#provenance.reward.v1.EligibilityCriteriaRequest)
-    - [EligibilityCriteriaRequestByNameRequest](#provenance.reward.v1.EligibilityCriteriaRequestByNameRequest)
-    - [EligibilityCriteriaRequestByNameResponse](#provenance.reward.v1.EligibilityCriteriaRequestByNameResponse)
-    - [EligibilityCriteriaResponse](#provenance.reward.v1.EligibilityCriteriaResponse)
     - [EpochRewardDistributionByIDRequest](#provenance.reward.v1.EpochRewardDistributionByIDRequest)
     - [EpochRewardDistributionByIDResponse](#provenance.reward.v1.EpochRewardDistributionByIDResponse)
     - [EpochRewardDistributionRequest](#provenance.reward.v1.EpochRewardDistributionRequest)
     - [EpochRewardDistributionResponse](#provenance.reward.v1.EpochRewardDistributionResponse)
     - [QueryModuleAccountBalanceRequest](#provenance.reward.v1.QueryModuleAccountBalanceRequest)
     - [QueryModuleAccountBalanceResponse](#provenance.reward.v1.QueryModuleAccountBalanceResponse)
-    - [RewardClaimByIDRequest](#provenance.reward.v1.RewardClaimByIDRequest)
-    - [RewardClaimByIDResponse](#provenance.reward.v1.RewardClaimByIDResponse)
-    - [RewardClaimsRequest](#provenance.reward.v1.RewardClaimsRequest)
-    - [RewardClaimsResponse](#provenance.reward.v1.RewardClaimsResponse)
     - [RewardProgramByIDRequest](#provenance.reward.v1.RewardProgramByIDRequest)
     - [RewardProgramByIDResponse](#provenance.reward.v1.RewardProgramByIDResponse)
     - [RewardProgramsRequest](#provenance.reward.v1.RewardProgramsRequest)
@@ -6000,22 +5989,6 @@ give it a share of the rewards pool, assuming it has not gone over max value and
 
 
 
-<a name="provenance.reward.v1.EligibilityCriteria"></a>
-
-### EligibilityCriteria
-EligibilityCriteria defines an Action which accrues rewards for a running RewardProgram
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `name` | [string](#string) |  |  |
-| `action` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-
-
-
-
-
-
 <a name="provenance.reward.v1.EpochRewardDistribution"></a>
 
 ### EpochRewardDistribution
@@ -6051,23 +6024,6 @@ EpochRewardDistribution, this will updated at the end of every epoch
 
 
 
-<a name="provenance.reward.v1.RewardClaim"></a>
-
-### RewardClaim
-A RewardClaim is the metadata of reward data per address
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | address of user reward |
-| `expired` | [bool](#bool) |  | state of a reward claim |
-| `shares_per_epoch_per_reward` | [SharesPerEpochPerRewardsProgram](#provenance.reward.v1.SharesPerEpochPerRewardsProgram) | repeated | array of shares calculated per epoch for each reward program |
-
-
-
-
-
-
 <a name="provenance.reward.v1.RewardProgram"></a>
 
 ### RewardProgram
@@ -6087,7 +6043,6 @@ RewardProgram
 | `sub_period_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `sub_periods` | [uint64](#uint64) |  | number of epochs this program will last for |
 | `current_sub_period` | [uint64](#uint64) |  | the current epoch reward program is on |
-| `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
 | `started` | [bool](#bool) |  | has the rewards program started |
 | `finished` | [bool](#bool) |  | has the rewards program completed |
 | `finished_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
@@ -6136,29 +6091,6 @@ Share
 
 
 
-
-<a name="provenance.reward.v1.SharesPerEpochPerRewardsProgram"></a>
-
-### SharesPerEpochPerRewardsProgram
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `reward_program_id` | [uint64](#uint64) |  | epoch id can be derived from reward program |
-| `total_shares` | [int64](#int64) |  | total shares accumulated( it is running total), can be negative |
-| `ephemeral_action_count` | [int64](#int64) |  | total number of times action has been taken by account |
-| `latest_recorded_epoch` | [uint64](#uint64) |  | last epoch number that this reward program was triggerred for. |
-| `claimed` | [bool](#bool) |  | action type
-
-whether rewards has been claimed |
-| `expired` | [bool](#bool) |  | rewards have been expired, this is defined in RewardProgram |
-| `total_reward_claimed` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-
-
-
-
-
  <!-- end messages -->
 
  <!-- end enums -->
@@ -6186,9 +6118,7 @@ GenesisState defines the reward module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `StartingRewardProgramId` | [uint64](#uint64) |  | starting_reward_program_id is the ID of the starting reward program. |
 | `reward_programs` | [RewardProgram](#provenance.reward.v1.RewardProgram) | repeated |  |
-| `reward_claims` | [RewardClaim](#provenance.reward.v1.RewardClaim) | repeated |  |
 | `epoch_reward_distributions` | [EpochRewardDistribution](#provenance.reward.v1.EpochRewardDistribution) | repeated |  |
-| `eligibility_criterias` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) | repeated |  |
 | `action_delegate` | [ActionDelegate](#provenance.reward.v1.ActionDelegate) |  |  |
 | `action_transfer_delegations` | [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations) |  |  |
 
@@ -6232,61 +6162,6 @@ GenesisState defines the reward module's genesis state.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `reward_programs` | [RewardProgram](#provenance.reward.v1.RewardProgram) | repeated |  |
-
-
-
-
-
-
-<a name="provenance.reward.v1.EligibilityCriteriaRequest"></a>
-
-### EligibilityCriteriaRequest
-
-
-
-
-
-
-
-<a name="provenance.reward.v1.EligibilityCriteriaRequestByNameRequest"></a>
-
-### EligibilityCriteriaRequestByNameRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `name` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="provenance.reward.v1.EligibilityCriteriaRequestByNameResponse"></a>
-
-### EligibilityCriteriaRequestByNameResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
-
-
-
-
-
-
-<a name="provenance.reward.v1.EligibilityCriteriaResponse"></a>
-
-### EligibilityCriteriaResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) | repeated |  |
 
 
 
@@ -6374,61 +6249,6 @@ QueryModuleAccountBalanceResponse is the response type for the Query/Params RPC 
 
 
 
-<a name="provenance.reward.v1.RewardClaimByIDRequest"></a>
-
-### RewardClaimByIDRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `id` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="provenance.reward.v1.RewardClaimByIDResponse"></a>
-
-### RewardClaimByIDResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `reward_claim` | [RewardClaim](#provenance.reward.v1.RewardClaim) |  |  |
-
-
-
-
-
-
-<a name="provenance.reward.v1.RewardClaimsRequest"></a>
-
-### RewardClaimsRequest
-
-
-
-
-
-
-
-<a name="provenance.reward.v1.RewardClaimsResponse"></a>
-
-### RewardClaimsResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `reward_claims` | [RewardClaim](#provenance.reward.v1.RewardClaim) | repeated |  |
-
-
-
-
-
-
 <a name="provenance.reward.v1.RewardProgramByIDRequest"></a>
 
 ### RewardProgramByIDRequest
@@ -6501,12 +6321,8 @@ Query defines the gRPC querier service for reward module.
 | `RewardPrograms` | [RewardProgramsRequest](#provenance.reward.v1.RewardProgramsRequest) | [RewardProgramsResponse](#provenance.reward.v1.RewardProgramsResponse) | returns RewardPrograms both upcoming and active | GET|/provenance/rewards/v1/reward_programs|
 | `ActiveRewardPrograms` | [ActiveRewardProgramsRequest](#provenance.reward.v1.ActiveRewardProgramsRequest) | [ActiveRewardProgramsResponse](#provenance.reward.v1.ActiveRewardProgramsResponse) | returns active RewardPrograms | GET|/provenance/rewards/v1/active_reward_programs|
 | `ModuleAccountBalance` | [QueryModuleAccountBalanceRequest](#provenance.reward.v1.QueryModuleAccountBalanceRequest) | [QueryModuleAccountBalanceResponse](#provenance.reward.v1.QueryModuleAccountBalanceResponse) |  | GET|/provenance/rewards/v1/module_account_balance|
-| `RewardClaims` | [RewardClaimsRequest](#provenance.reward.v1.RewardClaimsRequest) | [RewardClaimsResponse](#provenance.reward.v1.RewardClaimsResponse) | returns all RewardClaims | GET|/provenance/rewards/v1/reward_claims|
-| `RewardClaimByID` | [RewardClaimByIDRequest](#provenance.reward.v1.RewardClaimByIDRequest) | [RewardClaimByIDResponse](#provenance.reward.v1.RewardClaimByIDResponse) | returns a RewardClaim by id | GET|/provenance/rewards/v1/reward_claim_by_id/{id}|
 | `EpochRewardDistributions` | [EpochRewardDistributionRequest](#provenance.reward.v1.EpochRewardDistributionRequest) | [EpochRewardDistributionResponse](#provenance.reward.v1.EpochRewardDistributionResponse) | returns all EpochRewardDistributions | GET|/provenance/rewards/v1/epoch_reward_distributions|
 | `EpochRewardDistributionsByID` | [EpochRewardDistributionByIDRequest](#provenance.reward.v1.EpochRewardDistributionByIDRequest) | [EpochRewardDistributionByIDResponse](#provenance.reward.v1.EpochRewardDistributionByIDResponse) | returns a EpochRewardDistribution by rewardId and epochId | GET|/provenance/rewards/v1/epoch_reward_distributions/{rewardId}/epochs/{epochId}|
-| `EligibilityCriteria` | [EligibilityCriteriaRequest](#provenance.reward.v1.EligibilityCriteriaRequest) | [EligibilityCriteriaResponse](#provenance.reward.v1.EligibilityCriteriaResponse) | returns all EligibilityCriterias | GET|/provenance/rewards/v1/eligibility_criteria|
-| `EligibilityCriteriaByName` | [EligibilityCriteriaRequestByNameRequest](#provenance.reward.v1.EligibilityCriteriaRequestByNameRequest) | [EligibilityCriteriaRequestByNameResponse](#provenance.reward.v1.EligibilityCriteriaRequestByNameResponse) | returns a EligibilityCriteria by name | GET|/provenance/rewards/v1/eligibility_criteria/{name}|
 
  <!-- end services -->
 
@@ -6535,7 +6351,6 @@ Query defines the gRPC querier service for reward module.
 | `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `sub_period_type` | [string](#string) |  | EpochInfo defines the type of sub period attributed to this program.(e.g day,week,month) |
 | `sub_periods` | [uint64](#uint64) |  | number of sub periods this program will last for |
-| `eligibility_criteria` | [EligibilityCriteria](#provenance.reward.v1.EligibilityCriteria) |  |  |
 
 
 

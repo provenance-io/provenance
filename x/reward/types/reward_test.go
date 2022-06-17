@@ -45,7 +45,6 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				now,
 				60*24,
 				1,
-				NewEligibilityCriteria("action-name", &ActionDelegate{}),
 				[]QualifyingAction{},
 			),
 			"",
@@ -62,7 +61,6 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				now,
 				60*24,
 				1,
-				NewEligibilityCriteria("action-name", &ActionDelegate{}),
 				[]QualifyingAction{},
 			),
 			"reward program title cannot be blank",
@@ -79,7 +77,6 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				now,
 				60*24,
 				1,
-				NewEligibilityCriteria("action-name", &ActionDelegate{}),
 				[]QualifyingAction{},
 			),
 			"reward program title is longer than max length of 140",
@@ -96,7 +93,6 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				now,
 				60*24,
 				1,
-				NewEligibilityCriteria("action-name", &ActionDelegate{}),
 				[]QualifyingAction{},
 			),
 			"reward program description cannot be blank",
@@ -113,7 +109,6 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				now,
 				60*24,
 				1,
-				NewEligibilityCriteria("action-name", &ActionDelegate{}),
 				[]QualifyingAction{},
 			),
 			"reward program description is longer than max length of 10000",
@@ -130,7 +125,6 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				now,
 				60*24,
 				1,
-				NewEligibilityCriteria("action-name", &ActionDelegate{}),
 				[]QualifyingAction{},
 			),
 			"reward program id must be larger than 0",
@@ -147,27 +141,9 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				now,
 				60*24,
 				1,
-				NewEligibilityCriteria("action-name", &ActionDelegate{}),
 				[]QualifyingAction{},
 			),
 			"invalid address for rewards program distribution from address: decoding bech32 failed: invalid bech32 string length 7",
-		},
-		{
-			"invalid - ec validation fail",
-			NewRewardProgram(
-				"title",
-				"description",
-				1,
-				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-				sdk.NewInt64Coin("jackthecat", 1),
-				sdk.NewInt64Coin("jackthecat", 2),
-				now,
-				60*24,
-				1,
-				NewEligibilityCriteria("", &ActionDelegate{}),
-				[]QualifyingAction{},
-			),
-			"eligibility criteria is not valid: eligibility criteria must have a name",
 		},
 		{
 			"invalid - coin must be positive",
@@ -181,7 +157,6 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				now,
 				60*24,
 				1,
-				NewEligibilityCriteria("action-name", &ActionDelegate{}),
 				[]QualifyingAction{},
 			),
 			"reward program requires coins: 0jackthecat",
@@ -198,7 +173,6 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				now,
 				60*24,
 				1,
-				NewEligibilityCriteria("action-name", &ActionDelegate{}),
 				[]QualifyingAction{},
 			),
 			"reward program requires positive max reward by address: 0jackthecat",
@@ -215,7 +189,6 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				now,
 				60*24,
 				0,
-				NewEligibilityCriteria("action-name", &ActionDelegate{}),
 				[]QualifyingAction{},
 			),
 			"reward program number of sub periods must be larger than 0",
@@ -283,37 +256,6 @@ func (s *RewardTypesTestSuite) TestRewardProgramBalanceValidateBasic() {
 	}
 }
 
-func (s *RewardTypesTestSuite) TestRewardClaimValidateBasic() {
-	tests := []struct {
-		name        string
-		rewardClaim RewardClaim
-		want        string
-	}{
-		{
-			"invalid -  address format",
-			NewRewardClaim("invalid", []SharesPerEpochPerRewardsProgram{}, false),
-			"invalid address for reward claim address: decoding bech32 failed: invalid bech32 string length 7",
-		},
-		{
-			"should succeed validate basic",
-			NewRewardClaim("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", []SharesPerEpochPerRewardsProgram{}, false),
-			"",
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		s.T().Run(tt.name, func(t *testing.T) {
-			err := tt.rewardClaim.ValidateBasic()
-			if err != nil {
-				assert.Equal(t, tt.want, err.Error())
-			} else if len(tt.want) > 0 {
-				t.Errorf("RewardClaim ValidateBasic error = nil, expected: %s", tt.want)
-			}
-		})
-	}
-}
-
 func (s *RewardTypesTestSuite) TestEpochRewardDistributionValidateBasic() {
 	tests := []struct {
 		name          string
@@ -350,97 +292,6 @@ func (s *RewardTypesTestSuite) TestEpochRewardDistributionValidateBasic() {
 				assert.Equal(t, tt.want, err.Error())
 			} else if len(tt.want) > 0 {
 				t.Errorf("EpochRewardDistribution ValidateBasic error = nil, expected: %s", tt.want)
-			}
-		})
-	}
-}
-
-func (s *RewardTypesTestSuite) TestEligibilityCriteriaValidateBasic() {
-	tests := []struct {
-		name string
-		ec   EligibilityCriteria
-		want string
-	}{
-		{
-			"invalid -  empty name",
-			NewEligibilityCriteria("", &ActionDelegate{}),
-			"eligibility criteria must have a name",
-		},
-		{
-			"should succeed validate basic",
-			NewEligibilityCriteria("name", &ActionDelegate{}),
-			"",
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		s.T().Run(tt.name, func(t *testing.T) {
-			err := tt.ec.ValidateBasic()
-			if err != nil {
-				assert.Equal(t, tt.want, err.Error())
-			} else if len(tt.want) > 0 {
-				t.Errorf("EligibilityCriteria ValidateBasic error = nil, expected: %s", tt.want)
-			}
-		})
-	}
-}
-
-func (s *RewardTypesTestSuite) TestSharesPerEpochPerRewardsProgramValidateBasic() {
-	tests := []struct {
-		name                            string
-		sharesPerEpochPerRewardsProgram SharesPerEpochPerRewardsProgram
-		want                            string
-	}{
-		{
-			"invalid -  rewards program id incorrect",
-			NewSharesPerEpochPerRewardsProgram(
-				0,
-				0,
-				0,
-				1,
-				false,
-				false,
-				sdk.NewInt64Coin("jackthecat", 1),
-			),
-			"shares per epoch must have a valid reward program id",
-		},
-		{
-			"invalid -  last recorded epoch incorrect",
-			NewSharesPerEpochPerRewardsProgram(
-				1,
-				0,
-				0,
-				0,
-				false,
-				false,
-				sdk.NewInt64Coin("jackthecat", 1),
-			),
-			"latest recorded epoch cannot be less than 1",
-		},
-		{
-			"should succeed validate basic",
-			NewSharesPerEpochPerRewardsProgram(
-				1,
-				0,
-				0,
-				1,
-				false,
-				false,
-				sdk.NewInt64Coin("jackthecat", 1),
-			),
-			"",
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		s.T().Run(tt.name, func(t *testing.T) {
-			err := tt.sharesPerEpochPerRewardsProgram.ValidateBasic()
-			if err != nil {
-				assert.Equal(t, tt.want, err.Error())
-			} else if len(tt.want) > 0 {
-				t.Errorf("SharesPerEpochPerRewardsProgram ValidateBasic error = nil, expected: %s", tt.want)
 			}
 		})
 	}
