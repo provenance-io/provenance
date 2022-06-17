@@ -43,18 +43,18 @@ func (k Keeper) StartRewardProgram(ctx sdk.Context, rewardProgram *types.RewardP
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Starting reward program: %v ", rewardProgram))
 	blockTime := ctx.BlockTime()
 	rewardProgram.Started = true
-	rewardProgram.SubPeriodEndTime = blockTime.Add(time.Duration(rewardProgram.SubPeriodSeconds) * time.Second)
-	rewardProgram.CurrentSubPeriod = 1
+	rewardProgram.ClaimPeriodEndTime = blockTime.Add(time.Duration(rewardProgram.ClaimPeriodSeconds) * time.Second)
+	rewardProgram.CurrentClaimPeriod = 1
 }
 
 func (k Keeper) EndRewardProgramSubPeriod(ctx sdk.Context, rewardProgram *types.RewardProgram) {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Sub period end hit for reward program %v ", rewardProgram))
 	blockTime := ctx.BlockTime()
-	rewardProgram.CurrentSubPeriod++
+	rewardProgram.CurrentClaimPeriod++
 	if rewardProgram.IsEnding(ctx) {
 		k.EndRewardProgram(ctx, rewardProgram)
 	} else {
-		rewardProgram.SubPeriodEndTime = blockTime.Add(time.Duration(rewardProgram.SubPeriodSeconds) * time.Second)
+		rewardProgram.ClaimPeriodEndTime = blockTime.Add(time.Duration(rewardProgram.ClaimPeriodSeconds) * time.Second)
 	}
 }
 
@@ -62,5 +62,5 @@ func (k Keeper) EndRewardProgram(ctx sdk.Context, rewardProgram *types.RewardPro
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Ending reward program %v ", rewardProgram))
 	blockTime := ctx.BlockTime()
 	rewardProgram.Finished = true
-	rewardProgram.FinishedTime = blockTime
+	rewardProgram.ActualProgramEndTime = blockTime
 }

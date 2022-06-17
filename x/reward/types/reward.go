@@ -119,11 +119,11 @@ func NewRewardProgram(
 		Description:           description,
 		Id:                    id,
 		DistributeFromAddress: distributeFromAddress,
-		Coin:                  coin,
+		TotalRewardPool:       coin,
 		MaxRewardByAddress:    maxRewardByAddress,
 		ProgramStartTime:      programStartTime,
-		SubPeriodSeconds:      subPeriodSeconds,
-		SubPeriods:            subPeriods,
+		ClaimPeriodSeconds:    subPeriodSeconds,
+		ClaimPeriods:          subPeriods,
 		Started:               false,
 		Finished:              false,
 		QualifyingActions:     qualifyingActions,
@@ -137,11 +137,11 @@ func (rp *RewardProgram) IsStarting(ctx sdk.Context) bool {
 
 func (rp *RewardProgram) IsEndingSubPeriod(ctx sdk.Context) bool {
 	blockTime := ctx.BlockTime()
-	return rp.Started && !rp.Finished && (blockTime.After(rp.SubPeriodEndTime) || blockTime.Equal(rp.SubPeriodEndTime))
+	return rp.Started && !rp.Finished && (blockTime.After(rp.ClaimPeriodEndTime) || blockTime.Equal(rp.ClaimPeriodEndTime))
 }
 
 func (rp *RewardProgram) IsEnding(ctx sdk.Context) bool {
-	return rp.CurrentSubPeriod > rp.SubPeriods
+	return rp.CurrentClaimPeriod > rp.ClaimPeriods
 }
 
 func (rp *RewardProgram) ValidateBasic() error {
@@ -165,13 +165,13 @@ func (rp *RewardProgram) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(rp.DistributeFromAddress); err != nil {
 		return fmt.Errorf("invalid address for rewards program distribution from address: %w", err)
 	}
-	if !rp.Coin.IsPositive() {
-		return fmt.Errorf("reward program requires coins: %v", rp.Coin)
+	if !rp.TotalRewardPool.IsPositive() {
+		return fmt.Errorf("reward program requires coins: %v", rp.TotalRewardPool)
 	}
 	if !rp.MaxRewardByAddress.IsPositive() {
 		return fmt.Errorf("reward program requires positive max reward by address: %v", rp.MaxRewardByAddress)
 	}
-	if rp.SubPeriods < 1 {
+	if rp.ClaimPeriods < 1 {
 		return errors.New("reward program number of sub periods must be larger than 0")
 	}
 	return nil
@@ -267,9 +267,9 @@ func (s *Share) String() string {
 
 // ============ Epoch Reward Distribution ============
 
-func NewEpochRewardDistribution(epochID string, rewardProgramID uint64, totalRewardsPool sdk.Coin, totalShares int64, epochEnded bool) EpochRewardDistribution {
-	return EpochRewardDistribution{
-		EpochId:          epochID,
+func NewClaimPeriodRewardDistribution(epochID string, rewardProgramID uint64, totalRewardsPool sdk.Coin, totalShares int64, epochEnded bool) ClaimPeriodRewardDistribution {
+	return ClaimPeriodRewardDistribution{
+		ClaimPeriodId:    epochID,
 		RewardProgramId:  rewardProgramID,
 		TotalRewardsPool: totalRewardsPool,
 		TotalShares:      totalShares,
@@ -277,8 +277,8 @@ func NewEpochRewardDistribution(epochID string, rewardProgramID uint64, totalRew
 	}
 }
 
-func (erd *EpochRewardDistribution) ValidateBasic() error {
-	if len(erd.EpochId) < 1 {
+func (erd *ClaimPeriodRewardDistribution) ValidateBasic() error {
+	if len(erd.ClaimPeriodId) < 1 {
 		return errors.New("epoch reward distribution must have a epoch id")
 	}
 	if erd.RewardProgramId < 1 {
@@ -290,7 +290,7 @@ func (erd *EpochRewardDistribution) ValidateBasic() error {
 	return nil
 }
 
-func (erd *EpochRewardDistribution) String() string {
+func (erd *ClaimPeriodRewardDistribution) String() string {
 	out, _ := yaml.Marshal(erd)
 	return string(out)
 }

@@ -41,18 +41,6 @@
   
     - [Msg](#provenance.attribute.v1.Msg)
   
-- [provenance/epoch/v1/genesis.proto](#provenance/epoch/v1/genesis.proto)
-    - [EpochInfo](#provenance.epoch.v1.EpochInfo)
-    - [GenesisState](#provenance.epoch.v1.GenesisState)
-  
-- [provenance/epoch/v1/query.proto](#provenance/epoch/v1/query.proto)
-    - [QueryCurrentEpochRequest](#provenance.epoch.v1.QueryCurrentEpochRequest)
-    - [QueryCurrentEpochResponse](#provenance.epoch.v1.QueryCurrentEpochResponse)
-    - [QueryEpochInfosRequest](#provenance.epoch.v1.QueryEpochInfosRequest)
-    - [QueryEpochInfosResponse](#provenance.epoch.v1.QueryEpochInfosResponse)
-  
-    - [Query](#provenance.epoch.v1.Query)
-  
 - [provenance/marker/v1/accessgrant.proto](#provenance/marker/v1/accessgrant.proto)
     - [AccessGrant](#provenance.marker.v1.AccessGrant)
   
@@ -396,7 +384,7 @@
     - [AccountState](#provenance.reward.v1.AccountState)
     - [ActionDelegate](#provenance.reward.v1.ActionDelegate)
     - [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations)
-    - [EpochRewardDistribution](#provenance.reward.v1.EpochRewardDistribution)
+    - [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution)
     - [QualifyingAction](#provenance.reward.v1.QualifyingAction)
     - [RewardProgram](#provenance.reward.v1.RewardProgram)
     - [RewardProgramBalance](#provenance.reward.v1.RewardProgramBalance)
@@ -408,10 +396,10 @@
 - [provenance/reward/v1/query.proto](#provenance/reward/v1/query.proto)
     - [ActiveRewardProgramsRequest](#provenance.reward.v1.ActiveRewardProgramsRequest)
     - [ActiveRewardProgramsResponse](#provenance.reward.v1.ActiveRewardProgramsResponse)
-    - [EpochRewardDistributionByIDRequest](#provenance.reward.v1.EpochRewardDistributionByIDRequest)
-    - [EpochRewardDistributionByIDResponse](#provenance.reward.v1.EpochRewardDistributionByIDResponse)
-    - [EpochRewardDistributionRequest](#provenance.reward.v1.EpochRewardDistributionRequest)
-    - [EpochRewardDistributionResponse](#provenance.reward.v1.EpochRewardDistributionResponse)
+    - [ClaimPeriodRewardDistributionByIDRequest](#provenance.reward.v1.ClaimPeriodRewardDistributionByIDRequest)
+    - [ClaimPeriodRewardDistributionByIDResponse](#provenance.reward.v1.ClaimPeriodRewardDistributionByIDResponse)
+    - [ClaimPeriodRewardDistributionRequest](#provenance.reward.v1.ClaimPeriodRewardDistributionRequest)
+    - [ClaimPeriodRewardDistributionResponse](#provenance.reward.v1.ClaimPeriodRewardDistributionResponse)
     - [QueryModuleAccountBalanceRequest](#provenance.reward.v1.QueryModuleAccountBalanceRequest)
     - [QueryModuleAccountBalanceResponse](#provenance.reward.v1.QueryModuleAccountBalanceResponse)
     - [RewardProgramByIDRequest](#provenance.reward.v1.RewardProgramByIDRequest)
@@ -905,139 +893,6 @@ Msg defines the bank Msg service.
 | `UpdateAttribute` | [MsgUpdateAttributeRequest](#provenance.attribute.v1.MsgUpdateAttributeRequest) | [MsgUpdateAttributeResponse](#provenance.attribute.v1.MsgUpdateAttributeResponse) | UpdateAttribute defines a method to verify a particular invariance. | |
 | `DeleteAttribute` | [MsgDeleteAttributeRequest](#provenance.attribute.v1.MsgDeleteAttributeRequest) | [MsgDeleteAttributeResponse](#provenance.attribute.v1.MsgDeleteAttributeResponse) | DeleteAttribute defines a method to verify a particular invariance. | |
 | `DeleteDistinctAttribute` | [MsgDeleteDistinctAttributeRequest](#provenance.attribute.v1.MsgDeleteDistinctAttributeRequest) | [MsgDeleteDistinctAttributeResponse](#provenance.attribute.v1.MsgDeleteDistinctAttributeResponse) | DeleteDistinctAttribute defines a method to verify a particular invariance. | |
-
- <!-- end services -->
-
-
-
-<a name="provenance/epoch/v1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/epoch/v1/genesis.proto
-
-
-
-<a name="provenance.epoch.v1.EpochInfo"></a>
-
-### EpochInfo
-EpochInfo defines characteristics of an eppoch defined by the platform
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `identifier` | [string](#string) |  |  |
-| `start_height` | [uint64](#uint64) |  | start height of the beginning of all epoch |
-| `duration` | [uint64](#uint64) |  | in blocks for e.g a month will be (30*24*7*60*60)/5 blocks |
-| `current_epoch` | [uint64](#uint64) |  |  |
-| `current_epoch_start_height` | [uint64](#uint64) |  | start height of the current epoch |
-| `epoch_counting_started` | [bool](#bool) |  |  |
-
-
-
-
-
-
-<a name="provenance.epoch.v1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the epochs module's genesis state.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `epochs` | [EpochInfo](#provenance.epoch.v1.EpochInfo) | repeated |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="provenance/epoch/v1/query.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/epoch/v1/query.proto
-
-
-
-<a name="provenance.epoch.v1.QueryCurrentEpochRequest"></a>
-
-### QueryCurrentEpochRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `identifier` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="provenance.epoch.v1.QueryCurrentEpochResponse"></a>
-
-### QueryCurrentEpochResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `current_epoch` | [uint64](#uint64) |  |  |
-
-
-
-
-
-
-<a name="provenance.epoch.v1.QueryEpochInfosRequest"></a>
-
-### QueryEpochInfosRequest
-QueryEpochsInfosRequest
-
-
-
-
-
-
-<a name="provenance.epoch.v1.QueryEpochInfosResponse"></a>
-
-### QueryEpochInfosResponse
-QueryEpochInfosResponse
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `epochs` | [EpochInfo](#provenance.epoch.v1.EpochInfo) | repeated |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="provenance.epoch.v1.Query"></a>
-
-### Query
-Query defines the gRPC querier service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `EpochInfos` | [QueryEpochInfosRequest](#provenance.epoch.v1.QueryEpochInfosRequest) | [QueryEpochInfosResponse](#provenance.epoch.v1.QueryEpochInfosResponse) | EpochInfos provide running epochInfos | GET|/provenance/epoch/v1/epochs|
-| `CurrentEpoch` | [QueryCurrentEpochRequest](#provenance.epoch.v1.QueryCurrentEpochRequest) | [QueryCurrentEpochResponse](#provenance.epoch.v1.QueryCurrentEpochResponse) | CurrentEpoch provide current epoch of specified identifier | GET|/provenance/epoch/v1/current_epoch|
 
  <!-- end services -->
 
@@ -5989,15 +5844,15 @@ give it a share of the rewards pool, assuming it has not gone over max value and
 
 
 
-<a name="provenance.reward.v1.EpochRewardDistribution"></a>
+<a name="provenance.reward.v1.ClaimPeriodRewardDistribution"></a>
 
-### EpochRewardDistribution
-EpochRewardDistribution, this will updated at the end of every epoch
+### ClaimPeriodRewardDistribution
+ClaimPeriodRewardDistribution, this will updated at the end of every epoch
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `epoch_id` | [string](#string) |  |  |
+| `claim_period_id` | [string](#string) |  |  |
 | `reward_program_id` | [uint64](#uint64) |  |  |
 | `total_rewards_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `total_shares` | [int64](#int64) |  |  |
@@ -6036,15 +5891,17 @@ RewardProgram
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
 | `distribute_from_address` | [string](#string) |  | community pool for now |
-| `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `total_reward_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | maximum rewards amount per address |
-| `sub_period_seconds` | [uint64](#uint64) |  | EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month) |
-| `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `sub_period_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `finished_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `sub_periods` | [uint64](#uint64) |  | number of epochs this program will last for |
-| `current_sub_period` | [uint64](#uint64) |  | the current epoch reward program is on |
+| `claim_period_seconds` | [uint64](#uint64) |  | claim_period_seconds defines the type of claim_period attributed to this program.(e.g day,week,month) |
+| `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | optional field |
+| `expected_program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | optional |
+| `claim_period_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `actual_program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | when the program actually ended, will be empty at start |
+| `claim_periods` | [uint64](#uint64) |  | number of claim_periods set by reaward program creator
+
+number of epochs this program will last for |
+| `current_claim_period` | [uint64](#uint64) |  | the current claim_period for the reward program is on(claim periods start at 1 <-- fisrt period) |
 | `started` | [bool](#bool) |  | has the rewards program started |
 | `finished` | [bool](#bool) |  | has the rewards program completed |
 | `share_expiration_offset` | [uint64](#uint64) |  | Used to calculate the expiration time of a share in seconds. Currently, it is epoch_end_time + offset |
@@ -6119,7 +5976,7 @@ GenesisState defines the reward module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `StartingRewardProgramId` | [uint64](#uint64) |  | starting_reward_program_id is the ID of the starting reward program. |
 | `reward_programs` | [RewardProgram](#provenance.reward.v1.RewardProgram) | repeated |  |
-| `epoch_reward_distributions` | [EpochRewardDistribution](#provenance.reward.v1.EpochRewardDistribution) | repeated |  |
+| `claim_period_reward_distributions` | [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution) | repeated |  |
 | `action_delegate` | [ActionDelegate](#provenance.reward.v1.ActionDelegate) |  |  |
 | `action_transfer_delegations` | [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations) |  |  |
 
@@ -6169,56 +6026,56 @@ GenesisState defines the reward module's genesis state.
 
 
 
-<a name="provenance.reward.v1.EpochRewardDistributionByIDRequest"></a>
+<a name="provenance.reward.v1.ClaimPeriodRewardDistributionByIDRequest"></a>
 
-### EpochRewardDistributionByIDRequest
+### ClaimPeriodRewardDistributionByIDRequest
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `rewardId` | [uint64](#uint64) |  |  |
-| `epochId` | [string](#string) |  |  |
+| `claimPeriodId` | [string](#string) |  |  |
 
 
 
 
 
 
-<a name="provenance.reward.v1.EpochRewardDistributionByIDResponse"></a>
+<a name="provenance.reward.v1.ClaimPeriodRewardDistributionByIDResponse"></a>
 
-### EpochRewardDistributionByIDResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `epoch_reward_distribution` | [EpochRewardDistribution](#provenance.reward.v1.EpochRewardDistribution) |  |  |
-
-
-
-
-
-
-<a name="provenance.reward.v1.EpochRewardDistributionRequest"></a>
-
-### EpochRewardDistributionRequest
-
-
-
-
-
-
-
-<a name="provenance.reward.v1.EpochRewardDistributionResponse"></a>
-
-### EpochRewardDistributionResponse
+### ClaimPeriodRewardDistributionByIDResponse
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `epoch_reward_distribution` | [EpochRewardDistribution](#provenance.reward.v1.EpochRewardDistribution) | repeated |  |
+| `claim_period_reward_distribution` | [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.ClaimPeriodRewardDistributionRequest"></a>
+
+### ClaimPeriodRewardDistributionRequest
+
+
+
+
+
+
+
+<a name="provenance.reward.v1.ClaimPeriodRewardDistributionResponse"></a>
+
+### ClaimPeriodRewardDistributionResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `claim_period_reward_distribution` | [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution) | repeated |  |
 
 
 
@@ -6322,8 +6179,8 @@ Query defines the gRPC querier service for reward module.
 | `RewardPrograms` | [RewardProgramsRequest](#provenance.reward.v1.RewardProgramsRequest) | [RewardProgramsResponse](#provenance.reward.v1.RewardProgramsResponse) | returns RewardPrograms both upcoming and active | GET|/provenance/rewards/v1/reward_programs|
 | `ActiveRewardPrograms` | [ActiveRewardProgramsRequest](#provenance.reward.v1.ActiveRewardProgramsRequest) | [ActiveRewardProgramsResponse](#provenance.reward.v1.ActiveRewardProgramsResponse) | returns active RewardPrograms | GET|/provenance/rewards/v1/active_reward_programs|
 | `ModuleAccountBalance` | [QueryModuleAccountBalanceRequest](#provenance.reward.v1.QueryModuleAccountBalanceRequest) | [QueryModuleAccountBalanceResponse](#provenance.reward.v1.QueryModuleAccountBalanceResponse) |  | GET|/provenance/rewards/v1/module_account_balance|
-| `EpochRewardDistributions` | [EpochRewardDistributionRequest](#provenance.reward.v1.EpochRewardDistributionRequest) | [EpochRewardDistributionResponse](#provenance.reward.v1.EpochRewardDistributionResponse) | returns all EpochRewardDistributions | GET|/provenance/rewards/v1/epoch_reward_distributions|
-| `EpochRewardDistributionsByID` | [EpochRewardDistributionByIDRequest](#provenance.reward.v1.EpochRewardDistributionByIDRequest) | [EpochRewardDistributionByIDResponse](#provenance.reward.v1.EpochRewardDistributionByIDResponse) | returns a EpochRewardDistribution by rewardId and epochId | GET|/provenance/rewards/v1/epoch_reward_distributions/{rewardId}/epochs/{epochId}|
+| `ClaimPeriodRewardDistributions` | [ClaimPeriodRewardDistributionRequest](#provenance.reward.v1.ClaimPeriodRewardDistributionRequest) | [ClaimPeriodRewardDistributionResponse](#provenance.reward.v1.ClaimPeriodRewardDistributionResponse) | returns all ClaimPeriodRewardDistributionResponse | GET|/provenance/rewards/v1/claim_period_reward_distributions|
+| `ClaimPeriodRewardDistributionsByID` | [ClaimPeriodRewardDistributionByIDRequest](#provenance.reward.v1.ClaimPeriodRewardDistributionByIDRequest) | [ClaimPeriodRewardDistributionByIDResponse](#provenance.reward.v1.ClaimPeriodRewardDistributionByIDResponse) | returns a ClaimPeriodRewardDistribution by rewardId and epochId | GET|/provenance/rewards/v1/claim_period_reward_distributions/{rewardId}/claimPeriods/{claimPeriodId}|
 
  <!-- end services -->
 

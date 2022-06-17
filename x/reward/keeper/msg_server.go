@@ -59,12 +59,12 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 	s.Keeper.SetRewardProgramID(ctx, rewardProgramID+1)
 
 	acc, _ := sdk.AccAddressFromBech32(rewardProgram.DistributeFromAddress)
-	err = s.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.ModuleName, sdk.NewCoins(rewardProgram.Coin))
+	err = s.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.ModuleName, sdk.NewCoins(rewardProgram.TotalRewardPool))
 	if err != nil {
 		return nil, fmt.Errorf("unable to send coin to module reward pool: %s", err)
 	}
 
-	rewardProgramBalance := types.NewRewardProgramBalance(rewardProgramID, rewardProgram.DistributeFromAddress, rewardProgram.Coin)
+	rewardProgramBalance := types.NewRewardProgramBalance(rewardProgramID, rewardProgram.DistributeFromAddress, rewardProgram.TotalRewardPool)
 	err = rewardProgramBalance.ValidateBasic()
 	if err != nil {
 		return nil, err

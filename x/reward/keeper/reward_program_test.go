@@ -29,11 +29,11 @@ func (suite *KeeperTestSuite) TestNewRewardProgram() {
 	suite.Assert().Equal("description", program.GetDescription(), "description should match input")
 	suite.Assert().Equal(uint64(1), program.GetId(), "id should match input")
 	suite.Assert().Equal("insert address", program.GetDistributeFromAddress(), "address should match input")
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 100000), program.GetCoin(), "coin should match input")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 100000), program.GetTotalRewardPool(), "coin should match input")
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 1000), program.GetMaxRewardByAddress(), "max reward by address should match")
 	suite.Assert().Equal(time, program.GetProgramStartTime(), "program start time should match input")
-	suite.Assert().Equal(uint64(60*60), program.GetSubPeriodSeconds(), "sub period seconds should match input")
-	suite.Assert().Equal(uint64(3), program.GetSubPeriods(), "sub periods should match input")
+	suite.Assert().Equal(uint64(60*60), program.GetClaimPeriodSeconds(), "claim period seconds should match input")
+	suite.Assert().Equal(uint64(3), program.GetClaimPeriods(), "claim periods should match input")
 	suite.Assert().Equal(0, len(program.GetQualifyingActions()), "qualifying actions should match input")
 }
 
@@ -63,11 +63,11 @@ func (suite *KeeperTestSuite) TestGetSetRewardProgram() {
 	suite.Assert().Equal(program.GetDescription(), program2.GetDescription(), "description should match")
 	suite.Assert().Equal(program.GetId(), program2.GetId(), "id should match")
 	suite.Assert().Equal(program.GetDistributeFromAddress(), program2.GetDistributeFromAddress(), "address should match")
-	suite.Assert().Equal(program.GetCoin(), program2.GetCoin(), "coin should match")
+	suite.Assert().Equal(program.GetTotalRewardPool(), program2.GetTotalRewardPool(), "coin should match")
 	suite.Assert().Equal(program.GetMaxRewardByAddress(), program2.GetMaxRewardByAddress(), "max reward by address should")
 	suite.Assert().Equal(program.GetProgramStartTime(), program2.GetProgramStartTime(), "program start time should match")
-	suite.Assert().Equal(program.GetSubPeriodSeconds(), program2.GetSubPeriodSeconds(), "sub period seconds should match")
-	suite.Assert().Equal(program.GetSubPeriods(), program2.GetSubPeriods(), "number of sub periods should match")
+	suite.Assert().Equal(program.GetClaimPeriodSeconds(), program2.GetClaimPeriodSeconds(), "claim period seconds should match")
+	suite.Assert().Equal(program.GetClaimPeriods(), program2.GetClaimPeriods(), "number of claim periods should match")
 	suite.Assert().Equal(len(program.GetQualifyingActions()), len(program2.GetQualifyingActions()), "qualifying actions should match")
 }
 

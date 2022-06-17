@@ -70,39 +70,39 @@ func (k Keeper) RewardProgramByID(ctx context.Context, req *types.RewardProgramB
 	return &response, nil
 }
 
-// returns all EpochRewardDistributions
-func (k Keeper) EpochRewardDistributions(ctx context.Context, req *types.EpochRewardDistributionRequest) (*types.EpochRewardDistributionResponse, error) {
+// returns all ClaimPeriodRewardDistributions
+func (k Keeper) ClaimPeriodRewardDistributions(ctx context.Context, req *types.ClaimPeriodRewardDistributionRequest) (*types.ClaimPeriodRewardDistributionResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	response := types.EpochRewardDistributionResponse{}
+	response := types.ClaimPeriodRewardDistributionResponse{}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	rewardDistributions, err := k.GetAllEpochRewardDistributions(sdkCtx)
+	rewardDistributions, err := k.GetAllClaimPeriodRewardDistributions(sdkCtx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to query epoch reward distributions: %v", err))
 	}
-	response.EpochRewardDistribution = rewardDistributions
+	response.ClaimPeriodRewardDistribution = rewardDistributions
 
 	return &response, nil
 }
 
-// returns a EpochRewardDistribution by rewardId and epochId
-func (k Keeper) EpochRewardDistributionsByID(ctx context.Context, req *types.EpochRewardDistributionByIDRequest) (*types.EpochRewardDistributionByIDResponse, error) {
+// returns a ClaimPeriodRewardDistribution by rewardId and epochId
+func (k Keeper) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *types.ClaimPeriodRewardDistributionByIDRequest) (*types.ClaimPeriodRewardDistributionByIDResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	response := types.EpochRewardDistributionByIDResponse{}
+	response := types.ClaimPeriodRewardDistributionByIDResponse{}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	epochReward, err := k.GetEpochRewardDistribution(sdkCtx, req.GetEpochId(), req.GetRewardId())
+	ClaimPeriodReward, err := k.GetClaimPeriodRewardDistribution(sdkCtx, req.GetClaimPeriodId(), req.GetRewardId())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to query epoch reward distributions: %v", err))
 	}
 
-	if k.EpochRewardDistributionIsValid(&epochReward) {
-		response.EpochRewardDistribution = &epochReward
+	if k.ClaimPeriodRewardDistributionIsValid(&ClaimPeriodReward) {
+		response.ClaimPeriodRewardDistribution = &ClaimPeriodReward
 	}
 
 	return &response, nil

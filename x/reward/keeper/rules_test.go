@@ -823,14 +823,14 @@ func (suite *KeeperTestSuite) TestRewardSharesSingle() {
 	}
 
 	err := suite.app.RewardKeeper.RewardShares(suite.ctx, &rewardProgram, results)
-	share, _ := suite.app.RewardKeeper.GetShare(suite.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentSubPeriod(), delegator.String())
+	share, _ := suite.app.RewardKeeper.GetShare(suite.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String())
 	suite.Assert().NoError(err, "should return no error on success")
 	suite.Assert().Equal(int64(1), share.Amount, "share amount should increment")
 	suite.Assert().Equal(rewardProgram.GetId(), share.GetRewardProgramId(), "reward program id should match")
-	suite.Assert().Equal(rewardProgram.GetCurrentSubPeriod(), share.GetSubPeriodId(), "sub period id should match")
+	suite.Assert().Equal(rewardProgram.GetCurrentClaimPeriod(), share.GetSubPeriodId(), "sub period id should match")
 	suite.Assert().Equal(delegator.String(), share.GetAddress(), "address should match delegator")
 	suite.Assert().Equal(false, share.GetClaimed(), "claimed should be set to false")
-	suite.Assert().Equal(rewardProgram.GetSubPeriodEndTime().Add(time.Duration(rewardProgram.GetShareExpirationOffset())), share.GetExpireTime(), "expiration time should match sub period end time + offset")
+	suite.Assert().Equal(rewardProgram.GetClaimPeriodEndTime().Add(time.Duration(rewardProgram.GetShareExpirationOffset())), share.GetExpireTime(), "expiration time should match sub period end time + offset")
 }
 
 func (suite *KeeperTestSuite) TestRewardSharesMultiple() {
@@ -871,14 +871,14 @@ func (suite *KeeperTestSuite) TestRewardSharesMultiple() {
 	}
 
 	err := suite.app.RewardKeeper.RewardShares(suite.ctx, &rewardProgram, results)
-	share, _ := suite.app.RewardKeeper.GetShare(suite.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentSubPeriod(), delegator.String())
+	share, _ := suite.app.RewardKeeper.GetShare(suite.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String())
 	suite.Assert().NoError(err, "should return no error on success")
 	suite.Assert().Equal(int64(2), share.Amount, "share amount should increment")
 	suite.Assert().Equal(rewardProgram.GetId(), share.GetRewardProgramId(), "reward program id should match")
-	suite.Assert().Equal(rewardProgram.GetCurrentSubPeriod(), share.GetSubPeriodId(), "sub period id should match")
+	suite.Assert().Equal(rewardProgram.GetCurrentClaimPeriod(), share.GetSubPeriodId(), "sub period id should match")
 	suite.Assert().Equal(delegator.String(), share.GetAddress(), "address should match delegator")
 	suite.Assert().Equal(false, share.GetClaimed(), "claimed should be set to false")
-	suite.Assert().Equal(rewardProgram.GetSubPeriodEndTime().Add(time.Duration(rewardProgram.GetShareExpirationOffset())), share.GetExpireTime(), "expiration time should match sub period end time + offset")
+	suite.Assert().Equal(rewardProgram.GetClaimPeriodEndTime().Add(time.Duration(rewardProgram.GetShareExpirationOffset())), share.GetExpireTime(), "expiration time should match sub period end time + offset")
 }
 
 func (suite *KeeperTestSuite) TestRewardSharesInvalidRewardProgram() {
@@ -911,7 +911,7 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidRewardProgram() {
 	}
 
 	err := suite.app.RewardKeeper.RewardShares(suite.ctx, &rewardProgram, results)
-	share, _ := suite.app.RewardKeeper.GetShare(suite.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentSubPeriod(), delegator.String())
+	share, _ := suite.app.RewardKeeper.GetShare(suite.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String())
 	suite.Assert().Error(err, "should return an error on invalid program")
 	suite.Assert().Equal(int64(0), share.Amount, "share amount should not increment")
 }
@@ -946,7 +946,7 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidAddress() {
 	}
 
 	err := suite.app.RewardKeeper.RewardShares(suite.ctx, &rewardProgram, results)
-	share, _ := suite.app.RewardKeeper.GetShare(suite.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentSubPeriod(), delegator.String())
+	share, _ := suite.app.RewardKeeper.GetShare(suite.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String())
 	suite.Assert().NoError(err, "should return no error on invalid address")
 	suite.Assert().Equal(int64(1), share.Amount, "share amount should not increment")
 }

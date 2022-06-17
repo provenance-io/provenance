@@ -6,7 +6,6 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
-import "provenance/epoch/v1/genesis.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/reward/types";
 option java_package        = "io.provenance.reward.v1";
@@ -21,38 +20,44 @@ message RewardProgram {
   string                   title                   = 2;
   string                   description             = 3;
   string                   distribute_from_address = 4; // community pool for now
-  cosmos.base.v1beta1.Coin coin                    = 5 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin total_reward_pool       = 5 [(gogoproto.nullable) = false];
   cosmos.base.v1beta1.Coin max_reward_by_address   = 6
       [(gogoproto.nullable) = false]; // maximum rewards amount per address
-  uint64 sub_period_seconds = 7; // EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month)
+  uint64 claim_period_seconds =
+      7; // claim_period_seconds defines the type of claim_period attributed to this program.(e.g day,week,month)
   google.protobuf.Timestamp program_start_time = 8 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "program_start_time,omitempty",
     (gogoproto.moretags) = "yaml:\"program_start_time,omitempty\""
-  ];
-  google.protobuf.Timestamp program_end_time = 9 [
+  ]; // optional field
+  google.protobuf.Timestamp expected_program_end_time = 9 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
-    (gogoproto.jsontag)  = "program_end_time,omitempty",
-    (gogoproto.moretags) = "yaml:\"program_end_time,omitempty\""
-  ];
-  google.protobuf.Timestamp sub_period_end_time = 10 [
+    (gogoproto.jsontag)  = "expected_program_end_time,omitempty",
+    (gogoproto.moretags) = "yaml:\"expected_program_end_time,omitempty\""
+  ]; // optional
+
+  google.protobuf.Timestamp claim_period_end_time = 10 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
-    (gogoproto.jsontag)  = "epoch_end_time,omitempty",
-    (gogoproto.moretags) = "yaml:\"epoch_end_time,omitempty\""
+    (gogoproto.jsontag)  = "claim_period_end_time,omitempty",
+    (gogoproto.moretags) = "yaml:\"claim_period_end_time,omitempty\""
   ];
-  google.protobuf.Timestamp finished_time = 11 [
+
+  // when the program actually ended, will be empty at start
+  google.protobuf.Timestamp actual_program_end_time = 11 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "finished_time,omitempty",
     (gogoproto.moretags) = "yaml:\"finished_time,omitempty\""
   ];
-  uint64 sub_periods        = 12; // number of epochs this program will last for
-  uint64 current_sub_period = 13; // the current epoch reward program is on
-  bool   started            = 14; // has the rewards program started
-  bool   finished           = 15; // has the rewards program completed
+  // number of claim_periods set by reaward program creator
+  uint64 claim_periods = 12; // number of epochs this program will last for
+  uint64 current_claim_period =
+      13; // the current claim_period for the  reward program is on(claim periods start at 1 <-- fisrt period)
+  bool started  = 14; // has the rewards program started
+  bool finished = 15; // has the rewards program completed
 
   uint64 share_expiration_offset =
       16; // Used to calculate the expiration time of a share in seconds. Currently, it is epoch_end_time + offset
@@ -73,12 +78,12 @@ message RewardProgramBalance {
                             // Program creator can reclaim their remaining funds.
 }
 
-// EpochRewardDistribution, this will updated at the end of every epoch
-message EpochRewardDistribution {
+// ClaimPeriodRewardDistribution, this will updated at the end of every epoch
+message ClaimPeriodRewardDistribution {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  string                   epoch_id           = 1;
+  string                   claim_period_id           = 1;
   uint64                   reward_program_id  = 2;
   cosmos.base.v1beta1.Coin total_rewards_pool = 3
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"total_rewards_pool\""];

@@ -25,7 +25,7 @@ func GetQueryCmd() *cobra.Command {
 	}
 	queryCmd.AddCommand(
 		GetRewardProgramCmd(),
-		GetEpochRewardDistributionCmd(),
+		GetClaimPeriodRewardDistributionCmd(),
 	)
 	return queryCmd
 }
@@ -60,7 +60,7 @@ func GetRewardProgramCmd() *cobra.Command {
 	return cmd
 }
 
-func GetEpochRewardDistributionCmd() *cobra.Command {
+func GetClaimPeriodRewardDistributionCmd() *cobra.Command {
 	const all = "all"
 
 	cmd := &cobra.Command{
@@ -75,7 +75,7 @@ func GetEpochRewardDistributionCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
 			if arg0 == all {
-				return outputEpochRewardDistributionAll(cmd)
+				return outputClaimPeriodRewardDistributionAll(cmd)
 			}
 
 			if len(args) != 2 {
@@ -83,7 +83,7 @@ func GetEpochRewardDistributionCmd() *cobra.Command {
 			}
 			arg1 := args[1]
 
-			return outputEpochRewardDistributionByID(cmd, arg0, arg1)
+			return outputClaimPeriodRewardDistributionByID(cmd, arg0, arg1)
 		},
 	}
 
@@ -155,8 +155,8 @@ func outputRewardProgramByID(cmd *cobra.Command, arg string) error {
 	return clientCtx.PrintProto(response)
 }
 
-// Query for all EpochRewardDistributions
-func outputEpochRewardDistributionAll(cmd *cobra.Command) error {
+// Query for all ClaimPeriodRewardDistributions
+func outputClaimPeriodRewardDistributionAll(cmd *cobra.Command) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err
@@ -164,10 +164,10 @@ func outputEpochRewardDistributionAll(cmd *cobra.Command) error {
 
 	queryClient := types.NewQueryClient(clientCtx)
 
-	var response *types.EpochRewardDistributionResponse
-	if response, err = queryClient.EpochRewardDistributions(
+	var response *types.ClaimPeriodRewardDistributionResponse
+	if response, err = queryClient.ClaimPeriodRewardDistributions(
 		context.Background(),
-		&types.EpochRewardDistributionRequest{},
+		&types.ClaimPeriodRewardDistributionRequest{},
 	); err != nil {
 		return fmt.Errorf("failed to query reward programs: %s", err.Error())
 	}
@@ -175,8 +175,8 @@ func outputEpochRewardDistributionAll(cmd *cobra.Command) error {
 	return clientCtx.PrintProto(response)
 }
 
-// Query for a EpochRewardDistribution by Id
-func outputEpochRewardDistributionByID(cmd *cobra.Command, rewardID, epochID string) error {
+// Query for a ClaimPeriodRewardDistribution by Id
+func outputClaimPeriodRewardDistributionByID(cmd *cobra.Command, rewardID, epochID string) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err
@@ -187,18 +187,18 @@ func outputEpochRewardDistributionByID(cmd *cobra.Command, rewardID, epochID str
 		return err
 	}
 
-	var response *types.EpochRewardDistributionByIDResponse
-	if response, err = queryClient.EpochRewardDistributionsByID(
+	var response *types.ClaimPeriodRewardDistributionByIDResponse
+	if response, err = queryClient.ClaimPeriodRewardDistributionsByID(
 		context.Background(),
-		&types.EpochRewardDistributionByIDRequest{
-			RewardId: uint64(id),
-			EpochId:  epochID,
+		&types.ClaimPeriodRewardDistributionByIDRequest{
+			RewardId:      uint64(id),
+			ClaimPeriodId: epochID,
 		},
 	); err != nil {
 		return fmt.Errorf("failed to query reward claim %d: %s", id, err.Error())
 	}
 
-	if response.GetEpochRewardDistribution() == nil {
+	if response.GetClaimPeriodRewardDistribution() == nil {
 		return fmt.Errorf("epoch reward does not exist for reward-id: %s epoch-id %s", rewardID, epochID)
 	}
 

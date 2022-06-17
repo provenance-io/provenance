@@ -28,7 +28,7 @@ var (
 
 	RewardClaimKeyPrefix = []byte{0x04}
 
-	EpochRewardDistributionKeyPrefix = []byte{0x05}
+	ClaimPeriodRewardDistributionKeyPrefix = []byte{0x05}
 
 	EligibilityCriteriaKeyPrefix = []byte{0x06}
 
@@ -118,9 +118,9 @@ func GetRewardClaimsKey(addr []byte) []byte {
 	return append(RewardClaimKeyPrefix, address.MustLengthPrefix(addr)...)
 }
 
-func GetEpochRewardDistributionKey(epochID string, rewardID string) []byte {
-	key := EpochRewardDistributionKeyPrefix
-	key = append(key, []byte(epochID)...)
+func GetClaimPeriodRewardDistributionKey(claimId string, rewardID string) []byte {
+	key := ClaimPeriodRewardDistributionKeyPrefix
+	key = append(key, []byte(claimId)...)
 	return append(key, []byte(rewardID)...)
 }
 

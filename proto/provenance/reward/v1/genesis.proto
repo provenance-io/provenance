@@ -18,7 +18,7 @@ message GenesisState {
 
   repeated RewardProgram reward_programs = 2 [(gogoproto.nullable) = false];
 
-  repeated EpochRewardDistribution epoch_reward_distributions = 34 [(gogoproto.nullable) = false];
+  repeated ClaimPeriodRewardDistribution claim_period_reward_distributions = 34 [(gogoproto.nullable) = false];
 
   ActionDelegate            action_delegate             = 6 [(gogoproto.nullable) = false];
   ActionTransferDelegations action_transfer_delegations = 7 [(gogoproto.nullable) = false];

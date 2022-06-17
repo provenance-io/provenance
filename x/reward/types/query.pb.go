@@ -364,21 +364,21 @@ func (m *QueryModuleAccountBalanceResponse) GetModuleAccountBalance() github_com
 	return nil
 }
 
-type EpochRewardDistributionRequest struct {
+type ClaimPeriodRewardDistributionRequest struct {
 }
 
-func (m *EpochRewardDistributionRequest) Reset()         { *m = EpochRewardDistributionRequest{} }
-func (m *EpochRewardDistributionRequest) String() string { return proto.CompactTextString(m) }
-func (*EpochRewardDistributionRequest) ProtoMessage()    {}
-func (*EpochRewardDistributionRequest) Descriptor() ([]byte, []int) {
+func (m *ClaimPeriodRewardDistributionRequest) Reset()         { *m = ClaimPeriodRewardDistributionRequest{} }
+func (m *ClaimPeriodRewardDistributionRequest) String() string { return proto.CompactTextString(m) }
+func (*ClaimPeriodRewardDistributionRequest) ProtoMessage()    {}
+func (*ClaimPeriodRewardDistributionRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_89e47dd1c3e4febf, []int{8}
 }
-func (m *EpochRewardDistributionRequest) XXX_Unmarshal(b []byte) error {
+func (m *ClaimPeriodRewardDistributionRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EpochRewardDistributionRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ClaimPeriodRewardDistributionRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EpochRewardDistributionRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ClaimPeriodRewardDistributionRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -388,34 +388,34 @@ func (m *EpochRewardDistributionRequest) XXX_Marshal(b []byte, deterministic boo
 		return b[:n], nil
 	}
 }
-func (m *EpochRewardDistributionRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EpochRewardDistributionRequest.Merge(m, src)
+func (m *ClaimPeriodRewardDistributionRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClaimPeriodRewardDistributionRequest.Merge(m, src)
 }
-func (m *EpochRewardDistributionRequest) XXX_Size() int {
+func (m *ClaimPeriodRewardDistributionRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *EpochRewardDistributionRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_EpochRewardDistributionRequest.DiscardUnknown(m)
+func (m *ClaimPeriodRewardDistributionRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClaimPeriodRewardDistributionRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EpochRewardDistributionRequest proto.InternalMessageInfo
+var xxx_messageInfo_ClaimPeriodRewardDistributionRequest proto.InternalMessageInfo
 
-type EpochRewardDistributionResponse struct {
-	EpochRewardDistribution []EpochRewardDistribution `protobuf:"bytes,1,rep,name=epoch_reward_distribution,json=epochRewardDistribution,proto3" json:"epoch_reward_distribution"`
+type ClaimPeriodRewardDistributionResponse struct {
+	ClaimPeriodRewardDistribution []ClaimPeriodRewardDistribution `protobuf:"bytes,1,rep,name=claim_period_reward_distribution,json=claimPeriodRewardDistribution,proto3" json:"claim_period_reward_distribution"`
 }
 
-func (m *EpochRewardDistributionResponse) Reset()         { *m = EpochRewardDistributionResponse{} }
-func (m *EpochRewardDistributionResponse) String() string { return proto.CompactTextString(m) }
-func (*EpochRewardDistributionResponse) ProtoMessage()    {}
-func (*EpochRewardDistributionResponse) Descriptor() ([]byte, []int) {
+func (m *ClaimPeriodRewardDistributionResponse) Reset()         { *m = ClaimPeriodRewardDistributionResponse{} }
+func (m *ClaimPeriodRewardDistributionResponse) String() string { return proto.CompactTextString(m) }
+func (*ClaimPeriodRewardDistributionResponse) ProtoMessage()    {}
+func (*ClaimPeriodRewardDistributionResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_89e47dd1c3e4febf, []int{9}
 }
-func (m *EpochRewardDistributionResponse) XXX_Unmarshal(b []byte) error {
+func (m *ClaimPeriodRewardDistributionResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EpochRewardDistributionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ClaimPeriodRewardDistributionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EpochRewardDistributionResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ClaimPeriodRewardDistributionResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -425,42 +425,44 @@ func (m *EpochRewardDistributionResponse) XXX_Marshal(b []byte, deterministic bo
 		return b[:n], nil
 	}
 }
-func (m *EpochRewardDistributionResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EpochRewardDistributionResponse.Merge(m, src)
+func (m *ClaimPeriodRewardDistributionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClaimPeriodRewardDistributionResponse.Merge(m, src)
 }
-func (m *EpochRewardDistributionResponse) XXX_Size() int {
+func (m *ClaimPeriodRewardDistributionResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *EpochRewardDistributionResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_EpochRewardDistributionResponse.DiscardUnknown(m)
+func (m *ClaimPeriodRewardDistributionResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClaimPeriodRewardDistributionResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EpochRewardDistributionResponse proto.InternalMessageInfo
+var xxx_messageInfo_ClaimPeriodRewardDistributionResponse proto.InternalMessageInfo
 
-func (m *EpochRewardDistributionResponse) GetEpochRewardDistribution() []EpochRewardDistribution {
+func (m *ClaimPeriodRewardDistributionResponse) GetClaimPeriodRewardDistribution() []ClaimPeriodRewardDistribution {
 	if m != nil {
-		return m.EpochRewardDistribution
+		return m.ClaimPeriodRewardDistribution
 	}
 	return nil
 }
 
-type EpochRewardDistributionByIDRequest struct {
-	RewardId uint64 `protobuf:"varint,1,opt,name=rewardId,proto3" json:"rewardId,omitempty"`
-	EpochId  string `protobuf:"bytes,2,opt,name=epochId,proto3" json:"epochId,omitempty"`
+type ClaimPeriodRewardDistributionByIDRequest struct {
+	RewardId      uint64 `protobuf:"varint,1,opt,name=rewardId,proto3" json:"rewardId,omitempty"`
+	ClaimPeriodId string `protobuf:"bytes,2,opt,name=claimPeriodId,proto3" json:"claimPeriodId,omitempty"`
 }
 
-func (m *EpochRewardDistributionByIDRequest) Reset()         { *m = EpochRewardDistributionByIDRequest{} }
-func (m *EpochRewardDistributionByIDRequest) String() string { return proto.CompactTextString(m) }
-func (*EpochRewardDistributionByIDRequest) ProtoMessage()    {}
-func (*EpochRewardDistributionByIDRequest) Descriptor() ([]byte, []int) {
+func (m *ClaimPeriodRewardDistributionByIDRequest) Reset() {
+	*m = ClaimPeriodRewardDistributionByIDRequest{}
+}
+func (m *ClaimPeriodRewardDistributionByIDRequest) String() string { return proto.CompactTextString(m) }
+func (*ClaimPeriodRewardDistributionByIDRequest) ProtoMessage()    {}
+func (*ClaimPeriodRewardDistributionByIDRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_89e47dd1c3e4febf, []int{10}
 }
-func (m *EpochRewardDistributionByIDRequest) XXX_Unmarshal(b []byte) error {
+func (m *ClaimPeriodRewardDistributionByIDRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EpochRewardDistributionByIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ClaimPeriodRewardDistributionByIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EpochRewardDistributionByIDRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ClaimPeriodRewardDistributionByIDRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -470,48 +472,52 @@ func (m *EpochRewardDistributionByIDRequest) XXX_Marshal(b []byte, deterministic
 		return b[:n], nil
 	}
 }
-func (m *EpochRewardDistributionByIDRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EpochRewardDistributionByIDRequest.Merge(m, src)
+func (m *ClaimPeriodRewardDistributionByIDRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClaimPeriodRewardDistributionByIDRequest.Merge(m, src)
 }
-func (m *EpochRewardDistributionByIDRequest) XXX_Size() int {
+func (m *ClaimPeriodRewardDistributionByIDRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *EpochRewardDistributionByIDRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_EpochRewardDistributionByIDRequest.DiscardUnknown(m)
+func (m *ClaimPeriodRewardDistributionByIDRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClaimPeriodRewardDistributionByIDRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EpochRewardDistributionByIDRequest proto.InternalMessageInfo
+var xxx_messageInfo_ClaimPeriodRewardDistributionByIDRequest proto.InternalMessageInfo
 
-func (m *EpochRewardDistributionByIDRequest) GetRewardId() uint64 {
+func (m *ClaimPeriodRewardDistributionByIDRequest) GetRewardId() uint64 {
 	if m != nil {
 		return m.RewardId
 	}
 	return 0
 }
 
-func (m *EpochRewardDistributionByIDRequest) GetEpochId() string {
+func (m *ClaimPeriodRewardDistributionByIDRequest) GetClaimPeriodId() string {
 	if m != nil {
-		return m.EpochId
+		return m.ClaimPeriodId
 	}
 	return ""
 }
 
-type EpochRewardDistributionByIDResponse struct {
-	EpochRewardDistribution *EpochRewardDistribution `protobuf:"bytes,1,opt,name=epoch_reward_distribution,json=epochRewardDistribution,proto3" json:"epoch_reward_distribution,omitempty"`
+type ClaimPeriodRewardDistributionByIDResponse struct {
+	ClaimPeriodRewardDistribution *ClaimPeriodRewardDistribution `protobuf:"bytes,1,opt,name=claim_period_reward_distribution,json=claimPeriodRewardDistribution,proto3" json:"claim_period_reward_distribution,omitempty"`
 }
 
-func (m *EpochRewardDistributionByIDResponse) Reset()         { *m = EpochRewardDistributionByIDResponse{} }
-func (m *EpochRewardDistributionByIDResponse) String() string { return proto.CompactTextString(m) }
-func (*EpochRewardDistributionByIDResponse) ProtoMessage()    {}
-func (*EpochRewardDistributionByIDResponse) Descriptor() ([]byte, []int) {
+func (m *ClaimPeriodRewardDistributionByIDResponse) Reset() {
+	*m = ClaimPeriodRewardDistributionByIDResponse{}
+}
+func (m *ClaimPeriodRewardDistributionByIDResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*ClaimPeriodRewardDistributionByIDResponse) ProtoMessage() {}
+func (*ClaimPeriodRewardDistributionByIDResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_89e47dd1c3e4febf, []int{11}
 }
-func (m *EpochRewardDistributionByIDResponse) XXX_Unmarshal(b []byte) error {
+func (m *ClaimPeriodRewardDistributionByIDResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EpochRewardDistributionByIDResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ClaimPeriodRewardDistributionByIDResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EpochRewardDistributionByIDResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ClaimPeriodRewardDistributionByIDResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -521,21 +527,21 @@ func (m *EpochRewardDistributionByIDResponse) XXX_Marshal(b []byte, deterministi
 		return b[:n], nil
 	}
 }
-func (m *EpochRewardDistributionByIDResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EpochRewardDistributionByIDResponse.Merge(m, src)
+func (m *ClaimPeriodRewardDistributionByIDResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClaimPeriodRewardDistributionByIDResponse.Merge(m, src)
 }
-func (m *EpochRewardDistributionByIDResponse) XXX_Size() int {
+func (m *ClaimPeriodRewardDistributionByIDResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *EpochRewardDistributionByIDResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_EpochRewardDistributionByIDResponse.DiscardUnknown(m)
+func (m *ClaimPeriodRewardDistributionByIDResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClaimPeriodRewardDistributionByIDResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EpochRewardDistributionByIDResponse proto.InternalMessageInfo
+var xxx_messageInfo_ClaimPeriodRewardDistributionByIDResponse proto.InternalMessageInfo
 
-func (m *EpochRewardDistributionByIDResponse) GetEpochRewardDistribution() *EpochRewardDistribution {
+func (m *ClaimPeriodRewardDistributionByIDResponse) GetClaimPeriodRewardDistribution() *ClaimPeriodRewardDistribution {
 	if m != nil {
-		return m.EpochRewardDistribution
+		return m.ClaimPeriodRewardDistribution
 	}
 	return nil
 }
@@ -549,67 +555,68 @@ func init() {
 	proto.RegisterType((*ActiveRewardProgramsResponse)(nil), "provenance.reward.v1.ActiveRewardProgramsResponse")
 	proto.RegisterType((*QueryModuleAccountBalanceRequest)(nil), "provenance.reward.v1.QueryModuleAccountBalanceRequest")
 	proto.RegisterType((*QueryModuleAccountBalanceResponse)(nil), "provenance.reward.v1.QueryModuleAccountBalanceResponse")
-	proto.RegisterType((*EpochRewardDistributionRequest)(nil), "provenance.reward.v1.EpochRewardDistributionRequest")
-	proto.RegisterType((*EpochRewardDistributionResponse)(nil), "provenance.reward.v1.EpochRewardDistributionResponse")
-	proto.RegisterType((*EpochRewardDistributionByIDRequest)(nil), "provenance.reward.v1.EpochRewardDistributionByIDRequest")
-	proto.RegisterType((*EpochRewardDistributionByIDResponse)(nil), "provenance.reward.v1.EpochRewardDistributionByIDResponse")
+	proto.RegisterType((*ClaimPeriodRewardDistributionRequest)(nil), "provenance.reward.v1.ClaimPeriodRewardDistributionRequest")
+	proto.RegisterType((*ClaimPeriodRewardDistributionResponse)(nil), "provenance.reward.v1.ClaimPeriodRewardDistributionResponse")
+	proto.RegisterType((*ClaimPeriodRewardDistributionByIDRequest)(nil), "provenance.reward.v1.ClaimPeriodRewardDistributionByIDRequest")
+	proto.RegisterType((*ClaimPeriodRewardDistributionByIDResponse)(nil), "provenance.reward.v1.ClaimPeriodRewardDistributionByIDResponse")
 }
 
 func init() { proto.RegisterFile("provenance/reward/v1/query.proto", fileDescriptor_89e47dd1c3e4febf) }
 
 var fileDescriptor_89e47dd1c3e4febf = []byte{
-	// 805 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0xbf, 0x6f, 0xdb, 0x46,
-	0x14, 0xd6, 0xa9, 0xee, 0x0f, 0x5f, 0x5b, 0x15, 0x3d, 0xa8, 0xb5, 0xac, 0xba, 0x94, 0x4c, 0x03,
-	0x85, 0xd0, 0x56, 0xbc, 0x4a, 0xae, 0x5b, 0xbb, 0x53, 0xad, 0x38, 0x83, 0x03, 0x18, 0x71, 0x08,
-	0x64, 0xf1, 0x22, 0xf0, 0xc7, 0x85, 0x3e, 0x44, 0xe2, 0xd1, 0x3c, 0x52, 0x89, 0x60, 0x18, 0x08,
-	0xf2, 0x0f, 0xc4, 0x48, 0xc6, 0xfc, 0x07, 0x19, 0x32, 0x25, 0x6b, 0x86, 0x4c, 0x1e, 0x0d, 0x64,
-	0xc9, 0xe4, 0x04, 0x76, 0xa6, 0x8c, 0xf9, 0x0b, 0x02, 0x1e, 0x8f, 0x91, 0x64, 0x93, 0x8a, 0x14,
-	0x20, 0x93, 0x74, 0x78, 0xdf, 0x7b, 0xef, 0xfb, 0x8e, 0xef, 0x7d, 0x24, 0xac, 0x7a, 0x3e, 0xeb,
-	0x11, 0xd7, 0x70, 0x2d, 0x82, 0x7d, 0x72, 0xcb, 0xf0, 0x6d, 0xdc, 0x6b, 0xe0, 0xbd, 0x90, 0xf8,
-	0x7d, 0xcd, 0xf3, 0x59, 0xc0, 0x50, 0x71, 0x80, 0xd0, 0x62, 0x84, 0xd6, 0x6b, 0x94, 0x8b, 0x0e,
-	0x73, 0x98, 0x00, 0xe0, 0xe8, 0x5f, 0x8c, 0x2d, 0x2f, 0x38, 0x8c, 0x39, 0x1d, 0x82, 0x0d, 0x8f,
-	0x62, 0xc3, 0x75, 0x59, 0x60, 0x04, 0x94, 0xb9, 0x5c, 0x46, 0x15, 0x19, 0x15, 0x27, 0x33, 0xbc,
-	0x81, 0xed, 0xd0, 0x17, 0x00, 0x19, 0xaf, 0x9c, 0x8f, 0x07, 0xb4, 0x4b, 0x78, 0x60, 0x74, 0xbd,
-	0xa4, 0x80, 0xc5, 0x78, 0x97, 0x71, 0x6c, 0x1a, 0x9c, 0xe0, 0x5e, 0xc3, 0x24, 0x81, 0xd1, 0xc0,
-	0x16, 0xa3, 0x49, 0x81, 0xc5, 0x54, 0x31, 0x92, 0xb4, 0x80, 0xa8, 0xbf, 0xc3, 0x92, 0x2e, 0xce,
-	0xdb, 0x3e, 0x73, 0x7c, 0xa3, 0xdb, 0xea, 0x6f, 0x6e, 0xe8, 0x64, 0x2f, 0x24, 0x3c, 0x40, 0x05,
-	0x98, 0xa7, 0x76, 0x09, 0x54, 0x41, 0x6d, 0x46, 0xcf, 0x53, 0x5b, 0x75, 0xe0, 0x7c, 0x0a, 0x96,
-	0x7b, 0xcc, 0xe5, 0x04, 0x5d, 0x81, 0x85, 0xb8, 0x70, 0xdb, 0x8b, 0xa3, 0x22, 0xf1, 0xdb, 0xe6,
-	0x92, 0x96, 0x76, 0x5f, 0xda, 0x48, 0x21, 0xfd, 0x7b, 0x7f, 0xf8, 0xa8, 0xce, 0xc1, 0x9f, 0x46,
-	0xe2, 0x5c, 0x32, 0x52, 0x3b, 0xf0, 0xe7, 0xf3, 0x01, 0xd9, 0x5e, 0x87, 0x3f, 0x8c, 0xb6, 0xe7,
-	0x25, 0x50, 0xfd, 0x62, 0xc2, 0xfe, 0xad, 0x99, 0xa3, 0x93, 0x4a, 0x4e, 0x2f, 0x8c, 0xb0, 0xe0,
-	0xea, 0xaf, 0xf0, 0x97, 0x75, 0x2b, 0xa0, 0x3d, 0x92, 0x4e, 0xc6, 0x87, 0x0b, 0xe9, 0xe1, 0xcf,
-	0x48, 0x49, 0x85, 0xd5, 0x6b, 0xd1, 0x2c, 0x6e, 0x31, 0x3b, 0xec, 0x90, 0x75, 0xcb, 0x62, 0xa1,
-	0x1b, 0xb4, 0x8c, 0x4e, 0x54, 0x2a, 0xe1, 0xf5, 0x14, 0xc0, 0xc5, 0x31, 0x20, 0xc9, 0xee, 0x1e,
-	0x80, 0xc5, 0x6e, 0x0a, 0x40, 0x72, 0x9c, 0xd7, 0xe2, 0xd9, 0xd2, 0xa2, 0xd9, 0xd2, 0xe4, 0x6c,
-	0x69, 0x97, 0x18, 0x75, 0x5b, 0xff, 0x47, 0xcc, 0xde, 0x9d, 0x54, 0xbe, 0xeb, 0x1b, 0xdd, 0xce,
-	0x7f, 0x6a, 0x34, 0x6f, 0x5c, 0x7d, 0xf4, 0xaa, 0x52, 0x73, 0x68, 0xb0, 0x1b, 0x9a, 0x9a, 0xc5,
-	0xba, 0x58, 0x0e, 0x66, 0xfc, 0x53, 0xe7, 0xf6, 0x4d, 0x1c, 0xf4, 0x3d, 0xc2, 0x45, 0x01, 0xae,
-	0xa7, 0x36, 0x56, 0xab, 0x50, 0xb9, 0xec, 0x31, 0x6b, 0x37, 0xbe, 0x87, 0x0d, 0xca, 0x03, 0x9f,
-	0x9a, 0x61, 0xb4, 0x0f, 0x89, 0xb2, 0xfb, 0x00, 0x56, 0x32, 0x21, 0x52, 0x17, 0x83, 0xf3, 0x24,
-	0x82, 0xb4, 0xe5, 0xdd, 0xdb, 0x43, 0x20, 0xa9, 0xad, 0x9e, 0x7e, 0xff, 0x19, 0x95, 0xe5, 0x93,
-	0x98, 0x23, 0xe9, 0x61, 0x75, 0x07, 0xaa, 0x59, 0x99, 0x43, 0xbb, 0x54, 0x86, 0xdf, 0xc4, 0x9d,
-	0x36, 0x93, 0x8d, 0xfa, 0x70, 0x46, 0x25, 0xf8, 0xb5, 0x28, 0xbe, 0x69, 0x97, 0xf2, 0x55, 0x50,
-	0x9b, 0xd5, 0x93, 0xa3, 0x7a, 0x08, 0xe0, 0xd2, 0xd8, 0xe2, 0x52, 0x34, 0x1d, 0x2f, 0x1a, 0x4c,
-	0x2d, 0x3a, 0x53, 0x6e, 0xf3, 0xce, 0x2c, 0xfc, 0x52, 0x4c, 0x17, 0x7a, 0x0c, 0xe0, 0x8f, 0x17,
-	0xfc, 0x00, 0x69, 0x93, 0x0c, 0xf7, 0xe0, 0x62, 0xca, 0x78, 0x62, 0x7c, 0xac, 0x55, 0x5d, 0xbd,
-	0xfb, 0xe2, 0xcd, 0x83, 0x7c, 0x13, 0xfd, 0x85, 0x2f, 0xb8, 0x1b, 0x1f, 0xd8, 0x5b, 0xb2, 0x73,
-	0x6d, 0xb3, 0xdf, 0xa6, 0x36, 0xde, 0xa7, 0xf6, 0x01, 0x7a, 0x08, 0x60, 0x61, 0x74, 0x57, 0xd1,
-	0x1f, 0x13, 0x74, 0x4f, 0x16, 0xbe, 0xfc, 0xe7, 0x64, 0x60, 0xc9, 0x53, 0x13, 0x3c, 0x6b, 0xe8,
-	0xb7, 0x89, 0x78, 0x72, 0xf4, 0x04, 0xc0, 0x62, 0x9a, 0x9f, 0xa0, 0x46, 0x7a, 0xdb, 0x31, 0xd6,
-	0x54, 0x6e, 0x4e, 0x93, 0x22, 0xf9, 0xae, 0x08, 0xbe, 0x18, 0xd5, 0x33, 0xf8, 0x1a, 0x22, 0xb9,
-	0x7d, 0x9e, 0xf6, 0x33, 0x00, 0x8b, 0x69, 0x46, 0x83, 0xfe, 0x49, 0xe7, 0xf0, 0x31, 0xfb, 0x2a,
-	0xff, 0x3b, 0x75, 0xde, 0x84, 0x02, 0x62, 0xd3, 0x69, 0x1b, 0x71, 0x76, 0xdb, 0x94, 0x3c, 0x9f,
-	0x03, 0x58, 0xca, 0xd8, 0x02, 0x8e, 0xfe, 0x9e, 0x6e, 0x6b, 0xa4, 0x84, 0x95, 0x29, 0xb3, 0xa4,
-	0x80, 0x35, 0x21, 0x60, 0x19, 0x35, 0x32, 0x04, 0x64, 0xae, 0x38, 0x47, 0x6f, 0x01, 0x5c, 0xc8,
-	0x12, 0x21, 0xd6, 0x72, 0x75, 0x3a, 0xcf, 0x1b, 0x5a, 0xd0, 0xb5, 0x4f, 0xc8, 0x94, 0x82, 0xae,
-	0x0b, 0x41, 0x57, 0xd1, 0xd6, 0xd4, 0x82, 0xf0, 0x7e, 0xe2, 0x8e, 0x07, 0x31, 0x8a, 0xe3, 0x7d,
-	0x69, 0x8a, 0x07, 0x2d, 0xe7, 0xe8, 0x54, 0x01, 0xc7, 0xa7, 0x0a, 0x78, 0x7d, 0xaa, 0x80, 0xc3,
-	0x33, 0x25, 0x77, 0x7c, 0xa6, 0xe4, 0x5e, 0x9e, 0x29, 0x39, 0x38, 0x47, 0x59, 0x2a, 0xdb, 0x6d,
-	0xb0, 0xd3, 0x1c, 0x7a, 0x3b, 0x0d, 0x20, 0x75, 0xca, 0x86, 0xb9, 0xdd, 0x4e, 0x3e, 0x93, 0xc4,
-	0xdb, 0xca, 0xfc, 0x4a, 0x7c, 0x23, 0x2d, 0xbf, 0x0f, 0x00, 0x00, 0xff, 0xff, 0xa7, 0xf3, 0xe3,
-	0x2f, 0x15, 0x0a, 0x00, 0x00,
+	// 818 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0x4f, 0x6f, 0xe3, 0x44,
+	0x14, 0xcf, 0x84, 0x82, 0xe8, 0x40, 0x83, 0x18, 0x05, 0x9a, 0x86, 0xd6, 0x49, 0x4d, 0xa9, 0xc2,
+	0x9f, 0x7a, 0x48, 0x2a, 0xa0, 0x2a, 0x12, 0xb4, 0x69, 0x2f, 0x45, 0x42, 0x2a, 0x3e, 0x72, 0x31,
+	0xfe, 0x87, 0x3b, 0x22, 0xf6, 0xb8, 0x1e, 0x3b, 0x10, 0x95, 0x5e, 0xfa, 0x05, 0x8a, 0xc4, 0x91,
+	0x4f, 0x00, 0x42, 0x9c, 0xd8, 0x6b, 0xcf, 0x3d, 0x56, 0xda, 0xcb, 0x4a, 0x2b, 0x75, 0x57, 0xed,
+	0x7e, 0x82, 0xfd, 0x04, 0x2b, 0x8f, 0xc7, 0x1b, 0xa7, 0x75, 0x13, 0x37, 0xd2, 0x9e, 0xda, 0xc9,
+	0xfb, 0xcd, 0x7b, 0xbf, 0xdf, 0xf3, 0x7b, 0x3f, 0x1b, 0x36, 0xfd, 0x80, 0xf6, 0x6d, 0x4f, 0xf7,
+	0x4c, 0x1b, 0x07, 0xf6, 0xaf, 0x7a, 0x60, 0xe1, 0x7e, 0x1b, 0x1f, 0x46, 0x76, 0x30, 0x50, 0xfc,
+	0x80, 0x86, 0x14, 0x55, 0x87, 0x08, 0x25, 0x41, 0x28, 0xfd, 0x76, 0xbd, 0xea, 0x50, 0x87, 0x72,
+	0x00, 0x8e, 0xff, 0x4b, 0xb0, 0xf5, 0x45, 0x87, 0x52, 0xa7, 0x67, 0x63, 0xdd, 0x27, 0x58, 0xf7,
+	0x3c, 0x1a, 0xea, 0x21, 0xa1, 0x1e, 0x13, 0x51, 0x49, 0x44, 0xf9, 0xc9, 0x88, 0x7e, 0xc6, 0x56,
+	0x14, 0x70, 0x80, 0x88, 0x37, 0x6e, 0xc6, 0x43, 0xe2, 0xda, 0x2c, 0xd4, 0x5d, 0x3f, 0x4d, 0x60,
+	0x52, 0xe6, 0x52, 0x86, 0x0d, 0x9d, 0xd9, 0xb8, 0xdf, 0x36, 0xec, 0x50, 0x6f, 0x63, 0x93, 0x92,
+	0x34, 0xc1, 0x72, 0xae, 0x18, 0x41, 0x9a, 0x43, 0xe4, 0x4f, 0x60, 0x4d, 0xe5, 0xe7, 0xfd, 0x80,
+	0x3a, 0x81, 0xee, 0x76, 0x07, 0x7b, 0xbb, 0xaa, 0x7d, 0x18, 0xd9, 0x2c, 0x44, 0x15, 0x58, 0x26,
+	0x56, 0x0d, 0x34, 0x41, 0x6b, 0x46, 0x2d, 0x13, 0x4b, 0x76, 0xe0, 0x42, 0x0e, 0x96, 0xf9, 0xd4,
+	0x63, 0x36, 0xfa, 0x0e, 0x56, 0x92, 0xc4, 0x9a, 0x9f, 0x44, 0xf9, 0xc5, 0xb7, 0x3a, 0x1f, 0x2a,
+	0x79, 0xfd, 0x52, 0x46, 0x12, 0xa9, 0x73, 0x41, 0xf6, 0x28, 0xcf, 0xc3, 0xf7, 0x46, 0xe2, 0x4c,
+	0x30, 0x92, 0x7b, 0xf0, 0xfd, 0x9b, 0x01, 0x51, 0x5e, 0x85, 0xef, 0x8c, 0x96, 0x67, 0x35, 0xd0,
+	0x7c, 0xad, 0x60, 0xfd, 0xee, 0xcc, 0xf9, 0x65, 0xa3, 0xa4, 0x56, 0x46, 0x58, 0x30, 0x79, 0x09,
+	0x7e, 0xb0, 0x6d, 0x86, 0xa4, 0x6f, 0xe7, 0x93, 0x09, 0xe0, 0x62, 0x7e, 0xf8, 0x15, 0x52, 0x92,
+	0x61, 0xf3, 0x87, 0x78, 0x16, 0xbf, 0xa7, 0x56, 0xd4, 0xb3, 0xb7, 0x4d, 0x93, 0x46, 0x5e, 0xd8,
+	0xd5, 0x7b, 0x71, 0xaa, 0x94, 0xd7, 0x03, 0x00, 0x97, 0xc7, 0x80, 0x04, 0xbb, 0x53, 0x00, 0xab,
+	0x6e, 0x0e, 0x40, 0x70, 0x5c, 0x50, 0x92, 0xd9, 0x52, 0xe2, 0xd9, 0x52, 0xc4, 0x6c, 0x29, 0x3b,
+	0x94, 0x78, 0xdd, 0xad, 0x98, 0xd9, 0xf3, 0xcb, 0xc6, 0xdb, 0x03, 0xdd, 0xed, 0x6d, 0xca, 0xf1,
+	0xbc, 0x31, 0xf9, 0x9f, 0x27, 0x8d, 0x96, 0x43, 0xc2, 0x83, 0xc8, 0x50, 0x4c, 0xea, 0x62, 0x31,
+	0x98, 0xc9, 0x9f, 0x35, 0x66, 0xfd, 0x82, 0xc3, 0x81, 0x6f, 0x33, 0x9e, 0x80, 0xa9, 0xb9, 0x85,
+	0xe5, 0x55, 0xb8, 0xb2, 0xd3, 0xd3, 0x89, 0xbb, 0x6f, 0x07, 0x84, 0x5a, 0x49, 0x37, 0x76, 0x09,
+	0x0b, 0x03, 0x62, 0x44, 0xf1, 0x56, 0xa4, 0xfa, 0xfe, 0x05, 0xf0, 0xa3, 0x09, 0x40, 0xa1, 0xf1,
+	0x04, 0xc0, 0xa6, 0x19, 0x23, 0x35, 0x9f, 0x43, 0x35, 0xf1, 0x3c, 0xac, 0x0c, 0x58, 0xe8, 0x5d,
+	0xcf, 0x7f, 0x26, 0x63, 0xeb, 0x88, 0x67, 0xb4, 0x64, 0x8e, 0x03, 0xc9, 0x3d, 0xd8, 0x1a, 0x9f,
+	0x25, 0xb3, 0x71, 0x75, 0xf8, 0x66, 0x52, 0x7b, 0x2f, 0xdd, 0xbb, 0x97, 0x67, 0xb4, 0x02, 0xe7,
+	0x32, 0x85, 0xf6, 0xac, 0x5a, 0xb9, 0x09, 0x5a, 0xb3, 0xea, 0xe8, 0x8f, 0xf2, 0xdf, 0x00, 0x7e,
+	0x5c, 0xa0, 0x9c, 0x68, 0xd0, 0xef, 0x85, 0xfa, 0x03, 0xa6, 0xec, 0xcf, 0x84, 0xce, 0x74, 0xce,
+	0x66, 0xe1, 0xeb, 0x7c, 0x50, 0xd1, 0x7f, 0x00, 0xbe, 0x7b, 0xcb, 0x5a, 0x90, 0x52, 0x64, 0x4f,
+	0x86, 0xdd, 0xab, 0xe3, 0xc2, 0xf8, 0x44, 0xbe, 0xbc, 0x71, 0xf2, 0xf0, 0xd9, 0x9f, 0xe5, 0x0e,
+	0xfa, 0x1c, 0xdf, 0x32, 0x4a, 0x36, 0x74, 0xca, 0x74, 0x7d, 0x35, 0x63, 0xa0, 0x11, 0x0b, 0x1f,
+	0x11, 0xeb, 0x18, 0xfd, 0x05, 0x60, 0x65, 0x74, 0xed, 0xd1, 0xa7, 0x05, 0xaa, 0xa7, 0xde, 0x51,
+	0xff, 0xac, 0x18, 0x58, 0xf0, 0x54, 0x38, 0xcf, 0x16, 0x5a, 0x2d, 0xc4, 0x93, 0xa1, 0xff, 0x01,
+	0xac, 0xe6, 0x59, 0x13, 0x6a, 0xe7, 0x97, 0x1d, 0xe3, 0x72, 0xf5, 0xce, 0x7d, 0xae, 0x08, 0xbe,
+	0x5f, 0x70, 0xbe, 0x18, 0xad, 0xdd, 0xc1, 0x57, 0xe7, 0x97, 0xb5, 0x9b, 0xb4, 0xcf, 0x00, 0xac,
+	0xe6, 0x79, 0x16, 0xfa, 0x32, 0x9f, 0xc3, 0x24, 0x27, 0xac, 0x7f, 0x75, 0xef, 0x7b, 0x05, 0x05,
+	0x24, 0xfe, 0xa5, 0xe9, 0xc9, 0x6d, 0xcd, 0x10, 0x3c, 0x1f, 0x03, 0x28, 0x8d, 0xdd, 0x08, 0x86,
+	0x36, 0xa7, 0xd9, 0x23, 0x21, 0xe7, 0xeb, 0xa9, 0xee, 0x0a, 0x49, 0x5b, 0x5c, 0xd2, 0x26, 0xda,
+	0xb8, 0x43, 0xd2, 0x24, 0x1f, 0x60, 0xe8, 0xb4, 0x0c, 0xe5, 0xf1, 0xea, 0xf8, 0xd6, 0x7e, 0x33,
+	0x8d, 0x93, 0x66, 0xb6, 0xf8, 0xdb, 0xa9, 0xef, 0x0b, 0xa5, 0x07, 0x5c, 0xa9, 0x81, 0x7e, 0x9a,
+	0x56, 0x29, 0x3e, 0x4a, 0x4d, 0xf7, 0x18, 0x67, 0x1c, 0x8c, 0xe1, 0xa3, 0x11, 0xaf, 0x3d, 0xee,
+	0x3a, 0xe7, 0x57, 0x12, 0xb8, 0xb8, 0x92, 0xc0, 0xd3, 0x2b, 0x09, 0xfc, 0x71, 0x2d, 0x95, 0x2e,
+	0xae, 0xa5, 0xd2, 0xa3, 0x6b, 0xa9, 0x04, 0xe7, 0x09, 0xcd, 0x95, 0xb1, 0x0f, 0x7e, 0xec, 0x64,
+	0x5e, 0x93, 0x43, 0xc8, 0x1a, 0xa1, 0x59, 0xba, 0xbf, 0xa5, 0xdf, 0x6b, 0xfc, 0xb5, 0x69, 0xbc,
+	0xc1, 0x3f, 0xd6, 0xd6, 0x5f, 0x04, 0x00, 0x00, 0xff, 0xff, 0x81, 0x0e, 0xc0, 0xa5, 0x9e, 0x0a,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -631,10 +638,10 @@ type QueryClient interface {
 	// returns active RewardPrograms
 	ActiveRewardPrograms(ctx context.Context, in *ActiveRewardProgramsRequest, opts ...grpc.CallOption) (*ActiveRewardProgramsResponse, error)
 	ModuleAccountBalance(ctx context.Context, in *QueryModuleAccountBalanceRequest, opts ...grpc.CallOption) (*QueryModuleAccountBalanceResponse, error)
-	// returns all EpochRewardDistributions
-	EpochRewardDistributions(ctx context.Context, in *EpochRewardDistributionRequest, opts ...grpc.CallOption) (*EpochRewardDistributionResponse, error)
-	// returns a EpochRewardDistribution by rewardId and epochId
-	EpochRewardDistributionsByID(ctx context.Context, in *EpochRewardDistributionByIDRequest, opts ...grpc.CallOption) (*EpochRewardDistributionByIDResponse, error)
+	// returns all ClaimPeriodRewardDistributionResponse
+	ClaimPeriodRewardDistributions(ctx context.Context, in *ClaimPeriodRewardDistributionRequest, opts ...grpc.CallOption) (*ClaimPeriodRewardDistributionResponse, error)
+	// returns a ClaimPeriodRewardDistribution by rewardId and epochId
+	ClaimPeriodRewardDistributionsByID(ctx context.Context, in *ClaimPeriodRewardDistributionByIDRequest, opts ...grpc.CallOption) (*ClaimPeriodRewardDistributionByIDResponse, error)
 }
 
 type queryClient struct {
@@ -681,18 +688,18 @@ func (c *queryClient) ModuleAccountBalance(ctx context.Context, in *QueryModuleA
 	return out, nil
 }
 
-func (c *queryClient) EpochRewardDistributions(ctx context.Context, in *EpochRewardDistributionRequest, opts ...grpc.CallOption) (*EpochRewardDistributionResponse, error) {
-	out := new(EpochRewardDistributionResponse)
-	err := c.cc.Invoke(ctx, "/provenance.reward.v1.Query/EpochRewardDistributions", in, out, opts...)
+func (c *queryClient) ClaimPeriodRewardDistributions(ctx context.Context, in *ClaimPeriodRewardDistributionRequest, opts ...grpc.CallOption) (*ClaimPeriodRewardDistributionResponse, error) {
+	out := new(ClaimPeriodRewardDistributionResponse)
+	err := c.cc.Invoke(ctx, "/provenance.reward.v1.Query/ClaimPeriodRewardDistributions", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) EpochRewardDistributionsByID(ctx context.Context, in *EpochRewardDistributionByIDRequest, opts ...grpc.CallOption) (*EpochRewardDistributionByIDResponse, error) {
-	out := new(EpochRewardDistributionByIDResponse)
-	err := c.cc.Invoke(ctx, "/provenance.reward.v1.Query/EpochRewardDistributionsByID", in, out, opts...)
+func (c *queryClient) ClaimPeriodRewardDistributionsByID(ctx context.Context, in *ClaimPeriodRewardDistributionByIDRequest, opts ...grpc.CallOption) (*ClaimPeriodRewardDistributionByIDResponse, error) {
+	out := new(ClaimPeriodRewardDistributionByIDResponse)
+	err := c.cc.Invoke(ctx, "/provenance.reward.v1.Query/ClaimPeriodRewardDistributionsByID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -708,10 +715,10 @@ type QueryServer interface {
 	// returns active RewardPrograms
 	ActiveRewardPrograms(context.Context, *ActiveRewardProgramsRequest) (*ActiveRewardProgramsResponse, error)
 	ModuleAccountBalance(context.Context, *QueryModuleAccountBalanceRequest) (*QueryModuleAccountBalanceResponse, error)
-	// returns all EpochRewardDistributions
-	EpochRewardDistributions(context.Context, *EpochRewardDistributionRequest) (*EpochRewardDistributionResponse, error)
-	// returns a EpochRewardDistribution by rewardId and epochId
-	EpochRewardDistributionsByID(context.Context, *EpochRewardDistributionByIDRequest) (*EpochRewardDistributionByIDResponse, error)
+	// returns all ClaimPeriodRewardDistributionResponse
+	ClaimPeriodRewardDistributions(context.Context, *ClaimPeriodRewardDistributionRequest) (*ClaimPeriodRewardDistributionResponse, error)
+	// returns a ClaimPeriodRewardDistribution by rewardId and epochId
+	ClaimPeriodRewardDistributionsByID(context.Context, *ClaimPeriodRewardDistributionByIDRequest) (*ClaimPeriodRewardDistributionByIDResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -730,11 +737,11 @@ func (*UnimplementedQueryServer) ActiveRewardPrograms(ctx context.Context, req *
 func (*UnimplementedQueryServer) ModuleAccountBalance(ctx context.Context, req *QueryModuleAccountBalanceRequest) (*QueryModuleAccountBalanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ModuleAccountBalance not implemented")
 }
-func (*UnimplementedQueryServer) EpochRewardDistributions(ctx context.Context, req *EpochRewardDistributionRequest) (*EpochRewardDistributionResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method EpochRewardDistributions not implemented")
+func (*UnimplementedQueryServer) ClaimPeriodRewardDistributions(ctx context.Context, req *ClaimPeriodRewardDistributionRequest) (*ClaimPeriodRewardDistributionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClaimPeriodRewardDistributions not implemented")
 }
-func (*UnimplementedQueryServer) EpochRewardDistributionsByID(ctx context.Context, req *EpochRewardDistributionByIDRequest) (*EpochRewardDistributionByIDResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method EpochRewardDistributionsByID not implemented")
+func (*UnimplementedQueryServer) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *ClaimPeriodRewardDistributionByIDRequest) (*ClaimPeriodRewardDistributionByIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClaimPeriodRewardDistributionsByID not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -813,38 +820,38 @@ func _Query_ModuleAccountBalance_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_EpochRewardDistributions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EpochRewardDistributionRequest)
+func _Query_ClaimPeriodRewardDistributions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClaimPeriodRewardDistributionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).EpochRewardDistributions(ctx, in)
+		return srv.(QueryServer).ClaimPeriodRewardDistributions(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.reward.v1.Query/EpochRewardDistributions",
+		FullMethod: "/provenance.reward.v1.Query/ClaimPeriodRewardDistributions",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).EpochRewardDistributions(ctx, req.(*EpochRewardDistributionRequest))
+		return srv.(QueryServer).ClaimPeriodRewardDistributions(ctx, req.(*ClaimPeriodRewardDistributionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_EpochRewardDistributionsByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EpochRewardDistributionByIDRequest)
+func _Query_ClaimPeriodRewardDistributionsByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClaimPeriodRewardDistributionByIDRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).EpochRewardDistributionsByID(ctx, in)
+		return srv.(QueryServer).ClaimPeriodRewardDistributionsByID(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.reward.v1.Query/EpochRewardDistributionsByID",
+		FullMethod: "/provenance.reward.v1.Query/ClaimPeriodRewardDistributionsByID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).EpochRewardDistributionsByID(ctx, req.(*EpochRewardDistributionByIDRequest))
+		return srv.(QueryServer).ClaimPeriodRewardDistributionsByID(ctx, req.(*ClaimPeriodRewardDistributionByIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -870,12 +877,12 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_ModuleAccountBalance_Handler,
 		},
 		{
-			MethodName: "EpochRewardDistributions",
-			Handler:    _Query_EpochRewardDistributions_Handler,
+			MethodName: "ClaimPeriodRewardDistributions",
+			Handler:    _Query_ClaimPeriodRewardDistributions_Handler,
 		},
 		{
-			MethodName: "EpochRewardDistributionsByID",
-			Handler:    _Query_EpochRewardDistributionsByID_Handler,
+			MethodName: "ClaimPeriodRewardDistributionsByID",
+			Handler:    _Query_ClaimPeriodRewardDistributionsByID_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1125,7 +1132,7 @@ func (m *QueryModuleAccountBalanceResponse) MarshalToSizedBuffer(dAtA []byte) (i
 	return len(dAtA) - i, nil
 }
 
-func (m *EpochRewardDistributionRequest) Marshal() (dAtA []byte, err error) {
+func (m *ClaimPeriodRewardDistributionRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1135,12 +1142,12 @@ func (m *EpochRewardDistributionRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EpochRewardDistributionRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *ClaimPeriodRewardDistributionRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EpochRewardDistributionRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ClaimPeriodRewardDistributionRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1148,7 +1155,7 @@ func (m *EpochRewardDistributionRequest) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
-func (m *EpochRewardDistributionResponse) Marshal() (dAtA []byte, err error) {
+func (m *ClaimPeriodRewardDistributionResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1158,20 +1165,20 @@ func (m *EpochRewardDistributionResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EpochRewardDistributionResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *ClaimPeriodRewardDistributionResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EpochRewardDistributionResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ClaimPeriodRewardDistributionResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.EpochRewardDistribution) > 0 {
-		for iNdEx := len(m.EpochRewardDistribution) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.ClaimPeriodRewardDistribution) > 0 {
+		for iNdEx := len(m.ClaimPeriodRewardDistribution) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.EpochRewardDistribution[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.ClaimPeriodRewardDistribution[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -1185,7 +1192,7 @@ func (m *EpochRewardDistributionResponse) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
-func (m *EpochRewardDistributionByIDRequest) Marshal() (dAtA []byte, err error) {
+func (m *ClaimPeriodRewardDistributionByIDRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1195,20 +1202,20 @@ func (m *EpochRewardDistributionByIDRequest) Marshal() (dAtA []byte, err error) 
 	return dAtA[:n], nil
 }
 
-func (m *EpochRewardDistributionByIDRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *ClaimPeriodRewardDistributionByIDRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EpochRewardDistributionByIDRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ClaimPeriodRewardDistributionByIDRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.EpochId) > 0 {
-		i -= len(m.EpochId)
-		copy(dAtA[i:], m.EpochId)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.EpochId)))
+	if len(m.ClaimPeriodId) > 0 {
+		i -= len(m.ClaimPeriodId)
+		copy(dAtA[i:], m.ClaimPeriodId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ClaimPeriodId)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -1220,7 +1227,7 @@ func (m *EpochRewardDistributionByIDRequest) MarshalToSizedBuffer(dAtA []byte) (
 	return len(dAtA) - i, nil
 }
 
-func (m *EpochRewardDistributionByIDResponse) Marshal() (dAtA []byte, err error) {
+func (m *ClaimPeriodRewardDistributionByIDResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1230,19 +1237,19 @@ func (m *EpochRewardDistributionByIDResponse) Marshal() (dAtA []byte, err error)
 	return dAtA[:n], nil
 }
 
-func (m *EpochRewardDistributionByIDResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *ClaimPeriodRewardDistributionByIDResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EpochRewardDistributionByIDResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ClaimPeriodRewardDistributionByIDResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.EpochRewardDistribution != nil {
+	if m.ClaimPeriodRewardDistribution != nil {
 		{
-			size, err := m.EpochRewardDistribution.MarshalToSizedBuffer(dAtA[:i])
+			size, err := m.ClaimPeriodRewardDistribution.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1363,7 +1370,7 @@ func (m *QueryModuleAccountBalanceResponse) Size() (n int) {
 	return n
 }
 
-func (m *EpochRewardDistributionRequest) Size() (n int) {
+func (m *ClaimPeriodRewardDistributionRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1372,14 +1379,14 @@ func (m *EpochRewardDistributionRequest) Size() (n int) {
 	return n
 }
 
-func (m *EpochRewardDistributionResponse) Size() (n int) {
+func (m *ClaimPeriodRewardDistributionResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.EpochRewardDistribution) > 0 {
-		for _, e := range m.EpochRewardDistribution {
+	if len(m.ClaimPeriodRewardDistribution) > 0 {
+		for _, e := range m.ClaimPeriodRewardDistribution {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -1387,7 +1394,7 @@ func (m *EpochRewardDistributionResponse) Size() (n int) {
 	return n
 }
 
-func (m *EpochRewardDistributionByIDRequest) Size() (n int) {
+func (m *ClaimPeriodRewardDistributionByIDRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1396,21 +1403,21 @@ func (m *EpochRewardDistributionByIDRequest) Size() (n int) {
 	if m.RewardId != 0 {
 		n += 1 + sovQuery(uint64(m.RewardId))
 	}
-	l = len(m.EpochId)
+	l = len(m.ClaimPeriodId)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
 }
 
-func (m *EpochRewardDistributionByIDResponse) Size() (n int) {
+func (m *ClaimPeriodRewardDistributionByIDResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.EpochRewardDistribution != nil {
-		l = m.EpochRewardDistribution.Size()
+	if m.ClaimPeriodRewardDistribution != nil {
+		l = m.ClaimPeriodRewardDistribution.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
@@ -1979,7 +1986,7 @@ func (m *QueryModuleAccountBalanceResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EpochRewardDistributionRequest) Unmarshal(dAtA []byte) error {
+func (m *ClaimPeriodRewardDistributionRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2002,10 +2009,10 @@ func (m *EpochRewardDistributionRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EpochRewardDistributionRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: ClaimPeriodRewardDistributionRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EpochRewardDistributionRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ClaimPeriodRewardDistributionRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -2029,7 +2036,7 @@ func (m *EpochRewardDistributionRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EpochRewardDistributionResponse) Unmarshal(dAtA []byte) error {
+func (m *ClaimPeriodRewardDistributionResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2052,15 +2059,15 @@ func (m *EpochRewardDistributionResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EpochRewardDistributionResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: ClaimPeriodRewardDistributionResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EpochRewardDistributionResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ClaimPeriodRewardDistributionResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field EpochRewardDistribution", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClaimPeriodRewardDistribution", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2087,8 +2094,8 @@ func (m *EpochRewardDistributionResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.EpochRewardDistribution = append(m.EpochRewardDistribution, EpochRewardDistribution{})
-			if err := m.EpochRewardDistribution[len(m.EpochRewardDistribution)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.ClaimPeriodRewardDistribution = append(m.ClaimPeriodRewardDistribution, ClaimPeriodRewardDistribution{})
+			if err := m.ClaimPeriodRewardDistribution[len(m.ClaimPeriodRewardDistribution)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2113,7 +2120,7 @@ func (m *EpochRewardDistributionResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EpochRewardDistributionByIDRequest) Unmarshal(dAtA []byte) error {
+func (m *ClaimPeriodRewardDistributionByIDRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2136,10 +2143,10 @@ func (m *EpochRewardDistributionByIDRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EpochRewardDistributionByIDRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: ClaimPeriodRewardDistributionByIDRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EpochRewardDistributionByIDRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ClaimPeriodRewardDistributionByIDRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2163,7 +2170,7 @@ func (m *EpochRewardDistributionByIDRequest) Unmarshal(dAtA []byte) error {
 			}
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field EpochId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClaimPeriodId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2191,7 +2198,7 @@ func (m *EpochRewardDistributionByIDRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.EpochId = string(dAtA[iNdEx:postIndex])
+			m.ClaimPeriodId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2214,7 +2221,7 @@ func (m *EpochRewardDistributionByIDRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EpochRewardDistributionByIDResponse) Unmarshal(dAtA []byte) error {
+func (m *ClaimPeriodRewardDistributionByIDResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2237,15 +2244,15 @@ func (m *EpochRewardDistributionByIDResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EpochRewardDistributionByIDResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: ClaimPeriodRewardDistributionByIDResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EpochRewardDistributionByIDResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ClaimPeriodRewardDistributionByIDResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field EpochRewardDistribution", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClaimPeriodRewardDistribution", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2272,10 +2279,10 @@ func (m *EpochRewardDistributionByIDResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.EpochRewardDistribution == nil {
-				m.EpochRewardDistribution = &EpochRewardDistribution{}
+			if m.ClaimPeriodRewardDistribution == nil {
+				m.ClaimPeriodRewardDistribution = &ClaimPeriodRewardDistribution{}
 			}
-			if err := m.EpochRewardDistribution.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ClaimPeriodRewardDistribution.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

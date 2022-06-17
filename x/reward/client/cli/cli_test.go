@@ -74,22 +74,22 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			// 	false,
 			// ),
 		},
-		[]rewardtypes.EpochRewardDistribution{
-			// types.NewEpochRewardDistribution(
+		[]rewardtypes.ClaimPeriodRewardDistribution{
+			// types.NewClaimPeriodRewardDistribution(
 			// 	"day",
 			// 	1,
 			// 	sdk.NewInt64Coin("jackthecat", 100),
 			// 	5,
 			// 	false,
 			// ),
-			// types.NewEpochRewardDistribution(
+			// types.NewClaimPeriodRewardDistribution(
 			// 	"day",
 			// 	2,
 			// 	sdk.NewInt64Coin("jackthecat", 100),
 			// 	3,
 			// 	false,
 			// ),
-			// types.NewEpochRewardDistribution(
+			// types.NewClaimPeriodRewardDistribution(
 			// 	"month",
 			// 	1,
 			// 	sdk.NewInt64Coin("jackthecat", 100),
@@ -328,7 +328,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 // 		fmt.Printf("Address: %s\n", s.network.Validators[0].Address.String())
 // 		s.Run(tc.name, func() {
 // 			clientCtx := s.network.Validators[0].ClientCtx
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetEpochRewardDistributionCmd(), tc.args)
+// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetClaimPeriodRewardDistributionCmd(), tc.args)
 // 			if tc.expectErr {
 // 				s.Assert().Error(err)
 // 				s.Assert().Equal(tc.expectErrMsg, err.Error())

@@ -77,7 +77,7 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 		var state types.AccountState
 
 		// TODO Move this into the action's Pre-evaluate
-		state, err := k.GetAccountState(ctx, program.GetId(), program.GetCurrentSubPeriod(), action.Address.String())
+		state, err := k.GetAccountState(ctx, program.GetId(), program.GetCurrentClaimPeriod(), action.Address.String())
 		if err != nil {
 			continue
 		}
@@ -98,7 +98,7 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 
 func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram, evaluateRes []types.EvaluationResult) error {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: Recording shares for for rewardProgramId=%d, subPeriod=%d",
-		rewardProgram.GetId(), rewardProgram.GetCurrentSubPeriod()))
+		rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod()))
 
 	err := rewardProgram.ValidateBasic()
 	if rewardProgram == nil || err != nil {
@@ -106,7 +106,7 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 	}
 
 	for _, res := range evaluateRes {
-		share, err := k.GetShare(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentSubPeriod(), res.Address.String())
+		share, err := k.GetShare(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), res.Address.String())
 		if err != nil {
 			return err
 		}
@@ -114,14 +114,14 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 		// Share does not exist so create one
 		if share.ValidateBasic() != nil {
 			ctx.Logger().Info(fmt.Sprintf("NOTICE: Creating new share structure for rewardProgramId=%d, subPeriod=%d, addr=%s",
-				rewardProgram.GetId(), rewardProgram.GetCurrentSubPeriod(), res.Address.String()))
+				rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), res.Address.String()))
 
 			share = types.NewShare(
 				rewardProgram.GetId(),
-				rewardProgram.GetCurrentSubPeriod(),
+				rewardProgram.GetCurrentClaimPeriod(),
 				res.Address.String(),
 				false,
-				rewardProgram.SubPeriodEndTime.Add(time.Duration(rewardProgram.GetShareExpirationOffset())),
+				rewardProgram.ClaimPeriodEndTime.Add(time.Duration(rewardProgram.GetShareExpirationOffset())),
 				0,
 			)
 		}

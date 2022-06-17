@@ -3,16 +3,16 @@ package types
 func NewGenesisState(
 	startingRewardProgramID uint64,
 	rewardProgram []RewardProgram,
-	epochRewardDistributions []EpochRewardDistribution,
+	claimPeriodRewardDistributions []ClaimPeriodRewardDistribution,
 	actionDelegate ActionDelegate,
 	actionTransferDelegations ActionTransferDelegations,
 ) *GenesisState {
 	return &GenesisState{
-		StartingRewardProgramId:   startingRewardProgramID,
-		RewardPrograms:            rewardProgram,
-		EpochRewardDistributions:  epochRewardDistributions,
-		ActionDelegate:            actionDelegate,
-		ActionTransferDelegations: actionTransferDelegations,
+		StartingRewardProgramId:        startingRewardProgramID,
+		RewardPrograms:                 rewardProgram,
+		ClaimPeriodRewardDistributions: claimPeriodRewardDistributions,
+		ActionDelegate:                 actionDelegate,
+		ActionTransferDelegations:      actionTransferDelegations,
 	}
 }
 
@@ -21,7 +21,7 @@ func DefaultGenesis() *GenesisState {
 	return NewGenesisState(
 		DefaultStartingRewardProgramID,
 		[]RewardProgram{},
-		[]EpochRewardDistribution{},
+		[]ClaimPeriodRewardDistribution{},
 		ActionDelegate{},
 		ActionTransferDelegations{},
 	)
@@ -36,8 +36,8 @@ func (gs GenesisState) Validate() error {
 		}
 	}
 
-	for _, epochRewardDistributions := range gs.EpochRewardDistributions {
-		if err := epochRewardDistributions.ValidateBasic(); err != nil {
+	for _, claimPeriodRewardDistributions := range gs.ClaimPeriodRewardDistributions {
+		if err := claimPeriodRewardDistributions.ValidateBasic(); err != nil {
 			return err
 		}
 	}
