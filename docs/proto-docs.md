@@ -6040,12 +6040,13 @@ RewardProgram
 | `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | maximum rewards amount per address |
 | `sub_period_seconds` | [uint64](#uint64) |  | EpochInfo defines the type of epoch attributed to this program.(e.g day,week,month) |
 | `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `sub_period_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `finished_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `sub_periods` | [uint64](#uint64) |  | number of epochs this program will last for |
 | `current_sub_period` | [uint64](#uint64) |  | the current epoch reward program is on |
 | `started` | [bool](#bool) |  | has the rewards program started |
 | `finished` | [bool](#bool) |  | has the rewards program completed |
-| `finished_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `share_expiration_offset` | [uint64](#uint64) |  | Used to calculate the expiration time of a share in seconds. Currently, it is epoch_end_time + offset |
 | `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated |  |
 
@@ -6349,6 +6350,7 @@ Query defines the gRPC querier service for reward module.
 | `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `sub_period_type` | [string](#string) |  | EpochInfo defines the type of sub period attributed to this program.(e.g day,week,month) |
 | `sub_periods` | [uint64](#uint64) |  | number of sub periods this program will last for |
 
