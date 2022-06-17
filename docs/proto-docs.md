@@ -390,6 +390,8 @@
     - [RewardProgramBalance](#provenance.reward.v1.RewardProgramBalance)
     - [Share](#provenance.reward.v1.Share)
   
+    - [RewardProgram.State](#provenance.reward.v1.RewardProgram.State)
+  
 - [provenance/reward/v1/genesis.proto](#provenance/reward/v1/genesis.proto)
     - [GenesisState](#provenance.reward.v1.GenesisState)
   
@@ -5902,8 +5904,7 @@ RewardProgram
 
 number of epochs this program will last for |
 | `current_claim_period` | [uint64](#uint64) |  | the current claim_period for the reward program is on(claim periods start at 1 <-- fisrt period) |
-| `started` | [bool](#bool) |  | has the rewards program started |
-| `finished` | [bool](#bool) |  | has the rewards program completed |
+| `state` | [RewardProgram.State](#provenance.reward.v1.RewardProgram.State) |  | the current state of the reward program |
 | `share_expiration_offset` | [uint64](#uint64) |  | Used to calculate the expiration time of a share in seconds. Currently, it is epoch_end_time + offset |
 | `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated |  |
 
@@ -5950,6 +5951,19 @@ Share
 
 
  <!-- end messages -->
+
+
+<a name="provenance.reward.v1.RewardProgram.State"></a>
+
+### RewardProgram.State
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| PENDING | 0 |  |
+| STARTED | 1 |  |
+| FINISHED | 2 |  |
+
 
  <!-- end enums -->
 

@@ -42,7 +42,7 @@ func (k Keeper) Cleanup(ctx sdk.Context) {
 func (k Keeper) StartRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Starting reward program: %v ", rewardProgram))
 	blockTime := ctx.BlockTime()
-	rewardProgram.Started = true
+	rewardProgram.State = types.RewardProgram_STARTED
 	rewardProgram.ClaimPeriodEndTime = blockTime.Add(time.Duration(rewardProgram.ClaimPeriodSeconds) * time.Second)
 	rewardProgram.CurrentClaimPeriod = 1
 }
@@ -61,6 +61,6 @@ func (k Keeper) EndRewardProgramSubPeriod(ctx sdk.Context, rewardProgram *types.
 func (k Keeper) EndRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Ending reward program %v ", rewardProgram))
 	blockTime := ctx.BlockTime()
-	rewardProgram.Finished = true
+	rewardProgram.State = types.RewardProgram_FINISHED
 	rewardProgram.ActualProgramEndTime = blockTime
 }

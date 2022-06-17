@@ -15,6 +15,11 @@ option java_multiple_files = true;
 message RewardProgram {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
+  enum State {
+    PENDING  = 0;
+    STARTED  = 1;
+    FINISHED = 2;
+  }
 
   uint64                   id                      = 1;
   string                   title                   = 2;
@@ -55,14 +60,13 @@ message RewardProgram {
   // number of claim_periods set by reaward program creator
   uint64 claim_periods = 12; // number of epochs this program will last for
   uint64 current_claim_period =
-      13; // the current claim_period for the  reward program is on(claim periods start at 1 <-- fisrt period)
-  bool started  = 14; // has the rewards program started
-  bool finished = 15; // has the rewards program completed
+      13;           // the current claim_period for the  reward program is on(claim periods start at 1 <-- fisrt period)
+  State state = 14; // the current state of the reward program
 
   uint64 share_expiration_offset =
-      16; // Used to calculate the expiration time of a share in seconds. Currently, it is epoch_end_time + offset
+      15; // Used to calculate the expiration time of a share in seconds. Currently, it is epoch_end_time + offset
 
-  repeated QualifyingAction qualifying_actions = 17 // The actions that count towards the reward
+  repeated QualifyingAction qualifying_actions = 16 // The actions that count towards the reward
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"qualifying_actions"];
 }
 
@@ -83,7 +87,7 @@ message ClaimPeriodRewardDistribution {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  string                   claim_period_id           = 1;
+  string                   claim_period_id    = 1;
   uint64                   reward_program_id  = 2;
   cosmos.base.v1beta1.Coin total_rewards_pool = 3
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"total_rewards_pool\""];

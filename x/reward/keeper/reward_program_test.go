@@ -262,8 +262,8 @@ func (suite *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
 		3,
 		[]types.QualifyingAction{},
 	)
-	program2.Started = true
-	program3.Finished = true
+	program2.State = types.RewardProgram_STARTED
+	program3.State = types.RewardProgram_FINISHED
 
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
@@ -322,8 +322,8 @@ func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 		3,
 		[]types.QualifyingAction{},
 	)
-	program2.Started = true
-	program3.Finished = true
+	program2.State = types.RewardProgram_STARTED
+	program3.State = types.RewardProgram_FINISHED
 
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
@@ -381,8 +381,8 @@ func (suite *KeeperTestSuite) TestGetAllRewardPrograms() {
 		3,
 		[]types.QualifyingAction{},
 	)
-	program2.Started = true
-	program3.Finished = true
+	program2.State = types.RewardProgram_STARTED
+	program3.State = types.RewardProgram_FINISHED
 
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
@@ -478,9 +478,9 @@ func (suite *KeeperTestSuite) TestRemoveDeadPrograms() {
 		3,
 		[]types.QualifyingAction{},
 	)
-	program1.Finished = true
-	program2.Finished = true
-	program3.Finished = false
+	program1.State = types.RewardProgram_FINISHED
+	program2.State = types.RewardProgram_FINISHED
+	program3.State = types.RewardProgram_PENDING
 
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)

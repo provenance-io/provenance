@@ -174,7 +174,7 @@ func (s *KeeperTestSuite) TestNonDelegateAgainstRewardProgram() {
 			},
 		},
 	)
-	rewardProgram.Started = true
+	rewardProgram.State = types.RewardProgram_STARTED
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
@@ -279,7 +279,7 @@ func (s *KeeperTestSuite) TestSingleDelegate() {
 			},
 		},
 	)
-	rewardProgram.Started = true
+	rewardProgram.State = types.RewardProgram_STARTED
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -343,7 +343,7 @@ func (s *KeeperTestSuite) TestMultipleDelegate() {
 			},
 		},
 	)
-	rewardProgram.Started = true
+	rewardProgram.State = types.RewardProgram_STARTED
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -408,7 +408,7 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumActions() {
 			},
 		},
 	)
-	rewardProgram.Started = true
+	rewardProgram.State = types.RewardProgram_STARTED
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -473,7 +473,7 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumActions() {
 			},
 		},
 	)
-	rewardProgram.Started = true
+	rewardProgram.State = types.RewardProgram_STARTED
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -538,7 +538,7 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumDelegation() {
 			},
 		},
 	)
-	rewardProgram.Started = true
+	rewardProgram.State = types.RewardProgram_STARTED
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -603,7 +603,7 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumDelegation() {
 			},
 		},
 	)
-	rewardProgram.Started = true
+	rewardProgram.State = types.RewardProgram_STARTED
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -668,7 +668,7 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumPercentile() {
 			},
 		},
 	)
-	rewardProgram.Started = true
+	rewardProgram.State = types.RewardProgram_STARTED
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -733,7 +733,7 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumPercentile() {
 			},
 		},
 	)
-	rewardProgram.Started = true
+	rewardProgram.State = types.RewardProgram_STARTED
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here

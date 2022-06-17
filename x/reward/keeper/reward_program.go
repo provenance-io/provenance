@@ -61,7 +61,7 @@ func (k Keeper) IterateRewardPrograms(ctx sdk.Context, handle func(rewardProgram
 func (k Keeper) GetOutstandingRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
 	var rewardPrograms []types.RewardProgram
 	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
-		if !rewardProgram.Finished {
+		if rewardProgram.GetState() != types.RewardProgram_FINISHED {
 			rewardPrograms = append(rewardPrograms, rewardProgram)
 		}
 		return false
@@ -74,7 +74,7 @@ func (k Keeper) GetAllActiveRewardPrograms(ctx sdk.Context) ([]types.RewardProgr
 	var rewardPrograms []types.RewardProgram
 	// get all the rewards programs
 	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
-		if !rewardProgram.Finished && rewardProgram.Started {
+		if rewardProgram.GetState() == types.RewardProgram_STARTED {
 			rewardPrograms = append(rewardPrograms, rewardProgram)
 		}
 		return false
@@ -109,7 +109,7 @@ func (k Keeper) RemoveDeadPrograms(ctx sdk.Context) error {
 			return false
 		}
 
-		if !rewardProgram.Finished || hasShares {
+		if rewardProgram.State != types.RewardProgram_FINISHED || hasShares {
 			return false
 		}
 

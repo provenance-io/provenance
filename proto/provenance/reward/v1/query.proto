@@ -33,13 +33,16 @@ service Query {
   }
 
   // returns all ClaimPeriodRewardDistributionResponse
-  rpc ClaimPeriodRewardDistributions(ClaimPeriodRewardDistributionRequest) returns (ClaimPeriodRewardDistributionResponse) {
+  rpc ClaimPeriodRewardDistributions(ClaimPeriodRewardDistributionRequest)
+      returns (ClaimPeriodRewardDistributionResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/claim_period_reward_distributions";
   }
 
   // returns a ClaimPeriodRewardDistribution by rewardId and epochId
-  rpc ClaimPeriodRewardDistributionsByID(ClaimPeriodRewardDistributionByIDRequest) returns (ClaimPeriodRewardDistributionByIDResponse) {
-    option (google.api.http).get = "/provenance/rewards/v1/claim_period_reward_distributions/{rewardId}/claimPeriods/{claimPeriodId}";
+  rpc ClaimPeriodRewardDistributionsByID(ClaimPeriodRewardDistributionByIDRequest)
+      returns (ClaimPeriodRewardDistributionByIDResponse) {
+    option (google.api.http).get =
+        "/provenance/rewards/v1/claim_period_reward_distributions/{rewardId}/claimPeriods/{claimPeriodId}";
   }
 }
 
@@ -82,8 +85,8 @@ message ClaimPeriodRewardDistributionResponse {
 }
 
 message ClaimPeriodRewardDistributionByIDRequest {
-  uint64 rewardId = 1;
-  string claimPeriodId  = 2;
+  uint64 rewardId      = 1;
+  string claimPeriodId = 2;
 }
 
 message ClaimPeriodRewardDistributionByIDResponse {
