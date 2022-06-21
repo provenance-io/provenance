@@ -61,24 +61,22 @@ func (RewardProgram_State) EnumDescriptor() ([]byte, []int) {
 
 // RewardProgram
 type RewardProgram struct {
-	Id                     uint64     `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Title                  string     `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
-	Description            string     `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	DistributeFromAddress  string     `protobuf:"bytes,4,opt,name=distribute_from_address,json=distributeFromAddress,proto3" json:"distribute_from_address,omitempty"`
-	TotalRewardPool        types.Coin `protobuf:"bytes,5,opt,name=total_reward_pool,json=totalRewardPool,proto3" json:"total_reward_pool"`
-	MaxRewardByAddress     types.Coin `protobuf:"bytes,6,opt,name=max_reward_by_address,json=maxRewardByAddress,proto3" json:"max_reward_by_address"`
-	ClaimPeriodSeconds     uint64     `protobuf:"varint,7,opt,name=claim_period_seconds,json=claimPeriodSeconds,proto3" json:"claim_period_seconds,omitempty"`
-	ProgramStartTime       time.Time  `protobuf:"bytes,8,opt,name=program_start_time,json=programStartTime,proto3,stdtime" json:"program_start_time,omitempty" yaml:"program_start_time,omitempty"`
-	ExpectedProgramEndTime time.Time  `protobuf:"bytes,9,opt,name=expected_program_end_time,json=expectedProgramEndTime,proto3,stdtime" json:"expected_program_end_time,omitempty" yaml:"expected_program_end_time,omitempty"`
-	ClaimPeriodEndTime     time.Time  `protobuf:"bytes,10,opt,name=claim_period_end_time,json=claimPeriodEndTime,proto3,stdtime" json:"claim_period_end_time,omitempty" yaml:"claim_period_end_time,omitempty"`
-	// when the program actually ended, will be empty at start
-	ActualProgramEndTime time.Time `protobuf:"bytes,11,opt,name=actual_program_end_time,json=actualProgramEndTime,proto3,stdtime" json:"finished_time,omitempty" yaml:"finished_time,omitempty"`
-	// number of claim_periods set by reaward program creator
-	ClaimPeriods          uint64              `protobuf:"varint,12,opt,name=claim_periods,json=claimPeriods,proto3" json:"claim_periods,omitempty"`
-	CurrentClaimPeriod    uint64              `protobuf:"varint,13,opt,name=current_claim_period,json=currentClaimPeriod,proto3" json:"current_claim_period,omitempty"`
-	State                 RewardProgram_State `protobuf:"varint,14,opt,name=state,proto3,enum=provenance.reward.v1.RewardProgram_State" json:"state,omitempty"`
-	ShareExpirationOffset uint64              `protobuf:"varint,15,opt,name=share_expiration_offset,json=shareExpirationOffset,proto3" json:"share_expiration_offset,omitempty"`
-	QualifyingActions     []QualifyingAction  `protobuf:"bytes,16,rep,name=qualifying_actions,json=qualifyingActions,proto3" json:"qualifying_actions" yaml:"qualifying_actions`
+	Id                     uint64              `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Title                  string              `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	Description            string              `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	DistributeFromAddress  string              `protobuf:"bytes,4,opt,name=distribute_from_address,json=distributeFromAddress,proto3" json:"distribute_from_address,omitempty"`
+	TotalRewardPool        types.Coin          `protobuf:"bytes,5,opt,name=total_reward_pool,json=totalRewardPool,proto3" json:"total_reward_pool"`
+	MaxRewardByAddress     types.Coin          `protobuf:"bytes,6,opt,name=max_reward_by_address,json=maxRewardByAddress,proto3" json:"max_reward_by_address"`
+	ClaimPeriodSeconds     uint64              `protobuf:"varint,7,opt,name=claim_period_seconds,json=claimPeriodSeconds,proto3" json:"claim_period_seconds,omitempty"`
+	ProgramStartTime       time.Time           `protobuf:"bytes,8,opt,name=program_start_time,json=programStartTime,proto3,stdtime" json:"program_start_time,omitempty" yaml:"program_start_time,omitempty"`
+	ExpectedProgramEndTime time.Time           `protobuf:"bytes,9,opt,name=expected_program_end_time,json=expectedProgramEndTime,proto3,stdtime" json:"expected_program_end_time,omitempty" yaml:"expected_program_end_time,omitempty"`
+	ClaimPeriodEndTime     time.Time           `protobuf:"bytes,10,opt,name=claim_period_end_time,json=claimPeriodEndTime,proto3,stdtime" json:"claim_period_end_time,omitempty" yaml:"claim_period_end_time,omitempty"`
+	ActualProgramEndTime   time.Time           `protobuf:"bytes,11,opt,name=actual_program_end_time,json=actualProgramEndTime,proto3,stdtime" json:"finished_time,omitempty" yaml:"finished_time,omitempty"`
+	ClaimPeriods           uint64              `protobuf:"varint,12,opt,name=claim_periods,json=claimPeriods,proto3" json:"claim_periods,omitempty"`
+	CurrentClaimPeriod     uint64              `protobuf:"varint,13,opt,name=current_claim_period,json=currentClaimPeriod,proto3" json:"current_claim_period,omitempty"`
+	State                  RewardProgram_State `protobuf:"varint,14,opt,name=state,proto3,enum=provenance.reward.v1.RewardProgram_State" json:"state,omitempty"`
+	ShareExpirationOffset  uint64              `protobuf:"varint,15,opt,name=share_expiration_offset,json=shareExpirationOffset,proto3" json:"share_expiration_offset,omitempty"`
+	QualifyingActions      []QualifyingAction  `protobuf:"bytes,16,rep,name=qualifying_actions,json=qualifyingActions,proto3" json:"qualifying_actions" yaml:"qualifying_actions`
 }
 
 func (m *RewardProgram) Reset()      { *m = RewardProgram{} }
@@ -226,6 +224,10 @@ func (m *RewardProgram) GetQualifyingActions() []QualifyingAction {
 }
 
 // RewardProgramBalance will display the balance for a distribution address for specific rewards program
+// Money available for claims. How is this program doing.
+// Aggregate objects for claims and analytics
+// Used for queries
+// Reward Program Id - Key
 type RewardProgramBalance struct {
 	RewardProgramId     uint64     `protobuf:"varint,1,opt,name=reward_program_id,json=rewardProgramId,proto3" json:"reward_program_id,omitempty"`
 	DistributionAddress string     `protobuf:"bytes,2,opt,name=distribution_address,json=distributionAddress,proto3" json:"distribution_address,omitempty"`
@@ -293,7 +295,8 @@ func (m *RewardProgramBalance) GetFundsClaimable() bool {
 	return false
 }
 
-// ClaimPeriodRewardDistribution, this will updated at the end of every epoch
+// ClaimPeriodRewardDistribution, this will updated at the end of every claim period
+// Reward Program Id + Claim Period Id
 type ClaimPeriodRewardDistribution struct {
 	ClaimPeriodId    string     `protobuf:"bytes,1,opt,name=claim_period_id,json=claimPeriodId,proto3" json:"claim_period_id,omitempty"`
 	RewardProgramId  uint64     `protobuf:"varint,2,opt,name=reward_program_id,json=rewardProgramId,proto3" json:"reward_program_id,omitempty"`
@@ -437,14 +440,14 @@ func (m *AccountState) GetActionCounter() uint64 {
 }
 
 // Share
+// Reward Program Id + Reward Claim Period Id + Address
 type Share struct {
-	RewardProgramId uint64 `protobuf:"varint,1,opt,name=reward_program_id,json=rewardProgramId,proto3" json:"reward_program_id,omitempty"`
-	SubPeriodId     uint64 `protobuf:"varint,2,opt,name=sub_period_id,json=subPeriodId,proto3" json:"sub_period_id,omitempty"`
-	Address         string `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty" yaml:"address"`
-	Claimed         bool   `protobuf:"varint,4,opt,name=claimed,proto3" json:"claimed,omitempty"`
-	// Time when share expires
-	ExpireTime time.Time `protobuf:"bytes,5,opt,name=expire_time,json=expireTime,proto3,stdtime" json:"expire_time,omitempty" yaml:"expire_time,omitempty"`
-	Amount     int64     `protobuf:"varint,6,opt,name=amount,proto3" json:"amount,omitempty"`
+	RewardProgramId uint64    `protobuf:"varint,1,opt,name=reward_program_id,json=rewardProgramId,proto3" json:"reward_program_id,omitempty"`
+	SubPeriodId     uint64    `protobuf:"varint,2,opt,name=sub_period_id,json=subPeriodId,proto3" json:"sub_period_id,omitempty"`
+	Address         string    `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty" yaml:"address"`
+	Claimed         bool      `protobuf:"varint,4,opt,name=claimed,proto3" json:"claimed,omitempty"`
+	ExpireTime      time.Time `protobuf:"bytes,5,opt,name=expire_time,json=expireTime,proto3,stdtime" json:"expire_time,omitempty" yaml:"expire_time,omitempty"`
+	Amount          int64     `protobuf:"varint,6,opt,name=amount,proto3" json:"amount,omitempty"`
 }
 
 func (m *Share) Reset()      { *m = Share{} }

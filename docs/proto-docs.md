@@ -5849,7 +5849,8 @@ give it a share of the rewards pool, assuming it has not gone over max value and
 <a name="provenance.reward.v1.ClaimPeriodRewardDistribution"></a>
 
 ### ClaimPeriodRewardDistribution
-ClaimPeriodRewardDistribution, this will updated at the end of every epoch
+ClaimPeriodRewardDistribution, this will updated at the end of every claim period
+Reward Program Id + Claim Period Id
 
 
 | Field | Type | Label | Description |
@@ -5892,21 +5893,19 @@ RewardProgram
 | `id` | [uint64](#uint64) |  |  |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
-| `distribute_from_address` | [string](#string) |  | community pool for now |
+| `distribute_from_address` | [string](#string) |  | community pool for now (who provides the money) |
 | `total_reward_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | maximum rewards amount per address |
+| `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | maximum reward per claim per address |
 | `claim_period_seconds` | [uint64](#uint64) |  | claim_period_seconds defines the type of claim_period attributed to this program.(e.g day,week,month) |
-| `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | optional field |
-| `expected_program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | optional |
-| `claim_period_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | When the reward program starts |
+| `expected_program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that the reward program MUST end |
+| `claim_period_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | This can be calculated by us and its when the current claim period ends |
 | `actual_program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | when the program actually ended, will be empty at start |
-| `claim_periods` | [uint64](#uint64) |  | number of claim_periods set by reaward program creator
-
-number of epochs this program will last for |
+| `claim_periods` | [uint64](#uint64) |  | number of claim periods this program will run for |
 | `current_claim_period` | [uint64](#uint64) |  | the current claim_period for the reward program is on(claim periods start at 1 <-- fisrt period) |
 | `state` | [RewardProgram.State](#provenance.reward.v1.RewardProgram.State) |  | the current state of the reward program |
 | `share_expiration_offset` | [uint64](#uint64) |  | Used to calculate the expiration time of a share in seconds. Currently, it is epoch_end_time + offset |
-| `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated |  |
+| `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated | The actions that count towards the reward |
 
 
 
@@ -5917,6 +5916,10 @@ number of epochs this program will last for |
 
 ### RewardProgramBalance
 RewardProgramBalance will display the balance for a distribution address for specific rewards program
+Money available for claims. How is this program doing.
+Aggregate objects for claims and analytics
+Used for queries
+Reward Program Id - Key
 
 
 | Field | Type | Label | Description |
@@ -5935,6 +5938,7 @@ RewardProgramBalance will display the balance for a distribution address for spe
 
 ### Share
 Share
+Reward Program Id + Reward Claim Period Id + Address
 
 
 | Field | Type | Label | Description |
@@ -5942,8 +5946,8 @@ Share
 | `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this share belongs to |
 | `sub_period_id` | [uint64](#uint64) |  | The id of the sub period that the share belongs to |
 | `address` | [string](#string) |  | Owner of the share |
-| `claimed` | [bool](#bool) |  | Share has been claimed |
-| `expire_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time when share expires |
+| `claimed` | [bool](#bool) |  | Remove this |
+| `expire_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Remove this |
 | `amount` | [int64](#int64) |  |  |
 
 

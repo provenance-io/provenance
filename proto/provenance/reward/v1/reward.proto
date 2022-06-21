@@ -24,10 +24,10 @@ message RewardProgram {
   uint64                   id                      = 1;
   string                   title                   = 2;
   string                   description             = 3;
-  string                   distribute_from_address = 4; // community pool for now
+  string                   distribute_from_address = 4; // community pool for now (who provides the money)
   cosmos.base.v1beta1.Coin total_reward_pool       = 5 [(gogoproto.nullable) = false];
   cosmos.base.v1beta1.Coin max_reward_by_address   = 6
-      [(gogoproto.nullable) = false]; // maximum rewards amount per address
+      [(gogoproto.nullable) = false]; // maximum reward per claim per address
   uint64 claim_period_seconds =
       7; // claim_period_seconds defines the type of claim_period attributed to this program.(e.g day,week,month)
   google.protobuf.Timestamp program_start_time = 8 [
@@ -35,42 +35,49 @@ message RewardProgram {
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "program_start_time,omitempty",
     (gogoproto.moretags) = "yaml:\"program_start_time,omitempty\""
-  ]; // optional field
+  ]; // When the reward program starts
   google.protobuf.Timestamp expected_program_end_time = 9 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "expected_program_end_time,omitempty",
     (gogoproto.moretags) = "yaml:\"expected_program_end_time,omitempty\""
-  ]; // optional
+  ]; // Time that the reward program MUST end
 
   google.protobuf.Timestamp claim_period_end_time = 10 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "claim_period_end_time,omitempty",
     (gogoproto.moretags) = "yaml:\"claim_period_end_time,omitempty\""
-  ];
+  ]; // This can be calculated by us and its when the current claim period ends
 
-  // when the program actually ended, will be empty at start
   google.protobuf.Timestamp actual_program_end_time = 11 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "finished_time,omitempty",
     (gogoproto.moretags) = "yaml:\"finished_time,omitempty\""
-  ];
-  // number of claim_periods set by reaward program creator
-  uint64 claim_periods = 12; // number of epochs this program will last for
+  ]; // when the program actually ended, will be empty at start
+
+  uint64 claim_periods = 12; // number of claim periods this program will run for
+
   uint64 current_claim_period =
-      13;           // the current claim_period for the  reward program is on(claim periods start at 1 <-- fisrt period)
+      13; // the current claim_period for the reward program is on(claim periods start at 1 <-- fisrt period)
+
   State state = 14; // the current state of the reward program
 
   uint64 share_expiration_offset =
       15; // Used to calculate the expiration time of a share in seconds. Currently, it is epoch_end_time + offset
 
-  repeated QualifyingAction qualifying_actions = 16 // The actions that count towards the reward
-      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"qualifying_actions"];
+  repeated QualifyingAction qualifying_actions = 16 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"qualifying_actions"
+  ]; // The actions that count towards the reward
 }
 
 // RewardProgramBalance will display the balance for a distribution address for specific rewards program
+// Money available for claims. How is this program doing.
+// Aggregate objects for claims and analytics
+// Used for queries
+// Reward Program Id - Key
 message RewardProgramBalance {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
@@ -82,7 +89,8 @@ message RewardProgramBalance {
                             // Program creator can reclaim their remaining funds.
 }
 
-// ClaimPeriodRewardDistribution, this will updated at the end of every epoch
+// ClaimPeriodRewardDistribution, this will updated at the end of every claim period
+// Reward Program Id + Claim Period Id
 message ClaimPeriodRewardDistribution {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
@@ -106,6 +114,7 @@ message AccountState {
 }
 
 // Share
+// Reward Program Id + Reward Claim Period Id + Address
 message Share {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
@@ -113,15 +122,15 @@ message Share {
   uint64 reward_program_id = 1; // The id of the reward program that this share belongs to
   uint64 sub_period_id     = 2; // The id of the sub period that the share belongs to
   string address           = 3 [(gogoproto.moretags) = "yaml:\"address\""]; // Owner of the share
-  bool   claimed           = 4;                                             // Share has been claimed
+  bool   claimed           = 4;                                             // Remove this
 
-  // Time when share expires
   google.protobuf.Timestamp expire_time = 5 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "expire_time,omitempty",
     (gogoproto.moretags) = "yaml:\"expire_time,omitempty\""
-  ];
+  ]; // Remove this
+
   int64 amount = 6;
 }
 
