@@ -134,13 +134,16 @@ func (rp *RewardProgram) IsStarting(ctx sdk.Context) bool {
 	return rp.State == RewardProgram_PENDING && (blockTime.After(rp.ProgramStartTime) || blockTime.Equal(rp.ProgramStartTime))
 }
 
-func (rp *RewardProgram) IsEndingSubPeriod(ctx sdk.Context) bool {
+func (rp *RewardProgram) IsEndingClaimPeriod(ctx sdk.Context) bool {
 	blockTime := ctx.BlockTime()
 	return rp.State == RewardProgram_STARTED && (blockTime.After(rp.ClaimPeriodEndTime) || blockTime.Equal(rp.ClaimPeriodEndTime))
 }
 
 func (rp *RewardProgram) IsEnding(ctx sdk.Context) bool {
-	return rp.State == RewardProgram_STARTED && rp.CurrentClaimPeriod > rp.ClaimPeriods
+	blockTime := ctx.BlockTime()
+	isProgramExpired := !rp.GetExpectedProgramEndTime().IsZero() && (blockTime.After(rp.ExpectedProgramEndTime) || blockTime.Equal(rp.ExpectedProgramEndTime))
+	isProgramCompleted := rp.CurrentClaimPeriod > rp.ClaimPeriods
+	return rp.State == RewardProgram_STARTED && (isProgramCompleted || isProgramExpired)
 }
 
 func (rp *RewardProgram) ValidateBasic() error {

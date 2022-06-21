@@ -57,7 +57,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgram() {
 	suite.Assert().Equal(blockTime, program.ActualProgramEndTime, "actual program end time should be set")
 }
 
-func (suite *KeeperTestSuite) TestRewardProgramSubPeriodEnd() {
+func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEnd() {
 	suite.SetupTest()
 
 	currentTime := time.Now()
@@ -76,14 +76,14 @@ func (suite *KeeperTestSuite) TestRewardProgramSubPeriodEnd() {
 	)
 
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
-	suite.app.RewardKeeper.EndRewardProgramSubPeriod(suite.ctx, &program)
+	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
 
 	suite.Assert().Equal(program.State, types.RewardProgram_STARTED, "reward program should be in started state")
 	suite.Assert().Equal(uint64(2), program.CurrentClaimPeriod, "current claim period should be updated")
 	suite.Assert().Equal(blockTime.Add(time.Duration(program.ClaimPeriodSeconds)*time.Second), program.ClaimPeriodEndTime, "claim period end time should be set")
 }
 
-func (suite *KeeperTestSuite) TestRewardProgramSubPeriodEndTransition() {
+func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransition() {
 	suite.SetupTest()
 
 	currentTime := time.Now()
@@ -102,12 +102,43 @@ func (suite *KeeperTestSuite) TestRewardProgramSubPeriodEndTransition() {
 	)
 
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
-	suite.app.RewardKeeper.EndRewardProgramSubPeriod(suite.ctx, &program)
-	suite.app.RewardKeeper.EndRewardProgramSubPeriod(suite.ctx, &program)
-	suite.app.RewardKeeper.EndRewardProgramSubPeriod(suite.ctx, &program)
+	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
+	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
+	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
 
 	suite.Assert().Equal(program.State, types.RewardProgram_FINISHED, "reward program should be in finished state")
 	suite.Assert().Equal(uint64(4), program.CurrentClaimPeriod, "current claim period should be updated")
+	suite.Assert().Equal(blockTime.Add(time.Duration(program.ClaimPeriodSeconds)*time.Second), program.ClaimPeriodEndTime, "claim period end time should be set")
+	suite.Assert().Equal(blockTime, program.ActualProgramEndTime, "claim period end time should be set")
+}
+
+func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransitionExpired() {
+	suite.SetupTest()
+
+	currentTime := time.Now()
+	suite.ctx = suite.ctx.WithBlockTime(currentTime)
+	blockTime := suite.ctx.BlockTime()
+	program := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 100000),
+		sdk.NewInt64Coin("nhash", 1000),
+		currentTime,
+		60*60,
+		3,
+		[]types.QualifyingAction{},
+	)
+
+	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
+	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
+	// Normally you would need an additional claim period. However, it should end because the expected time is set.
+	program.ExpectedProgramEndTime = currentTime
+	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
+
+	suite.Assert().Equal(types.RewardProgram_FINISHED, program.State, "reward program should be in finished state")
+	suite.Assert().Equal(uint64(3), program.CurrentClaimPeriod, "current claim period should be updated")
 	suite.Assert().Equal(blockTime.Add(time.Duration(program.ClaimPeriodSeconds)*time.Second), program.ClaimPeriodEndTime, "claim period end time should be set")
 	suite.Assert().Equal(blockTime, program.ActualProgramEndTime, "claim period end time should be set")
 }
@@ -235,7 +266,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 	)
 
 	// Reward Program that is ready to move onto next claim period
-	nextSubPeriod := types.NewRewardProgram(
+	nextClaimPeriod := types.NewRewardProgram(
 		"title",
 		"description",
 		3,
@@ -247,8 +278,8 @@ func (suite *KeeperTestSuite) TestUpdate() {
 		3,
 		[]types.QualifyingAction{},
 	)
-	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &nextSubPeriod)
-	nextSubPeriod.ClaimPeriodEndTime = blockTime
+	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &nextClaimPeriod)
+	nextClaimPeriod.ClaimPeriodEndTime = blockTime
 
 	// Reward program that is ready to end
 	ending := types.NewRewardProgram(
@@ -268,7 +299,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, notStarted)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, starting)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, nextSubPeriod)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, nextClaimPeriod)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, ending)
 
 	// We call update
@@ -276,7 +307,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 
 	notStarted, _ = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, notStarted.Id)
 	starting, _ = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, starting.Id)
-	nextSubPeriod, _ = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, nextSubPeriod.Id)
+	nextClaimPeriod, _ = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, nextClaimPeriod.Id)
 	ending, _ = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, ending.Id)
 
 	suite.Assert().Equal(uint64(0), notStarted.CurrentClaimPeriod, "claim period should be 0 for a program that is not started")
@@ -285,8 +316,8 @@ func (suite *KeeperTestSuite) TestUpdate() {
 	suite.Assert().Equal(uint64(1), starting.CurrentClaimPeriod, "claim period should be 1 for a program that just started")
 	suite.Assert().Equal(starting.State, types.RewardProgram_STARTED, "should be in started state")
 
-	suite.Assert().Equal(uint64(2), nextSubPeriod.CurrentClaimPeriod, "claim period should be 2 for a program that went to next claim period")
-	suite.Assert().Equal(nextSubPeriod.State, types.RewardProgram_STARTED, "should be in started state")
+	suite.Assert().Equal(uint64(2), nextClaimPeriod.CurrentClaimPeriod, "claim period should be 2 for a program that went to next claim period")
+	suite.Assert().Equal(nextClaimPeriod.State, types.RewardProgram_STARTED, "should be in started state")
 
 	suite.Assert().Equal(uint64(2), ending.CurrentClaimPeriod, "claim period should be incremented by 1")
 	suite.Assert().Equal(ending.State, types.RewardProgram_FINISHED, "should be in finished state")

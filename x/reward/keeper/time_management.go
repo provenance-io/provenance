@@ -19,8 +19,8 @@ func (k Keeper) Update(ctx sdk.Context) {
 	for _, rewardProgram := range outstanding {
 		if rewardProgram.IsStarting(ctx) {
 			k.StartRewardProgram(ctx, &rewardProgram)
-		} else if rewardProgram.IsEndingSubPeriod(ctx) {
-			k.EndRewardProgramSubPeriod(ctx, &rewardProgram)
+		} else if rewardProgram.IsEndingClaimPeriod(ctx) {
+			k.EndRewardProgramClaimPeriod(ctx, &rewardProgram)
 		}
 
 		k.SetRewardProgram(ctx, rewardProgram)
@@ -47,8 +47,8 @@ func (k Keeper) StartRewardProgram(ctx sdk.Context, rewardProgram *types.RewardP
 	rewardProgram.CurrentClaimPeriod = 1
 }
 
-func (k Keeper) EndRewardProgramSubPeriod(ctx sdk.Context, rewardProgram *types.RewardProgram) {
-	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Sub period end hit for reward program %v ", rewardProgram))
+func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *types.RewardProgram) {
+	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Claim period end hit for reward program %v ", rewardProgram))
 	blockTime := ctx.BlockTime()
 	rewardProgram.CurrentClaimPeriod++
 	if rewardProgram.IsEnding(ctx) {
