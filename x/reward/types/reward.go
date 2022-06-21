@@ -269,13 +269,13 @@ func (s *Share) String() string {
 
 // ============ Epoch Reward Distribution ============
 
-func NewClaimPeriodRewardDistribution(epochID string, rewardProgramID uint64, totalRewardsPool sdk.Coin, totalShares int64, epochEnded bool) ClaimPeriodRewardDistribution {
+func NewClaimPeriodRewardDistribution(epochID string, rewardProgramID uint64, totalRewardsPoolForClaimPeriod sdk.Coin, totalShares int64, epochEnded bool) ClaimPeriodRewardDistribution {
 	return ClaimPeriodRewardDistribution{
-		ClaimPeriodId:    epochID,
-		RewardProgramId:  rewardProgramID,
-		TotalRewardsPool: totalRewardsPool,
-		TotalShares:      totalShares,
-		EpochEnded:       epochEnded,
+		ClaimPeriodId:                  epochID,
+		RewardProgramId:                rewardProgramID,
+		TotalRewardsPoolForClaimPeriod: totalRewardsPoolForClaimPeriod,
+		TotalShares:                    totalShares,
+		EpochEnded:                     epochEnded,
 	}
 }
 
@@ -286,7 +286,7 @@ func (erd *ClaimPeriodRewardDistribution) ValidateBasic() error {
 	if erd.RewardProgramId < 1 {
 		return errors.New("epoch reward distribution must have a valid reward program id")
 	}
-	if !erd.TotalRewardsPool.IsPositive() {
+	if !erd.TotalRewardsPoolForClaimPeriod.IsPositive() {
 		return errors.New("epoch reward distribution must have a reward pool")
 	}
 	return nil

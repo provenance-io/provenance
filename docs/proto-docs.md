@@ -5857,7 +5857,7 @@ Reward Program Id + Claim Period Id
 | ----- | ---- | ----- | ----------- |
 | `claim_period_id` | [string](#string) |  |  |
 | `reward_program_id` | [uint64](#uint64) |  |  |
-| `total_rewards_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `total_rewards_pool_for_claim_period` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `total_shares` | [int64](#int64) |  |  |
 | `epoch_ended` | [bool](#bool) |  |  |
 
