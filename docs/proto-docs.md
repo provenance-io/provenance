@@ -5924,10 +5924,10 @@ Reward Program Id - Key
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this balance belongs to |
-| `reward_program_balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The reward program's balance |
-| `claim_period_balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The claim period's balance |
-| `maximum_claim_period_balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The maximum balance per claim period |
+| `reward_program_id` | [uint64](#uint64) |  |  |
+| `distribution_address` | [string](#string) |  |  |
+| `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `funds_claimable` | [bool](#bool) |  | When rewards program is over and the time for participants to claim funds is over. |
 
 
 

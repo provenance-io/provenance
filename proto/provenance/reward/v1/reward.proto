@@ -82,11 +82,11 @@ message RewardProgramBalance {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  uint64                   reward_program_id      = 1; // The id of the reward program that this balance belongs to
-  cosmos.base.v1beta1.Coin reward_program_balance = 2 [(gogoproto.nullable) = false]; // The reward program's balance
-  cosmos.base.v1beta1.Coin claim_period_balance   = 3 [(gogoproto.nullable) = false]; // The claim period's balance
-  cosmos.base.v1beta1.Coin maximum_claim_period_balance = 4
-      [(gogoproto.nullable) = false]; // The maximum balance per claim period
+  uint64                   reward_program_id    = 1;
+  string                   distribution_address = 2;
+  cosmos.base.v1beta1.Coin balance              = 3 [(gogoproto.nullable) = false];
+  bool funds_claimable = 4; // When rewards program is over and the time for participants to claim funds is over.
+                            // Program creator can reclaim their remaining funds.
 }
 
 // ClaimPeriodRewardDistribution, this will updated at the end of every claim period
