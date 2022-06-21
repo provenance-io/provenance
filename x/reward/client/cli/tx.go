@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -23,7 +22,6 @@ const (
 	FlagMaxRewardByAddress = "max-reward-by-address"
 	FlagStartTime          = "start-time"
 	FlagSubPeriodType      = "sub-period-type"
-	FlagSubPeriods         = "sub-periods"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -95,14 +93,6 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 				return fmt.Errorf("sub period type %s does not exist", subPeriodTypeKey)
 			}
 
-			subPeriods, err := cmd.Flags().GetUint64(FlagSubPeriods)
-			if err != nil {
-				return err
-			}
-			if subPeriods < 1 {
-				return errors.New("number of sub periods must be larger than 0")
-			}
-
 			callerAddr := clientCtx.GetFromAddress()
 			msg := types.NewMsgCreateRewardProgramRequest(
 				args[0],
@@ -112,7 +102,6 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 				maxCoin,
 				startTime,
 				subPeriodTypeKey,
-				subPeriods,
 			)
 			if err != nil {
 				return fmt.Errorf("invalid governance proposal. Error: %q", err)
@@ -125,6 +114,5 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 	cmd.Flags().String(FlagMaxRewardByAddress, "", "max amount of coins a single address can claim in rewards")
 	cmd.Flags().String(FlagStartTime, "", "time to start the rewards program, this must be a time in the future or within the first epoch of format YYYY-MM-DDTHH:MM:SSZ00:00 (2012-11-01T22:08:41+07:00)")
 	cmd.Flags().String(FlagSubPeriodType, "", "sub period type (day, week, month)")
-	cmd.Flags().Uint64(FlagSubPeriods, 0, "number of sub periods for the reward program")
 	return cmd
 }

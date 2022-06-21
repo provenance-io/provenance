@@ -26,12 +26,12 @@ message MsgCreateRewardProgramRequest {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  string                    title                   = 1;
-  string                    description             = 2;
-  string                    distribute_from_address = 3; // community pool for now
-  cosmos.base.v1beta1.Coin  coin                    = 4 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin  max_reward_by_address   = 5 [(gogoproto.nullable) = false];
-  google.protobuf.Timestamp program_start_time      = 6 [
+  string                    title                        = 1;
+  string                    description                  = 2;
+  string                    distribute_from_address      = 3; // community pool for now
+  cosmos.base.v1beta1.Coin  coin                         = 4 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin  max_reward_per_claim_address = 5 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp program_start_time           = 6 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "program_start_time,omitempty",
@@ -44,8 +44,7 @@ message MsgCreateRewardProgramRequest {
     (gogoproto.moretags) = "yaml:\"program_end_time,omitempty\""
   ];
   string sub_period_type =
-      8;                  // EpochInfo defines the type of sub period attributed to this program.(e.g day,week,month)
-  uint64 sub_periods = 9; // number of sub periods this program will last for
+      8; // EpochInfo defines the type of sub period attributed to this program.(e.g day,week,month)
 }
 
 message MsgCreateRewardProgramResponse {
