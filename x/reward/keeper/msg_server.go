@@ -42,10 +42,10 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		rewardProgramID,
 		msg.DistributeFromAddress,
 		msg.Coin,
-		msg.MaxRewardByAddress,
+		msg.MaxRewardPerClaimAddress,
 		msg.ProgramStartTime,
 		types.PeriodTypeToSeconds[msg.SubPeriodType],
-		msg.SubPeriods,
+		1, // TODO calculate sub periods
 
 		// TODO - We need to update this to be part of the message
 		[]types.QualifyingAction{},

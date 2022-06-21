@@ -23,20 +23,18 @@ func NewMsgCreateRewardProgramRequest(
 	description string,
 	distributeFromAddress string,
 	coin sdk.Coin,
-	maxRewardByAddress sdk.Coin,
+	maxRewardPerClaimAddress sdk.Coin,
 	programStartTime time.Time,
 	subPeriodType string,
-	subPeriods uint64,
 ) *MsgCreateRewardProgramRequest {
 	return &MsgCreateRewardProgramRequest{
-		Title:                 title,
-		Description:           description,
-		DistributeFromAddress: distributeFromAddress,
-		Coin:                  coin,
-		MaxRewardByAddress:    maxRewardByAddress,
-		ProgramStartTime:      programStartTime,
-		SubPeriodType:         subPeriodType,
-		SubPeriods:            subPeriods,
+		Title:                    title,
+		Description:              description,
+		DistributeFromAddress:    distributeFromAddress,
+		Coin:                     coin,
+		MaxRewardPerClaimAddress: maxRewardPerClaimAddress,
+		ProgramStartTime:         programStartTime,
+		SubPeriodType:            subPeriodType,
 	}
 }
 
@@ -68,15 +66,12 @@ func (msg MsgCreateRewardProgramRequest) ValidateBasic() error {
 	if !msg.Coin.IsPositive() {
 		return fmt.Errorf("reward program requires coins: %v", msg.Coin)
 	}
-	if !msg.MaxRewardByAddress.IsPositive() {
-		return fmt.Errorf("reward program requires positive max reward by address: %v", msg.MaxRewardByAddress)
+	if !msg.MaxRewardPerClaimAddress.IsPositive() {
+		return fmt.Errorf("reward program requires positive max reward by address: %v", msg.MaxRewardPerClaimAddress)
 	}
 	subPeriodSeconds := PeriodTypeToSeconds[msg.SubPeriodType]
 	if subPeriodSeconds == 0 {
 		return fmt.Errorf("sub period type not found: %s", msg.SubPeriodType)
-	}
-	if msg.SubPeriods < 1 {
-		return errors.New("reward program number of sub periods must be larger than 0")
 	}
 	return nil
 }

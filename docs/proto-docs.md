@@ -6223,11 +6223,10 @@ Query defines the gRPC querier service for reward module.
 | `description` | [string](#string) |  |  |
 | `distribute_from_address` | [string](#string) |  | community pool for now |
 | `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `max_reward_per_claim_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `sub_period_type` | [string](#string) |  | EpochInfo defines the type of sub period attributed to this program.(e.g day,week,month) |
-| `sub_periods` | [uint64](#uint64) |  | number of sub periods this program will last for |
 
 
 
