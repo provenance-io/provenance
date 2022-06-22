@@ -45,13 +45,47 @@ func (k Keeper) StartRewardProgram(ctx sdk.Context, rewardProgram *types.RewardP
 	rewardProgram.State = types.RewardProgram_STARTED
 	rewardProgram.ClaimPeriodEndTime = blockTime.Add(time.Duration(rewardProgram.ClaimPeriodSeconds) * time.Second)
 	rewardProgram.CurrentClaimPeriod = 1
+
+	// Create the New Claim Period Reward Distribution
+	totalClaimReward := rewardProgram.MaxRewardByAddress
+	if totalClaimReward.IsGTE(rewardProgram.GetTotalRewardPool()) {
+		totalClaimReward = rewardProgram.GetTotalRewardPool()
+	}
+	claimPeriodReward := types.NewClaimPeriodRewardDistribution(
+		fmt.Sprintf("%d", rewardProgram.GetCurrentClaimPeriod()),
+		rewardProgram.GetId(),
+		totalClaimReward,
+		0,
+		false,
+	)
+	k.SetClaimPeriodRewardDistribution(ctx, claimPeriodReward)
 }
 
 func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *types.RewardProgram) {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Claim period end hit for reward program %v ", rewardProgram))
 	blockTime := ctx.BlockTime()
 	rewardProgram.CurrentClaimPeriod++
-	if rewardProgram.IsEnding(ctx) {
+
+	// Update the RewardProgramBalance
+	programBalance, err := k.GetRewardProgramBalance(ctx, rewardProgram.GetId())
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("NOTICE: Missing RewardProgramBalance for RewardProgram %d ", rewardProgram.GetId()))
+		//TODO How to handle this. This shouldn't happen
+	}
+	balance := programBalance.Min(rewardProgram.GetMaxRewardByAddress())
+	programBalance.Balance = programBalance.GetBalance().Sub(balance)
+	k.SetRewardProgramBalance(ctx, programBalance)
+
+	// Update the ClaimPeriodRewardDistribution
+	claimPeriodReward, err := k.GetClaimPeriodRewardDistribution(ctx, fmt.Sprintf("%d", rewardProgram.GetCurrentClaimPeriod()), rewardProgram.GetId())
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("NOTICE: Missing ClaimPeriodRewardDistribution for RewardProgram %d ", rewardProgram.GetId()))
+		//TODO How to handle this. This shouldn't happe
+	}
+	claimPeriodReward.TotalRewardsPoolForClaimPeriod = balance
+	k.SetClaimPeriodRewardDistribution(ctx, claimPeriodReward)
+
+	if rewardProgram.IsEnding(ctx) && programBalance.IsEmpty() {
 		k.EndRewardProgram(ctx, rewardProgram)
 	} else {
 		rewardProgram.ClaimPeriodEndTime = blockTime.Add(time.Duration(rewardProgram.ClaimPeriodSeconds) * time.Second)

@@ -195,6 +195,16 @@ func NewRewardProgramBalance(
 		Balance:         balance,
 	}
 }
+func (rpb *RewardProgramBalance) Min(amount sdk.Coin) sdk.Coin {
+	if rpb.GetBalance().IsLT(amount) {
+		return rpb.GetBalance()
+	}
+	return amount
+}
+
+func (rpb *RewardProgramBalance) IsEmpty() bool {
+	return rpb.GetBalance().IsZero()
+}
 
 func (rpb *RewardProgramBalance) ValidateBasic() error {
 	if rpb.RewardProgramId < 1 {

@@ -156,7 +156,7 @@ func (k Keeper) RemoveRewardProgramBalance(ctx sdk.Context, id uint64) bool {
 }
 
 // GetRewardProgram returns a RewardProgram by id
-func (k Keeper) GetRewardProgramBalance(ctx sdk.Context, id uint64) (rewardProgramBalance types.RewardProgram, err error) {
+func (k Keeper) GetRewardProgramBalance(ctx sdk.Context, id uint64) (rewardProgramBalance types.RewardProgramBalance, err error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRewardProgramBalanceKey(id)
 	bz := store.Get(key)
