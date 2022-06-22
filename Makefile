@@ -185,7 +185,7 @@ all: build format lint test
 install: go.sum
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install $(BUILD_FLAGS) ./cmd/provenanced
 
-build: validate-m1-dependencies validate-go-version go.sum
+build: validate-os-dependencies validate-go-version go.sum
 	mkdir -p $(BUILDDIR)
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/provenanced
 
@@ -388,7 +388,7 @@ validate-go-version: ## Validates the installed version of go against Provenance
 		exit 1; \
 	fi
 
-validate-m1-dependencies: ## Validates all the dependencies by M1 are installed or setup
+validate-os-dependencies: ## Validates all the dependencies needed by a specific os
 	@if [[ $(UNAME_S) == darwin && $(UNAME_M) == arm64 ]]; then \
 		output=$$(scripts/m1-dependency-check.sh); \
 		if [[ $$? == 1 ]]; then echo "\x1B[31m>> Build halted\x1B[39m"; echo "\x1B[31m>> $$output\x1B[39m"; exit 1; fi; \
