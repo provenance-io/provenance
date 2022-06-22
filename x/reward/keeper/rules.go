@@ -101,6 +101,24 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: Recording shares for for rewardProgramId=%d, claimPeriod=%d",
 		rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod()))
 
+	// get the ClaimPeriodRewardDistribution
+	claimPeriodRewardDistribution, err := k.GetClaimPeriodRewardDistribution(ctx, rewardProgram.GetCurrentClaimPeriod(), rewardProgram.GetId())
+
+	if err != nil {
+		return err
+	}
+
+	// check if ClaimPeriodRewardDistribution has default values in it, since claimPeriodId should always start with 1 hence should be fine.
+	if claimPeriodRewardDistribution.ClaimPeriodId == 0 {
+		claimPeriodRewardDistribution = types.NewClaimPeriodRewardDistribution(
+			rewardProgram.GetCurrentClaimPeriod(),
+			rewardProgram.GetId(),
+			sdk.Coin{},
+			0,
+			false,
+		)
+	}
+
 	if rewardProgram == nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "reward program cannot be nil")
 	}
@@ -127,7 +145,12 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 		}
 		share.Amount += res.Shares
 		k.SetShare(ctx, &share)
+		// we know the rewards it so update the epoch reward
+		claimPeriodRewardDistribution.TotalShares += res.Shares
 	}
+
+	// set total claim period rewards distribution.
+	k.SetClaimPeriodRewardDistribution(ctx, claimPeriodRewardDistribution)
 
 	return nil
 }

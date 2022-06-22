@@ -86,7 +86,7 @@ message ClaimPeriodRewardDistributionResponse {
 
 message ClaimPeriodRewardDistributionByIDRequest {
   uint64 rewardId      = 1;
-  string claimPeriodId = 2;
+  uint64 claimPeriodId = 2;
 }
 
 message ClaimPeriodRewardDistributionByIDResponse {

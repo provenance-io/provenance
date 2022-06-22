@@ -46,15 +46,10 @@ func (k Keeper) StartRewardProgram(ctx sdk.Context, rewardProgram *types.RewardP
 	rewardProgram.ClaimPeriodEndTime = blockTime.Add(time.Duration(rewardProgram.ClaimPeriodSeconds) * time.Second)
 	rewardProgram.CurrentClaimPeriod = 1
 
-	// Create the New Claim Period Reward Distribution
-	totalClaimReward := rewardProgram.MaxRewardByAddress
-	if totalClaimReward.IsGTE(rewardProgram.GetTotalRewardPool()) {
-		totalClaimReward = rewardProgram.GetTotalRewardPool()
-	}
 	claimPeriodReward := types.NewClaimPeriodRewardDistribution(
-		fmt.Sprintf("%d", rewardProgram.GetCurrentClaimPeriod()),
+		rewardProgram.GetCurrentClaimPeriod(),
 		rewardProgram.GetId(),
-		totalClaimReward,
+		sdk.Coin{},
 		0,
 		false,
 	)
@@ -77,7 +72,7 @@ func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *type
 	k.SetRewardProgramBalance(ctx, programBalance)
 
 	// Update the ClaimPeriodRewardDistribution
-	claimPeriodReward, err := k.GetClaimPeriodRewardDistribution(ctx, fmt.Sprintf("%d", rewardProgram.GetCurrentClaimPeriod()), rewardProgram.GetId())
+	claimPeriodReward, err := k.GetClaimPeriodRewardDistribution(ctx, rewardProgram.GetCurrentClaimPeriod(), rewardProgram.GetId())
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("NOTICE: Missing ClaimPeriodRewardDistribution for RewardProgram %d ", rewardProgram.GetId()))
 		//TODO How to handle this. This shouldn't happe

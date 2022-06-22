@@ -5855,11 +5855,11 @@ Reward Program Id + Claim Period Id
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `claim_period_id` | [string](#string) |  |  |
+| `claim_period_id` | [uint64](#uint64) |  |  |
 | `reward_program_id` | [uint64](#uint64) |  |  |
 | `total_rewards_pool_for_claim_period` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `total_shares` | [int64](#int64) |  |  |
-| `epoch_ended` | [bool](#bool) |  |  |
+| `total_shares` | [int64](#int64) |  | y |
+| `claim_period_ended` | [bool](#bool) |  |  |
 
 
 
@@ -6051,7 +6051,7 @@ GenesisState defines the reward module's genesis state.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `rewardId` | [uint64](#uint64) |  |  |
-| `claimPeriodId` | [string](#string) |  |  |
+| `claimPeriodId` | [uint64](#uint64) |  |  |
 
 
 

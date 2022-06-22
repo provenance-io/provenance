@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/reward/types"
@@ -12,13 +10,13 @@ import (
 func (k Keeper) SetClaimPeriodRewardDistribution(ctx sdk.Context, ClaimPeriodRewardDistribution types.ClaimPeriodRewardDistribution) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&ClaimPeriodRewardDistribution)
-	store.Set(types.GetClaimPeriodRewardDistributionKey(ClaimPeriodRewardDistribution.ClaimPeriodId, fmt.Sprintf("%d", ClaimPeriodRewardDistribution.RewardProgramId)), bz)
+	store.Set(types.GetClaimPeriodRewardDistributionKey(ClaimPeriodRewardDistribution.ClaimPeriodId, ClaimPeriodRewardDistribution.RewardProgramId), bz)
 }
 
 // GetClaimPeriodRewardDistribution returns a ClaimPeriodRewardDistribution by epoch id and reward id
-func (k Keeper) GetClaimPeriodRewardDistribution(ctx sdk.Context, epochID string, rewardID uint64) (ClaimPeriodRewardDistribution types.ClaimPeriodRewardDistribution, err error) {
+func (k Keeper) GetClaimPeriodRewardDistribution(ctx sdk.Context, claimPeriodId uint64, rewardID uint64) (ClaimPeriodRewardDistribution types.ClaimPeriodRewardDistribution, err error) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetClaimPeriodRewardDistributionKey(epochID, fmt.Sprintf("%d", rewardID))
+	key := types.GetClaimPeriodRewardDistributionKey(claimPeriodId, rewardID)
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return ClaimPeriodRewardDistribution, nil
@@ -45,7 +43,7 @@ func (k Keeper) IterateClaimPeriodRewardDistributions(ctx sdk.Context, handle fu
 	return nil
 }
 
-// Gets all the Epoch Reward Distributions
+// GetAllClaimPeriodRewardDistributions Gets all the Epoch Reward Distributions
 func (k Keeper) GetAllClaimPeriodRewardDistributions(sdkCtx sdk.Context) ([]types.ClaimPeriodRewardDistribution, error) {
 	var rewardDistributions []types.ClaimPeriodRewardDistribution
 	err := k.IterateClaimPeriodRewardDistributions(sdkCtx, func(rewardDistribution types.ClaimPeriodRewardDistribution) (stop bool) {
@@ -58,15 +56,15 @@ func (k Keeper) GetAllClaimPeriodRewardDistributions(sdkCtx sdk.Context) ([]type
 	return rewardDistributions, nil
 }
 
-// Checks if an Epoch Reward Distribution is valid
+// ClaimPeriodRewardDistributionIsValid Checks if an Epoch Reward Distribution is valid
 func (k Keeper) ClaimPeriodRewardDistributionIsValid(ClaimPeriodReward *types.ClaimPeriodRewardDistribution) bool {
 	return ClaimPeriodReward.RewardProgramId != 0
 }
 
-// Removes an ClaimPeriodRewardDistribution
-func (k Keeper) RemoveClaimPeriodRewardDistribution(ctx sdk.Context, epochID string, rewardID uint64) bool {
+// RemoveClaimPeriodRewardDistribution Removes an ClaimPeriodRewardDistribution
+func (k Keeper) RemoveClaimPeriodRewardDistribution(ctx sdk.Context, claimPeriodId uint64, rewardID uint64) bool {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetClaimPeriodRewardDistributionKey(epochID, fmt.Sprintf("%d", rewardID))
+	key := types.GetClaimPeriodRewardDistributionKey(claimPeriodId, rewardID)
 	bz := store.Get(key)
 	keyExists := store.Has(bz)
 	if keyExists {

@@ -118,10 +118,10 @@ func GetRewardClaimsKey(addr []byte) []byte {
 	return append(RewardClaimKeyPrefix, address.MustLengthPrefix(addr)...)
 }
 
-func GetClaimPeriodRewardDistributionKey(claimId string, rewardID string) []byte {
+func GetClaimPeriodRewardDistributionKey(claimId uint64, rewardID uint64) []byte {
 	key := ClaimPeriodRewardDistributionKeyPrefix
-	key = append(key, []byte(claimId)...)
-	return append(key, []byte(rewardID)...)
+	key = append(key, []byte(strconv.FormatUint(claimId, 10))...)
+	return append(key, []byte(strconv.FormatUint(rewardID, 10))...)
 }
 
 func GetEligibilityCriteriaKey(name string) []byte {

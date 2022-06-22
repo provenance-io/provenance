@@ -252,23 +252,23 @@ func (s *RewardTypesTestSuite) TestEpochRewardDistributionValidateBasic() {
 		want          string
 	}{
 		{
-			"invalid -  address format",
-			NewClaimPeriodRewardDistribution("", 1, sdk.NewInt64Coin("jackthecat", 100), 0, false),
-			"epoch reward distribution must have a epoch id",
+			"invalid -  claim period id",
+			NewClaimPeriodRewardDistribution(0, 1, sdk.NewInt64Coin("jackthecat", 100), 0, false),
+			"claim reward distribution has invalid claim id",
 		},
 		{
 			"invalid - reward program id",
-			NewClaimPeriodRewardDistribution("day", 0, sdk.NewInt64Coin("jackthecat", 100), 0, false),
-			"epoch reward distribution must have a valid reward program id",
+			NewClaimPeriodRewardDistribution(1, 0, sdk.NewInt64Coin("jackthecat", 100), 0, false),
+			"claim reward distribution must have a valid reward program id",
 		},
 		{
 			"invalid - total rewards needs to be positive",
-			NewClaimPeriodRewardDistribution("day", 1, sdk.NewInt64Coin("jackthecat", 0), 0, false),
-			"epoch reward distribution must have a reward pool",
+			NewClaimPeriodRewardDistribution(1, 1, sdk.NewInt64Coin("jackthecat", 0), 0, false),
+			"claim reward distribution must have a reward pool",
 		},
 		{
 			"should succeed validate basic",
-			NewClaimPeriodRewardDistribution("day", 1, sdk.NewInt64Coin("jackthecat", 1), 0, false),
+			NewClaimPeriodRewardDistribution(1, 1, sdk.NewInt64Coin("jackthecat", 1), 0, false),
 			"",
 		},
 	}
