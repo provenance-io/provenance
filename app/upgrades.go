@@ -27,8 +27,15 @@ type appUpgrade struct {
 }
 
 var handlers = map[string]appUpgrade{
-	"lava":  {}, // upgrade for 1.10.0
-	"mango": {}, // upgrade for 1.11.1-rc1
+	"lava": {}, // upgrade for 1.10.0
+	"mango": {
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+			params := app.MsgFeesKeeper.GetParams(ctx)
+			app.MsgFeesKeeper.SetParams(ctx, params)
+			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+			return versionMap, nil
+		},
+	}, // upgrade for 1.11.x
 	"mango-rc2": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
 			params := app.MsgFeesKeeper.GetParams(ctx)
