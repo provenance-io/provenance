@@ -12,8 +12,17 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
+      - uses: technote-space/get-diff-action@v6.1.0
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+            .github/workflows/rosetta.yml
       - name: Go mod vendor
+        if: ${{ env.GIT_DIFF }}
         run: |
           go mod vendor
       - name: rosetta
+        if: ${{ env.GIT_DIFF }}
         run: make test-rosetta
