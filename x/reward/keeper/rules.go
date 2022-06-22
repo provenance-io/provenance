@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -97,12 +98,11 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 }
 
 func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram, evaluateRes []types.EvaluationResult) error {
-	ctx.Logger().Info(fmt.Sprintf("NOTICE: Recording shares for for rewardProgramId=%d, subPeriod=%d",
+	ctx.Logger().Info(fmt.Sprintf("NOTICE: Recording shares for for rewardProgramId=%d, claimPeriod=%d",
 		rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod()))
 
-	err := rewardProgram.ValidateBasic()
-	if rewardProgram == nil || err != nil {
-		return err
+	if rewardProgram == nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "reward program cannot be nil")
 	}
 
 	for _, res := range evaluateRes {
