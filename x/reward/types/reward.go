@@ -188,20 +188,15 @@ func (rp *RewardProgram) String() string {
 
 func NewRewardProgramBalance(
 	rewardProgramID uint64,
-	distributionAddress string,
 	balance sdk.Coin,
 ) RewardProgramBalance {
 	return RewardProgramBalance{
-		RewardProgramId:     rewardProgramID,
-		DistributionAddress: distributionAddress,
-		Balance:             balance,
+		RewardProgramId: rewardProgramID,
+		Balance:         balance,
 	}
 }
 
 func (rpb *RewardProgramBalance) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(rpb.DistributionAddress); err != nil {
-		return fmt.Errorf("invalid address for reward program balance: %w", err)
-	}
 	if rpb.RewardProgramId < 1 {
 		return errors.New("reward program id must be larger than 0")
 	}

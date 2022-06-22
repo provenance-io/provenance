@@ -82,11 +82,8 @@ message RewardProgramBalance {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  uint64                   reward_program_id    = 1;
-  string                   distribution_address = 2;
-  cosmos.base.v1beta1.Coin balance              = 3 [(gogoproto.nullable) = false];
-  bool funds_claimable = 4; // When rewards program is over and the time for participants to claim funds is over.
-                            // Program creator can reclaim their remaining funds.
+  uint64                   reward_program_id = 1;
+  cosmos.base.v1beta1.Coin balance           = 3 [(gogoproto.nullable) = false];
 }
 
 // ClaimPeriodRewardDistribution, this will updated at the end of every claim period
@@ -95,8 +92,8 @@ message ClaimPeriodRewardDistribution {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  string                   claim_period_id    = 1;
-  uint64                   reward_program_id  = 2;
+  string                   claim_period_id                     = 1;
+  uint64                   reward_program_id                   = 2;
   cosmos.base.v1beta1.Coin total_rewards_pool_for_claim_period = 3
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"total_rewards_pool\""];
   int64 total_shares = 4;

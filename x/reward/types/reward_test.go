@@ -218,7 +218,6 @@ func (s *RewardTypesTestSuite) TestRewardProgramBalanceValidateBasic() {
 			"valid",
 			NewRewardProgramBalance(
 				1,
-				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 				sdk.NewInt64Coin("jackthecat", 1),
 			),
 			"",
@@ -227,19 +226,9 @@ func (s *RewardTypesTestSuite) TestRewardProgramBalanceValidateBasic() {
 			"invalid - reward id is 0",
 			NewRewardProgramBalance(
 				0,
-				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 				sdk.NewInt64Coin("jackthecat", 1),
 			),
 			"reward program id must be larger than 0",
-		},
-		{
-			"invalid - address is incorrect",
-			NewRewardProgramBalance(
-				1,
-				"invalid",
-				sdk.NewInt64Coin("jackthecat", 1),
-			),
-			"invalid address for reward program balance: decoding bech32 failed: invalid bech32 string length 7",
 		},
 	}
 

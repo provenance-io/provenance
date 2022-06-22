@@ -5925,9 +5925,7 @@ Reward Program Id - Key
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `reward_program_id` | [uint64](#uint64) |  |  |
-| `distribution_address` | [string](#string) |  |  |
 | `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `funds_claimable` | [bool](#bool) |  | When rewards program is over and the time for participants to claim funds is over. |
 
 
 
