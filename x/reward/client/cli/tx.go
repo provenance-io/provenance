@@ -21,7 +21,9 @@ const (
 	FlagCoin               = "coin"
 	FlagMaxRewardByAddress = "max-reward-by-address"
 	FlagStartTime          = "start-time"
-	FlagSubPeriodType      = "sub-period-type"
+	FlagRewardPeriodDays   = "reward-period-days"
+	FlagClaimPeriodDays    = "claim-period-days"
+	FlagExpireDays         = "expire-days"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -51,9 +53,11 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 		Example: fmt.Sprintf(`$ %[1]s tx reward new 
 		--coin 580nhash \
 		--max-reward-by-address 10nhash \
-    	--sub-period-type day \
     	--start-time 2022-05-10\
-    	--sub-periods 10 \
+		--reward-period-days 365 \
+		--claim-period-days 7 \
+		--expire-days 14 \ 
+The example command details state: TODO
 		`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -84,15 +88,20 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			subPeriodTypeKey, err := cmd.Flags().GetString(FlagSubPeriodType)
+			rewardProgramDays, err := cmd.Flags().GetUint64(FlagRewardPeriodDays)
 			if err != nil {
 				return err
 			}
-			subPeriodTypeSeconds := types.PeriodTypeToSeconds[subPeriodTypeKey]
-			if subPeriodTypeSeconds == 0 {
-				return fmt.Errorf("sub period type %s does not exist", subPeriodTypeKey)
+			claimPeriodDays, err := cmd.Flags().GetUint64(FlagClaimPeriodDays)
+			if err != nil {
+				return err
+			}
+			expireDays, err := cmd.Flags().GetUint64(FlagExpireDays)
+			if err != nil {
+				return err
 			}
 
+			// TODO add
 			callerAddr := clientCtx.GetFromAddress()
 			msg := types.NewMsgCreateRewardProgramRequest(
 				args[0],
@@ -101,7 +110,9 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 				coin,
 				maxCoin,
 				startTime,
-				subPeriodTypeKey,
+				rewardProgramDays,
+				claimPeriodDays,
+				expireDays,
 			)
 			if err != nil {
 				return fmt.Errorf("invalid governance proposal. Error: %q", err)
@@ -113,6 +124,8 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 	cmd.Flags().String(FlagCoin, "", "coins for reward program")
 	cmd.Flags().String(FlagMaxRewardByAddress, "", "max amount of coins a single address can claim in rewards")
 	cmd.Flags().String(FlagStartTime, "", "time to start the rewards program, this must be a time in the future or within the first epoch of format YYYY-MM-DDTHH:MM:SSZ00:00 (2012-11-01T22:08:41+07:00)")
-	cmd.Flags().String(FlagSubPeriodType, "", "sub period type (day, week, month)")
+	cmd.Flags().String(FlagRewardPeriodDays, "", "number of days the reward program runs")
+	cmd.Flags().String(FlagClaimPeriodDays, "", "number of days for a claim period interval")
+	cmd.Flags().String(FlagExpireDays, "", "number of days to expire program after it has ended")
 	return cmd
 }

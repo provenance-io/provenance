@@ -20,13 +20,8 @@ const DefaultStartingRewardProgramID uint64 = 1
 const (
 	MaxDescriptionLength int = 10000
 	MaxTitleLength       int = 140
+	DayInSeconds         int = 60 * 60 * 24
 )
-
-var PeriodTypeToSeconds = map[string]uint64{
-	"day":   60 * 60 * 24,
-	"week":  60 * 60 * 24 * 7,
-	"month": 60 * 60 * 24 * 30,
-}
 
 var (
 	_ RewardAction = &ActionDelegate{}
@@ -102,6 +97,7 @@ type EvaluationResult struct {
 
 // ============ Reward Program ============
 
+// TODO add expire days
 func NewRewardProgram(
 	title string,
 	description string,

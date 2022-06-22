@@ -37,14 +37,9 @@ message MsgCreateRewardProgramRequest {
     (gogoproto.jsontag)  = "program_start_time,omitempty",
     (gogoproto.moretags) = "yaml:\"program_start_time,omitempty\""
   ];
-  google.protobuf.Timestamp program_end_time = 7 [
-    (gogoproto.stdtime)  = true,
-    (gogoproto.nullable) = false,
-    (gogoproto.jsontag)  = "program_end_time,omitempty",
-    (gogoproto.moretags) = "yaml:\"program_end_time,omitempty\""
-  ];
-  string sub_period_type =
-      8; // EpochInfo defines the type of sub period attributed to this program.(e.g day,week,month)
+  uint64 reward_period_days = 7; // number of days the reward program will exist
+  uint64 claim_period_days  = 8; // number of days a claim period will exist
+  uint64 expire_days        = 9; // number of days before a reward program will expire after it has ended
 }
 
 message MsgCreateRewardProgramResponse {

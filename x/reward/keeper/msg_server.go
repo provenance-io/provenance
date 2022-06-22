@@ -34,8 +34,6 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		return &types.MsgCreateRewardProgramResponse{}, err
 	}
 
-	// TODO: get next sub period time by taking in day, week, month value and convert it to seconds for creating reward program
-
 	rewardProgram := types.NewRewardProgram(
 		msg.Title,
 		msg.Description,
@@ -44,9 +42,8 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		msg.Coin,
 		msg.MaxRewardPerClaimAddress,
 		msg.ProgramStartTime,
-		types.PeriodTypeToSeconds[msg.SubPeriodType],
-		1, // TODO calculate sub periods
-
+		uint64(types.DayInSeconds),
+		msg.ClaimPeriodDays,
 		// TODO - We need to update this to be part of the message
 		[]types.QualifyingAction{},
 	)
@@ -71,7 +68,6 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 	}
 	s.Keeper.SetRewardProgramBalance(ctx, rewardProgramBalance)
 
-	ctx.Logger().Info(fmt.Sprintf("NOTICE: Reward Program Proposal %v", rewardProgram))
 	// TODO: emit event
 	// ctx.EventManager().EmitEvent(
 	// 	sdk.NewEvent(

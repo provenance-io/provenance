@@ -25,7 +25,9 @@ func NewMsgCreateRewardProgramRequest(
 	coin sdk.Coin,
 	maxRewardPerClaimAddress sdk.Coin,
 	programStartTime time.Time,
-	subPeriodType string,
+	rewardPeriodDays uint64,
+	claimPeriodDays uint64,
+	expireDays uint64,
 ) *MsgCreateRewardProgramRequest {
 	return &MsgCreateRewardProgramRequest{
 		Title:                    title,
@@ -34,7 +36,9 @@ func NewMsgCreateRewardProgramRequest(
 		Coin:                     coin,
 		MaxRewardPerClaimAddress: maxRewardPerClaimAddress,
 		ProgramStartTime:         programStartTime,
-		SubPeriodType:            subPeriodType,
+		RewardPeriodDays:         rewardPeriodDays,
+		ClaimPeriodDays:          claimPeriodDays,
+		ExpireDays:               expireDays,
 	}
 }
 
@@ -69,10 +73,9 @@ func (msg MsgCreateRewardProgramRequest) ValidateBasic() error {
 	if !msg.MaxRewardPerClaimAddress.IsPositive() {
 		return fmt.Errorf("reward program requires positive max reward by address: %v", msg.MaxRewardPerClaimAddress)
 	}
-	subPeriodSeconds := PeriodTypeToSeconds[msg.SubPeriodType]
-	if subPeriodSeconds == 0 {
-		return fmt.Errorf("sub period type not found: %s", msg.SubPeriodType)
-	}
+
+	// TODO validate reward days, claim days, and expire days
+
 	return nil
 }
 
