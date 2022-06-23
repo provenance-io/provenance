@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"fmt"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"time"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -110,10 +111,15 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 
 	// check if ClaimPeriodRewardDistribution has default values in it, since claimPeriodId should always start with 1 hence should be fine.
 	if claimPeriodRewardDistribution.ClaimPeriodId == 0 {
+		// TODO We create this already when we start a new program and a new reward claim period
+		claim_period_amount := rewardProgram.GetTotalRewardPool().Amount.Quo(sdk.NewInt(int64(rewardProgram.GetClaimPeriods())))
+		claim_period_pool := sdk.NewCoin(rewardProgram.GetTotalRewardPool().Denom, claim_period_amount)
+
 		claimPeriodRewardDistribution = types.NewClaimPeriodRewardDistribution(
 			rewardProgram.GetCurrentClaimPeriod(),
 			rewardProgram.GetId(),
-			sdk.Coin{},
+			claim_period_pool,
+			sdk.NewInt64Coin(claim_period_pool.Denom, 0),
 			0,
 			false,
 		)

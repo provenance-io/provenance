@@ -5855,11 +5855,12 @@ Reward Program Id + Claim Period Id
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `claim_period_id` | [uint64](#uint64) |  |  |
-| `reward_program_id` | [uint64](#uint64) |  |  |
-| `total_rewards_pool_for_claim_period` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `total_shares` | [int64](#int64) |  | y |
-| `claim_period_ended` | [bool](#bool) |  |  |
+| `claim_period_id` | [uint64](#uint64) |  | The id of the claim period that this reward belongs to |
+| `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this reward belongs to |
+| `total_rewards_pool_for_claim_period` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The sum of all the granted rewards for this claim period |
+| `rewards_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The allocated rewards for this claim period |
+| `total_shares` | [int64](#int64) |  | The total number of granted shares for this claim period |
+| `claim_period_ended` | [bool](#bool) |  | A flag representing if the claim period for this reward has ended |
 
 
 
