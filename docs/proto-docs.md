@@ -6217,12 +6217,12 @@ Query defines the gRPC querier service for reward module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `distribute_from_address` | [string](#string) |  | community pool for now |
-| `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `max_reward_per_claim_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `title` | [string](#string) |  | title for the reward program |
+| `description` | [string](#string) |  | description for the reward program |
+| `distribute_from_address` | [string](#string) |  | provider address for the reward program funds and signer of message |
+| `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | amount of funds for the entirety of the reward program |
+| `max_reward_per_claim_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | maximum amount of funds an address can be rewarded per claim period |
+| `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | start time of the reward program |
 | `reward_period_days` | [uint64](#uint64) |  | number of days the reward program will exist |
 | `claim_period_days` | [uint64](#uint64) |  | number of days a claim period will exist |
 | `expire_days` | [uint64](#uint64) |  | number of days before a reward program will expire after it has ended |
@@ -6240,7 +6240,7 @@ Query defines the gRPC querier service for reward module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `id` | [uint64](#uint64) |  |  |
+| `id` | [uint64](#uint64) |  | reward program id assigned on creation |
 
 
 

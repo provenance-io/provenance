@@ -15,33 +15,30 @@ option java_multiple_files = true;
 service Msg {
 
   rpc CreateRewardProgram(MsgCreateRewardProgramRequest) returns (MsgCreateRewardProgramResponse);
-
-  // // WriteCritera
-  // rpc WriteCritera(MsgWriteCriteraRequest) returns (MsgWriteCriteraResponse);
-  // // AddToCritera
-  // rpc AddToCritera(MsgAddToCriteraRequest) returns (MsgAddToCriteraResponse);
 }
 
 message MsgCreateRewardProgramRequest {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  string                    title                        = 1;
-  string                    description                  = 2;
-  string                    distribute_from_address      = 3; // community pool for now
-  cosmos.base.v1beta1.Coin  coin                         = 4 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin  max_reward_per_claim_address = 5 [(gogoproto.nullable) = false];
-  google.protobuf.Timestamp program_start_time           = 6 [
+  string title                   = 1; // title for the reward program
+  string description             = 2; // description for the reward program
+  string distribute_from_address = 3; // provider address for the reward program funds and signer of message
+  cosmos.base.v1beta1.Coin coin  = 4
+      [(gogoproto.nullable) = false]; // amount of funds for the entirety of the reward program
+  cosmos.base.v1beta1.Coin max_reward_per_claim_address = 5
+      [(gogoproto.nullable) = false]; // maximum amount of funds an address can be rewarded per claim period
+  google.protobuf.Timestamp program_start_time = 6 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "program_start_time,omitempty",
     (gogoproto.moretags) = "yaml:\"program_start_time,omitempty\""
-  ];
+  ];                             // start time of the reward program
   uint64 reward_period_days = 7; // number of days the reward program will exist
   uint64 claim_period_days  = 8; // number of days a claim period will exist
   uint64 expire_days        = 9; // number of days before a reward program will expire after it has ended
 }
 
 message MsgCreateRewardProgramResponse {
-  uint64 id = 1;
+  uint64 id = 1; // reward program id assigned on creation
 }

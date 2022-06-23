@@ -96,8 +96,8 @@ message ClaimPeriodRewardDistribution {
   uint64                   reward_program_id                   = 2;
   cosmos.base.v1beta1.Coin total_rewards_pool_for_claim_period = 3
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"total_rewards_pool\""];
-  int64 total_shares = 4; // y
-  bool  claim_period_ended  = 5;
+  int64 total_shares       = 4; // y
+  bool  claim_period_ended = 5;
 }
 
 message AccountState {

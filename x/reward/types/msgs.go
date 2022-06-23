@@ -73,9 +73,18 @@ func (msg MsgCreateRewardProgramRequest) ValidateBasic() error {
 	if !msg.MaxRewardPerClaimAddress.IsPositive() {
 		return fmt.Errorf("reward program requires positive max reward by address: %v", msg.MaxRewardPerClaimAddress)
 	}
-
-	// TODO validate reward days, claim days, and expire days
-
+	if msg.Coin.Denom != msg.MaxRewardPerClaimAddress.Denom {
+		return fmt.Errorf("coin denoms differ %v : %v", msg.Coin.Denom, msg.MaxRewardPerClaimAddress.Denom)
+	}
+	if msg.MaxRewardPerClaimAddress.Amount.GT(msg.Coin.Amount) {
+		return fmt.Errorf("max claims per address cannot be larger than pool %v : %v", msg.MaxRewardPerClaimAddress.Amount, msg.Coin.Amount)
+	}
+	if msg.RewardPeriodDays < 1 || msg.ClaimPeriodDays < 1 || msg.ExpireDays < 1 {
+		return fmt.Errorf("reward period days (%v), claim period days (%v), and expire days (%v) must be larger than 0", msg.RewardPeriodDays, msg.ClaimPeriodDays, msg.ExpireDays)
+	}
+	if msg.RewardPeriodDays%msg.ClaimPeriodDays != 0 {
+		return fmt.Errorf("reward period days (%v) must be multiple of claim period days (%v)", msg.RewardPeriodDays, msg.ClaimPeriodDays)
+	}
 	return nil
 }
 
