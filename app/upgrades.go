@@ -33,7 +33,7 @@ var handlers = map[string]appUpgrade{
 			params := app.MsgFeesKeeper.GetParams(ctx)
 			app.MsgFeesKeeper.SetParams(ctx, params)
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			return versionMap, nil
+			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
 	}, // upgrade for 1.11.x
 	"mango-rc2": {
