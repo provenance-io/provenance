@@ -21,11 +21,11 @@ message MsgCreateRewardProgramRequest {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  string title                   = 1; // title for the reward program
-  string description             = 2; // description for the reward program
-  string distribute_from_address = 3; // provider address for the reward program funds and signer of message
-  cosmos.base.v1beta1.Coin coin  = 4
-      [(gogoproto.nullable) = false]; // amount of funds for the entirety of the reward program
+  string title                               = 1; // title for the reward program
+  string description                         = 2; // description for the reward program
+  string distribute_from_address             = 3; // provider address for the reward program funds and signer of message
+  cosmos.base.v1beta1.Coin total_reward_pool = 4
+      [(gogoproto.nullable) = false]; // total reward pool for the reward program
   cosmos.base.v1beta1.Coin max_reward_per_claim_address = 5
       [(gogoproto.nullable) = false]; // maximum amount of funds an address can be rewarded per claim period
   google.protobuf.Timestamp program_start_time = 6 [

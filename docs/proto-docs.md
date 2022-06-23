@@ -6220,7 +6220,7 @@ Query defines the gRPC querier service for reward module.
 | `title` | [string](#string) |  | title for the reward program |
 | `description` | [string](#string) |  | description for the reward program |
 | `distribute_from_address` | [string](#string) |  | provider address for the reward program funds and signer of message |
-| `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | amount of funds for the entirety of the reward program |
+| `total_reward_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | total reward pool for the reward program |
 | `max_reward_per_claim_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | maximum amount of funds an address can be rewarded per claim period |
 | `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | start time of the reward program |
 | `reward_period_days` | [uint64](#uint64) |  | number of days the reward program will exist |

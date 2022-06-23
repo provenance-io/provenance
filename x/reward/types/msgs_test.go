@@ -136,7 +136,7 @@ func (s *RewardMsgTypesTestSuite) TestMsgCreateRewardProgramRequestValidateBasic
 				1,
 				1,
 			),
-			"reward program requires coins: 0jackthecat",
+			"reward program requires total reward pool to be positive: 0jackthecat",
 		},
 		{
 			"invalid - max coin per address is invalid",

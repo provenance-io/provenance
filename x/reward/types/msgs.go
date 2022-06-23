@@ -22,7 +22,7 @@ func NewMsgCreateRewardProgramRequest(
 	title string,
 	description string,
 	distributeFromAddress string,
-	coin sdk.Coin,
+	totalRewardPool sdk.Coin,
 	maxRewardPerClaimAddress sdk.Coin,
 	programStartTime time.Time,
 	rewardPeriodDays uint64,
@@ -33,7 +33,7 @@ func NewMsgCreateRewardProgramRequest(
 		Title:                    title,
 		Description:              description,
 		DistributeFromAddress:    distributeFromAddress,
-		Coin:                     coin,
+		TotalRewardPool:          totalRewardPool,
 		MaxRewardPerClaimAddress: maxRewardPerClaimAddress,
 		ProgramStartTime:         programStartTime,
 		RewardPeriodDays:         rewardPeriodDays,
@@ -67,17 +67,17 @@ func (msg MsgCreateRewardProgramRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.DistributeFromAddress); err != nil {
 		return fmt.Errorf("invalid address for rewards program distribution from address: %w", err)
 	}
-	if !msg.Coin.IsPositive() {
-		return fmt.Errorf("reward program requires coins: %v", msg.Coin)
+	if !msg.TotalRewardPool.IsPositive() {
+		return fmt.Errorf("reward program requires total reward pool to be positive: %v", msg.TotalRewardPool)
 	}
 	if !msg.MaxRewardPerClaimAddress.IsPositive() {
 		return fmt.Errorf("reward program requires positive max reward by address: %v", msg.MaxRewardPerClaimAddress)
 	}
-	if msg.Coin.Denom != msg.MaxRewardPerClaimAddress.Denom {
-		return fmt.Errorf("coin denoms differ %v : %v", msg.Coin.Denom, msg.MaxRewardPerClaimAddress.Denom)
+	if msg.TotalRewardPool.Denom != msg.MaxRewardPerClaimAddress.Denom {
+		return fmt.Errorf("coin denoms differ %v : %v", msg.TotalRewardPool.Denom, msg.MaxRewardPerClaimAddress.Denom)
 	}
-	if msg.MaxRewardPerClaimAddress.Amount.GT(msg.Coin.Amount) {
-		return fmt.Errorf("max claims per address cannot be larger than pool %v : %v", msg.MaxRewardPerClaimAddress.Amount, msg.Coin.Amount)
+	if msg.MaxRewardPerClaimAddress.Amount.GT(msg.TotalRewardPool.Amount) {
+		return fmt.Errorf("max claims per address cannot be larger than pool %v : %v", msg.MaxRewardPerClaimAddress.Amount, msg.TotalRewardPool.Amount)
 	}
 	if msg.RewardPeriodDays < 1 || msg.ClaimPeriodDays < 1 || msg.ExpireDays < 1 {
 		return fmt.Errorf("reward period days (%v), claim period days (%v), and expire days (%v) must be larger than 0", msg.RewardPeriodDays, msg.ClaimPeriodDays, msg.ExpireDays)

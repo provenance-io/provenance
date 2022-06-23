@@ -39,7 +39,7 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		msg.Description,
 		rewardProgramID,
 		msg.DistributeFromAddress,
-		msg.Coin,
+		msg.TotalRewardPool,
 		msg.MaxRewardPerClaimAddress,
 		msg.ProgramStartTime,
 		uint64(types.DayInSeconds),
