@@ -12,7 +12,7 @@ if [[ "$1" == '-h' || "$1" == '--help' || "$1" == 'help' ]]; then
     echo 'The arguments can also be defined using environment variables:'
     echo "  ROCKSDB_VERSION for the <version>. Default is $DEFAULT_ROCKSDB_VERSION."
     echo 'Additional parameters definable using environment variables:'
-    echo "  ROCKSDB_JOBS is the number of parallel jobs for make to use. Default is the result of nproc (=$( nproc ))."
+    echo "  ROCKSDB_JOBS is the number of parallel jobs for make to use. Default is the result of nproc (=$( nproc )), or 1 if nproc isn't availble."
     echo '  ROCKSDB_WITH_SHARED controls whether to build and install the shared library. Default is true.'
     echo '  ROCKSDB_WITH_STATIC controls whether to build and install the static library. Default is false.'
     echo '  ROCKSDB_DO_BUILD controls whether to build. Default is true.'
@@ -34,7 +34,11 @@ if [[ -n "$ROCKSDB_VERSION" && "$ROCKSDB_VERSION" =~ ^v ]]; then
 fi
 
 if [[ -z "$ROCKSDB_JOBS" ]]; then
-    ROCKSDB_JOBS="$( nproc )"
+    if command -v nproc > /dev/null 2>&1; then
+        ROCKSDB_JOBS="$( nproc )"
+    else
+        ROCKSDB_JOBS=1
+    fi
 fi
 
 if [[ -n "$ROCKSDB_JOBS" && ( "$ROCKSDB_JOBS" =~ [^[:digit:]] || $ROCKSDB_JOBS -lt '1' ) ]]; then
