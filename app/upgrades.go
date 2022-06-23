@@ -35,6 +35,7 @@ type appUpgrade struct {
 	Handler appUpgradeHandler
 }
 
+// TODO : Rewards module will need to do a migrations update along with appUpgrade struct Add array with new store.  Verify by doing an upgrade locally from v1.11.x
 var handlers = map[string]appUpgrade{
 	"green": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
