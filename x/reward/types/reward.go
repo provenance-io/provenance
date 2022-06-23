@@ -191,12 +191,6 @@ func NewRewardProgramBalance(
 		Balance:         balance,
 	}
 }
-func (rpb *RewardProgramBalance) Min(amount sdk.Coin) sdk.Coin {
-	if rpb.GetBalance().IsLT(amount) {
-		return rpb.GetBalance()
-	}
-	return amount
-}
 
 func (rpb *RewardProgramBalance) IsEmpty() bool {
 	return rpb.GetBalance().IsZero()
@@ -268,12 +262,13 @@ func (s *Share) String() string {
 	return string(out)
 }
 
-// ============ Epoch Reward Distribution ============
+// ============ Claim Period Reward Distribution ============
 
-func NewClaimPeriodRewardDistribution(claimPeriodId uint64, rewardProgramID uint64, totalRewardsPoolForClaimPeriod sdk.Coin, totalShares int64, claimPeriodEnded bool) ClaimPeriodRewardDistribution {
+func NewClaimPeriodRewardDistribution(claimPeriodId uint64, rewardProgramID uint64, rewardsPool, totalRewardsPoolForClaimPeriod sdk.Coin, totalShares int64, claimPeriodEnded bool) ClaimPeriodRewardDistribution {
 	return ClaimPeriodRewardDistribution{
 		ClaimPeriodId:                  claimPeriodId,
 		RewardProgramId:                rewardProgramID,
+		RewardsPool:                    rewardsPool,
 		TotalRewardsPoolForClaimPeriod: totalRewardsPoolForClaimPeriod,
 		TotalShares:                    totalShares,
 		ClaimPeriodEnded:               claimPeriodEnded,
@@ -288,6 +283,9 @@ func (erd *ClaimPeriodRewardDistribution) ValidateBasic() error {
 		return errors.New("claim reward distribution must have a valid reward program id")
 	}
 	if !erd.TotalRewardsPoolForClaimPeriod.IsPositive() {
+		return errors.New("claim reward distribution must have a total reward pool")
+	}
+	if !erd.RewardsPool.IsPositive() {
 		return errors.New("claim reward distribution must have a reward pool")
 	}
 	return nil

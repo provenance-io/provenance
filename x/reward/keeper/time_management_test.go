@@ -39,6 +39,11 @@ func (suite *KeeperTestSuite) TestStartRewardProgramWithNotEnoughBalance() {
 	suite.Assert().Fail("not yet implemented")
 }
 
+func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriod() {
+	suite.SetupTest()
+	suite.Assert().Fail("not yet implemented")
+}
+
 func (suite *KeeperTestSuite) TestEndRewardProgram() {
 	suite.SetupTest()
 
@@ -155,6 +160,41 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndNoBalance() {
 }
 
 func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndExtraBalance() {
+	suite.SetupTest()
+	suite.Assert().Fail("not yet implemented")
+}
+
+func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesBalances() {
+	suite.SetupTest()
+	suite.Assert().Fail("not yet implemented")
+}
+
+func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesInvalidLookups() {
+	suite.SetupTest()
+	suite.Assert().Fail("not yet implemented")
+}
+
+func (suite *KeeperTestSuite) TestSumRewardClaimPeriodRewards() {
+	suite.SetupTest()
+	suite.Assert().Fail("not yet implemented")
+}
+
+func (suite *KeeperTestSuite) TestSumRewardClaimPeriodRewardsUsesMaxReward() {
+	suite.SetupTest()
+	suite.Assert().Fail("not yet implemented")
+}
+
+func (suite *KeeperTestSuite) TestSumRewardClaimPeriodRewardsUsesDoesNotExceedProgramBalance() {
+	suite.SetupTest()
+	suite.Assert().Fail("not yet implemented")
+}
+
+func (suite *KeeperTestSuite) TestSumRewardClaimPeriodRewardsNoTotalShares() {
+	suite.SetupTest()
+	suite.Assert().Fail("not yet implemented")
+}
+
+func (suite *KeeperTestSuite) TestSumRewardClaimPeriodRewardsHandlesInvalidLookups() {
 	suite.SetupTest()
 	suite.Assert().Fail("not yet implemented")
 }

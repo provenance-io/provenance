@@ -251,7 +251,7 @@ func (suite *KeeperTestSuite) TestIterateRewardSharesHalt() {
 	suite.Assert().Equal(1, counter, "should have correct number of iterations")
 }
 
-func (suite *KeeperTestSuite) TestIterateRewardSubPeriodShares() {
+func (suite *KeeperTestSuite) TestIterateRewardClaimPeriodShares() {
 	suite.SetupTest()
 
 	time := timestamppb.Now().AsTime()
@@ -268,7 +268,7 @@ func (suite *KeeperTestSuite) TestIterateRewardSubPeriodShares() {
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share5)
 
 	counter := 0
-	suite.app.RewardKeeper.IterateRewardSubPeriodShares(suite.ctx, 2, 2, func(share types.Share) bool {
+	suite.app.RewardKeeper.IterateRewardClaimPeriodShares(suite.ctx, 2, 2, func(share types.Share) bool {
 		counter += 1
 		return false
 	})
@@ -276,7 +276,7 @@ func (suite *KeeperTestSuite) TestIterateRewardSubPeriodShares() {
 	suite.Assert().Equal(2, counter, "should have correct number of iterations")
 }
 
-func (suite *KeeperTestSuite) TestEmptyIterateRewardSubPeriodShares() {
+func (suite *KeeperTestSuite) TestEmptyIterateRewardClaimPeriodShares() {
 	suite.SetupTest()
 
 	time := timestamppb.Now().AsTime()
@@ -293,7 +293,7 @@ func (suite *KeeperTestSuite) TestEmptyIterateRewardSubPeriodShares() {
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share5)
 
 	counter := 0
-	suite.app.RewardKeeper.IterateRewardSubPeriodShares(suite.ctx, 1, 4, func(share types.Share) bool {
+	suite.app.RewardKeeper.IterateRewardClaimPeriodShares(suite.ctx, 1, 4, func(share types.Share) bool {
 		counter += 1
 		return false
 	})
@@ -318,7 +318,7 @@ func (suite *KeeperTestSuite) TestIterateRewardSharesSubPeriodHalt() {
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share5)
 
 	counter := 0
-	suite.app.RewardKeeper.IterateRewardSubPeriodShares(suite.ctx, 1, 2, func(share types.Share) bool {
+	suite.app.RewardKeeper.IterateRewardClaimPeriodShares(suite.ctx, 1, 2, func(share types.Share) bool {
 		counter += 1
 		return counter == 1
 	})

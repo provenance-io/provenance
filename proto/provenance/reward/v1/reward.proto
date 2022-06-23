@@ -92,12 +92,18 @@ message ClaimPeriodRewardDistribution {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  uint64                   claim_period_id                     = 1;
-  uint64                   reward_program_id                   = 2;
-  cosmos.base.v1beta1.Coin total_rewards_pool_for_claim_period = 3
-      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"total_rewards_pool\""];
-  int64 total_shares       = 4; // y
-  bool  claim_period_ended = 5;
+  uint64                   claim_period_id   = 1; // The id of the claim period that this reward belongs to
+  uint64                   reward_program_id = 2; // The id of the reward program that this reward belongs to
+  cosmos.base.v1beta1.Coin total_rewards_pool_for_claim_period = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"total_rewards_pool\""
+  ]; // The sum of all the granted rewards for this claim period
+  cosmos.base.v1beta1.Coin rewards_pool = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"rewards_pool\""
+  ];                            // The allocated rewards for this claim period
+  int64 total_shares       = 5; // The total number of granted shares for this claim period
+  bool  claim_period_ended = 6; // A flag representing if the claim period for this reward has ended
 }
 
 message AccountState {
