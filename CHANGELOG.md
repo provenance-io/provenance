@@ -37,6 +37,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+## [v1.11.1-rc4](https://github.com/provenance-io/provenance/releases/tag/v1.11.1-rc4) - 2022-06-23
+
+### Bug Fixes
+
+* Actually run the module migrations during the upgrade. PRTODO
+
 ---
 
 ## [v1.11.1-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.11.1-rc2) - 2022-06-22
