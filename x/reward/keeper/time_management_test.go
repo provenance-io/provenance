@@ -179,6 +179,16 @@ func (suite *KeeperTestSuite) TestSumRewardClaimPeriodRewards() {
 	suite.Assert().Fail("not yet implemented")
 }
 
+func (suite *KeeperTestSuite) TestSumRewardClaimPeriodRewardsUsesMaxReward() {
+	suite.SetupTest()
+	suite.Assert().Fail("not yet implemented")
+}
+
+func (suite *KeeperTestSuite) TestSumRewardClaimPeriodRewardsUsesDoesNotExceedProgramBalance() {
+	suite.SetupTest()
+	suite.Assert().Fail("not yet implemented")
+}
+
 func (suite *KeeperTestSuite) TestSumRewardClaimPeriodRewardsNoTotalShares() {
 	suite.SetupTest()
 	suite.Assert().Fail("not yet implemented")

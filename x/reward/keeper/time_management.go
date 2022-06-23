@@ -80,7 +80,7 @@ func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *type
 		return
 	}
 
-	totalClaimPeriodRewards, err := k.SumRewardClaimPeriodRewards(ctx, programBalance.GetBalance(), claimPeriodReward)
+	totalClaimPeriodRewards, err := k.SumRewardClaimPeriodRewards(ctx, programBalance.GetBalance(), rewardProgram.GetMaxRewardByAddress(), claimPeriodReward)
 	if err != nil {
 		//TODO How to handle this. This shouldn't happen unless we are in a bad state
 		ctx.Logger().Error(fmt.Sprintf("%v", err))
@@ -107,7 +107,7 @@ func (k Keeper) EndRewardProgram(ctx sdk.Context, rewardProgram *types.RewardPro
 	rewardProgram.ActualProgramEndTime = blockTime
 }
 
-func (k Keeper) SumRewardClaimPeriodRewards(ctx sdk.Context, programBalance sdk.Coin, claimPeriodReward types.ClaimPeriodRewardDistribution) (sum sdk.Coin, err error) {
+func (k Keeper) SumRewardClaimPeriodRewards(ctx sdk.Context, programBalance, maxReward sdk.Coin, claimPeriodReward types.ClaimPeriodRewardDistribution) (sum sdk.Coin, err error) {
 	totalShares := claimPeriodReward.GetTotalShares()
 	claimRewardPool := claimPeriodReward.GetRewardsPool().Amount
 
@@ -125,6 +125,10 @@ func (k Keeper) SumRewardClaimPeriodRewards(ctx sdk.Context, programBalance sdk.
 	for _, participant := range participants {
 		percentage := sdk.NewInt(participant.GetAmount()).Quo(sdk.NewInt(totalShares))
 		reward := sdk.NewCoin(claimPeriodReward.GetRewardsPool().Denom, percentage.Mul(claimRewardPool))
+
+		if maxReward.IsLT(reward) {
+			reward = maxReward
+		}
 
 		if programBalance.IsLT(reward) {
 			reward = programBalance
