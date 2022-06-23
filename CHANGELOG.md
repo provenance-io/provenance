@@ -41,7 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* Actually run the module migrations during the upgrade. PRTODO
+* Actually run the module migrations during the upgrade. [PR 895](https://github.com/provenance-io/provenance/pull/895)
 
 ---
 
