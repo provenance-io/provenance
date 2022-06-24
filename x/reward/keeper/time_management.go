@@ -39,14 +39,30 @@ func (k Keeper) Cleanup(ctx sdk.Context) {
 	}
 }
 
-func (k Keeper) StartRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) {
+func (k Keeper) StartRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) error {
+	if rewardProgram == nil {
+		ctx.Logger().Error("NOTICE: Attempting to start nil reward program")
+		return fmt.Errorf("unable to start nil reward program")
+	}
+
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Starting reward program: %v ", rewardProgram))
 	rewardProgram.State = types.RewardProgram_STARTED
 	k.StartRewardProgramClaimPeriod(ctx, rewardProgram)
 
+	return nil
 }
 
-func (k Keeper) StartRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *types.RewardProgram) {
+func (k Keeper) StartRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *types.RewardProgram) error {
+	if rewardProgram == nil {
+		ctx.Logger().Error("NOTICE: Attempting to start reward program claim for nil reward program")
+		return fmt.Errorf("unable to start reward program claim for nil reward program")
+	}
+
+	if rewardProgram.GetClaimPeriods() == 0 {
+		ctx.Logger().Error("NOTICE: Attempting to start reward program claim with non positive claim periods")
+		return fmt.Errorf("claim periods must be positive")
+	}
+
 	blockTime := ctx.BlockTime()
 	rewardProgram.ClaimPeriodEndTime = blockTime.Add(time.Duration(rewardProgram.ClaimPeriodSeconds) * time.Second)
 	rewardProgram.CurrentClaimPeriod++
@@ -62,30 +78,28 @@ func (k Keeper) StartRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *ty
 		false,
 	)
 	k.SetClaimPeriodRewardDistribution(ctx, claimPeriodReward)
+	return nil
 }
 
-func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *types.RewardProgram) {
+func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *types.RewardProgram) error {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Claim period end hit for reward program %v ", rewardProgram))
 
 	programBalance, err := k.GetRewardProgramBalance(ctx, rewardProgram.GetId())
-	if err != nil {
-		//TODO How to handle this. This shouldn't happen unless we are in a bad state
+	if err != nil || programBalance.GetRewardProgramId() == 0 {
 		ctx.Logger().Error(fmt.Sprintf("NOTICE: Missing RewardProgramBalance for RewardProgram %d ", rewardProgram.GetId()))
-		return
+		return err
 	}
 
 	claimPeriodReward, err := k.GetClaimPeriodRewardDistribution(ctx, rewardProgram.GetCurrentClaimPeriod(), rewardProgram.GetId())
-	if err != nil {
-		//TODO How to handle this. This shouldn't happen unless we are in a bad state
+	if err != nil || claimPeriodReward.GetClaimPeriodId() == 0 {
 		ctx.Logger().Error(fmt.Sprintf("NOTICE: Missing ClaimPeriodRewardDistribution for RewardProgram %d ", rewardProgram.GetId()))
-		return
+		return err
 	}
 
 	totalClaimPeriodRewards, err := k.CalculateRewardClaimPeriodRewards(ctx, programBalance.GetBalance(), rewardProgram.GetMaxRewardByAddress(), claimPeriodReward)
 	if err != nil {
-		//TODO How to handle this. This shouldn't happen unless we are in a bad state
 		ctx.Logger().Error(fmt.Sprintf("%v", err))
-		return
+		return err
 	}
 
 	// Update balances
@@ -94,18 +108,27 @@ func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *type
 	k.SetClaimPeriodRewardDistribution(ctx, claimPeriodReward)
 	k.SetRewardProgramBalance(ctx, programBalance)
 
-	if rewardProgram.IsEnding(ctx) && programBalance.IsEmpty() {
+	if rewardProgram.IsEnding(ctx, programBalance) {
 		k.EndRewardProgram(ctx, rewardProgram)
 	} else {
 		k.StartRewardProgramClaimPeriod(ctx, rewardProgram)
 	}
+
+	return nil
 }
 
-func (k Keeper) EndRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) {
+func (k Keeper) EndRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) error {
+	if rewardProgram == nil {
+		ctx.Logger().Error("NOTICE: Attempting to end reward program for nil reward program")
+		return fmt.Errorf("unable to end reward programfor nil reward program")
+	}
+
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Ending reward program %v ", rewardProgram))
 	blockTime := ctx.BlockTime()
 	rewardProgram.State = types.RewardProgram_FINISHED
 	rewardProgram.ActualProgramEndTime = blockTime
+
+	return nil
 }
 
 func (k Keeper) CalculateRewardClaimPeriodRewards(ctx sdk.Context, programBalance, maxReward sdk.Coin, claimPeriodReward types.ClaimPeriodRewardDistribution) (sum sdk.Coin, err error) {
