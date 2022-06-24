@@ -33,7 +33,7 @@ var handlers = map[string]appUpgrade{
 			params := app.MsgFeesKeeper.GetParams(ctx)
 			app.MsgFeesKeeper.SetParams(ctx, params)
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			return versionMap, nil
+			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
 	}, // upgrade for 1.11.x
 	"mango-rc2": {
@@ -44,6 +44,12 @@ var handlers = map[string]appUpgrade{
 			return versionMap, nil
 		},
 	}, // upgrade for 1.11.1-rc2
+	"mango-rc4": {
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
+		},
+	}, // upgrade for 1.11.1-rc4
 
 	// TODO - Add new upgrade definitions here.
 }
