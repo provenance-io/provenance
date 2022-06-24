@@ -28,10 +28,18 @@ func (suite *KeeperTestSuite) TestStartRewardProgram() {
 
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
 
-	suite.Assert().Fail("test needs to be updated to test claim reward distribution creation")
 	suite.Assert().Equal(program.State, types.RewardProgram_STARTED, "reward program should be in started state")
 	suite.Assert().Equal(uint64(1), program.CurrentClaimPeriod, "current claim period should be set to 1")
 	suite.Assert().Equal(blockTime.Add(time.Duration(program.ClaimPeriodSeconds)*time.Second), program.ClaimPeriodEndTime, "claim period end time should be set")
+
+	claimPeriodAmount := program.GetTotalRewardPool().Amount.Quo(sdk.NewInt(int64(program.GetClaimPeriods())))
+	claimPeriodPool := sdk.NewCoin(program.GetTotalRewardPool().Denom, claimPeriodAmount)
+	reward, err := suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 1, 1)
+	suite.Assert().NoError(err)
+	suite.Assert().Equal(uint64(1), reward.GetRewardProgramId())
+	suite.Assert().Equal(uint64(1), reward.GetClaimPeriodId())
+	suite.Assert().Equal(claimPeriodPool, reward.GetRewardsPool())
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward.GetTotalRewardsPoolForClaimPeriod())
 }
 
 func (suite *KeeperTestSuite) TestStartRewardProgramWithNotEnoughBalance() {
@@ -41,7 +49,34 @@ func (suite *KeeperTestSuite) TestStartRewardProgramWithNotEnoughBalance() {
 
 func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriod() {
 	suite.SetupTest()
-	suite.Assert().Fail("not yet implemented")
+
+	currentTime := time.Now()
+	blockTime := suite.ctx.BlockTime()
+	program := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 100),
+		sdk.NewInt64Coin("nhash", 100),
+		currentTime,
+		60*60,
+		3,
+		[]types.QualifyingAction{},
+	)
+
+	suite.app.RewardKeeper.StartRewardProgramClaimPeriod(suite.ctx, &program)
+	suite.Assert().Equal(uint64(1), program.CurrentClaimPeriod, "current claim period should incremented")
+	suite.Assert().Equal(blockTime.Add(time.Duration(program.ClaimPeriodSeconds)*time.Second), program.ClaimPeriodEndTime, "claim period end time should be set")
+
+	claimPeriodAmount := program.GetTotalRewardPool().Amount.Quo(sdk.NewInt(int64(program.GetClaimPeriods())))
+	claimPeriodPool := sdk.NewCoin(program.GetTotalRewardPool().Denom, claimPeriodAmount)
+	reward, err := suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 1, 1)
+	suite.Assert().NoError(err)
+	suite.Assert().Equal(uint64(1), reward.GetRewardProgramId())
+	suite.Assert().Equal(uint64(1), reward.GetClaimPeriodId())
+	suite.Assert().Equal(claimPeriodPool, reward.GetRewardsPool())
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward.GetTotalRewardsPoolForClaimPeriod())
 }
 
 func (suite *KeeperTestSuite) TestEndRewardProgram() {

@@ -50,6 +50,7 @@ func (k Keeper) StartRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *ty
 	blockTime := ctx.BlockTime()
 	rewardProgram.ClaimPeriodEndTime = blockTime.Add(time.Duration(rewardProgram.ClaimPeriodSeconds) * time.Second)
 	rewardProgram.CurrentClaimPeriod++
+
 	claim_period_amount := rewardProgram.GetTotalRewardPool().Amount.Quo(sdk.NewInt(int64(rewardProgram.GetClaimPeriods())))
 	claim_period_pool := sdk.NewCoin(rewardProgram.GetTotalRewardPool().Denom, claim_period_amount)
 	claimPeriodReward := types.NewClaimPeriodRewardDistribution(
