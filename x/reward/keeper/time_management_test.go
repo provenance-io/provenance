@@ -25,6 +25,8 @@ func (suite *KeeperTestSuite) TestStartRewardProgram() {
 		3,
 		[]types.QualifyingAction{},
 	)
+	programBalance := types.NewRewardProgramBalance(program.GetId(), program.GetTotalRewardPool())
+	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
 
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
 
@@ -109,6 +111,38 @@ func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriod() {
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward.GetTotalRewardsPoolForClaimPeriod())
 }
 
+func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriodDoesNotExceedBalance() {
+	suite.SetupTest()
+
+	currentTime := time.Now()
+	blockTime := suite.ctx.BlockTime()
+	program := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 100),
+		sdk.NewInt64Coin("nhash", 100),
+		currentTime,
+		60*60,
+		4,
+		[]types.QualifyingAction{},
+	)
+	programBalance := types.NewRewardProgramBalance(program.GetId(), sdk.NewInt64Coin("nhash", 20))
+	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
+
+	suite.app.RewardKeeper.StartRewardProgramClaimPeriod(suite.ctx, &program)
+	suite.Assert().Equal(uint64(1), program.CurrentClaimPeriod, "current claim period should incremented")
+	suite.Assert().Equal(blockTime.Add(time.Duration(program.ClaimPeriodSeconds)*time.Second), program.ClaimPeriodEndTime, "claim period end time should be set")
+
+	reward, err := suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 1, 1)
+	suite.Assert().NoError(err)
+	suite.Assert().Equal(uint64(1), reward.GetRewardProgramId())
+	suite.Assert().Equal(uint64(1), reward.GetClaimPeriodId())
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 20), reward.GetRewardsPool())
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward.GetTotalRewardsPoolForClaimPeriod())
+}
+
 func (suite *KeeperTestSuite) TestEndRewardProgram() {
 	suite.SetupTest()
 
@@ -140,6 +174,130 @@ func (suite *KeeperTestSuite) TestEndRewardProgramNil() {
 }
 
 // We are good up to this point
+
+func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsNonMatchingDenoms() {
+	suite.SetupTest()
+	notMatching := types.NewClaimPeriodRewardDistribution(
+		1,
+		1,
+		sdk.NewInt64Coin("hotdog", 0),
+		sdk.NewInt64Coin("hotdog", 0),
+		1,
+		false,
+	)
+
+	_, err := suite.app.RewardKeeper.CalculateRewardClaimPeriodRewards(suite.ctx, sdk.NewInt64Coin("nhash", 0), notMatching)
+	suite.Assert().Error(err, "error should be thrown when claim period reward distribution doesn't match the others")
+}
+
+func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsNoSharesForPeriod() {
+	suite.SetupTest()
+	matching := types.NewClaimPeriodRewardDistribution(
+		1,
+		1,
+		sdk.NewInt64Coin("nhash", 0),
+		sdk.NewInt64Coin("nhash", 0),
+		0,
+		false,
+	)
+
+	reward, err := suite.app.RewardKeeper.CalculateRewardClaimPeriodRewards(suite.ctx, sdk.NewInt64Coin("nhash", 0), matching)
+	suite.Assert().NoError(err, "No error should be thrown when there are no claimed shares")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward, "should be 0 of the input denom")
+}
+
+func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsEvenDistributionNoRemainder() {
+	suite.SetupTest()
+	distribution := types.NewClaimPeriodRewardDistribution(
+		1,
+		1,
+		sdk.NewInt64Coin("nhash", 100),
+		sdk.NewInt64Coin("nhash", 0),
+		2,
+		false,
+	)
+
+	share1 := types.NewShare(1, 1, "address1", false, time.Time{}, 1)
+	share2 := types.NewShare(1, 1, "address2", false, time.Time{}, 1)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share2)
+
+	reward, err := suite.app.RewardKeeper.CalculateRewardClaimPeriodRewards(suite.ctx, sdk.NewInt64Coin("nhash", 100), distribution)
+	suite.Assert().NoError(err, "should return no error")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 100), reward, "should distribute all the funds")
+}
+
+func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsEvenDistributionWithRemainder() {
+	suite.SetupTest()
+	distribution := types.NewClaimPeriodRewardDistribution(
+		1,
+		1,
+		sdk.NewInt64Coin("nhash", 100),
+		sdk.NewInt64Coin("nhash", 0),
+		3,
+		false,
+	)
+
+	share1 := types.NewShare(1, 1, "address1", false, time.Time{}, 1)
+	share2 := types.NewShare(1, 1, "address2", false, time.Time{}, 1)
+	share3 := types.NewShare(1, 1, "address3", false, time.Time{}, 1)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share2)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share3)
+
+	reward, err := suite.app.RewardKeeper.CalculateRewardClaimPeriodRewards(suite.ctx, sdk.NewInt64Coin("nhash", 100), distribution)
+	suite.Assert().NoError(err, "should return no error")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 99), reward, "should distribute all the funds except for the remainder")
+}
+
+func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUnevenDistribution() {
+	suite.SetupTest()
+	distribution := types.NewClaimPeriodRewardDistribution(
+		1,
+		1,
+		sdk.NewInt64Coin("nhash", 100),
+		sdk.NewInt64Coin("nhash", 0),
+		4,
+		false,
+	)
+
+	share1 := types.NewShare(1, 1, "address1", false, time.Time{}, 2)
+	share2 := types.NewShare(1, 1, "address2", false, time.Time{}, 1)
+	share3 := types.NewShare(1, 1, "address3", false, time.Time{}, 1)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share2)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share3)
+
+	reward, err := suite.app.RewardKeeper.CalculateRewardClaimPeriodRewards(suite.ctx, sdk.NewInt64Coin("nhash", 100), distribution)
+	suite.Assert().NoError(err, "should return no error")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 100), reward, "should distribute all the funds")
+}
+
+func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUsesMaxReward() {
+	suite.SetupTest()
+	distribution := types.NewClaimPeriodRewardDistribution(
+		1,
+		1,
+		sdk.NewInt64Coin("nhash", 100),
+		sdk.NewInt64Coin("nhash", 0),
+		2,
+		false,
+	)
+
+	share1 := types.NewShare(1, 1, "address1", false, time.Time{}, 1)
+	share2 := types.NewShare(1, 1, "address2", false, time.Time{}, 1)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share2)
+
+	reward, err := suite.app.RewardKeeper.CalculateRewardClaimPeriodRewards(suite.ctx, sdk.NewInt64Coin("nhash", 20), distribution)
+	suite.Assert().NoError(err, "should return no error")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 40), reward, "should distribute only up to the maximum reward for each participant")
+}
+
+func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUsesDoesNotExceedProgramBalance() {
+	suite.SetupTest()
+	suite.Assert().Fail("not yet implemented")
+}
 
 func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEnd() {
 	suite.SetupTest()
@@ -274,31 +432,6 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesBalances() {
 }
 
 func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesInvalidLookups() {
-	suite.SetupTest()
-	suite.Assert().Fail("not yet implemented")
-}
-
-func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewards() {
-	suite.SetupTest()
-	suite.Assert().Fail("not yet implemented")
-}
-
-func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUsesMaxReward() {
-	suite.SetupTest()
-	suite.Assert().Fail("not yet implemented")
-}
-
-func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUsesDoesNotExceedProgramBalance() {
-	suite.SetupTest()
-	suite.Assert().Fail("not yet implemented")
-}
-
-func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsNoTotalShares() {
-	suite.SetupTest()
-	suite.Assert().Fail("not yet implemented")
-}
-
-func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsHandlesInvalidLookups() {
 	suite.SetupTest()
 	suite.Assert().Fail("not yet implemented")
 }

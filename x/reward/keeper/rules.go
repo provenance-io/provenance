@@ -109,21 +109,30 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 		return err
 	}
 
+	// TODO We create this already when we start a new program and a new reward claim period
+	// TODO Check if we need this still
 	// check if ClaimPeriodRewardDistribution has default values in it, since claimPeriodId should always start with 1 hence should be fine.
-	if claimPeriodRewardDistribution.ClaimPeriodId == 0 {
-		// TODO We create this already when we start a new program and a new reward claim period
-		claim_period_amount := rewardProgram.GetTotalRewardPool().Amount.Quo(sdk.NewInt(int64(rewardProgram.GetClaimPeriods())))
-		claim_period_pool := sdk.NewCoin(rewardProgram.GetTotalRewardPool().Denom, claim_period_amount)
+	/*if claimPeriodRewardDistribution.ClaimPeriodId == 0 {
+		claimPeriodAmount := rewardProgram.GetTotalRewardPool().Amount.Quo(sdk.NewInt(int64(rewardProgram.GetClaimPeriods())))
+		claimPeriodPool := sdk.NewCoin(rewardProgram.GetTotalRewardPool().Denom, claimPeriodAmount)
+		programBalance, err := k.GetRewardProgramBalance(ctx, rewardProgram.GetId())
+		if err != nil || programBalance.GetRewardProgramId() == 0 {
+			ctx.Logger().Error(fmt.Sprintf("NOTICE: Missing RewardProgramBalance for RewardProgram %d ", rewardProgram.GetId()))
+			return err
+		}
+		if programBalance.GetBalance().IsLT(claimPeriodPool) {
+			claimPeriodPool = programBalance.GetBalance()
+		}
 
 		claimPeriodRewardDistribution = types.NewClaimPeriodRewardDistribution(
 			rewardProgram.GetCurrentClaimPeriod(),
 			rewardProgram.GetId(),
-			claim_period_pool,
-			sdk.NewInt64Coin(claim_period_pool.Denom, 0),
+			claimPeriodPool,
+			sdk.NewInt64Coin(claimPeriodPool.Denom, 0),
 			0,
 			false,
 		)
-	}
+	}*/
 
 	if rewardProgram == nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "reward program cannot be nil")
