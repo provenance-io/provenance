@@ -386,6 +386,7 @@
     - [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations)
     - [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution)
     - [QualifyingAction](#provenance.reward.v1.QualifyingAction)
+    - [QualifyingActions](#provenance.reward.v1.QualifyingActions)
     - [RewardProgram](#provenance.reward.v1.RewardProgram)
     - [RewardProgramBalance](#provenance.reward.v1.RewardProgramBalance)
     - [Share](#provenance.reward.v1.Share)
@@ -5883,6 +5884,21 @@ Reward Program Id + Claim Period Id
 
 
 
+<a name="provenance.reward.v1.QualifyingActions"></a>
+
+### QualifyingActions
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated | The actions that count towards the reward |
+
+
+
+
+
+
 <a name="provenance.reward.v1.RewardProgram"></a>
 
 ### RewardProgram
@@ -6227,6 +6243,7 @@ Query defines the gRPC querier service for reward module.
 | `reward_period_days` | [uint64](#uint64) |  | number of days the reward program will exist |
 | `claim_period_days` | [uint64](#uint64) |  | number of days a claim period will exist |
 | `expire_days` | [uint64](#uint64) |  | number of days before a reward program will expire after it has ended |
+| `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated | The actions that count towards the reward |
 
 
 
