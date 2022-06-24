@@ -325,3 +325,47 @@ func (suite *KeeperTestSuite) TestIterateRewardSharesSubPeriodHalt() {
 
 	suite.Assert().Equal(1, counter, "should have correct number of iterations")
 }
+
+func (suite *KeeperTestSuite) TestGetRewardClaimPeriodShares() {
+	suite.SetupTest()
+
+	time := timestamppb.Now().AsTime()
+	share1 := types.NewShare(1, 2, "test", true, time, 5)
+	share2 := types.NewShare(1, 3, "test", true, time, 5)
+	share3 := types.NewShare(2, 1, "test", true, time, 5)
+	share4 := types.NewShare(2, 2, "test", true, time, 5)
+	share5 := types.NewShare(2, 2, "test2", true, time, 5)
+
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share2)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share3)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share4)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share5)
+
+	shares, err := suite.app.RewardKeeper.GetRewardClaimPeriodShares(suite.ctx, 2, 2)
+
+	suite.Assert().NoError(err, "should have no error")
+	suite.Assert().Equal(2, len(shares), "should have correct number of shares")
+}
+
+func (suite *KeeperTestSuite) TestGetRewardClaimPeriodSharesEmpty() {
+	suite.SetupTest()
+
+	time := timestamppb.Now().AsTime()
+	share1 := types.NewShare(1, 2, "test", true, time, 5)
+	share2 := types.NewShare(1, 3, "test", true, time, 5)
+	share3 := types.NewShare(2, 1, "test", true, time, 5)
+	share4 := types.NewShare(2, 2, "test", true, time, 5)
+	share5 := types.NewShare(2, 2, "test2", true, time, 5)
+
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share2)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share3)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share4)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share5)
+
+	shares, err := suite.app.RewardKeeper.GetRewardClaimPeriodShares(suite.ctx, 5, 5)
+
+	suite.Assert().NoError(err, "should have no error")
+	suite.Assert().Equal(0, len(shares), "should have correct number of shares")
+}
