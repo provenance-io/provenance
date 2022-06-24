@@ -94,7 +94,7 @@ func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *type
 	k.SetClaimPeriodRewardDistribution(ctx, claimPeriodReward)
 	k.SetRewardProgramBalance(ctx, programBalance)
 
-	if rewardProgram.IsEnding(ctx) || programBalance.IsEmpty() {
+	if rewardProgram.IsEnding(ctx) && programBalance.IsEmpty() {
 		k.EndRewardProgram(ctx, rewardProgram)
 	} else {
 		k.StartRewardProgramClaimPeriod(ctx, rewardProgram)
