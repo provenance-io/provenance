@@ -138,7 +138,7 @@ func (rp *RewardProgram) IsEndingClaimPeriod(ctx sdk.Context) bool {
 func (rp *RewardProgram) IsEnding(ctx sdk.Context) bool {
 	blockTime := ctx.BlockTime()
 	isProgramExpired := !rp.GetExpectedProgramEndTime().IsZero() && (blockTime.After(rp.ExpectedProgramEndTime) || blockTime.Equal(rp.ExpectedProgramEndTime))
-	isProgramCompleted := rp.CurrentClaimPeriod > rp.ClaimPeriods
+	isProgramCompleted := rp.CurrentClaimPeriod >= rp.ClaimPeriods
 	return rp.State == RewardProgram_STARTED && (isProgramCompleted || isProgramExpired)
 }
 

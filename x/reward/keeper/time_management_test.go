@@ -191,7 +191,33 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransitionExpired()
 
 func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndNoBalance() {
 	suite.SetupTest()
-	suite.Assert().Fail("not yet implemented")
+
+	currentTime := time.Now()
+	suite.ctx = suite.ctx.WithBlockTime(currentTime)
+	blockTime := suite.ctx.BlockTime()
+	program := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 0),
+		sdk.NewInt64Coin("nhash", 1000),
+		currentTime,
+		60*60,
+		3,
+		[]types.QualifyingAction{},
+	)
+
+	programBalance := types.NewRewardProgramBalance(1, sdk.NewInt64Coin("nhash", 0))
+	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
+
+	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
+	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
+
+	suite.Assert().Equal(types.RewardProgram_FINISHED, program.State, "reward program should be in finished state")
+	suite.Assert().Equal(uint64(1), program.CurrentClaimPeriod, "current claim period should not be updated")
+	suite.Assert().Equal(program.ClaimPeriodEndTime, program.ClaimPeriodEndTime, "claim period end time should not be updated")
+	suite.Assert().Equal(blockTime, program.ActualProgramEndTime, "actual end time should be set")
 }
 
 func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndExtraBalance() {
@@ -209,27 +235,27 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesInvalidLooku
 	suite.Assert().Fail("not yet implemented")
 }
 
-func (suite *KeeperTestSuite) TestSumRewardClaimPeriodRewards() {
+func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewards() {
 	suite.SetupTest()
 	suite.Assert().Fail("not yet implemented")
 }
 
-func (suite *KeeperTestSuite) TestSumRewardClaimPeriodRewardsUsesMaxReward() {
+func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUsesMaxReward() {
 	suite.SetupTest()
 	suite.Assert().Fail("not yet implemented")
 }
 
-func (suite *KeeperTestSuite) TestSumRewardClaimPeriodRewardsUsesDoesNotExceedProgramBalance() {
+func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUsesDoesNotExceedProgramBalance() {
 	suite.SetupTest()
 	suite.Assert().Fail("not yet implemented")
 }
 
-func (suite *KeeperTestSuite) TestSumRewardClaimPeriodRewardsNoTotalShares() {
+func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsNoTotalShares() {
 	suite.SetupTest()
 	suite.Assert().Fail("not yet implemented")
 }
 
-func (suite *KeeperTestSuite) TestSumRewardClaimPeriodRewardsHandlesInvalidLookups() {
+func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsHandlesInvalidLookups() {
 	suite.SetupTest()
 	suite.Assert().Fail("not yet implemented")
 }
