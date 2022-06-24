@@ -28,6 +28,7 @@ func NewMsgCreateRewardProgramRequest(
 	rewardPeriodDays uint64,
 	claimPeriodDays uint64,
 	expireDays uint64,
+	qualifyingAction []QualifyingAction,
 ) *MsgCreateRewardProgramRequest {
 	return &MsgCreateRewardProgramRequest{
 		Title:                    title,
@@ -39,6 +40,7 @@ func NewMsgCreateRewardProgramRequest(
 		RewardPeriodDays:         rewardPeriodDays,
 		ClaimPeriodDays:          claimPeriodDays,
 		ExpireDays:               expireDays,
+		QualifyingActions:        qualifyingAction,
 	}
 }
 
@@ -67,6 +69,10 @@ func (msg MsgCreateRewardProgramRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.DistributeFromAddress); err != nil {
 		return fmt.Errorf("invalid address for rewards program distribution from address: %w", err)
 	}
+	startTime := msg.ProgramStartTime.UTC()
+	if startTime.Hour() != 0 || startTime.Minute() != 0 || startTime.Second() != 0 || startTime.Nanosecond() != 0 {
+		return fmt.Errorf("invalid time must be of date only: %v", startTime)
+	}
 	if !msg.TotalRewardPool.IsPositive() {
 		return fmt.Errorf("reward program requires total reward pool to be positive: %v", msg.TotalRewardPool)
 	}
@@ -85,6 +91,13 @@ func (msg MsgCreateRewardProgramRequest) ValidateBasic() error {
 	if msg.RewardPeriodDays%msg.ClaimPeriodDays != 0 {
 		return fmt.Errorf("reward period days (%v) must be multiple of claim period days (%v)", msg.RewardPeriodDays, msg.ClaimPeriodDays)
 	}
+	if len(msg.QualifyingActions) == 0 {
+		return fmt.Errorf("reward program must contain qualifying actions")
+	}
+	// TODO validate basic should be on top level action
+	// for _, action :=  range msg.QualifyingActions {
+	// 	action.Vali
+	// }
 	return nil
 }
 

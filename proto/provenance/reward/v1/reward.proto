@@ -146,6 +146,12 @@ message QualifyingAction {
   }
 }
 
+message QualifyingActions {
+  repeated QualifyingAction qualifying_actions = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"qualifying_actions"
+  ]; // The actions that count towards the reward
+}
 // ActionDelegate, accounts that have delegated in an epoch period.
 // rule: ActionDelegate " when account delegates in epoch period,
 // if above min and below max, increase shares earned for rewards pool by 1.

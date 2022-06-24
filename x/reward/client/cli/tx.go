@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,6 +25,7 @@ const (
 	FlagRewardPeriodDays   = "reward-period-days"
 	FlagClaimPeriodDays    = "claim-period-days"
 	FlagExpireDays         = "expire-days"
+	FlagQualifyingActions  = "qualifying-actions"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -57,6 +59,7 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 		--reward-period-days 365 \
 		--claim-period-days 7 \
 		--expire-days 14 \ 
+		--qualifying-actions {}
 The example command details state: TODO
 		`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -84,7 +87,7 @@ The example command details state: TODO
 			if err != nil || len(startTimeStr) == 0 {
 				return err
 			}
-			startTime, err := time.Parse(time.RFC3339, startTimeStr)
+			startTime, err := convertDateToTime(startTimeStr)
 			if err != nil {
 				return err
 			}
@@ -101,7 +104,13 @@ The example command details state: TODO
 				return err
 			}
 
-			// TODO add
+			contents, err := cmd.Flags().GetString(FlagQualifyingActions)
+			if err != nil {
+				return err
+			}
+			var actions types.QualifyingActions
+			clientCtx.Codec.MustUnmarshalJSON([]byte(contents), &actions)
+
 			callerAddr := clientCtx.GetFromAddress()
 			msg := types.NewMsgCreateRewardProgramRequest(
 				args[0],
@@ -113,6 +122,7 @@ The example command details state: TODO
 				rewardProgramDays,
 				claimPeriodDays,
 				expireDays,
+				actions.QualifyingActions,
 			)
 			if err != nil {
 				return fmt.Errorf("invalid governance proposal. Error: %q", err)
@@ -127,5 +137,27 @@ The example command details state: TODO
 	cmd.Flags().String(FlagRewardPeriodDays, "", "number of days the reward program runs")
 	cmd.Flags().String(FlagClaimPeriodDays, "", "number of days for a claim period interval")
 	cmd.Flags().String(FlagExpireDays, "", "number of days to expire program after it has ended")
+	cmd.Flags().String(FlagQualifyingActions, "", "json representation of qualifying actions")
 	return cmd
+}
+
+func convertDateToTime(dateStr string) (time.Time, error) {
+	dateParts := strings.Split(dateStr, "-")
+	if len(dateParts) != 3 {
+		return time.Time{}, fmt.Errorf("error parsing start date must be of format YYYY-MM-dd: %v", dateStr)
+	}
+	year, err := strconv.Atoi(dateParts[0])
+	if err != nil {
+		return time.Time{}, err
+	}
+	month, err := strconv.Atoi(dateParts[1])
+	if err != nil {
+		return time.Time{}, err
+	}
+	day, err := strconv.Atoi(dateParts[2])
+	if err != nil {
+		return time.Time{}, err
+	}
+	startTime := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
+	return startTime, nil
 }

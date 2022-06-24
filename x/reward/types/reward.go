@@ -103,11 +103,12 @@ func NewRewardProgram(
 	description string,
 	id uint64,
 	distributeFromAddress string,
-	coin sdk.Coin,
+	totalRewardPool sdk.Coin,
 	maxRewardByAddress sdk.Coin,
 	programStartTime time.Time,
 	subPeriodSeconds uint64,
 	subPeriods uint64,
+	shareExpirationOffset uint64,
 	qualifyingActions []QualifyingAction,
 ) RewardProgram {
 	return RewardProgram{
@@ -115,11 +116,12 @@ func NewRewardProgram(
 		Description:           description,
 		Id:                    id,
 		DistributeFromAddress: distributeFromAddress,
-		TotalRewardPool:       coin,
+		TotalRewardPool:       totalRewardPool,
 		MaxRewardByAddress:    maxRewardByAddress,
 		ProgramStartTime:      programStartTime,
 		ClaimPeriodSeconds:    subPeriodSeconds,
 		ClaimPeriods:          subPeriods,
+		ShareExpirationOffset: shareExpirationOffset,
 		State:                 RewardProgram_PENDING,
 		QualifyingActions:     qualifyingActions,
 	}
@@ -171,6 +173,7 @@ func (rp *RewardProgram) ValidateBasic() error {
 	if rp.ClaimPeriods < 1 {
 		return errors.New("reward program number of sub periods must be larger than 0")
 	}
+
 	return nil
 }
 

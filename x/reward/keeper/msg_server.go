@@ -34,6 +34,14 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		return &types.MsgCreateRewardProgramResponse{}, err
 	}
 
+	if ctx.BlockTime().UTC().After(msg.ProgramStartTime.UTC()) {
+		return &types.MsgCreateRewardProgramResponse{},
+			fmt.Errorf("start time is before current block time %v : %v ", ctx.BlockTime().UTC(), msg.ProgramStartTime.UTC())
+	}
+
+	claimPeriodDaysInSeconds := uint64(types.DayInSeconds) * msg.GetClaimPeriodDays()
+	experationOffsetInSeconds := uint64(types.DayInSeconds) * msg.GetExpireDays()
+
 	rewardProgram := types.NewRewardProgram(
 		msg.Title,
 		msg.Description,
@@ -42,10 +50,10 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		msg.TotalRewardPool,
 		msg.MaxRewardPerClaimAddress,
 		msg.ProgramStartTime,
-		uint64(types.DayInSeconds),
+		claimPeriodDaysInSeconds,
 		msg.ClaimPeriodDays,
-		// TODO - We need to update this to be part of the message
-		[]types.QualifyingAction{},
+		experationOffsetInSeconds,
+		msg.QualifyingActions,
 	)
 	err = rewardProgram.ValidateBasic()
 	if err != nil {
@@ -68,7 +76,6 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 	}
 	s.Keeper.SetRewardProgramBalance(ctx, rewardProgramBalance)
 
-	// TODO: emit event
 	// ctx.EventManager().EmitEvent(
 	// 	sdk.NewEvent(
 	// 		types.EventTypeSubmitRewardProgram,
