@@ -173,8 +173,6 @@ func (suite *KeeperTestSuite) TestEndRewardProgramNil() {
 	suite.Assert().Error(err, "should throw an error for nil")
 }
 
-// We are good up to this point
-
 func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsNonMatchingDenoms() {
 	suite.SetupTest()
 	notMatching := types.NewClaimPeriodRewardDistribution(
@@ -294,9 +292,70 @@ func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUsesMaxReward
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 40), reward, "should distribute only up to the maximum reward for each participant")
 }
 
-func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUsesDoesNotExceedProgramBalance() {
+func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesInvalidLookups() {
 	suite.SetupTest()
-	suite.Assert().Fail("not yet implemented")
+
+	currentTime := time.Now()
+	suite.ctx = suite.ctx.WithBlockTime(currentTime)
+
+	program1 := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 0),
+		sdk.NewInt64Coin("nhash", 1000),
+		currentTime,
+		60*60,
+		3,
+		[]types.QualifyingAction{},
+	)
+	program2 := types.NewRewardProgram(
+		"title",
+		"description",
+		2,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 0),
+		sdk.NewInt64Coin("nhash", 1000),
+		currentTime,
+		60*60,
+		3,
+		[]types.QualifyingAction{},
+	)
+	program3 := types.NewRewardProgram(
+		"title",
+		"description",
+		3,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 0),
+		sdk.NewInt64Coin("nhash", 1000),
+		currentTime,
+		60*60,
+		3,
+		[]types.QualifyingAction{},
+	)
+	programBalance2 := types.NewRewardProgramBalance(program2.GetId(), program2.GetTotalRewardPool())
+	programBalance3 := types.NewRewardProgramBalance(program2.GetId(), sdk.NewInt64Coin("jackthecat", 100))
+	rewardDistribution := types.NewClaimPeriodRewardDistribution(0, 3, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 1, false)
+	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance2)
+	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance3)
+	suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, rewardDistribution)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program3)
+
+	err := suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program1)
+	suite.Assert().Error(err, "an error should be thrown if there is no program balance for the program")
+	err = suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program2)
+	suite.Assert().Error(err, "an error should be thrown if there is no claim period reward distribution for the program")
+	err = suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program3)
+	suite.Assert().Error(err, "an error should be thrown if reward claim calculation fails")
+}
+
+func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesNilRewardProgram() {
+	suite.SetupTest()
+	err := suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, nil)
+	suite.Assert().Error(err, "error should be returned for nil reward program")
 }
 
 func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEnd() {
@@ -310,18 +369,31 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEnd() {
 		1,
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
-		sdk.NewInt64Coin("nhash", 1000),
+		sdk.NewInt64Coin("nhash", 100000),
 		currentTime,
 		60*60,
-		3,
+		2,
 		[]types.QualifyingAction{},
 	)
+	share := types.NewShare(1, 1, "address1", false, time.Time{}, 1)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share)
 	programBalance := types.NewRewardProgramBalance(program.GetId(), program.GetTotalRewardPool())
 	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
 
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
+
+	// Update the distribution to replicate that a share was actually granted.
+	rewardDistribution, _ := suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 1, 1)
+	rewardDistribution.TotalShares = 1
+	suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, rewardDistribution)
+
 	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
 
+	newBalance, _ := suite.app.RewardKeeper.GetRewardProgramBalance(suite.ctx, 1)
+	reward, _ := suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 1, 1)
+
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 50000), newBalance.Balance, "balance should subtract the claim period reward")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 50000), reward.TotalRewardsPoolForClaimPeriod, "total claim should be increased by the amount rewarded")
 	suite.Assert().Equal(program.State, types.RewardProgram_STARTED, "reward program should be in started state")
 	suite.Assert().Equal(uint64(2), program.CurrentClaimPeriod, "current claim period should be updated")
 	suite.Assert().Equal(blockTime.Add(time.Duration(program.ClaimPeriodSeconds)*time.Second), program.ClaimPeriodEndTime, "claim period end time should be set")
@@ -338,25 +410,37 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransition() {
 		1,
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
-		sdk.NewInt64Coin("nhash", 1000),
+		sdk.NewInt64Coin("nhash", 100000),
 		currentTime,
 		60*60,
-		3,
+		2,
 		[]types.QualifyingAction{},
 	)
 	programBalance := types.NewRewardProgramBalance(program.GetId(), program.GetTotalRewardPool())
 	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
 
+	share1 := types.NewShare(1, 1, "address1", false, time.Time{}, 1)
+	share2 := types.NewShare(1, 2, "address2", false, time.Time{}, 1)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
+	suite.app.RewardKeeper.SetShare(suite.ctx, &share2)
+
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
+	reward, _ := suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 1, 1)
+	reward.TotalShares = 1
+	suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, reward)
 	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
-	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
+	reward, _ = suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 2, 1)
+	reward.TotalShares = 1
+	suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, reward)
 	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
 
 	suite.Assert().Equal(program.State, types.RewardProgram_FINISHED, "reward program should be in finished state")
-	suite.Assert().Equal(uint64(3), program.CurrentClaimPeriod, "current claim period should not be updated")
+	suite.Assert().Equal(uint64(2), program.CurrentClaimPeriod, "current claim period should not be updated")
 	suite.Assert().Equal(blockTime.Add(time.Duration(program.ClaimPeriodSeconds)*time.Second), program.ClaimPeriodEndTime, "claim period end time should be set")
 	suite.Assert().Equal(blockTime, program.ActualProgramEndTime, "claim period end time should be set")
 }
+
+// We are good up to this point
 
 func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransitionExpired() {
 	suite.SetupTest()
@@ -431,7 +515,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesBalances() {
 	suite.Assert().Fail("not yet implemented")
 }
 
-func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesInvalidLookups() {
+func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRolloverAmount() {
 	suite.SetupTest()
 	suite.Assert().Fail("not yet implemented")
 }

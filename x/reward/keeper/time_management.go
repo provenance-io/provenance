@@ -94,21 +94,26 @@ func (k Keeper) StartRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *ty
 func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *types.RewardProgram) error {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Claim period end hit for reward program %v ", rewardProgram))
 
+	if rewardProgram == nil {
+		ctx.Logger().Error("NOTICE: EndRewardProgramClaimPeriod RewardProgram is nil")
+		return fmt.Errorf("unable to end reward program claim period for nil reward program")
+	}
+
 	programBalance, err := k.GetRewardProgramBalance(ctx, rewardProgram.GetId())
 	if err != nil || programBalance.GetRewardProgramId() == 0 {
 		ctx.Logger().Error(fmt.Sprintf("NOTICE: Missing RewardProgramBalance for RewardProgram %d ", rewardProgram.GetId()))
-		return err
+		return fmt.Errorf("a program balance does not exist for RewardProgram %d", rewardProgram.GetId())
 	}
 
 	claimPeriodReward, err := k.GetClaimPeriodRewardDistribution(ctx, rewardProgram.GetCurrentClaimPeriod(), rewardProgram.GetId())
 	if err != nil || claimPeriodReward.GetClaimPeriodId() == 0 {
 		ctx.Logger().Error(fmt.Sprintf("NOTICE: Missing ClaimPeriodRewardDistribution for RewardProgram %d ", rewardProgram.GetId()))
-		return err
+		return fmt.Errorf("a ClaimPeriodRewardDistribution does not exist for RewardProgram %d with claim period %d", rewardProgram.GetId(), rewardProgram.GetId())
 	}
 
 	totalClaimPeriodRewards, err := k.CalculateRewardClaimPeriodRewards(ctx, rewardProgram.GetMaxRewardByAddress(), claimPeriodReward)
 	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("%v", err))
+		ctx.Logger().Error(fmt.Sprintf("NOTICE: Unable to calculate claim period rewards for RewardProgram %d ", rewardProgram.GetId()))
 		return err
 	}
 
