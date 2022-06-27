@@ -36,7 +36,6 @@ var handlers = map[string]appUpgrade{
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
 	}, // upgrade for 1.11.x
-
 	// TODO - Add new upgrade definitions here.
 }
 
