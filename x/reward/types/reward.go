@@ -97,7 +97,6 @@ type EvaluationResult struct {
 
 // ============ Reward Program ============
 
-// TODO add expire days
 func NewRewardProgram(
 	title string,
 	description string,
@@ -124,6 +123,7 @@ func NewRewardProgram(
 		ShareExpirationOffset: shareExpirationOffset,
 		State:                 RewardProgram_PENDING,
 		QualifyingActions:     qualifyingActions,
+		MinimumRolloverAmount: sdk.NewInt64Coin("nhash", 100_000_000_000),
 	}
 }
 

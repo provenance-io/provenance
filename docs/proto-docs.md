@@ -5913,6 +5913,7 @@ RewardProgram
 | `distribute_from_address` | [string](#string) |  | community pool for now (who provides the money) |
 | `total_reward_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | maximum reward per claim per address |
+| `minimum_rollover_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | minimum amount of coins for program to rollover |
 | `claim_period_seconds` | [uint64](#uint64) |  | claim_period_seconds defines the type of claim_period attributed to this program.(e.g day,week,month) |
 | `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | When the reward program starts |
 | `expected_program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that the reward program MUST end |
