@@ -301,15 +301,15 @@ func (s *RewardTypesTestSuite) TestEpochRewardDistributionValidateBasic() {
 	}
 }
 
-func (s *RewardTypesTestSuite) TesAccountStateValidateBasic() {
+func (s *RewardTypesTestSuite) TesRewardAccountStateValidateBasic() {
 	tests := []struct {
-		name         string
-		accountState AccountState
-		want         string
+		name               string
+		RewardAccountState RewardAccountState
+		want               string
 	}{
 		{
 			"valid",
-			NewAccountState(
+			NewRewardAccountState(
 				1,
 				2,
 				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
@@ -318,7 +318,7 @@ func (s *RewardTypesTestSuite) TesAccountStateValidateBasic() {
 		},
 		{
 			"invalid reward id",
-			NewAccountState(
+			NewRewardAccountState(
 				0,
 				2,
 				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
@@ -327,7 +327,7 @@ func (s *RewardTypesTestSuite) TesAccountStateValidateBasic() {
 		},
 		{
 			"invalid - address is incorrect",
-			NewAccountState(
+			NewRewardAccountState(
 				1,
 				2,
 				"test",
@@ -339,11 +339,11 @@ func (s *RewardTypesTestSuite) TesAccountStateValidateBasic() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := tt.accountState.ValidateBasic()
+			err := tt.RewardAccountState.ValidateBasic()
 			if err != nil {
 				assert.Equal(t, tt.want, err.Error())
 			} else if len(tt.want) > 0 {
-				t.Errorf("AccountState ValidateBasic error = nil, expected: %s", tt.want)
+				t.Errorf("RewardAccountState ValidateBasic error = nil, expected: %s", tt.want)
 			}
 		})
 	}

@@ -37,7 +37,7 @@ type (
 	// RewardAction defines the interface that actions need to implement
 	RewardAction interface {
 		ActionType() string
-		Evaluate(ctx sdk.Context, provider KeeperProvider, state AccountState, event EvaluationResult) bool
+		Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool
 		GetBuilder() ActionBuilder
 	}
 )
@@ -212,16 +212,16 @@ func (rpb *RewardProgramBalance) String() string {
 
 // ============ Account State ============
 
-func NewAccountState(rewardProgramID, subPeriod uint64, address string) AccountState {
-	return AccountState{
+func NewRewardAccountState(rewardProgramID, subPeriod uint64, address string) RewardAccountState {
+	return RewardAccountState{
 		RewardProgramId: rewardProgramID,
-		SubPeriodId:     subPeriod,
+		ClaimPeriodId:   subPeriod,
 		Address:         address,
 		ActionCounter:   0,
 	}
 }
 
-func (s *AccountState) ValidateBasic() error {
+func (s *RewardAccountState) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(s.Address); err != nil {
 		return fmt.Errorf("invalid address for share address: %w", err)
 	}
@@ -231,17 +231,17 @@ func (s *AccountState) ValidateBasic() error {
 	return nil
 }
 
-func (s *AccountState) String() string {
+func (s *RewardAccountState) String() string {
 	out, _ := yaml.Marshal(s)
 	return string(out)
 }
 
 // ============ Share ============
 
-func NewShare(rewardProgramID, subPeriod uint64, address string, claimed bool, expireTime time.Time, amount int64) Share {
+func NewShare(rewardProgramID, claimPeriodId uint64, address string, claimed bool, expireTime time.Time, amount int64) Share {
 	return Share{
 		RewardProgramId: rewardProgramID,
-		SubPeriodId:     subPeriod,
+		ClaimPeriodId:   claimPeriodId,
 		Address:         address,
 		Claimed:         claimed,
 		ExpireTime:      expireTime,
@@ -357,7 +357,7 @@ func (ad *ActionDelegate) getValidatorRankPercentile(ctx sdk.Context, provider K
 	return percentile
 }
 
-func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, state AccountState, event EvaluationResult) bool {
+func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
 	validator := event.Validator
 	delegator := event.Delegator
 
@@ -424,7 +424,7 @@ func (atd *ActionTransferDelegations) ActionType() string {
 	return ActionTypeDelegate
 }
 
-func (atd *ActionTransferDelegations) Evaluate(ctx sdk.Context, provider KeeperProvider, state AccountState, event EvaluationResult) bool {
+func (atd *ActionTransferDelegations) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
 	// TODO execute all the rules for action?
 	return false
 }

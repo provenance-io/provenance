@@ -20,7 +20,7 @@ func (suite *KeeperTestSuite) TestNewShare() {
 	)
 
 	suite.Assert().Equal(uint64(1), share.GetRewardProgramId(), "reward program id must match")
-	suite.Assert().Equal(uint64(2), share.GetSubPeriodId(), "sub period id must match")
+	suite.Assert().Equal(uint64(2), share.GetClaimPeriodId(), "sub period id must match")
 	suite.Assert().Equal("test", share.GetAddress(), "address must match")
 	suite.Assert().Equal(true, share.GetClaimed(), "claim status must match")
 	suite.Assert().Equal(time, share.GetExpireTime(), "expiration time must match")
@@ -43,12 +43,12 @@ func (suite *KeeperTestSuite) TestGetSetShare() {
 	suite.app.RewardKeeper.SetShare(suite.ctx, &expectedShare)
 	actualShare, err := suite.app.RewardKeeper.GetShare(suite.ctx,
 		expectedShare.GetRewardProgramId(),
-		expectedShare.GetSubPeriodId(),
+		expectedShare.GetClaimPeriodId(),
 		expectedShare.GetAddress())
 
 	suite.Assert().Nil(err, "must not have error")
 	suite.Assert().Equal(expectedShare.GetRewardProgramId(), actualShare.GetRewardProgramId(), "reward program id must match")
-	suite.Assert().Equal(expectedShare.GetSubPeriodId(), actualShare.GetSubPeriodId(), "sub period id must match")
+	suite.Assert().Equal(expectedShare.GetClaimPeriodId(), actualShare.GetClaimPeriodId(), "sub period id must match")
 	suite.Assert().Equal(expectedShare.GetAddress(), actualShare.GetAddress(), "address must match")
 	suite.Assert().Equal(expectedShare.GetClaimed(), actualShare.GetClaimed(), "claim status must match")
 	suite.Assert().Equal(expectedShare.GetExpireTime(), actualShare.GetExpireTime(), "expiration time must match")
@@ -83,12 +83,12 @@ func (suite *KeeperTestSuite) TestRemoveValidShare() {
 	suite.app.RewardKeeper.SetShare(suite.ctx, &expectedShare)
 	removed := suite.app.RewardKeeper.RemoveShare(suite.ctx,
 		expectedShare.GetRewardProgramId(),
-		expectedShare.GetSubPeriodId(),
+		expectedShare.GetClaimPeriodId(),
 		expectedShare.GetAddress())
 
 	actualShare, err := suite.app.RewardKeeper.GetShare(suite.ctx,
 		expectedShare.GetRewardProgramId(),
-		expectedShare.GetSubPeriodId(),
+		expectedShare.GetClaimPeriodId(),
 		expectedShare.GetAddress())
 
 	suite.Assert().True(removed, "share should successfully be removed")
@@ -111,7 +111,7 @@ func (suite *KeeperTestSuite) TestRemoveInvalidShare() {
 
 	removed := suite.app.RewardKeeper.RemoveShare(suite.ctx,
 		expectedShare.GetRewardProgramId(),
-		expectedShare.GetSubPeriodId(),
+		expectedShare.GetClaimPeriodId(),
 		expectedShare.GetAddress())
 
 	suite.Assert().False(removed, "share should be unable to be removed")

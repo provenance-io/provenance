@@ -62,8 +62,8 @@ func GetShareKey(rewardID uint64, subPeriod uint64, addr []byte) []byte {
 	return key
 }
 
-// GetAccountStateKey converts a reward program id, subPeriod id, and address into an AccountStateKey
-func GetAccountStateKey(rewardID uint64, subPeriod uint64, addr []byte) []byte {
+// GetRewardAccountStateKey converts a reward program id, subPeriod id, and address into an AccountStateKey
+func GetRewardAccountStateKey(rewardID uint64, subPeriod uint64, addr []byte) []byte {
 	key := AccountStateKeyPrefix
 	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
 	subPeriodByte := []byte(strconv.FormatUint(subPeriod, 10))
@@ -73,8 +73,8 @@ func GetAccountStateKey(rewardID uint64, subPeriod uint64, addr []byte) []byte {
 	return key
 }
 
-// GetAccountStateKeyPrefix converts a reward program id and sub period into a prefix for iterating
-func GetAccountStateKeyPrefix(rewardID uint64, subPeriod uint64) []byte {
+// GetRewardAccountStateKeyPrefix converts a reward program id and sub period into a prefix for iterating
+func GetRewardAccountStateKeyPrefix(rewardID uint64, subPeriod uint64) []byte {
 	key := AccountStateKeyPrefix
 	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
 	subPeriodByte := []byte(strconv.FormatUint(subPeriod, 10))
