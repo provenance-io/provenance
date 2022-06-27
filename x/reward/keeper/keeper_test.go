@@ -266,7 +266,7 @@ func (s *KeeperTestSuite) TestSingleDelegate() {
 		now,
 		60*60,
 		3,
-		0,
+		2,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -331,7 +331,7 @@ func (s *KeeperTestSuite) TestMultipleDelegate() {
 		now,
 		60*60,
 		3,
-		0,
+		2,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -397,7 +397,7 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumActions() {
 		now,
 		60*60,
 		3,
-		0,
+		2,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -437,17 +437,8 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumActions() {
 func (s *KeeperTestSuite) TestDelegateAboveMaximumActions() {
 	s.SetupTest()
 
-	// Create inactive reward program
-	action := types.NewActionDelegate()
-	action.MaximumActions = 10
-	action.MinimumActions = 1
-	action.MinimumActiveStakePercentile = sdk.NewDecWithPrec(0, 0)
-	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
-
 	minimumDelegation := sdk.NewInt64Coin("nhash", 0)
 	maximumDelegation := sdk.NewInt64Coin("nhash", 100)
-	action.MinimumDelegationAmount = &minimumDelegation
-	action.MaximumDelegationAmount = &maximumDelegation
 
 	coin := sdk.NewInt64Coin("hotdog", 10000)
 	maxCoin := sdk.NewInt64Coin("hotdog", 100)
@@ -463,7 +454,7 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumActions() {
 		now,
 		60*60,
 		3,
-		0,
+		2,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -529,7 +520,7 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumDelegation() {
 		now,
 		60*60,
 		3,
-		0,
+		2,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -595,7 +586,7 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumDelegation() {
 		now,
 		60*60,
 		3,
-		0,
+		2,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -661,7 +652,7 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumPercentile() {
 		now,
 		60*60,
 		3,
-		0,
+		2,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -727,7 +718,7 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumPercentile() {
 		now,
 		60*60,
 		3,
-		0,
+		2,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{

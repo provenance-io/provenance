@@ -19,7 +19,7 @@ import (
 
 // Flag names and values
 const (
-	FlagCoin               = "coin"
+	FlagTotalRewardPool    = "total-reward-pool"
 	FlagMaxRewardByAddress = "max-reward-by-address"
 	FlagStartTime          = "start-time"
 	FlagRewardPeriodDays   = "reward-period-days"
@@ -46,6 +46,7 @@ func NewTxCmd() *cobra.Command {
 }
 
 func GetCmdRewardProgramAdd() *cobra.Command {
+	actions := "{\"qualifying_actions\":[{\"delegate\":{\"minimum_actions\":\"0\",\"maximum_actions\":\"0\",\"minimum_delegation_amount\":{\"denom\":\"nhash\",\"amount\":\"0\"},\"maximum_delegation_amount\":{\"denom\":\"nhash\",\"amount\":\"100\"},\"minimum_active_stake_percentile\":\"0.000000000000000000\",\"maximum_active_stake_percentile\":\"1.000000000000000000\"}}]}"
 	cmd := &cobra.Command{
 		Use:     "add-reward-program [title] [description]",
 		Args:    cobra.ExactArgs(3),
@@ -53,21 +54,20 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 		Short:   "Add a reward program",
 		Long:    strings.TrimSpace(`Add a reward program`),
 		Example: fmt.Sprintf(`$ %[1]s tx reward new 
-		--coin 580nhash \
+		--total_reward_pool  580nhash \
 		--max-reward-by-address 10nhash \
     	--start-time 2022-05-10\
 		--reward-period-days 365 \
 		--claim-period-days 7 \
 		--expire-days 14 \ 
-		--qualifying-actions {}
-The example command details state: TODO
-		`, version.AppName),
+		--qualifying-actions %s
+		`, version.AppName, actions),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			coinStr, err := cmd.Flags().GetString(FlagCoin)
+			coinStr, err := cmd.Flags().GetString(FlagTotalRewardPool)
 			if err != nil {
 				return err
 			}
@@ -109,8 +109,10 @@ The example command details state: TODO
 				return err
 			}
 			var actions types.QualifyingActions
-			clientCtx.Codec.MustUnmarshalJSON([]byte(contents), &actions)
-
+			err = clientCtx.Codec.UnmarshalJSON([]byte(contents), &actions)
+			if err != nil {
+				return err
+			}
 			callerAddr := clientCtx.GetFromAddress()
 			msg := types.NewMsgCreateRewardProgramRequest(
 				args[0],
@@ -124,23 +126,21 @@ The example command details state: TODO
 				expireDays,
 				actions.QualifyingActions,
 			)
-			if err != nil {
-				return fmt.Errorf("invalid governance proposal. Error: %q", err)
-			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
-	cmd.Flags().String(FlagCoin, "", "coins for reward program")
+	cmd.Flags().String(FlagTotalRewardPool, "", "coins for reward program")
 	cmd.Flags().String(FlagMaxRewardByAddress, "", "max amount of coins a single address can claim in rewards")
 	cmd.Flags().String(FlagStartTime, "", "time to start the rewards program, this must be a time in the future or within the first epoch of format YYYY-MM-DDTHH:MM:SSZ00:00 (2012-11-01T22:08:41+07:00)")
-	cmd.Flags().String(FlagRewardPeriodDays, "", "number of days the reward program runs")
-	cmd.Flags().String(FlagClaimPeriodDays, "", "number of days for a claim period interval")
-	cmd.Flags().String(FlagExpireDays, "", "number of days to expire program after it has ended")
+	cmd.Flags().Uint64(FlagRewardPeriodDays, 365, "number of days the reward program runs")
+	cmd.Flags().Uint64(FlagClaimPeriodDays, 7, "number of days for a claim period interval")
+	cmd.Flags().Uint64(FlagExpireDays, 7, "number of days to expire program after it has ended")
 	cmd.Flags().String(FlagQualifyingActions, "", "json representation of qualifying actions")
 	return cmd
 }
 
+// convertDateToTime takes in a string of format YYYY-MM-dd and returns a time.Time or parsing error
 func convertDateToTime(dateStr string) (time.Time, error) {
 	dateParts := strings.Split(dateStr, "-")
 	if len(dateParts) != 3 {

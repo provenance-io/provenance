@@ -2,7 +2,9 @@ package cli_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -120,69 +122,69 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-// func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
-// 	testCases := []struct {
-// 		name           string
-// 		args           []string
-// 		expectErr      bool
-// 		expectErrMsg   string
-// 		expectedCode   uint32
-// 		expectedOutput string
-// 	}{
-// 		{"query all reward programs",
-// 			[]string{
-// 				"all",
-// 			},
-// 			false,
-// 			"",
-// 			0,
-// 			"{\"reward_programs\":[{\"id\":\"1\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"0\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"},{\"id\":\"2\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"100\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"}]}",
-// 		},
-// 		{"query all active reward programs",
-// 			[]string{
-// 				"active",
-// 			},
-// 			false,
-// 			"",
-// 			0,
-// 			"{\"reward_programs\":[{\"id\":\"1\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"0\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"}]}",
-// 		},
-// 		{"query existing reward program by id",
-// 			[]string{
-// 				"1",
-// 			},
-// 			false,
-// 			"",
-// 			0,
-// 			"{\"reward_program\":{\"id\":\"1\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"0\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"}}",
-// 		},
-// 		{"query non-existing reward program by id",
-// 			[]string{
-// 				"3",
-// 			},
-// 			true,
-// 			"reward program 3 does not exist",
-// 			0,
-// 			"",
-// 		},
-// 	}
+func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
+	testCases := []struct {
+		name           string
+		args           []string
+		expectErr      bool
+		expectErrMsg   string
+		expectedCode   uint32
+		expectedOutput string
+	}{
+		{"query all reward programs",
+			[]string{
+				"all",
+			},
+			false,
+			"",
+			0,
+			"{\"reward_programs\":[{\"id\":\"1\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"0\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"},{\"id\":\"2\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"100\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"}]}",
+		},
+		{"query all active reward programs",
+			[]string{
+				"active",
+			},
+			false,
+			"",
+			0,
+			"{\"reward_programs\":[{\"id\":\"1\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"0\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"}]}",
+		},
+		{"query existing reward program by id",
+			[]string{
+				"1",
+			},
+			false,
+			"",
+			0,
+			"{\"reward_program\":{\"id\":\"1\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"0\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"}}",
+		},
+		{"query non-existing reward program by id",
+			[]string{
+				"3",
+			},
+			true,
+			"reward program 3 does not exist",
+			0,
+			"",
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		tc := tc
+	for _, tc := range testCases {
+		tc := tc
 
-// 		s.Run(tc.name, func() {
-// 			clientCtx := s.network.Validators[0].ClientCtx
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardProgramCmd(), tc.args)
-// 			if tc.expectErr {
-// 				s.Assert().Error(err)
-// 				s.Assert().Equal(tc.expectErrMsg, err.Error())
-// 			} else {
-// 				s.Assert().NoError(err)
-// 				s.Assert().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
-// 			}
-// 		})
-// 	}
-// }
+		s.Run(tc.name, func() {
+			clientCtx := s.network.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardProgramCmd(), tc.args)
+			if tc.expectErr {
+				s.Assert().Error(err)
+				s.Assert().Equal(tc.expectErrMsg, err.Error())
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+			}
+		})
+	}
+}
 
 // func (s *IntegrationTestSuite) TestQueryRewardClaims() {
 // 	rewardClaimsJson := fmt.Sprintf(`{"reward_claims":[{"address":"%s","shares_per_epoch_per_reward":[{"reward_program_id":"1","total_shares":"1","ephemeral_action_count":"1","latest_recorded_epoch":"1","claimed":false,"expired":false,"total_reward_claimed":{"denom":"","amount":"0"}}]},{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","shares_per_epoch_per_reward":[{"reward_program_id":"2","total_shares":"0","ephemeral_action_count":"0","latest_recorded_epoch":"0","claimed":false,"expired":false,"total_reward_claimed":{"denom":"jackthecat","amount":"0"}}]},{"address":"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h","shares_per_epoch_per_reward":[{"reward_program_id":"3","total_shares":"0","ephemeral_action_count":"0","latest_recorded_epoch":"0","claimed":false,"expired":false,"total_reward_claimed":{"denom":"jackthecat","amount":"0"}}]}]}`, s.network.Validators[0].Address.String())
@@ -406,6 +408,10 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 //  }
 
 func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
+	actions := "{\"qualifying_actions\":[{\"delegate\":{\"minimum_actions\":\"0\",\"maximum_actions\":\"0\",\"minimum_delegation_amount\":{\"denom\":\"nhash\",\"amount\":\"0\"},\"maximum_delegation_amount\":{\"denom\":\"nhash\",\"amount\":\"100\"},\"minimum_active_stake_percentile\":\"0.000000000000000000\",\"maximum_active_stake_percentile\":\"1.000000000000000000\"}}]}"
+	soon := time.Now().Add(time.Hour * 24)
+	date := strings.Split(soon.String(), " ")
+
 	testCases := []struct {
 		name         string
 		args         []string
@@ -418,74 +424,100 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				"add-reward-program",
 				"test add reward program",
 				"description",
-				fmt.Sprintf("--coin=580%s", s.cfg.BondDenom),
+				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
 				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
-				"--sub-period-type=day",
-				"--sub-periods=10",
-				"--start-time=2022-05-10T12:30:31+07:00",
+				"--reward-period-days=364",
+				"--claim-period-days=7",
+				fmt.Sprintf("--start-time=%s", date[0]),
+				"--expire-days=14",
+				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
 			false,
 			"",
 			0,
 		},
-		{"add reward program tx - invalid coin",
+		{"add reward program tx - invalid total-reward-pool",
 			[]string{
 				"add-reward-program",
 				"test add reward program",
 				"description",
-				"--coin=invalid",
+				"--total-reward-pool=invalid",
 				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
-				"--sub-period-type=day",
-				"--sub-periods=10",
-				"--start-time=2022-05-10T12:30:31+07:00",
+				"--reward-period-days=365",
+				"--claim-period-days=10",
+				"--start-time=2022-05-10",
+				"--expire-days=14",
+				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
 			true,
 			"invalid decimal coin expression: invalid",
 			0,
 		},
-		{"add reward program tx - invalid coin",
+		{"add reward program tx - invalid max-reward-by-address",
 			[]string{
 				"add-reward-program",
 				"test add reward program",
 				"description",
-				fmt.Sprintf("--coin=580%s", s.cfg.BondDenom),
+				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
 				"--max-reward-by-address=invalid",
-				"--sub-period-type=day",
-				"--sub-periods=10",
-				"--start-time=2022-05-10T12:30:31+07:00",
+				"--claim-period-days=10",
+				"--start-time=2022-05-10",
+				"--expire-days=14",
+				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
 			true,
 			"invalid decimal coin expression: invalid",
 			0,
 		},
-		{"add reward program tx - invalid number of sub periods",
+		{"add reward program tx - invalid claim period days",
 			[]string{
 				"add-reward-program",
 				"test add reward program",
 				"description",
-				fmt.Sprintf("--coin=580%s", s.cfg.BondDenom),
+				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
 				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
-				"--sub-period-type=day",
-				"--sub-periods=0",
-				"--start-time=2022-05-10T12:30:31+07:00",
+				"--reward-period-days=365",
+				"--claim-period-days=-1",
+				"--start-time=2022-05-10",
+				"--expire-days=14",
+				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
 			true,
-			"number of sub periods must be larger than 0",
+			"invalid argument \"-1\" for \"--claim-period-days\" flag: strconv.ParseUint: parsing \"-1\": invalid syntax",
 			0,
 		},
-		{"add reward program tx - invalid sub period type",
+		{"add reward program tx - invalid expire days",
 			[]string{
 				"add-reward-program",
 				"test add reward program",
 				"description",
-				fmt.Sprintf("--coin=580%s", s.cfg.BondDenom),
+				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
 				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
-				"--sub-period-type=invalid",
-				"--sub-periods=10",
-				"--start-time=2022-05-10T12:30:31+07:00",
+				"--reward-period-days=365",
+				"--claim-period-days=10",
+				"--start-time=2022-05-10",
+				"--expire-days=-1",
+				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
 			true,
-			"sub period type invalid does not exist",
+			"invalid argument \"-1\" for \"--expire-days\" flag: strconv.ParseUint: parsing \"-1\": invalid syntax",
+			0,
+		},
+		{"add reward program tx - invalid reward period days",
+			[]string{
+				"add-reward-program",
+				"test add reward program",
+				"description",
+				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
+				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
+				"--reward-period-days=-365",
+				"--claim-period-days=10",
+				"--start-time=2022-05-10",
+				"--expire-days=1",
+				fmt.Sprintf("--qualifying-actions=%s", actions),
+			},
+			true,
+			"invalid argument \"-365\" for \"--reward-period-days\" flag: strconv.ParseUint: parsing \"-365\": invalid syntax",
 			0,
 		},
 		{"add reward program tx - invalid start time",
@@ -493,14 +525,16 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				"add-reward-program",
 				"test add reward program",
 				"description",
-				fmt.Sprintf("--coin=580%s", s.cfg.BondDenom),
+				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
 				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
-				"--sub-period-type=day",
-				"--sub-periods=10",
+				"--reward-period-days=365",
+				"--claim-period-days=10",
 				"--start-time=invalid",
+				"--expire-days=14",
+				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
 			true,
-			"parsing time \"invalid\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"invalid\" as \"2006\"",
+			"error parsing start date must be of format YYYY-MM-dd: invalid",
 			0,
 		},
 		{"add reward program tx - invalid ec",
@@ -508,14 +542,16 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				"add-reward-program",
 				"test add reward program",
 				"description",
-				fmt.Sprintf("--coin=580%s", s.cfg.BondDenom),
+				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
 				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
-				"--sub-period-type=day",
-				"--sub-periods=10",
-				"--start-time=2022-05-10T12:30:31+07:00",
+				"--reward-period-days=365",
+				"--claim-period-days=10",
+				"--start-time=2022-05-10",
+				"--expire-days=14",
+				fmt.Sprintf("--qualifying-actions=%s", "actions"),
 			},
-			false,
-			"",
+			true,
+			"invalid character 'a' looking for beginning of value",
 			0,
 		},
 	}
