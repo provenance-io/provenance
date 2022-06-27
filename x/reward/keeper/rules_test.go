@@ -917,7 +917,7 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidRewardProgram() {
 		},
 	}
 
-	err := suite.app.RewardKeeper.RewardShares(suite.ctx, &rewardProgram, results)
+	err := suite.app.RewardKeeper.RewardShares(suite.ctx, nil, results)
 	share, _ := suite.app.RewardKeeper.GetShare(suite.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String())
 	suite.Assert().Error(err, "should return an error on invalid program")
 	suite.Assert().Equal(int64(0), share.Amount, "share amount should not increment")
