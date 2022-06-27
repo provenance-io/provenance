@@ -663,6 +663,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction()
 		time.Now(),
 		5,
 		5,
+		0,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -700,6 +701,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction()
 		time.Now(),
 		5,
 		5,
+		0,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -747,6 +749,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoQualifyingAction(
 		time.Now(),
 		5,
 		5,
+		0,
 		[]types.QualifyingAction{},
 	)
 
@@ -772,6 +775,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoMatchingQualifyin
 		time.Now(),
 		5,
 		5,
+		0,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -806,6 +810,7 @@ func (suite *KeeperTestSuite) TestRewardSharesSingle() {
 		time.Now(),
 		5,
 		5,
+		0,
 		[]types.QualifyingAction{},
 	)
 
@@ -846,6 +851,7 @@ func (suite *KeeperTestSuite) TestRewardSharesMultiple() {
 		time.Now(),
 		5,
 		5,
+		0,
 		[]types.QualifyingAction{},
 	)
 
@@ -894,6 +900,7 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidRewardProgram() {
 		time.Now(),
 		5,
 		5,
+		0,
 		[]types.QualifyingAction{},
 	)
 
@@ -929,6 +936,7 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidAddress() {
 		time.Now(),
 		5,
 		5,
+		0,
 		[]types.QualifyingAction{},
 	)
 

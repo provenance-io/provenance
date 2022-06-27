@@ -92,6 +92,7 @@ func (s *KeeperTestSuite) TestDelegateAgainstInactiveRewardPrograms() {
 		now,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -159,6 +160,7 @@ func (s *KeeperTestSuite) TestNonDelegateAgainstRewardProgram() {
 		now,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -264,6 +266,7 @@ func (s *KeeperTestSuite) TestSingleDelegate() {
 		now,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -328,6 +331,7 @@ func (s *KeeperTestSuite) TestMultipleDelegate() {
 		now,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -393,6 +397,7 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumActions() {
 		now,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -458,6 +463,7 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumActions() {
 		now,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -523,6 +529,7 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumDelegation() {
 		now,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -588,6 +595,7 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumDelegation() {
 		now,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -653,6 +661,7 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumPercentile() {
 		now,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -718,6 +727,7 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumPercentile() {
 		now,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{

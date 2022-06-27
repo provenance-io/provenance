@@ -23,6 +23,7 @@ func (suite *KeeperTestSuite) TestStartRewardProgram() {
 		currentTime,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	programBalance := types.NewRewardProgramBalance(program.GetId(), program.GetTotalRewardPool())
@@ -92,6 +93,7 @@ func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriod() {
 		currentTime,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	programBalance := types.NewRewardProgramBalance(program.GetId(), program.GetTotalRewardPool())
@@ -126,6 +128,7 @@ func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriodDoesNotExceedBala
 		currentTime,
 		60*60,
 		4,
+		0,
 		[]types.QualifyingAction{},
 	)
 	programBalance := types.NewRewardProgramBalance(program.GetId(), sdk.NewInt64Coin("nhash", 20))
@@ -158,6 +161,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgram() {
 		currentTime,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 
@@ -308,6 +312,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesInvalidLooku
 		currentTime,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -320,6 +325,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesInvalidLooku
 		currentTime,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -332,6 +338,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesInvalidLooku
 		currentTime,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	programBalance2 := types.NewRewardProgramBalance(program2.GetId(), program2.GetTotalRewardPool())
@@ -373,6 +380,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEnd() {
 		currentTime,
 		60*60,
 		2,
+		0,
 		[]types.QualifyingAction{},
 	)
 	share := types.NewShare(1, 1, "address1", false, time.Time{}, 1)
@@ -414,8 +422,22 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransition() {
 		currentTime,
 		60*60,
 		2,
+		0,
 		[]types.QualifyingAction{},
 	)
+
+	title string,
+	description string,
+	id uint64,
+	distributeFromAddress string,
+	totalRewardPool sdk.Coin,
+	maxRewardByAddress sdk.Coin,
+	programStartTime time.Time,
+	subPeriodSeconds uint64,
+	subPeriods uint64,
+	shareExpirationOffset uint64,
+	qualifyingActions []QualifyingAction,
+
 	programBalance := types.NewRewardProgramBalance(program.GetId(), program.GetTotalRewardPool())
 	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
 
@@ -458,6 +480,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransitionExpired()
 		currentTime,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	programBalance := types.NewRewardProgramBalance(program.GetId(), program.GetTotalRewardPool())
@@ -491,6 +514,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndNoBalance() {
 		currentTime,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	programBalance := types.NewRewardProgramBalance(program.GetId(), program.GetTotalRewardPool())
@@ -536,6 +560,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRollo
 		currentTime,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	hasShares.State = types.RewardProgram_FINISHED
@@ -550,6 +575,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRollo
 		currentTime,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	hasExpiredShares.State = types.RewardProgram_FINISHED
@@ -564,6 +590,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRollo
 		currentTime,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	hasNoShares.State = types.RewardProgram_FINISHED
@@ -578,6 +605,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRollo
 		currentTime,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 
@@ -625,6 +653,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRollo
 		blockTime.Add(time.Duration(time.Hour)),
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 
@@ -639,6 +668,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRollo
 		blockTime,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 
@@ -653,6 +683,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRollo
 		blockTime,
 		uint64(time.Hour),
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &nextClaimPeriod)
@@ -669,6 +700,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRollo
 		blockTime,
 		uint64(time.Hour),
 		1,
+		0,
 		[]types.QualifyingAction{},
 	)
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &ending)

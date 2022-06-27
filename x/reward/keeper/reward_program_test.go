@@ -22,6 +22,7 @@ func (suite *KeeperTestSuite) TestNewRewardProgram() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 
@@ -51,6 +52,7 @@ func (suite *KeeperTestSuite) TestGetSetRewardProgram() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 
@@ -85,6 +87,7 @@ func (suite *KeeperTestSuite) TestRemoveValidRewardProgram() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 
@@ -117,6 +120,7 @@ func (suite *KeeperTestSuite) TestIterateRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -129,6 +133,7 @@ func (suite *KeeperTestSuite) TestIterateRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -141,6 +146,7 @@ func (suite *KeeperTestSuite) TestIterateRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 
@@ -170,6 +176,7 @@ func (suite *KeeperTestSuite) TestIterateRewardProgramsHalt() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -182,6 +189,7 @@ func (suite *KeeperTestSuite) TestIterateRewardProgramsHalt() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -194,6 +202,7 @@ func (suite *KeeperTestSuite) TestIterateRewardProgramsHalt() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 
@@ -236,6 +245,7 @@ func (suite *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -248,6 +258,7 @@ func (suite *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -260,6 +271,7 @@ func (suite *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program2.State = types.RewardProgram_STARTED
@@ -296,6 +308,7 @@ func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -308,6 +321,7 @@ func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -320,6 +334,7 @@ func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program2.State = types.RewardProgram_STARTED
@@ -355,6 +370,7 @@ func (suite *KeeperTestSuite) TestGetAllRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -367,6 +383,7 @@ func (suite *KeeperTestSuite) TestGetAllRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -379,6 +396,7 @@ func (suite *KeeperTestSuite) TestGetAllRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program2.State = types.RewardProgram_STARTED
@@ -416,6 +434,7 @@ func (suite *KeeperTestSuite) TestRewardProgramIsValidOnValid() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	suite.Assert().True(suite.app.RewardKeeper.RewardProgramIsValid(&program), "valid should be true when reward program is valid")
@@ -434,6 +453,7 @@ func (suite *KeeperTestSuite) TestRewardProgramIsValidOnInvalid() {
 		time,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	suite.Assert().False(suite.app.RewardKeeper.RewardProgramIsValid(&program), "valid should be false when reward program is invalid")
@@ -452,6 +472,7 @@ func (suite *KeeperTestSuite) TestRemoveDeadPrograms() {
 		currentTime,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -464,6 +485,7 @@ func (suite *KeeperTestSuite) TestRemoveDeadPrograms() {
 		currentTime.Add(time.Hour),
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -476,6 +498,7 @@ func (suite *KeeperTestSuite) TestRemoveDeadPrograms() {
 		currentTime,
 		60*60,
 		3,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program1.State = types.RewardProgram_FINISHED

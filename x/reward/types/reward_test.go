@@ -197,7 +197,7 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				sdk.NewInt64Coin("jackthecat", 2),
 				now,
 				1,
-				1,
+				0,
 				1,
 				[]QualifyingAction{},
 			),
