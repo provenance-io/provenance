@@ -426,18 +426,6 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransition() {
 		[]types.QualifyingAction{},
 	)
 
-	title string,
-	description string,
-	id uint64,
-	distributeFromAddress string,
-	totalRewardPool sdk.Coin,
-	maxRewardByAddress sdk.Coin,
-	programStartTime time.Time,
-	subPeriodSeconds uint64,
-	subPeriods uint64,
-	shareExpirationOffset uint64,
-	qualifyingActions []QualifyingAction,
-
 	programBalance := types.NewRewardProgramBalance(program.GetId(), program.GetTotalRewardPool())
 	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
 
