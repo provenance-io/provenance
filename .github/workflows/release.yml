@@ -77,25 +77,9 @@ jobs:
           go-version: ${{ needs.build_init.outputs.go_version }}
       - name: Build osx binary
         run: |
-          make WITH_CLEVELDB=false WITH_ROCKSDB=false VERSION=${{ needs.build_init.outputs.version }} build-release-bin build-release-libwasm
+          make WITH_CLEVELDB=false WITH_ROCKSDB=false VERSION=${{ needs.build_init.outputs.version }} build-release-zip
       - name: Provenanced version
         run: build/provenanced version --long
-      - name: Import Code-Signing Certificates
-        uses: Apple-Actions/import-codesign-certs@v1
-        with:
-          p12-file-base64: ${{ secrets.CODESIGNING_P12_BASE64 }}
-          p12-password: ${{ secrets.CODESIGNING_P12_PASSWORD }}
-      - name: Sign the mac binaries with Gon
-        # TODO: Remove this if line before final release. This is just a temporary workaround because notorization is failing auth.
-        if: true == false
-        env:
-          AC_USERNAME: ${{ secrets.AC_USERNAME }}
-          AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
-        run: |
-          gon -log-level=info -log-json ./gon.json
-      - name: Fix zip structure for cosmovisor
-        run: |
-          make VERSION=${{ needs.build_init.outputs.version }} build-release-rezip
       - uses: actions/upload-artifact@v3
         with:
           name: osx-zip
