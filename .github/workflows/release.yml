@@ -53,13 +53,6 @@ jobs:
           echo "::set-output name=version::$version"
           echo "::set-output name=is_release::$is_release"
           echo "::set-output name=prerelease::$prerelease"
-      - name: Get AC_USERNAME
-        env:
-          AC_USERNAME: ${{ secrets.AC_USERNAME }}
-          AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
-        run: |
-          sed -E 's/(.)/[\1]/g' <<< "$AC_USERNAME"
-          sed -E 's/(.)/[\1]/g' <<< "$AC_PASSWORD"
     outputs:
       version: ${{ steps.vars.outputs.version }}
       is_release: ${{ steps.vars.outputs.is_release }}
