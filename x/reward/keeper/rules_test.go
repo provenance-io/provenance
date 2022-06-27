@@ -270,7 +270,7 @@ func (m MockAction) ActionType() string {
 	return ""
 }
 
-func (m MockAction) Evaluate(ctx sdk.Context, provider types.KeeperProvider, state types.AccountState, event types.EvaluationResult) bool {
+func (m MockAction) Evaluate(ctx sdk.Context, provider types.KeeperProvider, state types.RewardAccountState, event types.EvaluationResult) bool {
 	return m.PassEvaluate
 }
 
@@ -444,7 +444,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluatePasses() {
 	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
-	state := types.NewAccountState(0, 0, "")
+	state := types.NewRewardAccountState(0, 0, "")
 	state.ActionCounter += 1
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
@@ -472,7 +472,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActionsN
 	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
-	state := types.NewAccountState(0, 0, "")
+	state := types.NewRewardAccountState(0, 0, "")
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
 	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
@@ -499,7 +499,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumActionsN
 	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
-	state := types.NewAccountState(0, 0, "")
+	state := types.NewRewardAccountState(0, 0, "")
 	state.ActionCounter += 3
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
@@ -527,7 +527,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegati
 	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
-	state := types.NewAccountState(0, 0, "")
+	state := types.NewRewardAccountState(0, 0, "")
 	state.ActionCounter += 1
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
@@ -555,7 +555,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumDelegati
 	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
-	state := types.NewAccountState(0, 0, "")
+	state := types.NewRewardAccountState(0, 0, "")
 	state.ActionCounter += 1
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
@@ -583,7 +583,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActiveSt
 	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
-	state := types.NewAccountState(0, 0, "")
+	state := types.NewRewardAccountState(0, 0, "")
 	state.ActionCounter += 1
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
@@ -611,7 +611,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegati
 	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
-	state := types.NewAccountState(0, 0, "")
+	state := types.NewRewardAccountState(0, 0, "")
 	state.ActionCounter += 1
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
@@ -832,7 +832,7 @@ func (suite *KeeperTestSuite) TestRewardSharesSingle() {
 	suite.Assert().NoError(err, "should return no error on success")
 	suite.Assert().Equal(int64(1), share.Amount, "share amount should increment")
 	suite.Assert().Equal(rewardProgram.GetId(), share.GetRewardProgramId(), "reward program id should match")
-	suite.Assert().Equal(rewardProgram.GetCurrentClaimPeriod(), share.GetSubPeriodId(), "sub period id should match")
+	suite.Assert().Equal(rewardProgram.GetCurrentClaimPeriod(), share.GetClaimPeriodId(), "sub period id should match")
 	suite.Assert().Equal(delegator.String(), share.GetAddress(), "address should match delegator")
 	suite.Assert().Equal(false, share.GetClaimed(), "claimed should be set to false")
 	suite.Assert().Equal(rewardProgram.GetClaimPeriodEndTime().Add(time.Duration(rewardProgram.GetShareExpirationOffset())), share.GetExpireTime(), "expiration time should match sub period end time + offset")
@@ -881,7 +881,7 @@ func (suite *KeeperTestSuite) TestRewardSharesMultiple() {
 	suite.Assert().NoError(err, "should return no error on success")
 	suite.Assert().Equal(int64(2), share.Amount, "share amount should increment")
 	suite.Assert().Equal(rewardProgram.GetId(), share.GetRewardProgramId(), "reward program id should match")
-	suite.Assert().Equal(rewardProgram.GetCurrentClaimPeriod(), share.GetSubPeriodId(), "sub period id should match")
+	suite.Assert().Equal(rewardProgram.GetCurrentClaimPeriod(), share.GetClaimPeriodId(), "sub period id should match")
 	suite.Assert().Equal(delegator.String(), share.GetAddress(), "address should match delegator")
 	suite.Assert().Equal(false, share.GetClaimed(), "claimed should be set to false")
 	suite.Assert().Equal(rewardProgram.GetClaimPeriodEndTime().Add(time.Duration(rewardProgram.GetShareExpirationOffset())), share.GetExpireTime(), "expiration time should match sub period end time + offset")

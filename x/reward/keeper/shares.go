@@ -42,7 +42,7 @@ func (k Keeper) CleanupRewardProgramShares(ctx sdk.Context, rewardProgram *types
 
 	// Remove all the dead shares
 	for _, share := range deadShares {
-		k.RemoveShare(ctx, share.RewardProgramId, share.SubPeriodId, share.Address)
+		k.RemoveShare(ctx, share.RewardProgramId, share.ClaimPeriodId, share.Address)
 	}
 
 	return nil
@@ -82,7 +82,7 @@ func (k Keeper) GetRewardClaimPeriodShares(ctx sdk.Context, rewardProgramID, rew
 func (k Keeper) SetShare(ctx sdk.Context, share *types.Share) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(share)
-	key := types.GetShareKey(share.GetRewardProgramId(), share.GetSubPeriodId(), []byte(share.GetAddress()))
+	key := types.GetShareKey(share.GetRewardProgramId(), share.GetClaimPeriodId(), []byte(share.GetAddress()))
 	store.Set(key, bz)
 }
 

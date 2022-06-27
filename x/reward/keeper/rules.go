@@ -75,16 +75,16 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 	}
 
 	for _, action := range actions {
-		// Get the AccountState for the triggering account
-		var state types.AccountState
+		// Get the RewardAccountState for the triggering account
+		var state types.RewardAccountState
 
 		// TODO Move this into the action's Pre-evaluate
-		state, err := k.GetAccountState(ctx, program.GetId(), program.GetCurrentClaimPeriod(), action.Address.String())
+		state, err := k.GetRewardAccountState(ctx, program.GetId(), program.GetCurrentClaimPeriod(), action.Address.String())
 		if err != nil {
 			continue
 		}
 		state.ActionCounter++
-		k.SetAccountState(ctx, &state)
+		k.SetRewardAccountState(ctx, &state)
 
 		// TODO We want to create an Evaluation Result here.
 		// TODO We can get the share amount from the action

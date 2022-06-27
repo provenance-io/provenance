@@ -108,12 +108,12 @@ message ClaimPeriodRewardDistribution {
   bool  claim_period_ended = 6; // A flag representing if the claim period for this reward has ended
 }
 
-message AccountState {
+message RewardAccountState {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
   uint64 reward_program_id = 1; // The id of the reward program that this share belongs to
-  uint64 sub_period_id     = 2; // The id of the sub period that the share belongs to
+  uint64 claim_period_id   = 2; // The id of the claim period that the share belongs to
   string address           = 3 [(gogoproto.moretags) = "yaml:\"address\""]; // Owner of the share
   uint64 action_counter    = 4; // The number of actions done by this account
 }
@@ -125,7 +125,7 @@ message Share {
   option (gogoproto.goproto_stringer) = false;
 
   uint64 reward_program_id = 1; // The id of the reward program that this share belongs to
-  uint64 sub_period_id     = 2; // The id of the sub period that the share belongs to
+  uint64 claim_period_id   = 2; // The id of the claim period that the share belongs to
   string address           = 3 [(gogoproto.moretags) = "yaml:\"address\""]; // Owner of the share
   bool   claimed           = 4;                                             // Remove this
 

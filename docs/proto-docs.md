@@ -381,12 +381,12 @@
     - [Msg](#provenance.name.v1.Msg)
   
 - [provenance/reward/v1/reward.proto](#provenance/reward/v1/reward.proto)
-    - [AccountState](#provenance.reward.v1.AccountState)
     - [ActionDelegate](#provenance.reward.v1.ActionDelegate)
     - [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations)
     - [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution)
     - [QualifyingAction](#provenance.reward.v1.QualifyingAction)
     - [QualifyingActions](#provenance.reward.v1.QualifyingActions)
+    - [RewardAccountState](#provenance.reward.v1.RewardAccountState)
     - [RewardProgram](#provenance.reward.v1.RewardProgram)
     - [RewardProgramBalance](#provenance.reward.v1.RewardProgramBalance)
     - [Share](#provenance.reward.v1.Share)
@@ -5795,24 +5795,6 @@ Msg defines the bank Msg service.
 
 
 
-<a name="provenance.reward.v1.AccountState"></a>
-
-### AccountState
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this share belongs to |
-| `sub_period_id` | [uint64](#uint64) |  | The id of the sub period that the share belongs to |
-| `address` | [string](#string) |  | Owner of the share |
-| `action_counter` | [uint64](#uint64) |  | The number of actions done by this account |
-
-
-
-
-
-
 <a name="provenance.reward.v1.ActionDelegate"></a>
 
 ### ActionDelegate
@@ -5899,6 +5881,24 @@ Reward Program Id + Claim Period Id
 
 
 
+<a name="provenance.reward.v1.RewardAccountState"></a>
+
+### RewardAccountState
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this share belongs to |
+| `claim_period_id` | [uint64](#uint64) |  | The id of the claim period that the share belongs to |
+| `address` | [string](#string) |  | Owner of the share |
+| `action_counter` | [uint64](#uint64) |  | The number of actions done by this account |
+
+
+
+
+
+
 <a name="provenance.reward.v1.RewardProgram"></a>
 
 ### RewardProgram
@@ -5960,7 +5960,7 @@ Reward Program Id + Reward Claim Period Id + Address
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this share belongs to |
-| `sub_period_id` | [uint64](#uint64) |  | The id of the sub period that the share belongs to |
+| `claim_period_id` | [uint64](#uint64) |  | The id of the claim period that the share belongs to |
 | `address` | [string](#string) |  | Owner of the share |
 | `claimed` | [bool](#bool) |  | Remove this |
 | `expire_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Remove this |
