@@ -53,6 +53,13 @@ jobs:
           echo "::set-output name=version::$version"
           echo "::set-output name=is_release::$is_release"
           echo "::set-output name=prerelease::$prerelease"
+      - name: Get AC_USERNAME
+        env:
+          AC_USERNAME: ${{ secrets.AC_USERNAME }}
+          AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
+        run: |
+          sed -E 's/(.)/[\1]/g' <<< "$AC_USERNAME"
+          sed -E 's/(.)/[\1]/g' <<< "$AC_PASSWORD"
     outputs:
       version: ${{ steps.vars.outputs.version }}
       is_release: ${{ steps.vars.outputs.is_release }}
@@ -71,10 +78,6 @@ jobs:
         run: |
           brew tap mitchellh/gon
           brew install mitchellh/gon/gon
-      - name: Get AC_USERNAME
-        env:
-          AC_USERNAME: ${{ secrets.AC_USERNAME }}
-        run: sed -E 's/(.)/[\1]/g' <<< "$AC_USERNAME"
       - name: Setup go
         uses: actions/setup-go@v3
         with:
@@ -91,8 +94,8 @@ jobs:
           p12-password: ${{ secrets.CODESIGNING_P12_PASSWORD }}
       - name: Sign the mac binaries with Gon
         env:
-          AC_USERNAME: ${{ secrets.AC_USERNAME }}
-          AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
+          AC_PASSWORD: ${{ secrets.AC_USERNAME }}
+          AC_USERNAME: ${{ secrets.AC_PASSWORD }}
         run: |
           gon -log-level=info -log-json ./gon.json
       - name: Fix zip structure for cosmovisor
