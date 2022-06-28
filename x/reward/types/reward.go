@@ -140,7 +140,8 @@ func (rp *RewardProgram) IsEndingClaimPeriod(ctx sdk.Context) bool {
 func (rp *RewardProgram) IsEnding(ctx sdk.Context, programBalance RewardProgramBalance) bool {
 	blockTime := ctx.BlockTime()
 	isProgramExpired := !rp.GetExpectedProgramEndTime().IsZero() && (blockTime.After(rp.ExpectedProgramEndTime) || blockTime.Equal(rp.ExpectedProgramEndTime))
-	return rp.State == RewardProgram_STARTED && (isProgramExpired || programBalance.IsEmpty())
+	canRollover := programBalance.GetBalance().IsGTE(rp.GetMinimumRolloverAmount())
+	return rp.State == RewardProgram_STARTED && (isProgramExpired || !canRollover)
 }
 
 func (rp *RewardProgram) ValidateBasic() error {
