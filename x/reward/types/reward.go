@@ -368,8 +368,8 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 
 	hasValidActionCount := state.ActionCounter >= ad.GetMinimumActions() && state.ActionCounter <= ad.GetMaximumActions()
 
-	// TODO Is this correct to round the tokens?
-	delegatedHash := sdk.NewInt64Coin("nhash", tokens.RoundInt64())
+	// TODO Is this correct to truncate the tokens?
+	delegatedHash := sdk.NewInt64Coin("nhash", tokens.TruncateInt64())
 	minDelegation := ad.GetMinimumDelegationAmount()
 	maxDelegation := ad.GetMaximumDelegationAmount()
 	minPercentile := ad.GetMinimumActiveStakePercentile()
