@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/reward/types"
@@ -21,43 +19,6 @@ func (k Keeper) RemoveShare(ctx sdk.Context, rewardProgramID, subPeriod uint64, 
 		store.Delete(key)
 	}
 	return keyExists
-}
-
-// Clean up the shared and expired shares
-func (k Keeper) CleanupRewardProgramShares(ctx sdk.Context, rewardProgram *types.RewardProgram) (err error) {
-	blockTime := ctx.BlockTime()
-	var deadShares []types.Share
-
-	// Find all the dead shares
-	err = k.IterateRewardShares(ctx, rewardProgram.Id, func(share types.Share) (stop bool) {
-		// Share has been claimed or expired we can remove it
-		if share.Claimed || blockTime.After(share.ExpireTime) || blockTime.Equal(share.ExpireTime) {
-			deadShares = append(deadShares, share)
-		}
-		return false
-	})
-	if err != nil {
-		return err
-	}
-
-	// Remove all the dead shares
-	for _, share := range deadShares {
-		k.RemoveShare(ctx, share.RewardProgramId, share.ClaimPeriodId, share.Address)
-	}
-
-	return nil
-}
-
-// Clean up the shared and expired shares
-func (k Keeper) RemoveDeadShares(ctx sdk.Context) (err error) {
-	err = k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
-		err := k.CleanupRewardProgramShares(ctx, &rewardProgram)
-		if err != nil {
-			ctx.Logger().Info(fmt.Sprintf("NOTICE: RemoveDeadShares - error cleaning up shares for reward program %d: %v ", rewardProgram.Id, err))
-		}
-		return false
-	})
-	return err
 }
 
 func (k Keeper) GetShare(ctx sdk.Context, rewardProgramID, rewardClaimPeriod uint64, addr string) (share types.Share, err error) {

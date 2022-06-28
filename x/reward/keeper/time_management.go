@@ -28,12 +28,7 @@ func (k Keeper) Update(ctx sdk.Context) {
 }
 
 func (k Keeper) Cleanup(ctx sdk.Context) {
-	err := k.RemoveDeadShares(ctx)
-	if err != nil {
-		ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - error removing dead shares: %v ", err))
-	}
-
-	err = k.RemoveDeadPrograms(ctx)
+	err := k.RemoveDeadPrograms(ctx)
 	if err != nil {
 		ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - error removing dead reward programs: %v ", err))
 	}

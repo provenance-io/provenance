@@ -5962,9 +5962,7 @@ Reward Program Id + Reward Claim Period Id + Address
 | `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this share belongs to |
 | `claim_period_id` | [uint64](#uint64) |  | The id of the claim period that the share belongs to |
 | `address` | [string](#string) |  | Owner of the share |
-| `claimed` | [bool](#bool) |  | Remove this |
-| `expire_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Remove this |
-| `amount` | [int64](#int64) |  |  |
+| `amount` | [int64](#int64) |  | The amount of granted shares for the address |
 
 
 

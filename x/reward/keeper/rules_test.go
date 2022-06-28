@@ -834,8 +834,6 @@ func (suite *KeeperTestSuite) TestRewardSharesSingle() {
 	suite.Assert().Equal(rewardProgram.GetId(), share.GetRewardProgramId(), "reward program id should match")
 	suite.Assert().Equal(rewardProgram.GetCurrentClaimPeriod(), share.GetClaimPeriodId(), "sub period id should match")
 	suite.Assert().Equal(delegator.String(), share.GetAddress(), "address should match delegator")
-	suite.Assert().Equal(false, share.GetClaimed(), "claimed should be set to false")
-	suite.Assert().Equal(rewardProgram.GetClaimPeriodEndTime().Add(time.Duration(rewardProgram.GetShareExpirationOffset())), share.GetExpireTime(), "expiration time should match sub period end time + offset")
 }
 
 func (suite *KeeperTestSuite) TestRewardSharesMultiple() {
@@ -883,8 +881,6 @@ func (suite *KeeperTestSuite) TestRewardSharesMultiple() {
 	suite.Assert().Equal(rewardProgram.GetId(), share.GetRewardProgramId(), "reward program id should match")
 	suite.Assert().Equal(rewardProgram.GetCurrentClaimPeriod(), share.GetClaimPeriodId(), "sub period id should match")
 	suite.Assert().Equal(delegator.String(), share.GetAddress(), "address should match delegator")
-	suite.Assert().Equal(false, share.GetClaimed(), "claimed should be set to false")
-	suite.Assert().Equal(rewardProgram.GetClaimPeriodEndTime().Add(time.Duration(rewardProgram.GetShareExpirationOffset())), share.GetExpireTime(), "expiration time should match sub period end time + offset")
 }
 
 func (suite *KeeperTestSuite) TestRewardSharesInvalidRewardProgram() {

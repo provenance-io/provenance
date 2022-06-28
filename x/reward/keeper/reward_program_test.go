@@ -509,7 +509,7 @@ func (suite *KeeperTestSuite) TestRemoveDeadPrograms() {
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program3)
 
-	share1 := types.NewShare(1, 1, "address", false, currentTime.Add(time.Hour*2), 1)
+	share1 := types.NewShare(1, 1, "address", 1)
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
 
 	err := suite.app.RewardKeeper.RemoveDeadPrograms(suite.ctx)

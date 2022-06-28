@@ -239,13 +239,11 @@ func (s *RewardAccountState) String() string {
 
 // ============ Share ============
 
-func NewShare(rewardProgramID, claimPeriodId uint64, address string, claimed bool, expireTime time.Time, amount int64) Share {
+func NewShare(rewardProgramID, claimPeriodId uint64, address string, amount int64) Share {
 	return Share{
 		RewardProgramId: rewardProgramID,
 		ClaimPeriodId:   claimPeriodId,
 		Address:         address,
-		Claimed:         claimed,
-		ExpireTime:      expireTime,
 		Amount:          amount,
 	}
 }

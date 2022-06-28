@@ -1,42 +1,32 @@
 package keeper_test
 
 import (
-	"google.golang.org/protobuf/types/known/timestamppb"
-
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
 func (suite *KeeperTestSuite) TestNewShare() {
 	suite.SetupTest()
 
-	time := timestamppb.Now().AsTime()
 	share := types.NewShare(
 		1,
 		2,
 		"test",
-		true,
-		time,
 		5,
 	)
 
 	suite.Assert().Equal(uint64(1), share.GetRewardProgramId(), "reward program id must match")
 	suite.Assert().Equal(uint64(2), share.GetClaimPeriodId(), "sub period id must match")
 	suite.Assert().Equal("test", share.GetAddress(), "address must match")
-	suite.Assert().Equal(true, share.GetClaimed(), "claim status must match")
-	suite.Assert().Equal(time, share.GetExpireTime(), "expiration time must match")
 	suite.Assert().Equal(int64(5), share.GetAmount(), "share amount must match")
 }
 
 func (suite *KeeperTestSuite) TestGetSetShare() {
 	suite.SetupTest()
 
-	time := timestamppb.Now().AsTime()
 	expectedShare := types.NewShare(
 		1,
 		2,
 		"test",
-		true,
-		time,
 		5,
 	)
 
@@ -50,8 +40,6 @@ func (suite *KeeperTestSuite) TestGetSetShare() {
 	suite.Assert().Equal(expectedShare.GetRewardProgramId(), actualShare.GetRewardProgramId(), "reward program id must match")
 	suite.Assert().Equal(expectedShare.GetClaimPeriodId(), actualShare.GetClaimPeriodId(), "sub period id must match")
 	suite.Assert().Equal(expectedShare.GetAddress(), actualShare.GetAddress(), "address must match")
-	suite.Assert().Equal(expectedShare.GetClaimed(), actualShare.GetClaimed(), "claim status must match")
-	suite.Assert().Equal(expectedShare.GetExpireTime(), actualShare.GetExpireTime(), "expiration time must match")
 	suite.Assert().Equal(expectedShare.GetAmount(), actualShare.GetAmount(), "share amount must match")
 }
 
@@ -70,13 +58,10 @@ func (suite *KeeperTestSuite) TestGetInvalidShare() {
 func (suite *KeeperTestSuite) TestRemoveValidShare() {
 	suite.SetupTest()
 
-	time := timestamppb.Now().AsTime()
 	expectedShare := types.NewShare(
 		1,
 		2,
 		"test",
-		true,
-		time,
 		5,
 	)
 
@@ -99,13 +84,10 @@ func (suite *KeeperTestSuite) TestRemoveValidShare() {
 func (suite *KeeperTestSuite) TestRemoveInvalidShare() {
 	suite.SetupTest()
 
-	time := timestamppb.Now().AsTime()
 	expectedShare := types.NewShare(
 		1,
 		2,
 		"test",
-		true,
-		time,
 		5,
 	)
 
@@ -120,12 +102,11 @@ func (suite *KeeperTestSuite) TestRemoveInvalidShare() {
 func (suite *KeeperTestSuite) TestIterateShares() {
 	suite.SetupTest()
 
-	time := timestamppb.Now().AsTime()
-	share1 := types.NewShare(1, 2, "test", true, time, 5)
-	share2 := types.NewShare(1, 3, "test", true, time, 5)
-	share3 := types.NewShare(2, 1, "test", true, time, 5)
-	share4 := types.NewShare(2, 2, "test", true, time, 5)
-	share5 := types.NewShare(2, 2, "test2", true, time, 5)
+	share1 := types.NewShare(1, 2, "test", 5)
+	share2 := types.NewShare(1, 3, "test", 5)
+	share3 := types.NewShare(2, 1, "test", 5)
+	share4 := types.NewShare(2, 2, "test", 5)
+	share5 := types.NewShare(2, 2, "test2", 5)
 
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share2)
@@ -145,12 +126,11 @@ func (suite *KeeperTestSuite) TestIterateShares() {
 func (suite *KeeperTestSuite) TestIterateSharesHalt() {
 	suite.SetupTest()
 
-	time := timestamppb.Now().AsTime()
-	share1 := types.NewShare(1, 2, "test", true, time, 5)
-	share2 := types.NewShare(1, 3, "test", true, time, 5)
-	share3 := types.NewShare(2, 1, "test", true, time, 5)
-	share4 := types.NewShare(2, 2, "test", true, time, 5)
-	share5 := types.NewShare(2, 2, "test2", true, time, 5)
+	share1 := types.NewShare(1, 2, "test", 5)
+	share2 := types.NewShare(1, 3, "test", 5)
+	share3 := types.NewShare(2, 1, "test", 5)
+	share4 := types.NewShare(2, 2, "test", 5)
+	share5 := types.NewShare(2, 2, "test2", 5)
 
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share2)
@@ -183,12 +163,11 @@ func (suite *KeeperTestSuite) TestEmptyIterateShares() {
 func (suite *KeeperTestSuite) TestIterateRewardShares() {
 	suite.SetupTest()
 
-	time := timestamppb.Now().AsTime()
-	share1 := types.NewShare(1, 2, "test", true, time, 5)
-	share2 := types.NewShare(1, 3, "test", true, time, 5)
-	share3 := types.NewShare(2, 1, "test", true, time, 5)
-	share4 := types.NewShare(2, 2, "test", true, time, 5)
-	share5 := types.NewShare(2, 2, "test2", true, time, 5)
+	share1 := types.NewShare(1, 2, "test", 5)
+	share2 := types.NewShare(1, 3, "test", 5)
+	share3 := types.NewShare(2, 1, "test", 5)
+	share4 := types.NewShare(2, 2, "test", 5)
+	share5 := types.NewShare(2, 2, "test2", 5)
 
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share2)
@@ -208,10 +187,9 @@ func (suite *KeeperTestSuite) TestIterateRewardShares() {
 func (suite *KeeperTestSuite) TestEmptyIterateRewardShares() {
 	suite.SetupTest()
 
-	time := timestamppb.Now().AsTime()
-	share3 := types.NewShare(2, 1, "test", true, time, 5)
-	share4 := types.NewShare(2, 2, "test", true, time, 5)
-	share5 := types.NewShare(2, 2, "test2", true, time, 5)
+	share3 := types.NewShare(2, 1, "test", 5)
+	share4 := types.NewShare(2, 2, "test", 5)
+	share5 := types.NewShare(2, 2, "test2", 5)
 
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share3)
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share4)
@@ -229,12 +207,11 @@ func (suite *KeeperTestSuite) TestEmptyIterateRewardShares() {
 func (suite *KeeperTestSuite) TestIterateRewardSharesHalt() {
 	suite.SetupTest()
 
-	time := timestamppb.Now().AsTime()
-	share1 := types.NewShare(1, 2, "test", true, time, 5)
-	share2 := types.NewShare(1, 3, "test", true, time, 5)
-	share3 := types.NewShare(2, 1, "test", true, time, 5)
-	share4 := types.NewShare(2, 2, "test", true, time, 5)
-	share5 := types.NewShare(2, 2, "test2", true, time, 5)
+	share1 := types.NewShare(1, 2, "test", 5)
+	share2 := types.NewShare(1, 3, "test", 5)
+	share3 := types.NewShare(2, 1, "test", 5)
+	share4 := types.NewShare(2, 2, "test", 5)
+	share5 := types.NewShare(2, 2, "test2", 5)
 
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share2)
@@ -254,12 +231,11 @@ func (suite *KeeperTestSuite) TestIterateRewardSharesHalt() {
 func (suite *KeeperTestSuite) TestIterateRewardClaimPeriodShares() {
 	suite.SetupTest()
 
-	time := timestamppb.Now().AsTime()
-	share1 := types.NewShare(1, 2, "test", true, time, 5)
-	share2 := types.NewShare(1, 3, "test", true, time, 5)
-	share3 := types.NewShare(2, 1, "test", true, time, 5)
-	share4 := types.NewShare(2, 2, "test", true, time, 5)
-	share5 := types.NewShare(2, 2, "test2", true, time, 5)
+	share1 := types.NewShare(1, 2, "test", 5)
+	share2 := types.NewShare(1, 3, "test", 5)
+	share3 := types.NewShare(2, 1, "test", 5)
+	share4 := types.NewShare(2, 2, "test", 5)
+	share5 := types.NewShare(2, 2, "test2", 5)
 
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share2)
@@ -279,12 +255,11 @@ func (suite *KeeperTestSuite) TestIterateRewardClaimPeriodShares() {
 func (suite *KeeperTestSuite) TestEmptyIterateRewardClaimPeriodShares() {
 	suite.SetupTest()
 
-	time := timestamppb.Now().AsTime()
-	share1 := types.NewShare(1, 2, "test", true, time, 5)
-	share2 := types.NewShare(1, 3, "test", true, time, 5)
-	share3 := types.NewShare(2, 1, "test", true, time, 5)
-	share4 := types.NewShare(2, 2, "test", true, time, 5)
-	share5 := types.NewShare(2, 2, "test2", true, time, 5)
+	share1 := types.NewShare(1, 2, "test", 5)
+	share2 := types.NewShare(1, 3, "test", 5)
+	share3 := types.NewShare(2, 1, "test", 5)
+	share4 := types.NewShare(2, 2, "test", 5)
+	share5 := types.NewShare(2, 2, "test2", 5)
 
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share2)
@@ -304,12 +279,11 @@ func (suite *KeeperTestSuite) TestEmptyIterateRewardClaimPeriodShares() {
 func (suite *KeeperTestSuite) TestIterateRewardSharesSubPeriodHalt() {
 	suite.SetupTest()
 
-	time := timestamppb.Now().AsTime()
-	share1 := types.NewShare(1, 2, "test", true, time, 5)
-	share2 := types.NewShare(1, 3, "test", true, time, 5)
-	share3 := types.NewShare(2, 1, "test", true, time, 5)
-	share4 := types.NewShare(2, 2, "test", true, time, 5)
-	share5 := types.NewShare(2, 2, "test2", true, time, 5)
+	share1 := types.NewShare(1, 2, "test", 5)
+	share2 := types.NewShare(1, 3, "test", 5)
+	share3 := types.NewShare(2, 1, "test", 5)
+	share4 := types.NewShare(2, 2, "test", 5)
+	share5 := types.NewShare(2, 2, "test2", 5)
 
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share2)
@@ -329,12 +303,11 @@ func (suite *KeeperTestSuite) TestIterateRewardSharesSubPeriodHalt() {
 func (suite *KeeperTestSuite) TestGetRewardClaimPeriodShares() {
 	suite.SetupTest()
 
-	time := timestamppb.Now().AsTime()
-	share1 := types.NewShare(1, 2, "test", true, time, 5)
-	share2 := types.NewShare(1, 3, "test", true, time, 5)
-	share3 := types.NewShare(2, 1, "test", true, time, 5)
-	share4 := types.NewShare(2, 2, "test", true, time, 5)
-	share5 := types.NewShare(2, 2, "test2", true, time, 5)
+	share1 := types.NewShare(1, 2, "test", 5)
+	share2 := types.NewShare(1, 3, "test", 5)
+	share3 := types.NewShare(2, 1, "test", 5)
+	share4 := types.NewShare(2, 2, "test", 5)
+	share5 := types.NewShare(2, 2, "test2", 5)
 
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share2)
@@ -351,12 +324,11 @@ func (suite *KeeperTestSuite) TestGetRewardClaimPeriodShares() {
 func (suite *KeeperTestSuite) TestGetRewardClaimPeriodSharesEmpty() {
 	suite.SetupTest()
 
-	time := timestamppb.Now().AsTime()
-	share1 := types.NewShare(1, 2, "test", true, time, 5)
-	share2 := types.NewShare(1, 3, "test", true, time, 5)
-	share3 := types.NewShare(2, 1, "test", true, time, 5)
-	share4 := types.NewShare(2, 2, "test", true, time, 5)
-	share5 := types.NewShare(2, 2, "test2", true, time, 5)
+	share1 := types.NewShare(1, 2, "test", 5)
+	share2 := types.NewShare(1, 3, "test", 5)
+	share3 := types.NewShare(2, 1, "test", 5)
+	share4 := types.NewShare(2, 2, "test", 5)
+	share5 := types.NewShare(2, 2, "test2", 5)
 
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share2)
