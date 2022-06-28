@@ -14,7 +14,7 @@ func (suite *KeeperTestSuite) TestNewRewardAccountState() {
 	)
 
 	suite.Assert().Equal(uint64(1), accountState.GetRewardProgramId(), "reward program id must match")
-	suite.Assert().Equal(uint64(2), accountState.GetClaimPeriodId(), "sub period id must match")
+	suite.Assert().Equal(uint64(2), accountState.GetClaimPeriodId(), "reward claim period id must match")
 	suite.Assert().Equal("test", accountState.GetAddress(), "address must match")
 	suite.Assert().Equal(uint64(0), accountState.GetActionCounter(), "action counter must match")
 }
@@ -36,7 +36,7 @@ func (suite *KeeperTestSuite) TestGetSetRewardAccountState() {
 
 	suite.Assert().Nil(err, "must not have error")
 	suite.Assert().Equal(expectedState.GetRewardProgramId(), actualState.GetRewardProgramId(), "reward program id must match")
-	suite.Assert().Equal(expectedState.GetClaimPeriodId(), actualState.GetClaimPeriodId(), "sub period id must match")
+	suite.Assert().Equal(expectedState.GetClaimPeriodId(), actualState.GetClaimPeriodId(), "reward claim period id must match")
 	suite.Assert().Equal(expectedState.GetAddress(), actualState.GetAddress(), "address must match")
 	suite.Assert().Equal(expectedState.GetActionCounter(), actualState.GetActionCounter(), "action counter must match")
 }

@@ -120,7 +120,7 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 
 		// Share does not exist so create one
 		if share.ValidateBasic() != nil {
-			ctx.Logger().Info(fmt.Sprintf("NOTICE: Creating new share structure for rewardProgramId=%d, subPeriod=%d, addr=%s",
+			ctx.Logger().Info(fmt.Sprintf("NOTICE: Creating new share structure for rewardProgramId=%d, claimPeriod=%d, addr=%s",
 				rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), res.Address.String()))
 
 			share = types.NewShare(
@@ -238,7 +238,7 @@ func logEvents(ctx sdk.Context) {
 	blockTime := ctx.BlockTime()
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: Block time: %v Size of events is %d", blockTime, len(history)))
 
-	// check if sub period has ended
+	// check if reward claim period has ended
 	for _, s := range ctx.EventManager().GetABCIEventHistory() {
 		// ctx.Logger().Info(fmt.Sprintf("events type is %s", s.Type))
 		ctx.Logger().Info(fmt.Sprintf("------- %s -------\n", s.Type))

@@ -105,8 +105,8 @@ func NewRewardProgram(
 	totalRewardPool sdk.Coin,
 	maxRewardByAddress sdk.Coin,
 	programStartTime time.Time,
-	subPeriodSeconds uint64,
-	subPeriods uint64,
+	claimPeriodSeconds uint64,
+	claimPeriods uint64,
 	shareExpirationOffset uint64,
 	qualifyingActions []QualifyingAction,
 ) RewardProgram {
@@ -118,8 +118,8 @@ func NewRewardProgram(
 		TotalRewardPool:       totalRewardPool,
 		MaxRewardByAddress:    maxRewardByAddress,
 		ProgramStartTime:      programStartTime,
-		ClaimPeriodSeconds:    subPeriodSeconds,
-		ClaimPeriods:          subPeriods,
+		ClaimPeriodSeconds:    claimPeriodSeconds,
+		ClaimPeriods:          claimPeriods,
 		ShareExpirationOffset: shareExpirationOffset,
 		State:                 RewardProgram_PENDING,
 		QualifyingActions:     qualifyingActions,
@@ -172,7 +172,7 @@ func (rp *RewardProgram) ValidateBasic() error {
 		return fmt.Errorf("reward program requires positive max reward by address: %v", rp.MaxRewardByAddress)
 	}
 	if rp.ClaimPeriods < 1 {
-		return errors.New("reward program number of sub periods must be larger than 0")
+		return errors.New("reward program number of claim periods must be larger than 0")
 	}
 
 	return nil
@@ -213,10 +213,10 @@ func (rpb *RewardProgramBalance) String() string {
 
 // ============ Account State ============
 
-func NewRewardAccountState(rewardProgramID, subPeriod uint64, address string) RewardAccountState {
+func NewRewardAccountState(rewardProgramID, rewardClaimPeriodId uint64, address string) RewardAccountState {
 	return RewardAccountState{
 		RewardProgramId: rewardProgramID,
-		ClaimPeriodId:   subPeriod,
+		ClaimPeriodId:   rewardClaimPeriodId,
 		Address:         address,
 		ActionCounter:   0,
 	}

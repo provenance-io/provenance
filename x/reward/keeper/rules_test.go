@@ -832,7 +832,7 @@ func (suite *KeeperTestSuite) TestRewardSharesSingle() {
 	suite.Assert().NoError(err, "should return no error on success")
 	suite.Assert().Equal(int64(1), share.Amount, "share amount should increment")
 	suite.Assert().Equal(rewardProgram.GetId(), share.GetRewardProgramId(), "reward program id should match")
-	suite.Assert().Equal(rewardProgram.GetCurrentClaimPeriod(), share.GetClaimPeriodId(), "sub period id should match")
+	suite.Assert().Equal(rewardProgram.GetCurrentClaimPeriod(), share.GetClaimPeriodId(), "reward claim period id should match")
 	suite.Assert().Equal(delegator.String(), share.GetAddress(), "address should match delegator")
 }
 
@@ -879,7 +879,7 @@ func (suite *KeeperTestSuite) TestRewardSharesMultiple() {
 	suite.Assert().NoError(err, "should return no error on success")
 	suite.Assert().Equal(int64(2), share.Amount, "share amount should increment")
 	suite.Assert().Equal(rewardProgram.GetId(), share.GetRewardProgramId(), "reward program id should match")
-	suite.Assert().Equal(rewardProgram.GetCurrentClaimPeriod(), share.GetClaimPeriodId(), "sub period id should match")
+	suite.Assert().Equal(rewardProgram.GetCurrentClaimPeriod(), share.GetClaimPeriodId(), "reward claim period id should match")
 	suite.Assert().Equal(delegator.String(), share.GetAddress(), "address should match delegator")
 }
 

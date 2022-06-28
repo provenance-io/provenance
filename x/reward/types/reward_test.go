@@ -187,7 +187,7 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 			"reward program requires positive max reward by address: 0jackthecat",
 		},
 		{
-			"invalid - number of sub periods must be larger than 0",
+			"invalid - number of claim periods must be larger than 0",
 			NewRewardProgram(
 				"title",
 				"description",
@@ -201,7 +201,7 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				1,
 				[]QualifyingAction{},
 			),
-			"reward program number of sub periods must be larger than 0",
+			"reward program number of claim periods must be larger than 0",
 		},
 	}
 

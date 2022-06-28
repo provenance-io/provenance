@@ -7,9 +7,9 @@ import (
 )
 
 // Removes a share
-func (k Keeper) RemoveShare(ctx sdk.Context, rewardProgramID, subPeriod uint64, addr string) bool {
+func (k Keeper) RemoveShare(ctx sdk.Context, rewardProgramID, rewardClaimPeriodId uint64, addr string) bool {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetShareKey(rewardProgramID, subPeriod, []byte(addr))
+	key := types.GetShareKey(rewardProgramID, rewardClaimPeriodId, []byte(addr))
 	if key == nil {
 		return false
 	}
@@ -95,7 +95,7 @@ func (k Keeper) IterateRewardShares(ctx sdk.Context, rewardProgramID uint64, han
 // Iterates over ALL the shares for a reward program's reward claim
 func (k Keeper) IterateRewardClaimPeriodShares(ctx sdk.Context, rewardProgramID, rewardClaimPeriod uint64, handle func(share types.Share) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetRewardSubPeriodShareKeyPrefix(rewardProgramID, rewardClaimPeriod))
+	iterator := sdk.KVStorePrefixIterator(store, types.GetRewardClaimPeriodShareKeyPrefix(rewardProgramID, rewardClaimPeriod))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

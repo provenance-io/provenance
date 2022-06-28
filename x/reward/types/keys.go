@@ -51,35 +51,35 @@ func GetRewardProgramBalanceKey(rewardProgramID uint64) []byte {
 	return append(RewardProgramBalanceKeyPrefix, idByte...)
 }
 
-// GetShareKey converts a reward program id, subPeriod id, and address into a ShareKey
-func GetShareKey(rewardID uint64, subPeriod uint64, addr []byte) []byte {
+// GetShareKey converts a reward program id, claim period id, and address into a ShareKey
+func GetShareKey(rewardID uint64, rewardClaimPeriodId uint64, addr []byte) []byte {
 	key := ShareKeyPrefix
 	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
-	subPeriodByte := []byte(strconv.FormatUint(subPeriod, 10))
+	claimPeriodByte := []byte(strconv.FormatUint(rewardClaimPeriodId, 10))
 	key = append(key, rewardByte...)
-	key = append(key, subPeriodByte...)
+	key = append(key, claimPeriodByte...)
 	key = append(key, address.MustLengthPrefix(addr)...)
 	return key
 }
 
-// GetRewardAccountStateKey converts a reward program id, subPeriod id, and address into an AccountStateKey
-func GetRewardAccountStateKey(rewardID uint64, subPeriod uint64, addr []byte) []byte {
+// GetRewardAccountStateKey converts a reward program id, claim period id, and address into an AccountStateKey
+func GetRewardAccountStateKey(rewardID uint64, rewardClaimPeriodId uint64, addr []byte) []byte {
 	key := AccountStateKeyPrefix
 	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
-	subPeriodByte := []byte(strconv.FormatUint(subPeriod, 10))
+	claimPeriodByte := []byte(strconv.FormatUint(rewardClaimPeriodId, 10))
 	key = append(key, rewardByte...)
-	key = append(key, subPeriodByte...)
+	key = append(key, claimPeriodByte...)
 	key = append(key, address.MustLengthPrefix(addr)...)
 	return key
 }
 
-// GetRewardAccountStateKeyPrefix converts a reward program id and sub period into a prefix for iterating
-func GetRewardAccountStateKeyPrefix(rewardID uint64, subPeriod uint64) []byte {
+// GetRewardAccountStateKeyPrefix converts a reward program id and claim period into a prefix for iterating
+func GetRewardAccountStateKeyPrefix(rewardID uint64, rewardClaimPeriodId uint64) []byte {
 	key := AccountStateKeyPrefix
 	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
-	subPeriodByte := []byte(strconv.FormatUint(subPeriod, 10))
+	claimPeriodByte := []byte(strconv.FormatUint(rewardClaimPeriodId, 10))
 	key = append(key, rewardByte...)
-	key = append(key, subPeriodByte...)
+	key = append(key, claimPeriodByte...)
 	return key
 }
 
@@ -103,13 +103,13 @@ func GetRewardProgramIDFromBytes(bz []byte) (rewardprogramID uint64) {
 	return binary.BigEndian.Uint64(bz)
 }
 
-// GetRewardSubPeriodShareKeyPrefix converts a reward program id and sub period into a prefix for iterating
-func GetRewardSubPeriodShareKeyPrefix(rewardID uint64, subPeriod uint64) []byte {
+// GetRewardClaimPeriodShareKeyPrefix converts a reward program id and claim period into a prefix for iterating
+func GetRewardClaimPeriodShareKeyPrefix(rewardID uint64, rewardClaimPeriodId uint64) []byte {
 	key := ShareKeyPrefix
 	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
-	subPeriodByte := []byte(strconv.FormatUint(subPeriod, 10))
+	claimPeriodByte := []byte(strconv.FormatUint(rewardClaimPeriodId, 10))
 	key = append(key, rewardByte...)
-	key = append(key, subPeriodByte...)
+	key = append(key, claimPeriodByte...)
 	return key
 }
 

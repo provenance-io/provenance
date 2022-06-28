@@ -15,7 +15,7 @@ func (suite *KeeperTestSuite) TestNewShare() {
 	)
 
 	suite.Assert().Equal(uint64(1), share.GetRewardProgramId(), "reward program id must match")
-	suite.Assert().Equal(uint64(2), share.GetClaimPeriodId(), "sub period id must match")
+	suite.Assert().Equal(uint64(2), share.GetClaimPeriodId(), "reward claim period id must match")
 	suite.Assert().Equal("test", share.GetAddress(), "address must match")
 	suite.Assert().Equal(int64(5), share.GetAmount(), "share amount must match")
 }
@@ -38,7 +38,7 @@ func (suite *KeeperTestSuite) TestGetSetShare() {
 
 	suite.Assert().Nil(err, "must not have error")
 	suite.Assert().Equal(expectedShare.GetRewardProgramId(), actualShare.GetRewardProgramId(), "reward program id must match")
-	suite.Assert().Equal(expectedShare.GetClaimPeriodId(), actualShare.GetClaimPeriodId(), "sub period id must match")
+	suite.Assert().Equal(expectedShare.GetClaimPeriodId(), actualShare.GetClaimPeriodId(), "reward claim period id must match")
 	suite.Assert().Equal(expectedShare.GetAddress(), actualShare.GetAddress(), "address must match")
 	suite.Assert().Equal(expectedShare.GetAmount(), actualShare.GetAmount(), "share amount must match")
 }
@@ -276,7 +276,7 @@ func (suite *KeeperTestSuite) TestEmptyIterateRewardClaimPeriodShares() {
 	suite.Assert().Equal(0, counter, "should have correct number of iterations")
 }
 
-func (suite *KeeperTestSuite) TestIterateRewardSharesSubPeriodHalt() {
+func (suite *KeeperTestSuite) TestIterateRewardSharesClaimPeriodHalt() {
 	suite.SetupTest()
 
 	share1 := types.NewShare(1, 2, "test", 5)
