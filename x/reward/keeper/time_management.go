@@ -142,8 +142,6 @@ func (k Keeper) EndRewardProgram(ctx sdk.Context, rewardProgram *types.RewardPro
 }
 
 func (k Keeper) CalculateRewardClaimPeriodRewards(ctx sdk.Context, maxReward sdk.Coin, claimPeriodReward types.ClaimPeriodRewardDistribution) (sum sdk.Coin, err error) {
-	totalShares := claimPeriodReward.GetTotalShares()
-	claimRewardPool := claimPeriodReward.GetRewardsPool().Amount
 	sum = sdk.NewInt64Coin(claimPeriodReward.GetRewardsPool().Denom, 0)
 
 	if maxReward.Denom != claimPeriodReward.RewardsPool.GetDenom() {
@@ -157,18 +155,8 @@ func (k Keeper) CalculateRewardClaimPeriodRewards(ctx sdk.Context, maxReward sdk
 		return sum, fmt.Errorf("unable to get reward claim period shares for reward program %d and claim period %d", claimPeriodReward.GetRewardProgramId(), claimPeriodReward.GetClaimPeriodId())
 	}
 
-	if claimPeriodReward.GetTotalShares() == 0 {
-		return sum, nil
-	}
-
 	for _, participant := range participants {
-		shares := sdk.NewDec(participant.GetAmount())
-		claimPeriodShares := sdk.NewDec(totalShares)
-		percentage := shares.Quo(claimPeriodShares)
-		pool := sdk.NewDec(claimRewardPool.Int64())
-
-		reward := sdk.NewInt64Coin(claimPeriodReward.GetRewardsPool().Denom, pool.Mul(percentage).RoundInt64())
-
+		reward := k.CalculateParticipantReward(ctx, participant.GetAmount(), claimPeriodReward.GetTotalShares(), claimPeriodReward.GetRewardsPool())
 		if maxReward.IsLT(reward) {
 			reward = maxReward
 		}
@@ -177,4 +165,17 @@ func (k Keeper) CalculateRewardClaimPeriodRewards(ctx sdk.Context, maxReward sdk
 	}
 
 	return sum, nil
+}
+
+func (k Keeper) CalculateParticipantReward(ctx sdk.Context, shares int64, totalShares int64, claimRewardPool sdk.Coin) sdk.Coin {
+	numerator := sdk.NewDec(shares)
+	denom := sdk.NewDec(totalShares)
+
+	percentage := sdk.NewDec(0)
+	if totalShares > 0 {
+		percentage = numerator.Quo(denom)
+	}
+
+	pool := sdk.NewDec(claimRewardPool.Amount.Int64())
+	return sdk.NewInt64Coin(claimRewardPool.Denom, pool.Mul(percentage).TruncateInt64())
 }
