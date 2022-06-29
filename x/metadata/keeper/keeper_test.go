@@ -300,6 +300,7 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 	s.Require().NoError(err)
 
 	// Todo: add CountAuthorization test cases once CountAuthorization type has been merged in upstream fork
+	//       https://github.com/provenance-io/cosmos-sdk/pull/175
 
 	// Test cases
 	for n, tc := range cases {
