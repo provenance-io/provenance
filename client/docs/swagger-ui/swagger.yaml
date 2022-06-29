@@ -47635,6 +47635,10 @@ paths:
                       custom method
 
                       signatures required by gogoproto.
+                  nhash_per_usd_mil:
+                    type: string
+                    format: uint64
+                    title: total nhash per usd mil for converting usd to nhash
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -80306,6 +80310,10 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
+      nhash_per_usd_mil:
+        type: string
+        format: uint64
+        title: total nhash per usd mil for converting usd to nhash
     description: Params defines the set of params for the msgfees module.
   provenance.msgfees.v1.QueryAllMsgFeesResponse:
     type: object
@@ -80384,4 +80392,8 @@ definitions:
               method
 
               signatures required by gogoproto.
+          nhash_per_usd_mil:
+            type: string
+            format: uint64
+            title: total nhash per usd mil for converting usd to nhash
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
