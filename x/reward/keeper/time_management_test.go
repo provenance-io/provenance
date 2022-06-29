@@ -27,8 +27,7 @@ func (suite *KeeperTestSuite) TestStartRewardProgram() {
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
-	programBalance := types.NewRewardProgramBalance(program.GetId(), program.GetTotalRewardPool())
-	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
+	program.Balance = program.GetTotalRewardPool()
 
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
 
@@ -100,8 +99,7 @@ func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriod() {
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
-	programBalance := types.NewRewardProgramBalance(program.GetId(), program.GetTotalRewardPool())
-	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
+	program.Balance = program.GetTotalRewardPool()
 
 	suite.app.RewardKeeper.StartRewardProgramClaimPeriod(suite.ctx, &program)
 	suite.Assert().Equal(uint64(1), program.CurrentClaimPeriod, "current claim period should incremented")
@@ -136,8 +134,7 @@ func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriodDoesNotExceedBala
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
-	programBalance := types.NewRewardProgramBalance(program.GetId(), sdk.NewInt64Coin("nhash", 20))
-	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
+	program.Balance = sdk.NewInt64Coin("nhash", 20)
 
 	suite.app.RewardKeeper.StartRewardProgramClaimPeriod(suite.ctx, &program)
 	suite.Assert().Equal(uint64(1), program.CurrentClaimPeriod, "current claim period should incremented")
@@ -384,11 +381,9 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesInvalidLooku
 	program1.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
 	program2.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
 	program3.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
-	programBalance2 := types.NewRewardProgramBalance(program2.GetId(), program2.GetTotalRewardPool())
-	programBalance3 := types.NewRewardProgramBalance(program2.GetId(), sdk.NewInt64Coin("jackthecat", 100))
+	program2.Balance = program2.GetTotalRewardPool()
+	program3.Balance = sdk.NewInt64Coin("jackthecat", 100)
 	rewardDistribution := types.NewClaimPeriodRewardDistribution(0, 3, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 1, false)
-	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance2)
-	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance3)
 	suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, rewardDistribution)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
@@ -429,8 +424,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEnd() {
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
 	share := types.NewShare(1, 1, "address1", 1)
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share)
-	programBalance := types.NewRewardProgramBalance(program.GetId(), program.GetTotalRewardPool())
-	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
+	program.Balance = program.GetTotalRewardPool()
 
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
 
@@ -441,10 +435,9 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEnd() {
 
 	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
 
-	newBalance, _ := suite.app.RewardKeeper.GetRewardProgramBalance(suite.ctx, 1)
 	reward, _ := suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 1, 1)
 
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 50000), newBalance.Balance, "balance should subtract the claim period reward")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 50000), program.Balance, "balance should subtract the claim period reward")
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 50000), reward.TotalRewardsPoolForClaimPeriod, "total claim should be increased by the amount rewarded")
 	suite.Assert().Equal(program.State, types.RewardProgram_STARTED, "reward program should be in started state")
 	suite.Assert().Equal(uint64(2), program.CurrentClaimPeriod, "current claim period should be updated")
@@ -470,9 +463,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransition() {
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
-
-	programBalance := types.NewRewardProgramBalance(program.GetId(), program.GetTotalRewardPool())
-	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
+	program.Balance = program.GetTotalRewardPool()
 
 	share1 := types.NewShare(1, 1, "address1", 1)
 	share2 := types.NewShare(1, 2, "address2", 1)
@@ -515,8 +506,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransitionExpired()
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
-	programBalance := types.NewRewardProgramBalance(program.GetId(), program.GetTotalRewardPool())
-	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
+	program.Balance = program.GetTotalRewardPool()
 
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
 	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
@@ -550,8 +540,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndNoBalance() {
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
-	programBalance := types.NewRewardProgramBalance(program.GetId(), program.GetTotalRewardPool())
-	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
+	program.Balance = program.GetTotalRewardPool()
 
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
 	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
@@ -582,8 +571,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndExtraBalance() {
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
-	programBalance := types.NewRewardProgramBalance(program.GetId(), program.GetTotalRewardPool())
-	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
+	program.Balance = program.GetTotalRewardPool()
 
 	share1 := types.NewShare(1, 1, "address1", 1)
 	share2 := types.NewShare(1, 2, "address1", 1)
@@ -640,8 +628,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesBalances() {
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
-	programBalance := types.NewRewardProgramBalance(program.GetId(), program.GetTotalRewardPool())
-	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
+	program.Balance = program.GetTotalRewardPool()
 
 	share1 := types.NewShare(1, 1, "address1", 1)
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
@@ -655,10 +642,9 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesBalances() {
 
 	// Adjusted after ending period
 	reward, _ = suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 1, 1)
-	newProgramBalance, _ := suite.app.RewardKeeper.GetRewardProgramBalance(suite.ctx, program.GetId())
 	expectedProgramBalance := program.GetTotalRewardPool().Sub(claimAmount)
 	suite.Assert().Equal(claimAmount, reward.GetTotalRewardsPoolForClaimPeriod(), "the reward for the claim period should be added to total reward")
-	suite.Assert().Equal(expectedProgramBalance, newProgramBalance.GetBalance(), "the reward for the claim period should be subtracted out of the program balance")
+	suite.Assert().Equal(expectedProgramBalance, program.GetBalance(), "the reward for the claim period should be subtracted out of the program balance")
 	suite.Assert().Equal(types.RewardProgram_STARTED, program.State, "reward program should be in started state")
 	suite.Assert().Equal(uint64(2), program.CurrentClaimPeriod, "next iteration should start")
 }
@@ -683,8 +669,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRollo
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 501)
-	programBalance := types.NewRewardProgramBalance(program.GetId(), program.GetTotalRewardPool())
-	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
+	program.Balance = program.GetTotalRewardPool()
 
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
 
@@ -698,13 +683,11 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRollo
 	// Should end because the balance should be below 501
 	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
 
-	programBalance, _ = suite.app.RewardKeeper.GetRewardProgramBalance(suite.ctx, 1)
-
 	suite.Assert().Equal(types.RewardProgram_FINISHED, program.State, "reward program should be in finished state")
 	suite.Assert().Equal(uint64(1), program.CurrentClaimPeriod, "current claim period should not be updated")
 	suite.Assert().Equal(program.ClaimPeriodEndTime, program.ClaimPeriodEndTime, "claim period end time should not be updated")
 	suite.Assert().Equal(blockTime, program.ActualProgramEndTime, "actual end time should be set")
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 500), programBalance.GetBalance(), "balance should be updated")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 500), program.GetBalance(), "balance should be updated")
 }
 
 func (suite *KeeperTestSuite) TestUpdate() {
@@ -728,8 +711,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 		[]types.QualifyingAction{},
 	)
 	notStarted.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
-	programBalance := types.NewRewardProgramBalance(notStarted.GetId(), notStarted.GetTotalRewardPool())
-	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
+	notStarted.Balance = notStarted.GetTotalRewardPool()
 
 	// Reward Program that is starting
 	starting := types.NewRewardProgram(
@@ -746,8 +728,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 		[]types.QualifyingAction{},
 	)
 	starting.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
-	programBalance = types.NewRewardProgramBalance(starting.GetId(), starting.GetTotalRewardPool())
-	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
+	starting.Balance = starting.GetTotalRewardPool()
 
 	// Reward Program that is ready to move onto next claim period
 	nextClaimPeriod := types.NewRewardProgram(
@@ -764,8 +745,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 		[]types.QualifyingAction{},
 	)
 	nextClaimPeriod.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
-	programBalance = types.NewRewardProgramBalance(nextClaimPeriod.GetId(), nextClaimPeriod.GetTotalRewardPool())
-	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
+	nextClaimPeriod.Balance = nextClaimPeriod.GetTotalRewardPool()
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &nextClaimPeriod)
 	nextClaimPeriod.ClaimPeriodEndTime = blockTime
 
@@ -784,8 +764,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 		[]types.QualifyingAction{},
 	)
 	ending.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
-	programBalance = types.NewRewardProgramBalance(ending.GetId(), sdk.NewInt64Coin("nhash", 0))
-	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
+	ending.Balance = sdk.NewInt64Coin("nhash", 0)
 	share1 := types.NewShare(4, 1, "address1", 1)
 	suite.app.RewardKeeper.SetShare(suite.ctx, &share1)
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &ending)
@@ -808,8 +787,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 	timeout.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
 	timeout.ClaimPeriodEndTime = blockTime
 	timeout.ExpectedProgramEndTime = blockTime
-	programBalance = types.NewRewardProgramBalance(timeout.GetId(), timeout.GetTotalRewardPool())
-	suite.app.RewardKeeper.SetRewardProgramBalance(suite.ctx, programBalance)
+	timeout.Balance = timeout.GetTotalRewardPool()
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &timeout)
 
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, notStarted)
