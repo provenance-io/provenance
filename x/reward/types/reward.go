@@ -118,7 +118,7 @@ func NewRewardProgram(
 		Id:                    id,
 		DistributeFromAddress: distributeFromAddress,
 		TotalRewardPool:       totalRewardPool,
-		Balance:               totalRewardPool,
+		RemainingPoolBalance:  totalRewardPool,
 		MaxRewardByAddress:    maxRewardByAddress,
 		ProgramStartTime:      programStartTime,
 		ClaimPeriodSeconds:    claimPeriodSeconds,

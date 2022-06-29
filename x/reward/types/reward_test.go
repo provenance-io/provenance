@@ -218,43 +218,6 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 	}
 }
 
-func (s *RewardTypesTestSuite) TestRewardProgramBalanceValidateBasic() {
-	tests := []struct {
-		name                 string
-		rewardProgramBalance RewardProgramBalance
-		want                 string
-	}{
-		{
-			"valid",
-			NewRewardProgramBalance(
-				1,
-				sdk.NewInt64Coin("jackthecat", 1),
-			),
-			"",
-		},
-		{
-			"invalid - reward id is 0",
-			NewRewardProgramBalance(
-				0,
-				sdk.NewInt64Coin("jackthecat", 1),
-			),
-			"reward program id must be larger than 0",
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		s.T().Run(tt.name, func(t *testing.T) {
-			err := tt.rewardProgramBalance.ValidateBasic()
-			if err != nil {
-				assert.Equal(t, tt.want, err.Error())
-			} else if len(tt.want) > 0 {
-				t.Errorf("RewardProgramBalance ValidateBasic error = nil, expected: %s", tt.want)
-			}
-		})
-	}
-}
-
 func (s *RewardTypesTestSuite) TestEpochRewardDistributionValidateBasic() {
 	tests := []struct {
 		name          string
