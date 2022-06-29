@@ -282,6 +282,14 @@ func (m MockAction) GetBuilder() types.ActionBuilder {
 	return m.Builder
 }
 
+func (m MockAction) PreEvaluate(ctx sdk.Context, provider types.KeeperProvider, state *types.RewardAccountState) {
+	// Any action specific thing that we need to do before evaluation
+}
+
+func (m MockAction) PostEvaluate(ctx sdk.Context, provider types.KeeperProvider, state *types.RewardAccountState) {
+	// Any action specific thing that we need to do after evaluation
+}
+
 func (suite *KeeperTestSuite) TestProcessQualifyingActionsWithNoAbciEvents() {
 	suite.SetupTest()
 	program := types.RewardProgram{}

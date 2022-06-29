@@ -38,6 +38,8 @@ type (
 	RewardAction interface {
 		ActionType() string
 		Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool
+		PreEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState)
+		PostEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState)
 		GetBuilder() ActionBuilder
 	}
 )
@@ -400,6 +402,14 @@ func (ad *ActionDelegate) GetMaximumActiveStakePercentile() sdk.Dec {
 	return sdk.NewDec(0)
 }
 
+func (ad *ActionDelegate) PreEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
+	// Any action specific thing that we need to do before evaluation
+}
+
+func (ad *ActionDelegate) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
+	// Any action specific thing that we need to do after evaluation
+}
+
 // ============ Action Transfer Delegations ============
 
 func NewActionTransferDelegations() ActionTransferDelegations {
@@ -426,6 +436,14 @@ func (atd *ActionTransferDelegations) ActionType() string {
 func (atd *ActionTransferDelegations) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
 	// TODO execute all the rules for action?
 	return false
+}
+
+func (atd *ActionTransferDelegations) PreEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
+	// Any action specific thing that we need to do before evaluation
+}
+
+func (atd *ActionTransferDelegations) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
+	// Any action specific thing that we need to do after evaluation
 }
 
 // ============ Qualifying Action ============
