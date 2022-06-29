@@ -22,6 +22,7 @@ RUN go build -mod vendor -tags=cleveldb -ldflags '-w -s -X github.com/cosmos/cos
 ## Run provenance for x86_64
 FROM debian:buster-slim as provenance-x86_64
 ENV LOCALNET=1
+ENV LD_LIBRARY_PATH="/usr/local/lib"
 
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -35,7 +36,7 @@ WORKDIR /provenance
 EXPOSE 26656 26657 1317 9090
 
 # Source binaries from the build above
-COPY --from=build-x86_64 /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.x86_64.so /lib/x86_64-linux-gnu/libwasmvm.x86_64.so
+COPY --from=build-x86_64 /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.x86_64.so /usr/local/lib/
 COPY --from=build-x86_64 /go/bin/provenanced /usr/bin/provenanced
 
 COPY networks/local/blockchain-local/entrypoint.sh /usr/bin/entrypoint.sh
@@ -73,9 +74,9 @@ RUN go build -mod vendor -tags=cleveldb,dynamic -ldflags '-w -s -X github.com/co
 ## Run provenance for ARM
 FROM debian:buster-slim as provenance-arm64
 ENV LOCALNET=1
-# This is for M1 to find librdkafka
-ENV PKG_CONFIG_PATH="/usr/local/lib"
 ENV LD_LIBRARY_PATH="/usr/local/lib"
+# This is for M1 to find package config
+ENV PKG_CONFIG_PATH="/usr/local/lib"
 
 RUN apt-get update && \
     apt-get upgrade -y && \
