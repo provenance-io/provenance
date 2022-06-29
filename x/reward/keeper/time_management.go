@@ -65,8 +65,8 @@ func (k Keeper) StartRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *ty
 	// Get the Claim Period Reward. It should not exceed program balance
 	claimPeriodAmount := rewardProgram.GetTotalRewardPool().Amount.Quo(sdk.NewInt(int64(rewardProgram.GetClaimPeriods())))
 	claimPeriodPool := sdk.NewCoin(rewardProgram.GetTotalRewardPool().Denom, claimPeriodAmount)
-	if rewardProgram.Balance.IsLT(claimPeriodPool) {
-		claimPeriodPool = rewardProgram.Balance
+	if rewardProgram.RemainingPoolBalance.IsLT(claimPeriodPool) {
+		claimPeriodPool = rewardProgram.RemainingPoolBalance
 	}
 
 	claimPeriodReward := types.NewClaimPeriodRewardDistribution(
@@ -103,11 +103,11 @@ func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *type
 
 	// Update balances
 	claimPeriodReward.TotalRewardsPoolForClaimPeriod = claimPeriodReward.TotalRewardsPoolForClaimPeriod.Add(totalClaimPeriodRewards)
-	rewardProgram.Balance = rewardProgram.Balance.Sub(totalClaimPeriodRewards)
+	rewardProgram.RemainingPoolBalance = rewardProgram.RemainingPoolBalance.Sub(totalClaimPeriodRewards)
 	k.SetClaimPeriodRewardDistribution(ctx, claimPeriodReward)
 	k.SetRewardProgram(ctx, *rewardProgram)
 
-	if rewardProgram.IsEnding(ctx, rewardProgram.Balance) {
+	if rewardProgram.IsEnding(ctx, rewardProgram.RemainingPoolBalance) {
 		k.EndRewardProgram(ctx, rewardProgram)
 	} else {
 		k.StartRewardProgramClaimPeriod(ctx, rewardProgram)

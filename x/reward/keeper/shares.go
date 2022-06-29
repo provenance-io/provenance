@@ -7,9 +7,9 @@ import (
 )
 
 // Removes a share
-func (k Keeper) RemoveShare(ctx sdk.Context, rewardProgramID, rewardClaimPeriodId uint64, addr string) bool {
+func (k Keeper) RemoveShare(ctx sdk.Context, rewardProgramID, rewardClaimPeriodID uint64, addr string) bool {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetShareKey(rewardProgramID, rewardClaimPeriodId, []byte(addr))
+	key := types.GetShareKey(rewardProgramID, rewardClaimPeriodID, []byte(addr))
 	if key == nil {
 		return false
 	}

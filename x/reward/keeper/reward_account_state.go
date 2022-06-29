@@ -7,9 +7,9 @@ import (
 )
 
 // RemoveRewardAccountState Removes an account state
-func (k Keeper) RemoveRewardAccountState(ctx sdk.Context, rewardProgramID, rewardClaimPeriodId uint64, addr string) bool {
+func (k Keeper) RemoveRewardAccountState(ctx sdk.Context, rewardProgramID, rewardClaimPeriodID uint64, addr string) bool {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetRewardAccountStateKey(rewardProgramID, rewardClaimPeriodId, []byte(addr))
+	key := types.GetRewardAccountStateKey(rewardProgramID, rewardClaimPeriodID, []byte(addr))
 	if key == nil {
 		return false
 	}
@@ -22,9 +22,9 @@ func (k Keeper) RemoveRewardAccountState(ctx sdk.Context, rewardProgramID, rewar
 	return keyExists
 }
 
-func (k Keeper) GetRewardAccountState(ctx sdk.Context, rewardProgramID, rewardClaimPeriodId uint64, addr string) (state types.RewardAccountState, err error) {
+func (k Keeper) GetRewardAccountState(ctx sdk.Context, rewardProgramID, rewardClaimPeriodID uint64, addr string) (state types.RewardAccountState, err error) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetRewardAccountStateKey(rewardProgramID, rewardClaimPeriodId, []byte(addr))
+	key := types.GetRewardAccountStateKey(rewardProgramID, rewardClaimPeriodID, []byte(addr))
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return state, nil
@@ -41,9 +41,9 @@ func (k Keeper) SetRewardAccountState(ctx sdk.Context, state *types.RewardAccoun
 }
 
 // IterateRewardAccountStates Iterates over ALL the account states for a reward program's claim period
-func (k Keeper) IterateRewardAccountStates(ctx sdk.Context, rewardProgramID, rewardClaimPeriodId uint64, handle func(state types.RewardAccountState) (stop bool)) error {
+func (k Keeper) IterateRewardAccountStates(ctx sdk.Context, rewardProgramID, rewardClaimPeriodID uint64, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetRewardAccountStateKeyPrefix(rewardProgramID, rewardClaimPeriodId))
+	iterator := sdk.KVStorePrefixIterator(store, types.GetRewardAccountStateKeyPrefix(rewardProgramID, rewardClaimPeriodID))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
