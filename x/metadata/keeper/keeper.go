@@ -213,13 +213,15 @@ func (k Keeper) checkAuthzForMissing(
 				if authz != nil {
 					resp, err := authz.Accept(ctx, nil)
 					if err == nil && resp.Accept {
-						if resp.Delete {
+						switch {
+						case resp.Delete:
 							err = k.authzKeeper.DeleteGrant(ctx, grantee, granter, msgType)
 							if err != nil {
 								return stillMissing, err
 							}
-						} else if resp.Updated != nil {
+						case resp.Updated != nil:
 							if err = k.authzKeeper.SaveGrant(ctx, grantee, grantee, resp.Updated, exp); err != nil {
+								return stillMissing, err
 							}
 						}
 						found = true

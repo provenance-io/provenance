@@ -299,6 +299,8 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 	err = s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour))
 	s.Require().NoError(err)
 
+	// Todo: add CountAuthorization test cases once CountAuthorization type has been merged in upstream fork
+
 	// Test cases
 	for n, tc := range cases {
 		s.T().Run(n, func(t *testing.T) {
