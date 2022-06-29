@@ -68,21 +68,22 @@ func (b *DelegateActionBuilder) GetEventCriteria() *EventCriteria {
 }
 
 func (b *DelegateActionBuilder) AddEvent(eventType string, attributes *map[string][]byte) error {
-	if eventType == "delegate" {
+	switch eventType {
+	case "delegate":
 		address := (*attributes)["validator"]
 		validator, err := sdk.ValAddressFromBech32(string(address))
 		if err != nil {
 			return err
 		}
 		b.Validator = validator
-	} else if eventType == "create_validator" {
+	case "create_validator":
 		address := (*attributes)["validator"]
 		validator, err := sdk.ValAddressFromBech32(string(address))
 		if err != nil {
 			return err
 		}
 		b.Validator = validator
-	} else if eventType == "message" {
+	case "message":
 		// Update the last result to have the delegator's address
 		address := (*attributes)["sender"]
 		address, err := sdk.AccAddressFromBech32(string(address))

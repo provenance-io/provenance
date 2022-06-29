@@ -393,7 +393,7 @@ func (atd *ActionTransferDelegations) ValidateBasic() error {
 	return nil
 }
 
-func (ad *ActionTransferDelegations) GetBuilder() ActionBuilder {
+func (atd *ActionTransferDelegations) GetBuilder() ActionBuilder {
 	return &DelegateTransferActionBuilder{}
 }
 

@@ -7,22 +7,22 @@ import (
 )
 
 // SetClaimPeriodRewardDistribution sets the ClaimPeriodRewardDistribution in the keeper
-func (k Keeper) SetClaimPeriodRewardDistribution(ctx sdk.Context, ClaimPeriodRewardDistribution types.ClaimPeriodRewardDistribution) {
+func (k Keeper) SetClaimPeriodRewardDistribution(ctx sdk.Context, claimPeriodRewardDistribution types.ClaimPeriodRewardDistribution) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&ClaimPeriodRewardDistribution)
-	store.Set(types.GetClaimPeriodRewardDistributionKey(ClaimPeriodRewardDistribution.ClaimPeriodId, ClaimPeriodRewardDistribution.RewardProgramId), bz)
+	bz := k.cdc.MustMarshal(&claimPeriodRewardDistribution)
+	store.Set(types.GetClaimPeriodRewardDistributionKey(claimPeriodRewardDistribution.ClaimPeriodId, claimPeriodRewardDistribution.RewardProgramId), bz)
 }
 
 // GetClaimPeriodRewardDistribution returns a ClaimPeriodRewardDistribution by epoch id and reward id
-func (k Keeper) GetClaimPeriodRewardDistribution(ctx sdk.Context, claimPeriodID uint64, rewardID uint64) (ClaimPeriodRewardDistribution types.ClaimPeriodRewardDistribution, err error) {
+func (k Keeper) GetClaimPeriodRewardDistribution(ctx sdk.Context, claimPeriodID uint64, rewardID uint64) (claimPeriodRewardDistribution types.ClaimPeriodRewardDistribution, err error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetClaimPeriodRewardDistributionKey(claimPeriodID, rewardID)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return ClaimPeriodRewardDistribution, nil
+		return claimPeriodRewardDistribution, nil
 	}
-	err = k.cdc.Unmarshal(bz, &ClaimPeriodRewardDistribution)
-	return ClaimPeriodRewardDistribution, err
+	err = k.cdc.Unmarshal(bz, &claimPeriodRewardDistribution)
+	return claimPeriodRewardDistribution, err
 }
 
 // IterateClaimPeriodRewardDistributions  iterates all epoch reward distributions with the given handler function.
@@ -57,8 +57,8 @@ func (k Keeper) GetAllClaimPeriodRewardDistributions(sdkCtx sdk.Context) ([]type
 }
 
 // ClaimPeriodRewardDistributionIsValid Checks if an Epoch Reward Distribution is valid
-func (k Keeper) ClaimPeriodRewardDistributionIsValid(ClaimPeriodReward *types.ClaimPeriodRewardDistribution) bool {
-	return ClaimPeriodReward.RewardProgramId != 0
+func (k Keeper) ClaimPeriodRewardDistributionIsValid(claimPeriodReward *types.ClaimPeriodRewardDistribution) bool {
+	return claimPeriodReward.RewardProgramId != 0
 }
 
 // RemoveClaimPeriodRewardDistribution Removes an ClaimPeriodRewardDistribution
