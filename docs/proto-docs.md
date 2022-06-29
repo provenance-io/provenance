@@ -384,11 +384,11 @@
     - [ActionDelegate](#provenance.reward.v1.ActionDelegate)
     - [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations)
     - [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution)
+    - [EventCreateRewardProgram](#provenance.reward.v1.EventCreateRewardProgram)
     - [QualifyingAction](#provenance.reward.v1.QualifyingAction)
     - [QualifyingActions](#provenance.reward.v1.QualifyingActions)
     - [RewardAccountState](#provenance.reward.v1.RewardAccountState)
     - [RewardProgram](#provenance.reward.v1.RewardProgram)
-    - [RewardProgramBalance](#provenance.reward.v1.RewardProgramBalance)
     - [Share](#provenance.reward.v1.Share)
   
     - [RewardProgram.State](#provenance.reward.v1.RewardProgram.State)
@@ -5850,6 +5850,35 @@ Reward Program Id + Claim Period Id
 
 
 
+<a name="provenance.reward.v1.EventCreateRewardProgram"></a>
+
+### EventCreateRewardProgram
+EventCreateRewardProgram event emitted when a reward program is created
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  |  |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `distribute_from_address` | [string](#string) |  |  |
+| `total_reward_pool` | [string](#string) |  |  |
+| `max_reward_by_address` | [string](#string) |  |  |
+| `minimum_rollover_amount` | [string](#string) |  |  |
+| `claim_period_seconds` | [uint64](#uint64) |  |  |
+| `program_start_time` | [string](#string) |  |  |
+| `expected_program_end_time` | [string](#string) |  |  |
+| `claim_period_end_time` | [string](#string) |  |  |
+| `claim_periods` | [string](#string) |  |  |
+| `state` | [string](#string) |  |  |
+| `share_expiration_offset` | [string](#string) |  |  |
+| `qualifying_actions` | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="provenance.reward.v1.QualifyingAction"></a>
 
 ### QualifyingAction
@@ -5912,6 +5941,7 @@ RewardProgram
 | `description` | [string](#string) |  |  |
 | `distribute_from_address` | [string](#string) |  | community pool for now (who provides the money) |
 | `total_reward_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | maximum reward per claim per address |
 | `minimum_rollover_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | minimum amount of coins for program to rollover |
 | `claim_period_seconds` | [uint64](#uint64) |  | claim_period_seconds defines the type of claim_period attributed to this program.(e.g day,week,month) |
@@ -5924,26 +5954,6 @@ RewardProgram
 | `state` | [RewardProgram.State](#provenance.reward.v1.RewardProgram.State) |  | the current state of the reward program |
 | `share_expiration_offset` | [uint64](#uint64) |  | Used to calculate the expiration time of a share in seconds. Currently, it is epoch_end_time + offset |
 | `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated | The actions that count towards the reward |
-
-
-
-
-
-
-<a name="provenance.reward.v1.RewardProgramBalance"></a>
-
-### RewardProgramBalance
-RewardProgramBalance will display the balance for a distribution address for specific rewards program
-Money available for claims. How is this program doing.
-Aggregate objects for claims and analytics
-Used for queries
-Reward Program Id - Key
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `reward_program_id` | [uint64](#uint64) |  |  |
-| `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
 
 

@@ -65,13 +65,8 @@ func (k Keeper) StartRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *ty
 	// Get the Claim Period Reward. It should not exceed program balance
 	claimPeriodAmount := rewardProgram.GetTotalRewardPool().Amount.Quo(sdk.NewInt(int64(rewardProgram.GetClaimPeriods())))
 	claimPeriodPool := sdk.NewCoin(rewardProgram.GetTotalRewardPool().Denom, claimPeriodAmount)
-	programBalance, err := k.GetRewardProgramBalance(ctx, rewardProgram.GetId())
-	if err != nil || programBalance.GetRewardProgramId() == 0 {
-		ctx.Logger().Error(fmt.Sprintf("NOTICE: Missing RewardProgramBalance for RewardProgram %d ", rewardProgram.GetId()))
-		return err
-	}
-	if programBalance.GetBalance().IsLT(claimPeriodPool) {
-		claimPeriodPool = programBalance.GetBalance()
+	if rewardProgram.Balance.IsLT(claimPeriodPool) {
+		claimPeriodPool = rewardProgram.Balance
 	}
 
 	claimPeriodReward := types.NewClaimPeriodRewardDistribution(
@@ -94,12 +89,6 @@ func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *type
 		return fmt.Errorf("unable to end reward program claim period for nil reward program")
 	}
 
-	programBalance, err := k.GetRewardProgramBalance(ctx, rewardProgram.GetId())
-	if err != nil || programBalance.GetRewardProgramId() == 0 {
-		ctx.Logger().Error(fmt.Sprintf("NOTICE: Missing RewardProgramBalance for RewardProgram %d ", rewardProgram.GetId()))
-		return fmt.Errorf("a program balance does not exist for RewardProgram %d", rewardProgram.GetId())
-	}
-
 	claimPeriodReward, err := k.GetClaimPeriodRewardDistribution(ctx, rewardProgram.GetCurrentClaimPeriod(), rewardProgram.GetId())
 	if err != nil || claimPeriodReward.GetClaimPeriodId() == 0 {
 		ctx.Logger().Error(fmt.Sprintf("NOTICE: Missing ClaimPeriodRewardDistribution for RewardProgram %d ", rewardProgram.GetId()))
@@ -114,11 +103,11 @@ func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *type
 
 	// Update balances
 	claimPeriodReward.TotalRewardsPoolForClaimPeriod = claimPeriodReward.TotalRewardsPoolForClaimPeriod.Add(totalClaimPeriodRewards)
-	programBalance.Balance = programBalance.Balance.Sub(totalClaimPeriodRewards)
+	rewardProgram.Balance = rewardProgram.Balance.Sub(totalClaimPeriodRewards)
 	k.SetClaimPeriodRewardDistribution(ctx, claimPeriodReward)
-	k.SetRewardProgramBalance(ctx, programBalance)
+	k.SetRewardProgram(ctx, *rewardProgram)
 
-	if rewardProgram.IsEnding(ctx, programBalance) {
+	if rewardProgram.IsEnding(ctx, rewardProgram.Balance) {
 		k.EndRewardProgram(ctx, rewardProgram)
 	} else {
 		k.StartRewardProgramClaimPeriod(ctx, rewardProgram)

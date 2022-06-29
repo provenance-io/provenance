@@ -118,6 +118,7 @@ func NewRewardProgram(
 		Id:                    id,
 		DistributeFromAddress: distributeFromAddress,
 		TotalRewardPool:       totalRewardPool,
+		Balance:               totalRewardPool,
 		MaxRewardByAddress:    maxRewardByAddress,
 		ProgramStartTime:      programStartTime,
 		ClaimPeriodSeconds:    claimPeriodSeconds,
@@ -139,10 +140,10 @@ func (rp *RewardProgram) IsEndingClaimPeriod(ctx sdk.Context) bool {
 	return rp.State == RewardProgram_STARTED && (blockTime.After(rp.ClaimPeriodEndTime) || blockTime.Equal(rp.ClaimPeriodEndTime))
 }
 
-func (rp *RewardProgram) IsEnding(ctx sdk.Context, programBalance RewardProgramBalance) bool {
+func (rp *RewardProgram) IsEnding(ctx sdk.Context, programBalance sdk.Coin) bool {
 	blockTime := ctx.BlockTime()
 	isProgramExpired := !rp.GetExpectedProgramEndTime().IsZero() && (blockTime.After(rp.ExpectedProgramEndTime) || blockTime.Equal(rp.ExpectedProgramEndTime))
-	canRollover := programBalance.GetBalance().IsGTE(rp.GetMinimumRolloverAmount())
+	canRollover := programBalance.IsGTE(rp.GetMinimumRolloverAmount())
 	return rp.State == RewardProgram_STARTED && (isProgramExpired || !canRollover)
 }
 
@@ -185,40 +186,12 @@ func (rp *RewardProgram) String() string {
 	return string(out)
 }
 
-// ============ Reward Program Balance ============
-
-func NewRewardProgramBalance(
-	rewardProgramID uint64,
-	balance sdk.Coin,
-) RewardProgramBalance {
-	return RewardProgramBalance{
-		RewardProgramId: rewardProgramID,
-		Balance:         balance,
-	}
-}
-
-func (rpb *RewardProgramBalance) IsEmpty() bool {
-	return rpb.GetBalance().IsZero()
-}
-
-func (rpb *RewardProgramBalance) ValidateBasic() error {
-	if rpb.RewardProgramId < 1 {
-		return errors.New("reward program id must be larger than 0")
-	}
-	return nil
-}
-
-func (rpb *RewardProgramBalance) String() string {
-	out, _ := yaml.Marshal(rpb)
-	return string(out)
-}
-
 // ============ Account State ============
 
-func NewRewardAccountState(rewardProgramID, rewardClaimPeriodId uint64, address string) RewardAccountState {
+func NewRewardAccountState(rewardProgramID, rewardClaimPeriodID uint64, address string) RewardAccountState {
 	return RewardAccountState{
 		RewardProgramId: rewardProgramID,
-		ClaimPeriodId:   rewardClaimPeriodId,
+		ClaimPeriodId:   rewardClaimPeriodID,
 		Address:         address,
 		ActionCounter:   0,
 	}
@@ -241,10 +214,10 @@ func (s *RewardAccountState) String() string {
 
 // ============ Share ============
 
-func NewShare(rewardProgramID, claimPeriodId uint64, address string, amount int64) Share {
+func NewShare(rewardProgramID, claimPeriodID uint64, address string, amount int64) Share {
 	return Share{
 		RewardProgramId: rewardProgramID,
-		ClaimPeriodId:   claimPeriodId,
+		ClaimPeriodId:   claimPeriodID,
 		Address:         address,
 		Amount:          amount,
 	}
@@ -267,9 +240,9 @@ func (s *Share) String() string {
 
 // ============ Claim Period Reward Distribution ============
 
-func NewClaimPeriodRewardDistribution(claimPeriodId uint64, rewardProgramID uint64, rewardsPool, totalRewardsPoolForClaimPeriod sdk.Coin, totalShares int64, claimPeriodEnded bool) ClaimPeriodRewardDistribution {
+func NewClaimPeriodRewardDistribution(claimPeriodID uint64, rewardProgramID uint64, rewardsPool, totalRewardsPoolForClaimPeriod sdk.Coin, totalShares int64, claimPeriodEnded bool) ClaimPeriodRewardDistribution {
 	return ClaimPeriodRewardDistribution{
-		ClaimPeriodId:                  claimPeriodId,
+		ClaimPeriodId:                  claimPeriodID,
 		RewardProgramId:                rewardProgramID,
 		RewardsPool:                    rewardsPool,
 		TotalRewardsPoolForClaimPeriod: totalRewardsPoolForClaimPeriod,

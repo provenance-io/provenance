@@ -176,7 +176,7 @@ func outputClaimPeriodRewardDistributionAll(cmd *cobra.Command) error {
 }
 
 // Query for a ClaimPeriodRewardDistribution by Id
-func outputClaimPeriodRewardDistributionByID(cmd *cobra.Command, rewardID, claimPeriodId string) error {
+func outputClaimPeriodRewardDistributionByID(cmd *cobra.Command, rewardID, claimPeriodID string) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err
@@ -186,7 +186,7 @@ func outputClaimPeriodRewardDistributionByID(cmd *cobra.Command, rewardID, claim
 	if err != nil {
 		return err
 	}
-	claimId, err := strconv.Atoi(claimPeriodId)
+	claimID, err := strconv.Atoi(claimPeriodID)
 	if err != nil {
 		return err
 	}
@@ -195,14 +195,14 @@ func outputClaimPeriodRewardDistributionByID(cmd *cobra.Command, rewardID, claim
 		context.Background(),
 		&types.ClaimPeriodRewardDistributionByIDRequest{
 			RewardId:      uint64(id),
-			ClaimPeriodId: uint64(claimId),
+			ClaimPeriodId: uint64(claimID),
 		},
 	); err != nil {
 		return fmt.Errorf("failed to query reward claim %d: %s", id, err.Error())
 	}
 
 	if response.GetClaimPeriodRewardDistribution() == nil {
-		return fmt.Errorf("reward does not exist for reward-id: %s claim-id %s", rewardID, claimPeriodId)
+		return fmt.Errorf("reward does not exist for reward-id: %s claim-id %s", rewardID, claimPeriodID)
 	}
 
 	return clientCtx.PrintProto(response)

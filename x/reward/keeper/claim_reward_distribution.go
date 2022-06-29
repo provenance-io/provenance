@@ -14,9 +14,9 @@ func (k Keeper) SetClaimPeriodRewardDistribution(ctx sdk.Context, ClaimPeriodRew
 }
 
 // GetClaimPeriodRewardDistribution returns a ClaimPeriodRewardDistribution by epoch id and reward id
-func (k Keeper) GetClaimPeriodRewardDistribution(ctx sdk.Context, claimPeriodId uint64, rewardID uint64) (ClaimPeriodRewardDistribution types.ClaimPeriodRewardDistribution, err error) {
+func (k Keeper) GetClaimPeriodRewardDistribution(ctx sdk.Context, claimPeriodID uint64, rewardID uint64) (ClaimPeriodRewardDistribution types.ClaimPeriodRewardDistribution, err error) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetClaimPeriodRewardDistributionKey(claimPeriodId, rewardID)
+	key := types.GetClaimPeriodRewardDistributionKey(claimPeriodID, rewardID)
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return ClaimPeriodRewardDistribution, nil
@@ -62,9 +62,9 @@ func (k Keeper) ClaimPeriodRewardDistributionIsValid(ClaimPeriodReward *types.Cl
 }
 
 // RemoveClaimPeriodRewardDistribution Removes an ClaimPeriodRewardDistribution
-func (k Keeper) RemoveClaimPeriodRewardDistribution(ctx sdk.Context, claimPeriodId uint64, rewardID uint64) bool {
+func (k Keeper) RemoveClaimPeriodRewardDistribution(ctx sdk.Context, claimPeriodID uint64, rewardID uint64) bool {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetClaimPeriodRewardDistributionKey(claimPeriodId, rewardID)
+	key := types.GetClaimPeriodRewardDistributionKey(claimPeriodID, rewardID)
 	bz := store.Get(key)
 	keyExists := store.Has(bz)
 	if keyExists {
