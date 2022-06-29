@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	coin1000 = sdk.NewCoin("stake", sdk.NewInt(1000))
-	coin500  = sdk.NewCoin("stake", sdk.NewInt(500))
+	coin1000   = sdk.NewCoin("stake", sdk.NewInt(1000))
+	coin500    = sdk.NewCoin("stake", sdk.NewInt(500))
+	msgTypeURL = "/provenance.marker.v1.MsgTransferRequest"
 )
 
 func TestMarkerTransferAuthorization(t *testing.T) {
@@ -20,28 +21,33 @@ func TestMarkerTransferAuthorization(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	authorization := NewMarkerTransferAuthorization(sdk.NewCoins(coin1000))
 
-	t.Log("verify authorization returns valid method name")
-	require.Equal(t, authorization.MsgTypeURL(), "/provenance.marker.v1.MsgTransferRequest")
-	require.NoError(t, authorization.ValidateBasic())
-	send := &MsgTransferRequest{Amount: coin500}
+	t.Run("verify authorization returns valid method name", func(t *testing.T) {
+		require.Equal(t, authorization.MsgTypeURL(), msgTypeURL)
+		require.NoError(t, authorization.ValidateBasic())
+	})
 
-	t.Log("verify updated authorization returns remaining spent limit")
-	resp, err := authorization.Accept(ctx, send)
-	require.NoError(t, err)
-	require.False(t, resp.Delete)
-	require.NotNil(t, resp.Updated)
-	sendAuth := NewMarkerTransferAuthorization(sdk.NewCoins(coin500))
-	require.Equal(t, sendAuth.String(), resp.Updated.String())
+	t.Run("verify updated authorization returns remaining spent limit", func(t *testing.T) {
+		send := &MsgTransferRequest{Amount: coin500}
+		resp, err := authorization.Accept(ctx, send)
+		require.NoError(t, err)
+		require.False(t, resp.Delete)
+		require.NotNil(t, resp.Updated)
+		sendAuth := NewMarkerTransferAuthorization(sdk.NewCoins(coin500))
+		require.Equal(t, sendAuth.String(), resp.Updated.String())
+	})
 
-	t.Log("expect updated authorization delete after spending remaining amount")
-	resp, err = resp.Updated.Accept(ctx, send)
-	require.NoError(t, err)
-	require.True(t, resp.Delete)
-	require.NotNil(t, resp.Updated)
+	t.Run("expect updated authorization delete after spending remaining amount", func(t *testing.T) {
+		send := &MsgTransferRequest{Amount: coin1000}
+		resp, err := authorization.Accept(ctx, send)
+		require.NoError(t, err)
+		require.True(t, resp.Delete)
+		require.NotNil(t, resp.Updated)
+	})
 
-	t.Log("verify invalid transfer type")
-	sendInvalid := &MsgBurnRequest{Amount: coin500}
-	resp, err = authorization.Accept(ctx, sendInvalid)
-	require.Error(t, err)
-	require.Nil(t, resp.Updated)
+	t.Run("verify invalid transfer type", func(t *testing.T) {
+		sendInvalid := &MsgBurnRequest{Amount: coin500}
+		resp, err := authorization.Accept(ctx, sendInvalid)
+		require.Error(t, err)
+		require.Nil(t, resp.Updated)
+	})
 }

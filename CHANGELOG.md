@@ -41,6 +41,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add new `msgfees` `NhashPerUsdMil`  default param to param space store on upgrade (PR [#875](https://github.com/provenance-io/provenance/issues/875))
 * Marker module `authzHandler` function is double decrementing [#903](https://github.com/provenance-io/provenance/issues/903)
+  
+### State Machine Breaking
+
+* Fix the `MarkerTransferAuthorization` Accept function and `TransferCoin` authz handling to prevent problems when other authorization types are used [#903](https://github.com/provenance-io/provenance/issues/903)
 
 ---
 
