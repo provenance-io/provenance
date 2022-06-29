@@ -383,6 +383,7 @@
 - [provenance/reward/v1/reward.proto](#provenance/reward/v1/reward.proto)
     - [ActionDelegate](#provenance.reward.v1.ActionDelegate)
     - [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations)
+    - [ActionVote](#provenance.reward.v1.ActionVote)
     - [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution)
     - [EventCreateRewardProgram](#provenance.reward.v1.EventCreateRewardProgram)
     - [QualifyingAction](#provenance.reward.v1.QualifyingAction)
@@ -5823,6 +5824,30 @@ if above min and below max, increase shares earned for rewards pool by 1.
 accounts that have made transfers, from accounts that have active delegations
 rule: ActionTransferDelegations "When transfer has occurred and the account has an active delegation,
 give it a share of the rewards pool, assuming it has not gone over max value and is above a min value" {
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `minimum_actions` | [uint64](#uint64) |  |  |
+| `maximum_actions` | [uint64](#uint64) |  |  |
+| `minimum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | transfers from only account that have delegations will be accounted for if minimum_delegation_amount is nt zero coins if below field is set to zero coins then all transfers will be eligible for this rewards. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.ActionVote"></a>
+
+### ActionVote
+ActionVote reward, participants for voting on provenance gov proposals.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `minimum_actions` | [uint64](#uint64) |  |  |
+| `maximum_actions` | [uint64](#uint64) |  |  |
+| `minimum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | votes from only account that have delegations will be tallied hence this rule will enforce that . |
 
 
 

@@ -31,6 +31,7 @@ var (
 const (
 	ActionTypeDelegate            = "ActionDelegate"
 	ActionTypeTransferDelegations = "ActionTransferDelegations"
+	ActionTypeVote                = "ActionVote"
 )
 
 type (
@@ -416,6 +417,42 @@ func (atd *ActionTransferDelegations) PreEvaluate(ctx sdk.Context, provider Keep
 }
 
 func (atd *ActionTransferDelegations) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
+	// Any action specific thing that we need to do after evaluation
+}
+
+// ============ Action Transfer Delegations ============
+
+func NewActionVote() ActionVote {
+	return ActionVote{}
+}
+
+func (atd *ActionVote) ValidateBasic() error {
+	return nil
+}
+
+func (atd *ActionVote) GetBuilder() ActionBuilder {
+	return &DelegateTransferActionBuilder{}
+}
+
+func (atd *ActionVote) String() string {
+	out, _ := yaml.Marshal(atd)
+	return string(out)
+}
+
+func (atd *ActionVote) ActionType() string {
+	return ActionTypeDelegate
+}
+
+func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
+	// TODO execute all the rules for action?
+	return false
+}
+
+func (atd *ActionVote) PreEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
+	// Any action specific thing that we need to do before evaluation
+}
+
+func (atd *ActionVote) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
 	// Any action specific thing that we need to do after evaluation
 }
 
