@@ -617,14 +617,14 @@ func TestAccountImplictControl(t *testing.T) {
 	now := ctx.BlockHeader().Time
 	require.NotNil(t, now)
 	a := types.NewMarkerTransferAuthorization(sdk.NewCoins(sdk.NewCoin("testcoin", sdk.NewInt(10))))
-	err := app.AuthzKeeper.SaveGrant(ctx, grantee, granter, a, time.Now().Add(time.Hour))
-	require.NoError(t, err)
 
-	// succeeds when admin user (grantee with authz permissions) has transfer authority
-	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
-	// fails when admin user (grantee without authz permissions) has transfer authority
-	require.NoError(t, app.AuthzKeeper.DeleteGrant(ctx, grantee, granter, a.MsgTypeURL()))
+	// fails when admin user (grantee without authz permissions) has transfer authority (transfer remaining balance)
 	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
+	// succeeds when admin user (grantee with authz permissions) has transfer authority
+	require.NoError(t, app.AuthzKeeper.SaveGrant(ctx, grantee, granter, a, time.Now().Add(time.Hour)))
+	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
+	// succeeds when admin user (grantee with authz permissions) has transfer authority (transfer remaining balance)
+	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
 	// fails when admin user (grantee with authz permissions) and transfer authority has transferred all coin ^^^ (grant has now been deleted)
 	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
 }
