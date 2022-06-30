@@ -119,3 +119,20 @@ func (b *DelegateActionBuilder) Reset() {
 	b.Validator = sdk.ValAddress{}
 	b.Delegator = sdk.AccAddress{}
 }
+
+// ============ VoteActionBuilder ============
+
+type VoteActionBuilder struct {
+	Validator sdk.ValAddress
+}
+
+func (b *VoteActionBuilder) GetEventCriteria() *EventCriteria {
+	return NewEventCriteria([]ABCIEvent{
+		{
+			Type: "message",
+			Attributes: map[string][]byte{
+				"module": []byte("governance"),
+			},
+		},
+	})
+}

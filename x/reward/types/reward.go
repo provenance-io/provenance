@@ -383,7 +383,7 @@ func (atd *ActionTransferDelegations) String() string {
 }
 
 func (atd *ActionTransferDelegations) ActionType() string {
-	return ActionTypeDelegate
+	return ActionTypeTransferDelegations
 }
 
 func (atd *ActionTransferDelegations) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
@@ -399,7 +399,7 @@ func (atd *ActionTransferDelegations) PostEvaluate(ctx sdk.Context, provider Kee
 	// Any action specific thing that we need to do after evaluation
 }
 
-// ============ Action Transfer Delegations ============
+// ============ Action Vote  ============
 
 func NewActionVote() ActionVote {
 	return ActionVote{}
@@ -419,7 +419,7 @@ func (atd *ActionVote) String() string {
 }
 
 func (atd *ActionVote) ActionType() string {
-	return ActionTypeDelegate
+	return ActionTypeVote
 }
 
 func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
@@ -445,6 +445,8 @@ func (qa *QualifyingAction) GetRewardAction(ctx sdk.Context) (RewardAction, erro
 		action = qa.GetDelegate()
 	case *QualifyingAction_TransferDelegations:
 		action = qa.GetTransferDelegations()
+	case *QualifyingAction_Vote:
+		action = qa.GetVote()
 	default:
 		// Skip any unsupported actions
 		message := fmt.Sprintf("The Action type %s is not supported", actionType)

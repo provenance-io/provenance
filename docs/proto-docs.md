@@ -5914,6 +5914,7 @@ EventCreateRewardProgram event emitted when a reward program is created
 | ----- | ---- | ----- | ----------- |
 | `delegate` | [ActionDelegate](#provenance.reward.v1.ActionDelegate) |  |  |
 | `transferDelegations` | [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations) |  |  |
+| `vote` | [ActionVote](#provenance.reward.v1.ActionVote) |  |  |
 
 
 
