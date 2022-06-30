@@ -28,10 +28,6 @@ func (k Keeper) Update(ctx sdk.Context) {
 }
 
 func (k Keeper) Cleanup(ctx sdk.Context) {
-	err := k.RemoveDeadPrograms(ctx)
-	if err != nil {
-		ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - error removing dead reward programs: %v ", err))
-	}
 }
 
 func (k Keeper) StartRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) error {
@@ -138,14 +134,14 @@ func (k Keeper) CalculateRewardClaimPeriodRewards(ctx sdk.Context, maxReward sdk
 		return sum, fmt.Errorf("ProgramBalance, MaxReward, and ClaimPeriodReward denoms must match")
 	}
 
-	participants, err := k.GetRewardClaimPeriodShares(ctx, claimPeriodReward.GetRewardProgramId(), claimPeriodReward.GetClaimPeriodId())
+	participants, err := k.GetRewardAccountStatesForClaimPeriod(ctx, claimPeriodReward.GetRewardProgramId(), claimPeriodReward.GetClaimPeriodId())
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("NOTICE: Unable to get shares for reward program %d's claim period %d ", claimPeriodReward.GetRewardProgramId(), claimPeriodReward.GetClaimPeriodId()))
 		return sum, fmt.Errorf("unable to get reward claim period shares for reward program %d and claim period %d", claimPeriodReward.GetRewardProgramId(), claimPeriodReward.GetClaimPeriodId())
 	}
 
 	for _, participant := range participants {
-		reward := k.CalculateParticipantReward(ctx, participant.GetAmount(), claimPeriodReward.GetTotalShares(), claimPeriodReward.GetRewardsPool())
+		reward := k.CalculateParticipantReward(ctx, int64(participant.GetSharesEarned()), claimPeriodReward.GetTotalShares(), claimPeriodReward.GetRewardsPool())
 		if maxReward.IsLT(reward) {
 			reward = maxReward
 		}

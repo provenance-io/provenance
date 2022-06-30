@@ -54,9 +54,12 @@ func (s *KeeperTestSuite) TestDelegateAgainstNoRewardPrograms() {
 	})
 
 	count := 0
-	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
-		count += 1
-		return true
+	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+		if state.GetSharesEarned() > 0 {
+			count += 1
+			return true
+		}
+		return false
 	})
 	s.Assert().NoError(err, "iterate should not throw error")
 	s.Assert().Equal(0, count, "no shares should be created")
@@ -114,9 +117,12 @@ func (s *KeeperTestSuite) TestDelegateAgainstInactiveRewardPrograms() {
 
 	// Ensure no shares are granted
 	count := 0
-	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
-		count += 1
-		return true
+	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+		if state.GetSharesEarned() > 0 {
+			count += 1
+			return true
+		}
+		return false
 	})
 	s.Assert().NoError(err, "iterate should not throw error")
 	s.Assert().Equal(0, count, "no shares should be created")
@@ -183,9 +189,12 @@ func (s *KeeperTestSuite) TestNonDelegateAgainstRewardProgram() {
 
 	// Ensure no shares are granted
 	count := 0
-	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
-		count += 1
-		return true
+	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+		if state.GetSharesEarned() > 0 {
+			count += 1
+			return true
+		}
+		return false
 	})
 	s.Assert().NoError(err, "iterate should not throw error")
 	s.Assert().Equal(0, count, "no shares should be created")
@@ -282,7 +291,7 @@ func (s *KeeperTestSuite) TestSingleDelegate() {
 			},
 		},
 	)
-	rewardProgram.State = types.RewardProgram_STARTED
+	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -293,9 +302,11 @@ func (s *KeeperTestSuite) TestSingleDelegate() {
 
 	// Ensure one share is granted
 	count := 0
-	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
-		count += int(share.GetAmount())
-		return true
+	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+		if state.GetSharesEarned() > 0 {
+			count += int(state.GetSharesEarned())
+		}
+		return false
 	})
 	s.Assert().NoError(err, "iterate should not throw error")
 	s.Assert().Equal(1, count, "1 share should be created")
@@ -347,7 +358,7 @@ func (s *KeeperTestSuite) TestMultipleDelegate() {
 			},
 		},
 	)
-	rewardProgram.State = types.RewardProgram_STARTED
+	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -359,9 +370,11 @@ func (s *KeeperTestSuite) TestMultipleDelegate() {
 
 	// Ensure one share is granted
 	count := 0
-	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
-		count += int(share.GetAmount())
-		return true
+	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+		if state.GetSharesEarned() > 0 {
+			count += int(state.GetSharesEarned())
+		}
+		return false
 	})
 	s.Assert().NoError(err, "iterate should not throw error")
 	s.Assert().Equal(2, count, "2 shares should be created")
@@ -413,7 +426,7 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumActions() {
 			},
 		},
 	)
-	rewardProgram.State = types.RewardProgram_STARTED
+	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -425,9 +438,12 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumActions() {
 
 	// Ensure no share is granted
 	count := 0
-	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
-		count += int(share.GetAmount())
-		return true
+	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+		if state.GetSharesEarned() > 0 {
+			count += int(state.GetSharesEarned())
+			return true
+		}
+		return false
 	})
 	s.Assert().NoError(err, "iterate should not throw error")
 	s.Assert().Equal(0, count, "no share should be created when below minimum actions")
@@ -470,7 +486,7 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumActions() {
 			},
 		},
 	)
-	rewardProgram.State = types.RewardProgram_STARTED
+	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -482,9 +498,12 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumActions() {
 
 	// Ensure no share is granted
 	count := 0
-	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
-		count += int(share.GetAmount())
-		return true
+	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+		if state.GetSharesEarned() > 0 {
+			count += int(state.GetSharesEarned())
+			return true
+		}
+		return false
 	})
 	s.Assert().NoError(err, "iterate should not throw error")
 	s.Assert().Equal(0, count, "no share should be created when above maximum actions")
@@ -536,7 +555,7 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumDelegation() {
 			},
 		},
 	)
-	rewardProgram.State = types.RewardProgram_STARTED
+	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -548,9 +567,12 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumDelegation() {
 
 	// Ensure no share is granted
 	count := 0
-	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
-		count += int(share.GetAmount())
-		return true
+	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+		if state.GetSharesEarned() > 0 {
+			count += int(state.GetSharesEarned())
+			return true
+		}
+		return false
 	})
 	s.Assert().NoError(err, "iterate should not throw error")
 	s.Assert().Equal(0, count, "no share should be created when below minimum delegation amount")
@@ -602,7 +624,7 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumDelegation() {
 			},
 		},
 	)
-	rewardProgram.State = types.RewardProgram_STARTED
+	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -614,9 +636,12 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumDelegation() {
 
 	// Ensure no share is granted
 	count := 0
-	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
-		count += int(share.GetAmount())
-		return true
+	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+		if state.GetSharesEarned() > 0 {
+			count += int(state.GetSharesEarned())
+			return true
+		}
+		return false
 	})
 	s.Assert().NoError(err, "iterate should not throw error")
 	s.Assert().Equal(0, count, "no share should be created when above maximum delegation amount")
@@ -668,7 +693,7 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumPercentile() {
 			},
 		},
 	)
-	rewardProgram.State = types.RewardProgram_STARTED
+	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -680,9 +705,12 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumPercentile() {
 
 	// Ensure no share is granted
 	count := 0
-	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
-		count += int(share.GetAmount())
-		return true
+	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+		if state.GetSharesEarned() > 0 {
+			count += int(state.GetSharesEarned())
+			return true
+		}
+		return false
 	})
 	s.Assert().NoError(err, "iterate should not throw error")
 	s.Assert().Equal(0, count, "no share should be created when below minimum delegation percentage")
@@ -734,7 +762,7 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumPercentile() {
 			},
 		},
 	)
-	rewardProgram.State = types.RewardProgram_STARTED
+	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -746,9 +774,12 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumPercentile() {
 
 	// Ensure no share is granted
 	count := 0
-	err := s.app.RewardKeeper.IterateShares(s.ctx, func(share types.Share) bool {
-		count += int(share.GetAmount())
-		return true
+	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+		if state.GetSharesEarned() > 0 {
+			count += int(state.GetSharesEarned())
+			return true
+		}
+		return false
 	})
 	s.Assert().NoError(err, "iterate should not throw error")
 	s.Assert().Equal(0, count, "no share should be created when above maximum delegation percentage")

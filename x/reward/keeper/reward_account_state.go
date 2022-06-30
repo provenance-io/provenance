@@ -57,3 +57,49 @@ func (k Keeper) IterateRewardAccountStates(ctx sdk.Context, rewardProgramID, rew
 	}
 	return nil
 }
+
+// TODO test this
+func (k Keeper) IterateAllRewardAccountStates(ctx sdk.Context, handle func(state types.RewardAccountState) (stop bool)) error {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.GetAllRewardAccountStateKeyPrefix())
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		record := types.RewardAccountState{}
+		if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {
+			return err
+		}
+		if handle(record) {
+			break
+		}
+	}
+	return nil
+}
+
+// TODO Test this
+func (k Keeper) IterateRewardAccountStatesForClaimPeriod(ctx sdk.Context, rewardProgramID, claimPeriodID uint64, handle func(state types.RewardAccountState) (stop bool)) error {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.GetClaimPeriodRewardAccountStateKeyPrefix(rewardProgramID, claimPeriodID))
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		record := types.RewardAccountState{}
+		if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {
+			return err
+		}
+		if handle(record) {
+			break
+		}
+	}
+	return nil
+}
+
+// TODO Test this
+func (k Keeper) GetRewardAccountStatesForClaimPeriod(ctx sdk.Context, rewardProgramID, claimPeriodID uint64) ([]types.RewardAccountState, error) {
+	states := []types.RewardAccountState{}
+	err := k.IterateRewardAccountStatesForClaimPeriod(ctx, rewardProgramID, claimPeriodID, func(state types.RewardAccountState) (stop bool) {
+		states = append(states, state)
+		return false
+	})
+	return states, err
+}

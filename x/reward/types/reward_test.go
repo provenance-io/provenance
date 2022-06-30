@@ -264,15 +264,6 @@ func (s *RewardTypesTestSuite) TestEpochRewardDistributionValidateBasic() {
 	}
 }
 
-func (s *RewardTypesTestSuite) TestRewardAccountStateIncrementActionCounter() {
-	state := NewRewardAccountState(1, 1, "address")
-	state.IncrementActionCounter("custom", 1)
-	s.Assert().Equal(uint64(1), state.ActionCounter["custom"], "action counter should handle new type counters")
-	state.IncrementActionCounter("custom", 2)
-	s.Assert().Equal(uint64(3), state.ActionCounter["custom"], "action counter should handle incrementing previous type counters")
-
-}
-
 func (s *RewardTypesTestSuite) TesRewardAccountStateValidateBasic() {
 	tests := []struct {
 		name               string
@@ -285,6 +276,7 @@ func (s *RewardTypesTestSuite) TesRewardAccountStateValidateBasic() {
 				1,
 				2,
 				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				0,
 			),
 			"",
 		},
@@ -294,6 +286,7 @@ func (s *RewardTypesTestSuite) TesRewardAccountStateValidateBasic() {
 				0,
 				2,
 				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				0,
 			),
 			"reward program id must be greater than 0",
 		},
@@ -303,6 +296,7 @@ func (s *RewardTypesTestSuite) TesRewardAccountStateValidateBasic() {
 				1,
 				2,
 				"test",
+				0,
 			),
 			"invalid address for reward program balance: decoding bech32 failed: invalid bech32 string length 7",
 		},

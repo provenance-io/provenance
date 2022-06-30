@@ -189,12 +189,13 @@ func (rp *RewardProgram) String() string {
 
 // ============ Account State ============
 
-func NewRewardAccountState(rewardProgramID, rewardClaimPeriodID uint64, address string) RewardAccountState {
+func NewRewardAccountState(rewardProgramID, rewardClaimPeriodID uint64, address string, shares uint64) RewardAccountState {
 	return RewardAccountState{
 		RewardProgramId: rewardProgramID,
 		ClaimPeriodId:   rewardClaimPeriodID,
 		Address:         address,
 		ActionCounter:   map[string]uint64{},
+		SharesEarned:    shares,
 	}
 }
 
@@ -205,43 +206,14 @@ func (s *RewardAccountState) ValidateBasic() error {
 	if id := s.GetRewardProgramId(); id == 0 {
 		return fmt.Errorf("reward program id must be greater than 0")
 	}
+	if claimID := s.GetClaimPeriodId(); claimID == 0 {
+		return fmt.Errorf("claim period id must be greater than 0")
+	}
+
 	return nil
 }
 
 func (s *RewardAccountState) String() string {
-	out, _ := yaml.Marshal(s)
-	return string(out)
-}
-
-func (s *RewardAccountState) IncrementActionCounter(actionType string, amount uint64) {
-	if s.ActionCounter == nil {
-		s.ActionCounter = map[string]uint64{}
-	}
-	s.ActionCounter[actionType] += amount
-}
-
-// ============ Share ============
-
-func NewShare(rewardProgramID, claimPeriodID uint64, address string, amount int64) Share {
-	return Share{
-		RewardProgramId: rewardProgramID,
-		ClaimPeriodId:   claimPeriodID,
-		Address:         address,
-		Amount:          amount,
-	}
-}
-
-func (s *Share) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(s.Address); err != nil {
-		return fmt.Errorf("invalid address for share address: %w", err)
-	}
-	if id := s.GetRewardProgramId(); id == 0 {
-		return fmt.Errorf("invalid reward program id")
-	}
-	return nil
-}
-
-func (s *Share) String() string {
 	out, _ := yaml.Marshal(s)
 	return string(out)
 }

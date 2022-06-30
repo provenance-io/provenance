@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"errors"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -98,25 +97,6 @@ func (k Keeper) GetAllRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, er
 // Check if a RewardProgram is valid
 func (k Keeper) RewardProgramIsValid(rewardProgram *types.RewardProgram) bool {
 	return rewardProgram.Id != 0
-}
-
-// Removes all RewardPrograms that are expired
-func (k Keeper) RemoveDeadPrograms(ctx sdk.Context) error {
-	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
-		hasShares, err := k.HasShares(ctx, rewardProgram.Id)
-		if err != nil {
-			ctx.Logger().Info(fmt.Sprintf("NOTICE: RemoveDeadPrograms - error checking shares for reward program %d: %v ", rewardProgram.Id, err))
-			return false
-		}
-
-		if rewardProgram.State != types.RewardProgram_FINISHED || hasShares {
-			return false
-		}
-
-		k.RemoveRewardProgram(ctx, rewardProgram.GetId())
-		return false
-	})
-	return err
 }
 
 // GetRewardProgramID gets the highest rewardprogram ID

@@ -391,7 +391,6 @@
     - [RewardAccountState](#provenance.reward.v1.RewardAccountState)
     - [RewardAccountState.ActionCounterEntry](#provenance.reward.v1.RewardAccountState.ActionCounterEntry)
     - [RewardProgram](#provenance.reward.v1.RewardProgram)
-    - [Share](#provenance.reward.v1.Share)
   
     - [RewardProgram.State](#provenance.reward.v1.RewardProgram.State)
   
@@ -5948,6 +5947,7 @@ EventCreateRewardProgram event emitted when a reward program is created
 | `claim_period_id` | [uint64](#uint64) |  | The id of the claim period that the share belongs to |
 | `address` | [string](#string) |  | Owner of the share |
 | `action_counter` | [RewardAccountState.ActionCounterEntry](#provenance.reward.v1.RewardAccountState.ActionCounterEntry) | repeated | The number of actions done by this account |
+| `shares_earned` | [uint64](#uint64) |  | The amount of granted shares for the address in the reward program's claim period |
 
 
 
@@ -5996,25 +5996,6 @@ RewardProgram
 | `state` | [RewardProgram.State](#provenance.reward.v1.RewardProgram.State) |  | the current state of the reward program |
 | `share_expiration_offset` | [uint64](#uint64) |  | Used to calculate the expiration time of a share in seconds. Currently, it is epoch_end_time + offset |
 | `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated | The actions that count towards the reward |
-
-
-
-
-
-
-<a name="provenance.reward.v1.Share"></a>
-
-### Share
-Share
-Reward Program Id + Reward Claim Period Id + Address
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this share belongs to |
-| `claim_period_id` | [uint64](#uint64) |  | The id of the claim period that the share belongs to |
-| `address` | [string](#string) |  | Owner of the share |
-| `amount` | [int64](#int64) |  | The amount of granted shares for the address |
 
 
 

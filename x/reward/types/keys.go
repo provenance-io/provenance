@@ -33,7 +33,6 @@ var (
 	EligibilityCriteriaKeyPrefix = []byte{0x06}
 
 	ActionKeyPrefix       = []byte{0x07}
-	ShareKeyPrefix        = []byte{0x08}
 	AccountStateKeyPrefix = []byte{0x09}
 
 	ActionDelegateKey            = []byte("Delegate")
@@ -49,17 +48,6 @@ func GetRewardProgramKey(id uint64) []byte {
 func GetRewardProgramBalanceKey(rewardProgramID uint64) []byte {
 	idByte := []byte(strconv.FormatUint(rewardProgramID, 10))
 	return append(RewardProgramBalanceKeyPrefix, idByte...)
-}
-
-// GetShareKey converts a reward program id, claim period id, and address into a ShareKey
-func GetShareKey(rewardID uint64, rewardClaimPeriodID uint64, addr []byte) []byte {
-	key := ShareKeyPrefix
-	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
-	claimPeriodByte := []byte(strconv.FormatUint(rewardClaimPeriodID, 10))
-	key = append(key, rewardByte...)
-	key = append(key, claimPeriodByte...)
-	key = append(key, address.MustLengthPrefix(addr)...)
-	return key
 }
 
 // GetRewardAccountStateKey converts a reward program id, claim period id, and address into an AccountStateKey
@@ -83,11 +71,29 @@ func GetRewardAccountStateKeyPrefix(rewardID uint64, rewardClaimPeriodID uint64)
 	return key
 }
 
-// GetRewardShareKeyPrefix converts a reward program id into a prefix for iterating
-func GetRewardShareKeyPrefix(rewardID uint64) []byte {
-	key := ShareKeyPrefix
+// TODO Test this
+// GetRewardAccountStateKeyPrefix returns the key to iterate over all RewardAccountStates for a RewardProgram
+func GetRewardProgramRewardAccountStateKeyPrefix(rewardID uint64) []byte {
+	key := AccountStateKeyPrefix
 	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
 	key = append(key, rewardByte...)
+	return key
+}
+
+// TODO Test this
+func GetClaimPeriodRewardAccountStateKeyPrefix(rewardID, claimID uint64) []byte {
+	key := AccountStateKeyPrefix
+	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
+	claimByte := []byte(strconv.FormatUint(claimID, 10))
+	key = append(key, rewardByte...)
+	key = append(key, claimByte...)
+	return key
+}
+
+// TODO Test this
+// GetRewardAccountStateKeyPrefix returns the key to iterate over all RewardAccountStates
+func GetAllRewardAccountStateKeyPrefix() []byte {
+	key := AccountStateKeyPrefix
 	return key
 }
 
@@ -101,16 +107,6 @@ func GetRewardProgramIDBytes(rewardprogramID uint64) (rewardprogramIDBz []byte) 
 // GetRewardProgramIDFromBytes returns rewardprogramID in uint64 format from a byte array
 func GetRewardProgramIDFromBytes(bz []byte) (rewardprogramID uint64) {
 	return binary.BigEndian.Uint64(bz)
-}
-
-// GetRewardClaimPeriodShareKeyPrefix converts a reward program id and claim period into a prefix for iterating
-func GetRewardClaimPeriodShareKeyPrefix(rewardID uint64, rewardClaimPeriodID uint64) []byte {
-	key := ShareKeyPrefix
-	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
-	claimPeriodByte := []byte(strconv.FormatUint(rewardClaimPeriodID, 10))
-	key = append(key, rewardByte...)
-	key = append(key, claimPeriodByte...)
-	return key
 }
 
 // GetRewardClaimsKey converts an reward claim

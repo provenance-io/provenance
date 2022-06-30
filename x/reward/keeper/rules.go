@@ -74,14 +74,15 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 	}
 
 	for _, action := range actions {
-		// Get the RewardAccountState for the triggering account
-		var state types.RewardAccountState
-
 		state, err := k.GetRewardAccountState(ctx, program.GetId(), program.GetCurrentClaimPeriod(), action.Address.String())
 		if err != nil {
 			continue
 		}
-		state.IncrementActionCounter(processor.ActionType(), 1)
+		if state.ValidateBasic() != nil {
+			state = types.NewRewardAccountState(program.GetId(), program.GetCurrentClaimPeriod(), action.Address.String(), 0)
+		}
+
+		state.ActionCounter[processor.ActionType()] += 1
 
 		processor.PreEvaluate(ctx, k, &state)
 		// TODO We want to create an Evaluation Result here.
@@ -113,25 +114,18 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 	}
 
 	for _, res := range evaluateRes {
-		share, err := k.GetShare(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), res.Address.String())
+		state, err := k.GetRewardAccountState(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), res.Address.String())
+		if state.ValidateBasic() != nil {
+			ctx.Logger().Error(fmt.Sprintf("NOTICE: Account state does not exist for RewardProgram: %d, ClaimPeriod: %d, Address: %s. Skipping...",
+				rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), res.Address.String()))
+			continue
+		}
 		if err != nil {
 			return err
 		}
 
-		// Share does not exist so create one
-		if share.ValidateBasic() != nil {
-			ctx.Logger().Info(fmt.Sprintf("NOTICE: Creating new share structure for rewardProgramId=%d, claimPeriod=%d, addr=%s",
-				rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), res.Address.String()))
-
-			share = types.NewShare(
-				rewardProgram.GetId(),
-				rewardProgram.GetCurrentClaimPeriod(),
-				res.Address.String(),
-				0,
-			)
-		}
-		share.Amount += res.Shares
-		k.SetShare(ctx, &share)
+		state.SharesEarned += uint64(res.Shares)
+		k.SetRewardAccountState(ctx, &state)
 		// we know the rewards it so update the epoch reward
 		claimPeriodRewardDistribution.TotalShares += res.Shares
 	}
