@@ -194,7 +194,7 @@ func NewRewardAccountState(rewardProgramID, rewardClaimPeriodID uint64, address 
 		RewardProgramId: rewardProgramID,
 		ClaimPeriodId:   rewardClaimPeriodID,
 		Address:         address,
-		ActionCounter:   0,
+		ActionCounter:   map[string]uint64{},
 	}
 }
 
@@ -211,6 +211,13 @@ func (s *RewardAccountState) ValidateBasic() error {
 func (s *RewardAccountState) String() string {
 	out, _ := yaml.Marshal(s)
 	return string(out)
+}
+
+func (s *RewardAccountState) IncrementActionCounter(actionType string, amount uint64) {
+	if s.ActionCounter == nil {
+		s.ActionCounter = map[string]uint64{}
+	}
+	s.ActionCounter[actionType] += amount
 }
 
 // ============ Share ============
@@ -341,8 +348,8 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 		return false
 	}
 	percentile := ad.getValidatorRankPercentile(ctx, provider, validator)
-
-	hasValidActionCount := state.ActionCounter >= ad.GetMinimumActions() && state.ActionCounter <= ad.GetMaximumActions()
+	actionCounter := state.ActionCounter[ad.ActionType()]
+	hasValidActionCount := actionCounter >= ad.GetMinimumActions() && actionCounter <= ad.GetMaximumActions()
 
 	// TODO Is this correct to truncate the tokens?
 	delegatedHash := sdk.NewInt64Coin("nhash", tokens.TruncateInt64())

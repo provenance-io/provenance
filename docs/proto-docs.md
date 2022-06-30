@@ -389,6 +389,7 @@
     - [QualifyingAction](#provenance.reward.v1.QualifyingAction)
     - [QualifyingActions](#provenance.reward.v1.QualifyingActions)
     - [RewardAccountState](#provenance.reward.v1.RewardAccountState)
+    - [RewardAccountState.ActionCounterEntry](#provenance.reward.v1.RewardAccountState.ActionCounterEntry)
     - [RewardProgram](#provenance.reward.v1.RewardProgram)
     - [Share](#provenance.reward.v1.Share)
   
@@ -5946,7 +5947,23 @@ EventCreateRewardProgram event emitted when a reward program is created
 | `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this share belongs to |
 | `claim_period_id` | [uint64](#uint64) |  | The id of the claim period that the share belongs to |
 | `address` | [string](#string) |  | Owner of the share |
-| `action_counter` | [uint64](#uint64) |  | The number of actions done by this account |
+| `action_counter` | [RewardAccountState.ActionCounterEntry](#provenance.reward.v1.RewardAccountState.ActionCounterEntry) | repeated | The number of actions done by this account |
+
+
+
+
+
+
+<a name="provenance.reward.v1.RewardAccountState.ActionCounterEntry"></a>
+
+### RewardAccountState.ActionCounterEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [string](#string) |  |  |
+| `value` | [uint64](#uint64) |  |  |
 
 
 

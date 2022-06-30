@@ -453,7 +453,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluatePasses() {
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewRewardAccountState(0, 0, "")
-	state.ActionCounter += 1
+	state.ActionCounter[action.ActionType()] += 1
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
 	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
@@ -508,7 +508,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumActionsN
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewRewardAccountState(0, 0, "")
-	state.ActionCounter += 3
+	state.ActionCounter[action.ActionType()] += 3
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
 	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
@@ -536,7 +536,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegati
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewRewardAccountState(0, 0, "")
-	state.ActionCounter += 1
+	state.ActionCounter[action.ActionType()] += 1
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
 	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
@@ -564,7 +564,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumDelegati
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewRewardAccountState(0, 0, "")
-	state.ActionCounter += 1
+	state.ActionCounter[action.ActionType()] += 1
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
 	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
@@ -592,7 +592,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActiveSt
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewRewardAccountState(0, 0, "")
-	state.ActionCounter += 1
+	state.ActionCounter[action.ActionType()] += 1
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
 	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
@@ -620,7 +620,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegati
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewRewardAccountState(0, 0, "")
-	state.ActionCounter += 1
+	state.ActionCounter[action.ActionType()] += 1
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
 	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")

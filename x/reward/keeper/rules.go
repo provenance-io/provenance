@@ -81,7 +81,7 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 		if err != nil {
 			continue
 		}
-		state.ActionCounter++
+		state.IncrementActionCounter(processor.ActionType(), 1)
 
 		processor.PreEvaluate(ctx, k, &state)
 		// TODO We want to create an Evaluation Result here.

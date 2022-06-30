@@ -120,10 +120,10 @@ message RewardAccountState {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  uint64 reward_program_id = 1; // The id of the reward program that this share belongs to
-  uint64 claim_period_id   = 2; // The id of the claim period that the share belongs to
-  string address           = 3 [(gogoproto.moretags) = "yaml:\"address\""]; // Owner of the share
-  uint64 action_counter    = 4; // The number of actions done by this account
+  uint64              reward_program_id = 1; // The id of the reward program that this share belongs to
+  uint64              claim_period_id   = 2; // The id of the claim period that the share belongs to
+  string              address           = 3 [(gogoproto.moretags) = "yaml:\"address\""]; // Owner of the share
+  map<string, uint64> action_counter    = 4; // The number of actions done by this account
 }
 
 // Share
@@ -176,11 +176,11 @@ message ActionTransferDelegations {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  uint64                   minimum_actions                 = 1;
-  uint64                   maximum_actions                 = 2;
-  // transfers from only account that have delegations will be accounted for if minimum_delegation_amount is nt zero coins
-  // if below field is set to zero coins then all transfers will be eligible for this rewards.
-  cosmos.base.v1beta1.Coin minimum_delegation_amount       = 3;
+  uint64 minimum_actions = 1;
+  uint64 maximum_actions = 2;
+  // transfers from only account that have delegations will be accounted for if minimum_delegation_amount is nt zero
+  // coins if below field is set to zero coins then all transfers will be eligible for this rewards.
+  cosmos.base.v1beta1.Coin minimum_delegation_amount = 3;
 }
 
 // ActionVote reward, participants for voting on provenance gov proposals.
@@ -188,8 +188,8 @@ message ActionVote {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  uint64                   minimum_actions                 = 1;
-  uint64                   maximum_actions                 = 2;
+  uint64 minimum_actions = 1;
+  uint64 maximum_actions = 2;
   // votes from only account that have delegations will be tallied hence this rule will enforce that .
-  cosmos.base.v1beta1.Coin minimum_delegation_amount       = 3;
+  cosmos.base.v1beta1.Coin minimum_delegation_amount = 3;
 }
