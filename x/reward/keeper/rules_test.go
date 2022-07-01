@@ -360,26 +360,16 @@ func (m MockStakingKeeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator
 	return nil
 }
 
-func (m MockStakingKeeper) GetValidatorDelegations(ctx sdk.Context, valAddr sdk.ValAddress) (delegations []stakingtypes.Delegation) {
-	delegations = []stakingtypes.Delegation{
-		{
-			DelegatorAddress: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			ValidatorAddress: "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun",
-			Shares:           sdk.NewDec(1),
-		},
-		{
-			DelegatorAddress: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			ValidatorAddress: "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun",
-			Shares:           sdk.NewDec(1),
-		},
-		{
-			DelegatorAddress: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			ValidatorAddress: "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun",
-			Shares:           sdk.NewDec(1),
-		},
+func (m MockStakingKeeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation stakingtypes.Delegation, found bool) {
+	if delAddr.String() != "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h" || valAddr.String() != "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun" {
+		return stakingtypes.Delegation{}, false
 	}
 
-	return delegations
+	return stakingtypes.Delegation{
+		DelegatorAddress: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		ValidatorAddress: "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun",
+		Shares:           sdk.NewDec(3),
+	}, true
 }
 
 func (suite *KeeperTestSuite) createTestValidators(amount int) {

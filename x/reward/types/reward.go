@@ -279,21 +279,15 @@ func (ad *ActionDelegate) GetBuilder() ActionBuilder {
 
 func (ad *ActionDelegate) getTokensFromValidator(ctx sdk.Context, provider KeeperProvider, validatorAddr sdk.ValAddress, delegator sdk.AccAddress) (sdk.Dec, bool) {
 	stakingKeeper := provider.GetStakingKeeper()
-	delegations := stakingKeeper.GetValidatorDelegations(ctx, validatorAddr)
-	delegatorShares := sdk.NewDec(0)
-	for _, delegation := range delegations {
-		if !delegator.Equals(delegation.GetDelegatorAddr()) {
-			continue
-		}
-		shares := delegation.GetShares()
-		delegatorShares = delegatorShares.Add(shares)
+	delegation, found := stakingKeeper.GetDelegation(ctx, delegator, validatorAddr)
+	if !found {
+		return sdk.NewDec(0), found
 	}
-
 	validator, found := stakingKeeper.GetValidator(ctx, validatorAddr)
 	if !found {
 		return sdk.NewDec(0), found
 	}
-	tokens := validator.TokensFromShares(delegatorShares)
+	tokens := validator.TokensFromShares(delegation.GetShares())
 	return tokens, found
 }
 
@@ -328,7 +322,6 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	}
 	percentile := ad.getValidatorRankPercentile(ctx, provider, validator)
 	actionCounter := state.ActionCounter[ad.ActionType()]
-	hasValidActionCount := actionCounter >= ad.GetMinimumActions() && actionCounter <= ad.GetMaximumActions()
 
 	// TODO Is this correct to truncate the tokens?
 	delegatedHash := sdk.NewInt64Coin("nhash", tokens.TruncateInt64())
@@ -337,6 +330,7 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	minPercentile := ad.GetMinimumActiveStakePercentile()
 	maxPercentile := ad.GetMaximumActiveStakePercentile()
 
+	hasValidActionCount := actionCounter >= ad.GetMinimumActions() && actionCounter <= ad.GetMaximumActions()
 	hasValidDelegationAmount := delegatedHash.IsGTE(*minDelegation) && (delegatedHash.IsLT(*maxDelegation) || delegatedHash.IsEqual(*maxDelegation))
 	hasValidActivePercentile := percentile.GTE(minPercentile) && percentile.LTE(maxPercentile)
 

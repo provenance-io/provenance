@@ -13,9 +13,9 @@ type DistributionKeeper interface {
 // StakingKeeper defines a subset of methods implemented by the cosmos-sdk staking keeper
 type StakingKeeper interface {
 	GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []stakingtypes.Delegation
-	GetValidatorDelegations(ctx sdk.Context, valAddr sdk.ValAddress) (delegations []stakingtypes.Delegation)
 	GetBondedValidatorsByPower(ctx sdk.Context) []stakingtypes.Validator
 	GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, found bool)
+	GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation stakingtypes.Delegation, found bool)
 }
 
 type KeeperProvider interface {
