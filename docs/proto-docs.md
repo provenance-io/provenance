@@ -392,6 +392,7 @@
     - [RewardAccountState.ActionCounterEntry](#provenance.reward.v1.RewardAccountState.ActionCounterEntry)
     - [RewardProgram](#provenance.reward.v1.RewardProgram)
   
+    - [RewardAccountState.ClaimStatus](#provenance.reward.v1.RewardAccountState.ClaimStatus)
     - [RewardProgram.State](#provenance.reward.v1.RewardProgram.State)
   
 - [provenance/reward/v1/genesis.proto](#provenance/reward/v1/genesis.proto)
@@ -5949,6 +5950,7 @@ EventCreateRewardProgram event emitted when a reward program is created
 | `address` | [string](#string) |  | Owner of the share |
 | `action_counter` | [RewardAccountState.ActionCounterEntry](#provenance.reward.v1.RewardAccountState.ActionCounterEntry) | repeated | The number of actions done by this account |
 | `shares_earned` | [uint64](#uint64) |  | The amount of granted shares for the address in the reward program's claim period |
+| `claim_status` | [RewardAccountState.ClaimStatus](#provenance.reward.v1.RewardAccountState.ClaimStatus) |  | The status of the claim |
 
 
 
@@ -6003,6 +6005,19 @@ RewardProgram
 
 
  <!-- end messages -->
+
+
+<a name="provenance.reward.v1.RewardAccountState.ClaimStatus"></a>
+
+### RewardAccountState.ClaimStatus
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| UNCLAIMED | 0 |  |
+| CLAIMED | 1 |  |
+| EXPIRED | 2 |  |
+
 
 
 <a name="provenance.reward.v1.RewardProgram.State"></a>

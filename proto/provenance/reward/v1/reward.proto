@@ -119,12 +119,18 @@ message ClaimPeriodRewardDistribution {
 message RewardAccountState {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
+  enum ClaimStatus {
+    UNCLAIMED = 0;
+    CLAIMED   = 1;
+    EXPIRED   = 2;
+  }
 
   uint64              reward_program_id = 1; // The id of the reward program that this share belongs to
   uint64              claim_period_id   = 2; // The id of the claim period that the share belongs to
   string              address           = 3 [(gogoproto.moretags) = "yaml:\"address\""]; // Owner of the share
   map<string, uint64> action_counter    = 4; // The number of actions done by this account
-  uint64 shares_earned = 5; // The amount of granted shares for the address in the reward program's claim period
+  uint64      shares_earned = 5; // The amount of granted shares for the address in the reward program's claim period
+  ClaimStatus claim_status  = 6; // The status of the claim
 }
 
 message QualifyingAction {
@@ -133,7 +139,7 @@ message QualifyingAction {
   oneof type {
     ActionDelegate            delegate            = 1;
     ActionTransferDelegations transferDelegations = 2;
-    ActionVote vote = 3;
+    ActionVote                vote                = 3;
   }
 }
 

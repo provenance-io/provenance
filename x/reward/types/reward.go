@@ -196,6 +196,7 @@ func NewRewardAccountState(rewardProgramID, rewardClaimPeriodID uint64, address 
 		Address:         address,
 		ActionCounter:   map[string]uint64{},
 		SharesEarned:    shares,
+		ClaimStatus:     RewardAccountState_UNCLAIMED,
 	}
 }
 

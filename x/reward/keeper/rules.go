@@ -23,7 +23,6 @@ func (k Keeper) ProcessTransactions(ctx sdk.Context) {
 	// Grant shares for qualifying actions
 	for _, program := range rewardPrograms {
 		// Go through all the reward programs
-		program := program
 		actions, err := k.DetectQualifyingActions(ctx, &program)
 		if err != nil {
 			ctx.Logger().Error(err.Error())
