@@ -12,9 +12,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/testutil"
 	rewardcli "github.com/provenance-io/provenance/x/reward/client/cli"
+	"github.com/provenance-io/provenance/x/reward/types"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 
 	"github.com/stretchr/testify/suite"
@@ -28,6 +30,9 @@ type IntegrationTestSuite struct {
 
 	accountAddr sdk.AccAddress
 	accountKey  *secp256k1.PrivKey
+
+	activeRewardProgram types.RewardProgram
+	qualifyingActions   []types.QualifyingAction
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
@@ -45,60 +50,43 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	genesisState := s.cfg.GenesisState
 	s.cfg.NumValidators = 1
-	// now := time.Now().UTC()
-	// nextEpochTime := now.Add(time.Hour + 24)
+	now := time.Now().UTC()
+	minimumDelegation := sdk.NewInt64Coin(app.DefaultBondDenom, 0)
+	maximumDelegation := sdk.NewInt64Coin(app.DefaultBondDenom, 10)
+	s.qualifyingActions = []types.QualifyingAction{
+		{
+			Type: &types.QualifyingAction_Delegate{
+				Delegate: &types.ActionDelegate{
+					MinimumActions:               0,
+					MaximumActions:               10,
+					MinimumDelegationAmount:      &minimumDelegation,
+					MaximumDelegationAmount:      &maximumDelegation,
+					MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+					MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+				},
+			},
+		},
+	}
 
+	s.activeRewardProgram = types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		s.accountAddr.String(),
+		sdk.NewInt64Coin("nhash", 100),
+		sdk.NewInt64Coin("nhash", 100),
+		now,
+		60*60,
+		3,
+		0,
+		s.qualifyingActions,
+	)
 	rewardData := rewardtypes.NewGenesisState(
 		rewardtypes.DefaultStartingRewardProgramID,
 		[]rewardtypes.RewardProgram{
-			// types.NewRewardProgram(
-			// 	1,
-			// 	s.accountAddr.String(),
-			// 	sdk.NewInt64Coin("jackthecat", 1),
-			// 	sdk.NewInt64Coin("jackthecat", 2),
-			// 	now,
-			// 	nextEpochTime,
-			// 	"minute",
-			// 	1,
-			// 	rewardtypes.NewEligibilityCriteria("action-name", &rewardtypes.ActionDelegate{}),
-			// 	false,
-			// ),
-			// types.NewRewardProgram(
-			// 	2,
-			// 	s.accountAddr.String(),
-			// 	sdk.NewInt64Coin("jackthecat", 1),
-			// 	sdk.NewInt64Coin("jackthecat", 2),
-			// 	now,
-			// 	nextEpochTime,
-			// 	"minute",
-			// 	1,
-			// 	rewardtypes.NewEligibilityCriteria("action-name", &rewardtypes.ActionDelegate{}),
-			// 	false,
-			// ),
+			s.activeRewardProgram,
 		},
-		[]rewardtypes.ClaimPeriodRewardDistribution{
-			// types.NewClaimPeriodRewardDistribution(
-			// 	"day",
-			// 	1,
-			// 	sdk.NewInt64Coin("jackthecat", 100),
-			// 	5,
-			// 	false,
-			// ),
-			// types.NewClaimPeriodRewardDistribution(
-			// 	"day",
-			// 	2,
-			// 	sdk.NewInt64Coin("jackthecat", 100),
-			// 	3,
-			// 	false,
-			// ),
-			// types.NewClaimPeriodRewardDistribution(
-			// 	"month",
-			// 	1,
-			// 	sdk.NewInt64Coin("jackthecat", 100),
-			// 	10,
-			// 	false,
-			// ),
-		},
+		[]rewardtypes.ClaimPeriodRewardDistribution{},
 		rewardtypes.ActionDelegate{},
 		rewardtypes.ActionTransferDelegations{},
 	)
@@ -113,23 +101,24 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.network = network.New(s.T(), s.cfg)
 
-	_, err = s.network.WaitForHeight(3)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
+	s.network.WaitForNextBlock()
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
 func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 	testCases := []struct {
-		name           string
-		args           []string
-		expectErr      bool
-		expectErrMsg   string
-		expectedCode   uint32
-		expectedOutput string
+		name         string
+		args         []string
+		expectErr    bool
+		expectErrMsg string
+		expectedCode uint32
+		expectedIds  []uint64
 	}{
 		{"query all reward programs",
 			[]string{
@@ -138,34 +127,7 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 			false,
 			"",
 			0,
-			"{\"reward_programs\":[{\"id\":\"1\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"0\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"},{\"id\":\"2\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"100\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"}]}",
-		},
-		{"query all active reward programs",
-			[]string{
-				"active",
-			},
-			false,
-			"",
-			0,
-			"{\"reward_programs\":[{\"id\":\"1\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"0\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"}]}",
-		},
-		{"query existing reward program by id",
-			[]string{
-				"1",
-			},
-			false,
-			"",
-			0,
-			"{\"reward_program\":{\"id\":\"1\",\"distribute_from_address\":\"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h\",\"coin\":{\"denom\":\"jackthecat\",\"amount\":\"1\"},\"max_reward_by_address\":{\"denom\":\"jackthecat\",\"amount\":\"2\"},\"epoch_id\":\"minute\",\"start_epoch\":\"0\",\"number_epochs\":\"1\",\"eligibility_criteria\":{\"name\":\"action-name\",\"action\":{\"@type\":\"/provenance.reward.v1.ActionDelegate\"}},\"expired\":false,\"minimum\":\"1\",\"maximum\":\"2\"}}",
-		},
-		{"query non-existing reward program by id",
-			[]string{
-				"3",
-			},
-			true,
-			"reward program 3 does not exist",
-			0,
-			"",
+			[]uint64{1},
 		},
 	}
 
@@ -179,15 +141,31 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 				s.Assert().Error(err)
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
 			} else {
+				var response types.RewardProgramsResponse
 				s.Assert().NoError(err)
-				s.Assert().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
+				s.Assert().NoError(err)
+				s.Assert().Equal(len(tc.expectedIds), len(response.RewardPrograms))
+				//s.Assert().Equal(tc.expectedOutput, response)
+				for _, expectedId := range tc.expectedIds {
+					s.Assert().True(containsId(response.RewardPrograms, expectedId))
+				}
 			}
 		})
 	}
 }
 
+func containsId(rewardPrograms []types.RewardProgram, id uint64) bool {
+	for _, rewardProgram := range rewardPrograms {
+		if rewardProgram.Id == id {
+			return true
+		}
+	}
+	return false
+}
+
 // func (s *IntegrationTestSuite) TestQueryRewardClaims() {
-// 	rewardClaimsJson := fmt.Sprintf(`{"reward_claims":[{"address":"%s","shares_per_epoch_per_reward":[{"reward_program_id":"1","total_shares":"1","ephemeral_action_count":"1","latest_recorded_epoch":"1","claimed":false,"expired":false,"total_reward_claimed":{"denom":"","amount":"0"}}]},{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","shares_per_epoch_per_reward":[{"reward_program_id":"2","total_shares":"0","ephemeral_action_count":"0","latest_recorded_epoch":"0","claimed":false,"expired":false,"total_reward_claimed":{"denom":"jackthecat","amount":"0"}}]},{"address":"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h","shares_per_epoch_per_reward":[{"reward_program_id":"3","total_shares":"0","ephemeral_action_count":"0","latest_recorded_epoch":"0","claimed":false,"expired":false,"total_reward_claimed":{"denom":"jackthecat","amount":"0"}}]}]}`, s.network.Validators[0].Address.String())
+// 	rewardClaimsJson := fmt.Sprintf(`{"reward_claims":[{"address":"%s","shares_per_epoch_per_reward":[{"reward_program_id":"1","total_shares":"1","ephemeral_action_count":"1","latest_recorded_epoch":"1","claimed":false,"expired":false,"total_reward_claimed":{"denom":"","amount":"0"}}]},{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","shares_per_epoch_per_reward":[{"reward_program_id":"2","total_shares":"0","ephemeral_action_count":"0","latest_recorded_epoch":"0","claimed":false,"expired":false,"total_reward_claimed":{"denom":"nhash","amount":"0"}}]},{"address":"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h","shares_per_epoch_per_reward":[{"reward_program_id":"3","total_shares":"0","ephemeral_action_count":"0","latest_recorded_epoch":"0","claimed":false,"expired":false,"total_reward_claimed":{"denom":"nhash","amount":"0"}}]}]}`, s.network.Validators[0].Address.String())
 // 	testCases := []struct {
 // 		name           string
 // 		args           []string
@@ -561,7 +539,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
-
 			args := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.network.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),

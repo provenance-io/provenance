@@ -127,7 +127,7 @@ func NewRewardProgram(
 		RewardClaimExpirationOffset: rewardClaimExpirationOffset,
 		State:                       RewardProgram_PENDING,
 		QualifyingActions:           qualifyingActions,
-		MinimumRolloverAmount:       sdk.NewInt64Coin("nhash", 100_000_000_000),
+		MinimumRolloverAmount:       sdk.NewInt64Coin(totalRewardPool.Denom, 100_000_000_000),
 	}
 }
 
@@ -177,6 +177,12 @@ func (rp *RewardProgram) ValidateBasic() error {
 	}
 	if rp.ClaimPeriods < 1 {
 		return errors.New("reward program number of claim periods must be larger than 0")
+	}
+	if rp.TotalRewardPool.Denom != rp.RemainingPoolBalance.Denom && rp.RemainingPoolBalance.Denom != rp.MaxRewardByAddress.Denom {
+		return fmt.Errorf("all denoms must be same for total reward pool (%s) remaining reward pool (%s) and max reward by address (%s)", rp.TotalRewardPool.Denom, rp.RemainingPoolBalance.Denom, rp.MaxRewardByAddress.Denom)
+	}
+	if rp.TotalRewardPool.Denom != "nhash" {
+		return fmt.Errorf("reward program denom must be in %s : %s", rp.TotalRewardPool.Denom, "nhash")
 	}
 
 	return nil
