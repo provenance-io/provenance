@@ -133,6 +133,7 @@ message QualifyingAction {
   oneof type {
     ActionDelegate            delegate            = 1;
     ActionTransferDelegations transferDelegations = 2;
+    ActionVote vote = 3;
   }
 }
 
