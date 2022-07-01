@@ -399,8 +399,6 @@
     - [GenesisState](#provenance.reward.v1.GenesisState)
   
 - [provenance/reward/v1/query.proto](#provenance/reward/v1/query.proto)
-    - [ActiveRewardProgramsRequest](#provenance.reward.v1.ActiveRewardProgramsRequest)
-    - [ActiveRewardProgramsResponse](#provenance.reward.v1.ActiveRewardProgramsResponse)
     - [ClaimPeriodRewardDistributionByIDRequest](#provenance.reward.v1.ClaimPeriodRewardDistributionByIDRequest)
     - [ClaimPeriodRewardDistributionByIDResponse](#provenance.reward.v1.ClaimPeriodRewardDistributionByIDResponse)
     - [ClaimPeriodRewardDistributionRequest](#provenance.reward.v1.ClaimPeriodRewardDistributionRequest)
@@ -411,6 +409,8 @@
     - [RewardProgramByIDResponse](#provenance.reward.v1.RewardProgramByIDResponse)
     - [RewardProgramsRequest](#provenance.reward.v1.RewardProgramsRequest)
     - [RewardProgramsResponse](#provenance.reward.v1.RewardProgramsResponse)
+  
+    - [RewardProgramsRequest.QueryType](#provenance.reward.v1.RewardProgramsRequest.QueryType)
   
     - [Query](#provenance.reward.v1.Query)
   
@@ -5997,7 +5997,7 @@ RewardProgram
 | `claim_periods` | [uint64](#uint64) |  | number of claim periods this program will run for |
 | `current_claim_period` | [uint64](#uint64) |  | the current claim_period for the reward program is on(claim periods start at 1 <-- fisrt period) |
 | `state` | [RewardProgram.State](#provenance.reward.v1.RewardProgram.State) |  | the current state of the reward program |
-| `reward_claim_expiration_offset` | [uint64](#uint64) |  | Used to calculate the expiration time of a reward claim in seconds. The expiration timer begins when the program ends. |
+| `reward_claim_expiration_offset` | [uint64](#uint64) |  | Used to calculate the expiration time of a reward claim in seconds. The |
 | `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated | The actions that count towards the reward |
 
 
@@ -6079,31 +6079,6 @@ GenesisState defines the reward module's genesis state.
 <p align="right"><a href="#top">Top</a></p>
 
 ## provenance/reward/v1/query.proto
-
-
-
-<a name="provenance.reward.v1.ActiveRewardProgramsRequest"></a>
-
-### ActiveRewardProgramsRequest
-
-
-
-
-
-
-
-<a name="provenance.reward.v1.ActiveRewardProgramsResponse"></a>
-
-### ActiveRewardProgramsResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `reward_programs` | [RewardProgram](#provenance.reward.v1.RewardProgram) | repeated |  |
-
-
-
 
 
 
@@ -6224,6 +6199,12 @@ QueryModuleAccountBalanceResponse is the response type for the Query/Params RPC 
 
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `query_type` | [RewardProgramsRequest.QueryType](#provenance.reward.v1.RewardProgramsRequest.QueryType) |  |  |
+| `id` | [uint64](#uint64) |  |  |
+
+
 
 
 
@@ -6244,6 +6225,20 @@ QueryModuleAccountBalanceResponse is the response type for the Query/Params RPC 
 
  <!-- end messages -->
 
+
+<a name="provenance.reward.v1.RewardProgramsRequest.QueryType"></a>
+
+### RewardProgramsRequest.QueryType
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| ID | 0 |  |
+| ALL | 1 |  |
+| ACTIVE | 2 |  |
+| COMPLETED | 3 |  |
+
+
  <!-- end enums -->
 
  <!-- end HasExtensions -->
@@ -6258,7 +6253,6 @@ Query defines the gRPC querier service for reward module.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `RewardProgramByID` | [RewardProgramByIDRequest](#provenance.reward.v1.RewardProgramByIDRequest) | [RewardProgramByIDResponse](#provenance.reward.v1.RewardProgramByIDResponse) | returns RewardProgram by id | GET|/provenance/rewards/v1/reward_program_by_id/{id}|
 | `RewardPrograms` | [RewardProgramsRequest](#provenance.reward.v1.RewardProgramsRequest) | [RewardProgramsResponse](#provenance.reward.v1.RewardProgramsResponse) | returns RewardPrograms both upcoming and active | GET|/provenance/rewards/v1/reward_programs|
-| `ActiveRewardPrograms` | [ActiveRewardProgramsRequest](#provenance.reward.v1.ActiveRewardProgramsRequest) | [ActiveRewardProgramsResponse](#provenance.reward.v1.ActiveRewardProgramsResponse) | returns active RewardPrograms | GET|/provenance/rewards/v1/active_reward_programs|
 | `ModuleAccountBalance` | [QueryModuleAccountBalanceRequest](#provenance.reward.v1.QueryModuleAccountBalanceRequest) | [QueryModuleAccountBalanceResponse](#provenance.reward.v1.QueryModuleAccountBalanceResponse) |  | GET|/provenance/rewards/v1/module_account_balance|
 | `ClaimPeriodRewardDistributions` | [ClaimPeriodRewardDistributionRequest](#provenance.reward.v1.ClaimPeriodRewardDistributionRequest) | [ClaimPeriodRewardDistributionResponse](#provenance.reward.v1.ClaimPeriodRewardDistributionResponse) | returns all ClaimPeriodRewardDistributionResponse | GET|/provenance/rewards/v1/claim_period_reward_distributions|
 | `ClaimPeriodRewardDistributionsByID` | [ClaimPeriodRewardDistributionByIDRequest](#provenance.reward.v1.ClaimPeriodRewardDistributionByIDRequest) | [ClaimPeriodRewardDistributionByIDResponse](#provenance.reward.v1.ClaimPeriodRewardDistributionByIDResponse) | returns a ClaimPeriodRewardDistribution by rewardId and epochId | GET|/provenance/rewards/v1/claim_period_reward_distributions/{rewardId}/claimPeriods/{claimPeriodId}|

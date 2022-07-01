@@ -46,14 +46,35 @@ func GetRewardProgramCmd() *cobra.Command {
 %[1]s reward-program all
 %[1]s reward-program active`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			arg0 := strings.TrimSpace(args[0])
-			if arg0 == all {
-				return outputRewardProgramsAll(cmd)
-			} else if arg0 == active {
-				return outputRewardProgramsActive(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
 			}
 
-			return outputRewardProgramByID(cmd, arg0)
+			var request types.RewardProgramsRequest
+			arg0 := strings.TrimSpace(args[0])
+			if arg0 == all {
+				request.QueryType = types.RewardProgramsRequest_ALL
+			} else if arg0 == active {
+				request.QueryType = types.RewardProgramsRequest_ACTIVE
+			} else {
+				request.QueryType = types.RewardProgramsRequest_ID
+				id, err := strconv.ParseInt(arg0, 10, 64)
+				if err == nil {
+					return err
+				}
+				request.Id = uint64(id)
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			var response *types.RewardProgramsResponse
+			if response, err = queryClient.RewardPrograms(
+				context.Background(),
+				&request,
+			); err != nil {
+				return fmt.Errorf("failed to query reward programs: %s", err.Error())
+			}
+
+			return clientCtx.PrintProto(response)
 		},
 	}
 
@@ -88,71 +109,6 @@ func GetClaimPeriodRewardDistributionCmd() *cobra.Command {
 	}
 
 	return cmd
-}
-
-// Query for all Reward Programs
-func outputRewardProgramsAll(cmd *cobra.Command) error {
-	clientCtx, err := client.GetClientQueryContext(cmd)
-	if err != nil {
-		return err
-	}
-
-	queryClient := types.NewQueryClient(clientCtx)
-
-	var response *types.RewardProgramsResponse
-	if response, err = queryClient.RewardPrograms(
-		context.Background(),
-		&types.RewardProgramsRequest{},
-	); err != nil {
-		return fmt.Errorf("failed to query reward programs: %s", err.Error())
-	}
-
-	return clientCtx.PrintProto(response)
-}
-
-// Query for all active Reward Programs
-func outputRewardProgramsActive(cmd *cobra.Command) error {
-	clientCtx, err := client.GetClientQueryContext(cmd)
-	if err != nil {
-		return err
-	}
-	queryClient := types.NewQueryClient(clientCtx)
-
-	var response *types.ActiveRewardProgramsResponse
-	if response, err = queryClient.ActiveRewardPrograms(
-		context.Background(),
-		&types.ActiveRewardProgramsRequest{},
-	); err != nil {
-		return fmt.Errorf("failed to query active reward programs: %s", err.Error())
-	}
-	return clientCtx.PrintProto(response)
-}
-
-// Query for a RewardProgram by Id
-func outputRewardProgramByID(cmd *cobra.Command, arg string) error {
-	clientCtx, err := client.GetClientQueryContext(cmd)
-	if err != nil {
-		return err
-	}
-	queryClient := types.NewQueryClient(clientCtx)
-	programID, err := strconv.Atoi(arg)
-	if err != nil {
-		return err
-	}
-
-	var response *types.RewardProgramByIDResponse
-	if response, err = queryClient.RewardProgramByID(
-		context.Background(),
-		&types.RewardProgramByIDRequest{Id: uint64(programID)},
-	); err != nil {
-		return fmt.Errorf("failed to query reward program %d: %s", programID, err.Error())
-	}
-
-	if response.GetRewardProgram() == nil {
-		return fmt.Errorf("reward program %d does not exist", programID)
-	}
-
-	return clientCtx.PrintProto(response)
 }
 
 // Query for all ClaimPeriodRewardDistributions

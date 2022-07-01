@@ -81,7 +81,7 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 			state = types.NewRewardAccountState(program.GetId(), program.GetCurrentClaimPeriod(), action.Address.String(), 0)
 		}
 
-		state.ActionCounter[processor.ActionType()] += 1
+		state.ActionCounter[processor.ActionType()]++
 
 		processor.PreEvaluate(ctx, k, &state)
 		// TODO We want to create an Evaluation Result here.

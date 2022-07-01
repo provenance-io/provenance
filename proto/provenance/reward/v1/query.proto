@@ -23,10 +23,6 @@ service Query {
   rpc RewardPrograms(RewardProgramsRequest) returns (RewardProgramsResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/reward_programs";
   }
-  // returns active RewardPrograms
-  rpc ActiveRewardPrograms(ActiveRewardProgramsRequest) returns (ActiveRewardProgramsResponse) {
-    option (google.api.http).get = "/provenance/rewards/v1/active_reward_programs";
-  }
 
   rpc ModuleAccountBalance(QueryModuleAccountBalanceRequest) returns (QueryModuleAccountBalanceResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/module_account_balance";
@@ -54,15 +50,18 @@ message RewardProgramByIDResponse {
   RewardProgram reward_program = 1;
 }
 
-message RewardProgramsRequest {}
-
-message RewardProgramsResponse {
-  repeated RewardProgram reward_programs = 1 [(gogoproto.nullable) = false];
+message RewardProgramsRequest {
+  enum QueryType {
+    ID        = 0;
+    ALL       = 1;
+    ACTIVE    = 2;
+    COMPLETED = 3;
+  }
+  QueryType query_type = 1;
+  uint64    id         = 2;
 }
 
-message ActiveRewardProgramsRequest {}
-
-message ActiveRewardProgramsResponse {
+message RewardProgramsResponse {
   repeated RewardProgram reward_programs = 1 [(gogoproto.nullable) = false];
 }
 
