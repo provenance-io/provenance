@@ -3,15 +3,13 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/provenance-io/provenance/app/kafka"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
-	"github.com/cosmos/cosmos-sdk/plugin"
-	"github.com/cosmos/cosmos-sdk/plugin/loader"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -283,6 +281,9 @@ type App struct {
 
 	// module configurator
 	configurator module.Configurator
+
+	// Kafka streaming service
+	kss *kafka.StreamingService
 }
 
 func init() {
@@ -334,31 +335,31 @@ func New(
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
-	pluginsOnKey := fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_ON_TOML_KEY)
-	if cast.ToBool(appOpts.Get(pluginsOnKey)) {
-		// this loads the preloaded and any plugins found in `plugins.dir`
-		// if their names match those in the `plugins.enabled` list.
-		pluginLoader, err := loader.NewPluginLoader(appOpts, logger)
-		if err != nil {
-			panic("error while loading plugin: " + err.Error())
-		}
-
-		// initialize the loaded plugins
-		if err := pluginLoader.Initialize(); err != nil {
-			panic("error while initializing plugin: " + err.Error())
-		}
-
-		// register the plugin(s) with the BaseApp
-		if err := pluginLoader.Inject(bApp, appCodec, keys); err != nil {
-			panic("error while injecting plugin: " + err.Error())
-		}
-
-		// start the plugin services, optionally use wg to synchronize shutdown using io.Closer
-		wg := new(sync.WaitGroup)
-		if err := pluginLoader.Start(wg); err != nil {
-			panic("error while starting plugin: " + err.Error())
-		}
-	}
+	//pluginsOnKey := fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_ON_TOML_KEY)
+	//if cast.ToBool(appOpts.Get(pluginsOnKey)) {
+	//	// this loads the preloaded and any plugins found in `plugins.dir`
+	//	// if their names match those in the `plugins.enabled` list.
+	//	pluginLoader, err := loader.NewPluginLoader(appOpts, logger)
+	//	if err != nil {
+	//		panic("error while loading plugin: " + err.Error())
+	//	}
+	//
+	//	// initialize the loaded plugins
+	//	if err := pluginLoader.Initialize(); err != nil {
+	//		panic("error while initializing plugin: " + err.Error())
+	//	}
+	//
+	//	// register the plugin(s) with the BaseApp
+	//	if err := pluginLoader.Inject(bApp, appCodec, keys); err != nil {
+	//		panic("error while injecting plugin: " + err.Error())
+	//	}
+	//
+	//	// start the plugin services, optionally use wg to synchronize shutdown using io.Closer
+	//	wg := new(sync.WaitGroup)
+	//	if err := pluginLoader.Start(wg); err != nil {
+	//		panic("error while starting plugin: " + err.Error())
+	//	}
+	//}
 
 	app := &App{
 		BaseApp:           bApp,
@@ -828,6 +829,13 @@ func New(
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
 
+	// start up Kafka streaming service
+	enableKss := cast.ToBool(appOpts.Get(fmt.Sprintf("%s.%s", kafka.TomlKey, kafka.EnableKafkaStreamingParam)))
+	if enableKss {
+		logger.Info("starting Kafka streaming service")
+		app.kss = kafka.NewStreamingService(appOpts, appCodec)
+	}
+
 	return app
 }
 
@@ -836,12 +844,20 @@ func (app *App) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block
 func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	return app.mm.BeginBlock(ctx, req)
+	res := app.mm.BeginBlock(ctx, req)
+	if app.kss != nil {
+		app.kss.ListenBeginBlocker(ctx, req, res)
+	}
+	return res
 }
 
 // EndBlocker application updates every end block
 func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	return app.mm.EndBlock(ctx, req)
+	res := app.mm.EndBlock(ctx, req)
+	if app.kss != nil {
+		app.kss.ListenEndBlocker(ctx, req, res)
+	}
+	return res
 }
 
 // InitChainer application update at chain initialization
