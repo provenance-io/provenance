@@ -5897,7 +5897,7 @@ EventCreateRewardProgram event emitted when a reward program is created
 | `claim_period_end_time` | [string](#string) |  |  |
 | `claim_periods` | [string](#string) |  |  |
 | `state` | [string](#string) |  |  |
-| `share_expiration_offset` | [string](#string) |  |  |
+| `reward_claim_expiration_offset` | [string](#string) |  |  |
 | `qualifying_actions` | [string](#string) |  |  |
 
 
@@ -5997,7 +5997,7 @@ RewardProgram
 | `claim_periods` | [uint64](#uint64) |  | number of claim periods this program will run for |
 | `current_claim_period` | [uint64](#uint64) |  | the current claim_period for the reward program is on(claim periods start at 1 <-- fisrt period) |
 | `state` | [RewardProgram.State](#provenance.reward.v1.RewardProgram.State) |  | the current state of the reward program |
-| `share_expiration_offset` | [uint64](#uint64) |  | Used to calculate the expiration time of a share in seconds. Currently, it is epoch_end_time + offset |
+| `reward_claim_expiration_offset` | [uint64](#uint64) |  | Used to calculate the expiration time of a reward claim in seconds. The expiration timer begins when the program ends. |
 | `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated | The actions that count towards the reward |
 
 

@@ -68,8 +68,8 @@ message RewardProgram {
 
   State state = 16; // the current state of the reward program
 
-  uint64 share_expiration_offset =
-      17; // Used to calculate the expiration time of a share in seconds. Currently, it is epoch_end_time + offset
+  uint64 reward_claim_expiration_offset = 17; // Used to calculate the expiration time of a reward claim in seconds. The
+                                              // expiration timer begins when the program ends.
 
   repeated QualifyingAction qualifying_actions = 18 [
     (gogoproto.nullable) = false,
@@ -79,21 +79,21 @@ message RewardProgram {
 
 // EventCreateRewardProgram event emitted when a reward program is created
 message EventCreateRewardProgram {
-  string id                        = 1;
-  string title                     = 2;
-  string description               = 3;
-  string distribute_from_address   = 4;
-  string total_reward_pool         = 5;
-  string max_reward_by_address     = 6;
-  string minimum_rollover_amount   = 7;
-  uint64 claim_period_seconds      = 8;
-  string program_start_time        = 9;
-  string expected_program_end_time = 10;
-  string claim_period_end_time     = 11;
-  string claim_periods             = 12;
-  string state                     = 13;
-  string share_expiration_offset   = 14;
-  string qualifying_actions        = 15;
+  string id                             = 1;
+  string title                          = 2;
+  string description                    = 3;
+  string distribute_from_address        = 4;
+  string total_reward_pool              = 5;
+  string max_reward_by_address          = 6;
+  string minimum_rollover_amount        = 7;
+  uint64 claim_period_seconds           = 8;
+  string program_start_time             = 9;
+  string expected_program_end_time      = 10;
+  string claim_period_end_time          = 11;
+  string claim_periods                  = 12;
+  string state                          = 13;
+  string reward_claim_expiration_offset = 14;
+  string qualifying_actions             = 15;
 }
 
 // ClaimPeriodRewardDistribution, this will updated at the end of every claim period
