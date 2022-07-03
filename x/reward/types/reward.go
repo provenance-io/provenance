@@ -411,7 +411,7 @@ func (atd *ActionVote) ValidateBasic() error {
 }
 
 func (atd *ActionVote) GetBuilder() ActionBuilder {
-	return &DelegateTransferActionBuilder{}
+	return &VoteActionBuilder{}
 }
 
 func (atd *ActionVote) String() string {

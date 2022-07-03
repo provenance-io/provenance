@@ -123,10 +123,32 @@ func (b *DelegateActionBuilder) Reset() {
 // ============ VoteActionBuilder ============
 
 type VoteActionBuilder struct {
-	Validator sdk.ValAddress
+	Voter sdk.AccAddress
 }
 
-func (b *VoteActionBuilder) GetEventCriteria() *EventCriteria {
+func (v *VoteActionBuilder) CanBuild() bool {
+	return !v.Voter.Empty()
+}
+
+func (v *VoteActionBuilder) BuildAction() (EvaluationResult, error) {
+	if !v.CanBuild() {
+		return EvaluationResult{}, fmt.Errorf("missing delegator or validator from delegate action")
+	}
+
+	result := EvaluationResult{
+		Shares:  1,
+		Address: v.Voter,
+	}
+
+	return result, nil
+}
+
+func (v *VoteActionBuilder) Reset() {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (v *VoteActionBuilder) GetEventCriteria() *EventCriteria {
 	return NewEventCriteria([]ABCIEvent{
 		{
 			Type: "message",
@@ -135,4 +157,11 @@ func (b *VoteActionBuilder) GetEventCriteria() *EventCriteria {
 			},
 		},
 	})
+}
+
+func (v *VoteActionBuilder) AddEvent(eventType string, attributes *map[string][]byte) error {
+	switch eventType {
+	}
+
+	return nil
 }
