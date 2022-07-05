@@ -6014,9 +6014,10 @@ RewardProgram
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| UNCLAIMED | 0 |  |
-| CLAIMED | 1 |  |
-| EXPIRED | 2 |  |
+| UNCLAIMABLE | 0 |  |
+| CLAIMABLE | 1 |  |
+| CLAIMED | 2 |  |
+| EXPIRED | 3 |  |
 
 
 

@@ -120,9 +120,10 @@ message RewardAccountState {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
   enum ClaimStatus {
-    UNCLAIMED = 0;
-    CLAIMED   = 1;
-    EXPIRED   = 2;
+    UNCLAIMABLE = 0;
+    CLAIMABLE   = 1;
+    CLAIMED     = 2;
+    EXPIRED     = 3;
   }
 
   uint64              reward_program_id = 1; // The id of the reward program that this share belongs to

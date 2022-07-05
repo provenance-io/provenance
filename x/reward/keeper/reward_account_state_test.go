@@ -20,7 +20,7 @@ func (suite *KeeperTestSuite) TestNewRewardAccountState() {
 	suite.Assert().Equal(uint64(2), accountState.GetClaimPeriodId(), "reward claim period id must match")
 	suite.Assert().Equal(uint64(3), accountState.GetSharesEarned(), "earned shares must match")
 	suite.Assert().Equal("test", accountState.GetAddress(), "address must match")
-	suite.Assert().Equal(types.RewardAccountState_UNCLAIMED, accountState.GetClaimStatus(), "should be set to unclaimed initially")
+	suite.Assert().Equal(types.RewardAccountState_UNCLAIMABLE, accountState.GetClaimStatus(), "should be set to unclaimable initially")
 	suite.Assert().True(reflect.DeepEqual(map[string]uint64{}, accountState.GetActionCounter()), "action counter must match")
 }
 

@@ -8,10 +8,10 @@ import (
 
 // BeginBlocker called every block
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
-	ctx.Logger().Info("NOTICE: -Begin Blocker of rewards module-")
+	ctx.Logger().Debug("NOTICE: -Begin Blocker of rewards module-")
 	k.Update(ctx)
 }
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
-	ctx.Logger().Info("NOTICE: -End Blocker of rewards module-")
+	ctx.Logger().Debug("NOTICE: -End Blocker of rewards module-")
 	k.ProcessTransactions(ctx)
 }
