@@ -507,9 +507,9 @@ proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-
 
 containerProtoVer=v0.2
 containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
-containerProtoGen=cosmos-sdk-proto-gen-$(containerProtoVer)
-containerProtoGenSwagger=cosmos-sdk-proto-gen-swagger-$(containerProtoVer)
-containerProtoFmt=cosmos-sdk-proto-fmt-$(containerProtoVer)
+containerProtoGen=prov-proto-gen-$(containerProtoVer)
+containerProtoGenSwagger=prov-proto-gen-swagger-$(containerProtoVer)
+containerProtoFmt=prov-proto-fmt-$(containerProtoVer)
 
 proto-gen:
 	@echo "Generating Protobuf files"
