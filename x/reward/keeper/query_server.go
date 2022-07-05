@@ -19,8 +19,22 @@ func (k Keeper) RewardPrograms(ctx context.Context, req *types.RewardProgramsReq
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	var rewardPrograms []types.RewardProgram
+	var err error
 
-	rewardPrograms, err := k.GetAllRewardPrograms(sdkCtx)
+	switch req.QueryType {
+	case types.RewardProgramsRequest_ALL:
+		rewardPrograms, err = k.GetAllRewardPrograms(sdkCtx)
+	case types.RewardProgramsRequest_PENDING:
+		rewardPrograms, err = k.GetAllPendingRewardPrograms(sdkCtx)
+	case types.RewardProgramsRequest_ACTIVE:
+		rewardPrograms, err = k.GetAllActiveRewardPrograms(sdkCtx)
+	case types.RewardProgramsRequest_FINISHED:
+		rewardPrograms, err = k.GetAllCompletedRewardPrograms(sdkCtx)
+	case types.RewardProgramsRequest_OUTSTANDING:
+		rewardPrograms, err = k.GetOutstandingRewardPrograms(sdkCtx)
+	}
+
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to query all reward programs: %v", err))
 	}
