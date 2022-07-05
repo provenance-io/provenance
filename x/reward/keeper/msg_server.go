@@ -82,5 +82,14 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 }
 
 func (s msgServer) ClaimRewards(ctx context.Context, req *types.MsgClaimRewardRequest) (*types.MsgClaimRewardResponse, error) {
+
+	// call keeper method here that
+	// 1.) gathers all the claimable awards for address and completed claim period
+	// 2.) sums the total reward coins from claim periods
+	// 3.) sends total coins from module escrow to address
+	// 		a.) will need to update reward program with total claimed funds
+	// 4.) returns details of claim periods and total funds to be populated in MsgClaimRewardResponse
+	// 5.) emit event of claims, possibly a typed event
+
 	return nil, status.Errorf(codes.Unimplemented, "method ClaimRewards not implemented")
 }
