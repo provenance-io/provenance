@@ -92,7 +92,7 @@ func GetRewardProgramCmd() *cobra.Command {
 func outputRewardProgramByID(client client.Context, queryClient types.QueryClient, arg string) error {
 	programID, err := strconv.Atoi(arg)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid argument arg : %s", arg)
 	}
 
 	var response *types.RewardProgramByIDResponse
