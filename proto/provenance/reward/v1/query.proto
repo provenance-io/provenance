@@ -52,13 +52,13 @@ message RewardProgramByIDResponse {
 
 message RewardProgramsRequest {
   enum QueryType {
-    ID        = 0;
-    ALL       = 1;
-    ACTIVE    = 2;
-    COMPLETED = 3;
+    ALL         = 0;
+    PENDING     = 1;
+    ACTIVE      = 2;
+    OUTSTANDING = 3;
+    FINISHED    = 4;
   }
   QueryType query_type = 1;
-  uint64    id         = 2;
 }
 
 message RewardProgramsResponse {

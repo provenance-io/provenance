@@ -31,8 +31,10 @@ type IntegrationTestSuite struct {
 	accountAddr sdk.AccAddress
 	accountKey  *secp256k1.PrivKey
 
-	activeRewardProgram types.RewardProgram
-	qualifyingActions   []types.QualifyingAction
+	activeRewardProgram   types.RewardProgram
+	pendingRewardProgram  types.RewardProgram
+	finishedRewardProgram types.RewardProgram
+	qualifyingActions     []types.QualifyingAction
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
@@ -69,8 +71,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	}
 
 	s.activeRewardProgram = types.NewRewardProgram(
-		"title",
-		"description",
+		"active title",
+		"active description",
 		1,
 		s.accountAddr.String(),
 		sdk.NewInt64Coin("nhash", 100),
@@ -81,10 +83,45 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		0,
 		s.qualifyingActions,
 	)
+	s.activeRewardProgram.State = types.RewardProgram_STARTED
+	s.activeRewardProgram.Id = 1
+
+	s.finishedRewardProgram = types.NewRewardProgram(
+		"finished title",
+		"finished description",
+		1,
+		s.accountAddr.String(),
+		sdk.NewInt64Coin("nhash", 100),
+		sdk.NewInt64Coin("nhash", 100),
+		now.Add(-60*60*time.Second),
+		60*60,
+		3,
+		1,
+		s.qualifyingActions,
+	)
+	s.finishedRewardProgram.Id = 2
+	s.finishedRewardProgram.State = types.RewardProgram_FINISHED
+
+	s.pendingRewardProgram = types.NewRewardProgram(
+		"pending title",
+		"pending description",
+		1,
+		s.accountAddr.String(),
+		sdk.NewInt64Coin("nhash", 100),
+		sdk.NewInt64Coin("nhash", 100),
+		now.Add(60*60*time.Second),
+		60*60,
+		3,
+		0,
+		s.qualifyingActions,
+	)
+	s.pendingRewardProgram.Id = 3
+	s.pendingRewardProgram.State = types.RewardProgram_PENDING
+
 	rewardData := rewardtypes.NewGenesisState(
 		rewardtypes.DefaultStartingRewardProgramID,
 		[]rewardtypes.RewardProgram{
-			s.activeRewardProgram,
+			s.activeRewardProgram, s.pendingRewardProgram, s.finishedRewardProgram,
 		},
 		[]rewardtypes.ClaimPeriodRewardDistribution{},
 		rewardtypes.ActionDelegate{},
@@ -115,6 +152,7 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 	testCases := []struct {
 		name         string
 		args         []string
+		byId         bool
 		expectErr    bool
 		expectErrMsg string
 		expectedCode uint32
@@ -125,9 +163,70 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 				"all",
 			},
 			false,
+			false,
+			"",
+			0,
+			[]uint64{1, 2, 3},
+		},
+		{"query active reward programs",
+			[]string{
+				"active",
+			},
+			false,
+			false,
 			"",
 			0,
 			[]uint64{1},
+		},
+		{"query pending reward programs",
+			[]string{
+				"pending",
+			},
+			false,
+			false,
+			"",
+			0,
+			[]uint64{3},
+		},
+		{"query completed reward programs",
+			[]string{
+				"completed",
+			},
+			false,
+			false,
+			"",
+			0,
+			[]uint64{2},
+		},
+		{"query outstnding reward programs",
+			[]string{
+				"outstanding",
+			},
+			false,
+			false,
+			"",
+			0,
+			[]uint64{1, 3},
+		},
+		{"query by id reward programs",
+			[]string{
+				"2",
+			},
+			true,
+			false,
+			"",
+			0,
+			[]uint64{2},
+		},
+		{"query invalid query type",
+			[]string{
+				"invalid",
+			},
+			true,
+			true,
+			"invalid argument arg : invalid",
+			0,
+			[]uint64{},
 		},
 	}
 
@@ -140,6 +239,12 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 			if tc.expectErr {
 				s.Assert().Error(err)
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
+			} else if tc.byId {
+				var response types.RewardProgramByIDResponse
+				s.Assert().NoError(err)
+				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
+				s.Assert().NoError(err)
+				s.Assert().Equal(tc.expectedIds[0], response.RewardProgram.Id)
 			} else {
 				var response types.RewardProgramsResponse
 				s.Assert().NoError(err)

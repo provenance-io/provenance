@@ -68,12 +68,27 @@ func (k Keeper) GetOutstandingRewardPrograms(ctx sdk.Context) ([]types.RewardPro
 	return rewardPrograms, err
 }
 
-// Gets all RewardPrograms that have started, but not have not finished
+// GetAllActiveRewardPrograms gets all RewardPrograms that have started
 func (k Keeper) GetAllActiveRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
+	return k.getRewardProgramByState(ctx, types.RewardProgram_STARTED)
+}
+
+// GetAllCompletedRewardPrograms gets all completed the RewardPrograms
+func (k Keeper) GetAllCompletedRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
+	return k.getRewardProgramByState(ctx, types.RewardProgram_FINISHED)
+}
+
+// GetAllPendingRewardPrograms gets all pending the RewardPrograms
+func (k Keeper) GetAllPendingRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
+	return k.getRewardProgramByState(ctx, types.RewardProgram_PENDING)
+}
+
+// getRewardProgramByState gets rewards based on state
+func (k Keeper) getRewardProgramByState(ctx sdk.Context, state types.RewardProgram_State) ([]types.RewardProgram, error) {
 	var rewardPrograms []types.RewardProgram
-	// get all the rewards programs
+	// get all the rewards programs by state
 	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
-		if rewardProgram.GetState() == types.RewardProgram_STARTED {
+		if rewardProgram.GetState() == state {
 			rewardPrograms = append(rewardPrograms, rewardProgram)
 		}
 		return false
