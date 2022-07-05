@@ -12,6 +12,7 @@ import (
 
 const (
 	TypeMsgCreateRewardProgramRequest = "create_reward_program"
+	TypeMsgClaimRewardRequest         = "claim_reward"
 )
 
 // Compile time interface checks.
@@ -119,4 +120,43 @@ func (msg MsgCreateRewardProgramRequest) GetSigners() []sdk.AccAddress {
 func (msg MsgCreateRewardProgramRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
+}
+
+// NewMsgClaimRewardRequest creates a new reward claim request
+func NewMsgClaimRewardRequest(
+	rewardProgramID uint64,
+	distributeToAddress string,
+) *MsgClaimRewardRequest {
+	return &MsgClaimRewardRequest{
+		RewardProgramId:     rewardProgramID,
+		DistributeToAddress: distributeToAddress,
+	}
+}
+
+// Route implements Msg
+func (msg MsgClaimRewardRequest) Route() string { return ModuleName }
+
+// Type implements Msg
+func (msg MsgClaimRewardRequest) Type() string { return TypeMsgClaimRewardRequest }
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgClaimRewardRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.DistributeToAddress); err != nil {
+		return fmt.Errorf("invalid address for to distribute claims address: %w", err)
+	}
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgClaimRewardRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners indicates that the message must have been signed by the parent.
+func (msg MsgClaimRewardRequest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.DistributeToAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
 }

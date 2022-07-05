@@ -24,17 +24,13 @@ service Query {
     option (google.api.http).get = "/provenance/rewards/v1/reward_programs";
   }
 
-  rpc ModuleAccountBalance(QueryModuleAccountBalanceRequest) returns (QueryModuleAccountBalanceResponse) {
-    option (google.api.http).get = "/provenance/rewards/v1/module_account_balance";
-  }
-
   // returns all ClaimPeriodRewardDistributionResponse
   rpc ClaimPeriodRewardDistributions(ClaimPeriodRewardDistributionRequest)
       returns (ClaimPeriodRewardDistributionResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/claim_period_reward_distributions";
   }
 
-  // returns a ClaimPeriodRewardDistribution by rewardId and epochId
+  // returns a ClaimPeriodRewardDistribution by rewardId and claimPeriodId
   rpc ClaimPeriodRewardDistributionsByID(ClaimPeriodRewardDistributionByIDRequest)
       returns (ClaimPeriodRewardDistributionByIDResponse) {
     option (google.api.http).get =
@@ -63,19 +59,6 @@ message RewardProgramsRequest {
 
 message RewardProgramsResponse {
   repeated RewardProgram reward_programs = 1 [(gogoproto.nullable) = false];
-}
-
-// QueryModuleAccountBalanceRequest is the request type for the Query/Params RPC method.
-message QueryModuleAccountBalanceRequest {}
-
-// QueryModuleAccountBalanceResponse is the response type for the Query/Params RPC method.
-message QueryModuleAccountBalanceResponse {
-  // params defines the parameters of the module.
-  repeated cosmos.base.v1beta1.Coin moduleAccountBalance = 1 [
-    (gogoproto.moretags)     = "yaml:\"coins\"",
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
 }
 
 message ClaimPeriodRewardDistributionRequest {}

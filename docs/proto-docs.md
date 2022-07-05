@@ -403,8 +403,6 @@
     - [ClaimPeriodRewardDistributionByIDResponse](#provenance.reward.v1.ClaimPeriodRewardDistributionByIDResponse)
     - [ClaimPeriodRewardDistributionRequest](#provenance.reward.v1.ClaimPeriodRewardDistributionRequest)
     - [ClaimPeriodRewardDistributionResponse](#provenance.reward.v1.ClaimPeriodRewardDistributionResponse)
-    - [QueryModuleAccountBalanceRequest](#provenance.reward.v1.QueryModuleAccountBalanceRequest)
-    - [QueryModuleAccountBalanceResponse](#provenance.reward.v1.QueryModuleAccountBalanceResponse)
     - [RewardProgramByIDRequest](#provenance.reward.v1.RewardProgramByIDRequest)
     - [RewardProgramByIDResponse](#provenance.reward.v1.RewardProgramByIDResponse)
     - [RewardProgramsRequest](#provenance.reward.v1.RewardProgramsRequest)
@@ -415,6 +413,9 @@
     - [Query](#provenance.reward.v1.Query)
   
 - [provenance/reward/v1/tx.proto](#provenance/reward/v1/tx.proto)
+    - [ClaimedRewardPeriodDetail](#provenance.reward.v1.ClaimedRewardPeriodDetail)
+    - [MsgClaimRewardRequest](#provenance.reward.v1.MsgClaimRewardRequest)
+    - [MsgClaimRewardResponse](#provenance.reward.v1.MsgClaimRewardResponse)
     - [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest)
     - [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse)
   
@@ -5987,6 +5988,7 @@ RewardProgram
 | `distribute_from_address` | [string](#string) |  | community pool for now (who provides the money) |
 | `total_reward_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `remaining_pool_balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `claimed_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | maximum reward per claim per address |
 | `minimum_rollover_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | minimum amount of coins for program to rollover |
 | `claim_period_seconds` | [uint64](#uint64) |  | claim_period_seconds defines the type of claim_period attributed to this program.(e.g day,week,month) |
@@ -6139,31 +6141,6 @@ GenesisState defines the reward module's genesis state.
 
 
 
-<a name="provenance.reward.v1.QueryModuleAccountBalanceRequest"></a>
-
-### QueryModuleAccountBalanceRequest
-QueryModuleAccountBalanceRequest is the request type for the Query/Params RPC method.
-
-
-
-
-
-
-<a name="provenance.reward.v1.QueryModuleAccountBalanceResponse"></a>
-
-### QueryModuleAccountBalanceResponse
-QueryModuleAccountBalanceResponse is the response type for the Query/Params RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `moduleAccountBalance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | params defines the parameters of the module. |
-
-
-
-
-
-
 <a name="provenance.reward.v1.RewardProgramByIDRequest"></a>
 
 ### RewardProgramByIDRequest
@@ -6254,9 +6231,8 @@ Query defines the gRPC querier service for reward module.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `RewardProgramByID` | [RewardProgramByIDRequest](#provenance.reward.v1.RewardProgramByIDRequest) | [RewardProgramByIDResponse](#provenance.reward.v1.RewardProgramByIDResponse) | returns RewardProgram by id | GET|/provenance/rewards/v1/reward_program_by_id/{id}|
 | `RewardPrograms` | [RewardProgramsRequest](#provenance.reward.v1.RewardProgramsRequest) | [RewardProgramsResponse](#provenance.reward.v1.RewardProgramsResponse) | returns RewardPrograms both upcoming and active | GET|/provenance/rewards/v1/reward_programs|
-| `ModuleAccountBalance` | [QueryModuleAccountBalanceRequest](#provenance.reward.v1.QueryModuleAccountBalanceRequest) | [QueryModuleAccountBalanceResponse](#provenance.reward.v1.QueryModuleAccountBalanceResponse) |  | GET|/provenance/rewards/v1/module_account_balance|
 | `ClaimPeriodRewardDistributions` | [ClaimPeriodRewardDistributionRequest](#provenance.reward.v1.ClaimPeriodRewardDistributionRequest) | [ClaimPeriodRewardDistributionResponse](#provenance.reward.v1.ClaimPeriodRewardDistributionResponse) | returns all ClaimPeriodRewardDistributionResponse | GET|/provenance/rewards/v1/claim_period_reward_distributions|
-| `ClaimPeriodRewardDistributionsByID` | [ClaimPeriodRewardDistributionByIDRequest](#provenance.reward.v1.ClaimPeriodRewardDistributionByIDRequest) | [ClaimPeriodRewardDistributionByIDResponse](#provenance.reward.v1.ClaimPeriodRewardDistributionByIDResponse) | returns a ClaimPeriodRewardDistribution by rewardId and epochId | GET|/provenance/rewards/v1/claim_period_reward_distributions/{rewardId}/claimPeriods/{claimPeriodId}|
+| `ClaimPeriodRewardDistributionsByID` | [ClaimPeriodRewardDistributionByIDRequest](#provenance.reward.v1.ClaimPeriodRewardDistributionByIDRequest) | [ClaimPeriodRewardDistributionByIDResponse](#provenance.reward.v1.ClaimPeriodRewardDistributionByIDResponse) | returns a ClaimPeriodRewardDistribution by rewardId and claimPeriodId | GET|/provenance/rewards/v1/claim_period_reward_distributions/{rewardId}/claimPeriods/{claimPeriodId}|
 
  <!-- end services -->
 
@@ -6266,6 +6242,56 @@ Query defines the gRPC querier service for reward module.
 <p align="right"><a href="#top">Top</a></p>
 
 ## provenance/reward/v1/tx.proto
+
+
+
+<a name="provenance.reward.v1.ClaimedRewardPeriodDetail"></a>
+
+### ClaimedRewardPeriodDetail
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `claim_period_id` | [uint64](#uint64) |  |  |
+| `total_shares` | [uint64](#uint64) |  |  |
+| `claim_period_reward` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.MsgClaimRewardRequest"></a>
+
+### MsgClaimRewardRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_program_id` | [uint64](#uint64) |  |  |
+| `distribute_to_address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.MsgClaimRewardResponse"></a>
+
+### MsgClaimRewardResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_program_id` | [uint64](#uint64) |  |  |
+| `total_reward_claim` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `claimed_reward_period_details` | [ClaimedRewardPeriodDetail](#provenance.reward.v1.ClaimedRewardPeriodDetail) | repeated |  |
+
+
+
 
 
 
@@ -6301,7 +6327,7 @@ Query defines the gRPC querier service for reward module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `id` | [uint64](#uint64) |  | reward program id assigned on creation |
+| `id` | [uint64](#uint64) |  |  |
 
 
 
@@ -6322,6 +6348,7 @@ Msg
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `CreateRewardProgram` | [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest) | [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse) |  | |
+| `ClaimRewards` | [MsgClaimRewardRequest](#provenance.reward.v1.MsgClaimRewardRequest) | [MsgClaimRewardResponse](#provenance.reward.v1.MsgClaimRewardResponse) |  | |
 
  <!-- end services -->
 

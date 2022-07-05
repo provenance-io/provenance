@@ -42,10 +42,6 @@ func (k Keeper) RewardPrograms(ctx context.Context, req *types.RewardProgramsReq
 	return &types.RewardProgramsResponse{RewardPrograms: rewardPrograms}, nil
 }
 
-func (k Keeper) ModuleAccountBalance(context.Context, *types.QueryModuleAccountBalanceRequest) (*types.QueryModuleAccountBalanceResponse, error) {
-	return &types.QueryModuleAccountBalanceResponse{}, nil
-}
-
 func (k Keeper) RewardProgramByID(ctx context.Context, req *types.RewardProgramByIDRequest) (*types.RewardProgramByIDResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

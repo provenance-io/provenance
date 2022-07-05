@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/provenance-io/provenance/x/reward/types"
 )
@@ -77,4 +79,8 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 	// )
 
 	return &types.MsgCreateRewardProgramResponse{Id: rewardProgramID}, nil
+}
+
+func (s msgServer) ClaimRewards(ctx context.Context, req *types.MsgClaimRewardRequest) (*types.MsgClaimRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClaimRewards not implemented")
 }

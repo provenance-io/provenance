@@ -121,6 +121,7 @@ func NewRewardProgram(
 		DistributeFromAddress:       distributeFromAddress,
 		TotalRewardPool:             totalRewardPool,
 		RemainingPoolBalance:        totalRewardPool,
+		ClaimedAmount:               sdk.NewInt64Coin(totalRewardPool.Denom, 0),
 		MaxRewardByAddress:          maxRewardByAddress,
 		ProgramStartTime:            programStartTime,
 		ClaimPeriodSeconds:          claimPeriodSeconds,

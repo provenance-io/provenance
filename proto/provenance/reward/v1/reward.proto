@@ -27,51 +27,52 @@ message RewardProgram {
   string                   distribute_from_address = 4; // community pool for now (who provides the money)
   cosmos.base.v1beta1.Coin total_reward_pool       = 5 [(gogoproto.nullable) = false];
   cosmos.base.v1beta1.Coin remaining_pool_balance  = 6 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin max_reward_by_address   = 7
+  cosmos.base.v1beta1.Coin claimed_amount          = 7 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin max_reward_by_address   = 8
       [(gogoproto.nullable) = false]; // maximum reward per claim per address
-  cosmos.base.v1beta1.Coin minimum_rollover_amount = 8
+  cosmos.base.v1beta1.Coin minimum_rollover_amount = 9
       [(gogoproto.nullable) = false]; // minimum amount of coins for program to rollover
 
   uint64 claim_period_seconds =
-      9; // claim_period_seconds defines the type of claim_period attributed to this program.(e.g day,week,month)
-  google.protobuf.Timestamp program_start_time = 10 [
+      10; // claim_period_seconds defines the type of claim_period attributed to this program.(e.g day,week,month)
+  google.protobuf.Timestamp program_start_time = 11 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "program_start_time,omitempty",
     (gogoproto.moretags) = "yaml:\"program_start_time,omitempty\""
   ]; // When the reward program starts
-  google.protobuf.Timestamp expected_program_end_time = 11 [
+  google.protobuf.Timestamp expected_program_end_time = 12 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "expected_program_end_time,omitempty",
     (gogoproto.moretags) = "yaml:\"expected_program_end_time,omitempty\""
   ]; // Time that the reward program MUST end
 
-  google.protobuf.Timestamp claim_period_end_time = 12 [
+  google.protobuf.Timestamp claim_period_end_time = 13 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "claim_period_end_time,omitempty",
     (gogoproto.moretags) = "yaml:\"claim_period_end_time,omitempty\""
   ]; // This can be calculated by us and its when the current claim period ends
 
-  google.protobuf.Timestamp actual_program_end_time = 13 [
+  google.protobuf.Timestamp actual_program_end_time = 14 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "finished_time,omitempty",
     (gogoproto.moretags) = "yaml:\"finished_time,omitempty\""
   ]; // when the program actually ended, will be empty at start
 
-  uint64 claim_periods = 14; // number of claim periods this program will run for
+  uint64 claim_periods = 15; // number of claim periods this program will run for
 
   uint64 current_claim_period =
-      15; // the current claim_period for the reward program is on(claim periods start at 1 <-- fisrt period)
+      16; // the current claim_period for the reward program is on(claim periods start at 1 <-- fisrt period)
 
-  State state = 16; // the current state of the reward program
+  State state = 17; // the current state of the reward program
 
-  uint64 reward_claim_expiration_offset = 17; // Used to calculate the expiration time of a reward claim in seconds. The
+  uint64 reward_claim_expiration_offset = 18; // Used to calculate the expiration time of a reward claim in seconds. The
                                               // expiration timer begins when the program ends.
 
-  repeated QualifyingAction qualifying_actions = 18 [
+  repeated QualifyingAction qualifying_actions = 19 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"qualifying_actions"
   ]; // The actions that count towards the reward
@@ -177,10 +178,8 @@ message ActionTransferDelegations {
   uint64 maximum_actions = 2;
   // transfers from only account that have delegations will be accounted for if minimum_delegation_amount is nt zero
   // coins if below field is set to zero coins then all transfers will be eligible for this rewards.
-  cosmos.base.v1beta1.Coin minimum_delegation_amount = 3[
-    (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"minimum_delegation_amount\""
-  ];
+  cosmos.base.v1beta1.Coin minimum_delegation_amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"minimum_delegation_amount\""];
 }
 
 // ActionVote reward, participants for voting on provenance gov proposals.
@@ -191,8 +190,6 @@ message ActionVote {
   uint64 minimum_actions = 1;
   uint64 maximum_actions = 2;
   // votes from only account that have delegations will be tallied hence this rule will enforce that .
-  cosmos.base.v1beta1.Coin minimum_delegation_amount = 3[
-  (gogoproto.nullable) = false,
-  (gogoproto.moretags) = "yaml:\"minimum_delegation_amount\""
-  ];
+  cosmos.base.v1beta1.Coin minimum_delegation_amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"minimum_delegation_amount\""];
 }
