@@ -2,7 +2,7 @@ package cli_test
 
 import (
 	"fmt"
-	provenanceconfig "github.com/provenance-io/provenance/internal/config"
+	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 	"strings"
 	"testing"
 	"time"

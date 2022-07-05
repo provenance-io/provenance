@@ -100,8 +100,8 @@ import (
 	appparams "github.com/provenance-io/provenance/app/params"
 	_ "github.com/provenance-io/provenance/client/docs/statik" // registers swagger-ui files with statik
 	"github.com/provenance-io/provenance/internal/antewrapper"
-	provenanceconfig "github.com/provenance-io/provenance/internal/config"
 	piohandlers "github.com/provenance-io/provenance/internal/handlers"
+	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/internal/provwasm"
 	"github.com/provenance-io/provenance/internal/statesync"
 	"github.com/provenance-io/provenance/x/attribute"

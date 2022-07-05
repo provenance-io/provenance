@@ -3,7 +3,7 @@ package types
 import (
 	"errors"
 	fmt "fmt"
-	provenanceconfig "github.com/provenance-io/provenance/internal/config"
+	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 	"reflect"
 	"strings"
 	time "time"

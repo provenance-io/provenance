@@ -6,7 +6,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	provenanceconfig "github.com/provenance-io/provenance/internal/config"
+	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 	"net"
 	"os"
 	"path/filepath"
