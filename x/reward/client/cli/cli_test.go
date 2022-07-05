@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"fmt"
+	provenanceconfig "github.com/provenance-io/provenance/internal/config"
 	"strings"
 	"testing"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/testutil"
 	rewardcli "github.com/provenance-io/provenance/x/reward/client/cli"
@@ -51,8 +51,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	genesisState := s.cfg.GenesisState
 	s.cfg.NumValidators = 1
 	now := time.Now().UTC()
-	minimumDelegation := sdk.NewInt64Coin(app.DefaultBondDenom, 0)
-	maximumDelegation := sdk.NewInt64Coin(app.DefaultBondDenom, 10)
+	minimumDelegation := sdk.NewInt64Coin(provenanceconfig.DefaultBondDenom, 0)
+	maximumDelegation := sdk.NewInt64Coin(provenanceconfig.DefaultBondDenom, 10)
 	s.qualifyingActions = []types.QualifyingAction{
 		{
 			Type: &types.QualifyingAction_Delegate{

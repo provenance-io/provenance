@@ -3,14 +3,15 @@ package types
 import (
 	"errors"
 	fmt "fmt"
+	provenanceconfig "github.com/provenance-io/provenance/internal/config"
 	"reflect"
 	"strings"
 	time "time"
 
-	// "github.com/gogo/protobuf/proto"
 	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // DefaultStartingRewardProgramID is 1
@@ -424,7 +425,17 @@ func (atd *ActionVote) ActionType() string {
 }
 
 func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
-	// TODO execute all the rules for action?
+	// get the address that voted
+	addressVoting := event.Address
+
+	totalDelegations, found := getAllDelegations(ctx, provider, addressVoting)
+	if !found {
+		return false
+	}
+	if totalDelegations.IsGTE(atd.MinimumDelegationAmount) {
+		return true
+	}
+	// now check if it has any delegations
 	return false
 }
 
@@ -457,4 +468,33 @@ func (qa *QualifyingAction) GetRewardAction(ctx sdk.Context) (RewardAction, erro
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: The Action type is %s", action.ActionType()))
 
 	return action, nil
+}
+
+// prefer pure functions
+func getAllDelegations(ctx sdk.Context, provider KeeperProvider, delegator sdk.AccAddress) (sdk.Coin, bool) {
+	stakingKeeper := provider.GetStakingKeeper()
+	delegations := make([]stakingtypes.Delegation, 0)
+	delegations = stakingKeeper.GetAllDelegatorDelegations(ctx, delegator)
+	// if no delegations then return not found
+	if len(delegations) == 0 {
+		return sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.ZeroInt()), false
+	}
+
+	sum := sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.ZeroInt())
+
+	for _, delegation := range delegations {
+		val, found := stakingKeeper.GetValidator(ctx, delegation.GetValidatorAddr())
+
+		if found {
+			tokens := val.TokensFromShares(delegation.GetShares()).TruncateInt()
+			sum = sum.Add(sdk.NewCoin(provenanceconfig.DefaultBondDenom, tokens))
+		}
+	}
+
+	if sum.Amount.Equal(sdk.ZeroInt()) {
+		return sum, false
+
+	}
+	return sum, true
+
 }

@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	provenanceconfig "github.com/provenance-io/provenance/internal/config"
 	"net"
 	"os"
 	"path/filepath"
@@ -93,7 +94,7 @@ Note, strict routability for addresses is turned off in the config file.
 	cmd.Flags().String(flagNodeDaemonHome, "", "Home directory of the node's daemon configuration")
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().String(server.FlagMinGasPrices, app.DefaultMinGasPrices, fmt.Sprintf("Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. %s,0.001stake)", app.DefaultMinGasPrices))
+	cmd.Flags().String(server.FlagMinGasPrices, provenanceconfig.DefaultMinGasPrices, fmt.Sprintf("Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. %s,0.001stake)", provenanceconfig.DefaultMinGasPrices))
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
@@ -206,7 +207,7 @@ func InitTestnet(
 		convAmt := sdk.NewInt(1_000_000_000)
 		nhashAmt := hashAmt.Mul(convAmt)
 		coins := sdk.Coins{
-			sdk.NewCoin(app.DefaultBondDenom, nhashAmt),
+			sdk.NewCoin(provenanceconfig.DefaultBondDenom, nhashAmt),
 		}
 
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
@@ -216,7 +217,7 @@ func InitTestnet(
 		createValMsg, _ := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
-			sdk.NewCoin(app.DefaultBondDenom, valTokens),
+			sdk.NewCoin(provenanceconfig.DefaultBondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
 			sdk.OneInt(),
@@ -252,7 +253,7 @@ func InitTestnet(
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), simappConfig)
 	}
 
-	markerAcc := markertypes.NewEmptyMarkerAccount(app.DefaultBondDenom, genAccounts[0].GetAddress().String(),
+	markerAcc := markertypes.NewEmptyMarkerAccount(provenanceconfig.DefaultBondDenom, genAccounts[0].GetAddress().String(),
 		[]markertypes.AccessGrant{
 			*markertypes.NewAccessGrant(genAccounts[0].GetAddress(), []markertypes.Access{
 				markertypes.Access_Admin,
@@ -262,7 +263,7 @@ func InitTestnet(
 			}),
 		})
 
-	if err := markerAcc.SetSupply(sdk.NewCoin(app.DefaultBondDenom, sdk.NewInt(100_000_000_000).Mul(sdk.NewInt(1_000_000_000)))); err != nil {
+	if err := markerAcc.SetSupply(sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.NewInt(100_000_000_000).Mul(sdk.NewInt(1_000_000_000)))); err != nil {
 		return err
 	}
 
@@ -344,26 +345,26 @@ func initGenFiles(
 	// Set the staking denom
 	var stakeGenState stakingtypes.GenesisState
 	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[stakingtypes.ModuleName], &stakeGenState)
-	stakeGenState.Params.BondDenom = app.DefaultBondDenom
+	stakeGenState.Params.BondDenom = provenanceconfig.DefaultBondDenom
 	appGenState[stakingtypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&stakeGenState)
 
 	// Set the crisis denom
 	var crisisGenState crisistypes.GenesisState
 	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[crisistypes.ModuleName], &crisisGenState)
-	crisisGenState.ConstantFee.Denom = app.DefaultBondDenom
+	crisisGenState.ConstantFee.Denom = provenanceconfig.DefaultBondDenom
 	appGenState[crisistypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&crisisGenState)
 
 	// Set the gov depost denom
 	var govGenState govtypes.GenesisState
 	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState)
-	govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(app.DefaultBondDenom, sdk.NewInt(10000000)))
+	govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.NewInt(10000000)))
 	govGenState.VotingParams.VotingPeriod, _ = time.ParseDuration("360s")
 	appGenState[govtypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&govGenState)
 
 	// Set the mint module parameters to stop inflation on the BondDenom.
 	var mintGenState minttypes.GenesisState
 	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState)
-	mintGenState.Params.MintDenom = app.DefaultBondDenom
+	mintGenState.Params.MintDenom = provenanceconfig.DefaultBondDenom
 	mintGenState.Minter.AnnualProvisions = sdk.ZeroDec()
 	mintGenState.Minter.Inflation = sdk.ZeroDec()
 	mintGenState.Params.InflationMax = sdk.ZeroDec()
