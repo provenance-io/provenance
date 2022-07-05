@@ -32,10 +32,12 @@ func GetQueryCmd() *cobra.Command {
 
 func GetRewardProgramCmd() *cobra.Command {
 	const all = "all"
+	const pending = "pending"
 	const active = "active"
-
+	const completed = "completed"
+	const outstanding = "outstanding"
 	cmd := &cobra.Command{
-		Use:     "reward-program {reward_program_id|\"all\"|\"active\"}",
+		Use:     "reward-program {reward_program_id|\"all\"|\"pending\"|\"active\"\"completed\"|\"outstanding\"}",
 		Aliases: []string{"rp", "rewardprogram"},
 		Short:   "Query the current reward programs",
 		Long: fmt.Sprintf(`%[1]s reward-program {reward_program_id} - gets the reward program for a given id.
@@ -44,28 +46,34 @@ func GetRewardProgramCmd() *cobra.Command {
 		Args: cobra.ExactArgs(1),
 		Example: fmt.Sprintf(`%[1]s reward-program 1
 %[1]s reward-program all
-%[1]s reward-program active`, cmdStart),
+%[1]s reward-program pending
+%[1]s reward-program active
+%[1]s reward-program outstanding
+%[1]s reward-program completed`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
+			queryClient := types.NewQueryClient(clientCtx)
 
 			var request types.RewardProgramsRequest
 			arg0 := strings.TrimSpace(args[0])
-			if arg0 == all {
+			switch arg0 {
+			case all:
 				request.QueryType = types.RewardProgramsRequest_ALL
-			} else if arg0 == active {
+			case pending:
+				request.QueryType = types.RewardProgramsRequest_PENDING
+			case active:
 				request.QueryType = types.RewardProgramsRequest_ACTIVE
-			} else {
-				request.QueryType = types.RewardProgramsRequest_ID
-				id, err := strconv.ParseInt(arg0, 10, 64)
-				if err == nil {
-					return err
-				}
-				request.Id = uint64(id)
+			case completed:
+				request.QueryType = types.RewardProgramsRequest_FINISHED
+			case outstanding:
+				request.QueryType = types.RewardProgramsRequest_OUTSTANDING
+			default:
+				return outputRewardProgramByID(clientCtx, queryClient, arg0)
 			}
-			queryClient := types.NewQueryClient(clientCtx)
+
 			var response *types.RewardProgramsResponse
 			if response, err = queryClient.RewardPrograms(
 				context.Background(),
@@ -79,6 +87,27 @@ func GetRewardProgramCmd() *cobra.Command {
 	}
 
 	return cmd
+}
+
+func outputRewardProgramByID(client client.Context, queryClient types.QueryClient, arg string) error {
+	programID, err := strconv.Atoi(arg)
+	if err != nil {
+		return fmt.Errorf("invalid argument arg : %s", arg)
+	}
+
+	var response *types.RewardProgramByIDResponse
+	if response, err = queryClient.RewardProgramByID(
+		context.Background(),
+		&types.RewardProgramByIDRequest{Id: uint64(programID)},
+	); err != nil {
+		return fmt.Errorf("failed to query reward program %d: %s", programID, err.Error())
+	}
+
+	if response.GetRewardProgram() == nil {
+		return fmt.Errorf("reward program %d does not exist", programID)
+	}
+
+	return client.PrintProto(response)
 }
 
 func GetClaimPeriodRewardDistributionCmd() *cobra.Command {

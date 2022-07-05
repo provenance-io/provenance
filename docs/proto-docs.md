@@ -6203,7 +6203,6 @@ QueryModuleAccountBalanceResponse is the response type for the Query/Params RPC 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `query_type` | [RewardProgramsRequest.QueryType](#provenance.reward.v1.RewardProgramsRequest.QueryType) |  |  |
-| `id` | [uint64](#uint64) |  |  |
 
 
 
@@ -6234,10 +6233,11 @@ QueryModuleAccountBalanceResponse is the response type for the Query/Params RPC 
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| ID | 0 |  |
-| ALL | 1 |  |
+| ALL | 0 |  |
+| PENDING | 1 |  |
 | ACTIVE | 2 |  |
-| COMPLETED | 3 |  |
+| OUTSTANDING | 3 |  |
+| FINISHED | 4 |  |
 
 
  <!-- end enums -->
