@@ -124,8 +124,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			s.activeRewardProgram, s.pendingRewardProgram, s.finishedRewardProgram,
 		},
 		[]rewardtypes.ClaimPeriodRewardDistribution{},
-		rewardtypes.ActionDelegate{},
-		rewardtypes.ActionTransferDelegations{},
 	)
 
 	rewardDataBz, err := s.cfg.Codec.MarshalJSON(rewardData)

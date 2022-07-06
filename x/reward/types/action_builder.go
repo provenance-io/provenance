@@ -15,32 +15,43 @@ type ActionBuilder interface {
 	Reset()
 }
 
-// ============ DelegateTransferActionBuilder ============
-type DelegateTransferActionBuilder struct {
+// ============ TransferActionBuilder ============
+type TransferActionBuilder struct {
+	Sender sdk.AccAddress
 }
 
-func (b *DelegateTransferActionBuilder) GetEventCriteria() *EventCriteria {
+func (b *TransferActionBuilder) GetEventCriteria() *EventCriteria {
 	return NewEventCriteria([]ABCIEvent{
 		{
-			Type:       "transfer",
+			Type:       banktypes.EventTypeTransfer,
 			Attributes: map[string][]byte{},
 		},
 	})
 }
 
-func (b *DelegateTransferActionBuilder) AddEvent(eventType string, attributes *map[string][]byte) error {
+func (b *TransferActionBuilder) AddEvent(eventType string, attributes *map[string][]byte) error {
+	switch eventType {
+	case banktypes.EventTypeTransfer:
+		// Update the result with the senders address
+		address := (*attributes)[banktypes.AttributeKeySender]
+		address, err := sdk.AccAddressFromBech32(string(address))
+		if err != nil {
+			return err
+		}
+		b.Sender = address
+	}
 	return nil
 }
 
-func (b *DelegateTransferActionBuilder) CanBuild() bool {
-	return false
+func (b *TransferActionBuilder) CanBuild() bool {
+	return !b.Sender.Empty()
 }
 
-func (b *DelegateTransferActionBuilder) BuildAction() (EvaluationResult, error) {
+func (b *TransferActionBuilder) BuildAction() (EvaluationResult, error) {
 	return EvaluationResult{}, nil
 }
 
-func (b *DelegateTransferActionBuilder) Reset() {
+func (b *TransferActionBuilder) Reset() {
 }
 
 // ============ DelegateActionBuilder ============

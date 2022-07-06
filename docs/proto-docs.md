@@ -382,7 +382,7 @@
   
 - [provenance/reward/v1/reward.proto](#provenance/reward/v1/reward.proto)
     - [ActionDelegate](#provenance.reward.v1.ActionDelegate)
-    - [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations)
+    - [ActionTransfer](#provenance.reward.v1.ActionTransfer)
     - [ActionVote](#provenance.reward.v1.ActionVote)
     - [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution)
     - [EventCreateRewardProgram](#provenance.reward.v1.EventCreateRewardProgram)
@@ -5820,11 +5820,11 @@ if above min and below max, increase shares earned for rewards pool by 1.
 
 
 
-<a name="provenance.reward.v1.ActionTransferDelegations"></a>
+<a name="provenance.reward.v1.ActionTransfer"></a>
 
-### ActionTransferDelegations
+### ActionTransfer
 accounts that have made transfers, from accounts that have active delegations
-rule: ActionTransferDelegations "When transfer has occurred and the account has an active delegation,
+rule: ActionTransfer "When transfer has occurred and the account has an active delegation,
 give it a share of the rewards pool, assuming it has not gone over max value and is above a min value" {
 
 
@@ -5915,7 +5915,7 @@ EventCreateRewardProgram event emitted when a reward program is created
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `delegate` | [ActionDelegate](#provenance.reward.v1.ActionDelegate) |  |  |
-| `transferDelegations` | [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations) |  |  |
+| `transferDelegations` | [ActionTransfer](#provenance.reward.v1.ActionTransfer) |  |  |
 | `vote` | [ActionVote](#provenance.reward.v1.ActionVote) |  |  |
 
 
@@ -6063,7 +6063,8 @@ GenesisState defines the reward module's genesis state.
 | `reward_programs` | [RewardProgram](#provenance.reward.v1.RewardProgram) | repeated |  |
 | `claim_period_reward_distributions` | [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution) | repeated |  |
 | `action_delegate` | [ActionDelegate](#provenance.reward.v1.ActionDelegate) |  |  |
-| `action_transfer_delegations` | [ActionTransferDelegations](#provenance.reward.v1.ActionTransferDelegations) |  |  |
+| `action_transfer` | [ActionTransfer](#provenance.reward.v1.ActionTransfer) |  |  |
+| `action_vote` | [ActionVote](#provenance.reward.v1.ActionVote) |  |  |
 
 
 
