@@ -27,6 +27,7 @@ const (
 var (
 	_ RewardAction = &ActionDelegate{}
 	_ RewardAction = &ActionTransferDelegations{}
+	_ RewardAction = &ActionVote{}
 )
 
 const (
@@ -471,7 +472,8 @@ func (qa *QualifyingAction) GetRewardAction(ctx sdk.Context) (RewardAction, erro
 	return action, nil
 }
 
-// prefer pure functions
+// getAllDelegations pure functions to get delegated coins for an addres
+// return total coin delegated and boolean to indicate if any delegations are at all present.
 func getAllDelegations(ctx sdk.Context, provider KeeperProvider, delegator sdk.AccAddress) (sdk.Coin, bool) {
 	stakingKeeper := provider.GetStakingKeeper()
 	delegations := make([]stakingtypes.Delegation, 0)

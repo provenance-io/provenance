@@ -2,8 +2,9 @@ package types
 
 import (
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type ActionBuilder interface {
@@ -132,7 +133,7 @@ func (v *VoteActionBuilder) CanBuild() bool {
 
 func (v *VoteActionBuilder) BuildAction() (EvaluationResult, error) {
 	if !v.CanBuild() {
-		return EvaluationResult{}, fmt.Errorf("missing delegator or validator from delegate action")
+		return EvaluationResult{}, fmt.Errorf("missing voter address from vote action")
 	}
 
 	result := EvaluationResult{
@@ -144,23 +145,34 @@ func (v *VoteActionBuilder) BuildAction() (EvaluationResult, error) {
 }
 
 func (v *VoteActionBuilder) Reset() {
-	//TODO implement me
-	panic("implement me")
+	v.Voter = sdk.AccAddress{}
 }
 
 func (v *VoteActionBuilder) GetEventCriteria() *EventCriteria {
 	return NewEventCriteria([]ABCIEvent{
 		{
-			Type: "message",
-			Attributes: map[string][]byte{
-				"module": []byte("governance"),
-			},
+			Type:       sdk.EventTypeMessage,
+			Attributes: map[string][]byte{sdk.AttributeKeyModule: []byte(types.AttributeValueCategory)},
 		},
 	})
 }
 
 func (v *VoteActionBuilder) AddEvent(eventType string, attributes *map[string][]byte) error {
 	switch eventType {
+	case sdk.EventTypeMessage:
+		// get the action
+		action := (*attributes)[sdk.AttributeKeyAction]
+		// accounts for legacy proto message for voting and newer msg type
+		if string(action) == sdk.MsgTypeURL(&types.MsgVote{}) || string(action) == sdk.MsgTypeURL(&types.MsgVoteWeighted{}) {
+			// Update the result with the voters address
+			address := (*attributes)[banktypes.AttributeKeySender]
+			address, err := sdk.AccAddressFromBech32(string(address))
+			if err != nil {
+				return err
+			}
+			v.Voter = address
+		}
+
 	}
 
 	return nil
