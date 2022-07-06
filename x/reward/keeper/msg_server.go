@@ -71,17 +71,18 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		return nil, fmt.Errorf("unable to send coin to module reward pool: %s", err)
 	}
 
-	// ctx.EventManager().EmitEvent(
-	// 	sdk.NewEvent(
-	// 		types.EventTypeSubmitRewardProgram,
-	// 		sdk.NewAttribute(types.AttributeKeyRewardProgramID, fmt.Sprintf("%d", rewardprogramID)),
-	// 	),
-	// )
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeRewardProgramCreated,
+			sdk.NewAttribute(types.AttributeKeyRewardProgramID, fmt.Sprintf("%d", rewardProgramID)),
+		),
+	)
 
 	return &types.MsgCreateRewardProgramResponse{Id: rewardProgramID}, nil
 }
 
-func (s msgServer) ClaimRewards(ctx context.Context, req *types.MsgClaimRewardRequest) (*types.MsgClaimRewardResponse, error) {
+func (s msgServer) ClaimRewards(goCtx context.Context, req *types.MsgClaimRewardRequest) (*types.MsgClaimRewardResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// call keeper method here that
 	// 1.) gathers all the claimable awards for address and completed claim period
@@ -90,6 +91,14 @@ func (s msgServer) ClaimRewards(ctx context.Context, req *types.MsgClaimRewardRe
 	// 		a.) will need to update reward program with total claimed funds
 	// 4.) returns details of claim periods and total funds to be populated in MsgClaimRewardResponse
 	// 5.) emit event of claims, possibly a typed event
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeClaimRewards,
+			sdk.NewAttribute(types.AttributeKeyRewardProgramID, fmt.Sprintf("%d", req.RewardProgramId)),
+			sdk.NewAttribute(types.AttributeKeyRewardsClaimAddress, req.DistributeToAddress),
+		),
+	)
 
 	return nil, status.Errorf(codes.Unimplemented, "method ClaimRewards not implemented")
 }
