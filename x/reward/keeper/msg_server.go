@@ -25,10 +25,6 @@ var _ types.MsgServer = msgServer{}
 func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCreateRewardProgramRequest) (*types.MsgCreateRewardProgramResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := msg.ValidateBasic(); err != nil {
-		return nil, err
-	}
-
 	rewardProgramID, err := s.Keeper.GetRewardProgramID(ctx)
 	if err != nil {
 		return &types.MsgCreateRewardProgramResponse{}, err
@@ -55,7 +51,7 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		experationOffsetInSeconds,
 		msg.QualifyingActions,
 	)
-	err = rewardProgram.ValidateBasic()
+	err = rewardProgram.Validate()
 	if err != nil {
 		return nil, err
 	}
