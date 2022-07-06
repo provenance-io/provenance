@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 	"io"
 	"os"
 	"path/filepath"
+
+	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 

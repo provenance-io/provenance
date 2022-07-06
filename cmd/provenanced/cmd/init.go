@@ -5,9 +5,10 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 	"os"
 	"time"
+
+	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"

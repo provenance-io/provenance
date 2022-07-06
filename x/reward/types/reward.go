@@ -422,7 +422,7 @@ func (at *ActionTransfer) PreEvaluate(ctx sdk.Context, provider KeeperProvider, 
 	// Any action specific thing that we need to do before evaluation
 }
 
-func (atd *ActionTransfer) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
+func (at *ActionTransfer) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
 	// Any action specific thing that we need to do after evaluation
 }
 
