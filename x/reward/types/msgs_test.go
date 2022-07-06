@@ -345,7 +345,48 @@ func (s *RewardMsgTypesTestSuite) TestMsgCreateRewardProgramRequestValidateBasic
 			if err != nil {
 				assert.Equal(t, tt.want, err.Error())
 			} else if len(tt.want) > 0 {
-				t.Errorf("RewardProgram ValidateBasic error = nil, expected: %s", tt.want)
+				t.Errorf("MsgCreateRewardProgramRequest ValidateBasic error = nil, expected: %s", tt.want)
+			}
+		})
+	}
+}
+
+func (s *RewardMsgTypesTestSuite) TestMsgClaimRewardValidateBasic() {
+	tests := []struct {
+		name                  string
+		msgClaimRewardRequest MsgClaimRewardRequest
+		want                  string
+	}{
+		{
+			"valid",
+			*NewMsgClaimRewardRequest(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+			"",
+		},
+		{
+			"invalid - address incorrect",
+			*NewMsgClaimRewardRequest(
+				1,
+				"invalid",
+			),
+			"invalid address for to distribute claims address: decoding bech32 failed: invalid bech32 string length 7",
+		},
+		{
+			"invalid - incorrect reward id",
+			*NewMsgClaimRewardRequest(
+				0,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+			),
+			"invalid rewards program id : 0",
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			err := tt.msgClaimRewardRequest.ValidateBasic()
+			if err != nil {
+				assert.Equal(t, tt.want, err.Error())
+			} else if len(tt.want) > 0 {
+				t.Errorf("MsgClaimRewardRequest ValidateBasic error = nil, expected: %s", tt.want)
 			}
 		})
 	}
