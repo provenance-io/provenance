@@ -2,10 +2,11 @@ package cli_test
 
 import (
 	"fmt"
-	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 	"strings"
 	"testing"
 	"time"
+
+	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -96,10 +97,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		now.Add(-60*60*time.Second),
 		60*60,
 		3,
-		1,
+		60*60*24,
 		s.qualifyingActions,
 	)
 	s.finishedRewardProgram.Id = 2
+	s.finishedRewardProgram.ActualProgramEndTime = now
 	s.finishedRewardProgram.State = types.RewardProgram_FINISHED
 
 	s.pendingRewardProgram = types.NewRewardProgram(
