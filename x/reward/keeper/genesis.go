@@ -30,16 +30,10 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
-	actionDelegate, _ := k.GetActionDelegate(ctx)
-
-	actionTransferDelegations, _ := k.GetActionTransferDelegations(ctx)
-
 	return types.NewGenesisState(
 		rewardProgramID,
 		rewardPrograms,
 		ClaimPeriodRewardDistributions,
-		actionDelegate,
-		actionTransferDelegations,
 	)
 }
 
@@ -58,7 +52,4 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	for _, ClaimPeriodRewardDistributions := range data.ClaimPeriodRewardDistributions {
 		k.SetClaimPeriodRewardDistribution(ctx, ClaimPeriodRewardDistributions)
 	}
-
-	k.SetActionDelegate(ctx, data.ActionDelegate)
-	k.SetActionTransferDelegations(ctx, data.ActionTransferDelegations)
 }

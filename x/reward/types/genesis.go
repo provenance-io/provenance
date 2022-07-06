@@ -4,15 +4,11 @@ func NewGenesisState(
 	startingRewardProgramID uint64,
 	rewardProgram []RewardProgram,
 	claimPeriodRewardDistributions []ClaimPeriodRewardDistribution,
-	actionDelegate ActionDelegate,
-	actionTransferDelegations ActionTransferDelegations,
 ) *GenesisState {
 	return &GenesisState{
 		StartingRewardProgramId:        startingRewardProgramID,
 		RewardPrograms:                 rewardProgram,
 		ClaimPeriodRewardDistributions: claimPeriodRewardDistributions,
-		ActionDelegate:                 actionDelegate,
-		ActionTransferDelegations:      actionTransferDelegations,
 	}
 }
 
@@ -22,8 +18,6 @@ func DefaultGenesis() *GenesisState {
 		DefaultStartingRewardProgramID,
 		[]RewardProgram{},
 		[]ClaimPeriodRewardDistribution{},
-		ActionDelegate{},
-		ActionTransferDelegations{},
 	)
 }
 
@@ -40,16 +34,6 @@ func (gs GenesisState) Validate() error {
 		if err := claimPeriodRewardDistributions.ValidateBasic(); err != nil {
 			return err
 		}
-	}
-
-	actionDelegate := gs.ActionDelegate
-	if err := actionDelegate.ValidateBasic(); err != nil {
-		return err
-	}
-
-	actionTransferDelegations := gs.ActionTransferDelegations
-	if err := actionTransferDelegations.ValidateBasic(); err != nil {
-		return err
 	}
 
 	return nil

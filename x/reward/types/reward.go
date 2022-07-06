@@ -12,7 +12,6 @@ import (
 	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // DefaultStartingRewardProgramID is 1
@@ -27,14 +26,14 @@ const (
 
 var (
 	_ RewardAction = &ActionDelegate{}
-	_ RewardAction = &ActionTransferDelegations{}
+	_ RewardAction = &ActionTransfer{}
 	_ RewardAction = &ActionVote{}
 )
 
 const (
-	ActionTypeDelegate            = "ActionDelegate"
-	ActionTypeTransferDelegations = "ActionTransferDelegations"
-	ActionTypeVote                = "ActionVote"
+	ActionTypeDelegate = "ActionDelegate"
+	ActionTypeTransfer = "ActionTransfer"
+	ActionTypeVote     = "ActionVote"
 )
 
 type (
@@ -338,7 +337,7 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	actionCounter := state.ActionCounter[ad.ActionType()]
 
 	// TODO Is this correct to truncate the tokens?
-	delegatedHash := sdk.NewInt64Coin("nhash", tokens.TruncateInt64())
+	delegatedHash := sdk.NewInt64Coin(provenanceconfig.DefaultBondDenom, tokens.TruncateInt64())
 	minDelegation := ad.GetMinimumDelegationAmount()
 	maxDelegation := ad.GetMaximumDelegationAmount()
 	minPercentile := ad.GetMinimumActiveStakePercentile()
@@ -380,37 +379,50 @@ func (ad *ActionDelegate) PostEvaluate(ctx sdk.Context, provider KeeperProvider,
 
 // ============ Action Transfer Delegations ============
 
-func NewActionTransferDelegations() ActionTransferDelegations {
-	return ActionTransferDelegations{}
+func NewActionTransfer() ActionTransfer {
+	return ActionTransfer{}
 }
 
-func (atd *ActionTransferDelegations) ValidateBasic() error {
+func (at *ActionTransfer) ValidateBasic() error {
 	return nil
 }
 
-func (atd *ActionTransferDelegations) GetBuilder() ActionBuilder {
-	return &DelegateTransferActionBuilder{}
+func (at *ActionTransfer) GetBuilder() ActionBuilder {
+	return &TransferActionBuilder{}
 }
 
-func (atd *ActionTransferDelegations) String() string {
-	out, _ := yaml.Marshal(atd)
+func (at *ActionTransfer) String() string {
+	out, _ := yaml.Marshal(at)
 	return string(out)
 }
 
-func (atd *ActionTransferDelegations) ActionType() string {
-	return ActionTypeTransferDelegations
+func (at *ActionTransfer) ActionType() string {
+	return ActionTypeTransfer
 }
 
-func (atd *ActionTransferDelegations) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
-	// TODO execute all the rules for action?
+func (at *ActionTransfer) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
+	// get the address that voted
+	addressVoting := event.Address
+
+	// check delegations if and only if mandated by the Action
+	if at.MinimumDelegationAmount.IsGTE(sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.ZeroInt())) {
+		// now check if it has any delegations
+		totalDelegations, found := getAllDelegations(ctx, provider, addressVoting)
+		if !found {
+			return false
+		}
+		if totalDelegations.IsGTE(at.MinimumDelegationAmount) {
+			return true
+		}
+	}
 	return false
 }
 
-func (atd *ActionTransferDelegations) PreEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
+func (at *ActionTransfer) PreEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
 	// Any action specific thing that we need to do before evaluation
 }
 
-func (atd *ActionTransferDelegations) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
+func (at *ActionTransfer) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
 	// Any action specific thing that we need to do after evaluation
 }
 
@@ -440,15 +452,17 @@ func (atd *ActionVote) ActionType() string {
 func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
 	// get the address that voted
 	addressVoting := event.Address
+	if atd.MinimumDelegationAmount.IsGTE(sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.ZeroInt())) {
+		// now check if it has any delegations
 
-	totalDelegations, found := getAllDelegations(ctx, provider, addressVoting)
-	if !found {
-		return false
+		totalDelegations, found := getAllDelegations(ctx, provider, addressVoting)
+		if !found {
+			return false
+		}
+		if totalDelegations.IsGTE(atd.MinimumDelegationAmount) {
+			return true
+		}
 	}
-	if totalDelegations.IsGTE(atd.MinimumDelegationAmount) {
-		return true
-	}
-	// now check if it has any delegations
 	return false
 }
 
@@ -487,8 +501,7 @@ func (qa *QualifyingAction) GetRewardAction(ctx sdk.Context) (RewardAction, erro
 // return total coin delegated and boolean to indicate if any delegations are at all present.
 func getAllDelegations(ctx sdk.Context, provider KeeperProvider, delegator sdk.AccAddress) (sdk.Coin, bool) {
 	stakingKeeper := provider.GetStakingKeeper()
-	delegations := make([]stakingtypes.Delegation, 0)
-	delegations = stakingKeeper.GetAllDelegatorDelegations(ctx, delegator)
+	delegations := stakingKeeper.GetAllDelegatorDelegations(ctx, delegator)
 	// if no delegations then return not found
 	if len(delegations) == 0 {
 		return sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.ZeroInt()), false
@@ -507,8 +520,6 @@ func getAllDelegations(ctx sdk.Context, provider KeeperProvider, delegator sdk.A
 
 	if sum.Amount.Equal(sdk.ZeroInt()) {
 		return sum, false
-
 	}
 	return sum, true
-
 }

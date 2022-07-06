@@ -6,11 +6,12 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 	"net"
 	"os"
 	"path/filepath"
 	"time"
+
+	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 
 	"github.com/cosmos/cosmos-sdk/version"
 

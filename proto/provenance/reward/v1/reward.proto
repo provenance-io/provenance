@@ -140,9 +140,9 @@ message QualifyingAction {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;
   oneof type {
-    ActionDelegate            delegate            = 1;
-    ActionTransferDelegations transferDelegations = 2;
-    ActionVote                vote                = 3;
+    ActionDelegate  delegate            = 1;
+    ActionTransfer transferDelegations = 2;
+    ActionVote      vote                = 3;
   }
 }
 
@@ -169,9 +169,9 @@ message ActionDelegate {
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 // accounts that have made transfers, from accounts that have active delegations
-// rule: ActionTransferDelegations "When transfer has occurred and the account has an active delegation,
+// rule: ActionTransfer "When transfer has occurred and the account has an active delegation,
 // give it a share of the rewards pool, assuming it has not gone over max value and is above a min value" {
-message ActionTransferDelegations {
+message ActionTransfer {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
