@@ -295,6 +295,193 @@ func (suite *KeeperTestSuite) TestGetOutstandingRewardProgramsEmpty() {
 	suite.Assert().Equal(0, len(programs), "should have no outstanding programs")
 }
 
+func (suite *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
+	suite.SetupTest()
+	time := time.Now()
+	program1 := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 100000),
+		sdk.NewInt64Coin("nhash", 1000),
+		time,
+		60*60,
+		3,
+		0,
+		[]types.QualifyingAction{},
+	)
+	program2 := types.NewRewardProgram(
+		"title",
+		"description",
+		2,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 100000),
+		sdk.NewInt64Coin("nhash", 1000),
+		time,
+		60*60,
+		3,
+		0,
+		[]types.QualifyingAction{},
+	)
+	program3 := types.NewRewardProgram(
+		"title",
+		"description",
+		3,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 100000),
+		sdk.NewInt64Coin("nhash", 1000),
+		time,
+		60*60,
+		3,
+		0,
+		[]types.QualifyingAction{},
+	)
+	program4 := types.NewRewardProgram(
+		"title",
+		"description",
+		4,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 100000),
+		sdk.NewInt64Coin("nhash", 1000),
+		time,
+		60*60,
+		3,
+		0,
+		[]types.QualifyingAction{},
+	)
+	program5 := types.NewRewardProgram(
+		"title",
+		"description",
+		5,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 100000),
+		sdk.NewInt64Coin("nhash", 1000),
+		time,
+		60*60,
+		3,
+		0,
+		[]types.QualifyingAction{},
+	)
+	program2.State = types.RewardProgram_STARTED
+	program3.State = types.RewardProgram_FINISHED
+	program4.State = types.RewardProgram_EXPIRED
+	program5.State = types.RewardProgram_EXPIRED
+
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program3)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program4)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program5)
+
+	programs, err := suite.app.RewardKeeper.GetAllExpiredRewardPrograms(suite.ctx)
+	suite.Assert().NoError(err, "no error should be returned")
+	suite.Assert().Equal(2, len(programs), "should have all outstanding programs")
+	suite.Assert().Equal(uint64(4), programs[0].GetId(), "should have program 4")
+	suite.Assert().Equal(uint64(5), programs[1].GetId(), "should have program 5")
+}
+
+func (suite *KeeperTestSuite) TestGetAllExpiredRewardProgramsEmpty() {
+	suite.SetupTest()
+	programs, err := suite.app.RewardKeeper.GetAllExpiredRewardPrograms(suite.ctx)
+	suite.Assert().NoError(err, "no error should be returned")
+	suite.Assert().Equal(0, len(programs), "should have no expired programs")
+}
+
+func (suite *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
+	suite.SetupTest()
+	time := time.Now()
+	program1 := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 100000),
+		sdk.NewInt64Coin("nhash", 1000),
+		time,
+		60*60,
+		3,
+		0,
+		[]types.QualifyingAction{},
+	)
+	program2 := types.NewRewardProgram(
+		"title",
+		"description",
+		2,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 100000),
+		sdk.NewInt64Coin("nhash", 1000),
+		time,
+		60*60,
+		3,
+		0,
+		[]types.QualifyingAction{},
+	)
+	program3 := types.NewRewardProgram(
+		"title",
+		"description",
+		3,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 100000),
+		sdk.NewInt64Coin("nhash", 1000),
+		time,
+		60*60,
+		3,
+		0,
+		[]types.QualifyingAction{},
+	)
+	program4 := types.NewRewardProgram(
+		"title",
+		"description",
+		4,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 100000),
+		sdk.NewInt64Coin("nhash", 1000),
+		time,
+		60*60,
+		3,
+		0,
+		[]types.QualifyingAction{},
+	)
+	program5 := types.NewRewardProgram(
+		"title",
+		"description",
+		5,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 100000),
+		sdk.NewInt64Coin("nhash", 1000),
+		time,
+		60*60,
+		3,
+		0,
+		[]types.QualifyingAction{},
+	)
+	program2.State = types.RewardProgram_STARTED
+	program3.State = types.RewardProgram_FINISHED
+	program4.State = types.RewardProgram_EXPIRED
+	program5.State = types.RewardProgram_EXPIRED
+
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program3)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program4)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program5)
+
+	programs, err := suite.app.RewardKeeper.GetUnexpiredRewardPrograms(suite.ctx)
+	suite.Assert().NoError(err, "no error should be returned")
+	suite.Assert().Equal(3, len(programs), "should have all unexpired programs")
+	suite.Assert().Equal(uint64(1), programs[0].GetId(), "should have program 1")
+	suite.Assert().Equal(uint64(2), programs[1].GetId(), "should have program 2")
+	suite.Assert().Equal(uint64(3), programs[2].GetId(), "should have program 3")
+}
+
+func (suite *KeeperTestSuite) TestGetUnexpiredRewardProgramsEmpty() {
+	suite.SetupTest()
+	programs, err := suite.app.RewardKeeper.GetUnexpiredRewardPrograms(suite.ctx)
+	suite.Assert().NoError(err, "no error should be returned")
+	suite.Assert().Equal(0, len(programs), "should have no expired programs")
+}
+
 func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 	suite.SetupTest()
 	time := time.Now()

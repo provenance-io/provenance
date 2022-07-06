@@ -46,14 +46,14 @@ func NewTxCmd() *cobra.Command {
 }
 
 func GetCmdRewardProgramAdd() *cobra.Command {
-	actions := "{\"qualifying_actions\":[{\"delegate\":{\"minimum_actions\":\"0\",\"maximum_actions\":\"0\",\"minimum_delegation_amount\":{\"denom\":\"nhash\",\"amount\":\"0\"},\"maximum_delegation_amount\":{\"denom\":\"nhash\",\"amount\":\"100\"},\"minimum_active_stake_percentile\":\"0.000000000000000000\",\"maximum_active_stake_percentile\":\"1.000000000000000000\"}}]}"
+	actionsExampleJSON := "{\"qualifying_actions\":[{\"delegate\":{\"minimum_actions\":\"0\",\"maximum_actions\":\"0\",\"minimum_delegation_amount\":{\"denom\":\"nhash\",\"amount\":\"0\"},\"maximum_delegation_amount\":{\"denom\":\"nhash\",\"amount\":\"100\"},\"minimum_active_stake_percentile\":\"0.000000000000000000\",\"maximum_active_stake_percentile\":\"1.000000000000000000\"}}]}"
 	cmd := &cobra.Command{
 		Use:     "add-reward-program [title] [description]",
 		Args:    cobra.ExactArgs(3),
 		Aliases: []string{"arp"},
 		Short:   "Add a reward program",
 		Long:    strings.TrimSpace(`Add a reward program`),
-		Example: fmt.Sprintf(`$ %[1]s tx reward new 
+		Example: fmt.Sprintf(`$ %[1]s tx reward add-reward-program 
 		--total_reward_pool  580nhash \
 		--max-reward-by-address 10nhash \
     	--start-time 2022-05-10\
@@ -61,7 +61,7 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 		--claim-period-days 7 \
 		--expire-days 14 \ 
 		--qualifying-actions %s
-		`, version.AppName, actions),
+		`, version.AppName, actionsExampleJSON),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -160,4 +160,34 @@ func convertDateToTime(dateStr string) (time.Time, error) {
 	}
 	startTime := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
 	return startTime, nil
+}
+
+func GetCmdClaimReward() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "claim-reward [reward-program-id]",
+		Args:    cobra.ExactArgs(1),
+		Aliases: []string{"cr", "claim"},
+		Short:   "Claim reward for specified reward program",
+		Long:    strings.TrimSpace(`Claim reward for a specified reward program.  This will transfer all unclaimed rewards for outstanding claim periods to signers address.`),
+		Example: fmt.Sprintf(`$ %[1]s tx reward `, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			callerAddr := clientCtx.GetFromAddress()
+			programID, err := strconv.Atoi(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid argument : %s", args[0])
+			}
+
+			msg := types.NewMsgClaimRewardRequest(
+				uint64(programID),
+				callerAddr.String(),
+			)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }
