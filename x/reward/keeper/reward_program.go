@@ -56,16 +56,9 @@ func (k Keeper) IterateRewardPrograms(ctx sdk.Context, handle func(rewardProgram
 	return nil
 }
 
-// Gets all RewardPrograms that have not finished
+// Gets all RewardPrograms that have not expired
 func (k Keeper) GetOutstandingRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
-	var rewardPrograms []types.RewardProgram
-	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
-		if rewardProgram.GetState() != types.RewardProgram_FINISHED {
-			rewardPrograms = append(rewardPrograms, rewardProgram)
-		}
-		return false
-	})
-	return rewardPrograms, err
+	return k.getRewardProgramByState(ctx, types.RewardProgram_PENDING, types.RewardProgram_STARTED)
 }
 
 // GetAllActiveRewardPrograms gets all RewardPrograms that have started
@@ -83,26 +76,29 @@ func (k Keeper) GetAllPendingRewardPrograms(ctx sdk.Context) ([]types.RewardProg
 	return k.getRewardProgramByState(ctx, types.RewardProgram_PENDING)
 }
 
-// GetAllFinishedRewardPrograms gets all pending the RewardPrograms
-// TODO Test this
-func (k Keeper) GetAllFinishedRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
-	return k.getRewardProgramByState(ctx, types.RewardProgram_FINISHED)
-}
-
-// GetAllFinishedRewardPrograms gets all pending the RewardPrograms
+// GetAllFinishedRewardPrograms gets all expired RewardPrograms
 // TODO Test this
 func (k Keeper) GetAllExpiredRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
 	return k.getRewardProgramByState(ctx, types.RewardProgram_EXPIRED)
 }
 
+// TODO Test this
+func (k Keeper) GetUnexpiredRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
+	return k.getRewardProgramByState(ctx, types.RewardProgram_PENDING, types.RewardProgram_PENDING, types.RewardProgram_STARTED, types.RewardProgram_EXPIRED)
+}
+
 // getRewardProgramByState gets rewards based on state
-func (k Keeper) getRewardProgramByState(ctx sdk.Context, state types.RewardProgram_State) ([]types.RewardProgram, error) {
+func (k Keeper) getRewardProgramByState(ctx sdk.Context, states ...types.RewardProgram_State) ([]types.RewardProgram, error) {
 	var rewardPrograms []types.RewardProgram
 	// get all the rewards programs by state
 	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
-		if rewardProgram.GetState() == state {
-			rewardPrograms = append(rewardPrograms, rewardProgram)
+		for _, state := range states {
+			if rewardProgram.GetState() == state {
+				rewardPrograms = append(rewardPrograms, rewardProgram)
+				break
+			}
 		}
+
 		return false
 	})
 	return rewardPrograms, err

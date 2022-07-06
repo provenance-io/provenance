@@ -3,10 +3,11 @@ package types
 import (
 	"errors"
 	fmt "fmt"
-	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 	"reflect"
 	"strings"
 	time "time"
+
+	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 
 	"gopkg.in/yaml.v2"
 
@@ -134,16 +135,26 @@ func NewRewardProgram(
 	}
 }
 
+// TODO Test this
 func (rp *RewardProgram) IsStarting(ctx sdk.Context) bool {
 	blockTime := ctx.BlockTime()
 	return rp.State == RewardProgram_PENDING && (blockTime.After(rp.ProgramStartTime) || blockTime.Equal(rp.ProgramStartTime))
 }
 
+// TODO Test this
 func (rp *RewardProgram) IsEndingClaimPeriod(ctx sdk.Context) bool {
 	blockTime := ctx.BlockTime()
 	return rp.State == RewardProgram_STARTED && (blockTime.After(rp.ClaimPeriodEndTime) || blockTime.Equal(rp.ClaimPeriodEndTime))
 }
 
+// TODO Test this
+func (rp *RewardProgram) IsExpiring(ctx sdk.Context) bool {
+	blockTime := ctx.BlockTime()
+	expireTime := rp.ActualProgramEndTime.Add(time.Second * time.Duration(rp.RewardClaimExpirationOffset))
+	return rp.State == RewardProgram_FINISHED && (blockTime.After(expireTime) || blockTime.Equal(expireTime))
+}
+
+// TODO Test this
 func (rp *RewardProgram) IsEnding(ctx sdk.Context, programBalance sdk.Coin) bool {
 	blockTime := ctx.BlockTime()
 	isProgramExpired := !rp.GetExpectedProgramEndTime().IsZero() && (blockTime.After(rp.ExpectedProgramEndTime) || blockTime.Equal(rp.ExpectedProgramEndTime))
@@ -472,7 +483,7 @@ func (qa *QualifyingAction) GetRewardAction(ctx sdk.Context) (RewardAction, erro
 	return action, nil
 }
 
-// getAllDelegations pure functions to get delegated coins for an addres
+// getAllDelegations pure functions to get delegated coins for an address
 // return total coin delegated and boolean to indicate if any delegations are at all present.
 func getAllDelegations(ctx sdk.Context, provider KeeperProvider, delegator sdk.AccAddress) (sdk.Coin, bool) {
 	stakingKeeper := provider.GetStakingKeeper()

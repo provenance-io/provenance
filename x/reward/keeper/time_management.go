@@ -10,17 +10,19 @@ import (
 )
 
 func (k Keeper) Update(ctx sdk.Context) {
-	outstanding, err := k.GetOutstandingRewardPrograms(ctx)
+	rewardPrograms, err := k.GetUnexpiredRewardPrograms(ctx)
 	if err != nil {
 		ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - error iterating reward programs: %v ", err))
 		return
 	}
 
-	for _, rewardProgram := range outstanding {
+	for _, rewardProgram := range rewardPrograms {
 		if rewardProgram.IsStarting(ctx) {
 			k.StartRewardProgram(ctx, &rewardProgram)
 		} else if rewardProgram.IsEndingClaimPeriod(ctx) {
 			k.EndRewardProgramClaimPeriod(ctx, &rewardProgram)
+		} else if rewardProgram.IsExpiring(ctx) {
+			k.ExpireRewardProgram(ctx, &rewardProgram)
 		}
 
 		k.SetRewardProgram(ctx, rewardProgram)
