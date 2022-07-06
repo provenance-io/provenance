@@ -31,8 +31,7 @@ func (b *TransferActionBuilder) GetEventCriteria() *EventCriteria {
 }
 
 func (b *TransferActionBuilder) AddEvent(eventType string, attributes *map[string][]byte) error {
-	switch eventType {
-	case banktypes.EventTypeTransfer:
+	if eventType == banktypes.EventTypeTransfer {
 		// Update the result with the senders address
 		address := (*attributes)[banktypes.AttributeKeySender]
 		address, err := sdk.AccAddressFromBech32(string(address))
