@@ -177,7 +177,6 @@ func (suite *KeeperTestSuite) TestIterateAccountStatesHalt() {
 	suite.Assert().Equal(1, counter, "should have correct number of iterations")
 }
 
-//
 func (suite *KeeperTestSuite) TestIterateAllAccountStates() {
 	suite.SetupTest()
 
@@ -236,4 +235,193 @@ func (suite *KeeperTestSuite) TestIterateAllAccountStatesHalt() {
 	})
 
 	suite.Assert().Equal(1, counter, "should have correct number of iterations")
+}
+
+func (suite *KeeperTestSuite) TestIterateRewardAccountStatesForRewardProgram() {
+	suite.SetupTest()
+
+	state1 := types.NewRewardAccountState(1, 2, "test", 0)
+	state2 := types.NewRewardAccountState(1, 3, "test", 0)
+	state3 := types.NewRewardAccountState(2, 1, "test", 0)
+	state4 := types.NewRewardAccountState(2, 2, "test", 0)
+	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
+
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state3)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state4)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state5)
+
+	counter := 0
+	suite.app.RewardKeeper.IterateRewardAccountStatesForRewardProgram(suite.ctx, 2, func(state types.RewardAccountState) bool {
+		counter += 1
+		return false
+	})
+
+	suite.Assert().Equal(3, counter, "should have correct number of iterations")
+}
+
+func (suite *KeeperTestSuite) TestEmptyIterateRewardAccountStatesForRewardProgram() {
+	suite.SetupTest()
+
+	counter := 0
+	suite.app.RewardKeeper.IterateRewardAccountStatesForRewardProgram(suite.ctx, 1, func(state types.RewardAccountState) bool {
+		counter += 1
+		return false
+	})
+
+	suite.Assert().Equal(0, counter, "should have correct number of iterations")
+}
+
+func (suite *KeeperTestSuite) TestIterateRewardAccountStatesForRewardProgramHalt() {
+	suite.SetupTest()
+
+	state1 := types.NewRewardAccountState(1, 2, "test", 0)
+	state2 := types.NewRewardAccountState(1, 3, "test", 0)
+	state3 := types.NewRewardAccountState(2, 1, "test", 0)
+	state4 := types.NewRewardAccountState(2, 2, "test", 0)
+	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
+
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state3)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state4)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state5)
+
+	counter := 0
+	suite.app.RewardKeeper.IterateRewardAccountStatesForRewardProgram(suite.ctx, 2, func(state types.RewardAccountState) bool {
+		counter += 1
+		return counter == 1
+	})
+
+	suite.Assert().Equal(1, counter, "should have correct number of iterations")
+}
+
+func (suite *KeeperTestSuite) TestGetRewardAccountStatesForClaimPeriod() {
+	suite.SetupTest()
+
+	state1 := types.NewRewardAccountState(1, 2, "test", 0)
+	state2 := types.NewRewardAccountState(1, 3, "test", 0)
+	state3 := types.NewRewardAccountState(2, 1, "test", 0)
+	state4 := types.NewRewardAccountState(2, 2, "test", 0)
+	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
+
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state3)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state4)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state5)
+
+	states, err := suite.app.RewardKeeper.GetRewardAccountStatesForClaimPeriod(suite.ctx, 2, 2)
+	suite.Assert().NoError(err, "no error should be thrown when there are account states.")
+	suite.Assert().Equal(2, len(states), "should have correct number of account states")
+}
+
+func (suite *KeeperTestSuite) TestGetRewardAccountStatesForClaimPeriodHandlesEmpty() {
+	suite.SetupTest()
+
+	states, err := suite.app.RewardKeeper.GetRewardAccountStatesForClaimPeriod(suite.ctx, 1, 1)
+	suite.Assert().NoError(err, "no error should be thrown when there are no account states.")
+	suite.Assert().Equal(0, len(states), "should have no account states")
+}
+
+func (suite *KeeperTestSuite) TestGetRewardAccountStatesForRewardProgram() {
+	suite.SetupTest()
+
+	state1 := types.NewRewardAccountState(1, 2, "test", 0)
+	state2 := types.NewRewardAccountState(1, 3, "test", 0)
+	state3 := types.NewRewardAccountState(2, 1, "test", 0)
+	state4 := types.NewRewardAccountState(2, 2, "test", 0)
+	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
+
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state3)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state4)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state5)
+
+	states, err := suite.app.RewardKeeper.GetRewardAccountStatesForRewardProgram(suite.ctx, 2)
+	suite.Assert().NoError(err, "no error should be thrown when there are account states.")
+	suite.Assert().Equal(3, len(states), "should have correct number of account states")
+}
+
+func (suite *KeeperTestSuite) TestGetRewardAccountStatesForRewardProgramHandlesEmpty() {
+	suite.SetupTest()
+
+	states, err := suite.app.RewardKeeper.GetRewardAccountStatesForClaimPeriod(suite.ctx, 1, 1)
+	suite.Assert().NoError(err, "no error should be thrown when there are no account states.")
+	suite.Assert().Equal(0, len(states), "should have no account states")
+}
+
+func (suite *KeeperTestSuite) TestMakeRewardClaimsClaimableForPeriod() {
+	suite.SetupTest()
+
+	state1 := types.NewRewardAccountState(1, 2, "test", 0)
+	state2 := types.NewRewardAccountState(1, 3, "test", 0)
+	state3 := types.NewRewardAccountState(2, 1, "test", 0)
+	state4 := types.NewRewardAccountState(2, 2, "test", 0)
+	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
+
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state3)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state4)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state5)
+
+	err := suite.app.RewardKeeper.MakeRewardClaimsClaimableForPeriod(suite.ctx, 2, 2)
+	suite.Assert().NoError(err, "no error should be thrown when there are account states.")
+
+	state1, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 1, 2, "test")
+	state2, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 1, 3, "test")
+	state3, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 2, 1, "test")
+	state4, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 2, 2, "test")
+	state5, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 2, 2, "test2")
+
+	suite.Assert().NotEqual(types.RewardAccountState_CLAIMABLE, state1.GetClaimStatus(), "account state should not be updated to be claimable")
+	suite.Assert().NotEqual(types.RewardAccountState_CLAIMABLE, state2.GetClaimStatus(), "account state should not be updated to be claimable")
+	suite.Assert().NotEqual(types.RewardAccountState_CLAIMABLE, state3.GetClaimStatus(), "account state should not be updated to be claimable")
+	suite.Assert().Equal(types.RewardAccountState_CLAIMABLE, state4.GetClaimStatus(), "account state should not be updated to be claimable")
+	suite.Assert().Equal(types.RewardAccountState_CLAIMABLE, state5.GetClaimStatus(), "account state should not be updated to be claimable")
+}
+
+func (suite *KeeperTestSuite) TestMakeRewardClaimsClaimableForPeriodHandlesEmpty() {
+	suite.SetupTest()
+
+	err := suite.app.RewardKeeper.MakeRewardClaimsClaimableForPeriod(suite.ctx, 1, 1)
+	suite.Assert().NoError(err, "no error should be thrown when there are no account states.")
+}
+
+func (suite *KeeperTestSuite) TestExpireRewardClaimsForRewardProgram() {
+	suite.SetupTest()
+
+	state1 := types.NewRewardAccountState(1, 1, "test", 0)
+	state2 := types.NewRewardAccountState(1, 1, "test2", 0)
+	state3 := types.NewRewardAccountState(1, 2, "test", 0)
+	state4 := types.NewRewardAccountState(1, 2, "test2", 0)
+	state4.ClaimStatus = types.RewardAccountState_CLAIMED
+
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state3)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state4)
+
+	err := suite.app.RewardKeeper.ExpireRewardClaimsForRewardProgram(suite.ctx, 1)
+	suite.Assert().NoError(err, "no error should be thrown when there are account states.")
+
+	state1, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 1, 1, "test")
+	state2, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 1, 1, "test2")
+	state3, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 1, 2, "test")
+	state4, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 1, 2, "test2")
+
+	suite.Assert().Equal(types.RewardAccountState_EXPIRED, state1.GetClaimStatus(), "account state should be updated to expired")
+	suite.Assert().Equal(types.RewardAccountState_EXPIRED, state2.GetClaimStatus(), "account state should be updated to expired")
+	suite.Assert().Equal(types.RewardAccountState_EXPIRED, state3.GetClaimStatus(), "account state should be updated to expired")
+	suite.Assert().Equal(types.RewardAccountState_CLAIMED, state4.GetClaimStatus(), "account state should not be updated to expired if claimed")
+}
+
+func (suite *KeeperTestSuite) TestExpireRewardClaimsForRewardProgramHandlesEmpty() {
+	suite.SetupTest()
+
+	err := suite.app.RewardKeeper.ExpireRewardClaimsForRewardProgram(suite.ctx, 1)
+	suite.Assert().NoError(err, "no error should be thrown when there are no account states.")
 }

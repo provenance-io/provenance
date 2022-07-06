@@ -76,7 +76,7 @@ func (k Keeper) IterateAllRewardAccountStates(ctx sdk.Context, handle func(state
 	return nil
 }
 
-// TODO test this
+// Iterates over the account states for a reward program
 func (k Keeper) IterateRewardAccountStatesForRewardProgram(ctx sdk.Context, rewardProgramID uint64, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.GetRewardProgramRewardAccountStateKeyPrefix(rewardProgramID))
@@ -94,7 +94,7 @@ func (k Keeper) IterateRewardAccountStatesForRewardProgram(ctx sdk.Context, rewa
 	return nil
 }
 
-// TODO Test this
+// Returns a list of account states for the reward program's claim period
 func (k Keeper) GetRewardAccountStatesForClaimPeriod(ctx sdk.Context, rewardProgramID, claimPeriodID uint64) ([]types.RewardAccountState, error) {
 	states := []types.RewardAccountState{}
 	err := k.IterateRewardAccountStates(ctx, rewardProgramID, claimPeriodID, func(state types.RewardAccountState) (stop bool) {
@@ -104,7 +104,7 @@ func (k Keeper) GetRewardAccountStatesForClaimPeriod(ctx sdk.Context, rewardProg
 	return states, err
 }
 
-// TODO Test this
+// Returns a list of account states for the reward program
 func (k Keeper) GetRewardAccountStatesForRewardProgram(ctx sdk.Context, rewardProgramID uint64) ([]types.RewardAccountState, error) {
 	states := []types.RewardAccountState{}
 	err := k.IterateRewardAccountStatesForRewardProgram(ctx, rewardProgramID, func(state types.RewardAccountState) (stop bool) {
@@ -114,7 +114,7 @@ func (k Keeper) GetRewardAccountStatesForRewardProgram(ctx sdk.Context, rewardPr
 	return states, err
 }
 
-// TODO Test this
+// Changes the state for all account states in a reward program's claim period to be claimable
 func (k Keeper) MakeRewardClaimsClaimableForPeriod(ctx sdk.Context, rewardProgramID, claimPeriodID uint64) error {
 	states, err := k.GetRewardAccountStatesForClaimPeriod(ctx, rewardProgramID, claimPeriodID)
 	for _, state := range states {
@@ -124,7 +124,7 @@ func (k Keeper) MakeRewardClaimsClaimableForPeriod(ctx sdk.Context, rewardProgra
 	return err
 }
 
-// TODO Test this
+// Changes the state for all account states in a reward program to be expired if they are not claimed
 func (k Keeper) ExpireRewardClaimsForRewardProgram(ctx sdk.Context, rewardProgramID uint64) error {
 	states, err := k.GetRewardAccountStatesForRewardProgram(ctx, rewardProgramID)
 	for _, state := range states {
