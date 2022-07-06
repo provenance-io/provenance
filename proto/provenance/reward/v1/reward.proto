@@ -140,9 +140,9 @@ message QualifyingAction {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;
   oneof type {
-    ActionDelegate  delegate            = 1;
+    ActionDelegate delegate            = 1;
     ActionTransfer transferDelegations = 2;
-    ActionVote      vote                = 3;
+    ActionVote     vote                = 3;
   }
 }
 

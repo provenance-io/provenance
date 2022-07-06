@@ -6255,9 +6255,9 @@ Query defines the gRPC querier service for reward module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `claim_period_id` | [uint64](#uint64) |  |  |
-| `total_shares` | [uint64](#uint64) |  |  |
-| `claim_period_reward` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `claim_period_id` | [uint64](#uint64) |  | claim period id |
+| `total_shares` | [uint64](#uint64) |  | total shares accumulated |
+| `claim_period_reward` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | total rewards for claim period |
 
 
 
@@ -6267,13 +6267,13 @@ Query defines the gRPC querier service for reward module.
 <a name="provenance.reward.v1.MsgClaimRewardRequest"></a>
 
 ### MsgClaimRewardRequest
-
+MsgClaimRewardRequest is the request type for claiming reward from reward program RPC
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `reward_program_id` | [uint64](#uint64) |  |  |
-| `distribute_to_address` | [string](#string) |  |  |
+| `reward_program_id` | [uint64](#uint64) |  | reward program id to claim rewards |
+| `reward_address` | [string](#string) |  | reward address and signer of msg to send claimed rewards to |
 
 
 
@@ -6283,14 +6283,14 @@ Query defines the gRPC querier service for reward module.
 <a name="provenance.reward.v1.MsgClaimRewardResponse"></a>
 
 ### MsgClaimRewardResponse
-
+MsgClaimRewardResponse is the response type for claiming reward from reward program RPC
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `reward_program_id` | [uint64](#uint64) |  |  |
-| `total_reward_claim` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `claimed_reward_period_details` | [ClaimedRewardPeriodDetail](#provenance.reward.v1.ClaimedRewardPeriodDetail) | repeated |  |
+| `reward_program_id` | [uint64](#uint64) |  | reward program id |
+| `total_reward_claim` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | total rewards claimed for all elegible claim periods in program |
+| `claimed_reward_period_details` | [ClaimedRewardPeriodDetail](#provenance.reward.v1.ClaimedRewardPeriodDetail) | repeated | claim period details |
 
 
 
@@ -6300,7 +6300,7 @@ Query defines the gRPC querier service for reward module.
 <a name="provenance.reward.v1.MsgCreateRewardProgramRequest"></a>
 
 ### MsgCreateRewardProgramRequest
-
+MsgCreateRewardProgramRequest is the request type for creating a reward program RPC
 
 
 | Field | Type | Label | Description |
@@ -6324,12 +6324,12 @@ Query defines the gRPC querier service for reward module.
 <a name="provenance.reward.v1.MsgCreateRewardProgramResponse"></a>
 
 ### MsgCreateRewardProgramResponse
-
+MsgCreateRewardProgramResponse is the response type for creating a reward program RPC
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `id` | [uint64](#uint64) |  |  |
+| `id` | [uint64](#uint64) |  | reward program id that is generated on creation |
 
 
 
@@ -6349,8 +6349,8 @@ Msg
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `CreateRewardProgram` | [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest) | [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse) |  | |
-| `ClaimRewards` | [MsgClaimRewardRequest](#provenance.reward.v1.MsgClaimRewardRequest) | [MsgClaimRewardResponse](#provenance.reward.v1.MsgClaimRewardResponse) |  | |
+| `CreateRewardProgram` | [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest) | [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse) | CreateRewardProgram is the RPC endpoint for creating a rewards program | |
+| `ClaimRewards` | [MsgClaimRewardRequest](#provenance.reward.v1.MsgClaimRewardRequest) | [MsgClaimRewardResponse](#provenance.reward.v1.MsgClaimRewardResponse) | ClaimRewards is the RPC endpoint for claiming rewards for completed claim periods of a reward program | |
 
  <!-- end services -->
 

@@ -94,7 +94,7 @@ func (s msgServer) ClaimRewards(goCtx context.Context, req *types.MsgClaimReward
 		sdk.NewEvent(
 			types.EventTypeClaimRewards,
 			sdk.NewAttribute(types.AttributeKeyRewardProgramID, fmt.Sprintf("%d", req.RewardProgramId)),
-			sdk.NewAttribute(types.AttributeKeyRewardsClaimAddress, req.DistributeToAddress),
+			sdk.NewAttribute(types.AttributeKeyRewardsClaimAddress, req.RewardAddress),
 		),
 	)
 
