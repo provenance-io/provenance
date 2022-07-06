@@ -68,7 +68,7 @@ func (k Keeper) GetAllActiveRewardPrograms(ctx sdk.Context) ([]types.RewardProgr
 
 // GetAllCompletedRewardPrograms gets all completed the RewardPrograms
 func (k Keeper) GetAllCompletedRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
-	return k.getRewardProgramByState(ctx, types.RewardProgram_FINISHED)
+	return k.getRewardProgramByState(ctx, types.RewardProgram_FINISHED, types.RewardProgram_EXPIRED)
 }
 
 // GetAllPendingRewardPrograms gets all pending the RewardPrograms
@@ -76,15 +76,14 @@ func (k Keeper) GetAllPendingRewardPrograms(ctx sdk.Context) ([]types.RewardProg
 	return k.getRewardProgramByState(ctx, types.RewardProgram_PENDING)
 }
 
-// GetAllFinishedRewardPrograms gets all expired RewardPrograms
-// TODO Test this
+// GetAllExpiredRewardPrograms gets all expired RewardPrograms
 func (k Keeper) GetAllExpiredRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
 	return k.getRewardProgramByState(ctx, types.RewardProgram_EXPIRED)
 }
 
-// TODO Test this
+// GetAllExpiredRewardPrograms gets all RewardPrograms that are not expired
 func (k Keeper) GetUnexpiredRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
-	return k.getRewardProgramByState(ctx, types.RewardProgram_PENDING, types.RewardProgram_PENDING, types.RewardProgram_STARTED, types.RewardProgram_EXPIRED)
+	return k.getRewardProgramByState(ctx, types.RewardProgram_PENDING, types.RewardProgram_STARTED, types.RewardProgram_FINISHED)
 }
 
 // getRewardProgramByState gets rewards based on state
