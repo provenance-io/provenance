@@ -97,6 +97,8 @@ func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *type
 		return err
 	}
 
+	k.MakeRewardClaimsClaimableForPeriod(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod())
+
 	// Update balances
 	claimPeriodReward.TotalRewardsPoolForClaimPeriod = claimPeriodReward.TotalRewardsPoolForClaimPeriod.Add(totalClaimPeriodRewards)
 	rewardProgram.RemainingPoolBalance = rewardProgram.RemainingPoolBalance.Sub(totalClaimPeriodRewards)
@@ -115,7 +117,7 @@ func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *type
 func (k Keeper) EndRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) error {
 	if rewardProgram == nil {
 		ctx.Logger().Error("NOTICE: Attempting to end reward program for nil reward program")
-		return fmt.Errorf("unable to end reward programfor nil reward program")
+		return fmt.Errorf("unable to end reward program for nil reward program")
 	}
 
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Ending reward program %v ", rewardProgram))
@@ -124,6 +126,20 @@ func (k Keeper) EndRewardProgram(ctx sdk.Context, rewardProgram *types.RewardPro
 	rewardProgram.ActualProgramEndTime = blockTime
 
 	return nil
+}
+
+func (k Keeper) ExpireRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) error {
+	if rewardProgram == nil {
+		ctx.Logger().Error("NOTICE: Attempting to expire reward program for nil reward program")
+		return fmt.Errorf("unable to expire reward program for nil reward program")
+	}
+	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Expiring reward program %v ", rewardProgram))
+
+	err := k.ExpireRewardClaimsForRewardProgram(ctx, rewardProgram.GetId())
+	// We need to return the funds in the program
+	// We need to return the funds in the reward claims
+	rewardProgram.State = types.RewardProgram_EXPIRED
+	return err
 }
 
 func (k Keeper) CalculateRewardClaimPeriodRewards(ctx sdk.Context, maxReward sdk.Coin, claimPeriodReward types.ClaimPeriodRewardDistribution) (sum sdk.Coin, err error) {

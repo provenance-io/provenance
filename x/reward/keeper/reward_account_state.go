@@ -33,14 +33,14 @@ func (k Keeper) GetRewardAccountState(ctx sdk.Context, rewardProgramID, rewardCl
 	return state, err
 }
 
-func (k Keeper) SetRewardAccountState(ctx sdk.Context, state *types.RewardAccountState) {
+func (k Keeper) SetRewardAccountState(ctx sdk.Context, state types.RewardAccountState) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(state)
+	bz := k.cdc.MustMarshal(&state)
 	key := types.GetRewardAccountStateKey(state.GetRewardProgramId(), state.GetClaimPeriodId(), []byte(state.GetAddress()))
 	store.Set(key, bz)
 }
 
-// IterateRewardAccountStates Iterates over ALL the account states for a reward program's claim period
+// IterateRewardAccountStates Iterates over the account states for a reward program's claim period
 func (k Keeper) IterateRewardAccountStates(ctx sdk.Context, rewardProgramID, rewardClaimPeriodID uint64, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.GetRewardAccountStateKeyPrefix(rewardProgramID, rewardClaimPeriodID))
@@ -58,7 +58,7 @@ func (k Keeper) IterateRewardAccountStates(ctx sdk.Context, rewardProgramID, rew
 	return nil
 }
 
-// TODO test this
+// Iterates over the account states for every reward program
 func (k Keeper) IterateAllRewardAccountStates(ctx sdk.Context, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.GetAllRewardAccountStateKeyPrefix())
@@ -76,10 +76,10 @@ func (k Keeper) IterateAllRewardAccountStates(ctx sdk.Context, handle func(state
 	return nil
 }
 
-// TODO Test this
-func (k Keeper) IterateRewardAccountStatesForClaimPeriod(ctx sdk.Context, rewardProgramID, claimPeriodID uint64, handle func(state types.RewardAccountState) (stop bool)) error {
+// TODO test this
+func (k Keeper) IterateRewardAccountStatesForRewardProgram(ctx sdk.Context, rewardProgramID uint64, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetClaimPeriodRewardAccountStateKeyPrefix(rewardProgramID, claimPeriodID))
+	iterator := sdk.KVStorePrefixIterator(store, types.GetRewardProgramRewardAccountStateKeyPrefix(rewardProgramID))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -97,9 +97,42 @@ func (k Keeper) IterateRewardAccountStatesForClaimPeriod(ctx sdk.Context, reward
 // TODO Test this
 func (k Keeper) GetRewardAccountStatesForClaimPeriod(ctx sdk.Context, rewardProgramID, claimPeriodID uint64) ([]types.RewardAccountState, error) {
 	states := []types.RewardAccountState{}
-	err := k.IterateRewardAccountStatesForClaimPeriod(ctx, rewardProgramID, claimPeriodID, func(state types.RewardAccountState) (stop bool) {
+	err := k.IterateRewardAccountStates(ctx, rewardProgramID, claimPeriodID, func(state types.RewardAccountState) (stop bool) {
 		states = append(states, state)
 		return false
 	})
 	return states, err
+}
+
+// TODO Test this
+func (k Keeper) GetRewardAccountStatesForRewardProgram(ctx sdk.Context, rewardProgramID uint64) ([]types.RewardAccountState, error) {
+	states := []types.RewardAccountState{}
+	err := k.IterateRewardAccountStatesForRewardProgram(ctx, rewardProgramID, func(state types.RewardAccountState) (stop bool) {
+		states = append(states, state)
+		return false
+	})
+	return states, err
+}
+
+// TODO Test this
+func (k Keeper) MakeRewardClaimsClaimableForPeriod(ctx sdk.Context, rewardProgramID, claimPeriodID uint64) error {
+	states, err := k.GetRewardAccountStatesForClaimPeriod(ctx, rewardProgramID, claimPeriodID)
+	for _, state := range states {
+		state.ClaimStatus = types.RewardAccountState_CLAIMABLE
+		k.SetRewardAccountState(ctx, state)
+	}
+	return err
+}
+
+// TODO Test this
+func (k Keeper) ExpireRewardClaimsForRewardProgram(ctx sdk.Context, rewardProgramID uint64) error {
+	states, err := k.GetRewardAccountStatesForRewardProgram(ctx, rewardProgramID)
+	for _, state := range states {
+		if state.ClaimStatus == types.RewardAccountState_CLAIMED {
+			continue
+		}
+		state.ClaimStatus = types.RewardAccountState_EXPIRED
+		k.SetRewardAccountState(ctx, state)
+	}
+	return err
 }

@@ -186,6 +186,34 @@ func (suite *KeeperTestSuite) TestEndRewardProgramNil() {
 	suite.Assert().Error(err, "should throw an error for nil")
 }
 
+func (suite *KeeperTestSuite) TestExpireRewardProgram() {
+	suite.SetupTest()
+
+	program := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 100000),
+		sdk.NewInt64Coin("nhash", 1000),
+		time.Now(),
+		60*60,
+		3,
+		0,
+		[]types.QualifyingAction{},
+	)
+	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
+
+	suite.app.RewardKeeper.ExpireRewardProgram(suite.ctx, &program)
+	suite.Assert().Equal(program.State, types.RewardProgram_EXPIRED, "reward program should be in expired state")
+}
+
+func (suite *KeeperTestSuite) TestExpireRewardProgramNil() {
+	suite.SetupTest()
+	err := suite.app.RewardKeeper.ExpireRewardProgram(suite.ctx, nil)
+	suite.Assert().Error(err, "should throw an error for nil")
+}
+
 func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsNonMatchingDenoms() {
 	suite.SetupTest()
 	notMatching := types.NewClaimPeriodRewardDistribution(
@@ -230,8 +258,8 @@ func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsEvenDistribut
 
 	state1 := types.NewRewardAccountState(1, 1, "address1", 1)
 	state2 := types.NewRewardAccountState(1, 1, "address2", 1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state2)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
 
 	reward, err := suite.app.RewardKeeper.CalculateRewardClaimPeriodRewards(suite.ctx, sdk.NewInt64Coin("nhash", 100), distribution)
 	suite.Assert().NoError(err, "should return no error")
@@ -252,9 +280,9 @@ func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsEvenDistribut
 	state1 := types.NewRewardAccountState(1, 1, "address1", 1)
 	state2 := types.NewRewardAccountState(1, 1, "address2", 1)
 	state3 := types.NewRewardAccountState(1, 1, "address3", 1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state2)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state3)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state3)
 
 	reward, err := suite.app.RewardKeeper.CalculateRewardClaimPeriodRewards(suite.ctx, sdk.NewInt64Coin("nhash", 100), distribution)
 	suite.Assert().NoError(err, "should return no error")
@@ -275,9 +303,9 @@ func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUnevenDistrib
 	state1 := types.NewRewardAccountState(1, 1, "address1", 2)
 	state2 := types.NewRewardAccountState(1, 1, "address2", 1)
 	state3 := types.NewRewardAccountState(1, 1, "address3", 1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state2)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state3)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state3)
 
 	reward, err := suite.app.RewardKeeper.CalculateRewardClaimPeriodRewards(suite.ctx, sdk.NewInt64Coin("nhash", 100), distribution)
 	suite.Assert().NoError(err, "should return no error")
@@ -297,8 +325,8 @@ func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUsesMaxReward
 
 	state1 := types.NewRewardAccountState(1, 1, "address1", 1)
 	state2 := types.NewRewardAccountState(1, 1, "address2", 1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state2)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
 
 	reward, err := suite.app.RewardKeeper.CalculateRewardClaimPeriodRewards(suite.ctx, sdk.NewInt64Coin("nhash", 20), distribution)
 	suite.Assert().NoError(err, "should return no error")
@@ -429,7 +457,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEnd() {
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
 	state1 := types.NewRewardAccountState(1, 1, "address1", 1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	program.RemainingPoolBalance = program.GetTotalRewardPool()
 
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
@@ -473,8 +501,8 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransition() {
 
 	state1 := types.NewRewardAccountState(1, 1, "address1", 1)
 	state2 := types.NewRewardAccountState(1, 2, "address2", 1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state2)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
 
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
 	reward, _ := suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 1, 1)
@@ -557,12 +585,11 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndNoBalance() {
 	suite.Assert().Equal(blockTime, program.ActualProgramEndTime, "actual end time should be set")
 }
 
-func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndExtraBalance() {
+func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesClaimStatus() {
 	suite.SetupTest()
 
 	currentTime := time.Now()
 	suite.ctx = suite.ctx.WithBlockTime(currentTime)
-	blockTime := suite.ctx.BlockTime()
 	program := types.NewRewardProgram(
 		"title",
 		"description",
@@ -580,39 +607,22 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndExtraBalance() {
 	program.RemainingPoolBalance = program.GetTotalRewardPool()
 
 	state1 := types.NewRewardAccountState(1, 1, "address1", 1)
-	state2 := types.NewRewardAccountState(1, 2, "address1", 1)
-	state3 := types.NewRewardAccountState(1, 3, "address1", 1)
-	state4 := types.NewRewardAccountState(1, 4, "address1", 1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state2)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state3)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state4)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
+	state2 := types.NewRewardAccountState(1, 1, "address2", 1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
 
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
 	reward, _ := suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 1, 1)
 	reward.TotalShares = 1
 	suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, reward)
-
-	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
-	reward, _ = suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 2, 1)
-	reward.TotalShares = 1
-	suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, reward)
-
-	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
-	reward, _ = suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 3, 1)
-	reward.TotalShares = 1
-	suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, reward)
-
-	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
-	reward, _ = suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 4, 1)
-	reward.TotalShares = 1
-	suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, reward)
-
 	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
 
-	suite.Assert().Equal(types.RewardProgram_FINISHED, program.State, "reward program should be in finished state")
-	suite.Assert().Equal(uint64(4), program.CurrentClaimPeriod, "an extra iteration should run")
-	suite.Assert().Equal(blockTime, program.ActualProgramEndTime, "actual end time should be set")
+	state1, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 1, 1, "address1")
+	state2, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 1, 1, "address2")
+
+	// Adjusted after ending period
+	suite.Assert().Equal(types.RewardAccountState_CLAIMABLE, state1.GetClaimStatus(), "first claim status should be updated to claimable")
+	suite.Assert().Equal(types.RewardAccountState_CLAIMABLE, state2.GetClaimStatus(), "second claim status should be updated to claimable")
 }
 
 func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesBalances() {
@@ -637,7 +647,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesBalances() {
 	program.RemainingPoolBalance = program.GetTotalRewardPool()
 
 	state1 := types.NewRewardAccountState(1, 1, "address1", 1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
 	reward, _ := suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 1, 1)
@@ -681,7 +691,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRollo
 
 	// Create the shares
 	state1 := types.NewRewardAccountState(1, 1, "address1", 1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	reward, _ := suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 1, 1)
 	reward.TotalShares = 1
 	suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, reward)
@@ -772,7 +782,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 	ending.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
 	ending.RemainingPoolBalance = sdk.NewInt64Coin("nhash", 0)
 	state1 := types.NewRewardAccountState(4, 1, "address1", 1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &ending)
 	ending.ClaimPeriodEndTime = blockTime
 

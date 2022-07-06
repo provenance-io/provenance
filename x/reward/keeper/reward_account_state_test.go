@@ -34,7 +34,7 @@ func (suite *KeeperTestSuite) TestGetSetRewardAccountState() {
 		3,
 	)
 
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &expectedState)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, expectedState)
 	actualState, err := suite.app.RewardKeeper.GetRewardAccountState(suite.ctx,
 		expectedState.GetRewardProgramId(),
 		expectedState.GetClaimPeriodId(),
@@ -71,7 +71,7 @@ func (suite *KeeperTestSuite) TestRemoveValidAccountState() {
 		0,
 	)
 
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &expectedState)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, expectedState)
 	removed := suite.app.RewardKeeper.RemoveRewardAccountState(suite.ctx,
 		expectedState.GetRewardProgramId(),
 		expectedState.GetClaimPeriodId(),
@@ -114,11 +114,11 @@ func (suite *KeeperTestSuite) TestIterateAccountStates() {
 	state4 := types.NewRewardAccountState(2, 2, "test", 0)
 	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
 
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state2)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state3)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state4)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state5)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state3)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state4)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state5)
 
 	counter := 0
 	suite.app.RewardKeeper.IterateRewardAccountStates(suite.ctx, 2, 2, func(state types.RewardAccountState) bool {
@@ -138,11 +138,11 @@ func (suite *KeeperTestSuite) TestEmptyIterateAccountStates() {
 	state4 := types.NewRewardAccountState(2, 2, "test", 0)
 	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
 
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state2)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state3)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state4)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state5)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state3)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state4)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state5)
 
 	counter := 0
 	suite.app.RewardKeeper.IterateRewardAccountStates(suite.ctx, 1, 4, func(state types.RewardAccountState) bool {
@@ -162,11 +162,11 @@ func (suite *KeeperTestSuite) TestIterateAccountStatesHalt() {
 	state4 := types.NewRewardAccountState(2, 2, "test", 0)
 	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
 
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state2)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state3)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state4)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state5)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state3)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state4)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state5)
 
 	counter := 0
 	suite.app.RewardKeeper.IterateRewardAccountStates(suite.ctx, 1, 2, func(state types.RewardAccountState) bool {
@@ -177,83 +177,63 @@ func (suite *KeeperTestSuite) TestIterateAccountStatesHalt() {
 	suite.Assert().Equal(1, counter, "should have correct number of iterations")
 }
 
-func (suite *KeeperTestSuite) TestGetRewardAccountStatesForClaimPeriod() {
+//
+func (suite *KeeperTestSuite) TestIterateAllAccountStates() {
 	suite.SetupTest()
 
-	state1 := types.NewRewardAccountState(1, 1, "test", 0)
-	state3 := types.NewRewardAccountState(1, 1, "test2", 0)
-	state2 := types.NewRewardAccountState(1, 2, "test", 0)
-	state4 := types.NewRewardAccountState(1, 2, "test2", 0)
+	state1 := types.NewRewardAccountState(1, 2, "test", 0)
+	state2 := types.NewRewardAccountState(1, 3, "test", 0)
+	state3 := types.NewRewardAccountState(2, 1, "test", 0)
+	state4 := types.NewRewardAccountState(2, 2, "test", 0)
+	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
 
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state2)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state3)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state4)
-
-	results, err := suite.app.RewardKeeper.GetRewardAccountStatesForClaimPeriod(suite.ctx, 1, 1)
-	suite.Assert().NoError(err, "no error should be returned in successful case")
-	suite.Assert().Equal(2, len(results), "should have every state for the reward program's claim period")
-}
-
-func (suite *KeeperTestSuite) TestGetRewardAccountStatesForClaimPeriodInvalid() {
-	suite.SetupTest()
-	results, err := suite.app.RewardKeeper.GetRewardAccountStatesForClaimPeriod(suite.ctx, 1, 1)
-	suite.Assert().NoError(err, "no error should be returned when no states exist")
-	suite.Assert().Equal(0, len(results), "should have every state for the reward program's claim period")
-}
-
-func (suite *KeeperTestSuite) TestIterateRewardAccountStatesForClaimPeriod() {
-	suite.SetupTest()
-
-	state1 := types.NewRewardAccountState(1, 1, "test", 0)
-	state3 := types.NewRewardAccountState(1, 1, "test2", 0)
-	state2 := types.NewRewardAccountState(1, 2, "test", 0)
-	state4 := types.NewRewardAccountState(1, 2, "test2", 0)
-
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state2)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state3)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state4)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state3)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state4)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state5)
 
 	counter := 0
-	err := suite.app.RewardKeeper.IterateRewardAccountStatesForClaimPeriod(suite.ctx, 1, 1, func(state types.RewardAccountState) (stop bool) {
+	suite.app.RewardKeeper.IterateAllRewardAccountStates(suite.ctx, func(state types.RewardAccountState) bool {
 		counter += 1
 		return false
 	})
-	suite.Assert().NoError(err, "no error should be returned in successful case")
-	suite.Assert().Equal(2, counter, "should iterate every state for the reward program's claim period")
+
+	suite.Assert().Equal(5, counter, "should have correct number of iterations")
 }
 
-func (suite *KeeperTestSuite) TestIterateRewardAccountStatesForClaimPeriodHalt() {
-	suite.SetupTest()
-
-	state1 := types.NewRewardAccountState(1, 1, "test", 0)
-	state3 := types.NewRewardAccountState(1, 1, "test2", 0)
-	state2 := types.NewRewardAccountState(1, 2, "test", 0)
-	state4 := types.NewRewardAccountState(1, 2, "test2", 0)
-
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state2)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state3)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state4)
-
-	counter := 0
-	err := suite.app.RewardKeeper.IterateRewardAccountStatesForClaimPeriod(suite.ctx, 1, 1, func(state types.RewardAccountState) (stop bool) {
-		counter += 1
-		return true
-	})
-	suite.Assert().NoError(err, "no error should be returned in successful case")
-	suite.Assert().Equal(1, counter, "should only iterate once because of stop")
-}
-
-func (suite *KeeperTestSuite) TestIterateRewardAccountStatesForClaimPeriodEmpty() {
+func (suite *KeeperTestSuite) TestEmptyIterateAllAccountStates() {
 	suite.SetupTest()
 
 	counter := 0
-	err := suite.app.RewardKeeper.IterateRewardAccountStatesForClaimPeriod(suite.ctx, 1, 1, func(state types.RewardAccountState) (stop bool) {
+	suite.app.RewardKeeper.IterateAllRewardAccountStates(suite.ctx, func(state types.RewardAccountState) bool {
 		counter += 1
 		return false
 	})
-	suite.Assert().NoError(err, "no error should be returned in successful case")
-	suite.Assert().Equal(0, counter, "should not iterate when empty")
+
+	suite.Assert().Equal(0, counter, "should have correct number of iterations")
+}
+
+func (suite *KeeperTestSuite) TestIterateAllAccountStatesHalt() {
+	suite.SetupTest()
+
+	state1 := types.NewRewardAccountState(1, 2, "test", 0)
+	state2 := types.NewRewardAccountState(1, 3, "test", 0)
+	state3 := types.NewRewardAccountState(2, 1, "test", 0)
+	state4 := types.NewRewardAccountState(2, 2, "test", 0)
+	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
+
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state3)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state4)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state5)
+
+	counter := 0
+	suite.app.RewardKeeper.IterateAllRewardAccountStates(suite.ctx, func(state types.RewardAccountState) bool {
+		counter += 1
+		return counter == 1
+	})
+
+	suite.Assert().Equal(1, counter, "should have correct number of iterations")
 }

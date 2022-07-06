@@ -6033,6 +6033,7 @@ RewardProgram
 | PENDING | 0 |  |
 | STARTED | 1 |  |
 | FINISHED | 2 |  |
+| EXPIRED | 3 |  |
 
 
  <!-- end enums -->

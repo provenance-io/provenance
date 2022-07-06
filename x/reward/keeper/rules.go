@@ -91,7 +91,7 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 		}
 		processor.PostEvaluate(ctx, k, &state)
 
-		k.SetRewardAccountState(ctx, &state)
+		k.SetRewardAccountState(ctx, state)
 	}
 
 	return successfulActions
@@ -124,7 +124,7 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 		}
 
 		state.SharesEarned += uint64(res.Shares)
-		k.SetRewardAccountState(ctx, &state)
+		k.SetRewardAccountState(ctx, state)
 		// we know the rewards it so update the epoch reward
 		claimPeriodRewardDistribution.TotalShares += res.Shares
 	}

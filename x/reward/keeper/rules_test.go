@@ -841,7 +841,7 @@ func (suite *KeeperTestSuite) TestRewardSharesSingle() {
 	}
 
 	state := types.NewRewardAccountState(rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String(), 0)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
 	claimPeriodRewardDistribution := types.NewClaimPeriodRewardDistribution(rewardProgram.GetCurrentClaimPeriod(),
 		rewardProgram.GetCurrentClaimPeriod(),
 		sdk.NewInt64Coin("nhash", 0),
@@ -903,7 +903,7 @@ func (suite *KeeperTestSuite) TestRewardSharesMultiple() {
 	}
 
 	state := types.NewRewardAccountState(rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String(), 0)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
 	claimPeriodRewardDistribution := types.NewClaimPeriodRewardDistribution(rewardProgram.GetCurrentClaimPeriod(),
 		rewardProgram.GetCurrentClaimPeriod(),
 		sdk.NewInt64Coin("nhash", 0),
@@ -993,7 +993,7 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidAddress() {
 	}
 
 	state := types.NewRewardAccountState(rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String(), 1)
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, &state)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
 	err := suite.app.RewardKeeper.RewardShares(suite.ctx, &rewardProgram, results)
 	state, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String())
 
