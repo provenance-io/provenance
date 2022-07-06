@@ -806,11 +806,31 @@ func (suite *KeeperTestSuite) TestUpdate() {
 	timeout.RemainingPoolBalance = timeout.GetTotalRewardPool()
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &timeout)
 
+	// Reward program that times out
+	expiring := types.NewRewardProgram(
+		"title",
+		"description",
+		6,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 100000),
+		sdk.NewInt64Coin("nhash", 100000),
+		blockTime,
+		0,
+		1,
+		0,
+		[]types.QualifyingAction{},
+	)
+	expiring.ActualProgramEndTime = blockTime
+	expiring.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
+	expiring.State = types.RewardProgram_FINISHED
+	expiring.RemainingPoolBalance = timeout.GetTotalRewardPool()
+
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, notStarted)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, starting)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, nextClaimPeriod)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, ending)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, timeout)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, expiring)
 
 	// We call update
 	suite.app.RewardKeeper.Update(suite.ctx)
@@ -820,6 +840,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 	nextClaimPeriod, _ = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, nextClaimPeriod.Id)
 	ending, _ = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, ending.Id)
 	timeout, _ = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, timeout.Id)
+	expiring, _ = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, expiring.Id)
 
 	suite.Assert().Equal(uint64(0), notStarted.CurrentClaimPeriod, "claim period should be 0 for a program that is not started")
 	suite.Assert().Equal(notStarted.State, types.RewardProgram_PENDING, "should be in pending state")
@@ -835,4 +856,6 @@ func (suite *KeeperTestSuite) TestUpdate() {
 
 	suite.Assert().Equal(uint64(1), timeout.CurrentClaimPeriod, "claim period should not increment")
 	suite.Assert().Equal(timeout.State, types.RewardProgram_FINISHED, "should be in finished state")
+
+	suite.Assert().Equal(expiring.State, types.RewardProgram_EXPIRED, "should be in expired state")
 }
