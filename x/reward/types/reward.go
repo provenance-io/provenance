@@ -12,7 +12,6 @@ import (
 	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // DefaultStartingRewardProgramID is 1
@@ -487,8 +486,7 @@ func (qa *QualifyingAction) GetRewardAction(ctx sdk.Context) (RewardAction, erro
 // return total coin delegated and boolean to indicate if any delegations are at all present.
 func getAllDelegations(ctx sdk.Context, provider KeeperProvider, delegator sdk.AccAddress) (sdk.Coin, bool) {
 	stakingKeeper := provider.GetStakingKeeper()
-	delegations := make([]stakingtypes.Delegation, 0)
-	delegations = stakingKeeper.GetAllDelegatorDelegations(ctx, delegator)
+	delegations := stakingKeeper.GetAllDelegatorDelegations(ctx, delegator)
 	// if no delegations then return not found
 	if len(delegations) == 0 {
 		return sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.ZeroInt()), false
@@ -507,8 +505,6 @@ func getAllDelegations(ctx sdk.Context, provider KeeperProvider, delegator sdk.A
 
 	if sum.Amount.Equal(sdk.ZeroInt()) {
 		return sum, false
-
 	}
 	return sum, true
-
 }
