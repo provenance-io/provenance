@@ -35,6 +35,7 @@ type IntegrationTestSuite struct {
 	activeRewardProgram   types.RewardProgram
 	pendingRewardProgram  types.RewardProgram
 	finishedRewardProgram types.RewardProgram
+	expiredRewardProgram  types.RewardProgram
 	qualifyingActions     []types.QualifyingAction
 }
 
@@ -85,12 +86,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.qualifyingActions,
 	)
 	s.activeRewardProgram.State = types.RewardProgram_STARTED
-	s.activeRewardProgram.Id = 1
 
 	s.finishedRewardProgram = types.NewRewardProgram(
 		"finished title",
 		"finished description",
-		1,
+		2,
 		s.accountAddr.String(),
 		sdk.NewInt64Coin("nhash", 100),
 		sdk.NewInt64Coin("nhash", 100),
@@ -100,14 +100,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		60*60*24,
 		s.qualifyingActions,
 	)
-	s.finishedRewardProgram.Id = 2
 	s.finishedRewardProgram.ActualProgramEndTime = now
 	s.finishedRewardProgram.State = types.RewardProgram_FINISHED
 
 	s.pendingRewardProgram = types.NewRewardProgram(
 		"pending title",
 		"pending description",
-		1,
+		3,
 		s.accountAddr.String(),
 		sdk.NewInt64Coin("nhash", 100),
 		sdk.NewInt64Coin("nhash", 100),
@@ -117,13 +116,27 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		0,
 		s.qualifyingActions,
 	)
-	s.pendingRewardProgram.Id = 3
 	s.pendingRewardProgram.State = types.RewardProgram_PENDING
+
+	s.expiredRewardProgram = types.NewRewardProgram(
+		"expired title",
+		"expired description",
+		4,
+		s.accountAddr.String(),
+		sdk.NewInt64Coin("nhash", 100),
+		sdk.NewInt64Coin("nhash", 100),
+		now.Add(-60*60*time.Second),
+		60*60,
+		3,
+		0,
+		s.qualifyingActions,
+	)
+	s.expiredRewardProgram.State = types.RewardProgram_EXPIRED
 
 	rewardData := rewardtypes.NewGenesisState(
 		rewardtypes.DefaultStartingRewardProgramID,
 		[]rewardtypes.RewardProgram{
-			s.activeRewardProgram, s.pendingRewardProgram, s.finishedRewardProgram,
+			s.activeRewardProgram, s.pendingRewardProgram, s.finishedRewardProgram, s.expiredRewardProgram,
 		},
 		[]rewardtypes.ClaimPeriodRewardDistribution{},
 		rewardtypes.ActionDelegate{},
@@ -168,7 +181,7 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 			false,
 			"",
 			0,
-			[]uint64{1, 2, 3},
+			[]uint64{1, 2, 3, 4},
 		},
 		{"query active reward programs",
 			[]string{
@@ -198,9 +211,9 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 			false,
 			"",
 			0,
-			[]uint64{2},
+			[]uint64{2, 4},
 		},
-		{"query outstnding reward programs",
+		{"query outstanding reward programs",
 			[]string{
 				"outstanding",
 			},
