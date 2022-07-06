@@ -169,8 +169,7 @@ func (v *VoteActionBuilder) GetEventCriteria() *EventCriteria {
 }
 
 func (v *VoteActionBuilder) AddEvent(eventType string, attributes *map[string][]byte) error {
-	switch eventType {
-	case sdk.EventTypeMessage:
+	if eventType == sdk.EventTypeMessage {
 		// get the action
 		action := (*attributes)[sdk.AttributeKeyAction]
 		// accounts for legacy proto message for voting and newer msg type

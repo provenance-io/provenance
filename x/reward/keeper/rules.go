@@ -37,7 +37,7 @@ func (k Keeper) ProcessTransactions(ctx sdk.Context) {
 	}
 }
 
-// EvaluateRules takes in a Eligibility criteria and measure it against the events in the context
+// DetectQualifyingActions takes in the RewardProgram and checks if any of the qualifying actions is found in the event history
 func (k Keeper) DetectQualifyingActions(ctx sdk.Context, program *types.RewardProgram) ([]types.EvaluationResult, error) {
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: EvaluateRules for RewardProgram: %d", program.GetId()))
 	results := []types.EvaluationResult(nil)
