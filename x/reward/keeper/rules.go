@@ -21,16 +21,16 @@ func (k Keeper) ProcessTransactions(ctx sdk.Context) {
 	}
 
 	// Grant shares for qualifying actions
-	for _, program := range rewardPrograms {
+	for index := range rewardPrograms {
 		// Go through all the reward programs
-		actions, err := k.DetectQualifyingActions(ctx, &program)
+		actions, err := k.DetectQualifyingActions(ctx, &rewardPrograms[index])
 		if err != nil {
 			ctx.Logger().Error(err.Error())
 			continue
 		}
 
 		// Record any results
-		err = k.RewardShares(ctx, &program, actions)
+		err = k.RewardShares(ctx, &rewardPrograms[index], actions)
 		if err != nil {
 			ctx.Logger().Error(err.Error())
 		}
