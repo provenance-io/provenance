@@ -141,6 +141,9 @@ func (msg MsgClaimRewardRequest) Type() string { return TypeMsgClaimRewardReques
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgClaimRewardRequest) ValidateBasic() error {
+	if msg.RewardProgramId < 1 {
+		return fmt.Errorf("invalid rewards program id : %d", msg.RewardProgramId)
+	}
 	if _, err := sdk.AccAddressFromBech32(msg.DistributeToAddress); err != nil {
 		return fmt.Errorf("invalid address for to distribute claims address: %w", err)
 	}
