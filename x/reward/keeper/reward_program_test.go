@@ -97,14 +97,14 @@ func (suite *KeeperTestSuite) TestRemoveValidRewardProgram() {
 
 	invalidProgram, err := suite.app.RewardKeeper.GetRewardProgram(suite.ctx, 1)
 	suite.Assert().NoError(err)
-	suite.Assert().False(suite.app.RewardKeeper.RewardProgramIsValid(&invalidProgram))
+	suite.Assert().Equal(uint64(0), invalidProgram.Id)
 }
 
 func (suite *KeeperTestSuite) TestRemoveInvalidRewardProgram() {
 	suite.SetupTest()
 	invalidProgram, err := suite.app.RewardKeeper.GetRewardProgram(suite.ctx, 1)
 	suite.Assert().NoError(err)
-	suite.Assert().False(suite.app.RewardKeeper.RewardProgramIsValid(&invalidProgram))
+	suite.Assert().Equal(uint64(0), invalidProgram.Id)
 }
 
 func (suite *KeeperTestSuite) TestIterateRewardPrograms() {
@@ -606,42 +606,4 @@ func (suite *KeeperTestSuite) TestGetAllRewardProgramsEmpty() {
 	programs, err := suite.app.RewardKeeper.GetAllRewardPrograms(suite.ctx)
 	suite.Assert().NoError(err, "no error should be returned")
 	suite.Assert().Equal(0, len(programs), "should have no active programs")
-}
-
-func (suite *KeeperTestSuite) TestRewardProgramIsValidOnValid() {
-	suite.SetupTest()
-	time := time.Now()
-	program := types.NewRewardProgram(
-		"title",
-		"description",
-		1,
-		"insert address",
-		sdk.NewInt64Coin("nhash", 100000),
-		sdk.NewInt64Coin("nhash", 1000),
-		time,
-		60*60,
-		3,
-		0,
-		[]types.QualifyingAction{},
-	)
-	suite.Assert().True(suite.app.RewardKeeper.RewardProgramIsValid(&program), "valid should be true when reward program is valid")
-}
-
-func (suite *KeeperTestSuite) TestRewardProgramIsValidOnInvalid() {
-	suite.SetupTest()
-	time := time.Now()
-	program := types.NewRewardProgram(
-		"title",
-		"description",
-		0,
-		"insert address",
-		sdk.NewInt64Coin("nhash", 100000),
-		sdk.NewInt64Coin("nhash", 1000),
-		time,
-		60*60,
-		3,
-		0,
-		[]types.QualifyingAction{},
-	)
-	suite.Assert().False(suite.app.RewardKeeper.RewardProgramIsValid(&program), "valid should be false when reward program is invalid")
 }

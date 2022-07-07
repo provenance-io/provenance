@@ -47,19 +47,12 @@ func (k Keeper) RewardProgramByID(ctx context.Context, req *types.RewardProgramB
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	response := types.RewardProgramByIDResponse{}
-
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	rewardProgram, err := k.GetRewardProgram(sdkCtx, req.GetId())
 	if err != nil {
-		return &response, status.Errorf(codes.Internal, fmt.Sprintf("unable to query for reward program: %v", err))
+		return &types.RewardProgramByIDResponse{}, status.Errorf(codes.Internal, fmt.Sprintf("unable to query for reward program: %v", err))
 	}
-
-	if k.RewardProgramIsValid(&rewardProgram) {
-		response.RewardProgram = &rewardProgram
-	}
-
-	return &response, nil
+	return &types.RewardProgramByIDResponse{RewardProgram: &rewardProgram}, nil
 }
 
 // returns all ClaimPeriodRewardDistributions
