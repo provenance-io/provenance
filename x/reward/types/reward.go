@@ -161,7 +161,7 @@ func (rp *RewardProgram) IsEnding(ctx sdk.Context, programBalance sdk.Coin) bool
 	return rp.State == RewardProgram_STARTED && (isProgramExpired || !canRollover)
 }
 
-func (rp *RewardProgram) ValidateBasic() error {
+func (rp *RewardProgram) Validate() error {
 	title := rp.GetTitle()
 	if len(strings.TrimSpace(title)) == 0 {
 		return errors.New("reward program title cannot be blank")

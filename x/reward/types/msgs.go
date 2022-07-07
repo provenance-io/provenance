@@ -125,11 +125,11 @@ func (msg MsgCreateRewardProgramRequest) String() string {
 // NewMsgClaimRewardRequest creates a new reward claim request
 func NewMsgClaimRewardRequest(
 	rewardProgramID uint64,
-	distributeToAddress string,
+	rewardAddress string,
 ) *MsgClaimRewardRequest {
 	return &MsgClaimRewardRequest{
-		RewardProgramId:     rewardProgramID,
-		DistributeToAddress: distributeToAddress,
+		RewardProgramId: rewardProgramID,
+		RewardAddress:   rewardAddress,
 	}
 }
 
@@ -144,8 +144,8 @@ func (msg MsgClaimRewardRequest) ValidateBasic() error {
 	if msg.RewardProgramId < 1 {
 		return fmt.Errorf("invalid rewards program id : %d", msg.RewardProgramId)
 	}
-	if _, err := sdk.AccAddressFromBech32(msg.DistributeToAddress); err != nil {
-		return fmt.Errorf("invalid address for to distribute claims address: %w", err)
+	if _, err := sdk.AccAddressFromBech32(msg.RewardAddress); err != nil {
+		return fmt.Errorf("invalid reward address : %w", err)
 	}
 	return nil
 }
@@ -157,7 +157,7 @@ func (msg MsgClaimRewardRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the parent.
 func (msg MsgClaimRewardRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.DistributeToAddress)
+	addr, err := sdk.AccAddressFromBech32(msg.RewardAddress)
 	if err != nil {
 		panic(err)
 	}

@@ -368,7 +368,7 @@ func (s *RewardMsgTypesTestSuite) TestMsgClaimRewardValidateBasic() {
 				1,
 				"invalid",
 			),
-			"invalid address for to distribute claims address: decoding bech32 failed: invalid bech32 string length 7",
+			"invalid reward address : decoding bech32 failed: invalid bech32 string length 7",
 		},
 		{
 			"invalid - incorrect reward id",

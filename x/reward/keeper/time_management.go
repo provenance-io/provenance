@@ -16,16 +16,25 @@ func (k Keeper) Update(ctx sdk.Context) {
 		return
 	}
 
-	for _, rewardProgram := range rewardPrograms {
-		if rewardProgram.IsStarting(ctx) {
-			k.StartRewardProgram(ctx, &rewardProgram)
-		} else if rewardProgram.IsEndingClaimPeriod(ctx) {
-			k.EndRewardProgramClaimPeriod(ctx, &rewardProgram)
-		} else if rewardProgram.IsExpiring(ctx) {
-			k.ExpireRewardProgram(ctx, &rewardProgram)
+	for index := range rewardPrograms {
+		switch {
+		case rewardPrograms[index].IsStarting(ctx):
+			err = k.StartRewardProgram(ctx, &rewardPrograms[index])
+			if err != nil {
+				return
+			}
+		case rewardPrograms[index].IsEndingClaimPeriod(ctx):
+			err = k.EndRewardProgramClaimPeriod(ctx, &rewardPrograms[index])
+			if err != nil {
+				return
+			}
+		case rewardPrograms[index].IsExpiring(ctx):
+			err = k.ExpireRewardProgram(ctx, &rewardPrograms[index])
+			if err != nil {
+				return
+			}
 		}
-
-		k.SetRewardProgram(ctx, rewardProgram)
+		k.SetRewardProgram(ctx, rewardPrograms[index])
 	}
 }
 
@@ -40,8 +49,10 @@ func (k Keeper) StartRewardProgram(ctx sdk.Context, rewardProgram *types.RewardP
 
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Starting reward program: %v ", rewardProgram))
 	rewardProgram.State = types.RewardProgram_STARTED
-	k.StartRewardProgramClaimPeriod(ctx, rewardProgram)
-
+	err := k.StartRewardProgramClaimPeriod(ctx, rewardProgram)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -99,8 +110,10 @@ func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *type
 		return err
 	}
 
-	k.MakeRewardClaimsClaimableForPeriod(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod())
-
+	err = k.MakeRewardClaimsClaimableForPeriod(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod())
+	if err != nil {
+		return err
+	}
 	// Update balances
 	claimPeriodReward.TotalRewardsPoolForClaimPeriod = claimPeriodReward.TotalRewardsPoolForClaimPeriod.Add(totalClaimPeriodRewards)
 	rewardProgram.RemainingPoolBalance = rewardProgram.RemainingPoolBalance.Sub(totalClaimPeriodRewards)
@@ -108,9 +121,15 @@ func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *type
 	k.SetRewardProgram(ctx, *rewardProgram)
 
 	if rewardProgram.IsEnding(ctx, rewardProgram.RemainingPoolBalance) {
-		k.EndRewardProgram(ctx, rewardProgram)
+		err = k.EndRewardProgram(ctx, rewardProgram)
+		if err != nil {
+			return err
+		}
 	} else {
-		k.StartRewardProgramClaimPeriod(ctx, rewardProgram)
+		err = k.StartRewardProgramClaimPeriod(ctx, rewardProgram)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

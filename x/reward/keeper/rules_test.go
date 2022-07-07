@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"time"
 
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -70,6 +72,30 @@ func SetupEventHistoryWithDelegates(suite *KeeperTestSuite) {
 		event2,
 		event3,
 		event4,
+	}
+	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
+	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
+}
+
+func SetupEventHistoryWithTransfers(suite *KeeperTestSuite) {
+	sender := "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
+	recipient := "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3"
+	attributes1 := []sdk.Attribute{
+		sdk.NewAttribute("sender", sender),
+		sdk.NewAttribute("recipient", recipient),
+		sdk.NewAttribute("amount", "1000000000000000nhash"),
+	}
+	attributes2 := []sdk.Attribute{
+		sdk.NewAttribute("module", "bank"),
+		sdk.NewAttribute("sender", sender),
+		sdk.NewAttribute("action", "/cosmos.bank.v1beta1.MsgSend"),
+	}
+
+	event1 := sdk.NewEvent("transfer", attributes1...)
+	event2 := sdk.NewEvent("message", attributes2...)
+	loggedEvents := sdk.Events{
+		event1,
+		event2,
 	}
 	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
 	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
@@ -231,6 +257,26 @@ func (suite *KeeperTestSuite) TestFindQualifyingActionsWithDelegates() {
 		suite.Assert().Equal(event.Shares, int64(1), "shares must be 1")
 		suite.Assert().Equal(event.Delegator.String(), "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "delegator address must be correct")
 		suite.Assert().Equal(event.Validator.String(), "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun", "validator address must be correct")
+	}
+}
+
+func (suite *KeeperTestSuite) TestFindQualifyingActionsWithTransfers() {
+	suite.SetupTest()
+	SetupEventHistoryWithTransfers(suite)
+	criteria := types.NewEventCriteria([]types.ABCIEvent{
+		{
+			Type:       banktypes.EventTypeTransfer,
+			Attributes: map[string][]byte{},
+		},
+	})
+
+	action := MockAction{Criteria: criteria, Builder: &types.TransferActionBuilder{}}
+	events, err := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, action)
+	suite.Assert().NoError(err, "should throw no error when handling no events")
+	suite.Assert().Equal(1, len(events), "should find the one transfer event")
+	for _, event := range events {
+		suite.Assert().Equal(event.Shares, int64(1), "shares must be 1")
+		suite.Assert().Equal(event.Address.String(), "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "address must be correct")
 	}
 }
 

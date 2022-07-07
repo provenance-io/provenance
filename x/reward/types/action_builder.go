@@ -48,7 +48,16 @@ func (b *TransferActionBuilder) CanBuild() bool {
 }
 
 func (b *TransferActionBuilder) BuildAction() (EvaluationResult, error) {
-	return EvaluationResult{}, nil
+	if !b.CanBuild() {
+		return EvaluationResult{}, fmt.Errorf("missing delegator or validator from delegate action")
+	}
+
+	result := EvaluationResult{
+		Shares:  1,
+		Address: b.Sender,
+	}
+
+	return result, nil
 }
 
 func (b *TransferActionBuilder) Reset() {

@@ -25,10 +25,6 @@ var _ types.MsgServer = msgServer{}
 func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCreateRewardProgramRequest) (*types.MsgCreateRewardProgramResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := msg.ValidateBasic(); err != nil {
-		return nil, err
-	}
-
 	rewardProgramID, err := s.Keeper.GetRewardProgramID(ctx)
 	if err != nil {
 		return &types.MsgCreateRewardProgramResponse{}, err
@@ -55,7 +51,7 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		experationOffsetInSeconds,
 		msg.QualifyingActions,
 	)
-	err = rewardProgram.ValidateBasic()
+	err = rewardProgram.Validate()
 	if err != nil {
 		return nil, err
 	}
@@ -84,13 +80,13 @@ func (s msgServer) ClaimRewards(goCtx context.Context, req *types.MsgClaimReward
 	response := types.MsgClaimRewardResponse{}
 
 	rewardProgram, err := s.Keeper.GetRewardProgram(ctx, req.GetRewardProgramId())
-	if err != nil || rewardProgram.ValidateBasic() != nil {
+	if err != nil || rewardProgram.Validate() != nil {
 		return nil, fmt.Errorf("reward program %d does not exist", req.GetRewardProgramId())
 	}
 
 	// 1.) gathers all the claimable awards for address and completed claim period
 	response.RewardProgramId = req.GetRewardProgramId()
-	rewards := s.Keeper.ClaimRewards(ctx, rewardProgram, req.GetDistributeToAddress())
+	rewards := s.Keeper.ClaimRewards(ctx, rewardProgram, req.GetRewardAddress())
 
 	// 2.) sums the total reward coins from claim periods
 	for i := 0; i < len(rewards); i++ {
@@ -120,7 +116,7 @@ func (s msgServer) ClaimRewards(goCtx context.Context, req *types.MsgClaimReward
 			sdk.NewEvent(
 				types.EventTypeClaimRewards,
 				sdk.NewAttribute(types.AttributeKeyRewardProgramID, fmt.Sprintf("%d", req.RewardProgramId)),
-				sdk.NewAttribute(types.AttributeKeyRewardsClaimAddress, req.DistributeToAddress),
+				sdk.NewAttribute(types.AttributeKeyRewardsClaimAddress, req.GetRewardAddress()),
 			),
 		)
 	}
