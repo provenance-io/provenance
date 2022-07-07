@@ -81,22 +81,50 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 
 func (s msgServer) ClaimRewards(goCtx context.Context, req *types.MsgClaimRewardRequest) (*types.MsgClaimRewardResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	response := types.MsgClaimRewardResponse{}
 
-	// call keeper method here that
+	rewardProgram, err := s.Keeper.GetRewardProgram(ctx, req.GetRewardProgramId())
+	if err != nil || rewardProgram.ValidateBasic() != nil {
+		return nil, fmt.Errorf("reward program %d does not exist", req.GetRewardProgramId())
+	}
+
 	// 1.) gathers all the claimable awards for address and completed claim period
+	response.RewardProgramId = req.GetRewardProgramId()
+	rewards := s.Keeper.ClaimRewards(ctx, rewardProgram, req.GetDistributeToAddress())
+
 	// 2.) sums the total reward coins from claim periods
+	for i := 0; i < len(rewards); i++ {
+		reward := rewards[i]
+		response.TotalRewardClaim.Denom = reward.GetClaimPeriodReward().Denom
+		response.TotalRewardClaim = response.TotalRewardClaim.Add(reward.GetClaimPeriodReward())
+		response.ClaimedRewardPeriodDetails = append(response.ClaimedRewardPeriodDetails, &reward)
+	}
+
 	// 3.) sends total coins from module escrow to address
+	acc, err := sdk.AccAddressFromBech32(rewardProgram.DistributeFromAddress)
+	if err != nil {
+		return nil, fmt.Errorf("not a valid address: %s", err)
+	}
+	err = s.Keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, acc, sdk.NewCoins(rewardProgram.ClaimedAmount))
+	if err != nil {
+		return nil, fmt.Errorf("unable to send coin from module to account: %s", err)
+	}
+
 	// 		a.) will need to update reward program with total claimed funds
-	// 4.) returns details of claim periods and total funds to be populated in MsgClaimRewardResponse
+	rewardProgram.ClaimedAmount = rewardProgram.ClaimedAmount.Add(response.TotalRewardClaim)
+	s.Keeper.SetRewardProgram(ctx, rewardProgram)
+
 	// 5.) emit event of claims, possibly a typed event
+	if len(rewards) > 0 {
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeClaimRewards,
+				sdk.NewAttribute(types.AttributeKeyRewardProgramID, fmt.Sprintf("%d", req.RewardProgramId)),
+				sdk.NewAttribute(types.AttributeKeyRewardsClaimAddress, req.DistributeToAddress),
+			),
+		)
+	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeClaimRewards,
-			sdk.NewAttribute(types.AttributeKeyRewardProgramID, fmt.Sprintf("%d", req.RewardProgramId)),
-			sdk.NewAttribute(types.AttributeKeyRewardsClaimAddress, req.DistributeToAddress),
-		),
-	)
-
-	return &types.MsgClaimRewardResponse{}, nil
+	// 4.) returns details of claim periods and total funds to be populated in MsgClaimRewardResponse
+	return &response, nil
 }
