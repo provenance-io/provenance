@@ -1,18 +1,11 @@
 package keeper_test
 
 import (
-	"testing"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
-
 	"github.com/provenance-io/provenance/x/reward/types"
 )
-
-func TestTimeManagementTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
 
 func (suite *KeeperTestSuite) TestStartRewardProgram() {
 	suite.SetupTest()
