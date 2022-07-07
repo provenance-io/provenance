@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"time"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -93,6 +94,28 @@ func SetupEventHistoryWithTransfers(suite *KeeperTestSuite) {
 
 	event1 := sdk.NewEvent("transfer", attributes1...)
 	event2 := sdk.NewEvent("message", attributes2...)
+	loggedEvents := sdk.Events{
+		event1,
+		event2,
+	}
+	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
+	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
+}
+
+func SetupEventHistoryWithVotes(suite *KeeperTestSuite) {
+	sender := "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
+	attributes1 := []sdk.Attribute{
+		sdk.NewAttribute("action", "/cosmos.gov.v1beta1.MsgVote"),
+		sdk.NewAttribute("module", "governance"),
+		sdk.NewAttribute("sender", sender),
+	}
+	attributes2 := []sdk.Attribute{
+		sdk.NewAttribute("option", "{\"option\":1,\"weight\":\"1.000000000000000000\"}"),
+		sdk.NewAttribute("proposal_id", "1"),
+	}
+
+	event1 := sdk.NewEvent("message", attributes1...)
+	event2 := sdk.NewEvent("proposal_vote", attributes2...)
 	loggedEvents := sdk.Events{
 		event1,
 		event2,
@@ -271,6 +294,26 @@ func (suite *KeeperTestSuite) TestFindQualifyingActionsWithTransfers() {
 	})
 
 	action := MockAction{Criteria: criteria, Builder: &types.TransferActionBuilder{}}
+	events, err := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, action)
+	suite.Assert().NoError(err, "should throw no error when handling no events")
+	suite.Assert().Equal(1, len(events), "should find the one transfer event")
+	for _, event := range events {
+		suite.Assert().Equal(event.Shares, int64(1), "shares must be 1")
+		suite.Assert().Equal(event.Address.String(), "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "address must be correct")
+	}
+}
+
+func (suite *KeeperTestSuite) TestFindQualifyingActionsWithVotes() {
+	suite.SetupTest()
+	SetupEventHistoryWithVotes(suite)
+	criteria := types.NewEventCriteria([]types.ABCIEvent{
+		{
+			Type:       sdk.EventTypeMessage,
+			Attributes: map[string][]byte{sdk.AttributeKeyModule: []byte(govtypes.AttributeValueCategory)},
+		},
+	})
+
+	action := MockAction{Criteria: criteria, Builder: &types.VoteActionBuilder{}}
 	events, err := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, action)
 	suite.Assert().NoError(err, "should throw no error when handling no events")
 	suite.Assert().Equal(1, len(events), "should find the one transfer event")
