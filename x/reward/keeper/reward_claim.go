@@ -14,6 +14,10 @@ func (k Keeper) ClaimRewards(ctx sdk.Context, rewardProgramID uint64, addr strin
 		return nil, sdk.Coin{}, fmt.Errorf("reward program %d does not exist", rewardProgramID)
 	}
 
+	if rewardProgram.State == types.RewardProgram_EXPIRED {
+		return nil, sdk.Coin{}, fmt.Errorf("reward program %d has expired", rewardProgramID)
+	}
+
 	rewards := k.ClaimRewardsForProgram(ctx, rewardProgram, addr)
 	sent, err := k.SendRewards(ctx, rewardProgram, rewards, addr)
 	if err != nil {
