@@ -43,7 +43,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 		panic(err)
 	}
 
-	k.SetRewardProgramID(ctx, data.StartingRewardProgramId)
+	k.setRewardProgramID(ctx, data.StartingRewardProgramId)
 
 	for _, rewardProgram := range data.RewardPrograms {
 		k.SetRewardProgram(ctx, rewardProgram)

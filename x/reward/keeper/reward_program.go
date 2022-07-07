@@ -2,11 +2,31 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/reward/types"
 )
+
+func (k Keeper) CreateRewardProgram(ctx sdk.Context, rewardProgram types.RewardProgram) (err error) {
+	err = rewardProgram.Validate()
+	if err != nil {
+		return err
+	}
+
+	if ctx.BlockTime().UTC().After(rewardProgram.ProgramStartTime.UTC()) {
+		return fmt.Errorf("start time is before current block time %v : %v ", ctx.BlockTime().UTC(), rewardProgram.ProgramStartTime.UTC())
+	}
+
+	// error check done in reward Validate()
+	acc, _ := sdk.AccAddressFromBech32(rewardProgram.DistributeFromAddress)
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.ModuleName, sdk.NewCoins(rewardProgram.TotalRewardPool))
+	if err != nil {
+		return fmt.Errorf("unable to send coin to module reward pool: %s", err)
+	}
+	return nil
+}
 
 // SetRewardProgram sets the reward program in the keeper
 func (k Keeper) SetRewardProgram(ctx sdk.Context, rewardProgram types.RewardProgram) {
@@ -116,11 +136,6 @@ func (k Keeper) GetAllRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, er
 	return rewardPrograms, nil
 }
 
-// Check if a RewardProgram is valid
-func (k Keeper) RewardProgramIsValid(rewardProgram *types.RewardProgram) bool {
-	return rewardProgram.Id != 0
-}
-
 // GetRewardProgramID gets the highest rewardprogram ID
 func (k Keeper) GetRewardProgramID(ctx sdk.Context) (rewardprogramID uint64, err error) {
 	store := ctx.KVStore(k.storeKey)
@@ -133,8 +148,17 @@ func (k Keeper) GetRewardProgramID(ctx sdk.Context) (rewardprogramID uint64, err
 	return rewardprogramID, nil
 }
 
-// SetRewardProgramID sets the new rewardprogram ID to the store
-func (k Keeper) SetRewardProgramID(ctx sdk.Context, rewardprogramID uint64) {
+// setRewardProgramID sets the new rewardprogram ID to the store
+func (k Keeper) setRewardProgramID(ctx sdk.Context, rewardprogramID uint64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.RewardProgramIDKey, types.GetRewardProgramIDBytes(rewardprogramID))
+}
+
+// GetNextRewardProgramID returns the next available reward program ID and increments keeper with next reward program ID
+func (k Keeper) GetNextRewardProgramID(ctx sdk.Context) (rewardProgramID uint64, err error) {
+	rewardProgramID, err = k.GetRewardProgramID(ctx)
+	if err == nil {
+		k.setRewardProgramID(ctx, rewardProgramID+1)
+	}
+	return rewardProgramID, err
 }
