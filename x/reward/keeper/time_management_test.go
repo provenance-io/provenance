@@ -208,14 +208,35 @@ func (suite *KeeperTestSuite) TestExpireRewardProgramNil() {
 	suite.Assert().Error(err, "should throw an error for nil")
 }
 
-func (suite *KeeperTestSuite) TestExpireRewardProgramRefundsClaims() {
+func (suite *KeeperTestSuite) TestExpireRewardProgramRefunds() {
 	suite.SetupTest()
-	suite.Assert().Fail("not yet implemented")
-}
 
-func (suite *KeeperTestSuite) TestExpireRewardProgramRefundsRemainingBalance() {
-	suite.SetupTest()
-	suite.Assert().Fail("not yet implemented")
+	program := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv",
+		sdk.NewInt64Coin("nhash", 100000),
+		sdk.NewInt64Coin("nhash", 1000),
+		time.Now(),
+		60*60,
+		3,
+		0,
+		[]types.QualifyingAction{},
+	)
+	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
+	program.RemainingPoolBalance = sdk.NewInt64Coin("nhash", 80000)
+	program.ClaimedAmount = sdk.NewInt64Coin("nhash", 10000)
+
+	addr, _ := sdk.AccAddressFromBech32("cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
+	beforeBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
+
+	suite.app.RewardKeeper.ExpireRewardProgram(suite.ctx, &program)
+
+	afterBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
+
+	suite.Assert().Equal(beforeBalance.Add(sdk.NewInt64Coin("nhash", 90000)), afterBalance, "account should get remaining balance and claims")
+	suite.Assert().Equal(program.State, types.RewardProgram_EXPIRED, "reward program should be in expired state")
 }
 
 func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsNonMatchingDenoms() {
@@ -816,7 +837,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 		"title",
 		"description",
 		6,
-		"insert address",
+		"cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 100000),
 		blockTime,
@@ -837,9 +858,13 @@ func (suite *KeeperTestSuite) TestUpdate() {
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, timeout)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, expiring)
 
+	addr, _ := sdk.AccAddressFromBech32("cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
+	beforeBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
+
 	// We call update
 	suite.app.RewardKeeper.Update(suite.ctx)
 
+	afterBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
 	notStarted, _ = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, notStarted.Id)
 	starting, _ = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, starting.Id)
 	nextClaimPeriod, _ = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, nextClaimPeriod.Id)
@@ -863,4 +888,5 @@ func (suite *KeeperTestSuite) TestUpdate() {
 	suite.Assert().Equal(timeout.State, types.RewardProgram_FINISHED, "should be in finished state")
 
 	suite.Assert().Equal(expiring.State, types.RewardProgram_EXPIRED, "should be in expired state")
+	suite.Assert().Equal(beforeBalance.Add(expiring.GetRemainingPoolBalance()), afterBalance, "balance should be refunded")
 }

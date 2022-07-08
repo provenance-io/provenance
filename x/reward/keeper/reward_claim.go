@@ -89,6 +89,10 @@ func (k Keeper) sendRewards(ctx sdk.Context, rewardProgram types.RewardProgram, 
 }
 
 func (k Keeper) sendCoinsToAccount(ctx sdk.Context, amount sdk.Coin, addr string) (sdk.Coin, error) {
+	if amount.IsZero() {
+		return sdk.NewInt64Coin(amount.GetDenom(), 0), nil
+	}
+
 	acc, err := sdk.AccAddressFromBech32(addr)
 	if err != nil {
 		return sdk.NewInt64Coin(amount.Denom, 0), err
