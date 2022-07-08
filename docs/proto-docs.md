@@ -385,7 +385,7 @@
     - [ActionTransfer](#provenance.reward.v1.ActionTransfer)
     - [ActionVote](#provenance.reward.v1.ActionVote)
     - [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution)
-    - [EventCreateRewardProgram](#provenance.reward.v1.EventCreateRewardProgram)
+    - [EventSetRewardProgram](#provenance.reward.v1.EventSetRewardProgram)
     - [QualifyingAction](#provenance.reward.v1.QualifyingAction)
     - [QualifyingActions](#provenance.reward.v1.QualifyingActions)
     - [RewardAccountState](#provenance.reward.v1.RewardAccountState)
@@ -5877,10 +5877,10 @@ Reward Program Id + Claim Period Id
 
 
 
-<a name="provenance.reward.v1.EventCreateRewardProgram"></a>
+<a name="provenance.reward.v1.EventSetRewardProgram"></a>
 
-### EventCreateRewardProgram
-EventCreateRewardProgram event emitted when a reward program is created
+### EventSetRewardProgram
+EventSetRewardProgram event emitted when a reward program is is updated
 
 
 | Field | Type | Label | Description |

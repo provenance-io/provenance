@@ -79,8 +79,8 @@ message RewardProgram {
   ]; // The actions that count towards the reward
 }
 
-// EventCreateRewardProgram event emitted when a reward program is created
-message EventCreateRewardProgram {
+// EventSetRewardProgram event emitted when a reward program is is updated
+message EventSetRewardProgram {
   string id                             = 1;
   string title                          = 2;
   string description                    = 3;

@@ -10,6 +10,6 @@ const (
 	AttributeKeyRewardsClaimAddress string = "rewards_claim_address"
 )
 
-func NewEventCreateRewardProgram() EventCreateRewardProgram {
-	return EventCreateRewardProgram{}
+func NewEventSetRewardProgram(rewardProgram RewardProgram) EventSetRewardProgram {
+	return EventSetRewardProgram{}
 }

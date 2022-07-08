@@ -46,7 +46,7 @@ func (k Keeper) claimRewardsForProgram(ctx sdk.Context, rewardProgram types.Rewa
 }
 
 func (k Keeper) claimRewardForPeriod(ctx sdk.Context, rewardProgram types.RewardProgram, period uint64, addr string) (reward types.ClaimedRewardPeriodDetail, found bool) {
-	state, err := k.GetRewardAccountState(ctx, rewardProgram.GetId(), uint64(period), addr)
+	state, err := k.GetRewardAccountState(ctx, rewardProgram.GetId(), period, addr)
 	if err != nil {
 		return reward, false
 	}
@@ -54,14 +54,14 @@ func (k Keeper) claimRewardForPeriod(ctx sdk.Context, rewardProgram types.Reward
 		return reward, false
 	}
 
-	distribution, err := k.GetClaimPeriodRewardDistribution(ctx, uint64(period), rewardProgram.GetId())
+	distribution, err := k.GetClaimPeriodRewardDistribution(ctx, period, rewardProgram.GetId())
 	if err != nil {
 		return reward, false
 	}
 
 	participantReward := k.CalculateParticipantReward(ctx, int64(state.GetSharesEarned()), distribution.GetTotalShares(), distribution.GetRewardsPool())
 	reward = types.ClaimedRewardPeriodDetail{
-		ClaimPeriodId:     uint64(period),
+		ClaimPeriodId:     period,
 		TotalShares:       state.GetSharesEarned(),
 		ClaimPeriodReward: participantReward,
 	}
