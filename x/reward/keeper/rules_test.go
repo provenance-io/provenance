@@ -51,6 +51,7 @@ func SetupEventHistory(suite *KeeperTestSuite, events sdk.Events) {
 	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
 }
 
+// with delegate
 func SetupEventHistoryWithDelegates(suite *KeeperTestSuite) {
 	attributes1 := []sdk.Attribute{
 		sdk.NewAttribute("validator", "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun"),
@@ -79,6 +80,7 @@ func SetupEventHistoryWithDelegates(suite *KeeperTestSuite) {
 	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
 }
 
+// with transfer
 func SetupEventHistoryWithTransfers(suite *KeeperTestSuite) {
 	sender := "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
 	recipient := "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3"
@@ -103,6 +105,7 @@ func SetupEventHistoryWithTransfers(suite *KeeperTestSuite) {
 	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
 }
 
+// with vote
 func SetupEventHistoryWithVotes(suite *KeeperTestSuite) {
 	sender := "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
 	attributes1 := []sdk.Attribute{
@@ -128,7 +131,7 @@ func SetupEventHistoryWithVotes(suite *KeeperTestSuite) {
 func (suite *KeeperTestSuite) TestIterateABCIEventsWildcard() {
 	suite.SetupTest()
 	setupEventHistory(suite)
-	events := []types.ABCIEvent{}
+	var events []types.ABCIEvent
 	criteria := types.NewEventCriteria(events)
 	counter := 0
 	suite.app.RewardKeeper.IterateABCIEvents(suite.ctx, criteria, func(name string, attributes *map[string][]byte) error {
