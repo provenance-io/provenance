@@ -18,11 +18,11 @@ func (k Keeper) ClaimRewards(ctx sdk.Context, rewardProgramID uint64, addr strin
 		return nil, sdk.Coin{}, fmt.Errorf("reward program %d has expired", rewardProgramID)
 	}
 
-	rewards := k.ClaimRewardsForProgram(ctx, rewardProgram, addr)
-	sent, err := k.SendRewards(ctx, rewardProgram, rewards, addr)
+	rewards := k.claimRewardsForProgram(ctx, rewardProgram, addr)
+	sent, err := k.sendRewards(ctx, rewardProgram, rewards, addr)
 	if err != nil {
 		// Rollback is handled by the chain automatically
-		//k.RollbackClaims(ctx, rewardProgram, rewards, addr)
+		// k.rollbackClaims(ctx, rewardProgram, rewards, addr)
 		return nil, sdk.Coin{}, err
 	}
 	rewardProgram.ClaimedAmount = rewardProgram.ClaimedAmount.Add(sent)
@@ -31,11 +31,11 @@ func (k Keeper) ClaimRewards(ctx sdk.Context, rewardProgramID uint64, addr strin
 	return rewards, sent, nil
 }
 
-func (k Keeper) ClaimRewardsForProgram(ctx sdk.Context, rewardProgram types.RewardProgram, addr string) []*types.ClaimedRewardPeriodDetail {
+func (k Keeper) claimRewardsForProgram(ctx sdk.Context, rewardProgram types.RewardProgram, addr string) []*types.ClaimedRewardPeriodDetail {
 	rewards := []*types.ClaimedRewardPeriodDetail{}
 
 	for period := 1; period <= int(rewardProgram.CurrentClaimPeriod); period++ {
-		reward, found := k.ClaimRewardForPeriod(ctx, rewardProgram, uint64(period), addr)
+		reward, found := k.claimRewardForPeriod(ctx, rewardProgram, uint64(period), addr)
 		if !found {
 			continue
 		}
@@ -45,7 +45,7 @@ func (k Keeper) ClaimRewardsForProgram(ctx sdk.Context, rewardProgram types.Rewa
 	return rewards
 }
 
-func (k Keeper) ClaimRewardForPeriod(ctx sdk.Context, rewardProgram types.RewardProgram, period uint64, addr string) (reward types.ClaimedRewardPeriodDetail, found bool) {
+func (k Keeper) claimRewardForPeriod(ctx sdk.Context, rewardProgram types.RewardProgram, period uint64, addr string) (reward types.ClaimedRewardPeriodDetail, found bool) {
 	state, err := k.GetRewardAccountState(ctx, rewardProgram.GetId(), uint64(period), addr)
 	if err != nil {
 		return reward, false
@@ -72,18 +72,7 @@ func (k Keeper) ClaimRewardForPeriod(ctx sdk.Context, rewardProgram types.Reward
 	return reward, true
 }
 
-func (k Keeper) RollbackClaims(ctx sdk.Context, rewardProgram types.RewardProgram, rewards []*types.ClaimedRewardPeriodDetail, addr string) {
-	for _, reward := range rewards {
-		state, err := k.GetRewardAccountState(ctx, rewardProgram.GetId(), reward.GetClaimPeriodId(), addr)
-		if err != nil {
-			continue
-		}
-		state.ClaimStatus = types.RewardAccountState_CLAIMABLE
-		k.SetRewardAccountState(ctx, state)
-	}
-}
-
-func (k Keeper) SendRewards(ctx sdk.Context, rewardProgram types.RewardProgram, rewards []*types.ClaimedRewardPeriodDetail, addr string) (sdk.Coin, error) {
+func (k Keeper) sendRewards(ctx sdk.Context, rewardProgram types.RewardProgram, rewards []*types.ClaimedRewardPeriodDetail, addr string) (sdk.Coin, error) {
 	sent := sdk.NewInt64Coin("nhash", 0)
 
 	if len(rewards) == 0 {
