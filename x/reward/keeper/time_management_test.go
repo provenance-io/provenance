@@ -862,7 +862,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 	beforeBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
 
 	// We call update
-	suite.app.RewardKeeper.Update(suite.ctx)
+	suite.app.RewardKeeper.UpdateUnexpiredRewardsProgram(suite.ctx)
 
 	afterBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
 	notStarted, _ = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, notStarted.Id)

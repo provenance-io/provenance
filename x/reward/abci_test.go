@@ -27,3 +27,19 @@ func TestEndBlockWithNoActiveRewards(t *testing.T) {
 		reward.EndBlocker(ctx, app.RewardKeeper)
 	})
 }
+
+func TestBeginBlockWithNoActiveRewards(t *testing.T) {
+	var app *simapp.App
+	var ctx sdk.Context
+
+	now := time.Now()
+
+	app = simapp.Setup(false)
+	ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx = ctx.WithBlockHeight(1).WithBlockTime(now)
+
+	ctx = ctx.WithBlockHeight(2)
+	require.NotPanics(t, func() {
+		reward.BeginBlocker(ctx, app.RewardKeeper)
+	})
+}

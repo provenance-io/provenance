@@ -9,10 +9,11 @@ import (
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
-func (k Keeper) Update(ctx sdk.Context) {
+func (k Keeper) UpdateUnexpiredRewardsProgram(ctx sdk.Context) {
 	rewardPrograms, err := k.GetUnexpiredRewardPrograms(ctx)
 	if err != nil {
-		ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - error iterating reward programs: %v ", err))
+		ctx.Logger().Error(fmt.Sprintf("error iterating reward programs: %v ", err))
+		// called from the beginblocker, not much we can do here but return
 		return
 	}
 
