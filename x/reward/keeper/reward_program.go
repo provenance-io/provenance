@@ -25,6 +25,7 @@ func (k Keeper) CreateRewardProgram(ctx sdk.Context, rewardProgram types.RewardP
 	if err != nil {
 		return fmt.Errorf("unable to send coin to module reward pool: %s", err)
 	}
+	k.SetRewardProgram(ctx, rewardProgram)
 	return nil
 }
 
