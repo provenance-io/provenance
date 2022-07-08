@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 
 	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
@@ -26,10 +28,27 @@ type KeeperTestSuite struct {
 	app         *simapp.App
 	ctx         sdk.Context
 	queryClient types.QueryClient
+
+	accountAddr      sdk.AccAddress
+	accountKey       *secp256k1.PrivKey
+	keyring          keyring.Keyring
+	keyringDir       string
+	accountAddresses []sdk.AccAddress
+}
+
+func (suite *KeeperTestSuite) CreateAccounts(number int) {
+	for i := 0; i < number; i++ {
+		accountKey := secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
+		addr, err := sdk.AccAddressFromHex(accountKey.PubKey().Address().String())
+		suite.Require().NoError(err)
+		suite.accountAddr = addr
+		suite.accountAddresses = append(suite.accountAddresses, addr)
+	}
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app.Setup(false)
+	suite.CreateAccounts(4)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
 	suite.createTestValidators(10)
 	simapp.FundModuleAccount(suite.app, suite.ctx, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("nhash", 10000000000000)))

@@ -1,12 +1,19 @@
 package keeper_test
 
 import (
+	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/x/reward/types"
 )
+
+func TestRewardProgramKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
+}
 
 func (suite *KeeperTestSuite) TestNewRewardProgram() {
 	suite.SetupTest()
@@ -606,6 +613,32 @@ func (suite *KeeperTestSuite) TestGetAllRewardProgramsEmpty() {
 	programs, err := suite.app.RewardKeeper.GetAllRewardPrograms(suite.ctx)
 	suite.Assert().NoError(err, "no error should be returned")
 	suite.Assert().Equal(0, len(programs), "should have no active programs")
+}
+
+func (suite *KeeperTestSuite) TestCreateRewardProgram() {
+	suite.SetupTest()
+	simapp.FundAccount(suite.app.BankKeeper, suite.ctx, suite.accountAddresses[0], sdk.NewCoins(sdk.NewInt64Coin("nhash", 1000000000000)))
+	err := suite.app.RewardKeeper.CreateRewardProgram(suite.ctx, types.RewardProgram{})
+	suite.Assert().Error(err)
+	time := time.Now()
+	program1 := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		suite.accountAddresses[0].String(),
+		sdk.NewInt64Coin("nhash", 100000),
+		sdk.NewInt64Coin("nhash", 1000),
+		time,
+		60*60,
+		3,
+		0,
+		[]types.QualifyingAction{},
+	)
+	err = suite.app.RewardKeeper.CreateRewardProgram(suite.ctx, program1)
+	suite.Assert().NoError(err)
+	actualProgram, err := suite.app.RewardKeeper.GetRewardProgram(suite.ctx, uint64(1))
+	suite.Assert().NoError(err)
+	suite.Equal(uint64(1), actualProgram.Id)
 }
 
 func (suite *KeeperTestSuite) TestRefundRemainingBalance() {
