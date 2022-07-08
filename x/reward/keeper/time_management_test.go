@@ -657,6 +657,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesBalances() {
 	suite.Assert().Equal(expectedProgramBalance, program.GetRemainingPoolBalance(), "the reward for the claim period should be subtracted out of the program balance")
 	suite.Assert().Equal(types.RewardProgram_STARTED, program.State, "reward program should be in started state")
 	suite.Assert().Equal(uint64(2), program.CurrentClaimPeriod, "next iteration should start")
+	suite.Assert().Equal(true, reward.ClaimPeriodEnded, "claim period should be marked as ended")
 }
 
 func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRolloverAmount() {

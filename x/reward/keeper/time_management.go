@@ -116,6 +116,7 @@ func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *type
 	}
 	// Update balances
 	claimPeriodReward.TotalRewardsPoolForClaimPeriod = claimPeriodReward.TotalRewardsPoolForClaimPeriod.Add(totalClaimPeriodRewards)
+	claimPeriodReward.ClaimPeriodEnded = true
 	rewardProgram.RemainingPoolBalance = rewardProgram.RemainingPoolBalance.Sub(totalClaimPeriodRewards)
 	k.SetClaimPeriodRewardDistribution(ctx, claimPeriodReward)
 	k.SetRewardProgram(ctx, *rewardProgram)
