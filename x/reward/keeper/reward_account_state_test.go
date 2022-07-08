@@ -405,7 +405,7 @@ func (suite *KeeperTestSuite) TestExpireRewardClaimsForRewardProgram() {
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state3)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state4)
 
-	err := suite.app.RewardKeeper.ExpireRewardClaimsForRewardProgram(suite.ctx, 1)
+	claims, err := suite.app.RewardKeeper.ExpireRewardClaimsForRewardProgram(suite.ctx, 1)
 	suite.Assert().NoError(err, "no error should be thrown when there are account states.")
 
 	state1, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 1, 1, "test")
@@ -413,6 +413,10 @@ func (suite *KeeperTestSuite) TestExpireRewardClaimsForRewardProgram() {
 	state3, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 1, 2, "test")
 	state4, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 1, 2, "test2")
 
+	suite.Assert().Equal(3, len(claims), "should return the correct number of newly expired claims")
+	suite.Assert().Equal(state1, claims[0], "claims should match")
+	suite.Assert().Equal(state2, claims[1], "claims should match")
+	suite.Assert().Equal(state3, claims[2], "claims should match")
 	suite.Assert().Equal(types.RewardAccountState_EXPIRED, state1.GetClaimStatus(), "account state should be updated to expired")
 	suite.Assert().Equal(types.RewardAccountState_EXPIRED, state2.GetClaimStatus(), "account state should be updated to expired")
 	suite.Assert().Equal(types.RewardAccountState_EXPIRED, state3.GetClaimStatus(), "account state should be updated to expired")
@@ -422,6 +426,7 @@ func (suite *KeeperTestSuite) TestExpireRewardClaimsForRewardProgram() {
 func (suite *KeeperTestSuite) TestExpireRewardClaimsForRewardProgramHandlesEmpty() {
 	suite.SetupTest()
 
-	err := suite.app.RewardKeeper.ExpireRewardClaimsForRewardProgram(suite.ctx, 1)
+	claims, err := suite.app.RewardKeeper.ExpireRewardClaimsForRewardProgram(suite.ctx, 1)
+	suite.Assert().Equal(0, len(claims), "should have no claims that are expired")
 	suite.Assert().NoError(err, "no error should be thrown when there are no account states.")
 }

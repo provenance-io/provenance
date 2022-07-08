@@ -73,27 +73,54 @@ func (k Keeper) claimRewardForPeriod(ctx sdk.Context, rewardProgram types.Reward
 }
 
 func (k Keeper) sendRewards(ctx sdk.Context, rewardProgram types.RewardProgram, rewards []*types.ClaimedRewardPeriodDetail, addr string) (sdk.Coin, error) {
-	sent := sdk.NewInt64Coin("nhash", 0)
+	amount := sdk.NewInt64Coin("nhash", 0)
 
 	if len(rewards) == 0 {
-		return sent, nil
+		return amount, nil
 	}
 
 	for i := 0; i < len(rewards); i++ {
 		reward := rewards[i]
-		sent.Denom = reward.GetClaimPeriodReward().Denom
-		sent = sent.Add(reward.GetClaimPeriodReward())
+		amount.Denom = reward.GetClaimPeriodReward().Denom
+		amount = amount.Add(reward.GetClaimPeriodReward())
 	}
 
+	return k.sendCoinsToAccount(ctx, amount, addr)
+}
+
+func (k Keeper) sendCoinsToAccount(ctx sdk.Context, amount sdk.Coin, addr string) (sdk.Coin, error) {
 	acc, err := sdk.AccAddressFromBech32(addr)
 	if err != nil {
-		return sent, err
+		return sdk.NewInt64Coin(amount.Denom, 0), err
 	}
 
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, acc, sdk.NewCoins(rewardProgram.ClaimedAmount))
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, acc, sdk.NewCoins(amount))
 	if err != nil {
-		return sent, err
+		return sdk.NewInt64Coin(amount.Denom, 0), err
 	}
 
-	return sent, nil
+	return amount, nil
+}
+
+func (k Keeper) RefundRewardClaims(ctx sdk.Context, rewardProgram types.RewardProgram, claims []types.RewardAccountState) error {
+	sent := sdk.NewInt64Coin("nhash", 0)
+
+	if len(claims) == 0 {
+		return nil
+	}
+
+	for i := 0; i < len(claims); i++ {
+		reward := claims[i]
+		distribution, err := k.GetClaimPeriodRewardDistribution(ctx, reward.GetClaimPeriodId(), rewardProgram.GetId())
+		if err != nil {
+			ctx.Logger().Error("NOTICE: Failed to obtain claim period reward distribution. %v", err)
+			continue
+		}
+		participantReward := k.CalculateParticipantReward(ctx, int64(reward.GetSharesEarned()), distribution.GetTotalShares(), distribution.GetRewardsPool())
+		sent.Denom = participantReward.GetDenom()
+		sent = sent.Add(participantReward)
+	}
+
+	_, err := k.sendCoinsToAccount(ctx, rewardProgram.ClaimedAmount, rewardProgram.GetDistributeFromAddress())
+	return err
 }

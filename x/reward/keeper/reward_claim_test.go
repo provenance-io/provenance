@@ -8,6 +8,8 @@ import (
 
 func (suite *KeeperTestSuite) TestClaimRewards() {
 	suite.SetupTest()
+	funds := sdk.NewInt64Coin("nhash", 1000000000000)
+	suite.app.BankKeeper.SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, types.ModuleName, sdk.NewCoins(funds))
 	time := suite.ctx.BlockTime()
 	rewardProgram := types.NewRewardProgram(
 		"title",
@@ -93,4 +95,19 @@ func (suite *KeeperTestSuite) TestClaimRewardsHandlesExpiredProgram() {
 	suite.Assert().Nil(details, "should have no reward details")
 	suite.Assert().Equal(sdk.Coin{}, reward, "should have no reward")
 	suite.Assert().Error(err, "should throw error")
+}
+
+func (suite *KeeperTestSuite) TestRefundRewardClaims() {
+	suite.SetupTest()
+	suite.Assert().Fail("not yet implemented")
+}
+
+func (suite *KeeperTestSuite) TestRefundRewardClaimsEmpty() {
+	suite.SetupTest()
+	suite.Assert().Fail("not yet implemented")
+}
+
+func (suite *KeeperTestSuite) TestRefundRewardClaimsSkipsInvalidDistributions() {
+	suite.SetupTest()
+	suite.Assert().Fail("not yet implemented")
 }

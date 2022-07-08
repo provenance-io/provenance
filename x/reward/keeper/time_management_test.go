@@ -208,6 +208,16 @@ func (suite *KeeperTestSuite) TestExpireRewardProgramNil() {
 	suite.Assert().Error(err, "should throw an error for nil")
 }
 
+func (suite *KeeperTestSuite) TestExpireRewardProgramRefundsClaims() {
+	suite.SetupTest()
+	suite.Assert().Fail("not yet implemented")
+}
+
+func (suite *KeeperTestSuite) TestExpireRewardProgramRefundsRemainingBalance() {
+	suite.SetupTest()
+	suite.Assert().Fail("not yet implemented")
+}
+
 func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsNonMatchingDenoms() {
 	suite.SetupTest()
 	notMatching := types.NewClaimPeriodRewardDistribution(

@@ -125,7 +125,8 @@ func (k Keeper) MakeRewardClaimsClaimableForPeriod(ctx sdk.Context, rewardProgra
 }
 
 // Changes the state for all account states in a reward program to be expired if they are not claimed
-func (k Keeper) ExpireRewardClaimsForRewardProgram(ctx sdk.Context, rewardProgramID uint64) error {
+func (k Keeper) ExpireRewardClaimsForRewardProgram(ctx sdk.Context, rewardProgramID uint64) ([]types.RewardAccountState, error) {
+	expired := []types.RewardAccountState{}
 	states, err := k.GetRewardAccountStatesForRewardProgram(ctx, rewardProgramID)
 	for _, state := range states {
 		if state.ClaimStatus == types.RewardAccountState_CLAIMED {
@@ -133,6 +134,7 @@ func (k Keeper) ExpireRewardClaimsForRewardProgram(ctx sdk.Context, rewardProgra
 		}
 		state.ClaimStatus = types.RewardAccountState_EXPIRED
 		k.SetRewardAccountState(ctx, state)
+		expired = append(expired, state)
 	}
-	return err
+	return expired, err
 }

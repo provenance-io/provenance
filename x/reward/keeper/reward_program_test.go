@@ -607,3 +607,13 @@ func (suite *KeeperTestSuite) TestGetAllRewardProgramsEmpty() {
 	suite.Assert().NoError(err, "no error should be returned")
 	suite.Assert().Equal(0, len(programs), "should have no active programs")
 }
+
+func (suite *KeeperTestSuite) TestRefundRemainingBalance() {
+	suite.SetupTest()
+	suite.Assert().Fail("not yet implemented")
+}
+
+func (suite *KeeperTestSuite) TestRefundRemainingBalanceEmpty() {
+	suite.SetupTest()
+	suite.Assert().Fail("not yet implemented")
+}
