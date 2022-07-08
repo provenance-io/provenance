@@ -58,7 +58,7 @@ type EventCriteria struct {
 	Events map[string]ABCIEvent
 }
 
-// Performs a shallow copy of the map
+// NewEventCriteria Performs a shallow copy of the map
 // We are assuming this takes ownership of events
 func NewEventCriteria(events []ABCIEvent) *EventCriteria {
 	criteria := EventCriteria{}
