@@ -158,11 +158,11 @@ func (k Keeper) ExpireRewardProgram(ctx sdk.Context, rewardProgram *types.Reward
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Expiring reward program %v ", rewardProgram))
 
 	rewardProgram.State = types.RewardProgram_EXPIRED
-	claims, err := k.ExpireRewardClaimsForRewardProgram(ctx, rewardProgram.GetId())
+	err := k.ExpireRewardClaimsForRewardProgram(ctx, rewardProgram.GetId())
 	if err != nil {
 		ctx.Logger().Error("NOTICE: Failed to expire reward claims for reward program. %v", err)
 	}
-	err = k.RefundRewardClaims(ctx, *rewardProgram, claims)
+	err = k.RefundRewardClaims(ctx, *rewardProgram)
 	if err != nil {
 		ctx.Logger().Error("NOTICE: Failed to refund reward claims. %v", err)
 	}

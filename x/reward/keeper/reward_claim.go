@@ -102,25 +102,8 @@ func (k Keeper) sendCoinsToAccount(ctx sdk.Context, amount sdk.Coin, addr string
 	return amount, nil
 }
 
-func (k Keeper) RefundRewardClaims(ctx sdk.Context, rewardProgram types.RewardProgram, claims []types.RewardAccountState) error {
-	sent := sdk.NewInt64Coin("nhash", 0)
-
-	if len(claims) == 0 {
-		return nil
-	}
-
-	for i := 0; i < len(claims); i++ {
-		reward := claims[i]
-		distribution, err := k.GetClaimPeriodRewardDistribution(ctx, reward.GetClaimPeriodId(), rewardProgram.GetId())
-		if err != nil {
-			ctx.Logger().Error("NOTICE: Failed to obtain claim period reward distribution. %v", err)
-			continue
-		}
-		participantReward := k.CalculateParticipantReward(ctx, int64(reward.GetSharesEarned()), distribution.GetTotalShares(), distribution.GetRewardsPool())
-		sent.Denom = participantReward.GetDenom()
-		sent = sent.Add(participantReward)
-	}
-
-	_, err := k.sendCoinsToAccount(ctx, rewardProgram.ClaimedAmount, rewardProgram.GetDistributeFromAddress())
+func (k Keeper) RefundRewardClaims(ctx sdk.Context, rewardProgram types.RewardProgram) error {
+	amount := rewardProgram.TotalRewardPool.Sub(rewardProgram.RemainingPoolBalance).Sub(rewardProgram.ClaimedAmount)
+	_, err := k.sendCoinsToAccount(ctx, amount, rewardProgram.GetDistributeFromAddress())
 	return err
 }
