@@ -8,8 +8,7 @@ import (
 
 func (suite *KeeperTestSuite) TestClaimRewards() {
 	suite.SetupTest()
-	funds := sdk.NewInt64Coin("nhash", 1000000000000)
-	suite.app.BankKeeper.SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, types.ModuleName, sdk.NewCoins(funds))
+
 	time := suite.ctx.BlockTime()
 	rewardProgram := types.NewRewardProgram(
 		"title",
