@@ -1,11 +1,9 @@
 package keeper_test
 
 import (
-	"time"
-
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -75,54 +73,6 @@ func SetupEventHistoryWithDelegates(suite *KeeperTestSuite) {
 		event2,
 		event3,
 		event4,
-	}
-	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
-	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
-}
-
-// with transfer
-func SetupEventHistoryWithTransfers(suite *KeeperTestSuite) {
-	sender := "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
-	recipient := "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3"
-	attributes1 := []sdk.Attribute{
-		sdk.NewAttribute("sender", sender),
-		sdk.NewAttribute("recipient", recipient),
-		sdk.NewAttribute("amount", "1000000000000000nhash"),
-	}
-	attributes2 := []sdk.Attribute{
-		sdk.NewAttribute("module", "bank"),
-		sdk.NewAttribute("sender", sender),
-		sdk.NewAttribute("action", "/cosmos.bank.v1beta1.MsgSend"),
-	}
-
-	event1 := sdk.NewEvent("transfer", attributes1...)
-	event2 := sdk.NewEvent("message", attributes2...)
-	loggedEvents := sdk.Events{
-		event1,
-		event2,
-	}
-	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
-	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
-}
-
-// with vote
-func SetupEventHistoryWithVotes(suite *KeeperTestSuite) {
-	sender := "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
-	attributes1 := []sdk.Attribute{
-		sdk.NewAttribute("action", "/cosmos.gov.v1beta1.MsgVote"),
-		sdk.NewAttribute("module", "governance"),
-		sdk.NewAttribute("sender", sender),
-	}
-	attributes2 := []sdk.Attribute{
-		sdk.NewAttribute("option", "{\"option\":1,\"weight\":\"1.000000000000000000\"}"),
-		sdk.NewAttribute("proposal_id", "1"),
-	}
-
-	event1 := sdk.NewEvent("message", attributes1...)
-	event2 := sdk.NewEvent("proposal_vote", attributes2...)
-	loggedEvents := sdk.Events{
-		event1,
-		event2,
 	}
 	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
 	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
@@ -284,46 +234,6 @@ func (suite *KeeperTestSuite) TestFindQualifyingActionsWithDelegates() {
 		suite.Assert().Equal(event.Shares, int64(1), "shares must be 1")
 		suite.Assert().Equal(event.Delegator.String(), "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "delegator address must be correct")
 		suite.Assert().Equal(event.Validator.String(), "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun", "validator address must be correct")
-	}
-}
-
-func (suite *KeeperTestSuite) TestFindQualifyingActionsWithTransfers() {
-	suite.SetupTest()
-	SetupEventHistoryWithTransfers(suite)
-	criteria := types.NewEventCriteria([]types.ABCIEvent{
-		{
-			Type:       banktypes.EventTypeTransfer,
-			Attributes: map[string][]byte{},
-		},
-	})
-
-	action := MockAction{Criteria: criteria, Builder: &types.TransferActionBuilder{}}
-	events, err := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, action)
-	suite.Assert().NoError(err, "should throw no error when handling no events")
-	suite.Assert().Equal(1, len(events), "should find the one transfer event")
-	for _, event := range events {
-		suite.Assert().Equal(event.Shares, int64(1), "shares must be 1")
-		suite.Assert().Equal(event.Address.String(), "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "address must be correct")
-	}
-}
-
-func (suite *KeeperTestSuite) TestFindQualifyingActionsWithVotes() {
-	suite.SetupTest()
-	SetupEventHistoryWithVotes(suite)
-	criteria := types.NewEventCriteria([]types.ABCIEvent{
-		{
-			Type:       sdk.EventTypeMessage,
-			Attributes: map[string][]byte{sdk.AttributeKeyModule: []byte(govtypes.AttributeValueCategory)},
-		},
-	})
-
-	action := MockAction{Criteria: criteria, Builder: &types.VoteActionBuilder{}}
-	events, err := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, action)
-	suite.Assert().NoError(err, "should throw no error when handling no events")
-	suite.Assert().Equal(1, len(events), "should find the one transfer event")
-	for _, event := range events {
-		suite.Assert().Equal(event.Shares, int64(1), "shares must be 1")
-		suite.Assert().Equal(event.Address.String(), "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "address must be correct")
 	}
 }
 
@@ -801,154 +711,6 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction()
 	suite.Assert().Equal(2, len(qualifyingActions), "must find two qualifying actions")
 }
 
-func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingAction() {
-	suite.SetupTest()
-	SetupEventHistoryWithVotes(suite)
-	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
-	minDelegation := sdk.NewInt64Coin("nhash", 3)
-
-	rewardProgram := types.NewRewardProgram(
-		"title",
-		"description",
-		1,
-		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-		sdk.NewInt64Coin("hotdog", 10000),
-		sdk.NewInt64Coin("hotdog", 10000),
-		time.Now(),
-		5,
-		5,
-		0,
-		[]types.QualifyingAction{
-			{
-				Type: &types.QualifyingAction_Vote{
-					Vote: &types.ActionVote{
-						MinimumActions:          0,
-						MaximumActions:          1,
-						MinimumDelegationAmount: minDelegation,
-					},
-				},
-			},
-		},
-	)
-	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
-	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
-}
-func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingActionDelegationNotMet() {
-	suite.SetupTest()
-	SetupEventHistoryWithVotes(suite)
-	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
-	minDelegation := sdk.NewInt64Coin("nhash", 4)
-
-	rewardProgram := types.NewRewardProgram(
-		"title",
-		"description",
-		1,
-		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-		sdk.NewInt64Coin("hotdog", 10000),
-		sdk.NewInt64Coin("hotdog", 10000),
-		time.Now(),
-		5,
-		5,
-		0,
-		[]types.QualifyingAction{
-			{
-				Type: &types.QualifyingAction_Vote{
-					Vote: &types.ActionVote{
-						MinimumActions:          0,
-						MaximumActions:          1,
-						MinimumDelegationAmount: minDelegation,
-					},
-				},
-			},
-		},
-	)
-	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
-	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(0, len(qualifyingActions), "must find zero qualifying actions")
-}
-
-func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingNoQualifyingAction() {
-	suite.SetupTest()
-	SetupEventHistoryWithDelegates(suite)
-	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
-	minDelegation := sdk.NewInt64Coin("nhash", 0)
-
-	rewardProgram := types.NewRewardProgram(
-		"title",
-		"description",
-		1,
-		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-		sdk.NewInt64Coin("hotdog", 10000),
-		sdk.NewInt64Coin("hotdog", 10000),
-		time.Now(),
-		5,
-		5,
-		0,
-		[]types.QualifyingAction{
-			{
-				Type: &types.QualifyingAction_Vote{
-					Vote: &types.ActionVote{
-						MinimumActions:          0,
-						MaximumActions:          1,
-						MinimumDelegationAmount: minDelegation,
-					},
-				},
-			},
-		},
-	)
-	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
-	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(0, len(qualifyingActions), "must find one qualifying actions")
-}
-
-func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingDelegateQualifyingAction() {
-	suite.SetupTest()
-	SetupEventHistoryWithDelegates(suite)
-	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
-	minDelegation := sdk.NewInt64Coin("nhash", 0)
-	maxDelegation := sdk.NewInt64Coin("nhash", 10)
-
-	rewardProgram := types.NewRewardProgram(
-		"title",
-		"description",
-		1,
-		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-		sdk.NewInt64Coin("hotdog", 10000),
-		sdk.NewInt64Coin("hotdog", 10000),
-		time.Now(),
-		5,
-		5,
-		0,
-		[]types.QualifyingAction{
-			{
-				Type: &types.QualifyingAction_Vote{
-					Vote: &types.ActionVote{
-						MinimumActions:          0,
-						MaximumActions:          1,
-						MinimumDelegationAmount: minDelegation,
-					},
-				},
-			},
-			{
-				Type: &types.QualifyingAction_Delegate{
-					Delegate: &types.ActionDelegate{
-						MinimumActions:               0,
-						MaximumActions:               1,
-						MinimumDelegationAmount:      &minDelegation,
-						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
-					},
-				},
-			},
-		},
-	)
-	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
-	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(2, len(qualifyingActions), "must find one qualifying actions")
-}
-
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction() {
 	suite.SetupTest()
 	SetupEventHistoryWithDelegates(suite)
@@ -1252,4 +1014,292 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidAddress() {
 
 	suite.Assert().NoError(err, "should return no error on invalid address")
 	suite.Assert().Equal(uint64(1), state.GetSharesEarned(), "share amount should not increment")
+}
+
+// with transfer
+func SetupEventHistoryWithTransfers(suite *KeeperTestSuite) {
+	sender := "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
+	recipient := "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3"
+	attributes1 := []sdk.Attribute{
+		sdk.NewAttribute("sender", sender),
+		sdk.NewAttribute("recipient", recipient),
+		sdk.NewAttribute("amount", "1000000000000000nhash"),
+	}
+	attributes2 := []sdk.Attribute{
+		sdk.NewAttribute("module", "bank"),
+		sdk.NewAttribute("sender", sender),
+		sdk.NewAttribute("action", "/cosmos.bank.v1beta1.MsgSend"),
+	}
+
+	event1 := sdk.NewEvent("transfer", attributes1...)
+	event2 := sdk.NewEvent("message", attributes2...)
+	loggedEvents := sdk.Events{
+		event1,
+		event2,
+	}
+	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
+	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
+}
+
+// with vote
+func SetupEventHistoryWithVotes(suite *KeeperTestSuite) {
+	sender := "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
+	attributes1 := []sdk.Attribute{
+		sdk.NewAttribute("action", "/cosmos.gov.v1beta1.MsgVote"),
+		sdk.NewAttribute("module", "governance"),
+		sdk.NewAttribute("sender", sender),
+	}
+	attributes2 := []sdk.Attribute{
+		sdk.NewAttribute("option", "{\"option\":1,\"weight\":\"1.000000000000000000\"}"),
+		sdk.NewAttribute("proposal_id", "1"),
+	}
+
+	event1 := sdk.NewEvent("message", attributes1...)
+	event2 := sdk.NewEvent("proposal_vote", attributes2...)
+	loggedEvents := sdk.Events{
+		event1,
+		event2,
+	}
+	newEvents := loggedEvents.ToABCIEvents()
+	newEvents = append(newEvents, suite.ctx.EventManager().GetABCIEventHistory()...)
+	eventManagerStub := sdk.NewEventManagerWithHistory(newEvents)
+	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
+}
+
+// transfer
+func (suite *KeeperTestSuite) TestFindQualifyingActionsWithTransfers() {
+	suite.SetupTest()
+	SetupEventHistoryWithTransfers(suite)
+	criteria := types.NewEventCriteria([]types.ABCIEvent{
+		{
+			Type:       banktypes.EventTypeTransfer,
+			Attributes: map[string][]byte{},
+		},
+	})
+
+	action := MockAction{Criteria: criteria, Builder: &types.TransferActionBuilder{}}
+	events, err := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, action)
+	suite.Assert().NoError(err, "should throw no error when handling no events")
+	suite.Assert().Equal(1, len(events), "should find the one transfer event")
+	for _, event := range events {
+		suite.Assert().Equal(event.Shares, int64(1), "shares must be 1")
+		suite.Assert().Equal(event.Address.String(), "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "address must be correct")
+	}
+}
+
+// vote
+func (suite *KeeperTestSuite) TestFindQualifyingActionsWithVotes() {
+	suite.SetupTest()
+	SetupEventHistoryWithVotes(suite)
+	criteria := types.NewEventCriteria([]types.ABCIEvent{
+		{
+			Type:       sdk.EventTypeMessage,
+			Attributes: map[string][]byte{sdk.AttributeKeyModule: []byte(govtypes.AttributeValueCategory)},
+		},
+	})
+
+	action := MockAction{Criteria: criteria, Builder: &types.VoteActionBuilder{}}
+	events, err := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, action)
+	suite.Assert().NoError(err, "should throw no error when handling no events")
+	suite.Assert().Equal(1, len(events), "should find the one transfer event")
+	for _, event := range events {
+		suite.Assert().Equal(event.Shares, int64(1), "shares must be 1")
+		suite.Assert().Equal(event.Address.String(), "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "address must be correct")
+	}
+}
+
+func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingAction() {
+	suite.SetupTest()
+	SetupEventHistoryWithVotes(suite)
+	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+	minDelegation := sdk.NewInt64Coin("nhash", 3)
+
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdk.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
+		time.Now(),
+		5,
+		5,
+		0,
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Vote{
+					Vote: &types.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          1,
+						MinimumDelegationAmount: minDelegation,
+					},
+				},
+			},
+		},
+	)
+	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
+	suite.Assert().NoError(err, "must not error")
+	suite.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
+}
+func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingActionDelegationNotMet() {
+	suite.SetupTest()
+	SetupEventHistoryWithVotes(suite)
+	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+	minDelegation := sdk.NewInt64Coin("nhash", 4)
+
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdk.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
+		time.Now(),
+		5,
+		5,
+		0,
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Vote{
+					Vote: &types.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          1,
+						MinimumDelegationAmount: minDelegation,
+					},
+				},
+			},
+		},
+	)
+	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
+	suite.Assert().NoError(err, "must not error")
+	suite.Assert().Equal(0, len(qualifyingActions), "must find zero qualifying actions")
+}
+
+func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingNoQualifyingAction() {
+	suite.SetupTest()
+	SetupEventHistoryWithDelegates(suite)
+	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+	minDelegation := sdk.NewInt64Coin("nhash", 0)
+
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdk.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
+		time.Now(),
+		5,
+		5,
+		0,
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Vote{
+					Vote: &types.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          1,
+						MinimumDelegationAmount: minDelegation,
+					},
+				},
+			},
+		},
+	)
+	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
+	suite.Assert().NoError(err, "must not error")
+	suite.Assert().Equal(0, len(qualifyingActions), "must find one qualifying actions")
+}
+
+func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingDelegateQualifyingAction() {
+	suite.SetupTest()
+	SetupEventHistoryWithDelegates(suite)
+	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+	minDelegation := sdk.NewInt64Coin("nhash", 0)
+	maxDelegation := sdk.NewInt64Coin("nhash", 10)
+
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdk.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
+		time.Now(),
+		5,
+		5,
+		0,
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Vote{
+					Vote: &types.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          1,
+						MinimumDelegationAmount: minDelegation,
+					},
+				},
+			},
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               1,
+						MinimumDelegationAmount:      &minDelegation,
+						MaximumDelegationAmount:      &maxDelegation,
+						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+					},
+				},
+			},
+		},
+	)
+	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
+	suite.Assert().NoError(err, "must not error")
+	suite.Assert().Equal(2, len(qualifyingActions), "must find one qualifying actions")
+}
+
+func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1Voting1DelegateQualifyingAction() {
+	suite.SetupTest()
+	SetupEventHistoryWithDelegates(suite)
+	SetupEventHistoryWithVotes(suite)
+	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+	minDelegation := sdk.NewInt64Coin("nhash", 0)
+	maxDelegation := sdk.NewInt64Coin("nhash", 10)
+
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdk.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
+		time.Now(),
+		5,
+		5,
+		0,
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Vote{
+					Vote: &types.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          1,
+						MinimumDelegationAmount: minDelegation,
+					},
+				},
+			},
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               1,
+						MinimumDelegationAmount:      &minDelegation,
+						MaximumDelegationAmount:      &maxDelegation,
+						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+					},
+				},
+			},
+		},
+	)
+	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
+	suite.Assert().NoError(err, "must not error")
+	suite.Assert().Equal(3, len(qualifyingActions), "must find one qualifying actions")
 }

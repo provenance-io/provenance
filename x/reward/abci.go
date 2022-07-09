@@ -6,10 +6,10 @@ import (
 	"github.com/provenance-io/provenance/x/reward/keeper"
 )
 
-// BeginBlocker called every block
+// BeginBlocker for rewards module updates the
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	ctx.Logger().Debug("NOTICE: -Begin Blocker of rewards module-")
-	k.Update(ctx)
+	k.UpdateUnexpiredRewardsProgram(ctx)
 }
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	ctx.Logger().Debug("NOTICE: -End Blocker of rewards module-")

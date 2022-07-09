@@ -21,5 +21,5 @@ create reward programs based on certain Qualifying events.
 6. **[Queries](05_queries.md)**
 7. **[Events](06_events.md)**
 8. **[Params](07_params.md)**
-9. **[Governance](08_governance.md)**
+9. **[Governance](08_begin_and_end_blocker.md)**
 10. **[Genesis](09_genesis.md)**

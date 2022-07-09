@@ -680,10 +680,56 @@ func (suite *KeeperTestSuite) TestCreateRewardProgram() {
 
 func (suite *KeeperTestSuite) TestRefundRemainingBalance() {
 	suite.SetupTest()
-	suite.Assert().Fail("not yet implemented")
+	time := suite.ctx.BlockTime()
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv",
+		sdk.NewInt64Coin("nhash", 1000),
+		sdk.NewInt64Coin("nhash", 100),
+		time,
+		10,
+		5,
+		uint64(time.Day()),
+		[]types.QualifyingAction{},
+	)
+	rewardProgram.RemainingPoolBalance = rewardProgram.GetTotalRewardPool()
+	rewardProgram.ClaimedAmount = sdk.NewInt64Coin("nhash", 0)
+
+	addr, _ := sdk.AccAddressFromBech32("cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
+	beforeBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
+	err := suite.app.RewardKeeper.RefundRemainingBalance(suite.ctx, rewardProgram)
+	afterBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
+
+	suite.Assert().NoError(err, "no error should be thrown")
+	suite.Assert().Equal(beforeBalance.Add(rewardProgram.RemainingPoolBalance), afterBalance, "balance should be given remaining pool balance")
 }
 
 func (suite *KeeperTestSuite) TestRefundRemainingBalanceEmpty() {
 	suite.SetupTest()
-	suite.Assert().Fail("not yet implemented")
+	time := suite.ctx.BlockTime()
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv",
+		sdk.NewInt64Coin("nhash", 1000),
+		sdk.NewInt64Coin("nhash", 100),
+		time,
+		10,
+		5,
+		uint64(time.Day()),
+		[]types.QualifyingAction{},
+	)
+	rewardProgram.RemainingPoolBalance = sdk.NewInt64Coin("nhash", 0)
+	rewardProgram.ClaimedAmount = sdk.NewInt64Coin("nhash", 0)
+
+	addr, _ := sdk.AccAddressFromBech32("cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
+	beforeBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
+	err := suite.app.RewardKeeper.RefundRemainingBalance(suite.ctx, rewardProgram)
+	afterBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
+
+	suite.Assert().NoError(err, "no error should be thrown")
+	suite.Assert().Equal(beforeBalance, afterBalance, "balance should remain same because there is no remaining pool balance")
 }

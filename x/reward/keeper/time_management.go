@@ -9,10 +9,11 @@ import (
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
-func (k Keeper) Update(ctx sdk.Context) {
+func (k Keeper) UpdateUnexpiredRewardsProgram(ctx sdk.Context) {
 	rewardPrograms, err := k.GetUnexpiredRewardPrograms(ctx)
 	if err != nil {
-		ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - error iterating reward programs: %v ", err))
+		ctx.Logger().Error(fmt.Sprintf("error iterating reward programs: %v ", err))
+		// called from the beginblocker, not much we can do here but return
 		return
 	}
 
@@ -158,11 +159,11 @@ func (k Keeper) ExpireRewardProgram(ctx sdk.Context, rewardProgram *types.Reward
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Expiring reward program %v ", rewardProgram))
 
 	rewardProgram.State = types.RewardProgram_EXPIRED
-	claims, err := k.ExpireRewardClaimsForRewardProgram(ctx, rewardProgram.GetId())
+	err := k.ExpireRewardClaimsForRewardProgram(ctx, rewardProgram.GetId())
 	if err != nil {
 		ctx.Logger().Error("NOTICE: Failed to expire reward claims for reward program. %v", err)
 	}
-	err = k.RefundRewardClaims(ctx, *rewardProgram, claims)
+	err = k.RefundRewardClaims(ctx, *rewardProgram)
 	if err != nil {
 		ctx.Logger().Error("NOTICE: Failed to refund reward claims. %v", err)
 	}

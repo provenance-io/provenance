@@ -98,15 +98,56 @@ func (suite *KeeperTestSuite) TestClaimRewardsHandlesExpiredProgram() {
 
 func (suite *KeeperTestSuite) TestRefundRewardClaims() {
 	suite.SetupTest()
-	suite.Assert().Fail("not yet implemented")
+	time := suite.ctx.BlockTime()
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv",
+		sdk.NewInt64Coin("nhash", 1000),
+		sdk.NewInt64Coin("nhash", 100),
+		time,
+		10,
+		5,
+		uint64(time.Day()),
+		[]types.QualifyingAction{},
+	)
+	rewardProgram.RemainingPoolBalance = sdk.NewInt64Coin("nhash", 0)
+	rewardProgram.ClaimedAmount = sdk.NewInt64Coin("nhash", 0)
+
+	addr, _ := sdk.AccAddressFromBech32("cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
+	beforeBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
+	err := suite.app.RewardKeeper.RefundRewardClaims(suite.ctx, rewardProgram)
+	afterBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
+
+	suite.Assert().NoError(err, "no error should be thrown")
+	suite.Assert().Equal(beforeBalance.Add(rewardProgram.TotalRewardPool), afterBalance, "unclaimed balance should be refunded")
 }
 
 func (suite *KeeperTestSuite) TestRefundRewardClaimsEmpty() {
 	suite.SetupTest()
-	suite.Assert().Fail("not yet implemented")
-}
+	time := suite.ctx.BlockTime()
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv",
+		sdk.NewInt64Coin("nhash", 1000),
+		sdk.NewInt64Coin("nhash", 100),
+		time,
+		10,
+		5,
+		uint64(time.Day()),
+		[]types.QualifyingAction{},
+	)
+	rewardProgram.RemainingPoolBalance = rewardProgram.GetTotalRewardPool()
+	rewardProgram.ClaimedAmount = sdk.NewInt64Coin("nhash", 0)
 
-func (suite *KeeperTestSuite) TestRefundRewardClaimsSkipsInvalidDistributions() {
-	suite.SetupTest()
-	suite.Assert().Fail("not yet implemented")
+	addr, _ := sdk.AccAddressFromBech32("cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
+	beforeBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
+	err := suite.app.RewardKeeper.RefundRewardClaims(suite.ctx, rewardProgram)
+	afterBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
+
+	suite.Assert().NoError(err, "no error should be thrown")
+	suite.Assert().Equal(beforeBalance, afterBalance, "balance should stay same since all claims are taken")
 }
