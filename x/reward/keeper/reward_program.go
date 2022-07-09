@@ -23,7 +23,7 @@ func (k Keeper) CreateRewardProgram(ctx sdk.Context, rewardProgram types.RewardP
 	acc, _ := sdk.AccAddressFromBech32(rewardProgram.DistributeFromAddress)
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.ModuleName, sdk.NewCoins(rewardProgram.TotalRewardPool))
 	if err != nil {
-		return fmt.Errorf("unable to send coin to module reward pool: %s", err)
+		return fmt.Errorf("unable to send coin to module reward pool : %s", err)
 	}
 	k.SetRewardProgram(ctx, rewardProgram)
 	return nil

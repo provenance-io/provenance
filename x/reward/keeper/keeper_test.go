@@ -49,7 +49,7 @@ func (suite *KeeperTestSuite) CreateAccounts(number int) {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app.Setup(false)
 	suite.CreateAccounts(4)
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
+	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now().UTC()})
 	suite.createTestValidators(10)
 	simapp.FundModuleAccount(suite.app, suite.ctx, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("nhash", 10000000000000)))
 

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -618,27 +619,63 @@ func (suite *KeeperTestSuite) TestGetAllRewardProgramsEmpty() {
 func (suite *KeeperTestSuite) TestCreateRewardProgram() {
 	suite.SetupTest()
 	simapp.FundAccount(suite.app.BankKeeper, suite.ctx, suite.accountAddresses[0], sdk.NewCoins(sdk.NewInt64Coin("nhash", 1000000000000)))
+
 	err := suite.app.RewardKeeper.CreateRewardProgram(suite.ctx, types.RewardProgram{})
 	suite.Assert().Error(err)
-	time := time.Now()
-	program1 := types.NewRewardProgram(
+
+	now := time.Now()
+	validProgram := types.NewRewardProgram(
 		"title",
 		"description",
 		1,
 		suite.accountAddresses[0].String(),
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
 		[]types.QualifyingAction{},
 	)
-	err = suite.app.RewardKeeper.CreateRewardProgram(suite.ctx, program1)
+	err = suite.app.RewardKeeper.CreateRewardProgram(suite.ctx, validProgram)
 	suite.Assert().NoError(err)
 	actualProgram, err := suite.app.RewardKeeper.GetRewardProgram(suite.ctx, uint64(1))
 	suite.Assert().NoError(err)
 	suite.Equal(uint64(1), actualProgram.Id)
+	lastYear := now.Add(-60 * 60 * 365 * time.Second)
+	inValidProgramStartTime := types.NewRewardProgram(
+		"title",
+		"description",
+		2,
+		suite.accountAddresses[0].String(),
+		sdk.NewInt64Coin("nhash", 100000),
+		sdk.NewInt64Coin("nhash", 1000),
+		lastYear,
+		60*60,
+		3,
+		0,
+		[]types.QualifyingAction{},
+	)
+	err = suite.app.RewardKeeper.CreateRewardProgram(suite.ctx, inValidProgramStartTime)
+	suite.Assert().Error(err)
+	suite.Assert().True(strings.Contains(err.Error(), "start time is before current block time"))
+
+	invalidAmount := types.NewRewardProgram(
+		"title",
+		"description",
+		2,
+		suite.accountAddresses[0].String(),
+		sdk.NewInt64Coin("nhash", 10000000000000),
+		sdk.NewInt64Coin("nhash", 1000),
+		now,
+		60*60,
+		3,
+		0,
+		[]types.QualifyingAction{},
+	)
+	err = suite.app.RewardKeeper.CreateRewardProgram(suite.ctx, invalidAmount)
+	suite.Assert().Error(err)
+	suite.Assert().Equal("unable to send coin to module reward pool : 999999900000nhash is smaller than 10000000000000nhash: insufficient funds", err.Error())
 }
 
 func (suite *KeeperTestSuite) TestRefundRemainingBalance() {
