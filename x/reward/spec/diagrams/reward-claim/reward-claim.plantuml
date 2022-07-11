@@ -4,21 +4,14 @@
         FontSize 10
     }
 </style>
-caption Figure 2
+skinparam linetype ortho
+skinparam SequenceMessageAlign center
+hide empty description
 state c <<choice>>
-
-Unclaimable : A reward has been granted to the participant.
-Unclaimable : The reward cannot be claimed until the current claim period ends.
-
-Claimable : A reward has been granted to the participant and it's claimable.
-Claimable : The reward can be claimed at the end of its claim.
-Claimable : Rewards are claimable until the reward program expires.
-
-Claimed : The reward has been granted and received by the participant.
-Claimed : The reward cannot be claimed more than once.
-
-Expired : The reward has been cleaned up and the participant can no longer claim it.
-Expired : The reward is refunded back to the program creator.
+state Unclaimable
+state Claimable
+state Claimed
+state Expired
 
 [*] -down-> Unclaimable : [Participant engages in qualifying action]
 Unclaimable -down-> Claimable : [Claim period ends]

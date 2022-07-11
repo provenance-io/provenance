@@ -3,29 +3,19 @@
     arrow {
         FontSize 10
     }
-    caption {
-
-    }
 </style>
-caption Figure 1
+skinparam linetype ortho
+skinparam SequenceMessageAlign center
+hide empty description
 
-Pending : The reward program has not started.
-Pending : The reward program will begin once the start time has been reached.
-
-Started : The reward program is active.
-Started : Users can participate and receive their rewards at the end of each claim period.
-
-Finished : The reward program is no longer active.
-Finished : No additional rewards will be created.
-Finished : Participants have limited time to claim their earned rewards.
-
-Expired : The reward program has been cleaned up.
-Expired : Participants can no longer claim their rewards.
-Expired : The remaining balance and any unclaimed rewards will be returned to the creator.
+state Pending
+state Started
+state Finished
+state Expired
 
 [*] -down-> Pending
 Finished -down-> Expired : [End Time + Offset time <= Block Time]
 Pending -down-> Started : [Start Time <= Block Time]
-Started -down-> Finished : [End Time <= Block Time || Remaining Balance <= Minimum Rollover]
+Started -down-> Finished : [End Time <= Block Time OR\nRemaining Balance <= Minimum Rollover]
 
 @enduml
