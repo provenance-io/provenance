@@ -30,10 +30,23 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
+	RewardAccountStates := make([]types.RewardAccountState, 0)
+	RewardAccountStateRecords := func(RewardAccountState types.RewardAccountState) bool {
+		RewardAccountStates = append(RewardAccountStates, RewardAccountState)
+		return false
+	}
+
+	for _, claim := range ClaimPeriodRewardDistributions {
+		if err := k.IterateRewardAccountStates(ctx, claim.RewardProgramId, claim.ClaimPeriodId, RewardAccountStateRecords); err != nil {
+			panic(err)
+		}
+	}
+
 	return types.NewGenesisState(
 		rewardProgramID,
 		rewardPrograms,
 		ClaimPeriodRewardDistributions,
+		RewardAccountStates,
 	)
 }
 
@@ -51,5 +64,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 
 	for _, ClaimPeriodRewardDistributions := range data.ClaimPeriodRewardDistributions {
 		k.SetClaimPeriodRewardDistribution(ctx, ClaimPeriodRewardDistributions)
+	}
+
+	for _, RewardAccountStates := range data.RewardAccountStates {
+		k.SetRewardAccountState(ctx, RewardAccountStates)
 	}
 }

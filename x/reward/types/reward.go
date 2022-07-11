@@ -25,7 +25,7 @@ const (
 )
 
 var (
-	_ RewardAction = &ActionDelegate{}
+	_ RewardAction = (*ActionDelegate)(nil)
 	_ RewardAction = &ActionTransfer{}
 	_ RewardAction = &ActionVote{}
 )
