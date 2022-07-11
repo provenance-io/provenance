@@ -5999,7 +5999,7 @@ RewardProgram
 | `claim_periods` | [uint64](#uint64) |  | Number of claim periods this program will run for |
 | `current_claim_period` | [uint64](#uint64) |  | Current claim period of the RewardProgram. Uses 1-based indexing. |
 | `state` | [RewardProgram.State](#provenance.reward.v1.RewardProgram.State) |  | Current state of the RewardProgram. |
-| `reward_claim_expiration_offset` | [uint64](#uint64) |  | Grace period after a RewardProgram FINISHED. It is the number of seconds until a RewardProgram enters the EXPIRED state. |
+| `reward_claim_expiration_offset` | [uint64](#uint64) |  | Grace period after a RewardProgram FINISHED. It is the number of |
 | `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated | Actions that count towards the reward |
 
 
