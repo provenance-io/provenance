@@ -8,6 +8,7 @@ import (
 	rewardModule "github.com/provenance-io/provenance/x/reward"
 	cli "github.com/provenance-io/provenance/x/reward/client/cli"
 	"github.com/provenance-io/provenance/x/reward/keeper"
+	simulation "github.com/provenance-io/provenance/x/reward/simulation"
 	"github.com/provenance-io/provenance/x/reward/types"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
@@ -115,7 +116,7 @@ func (am AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 }
 
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	// sdr[keeper.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[keeper.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
