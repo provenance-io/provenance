@@ -16,15 +16,13 @@ A Reward Program can be `Pending`, `Started`, `Finished`, or `Expired`. A Reward
 Reward program has *not* started.
 
 ### Started 
-Reward program has started, rewards can be claimed if the minimum claim period has ended and addresses 
-have preformed eligible qualifying events and accrued shares for that claim period.
+The Reward Program has started, and users can participate by performing qualifying actions. Participants can claim their rewards at the end of the claim period that the qualifying action was performed in.
 
 ### Finished 
-Reward program had ended, however rewards can still be claimed by eligible addresses.
+The Reward Program has ended, and participants can no longer make qualifying actions. Participants have a limited amount of time to collect their remaining rewards.
 
 ### Expired
-Reward program has passed it's expiry date.
-All funds will be returned to the reward creator address
+Reward program has passed its expiration date, and participants can no longer claim rewards. The remaining balance and any unclaimed rewards will be returned to the creator.
 
 <p align="center">
   <img src="./diagrams/reward-program/RewardProgram.png">
