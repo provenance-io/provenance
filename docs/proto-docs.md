@@ -6062,9 +6062,7 @@ GenesisState defines the reward module's genesis state.
 | `StartingRewardProgramId` | [uint64](#uint64) |  | starting_reward_program_id is the ID of the starting reward program. |
 | `reward_programs` | [RewardProgram](#provenance.reward.v1.RewardProgram) | repeated |  |
 | `claim_period_reward_distributions` | [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution) | repeated |  |
-| `action_delegate` | [ActionDelegate](#provenance.reward.v1.ActionDelegate) |  |  |
-| `action_transfer` | [ActionTransfer](#provenance.reward.v1.ActionTransfer) |  |  |
-| `action_vote` | [ActionVote](#provenance.reward.v1.ActionVote) |  |  |
+| `reward_account_state` | [RewardAccountState](#provenance.reward.v1.RewardAccountState) | repeated |  |
 
 
 
