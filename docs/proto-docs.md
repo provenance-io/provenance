@@ -5982,25 +5982,25 @@ RewardProgram
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `id` | [uint64](#uint64) |  |  |
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `distribute_from_address` | [string](#string) |  | community pool for now (who provides the money) |
-| `total_reward_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `remaining_pool_balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `claimed_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | maximum reward per claim per address |
-| `minimum_rollover_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | minimum amount of coins for program to rollover |
-| `claim_period_seconds` | [uint64](#uint64) |  | claim_period_seconds defines the type of claim_period attributed to this program.(e.g day,week,month) |
-| `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | When the reward program starts |
-| `expected_program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that the reward program MUST end |
-| `claim_period_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | This can be calculated by us and its when the current claim period ends |
-| `actual_program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | when the program actually ended, will be empty at start |
-| `claim_periods` | [uint64](#uint64) |  | number of claim periods this program will run for |
-| `current_claim_period` | [uint64](#uint64) |  | the current claim_period for the reward program is on(claim periods start at 1 <-- fisrt period) |
-| `state` | [RewardProgram.State](#provenance.reward.v1.RewardProgram.State) |  | the current state of the reward program |
-| `reward_claim_expiration_offset` | [uint64](#uint64) |  | Used to calculate the expiration time of a reward claim in seconds. The |
-| `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated | The actions that count towards the reward |
+| `id` | [uint64](#uint64) |  | An integer to uniquely identify the reward program. |
+| `title` | [string](#string) |  | Name to help identify the Reward Program. |
+| `description` | [string](#string) |  | Short summary describing the Reward Program. |
+| `distribute_from_address` | [string](#string) |  | Community pool for now (who provides the money) |
+| `total_reward_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The total amount of funding given to the RewardProgram. |
+| `remaining_pool_balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The remaining funds available to distribute. |
+| `claimed_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The total amount of funds claimed by participants. |
+| `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Maximum reward per claim per address |
+| `minimum_rollover_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Minimum amount of coins for a program to rollover |
+| `claim_period_seconds` | [uint64](#uint64) |  | Number of seconds that a claim period lasts. |
+| `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that a RewardProgram should start and switch to STARTED state. |
+| `expected_program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that a RewardProgram MUST end. |
+| `claim_period_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Used internally to calculate and track the current claim period's ending time. |
+| `actual_program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time the RewardProgram switched to FINISHED state. Initially set as empty. |
+| `claim_periods` | [uint64](#uint64) |  | Number of claim periods this program will run for |
+| `current_claim_period` | [uint64](#uint64) |  | Current claim period of the RewardProgram. Uses 1-based indexing. |
+| `state` | [RewardProgram.State](#provenance.reward.v1.RewardProgram.State) |  | Current state of the RewardProgram. |
+| `reward_claim_expiration_offset` | [uint64](#uint64) |  | Grace period after a RewardProgram FINISHED. It is the number of seconds until a RewardProgram enters the EXPIRED state. |
+| `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated | Actions that count towards the reward |
 
 
 
