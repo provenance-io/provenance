@@ -63,32 +63,32 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 // Test no reward programs. Nothing should happen
-func (s *KeeperTestSuite) TestDelegateAgainstNoRewardPrograms() {
-	s.SetupTest()
-	SetupEventHistoryWithDelegates(s)
+func (suite *KeeperTestSuite) TestDelegateAgainstNoRewardPrograms() {
+	suite.SetupTest()
+	SetupEventHistoryWithDelegates(suite)
 
 	// Advance one day
-	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + (24 * 60 * 60))
-	s.Assert().NotPanics(func() {
-		reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + (24 * 60 * 60))
+	suite.Assert().NotPanics(func() {
+		reward.EndBlocker(suite.ctx, suite.app.RewardKeeper)
 	})
 
 	count := 0
-	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+	err := suite.app.RewardKeeper.IterateAllRewardAccountStates(suite.ctx, func(state types.RewardAccountState) bool {
 		if state.GetSharesEarned() > 0 {
 			count += 1
 			return true
 		}
 		return false
 	})
-	s.Assert().NoError(err, "iterate should not throw error")
-	s.Assert().Equal(0, count, "no shares should be created")
+	suite.Assert().NoError(err, "iterate should not throw error")
+	suite.Assert().Equal(0, count, "no shares should be created")
 }
 
 // Test against inactive reward programs. They should not be updated
-func (s *KeeperTestSuite) TestDelegateAgainstInactiveRewardPrograms() {
-	s.SetupTest()
-	SetupEventHistoryWithDelegates(s)
+func (suite *KeeperTestSuite) TestDelegateAgainstInactiveRewardPrograms() {
+	suite.SetupTest()
+	SetupEventHistoryWithDelegates(suite)
 
 	// Create inactive reward program
 	action := types.NewActionDelegate()
@@ -131,35 +131,35 @@ func (s *KeeperTestSuite) TestDelegateAgainstInactiveRewardPrograms() {
 			},
 		},
 	)
-	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
-	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+	reward.EndBlocker(suite.ctx, suite.app.RewardKeeper)
 
 	// Ensure no shares are granted
 	count := 0
-	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+	err := suite.app.RewardKeeper.IterateAllRewardAccountStates(suite.ctx, func(state types.RewardAccountState) bool {
 		if state.GetSharesEarned() > 0 {
 			count += 1
 			return true
 		}
 		return false
 	})
-	s.Assert().NoError(err, "iterate should not throw error")
-	s.Assert().Equal(0, count, "no shares should be created")
+	suite.Assert().NoError(err, "iterate should not throw error")
+	suite.Assert().Equal(0, count, "no shares should be created")
 
-	programs, err := s.app.RewardKeeper.GetAllRewardPrograms(s.ctx)
-	s.Assert().Equal(1, len(programs))
-	s.Assert().NoError(err, "get all reward programs should not throw error")
+	programs, err := suite.app.RewardKeeper.GetAllRewardPrograms(suite.ctx)
+	suite.Assert().Equal(1, len(programs))
+	suite.Assert().NoError(err, "get all reward programs should not throw error")
 
-	activePrograms, err := s.app.RewardKeeper.GetAllActiveRewardPrograms(s.ctx)
-	s.Assert().NoError(err, "get all active reward programs should not throw error")
-	s.Assert().Equal(0, len(activePrograms))
+	activePrograms, err := suite.app.RewardKeeper.GetAllActiveRewardPrograms(suite.ctx)
+	suite.Assert().NoError(err, "get all active reward programs should not throw error")
+	suite.Assert().Equal(0, len(activePrograms))
 }
 
 // Test against delegate reward program. No delegate happens.
-func (s *KeeperTestSuite) TestNonDelegateAgainstRewardProgram() {
-	s.SetupTest()
-	setupEventHistory(s)
+func (suite *KeeperTestSuite) TestNonDelegateAgainstRewardProgram() {
+	suite.SetupTest()
+	setupEventHistory(suite)
 
 	// Create inactive reward program
 	action := types.NewActionDelegate()
@@ -203,29 +203,29 @@ func (s *KeeperTestSuite) TestNonDelegateAgainstRewardProgram() {
 		},
 	)
 	rewardProgram.State = types.RewardProgram_STARTED
-	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
-	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+	reward.EndBlocker(suite.ctx, suite.app.RewardKeeper)
 
 	// Ensure no shares are granted
 	count := 0
-	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+	err := suite.app.RewardKeeper.IterateAllRewardAccountStates(suite.ctx, func(state types.RewardAccountState) bool {
 		if state.GetSharesEarned() > 0 {
 			count += 1
 			return true
 		}
 		return false
 	})
-	s.Assert().NoError(err, "iterate should not throw error")
-	s.Assert().Equal(0, count, "no shares should be created")
+	suite.Assert().NoError(err, "iterate should not throw error")
+	suite.Assert().Equal(0, count, "no shares should be created")
 
-	programs, err := s.app.RewardKeeper.GetAllRewardPrograms(s.ctx)
-	s.Assert().Equal(1, len(programs))
-	s.Assert().NoError(err, "get all reward programs should not throw error")
+	programs, err := suite.app.RewardKeeper.GetAllRewardPrograms(suite.ctx)
+	suite.Assert().Equal(1, len(programs))
+	suite.Assert().NoError(err, "get all reward programs should not throw error")
 
-	activePrograms, err := s.app.RewardKeeper.GetAllActiveRewardPrograms(s.ctx)
-	s.Assert().NoError(err, "get all active reward programs should not throw error")
-	s.Assert().Equal(1, len(activePrograms))
+	activePrograms, err := suite.app.RewardKeeper.GetAllActiveRewardPrograms(suite.ctx)
+	suite.Assert().NoError(err, "get all active reward programs should not throw error")
+	suite.Assert().Equal(1, len(activePrograms))
 }
 
 func (suite *KeeperTestSuite) createDelegateEvents(validator, amount, sender, shares string) sdk.Events {
@@ -266,8 +266,8 @@ func (suite *KeeperTestSuite) createValidatorEvent(validator, amount, sender str
 }
 
 // Test against delegate reward program. Grant 1 share
-func (s *KeeperTestSuite) TestSingleDelegate() {
-	s.SetupTest()
+func (suite *KeeperTestSuite) TestSingleDelegate() {
+	suite.SetupTest()
 
 	// Create inactive reward program
 	action := types.NewActionDelegate()
@@ -311,30 +311,30 @@ func (s *KeeperTestSuite) TestSingleDelegate() {
 			},
 		},
 	)
-	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
-	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &rewardProgram)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
 	// We want to set the events here
 	validators := getTestValidators(6, 6)
-	delegates := s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
-	SetupEventHistory(s, delegates)
-	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+	delegates := suite.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
+	SetupEventHistory(suite, delegates)
+	reward.EndBlocker(suite.ctx, suite.app.RewardKeeper)
 
 	// Ensure one share is granted
 	count := 0
-	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+	err := suite.app.RewardKeeper.IterateAllRewardAccountStates(suite.ctx, func(state types.RewardAccountState) bool {
 		if state.GetSharesEarned() > 0 {
 			count += int(state.GetSharesEarned())
 		}
 		return false
 	})
-	s.Assert().NoError(err, "iterate should not throw error")
-	s.Assert().Equal(1, count, "1 share should be created")
+	suite.Assert().NoError(err, "iterate should not throw error")
+	suite.Assert().Equal(1, count, "1 share should be created")
 }
 
 // Test against delegate reward program. Grant 2 share
-func (s *KeeperTestSuite) TestMultipleDelegate() {
-	s.SetupTest()
+func (suite *KeeperTestSuite) TestMultipleDelegate() {
+	suite.SetupTest()
 
 	// Create inactive reward program
 	action := types.NewActionDelegate()
@@ -378,31 +378,31 @@ func (s *KeeperTestSuite) TestMultipleDelegate() {
 			},
 		},
 	)
-	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
-	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &rewardProgram)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
 	// We want to set the events here
 	validators := getTestValidators(6, 6)
-	delegates := s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
-	delegates = delegates.AppendEvents(s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
-	SetupEventHistory(s, delegates)
-	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+	delegates := suite.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
+	delegates = delegates.AppendEvents(suite.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
+	SetupEventHistory(suite, delegates)
+	reward.EndBlocker(suite.ctx, suite.app.RewardKeeper)
 
 	// Ensure one share is granted
 	count := 0
-	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+	err := suite.app.RewardKeeper.IterateAllRewardAccountStates(suite.ctx, func(state types.RewardAccountState) bool {
 		if state.GetSharesEarned() > 0 {
 			count += int(state.GetSharesEarned())
 		}
 		return false
 	})
-	s.Assert().NoError(err, "iterate should not throw error")
-	s.Assert().Equal(2, count, "2 shares should be created")
+	suite.Assert().NoError(err, "iterate should not throw error")
+	suite.Assert().Equal(2, count, "2 shares should be created")
 }
 
 // Test against delegate reward program. Not enough actions
-func (s *KeeperTestSuite) TestDelegateBelowMinimumActions() {
-	s.SetupTest()
+func (suite *KeeperTestSuite) TestDelegateBelowMinimumActions() {
+	suite.SetupTest()
 
 	// Create inactive reward program
 	action := types.NewActionDelegate()
@@ -446,32 +446,32 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumActions() {
 			},
 		},
 	)
-	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
-	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &rewardProgram)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
 	// We want to set the events here
 	validators := getTestValidators(6, 6)
-	delegates := s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
-	delegates = delegates.AppendEvents(s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
-	SetupEventHistory(s, delegates)
-	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+	delegates := suite.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
+	delegates = delegates.AppendEvents(suite.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
+	SetupEventHistory(suite, delegates)
+	reward.EndBlocker(suite.ctx, suite.app.RewardKeeper)
 
 	// Ensure no share is granted
 	count := 0
-	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+	err := suite.app.RewardKeeper.IterateAllRewardAccountStates(suite.ctx, func(state types.RewardAccountState) bool {
 		if state.GetSharesEarned() > 0 {
 			count += int(state.GetSharesEarned())
 			return true
 		}
 		return false
 	})
-	s.Assert().NoError(err, "iterate should not throw error")
-	s.Assert().Equal(0, count, "no share should be created when below minimum actions")
+	suite.Assert().NoError(err, "iterate should not throw error")
+	suite.Assert().Equal(0, count, "no share should be created when below minimum actions")
 }
 
 // Test against delegate reward program. Too many actions
-func (s *KeeperTestSuite) TestDelegateAboveMaximumActions() {
-	s.SetupTest()
+func (suite *KeeperTestSuite) TestDelegateAboveMaximumActions() {
+	suite.SetupTest()
 
 	minimumDelegation := sdk.NewInt64Coin("nhash", 0)
 	maximumDelegation := sdk.NewInt64Coin("nhash", 100)
@@ -506,32 +506,32 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumActions() {
 			},
 		},
 	)
-	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
-	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &rewardProgram)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
 	// We want to set the events here
 	validators := getTestValidators(6, 6)
-	delegates := s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
-	delegates = delegates.AppendEvents(s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
-	SetupEventHistory(s, delegates)
-	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+	delegates := suite.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
+	delegates = delegates.AppendEvents(suite.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
+	SetupEventHistory(suite, delegates)
+	reward.EndBlocker(suite.ctx, suite.app.RewardKeeper)
 
 	// Ensure no share is granted
 	count := 0
-	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+	err := suite.app.RewardKeeper.IterateAllRewardAccountStates(suite.ctx, func(state types.RewardAccountState) bool {
 		if state.GetSharesEarned() > 0 {
 			count += int(state.GetSharesEarned())
 			return true
 		}
 		return false
 	})
-	s.Assert().NoError(err, "iterate should not throw error")
-	s.Assert().Equal(0, count, "no share should be created when above maximum actions")
+	suite.Assert().NoError(err, "iterate should not throw error")
+	suite.Assert().Equal(0, count, "no share should be created when above maximum actions")
 }
 
 // Test against delegate reward program. Below delegation amount
-func (s *KeeperTestSuite) TestDelegateBelowMinimumDelegation() {
-	s.SetupTest()
+func (suite *KeeperTestSuite) TestDelegateBelowMinimumDelegation() {
+	suite.SetupTest()
 
 	// Create inactive reward program
 	action := types.NewActionDelegate()
@@ -575,32 +575,32 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumDelegation() {
 			},
 		},
 	)
-	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
-	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &rewardProgram)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
 	// We want to set the events here
 	validators := getTestValidators(6, 6)
-	delegates := s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
-	delegates = delegates.AppendEvents(s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
-	SetupEventHistory(s, delegates)
-	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+	delegates := suite.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
+	delegates = delegates.AppendEvents(suite.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
+	SetupEventHistory(suite, delegates)
+	reward.EndBlocker(suite.ctx, suite.app.RewardKeeper)
 
 	// Ensure no share is granted
 	count := 0
-	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+	err := suite.app.RewardKeeper.IterateAllRewardAccountStates(suite.ctx, func(state types.RewardAccountState) bool {
 		if state.GetSharesEarned() > 0 {
 			count += int(state.GetSharesEarned())
 			return true
 		}
 		return false
 	})
-	s.Assert().NoError(err, "iterate should not throw error")
-	s.Assert().Equal(0, count, "no share should be created when below minimum delegation amount")
+	suite.Assert().NoError(err, "iterate should not throw error")
+	suite.Assert().Equal(0, count, "no share should be created when below minimum delegation amount")
 }
 
 // Test against delegate reward program. Above delegation amount
-func (s *KeeperTestSuite) TestDelegateAboveMaximumDelegation() {
-	s.SetupTest()
+func (suite *KeeperTestSuite) TestDelegateAboveMaximumDelegation() {
+	suite.SetupTest()
 
 	// Create inactive reward program
 	action := types.NewActionDelegate()
@@ -644,32 +644,32 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumDelegation() {
 			},
 		},
 	)
-	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
-	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &rewardProgram)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
 	// We want to set the events here
 	validators := getTestValidators(6, 6)
-	delegates := s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
-	delegates = delegates.AppendEvents(s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
-	SetupEventHistory(s, delegates)
-	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+	delegates := suite.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
+	delegates = delegates.AppendEvents(suite.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
+	SetupEventHistory(suite, delegates)
+	reward.EndBlocker(suite.ctx, suite.app.RewardKeeper)
 
 	// Ensure no share is granted
 	count := 0
-	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+	err := suite.app.RewardKeeper.IterateAllRewardAccountStates(suite.ctx, func(state types.RewardAccountState) bool {
 		if state.GetSharesEarned() > 0 {
 			count += int(state.GetSharesEarned())
 			return true
 		}
 		return false
 	})
-	s.Assert().NoError(err, "iterate should not throw error")
-	s.Assert().Equal(0, count, "no share should be created when above maximum delegation amount")
+	suite.Assert().NoError(err, "iterate should not throw error")
+	suite.Assert().Equal(0, count, "no share should be created when above maximum delegation amount")
 }
 
 // Test against delegate reward program. Below percentile
-func (s *KeeperTestSuite) TestDelegateBelowMinimumPercentile() {
-	s.SetupTest()
+func (suite *KeeperTestSuite) TestDelegateBelowMinimumPercentile() {
+	suite.SetupTest()
 
 	// Create inactive reward program
 	action := types.NewActionDelegate()
@@ -713,32 +713,32 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumPercentile() {
 			},
 		},
 	)
-	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
-	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &rewardProgram)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
 	// We want to set the events here
 	validators := getTestValidators(6, 6)
-	delegates := s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
-	delegates = delegates.AppendEvents(s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
-	SetupEventHistory(s, delegates)
-	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+	delegates := suite.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
+	delegates = delegates.AppendEvents(suite.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
+	SetupEventHistory(suite, delegates)
+	reward.EndBlocker(suite.ctx, suite.app.RewardKeeper)
 
 	// Ensure no share is granted
 	count := 0
-	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+	err := suite.app.RewardKeeper.IterateAllRewardAccountStates(suite.ctx, func(state types.RewardAccountState) bool {
 		if state.GetSharesEarned() > 0 {
 			count += int(state.GetSharesEarned())
 			return true
 		}
 		return false
 	})
-	s.Assert().NoError(err, "iterate should not throw error")
-	s.Assert().Equal(0, count, "no share should be created when below minimum delegation percentage")
+	suite.Assert().NoError(err, "iterate should not throw error")
+	suite.Assert().Equal(0, count, "no share should be created when below minimum delegation percentage")
 }
 
 // Test against delegate reward program. Above percentile
-func (s *KeeperTestSuite) TestDelegateAboveMaximumPercentile() {
-	s.SetupTest()
+func (suite *KeeperTestSuite) TestDelegateAboveMaximumPercentile() {
+	suite.SetupTest()
 
 	// Create inactive reward program
 	action := types.NewActionDelegate()
@@ -782,25 +782,25 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumPercentile() {
 			},
 		},
 	)
-	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
-	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
+	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &rewardProgram)
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
 	// We want to set the events here
 	validators := getTestValidators(6, 6)
-	delegates := s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
-	delegates = delegates.AppendEvents(s.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
-	SetupEventHistory(s, delegates)
-	reward.EndBlocker(s.ctx, s.app.RewardKeeper)
+	delegates := suite.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000")
+	delegates = delegates.AppendEvents(suite.createDelegateEvents(validators[0].OperatorAddress, "1000000000nhash", "cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgxwpuzvh", "50000000000000.000000000000000000"))
+	SetupEventHistory(suite, delegates)
+	reward.EndBlocker(suite.ctx, suite.app.RewardKeeper)
 
 	// Ensure no share is granted
 	count := 0
-	err := s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+	err := suite.app.RewardKeeper.IterateAllRewardAccountStates(suite.ctx, func(state types.RewardAccountState) bool {
 		if state.GetSharesEarned() > 0 {
 			count += int(state.GetSharesEarned())
 			return true
 		}
 		return false
 	})
-	s.Assert().NoError(err, "iterate should not throw error")
-	s.Assert().Equal(0, count, "no share should be created when above maximum delegation percentage")
+	suite.Assert().NoError(err, "iterate should not throw error")
+	suite.Assert().Equal(0, count, "no share should be created when above maximum delegation percentage")
 }

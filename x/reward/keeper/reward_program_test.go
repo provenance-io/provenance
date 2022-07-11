@@ -2,19 +2,12 @@ package keeper_test
 
 import (
 	"strings"
-	"testing"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
-
 	"github.com/provenance-io/provenance/x/reward/types"
 )
-
-func TestRewardProgramKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
 
 func (suite *KeeperTestSuite) TestNewRewardProgram() {
 	suite.SetupTest()
@@ -635,7 +628,29 @@ func (suite *KeeperTestSuite) TestCreateRewardProgram() {
 		60*60,
 		3,
 		0,
-		[]types.QualifyingAction{},
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Vote{
+					Vote: &types.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          1,
+						MinimumDelegationAmount: minDelegation,
+					},
+				},
+			},
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               1,
+						MinimumDelegationAmount:      &minDelegation,
+						MaximumDelegationAmount:      &maxDelegation,
+						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+					},
+				},
+			},
+		},
 	)
 	err = suite.app.RewardKeeper.CreateRewardProgram(suite.ctx, validProgram)
 	suite.Assert().NoError(err)
@@ -654,11 +669,36 @@ func (suite *KeeperTestSuite) TestCreateRewardProgram() {
 		60*60,
 		3,
 		0,
-		[]types.QualifyingAction{},
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Vote{
+					Vote: &types.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          1,
+						MinimumDelegationAmount: minDelegation,
+					},
+				},
+			},
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               1,
+						MinimumDelegationAmount:      &minDelegation,
+						MaximumDelegationAmount:      &maxDelegation,
+						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+					},
+				},
+			},
+		},
 	)
 	err = suite.app.RewardKeeper.CreateRewardProgram(suite.ctx, inValidProgramStartTime)
 	suite.Assert().Error(err)
 	suite.Assert().True(strings.Contains(err.Error(), "start time is before current block time"))
+
+	minDelegation := sdk.NewInt64Coin("nhash", 4)
+	maxDelegation := sdk.NewInt64Coin("nhash", 40)
 
 	invalidAmount := types.NewRewardProgram(
 		"title",
@@ -671,7 +711,29 @@ func (suite *KeeperTestSuite) TestCreateRewardProgram() {
 		60*60,
 		3,
 		0,
-		[]types.QualifyingAction{},
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Vote{
+					Vote: &types.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          1,
+						MinimumDelegationAmount: minDelegation,
+					},
+				},
+			},
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               1,
+						MinimumDelegationAmount:      &minDelegation,
+						MaximumDelegationAmount:      &maxDelegation,
+						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+					},
+				},
+			},
+		},
 	)
 	err = suite.app.RewardKeeper.CreateRewardProgram(suite.ctx, invalidAmount)
 	suite.Assert().Error(err)

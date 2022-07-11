@@ -198,6 +198,10 @@ func (rp *RewardProgram) Validate() error {
 		return fmt.Errorf("reward program denom must be in %s : %s", rp.TotalRewardPool.Denom, "nhash")
 	}
 
+	if len(rp.QualifyingActions) == 0 {
+		return errors.New("reward program must have at least one qualifying action")
+	}
+
 	return nil
 }
 

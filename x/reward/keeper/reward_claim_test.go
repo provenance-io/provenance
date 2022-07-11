@@ -6,6 +6,11 @@ import (
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
+var (
+	minDelegation = sdk.NewInt64Coin("nhash", 4)
+	maxDelegation = sdk.NewInt64Coin("nhash", 40)
+)
+
 func (suite *KeeperTestSuite) TestClaimRewards() {
 	suite.SetupTest()
 
@@ -21,7 +26,29 @@ func (suite *KeeperTestSuite) TestClaimRewards() {
 		10,
 		3,
 		uint64(time.Day()),
-		[]types.QualifyingAction{},
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Vote{
+					Vote: &types.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          1,
+						MinimumDelegationAmount: minDelegation,
+					},
+				},
+			},
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               1,
+						MinimumDelegationAmount:      &minDelegation,
+						MaximumDelegationAmount:      &maxDelegation,
+						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+					},
+				},
+			},
+		},
 	)
 	rewardProgram.State = types.RewardProgram_FINISHED
 	rewardProgram.CurrentClaimPeriod = rewardProgram.GetClaimPeriods()

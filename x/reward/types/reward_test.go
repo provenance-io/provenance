@@ -28,6 +28,8 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 	longTitle := string(lTitle)
 	lDescription := make([]byte, MaxDescriptionLength+1)
 	longDescription := string(lDescription)
+	minDelegation := sdk.NewInt64Coin("nhash", 4)
+	maxDelegation := sdk.NewInt64Coin("nhash", 40)
 	tests := []struct {
 		name          string
 		rewardProgram RewardProgram
@@ -46,7 +48,29 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 				1,
 				1,
 				1,
-				[]QualifyingAction{},
+				[]QualifyingAction{
+					{
+						Type: &QualifyingAction_Vote{
+							Vote: &ActionVote{
+								MinimumActions:          0,
+								MaximumActions:          1,
+								MinimumDelegationAmount: minDelegation,
+							},
+						},
+					},
+					{
+						Type: &QualifyingAction_Delegate{
+							Delegate: &ActionDelegate{
+								MinimumActions:               0,
+								MaximumActions:               1,
+								MinimumDelegationAmount:      &minDelegation,
+								MaximumDelegationAmount:      &maxDelegation,
+								MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+								MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+							},
+						},
+					},
+				},
 			),
 			"",
 		},
