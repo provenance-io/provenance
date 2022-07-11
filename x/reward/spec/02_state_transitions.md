@@ -1,12 +1,16 @@
 # State Transitions
 
-This document describes the state transitions that occur within the Active Participation and Engagement (APE) module.
+This document describes the state transition operations pertaining to:
+
+1. [Reward Programs](./02_state_transitions.md#reward-programs)
+2. [Reward Claims](./02_state_transitions.md#reward-claims)
 
 <!-- TOC 2 2 -->
  
-## State transitions for a Reward Program
+## Reward Programs
+State transition for Reward Programs happen on `BeginBlock` and make use of the `BlockTime` attribute.
 
-![RewardProgram state diagram](./diagrams/reward-program/RewardProgram.png?raw=true "RewardProgram state diagram")
+A Reward Program can be `Pending`, `Started`, `Finished`, or `Expired`. A Reward Program will move through all these states, and will initially be in the `Pending` state.
 
 ### Pending 
 Reward program has *not* started.
@@ -22,9 +26,14 @@ Reward program had ended, however rewards can still be claimed by eligible addre
 Reward program has passed it's expiry date.
 All funds will be returned to the reward creator address
 
-## State transitions for a Reward Claim
+<p align="center">
+  <img src="./diagrams/reward-program/RewardProgram.png">
+</p>
 
-![RewardClaim state diagram](./diagrams/reward-claim/RewardClaim.png#center?raw=true "RewardClaim state diagram")
+## Reward Claims
+State transitions for a Reward Claim happen on `BeginBlock` and on claim transactions.
+
+A Reward Claim can be `Unclaimable`, `Claimable`, `Claimed`, or `Expired`. A Reward Claim will always start as `Unclaimable` and eventually become `Claimable`. If a participant claims their reward then the Reward Claim will become `Claimed`, otherwise it will timeout and enter the `Expired` state where they can no longer claim it.
 
 ### Unclaimable
 The reward has been granted to a participant, but it cannot be claimed until the current claim period ends.
@@ -37,3 +46,7 @@ The reward has been granted and received by the participant. A reward cannot be 
 
 ### Expired
 The reward has been cleaned up and the participant can no longer claim it. The funds attached to the reward claim are refunded back to the program creator.
+
+<p align="center">
+  <img src="./diagrams/reward-claim/RewardClaim.png">
+</p>
