@@ -4,11 +4,13 @@ func NewGenesisState(
 	startingRewardProgramID uint64,
 	rewardProgram []RewardProgram,
 	claimPeriodRewardDistributions []ClaimPeriodRewardDistribution,
+	rewardAccountStates []RewardAccountState,
 ) *GenesisState {
 	return &GenesisState{
 		StartingRewardProgramId:        startingRewardProgramID,
 		RewardPrograms:                 rewardProgram,
 		ClaimPeriodRewardDistributions: claimPeriodRewardDistributions,
+		RewardAccountStates:            rewardAccountStates,
 	}
 }
 
@@ -18,6 +20,7 @@ func DefaultGenesis() *GenesisState {
 		DefaultStartingRewardProgramID,
 		[]RewardProgram{},
 		[]ClaimPeriodRewardDistribution{},
+		[]RewardAccountState{},
 	)
 }
 

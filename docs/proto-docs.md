@@ -5999,7 +5999,7 @@ RewardProgram
 | `claim_periods` | [uint64](#uint64) |  | Number of claim periods this program will run for |
 | `current_claim_period` | [uint64](#uint64) |  | Current claim period of the RewardProgram. Uses 1-based indexing. |
 | `state` | [RewardProgram.State](#provenance.reward.v1.RewardProgram.State) |  | Current state of the RewardProgram. |
-| `reward_claim_expiration_offset` | [uint64](#uint64) |  | Grace period after a RewardProgram FINISHED. It is the number of seconds until a RewardProgram enters the EXPIRED state. |
+| `reward_claim_expiration_offset` | [uint64](#uint64) |  | Grace period after a RewardProgram FINISHED. It is the number of |
 | `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated | Actions that count towards the reward |
 
 
@@ -6062,7 +6062,7 @@ GenesisState defines the reward module's genesis state.
 | `StartingRewardProgramId` | [uint64](#uint64) |  | starting_reward_program_id is the ID of the starting reward program. |
 | `reward_programs` | [RewardProgram](#provenance.reward.v1.RewardProgram) | repeated |  |
 | `claim_period_reward_distributions` | [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution) | repeated |  |
-| `reward_account_state` | [RewardAccountState](#provenance.reward.v1.RewardAccountState) | repeated |  |
+| `reward_account_states` | [RewardAccountState](#provenance.reward.v1.RewardAccountState) | repeated |  |
 
 
 
