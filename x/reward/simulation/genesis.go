@@ -52,8 +52,8 @@ func RandomizedGenState(simState *module.SimulationState) {
 	)
 	var maxRewardsByAddress sdk.Coin
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, TotalRewardsPool, &maxRewardsByAddress, simState.Rand,
-		func(r *rand.Rand) { maxRewardsByAddress = GenTotalRewardsPool(r) },
+		simState.Cdc, MaxRewardByAddress, &maxRewardsByAddress, simState.Rand,
+		func(r *rand.Rand) { maxRewardsByAddress = GenMaxRewardsByAddress(r) },
 	)
 
 	var maxActions uint64
@@ -73,14 +73,14 @@ func RandomizedGenState(simState *module.SimulationState) {
 	rewardProgram := types.NewRewardProgram(
 		"title",
 		"description",
-		1,
-		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		uint64(simState.Rand.Intn(100000)),
+		simState.Accounts[0].Address.String(),
 		totalRewardsPool,
 		maxRewardsByAddress,
 		time.Now(),
-		5,
-		5,
-		0,
+		uint64(simState.Rand.Intn(100000)),
+		uint64(simState.Rand.Intn(100000)),
+		uint64(simState.Rand.Intn(100000)),
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Vote{
