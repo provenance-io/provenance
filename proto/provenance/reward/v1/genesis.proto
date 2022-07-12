@@ -13,13 +13,11 @@ option java_multiple_files = true;
 message GenesisState {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
-  // starting_reward_program_id is the ID of the starting reward program.
-  uint64 StartingRewardProgramId = 1;
 
-  repeated RewardProgram reward_programs = 2 [(gogoproto.nullable) = false];
+  repeated RewardProgram reward_programs = 1 [(gogoproto.nullable) = false];
 
-  repeated ClaimPeriodRewardDistribution claim_period_reward_distributions = 3 [(gogoproto.nullable) = false];
+  repeated ClaimPeriodRewardDistribution claim_period_reward_distributions = 2 [(gogoproto.nullable) = false];
 
-  repeated RewardAccountState reward_account_states = 4 [(gogoproto.nullable) = false];
+  repeated RewardAccountState reward_account_states = 3 [(gogoproto.nullable) = false];
 
 }

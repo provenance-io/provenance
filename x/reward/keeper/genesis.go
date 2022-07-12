@@ -8,10 +8,6 @@ import (
 
 // ExportGenesis returns a GenesisState for a given context.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	rewardProgramID, err := k.GetRewardProgramID(ctx)
-	if err != nil {
-		panic(err)
-	}
 	rewardPrograms := make([]types.RewardProgram, 0)
 	rewardProgramRecords := func(rewardProgram types.RewardProgram) bool {
 		rewardPrograms = append(rewardPrograms, rewardProgram)
@@ -43,7 +39,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 
 	return types.NewGenesisState(
-		rewardProgramID,
 		rewardPrograms,
 		ClaimPeriodRewardDistributions,
 		RewardAccountStates,
@@ -55,8 +50,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	if err := data.Validate(); err != nil {
 		panic(err)
 	}
-
-	k.setRewardProgramID(ctx, data.StartingRewardProgramId)
 
 	for _, rewardProgram := range data.RewardPrograms {
 		k.SetRewardProgram(ctx, rewardProgram)

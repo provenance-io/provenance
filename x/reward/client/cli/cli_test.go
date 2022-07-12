@@ -134,7 +134,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.expiredRewardProgram.State = types.RewardProgram_EXPIRED
 
 	rewardData := rewardtypes.NewGenesisState(
-		rewardtypes.DefaultStartingRewardProgramID,
 		[]rewardtypes.RewardProgram{
 			s.activeRewardProgram, s.pendingRewardProgram, s.finishedRewardProgram, s.expiredRewardProgram,
 		},
