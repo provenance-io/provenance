@@ -82,7 +82,14 @@ var handlers = map[string]appUpgrade{
 
 		},
 	},
-	// TODO - Add new upgrade definitions here.
+	//TODO - CHECK UPGRADE HANDLER
+	"nickel": {
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+			ctx.Logger().Info("NOTICE: Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
+			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
+		},
+	},
 }
 
 // AddMsgBasedFees adds pio specific msg based fees for BindName, AddMarker, AddAttribute, WriteScope, P8EMemorializeContract requests for v1.8.0 upgrade
