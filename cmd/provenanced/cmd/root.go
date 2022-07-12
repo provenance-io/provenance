@@ -249,7 +249,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 			panic(err)
 		}
 	}
-	snapshotDB, err := sdk.NewLevelDB("metadata", snapshotDir)
+	snapshotDB, err := sdk.NewDB("metadata", cast.ToString(appOpts.Get("db_backend")), snapshotDir)
 	if err != nil {
 		panic(err)
 	}

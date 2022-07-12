@@ -40,6 +40,7 @@ func ConfigCmd() *cobra.Command {
 		ConfigGetCmd(),
 		ConfigSetCmd(),
 		ConfigChangedCmd(),
+		ConfigHomeCmd(),
 		ConfigPackCmd(),
 		ConfigUnpackCmd(),
 	)
@@ -169,6 +170,24 @@ $ %[1]s changed telemetry.service-name`, configCmdStart),
 				cmd.Printf("Error: %v\n", err)
 			}
 			return nil
+		},
+	}
+	return cmd
+}
+
+// ConfigHomeCmd returns a CLI command for ouputting the home directory
+func ConfigHomeCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "home",
+		Short: "Outputs the home directory.",
+		Long: `Outputs the home directory.
+		
+The directory that houses the configuration and data for the blockchain. This directory can be set with either PIO_HOME or --home.
+		`,
+		Example: fmt.Sprintf(`$ %[1]s home`, configCmdStart),
+		Args:    cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runConfigHomeCmd(cmd)
 		},
 	}
 	return cmd
@@ -531,6 +550,13 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 		}
 		return fmt.Errorf("%d configuration key%s not found: %s", len(unknownKeys), s, strings.Join(unknownKeys, ", "))
 	}
+	return nil
+}
+
+// runConfigHomeCmd obtains the home directory.
+func runConfigHomeCmd(cmd *cobra.Command) error {
+	clientCtx := client.GetClientContextFromCmd(cmd)
+	cmd.Println(clientCtx.HomeDir)
 	return nil
 }
 

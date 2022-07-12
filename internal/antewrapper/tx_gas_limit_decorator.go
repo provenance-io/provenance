@@ -13,11 +13,17 @@ import (
 // CONTRACT: Tx must implement FeeTx to use TxGasLimitDecorator
 type TxGasLimitDecorator struct{}
 
-// MinTxPerBlock is used to determine the maximum amount of gas that any given transaction can use based on the block gas limit.
-const MinTxPerBlock = 20
-
 func NewTxGasLimitDecorator() TxGasLimitDecorator {
 	return TxGasLimitDecorator{}
+}
+
+// Checks whether the given message is related to governance.
+func isGovernanceMessage(msg sdk.Msg) bool {
+	_, isSubmitPropMsg := msg.(*govtypes.MsgSubmitProposal)
+	_, isVoteMsg := msg.(*govtypes.MsgVote)
+	_, isVoteWeightedMsg := msg.(*govtypes.MsgVoteWeighted)
+	_, isDepositMsg := msg.(*govtypes.MsgDeposit)
+	return isSubmitPropMsg || isVoteMsg || isVoteWeightedMsg || isDepositMsg
 }
 
 func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
@@ -27,23 +33,20 @@ func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 	// Ensure that the requested gas does not exceed the configured block maximum
 	gas := feeTx.GetGas()
-	gasTxLimit := uint64(0)
-	if ctx.BlockGasMeter() != nil {
-		gasTxLimit = ctx.BlockGasMeter().Limit() / MinTxPerBlock
-	}
+	gasTxLimit := uint64(4_000_000)
 
 	// Skip gas limit check for txs with MsgSubmitProposal
-	hasSubmitPropMsg := false
+	hasGovMsg := false
 	for _, msg := range tx.GetMsgs() {
-		_, isSubmitPropMsg := msg.(*govtypes.MsgSubmitProposal)
-		if isSubmitPropMsg {
-			hasSubmitPropMsg = true
+		isGovMsg := isGovernanceMessage(msg)
+		if isGovMsg {
+			hasGovMsg = true
 			break
 		}
 	}
 
 	// TODO - remove "gasTxLimit > 0" with SDK 0.46 which fixes the infinite gas meter to use max int vs zero for the limit.
-	if gasTxLimit > 0 && gas > gasTxLimit && !hasSubmitPropMsg {
+	if !isTestContext(ctx) && gasTxLimit > 0 && gas > gasTxLimit && !hasGovMsg {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrTxTooLarge, "transaction gas exceeds maximum allowed; got: %d max allowed: %d", gas, gasTxLimit)
 	}
 	return next(ctx, tx, simulate)

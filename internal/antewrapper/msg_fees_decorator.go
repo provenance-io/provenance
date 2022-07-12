@@ -3,6 +3,8 @@ package antewrapper
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -39,6 +41,12 @@ func NewMsgFeesDecorator(bankKeeper banktypes.Keeper, accountKeeper cosmosante.A
 	}
 }
 
+type MsgFeesDistribution struct {
+	AdditionalModuleFees   sdk.Coins
+	RecipientDistributions map[string]sdk.Coin
+	TotalAdditionalFees    sdk.Coins
+}
+
 // AnteHandle handles msg fee checking
 // has two functions ensures,
 // 1. has enough fees to add to Mempool (this involves CheckTx)
@@ -61,24 +69,25 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 	gas := feeTx.GetGas()
 	msgs := feeTx.GetMsgs()
 
-	// Compute msg additionalFees
-	additionalFees, err := CalculateAdditionalFeesToBePaid(ctx, afd.msgFeeKeeper, msgs...)
+	// Compute msg all additional fees
+	msgFeesDistribution, err := CalculateAdditionalFeesToBePaid(ctx, afd.msgFeeKeeper, msgs...)
+	totalAdditionalFees := msgFeesDistribution.TotalAdditionalFees
 	if err != nil {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, err.Error())
 	}
 	// floor gas price should be checked for all Tx's ( i.e nodes cannot set min-gas-price < floor gas price)
 	// the chain id check is exclusively for not breaking all existing sim tests which freak out when denom is anything other than stake.
-	if ctx.IsCheckTx() && !simulate && shouldIgnoreFloorGasPriceCheck(ctx) && (additionalFees.IsZero() || additionalFees == nil) {
-		err = checkFloorGasFees(gas, feeCoins, additionalFees, afd.msgFeeKeeper.GetFloorGasPrice(ctx))
+	if ctx.IsCheckTx() && !simulate && !isTestContext(ctx) && (totalAdditionalFees.IsZero() || totalAdditionalFees == nil) {
+		err = checkFloorGasFees(gas, feeCoins, totalAdditionalFees, afd.msgFeeKeeper.GetFloorGasPrice(ctx))
 		if err != nil {
 			return ctx, err
 		}
 	}
-	if !additionalFees.IsZero() {
+	if !totalAdditionalFees.IsZero() {
 		// ensure enough fees to cover mempool fee for base fee + additional fee
 		// This is exact same logic as NewMempoolFeeDecorator except it accounts for additional Fees.
 		if ctx.IsCheckTx() && !simulate {
-			errFromMempoolCalc := EnsureSufficientMempoolFees(ctx, gas, feeCoins, additionalFees)
+			errFromMempoolCalc := EnsureSufficientMempoolFees(ctx, gas, feeCoins, totalAdditionalFees)
 			if errFromMempoolCalc != nil {
 				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, errFromMempoolCalc.Error())
 			}
@@ -108,7 +117,7 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 		}
 
 		if !simulate {
-			if err = EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas, feeCoins, additionalFees, balancePerCoin,
+			if err = EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas, feeCoins, totalAdditionalFees, balancePerCoin,
 				afd.msgFeeKeeper.GetFloorGasPrice(ctx)); err != nil {
 				return ctx, err
 			}
@@ -120,8 +129,8 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 //   This check for chain-id is exclusively for not breaking all existing sim tests which freak out when denom is anything other than stake.
 //   and some network tests won't work without a chain id being set(but they also setup everything with stake denom) so `simapp-unit-testing` chain id is skipped also.
 //   This only needs to work to pio-testnet and pio-mainnet, so this is safe.
-func shouldIgnoreFloorGasPriceCheck(ctx sdk.Context) bool {
-	return len(ctx.ChainID()) != 0 && ctx.ChainID() != SimAppChainID
+func isTestContext(ctx sdk.Context) bool {
+	return !(len(ctx.ChainID()) != 0 && ctx.ChainID() != SimAppChainID && ctx.ChainID() != helpers.SimAppChainID)
 }
 
 // getFeeGranterIfExists checks if fee granter exists and returns account to deduct fees from
@@ -237,10 +246,12 @@ func checkFloorGasFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins,
 }
 
 // CalculateAdditionalFeesToBePaid computes the stability tax on MsgSend and MsgMultiSend.
-func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesKeeper, msgs ...sdk.Msg) (sdk.Coins, error) {
+func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesKeeper, msgs ...sdk.Msg) (*MsgFeesDistribution, error) {
 	// get the msg fee
-	additionalFees := sdk.Coins{}
-
+	msgFeesDistribution := MsgFeesDistribution{
+		RecipientDistributions: make(map[string]sdk.Coin),
+	}
+	assessCustomMsgTypeURL := sdk.MsgTypeURL(&msgfeestypes.MsgAssessCustomMsgFeeRequest{})
 	for _, msg := range msgs {
 		typeURL := sdk.MsgTypeURL(msg)
 		msgFees, err := mbfk.GetMsgFee(ctx, typeURL)
@@ -248,13 +259,38 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 		}
 
-		if msgFees == nil {
-			continue
+		if msgFees != nil {
+			if msgFees.AdditionalFee.IsPositive() {
+				msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFees.AdditionalFee)
+				msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFees.AdditionalFee)
+			}
 		}
-		if msgFees.AdditionalFee.IsPositive() {
-			additionalFees = additionalFees.Add(msgFees.AdditionalFee)
+		if typeURL == assessCustomMsgTypeURL {
+			assessFee, ok := msg.(*msgfeestypes.MsgAssessCustomMsgFeeRequest)
+			if !ok {
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "unable to convert msg to MsgAssessCustomMsgFeeRequest")
+			}
+			msgFeeCoin, err := mbfk.ConvertDenomToHash(ctx, assessFee.Amount)
+			if err != nil {
+				return nil, err
+			}
+			if msgFeeCoin.IsPositive() {
+				if len(assessFee.Recipient) != 0 {
+					recipientCoin, feePayoutCoin := msgfeestypes.SplitAmount(msgFeeCoin)
+					if len(msgFeesDistribution.RecipientDistributions[assessFee.Recipient].Denom) == 0 {
+						msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = recipientCoin
+					} else {
+						msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = msgFeesDistribution.RecipientDistributions[assessFee.Recipient].Add(recipientCoin)
+					}
+					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(feePayoutCoin)
+					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFeeCoin)
+				} else {
+					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFeeCoin)
+					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFeeCoin)
+				}
+			}
 		}
 	}
 
-	return additionalFees, nil
+	return &msgFeesDistribution, nil
 }

@@ -764,34 +764,15 @@ func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress,
 	return m.GetSupply().IsEqual(sdk.NewCoin(m.GetDenom(), balance.Amount))
 }
 
-// getCurrentSendEnabledStatus returns true is the denom will support sending with the bank, either as
-// the default send enable or a specific record.
-func (k Keeper) getCurrentSendEnabledStatus(ctx sdk.Context, denom string) bool {
-	return k.bankKeeper.IsSendEnabledCoin(ctx, sdk.NewCoin(denom, sdk.ZeroInt()))
-}
-
 // ensureSendEnabledStatus checks to see if the configuration of SendEnabled for the current network matches
 // the requested value, sets
 func (k Keeper) ensureSendEnabledStatus(ctx sdk.Context, denom string, sendEnabled bool) {
-	if k.getCurrentSendEnabledStatus(ctx, denom) == sendEnabled {
-		return
-	}
-	// current state doesn't match requested so update configuration.
-	k.setSendEnabledStatus(ctx, denom, sendEnabled)
-}
-
-// setSendEnabledStatus will ensure an existing explicit denom SendEnabled bank param matches sendEnabled,
-// and create a new SendEnabled param and add it if required.
-func (k Keeper) setSendEnabledStatus(ctx sdk.Context, denom string, sendEnabled bool) {
-	bankParams := k.bankKeeper.GetParams(ctx)
-	for i := range bankParams.SendEnabled {
-		if bankParams.SendEnabled[i].Denom == denom {
-			bankParams.SendEnabled[i].Enabled = sendEnabled
-			k.bankKeeper.SetParams(ctx, bankParams)
-			return
+	if k.bankKeeper.IsSendEnabledDenom(ctx, denom) != sendEnabled {
+		switch k.bankKeeper.GetParams(ctx).DefaultSendEnabled {
+		case sendEnabled:
+			k.bankKeeper.DeleteSendEnabled(ctx, denom)
+		default:
+			k.bankKeeper.SetSendEnabled(ctx, denom, sendEnabled)
 		}
 	}
-	// not found and set above so add a new explicit record here.
-	bankParams.SendEnabled = append(bankParams.SendEnabled, banktypes.NewSendEnabled(denom, sendEnabled))
-	k.bankKeeper.SetParams(ctx, bankParams)
 }

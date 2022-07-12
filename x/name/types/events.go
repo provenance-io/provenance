@@ -12,16 +12,18 @@ const (
 	KeyAttributeAddress string = "address"
 )
 
-func NewEventNameBound(address string, name string) *EventNameBound {
+func NewEventNameBound(address string, name string, restricted bool) *EventNameBound {
 	return &EventNameBound{
-		Address: address,
-		Name:    name,
+		Address:    address,
+		Name:       name,
+		Restricted: restricted,
 	}
 }
 
-func NewEventNameUnbound(address string, name string) *EventNameUnbound {
+func NewEventNameUnbound(address string, name string, restricted bool) *EventNameUnbound {
 	return &EventNameUnbound{
-		Address: address,
-		Name:    name,
+		Address:    address,
+		Name:       name,
+		Restricted: restricted,
 	}
 }

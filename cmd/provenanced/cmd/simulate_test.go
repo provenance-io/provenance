@@ -2,7 +2,6 @@ package cmd_test
 
 import (
 	"fmt"
-	"github.com/provenance-io/provenance/internal/antewrapper"
 	"os"
 	"path/filepath"
 	"testing"
@@ -18,6 +17,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/testutil"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
@@ -55,6 +55,7 @@ func (s *SimulateTestSuite) SetupTest() {
 		Denom:  "stake",
 		Amount: sdk.NewInt(1000),
 	}
+	msgfeestypes.DefaultFloorGasPrice = s.floorGasPrice
 
 	s.sendMsgTypeUrl = "/cosmos.bank.v1beta1.MsgSend"
 	s.sendMsgAdditionalFee = sdk.NewCoin("stake", sdk.NewInt(1))
@@ -81,6 +82,10 @@ func (s *SimulateTestSuite) SetupTest() {
 
 	_, err = s.testnet.WaitForHeight(1)
 	s.Require().NoError(err)
+}
+
+func (s *SimulateTestSuite) TearDownTest() {
+	testutil.CleanUp(s.testnet, s.T())
 }
 
 func TestSimulateTestSuite(t *testing.T) {

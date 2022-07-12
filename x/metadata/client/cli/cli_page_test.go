@@ -24,6 +24,7 @@ import (
 	"github.com/provenance-io/provenance/testutil"
 	mdcli "github.com/provenance-io/provenance/x/metadata/client/cli"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type IntegrationCLIPageTestSuite struct {
@@ -66,7 +67,7 @@ func TestIntegrationCLIPageTestSuite(t *testing.T) {
 func (s *IntegrationCLIPageTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 	var err error
-
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	s.cfg.NumValidators = 1
 
@@ -310,11 +311,7 @@ func (s *IntegrationCLIPageTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationCLIPageTestSuite) TearDownSuite() {
-	s.T().Log("teardown waiting for next block")
-	s.Require().NoError(s.testnet.WaitForNextBlock(), "waiting for next block")
-	s.T().Log("teardown cleaning up testnet")
-	s.testnet.Cleanup()
-	s.T().Log("teardown done")
+	testutil.CleanUp(s.testnet, s.T())
 }
 
 // Converts an integer to a written version of it. E.g. 1 => one, 83 => eightyThree.

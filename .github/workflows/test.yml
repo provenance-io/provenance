@@ -1,5 +1,7 @@
 name: Tests / Code Coverage
 #  Tests / Code Coverage workflow runs unit tests and uploads a code coverage report
+
+
 #  This workflow is run on pushes to master & every Pull Request,
 #  if no *.go, go.mod or go.sum file is changed it will pass without running as these are required checks
 on:
@@ -7,134 +9,173 @@ on:
   push:
     branches:
       - main
+
+
 jobs:
   #  This action cleans up previously running instances of a workflow on the same branch. This accomplishes
   #  the task of automatically cancelling CI runs on pushes to the same branch, which is a common feature in
   #  most CI systems but currently not possible with GitHub actions.
   cleanup-runs:
+    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
     runs-on: ubuntu-latest
     steps:
     - uses: rokroskar/workflow-run-cleanup-action@v0.3.3
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
 
 
-  install-tparse:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.17
-      - name: Display go version
-        run: go version
-      - name: install tparse
-        run: |
-          export GO111MODULE="on" && go get github.com/mfridman/tparse@v0.8.3
-      - uses: actions/cache@v2.1.7
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-tparse-binary
-
-
-  split-test-files:
+  setup-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Create a file with all the pkgs
-        run: go list ./... > pkgs.txt
-      - name: Split pkgs into 4 files
-        run: split -d -n l/4 pkgs.txt pkgs.txt.part.
-      # cache multiple
-      - uses: actions/upload-artifact@v2
-        with:
-          name: "${{ github.sha }}-00"
-          path: ./pkgs.txt.part.00
-      - uses: actions/upload-artifact@v2
-        with:
-          name: "${{ github.sha }}-01"
-          path: ./pkgs.txt.part.01
-      - uses: actions/upload-artifact@v2
-        with:
-          name: "${{ github.sha }}-02"
-          path: ./pkgs.txt.part.02
-      - uses: actions/upload-artifact@v2
-        with:
-          name: "${{ github.sha }}-03"
-          path: ./pkgs.txt.part.03
-
-
-  tests:
-    runs-on: ubuntu-latest
-    needs: split-test-files
-    strategy:
-      fail-fast: false
-      matrix:
-        part: ["00", "01", "02", "03"]
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          # CodeCov requires fetch-depth > 1
-          fetch-depth: 2
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.17
-      - uses: technote-space/get-diff-action@v6.0.1
+      - uses: technote-space/get-diff-action@v6.1.0
         with:
           PATTERNS: |
             **/**.go
             go.mod
             go.sum
-      - uses: actions/download-artifact@v2
-        with:
-          name: "${{ github.sha }}-${{ matrix.part }}"
-        if: env.GIT_DIFF
-      - name: test & coverage report creation
+            .github/workflows/test.yml
+      - name: Define Variables
+        id: def-vars
         run: |
-          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='norace ledger test_ledger_mock'
-        if: env.GIT_DIFF
-      - uses: actions/upload-artifact@v2
+          echo "::set-output name=go-version::1.17"
+          echo "::set-output name=cache-key::${{ runner.os }}-unit-tests-${{ hashFiles('scripts/cleveldb_build_and_install.sh', '.github/workflows/test.yml') }}"
+          echo "::set-output name=file-prefix::${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
+      - name: Create a file with all the pkgs
+        run: go list ./... > pkgs.txt
+      - uses: actions/upload-artifact@v3
         with:
-          name: "${{ github.sha }}-${{ matrix.part }}-coverage"
+          name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt"
+          path: ./pkgs.txt
+      - name: Split pkgs into parts
+        # The x/marker/simulation test-race takes around 6ish minutes and is by far the longest running one.
+        # The next longest running is x/metadata/client/cli at 2.5ish minutes.
+        # So take x/marker/simulation out of the list, split the list into 3 parts and create a 4th part
+        # with just the x/marker/simulation test.
+        run: |
+          grep -vF -e 'github.com/provenance-io/provenance/x/marker/simulation' pkgs.txt > pkgs.txt.tmp
+          split -d -n l/3 pkgs.txt.tmp pkgs.txt.part.
+          printf 'github.com/provenance-io/provenance/x/marker/simulation\n' > pkgs.txt.part.03
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.00"
+          path: ./pkgs.txt.part.00
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.01"
+          path: ./pkgs.txt.part.01
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.02"
+          path: ./pkgs.txt.part.02
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.03"
+          path: ./pkgs.txt.part.03
+      - uses: actions/cache@v3
+        id: cache-setup
+        with:
+          # In order:
+          # * The leveldb repo tarball
+          # * The directory extracted from the leveldb tarball
+          # Note: this needs to match the cache-path: entries in the outputs below.
+          path: |
+            leveldb*.tar.gz
+            leveldb-*
+          key: ${{ steps.def-vars.outputs.cache-key }}
+      - name: Build Cache
+        if: steps.cache-setup.outputs.cache-hit != 'true'
+        run: CLEVELDB_DO_CLEANUP=false make cleveldb
+    outputs:
+      should-run: ${{ env.GIT_DIFF }}
+      go-version: ${{ steps.def-vars.outputs.go-version }}
+      cache-key: ${{ steps.def-vars.outputs.cache-key }}
+      file-prefix: ${{ steps.def-vars.outputs.file-prefix }}
+      # Note: this needs to match the path: entries in the actions/cache step above.
+      cache-path: |
+        leveldb*.tar.gz
+        leveldb-*
+
+
+  tests:
+    needs: setup-tests
+    # Note: There's a required check on this, and it must pass. A skip doesn't count as a pass.
+    #       So instead of a job-level if: needs.setup-tests.outputs.should-run on this job,
+    #       it's in the steps below (except the checkout step).
+    strategy:
+      fail-fast: false
+      matrix:
+        part: ["00", "01", "02", "03"]
+    runs-on: ubuntu-latest
+    env:
+      LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # CodeCov requires fetch-depth > 1
+          fetch-depth: 2
+      - uses: actions/cache@v3
+        if: needs.setup-tests.outputs.should-run
+        with:
+          path: ${{ needs.setup-tests.outputs.cache-path }}
+          key: ${{ needs.setup-tests.outputs.cache-key }}
+      - name: Build and install cleveldb
+        if: needs.setup-tests.outputs.should-run
+        run: CLEVELDB_DO_CLEANUP=false make cleveldb
+      - uses: actions/setup-go@v3
+        if: needs.setup-tests.outputs.should-run
+        with:
+          go-version: ${{ needs.setup-tests.outputs.go-version }}
+      - uses: actions/download-artifact@v3
+        if: needs.setup-tests.outputs.should-run
+        with:
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-pkgs.txt.part.${{ matrix.part }}"
+      - name: test & coverage report creation
+        if: needs.setup-tests.outputs.should-run
+        run: |
+          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='norace ledger test_ledger_mock cleveldb'
+      - uses: actions/upload-artifact@v3
+        if: needs.setup-tests.outputs.should-run
+        with:
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-${{ matrix.part }}-coverage"
           path: ./${{ matrix.part }}profile.out
 
 
   #  This action performs a code coverage assessment but filters out generated code from proto based types
   #  and grpc services
   upload-coverage-report:
+    needs: [setup-tests, tests]
+    # Note: There's a required check on this, and it must pass. A skip doesn't count as a pass.
+    #       So instead of a job-level if: needs.setup-tests.outputs.should-run on this job,
+    #       it's in the steps below (except the checkout step).
     runs-on: ubuntu-latest
-    needs: tests
     steps:
       - uses: actions/checkout@v3
         with:
           # CodeCov requires fetch-depth > 1
-          fetch-depth: 2      
-      - uses: technote-space/get-diff-action@v6.0.1
+          fetch-depth: 2
+      - uses: actions/download-artifact@v3
+        if: needs.setup-tests.outputs.should-run
         with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-      - uses: actions/download-artifact@v2
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-00-coverage"
+      - uses: actions/download-artifact@v3
+        if: needs.setup-tests.outputs.should-run
         with:
-          name: "${{ github.sha }}-00-coverage"
-        if: env.GIT_DIFF
-      - uses: actions/download-artifact@v2
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-01-coverage"
+      - uses: actions/download-artifact@v3
+        if: needs.setup-tests.outputs.should-run
         with:
-          name: "${{ github.sha }}-01-coverage"
-        if: env.GIT_DIFF
-      - uses: actions/download-artifact@v2
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-02-coverage"
+      - uses: actions/download-artifact@v3
+        if: needs.setup-tests.outputs.should-run
         with:
-          name: "${{ github.sha }}-02-coverage"
-        if: env.GIT_DIFF
-      - uses: actions/download-artifact@v2
-        with:
-          name: "${{ github.sha }}-03-coverage"
-        if: env.GIT_DIFF
-      - run: |
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-03-coverage"
+      - name: Combine profiles
+        if: needs.setup-tests.outputs.should-run
+        run: |
           cat ./*profile.out | grep -v "mode: atomic" >> coverage.txt
-        if: env.GIT_DIFF
       - name: filter out DONTCOVER
+        if: needs.setup-tests.outputs.should-run
         run: |
           excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
           excludelist+=" $(find ./ -type f -name '*.pb.go')"
@@ -145,40 +186,49 @@ jobs:
             echo "Excluding ${filename} from coverage report..."
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
-        if: env.GIT_DIFF
-      - uses: codecov/codecov-action@v2.1.0
+      - uses: codecov/codecov-action@v3
+        if: needs.setup-tests.outputs.should-run
         with:
           file: ./coverage.txt
-        if: env.GIT_DIFF
 
 
   test-race:
+    needs: setup-tests
+    # Note: There's a required check on this, and it must pass. A skip doesn't count as a pass.
+    #       So instead of a job-level if: needs.setup-tests.outputs.should-run on this job,
+    #       it's in the steps below (except the checkout step).
     runs-on: ubuntu-latest
-    needs: split-test-files
     strategy:
       fail-fast: false
       matrix:
         part: ["00", "01", "02", "03"]
+    env:
+      LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        if: needs.setup-tests.outputs.should-run
+        with:
+          path: ${{ needs.setup-tests.outputs.cache-path }}
+          key: ${{ needs.setup-tests.outputs.cache-key }}
+      - name: Build and install cleveldb
+        if: needs.setup-tests.outputs.should-run
+        run: CLEVELDB_DO_CLEANUP=false make cleveldb
       - uses: actions/setup-go@v3
+        if: needs.setup-tests.outputs.should-run
         with:
-          go-version: 1.17
-      - uses: technote-space/get-diff-action@v6.0.1
+          go-version: ${{ needs.setup-tests.outputs.go-version }}
+      - uses: actions/download-artifact@v3
+        if: needs.setup-tests.outputs.should-run
         with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-      - uses: actions/download-artifact@v2
-        with:
-          name: "${{ github.sha }}-${{ matrix.part }}"
-        if: env.GIT_DIFF
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-pkgs.txt.part.${{ matrix.part }}"
       - name: test & coverage report creation
+        if: needs.setup-tests.outputs.should-run
         run: |
-          xargs --arg-file=pkgs.txt.part.${{ matrix.part }} go test -mod=readonly -timeout 30m -race -tags='cgo ledger test_ledger_mock'
-        if: env.GIT_DIFF
-      - uses: actions/upload-artifact@v2
+          xargs --arg-file=pkgs.txt.part.${{ matrix.part }} go test -mod=readonly -timeout 30m -race -tags='cgo ledger test_ledger_mock cleveldb' | tee ${{ matrix.part }}-race-output.txt
+          exit "${PIPESTATUS[0]}"
+      - uses: actions/upload-artifact@v3
+        if: needs.setup-tests.outputs.should-run
         with:
-          name: "${{ github.sha }}-${{ matrix.part }}-race-output"
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-${{ matrix.part }}-race-output"
           path: ./${{ matrix.part }}-race-output.txt

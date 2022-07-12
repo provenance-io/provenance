@@ -1,16 +1,21 @@
 package antewrapper_test
 
 import (
+	"testing"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/stretchr/testify/suite"
 
 	pioante "github.com/provenance-io/provenance/internal/antewrapper"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 func (suite *AnteTestSuite) TestEnsureMempoolFees() {
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -63,6 +68,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 }
 
 func (suite *AnteTestSuite) TestDeductFees() {
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	suite.SetupTest(false) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -105,7 +111,12 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	suite.Require().Nil(err, "Tx errored after account has been set with sufficient funds")
 }
 
+func TestAnteFeeTestSuite(t *testing.T) {
+	suite.Run(t, new(AnteTestSuite))
+}
+
 func (suite *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	// given
 	suite.SetupTest(true)
 	newCoin := sdk.NewInt64Coin("steak", 100)

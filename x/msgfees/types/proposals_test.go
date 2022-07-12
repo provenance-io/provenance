@@ -26,7 +26,6 @@ func (s *MsgFeesProposalTestSuite) TearDownSuite() {
 }
 
 func (s *MsgFeesProposalTestSuite) TestAddMsgFeeProposalType() {
-
 	msgType := sdk.MsgTypeURL(&metadatatypes.MsgWriteRecordRequest{})
 
 	m := NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)))
@@ -70,7 +69,6 @@ AdditionalFee: 10hotdog
 }
 
 func (s *MsgFeesProposalTestSuite) TestUpdateMsgFeeProposalType() {
-
 	msgType := sdk.MsgTypeURL(&metadatatypes.MsgWriteRecordRequest{})
 
 	m := NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)))
@@ -121,7 +119,7 @@ func (s *MsgFeesProposalTestSuite) TestRemoveMsgFeeProposalType() {
 		`Remove Msg Fee Proposal:
   Title:       title
   Description: description
-  MsgTypeUrl:         /provenance.metadata.v1.MsgWriteRecordRequest
+  MsgTypeUrl:  /provenance.metadata.v1.MsgWriteRecordRequest
 `, m.String())
 
 	err := m.ValidateBasic()
@@ -135,4 +133,48 @@ func (s *MsgFeesProposalTestSuite) TestRemoveMsgFeeProposalType() {
 	m.Description = ""
 	err = m.ValidateBasic()
 	s.Assert().Equal("proposal description cannot be blank: invalid proposal content", err.Error())
+}
+
+func (s *MsgFeesProposalTestSuite) TestUpdateUsdConversionRateProposalValidateBasic() {
+	m := NewUpdateNhashPerUsdMilProposal("title", "description", 70)
+	s.Assert().Equal(
+		`Update Nhash to Usd Mil Proposal:
+  Title:             title
+  Description:       description
+  NhashPerUsdMil:    70
+`, m.String())
+
+	tests := []struct {
+		name        string
+		proposal    *UpdateNhashPerUsdMilProposal
+		expectedErr string
+	}{
+		{
+			"Empty type error",
+			NewUpdateNhashPerUsdMilProposal("title", "description", 0),
+			"nhash per usd mil must be greater than 0",
+		},
+		{
+			"Invalid proposal details",
+			NewUpdateNhashPerUsdMilProposal("title", "", 70),
+			"proposal description cannot be blank: invalid proposal content",
+		},
+		{
+			"Valid proposal",
+			NewUpdateNhashPerUsdMilProposal("title", "description", 70),
+			"",
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			err := tc.proposal.ValidateBasic()
+			if len(tc.expectedErr) == 0 {
+				s.Assert().NoError(err)
+			} else {
+				s.Assert().Equal(tc.expectedErr, err.Error())
+			}
+		})
+	}
+
 }

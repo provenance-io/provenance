@@ -21,6 +21,10 @@ type AttributeMsgParams struct {
 	Add *AddAttributeParams `json:"add_attribute"`
 	// A request to encode a MsgDeleteAttribute
 	Del *DeleteAttributeParams `json:"delete_attribute"`
+	// A request to encode a MsgDeleteAttribute
+	DelDistinct *DeleteDistinctAttributeParams `json:"delete_distinct_attribute"`
+	// A request to encode a MsgUpdateAttribute
+	Update *UpdateAttributeParams `json:"update_attribute"`
 }
 
 // AddAttributeParams are params for encoding a MsgAddAttribute
@@ -43,6 +47,32 @@ type DeleteAttributeParams struct {
 	Name string `json:"name"`
 }
 
+// DeleteDistinctAttributeParams are params for encoding a MsgDeleteDistinctAttribute
+type DeleteDistinctAttributeParams struct {
+	// The address of the account to delete the attribute from.
+	Address string `json:"address"`
+	// The attribute name.
+	Name string `json:"name"`
+	// The attribute value.
+	Value []byte `json:"value"`
+}
+
+// UpdateAttributeParams are params for encoding a MsgUpdateAttributeRequest
+type UpdateAttributeParams struct {
+	// The address of the account on the attribute
+	Address string `json:"address"`
+	// The attribute name.
+	Name string `json:"name"`
+	// The original attribute value.
+	OriginalValue []byte `json:"original_value"`
+	// The original attribute value type.
+	OriginalValueType string `json:"original_value_type"`
+	// The new attribute value.
+	UpdateValue []byte `json:"update_value"`
+	// The new attribute value type.
+	UpdateValueType string `json:"update_value_type"`
+}
+
 // Encoder returns a smart contract message encoder for the attribute module.
 func Encoder(contract sdk.AccAddress, msg json.RawMessage, version string) ([]sdk.Msg, error) {
 	wrapper := struct {
@@ -60,13 +90,17 @@ func Encoder(contract sdk.AccAddress, msg json.RawMessage, version string) ([]sd
 		return params.Add.Encode(contract)
 	case params.Del != nil:
 		return params.Del.Encode(contract)
+	case params.DelDistinct != nil:
+		return params.DelDistinct.Encode(contract)
+	case params.Update != nil:
+		return params.Update.Encode(contract)
 	default:
 		return nil, fmt.Errorf("wasm: invalid attribute encoder params: %s", string(msg))
 	}
 }
 
 // Encode creates a MsgAddAttribute.
-// The contract must be the owner of the name of the attribute being added.
+// INFO: The contract must be the owner of the name of the attribute being added.
 func (params *AddAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
 	if err := types.ValidateAttributeAddress(params.Address); err != nil {
 		return nil, fmt.Errorf("wasm: invalid address: %w", err)
@@ -82,12 +116,40 @@ func (params *AddAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, er
 }
 
 // Encode creates a MsgDeleteAttribute.
-// The contract must be the owner of the name of the attribute being deleted.
+// INFO: The contract must be the owner of the name of the attribute being deleted.
 func (params *DeleteAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
 	if err := types.ValidateAttributeAddress(params.Address); err != nil {
 		return nil, fmt.Errorf("wasm: invalid address: %w", err)
 	}
 	msg := types.NewMsgDeleteAttributeRequest(params.Address, contract, params.Name)
+	return []sdk.Msg{msg}, nil
+}
+
+// Encode creates a MsgDeleteDistinctAttribute.
+// INFO: The contract must be the owner of the name of the attribute being deleted.
+func (params *DeleteDistinctAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
+	if err := types.ValidateAttributeAddress(params.Address); err != nil {
+		return nil, fmt.Errorf("wasm: invalid address: %w", err)
+	}
+	msg := types.NewMsgDeleteDistinctAttributeRequest(params.Address, contract, params.Name, params.Value)
+	return []sdk.Msg{msg}, nil
+}
+
+// Encode creates a MsgUpdateAttribute.
+// INFO: The contract must be the owner of the name of the attribute being updated.
+func (params *UpdateAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
+	if err := types.ValidateAttributeAddress(params.Address); err != nil {
+		return nil, fmt.Errorf("wasm: invalid address: %w", err)
+	}
+	msg := types.NewMsgUpdateAttributeRequest(
+		params.Address,
+		contract,
+		params.Name,
+		params.OriginalValue,
+		params.UpdateValue,
+		encodeType(params.OriginalValueType),
+		encodeType(params.UpdateValueType),
+	)
 	return []sdk.Msg{msg}, nil
 }
 

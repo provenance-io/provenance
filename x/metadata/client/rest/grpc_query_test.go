@@ -6,7 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/gogo/protobuf/proto"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/suite"
 	"google.golang.org/genproto/googleapis/rpc/status"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -15,16 +17,12 @@ import (
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/testutil"
-
 	"github.com/provenance-io/provenance/x/metadata/types"
-	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
-
-	"github.com/gogo/protobuf/proto"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
@@ -46,19 +44,19 @@ type IntegrationGRPCTestSuite struct {
 	user2     string
 	user2Addr sdk.AccAddress
 
-	scope     metadatatypes.Scope
+	scope     types.Scope
 	scopeUUID uuid.UUID
 	scopeID   types.MetadataAddress
 
 	specUUID uuid.UUID
 	specID   types.MetadataAddress
 
-	objectLocator metadatatypes.ObjectStoreLocator
+	objectLocator types.ObjectStoreLocator
 	ownerAddr     sdk.AccAddress
 	encryptionKey sdk.AccAddress
 	uri           string
 
-	objectLocator1 metadatatypes.ObjectStoreLocator
+	objectLocator1 types.ObjectStoreLocator
 	ownerAddr1     sdk.AccAddress
 	encryptionKey1 sdk.AccAddress
 	uri1           string
@@ -73,6 +71,7 @@ func ownerPartyList(addresses ...string) []types.Party {
 }
 
 func (suite *IntegrationGRPCTestSuite) SetupSuite() {
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	suite.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
 	addr, err := sdk.AccAddressFromHex(suite.accountKey.PubKey().Address().String())
 	suite.Require().NoError(err)
@@ -108,29 +107,29 @@ func (suite *IntegrationGRPCTestSuite) SetupSuite() {
 	suite.specUUID = uuid.New()
 	suite.specID = types.ScopeSpecMetadataAddress(suite.specUUID)
 
-	suite.scope = *metadatatypes.NewScope(suite.scopeID, suite.specID, ownerPartyList(suite.user1), []string{suite.user1}, suite.user1)
+	suite.scope = *types.NewScope(suite.scopeID, suite.specID, ownerPartyList(suite.user1), []string{suite.user1}, suite.user1)
 	// Configure Genesis data for metadata module
 
 	// add os locator
 	suite.ownerAddr = suite.accountAddr
 	suite.uri = "http://foo.com"
 	suite.encryptionKey = sdk.AccAddress{}
-	suite.objectLocator = metadatatypes.NewOSLocatorRecord(suite.ownerAddr, suite.encryptionKey, suite.uri)
+	suite.objectLocator = types.NewOSLocatorRecord(suite.ownerAddr, suite.encryptionKey, suite.uri)
 
 	suite.ownerAddr1 = suite.user1Addr
 	suite.uri1 = "http://bar.com"
 	suite.encryptionKey1 = suite.ownerAddr
-	suite.objectLocator1 = metadatatypes.NewOSLocatorRecord(suite.ownerAddr1, suite.encryptionKey1, suite.uri1)
+	suite.objectLocator1 = types.NewOSLocatorRecord(suite.ownerAddr1, suite.encryptionKey1, suite.uri1)
 
-	var metadataData metadatatypes.GenesisState
-	metadataData.Params = metadatatypes.DefaultParams()
-	metadataData.OSLocatorParams = metadatatypes.DefaultOSLocatorParams()
+	var metadataData types.GenesisState
+	metadataData.Params = types.DefaultParams()
+	metadataData.OSLocatorParams = types.DefaultOSLocatorParams()
 	metadataData.Scopes = append(metadataData.Scopes, suite.scope)
 	metadataData.ObjectStoreLocators = append(metadataData.ObjectStoreLocators, suite.objectLocator, suite.objectLocator1)
 	metadataDataBz, err := cfg.Codec.MarshalJSON(&metadataData)
 	suite.Require().NoError(err)
 
-	genesisState[metadatatypes.ModuleName] = metadataDataBz
+	genesisState[types.ModuleName] = metadataDataBz
 
 	cfg.GenesisState = genesisState
 
@@ -143,9 +142,7 @@ func (suite *IntegrationGRPCTestSuite) SetupSuite() {
 }
 
 func (suite *IntegrationGRPCTestSuite) TearDownSuite() {
-	suite.testnet.WaitForNextBlock()
-	suite.T().Log("tearing down integration test suite")
-	suite.testnet.Cleanup()
+	testutil.CleanUp(suite.testnet, suite.T())
 }
 
 func TestIntegrationGRPCTestSuite(t *testing.T) {
@@ -171,10 +168,10 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
 			false,
-			&metadatatypes.QueryParamsResponse{},
-			&metadatatypes.QueryParamsResponse{
-				Params:  metadatatypes.DefaultParams(),
-				Request: &metadatatypes.QueryParamsRequest{},
+			&types.QueryParamsResponse{},
+			&types.QueryParamsResponse{
+				Params:  types.DefaultParams(),
+				Request: &types.QueryParamsRequest{},
 			},
 		},
 		{
@@ -184,14 +181,14 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
 			false,
-			&metadatatypes.ScopeResponse{},
-			&metadatatypes.ScopeResponse{
-				Scope: &metadatatypes.ScopeWrapper{
+			&types.ScopeResponse{},
+			&types.ScopeResponse{
+				Scope: &types.ScopeWrapper{
 					Scope:           &suite.scope,
 					ScopeIdInfo:     types.GetScopeIDInfo(suite.scopeID),
 					ScopeSpecIdInfo: types.GetScopeSpecIDInfo(suite.specID),
 				},
-				Request: &metadatatypes.ScopeRequest{ScopeId: suite.scopeUUID.String()},
+				Request: &types.ScopeRequest{ScopeId: suite.scopeUUID.String()},
 			},
 		},
 		{
@@ -211,10 +208,10 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
 			false,
-			&metadatatypes.OSLocatorParamsResponse{},
-			&metadatatypes.OSLocatorParamsResponse{
-				Params:  metadatatypes.DefaultOSLocatorParams(),
-				Request: &metadatatypes.OSLocatorParamsRequest{},
+			&types.OSLocatorParamsResponse{},
+			&types.OSLocatorParamsResponse{
+				Params:  types.DefaultOSLocatorParams(),
+				Request: &types.OSLocatorParamsRequest{},
 			},
 		},
 		{
@@ -224,10 +221,10 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
 			false,
-			&metadatatypes.OSLocatorResponse{},
-			&metadatatypes.OSLocatorResponse{
+			&types.OSLocatorResponse{},
+			&types.OSLocatorResponse{
 				Locator: &suite.objectLocator,
-				Request: &metadatatypes.OSLocatorRequest{
+				Request: &types.OSLocatorRequest{
 					Owner: suite.ownerAddr.String(),
 				},
 			},
@@ -242,14 +239,14 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
 			false,
-			&metadatatypes.OSLocatorsByURIResponse{},
-			&metadatatypes.OSLocatorsByURIResponse{
-				Locators: []metadatatypes.ObjectStoreLocator{{
+			&types.OSLocatorsByURIResponse{},
+			&types.OSLocatorsByURIResponse{
+				Locators: []types.ObjectStoreLocator{{
 					Owner:         suite.ownerAddr.String(),
 					LocatorUri:    suite.uri,
 					EncryptionKey: suite.encryptionKey.String(),
 				}},
-				Request: &metadatatypes.OSLocatorsByURIRequest{
+				Request: &types.OSLocatorsByURIRequest{
 					Uri:        b64.StdEncoding.EncodeToString([]byte(suite.uri)),
 					Pagination: nil,
 				},
@@ -269,14 +266,14 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
 			false,
-			&metadatatypes.OSLocatorsByScopeResponse{},
-			&metadatatypes.OSLocatorsByScopeResponse{
-				Locators: []metadatatypes.ObjectStoreLocator{{
+			&types.OSLocatorsByScopeResponse{},
+			&types.OSLocatorsByScopeResponse{
+				Locators: []types.ObjectStoreLocator{{
 					Owner:         suite.ownerAddr1.String(),
 					LocatorUri:    suite.uri1,
 					EncryptionKey: suite.encryptionKey1.String(),
 				}},
-				Request: &metadatatypes.OSLocatorsByScopeRequest{
+				Request: &types.OSLocatorsByScopeRequest{
 					ScopeId: suite.scopeUUID.String(),
 				},
 			},
@@ -323,9 +320,9 @@ func (suite *IntegrationGRPCTestSuite) TestAllOSLocator() {
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
 			false,
-			&metadatatypes.OSAllLocatorsResponse{},
-			&metadatatypes.OSAllLocatorsResponse{
-				Locators: []metadatatypes.ObjectStoreLocator{{
+			&types.OSAllLocatorsResponse{},
+			&types.OSAllLocatorsResponse{
+				Locators: []types.ObjectStoreLocator{{
 					Owner:         suite.ownerAddr1.String(),
 					EncryptionKey: suite.encryptionKey1.String(),
 					LocatorUri:    suite.uri1,

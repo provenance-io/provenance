@@ -13,7 +13,7 @@ jobs:
     timeout-minutes: 6
     steps:
       - uses: actions/checkout@v3
-      - uses: technote-space/get-diff-action@v6.0.1
+      - uses: technote-space/get-diff-action@v6.1.0
         with:
           PATTERNS: |
             **/**.go
@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.17
-      - uses: golangci/golangci-lint-action@v3.1.0
+      - uses: golangci/golangci-lint-action@v3.2.0
         with:
           # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
           version: v1.44

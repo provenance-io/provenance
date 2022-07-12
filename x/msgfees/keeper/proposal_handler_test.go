@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -31,7 +32,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.app = provenance.Setup(false)
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
-	s.k = msgfeeskeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(msgfeestypes.ModuleName), s.app.GetSubspace(msgfeestypes.ModuleName), "", "nhash", nil, nil)
+	s.k = msgfeeskeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(msgfeestypes.ModuleName), s.app.GetSubspace(msgfeestypes.ModuleName), "", msgfeestypes.NhashDenom, nil, nil)
 	s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 }
 
@@ -93,13 +94,22 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 			msgfeestypes.NewRemoveMsgFeeProposal("title remove", "description", ""),
 			msgfeestypes.ErrEmptyMsgType,
 		},
+		{
+			"update nhash to usd mil - invalid - validate basic fail",
+			msgfeestypes.NewUpdateNhashPerUsdMilProposal("title update conversion", "", 10),
+			errors.New("proposal description cannot be blank: invalid proposal content"),
+		},
+		{
+			"update nhash to usd mil - valid",
+			msgfeestypes.NewUpdateNhashPerUsdMilProposal("title update conversion", "description", 1),
+			nil,
+		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 
 		s.T().Run(tc.name, func(t *testing.T) {
-
 			var err error
 			switch c := tc.prop.(type) {
 			case *msgfeestypes.AddMsgFeeProposal:
@@ -108,6 +118,8 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 				err = msgfeeskeeper.HandleUpdateMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
 			case *msgfeestypes.RemoveMsgFeeProposal:
 				err = msgfeeskeeper.HandleRemoveMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
+			case *msgfeestypes.UpdateNhashPerUsdMilProposal:
+				err = msgfeeskeeper.HandleUpdateNhashPerUsdMilProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
 			default:
 				panic("invalid proposal type")
 			}

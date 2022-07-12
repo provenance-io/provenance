@@ -37,6 +37,134 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+
+* Update the swagger files (including third-party changes). [#728](https://github.com/provenance-io/provenance/issues/728)
+
+### Bug Fixes
+
+* Add new `msgfees` `NhashPerUsdMil`  default param to param space store on upgrade (PR [#875](https://github.com/provenance-io/provenance/issues/875))
+
+---
+
+## [v1.11.1-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.11.1-rc1) - 2022-06-14
+
+### Bug Fixes
+
+* Add `mango` upgrade handler.
+
+---
+
+## [v1.11.0](https://github.com/provenance-io/provenance/releases/tag/v1.11.0) - 2022-06-13
+
+### Features
+
+* Add CONTROLLER, and VALIDATOR PartyTypes for contract execution. [\#824](https://github.com/provenance-io/provenance/pull/824])
+* Add FeeGrant allowance support for marker escrow accounts [#406](https://github.com/provenance-io/provenance/issues/406)
+* Bump Cosmos-SDK to v0.45.4-pio-1, which contains Cosmos-SDK v0.45.4 and the update to storage of the bank module's SendEnabled information. [PR 850](https://github.com/provenance-io/provenance/pull/850)
+* Add `MsgAssessCustomMsgFeeRequest` to add the ability for a smart contract author to charge a custom fee [#831](https://github.com/provenance-io/provenance/issues/831)
+
+### Bug Fixes
+
+* Move buf.build push action to occur after PRs are merged to main branch [#838](https://github.com/provenance-io/provenance/issues/838)
+* Update third party proto dependencies [#842](https://github.com/provenance-io/provenance/issues/842)
+
+### Improvements
+
+* Add restricted status info to name module cli queries [#806](https://github.com/provenance-io/provenance/issues/806)
+* Store the bank module's SendEnabled flags directly in state instead of as part of Params. This will drastically reduce the costs of sending coins and managing markers. [PR 850](https://github.com/provenance-io/provenance/pull/850)
+* Add State Sync readme [#859](https://github.com/provenance-io/provenance/issues/859)
+
+### State Machine Breaking
+
+* Move storage of denomination SendEnabled flags into bank module state (from Params), and update the marker module to correctly manipulate the flags in their new location. [PR 850](https://github.com/provenance-io/provenance/pull/850)
+
+---
+
+## [v1.10.0](https://github.com/provenance-io/provenance/releases/tag/v1.10.0) - 2022-05-11
+
+### Summary
+
+Provenance 1.10.0 includes upgrades to the underlying CosmWasm dependencies and adds functionality to
+remove orphaned metadata in the bank module left over after markers have been deleted.
+
+### Improvements
+
+* Update wasmvm dependencies and update Dockerfile for localnet [#818](https://github.com/provenance-io/provenance/issues/818)
+* Remove "send enabled" on marker removal and in bulk on 1.10.0 upgrade [#821](https://github.com/provenance-io/provenance/issues/821)
+
+---
+
+## [v1.9.0](https://github.com/provenance-io/provenance/releases/tag/v1.9.0) - 2022-04-25
+
+### Summary
+
+Provenance 1.9.0 brings some minor features and security improvements.
+
+### Features
+
+* Add `add-genesis-msg-fee` command to add msg fees to genesis.json and update Makefile to have pre-defined msg fees [#667](https://github.com/provenance-io/provenance/issues/667)
+* Add msgfees summary event to be emitted when there are txs that have fees [#678](https://github.com/provenance-io/provenance/issues/678)
+* Adds home subcommand to the cli's config command [#620] (https://github.com/provenance-io/provenance/issues/620)
+* Add support for rocksdb and badgerdb [#702](https://github.com/provenance-io/provenance/issues/702)
+* Create `dbmigrate` utility for migrating a data folder to use a different db backend [#696](https://github.com/provenance-io/provenance/issues/696)
+
+### Improvements
+
+* When the `start` command encounters an error, it no longer outputs command usage [#670](https://github.com/provenance-io/provenance/issues/670)
+* Change max length on marker unresticted denom from 64 to 83 [#719](https://github.com/provenance-io/provenance/issues/719)
+* Set prerelease to `true` for release candidates. [#666](https://github.com/provenance-io/provenance/issues/666)
+* Allow authz grants to work on scope value owners [#755](https://github.com/provenance-io/provenance/issues/755)
+* Bump wasmd to v0.26 (from v0.24). [#799](https://github.com/provenance-io/provenance/pull/799)
+
+---
+
+## [v1.8.2](https://github.com/provenance-io/provenance/releases/tag/v1.8.2) - 2022-04-22
+
+### Summary
+
+Provenance 1.8.2 is a point release to fix an issue with "downgrade detection" in Cosmos SDK. A panic condition
+occurs in cases where no update handler is found for the last known upgrade, but the process for determining
+the last known upgrade is flawed in Cosmos SDK 0.45.3. This released uses an updated Cosmos fork to patch the
+issue until an official patch is released. Version 1.8.2 also adds some remaining pieces for  ADR-038 that were
+missing in the 1.8.1 release.
+
+### Bug Fixes
+
+* Order upgrades by block height rather than name to prevent panic [\#106](https://github.com/provenance-io/cosmos-sdk/pull/106)
+
+### Improvements
+
+* Add remaining updates for ADR-038 support [\#786](https://github.com/provenance-io/provenance/pull/786)
+
+---
+
+## [v1.8.1](https://github.com/provenance-io/provenance/releases/tag/v1.8.1) - 2022-04-13
+
+### Summary
+
+Provenance 1.8.1 includes upgrades to the underlying Cosmos SDK and adds initial support for ADR-038.
+
+This release addresses issues related to IAVL concurrency and Tendermint performance that resulted in occasional panics when under high-load conditions such as replay from quicksync. In particular, nodes which experienced issues with "Value missing for hash" and similar panic conditions should work properly with this release. The underlying Cosmos SDK `0.45.3` release that has been incorporated includes a number of improvements around IAVL locking and performance characteristics.
+
+** NOTE: Although Provenance supports multiple database backends, some issues have been reported when using the `goleveldb` backend. If experiencing issues, using the `cleveldb` backend is preferred **
+
+### Improvements
+
+* Update Provenance to use Cosmos SDK 0.45.3 Release [\#781](https://github.com/provenance-io/provenance/issues/781)
+* Plugin architecture for ADR-038 + FileStreamingService plugin [\#10639](https://github.com/cosmos/cosmos-sdk/pull/10639)
+* Fix for sporadic error "panic: Value missing for hash" [\#611](https://github.com/provenance-io/provenance/issues/611)
+
+---
+
+## [v1.8.0](https://github.com/provenance-io/provenance/releases/tag/v1.8.0) - 2022-03-17
+
+### Summary
+
+Provenance 1.8.0 is focused on improving the fee structures for transactions on the blockchain. While the Cosmos SDK has traditionally offered a generic fee structure focused on gas/resource utilization, the Provenance blockchain has found that certain transactions have additional long term costs and value beyond simple resources charges. This is the reason we are adding the new MsgFee module which allows governance based control of additional fee charges on certain message types.
+
+NOTE: The second major change in the 1.8.0 release is part of the migration process which removes many orphaned state objects that were left in 1.7.x chains. This cleanup process will require a significant amount of time to perform during the green upgrade handler execution. The upgrade will print status messages showing the progress of this process.
+
 ### Features
 
 * Add check for `authz` grants when there are missing signatures in `metadata` transactions [#516](https://github.com/provenance-io/provenance/issues/516)
@@ -48,8 +176,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add support for Scope mutation via wasm Smart Contracts [#531](https://github.com/provenance-io/provenance/issues/531)
 * Increase governance deposit amount and add create proposal msg fee [#632](https://github.com/provenance-io/provenance/issues/632)
 * Allow attributes to be associated with scopes [#631](https://github.com/provenance-io/provenance/issues/631)
-* Add `add-genesis-msg-fee` command to add msg fees to genesis.json and update Makefile to have pre-defined msg fees [#667](https://github.com/provenance-io/provenance/issues/667)
-* Add msgfees summary event to be emitted when there are txs that have fees [#678](https://github.com/provenance-io/provenance/issues/678)
+
 ### Improvements
 
 * Add `bank` and `authz` module query `proto` files required by `grpcurl` [#482](https://github.com/provenance-io/provenance/issues/482)
@@ -69,9 +196,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `provenance.attribute.v1.MsgAddAttributeRequest` 10 hash (10,000,000,000 nhash)
   * `provenance.metadata.v1.MsgWriteScopeRequest`  10 hash (10,000,000,000 nhash)
   * `provenance.metadata.v1.MsgP8eMemorializeContractRequest` 10 hash (10,000,000,000 nhash)
-* When the `start` command encounters an error, it no longer outputs command usage [#670](https://github.com/provenance-io/provenance/issues/670)
-* Change max length on marker unresticted denom from 64 to 83 [#719](https://github.com/provenance-io/provenance/issues/719)
-  
+* Add integration tests for smart contracts [#392](https://github.com/provenance-io/provenance/issues/392)
+* Use provwasm release artifact for smart contract tests [#731](https://github.com/provenance-io/provenance/issues/731)
+
 ### Client Breaking
 
 * Enforce a maximum gas limit on individual transactions so that at least 20 can fit in any given block. [#681](https://github.com/provenance-io/provenance/issues/681)
@@ -89,9 +216,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add migration to re-index the metadata indexes involving addresses [#541](https://github.com/provenance-io/provenance/issues/541)
 * Add migration to delete empty sessions [#480](https://github.com/provenance-io/provenance/issues/480)
 * Add Java distribution tag to workflow [#624](https://github.com/provenance-io/provenance/issues/624)
+* Add `msgfees` module to added store upgrades [#640](https://github.com/provenance-io/provenance/issues/640)
+* Use `nhash` for base denom in gov proposal upgrade [#648](https://github.com/provenance-io/provenance/issues/648)
+* Bump `cosmowasm` from `v1.0.0-beta5` to `v1.0.0-beta6` [#655](https://github.com/provenance-io/provenance/issues/655)
 * Fix maven publish release version number reference [#650](https://github.com/provenance-io/provenance/issues/650)
-* String "v" from Jar artifact version number [#653](https://github.com/provenance-io/provenance/issues/653)
 * Add `iterator` as feature for wasm [#658](https://github.com/provenance-io/provenance/issues/658)
+* String "v" from Jar artifact version number [#653](https://github.com/provenance-io/provenance/issues/653)
+* Fix `wasm` contract migration failure to find contract history [#662](https://github.com/provenance-io/provenance/issues/662)
 
 ## [v1.7.6](https://github.com/provenance-io/provenance/releases/tag/v1.7.6) - 2021-12-15
 

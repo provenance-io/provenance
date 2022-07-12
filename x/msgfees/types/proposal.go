@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	fmt "fmt"
 	"strings"
 
@@ -15,12 +16,15 @@ const (
 	ProposalTypeUpdateMsgFee string = "UpdateMsgFee"
 	// ProposalTypeRemoveMsgFee to remove an existing msg based fee
 	ProposalTypeRemoveMsgFee string = "RemoveMsgFee"
+	// ProposalTypeUpdateUsdConversionRate to update the usd conversion rate param
+	ProposalTypeUpdateUsdConversionRate string = "UpdateUsdConversionRate"
 )
 
 var (
 	_ govtypes.Content = &AddMsgFeeProposal{}
 	_ govtypes.Content = &UpdateMsgFeeProposal{}
 	_ govtypes.Content = &RemoveMsgFeeProposal{}
+	_ govtypes.Content = &UpdateNhashPerUsdMilProposal{}
 )
 
 func init() {
@@ -32,6 +36,8 @@ func init() {
 
 	govtypes.RegisterProposalType(ProposalTypeRemoveMsgFee)
 	govtypes.RegisterProposalTypeCodec(RemoveMsgFeeProposal{}, "provenance/msgfees/RemoveMsgFeeProposal")
+	govtypes.RegisterProposalType(ProposalTypeUpdateUsdConversionRate)
+	govtypes.RegisterProposalTypeCodec(UpdateNhashPerUsdMilProposal{}, "provenance/msgfees/UpdateNhashPerUsdMilProposal")
 }
 
 func NewAddMsgFeeProposal(
@@ -47,27 +53,27 @@ func NewAddMsgFeeProposal(
 	}
 }
 
-func (ambfp AddMsgFeeProposal) ProposalRoute() string { return RouterKey }
-func (ambfp AddMsgFeeProposal) ProposalType() string  { return ProposalTypeAddMsgFee }
-func (ambfp AddMsgFeeProposal) ValidateBasic() error {
-	if len(ambfp.MsgTypeUrl) == 0 {
+func (p AddMsgFeeProposal) ProposalRoute() string { return RouterKey }
+func (p AddMsgFeeProposal) ProposalType() string  { return ProposalTypeAddMsgFee }
+func (p AddMsgFeeProposal) ValidateBasic() error {
+	if len(p.MsgTypeUrl) == 0 {
 		return ErrEmptyMsgType
 	}
 
-	if !ambfp.AdditionalFee.IsPositive() {
+	if !p.AdditionalFee.IsPositive() {
 		return ErrInvalidFee
 	}
 
-	return govtypes.ValidateAbstract(&ambfp)
+	return govtypes.ValidateAbstract(&p)
 }
-func (ambfp AddMsgFeeProposal) String() string {
+func (p AddMsgFeeProposal) String() string {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf(`Add Msg Fee Proposal:
 Title:         %s
 Description:   %s
 Msg:           %s
 AdditionalFee: %s
-`, ambfp.Title, ambfp.Description, ambfp.MsgTypeUrl, ambfp.AdditionalFee))
+`, p.Title, p.Description, p.MsgTypeUrl, p.AdditionalFee))
 	return b.String()
 }
 
@@ -84,30 +90,30 @@ func NewUpdateMsgFeeProposal(
 	}
 }
 
-func (umbfp UpdateMsgFeeProposal) ProposalRoute() string { return RouterKey }
+func (p UpdateMsgFeeProposal) ProposalRoute() string { return RouterKey }
 
-func (umbfp UpdateMsgFeeProposal) ProposalType() string { return ProposalTypeUpdateMsgFee }
+func (p UpdateMsgFeeProposal) ProposalType() string { return ProposalTypeUpdateMsgFee }
 
-func (umbfp UpdateMsgFeeProposal) ValidateBasic() error {
-	if len(umbfp.MsgTypeUrl) == 0 {
+func (p UpdateMsgFeeProposal) ValidateBasic() error {
+	if len(p.MsgTypeUrl) == 0 {
 		return ErrEmptyMsgType
 	}
 
-	if !umbfp.AdditionalFee.IsPositive() {
+	if !p.AdditionalFee.IsPositive() {
 		return ErrInvalidFee
 	}
 
-	return govtypes.ValidateAbstract(&umbfp)
+	return govtypes.ValidateAbstract(&p)
 }
 
-func (umbfp UpdateMsgFeeProposal) String() string {
+func (p UpdateMsgFeeProposal) String() string {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf(`Update Msg Fee Proposal:
 Title:         %s
 Description:   %s
 Msg:           %s
 AdditionalFee: %s
-`, umbfp.Title, umbfp.Description, umbfp.MsgTypeUrl, umbfp.AdditionalFee))
+`, p.Title, p.Description, p.MsgTypeUrl, p.AdditionalFee))
 	return b.String()
 }
 
@@ -123,23 +129,58 @@ func NewRemoveMsgFeeProposal(
 	}
 }
 
-func (rmbfp RemoveMsgFeeProposal) ProposalRoute() string { return RouterKey }
+func (p RemoveMsgFeeProposal) ProposalRoute() string { return RouterKey }
 
-func (rmbfp RemoveMsgFeeProposal) ProposalType() string { return ProposalTypeRemoveMsgFee }
+func (p RemoveMsgFeeProposal) ProposalType() string { return ProposalTypeRemoveMsgFee }
 
-func (rmbfp RemoveMsgFeeProposal) ValidateBasic() error {
-	if len(rmbfp.MsgTypeUrl) == 0 {
+func (p RemoveMsgFeeProposal) ValidateBasic() error {
+	if len(p.MsgTypeUrl) == 0 {
 		return ErrEmptyMsgType
 	}
-	return govtypes.ValidateAbstract(&rmbfp)
+	return govtypes.ValidateAbstract(&p)
 }
 
-func (rmbfp RemoveMsgFeeProposal) String() string {
+func (p RemoveMsgFeeProposal) String() string {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf(`Remove Msg Fee Proposal:
   Title:       %s
   Description: %s
-  MsgTypeUrl:         %s
-`, rmbfp.Title, rmbfp.Description, rmbfp.MsgTypeUrl))
+  MsgTypeUrl:  %s
+`, p.Title, p.Description, p.MsgTypeUrl))
+	return b.String()
+}
+
+func NewUpdateNhashPerUsdMilProposal(
+	title string,
+	description string,
+	nhashPerUsdMil uint64,
+) *UpdateNhashPerUsdMilProposal {
+	return &UpdateNhashPerUsdMilProposal{
+		Title:          title,
+		Description:    description,
+		NhashPerUsdMil: nhashPerUsdMil,
+	}
+}
+
+func (p UpdateNhashPerUsdMilProposal) ProposalRoute() string { return RouterKey }
+
+func (p UpdateNhashPerUsdMilProposal) ProposalType() string {
+	return ProposalTypeUpdateUsdConversionRate
+}
+
+func (p UpdateNhashPerUsdMilProposal) ValidateBasic() error {
+	if p.NhashPerUsdMil < 1 {
+		return errors.New("nhash per usd mil must be greater than 0")
+	}
+	return govtypes.ValidateAbstract(&p)
+}
+
+func (p UpdateNhashPerUsdMilProposal) String() string {
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf(`Update Nhash to Usd Mil Proposal:
+  Title:             %s
+  Description:       %s
+  NhashPerUsdMil:    %v
+`, p.Title, p.Description, p.NhashPerUsdMil))
 	return b.String()
 }

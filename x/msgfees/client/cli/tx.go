@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -35,6 +36,7 @@ func NewTxCmd() *cobra.Command {
 
 	txCmd.AddCommand(
 		GetCmdMsgFeesProposal(),
+		GetUpdateNhashPerUsdMilProposal(),
 	)
 
 	return txCmd
@@ -42,14 +44,15 @@ func NewTxCmd() *cobra.Command {
 
 func GetCmdMsgFeesProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "proposal [add|update|remove] [title] [description] [deposit]",
-		Args:  cobra.ExactArgs(4),
-		Short: "Submit a msg based fee proposal along with an initial deposit",
+		Use:     "proposal {add|update|remove} <title> <description> <deposit>",
+		Args:    cobra.ExactArgs(4),
+		Aliases: []string{"p"},
+		Short:   "Submit a msg based fee proposal along with an initial deposit",
 		Long: strings.TrimSpace(`Submit a msg fees proposal along with an initial deposit.
 For add, update, and removal of msg fees amount and min fee and/or rate fee must be set.
 `),
 		Example: fmt.Sprintf(`$ %[1]s tx msgfees add "adding" "adding MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612nhash
-$ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash 
+$ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash
 $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest
 `, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -132,5 +135,44 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(FlagMsgType, "", "proto type url for msg type")
 	cmd.Flags().String(FlagMinFee, "", "additional fee for msg based fee")
+	return cmd
+}
+
+func GetUpdateNhashPerUsdMilProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "nhash-per-usd-mil <title> <description> <nhash-per-usd-mil> <deposit>",
+		Aliases: []string{"npum", "n-p-u-m"},
+		Args:    cobra.ExactArgs(4),
+		Short:   "Submit a nhash per usd mil update proposal along with an initial deposit",
+		Long: strings.TrimSpace(`Submit a nhash per usd mil update proposal along with an initial deposit.
+The nhash per usd mil is the number of nhash that will be multiplied by the usd mil amount.  Example: $1.000 usd where 1 mil equals 2000nhash will equate to 1000 * 2000 = 2000000nhash
+`),
+		Example: fmt.Sprintf(`$ %[1]s tx msgfees nhash-per-usd-mil "updating nhash to usd mil" "changes the nhash per mil to 1234nhash"  1234 1000000000nhash
+$ %[1]s tx msgfees npum nhash-per-usd-mil "updating nhash to usd mil" "changes the nhash per mil to 1234nhash"   1234 1000000000nhash
+`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			title, description, nhash, depositArg := args[0], args[1], args[2], args[3]
+			rate, err := strconv.ParseUint(nhash, 0, 64)
+			if err != nil {
+				return fmt.Errorf("unable to parse nhash value: %s", nhash)
+			}
+			proposal := types.NewUpdateNhashPerUsdMilProposal(title, description, rate)
+			deposit, err := sdk.ParseCoinsNormalized(depositArg)
+			if err != nil {
+				return err
+			}
+			callerAddr := clientCtx.GetFromAddress()
+			msg, err := govtypes.NewMsgSubmitProposal(proposal, deposit, callerAddr)
+			if err != nil {
+				return fmt.Errorf("invalid governance proposal. Error: %q", err)
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

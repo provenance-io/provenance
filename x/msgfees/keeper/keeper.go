@@ -5,7 +5,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
@@ -61,13 +63,22 @@ func (k Keeper) GetFeeCollectorName() string {
 	return k.feeCollectorName
 }
 
-// GetFloorGasPrice  returns the current minimum gas price in sdk.Coin used in calculations for charging additional fees
+// GetFloorGasPrice returns the current minimum gas price in sdk.Coin used in calculations for charging additional fees
 func (k Keeper) GetFloorGasPrice(ctx sdk.Context) sdk.Coin {
 	min := types.DefaultFloorGasPrice
 	if k.paramSpace.Has(ctx, types.ParamStoreKeyFloorGasPrice) {
 		k.paramSpace.Get(ctx, types.ParamStoreKeyFloorGasPrice, &min)
 	}
 	return min
+}
+
+// GetNhashPerUsdMil returns the current nhash amount per usd mil
+func (k Keeper) GetNhashPerUsdMil(ctx sdk.Context) uint64 {
+	rateInMils := types.DefaultParams().NhashPerUsdMil
+	if k.paramSpace.Has(ctx, types.ParamStoreKeyNhashPerUsdMil) {
+		k.paramSpace.Get(ctx, types.ParamStoreKeyNhashPerUsdMil, &rateInMils)
+	}
+	return rateInMils
 }
 
 // SetMsgFee sets the additional fee schedule for a Msg
@@ -129,16 +140,57 @@ func (k Keeper) IterateMsgFees(ctx sdk.Context, handle func(msgFees types.MsgFee
 	return nil
 }
 
-// DeductFees deducts fees from the given account, the only reason it exists is that the
-// cosmos method does not take in the custom fee collector which is a feature desired from msg fees.
-func (k Keeper) DeductFees(bankKeeper cosmosauthtypes.BankKeeper, ctx sdk.Context, acc cosmosauthtypes.AccountI, fees sdk.Coins) error {
-	if !fees.IsValid() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", fees)
+// DeductFeesDistributions deducts fees from the given account.  The fees map contains a key of bech32 addresses to distribute funds to.
+// If the key in the map is an empty string, those will go to the fee collector.  After all the accounts in fees map are paid out,
+// the remainder of remainingFees will be swept to the fee collector account.
+func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc cosmosauthtypes.AccountI, remainingFees sdk.Coins, fees map[string]sdk.Coins) error {
+	sentCoins := sdk.NewCoins()
+	for key, coins := range fees {
+		if !coins.IsValid() {
+			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", fees)
+		}
+		if len(key) == 0 {
+			err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, coins)
+			if err != nil {
+				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			}
+		} else {
+			recipient, err := sdk.AccAddressFromBech32(key)
+			if err != nil {
+				return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, err.Error())
+			}
+			err = bankKeeper.SendCoins(ctx, acc.GetAddress(), recipient, coins)
+			if err != nil {
+				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			}
+		}
+		sentCoins = sentCoins.Add(coins...)
 	}
-
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, fees)
+	remainingFee, neg := remainingFees.SafeSub(sentCoins)
+	if neg {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "negative balance after sending coins to accounts and fee collector")
+	}
+	// sweep the rest of the fees to module
+	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, remainingFee)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 	}
+
 	return nil
+}
+
+// ConvertDenomToHash converts usd coin to nhash coin using nhash per usd mil.
+// Currently, usd is only supported with nhash to usd mil coming from params
+func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, error) {
+	switch coin.Denom {
+	case types.UsdDenom:
+		nhashPerMil := int64(k.GetNhashPerUsdMil(ctx))
+		amount := coin.Amount.Mul(sdk.NewInt(nhashPerMil))
+		msgFeeCoin := sdk.NewInt64Coin(types.NhashDenom, amount.Int64())
+		return msgFeeCoin, nil
+	case types.NhashDenom:
+		return coin, nil
+	default:
+		return sdk.Coin{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "denom not supported for conversion %s", coin.Denom)
+	}
 }

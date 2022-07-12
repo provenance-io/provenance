@@ -1,6 +1,16 @@
-name: Provenance Binary Release
+name: Provenance Build and Release
 
 on:
+  pull_request:
+    paths:
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
+      - "**.mk"
+      - "Makefile"
+      - "gon.json"
+      - "scripts/**"
+      - ".github/workflows/release.yml"
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"     # Push events to matching v*, i.e. v1.0, v20.15.10
@@ -10,23 +20,43 @@ jobs:
   #  This action cleans up previously running instances of a workflow on the same branch. This accomplishes
   #  the task of automatically cancelling CI runs on pushes to the same branch, which is a common feature in
   #  most CI systems but currently not possible with GitHub actions.
-  cleanup_runs:
+  cleanup-runs:
+    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
     runs-on: ubuntu-latest
-    name: Cleanup Workflows
     steps:
       - uses: rokroskar/workflow-run-cleanup-action@v0.3.3
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
 
   build_init:
     runs-on: ubuntu-latest
     name: Build Init
     steps:
-      - id: version
-        run: echo "::set-output name=version::${GITHUB_REF##*/}"
+      - name: Define Variables
+        id: vars
+        # ${GITHUB_REF##*/} removes everything before the last slash. E.g. 'refs/tags/v1.8.0' becomes 'v1.8.0'
+        # ${GITHUB_SHA:0:7} gets the first 7 characters. E.g. `3e9928920f5a64c8fc4884ee085efe1983071c90` becomes `3e99289'
+        run: |
+          version="${GITHUB_SHA:0:7}"
+          is_release='false'
+          if [[ "$GITHUB_REF" =~ ^refs/tags/ ]]; then
+            version=${GITHUB_REF##*/}
+            is_release='true'
+          fi
+          prerelease=false
+          if [[ "$version" =~ -rc ]]; then
+            prerelease=true
+          fi
+          echo "version: '$version'"
+          echo "is_release: $is_release"
+          echo "prerelease: $prerelease"
+          echo "::set-output name=version::$version"
+          echo "::set-output name=is_release::$is_release"
+          echo "::set-output name=prerelease::$prerelease"
     outputs:
-      version: ${{ steps.version.outputs.version }}
+      version: ${{ steps.vars.outputs.version }}
+      is_release: ${{ steps.vars.outputs.is_release }}
+      prerelease: ${{ steps.vars.outputs.prerelease }}
       go_version: "1.17"
 
   build_osx:
@@ -45,14 +75,16 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: ${{ needs.build_init.outputs.go_version }}
+      - name: Build osx binary
+        run: |
+          make WITH_CLEVELDB=false WITH_ROCKSDB=false VERSION=${{ needs.build_init.outputs.version }} build-release-bin build-release-libwasm
+      - name: Provenanced version
+        run: build/provenanced version --long
       - name: Import Code-Signing Certificates
         uses: Apple-Actions/import-codesign-certs@v1
         with:
           p12-file-base64: ${{ secrets.CODESIGNING_P12_BASE64 }}
           p12-password: ${{ secrets.CODESIGNING_P12_PASSWORD }}
-      - name: Build osx binary
-        run: |
-          make WITH_CLEVELDB=no VERSION=${{ needs.build_init.outputs.version }} build-release-bin build-release-libwasm
       - name: Sign the mac binaries with Gon
         env:
           AC_USERNAME: ${{ secrets.AC_USERNAME }}
@@ -62,7 +94,7 @@ jobs:
       - name: Fix zip structure for cosmovisor
         run: |
           make VERSION=${{ needs.build_init.outputs.version }} build-release-rezip
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: osx-zip
           path: build/*.zip
@@ -72,6 +104,8 @@ jobs:
     needs:
       - build_init
     name: Build Linux
+    env:
+      LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -82,21 +116,32 @@ jobs:
       - name: Install deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y libleveldb-dev
+          sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+      - name: Build and install cleveldb
+        run: make cleveldb
+      - name: Setup go
+        uses: actions/setup-go@v2.1.5
+        with:
+          go-version: ${{ needs.build_init.outputs.go_version }}
       - name: Build linux binary
         run: |
-          make VERSION=${{ needs.build_init.outputs.version }} build-release-zip
-      - uses: actions/upload-artifact@v2
+          export VERSION=${{ needs.build_init.outputs.version }}
+          export WITH_CLEVELDB=true
+          make build-release-zip
+      - name: Provenanced version
+        run: build/provenanced version --long
+      - uses: actions/upload-artifact@v3
         with:
           name: linux-zip
           path: build/*.zip
 
   create_release:
-    runs-on: ubuntu-latest
     needs:
       - build_init
       - build_osx
       - build_linux
+    if: needs.build_init.outputs.is_release == 'true'
+    runs-on: ubuntu-latest
     name: Create Release
     steps:
       - name: Checkout
@@ -110,16 +155,17 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
           draft: false
-          prerelease: false
+          prerelease: ${{ needs.build_init.outputs.prerelease }}
           body_path: RELEASE_CHANGELOG.md
     outputs:
       release_url: ${{ steps.create_release.outputs.upload_url }}
 
   update_release:
-    runs-on: ubuntu-latest
     needs:
       - build_init
       - create_release
+    if: needs.build_init.outputs.is_release == 'true'
+    runs-on: ubuntu-latest
     name: Attach Release Artifacts
     steps:
       -
@@ -132,13 +178,13 @@ jobs:
           go-version: ${{ needs.build_init.outputs.go_version }}
       -
         name: Download linux zip artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: linux-zip
           path: build/
       -
         name: Download osx zip artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: osx-zip
           path: build/
@@ -198,10 +244,11 @@ jobs:
           asset_content_type: application/octet-stream
 
   java_kotlin_release:
-    runs-on: ubuntu-latest
     needs:
       - build_init
-    name: Maven Publishing
+    if: needs.build_init.outputs.is_release == 'true'
+    runs-on: ubuntu-latest
+    name: Java/Kotlin Proto Publishing
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -229,7 +276,7 @@ jobs:
           GPG_PASSWORD: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
         run: |
           cd protoBindings
-          ./gradlew publish $(if [ "${{github.event.release.prerelease}}" = "true" ]; then echo 'closeSonatypeStagingRepository'; else echo 'closeAndReleaseSonatypeStagingRepository'; fi) \
+          ./gradlew publish $(if [ "${{ needs.build_init.outputs.prerelease }}" = "true" ]; then echo 'closeSonatypeStagingRepository'; else echo 'closeAndReleaseSonatypeStagingRepository'; fi) \
             -PartifactVersion=$(echo "${{ needs.build_init.outputs.version }}" | sed -e 's/^v//') \
             -Psigning.keyId=B7D30ABE \
             -Psigning.password="${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}" \

@@ -43,8 +43,6 @@ type AnteTestSuite struct {
 	txBuilder   client.TxBuilder
 }
 
-var testMsgType = sdk.MsgTypeURL(&testdata.TestMsg{})
-
 // returns context and app with params set on account keeper
 func createTestApp(isCheckTx bool) (*simapp.App, sdk.Context) {
 	app := simapp.Setup(isCheckTx)
@@ -56,6 +54,10 @@ func createTestApp(isCheckTx bool) (*simapp.App, sdk.Context) {
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
 func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
+	msgfeetype.DefaultFloorGasPrice = sdk.Coin{
+		Denom:  "atom",
+		Amount: sdk.NewInt(1),
+	}
 	suite.app, suite.ctx = createTestApp(isCheckTx)
 	suite.ctx = suite.ctx.WithBlockHeight(1)
 

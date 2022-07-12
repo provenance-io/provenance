@@ -8,6 +8,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -51,6 +52,9 @@ type Keeper struct {
 	// To handle movement of coin between accounts and check total supply
 	bankKeeper bankkeeper.Keeper
 
+	// To pass through grant creation for callers with admin access on a marker.
+	feegrantKeeper feegrantkeeper.Keeper
+
 	// For access to bank keeper storage outside what their keeper provides.
 	bankKeeperStoreKey sdk.StoreKey
 
@@ -73,6 +77,7 @@ func NewKeeper(
 	authKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper,
 	authzKeeper authzkeeper.Keeper,
+	feegrantKeeper feegrantkeeper.Keeper,
 	bankKey sdk.StoreKey,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
@@ -84,6 +89,7 @@ func NewKeeper(
 		authKeeper:         authKeeper,
 		authzKeeper:        authzKeeper,
 		bankKeeper:         bankKeeper,
+		feegrantKeeper:     feegrantKeeper,
 		storeKey:           key,
 		bankKeeperStoreKey: bankKey,
 		cdc:                cdc,
@@ -137,6 +143,7 @@ func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) {
 func (k Keeper) RemoveMarker(ctx sdk.Context, marker types.MarkerAccountI) {
 	store := ctx.KVStore(k.storeKey)
 	k.authKeeper.RemoveAccount(ctx, marker)
+	k.bankKeeper.DeleteSendEnabled(ctx, marker.GetDenom())
 
 	store.Delete(types.MarkerStoreKey(marker.GetAddress()))
 }

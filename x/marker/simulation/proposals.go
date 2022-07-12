@@ -86,11 +86,11 @@ func SimulateCreateAddMarkerProposalContent(k keeper.Keeper) simtypes.ContentSim
 			randomUnrestrictedDenom(r, k.GetUnrestrictedDenomRegex(ctx)),
 			sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx))), // initial supply
 			simAccount.Address,              // manager
-			types.MarkerStatus(r.Intn(2)+1), // initial status (proposed, finalized, active)
-			types.MarkerType(r.Intn(1)+1),   // coin or restricted_coin
+			types.MarkerStatus(r.Intn(3)+1), // initial status (proposed, finalized, active)
+			types.MarkerType(r.Intn(2)+1),   // coin or restricted_coin
 			[]types.AccessGrant{{Address: simAccount.Address.String(), Permissions: randomAccessTypes(r)}},
-			r.Intn(1) > 0, // fixed supply
-			r.Intn(1) > 0, // allow gov
+			r.Intn(2) > 0, // fixed supply
+			r.Intn(2) > 0, // allow gov
 		)
 	}
 }

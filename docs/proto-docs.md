@@ -124,6 +124,8 @@
     - [MsgDeleteResponse](#provenance.marker.v1.MsgDeleteResponse)
     - [MsgFinalizeRequest](#provenance.marker.v1.MsgFinalizeRequest)
     - [MsgFinalizeResponse](#provenance.marker.v1.MsgFinalizeResponse)
+    - [MsgGrantAllowanceRequest](#provenance.marker.v1.MsgGrantAllowanceRequest)
+    - [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse)
     - [MsgMintRequest](#provenance.marker.v1.MsgMintRequest)
     - [MsgMintResponse](#provenance.marker.v1.MsgMintResponse)
     - [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest)
@@ -341,6 +343,7 @@
     - [AddMsgFeeProposal](#provenance.msgfees.v1.AddMsgFeeProposal)
     - [RemoveMsgFeeProposal](#provenance.msgfees.v1.RemoveMsgFeeProposal)
     - [UpdateMsgFeeProposal](#provenance.msgfees.v1.UpdateMsgFeeProposal)
+    - [UpdateNhashPerUsdMilProposal](#provenance.msgfees.v1.UpdateNhashPerUsdMilProposal)
   
 - [provenance/msgfees/v1/query.proto](#provenance/msgfees/v1/query.proto)
     - [CalculateTxFeesRequest](#provenance.msgfees.v1.CalculateTxFeesRequest)
@@ -351,6 +354,12 @@
     - [QueryParamsResponse](#provenance.msgfees.v1.QueryParamsResponse)
   
     - [Query](#provenance.msgfees.v1.Query)
+  
+- [provenance/msgfees/v1/tx.proto](#provenance/msgfees/v1/tx.proto)
+    - [MsgAssessCustomMsgFeeRequest](#provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest)
+    - [MsgAssessCustomMsgFeeResponse](#provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse)
+  
+    - [Msg](#provenance.msgfees.v1.Msg)
   
 - [provenance/name/v1/name.proto](#provenance/name/v1/name.proto)
     - [CreateRootNameProposal](#provenance.name.v1.CreateRootNameProposal)
@@ -891,7 +900,7 @@ MsgUpdateAttributeResponse defines the Msg/Vote response type.
 <a name="provenance.attribute.v1.Msg"></a>
 
 ### Msg
-Msg defines the bank Msg service.
+Msg defines the attribute module Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
@@ -2071,6 +2080,35 @@ MsgFinalizeResponse defines the Msg/Finalize response type
 
 
 
+<a name="provenance.marker.v1.MsgGrantAllowanceRequest"></a>
+
+### MsgGrantAllowanceRequest
+MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If
+successful a feegrant is recorded where the marker account itself is the grantor
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `administrator` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  | grantee is the address of the user being granted an allowance of another user's funds. |
+| `allowance` | [google.protobuf.Any](#google.protobuf.Any) |  | allowance can be any of basic and filtered fee allowance (fee FeeGrant module). |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgGrantAllowanceResponse"></a>
+
+### MsgGrantAllowanceResponse
+MsgGrantAllowanceResponse defines the Msg/GrantAllowanceResponse response type.
+
+
+
+
+
+
 <a name="provenance.marker.v1.MsgMintRequest"></a>
 
 ### MsgMintRequest
@@ -2204,6 +2242,7 @@ Msg defines the Marker Msg service.
 | `AddMarker` | [MsgAddMarkerRequest](#provenance.marker.v1.MsgAddMarkerRequest) | [MsgAddMarkerResponse](#provenance.marker.v1.MsgAddMarkerResponse) | AddMarker | |
 | `Transfer` | [MsgTransferRequest](#provenance.marker.v1.MsgTransferRequest) | [MsgTransferResponse](#provenance.marker.v1.MsgTransferResponse) | Transfer marker denominated coin between accounts | |
 | `SetDenomMetadata` | [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest) | [MsgSetDenomMetadataResponse](#provenance.marker.v1.MsgSetDenomMetadataResponse) | Allows Denom Metadata (see bank module) to be set for the Marker's Denom | |
+| `GrantAllowance` | [MsgGrantAllowanceRequest](#provenance.marker.v1.MsgGrantAllowanceRequest) | [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse) | GrantAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
 
  <!-- end services -->
 
@@ -2848,6 +2887,8 @@ PartyType are the different roles parties on a contract may use
 | PARTY_TYPE_AFFILIATE | 6 | PARTY_TYPE_AFFILIATE is a party with an affiliate agreement |
 | PARTY_TYPE_OMNIBUS | 7 | PARTY_TYPE_OMNIBUS is a special type of party that controls an omnibus bank account |
 | PARTY_TYPE_PROVENANCE | 8 | PARTY_TYPE_PROVENANCE is used to indicate this party represents the blockchain or a smart contract action |
+| PARTY_TYPE_CONTROLLER | 10 | PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote) |
+| PARTY_TYPE_VALIDATOR | 11 | PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain |
 
 
  <!-- end enums -->
@@ -3554,6 +3595,8 @@ A Timestamp represents a point in time using values relative to the epoch.
 | PARTY_TYPE_OMNIBUS | 7 |  |
 | PARTY_TYPE_PROVENANCE | 8 |  |
 | PARTY_TYPE_MARKER | 9 |  |
+| PARTY_TYPE_CONTROLLER | 10 |  |
+| PARTY_TYPE_VALIDATOR | 11 |  |
 
 
 
@@ -5176,6 +5219,7 @@ EventMsgFee final event property for msg fee on type
 | `msg_type` | [string](#string) |  |  |
 | `count` | [string](#string) |  |  |
 | `total` | [string](#string) |  |  |
+| `recipient` | [string](#string) |  |  |
 
 
 
@@ -5225,6 +5269,7 @@ Params defines the set of params for the msgfees module.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | constant used to calculate fees when gas fees shares denom with msg fee |
+| `nhash_per_usd_mil` | [uint64](#uint64) |  | total nhash per usd mil for converting usd to nhash |
 
 
 
@@ -5326,6 +5371,23 @@ UpdateMsgFeeProposal defines a governance proposal to update a current msg based
 | `description` | [string](#string) |  |  |
 | `msg_type_url` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.UpdateNhashPerUsdMilProposal"></a>
+
+### UpdateNhashPerUsdMilProposal
+UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is number of nhash per usd mil |
 
 
 
@@ -5459,6 +5521,62 @@ Query defines the gRPC querier service for marker module.
 
 
 
+<a name="provenance/msgfees/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/msgfees/v1/tx.proto
+
+
+
+<a name="provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest"></a>
+
+### MsgAssessCustomMsgFeeRequest
+MsgAssessCustomMsgFeeRequest defines an sdk.Msg type
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | optional short name for custom msg fee, this will be emitted as a property of the event |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | amount of additional fee that must be paid |
+| `recipient` | [string](#string) |  | optional recipient address, the amount is split 50/50 between recipient and fee module. If |
+| `from` | [string](#string) |  | empty, whole amount goes to fee module
+
+the signer of the msg |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse"></a>
+
+### MsgAssessCustomMsgFeeResponse
+MsgAssessCustomMsgFeeResponse defines the Msg/AssessCustomMsgFeee response type.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.msgfees.v1.Msg"></a>
+
+### Msg
+Msg defines the msgfees Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `AssessCustomMsgFee` | [MsgAssessCustomMsgFeeRequest](#provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest) | [MsgAssessCustomMsgFeeResponse](#provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse) | AssessCustomMsgFee endpoint executes the additional fee charges. This will only emit the event and not persist it to the keeper. Fees are handled with the custom msg fee handlers Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient for executing contracts | |
+
+ <!-- end services -->
+
+
+
 <a name="provenance/name/v1/name.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -5497,6 +5615,7 @@ Event emitted when name is bound.
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
 | `name` | [string](#string) |  |  |
+| `restricted` | [bool](#bool) |  |  |
 
 
 
@@ -5513,6 +5632,7 @@ Event emitted when name is unbound.
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
 | `name` | [string](#string) |  |  |
+| `restricted` | [bool](#bool) |  |  |
 
 
 
@@ -5651,6 +5771,7 @@ QueryResolveResponse is the response type for the Query/Resolve method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | a string containing the address the name resolves to |
+| `restricted` | [bool](#bool) |  | Whether owner signature is required to add sub-names. |
 
 
 

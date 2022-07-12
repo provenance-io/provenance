@@ -63,7 +63,7 @@ func TestCreateName(t *testing.T) {
 			name:          "create name record",
 			msg:           nametypes.NewMsgBindNameRequest(nametypes.NewNameRecord("new", addr2, false), nametypes.NewNameRecord("example.name", addr1, false)),
 			expectedError: nil,
-			expectedEvent: nametypes.NewEventNameBound(addr2.String(), "new.example.name"),
+			expectedEvent: nametypes.NewEventNameBound(addr2.String(), "new.example.name", false),
 		},
 		{
 			name:          "create bad name record",
@@ -126,7 +126,7 @@ func TestDeleteName(t *testing.T) {
 			name:          "delete name record",
 			msg:           nametypes.NewMsgDeleteNameRequest(nametypes.NewNameRecord("example.name", addr1, false)),
 			expectedError: nil,
-			expectedEvent: nametypes.NewEventNameUnbound(addr1.String(), "example.name"),
+			expectedEvent: nametypes.NewEventNameUnbound(addr1.String(), "example.name", false),
 		},
 		{
 			name:          "create bad name record",

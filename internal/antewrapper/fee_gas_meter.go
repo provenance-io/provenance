@@ -27,7 +27,7 @@ type FeeGasMeter struct {
 	// tracks number of msg fee calls by msg type url
 	feeCalls map[string]uint64
 	// tracks the total amount of fees per msg type url
-	usedFees map[string]sdk.Coin
+	usedFees map[string]sdk.Coins
 
 	// this is the base fee charged in decorator
 	baseFeeCharged sdk.Coins
@@ -43,7 +43,7 @@ func NewFeeGasMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter, isSimul
 		used:           make(map[string]uint64),
 		calls:          make(map[string]uint64),
 		feeCalls:       make(map[string]uint64),
-		usedFees:       make(map[string]sdk.Coin),
+		usedFees:       make(map[string]sdk.Coins),
 		baseFeeCharged: sdk.Coins{},
 		simulate:       isSimulate,
 	}
@@ -107,34 +107,47 @@ func (g *FeeGasMeter) String() string {
 }
 
 // ConsumeFee increments the amount of msg fee required by a msg type.
-func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string) {
-	cur := g.usedFees[msgType]
-	if !cur.Amount.IsNil() {
-		g.usedFees[msgType] = cur.Add(amount)
+func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string, recipient string) {
+	key := msgfeestypes.GetCompositeKey(msgType, recipient)
+	cur := g.usedFees[key]
+	if cur.Empty() {
+		g.usedFees[key] = sdk.NewCoins(amount)
 	} else {
-		g.usedFees[msgType] = amount
+		g.usedFees[key] = cur.Add(amount)
 	}
-	g.feeCalls[msgType]++
+	g.feeCalls[key]++
 }
 
-func (g *FeeGasMeter) FeeConsumedForType(msgType string) sdk.Coin {
-	return g.usedFees[msgType]
+func (g *FeeGasMeter) FeeConsumedForType(msgType string, recipient string) sdk.Coins {
+	return g.usedFees[msgfeestypes.GetCompositeKey(msgType, recipient)]
 }
 
 // FeeConsumed returns total fee consumed in the current fee gas meter, is returned Sorted.
 func (g *FeeGasMeter) FeeConsumed() sdk.Coins {
-	consumedFees := make(sdk.Coins, len(g.usedFees))
-	var i = 0
-	for _, coin := range g.usedFees {
-		consumedFees[i] = sdk.NewCoin(coin.Denom, coin.Amount)
-		i++
+	var consumedFees sdk.Coins
+	for _, coins := range g.usedFees {
+		consumedFees = consumedFees.Add(coins...)
 	}
 	return consumedFees.Sort()
 }
 
+// FeeConsumedDistributions returns fees by distribution either to fee module when key is empty or address
+func (g *FeeGasMeter) FeeConsumedDistributions() map[string]sdk.Coins {
+	additionalFeeDistributions := make(map[string]sdk.Coins)
+	for key, coins := range g.usedFees {
+		_, addressKey := msgfeestypes.SplitCompositeKey(key)
+		additionalFeeDistributions[addressKey] = additionalFeeDistributions[addressKey].Add(coins...)
+	}
+	return additionalFeeDistributions
+}
+
 // FeeConsumedByMsg total fee consumed for a particular MsgType
-func (g *FeeGasMeter) FeeConsumedByMsg() map[string]sdk.Coin {
-	return g.usedFees
+func (g *FeeGasMeter) FeeConsumedByMsg() map[string]sdk.Coins {
+	consumedByMsg := make(map[string]sdk.Coins)
+	for msg, coins := range g.usedFees {
+		consumedByMsg[msg] = sdk.NewCoins(coins...)
+	}
+	return consumedByMsg
 }
 
 func (g *FeeGasMeter) IsSimulate() bool {

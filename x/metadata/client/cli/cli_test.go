@@ -2,7 +2,6 @@ package cli_test
 
 import (
 	"fmt"
-	"github.com/provenance-io/provenance/internal/antewrapper"
 	"strings"
 	"testing"
 	"time"
@@ -27,9 +26,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type IntegrationCLITestSuite struct {
@@ -444,6 +445,7 @@ owner: %s`,
 	genesisState[metadatatypes.ModuleName] = metadataDataBz
 
 	cfg.GenesisState = genesisState
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewCoin("atom", sdk.NewInt(0))
 
 	s.cfg = cfg
 	cfg.ChainID = antewrapper.SimAppChainID
@@ -454,9 +456,7 @@ owner: %s`,
 }
 
 func (s *IntegrationCLITestSuite) TearDownSuite() {
-	s.testnet.WaitForNextBlock()
-	s.T().Log("tearing down integration test suite")
-	s.testnet.Cleanup()
+	testutil.CleanUp(s.testnet, s.T())
 }
 
 func (s *IntegrationCLITestSuite) generateAccountsWithKeyrings(number int) {

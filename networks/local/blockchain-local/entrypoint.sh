@@ -5,6 +5,7 @@
 ##
 ID=${ID:-0}
 export PIO_HOME="/provenance/node${ID}"
+
 BINARY=/usr/bin/${BINARY:-provenanced}
 LOG=${LOG:-provenance.log}
 

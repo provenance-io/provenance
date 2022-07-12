@@ -1,34 +1,43 @@
-name: Protobuf
-# Protobuf runs buf (https://buf.build/) lint and check-breakage
-# This workflow is only run when a .proto file has been changed
+name: Protobuf Checks
+# This workflow runs some Protobuf related checks.
 on:
   pull_request:
     paths:
       - "**/**.proto"
+      - "**/go.mod"
+      - ".github/workflows/proto.yml"
+
 jobs:
-  buf_push:
+  buf_lint:
     runs-on: ubuntu-latest
+    name: Protobuf Checks
     steps:
-      - uses: actions/checkout@v3
-      - uses: bufbuild/buf-setup-action@v1.1.0
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+      - uses: bufbuild/buf-setup-action@v1.6.0
       - uses: bufbuild/buf-lint-action@v1
+        if: always()
         with:
           input: 'proto'
       - uses: bufbuild/buf-breaking-action@v1
+        if: always()
         with:
           input: 'proto'
           # The 'main' branch of the GitHub repository that defines the module.
           against: 'buf.build/provenance-io/provenance'
-      - uses: bufbuild/buf-breaking-action@v1
+      - name: third_party breaking
+        if: always()
+        uses: bufbuild/buf-breaking-action@v1
         with:
           input: 'third_party/proto'
           # The 'main' branch of the GitHub repository that defines the module.
           against: 'buf.build/provenance-io/third-party'
-      - uses: bufbuild/buf-push-action@v1
-        with:
-          input: 'proto'
-          buf_token: ${{ secrets.BUF_TOKEN }}
-      - uses: bufbuild/buf-push-action@v1
-        with:
-          input: 'third_party/proto'
-          buf_token: ${{ secrets.BUF_TOKEN }}
+      - name: proto-update-check
+        if: always()
+        run: make proto-update-check

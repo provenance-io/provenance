@@ -3,7 +3,6 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/provenance-io/provenance/internal/antewrapper"
 	"sort"
 	"strings"
 	"testing"
@@ -22,6 +21,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/testutil"
 	namecli "github.com/provenance-io/provenance/x/name/client/cli"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
@@ -90,8 +90,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
-	s.testnet.Cleanup()
+	testutil.CleanUp(s.testnet, s.T())
 }
 
 // toWritten converts an integer to a written string version.
@@ -228,12 +227,12 @@ func (s *IntegrationTestSuite) TestResolveNameCommand() {
 		{
 			"query name, json output",
 			[]string{"attribute", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			fmt.Sprintf("{\"address\":\"%s\"}", s.accountAddr.String()),
+			fmt.Sprintf("{\"address\":\"%s\",\"restricted\":false}", s.accountAddr.String()),
 		},
 		{
 			"query name, text output",
 			[]string{"attribute", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			fmt.Sprintf("address: %s", s.accountAddr.String()),
+			fmt.Sprintf("address: %s\nrestricted: false", s.accountAddr.String()),
 		},
 		{
 			"query name that does not exist, text output",

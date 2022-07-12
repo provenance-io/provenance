@@ -14,6 +14,7 @@ import (
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // PioMsgServiceRouter routes fully-qualified Msg service methods to their handler with additional fee processing of msgs.
@@ -117,8 +118,8 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 			)
 		}
 
+		// provenance specific modification to msg service router that handles additional fees and assessed fee msgs
 		msr.routes[requestTypeName] = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error) {
-			// provenance specific modification to msg service router
 			msgTypeURL := sdk.MsgTypeURL(req)
 
 			feeGasMeter, ok := ctx.GasMeter().(*antewrapper.FeeGasMeter)
@@ -140,10 +141,11 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 			if err != nil {
 				return nil, err
 			}
+			isAssessMsgFee := msgTypeURL == sdk.MsgTypeURL(&msgfeestypes.MsgAssessCustomMsgFeeRequest{})
+
 			if fee != nil && fee.AdditionalFee.IsPositive() {
 				ctx.Logger().Debug(fmt.Sprintf("Tx Msg %v has an additional fee of %v ", msgTypeURL, fee.AdditionalFee))
-
-				if !feeGasMeter.IsSimulate() {
+				if !feeGasMeter.IsSimulate() && !isAssessMsgFee {
 					err = antewrapper.EnsureSufficientFees(runtimeGasForMsg(ctx), feeTx.GetFee(), feeGasMeter.FeeConsumed().Add(fee.AdditionalFee),
 						msr.msgFeesKeeper.GetFloorGasPrice(ctx))
 					if err != nil {
@@ -151,7 +153,36 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 					}
 				}
 
-				feeGasMeter.ConsumeFee(fee.AdditionalFee, msgTypeURL)
+				feeGasMeter.ConsumeFee(fee.AdditionalFee, msgTypeURL, "")
+			}
+			if isAssessMsgFee {
+				var assessCustomFee *msgfeestypes.MsgAssessCustomMsgFeeRequest
+				assessCustomFee, ok = req.(*msgfeestypes.MsgAssessCustomMsgFeeRequest)
+				if !ok {
+					panic("could not convert request msg to MsgAssessCustomMsgFeeRequest")
+				}
+				ctx.Logger().Debug(fmt.Sprintf("NOTICE: Tx Msg is an assess custom msg fee of %v ", assessCustomFee))
+				var msgFeeCoin sdk.Coin
+				msgFeeCoin, err = msr.msgFeesKeeper.ConvertDenomToHash(ctx, assessCustomFee.Amount)
+				if err != nil {
+					return nil, err
+				}
+				if !feeGasMeter.IsSimulate() {
+					err = antewrapper.EnsureSufficientFees(runtimeGasForMsg(ctx), feeTx.GetFee(), feeGasMeter.FeeConsumed().Add(msgFeeCoin),
+						msr.msgFeesKeeper.GetFloorGasPrice(ctx))
+					if err != nil {
+						return nil, err
+					}
+				}
+				if msgFeeCoin.IsPositive() {
+					if len(assessCustomFee.Recipient) != 0 {
+						recipientCoin, feePayoutCoin := msgfeestypes.SplitAmount(msgFeeCoin)
+						feeGasMeter.ConsumeFee(recipientCoin, msgTypeURL, assessCustomFee.Recipient)
+						feeGasMeter.ConsumeFee(feePayoutCoin, msgTypeURL, "")
+					} else {
+						feeGasMeter.ConsumeFee(assessCustomFee.Amount, msgTypeURL, "")
+					}
+				}
 			}
 
 			// original sdk implementation of msg service router
