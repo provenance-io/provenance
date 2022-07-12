@@ -43,8 +43,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* Add new `msgfees` `NhashPerUsdMil`  default param to param space store on upgrade (PR [#875](https://github.com/provenance-io/provenance/issues/875))
-* Update Cosmos-SDK to v0.45.4-pio-2 to fix a non-deterministic map iteration
+* Add new `msgfees` `NhashPerUsdMil`  default param to param space store on upgrade PR [#875](https://github.com/provenance-io/provenance/issues/875)
+* Update Cosmos-SDK to v0.45.4-pio-2 to fix a non-deterministic map iteration [PR 929](https://github.com/provenance-io/provenance/pull/929)
 
 ---
 
