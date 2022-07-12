@@ -2,7 +2,7 @@
 
 ## Overview
 
-Application performance and Engagement rewards module.
+Active Participation and Engagement (APE) rewards module.
 This module has the following goals
 * Incentivize participation/engagement on the chain by allowing the foundation or other interested parties to 
 create reward programs based on certain Qualifying events.
@@ -21,4 +21,4 @@ create reward programs based on certain Qualifying events.
 6. **[Events](06_events.md)**
 7. **[Params](07_params.md)**
 8. **[Governance](08_begin_and_end_blocker.md)**
-9.  **[Genesis](09_genesis.md)**
+9. **[Genesis](09_genesis.md)**
