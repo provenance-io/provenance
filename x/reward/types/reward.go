@@ -489,8 +489,8 @@ func (qa *QualifyingAction) GetRewardAction(ctx sdk.Context) (RewardAction, erro
 	switch actionType := qa.GetType().(type) {
 	case *QualifyingAction_Delegate:
 		action = qa.GetDelegate()
-	case *QualifyingAction_TransferDelegations:
-		action = qa.GetTransferDelegations()
+	case *QualifyingAction_Transfer:
+		action = qa.GetTransfer()
 	case *QualifyingAction_Vote:
 		action = qa.GetVote()
 	default:

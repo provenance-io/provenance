@@ -2,6 +2,7 @@ package handlers_test
 
 import (
 	"fmt"
+	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 	"os"
 	"testing"
 	"time"
@@ -406,6 +407,47 @@ func TestMsgServiceAssessMsgFee(t *testing.T) {
 
 }
 
+func TestRewardsProgramStart(t *testing.T) {
+	encCfg := simapp.MakeTestEncodingConfig()
+	priv, _, addr := testdata.KeyTestPubAddr()
+	//_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin("atom", 1000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000))
+	app := piosimapp.SetupWithGenesisAccounts([]authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	time := ctx.BlockTime()
+	check(simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+
+	rewardProgram := *rewardtypes.NewMsgCreateRewardProgramRequest(
+		"title",
+		"description",
+		acct1.Address,
+		sdk.NewInt64Coin("nhash", 1000),
+		sdk.NewInt64Coin("nhash", 100),
+		time,
+		10,
+		3,
+		uint64(time.Day()),
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+					},
+				},
+			},
+		},
+	)
+
+	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &rewardProgram)
+	require.NoError(t, err)
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+	assert.Equal(t, 12, len(res.Events))
+}
 func SignTxAndGetBytes(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey types.PubKey, privKey types.PrivKey, acct authtypes.BaseAccount, chainId string, msg ...sdk.Msg) ([]byte, error) {
 	txBuilder := encCfg.TxConfig.NewTxBuilder()
 	txBuilder.SetFeeAmount(fees)

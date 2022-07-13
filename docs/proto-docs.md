@@ -6036,7 +6036,7 @@ EventSetRewardProgram event emitted when a reward program is is updated
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `delegate` | [ActionDelegate](#provenance.reward.v1.ActionDelegate) |  |  |
-| `transferDelegations` | [ActionTransfer](#provenance.reward.v1.ActionTransfer) |  |  |
+| `transfer` | [ActionTransfer](#provenance.reward.v1.ActionTransfer) |  |  |
 | `vote` | [ActionVote](#provenance.reward.v1.ActionVote) |  |  |
 
 
