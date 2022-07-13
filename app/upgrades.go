@@ -35,7 +35,8 @@ var handlers = map[string]appUpgrade{
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
-	}, // upgrade for 1.11.x
+	}, // upgrade for 1.11.1
+	"mango-rc4": {}, // upgrade for 1.11.1-rc4
 	// TODO - Add new upgrade definitions here.
 }
 
