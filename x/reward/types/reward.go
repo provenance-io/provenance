@@ -262,11 +262,11 @@ func (erd *ClaimPeriodRewardDistribution) ValidateBasic() error {
 	if erd.RewardProgramId < 1 {
 		return errors.New("claim reward distribution must have a valid reward program id")
 	}
-	if !erd.TotalRewardsPoolForClaimPeriod.IsPositive() {
+	if !erd.TotalRewardsPoolForClaimPeriod.IsPositive() && !erd.TotalRewardsPoolForClaimPeriod.IsZero() {
 		return errors.New("claim reward distribution must have a total reward pool")
 	}
 	if !erd.RewardsPool.IsPositive() {
-		return errors.New("claim reward distribution must have a reward pool")
+		return errors.New("claim reward distribution must have a reward pool which is positive")
 	}
 	return nil
 }

@@ -109,16 +109,21 @@ type AppModule struct {
 	registry cdctypes.InterfaceRegistry
 }
 
-func (am AppModule) GenerateGenesisState(input *module.SimulationState) {
-	panic("implement me")
+// ____________________________________________________________________________
+
+// AppModuleSimulation functions
+
+// GenerateGenesisState creates a randomized GenState of the rewards module.
+func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
 }
 
 func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	panic("implement me")
+	return nil
 }
 
 func (am AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	panic("implement me")
+	return nil
 }
 
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
@@ -126,7 +131,7 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 }
 
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	panic("implement me")
+	return nil
 }
 
 // NewAppModule creates a new AppModule object
