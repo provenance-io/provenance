@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -28,6 +29,7 @@ type KeeperTestSuite struct {
 	app         *simapp.App
 	ctx         sdk.Context
 	queryClient types.QueryClient
+	handler     sdk.Handler
 
 	accountAddr      sdk.AccAddress
 	accountKey       *secp256k1.PrivKey
@@ -38,7 +40,7 @@ type KeeperTestSuite struct {
 
 func (suite *KeeperTestSuite) CreateAccounts(number int) {
 	for i := 0; i < number; i++ {
-		accountKey := secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
+		accountKey := secp256k1.GenPrivKeyFromSecret([]byte(fmt.Sprintf("acc%d", i+2)))
 		addr, err := sdk.AccAddressFromHex(accountKey.PubKey().Address().String())
 		suite.Require().NoError(err)
 		suite.accountAddr = addr
@@ -49,6 +51,7 @@ func (suite *KeeperTestSuite) CreateAccounts(number int) {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app.Setup(false)
 	suite.CreateAccounts(4)
+	suite.handler = reward.NewHandler(suite.app.RewardKeeper)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now().UTC()})
 	suite.createTestValidators(10)
 	simapp.FundModuleAccount(suite.app, suite.ctx, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("nhash", 10000000000000)))

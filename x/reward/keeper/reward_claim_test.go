@@ -69,7 +69,6 @@ func (suite *KeeperTestSuite) TestClaimRewards() {
 	suite.Assert().NoError(err, "should throw no error")
 	suite.Assert().Equal(3, len(details), "should have rewards from every period")
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 300), reward, "should total up the rewards from the periods")
-
 }
 
 func (suite *KeeperTestSuite) TestClaimRewardsHandlesInvalidProgram() {
