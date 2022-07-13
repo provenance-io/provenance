@@ -37,34 +37,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-### Bug Fixes
-
-* Update Cosmos-SDK to v0.45.4-pio-2 to fix a non-deterministic map iteration [PR 928](https://github.com/provenance-io/provenance/pull/928)
+* nothing
 
 ---
 
-## [v1.11.1-rc4](https://github.com/provenance-io/provenance/releases/tag/v1.11.1-rc4) - 2022-06-23
-
-### Bug Fixes
-
-* Actually run the module migrations during the upgrade. [PR 895](https://github.com/provenance-io/provenance/pull/895)
-
----
-
-## [v1.11.1-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.11.1-rc2) - 2022-06-22
-
-### Bug Fixes
-
-* Add new `msgfees` `NhashPerUsdMil`  default param to param space store on upgrade (PR [#875](https://github.com/provenance-io/provenance/issues/875))
-* Add `mango-rc2` upgrade handler to do a couple migration pieces that were missed in v1.11.1-rc1, but needed [PR 888](https://github.com/provenance-io/provenance/pull/888).
-
----
-
-## [v1.11.1-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.11.1-rc1) - 2022-06-14
+## [v1.11.1](https://github.com/provenance-io/provenance/releases/tag/v1.11.1) - 2022-07-13
 
 ### Bug Fixes
 
 * Add `mango` upgrade handler.
+* Add new `msgfees` `NhashPerUsdMil`  default param to param space store on upgrade (PR [#875](https://github.com/provenance-io/provenance/issues/875))
+* Run the module migrations as part of the mango upgrade [PR 896](https://github.com/provenance-io/provenance/pull/896)
+* Update Cosmos-SDK to v0.45.4-pio-2 to fix a non-deterministic map iteration [PR 928](https://github.com/provenance-io/provenance/pull/928)
 
 ---
 
