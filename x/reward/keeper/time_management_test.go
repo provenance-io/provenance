@@ -45,6 +45,32 @@ func (suite *KeeperTestSuite) TestStartRewardProgram() {
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward.GetTotalRewardsPoolForClaimPeriod())
 }
 
+func (suite *KeeperTestSuite) TestStartRewardProgramNoBalance() {
+	suite.SetupTest()
+
+	currentTime := time.Now()
+	program := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 0),
+		sdk.NewInt64Coin("nhash", 0),
+		currentTime,
+		60*60,
+		3,
+		0,
+		[]types.QualifyingAction{},
+	)
+	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
+	program.RemainingPoolBalance = program.GetTotalRewardPool()
+
+	err := suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
+	suite.Assert().Error(err, "an error should be thrown when there is no balance")
+	suite.Assert().Equal(program.State, types.RewardProgram_PENDING, "reward program should be in pending state")
+	suite.Assert().Equal(uint64(0), program.CurrentClaimPeriod, "current claim period should be set to 0")
+}
+
 func (suite *KeeperTestSuite) TestStartNilRewardProgram() {
 	suite.SetupTest()
 	err := suite.app.RewardKeeper.StartRewardProgram(suite.ctx, nil)
@@ -590,7 +616,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndNoBalance() {
 		"description",
 		1,
 		"insert address",
-		sdk.NewInt64Coin("nhash", 0),
+		sdk.NewInt64Coin("nhash", 1000),
 		sdk.NewInt64Coin("nhash", 1000),
 		currentTime,
 		60*60,
@@ -599,7 +625,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndNoBalance() {
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
-	program.RemainingPoolBalance = program.GetTotalRewardPool()
+	program.RemainingPoolBalance = sdk.NewInt64Coin("nhash", 0)
 
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
 	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)

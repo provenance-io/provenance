@@ -266,7 +266,7 @@ func (s *RewardTypesTestSuite) TestEpochRewardDistributionValidateBasic() {
 		{
 			"invalid - total rewards needs to be positive",
 			NewClaimPeriodRewardDistribution(1, 1, sdk.NewInt64Coin("nhash", 0), sdk.NewInt64Coin("nhash", 100), 0, false),
-			"claim reward distribution must have a reward pool",
+			"claim reward distribution must have a reward pool which is positive",
 		},
 		{
 			"should succeed validate basic",

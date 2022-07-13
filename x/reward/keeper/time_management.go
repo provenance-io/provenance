@@ -48,6 +48,11 @@ func (k Keeper) StartRewardProgram(ctx sdk.Context, rewardProgram *types.RewardP
 		return fmt.Errorf("unable to start nil reward program")
 	}
 
+	if rewardProgram.GetTotalRewardPool().IsZero() {
+		ctx.Logger().Error("NOTICE: Attempting to start reward program with no balance")
+		return fmt.Errorf("unable to start reward program with no balance")
+	}
+
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Starting reward program: %v ", rewardProgram))
 	rewardProgram.State = types.RewardProgram_STARTED
 	err := k.StartRewardProgramClaimPeriod(ctx, rewardProgram)
