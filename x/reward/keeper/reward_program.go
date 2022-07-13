@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -142,7 +141,7 @@ func (k Keeper) GetRewardProgramID(ctx sdk.Context) (rewardprogramID uint64, err
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.RewardProgramIDKey)
 	if bz == nil {
-		return 0, errors.New("initial rewardprogram ID hasn't been set")
+		return 1, nil
 	}
 
 	rewardprogramID = types.GetRewardProgramIDFromBytes(bz)
