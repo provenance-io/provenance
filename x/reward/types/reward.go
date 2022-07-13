@@ -262,7 +262,7 @@ func (erd *ClaimPeriodRewardDistribution) ValidateBasic() error {
 	if erd.RewardProgramId < 1 {
 		return errors.New("claim reward distribution must have a valid reward program id")
 	}
-	if !erd.TotalRewardsPoolForClaimPeriod.IsPositive() {
+	if !erd.TotalRewardsPoolForClaimPeriod.IsPositive() && !erd.TotalRewardsPoolForClaimPeriod.IsZero() {
 		return errors.New("claim reward distribution must have a total reward pool")
 	}
 	if !erd.RewardsPool.IsPositive() {
@@ -283,6 +283,9 @@ func NewActionDelegate() ActionDelegate {
 }
 
 func (ad *ActionDelegate) ValidateBasic() error {
+	if ad.MinimumDelegationAmount != nil && ad.MaximumDelegationAmount == nil {
+
+	}
 	return nil
 }
 
