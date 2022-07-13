@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/reward/types"
 	"github.com/tendermint/tendermint/types/time"
 	"math/rand"
@@ -24,12 +25,12 @@ const (
 
 // GenTotalRewardsPool randomized TotalRewardsPool
 func GenTotalRewardsPool(r *rand.Rand) sdk.Coin {
-	return sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simtypes.RandIntBetween(r, 1000, 1e3)))
+	return sdk.NewInt64Coin(pioconfig.DefaultBondDenom, int64(simtypes.RandIntBetween(r, 1000, 10000000000)))
 }
 
 // GenMaxRewardsByAddress randomized MaxRewardByAddress
 func GenMaxRewardsByAddress(r *rand.Rand) sdk.Coin {
-	return sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simtypes.RandIntBetween(r, 1, 999)))
+	return sdk.NewInt64Coin(pioconfig.DefaultBondDenom, int64(simtypes.RandIntBetween(r, 1, 999)))
 }
 
 // MaxActionsFn randomized MaxActions
@@ -68,7 +69,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { minActions = MinActionsFn(r) },
 	)
 
-	minDelegation := sdk.NewInt64Coin("stake", int64(minActions))
+	minDelegation := sdk.NewInt64Coin(pioconfig.DefaultBondDenom, int64(minActions))
 
 	rewardProgram := types.NewRewardProgram(
 		"title",
@@ -79,7 +80,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		maxRewardsByAddress,
 		time.Now(),
 		uint64(simState.Rand.Intn(100000)),
-		uint64(simState.Rand.Intn(100000)),
+		uint64(simState.Rand.Intn(100)),
 		uint64(simState.Rand.Intn(100000)),
 		[]types.QualifyingAction{
 			{
