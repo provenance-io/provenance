@@ -100,7 +100,7 @@ jobs:
           path: build/*.zip
 
   build_linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs:
       - build_init
     name: Build Linux
