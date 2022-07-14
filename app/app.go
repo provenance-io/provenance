@@ -335,32 +335,6 @@ func New(
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
-	//pluginsOnKey := fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_ON_TOML_KEY)
-	//if cast.ToBool(appOpts.Get(pluginsOnKey)) {
-	//	// this loads the preloaded and any plugins found in `plugins.dir`
-	//	// if their names match those in the `plugins.enabled` list.
-	//	pluginLoader, err := loader.NewPluginLoader(appOpts, logger)
-	//	if err != nil {
-	//		panic("error while loading plugin: " + err.Error())
-	//	}
-	//
-	//	// initialize the loaded plugins
-	//	if err := pluginLoader.Initialize(); err != nil {
-	//		panic("error while initializing plugin: " + err.Error())
-	//	}
-	//
-	//	// register the plugin(s) with the BaseApp
-	//	if err := pluginLoader.Inject(bApp, appCodec, keys); err != nil {
-	//		panic("error while injecting plugin: " + err.Error())
-	//	}
-	//
-	//	// start the plugin services, optionally use wg to synchronize shutdown using io.Closer
-	//	wg := new(sync.WaitGroup)
-	//	if err := pluginLoader.Start(wg); err != nil {
-	//		panic("error while starting plugin: " + err.Error())
-	//	}
-	//}
-
 	app := &App{
 		BaseApp:           bApp,
 		legacyAmino:       legacyAmino,

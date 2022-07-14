@@ -5,7 +5,6 @@ package app
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"math/rand"
 	"os"
@@ -26,9 +25,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/plugin"
-	kafkaplugin "github.com/cosmos/cosmos-sdk/plugin/plugins/kafka"
-	kafkaservice "github.com/cosmos/cosmos-sdk/plugin/plugins/kafka/service"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
@@ -48,6 +44,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	kafkaservice "github.com/provenance-io/provenance/app/kafka"
 	cmdconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -60,16 +57,8 @@ const (
 	chainID = "sim-provenance"
 )
 
-var (
-	StateListeningPlugin   string
-	HaltAppOnDeliveryError bool
-)
-
 func init() {
 	sdksim.GetSimulatorFlags()
-	// State listening flags
-	flag.StringVar(&StateListeningPlugin, "StateListeningPlugin", "", "State listening plugin name")
-	flag.BoolVar(&HaltAppOnDeliveryError, "HaltAppOnDeliveryError", true, "Halt app when state listeners fail")
 }
 
 type StoreKeysPrefixes struct {
@@ -398,15 +387,11 @@ func TestAppStateDeterminism(t *testing.T) {
 	}
 }
 
-// TestAppStateDeterminismStateListening non-deterministic
-// testing with state listing indexing plugins enabled
-func TestAppStateDeterminismWithStateListening(t *testing.T) {
+// TestAppStateDeterminismStateListeningKafka non-deterministic
+// testing with state listing indexing in Kafka
+func TestAppStateDeterminismStateListeningKafka(t *testing.T) {
 	if !sdksim.FlagEnabledValue {
 		t.Skip("skipping application simulation")
-	}
-
-	if StateListeningPlugin == "" {
-		t.Skip("state listening plugin flag not provided: -StateListeningPlugin=name")
 	}
 
 	config := sdksim.NewConfigFromFlags()
@@ -415,6 +400,7 @@ func TestAppStateDeterminismWithStateListening(t *testing.T) {
 	config.OnOperation = false
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
+	config.DBBackend = "memdb"
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
@@ -432,15 +418,18 @@ func TestAppStateDeterminismWithStateListening(t *testing.T) {
 				logger = log.NewNopLogger()
 			}
 
-			// load listening plugin(s)
-			appOpts := loadAppOptions()
-			key := fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_ENABLED_TOML_KEY)
-			enabledPlugins := cast.ToStringSlice(appOpts.Get(key))
-			for _, p := range enabledPlugins {
-				if kafkaplugin.PLUGIN_NAME == p {
-					prepKafkaTopics(appOpts)
-					break
-				}
+			// load kafka streaming service config options
+			m := make(map[string]interface{})
+			m["kafka.enabled"] = true
+			m["kafka.topic_prefix"] = "sim"
+			m["kafka.producer.bootstrap_servers"] = "localhost:9092"
+			m["kafka.producer.client_id"] = "sim"
+			m["kafka.producer.acks"] = "all"
+			m["kafka.producer.enable_idempotence"] = true
+
+			appOpts := viper.New()
+			for key, value := range m {
+				appOpts.SetDefault(key, value)
 			}
 
 			db := dbm.NewMemDB()
@@ -451,13 +440,19 @@ func TestAppStateDeterminismWithStateListening(t *testing.T) {
 				DefaultNodeHome,
 				sdksim.FlagPeriodValue,
 				MakeEncodingConfig(),
-				//sdksim.EmptyAppOptions{},
 				appOpts,
 				interBlockCacheOpt(),
 			)
 
+			// load kafka streaming service
+			enableKss := cast.ToBool(appOpts.Get(fmt.Sprintf("%s.%s", kafkaservice.TomlKey, kafkaservice.EnableKafkaStreamingParam)))
+			if enableKss {
+				prepKafkaTopics(appOpts)
+				app.kss = kafkaservice.NewStreamingService(appOpts, app.AppCodec())
+			}
+
 			fmt.Printf(
-				"running provenance non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
+				"running provenance non-determinism simulation with Kafka indexing; seed %d: %d/%d, attempt: %d/%d\n",
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 
@@ -503,54 +498,16 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 
-func loadAppOptions() types.AppOptions {
-	// load plugin config
-	keys := make([]string, 0) // leave empty to listen to all store keys
-	m := make(map[string]interface{})
-	m["plugins.on"] = true
-	m["plugins.enabled"] = []string{StateListeningPlugin}
-	m["plugins.dir"] = ""
-	// file plugin
-	m["plugins.streaming.file.keys"] = keys
-	m["plugins.streaming.file.write_dir"] = ""
-	m["plugins.streaming.file.prefix"] = ""
-	m["plugins.streaming.file.halt_app_on_delivery_error"] = HaltAppOnDeliveryError
-	// trace plugin
-	m["plugins.streaming.trace.keys"] = keys
-	m["plugins.streaming.trace.print_data_to_stdout"] = false
-	m["plugins.streaming.trace.halt_app_on_delivery_error"] = HaltAppOnDeliveryError
-	// kafka plugin
-	m["plugins.streaming.kafka.keys"] = keys
-	m["plugins.streaming.kafka.topic_prefix"] = "sim"
-	m["plugins.streaming.kafka.flush_timeout_ms"] = 5000
-	m["plugins.streaming.kafka.halt_app_on_delivery_error"] = HaltAppOnDeliveryError
-	// Kafka plugin producer
-	m["plugins.streaming.kafka.producer.bootstrap_servers"] = "localhost:9092"
-	m["plugins.streaming.kafka.producer.client_id"] = "pio-sim"
-	m["plugins.streaming.kafka.producer.acks"] = "all"
-	m["plugins.streaming.kafka.producer.enable_idempotence"] = true
-
-	vpr := viper.New()
-	for key, value := range m {
-		vpr.SetDefault(key, value)
-	}
-
-	return vpr
-}
-
 func prepKafkaTopics(opts types.AppOptions) {
 	// kafka topic setup
-	topicPrefix := cast.ToString(opts.Get(fmt.Sprintf("%s.%s.%s.%s", plugin.PLUGINS_TOML_KEY, plugin.STREAMING_TOML_KEY, kafkaplugin.PLUGIN_NAME, kafkaplugin.TOPIC_PREFIX_PARAM)))
-	bootstrapServers := cast.ToString(opts.Get(fmt.Sprintf("%s.%s.%s.%s.%s", plugin.PLUGINS_TOML_KEY, plugin.STREAMING_TOML_KEY, kafkaplugin.PLUGIN_NAME, kafkaplugin.PRODUCER_CONFIG_PARAM, "bootstrap_servers")))
+	topicPrefix := cast.ToString(opts.Get(fmt.Sprintf("%s.%s", kafkaservice.TomlKey, kafkaservice.TopicPrefixParam)))
+	bootstrapServers := cast.ToString(opts.Get(fmt.Sprintf("%s.%s.%s", kafkaservice.TomlKey, kafkaservice.ProducerTomlKey, "bootstrap_servers")))
 	bootstrapServers = strings.ReplaceAll(bootstrapServers, "_", ".")
 	topics := []string{
 		string(kafkaservice.BeginBlockReqTopic),
 		kafkaservice.BeginBlockResTopic,
-		kafkaservice.DeliverTxReqTopic,
-		kafkaservice.DeliverTxResTopic,
 		kafkaservice.EndBlockReqTopic,
 		kafkaservice.EndBlockResTopic,
-		kafkaservice.StateChangeTopic,
 	}
 	deleteTopics(topicPrefix, topics, bootstrapServers)
 	createTopics(topicPrefix, topics, bootstrapServers)

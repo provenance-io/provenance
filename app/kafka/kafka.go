@@ -19,50 +19,41 @@ const (
 	// TomlKey is the top-level TOML key for KafkaStreamingService configuration
 	TomlKey = "kafka"
 
-	// Enabled is the KafkaStreamingService flag that enabled streaming to Kafka
+	// EnableKafkaStreamingParam is the KafkaStreamingService flag that enabled streaming to Kafka
 	EnableKafkaStreamingParam = "enabled"
 
 	// TopicPrefixParam is the KafkaStreamingService topic where events will be streamed to
 	TopicPrefixParam = "topic_prefix"
 
-	// FlushTimeoutMsParam is the timeout setting passed to the producer.Flush(timeoutMs)
-	FlushTimeoutMsParam = "flush_timeout_ms"
-
-	// KafkaProducerTomlKey is the top-level key for the KafkaStreamingService Producer configuration properties
-	KafkaProducerTomlKey = "producer"
-
-	// HaltAppOnDeliveryErrorParam whether or not to halt the application when plugin fails to deliver message(s)
-	HaltAppOnDeliveryErrorParam = "halt_app_on_delivery_error"
+	// ProducerTomlKey is the top-level key for the KafkaStreamingService Producer configuration properties
+	ProducerTomlKey = "producer"
 )
 
-// EventTypeValueTypeTopic Kafka topic name enum types
-type EventTypeValueTypeTopic string
+// EventTypeTopic Kafka topic name enum types
+type EventTypeTopic string
+
 const (
-	BeginBlockReqTopic EventTypeValueTypeTopic = "begin-block-req"
-	BeginBlockResTopic                         = "begin-block-res"
-	EndBlockReqTopic                           = "end-block-req"
-	EndBlockResTopic                           = "end-block-res"
+	BeginBlockReqTopic EventTypeTopic = "begin-block-req"
+	BeginBlockResTopic                = "begin-block-res"
+	EndBlockReqTopic                  = "end-block-req"
+	EndBlockResTopic                  = "end-block-res"
 )
 
-// KafkaStreamingService is a concrete implementation of streaming.Service that writes state changes out to KafkaStreamingService
+// StreamingService wraps a high-level [*kafka.Producer] instance
 type StreamingService struct {
-	topicPrefix            string            // topicPrefix prefix name
-	producer               *kafka.Producer   // the producer instance that will be used to send messages to KafkaStreamingService
-	flushTimeoutMs         int               // the time to wait for outstanding messages and requests to complete delivery (milliseconds)
-	codec                  codec.BinaryCodec // binary marshaller used for re-marshalling the ABCI messages to write them out to the destination files
-	deliveryChan           chan kafka.Event  // KafkaStreamingService producer delivery report channel
-	haltAppOnDeliveryError bool              // true if the app should be halted on streaming errors, false otherwise
+	topicPrefix  string            // topicPrefix prefix name
+	producer     *kafka.Producer   // the producer instance that will be used to send messages to KafkaStreamingService
+	codec        codec.BinaryCodec // binary marshaller used for re-marshalling the ABCI messages to write them out to the destination files
+	deliveryChan chan kafka.Event  // KafkaStreamingService producer delivery report channel
 }
 
 func NewStreamingService(appOpts serverTypes.AppOptions, marshaller codec.BinaryCodec) *StreamingService {
 	// load all the params required from the provided AppOptions
 	topicPrefix := cast.ToString(appOpts.Get(fmt.Sprintf("%s.%s", TomlKey, TopicPrefixParam)))
-	flushTimeoutMs := cast.ToInt(appOpts.Get(fmt.Sprintf("%s.%s", TomlKey, FlushTimeoutMsParam)))
-	haltAppOnDeliveryError := cast.ToBool(appOpts.Get(fmt.Sprintf("%s.%s", TomlKey, HaltAppOnDeliveryErrorParam)))
-	producerConfig := cast.ToStringMap(appOpts.Get(fmt.Sprintf("%s.%s", TomlKey, KafkaProducerTomlKey)))
+	producerConfig := cast.ToStringMap(appOpts.Get(fmt.Sprintf("%s.%s", TomlKey, ProducerTomlKey)))
 
 	// Validate minimum producer config properties
-	producerConfigKey := fmt.Sprintf("%s.%s", TomlKey, KafkaProducerTomlKey)
+	producerConfigKey := fmt.Sprintf("%s.%s", TomlKey, ProducerTomlKey)
 
 	if len(producerConfig) == 0 {
 		panic(fmt.Errorf("unable to connect to Kafka cluster: unset properties for '%s': ", producerConfigKey))
@@ -80,37 +71,19 @@ func NewStreamingService(appOpts serverTypes.AppOptions, marshaller codec.Binary
 		if err := producerConfigMap.SetKey(key, element); err != nil {
 			panic(err)
 		}
-		if !haltAppOnDeliveryError {
-			// disable delivery reports when operating in fire-and-forget fashion
-			if err := producerConfigMap.SetKey("go.delivery.reports", false); err != nil {
-				panic(err)
-			}
-		}
 	}
 
 	// Initialize the producer and connect to KafkaStreamingService cluster
 	p, err := kafka.NewProducer(&producerConfigMap)
 	if err != nil {
-		if haltAppOnDeliveryError {
-			panic(err)
-		} else {
-			// producing to Kafka will be ignored
-			// TODO: should we log a warning here?
-			return nil
-		}
+		panic(err)
 	}
 
 	kss := &StreamingService{
-		topicPrefix: topicPrefix,
-		producer: p,
-		flushTimeoutMs: flushTimeoutMs,
-		codec: marshaller,
-		haltAppOnDeliveryError: haltAppOnDeliveryError,
-	}
-
-	// setup private delivery channel to listen for delivery errors.
-	if haltAppOnDeliveryError {
-		kss.deliveryChan = make(chan kafka.Event)
+		topicPrefix:  topicPrefix,
+		producer:     p,
+		codec:        marshaller,
+		deliveryChan: make(chan kafka.Event),
 	}
 
 	return kss
@@ -127,21 +100,17 @@ func (kss *StreamingService) ListenBeginBlocker(
 	// write req
 	if err := kss.writeToKafka(ctx, string(BeginBlockReqTopic), &req); err != nil {
 		ctx.Logger().Error(errMsg, "height", req.Header.Height, "err", err)
-		if kss.haltAppOnDeliveryError {
-			panic(err)
-		}
+		panic(err)
 	}
 
 	// write res
 	if err := kss.writeToKafka(ctx, BeginBlockResTopic, &res); err != nil {
 		ctx.Logger().Error(errMsg, "height", ctx.BlockHeight(), "err", err)
-		if kss.haltAppOnDeliveryError {
-			panic(err)
-		}
+		panic(err)
 	}
 }
 
-// ListenEndBlocker writes out the received BeginBlockEvent request and response to Kafka
+// ListenEndBlocker writes out the received app.EndBlocker request and response to Kafka
 func (kss *StreamingService) ListenEndBlocker(
 	ctx sdk.Context,
 	req abci.RequestEndBlock,
@@ -152,18 +121,27 @@ func (kss *StreamingService) ListenEndBlocker(
 	// write req
 	if err := kss.writeToKafka(ctx, EndBlockReqTopic, &req); err != nil {
 		ctx.Logger().Error(errMsg, "height", ctx.BlockHeight(), "err", err)
-		if kss.haltAppOnDeliveryError {
-			panic(err)
-		}
+		panic(err)
 	}
 
 	// write res
 	if err := kss.writeToKafka(ctx, EndBlockResTopic, &res); err != nil {
 		ctx.Logger().Error(errMsg, "height", ctx.BlockHeight(), "err", err)
-		if kss.haltAppOnDeliveryError {
-			panic(err)
-		}
+		panic(err)
 	}
+}
+
+// Close a Producer instance. The Producer object or its channels are no longer usable after this call.
+//
+// Flush and wait for outstanding messages and requests to complete delivery.
+// Includes messages on ProduceChannel. Runs until value reaches zero or on timeoutMs.
+// Returns the number of outstanding events still un-flushed
+//
+// NOTE: This is solely to be used for testing purposes.
+func (kss *StreamingService) Close(timeoutMs int) {
+	kss.producer.Flush(timeoutMs)
+	close(kss.deliveryChan)
+	kss.producer.Close()
 }
 
 func (kss *StreamingService) writeToKafka(
@@ -186,7 +164,7 @@ func (kss *StreamingService) writeToKafka(
 	// this means that the producer operates in a fire-and-forget mode
 	if err := kss.producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-		Key: 			[]byte(strconv.FormatInt(ctx.BlockHeight(), 10)),
+		Key:            []byte(strconv.FormatInt(ctx.BlockHeight(), 10)),
 		Value:          value,
 	}, kss.deliveryChan); err != nil {
 		return err
@@ -195,12 +173,8 @@ func (kss *StreamingService) writeToKafka(
 	return kss.checkDeliveryReport(ctx)
 }
 
-// checkDeliveryReport checks kafka.Producer delivery report for successful or failed messages
+// checkDeliveryReport checks [*kafka.Producer] delivery report for successful or failed messages
 func (kss *StreamingService) checkDeliveryReport(ctx sdk.Context) error {
-	if kss.deliveryChan == nil {
-		return nil
-	}
-
 	e := <-kss.deliveryChan
 	m := e.(*kafka.Message)
 	topic := *m.TopicPartition.Topic
