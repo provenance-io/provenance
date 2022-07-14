@@ -91,6 +91,12 @@ ifeq ($(UNAME_S),darwin)
 		build_tags += dynamic
 	endif
 endif
+ifeq ($(UNAME_S),linux)
+	ifeq ($(UNAME_M),aarch64)
+		# Needed on aarch64 due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
+		build_tags += dynamic
+	endif
+endif
 
 ifeq ($(WITH_CLEVELDB),true)
   ifneq ($(have_gcc),true)
@@ -409,6 +415,12 @@ endif
 ifeq ($(UNAME_S),darwin)
 	ifeq ($(UNAME_M),arm64)
 		# Needed on M1 macs due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
+		TAGS += dynamic
+	endif
+endif
+ifeq ($(UNAME_S),linux)
+	ifeq ($(UNAME_M),aarch64)
+		# Needed on aarch64 due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
 		TAGS += dynamic
 	endif
 endif
