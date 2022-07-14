@@ -42,6 +42,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update the swagger files (including third-party changes). [#728](https://github.com/provenance-io/provenance/issues/728)
 * Bump IBC to 2.3.0 and update third-party protos [PR 868](https://github.com/provenance-io/provenance/pull/868)
 
+### Bug Fixes
+
+* Support standard flags on msgfees params query cli command [#936](https://github.com/provenance-io/provenance/issues/936)
+
 ---
 
 ## [v1.11.1](https://github.com/provenance-io/provenance/releases/tag/v1.11.1) - 2022-07-13
