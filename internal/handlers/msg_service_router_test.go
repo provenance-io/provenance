@@ -407,7 +407,7 @@ func TestMsgServiceAssessMsgFee(t *testing.T) {
 
 }
 
-func TestRewardsProgramStart(t *testing.T) {
+func TestRewardsProgramStartError(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	priv, _, addr := testdata.KeyTestPubAddr()
 	//_, _, addr2 := testdata.KeyTestPubAddr()
@@ -445,9 +445,92 @@ func TestRewardsProgramStart(t *testing.T) {
 	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &rewardProgram)
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-	assert.Equal(t, 12, len(res.Events))
+	require.Equal(t, true, res.IsErr(), "should return error", res)
 }
+
+func TestRewardsProgramStart(t *testing.T) {
+	encCfg := simapp.MakeTestEncodingConfig()
+	priv, _, addr := testdata.KeyTestPubAddr()
+	//_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin("atom", 1000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000))
+	app := piosimapp.SetupWithGenesisAccounts([]authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	time := ctx.BlockTime()
+	check(simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+
+	rewardProgram := *rewardtypes.NewMsgCreateRewardProgramRequest(
+		"title",
+		"description",
+		acct1.Address,
+		sdk.NewInt64Coin("nhash", 1000),
+		sdk.NewInt64Coin("nhash", 100),
+		time,
+		9,
+		3,
+		uint64(time.Day()),
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+					},
+				},
+			},
+		},
+	)
+
+	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &rewardProgram)
+	require.NoError(t, err)
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, true, res.IsOK(), "should return error", res)
+	assert.Equal(t, 13, len(res.Events))
+	lookForRewardCreatedEvent, found := contains(res.Events, "reward_program_created")
+	assert.Equal(t, true, found, "event reward_program_created should exist")
+	assert.Equal(t, 1, len(*lookForRewardCreatedEvent), "event reward_program_created should exist")
+	lookForMessageEvent, foundMessage := contains(res.Events, "message")
+	assert.Equal(t, true, foundMessage, "event message should exist")
+	_, foundAttribute := containsAttribute(*lookForMessageEvent, "create_reward_program")
+	assert.Equal(t, true, foundAttribute, "event attribute create_reward_program should exist")
+}
+
+// Contains tells if Event type exists in abci.Event.
+func contains(a []abci.Event, x string) (*[]abci.Event, bool) {
+	var eventSlice []abci.Event
+	var found bool
+	for _, n := range a {
+		if x == n.Type {
+			found = true
+			eventSlice = append(eventSlice, n)
+		}
+	}
+	return &eventSlice, found
+}
+
+// containsAttribute function to return back an attribute based on attribute value, since in tendermit you can have events
+// which can have the same type(classic example is message)
+func containsAttribute(a []abci.Event, x string) (*abci.EventAttribute, bool) {
+	for _, n := range a {
+		temp, found := containsEventAttribute(n, x)
+		if found {
+			return temp, found
+		}
+	}
+	return nil, false
+}
+
+func containsEventAttribute(a abci.Event, x string) (*abci.EventAttribute, bool) {
+	for _, n := range a.Attributes {
+		if x == string(n.Value) {
+			return &n, true
+		}
+	}
+	return nil, false
+}
+
 func SignTxAndGetBytes(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey types.PubKey, privKey types.PrivKey, acct authtypes.BaseAccount, chainId string, msg ...sdk.Msg) ([]byte, error) {
 	txBuilder := encCfg.TxConfig.NewTxBuilder()
 	txBuilder.SetFeeAmount(fees)
