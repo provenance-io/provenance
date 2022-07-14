@@ -24,7 +24,7 @@ fi
 
 # Check if we have the env varibale set
 if ! tr ':' '\n' <<< "$LD_LIBRARY_PATH" | grep -xFq "$LIB_PATH"; then
-    echo "LD_LIBRARY_PATH is already set."
-else
     echo 'LD_LIBRARY_PATH is not set. Please set it with export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib'
+else
+    echo "LD_LIBRARY_PATH is already set."
 fi
