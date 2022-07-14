@@ -94,6 +94,9 @@ func ListParamsCmd() *cobra.Command {
 			return clientCtx.PrintProto(response)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
 	return cmd
 }
 
