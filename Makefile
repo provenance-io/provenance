@@ -378,6 +378,8 @@ cleveldb:
 librdkafka:
 	@if [ "$(UNAME_S)" = "darwin" ] && [ "$(UNAME_M)" = "arm64" ]; then \
 		scripts/m1_librdkafka_install.sh;\
+	elif [ "$(UNAME_S)" = "linux" ] && [ "$(UNAME_M)" = "aarch64" ]; then \
+		scripts/linux_arm64_librdkafka_install.sh;\
 	fi
 
 .PHONY: go-mod-cache go.sum lint clean format check-built linkify update-tocs rocksdb cleveldb librdkafka
