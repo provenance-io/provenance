@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -90,23 +91,23 @@ func (b *DelegateActionBuilder) GetEventCriteria() *EventCriteria {
 
 func (b *DelegateActionBuilder) AddEvent(eventType string, attributes *map[string][]byte) error {
 	switch eventType {
-	case "delegate":
-		address := (*attributes)["validator"]
+	case stakingtypes.EventTypeDelegate:
+		address := (*attributes)[stakingtypes.AttributeKeyValidator]
 		validator, err := sdk.ValAddressFromBech32(string(address))
 		if err != nil {
 			return err
 		}
 		b.Validator = validator
-	case "create_validator":
-		address := (*attributes)["validator"]
+	case stakingtypes.EventTypeCreateValidator:
+		address := (*attributes)[stakingtypes.AttributeKeyValidator]
 		validator, err := sdk.ValAddressFromBech32(string(address))
 		if err != nil {
 			return err
 		}
 		b.Validator = validator
-	case "message":
+	case sdk.EventTypeMessage:
 		// Update the last result to have the delegator's address
-		address := (*attributes)["sender"]
+		address := (*attributes)[banktypes.AttributeKeySender]
 		address, err := sdk.AccAddressFromBech32(string(address))
 		if err != nil {
 			return err
