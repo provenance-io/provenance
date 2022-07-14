@@ -400,6 +400,9 @@ validate-os-dependencies: ## Validates all the dependencies needed by a specific
 	@if [ "$(UNAME_S)" = "darwin" ] && [ "$(UNAME_M)" = "arm64" ]; then \
 		output=$$(scripts/m1-dependency-check.sh); \
 		if [ "$$?" == "1" ]; then echo "\x1B[31m>> Build halted\x1B[39m"; echo "\x1B[31m>> $$output\x1B[39m"; exit 1; fi; \
+	elif [ "$(UNAME_S)" = "linux" ] && [ "$(UNAME_M)" = "aarch64" ]; then \
+		output=$$(scripts/linux-arm64-dependency-check.sh); \
+		if [ "$$?" == "1" ]; then echo "\x1B[31m>> Build halted\x1B[39m"; echo "\x1B[31m>> $$output\x1B[39m"; exit 1; fi; \
 	fi
 
 download-smart-contracts:

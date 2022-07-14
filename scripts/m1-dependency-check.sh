@@ -23,7 +23,7 @@ do
     has_dependency $dependency
     status=$?
     if [[ $status == 0 ]]; then
-        echo "Missing $dependency. Recommened to run: make librdkafka"
+        echo "Missing $dependency. Recommended to run: make librdkafka"
         exit 1
     fi
 done

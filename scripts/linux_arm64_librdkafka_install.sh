@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 TEMP=/tmp/librdkafka
 LIB_PATH=/usr/local/lib
@@ -9,6 +9,7 @@ VERSION=v1.8.2
 if [ -f "$LIB_PATH/$LIB_RDKAFKA" ]; then
     echo "librdkafka is already installed"
 else
+    echo "Installing librdkafka..."
     # Build librdkafka
     git clone -b $VERSION https://github.com/edenhill/librdkafka.git $TEMP
     cd /tmp/librdkafka
@@ -21,9 +22,9 @@ else
     rm -rf $TEMP
 fi
 
-# Check if we have a library
-if [ ":$LD_LIBRARY_PATH:" = *":$LIB_PATH:"* ]; then
+# Check if we have the env varibale set
+if grep -q "$LIB_PATH" <<< "$LD_LIBRARY_PATH"; then
     echo "LD_LIBRARY_PATH is already set."
 else
-    echo "LD_LIBRARY_PATH is not set. Please set it with export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib"
+    echo 'LD_LIBRARY_PATH is not set. Please set it with export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib'
 fi
