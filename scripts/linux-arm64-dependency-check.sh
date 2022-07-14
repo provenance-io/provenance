@@ -12,7 +12,7 @@ else
 fi
 
 # Check if we have the env varibale set
-if grep -q "$LIB_PATH" <<< "$LD_LIBRARY_PATH"; then
+if ! tr ':' '\n' <<< "$LD_LIBRARY_PATH" | grep -xFq "$LIB_PATH"; then
     echo "LD_LIBRARY_PATH is already set."
 else
     echo "LD_LIBRARY_PATH is missing ${LIB_PATH}. Recommended to run: LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/usr/local/lib"
