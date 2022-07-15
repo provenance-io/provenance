@@ -411,6 +411,12 @@ func (at *ActionTransfer) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	// get the address that voted
 	addressVoting := event.Address
 
+	actionCounter := state.ActionCounter[at.ActionType()]
+	hasValidActionCount := actionCounter >= at.GetMinimumActions() && actionCounter <= at.GetMaximumActions()
+	if !hasValidActionCount {
+		return false
+	}
+
 	// check delegations if and only if mandated by the Action
 	if at.MinimumDelegationAmount.IsGTE(sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.ZeroInt())) {
 		// now check if it has any delegations
@@ -457,6 +463,12 @@ func (atd *ActionVote) ActionType() string {
 }
 
 func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
+	actionCounter := state.ActionCounter[atd.ActionType()]
+	hasValidActionCount := actionCounter >= atd.GetMinimumActions() && actionCounter <= atd.GetMaximumActions()
+	if !hasValidActionCount {
+		return false
+	}
+
 	// get the address that voted
 	addressVoting := event.Address
 	if atd.MinimumDelegationAmount.IsGTE(sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.ZeroInt())) {
