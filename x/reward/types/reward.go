@@ -415,13 +415,6 @@ func (at *ActionTransfer) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	if provider.GetAccountKeeper().GetModuleAddress(authtypes.FeeCollectorName).Equals(event.Recipient) {
 		return false
 	}
-	actionCounter := state.ActionCounter[at.ActionType()]
-	hasValidActionCount := actionCounter >= at.GetMinimumActions() && actionCounter <= at.GetMaximumActions()
-	if !hasValidActionCount {
-		return false
-	}
-
-	println(at.MinimumDelegationAmount.String())
 	// check delegations if and only if mandated by the Action
 	if sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.ZeroInt()).IsLT(at.MinimumDelegationAmount) {
 		// now check if it has any delegations

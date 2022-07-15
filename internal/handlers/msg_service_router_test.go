@@ -572,7 +572,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	}), "claim period has not ended so shares have to be 0")
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
-	assert.Equal(t, 11, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
+	assert.Equal(t, 98, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
 	assert.Equal(t, 10, int(accountState.SharesEarned), "account state incorrect")
 
 }
