@@ -30,7 +30,7 @@ done
 
 # Check that PKG_CONFIG_PATH is set
 op="$( brew --prefix openssl )/lib/pkgconfig"
-if ! tr ':' '\n' <<< $PKG_CONFIG_PATH | grep -xFq "$op"; then
+if ! tr ':' '\n' <<< "$PKG_CONFIG_PATH" | grep -xFq "$op"; then
     echo "PKG_CONFIG_PATH is missing openssl. Recommended to run: export PKG_CONFIG_PATH=\"\$( brew --prefix openssl )\"/lib/pkgconfig\"\${PKG_CONFIG_PATH:+:\$PKG_CONFIG_PATH}\"";
     exit 1;
 fi

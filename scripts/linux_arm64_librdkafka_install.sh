@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TEMP=/tmp/librdkafka
-LIB_PATH=/usr/local/lib
+LIB_PATH=${LIB_PATH:-/usr/local/lib}
 LIB_RDKAFKA=librdkafka.so
 VERSION=v1.8.2
 
@@ -24,7 +24,7 @@ fi
 
 # Check if we have the env varibale set
 if ! tr ':' '\n' <<< "$LD_LIBRARY_PATH" | grep -xFq "$LIB_PATH"; then
-    echo 'LD_LIBRARY_PATH is not set. Please set it with export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib'
+    echo 'LD_LIBRARY_PATH is not set. Please set it with export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$LIB_PATH'
 else
     echo "LD_LIBRARY_PATH is already set."
 fi
