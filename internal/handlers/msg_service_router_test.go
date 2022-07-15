@@ -549,7 +549,6 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	seq := acct1.Sequence
 	for height := int64(3); height <= int64(100); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height}})
-		acct1 := app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 		acct1.SetSequence(seq)
 		tx1, err1 := SignTx(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1)
@@ -574,6 +573,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
 	assert.Equal(t, 196, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
+	assert.Equal(t, 0, int(accountState.SharesEarned), "account state incorrect")
 
 }
 
