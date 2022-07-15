@@ -90,6 +90,9 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 			k.SetRewardAccountState(ctx, state)
 			continue
 		}
+		if state.ActionCounter == nil {
+			state.ActionCounter = make(map[string]uint64)
+		}
 		state.ActionCounter[processor.ActionType()] += 1
 		if !processor.PostEvaluate(ctx, k, state) {
 			k.SetRewardAccountState(ctx, state)

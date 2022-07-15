@@ -564,7 +564,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	check(err)
 	assert.Equal(t, true, len(claimPeriodDistributions) == 1, "claim period reward distributions should exist")
-	assert.Equal(t, int64(0), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
+	assert.Equal(t, int64(10), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
 		Denom:  "nhash",
@@ -572,8 +572,8 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	}), "claim period has not ended so shares have to be 0")
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
-	assert.Equal(t, 98, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
-	//assert.Equal(t, 0, int(accountState.SharesEarned), "account state incorrect")
+	assert.Equal(t, 11, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
+	assert.Equal(t, 10, int(accountState.SharesEarned), "account state incorrect")
 
 }
 
