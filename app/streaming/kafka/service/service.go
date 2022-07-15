@@ -1,32 +1,13 @@
-package kafka
+package service
 
 import (
 	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/internal/streaming"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"strconv"
-	"strings"
-
-	"github.com/spf13/cast"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
-)
-
-// TOML configuration parameter keys
-const (
-	// TomlKey is the top-level TOML key for KafkaStreamingService configuration
-	TomlKey = "kafka"
-
-	// EnableKafkaStreamingParam is the KafkaStreamingService flag that enabled streaming to Kafka
-	EnableKafkaStreamingParam = "enabled"
-
-	// TopicPrefixParam is the KafkaStreamingService topic where events will be streamed to
-	TopicPrefixParam = "topic_prefix"
-
-	// ProducerTomlKey is the top-level key for the KafkaStreamingService Producer configuration properties
-	ProducerTomlKey = "producer"
 )
 
 // EventTypeTopic Kafka topic name enum types
@@ -39,47 +20,27 @@ const (
 	EndBlockResTopic                  = "end-block-res"
 )
 
-// StreamingService wraps a high-level [*kafka.Producer] instance
-type StreamingService struct {
+var _ streaming.StreamService = (*KafkaStreamingService)(nil)
+
+// KafkaStreamingService wraps a high-level [*kafka.Producer] instance
+type KafkaStreamingService struct {
 	topicPrefix  string            // topicPrefix prefix name
 	producer     *kafka.Producer   // the producer instance that will be used to send messages to KafkaStreamingService
 	codec        codec.BinaryCodec // binary marshaller used for re-marshalling the ABCI messages to write them out to the destination files
 	deliveryChan chan kafka.Event  // KafkaStreamingService producer delivery report channel
 }
 
-func NewStreamingService(appOpts serverTypes.AppOptions, marshaller codec.BinaryCodec) *StreamingService {
-	// load all the params required from the provided AppOptions
-	topicPrefix := cast.ToString(appOpts.Get(fmt.Sprintf("%s.%s", TomlKey, TopicPrefixParam)))
-	producerConfig := cast.ToStringMap(appOpts.Get(fmt.Sprintf("%s.%s", TomlKey, ProducerTomlKey)))
-
-	// Validate minimum producer config properties
-	producerConfigKey := fmt.Sprintf("%s.%s", TomlKey, ProducerTomlKey)
-
-	if len(producerConfig) == 0 {
-		panic(fmt.Errorf("unable to connect to Kafka cluster: unset properties for '%s': ", producerConfigKey))
-	} else {
-		bootstrapServers := strings.TrimSpace(cast.ToString(producerConfig["bootstrap_servers"]))
-		if len(bootstrapServers) == 0 {
-			panic(fmt.Errorf("unable to connect to Kafka cluster: unset property \"%s.%s\" ", producerConfigKey, "bootstrap_servers"))
-		}
-	}
-
-	// load producer config into a kafka.ConfigMap
-	producerConfigMap := kafka.ConfigMap{}
-	for key, element := range producerConfig {
-		key = strings.ReplaceAll(key, "_", ".")
-		if err := producerConfigMap.SetKey(key, element); err != nil {
-			panic(err)
-		}
-	}
-
-	// Initialize the producer and connect to KafkaStreamingService cluster
-	p, err := kafka.NewProducer(&producerConfigMap)
+func NewKafkaStreamingService(
+	topicPrefix string,
+	producerConfigMap *kafka.ConfigMap,
+	marshaller codec.BinaryCodec,
+) *KafkaStreamingService {
+	p, err := kafka.NewProducer(producerConfigMap)
 	if err != nil {
 		panic(err)
 	}
 
-	kss := &StreamingService{
+	kss := &KafkaStreamingService{
 		topicPrefix:  topicPrefix,
 		producer:     p,
 		codec:        marshaller,
@@ -89,8 +50,8 @@ func NewStreamingService(appOpts serverTypes.AppOptions, marshaller codec.Binary
 	return kss
 }
 
-// ListenBeginBlocker writes out the received BeginBlockEvent request and response to Kafka
-func (kss *StreamingService) ListenBeginBlocker(
+// StreamBeginBlocker writes out the received BeginBlockEvent request and response to Kafka
+func (kss *KafkaStreamingService) StreamBeginBlocker(
 	ctx sdk.Context,
 	req abci.RequestBeginBlock,
 	res abci.ResponseBeginBlock,
@@ -110,8 +71,8 @@ func (kss *StreamingService) ListenBeginBlocker(
 	}
 }
 
-// ListenEndBlocker writes out the received app.EndBlocker request and response to Kafka
-func (kss *StreamingService) ListenEndBlocker(
+// StreamEndBlocker writes out the received app.EndBlocker request and response to Kafka
+func (kss *KafkaStreamingService) StreamEndBlocker(
 	ctx sdk.Context,
 	req abci.RequestEndBlock,
 	res abci.ResponseEndBlock,
@@ -138,13 +99,13 @@ func (kss *StreamingService) ListenEndBlocker(
 // Returns the number of outstanding events still un-flushed
 //
 // NOTE: This is solely to be used for testing purposes.
-func (kss *StreamingService) Close(timeoutMs int) {
+func (kss *KafkaStreamingService) Close(timeoutMs int) {
 	kss.producer.Flush(timeoutMs)
 	close(kss.deliveryChan)
 	kss.producer.Close()
 }
 
-func (kss *StreamingService) writeToKafka(
+func (kss *KafkaStreamingService) writeToKafka(
 	ctx sdk.Context,
 	topic string,
 	msgValue codec.ProtoMarshaler,
@@ -174,7 +135,7 @@ func (kss *StreamingService) writeToKafka(
 }
 
 // checkDeliveryReport checks [*kafka.Producer] delivery report for successful or failed messages
-func (kss *StreamingService) checkDeliveryReport(ctx sdk.Context) error {
+func (kss *KafkaStreamingService) checkDeliveryReport(ctx sdk.Context) error {
 	e := <-kss.deliveryChan
 	m := e.(*kafka.Message)
 	topic := *m.TopicPartition.Topic

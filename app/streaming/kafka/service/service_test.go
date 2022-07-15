@@ -1,12 +1,9 @@
-package kafka
+package service
 
 import (
 	"context"
 	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
-	types2 "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/spf13/cast"
-	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/log"
 	"os"
 	"os/signal"
@@ -26,7 +23,7 @@ import (
 var (
 	interfaceRegistry    = codecTypes.NewInterfaceRegistry()
 	testMarshaller       = codec.NewProtoCodec(interfaceRegistry)
-	testStreamingService *StreamingService
+	testStreamingService *KafkaStreamingService
 	testingCtx           sdk.Context
 
 	// test abci message types
@@ -70,16 +67,23 @@ var (
 	}
 	bootstrapServers = "localhost:9092"
 	timeoutMs        = 5000
-	appOpts          = loadAppOptions()
-	topicPrefix      = cast.ToString(appOpts.Get(fmt.Sprintf("%s.%s", TomlKey, TopicPrefixParam)))
+	topicPrefix      = "unittest"
+	producerConfig   = kafka.ConfigMap{
+		"bootstrap.servers":  bootstrapServers,
+		"client.id":          "testKafkaStreamService",
+		"security.protocol":  "PLAINTEXT",
+		"enable.idempotence": "true",
+		// Best practice for Kafka producer to prevent data loss
+		"acks": "all",
+	}
 )
 
 // change this to write to in-memory io.Writer (e.g. bytes.Buffer)
 func TestStreamingService(t *testing.T) {
 	testingCtx = sdk.NewContext(nil, types1.Header{}, false, log.TestingLogger())
-	testStreamingService = NewStreamingService(appOpts, testMarshaller)
+	testStreamingService = NewKafkaStreamingService(topicPrefix, &producerConfig, testMarshaller)
 	require.NotNil(t, testStreamingService)
-	require.IsType(t, &StreamingService{}, testStreamingService)
+	require.IsType(t, &KafkaStreamingService{}, testStreamingService)
 	deleteTopics(t, topics, bootstrapServers)
 	createTopics(t, topics, bootstrapServers)
 	testListenBeginBlocker(t)
@@ -94,7 +98,7 @@ func testListenBeginBlocker(t *testing.T) {
 	require.Nil(t, err)
 
 	// send the ABCI messages
-	testStreamingService.ListenBeginBlocker(testingCtx, testBeginBlockReq, testBeginBlockRes)
+	testStreamingService.StreamBeginBlocker(testingCtx, testBeginBlockReq, testBeginBlockRes)
 
 	// consume stored messages
 	// expectedMsgCnt must equal messages sent count so the consumer can close (not stay alive for more messages).
@@ -115,7 +119,7 @@ func testListenEndBlocker(t *testing.T) {
 	require.Nil(t, err)
 
 	// send the ABCI messages
-	testStreamingService.ListenEndBlocker(testingCtx, testEndBlockReq, testEndBlockRes)
+	testStreamingService.StreamEndBlocker(testingCtx, testEndBlockReq, testEndBlockRes)
 
 	// consume stored messages
 	// expectedMsgCnt must equal messages sent count so the consumer can close (not stay alive for more messages).
@@ -316,22 +320,4 @@ func deleteTopics(t *testing.T, topics []string, bootstrapServers string) {
 	}
 
 	a.Close()
-}
-
-func loadAppOptions() types2.AppOptions {
-	m := make(map[string]interface{})
-	m["kafka.enabled"] = true
-	m["kafka.topic_prefix"] = "unittest"
-	// Kafka plugin producer
-	m["kafka.producer.bootstrap_servers"] = "localhost:9092"
-	m["kafka.producer.client_id"] = "kafka_test.go"
-	m["kafka.producer.acks"] = "all"
-	m["kafka.producer.enable_idempotence"] = true
-
-	vpr := viper.New()
-	for key, value := range m {
-		vpr.SetDefault(key, value)
-	}
-
-	return vpr
 }

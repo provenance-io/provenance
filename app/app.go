@@ -3,7 +3,8 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/provenance-io/provenance/app/kafka"
+	streaming2 "github.com/provenance-io/provenance/app/streaming"
+	"github.com/provenance-io/provenance/internal/streaming"
 	"io"
 	"net/http"
 	"os"
@@ -282,8 +283,8 @@ type App struct {
 	// module configurator
 	configurator module.Configurator
 
-	// Kafka streaming service
-	kss *kafka.StreamingService
+	// ABCI streaming services
+	streamingServices []streaming.StreamService
 }
 
 func init() {
@@ -346,7 +347,7 @@ func New(
 		memKeys:           memKeys,
 	}
 
-	// Register helpers for state-sync status.
+	// Init helpers for state-sync status.
 	statesync.RegisterSyncStatus()
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
@@ -803,11 +804,13 @@ func New(
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
 
-	// start up Kafka streaming service
-	enableKss := cast.ToBool(appOpts.Get(fmt.Sprintf("%s.%s", kafka.TomlKey, kafka.EnableKafkaStreamingParam)))
-	if enableKss {
-		logger.Info("starting Kafka streaming service")
-		app.kss = kafka.NewStreamingService(appOpts, appCodec)
+	// register streaming service
+	enabledServices := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("%s.%s", streaming.TomlKey, streaming.EnabledParam)))
+	for _, key := range enabledServices {
+		if ssi, found := streaming2.StreamServiceInitializers[key]; found {
+			app.RegisterStreamingService(ssi.Init(appOpts, app.AppCodec()))
+			logger.Info(fmt.Sprintf("registered %s streaming service", ssi))
+		}
 	}
 
 	return app
@@ -819,8 +822,8 @@ func (app *App) Name() string { return app.BaseApp.Name() }
 // BeginBlocker application updates every begin block
 func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	res := app.mm.BeginBlock(ctx, req)
-	if app.kss != nil {
-		app.kss.ListenBeginBlocker(ctx, req, res)
+	for _, s := range app.streamingServices {
+		s.StreamBeginBlocker(ctx, req, res)
 	}
 	return res
 }
@@ -828,8 +831,8 @@ func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 // EndBlocker application updates every end block
 func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	res := app.mm.EndBlock(ctx, req)
-	if app.kss != nil {
-		app.kss.ListenEndBlocker(ctx, req, res)
+	for _, s := range app.streamingServices {
+		s.StreamEndBlocker(ctx, req, res)
 	}
 	return res
 }
@@ -919,14 +922,14 @@ func (app *App) SimulationManager() *module.SimulationManager {
 func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
 	rpc.RegisterRoutes(clientCtx, apiSvr.Router)
-	// Register legacy tx routes.
+	// Init legacy tx routes.
 	authrest.RegisterTxRoutes(clientCtx, apiSvr.Router)
-	// Register new tx routes from grpc-gateway.
+	// Init new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
-	// Register new tendermint queries routes from grpc-gateway.
+	// Init new tendermint queries routes from grpc-gateway.
 	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
-	// Register legacy and grpc-gateway routes for all modules.
+	// Init legacy and grpc-gateway routes for all modules.
 	ModuleBasics.RegisterRESTRoutes(clientCtx, apiSvr.Router)
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
@@ -944,6 +947,11 @@ func (app *App) RegisterTxService(clientCtx client.Context) {
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *App) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
+}
+
+func (app *App) RegisterStreamingService(s streaming.StreamService) {
+	// App will pass BeginBlocker and EndBlocker requests and responses to the streaming services
+	app.streamingServices = append(app.streamingServices, s)
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
