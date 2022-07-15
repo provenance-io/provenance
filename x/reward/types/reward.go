@@ -41,8 +41,8 @@ type (
 	RewardAction interface {
 		ActionType() string
 		Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool
-		PreEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState)
-		PostEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState)
+		PreEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool
+		PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool
 		GetBuilder() ActionBuilder
 	}
 )
@@ -285,9 +285,6 @@ func NewActionDelegate() ActionDelegate {
 }
 
 func (ad *ActionDelegate) ValidateBasic() error {
-	if ad.MinimumDelegationAmount != nil && ad.MaximumDelegationAmount == nil {
-
-	}
 	return nil
 }
 
@@ -343,7 +340,6 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 		return false
 	}
 	percentile := ad.getValidatorRankPercentile(ctx, provider, validator)
-	actionCounter := state.ActionCounter[ad.ActionType()]
 
 	// TODO Is this correct to truncate the tokens?
 	delegatedHash := sdk.NewInt64Coin(provenanceconfig.DefaultBondDenom, tokens.TruncateInt64())
@@ -352,11 +348,10 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	minPercentile := ad.GetMinimumActiveStakePercentile()
 	maxPercentile := ad.GetMaximumActiveStakePercentile()
 
-	hasValidActionCount := actionCounter >= ad.GetMinimumActions() && actionCounter <= ad.GetMaximumActions()
 	hasValidDelegationAmount := delegatedHash.IsGTE(*minDelegation) && (delegatedHash.IsLT(*maxDelegation) || delegatedHash.IsEqual(*maxDelegation))
 	hasValidActivePercentile := percentile.GTE(minPercentile) && percentile.LTE(maxPercentile)
 
-	return hasValidActionCount && hasValidDelegationAmount && hasValidActivePercentile
+	return hasValidDelegationAmount && hasValidActivePercentile
 }
 
 func (ad *ActionDelegate) String() string {
@@ -378,12 +373,14 @@ func (ad *ActionDelegate) GetMaximumActiveStakePercentile() sdk.Dec {
 	return sdk.NewDec(0)
 }
 
-func (ad *ActionDelegate) PreEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
-	// Any action specific thing that we need to do before evaluation
+func (ad *ActionDelegate) PreEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+	return true
 }
 
-func (ad *ActionDelegate) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
-	// Any action specific thing that we need to do after evaluation
+func (ad *ActionDelegate) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+	actionCounter := state.ActionCounter[ad.ActionType()]
+	hasValidActionCount := actionCounter >= ad.GetMinimumActions() && actionCounter <= ad.GetMaximumActions()
+	return hasValidActionCount
 }
 
 // ============ Action Transfer Delegations ============
@@ -439,12 +436,14 @@ func (at *ActionTransfer) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	return true
 }
 
-func (at *ActionTransfer) PreEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
-	// Any action specific thing that we need to do before evaluation
+func (at *ActionTransfer) PreEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+	return true
 }
 
-func (at *ActionTransfer) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
-	// Any action specific thing that we need to do after evaluation
+func (at *ActionTransfer) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+	actionCounter := state.ActionCounter[at.ActionType()]
+	hasValidActionCount := actionCounter >= at.GetMinimumActions() && actionCounter <= at.GetMaximumActions()
+	return hasValidActionCount
 }
 
 // ============ Action Vote  ============
@@ -471,11 +470,6 @@ func (atd *ActionVote) ActionType() string {
 }
 
 func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
-	actionCounter := state.ActionCounter[atd.ActionType()]
-	hasValidActionCount := actionCounter >= atd.GetMinimumActions() && actionCounter <= atd.GetMaximumActions()
-	if !hasValidActionCount {
-		return false
-	}
 
 	// get the address that voted
 	addressVoting := event.Address
@@ -493,12 +487,14 @@ func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state 
 	return false
 }
 
-func (atd *ActionVote) PreEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
-	// Any action specific thing that we need to do before evaluation
+func (atd *ActionVote) PreEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+	return true
 }
 
-func (atd *ActionVote) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {
-	// Any action specific thing that we need to do after evaluation
+func (atd *ActionVote) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+	actionCounter := state.ActionCounter[atd.ActionType()]
+	hasValidActionCount := actionCounter >= atd.GetMinimumActions() && actionCounter <= atd.GetMaximumActions()
+	return hasValidActionCount
 }
 
 // ============ Qualifying Action ============

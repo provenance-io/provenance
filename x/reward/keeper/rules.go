@@ -81,19 +81,22 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 		if state.ValidateBasic() != nil {
 			state = types.NewRewardAccountState(program.GetId(), program.GetCurrentClaimPeriod(), action.Address.String(), 0)
 		}
-		processor.PreEvaluate(ctx, k, &state)
-		// TODO We want to create an Evaluation Result here.
-		// TODO We can get the share amount from the action
-		if processor.Evaluate(ctx, k, state, action) {
-			successfulActions = append(successfulActions, action)
-			if state.ActionCounter == nil {
-				state.ActionCounter = make(map[string]uint64)
-			}
-			state.ActionCounter[processor.ActionType()]++
 
+		if !processor.PreEvaluate(ctx, k, state) {
+			k.SetRewardAccountState(ctx, state)
+			continue
 		}
-		processor.PostEvaluate(ctx, k, &state)
+		if !processor.Evaluate(ctx, k, state, action) {
+			k.SetRewardAccountState(ctx, state)
+			continue
+		}
+		state.ActionCounter[processor.ActionType()] += 1
+		if !processor.PostEvaluate(ctx, k, state) {
+			k.SetRewardAccountState(ctx, state)
+			continue
+		}
 
+		successfulActions = append(successfulActions, action)
 		k.SetRewardAccountState(ctx, state)
 	}
 
@@ -186,7 +189,7 @@ func (k Keeper) FindQualifyingActions(ctx sdk.Context, action types.RewardAction
 	result := ([]types.EvaluationResult)(nil)
 	builder := action.GetBuilder()
 
-	err1 := k.IterateABCIEvents(ctx, builder.GetEventCriteria(), func(eventType string, attributes *map[string][]byte) error {
+	err := k.IterateABCIEvents(ctx, builder.GetEventCriteria(), func(eventType string, attributes *map[string][]byte) error {
 		// Add the event to the builder
 		err := builder.AddEvent(eventType, attributes)
 		if err != nil {
@@ -209,8 +212,8 @@ func (k Keeper) FindQualifyingActions(ctx sdk.Context, action types.RewardAction
 
 		return nil
 	})
-	if err1 != nil {
-		return nil, err1
+	if err != nil {
+		return nil, err
 	}
 
 	return result, nil
