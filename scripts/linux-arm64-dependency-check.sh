@@ -13,7 +13,7 @@ fi
 
 # Check if we have the env varibale set
 if ! tr ':' '\n' <<< "$LD_LIBRARY_PATH" | grep -xFq "$LIB_PATH"; then
-    echo "LD_LIBRARY_PATH is missing ${LIB_PATH}. Recommended to run: export export LD_LIBRARY_PATH=\${LD_LIBRARY_PATH:+\$LD_LIBRARY_PATH:}$LIB_PATH"
+    echo "LD_LIBRARY_PATH is missing ${LIB_PATH}. Recommended to run: export LD_LIBRARY_PATH=\${LD_LIBRARY_PATH:+\$LD_LIBRARY_PATH:}$LIB_PATH"
     exit 1
 else
     echo "LD_LIBRARY_PATH is already set."
