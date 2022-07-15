@@ -1315,5 +1315,5 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1Voting1DelegateQua
 	rewardProgram.CurrentClaimPeriod = 1
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(3, len(qualifyingActions), "must find one qualifying actions")
+	suite.Assert().Equal(2, len(qualifyingActions), "must find one qualifying actions")
 }
