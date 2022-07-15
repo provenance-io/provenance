@@ -62,6 +62,7 @@ func (b *TransferActionBuilder) BuildAction() (EvaluationResult, error) {
 }
 
 func (b *TransferActionBuilder) Reset() {
+	b.Sender = sdk.AccAddress{}
 }
 
 // ============ DelegateActionBuilder ============

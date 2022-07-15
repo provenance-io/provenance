@@ -2,6 +2,7 @@ package handlers_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 	"os"
 	"testing"
@@ -497,6 +498,85 @@ func TestRewardsProgramStart(t *testing.T) {
 	assert.Equal(t, true, foundAttribute, "event attribute create_reward_program should exist")
 }
 
+func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
+	encCfg := simapp.MakeTestEncodingConfig()
+	priv, _, addr := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000))
+	app := piosimapp.SetupWithGenesisAccounts([]authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	time := ctx.BlockTime()
+	check(simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+
+	rewardProgram := *rewardtypes.NewMsgCreateRewardProgramRequest(
+		"title",
+		"description",
+		acct1.Address,
+		sdk.NewInt64Coin("nhash", 1000),
+		sdk.NewInt64Coin("nhash", 100),
+		time,
+		9,
+		3,
+		uint64(time.Day()),
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+					},
+				},
+			},
+		},
+	)
+	//app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
+	txReward, err := SignTx(NewTestGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &rewardProgram)
+	require.NoError(t, err)
+	_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), txReward)
+	check(errFromDeliverTx)
+	println(res.Data)
+	println(res.Log)
+	app.EndBlock(abci.RequestEndBlock{Height: 2})
+	app.Commit()
+
+	// tx with a fee associated with msg type and account has funds
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(50))))
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("hotdog", 800))
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	for height := int64(3); height <= int64(100); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height}})
+		acct1 := app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+		acct1.SetSequence(seq)
+		tx1, err1 := SignTx(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1)
+		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
+		check(errFromDeliverTx)
+		println(res.Data)
+		println(res.Log)
+
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	check(err)
+	assert.Equal(t, true, len(claimPeriodDistributions) == 1, "claim period reward distributions should exist")
+	assert.Equal(t, int64(0), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
+	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
+	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
+		Denom:  "nhash",
+		Amount: sdk.ZeroInt(),
+	}), "claim period has not ended so shares have to be 0")
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	assert.Equal(t, 196, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
+
+}
+
 // Contains tells if Event type exists in abci.Event.
 func contains(a []abci.Event, x string) (*[]abci.Event, bool) {
 	var eventSlice []abci.Event
@@ -531,7 +611,7 @@ func containsEventAttribute(a abci.Event, x string) (*abci.EventAttribute, bool)
 	return nil, false
 }
 
-func SignTxAndGetBytes(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey types.PubKey, privKey types.PrivKey, acct authtypes.BaseAccount, chainId string, msg ...sdk.Msg) ([]byte, error) {
+func signAndGenTx(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey types.PubKey, privKey types.PrivKey, acct authtypes.BaseAccount, chainId string, msg []sdk.Msg) (client.TxBuilder, error) {
 	txBuilder := encCfg.TxConfig.NewTxBuilder()
 	txBuilder.SetFeeAmount(fees)
 	txBuilder.SetGasLimit(gaslimit)
@@ -572,12 +652,29 @@ func SignTxAndGetBytes(gaslimit uint64, fees sdk.Coins, encCfg simappparams.Enco
 	if err != nil {
 		return nil, err
 	}
+	return txBuilder, nil
+}
+
+func SignTxAndGetBytes(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey types.PubKey, privKey types.PrivKey, acct authtypes.BaseAccount, chainId string, msg ...sdk.Msg) ([]byte, error) {
+	txBuilder, err := signAndGenTx(gaslimit, fees, encCfg, pubKey, privKey, acct, chainId, msg)
+	if err != nil {
+		return nil, err
+	}
 	// Send the tx to the app
 	txBytes, err := encCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
 	if err != nil {
 		return nil, err
 	}
 	return txBytes, nil
+}
+
+func SignTx(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey types.PubKey, privKey types.PrivKey, acct authtypes.BaseAccount, chainId string, msg ...sdk.Msg) (sdk.Tx, error) {
+	txBuilder, err := signAndGenTx(gaslimit, fees, encCfg, pubKey, privKey, acct, chainId, msg)
+	if err != nil {
+		return nil, err
+	}
+	// Send the tx to the app
+	return txBuilder.GetTx(), nil
 }
 
 // NewTestGasLimit is a test fee gas limit.
