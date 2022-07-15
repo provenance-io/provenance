@@ -7,8 +7,8 @@ import (
 	"strings"
 	time "time"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
-
 	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -88,6 +88,7 @@ func (ec *ABCIEvent) MatchesAttribute(name string, value []byte) bool {
 	if !exists {
 		return false
 	}
+	// for dynamic properties like sender we will never know the value, hence a zero byte check will return true too
 	return attribute == nil || reflect.DeepEqual(attribute, value)
 }
 
@@ -98,6 +99,7 @@ type EvaluationResult struct {
 	Address           sdk.AccAddress // shares to attribute to this address
 	Validator         sdk.ValAddress // Address of the validator
 	Delegator         sdk.AccAddress // Address of the delegator
+	Recipient         sdk.AccAddress // Address of the recipient of the Action, specifically Transfer
 }
 
 // ============ Reward Program ============
@@ -408,19 +410,25 @@ func (at *ActionTransfer) ActionType() string {
 }
 
 func (at *ActionTransfer) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
-	// get the address that voted
-	addressVoting := event.Address
-
+	// get the address that is performing the send
+	addressSender := event.Address
+	if addressSender == nil {
+		return false
+	}
+	if provider.GetAccountKeeper().GetModuleAddress(authtypes.FeeCollectorName).Equals(event.Recipient) {
+		return false
+	}
 	actionCounter := state.ActionCounter[at.ActionType()]
 	hasValidActionCount := actionCounter >= at.GetMinimumActions() && actionCounter <= at.GetMaximumActions()
 	if !hasValidActionCount {
 		return false
 	}
 
+	println(at.MinimumDelegationAmount.String())
 	// check delegations if and only if mandated by the Action
-	if at.MinimumDelegationAmount.IsGTE(sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.ZeroInt())) {
+	if sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.ZeroInt()).IsLT(at.MinimumDelegationAmount) {
 		// now check if it has any delegations
-		totalDelegations, found := getAllDelegations(ctx, provider, addressVoting)
+		totalDelegations, found := getAllDelegations(ctx, provider, addressSender)
 		if !found {
 			return false
 		}
@@ -428,7 +436,7 @@ func (at *ActionTransfer) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 			return true
 		}
 	}
-	return false
+	return true
 }
 
 func (at *ActionTransfer) PreEvaluate(ctx sdk.Context, provider KeeperProvider, state *RewardAccountState) {

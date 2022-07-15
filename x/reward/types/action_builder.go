@@ -19,11 +19,19 @@ type ActionBuilder interface {
 
 // ============ TransferActionBuilder ============
 type TransferActionBuilder struct {
-	Sender sdk.AccAddress
+	Sender    sdk.AccAddress
+	Action    string
+	Recipient sdk.AccAddress
 }
 
 func (b *TransferActionBuilder) GetEventCriteria() *EventCriteria {
 	return NewEventCriteria([]ABCIEvent{
+		{
+			Type: sdk.EventTypeMessage,
+			Attributes: map[string][]byte{
+				"action": []byte("/cosmos.bank.v1beta1.MsgSend"),
+			},
+		},
 		{
 			Type:       banktypes.EventTypeTransfer,
 			Attributes: map[string][]byte{},
@@ -32,30 +40,55 @@ func (b *TransferActionBuilder) GetEventCriteria() *EventCriteria {
 }
 
 func (b *TransferActionBuilder) AddEvent(eventType string, attributes *map[string][]byte) error {
-	if eventType == banktypes.EventTypeTransfer {
+	switch eventType {
+	case sdk.EventTypeMessage:
 		// Update the result with the senders address
 		address := (*attributes)[banktypes.AttributeKeySender]
-		address, err := sdk.AccAddressFromBech32(string(address))
+		action := (*attributes)[sdk.AttributeKeyAction]
+		if address != nil {
+			address, err := sdk.AccAddressFromBech32(string(address))
+			if err != nil {
+				return err
+			}
+			b.Sender = address
+		}
+
+		if action != nil {
+			b.Action = string(action)
+		}
+	case banktypes.EventTypeTransfer:
+		// Update the result with the senders address
+		address := (*attributes)[banktypes.AttributeKeySender]
+		addressSenderAddr, err := sdk.AccAddressFromBech32(string(address))
 		if err != nil {
 			return err
 		}
-		b.Sender = address
+		b.Sender = addressSenderAddr
+
+		addressRecipient := (*attributes)[banktypes.AttributeKeyRecipient]
+		addressRecipientAddr, errFromParsingRecipientAddress := sdk.AccAddressFromBech32(string(addressRecipient))
+		if errFromParsingRecipientAddress != nil {
+			return errFromParsingRecipientAddress
+		}
+		b.Recipient = addressRecipientAddr
+
 	}
 	return nil
 }
 
 func (b *TransferActionBuilder) CanBuild() bool {
-	return !b.Sender.Empty()
+	return !b.Sender.Empty() && !(len(b.Action) == 0) && !b.Recipient.Empty()
 }
 
 func (b *TransferActionBuilder) BuildAction() (EvaluationResult, error) {
 	if !b.CanBuild() {
-		return EvaluationResult{}, fmt.Errorf("missing delegator or validator from delegate action")
+		return EvaluationResult{}, nil
 	}
 
 	result := EvaluationResult{
-		Shares:  1,
-		Address: b.Sender,
+		Shares:    1,
+		Address:   b.Sender,
+		Recipient: b.Recipient,
 	}
 
 	return result, nil

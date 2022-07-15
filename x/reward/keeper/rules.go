@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -80,14 +81,16 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 		if state.ValidateBasic() != nil {
 			state = types.NewRewardAccountState(program.GetId(), program.GetCurrentClaimPeriod(), action.Address.String(), 0)
 		}
-
-		state.ActionCounter[processor.ActionType()]++
-
 		processor.PreEvaluate(ctx, k, &state)
 		// TODO We want to create an Evaluation Result here.
 		// TODO We can get the share amount from the action
 		if processor.Evaluate(ctx, k, state, action) {
 			successfulActions = append(successfulActions, action)
+			if state.ActionCounter == nil {
+				state.ActionCounter = make(map[string]uint64)
+			}
+			state.ActionCounter[processor.ActionType()]++
+
 		}
 		processor.PostEvaluate(ctx, k, &state)
 
@@ -183,7 +186,7 @@ func (k Keeper) FindQualifyingActions(ctx sdk.Context, action types.RewardAction
 	result := ([]types.EvaluationResult)(nil)
 	builder := action.GetBuilder()
 
-	err := k.IterateABCIEvents(ctx, builder.GetEventCriteria(), func(eventType string, attributes *map[string][]byte) error {
+	err1 := k.IterateABCIEvents(ctx, builder.GetEventCriteria(), func(eventType string, attributes *map[string][]byte) error {
 		// Add the event to the builder
 		err := builder.AddEvent(eventType, attributes)
 		if err != nil {
@@ -206,8 +209,8 @@ func (k Keeper) FindQualifyingActions(ctx sdk.Context, action types.RewardAction
 
 		return nil
 	})
-	if err != nil {
-		return nil, err
+	if err1 != nil {
+		return nil, err1
 	}
 
 	return result, nil
@@ -215,6 +218,13 @@ func (k Keeper) FindQualifyingActions(ctx sdk.Context, action types.RewardAction
 
 func (k Keeper) GetDistributionKeeper() types.DistributionKeeper {
 	return nil
+}
+func (k Keeper) GetAccountKeeper() types.AccountKeeper {
+	return k.authkeeper
+}
+
+func (k *Keeper) SetAccountKeeper(newKeeper authkeeper.AccountKeeper) {
+	k.authkeeper = newKeeper
 }
 
 func (k Keeper) GetStakingKeeper() types.StakingKeeper {

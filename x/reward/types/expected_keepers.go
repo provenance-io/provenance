@@ -18,7 +18,14 @@ type StakingKeeper interface {
 	GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation stakingtypes.Delegation, found bool)
 }
 
+// AccountKeeper defines the contract needed for AccountKeeper related APIs.
+// Interface provides support to use non-sdk AccountKeeper for AnteHandler's decorators.
+type AccountKeeper interface {
+	GetModuleAddress(moduleName string) sdk.AccAddress
+}
+
 type KeeperProvider interface {
 	GetDistributionKeeper() DistributionKeeper
 	GetStakingKeeper() StakingKeeper
+	GetAccountKeeper() AccountKeeper
 }

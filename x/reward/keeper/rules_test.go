@@ -356,7 +356,18 @@ func (m MockKeeperProvider) GetStakingKeeper() types.StakingKeeper {
 	return MockStakingKeeper{}
 }
 
+func (m MockKeeperProvider) GetAccountKeeper() types.AccountKeeper {
+	return MockAccountKeeper{}
+}
+
 type MockStakingKeeper struct {
+}
+
+type MockAccountKeeper struct {
+}
+
+func (m MockAccountKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
+	return nil
 }
 
 func (m MockStakingKeeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []stakingtypes.Delegation {
