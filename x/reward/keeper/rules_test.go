@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
+	"time"
+
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -285,11 +286,13 @@ func (m MockAction) GetBuilder() types.ActionBuilder {
 	return m.Builder
 }
 
-func (m MockAction) PreEvaluate(ctx sdk.Context, provider types.KeeperProvider, state *types.RewardAccountState) {
+func (m MockAction) PreEvaluate(ctx sdk.Context, provider types.KeeperProvider, state types.RewardAccountState) bool {
+	return true
 	// Any action specific thing that we need to do before evaluation
 }
 
-func (m MockAction) PostEvaluate(ctx sdk.Context, provider types.KeeperProvider, state *types.RewardAccountState) {
+func (m MockAction) PostEvaluate(ctx sdk.Context, provider types.KeeperProvider, state types.RewardAccountState) bool {
+	return true
 	// Any action specific thing that we need to do after evaluation
 }
 
@@ -706,9 +709,10 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction()
 			},
 		},
 	)
+	rewardProgram.CurrentClaimPeriod = 1
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(2, len(qualifyingActions), "must find two qualifying actions")
+	suite.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
 }
 
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction() {
@@ -734,7 +738,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction()
 				Type: &types.QualifyingAction_Delegate{
 					Delegate: &types.ActionDelegate{
 						MinimumActions:               0,
-						MaximumActions:               1,
+						MaximumActions:               4,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
 						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
@@ -746,7 +750,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction()
 				Type: &types.QualifyingAction_Delegate{
 					Delegate: &types.ActionDelegate{
 						MinimumActions:               0,
-						MaximumActions:               1,
+						MaximumActions:               4,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
 						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
@@ -756,6 +760,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction()
 			},
 		},
 	)
+	rewardProgram.CurrentClaimPeriod = 1
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
 	suite.Assert().Equal(4, len(qualifyingActions), "must find four qualifying actions")
@@ -779,6 +784,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoQualifyingAction(
 		0,
 		[]types.QualifyingAction{},
 	)
+	rewardProgram.CurrentClaimPeriod = 1
 
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
@@ -818,6 +824,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoMatchingQualifyin
 			},
 		},
 	)
+	rewardProgram.CurrentClaimPeriod = 1
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
 	suite.Assert().Equal(0, len(qualifyingActions), "must find no qualifying actions")
@@ -956,6 +963,7 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidRewardProgram() {
 		0,
 		[]types.QualifyingAction{},
 	)
+	rewardProgram.CurrentClaimPeriod = 1
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
 	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
@@ -993,6 +1001,7 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidAddress() {
 		0,
 		[]types.QualifyingAction{},
 	)
+	rewardProgram.CurrentClaimPeriod = 1
 
 	validator, _ := sdk.ValAddressFromBech32("blah")
 	delegator, _ := sdk.AccAddressFromBech32("blah")
@@ -1137,6 +1146,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingAc
 			},
 		},
 	)
+	rewardProgram.CurrentClaimPeriod = 1
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
 	suite.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
@@ -1170,6 +1180,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingAc
 			},
 		},
 	)
+	rewardProgram.CurrentClaimPeriod = 1
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
 	suite.Assert().Equal(0, len(qualifyingActions), "must find zero qualifying actions")
@@ -1204,6 +1215,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingNoQualifying
 			},
 		},
 	)
+	rewardProgram.CurrentClaimPeriod = 1
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
 	suite.Assert().Equal(0, len(qualifyingActions), "must find one qualifying actions")
@@ -1251,9 +1263,10 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingDelegateQual
 			},
 		},
 	)
+	rewardProgram.CurrentClaimPeriod = 1
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(2, len(qualifyingActions), "must find one qualifying actions")
+	suite.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
 }
 
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1Voting1DelegateQualifyingAction() {
@@ -1299,6 +1312,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1Voting1DelegateQua
 			},
 		},
 	)
+	rewardProgram.CurrentClaimPeriod = 1
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
 	suite.Assert().Equal(3, len(qualifyingActions), "must find one qualifying actions")

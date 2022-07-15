@@ -81,16 +81,21 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 			state = types.NewRewardAccountState(program.GetId(), program.GetCurrentClaimPeriod(), action.Address.String(), 0)
 		}
 
-		state.ActionCounter[processor.ActionType()]++
-
-		processor.PreEvaluate(ctx, k, &state)
-		// TODO We want to create an Evaluation Result here.
-		// TODO We can get the share amount from the action
-		if processor.Evaluate(ctx, k, state, action) {
-			successfulActions = append(successfulActions, action)
+		if !processor.PreEvaluate(ctx, k, state) {
+			k.SetRewardAccountState(ctx, state)
+			continue
 		}
-		processor.PostEvaluate(ctx, k, &state)
+		if !processor.Evaluate(ctx, k, state, action) {
+			k.SetRewardAccountState(ctx, state)
+			continue
+		}
+		state.ActionCounter[processor.ActionType()] += 1
+		if !processor.PostEvaluate(ctx, k, state) {
+			k.SetRewardAccountState(ctx, state)
+			continue
+		}
 
+		successfulActions = append(successfulActions, action)
 		k.SetRewardAccountState(ctx, state)
 	}
 
