@@ -23,14 +23,15 @@ do
     has_dependency $dependency
     status=$?
     if [[ $status == 0 ]]; then
-        echo "Missing $dependency. Recommened to run: make librdkafka"
+        echo "Missing $dependency. Recommended to run: make librdkafka"
         exit 1
     fi
 done
 
 # Check that PKG_CONFIG_PATH is set
-case ":$PKG_CONFIG_PATH:" in
-  *:"$( brew --prefix openssl )/lib/pkgconfig":*) : ;;
-  *) echo "PKG_CONFIG_PATH is missing openssl. Recommended to run: export PKG_CONFIG_PATH=\"\$( brew --prefix openssl )\"/lib/pkgconfig\"\${PKG_CONFIG_PATH:+:\$PKG_CONFIG_PATH}\""; exit 1;
-esac
+op="$( brew --prefix openssl )/lib/pkgconfig"
+if ! tr ':' '\n' <<< "$PKG_CONFIG_PATH" | grep -xFq "$op"; then
+    echo "PKG_CONFIG_PATH is missing openssl. Recommended to run: export PKG_CONFIG_PATH=\"\$( brew --prefix openssl )\"/lib/pkgconfig\"\${PKG_CONFIG_PATH:+:\$PKG_CONFIG_PATH}\"";
+    exit 1;
+fi
 exit 0

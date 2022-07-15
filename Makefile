@@ -91,6 +91,12 @@ ifeq ($(UNAME_S),darwin)
 		build_tags += dynamic
 	endif
 endif
+ifeq ($(UNAME_S),linux)
+	ifeq ($(UNAME_M),aarch64)
+		# Needed on aarch64 due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
+		build_tags += dynamic
+	endif
+endif
 
 ifeq ($(WITH_CLEVELDB),true)
   ifneq ($(have_gcc),true)
@@ -372,6 +378,8 @@ cleveldb:
 librdkafka:
 	@if [ "$(UNAME_S)" = "darwin" ] && [ "$(UNAME_M)" = "arm64" ]; then \
 		scripts/m1_librdkafka_install.sh;\
+	elif [ "$(UNAME_S)" = "linux" ] && [ "$(UNAME_M)" = "aarch64" ]; then \
+		scripts/linux_arm64_librdkafka_install.sh;\
 	fi
 
 .PHONY: go-mod-cache go.sum lint clean format check-built linkify update-tocs rocksdb cleveldb librdkafka
@@ -391,7 +399,10 @@ validate-go-version: ## Validates the installed version of go against Provenance
 validate-os-dependencies: ## Validates all the dependencies needed by a specific os
 	@if [ "$(UNAME_S)" = "darwin" ] && [ "$(UNAME_M)" = "arm64" ]; then \
 		output=$$(scripts/m1-dependency-check.sh); \
-		if [ "$$?" == "1" ]; then echo "\x1B[31m>> Build halted\x1B[39m"; echo "\x1B[31m>> $$output\x1B[39m"; exit 1; fi; \
+		if [ "$$?" = "1" ]; then echo "\x1B[31m>> Build halted\x1B[39m"; echo "\x1B[31m>> $$output\x1B[39m"; exit 1; fi; \
+	elif [ "$(UNAME_S)" = "linux" ] && [ "$(UNAME_M)" = "aarch64" ]; then \
+		output=$$(scripts/linux-arm64-dependency-check.sh); \
+		if [ "$$?" = "1" ]; then echo ">> Build halted"; echo ">> $$output"; exit 1; fi; \
 	fi
 
 download-smart-contracts:
@@ -415,6 +426,12 @@ endif
 ifeq ($(UNAME_S),darwin)
 	ifeq ($(UNAME_M),arm64)
 		# Needed on M1 macs due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
+		TAGS += dynamic
+	endif
+endif
+ifeq ($(UNAME_S),linux)
+	ifeq ($(UNAME_M),aarch64)
+		# Needed on aarch64 due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
 		TAGS += dynamic
 	endif
 endif
