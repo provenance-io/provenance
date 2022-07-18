@@ -42,10 +42,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update the swagger files (including third-party changes). [#728](https://github.com/provenance-io/provenance/issues/728)
 * Bump IBC to 2.3.0 and update third-party protos [PR 868](https://github.com/provenance-io/provenance/pull/868)
 
-### Bug Fixes
-
-* Add new `msgfees` `NhashPerUsdMil`  default param to param space store on upgrade (PR [#875](https://github.com/provenance-io/provenance/issues/875))
-  
 ### State Machine Breaking
 
 * Fix the `MarkerTransferAuthorization` Accept function and `TransferCoin` authz handling to prevent problems when other authorization types are used [#903](https://github.com/provenance-io/provenance/issues/903)
