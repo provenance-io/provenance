@@ -98,17 +98,22 @@ $ make rocksdb
 
 ### librdkafka
 
-On M1 Macs (arm64), `librdkafka` and its dependencies are required.
+On ARM64, `librdkafka` and its dependencies are required.
 
 To download, build, and install librdkafka and its dependencies on your system:
 ```console
 $ make librdkafka
 ```
 
-Openssl's pkg-config files need to be included in the PKG_CONFIG_PATH.
+For M1's Openssl's pkg-config files need to be included in the PKG_CONFIG_PATH.
 
 ```console
 $ export PKG_CONFIG_PATH="$( brew --prefix openssl )"/lib/pkgconfig"${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+```
+
+For Linux ARM64 LD_LIBRARY_PATH needs to include the path to librdkafka.
+```console
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 ```
 
 ## Building or Installing `provenanced`

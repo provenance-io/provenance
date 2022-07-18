@@ -91,6 +91,12 @@ ifeq ($(UNAME_S),darwin)
 		build_tags += dynamic
 	endif
 endif
+ifeq ($(UNAME_S),linux)
+	ifeq ($(UNAME_M),aarch64)
+		# Needed on aarch64 due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
+		build_tags += dynamic
+	endif
+endif
 
 ifeq ($(WITH_CLEVELDB),true)
   ifneq ($(have_gcc),true)
@@ -185,7 +191,7 @@ all: build format lint test
 install: go.sum
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install $(BUILD_FLAGS) ./cmd/provenanced
 
-build: validate-go-version go.sum
+build: validate-os-dependencies validate-go-version go.sum
 	mkdir -p $(BUILDDIR)
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/provenanced
 
@@ -370,8 +376,10 @@ cleveldb:
 
 # Download and install librdkafka so that it can be used when doing a build.
 librdkafka:
-	@if [[ $(UNAME_S) == darwin && $(UNAME_M) == arm64 ]]; then \
+	@if [ "$(UNAME_S)" = "darwin" ] && [ "$(UNAME_M)" = "arm64" ]; then \
 		scripts/m1_librdkafka_install.sh;\
+	elif [ "$(UNAME_S)" = "linux" ] && [ "$(UNAME_M)" = "aarch64" ]; then \
+		scripts/linux_arm64_librdkafka_install.sh;\
 	fi
 
 .PHONY: go-mod-cache go.sum lint clean format check-built linkify update-tocs rocksdb cleveldb librdkafka
@@ -386,6 +394,15 @@ validate-go-version: ## Validates the installed version of go against Provenance
 	elif [ $(GO_MINOR_VERSION) -lt $(MINIMUM_SUPPORTED_GO_MINOR_VERSION) ] ; then \
 		echo '$(GO_VERSION_VALIDATION_ERR_MSG)';\
 		exit 1; \
+	fi
+
+validate-os-dependencies: ## Validates all the dependencies needed by a specific os
+	@if [ "$(UNAME_S)" = "darwin" ] && [ "$(UNAME_M)" = "arm64" ]; then \
+		output=$$(scripts/m1-dependency-check.sh); \
+		if [ "$$?" = "1" ]; then echo "\x1B[31m>> Build halted\x1B[39m"; echo "\x1B[31m>> $$output\x1B[39m"; exit 1; fi; \
+	elif [ "$(UNAME_S)" = "linux" ] && [ "$(UNAME_M)" = "aarch64" ]; then \
+		output=$$(scripts/linux-arm64-dependency-check.sh); \
+		if [ "$$?" = "1" ]; then echo ">> Build halted"; echo ">> $$output"; exit 1; fi; \
 	fi
 
 download-smart-contracts:
@@ -409,6 +426,12 @@ endif
 ifeq ($(UNAME_S),darwin)
 	ifeq ($(UNAME_M),arm64)
 		# Needed on M1 macs due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
+		TAGS += dynamic
+	endif
+endif
+ifeq ($(UNAME_S),linux)
+	ifeq ($(UNAME_M),aarch64)
+		# Needed on aarch64 due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
 		TAGS += dynamic
 	endif
 endif
@@ -507,9 +530,9 @@ proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-
 
 containerProtoVer=v0.2
 containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
-containerProtoGen=cosmos-sdk-proto-gen-$(containerProtoVer)
-containerProtoGenSwagger=cosmos-sdk-proto-gen-swagger-$(containerProtoVer)
-containerProtoFmt=cosmos-sdk-proto-fmt-$(containerProtoVer)
+containerProtoGen=prov-proto-gen-$(containerProtoVer)
+containerProtoGenSwagger=prov-proto-gen-swagger-$(containerProtoVer)
+containerProtoFmt=prov-proto-fmt-$(containerProtoVer)
 
 proto-gen:
 	@echo "Generating Protobuf files"
