@@ -11,11 +11,11 @@ if [ -f "$LIB_PATH/$LIB_RDKAFKA" ]; then
 else
     echo "Installing librdkafka..."
     # Build librdkafka
-    git clone -b $VERSION https://github.com/edenhill/librdkafka.git $TEMP
+    git clone -b v1.8.2 https://github.com/edenhill/librdkafka.git /tmp/librdkafka
     cd /tmp/librdkafka
     ./configure
     make
-    make install
+    sudo make install
     cd ${PWD}
 
     # Cleanup
