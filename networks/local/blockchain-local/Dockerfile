@@ -22,6 +22,7 @@ RUN go build -mod vendor -tags=cleveldb -ldflags '-w -s -X github.com/cosmos/cos
 ## Run provenance for x86_64
 FROM debian:buster-slim as provenance-x86_64
 ENV LOCALNET=1
+ENV LD_LIBRARY_PATH="/usr/local/lib"
 
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -73,9 +74,9 @@ RUN go build -mod vendor -tags=cleveldb,dynamic -ldflags '-w -s -X github.com/co
 ## Run provenance for ARM
 FROM debian:buster-slim as provenance-arm64
 ENV LOCALNET=1
-# This is for M1 to find librdkafka
-ENV PKG_CONFIG_PATH="/usr/local/lib"
 ENV LD_LIBRARY_PATH="/usr/local/lib"
+# This is for M1 to find package config
+ENV PKG_CONFIG_PATH="/usr/local/lib"
 
 RUN apt-get update && \
     apt-get upgrade -y && \

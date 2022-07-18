@@ -29,15 +29,12 @@ func (a MarkerTransferAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz
 		limitLeft, isNegative := a.DecreaseTransferLimit(msg.Amount)
 		if isNegative {
 			return authz.AcceptResponse{}, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "requested amount is more than spend limit")
-		} else if msg.Administrator != "" && msg.Administrator == msg.FromAddress {
-			shouldDelete := false
-			if limitLeft.IsZero() {
-				shouldDelete = true
-			}
-			return authz.AcceptResponse{Accept: true, Delete: shouldDelete, Updated: &MarkerTransferAuthorization{TransferLimit: limitLeft}}, nil
 		}
-		// does not return and an updated transfer limit, this is handled in marker module
-		return authz.AcceptResponse{Accept: true, Delete: false, Updated: &MarkerTransferAuthorization{TransferLimit: a.TransferLimit}}, nil
+		shouldDelete := false
+		if limitLeft.IsZero() {
+			shouldDelete = true
+		}
+		return authz.AcceptResponse{Accept: true, Delete: shouldDelete, Updated: &MarkerTransferAuthorization{TransferLimit: limitLeft}}, nil
 	default:
 		return authz.AcceptResponse{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "type mismatch")
 	}
