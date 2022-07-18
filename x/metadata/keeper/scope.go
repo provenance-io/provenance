@@ -340,7 +340,10 @@ func (k Keeper) validateScopeUpdateValueOwner(ctx sdk.Context, existing, propose
 				}
 			}
 			if !found {
-				stillMissing := k.checkAuthzForMissing(ctx, []string{existing}, signers, msgTypeURL)
+				stillMissing, err := k.checkAuthzForMissing(ctx, []string{existing}, signers, msgTypeURL)
+				if err != nil {
+					return fmt.Errorf("error validating signers: %w", err)
+				}
 				if len(stillMissing) == 0 {
 					found = true
 				}
