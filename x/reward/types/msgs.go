@@ -18,7 +18,7 @@ const (
 // Compile time interface checks.
 var _ sdk.Msg = &MsgCreateRewardProgramRequest{}
 
-// MsgCreateRewardProgramRequest creates a new create reward program request
+// NewMsgCreateRewardProgramRequest creates a new create reward program request
 func NewMsgCreateRewardProgramRequest(
 	title string,
 	description string,

@@ -577,6 +577,57 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 
 }
 
+func TestRewardsProgramStartPerformQualifyingActions_1(t *testing.T) {
+	encCfg := simapp.MakeTestEncodingConfig()
+	priv, _, addr := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+	app := piosimapp.SetupWithGenesisRewardsProgram([]authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	check(simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+
+	// tx with a fee associated with msg type and account has funds
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+
+	rewardProgram, found := app.RewardKeeper.GetRewardProgram(ctx, 1)
+	assert.Equal(t, true, found, "reward program needs to be found")
+	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)), rewardProgram.TotalRewardPool, "reward program needs to be found")
+	for height := int64(2); height <= int64(20); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height}})
+		acct1.SetSequence(seq)
+		tx1, err1 := SignTx(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1)
+		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
+		check(errFromDeliverTx)
+		println(res.Data)
+		println(res.Log)
+		time.Sleep(1000 * time.Millisecond)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	check(err)
+	assert.Equal(t, true, len(claimPeriodDistributions) == 1, "claim period reward distributions should exist")
+	//assert.Equal(t, int64(10), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
+	//assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
+	//assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
+	//	Denom:  "nhash",
+	//	Amount: sdk.ZeroInt(),
+	//}), "claim period has not ended so shares have to be 0")
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	check(err)
+	assert.Equal(t, 98, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
+	assert.Equal(t, 10, int(accountState.SharesEarned), "account state incorrect")
+
+}
+
 // Contains tells if Event type exists in abci.Event.
 func contains(a []abci.Event, x string) (*[]abci.Event, bool) {
 	var eventSlice []abci.Event
