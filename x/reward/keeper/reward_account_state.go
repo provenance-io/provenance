@@ -30,6 +30,14 @@ func (k Keeper) GetRewardAccountState(ctx sdk.Context, rewardProgramID, rewardCl
 		return state, nil
 	}
 	err = k.cdc.Unmarshal(bz, &state)
+
+	// By default protobuf can't tell the difference between
+	// an empty map and nil. It's solution is to always make
+	// it nil because of the spec.
+	if state.ActionCounter == nil {
+		state.ActionCounter = make(map[string]uint64)
+	}
+
 	return state, err
 }
 

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -89,9 +90,6 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 		if !processor.Evaluate(ctx, k, state, action) {
 			k.SetRewardAccountState(ctx, state)
 			continue
-		}
-		if state.ActionCounter == nil {
-			state.ActionCounter = make(map[string]uint64)
 		}
 		state.ActionCounter[processor.ActionType()] += 1
 		if !processor.PostEvaluate(ctx, k, state) {
