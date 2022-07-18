@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -609,6 +610,23 @@ func TestAccountImplictControl(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, user2, user, user2, sdk.NewCoin("testcoin", sdk.NewInt(10))))
 	// fails if the admin user does not have transfer authority
 	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, user, user2, user, sdk.NewCoin("testcoin", sdk.NewInt(10))))
+
+	// validate authz when 'from' is different from 'admin'
+	granter := user
+	grantee := user2
+	now := ctx.BlockHeader().Time
+	require.NotNil(t, now)
+	a := types.NewMarkerTransferAuthorization(sdk.NewCoins(sdk.NewCoin("testcoin", sdk.NewInt(10))))
+
+	// fails when admin user (grantee without authz permissions) has transfer authority
+	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
+	// succeeds when admin user (grantee with authz permissions) has transfer authority
+	require.NoError(t, app.AuthzKeeper.SaveGrant(ctx, grantee, granter, a, time.Now().Add(time.Hour)))
+	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
+	// succeeds when admin user (grantee with authz permissions) has transfer authority (transfer remaining balance)
+	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
+	// fails when admin user (grantee with authz permissions) and transfer authority has transferred all coin ^^^ (grant has now been deleted)
+	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
 }
 
 func TestMarkerFeeGrant(t *testing.T) {

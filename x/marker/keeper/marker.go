@@ -703,17 +703,17 @@ func (k Keeper) authzHandler(ctx sdk.Context, admin sdk.AccAddress, from sdk.Acc
 		return fmt.Errorf("%s account has not been granted authority to withdraw from %s account", admin, from)
 	}
 	accept, err := authorization.Accept(ctx, &types.MsgTransferRequest{Amount: amount})
-	if err != nil {
+	switch {
+	case err != nil:
 		return err
+	case !accept.Accept:
+		return fmt.Errorf("authorization was not accepted for %s", admin)
+	case accept.Delete:
+		return k.authzKeeper.DeleteGrant(ctx, admin, from, markerAuth.MsgTypeURL())
+	case accept.Updated != nil:
+		return k.authzKeeper.SaveGrant(ctx, admin, from, accept.Updated, expireTime)
 	}
-	if accept.Accept {
-		limitLeft, _ := authorization.(*types.MarkerTransferAuthorization).DecreaseTransferLimit(amount)
-		if limitLeft.IsZero() {
-			return k.authzKeeper.DeleteGrant(ctx, admin, from, markerAuth.MsgTypeURL())
-		}
-		return k.authzKeeper.SaveGrant(ctx, admin, from, &types.MarkerTransferAuthorization{TransferLimit: limitLeft}, expireTime)
-	}
-	return fmt.Errorf("authorization was not accepted for %s", admin)
+	return nil
 }
 
 // SetMarkerDenomMetadata updates the denom metadata records for the current marker.
