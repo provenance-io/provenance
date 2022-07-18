@@ -49,7 +49,7 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 	actionsExampleJSON := "{\"qualifying_actions\":[{\"delegate\":{\"minimum_actions\":\"0\",\"maximum_actions\":\"0\",\"minimum_delegation_amount\":{\"denom\":\"nhash\",\"amount\":\"0\"},\"maximum_delegation_amount\":{\"denom\":\"nhash\",\"amount\":\"100\"},\"minimum_active_stake_percentile\":\"0.000000000000000000\",\"maximum_active_stake_percentile\":\"1.000000000000000000\"}}]}"
 	cmd := &cobra.Command{
 		Use:     "add-reward-program [title] [description]",
-		Args:    cobra.ExactArgs(3),
+		Args:    cobra.ExactArgs(2),
 		Aliases: []string{"arp"},
 		Short:   "Add a reward program",
 		Long:    strings.TrimSpace(`Add a reward program`),

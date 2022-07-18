@@ -296,7 +296,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 	}{
 		{"add reward program tx - valid",
 			[]string{
-				"add-reward-program",
 				"test add reward program",
 				"description",
 				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
@@ -313,7 +312,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 		},
 		{"add reward program tx - invalid total-reward-pool",
 			[]string{
-				"add-reward-program",
 				"test add reward program",
 				"description",
 				"--total-reward-pool=invalid",
@@ -330,7 +328,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 		},
 		{"add reward program tx - invalid max-reward-by-address",
 			[]string{
-				"add-reward-program",
 				"test add reward program",
 				"description",
 				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
@@ -346,7 +343,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 		},
 		{"add reward program tx - invalid claim period days",
 			[]string{
-				"add-reward-program",
 				"test add reward program",
 				"description",
 				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
@@ -363,7 +359,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 		},
 		{"add reward program tx - invalid expire days",
 			[]string{
-				"add-reward-program",
 				"test add reward program",
 				"description",
 				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
@@ -380,7 +375,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 		},
 		{"add reward program tx - invalid reward period days",
 			[]string{
-				"add-reward-program",
 				"test add reward program",
 				"description",
 				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
@@ -397,7 +391,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 		},
 		{"add reward program tx - invalid start time",
 			[]string{
-				"add-reward-program",
 				"test add reward program",
 				"description",
 				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
@@ -414,7 +407,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 		},
 		{"add reward program tx - invalid ec",
 			[]string{
-				"add-reward-program",
 				"test add reward program",
 				"description",
 				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
