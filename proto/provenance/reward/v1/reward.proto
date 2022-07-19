@@ -44,6 +44,7 @@ message RewardProgram {
     (gogoproto.jsontag)  = "program_start_time,omitempty",
     (gogoproto.moretags) = "yaml:\"program_start_time,omitempty\""
   ]; // Time that a RewardProgram should start and switch to STARTED state.
+
   google.protobuf.Timestamp expected_program_end_time = 12 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
@@ -51,30 +52,37 @@ message RewardProgram {
     (gogoproto.moretags) = "yaml:\"expected_program_end_time,omitempty\""
   ]; // Time that a RewardProgram MUST end.
 
-  google.protobuf.Timestamp claim_period_end_time = 13 [
+  google.protobuf.Timestamp program_end_time_max = 13 [
+    (gogoproto.stdtime)  = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "program_end_time_max,omitempty",
+    (gogoproto.moretags) = "yaml:\"program_end_time_max,omitempty\""
+  ]; // Time that a RewardProgram MUST end.
+
+  google.protobuf.Timestamp claim_period_end_time = 14 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "claim_period_end_time,omitempty",
     (gogoproto.moretags) = "yaml:\"claim_period_end_time,omitempty\""
   ]; // Used internally to calculate and track the current claim period's ending time.
 
-  google.protobuf.Timestamp actual_program_end_time = 14 [
+  google.protobuf.Timestamp actual_program_end_time = 15 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "finished_time,omitempty",
     (gogoproto.moretags) = "yaml:\"finished_time,omitempty\""
   ]; // Time the RewardProgram switched to FINISHED state. Initially set as empty.
 
-  uint64 claim_periods = 15; // Number of claim periods this program will run for
+  uint64 claim_periods = 16; // Number of claim periods this program will run for
 
-  uint64 current_claim_period = 16; // Current claim period of the RewardProgram. Uses 1-based indexing.
+  uint64 current_claim_period = 17; // Current claim period of the RewardProgram. Uses 1-based indexing.
 
-  State state = 17; // Current state of the RewardProgram.
+  State state = 18; // Current state of the RewardProgram.
 
-  uint64 reward_claim_expiration_offset = 18; // Grace period after a RewardProgram FINISHED. It is the number of
+  uint64 reward_claim_expiration_offset = 19; // Grace period after a RewardProgram FINISHED. It is the number of
                                               // seconds until a RewardProgram enters the EXPIRED state.
 
-  repeated QualifyingAction qualifying_actions = 19 [
+  repeated QualifyingAction qualifying_actions = 20 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"qualifying_actions"
   ]; // Actions that count towards the reward
@@ -141,9 +149,9 @@ message QualifyingAction {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;
   oneof type {
-    ActionDelegate delegate            = 1;
+    ActionDelegate delegate = 1;
     ActionTransfer transfer = 2;
-    ActionVote     vote                = 3;
+    ActionVote     vote     = 3;
   }
 }
 

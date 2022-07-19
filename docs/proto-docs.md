@@ -6115,6 +6115,7 @@ RewardProgram
 | `claim_period_seconds` | [uint64](#uint64) |  | Number of seconds that a claim period lasts. |
 | `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that a RewardProgram should start and switch to STARTED state. |
 | `expected_program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that a RewardProgram MUST end. |
+| `program_end_time_max` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that a RewardProgram MUST end. |
 | `claim_period_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Used internally to calculate and track the current claim period's ending time. |
 | `actual_program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time the RewardProgram switched to FINISHED state. Initially set as empty. |
 | `claim_periods` | [uint64](#uint64) |  | Number of claim periods this program will run for |
