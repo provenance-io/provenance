@@ -8,8 +8,9 @@ import (
 	time "time"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 	"gopkg.in/yaml.v2"
+
+	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -158,7 +159,7 @@ func (rp *RewardProgram) IsExpiring(ctx sdk.Context) bool {
 // TODO Test this
 func (rp *RewardProgram) IsEnding(ctx sdk.Context, programBalance sdk.Coin) bool {
 	blockTime := ctx.BlockTime()
-	isProgramExpired := !rp.GetExpectedProgramEndTime().IsZero() && (blockTime.After(rp.ExpectedProgramEndTime) || blockTime.Equal(rp.ExpectedProgramEndTime))
+	isProgramExpired := !rp.GetProgramEndTimeMax().IsZero() && (blockTime.After(rp.ProgramEndTimeMax) || blockTime.Equal(rp.ProgramEndTimeMax))
 	canRollover := programBalance.IsGTE(rp.GetMinimumRolloverAmount())
 	return rp.State == RewardProgram_STARTED && (isProgramExpired || !canRollover)
 }

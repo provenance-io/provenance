@@ -596,7 +596,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransitionExpired()
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
 	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
 	// Normally you would need an additional claim period. However, it should end because the expected time is set.
-	program.ExpectedProgramEndTime = currentTime
+	program.ProgramEndTimeMax = currentTime
 	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
 
 	suite.Assert().Equal(types.RewardProgram_FINISHED, program.State, "reward program should be in finished state")
@@ -854,7 +854,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 	)
 	timeout.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
 	timeout.ClaimPeriodEndTime = blockTime
-	timeout.ExpectedProgramEndTime = blockTime
+	timeout.ProgramEndTimeMax = blockTime
 	timeout.RemainingPoolBalance = timeout.GetTotalRewardPool()
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &timeout)
 
