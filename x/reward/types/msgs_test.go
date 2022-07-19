@@ -223,7 +223,7 @@ func (s *RewardMsgTypesTestSuite) TestMsgCreateRewardProgramRequestValidateBasic
 				1,
 				qualifyingActions,
 			),
-			"reward period days (1), claim period days (0), and expire days (1) must be larger than 0",
+			"claim periods (1), claim period days (0), and expire days (1) must be larger than 0",
 		},
 		{
 			"invalid - number of claim periods is 0",
@@ -239,23 +239,7 @@ func (s *RewardMsgTypesTestSuite) TestMsgCreateRewardProgramRequestValidateBasic
 				0,
 				qualifyingActions,
 			),
-			"reward period days (1), claim period days (1), and expire days (0) must be larger than 0",
-		},
-		{
-			"invalid - number of claim periods is 0",
-			*NewMsgCreateRewardProgramRequest(
-				"title",
-				"description",
-				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-				sdk.NewInt64Coin("jackthecat", 1),
-				sdk.NewInt64Coin("jackthecat", 1),
-				dateTime,
-				4,
-				5,
-				1,
-				qualifyingActions,
-			),
-			"reward period days (4) must be multiple of claim period days (5)",
+			"claim periods (1), claim period days (1), and expire days (0) must be larger than 0",
 		},
 		{
 			"invalid - reward has no qualifying actions",

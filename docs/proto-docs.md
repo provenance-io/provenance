@@ -6430,7 +6430,7 @@ MsgCreateRewardProgramRequest is the request type for creating a reward program 
 | `total_reward_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | total reward pool for the reward program |
 | `max_reward_per_claim_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | maximum amount of funds an address can be rewarded per claim period |
 | `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | start time of the reward program |
-| `reward_period_days` | [uint64](#uint64) |  | number of days the reward program will exist |
+| `claim_periods` | [uint64](#uint64) |  | number of claim periods the reward program runs for |
 | `claim_period_days` | [uint64](#uint64) |  | number of days a claim period will exist |
 | `expire_days` | [uint64](#uint64) |  | number of days before a reward program will expire after it has ended |
 | `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated | The actions that count towards the reward |
