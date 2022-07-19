@@ -3,6 +3,8 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	appStreaming "github.com/provenance-io/provenance/app/streaming"
+	"github.com/provenance-io/provenance/internal/streaming"
 	"io"
 	"net/http"
 	"os"
@@ -283,6 +285,9 @@ type App struct {
 
 	// module configurator
 	configurator module.Configurator
+
+	// ABCI streaming services
+	streamingServices []streaming.StreamService
 }
 
 func init() {
@@ -828,6 +833,18 @@ func New(
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
 
+	// register streaming service
+	enabledServices := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("%s.%s", streaming.TomlKey, streaming.EnabledParam)))
+	for _, key := range enabledServices {
+		ssi, found := appStreaming.StreamServiceInitializers[key]
+		if found {
+			app.RegisterStreamingService(ssi.Init(appOpts, app.AppCodec()))
+			logger.Info("registered streaming service", "service", ssi)
+		} else {
+			logger.Error("unsupported streaming service", "service", ssi)
+		}
+	}
+
 	return app
 }
 
@@ -836,12 +853,20 @@ func (app *App) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block
 func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	return app.mm.BeginBlock(ctx, req)
+	res := app.mm.BeginBlock(ctx, req)
+	for _, s := range app.streamingServices {
+		s.StreamBeginBlocker(ctx, req, res)
+	}
+	return res
 }
 
 // EndBlocker application updates every end block
 func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	return app.mm.EndBlock(ctx, req)
+	res := app.mm.EndBlock(ctx, req)
+	for _, s := range app.streamingServices {
+		s.StreamEndBlocker(ctx, req, res)
+	}
+	return res
 }
 
 // InitChainer application update at chain initialization
@@ -954,6 +979,12 @@ func (app *App) RegisterTxService(clientCtx client.Context) {
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *App) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
+}
+
+// RegisterStreamingService is used to register a streaming service into the App
+func (app *App) RegisterStreamingService(s streaming.StreamService) {
+	// App will pass BeginBlocker and EndBlocker requests and responses to the streaming services
+	app.streamingServices = append(app.streamingServices, s)
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
