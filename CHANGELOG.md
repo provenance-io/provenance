@@ -44,9 +44,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* Create authz authorization with limited number of uses. [#807](https://github.com/provenance-io/provenance/issues/807)
-  * Create a new authz authorization type that is limited to a certain number of times [#904](https://github.com/provenance-io/provenance/issues/904)
-  * Update metadata and marker modules to delete authorizations based on Delete flag [#728](https://github.com/provenance-io/provenance/issues/728)
+* Bump Cosmos-SDK to `v0.45.4-pio-4` (from `v0.45.4-pio-2`) to utilize the new `CountAuthorization` authz grant type. [#807](https://github.com/provenance-io/provenance/issues/807)
+* Update metadata module authz handling to properly call `Accept` and delete/update authorizations as they're used [#728](https://github.com/provenance-io/provenance/issues/728)
 
 ### Bug Fixes
 
