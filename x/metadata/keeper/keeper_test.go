@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"sort"
 	"testing"
 	"time"
@@ -58,7 +59,7 @@ type KeeperTestSuite struct {
 func (s *KeeperTestSuite) SetupTest() {
 	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	s.app = simapp.Setup(false)
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.app.MetadataKeeper)
 	s.queryClient = types.NewQueryClient(queryHelper)
@@ -252,7 +253,7 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSignersWithGenericAuthor
 		errorMsg   string
 	}{
 		// generic authorization test cases
-		"two parties - one missing signature with authz grant - two signers": {
+		"three parties - one missing signature with authz grant - two signers": {
 			owners: []types.Party{
 				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
@@ -263,7 +264,7 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSignersWithGenericAuthor
 			grantee:    s.user3Addr,
 			errorMsg:   "",
 		},
-		"two parties - one missing signature without authz grant - one signer": {
+		"three parties - one missing signature without authz grant - one signer": {
 			owners: []types.Party{
 				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}},
@@ -273,7 +274,7 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSignersWithGenericAuthor
 			grantee:    nil,
 			errorMsg:   fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user3),
 		},
-		"two parties - one missing signature with a special case message type - authz grant - two signers": {
+		"three parties - one missing signature with a special case message type - authz grant - two signers": {
 			owners: []types.Party{
 				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
@@ -284,7 +285,7 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSignersWithGenericAuthor
 			grantee:    s.user3Addr,
 			errorMsg:   "",
 		},
-		"two parties - one missing signature with a special case message type - authz grant on parent message type - two signers": {
+		"three parties - one missing signature with a special case message type - authz grant on parent message type - two signers": {
 			owners: []types.Party{
 				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
@@ -332,7 +333,8 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSignersWithCountAuthoriz
 	oneAllowedAuthorizations := int32(1)
 	manyAllowedAuthorizations := int32(10)
 
-	cases := map[string]struct {
+	cases := []struct {
+		name                  string
 		owners                []types.Party
 		signers               []string
 		msgTypeURL            string
@@ -342,7 +344,8 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSignersWithCountAuthoriz
 		errorMsg              string
 	}{
 		// generic authorization test cases
-		"two parties - one missing signature with one authz grant - two signers": {
+		{
+			name: "three parties - one missing signature with one authz grant - two signers",
 			owners: []types.Party{
 				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
@@ -354,7 +357,8 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSignersWithCountAuthoriz
 			grantee:               s.user3Addr,
 			errorMsg:              "",
 		},
-		"two parties - one missing signature with a special case message type - authz grant - two signers": {
+		{
+			name: "three parties - one missing signature with a special case message type - authz grant - two signers",
 			owners: []types.Party{
 				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
@@ -366,7 +370,8 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSignersWithCountAuthoriz
 			grantee:               s.user3Addr,
 			errorMsg:              "",
 		},
-		"two parties - one missing signature with a special case message type - authz grant on parent message type - two signers": {
+		{
+			name: "three parties - one missing signature with a special case message type - authz grant on parent message type - two signers",
 			owners: []types.Party{
 				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
@@ -378,7 +383,8 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSignersWithCountAuthoriz
 			grantee:               s.user3Addr,
 			errorMsg:              "",
 		},
-		"two parties - one missing signature with a special case message type without authz grant - one signer": {
+		{
+			name: "two parties - one missing signature with a special case message type without authz grant - one signer",
 			owners: []types.Party{
 				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}},
@@ -395,27 +401,29 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSignersWithCountAuthoriz
 	s.Require().NotNil(now)
 
 	// Test cases
-	for n, tc := range cases {
-		a := authz.NewCountAuthorization(tc.msgTypeURL, tc.allowedAuthorizations)
-		err := s.app.AuthzKeeper.SaveGrant(s.ctx, tc.grantee, tc.granter, a, now.Add(time.Hour))
-		s.Require().NoError(err)
+	for _, tc := range cases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			a := authz.NewCountAuthorization(tc.msgTypeURL, tc.allowedAuthorizations)
+			err := s.app.AuthzKeeper.SaveGrant(s.ctx, tc.grantee, tc.granter, a, now.Add(time.Hour))
+			s.Require().NoError(err)
 
-		s.T().Run(n, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateAllPartiesAreSignersWithAuthz(s.ctx, tc.owners, tc.signers, tc.msgTypeURL)
+			err = s.app.MetadataKeeper.ValidateAllPartiesAreSignersWithAuthz(s.ctx, tc.owners, tc.signers, tc.msgTypeURL)
 			if len(tc.errorMsg) == 0 {
-				assert.NoError(t, err, "%s unexpected error", n)
+				assert.NoError(t, err, "%s unexpected error", tc.name)
 			} else {
-				assert.EqualError(t, err, tc.errorMsg, "%s error", n)
+				assert.EqualError(t, err, tc.errorMsg, "%s error", tc.name)
 			}
+
 			// validate allowedAuthorizations
-			auth, _ := s.app.AuthzKeeper.GetCleanAuthorization(s.ctx, tc.grantee, tc.granter, tc.msgTypeURL)
-			if tc.allowedAuthorizations == 1 {
-				// authorization is deleted after one use
-				assert.Nil(t, auth)
-			} else {
-				// todo: why isn't this updating correctly when delete ^^^ works.
-				//actual := auth.(*authz.CountAuthorization).AllowedAuthorizations
-				//assert.Equal(t, tc.allowedAuthorizations-1, actual)
+			if err == nil {
+				auth, _ := s.app.AuthzKeeper.GetCleanAuthorization(s.ctx, tc.grantee, tc.granter, tc.msgTypeURL)
+				if tc.allowedAuthorizations == 1 {
+					// authorization is deleted after one use
+					assert.Nil(t, auth)
+				} else {
+					actual := auth.(*authz.CountAuthorization).AllowedAuthorizations
+					assert.Equal(t, tc.allowedAuthorizations-1, actual)
+				}
 			}
 		})
 	}
@@ -569,12 +577,12 @@ func (s *KeeperTestSuite) TestValidateAllOwnersAreSignersWithGenericAuthorizatio
 
 	// Test cases
 	for n, tc := range tests {
-		a := authz.NewGenericAuthorization(tc.msgTypeURL)
-		err := s.app.AuthzKeeper.SaveGrant(s.ctx, tc.grantee, tc.granter, a, now.Add(time.Hour))
-		s.Require().NoError(err)
-
 		s.T().Run(n, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateAllOwnersAreSignersWithAuthz(s.ctx, tc.owners, tc.signers, tc.msgTypeURL)
+			a := authz.NewGenericAuthorization(tc.msgTypeURL)
+			err := s.app.AuthzKeeper.SaveGrant(s.ctx, tc.grantee, tc.granter, a, now.Add(time.Hour))
+			s.Require().NoError(err)
+
+			err = s.app.MetadataKeeper.ValidateAllOwnersAreSignersWithAuthz(s.ctx, tc.owners, tc.signers, tc.msgTypeURL)
 			if len(tc.errorMsg) == 0 {
 				assert.NoError(t, err, "ValidateAllOwnersAreSigners unexpected error")
 			} else {
@@ -589,7 +597,8 @@ func (s *KeeperTestSuite) TestValidateAllOwnersAreSignersWithCountAuthorization(
 	oneAllowedAuthorizations := int32(1)
 	manyAllowedAuthorizations := int32(10)
 
-	tests := map[string]struct {
+	tests := []struct {
+		name                  string
 		owners                []string
 		signers               []string
 		msgTypeURL            string
@@ -599,16 +608,18 @@ func (s *KeeperTestSuite) TestValidateAllOwnersAreSignersWithCountAuthorization(
 		errorMsg              string
 	}{
 		// authz test cases
-		"Scope Spec with 2 owners - both in signers list - authz": {
+		{
+			name:                  "Scope Spec with 2 owners - one signer - with grant - authz",
 			owners:                []string{s.user2, s.user3},
-			signers:               []string{s.user2, s.user3},
+			signers:               []string{s.user3},
 			msgTypeURL:            types.TypeURLMsgAddScopeOwnerRequest,
 			allowedAuthorizations: oneAllowedAuthorizations,
 			granter:               s.user2Addr,
 			grantee:               s.user3Addr,
 			errorMsg:              "",
 		},
-		"Scope Spec with 2 owners - one signer - authz - error": {
+		{
+			name:                  "Scope Spec with 2 owners - one signer - no grant - authz - error",
 			owners:                []string{s.user2, s.user3},
 			signers:               []string{s.user2},
 			msgTypeURL:            types.TypeURLMsgWriteScopeRequest,
@@ -617,7 +628,8 @@ func (s *KeeperTestSuite) TestValidateAllOwnersAreSignersWithCountAuthorization(
 			grantee:               s.user3Addr,
 			errorMsg:              fmt.Sprintf("missing signature from existing owner %s; required for update", s.user3),
 		},
-		"Scope Spec with 3 owners - one signer with a special case message type - with grant - authz": {
+		{
+			name:                  "Scope Spec with 3 owners - one signer with a special case message type - with grant - authz",
 			owners:                []string{s.user1, s.user2, s.user3},
 			signers:               []string{s.user1, s.user3}, // signer 3 is grantee of singer 2
 			msgTypeURL:            types.TypeURLMsgAddScopeDataAccessRequest,
@@ -626,7 +638,8 @@ func (s *KeeperTestSuite) TestValidateAllOwnersAreSignersWithCountAuthorization(
 			grantee:               s.user3Addr,
 			errorMsg:              "",
 		},
-		"Scope Spec with 3 owners - two signers with a special case message type - grant on parent of special case message type - authz": {
+		{
+			name:                  "Scope Spec with 3 owners - two signers with a special case message type - grant on parent of special case message type - authz",
 			owners:                []string{s.user1, s.user2, s.user3},
 			signers:               []string{s.user1, s.user3}, // signer 3 grantee of signer 2
 			msgTypeURL:            types.TypeURLMsgDeleteContractSpecFromScopeSpecRequest,
@@ -635,7 +648,8 @@ func (s *KeeperTestSuite) TestValidateAllOwnersAreSignersWithCountAuthorization(
 			grantee:               s.user3Addr,
 			errorMsg:              "",
 		},
-		"Scope Spec with 2 owners - one signer - no grant - authz - error": {
+		{
+			name:                  "Scope Spec with 2 owners - one signer - no grant - authz - error",
 			owners:                []string{s.user2, s.user3},
 			signers:               []string{s.user3},
 			msgTypeURL:            types.TypeURLMsgDeleteRecordRequest,
@@ -650,27 +664,29 @@ func (s *KeeperTestSuite) TestValidateAllOwnersAreSignersWithCountAuthorization(
 	s.Require().NotNil(now)
 
 	// Test cases
-	for n, tc := range tests {
-		a := authz.NewCountAuthorization(tc.msgTypeURL, tc.allowedAuthorizations)
-		err := s.app.AuthzKeeper.SaveGrant(s.ctx, tc.grantee, tc.granter, a, now.Add(time.Hour))
-		s.Require().NoError(err)
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			a := authz.NewCountAuthorization(tc.msgTypeURL, tc.allowedAuthorizations)
+			err := s.app.AuthzKeeper.SaveGrant(s.ctx, tc.grantee, tc.granter, a, now.Add(time.Hour))
+			require.NoError(t, err)
 
-		s.T().Run(n, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateAllOwnersAreSignersWithAuthz(s.ctx, tc.owners, tc.signers, tc.msgTypeURL)
+			err = s.app.MetadataKeeper.ValidateAllOwnersAreSignersWithAuthz(s.ctx, tc.owners, tc.signers, tc.msgTypeURL)
 			if len(tc.errorMsg) == 0 {
-				assert.NoError(t, err, "ValidateAllOwnersAreSigners unexpected error")
+				assert.NoError(t, err, "ValidateAllOwnersAreSigners unexpected error", tc.name)
 			} else {
-				assert.EqualError(t, err, tc.errorMsg, "ValidateAllOwnersAreSigners error")
+				assert.EqualError(t, err, tc.errorMsg, "ValidateAllOwnersAreSigners error", tc.name)
 			}
+
 			// validate allowedAuthorizations
-			auth, _ := s.app.AuthzKeeper.GetCleanAuthorization(s.ctx, tc.grantee, tc.granter, tc.msgTypeURL)
-			if tc.allowedAuthorizations == 1 {
-				// authorization is deleted after one use
-				assert.Nil(t, auth)
-			} else {
-				// todo: why isn't this updating correctly when delete ^^^ works.
-				//actual := auth.(*authz.CountAuthorization).AllowedAuthorizations
-				//assert.Equal(t, tc.allowedAuthorizations-1, actual)
+			if err == nil {
+				auth, _ := s.app.AuthzKeeper.GetCleanAuthorization(s.ctx, tc.grantee, tc.granter, tc.msgTypeURL)
+				if tc.allowedAuthorizations == 1 {
+					// authorization is deleted after one use
+					assert.Nil(t, auth)
+				} else {
+					actual := auth.(*authz.CountAuthorization).AllowedAuthorizations
+					assert.Equal(t, tc.allowedAuthorizations-1, actual)
+				}
 			}
 		})
 	}
