@@ -77,12 +77,14 @@ message RewardProgram {
 
   uint64 current_claim_period = 17; // Current claim period of the RewardProgram. Uses 1-based indexing.
 
-  State state = 18; // Current state of the RewardProgram.
+  uint64 max_rollover_claim_periods = 18; // maximum number of claim periods a reward program can rollover
 
-  uint64 reward_claim_expiration_offset = 19; // Grace period after a RewardProgram FINISHED. It is the number of
+  State state = 19; // Current state of the RewardProgram.
+
+  uint64 reward_claim_expiration_offset = 20; // Grace period after a RewardProgram FINISHED. It is the number of
                                               // seconds until a RewardProgram enters the EXPIRED state.
 
-  repeated QualifyingAction qualifying_actions = 20 [
+  repeated QualifyingAction qualifying_actions = 21 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"qualifying_actions"
   ]; // Actions that count towards the reward

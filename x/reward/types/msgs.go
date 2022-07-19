@@ -26,8 +26,9 @@ func NewMsgCreateRewardProgramRequest(
 	totalRewardPool sdk.Coin,
 	maxRewardPerClaimAddress sdk.Coin,
 	programStartTime time.Time,
-	rewardPeriodDays uint64,
+	claimPeriods uint64,
 	claimPeriodDays uint64,
+	maxRolloverClaimPeriods uint64,
 	expireDays uint64,
 	qualifyingAction []QualifyingAction,
 ) *MsgCreateRewardProgramRequest {
@@ -38,8 +39,9 @@ func NewMsgCreateRewardProgramRequest(
 		TotalRewardPool:          totalRewardPool,
 		MaxRewardPerClaimAddress: maxRewardPerClaimAddress,
 		ProgramStartTime:         programStartTime,
-		RewardPeriodDays:         rewardPeriodDays,
+		ClaimPeriods:             claimPeriods,
 		ClaimPeriodDays:          claimPeriodDays,
+		MaxRolloverClaimPeriods:  maxRolloverClaimPeriods,
 		ExpireDays:               expireDays,
 		QualifyingActions:        qualifyingAction,
 	}
@@ -82,11 +84,8 @@ func (msg MsgCreateRewardProgramRequest) ValidateBasic() error {
 	if msg.MaxRewardPerClaimAddress.Amount.GT(msg.TotalRewardPool.Amount) {
 		return fmt.Errorf("max claims per address cannot be larger than pool %v : %v", msg.MaxRewardPerClaimAddress.Amount, msg.TotalRewardPool.Amount)
 	}
-	if msg.RewardPeriodDays < 1 || msg.ClaimPeriodDays < 1 || msg.ExpireDays < 1 {
-		return fmt.Errorf("reward period days (%v), claim period days (%v), and expire days (%v) must be larger than 0", msg.RewardPeriodDays, msg.ClaimPeriodDays, msg.ExpireDays)
-	}
-	if msg.RewardPeriodDays%msg.ClaimPeriodDays != 0 {
-		return fmt.Errorf("reward period days (%v) must be multiple of claim period days (%v)", msg.RewardPeriodDays, msg.ClaimPeriodDays)
+	if msg.ClaimPeriods < 1 || msg.ClaimPeriodDays < 1 || msg.ExpireDays < 1 {
+		return fmt.Errorf("claim periods (%v), claim period days (%v), and expire days (%v) must be larger than 0", msg.ClaimPeriods, msg.ClaimPeriodDays, msg.ExpireDays)
 	}
 	if len(msg.QualifyingActions) == 0 {
 		return fmt.Errorf("reward program must contain qualifying actions")
