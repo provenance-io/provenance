@@ -18,7 +18,7 @@ const (
 // Compile time interface checks.
 var _ sdk.Msg = &MsgCreateRewardProgramRequest{}
 
-// MsgCreateRewardProgramRequest creates a new create reward program request
+// NewMsgCreateRewardProgramRequest creates a new create reward program request
 func NewMsgCreateRewardProgramRequest(
 	title string,
 	description string,
@@ -69,10 +69,6 @@ func (msg MsgCreateRewardProgramRequest) ValidateBasic() error {
 	}
 	if _, err := sdk.AccAddressFromBech32(msg.DistributeFromAddress); err != nil {
 		return fmt.Errorf("invalid address for rewards program distribution from address: %w", err)
-	}
-	startTime := msg.ProgramStartTime.UTC()
-	if startTime.Hour() != 0 || startTime.Minute() != 0 || startTime.Second() != 0 || startTime.Nanosecond() != 0 {
-		return fmt.Errorf("invalid time must be of date only: %v", startTime)
 	}
 	if !msg.TotalRewardPool.IsPositive() {
 		return fmt.Errorf("reward program requires total reward pool to be positive: %v", msg.TotalRewardPool)

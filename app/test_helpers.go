@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/provenance-io/provenance/x/reward/types"
 	"strconv"
 	"testing"
 	"time"
@@ -456,4 +457,73 @@ func FundModuleAccount(app *App, ctx sdk.Context, recipientMod string, amounts s
 		return err
 	}
 	return app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, recipientMod, amounts)
+}
+
+func SetupWithGenesisRewardsProgram(genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
+
+	app, genesisState := setup(true, 0)
+	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
+	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
+
+	totalSupply := sdk.NewCoins()
+	for _, b := range balances {
+		totalSupply = totalSupply.Add(b.Coins...)
+	}
+
+	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{}, []banktypes.SendEnabled{})
+	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
+
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		genAccs[0].GetAddress().String(),
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(30),
+		10,
+		10,
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Transfer{
+					Transfer: &types.ActionTransfer{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+					},
+				},
+			},
+		},
+	)
+
+	rewardProgram.State = types.RewardProgram_PENDING
+
+	rewardGenesisState := types.NewGenesisState(
+		[]types.RewardProgram{
+			rewardProgram,
+		},
+		[]types.ClaimPeriodRewardDistribution{},
+		[]types.RewardAccountState{},
+	)
+	genesisState[types.ModuleName] = app.AppCodec().MustMarshalJSON(rewardGenesisState)
+
+	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+	if err != nil {
+		panic(err)
+	}
+
+	app.InitChain(
+		abci.RequestInitChain{
+			Validators:      []abci.ValidatorUpdate{},
+			ConsensusParams: DefaultConsensusParams,
+			AppStateBytes:   stateBytes,
+		},
+	)
+
+	app.Commit()
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, Time: time.Now().UTC()}})
+
+	return app
+
 }
