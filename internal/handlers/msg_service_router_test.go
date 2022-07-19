@@ -429,6 +429,7 @@ func TestRewardsProgramStartError(t *testing.T) {
 		time,
 		10,
 		3,
+		3,
 		uint64(time.Day()),
 		[]rewardtypes.QualifyingAction{
 			{
@@ -469,6 +470,7 @@ func TestRewardsProgramStart(t *testing.T) {
 		sdk.NewInt64Coin("nhash", 100),
 		time,
 		9,
+		3,
 		3,
 		uint64(time.Day()),
 		[]rewardtypes.QualifyingAction{
@@ -518,6 +520,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 		sdk.NewInt64Coin("nhash", 100),
 		time,
 		9,
+		3,
 		3,
 		uint64(time.Day()),
 		[]rewardtypes.QualifyingAction{
@@ -593,6 +596,7 @@ func TestRewardsProgramStartPerformQualifyingActions_1(t *testing.T) {
 		uint64(30),
 		10,
 		10,
+		3,
 		[]rewardtypes.QualifyingAction{
 			{
 				Type: &rewardtypes.QualifyingAction_Transfer{
@@ -670,6 +674,7 @@ func TestRewardsProgramStartPerformQualifyingActions_2(t *testing.T) {
 		uint64(2),
 		10,
 		10,
+		3,
 		[]rewardtypes.QualifyingAction{
 			{
 				Type: &rewardtypes.QualifyingAction_Transfer{
