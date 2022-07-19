@@ -3,7 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	appStreaming "github.com/provenance-io/provenance/app/streaming"
+	appstreaming "github.com/provenance-io/provenance/app/streaming"
 	"github.com/provenance-io/provenance/internal/streaming"
 	"io"
 	"net/http"
@@ -836,7 +836,7 @@ func New(
 	// register streaming service
 	enabledServices := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("%s.%s", streaming.TomlKey, streaming.EnabledParam)))
 	for _, key := range enabledServices {
-		ssi, found := appStreaming.StreamServiceInitializers[key]
+		ssi, found := appstreaming.StreamServiceInitializers[key]
 		if found {
 			app.RegisterStreamingService(ssi.Init(appOpts, app.AppCodec()))
 			logger.Info("registered streaming service", "service", ssi)
