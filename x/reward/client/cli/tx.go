@@ -19,13 +19,14 @@ import (
 
 // Flag names and values
 const (
-	FlagTotalRewardPool    = "total-reward-pool"
-	FlagMaxRewardByAddress = "max-reward-by-address"
-	FlagStartTime          = "start-time"
-	FlagRewardPeriodDays   = "reward-period-days"
-	FlagClaimPeriodDays    = "claim-period-days"
-	FlagExpireDays         = "expire-days"
-	FlagQualifyingActions  = "qualifying-actions"
+	FlagTotalRewardPool         = "total-reward-pool"
+	FlagMaxRewardByAddress      = "max-reward-by-address"
+	FlagStartTime               = "start-time"
+	FlagClaimPeriods            = "claim-periods"
+	FlagClaimPeriodDays         = "claim-period-days"
+	FlagExpireDays              = "expire-days"
+	FlagQualifyingActions       = "qualifying-actions"
+	FlagMaxRolloverClaimPeriods = "max-rollover-periods"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -58,7 +59,8 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 		--total-reward-pool 580nhash \
 		--max-reward-by-address 10nhash \
     	--start-time 2022-05-10\
-		--reward-period-days 364 \
+		--claim-periods 52 \
+		--max-rollover-periods 4 \
 		--claim-period-days 7 \
 		--expire-days 14 \ 
 		--qualifying-actions %s
@@ -92,7 +94,7 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			rewardProgramDays, err := cmd.Flags().GetUint64(FlagRewardPeriodDays)
+			rewardProgramDays, err := cmd.Flags().GetUint64(FlagClaimPeriods)
 			if err != nil {
 				return err
 			}
@@ -106,6 +108,10 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 			}
 
 			contents, err := cmd.Flags().GetString(FlagQualifyingActions)
+			if err != nil {
+				return err
+			}
+			maxRolloverPeriods, err := cmd.Flags().GetUint64(FlagMaxRolloverClaimPeriods)
 			if err != nil {
 				return err
 			}
@@ -124,6 +130,7 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 				startTime,
 				rewardProgramDays,
 				claimPeriodDays,
+				maxRolloverPeriods,
 				expireDays,
 				actions.QualifyingActions,
 			)
@@ -134,10 +141,11 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 	cmd.Flags().String(FlagTotalRewardPool, "", "coins for reward program")
 	cmd.Flags().String(FlagMaxRewardByAddress, "", "max amount of coins a single address can claim in rewards")
 	cmd.Flags().String(FlagStartTime, "", "time to start the rewards program, this must be a time in the future or within the first epoch of format YYYY-MM-DDTHH:MM:SSZ00:00 (2012-11-01T22:08:41+07:00)")
-	cmd.Flags().Uint64(FlagRewardPeriodDays, 365, "number of days the reward program runs")
+	cmd.Flags().Uint64(FlagClaimPeriods, 52, "number of claim periods the reward program runs")
 	cmd.Flags().Uint64(FlagClaimPeriodDays, 7, "number of days for a claim period interval")
 	cmd.Flags().Uint64(FlagExpireDays, 7, "number of days to expire program after it has ended")
 	cmd.Flags().String(FlagQualifyingActions, "", "json representation of qualifying actions")
+	cmd.Flags().Uint64(FlagMaxRolloverClaimPeriods, 0, "max number of rollover claim periods")
 	return cmd
 }
 

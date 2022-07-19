@@ -19,5 +19,4 @@ message GenesisState {
   repeated ClaimPeriodRewardDistribution claim_period_reward_distributions = 2 [(gogoproto.nullable) = false];
 
   repeated RewardAccountState reward_account_states = 3 [(gogoproto.nullable) = false];
-
 }

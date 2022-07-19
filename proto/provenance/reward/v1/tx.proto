@@ -38,12 +38,12 @@ message MsgCreateRewardProgramRequest {
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "program_start_time,omitempty",
     (gogoproto.moretags) = "yaml:\"program_start_time,omitempty\""
-  ];                                                // start time of the reward program
-  uint64                    reward_period_days = 7; // number of days the reward program will exist
-  uint64                    claim_period_days  = 8; // number of claim periods
-  uint64                    expire_days = 9; // number of days before a reward program will expire after it has ended
-  uint64                    max_reward_period_days = 9; // number of days before a reward program will expire after it has ended
-  repeated QualifyingAction qualifying_actions = 16 [
+  ];                                      // start time of the reward program
+  uint64 claim_periods              = 7;  // number of claim periods the reward program runs for
+  uint64 claim_period_days          = 8;  // number of days a claim period will exist
+  uint64 max_rollover_claim_periods = 9;  // maximum number of claim periods a reward program can rollover
+  uint64 expire_days                = 10; // number of days before a reward program will expire after it has ended
+  repeated QualifyingAction qualifying_actions = 11 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"qualifying_actions"
   ]; // The actions that count towards the reward

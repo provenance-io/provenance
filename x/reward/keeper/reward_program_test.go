@@ -24,6 +24,7 @@ func (suite *KeeperTestSuite) TestNewRewardProgram() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 
@@ -53,6 +54,7 @@ func (suite *KeeperTestSuite) TestGetSetRewardProgram() {
 		time,
 		60*60,
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -89,6 +91,7 @@ func (suite *KeeperTestSuite) TestRemoveValidRewardProgram() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 
@@ -122,6 +125,7 @@ func (suite *KeeperTestSuite) TestIterateRewardPrograms() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -135,6 +139,7 @@ func (suite *KeeperTestSuite) TestIterateRewardPrograms() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -147,6 +152,7 @@ func (suite *KeeperTestSuite) TestIterateRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -178,6 +184,7 @@ func (suite *KeeperTestSuite) TestIterateRewardProgramsHalt() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -191,6 +198,7 @@ func (suite *KeeperTestSuite) TestIterateRewardProgramsHalt() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -203,6 +211,7 @@ func (suite *KeeperTestSuite) TestIterateRewardProgramsHalt() {
 		time,
 		60*60,
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -247,6 +256,7 @@ func (suite *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -260,6 +270,7 @@ func (suite *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -272,6 +283,7 @@ func (suite *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -310,6 +322,7 @@ func (suite *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -322,6 +335,7 @@ func (suite *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -336,6 +350,7 @@ func (suite *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program4 := types.NewRewardProgram(
@@ -349,6 +364,7 @@ func (suite *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program5 := types.NewRewardProgram(
@@ -361,6 +377,7 @@ func (suite *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -403,6 +420,7 @@ func (suite *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -415,6 +433,7 @@ func (suite *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -429,6 +448,7 @@ func (suite *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program4 := types.NewRewardProgram(
@@ -442,6 +462,7 @@ func (suite *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program5 := types.NewRewardProgram(
@@ -454,6 +475,7 @@ func (suite *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -497,6 +519,7 @@ func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -510,6 +533,7 @@ func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -522,6 +546,7 @@ func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -559,6 +584,7 @@ func (suite *KeeperTestSuite) TestGetAllRewardPrograms() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -572,6 +598,7 @@ func (suite *KeeperTestSuite) TestGetAllRewardPrograms() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -584,6 +611,7 @@ func (suite *KeeperTestSuite) TestGetAllRewardPrograms() {
 		time,
 		60*60,
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -628,6 +656,7 @@ func (suite *KeeperTestSuite) TestCreateRewardProgram() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Vote{
@@ -668,6 +697,7 @@ func (suite *KeeperTestSuite) TestCreateRewardProgram() {
 		lastYear,
 		60*60,
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{
 			{
@@ -711,6 +741,7 @@ func (suite *KeeperTestSuite) TestCreateRewardProgram() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Vote{
@@ -753,6 +784,7 @@ func (suite *KeeperTestSuite) TestRefundRemainingBalance() {
 		time,
 		10,
 		5,
+		0,
 		uint64(time.Day()),
 		[]types.QualifyingAction{},
 	)
@@ -781,6 +813,7 @@ func (suite *KeeperTestSuite) TestRefundRemainingBalanceEmpty() {
 		time,
 		10,
 		5,
+		0,
 		uint64(time.Day()),
 		[]types.QualifyingAction{},
 	)

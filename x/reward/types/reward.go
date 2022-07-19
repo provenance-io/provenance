@@ -8,8 +8,9 @@ import (
 	time "time"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 	"gopkg.in/yaml.v2"
+
+	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -114,9 +115,12 @@ func NewRewardProgram(
 	programStartTime time.Time,
 	claimPeriodSeconds uint64,
 	claimPeriods uint64,
+	maxRolloverClaimPeriods uint64,
 	rewardClaimExpirationOffset uint64,
 	qualifyingActions []QualifyingAction,
 ) RewardProgram {
+	expectedProgramEndTime := CalculateExpectedEndTime(programStartTime, claimPeriodSeconds, claimPeriods)
+	programEndTimeMax := CalculateEndTimeMax(programStartTime, claimPeriodSeconds, claimPeriods, maxRolloverClaimPeriods)
 	return RewardProgram{
 		Title:                       title,
 		Description:                 description,
@@ -127,8 +131,11 @@ func NewRewardProgram(
 		ClaimedAmount:               sdk.NewInt64Coin(totalRewardPool.Denom, 0),
 		MaxRewardByAddress:          maxRewardByAddress,
 		ProgramStartTime:            programStartTime,
+		ExpectedProgramEndTime:      expectedProgramEndTime,
+		ProgramEndTimeMax:           programEndTimeMax,
 		ClaimPeriodSeconds:          claimPeriodSeconds,
 		ClaimPeriods:                claimPeriods,
+		MaxRolloverClaimPeriods:     maxRolloverClaimPeriods,
 		RewardClaimExpirationOffset: rewardClaimExpirationOffset,
 		State:                       RewardProgram_PENDING,
 		QualifyingActions:           qualifyingActions,
@@ -158,7 +165,7 @@ func (rp *RewardProgram) IsExpiring(ctx sdk.Context) bool {
 // TODO Test this
 func (rp *RewardProgram) IsEnding(ctx sdk.Context, programBalance sdk.Coin) bool {
 	blockTime := ctx.BlockTime()
-	isProgramExpired := !rp.GetExpectedProgramEndTime().IsZero() && (blockTime.After(rp.ExpectedProgramEndTime) || blockTime.Equal(rp.ExpectedProgramEndTime))
+	isProgramExpired := !rp.GetProgramEndTimeMax().IsZero() && (blockTime.After(rp.ProgramEndTimeMax) || blockTime.Equal(rp.ProgramEndTimeMax))
 	canRollover := programBalance.IsGTE(rp.GetMinimumRolloverAmount())
 	return rp.State == RewardProgram_STARTED && (isProgramExpired || !canRollover)
 }
@@ -242,6 +249,14 @@ func (s *RewardAccountState) ValidateBasic() error {
 func (s *RewardAccountState) String() string {
 	out, _ := yaml.Marshal(s)
 	return string(out)
+}
+
+func CalculateExpectedEndTime(programStartTime time.Time, claimPeriodSeconds, numberOfClaimPeriods uint64) time.Time {
+	return programStartTime.Add(time.Duration(claimPeriodSeconds * numberOfClaimPeriods))
+}
+
+func CalculateEndTimeMax(programStartTime time.Time, claimPeriodSeconds, numberOfClaimPeriods uint64, maxRolloverPeriods uint64) time.Time {
+	return programStartTime.Add(time.Duration(claimPeriodSeconds * (numberOfClaimPeriods + maxRolloverPeriods)))
 }
 
 // ============ Claim Period Reward Distribution ============

@@ -5,11 +5,12 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
+
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/reward/types"
 	"github.com/tendermint/tendermint/types/time"
-	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -71,6 +72,12 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	minDelegation := sdk.NewInt64Coin(pioconfig.DefaultBondDenom, int64(minActions))
 
+	now := time.Now()
+	claimPeriodSeconds := uint64(simState.Rand.Intn(100000))
+	claimPeriods := uint64(simState.Rand.Intn(100))
+	maxRolloverPeriods := uint64(simState.Rand.Intn(10))
+	expireClaimPeriods := uint64(simState.Rand.Intn(100000))
+
 	rewardProgram := types.NewRewardProgram(
 		"title",
 		"description",
@@ -78,10 +85,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 		simState.Accounts[0].Address.String(),
 		totalRewardsPool,
 		maxRewardsByAddress,
-		time.Now(),
-		uint64(simState.Rand.Intn(100000)),
-		uint64(simState.Rand.Intn(100)),
-		uint64(simState.Rand.Intn(100000)),
+		now,
+		claimPeriodSeconds,
+		claimPeriods,
+		maxRolloverPeriods,
+		expireClaimPeriods,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Vote{

@@ -76,6 +76,9 @@ func (k Keeper) StartRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *ty
 	blockTime := ctx.BlockTime()
 	rewardProgram.ClaimPeriodEndTime = blockTime.Add(time.Duration(rewardProgram.ClaimPeriodSeconds) * time.Second)
 	rewardProgram.CurrentClaimPeriod++
+	if rewardProgram.CurrentClaimPeriod > rewardProgram.ClaimPeriods {
+		rewardProgram.ExpectedProgramEndTime = rewardProgram.ExpectedProgramEndTime.Add(time.Duration(rewardProgram.ClaimPeriodSeconds) * time.Second)
+	}
 
 	// Get the Claim Period Reward. It should not exceed program balance
 	claimPeriodAmount := rewardProgram.GetTotalRewardPool().Amount.Quo(sdk.NewInt(int64(rewardProgram.GetClaimPeriods())))

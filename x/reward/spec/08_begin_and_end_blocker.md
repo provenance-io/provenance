@@ -11,7 +11,7 @@ The following conditional logic is evaluated to help a `Reward Program` transiti
 2. Evaluates if `BlockTime` >= `claim_period_end_time`, and if it evaluates to true the `Reward Program` will *attempt* to progress to the next claim period.
 3. The Reward Program will successfully progress to the next claim period, if all of the following criteria are true:
    1. `remaining_pool_balance` >= `minimum_rollover_amount`
-   2. `BlockTime` < `expected_program_end_time`
+   2. `BlockTime` < `program_end_time_max`
 4. If either of the previously mentioned criteria is not met, then the `Reward Program` will end.
 5. A completed `Reward Program` will then expire after `reward_claim_expiration_offset` seconds from its completion time.
 6. All expired `Reward Program` will return any unused funds to the reward creator and expire any unclaimed rewards.
