@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	authz2 "github.com/cosmos/cosmos-sdk/x/authz"
 	"net/url"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -210,9 +209,9 @@ func (k Keeper) checkAuthzForMissing(
 			grantee := types.MustAccAddressFromBech32(signer)
 
 			for _, msgType := range msgTypeURLs {
-				authz, exp := k.authzKeeper.GetCleanAuthorization(ctx, grantee, granter, msgType)
-				if authz != nil {
-					resp, err := authz.Accept(ctx, nil)
+				authorization, exp := k.authzKeeper.GetCleanAuthorization(ctx, grantee, granter, msgType)
+				if authorization != nil {
+					resp, err := authorization.Accept(ctx, nil)
 					if err == nil && resp.Accept {
 						switch {
 						case resp.Delete:
@@ -224,9 +223,6 @@ func (k Keeper) checkAuthzForMissing(
 							if err = k.authzKeeper.SaveGrant(ctx, grantee, granter, resp.Updated, exp); err != nil {
 								return stillMissing, err
 							}
-							a, _ := k.authzKeeper.GetCleanAuthorization(ctx, grantee, granter, msgType)
-							aa := a.(*authz2.CountAuthorization).AllowedAuthorizations
-							ctx.Logger().Info(fmt.Sprintf("allowedAuthorizations %d", aa))
 						}
 						found = true
 						break
