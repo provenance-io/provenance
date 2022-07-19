@@ -45,6 +45,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * Support standard flags on msgfees params query cli command [#936](https://github.com/provenance-io/provenance/issues/936)
+* Fix the `MarkerTransferAuthorization` Accept function and `TransferCoin` authz handling to prevent problems when other authorization types are used [#903](https://github.com/provenance-io/provenance/issues/903)
+
+### State Machine Breaking
+
+* Fix the `MarkerTransferAuthorization` Accept function and `TransferCoin` authz handling to prevent problems when other authorization types are used [#903](https://github.com/provenance-io/provenance/issues/903)
 
 ---
 
