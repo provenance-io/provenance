@@ -522,7 +522,7 @@ func SetupWithGenesisRewardsProgram(genAccs []authtypes.GenesisAccount, balances
 	)
 
 	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, Time: time.Now().UTC()}})
 
 	return app
 
