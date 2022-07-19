@@ -131,7 +131,7 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.45.4-0.20220718211749-7f8bd4aa4c68
+replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.45.4-pio-4
 
 replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 
