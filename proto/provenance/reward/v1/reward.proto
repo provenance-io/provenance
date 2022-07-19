@@ -51,23 +51,30 @@ message RewardProgram {
     (gogoproto.moretags) = "yaml:\"expected_program_end_time,omitempty\""
   ]; // Time that a RewardProgram MUST end.
 
-  google.protobuf.Timestamp claim_period_end_time = 13 [
+  google.protobuf.Timestamp program_end_time_max = 13 [
+    (gogoproto.stdtime)  = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "program_end_time_max,omitempty",
+    (gogoproto.moretags) = "yaml:\"program_end_time_max,omitempty\""
+  ]; // Maximum time this program can run
+
+  google.protobuf.Timestamp claim_period_end_time = 14 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "claim_period_end_time,omitempty",
     (gogoproto.moretags) = "yaml:\"claim_period_end_time,omitempty\""
   ]; // Used internally to calculate and track the current claim period's ending time.
 
-  google.protobuf.Timestamp actual_program_end_time = 14 [
+  google.protobuf.Timestamp actual_program_end_time = 15 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "finished_time,omitempty",
     (gogoproto.moretags) = "yaml:\"finished_time,omitempty\""
   ]; // Time the RewardProgram switched to FINISHED state. Initially set as empty.
 
-  uint64 claim_periods = 15; // Number of claim periods this program will run for
+  uint64 claim_periods = 16; // Number of claim periods this program will run for
 
-  uint64 current_claim_period = 16; // Current claim period of the RewardProgram. Uses 1-based indexing.
+  uint64 current_claim_period = 17; // Current claim period of the RewardProgram. Uses 1-based indexing.
 
   State state = 17; // Current state of the RewardProgram.
 
