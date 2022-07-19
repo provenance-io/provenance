@@ -32,6 +32,7 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 
 	claimPeriodDaysInSeconds := uint64(types.DayInSeconds) * msg.GetClaimPeriodDays()
 	experationOffsetInSeconds := uint64(types.DayInSeconds) * msg.GetExpireDays()
+
 	rewardProgram := types.NewRewardProgram(
 		msg.Title,
 		msg.Description,
@@ -42,6 +43,7 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 		msg.ProgramStartTime,
 		claimPeriodDaysInSeconds,
 		msg.ClaimPeriods,
+		msg.MaxRolloverClaimPeriods,
 		experationOffsetInSeconds,
 		msg.QualifyingActions,
 	)

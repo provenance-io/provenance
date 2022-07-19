@@ -705,6 +705,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction()
 		5,
 		5,
 		0,
+		0,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Delegate{
@@ -743,6 +744,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction()
 		time.Now(),
 		5,
 		5,
+		0,
 		0,
 		[]types.QualifyingAction{
 			{
@@ -793,6 +795,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoQualifyingAction(
 		5,
 		5,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	rewardProgram.CurrentClaimPeriod = 1
@@ -819,6 +822,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoMatchingQualifyin
 		time.Now(),
 		5,
 		5,
+		0,
 		0,
 		[]types.QualifyingAction{
 			{
@@ -855,6 +859,7 @@ func (suite *KeeperTestSuite) TestRewardSharesSingle() {
 		time.Now(),
 		5,
 		5,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -910,6 +915,7 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidClaimPeriodRewardDistributi
 		5,
 		5,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	rewardProgram.CurrentClaimPeriod = 1
@@ -955,6 +961,7 @@ func (suite *KeeperTestSuite) TestRewardSharesMultiple() {
 		time.Now(),
 		5,
 		5,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -1018,6 +1025,7 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidRewardProgram() {
 		5,
 		5,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	rewardProgram.CurrentClaimPeriod = 1
@@ -1063,6 +1071,7 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidAddress() {
 		time.Now(),
 		5,
 		5,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -1207,6 +1216,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingAc
 		5,
 		5,
 		0,
+		0,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Vote{
@@ -1240,6 +1250,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingAc
 		time.Now(),
 		5,
 		5,
+		0,
 		0,
 		[]types.QualifyingAction{
 			{
@@ -1276,6 +1287,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingNoQualifying
 		5,
 		5,
 		0,
+		0,
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Vote{
@@ -1311,6 +1323,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingDelegateQual
 		time.Now(),
 		5,
 		5,
+		0,
 		0,
 		[]types.QualifyingAction{
 			{
@@ -1360,6 +1373,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1Voting1DelegateQua
 		time.Now(),
 		5,
 		5,
+		0,
 		0,
 		[]types.QualifyingAction{
 			{

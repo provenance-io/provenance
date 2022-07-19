@@ -83,6 +83,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		60*60,
 		3,
 		0,
+		0,
 		s.qualifyingActions,
 	)
 	s.activeRewardProgram.State = types.RewardProgram_STARTED
@@ -97,6 +98,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		now.Add(-60*60*time.Second),
 		60*60,
 		3,
+		0,
 		60*60*24,
 		s.qualifyingActions,
 	)
@@ -114,6 +116,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		60*60,
 		3,
 		0,
+		0,
 		s.qualifyingActions,
 	)
 	s.pendingRewardProgram.State = types.RewardProgram_PENDING
@@ -128,6 +131,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		now.Add(-60*60*time.Second),
 		60*60,
 		3,
+		0,
 		0,
 		s.qualifyingActions,
 	)
@@ -300,7 +304,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				"description",
 				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
 				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
-				"--claim-periods=52",
+				"--claim-periods=52364",
 				"--claim-period-days=7",
 				fmt.Sprintf("--start-time=%s", date[0]),
 				"--expire-days=14",
@@ -373,7 +377,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 			"invalid argument \"-1\" for \"--expire-days\" flag: strconv.ParseUint: parsing \"-1\": invalid syntax",
 			0,
 		},
-		{"add reward program tx - invalid claim periods",
+		{"add reward program tx - invalid reward period days",
 			[]string{
 				"test add reward program",
 				"description",
@@ -387,23 +391,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 			},
 			true,
 			"invalid argument \"-52\" for \"--claim-periods\" flag: strconv.ParseUint: parsing \"-52\": invalid syntax",
-			0,
-		},
-		{"add reward program tx - invalid max rollover periods",
-			[]string{
-				"test add reward program",
-				"description",
-				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
-				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
-				"--claim-periods=52",
-				"--claim-period-days=10",
-				"--start-time=2022-05-10",
-				"--max-rollover-periods=-100",
-				"--expire-days=1",
-				fmt.Sprintf("--qualifying-actions=%s", actions),
-			},
-			true,
-			"invalid argument \"-100\" for \"--max-rollover-periods\" flag: strconv.ParseUint: parsing \"-100\": invalid syntax",
 			0,
 		},
 		{"add reward program tx - invalid start time",

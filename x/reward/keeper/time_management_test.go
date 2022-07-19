@@ -24,6 +24,7 @@ func (suite *KeeperTestSuite) TestStartRewardProgram() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
@@ -59,6 +60,7 @@ func (suite *KeeperTestSuite) TestStartRewardProgramNoBalance() {
 		currentTime,
 		60*60,
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -98,6 +100,7 @@ func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriodWithNoPeriods() {
 		60*60,
 		0,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
@@ -121,6 +124,7 @@ func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriod() {
 		currentTime,
 		60*60,
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -158,6 +162,7 @@ func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriodUpdatesExpectedEn
 		currentTime,
 		60*60,
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -197,6 +202,7 @@ func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriodDoesNotExceedBala
 		60*60,
 		4,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
@@ -230,6 +236,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgram() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
@@ -260,6 +267,7 @@ func (suite *KeeperTestSuite) TestExpireRewardProgram() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
@@ -287,6 +295,7 @@ func (suite *KeeperTestSuite) TestExpireRewardProgramRefunds() {
 		time.Now(),
 		60*60,
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -475,6 +484,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesInvalidLooku
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program2 := types.NewRewardProgram(
@@ -488,6 +498,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesInvalidLooku
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program3 := types.NewRewardProgram(
@@ -500,6 +511,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesInvalidLooku
 		currentTime,
 		60*60,
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -544,6 +556,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEnd() {
 		60*60,
 		2,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
@@ -584,6 +597,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransition() {
 		currentTime,
 		60*60,
 		2,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -628,6 +642,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransitionExpired()
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
@@ -662,6 +677,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndNoBalance() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
@@ -691,6 +707,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesClaimStatus(
 		currentTime,
 		60*60,
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -731,6 +748,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesBalances() {
 		currentTime,
 		60*60,
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -774,6 +792,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRollo
 		60*60,
 		2,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 501)
@@ -816,6 +835,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	notStarted.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
@@ -833,6 +853,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 		60*60,
 		3,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	starting.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
@@ -849,6 +870,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 		blockTime,
 		uint64(time.Hour),
 		3,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -868,6 +890,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 		blockTime,
 		uint64(time.Hour),
 		1,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)
@@ -890,6 +913,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 		0,
 		1,
 		0,
+		0,
 		[]types.QualifyingAction{},
 	)
 	timeout.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
@@ -909,6 +933,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 		blockTime,
 		0,
 		1,
+		0,
 		0,
 		[]types.QualifyingAction{},
 	)

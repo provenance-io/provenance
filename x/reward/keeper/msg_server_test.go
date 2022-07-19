@@ -113,6 +113,7 @@ func (s *KeeperTestSuite) TestRewardClaimTransaction() {
 		time,
 		10,
 		3,
+		0,
 		uint64(time.Day()),
 		[]types.QualifyingAction{
 			{
@@ -190,6 +191,7 @@ func (s *KeeperTestSuite) TestRewardClaimTransactionInvalidClaimer() {
 		time,
 		10,
 		3,
+		0,
 		uint64(time.Day()),
 		[]types.QualifyingAction{
 			{

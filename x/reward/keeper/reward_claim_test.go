@@ -25,6 +25,7 @@ func (suite *KeeperTestSuite) TestClaimRewards() {
 		time,
 		10,
 		3,
+		0,
 		uint64(time.Day()),
 		[]types.QualifyingAction{
 			{
@@ -84,6 +85,7 @@ func (suite *KeeperTestSuite) TestClaimRewardsHandlesInvalidProgram() {
 		time,
 		10,
 		5,
+		0,
 		uint64(time.Day()),
 		[]types.QualifyingAction{},
 	)
@@ -109,6 +111,7 @@ func (suite *KeeperTestSuite) TestClaimRewardsHandlesExpiredProgram() {
 		time,
 		10,
 		5,
+		0,
 		uint64(time.Day()),
 		[]types.QualifyingAction{},
 	)
@@ -135,6 +138,7 @@ func (suite *KeeperTestSuite) TestRefundRewardClaims() {
 		time,
 		10,
 		5,
+		0,
 		uint64(time.Day()),
 		[]types.QualifyingAction{},
 	)
@@ -163,6 +167,7 @@ func (suite *KeeperTestSuite) TestRefundRewardClaimsEmpty() {
 		time,
 		10,
 		5,
+		0,
 		uint64(time.Day()),
 		[]types.QualifyingAction{},
 	)

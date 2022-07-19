@@ -115,9 +115,12 @@ func NewRewardProgram(
 	programStartTime time.Time,
 	claimPeriodSeconds uint64,
 	claimPeriods uint64,
+	maxRolloverClaimPeriods uint64,
 	rewardClaimExpirationOffset uint64,
 	qualifyingActions []QualifyingAction,
 ) RewardProgram {
+	expectedProgramEndTime := CalculateExpectedEndTime(programStartTime, claimPeriodSeconds, claimPeriods)
+	programEndTimeMax := CalculateEndTimeMax(programStartTime, claimPeriodSeconds, claimPeriods, maxRolloverClaimPeriods)
 	return RewardProgram{
 		Title:                       title,
 		Description:                 description,
@@ -128,8 +131,11 @@ func NewRewardProgram(
 		ClaimedAmount:               sdk.NewInt64Coin(totalRewardPool.Denom, 0),
 		MaxRewardByAddress:          maxRewardByAddress,
 		ProgramStartTime:            programStartTime,
+		ExpectedProgramEndTime:      expectedProgramEndTime,
+		ProgramEndTimeMax:           programEndTimeMax,
 		ClaimPeriodSeconds:          claimPeriodSeconds,
 		ClaimPeriods:                claimPeriods,
+		MaxRolloverClaimPeriods:     maxRolloverClaimPeriods,
 		RewardClaimExpirationOffset: rewardClaimExpirationOffset,
 		State:                       RewardProgram_PENDING,
 		QualifyingActions:           qualifyingActions,
@@ -243,6 +249,14 @@ func (s *RewardAccountState) ValidateBasic() error {
 func (s *RewardAccountState) String() string {
 	out, _ := yaml.Marshal(s)
 	return string(out)
+}
+
+func CalculateExpectedEndTime(programStartTime time.Time, claimPeriodSeconds, numberOfClaimPeriods uint64) time.Time {
+	return programStartTime.Add(time.Duration(claimPeriodSeconds * numberOfClaimPeriods))
+}
+
+func CalculateEndTimeMax(programStartTime time.Time, claimPeriodSeconds, numberOfClaimPeriods uint64, maxRolloverPeriods uint64) time.Time {
+	return programStartTime.Add(time.Duration(claimPeriodSeconds * (numberOfClaimPeriods + maxRolloverPeriods)))
 }
 
 // ============ Claim Period Reward Distribution ============
