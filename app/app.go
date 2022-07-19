@@ -3,8 +3,6 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	appStreaming "github.com/provenance-io/provenance/app/streaming"
-	"github.com/provenance-io/provenance/internal/streaming"
 	"io"
 	"net/http"
 	"os"
@@ -104,11 +102,13 @@ import (
 
 	// PROVENANCE
 	appparams "github.com/provenance-io/provenance/app/params"
+	appstreaming "github.com/provenance-io/provenance/app/streaming"
 	_ "github.com/provenance-io/provenance/client/docs/statik" // registers swagger-ui files with statik
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	piohandlers "github.com/provenance-io/provenance/internal/handlers"
 	"github.com/provenance-io/provenance/internal/provwasm"
 	"github.com/provenance-io/provenance/internal/statesync"
+	"github.com/provenance-io/provenance/internal/streaming"
 	"github.com/provenance-io/provenance/x/attribute"
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -836,7 +836,7 @@ func New(
 	// register streaming service
 	enabledServices := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("%s.%s", streaming.TomlKey, streaming.EnabledParam)))
 	for _, key := range enabledServices {
-		ssi, found := appStreaming.StreamServiceInitializers[key]
+		ssi, found := appstreaming.StreamServiceInitializers[key]
 		if found {
 			app.RegisterStreamingService(ssi.Init(appOpts, app.AppCodec()))
 			logger.Info("registered streaming service", "service", ssi)
