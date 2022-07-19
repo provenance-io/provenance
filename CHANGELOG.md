@@ -42,6 +42,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update the swagger files (including third-party changes). [#728](https://github.com/provenance-io/provenance/issues/728)
 * Bump IBC to 2.3.0 and update third-party protos [PR 868](https://github.com/provenance-io/provenance/pull/868)
 
+### Features
+
+* Create authz authorization with limited number of uses. [#807](https://github.com/provenance-io/provenance/issues/807)
+  * Create a new authz authorization type that is limited to a certain number of times [#904](https://github.com/provenance-io/provenance/issues/904)
+  * Update metadata and marker modules to delete authorizations based on Delete flag [#728](https://github.com/provenance-io/provenance/issues/728)
+
 ### Bug Fixes
 
 * Support standard flags on msgfees params query cli command [#936](https://github.com/provenance-io/provenance/issues/936)
