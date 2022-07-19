@@ -28,6 +28,7 @@ func NewMsgCreateRewardProgramRequest(
 	programStartTime time.Time,
 	claimPeriods uint64,
 	claimPeriodDays uint64,
+	maxRolloverClaimPeriods uint64,
 	expireDays uint64,
 	qualifyingAction []QualifyingAction,
 ) *MsgCreateRewardProgramRequest {
@@ -40,6 +41,7 @@ func NewMsgCreateRewardProgramRequest(
 		ProgramStartTime:         programStartTime,
 		ClaimPeriods:             claimPeriods,
 		ClaimPeriodDays:          claimPeriodDays,
+		MaxRolloverClaimPeriods:  maxRolloverClaimPeriods,
 		ExpireDays:               expireDays,
 		QualifyingActions:        qualifyingAction,
 	}

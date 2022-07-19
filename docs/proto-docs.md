@@ -6120,6 +6120,7 @@ RewardProgram
 | `actual_program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time the RewardProgram switched to FINISHED state. Initially set as empty. |
 | `claim_periods` | [uint64](#uint64) |  | Number of claim periods this program will run for |
 | `current_claim_period` | [uint64](#uint64) |  | Current claim period of the RewardProgram. Uses 1-based indexing. |
+| `max_rollover_claim_periods` | [uint64](#uint64) |  | maximum number of claim periods a reward program can rollover |
 | `state` | [RewardProgram.State](#provenance.reward.v1.RewardProgram.State) |  | Current state of the RewardProgram. |
 | `reward_claim_expiration_offset` | [uint64](#uint64) |  | Grace period after a RewardProgram FINISHED. It is the number of |
 | `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated | Actions that count towards the reward |
@@ -6432,6 +6433,7 @@ MsgCreateRewardProgramRequest is the request type for creating a reward program 
 | `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | start time of the reward program |
 | `claim_periods` | [uint64](#uint64) |  | number of claim periods the reward program runs for |
 | `claim_period_days` | [uint64](#uint64) |  | number of days a claim period will exist |
+| `max_rollover_claim_periods` | [uint64](#uint64) |  | maximum number of claim periods a reward program can rollover |
 | `expire_days` | [uint64](#uint64) |  | number of days before a reward program will expire after it has ended |
 | `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated | The actions that count towards the reward |
 

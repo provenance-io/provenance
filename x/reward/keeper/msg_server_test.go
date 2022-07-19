@@ -25,6 +25,7 @@ func (s *KeeperTestSuite) TestCreateRewardProgramTransaction() {
 		time.Now(),
 		4,
 		2,
+		1,
 		4,
 		[]types.QualifyingAction{
 			{
@@ -70,6 +71,7 @@ func (s *KeeperTestSuite) TestCreateRewardProgramFailedTransaction() {
 		time.Now(),
 		4,
 		2,
+		1,
 		4,
 		[]types.QualifyingAction{
 			{
