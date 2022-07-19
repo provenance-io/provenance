@@ -252,11 +252,11 @@ func (s *RewardAccountState) String() string {
 }
 
 func CalculateExpectedEndTime(programStartTime time.Time, claimPeriodSeconds, numberOfClaimPeriods uint64) time.Time {
-	return programStartTime.Add(time.Duration(claimPeriodSeconds * numberOfClaimPeriods))
+	return programStartTime.Add(time.Duration(claimPeriodSeconds*numberOfClaimPeriods) * time.Second)
 }
 
 func CalculateEndTimeMax(programStartTime time.Time, claimPeriodSeconds, numberOfClaimPeriods uint64, maxRolloverPeriods uint64) time.Time {
-	return programStartTime.Add(time.Duration(claimPeriodSeconds * (numberOfClaimPeriods + maxRolloverPeriods)))
+	return programStartTime.Add(time.Duration(claimPeriodSeconds*(numberOfClaimPeriods+maxRolloverPeriods)) * time.Second)
 }
 
 // ============ Claim Period Reward Distribution ============
