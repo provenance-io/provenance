@@ -5,8 +5,6 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/require"
 	"math/rand"
 	"os"
 	"sort"
@@ -43,6 +41,9 @@ import (
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
+
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -365,6 +366,96 @@ func TestAppStateDeterminism(t *testing.T) {
 			require.NoError(t, err)
 
 			PrintStats(config, db)
+
+			appHash := app.LastCommitID().Hash
+			appHashList[j] = appHash
+
+			if j != 0 {
+				require.Equal(
+					t, string(appHashList[0]), string(appHashList[j]),
+					"non-determinism in seed %d: %d/%d, attempt: %d/%d\n", config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+				)
+			}
+		}
+	}
+}
+
+// TestAppStateDeterminismWithStateListeningTrace non-deterministic
+// testing with state listing to STDOUT
+func TestAppStateDeterminismWithStateListeningTrace(t *testing.T) {
+	if !sdksim.FlagEnabledValue {
+		t.Skip("skipping application simulation")
+	}
+
+	config := sdksim.NewConfigFromFlags()
+	config.InitialBlockHeight = 1
+	config.ExportParamsPath = ""
+	config.OnOperation = false
+	config.AllInvariants = false
+	config.ChainID = helpers.SimAppChainID
+	config.DBBackend = "memdb"
+
+	numSeeds := 3
+	numTimesToRunPerSeed := 5
+	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
+
+	// load trace streaming service config options
+	m := make(map[string]interface{})
+	m["streaming.enabled"] = true
+	m["streaming.service"] = []string{"trace"}
+	// example service params
+	m["streaming.trace.print_data_to_stdout"] = true
+
+	appOpts := viper.New()
+	for key, value := range m {
+		appOpts.SetDefault(key, value)
+	}
+
+	for i := 0; i < numSeeds; i++ {
+		config.Seed = rand.Int63()
+		PrintConfig(config)
+
+		for j := 0; j < numTimesToRunPerSeed; j++ {
+			var logger log.Logger
+			if sdksim.FlagVerboseValue {
+				logger = log.TestingLogger()
+			} else {
+				logger = log.NewNopLogger()
+			}
+
+			db := dbm.NewMemDB()
+			app := New(logger,
+				db,
+				nil,
+				true, map[int64]bool{},
+				DefaultNodeHome,
+				sdksim.FlagPeriodValue,
+				MakeEncodingConfig(),
+				appOpts,
+				interBlockCacheOpt(),
+			)
+
+			fmt.Printf(
+				"running provenance non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
+				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+			)
+
+			_, _, err := simulation.SimulateFromSeed(
+				t,
+				os.Stdout,
+				app.BaseApp,
+				sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+				sdksim.SimulationOperations(app, app.AppCodec(), config),
+				app.ModuleAccountAddrs(),
+				config,
+				app.AppCodec(),
+			)
+			require.NoError(t, err)
+
+			if config.Commit {
+				PrintStats(config, db)
+			}
 
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash

@@ -14,6 +14,9 @@ const (
 
 	// EnabledParam is the flag that enables ABCI request response streaming services
 	EnabledParam = "enabled"
+
+	// ServiceParam is the flag that contains the streaming service name
+	ServiceParam = "service"
 )
 
 // StreamService interface used to hook into the ABCI message processing of the BaseApp

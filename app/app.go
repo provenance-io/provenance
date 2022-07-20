@@ -3,8 +3,6 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	appstreaming "github.com/provenance-io/provenance/app/streaming"
-	"github.com/provenance-io/provenance/internal/streaming"
 	"io"
 	"net/http"
 	"os"
@@ -104,11 +102,13 @@ import (
 
 	// PROVENANCE
 	appparams "github.com/provenance-io/provenance/app/params"
+	appstreaming "github.com/provenance-io/provenance/app/streaming"
 	_ "github.com/provenance-io/provenance/client/docs/statik" // registers swagger-ui files with statik
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	piohandlers "github.com/provenance-io/provenance/internal/handlers"
 	"github.com/provenance-io/provenance/internal/provwasm"
 	"github.com/provenance-io/provenance/internal/statesync"
+	"github.com/provenance-io/provenance/internal/streaming"
 	"github.com/provenance-io/provenance/x/attribute"
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -286,8 +286,8 @@ type App struct {
 	// module configurator
 	configurator module.Configurator
 
-	// ABCI streaming services
-	streamingServices []streaming.StreamService
+	// ABCI streaming service
+	streamingService streaming.StreamService
 }
 
 func init() {
@@ -834,14 +834,15 @@ func New(
 	app.ScopedTransferKeeper = scopedTransferKeeper
 
 	// register streaming service
-	enabledServices := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("%s.%s", streaming.TomlKey, streaming.EnabledParam)))
-	for _, key := range enabledServices {
-		ssi, found := appstreaming.StreamServiceInitializers[key]
+	streamingEnabled := cast.ToBool(appOpts.Get(fmt.Sprintf("%s.%s", streaming.TomlKey, streaming.EnabledParam)))
+	if streamingEnabled {
+		service := cast.ToString(appOpts.Get(fmt.Sprintf("%s.%s", streaming.TomlKey, streaming.ServiceParam)))
+		ssi, found := appstreaming.StreamServiceInitializers[service]
 		if found {
 			app.RegisterStreamingService(ssi.Init(appOpts, app.AppCodec()))
-			logger.Info("registered streaming service", "service", ssi)
+			logger.Info("Starting ABCI external streaming", "service", service)
 		} else {
-			logger.Error("unsupported streaming service", "service", ssi)
+			logger.Error("unsupported ABCI streaming service", "service", service)
 		}
 	}
 
@@ -854,8 +855,8 @@ func (app *App) Name() string { return app.BaseApp.Name() }
 // BeginBlocker application updates every begin block
 func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	res := app.mm.BeginBlock(ctx, req)
-	for _, s := range app.streamingServices {
-		s.StreamBeginBlocker(ctx, req, res)
+	if app.streamingService != nil {
+		app.streamingService.StreamBeginBlocker(ctx, req, res)
 	}
 	return res
 }
@@ -863,8 +864,8 @@ func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 // EndBlocker application updates every end block
 func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	res := app.mm.EndBlock(ctx, req)
-	for _, s := range app.streamingServices {
-		s.StreamEndBlocker(ctx, req, res)
+	if app.streamingService != nil {
+		app.streamingService.StreamEndBlocker(ctx, req, res)
 	}
 	return res
 }
@@ -984,7 +985,7 @@ func (app *App) RegisterTendermintService(clientCtx client.Context) {
 // RegisterStreamingService is used to register a streaming service into the App
 func (app *App) RegisterStreamingService(s streaming.StreamService) {
 	// App will pass BeginBlocker and EndBlocker requests and responses to the streaming services
-	app.streamingServices = append(app.streamingServices, s)
+	app.streamingService = s
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
