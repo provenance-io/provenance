@@ -843,8 +843,8 @@ func (m *ActionDelegate) GetMaximumDelegationAmount() *types.Coin {
 type ActionTransfer struct {
 	MinimumActions uint64 `protobuf:"varint,1,opt,name=minimum_actions,json=minimumActions,proto3" json:"minimum_actions,omitempty"`
 	MaximumActions uint64 `protobuf:"varint,2,opt,name=maximum_actions,json=maximumActions,proto3" json:"maximum_actions,omitempty"`
-	// transfers from only account that have delegations will be accounted for if minimum_delegation_amount is nt zero
-	// coins if below field is set to zero coins then all transfers will be eligible for this rewards.
+	// minimum_delegation_amount when set to a coin amount greater than zero will only reward accounts with delegations
+	// equal or greater than amount, if minimum_delegation_amount is zero then every send will be elegible for reward
 	MinimumDelegationAmount types.Coin `protobuf:"bytes,3,opt,name=minimum_delegation_amount,json=minimumDelegationAmount,proto3" json:"minimum_delegation_amount" yaml:"minimum_delegation_amount"`
 }
 
