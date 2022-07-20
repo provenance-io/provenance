@@ -15,7 +15,7 @@ else
     cd /tmp/librdkafka
     ./configure
     make
-    make install
+    sudo make install
     cd ${PWD}
 
     # Cleanup
