@@ -15,9 +15,8 @@ test-sim-nondeterminism-state-listening-file:
 
 test-sim-nondeterminism-state-listening-trace:
 	@echo "Running non-determinism-state-listening-trace test..."
-	go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminismWithStateListening -Enabled=true \
-		-NumBlocks=50 -BlockSize=100 -Commit=true -Period=0 -v -timeout 24h \
-		-StateListeningPlugin=trace -HaltAppOnDeliveryError=true
+	go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminismWithStateListeningTrace -Enabled=true \
+		-NumBlocks=50 -BlockSize=100 -Commit=true -Period=0 -v -test.v -timeout 24h;
 
 SIM_DOCKER_COMPOSE_YML ?= vendor/github.com/cosmos/cosmos-sdk/plugin/plugins/kafka/docker-compose.yml
 
