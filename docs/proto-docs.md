@@ -5953,7 +5953,7 @@ give it a share of the rewards pool, assuming it has not gone over max value and
 | ----- | ---- | ----- | ----------- |
 | `minimum_actions` | [uint64](#uint64) |  |  |
 | `maximum_actions` | [uint64](#uint64) |  |  |
-| `minimum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | transfers from only account that have delegations will be accounted for if minimum_delegation_amount is nt zero coins if below field is set to zero coins then all transfers will be eligible for this rewards. |
+| `minimum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | minimum_delegation_amount when set to a coin amount greater than zero will only reward accounts with delegations equal or greater than amount, if minimum_delegation_amount is zero then every send will be elegible for reward |
 
 
 
