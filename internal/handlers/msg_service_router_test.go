@@ -734,6 +734,88 @@ func TestRewardsProgramStartPerformQualifyingActions_2(t *testing.T) {
 	assert.Equal(t, 1, int(accountState.SharesEarned), "account state incorrect")
 }
 
+// Checks to see if delegation are met for a Qualifying action in this case Transfer
+func TestRewardsProgramStartPerformQualifyingActions_3(t *testing.T) {
+	encCfg := simapp.MakeTestEncodingConfig()
+	priv, _, addr := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(5),
+		100,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions: 0,
+						MaximumActions: 10,
+						MinimumDelegationAmount: sdk.Coin{
+							Denom:  "nhash",
+							Amount: sdk.NewInt(10_000_000_000)},
+					},
+				},
+			},
+		},
+	)
+
+	rewardProgram.State = rewardtypes.RewardProgram_PENDING
+
+	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx.WithBlockTime(time.Now())
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	check(simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+
+	// tx with a fee associated with msg type and account has funds
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	ctx.WithBlockTime(time.Now())
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	ctx.WithBlockTime(time.Now())
+	time.Sleep(2000 * time.Millisecond)
+
+	//go through 5 blocks, but take a long time to cut blocks.
+	for height := int64(2); height < int64(7); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		acct1.SetSequence(seq)
+		tx1, err1 := SignTx(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1)
+		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
+		check(errFromDeliverTx)
+		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+		time.Sleep(6000 * time.Millisecond)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	check(err)
+	assert.Equal(t, true, len(claimPeriodDistributions) > 1, "claim period reward distributions should exist")
+	assert.Equal(t, int64(0), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
+	assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
+	assert.Equal(t, sdk.Coin{
+		Denom:  "nhash",
+		Amount: sdk.NewInt(10_000_000_000),
+	}, claimPeriodDistributions[0].RewardsPool)
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	check(err)
+	assert.Equal(t, 0, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
+	assert.Equal(t, 0, int(accountState.SharesEarned), "account state incorrect")
+}
+
 // Contains tells if Event type exists in abci.Event.
 func contains(a []abci.Event, x string) (*[]abci.Event, bool) {
 	var eventSlice []abci.Event
