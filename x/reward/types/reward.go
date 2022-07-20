@@ -439,6 +439,8 @@ func (at *ActionTransfer) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 		}
 		if totalDelegations.IsGTE(at.MinimumDelegationAmount) {
 			return true
+		} else {
+			return false
 		}
 	}
 	return true
