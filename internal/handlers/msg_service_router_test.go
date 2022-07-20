@@ -3,6 +3,8 @@ package handlers_test
 import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 	"os"
 	"testing"
@@ -110,7 +112,7 @@ func TestMsgService(t *testing.T) {
 	assert.Equal(t, "150atom", string(res.Events[4].Attributes[0].Value))
 
 	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)))
-	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
+	check(app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee))
 
 	// tx with a fee associated with msg type and account has funds
 	msg = banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(50))))
@@ -139,7 +141,7 @@ func TestMsgService(t *testing.T) {
 	assert.Equal(t, "[{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"800hotdog\",\"recipient\":\"\"}]", string(res.Events[15].Attributes[0].Value))
 
 	msgbasedFee = msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("atom", 10))
-	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
+	check(app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee))
 
 	// tx with a fee associated with msg type, additional cost is in same base as fee
 	msg = banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(50))))
@@ -198,7 +200,7 @@ func TestMsgService(t *testing.T) {
 	assert.Equal(t, "[{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"10nhash\",\"recipient\":\"\"}]", string(res.Events[15].Attributes[0].Value))
 
 	msgbasedFee = msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("atom", 100))
-	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
+	check(app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee))
 
 	check(simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
 	// tx with a fee associated with msg type, additional cost is in diff denom(atom) but using default denom, nhash for base fee.
@@ -241,7 +243,7 @@ func TestMsgServiceAuthz(t *testing.T) {
 
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
 	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)))
-	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
+	check(app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee))
 	app.AuthzKeeper.SaveGrant(ctx, addr2, addr, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("hotdog", 500))), time.Now().Add(time.Hour))
 
 	// tx authz send message with correct amount of fees associated
@@ -339,7 +341,7 @@ func TestMsgServiceAuthzAdditionalMsgFeeInDefaultDenom(t *testing.T) {
 
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100))))
 	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("atom", sdk.NewInt(10)))
-	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
+	check(app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee))
 	app.AuthzKeeper.SaveGrant(ctx, addr2, addr, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("atom", 500))), time.Now().Add(time.Hour))
 
 	// tx authz send message with correct amount of fees associated
@@ -509,7 +511,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	app := piosimapp.SetupWithGenesisAccounts([]authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	time := ctx.BlockTime()
+	blockTime := ctx.BlockTime()
 	check(simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
 
 	rewardProgram := *rewardtypes.NewMsgCreateRewardProgramRequest(
@@ -518,11 +520,11 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 		acct1.Address,
 		sdk.NewInt64Coin("nhash", 1000),
 		sdk.NewInt64Coin("nhash", 100),
-		time,
+		blockTime,
 		9,
 		3,
 		3,
-		uint64(time.Day()),
+		uint64(blockTime.Day()),
 		[]rewardtypes.QualifyingAction{
 			{
 				Type: &rewardtypes.QualifyingAction_Transfer{
@@ -551,7 +553,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	seq := acct1.Sequence
 	for height := int64(3); height <= int64(100); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height}})
-		acct1.SetSequence(seq)
+		check(acct1.SetSequence(seq))
 		tx1, err1 := SignTx(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
@@ -611,7 +613,7 @@ func TestRewardsProgramStartPerformQualifyingActions_1(t *testing.T) {
 
 	rewardProgram.State = rewardtypes.RewardProgram_PENDING
 
-	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, nil, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
@@ -628,7 +630,7 @@ func TestRewardsProgramStartPerformQualifyingActions_1(t *testing.T) {
 
 	for height := int64(2); height < int64(22); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
-		acct1.SetSequence(seq)
+		check(acct1.SetSequence(seq))
 		tx1, err1 := SignTx(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
@@ -689,7 +691,7 @@ func TestRewardsProgramStartPerformQualifyingActions_2(t *testing.T) {
 
 	rewardProgram.State = rewardtypes.RewardProgram_PENDING
 
-	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, nil, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
@@ -707,7 +709,7 @@ func TestRewardsProgramStartPerformQualifyingActions_2(t *testing.T) {
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(2); height < int64(7); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
-		acct1.SetSequence(seq)
+		check(acct1.SetSequence(seq))
 		tx1, err1 := SignTx(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
@@ -740,7 +742,7 @@ func TestRewardsProgramStartPerformQualifyingActions_3(t *testing.T) {
 	priv, _, addr := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
 		"title",
@@ -771,7 +773,7 @@ func TestRewardsProgramStartPerformQualifyingActions_3(t *testing.T) {
 
 	rewardProgram.State = rewardtypes.RewardProgram_PENDING
 
-	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, nil, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
@@ -789,7 +791,209 @@ func TestRewardsProgramStartPerformQualifyingActions_3(t *testing.T) {
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(2); height < int64(7); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
-		acct1.SetSequence(seq)
+		check(acct1.SetSequence(seq))
+		tx1, err1 := SignTx(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1)
+		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
+		check(errFromDeliverTx)
+		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+		time.Sleep(6000 * time.Millisecond)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	check(err)
+	assert.Equal(t, true, len(claimPeriodDistributions) > 1, "claim period reward distributions should exist")
+	assert.Equal(t, int64(0), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
+	assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
+	assert.Equal(t, sdk.Coin{
+		Denom:  "nhash",
+		Amount: sdk.NewInt(10_000_000_000),
+	}, claimPeriodDistributions[0].RewardsPool)
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	check(err)
+	assert.Equal(t, 0, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
+	assert.Equal(t, 0, int(accountState.SharesEarned), "account state incorrect")
+}
+
+// generateAddresses generates numAddrs of normal AccAddrs and ValAddrs
+func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int, accAmount sdk.Int) ([]sdk.AccAddress, []sdk.ValAddress) {
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, numAddrs, accAmount)
+	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
+
+	return addrDels, addrVals
+}
+
+// Checks to see if delegation are met for a Qualifying action in this case Transfer, create an address with delegations
+// transfers which map to QualifyingAction map to the delegated address
+// delegation threshhold is met
+func TestRewardsProgramStartPerformQualifyingActions_4(t *testing.T) {
+	encCfg := simapp.MakeTestEncodingConfig()
+	priv, pubKey, addr := testdata.KeyTestPubAddr()
+	_, pubKey2, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(5),
+		100,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions: 0,
+						MaximumActions: 10,
+						MinimumDelegationAmount: sdk.Coin{
+							Denom:  "nhash",
+							Amount: sdk.NewInt(100)},
+					},
+				},
+			},
+		},
+	)
+
+	rewardProgram.State = rewardtypes.RewardProgram_PENDING
+	pk0, err := codectypes.NewAnyWithValue(pubKey)
+	pk1, err := codectypes.NewAnyWithValue(pubKey2)
+	// initialize the validators
+	bondedVal1 := stakingtypes.Validator{
+		OperatorAddress: sdk.ValAddress(addr).String(),
+		ConsensusPubkey: pk0,
+		Description:     stakingtypes.NewDescription("hotdog", "", "", "", ""),
+	}
+	bondedVal2 := stakingtypes.Validator{
+		OperatorAddress: sdk.ValAddress(addr2).String(),
+		ConsensusPubkey: pk1,
+		Description:     stakingtypes.NewDescription("corndog", "", "", "", ""),
+	}
+
+	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, []stakingtypes.Validator{bondedVal1, bondedVal2}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx.WithBlockTime(time.Now())
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	check(simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+
+	// tx with a fee associated with msg type and account has funds
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	ctx.WithBlockTime(time.Now())
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	ctx.WithBlockTime(time.Now())
+	time.Sleep(1 * time.Second)
+
+	//go through 5 blocks, but take a long time to cut blocks.
+	for height := int64(2); height < int64(7); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		check(acct1.SetSequence(seq))
+		tx1, err1 := SignTx(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1)
+		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
+		check(errFromDeliverTx)
+		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+		time.Sleep(6000 * time.Millisecond)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	check(err)
+	assert.Equal(t, true, len(claimPeriodDistributions) > 1, "claim period reward distributions should exist")
+	assert.Equal(t, int64(1), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
+	assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
+	assert.Equal(t, sdk.Coin{
+		Denom:  "nhash",
+		Amount: sdk.NewInt(10_000_000_000),
+	}, claimPeriodDistributions[0].RewardsPool)
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	check(err)
+	assert.Equal(t, 1, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
+	assert.Equal(t, 1, int(accountState.SharesEarned), "account state incorrect")
+}
+
+// Checks to see if delegation are met for a Qualifying action in this case Transfer, create an address with delegations
+// transfers which map to QualifyingAction map to the delegated address
+// delegation threshhold is *not* met
+func TestRewardsProgramStartPerformQualifyingActions_5(t *testing.T) {
+	encCfg := simapp.MakeTestEncodingConfig()
+	priv, pubKey, addr := testdata.KeyTestPubAddr()
+	_, pubKey2, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(5),
+		100,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions: 0,
+						MaximumActions: 10,
+						MinimumDelegationAmount: sdk.Coin{
+							Denom:  "nhash",
+							Amount: sdk.NewInt(1_100_000_000)},
+					},
+				},
+			},
+		},
+	)
+
+	rewardProgram.State = rewardtypes.RewardProgram_PENDING
+	pk0, err := codectypes.NewAnyWithValue(pubKey)
+	pk1, err := codectypes.NewAnyWithValue(pubKey2)
+	// initialize the validators
+	bondedVal1 := stakingtypes.Validator{
+		OperatorAddress: sdk.ValAddress(addr).String(),
+		ConsensusPubkey: pk0,
+		Description:     stakingtypes.NewDescription("hotdog", "", "", "", ""),
+	}
+	bondedVal2 := stakingtypes.Validator{
+		OperatorAddress: sdk.ValAddress(addr2).String(),
+		ConsensusPubkey: pk1,
+		Description:     stakingtypes.NewDescription("corndog", "", "", "", ""),
+	}
+
+	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, []stakingtypes.Validator{bondedVal1, bondedVal2}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx.WithBlockTime(time.Now())
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	check(simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+
+	// tx with a fee associated with msg type and account has funds
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	ctx.WithBlockTime(time.Now())
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	ctx.WithBlockTime(time.Now())
+	time.Sleep(1 * time.Second)
+
+	//go through 5 blocks, but take a long time to cut blocks.
+	for height := int64(2); height < int64(7); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		check(acct1.SetSequence(seq))
 		tx1, err1 := SignTx(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)

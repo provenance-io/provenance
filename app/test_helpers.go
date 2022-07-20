@@ -459,15 +459,54 @@ func FundModuleAccount(app *App, ctx sdk.Context, recipientMod string, amounts s
 	return app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, recipientMod, amounts)
 }
 
-func SetupWithGenesisRewardsProgram(genesisRewards types.RewardProgram, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
+func SetupWithGenesisRewardsProgram(genesisRewards types.RewardProgram, genAccs []authtypes.GenesisAccount, valSet []stakingtypes.Validator, balances ...banktypes.Balance) *App {
 
 	app, genesisState := setup(true, 0)
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
 
+	validators := make([]stakingtypes.Validator, 0, len(valSet))
+	delegations := make([]stakingtypes.Delegation, 0, len(valSet))
+
+	bondAmt := sdk.NewInt(1_000_000)
+
+	for _, val := range valSet {
+		validator := stakingtypes.Validator{
+			OperatorAddress:   val.OperatorAddress,
+			ConsensusPubkey:   val.ConsensusPubkey,
+			Jailed:            false,
+			Status:            stakingtypes.Bonded,
+			Tokens:            bondAmt,
+			DelegatorShares:   sdk.OneDec(),
+			Description:       stakingtypes.Description{},
+			UnbondingHeight:   int64(0),
+			UnbondingTime:     time.Unix(0, 0).UTC(),
+			Commission:        stakingtypes.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+			MinSelfDelegation: sdk.ZeroInt(),
+		}
+		validators = append(validators, validator)
+		add, _ := sdk.ValAddressFromBech32(validator.OperatorAddress)
+
+		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), add, sdk.OneDec()))
+	}
+
+	// set validators and delegations
+	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
+	genesisState[stakingtypes.ModuleName] = app.AppCodec().MustMarshalJSON(stakingGenesis)
+
 	totalSupply := sdk.NewCoins()
 	for _, b := range balances {
 		totalSupply = totalSupply.Add(b.Coins...)
+	}
+
+	if len(valSet) > 0 {
+		totalSupply = totalSupply.Add(sdk.NewCoin(sdk.DefaultBondDenom, bondAmt))
+		totalSupply = totalSupply.Add(sdk.NewCoin(sdk.DefaultBondDenom, bondAmt))
+		// add bonded amount to bonded pool module account
+		balances = append(balances, banktypes.Balance{
+			Address: authtypes.NewModuleAddress(stakingtypes.BondedPoolName).String(),
+			Coins:   sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, bondAmt.Mul(sdk.NewInt(int64(len(valSet)))))},
+		})
 	}
 
 	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{}, []banktypes.SendEnabled{})
