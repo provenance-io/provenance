@@ -14,7 +14,7 @@ var _ streaming.StreamService = (*TraceStreamingService)(nil)
 // TraceStreamingService is a lightweight streaming service for showing how streaming is plugged in.
 type TraceStreamingService struct {
 	printDataToStdout bool              // Print request response data to stdout.
-	codec             codec.BinaryCodec // binary marshaller used for re-marshalling the ABCI messages to write them out to the destination files
+	codec             codec.BinaryCodec // binary marshaller used for re-marshaling the ABCI messages to write them out to the destination files
 }
 
 func NewTraceStreamingService(
@@ -71,11 +71,12 @@ func (tss *TraceStreamingService) StreamEndBlocker(
 	}
 }
 
+// nolint: unparam
 func (tss *TraceStreamingService) write(
 	ctx sdk.Context,
 	data proto.Message,
 ) error {
-	var m = fmt.Sprintf("omitted")
+	var m = "omitted"
 	if tss.printDataToStdout {
 		m = fmt.Sprintf("%v", data)
 	}
