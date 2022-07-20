@@ -14,8 +14,10 @@ func (k Keeper) CreateRewardProgram(ctx sdk.Context, rewardProgram types.RewardP
 		return err
 	}
 
-	if ctx.BlockTime().UTC().After(rewardProgram.ProgramStartTime.UTC()) {
-		return fmt.Errorf("start time is before current block time %v : %v ", ctx.BlockTime().UTC(), rewardProgram.ProgramStartTime.UTC())
+	y1, m1, d1 := ctx.BlockTime().UTC().Date()
+	y2, m2, d2 := rewardProgram.ProgramStartTime.UTC().Date()
+	if y2 >= y1 && m2 >= m1 && d2 >= d1 {
+		return fmt.Errorf("start time is before current block time %v-%v-%v : %v-%v-%v ", y1, m1, d1, y2, m2, d2)
 	}
 
 	// error check done in reward Validate()
