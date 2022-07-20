@@ -375,8 +375,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # test-sim-nondeterminism-state-listening-trace is the nondeterminism test with state listening to trace.
         # test-sim-nondeterminism-state-listening-kafka is the nondeterminism test with state listening to kafka.
-        test: ["kafka"]
+        test: ["trace", "kafka"]
         os: ["ubuntu-latest", "macos-latest"]
     runs-on: ${{ matrix.os }}
     steps:

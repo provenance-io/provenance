@@ -8,6 +8,6 @@ import (
 
 // StreamServiceInitializers contains a map of supported StreamServiceInitializer implementations
 var StreamServiceInitializers = map[string]streaming.StreamServiceInitializer{
-	"trace": trace.StreamServiceInitializer,
 	"kafka": kafka.StreamServiceInitializer,
+	"trace": trace.StreamServiceInitializer,
 }

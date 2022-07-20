@@ -491,7 +491,8 @@ func TestAppStateDeterminismStateListeningKafka(t *testing.T) {
 
 	// load kafka streaming service config options
 	m := make(map[string]interface{})
-	m["streaming.enabled"] = []string{"kafka"}
+	m["streaming.enabled"] = true
+	m["streaming.service"] = []string{"kafka"}
 	m["streaming.kafka.topic_prefix"] = "sim"
 	m["streaming.kafka.producer.bootstrap_servers"] = "localhost:9092"
 	m["streaming.kafka.producer.client_id"] = "sim"
