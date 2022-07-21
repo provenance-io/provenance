@@ -114,13 +114,13 @@ func GetClaimPeriodRewardDistributionCmd() *cobra.Command {
 	const all = "all"
 
 	cmd := &cobra.Command{
-		Use:     "epoch-reward-distribution {\"all\"} | {reward_program_id} {epoch_id}",
-		Aliases: []string{"erd", "reward-distribution", "rd"},
-		Short:   "Query the current epoch reward distributions",
-		Long: fmt.Sprintf(`%[1]s epoch-reward-distribution {reward_program_id} {epoch_id} - gets the reward program for the given reward_program_id and epoch id
-%[1]s epoch-reward-distribution all - gets all the reward programs`, cmdStart),
+		Use:     "claim-period-reward-distribution {\"all\"} | {reward_program_id} {claim_period_id}",
+		Aliases: []string{"cprd", "reward-distribution", "rd", "claim-periods"},
+		Short:   "Query the current claim period reward distributions",
+		Long: fmt.Sprintf(`%[1]s claim-period-reward-distribution {reward_program_id} {claim_period_id} - gets the reward program for the given reward_program_id and claim_period_id
+%[1]s epoch-reward-distribution all - gets all the claim period reward distributions`, cmdStart),
 		Args: cobra.RangeArgs(1, 2),
-		Example: fmt.Sprintf(`%[1]s epoch-reward-distribution 1 "day"
+		Example: fmt.Sprintf(`%[1]s claim-period-reward-distribution 1 1
 %[1]s epoch-reward-distribution all`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
@@ -129,7 +129,7 @@ func GetClaimPeriodRewardDistributionCmd() *cobra.Command {
 			}
 
 			if len(args) != 2 {
-				return fmt.Errorf("a reward_program_id and an epoch_id are required")
+				return fmt.Errorf("a reward_program_id and an claim_period_id are required")
 			}
 			arg1 := args[1]
 
