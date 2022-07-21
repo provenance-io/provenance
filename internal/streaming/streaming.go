@@ -12,8 +12,8 @@ const (
 	// TomlKey is the top-level TOML key for streaming configuration
 	TomlKey = "streaming"
 
-	// EnabledParam is the flag that enables ABCI request response streaming services
-	EnabledParam = "enabled"
+	// EnableParam is the flag that enables ABCI request response streaming services
+	EnableParam = "enable"
 
 	// ServiceParam is the flag that contains the streaming service name
 	ServiceParam = "service"

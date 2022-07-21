@@ -57,12 +57,12 @@ Take a look at [app/streaming/trace/service/service.go](./trace/service/service.
 ## Configuration
 
 Streaming services are configured in the `streaming` TOML mapping in the App's `app.toml` file. There are two parameters
-for configuring a service: `streaming.enabled` and `streaming.service`. `streaming.enabled` is bool that turns on or of a streaming service.
+for configuring a service: `streaming.enable` and `streaming.service`. `streaming.enable` is bool that turns on or of a streaming service.
 `streaming.service` specifies the service name that is registered with the App. 
 
 ```toml
 [streaming]
-    enabled = true
+    enable = true
     # The streaming service name that ABCI BeginBlocker and EndBlocker request and response will be sent to.
     # Supported services are: trace
     service = "service name to stream ABCI data"
@@ -81,7 +81,7 @@ The configuration for the `trace` service is defined as:
 
 ```toml
 [streaming]
-enabled = true
+enable = true
 # The streaming service name that ABCI BeginBlocker and EndBlocker request and response will be sent to.
 # Supported services are: trace
 service = "trace"

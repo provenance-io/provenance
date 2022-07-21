@@ -834,8 +834,8 @@ func New(
 	app.ScopedTransferKeeper = scopedTransferKeeper
 
 	// register streaming service
-	streamingEnabled := cast.ToBool(appOpts.Get(fmt.Sprintf("%s.%s", streaming.TomlKey, streaming.EnabledParam)))
-	if streamingEnabled {
+	enableStreaming := cast.ToBool(appOpts.Get(fmt.Sprintf("%s.%s", streaming.TomlKey, streaming.EnableParam)))
+	if enableStreaming {
 		service := cast.ToString(appOpts.Get(fmt.Sprintf("%s.%s", streaming.TomlKey, streaming.ServiceParam)))
 		ssi, found := appstreaming.StreamServiceInitializers[service]
 		if found {
