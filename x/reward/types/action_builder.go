@@ -17,7 +17,6 @@ type ActionBuilder interface {
 	Reset()
 }
 
-// ============ TransferActionBuilder ============
 type TransferActionBuilder struct {
 	Sender    sdk.AccAddress
 	Action    string
@@ -29,7 +28,7 @@ func (b *TransferActionBuilder) GetEventCriteria() *EventCriteria {
 		{
 			Type: sdk.EventTypeMessage,
 			Attributes: map[string][]byte{
-				"action": []byte("/cosmos.bank.v1beta1.MsgSend"),
+				"action": []byte(sdk.MsgTypeURL(&banktypes.MsgSend{})),
 			},
 		},
 		{
@@ -98,7 +97,6 @@ func (b *TransferActionBuilder) Reset() {
 	b.Sender = sdk.AccAddress{}
 }
 
-// ============ DelegateActionBuilder ============
 type DelegateActionBuilder struct {
 	Validator sdk.ValAddress
 	Delegator sdk.AccAddress
@@ -107,17 +105,17 @@ type DelegateActionBuilder struct {
 func (b *DelegateActionBuilder) GetEventCriteria() *EventCriteria {
 	return NewEventCriteria([]ABCIEvent{
 		{
-			Type: "message",
+			Type: sdk.EventTypeMessage,
 			Attributes: map[string][]byte{
-				"module": []byte("staking"),
+				sdk.AttributeKeyModule: []byte(stakingtypes.ModuleName),
 			},
 		},
 		{
-			Type:       "delegate",
+			Type:       stakingtypes.EventTypeDelegate,
 			Attributes: map[string][]byte{},
 		},
 		{
-			Type:       "create_validator",
+			Type:       stakingtypes.EventTypeCreateValidator,
 			Attributes: map[string][]byte{},
 		},
 	})
@@ -175,8 +173,6 @@ func (b *DelegateActionBuilder) Reset() {
 	b.Validator = sdk.ValAddress{}
 	b.Delegator = sdk.AccAddress{}
 }
-
-// ============ VoteActionBuilder ============
 
 type VoteActionBuilder struct {
 	Voter sdk.AccAddress
