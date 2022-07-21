@@ -259,6 +259,16 @@ func CalculateEndTimeMax(programStartTime time.Time, claimPeriodSeconds, numberO
 	return programStartTime.Add(time.Duration(claimPeriodSeconds*(numberOfClaimPeriods+maxRolloverPeriods)) * time.Second)
 }
 
+// DateOnOrAfter compares day1 with day2 and returns true if the date of day2 is on or after the date of day1 ignoring time part.
+func DateOnOrAfter(day1 time.Time, day2 time.Time) bool {
+	y1, m1, d1 := day1.UTC().Date()
+	y2, m2, d2 := day2.UTC().Date()
+	if y2 >= y1 && m2 >= m1 && d2 >= d1 {
+		return true
+	}
+	return false
+}
+
 // ============ Claim Period Reward Distribution ============
 
 func NewClaimPeriodRewardDistribution(claimPeriodID uint64, rewardProgramID uint64, rewardsPool, totalRewardsPoolForClaimPeriod sdk.Coin, totalShares int64, claimPeriodEnded bool) ClaimPeriodRewardDistribution {
