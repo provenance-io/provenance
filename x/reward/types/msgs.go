@@ -90,10 +90,11 @@ func (msg MsgCreateRewardProgramRequest) ValidateBasic() error {
 	if len(msg.QualifyingActions) == 0 {
 		return fmt.Errorf("reward program must contain qualifying actions")
 	}
-	// TODO validate basic should be on top level action
-	// for _, action := range msg.QualifyingActions {
-	// 	action.Val
-	// }
+	for _, action := range msg.QualifyingActions {
+		if err := action.Validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

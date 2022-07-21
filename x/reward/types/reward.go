@@ -210,7 +210,11 @@ func (rp *RewardProgram) Validate() error {
 	if len(rp.QualifyingActions) == 0 {
 		return errors.New("reward program must have at least one qualifying action")
 	}
-
+	for _, qa := range rp.QualifyingActions {
+		if err := qa.GetDelegate().Validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -419,7 +423,7 @@ func NewActionTransfer() ActionTransfer {
 	return ActionTransfer{}
 }
 
-func (at *ActionTransfer) ValidateBasic() error {
+func (at *ActionTransfer) Validate() error {
 	if at.MinimumActions > at.MaximumActions {
 		return errors.New("minimum action cannot be greater than maximum actions")
 	}
@@ -529,6 +533,22 @@ func (atd *ActionVote) PostEvaluate(ctx sdk.Context, provider KeeperProvider, st
 }
 
 // ============ Qualifying Action ============
+
+func (qa *QualifyingAction) Validate() (isValid error) {
+	switch actionType := qa.GetType().(type) {
+	case *QualifyingAction_Delegate:
+		isValid = qa.GetDelegate().Validate()
+	case *QualifyingAction_Transfer:
+		isValid = qa.GetTransfer().Validate()
+	case *QualifyingAction_Vote:
+		isValid = qa.GetVote().Validate()
+	default:
+		// Skip any unsupported actions
+		message := fmt.Sprintf("The Action type %s is not supported", actionType)
+		isValid = errors.New(message)
+	}
+	return isValid
+}
 
 func (qa *QualifyingAction) GetRewardAction(ctx sdk.Context) (RewardAction, error) {
 	var action RewardAction

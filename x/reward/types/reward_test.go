@@ -387,7 +387,7 @@ func (s *RewardTypesTestSuite) TestActionTransferCreation() {
 		MaximumActions:          1,
 		MinimumDelegationAmount: minDelegation,
 	}
-	s.Assert().Nil(action.ValidateBasic(), "validate basic must have no error")
+	s.Assert().Nil(action.Validate(), "validate basic must have no error")
 	s.Assert().Equal("ActionTransfer", action.ActionType(), "must have appropriate action type")
 	s.Assert().Equal(true, action.GetBuilder() != nil, "must have appropriate builder")
 }
