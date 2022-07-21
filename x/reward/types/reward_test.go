@@ -427,3 +427,25 @@ func (s *RewardTypesTestSuite) TestMatchesEvent() {
 	s.Assert().True(criteria.MatchesEvent("type1"), "criteria must match against valid event type")
 	s.Assert().False(criteria.MatchesEvent("blah"), "criteria must fail against invalid event type")
 }
+
+func (s *RewardTypesTestSuite) TestDateOnOrAfter() {
+	// compareConstant's use case is blockTime
+	compareConstant, err := time.Parse(time.RFC3339, "2022-01-21T15:00:00Z")
+	s.Require().NoError(err)
+
+	yesterday, err := time.Parse(time.RFC3339, "2022-07-20T13:00:00Z")
+	s.Require().NoError(err)
+	tomorrow, err := time.Parse(time.RFC3339, "2022-07-22T13:00:00Z")
+	s.Require().NoError(err)
+
+	hourBefore, err := time.Parse(time.RFC3339, "2022-07-21T13:00:00Z")
+	s.Require().NoError(err)
+	hourAfter, err := time.Parse(time.RFC3339, "2022-07-21T14:00:00Z")
+	s.Require().NoError(err)
+
+	s.Assert().False(DateOnOrAfter(compareConstant, yesterday))
+	s.Assert().True(DateOnOrAfter(compareConstant, tomorrow))
+	s.Assert().True(DateOnOrAfter(compareConstant, hourBefore))
+	s.Assert().True(DateOnOrAfter(compareConstant, hourAfter))
+	s.Assert().True(DateOnOrAfter(compareConstant, compareConstant))
+}
