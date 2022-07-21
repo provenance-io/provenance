@@ -430,25 +430,19 @@ func (s *RewardTypesTestSuite) TestMatchesEvent() {
 
 func (s *RewardTypesTestSuite) TestDateOnOrAfter() {
 	// compareConstant's use case is blockTime
-	compareConstant, err := time.Parse(time.RFC3339, "2022-01-21T15:00:00Z")
+	compareConstant, err := time.Parse(time.RFC3339, "2022-07-21T13:00:10Z")
 	s.Require().NoError(err)
 
-	yesterday, err := time.Parse(time.RFC3339, "2022-07-20T13:00:00Z")
+	past, err := time.Parse(time.RFC3339, "2022-07-21T13:00:09Z")
 	s.Require().NoError(err)
-	tomorrow, err := time.Parse(time.RFC3339, "2022-07-22T13:00:00Z")
-	s.Require().NoError(err)
-
-	hourBefore, err := time.Parse(time.RFC3339, "2022-07-21T13:00:00Z")
-	s.Require().NoError(err)
-	hourAfter, err := time.Parse(time.RFC3339, "2022-07-21T14:00:00Z")
+	future, err := time.Parse(time.RFC3339, "2022-07-21T13:00:11Z")
 	s.Require().NoError(err)
 
-	s.Assert().False(DateOnOrAfter(compareConstant, yesterday))
-	s.Assert().True(DateOnOrAfter(compareConstant, tomorrow))
-	s.Assert().True(DateOnOrAfter(compareConstant, hourBefore))
-	s.Assert().True(DateOnOrAfter(compareConstant, hourAfter))
-	s.Assert().True(DateOnOrAfter(compareConstant, compareConstant))
+	s.Assert().False(TimeOnOrAfter(compareConstant, past))
+	s.Assert().True(TimeOnOrAfter(compareConstant, future))
+	s.Assert().True(TimeOnOrAfter(compareConstant, compareConstant))
 }
+
 func (s *RewardTypesTestSuite) TestCalculateExpectedEndTime() {
 	compareConstant, err := time.Parse(time.RFC3339, "2022-01-21T15:00:00Z")
 	s.Require().NoError(err)

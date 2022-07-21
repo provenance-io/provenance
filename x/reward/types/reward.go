@@ -119,8 +119,8 @@ func NewRewardProgram(
 	rewardClaimExpirationOffset uint64,
 	qualifyingActions []QualifyingAction,
 ) RewardProgram {
-	expectedProgramEndTime := CalculateExpectedEndTime(programStartTime, claimPeriodSeconds, claimPeriods)
-	programEndTimeMax := CalculateEndTimeMax(programStartTime, claimPeriodSeconds, claimPeriods, maxRolloverClaimPeriods)
+	expectedProgramEndTime := CalculateExpectedEndTime(programStartTime.UTC(), claimPeriodSeconds, claimPeriods)
+	programEndTimeMax := CalculateEndTimeMax(programStartTime.UTC(), claimPeriodSeconds, claimPeriods, maxRolloverClaimPeriods)
 	return RewardProgram{
 		Title:                       title,
 		Description:                 description,
@@ -130,7 +130,7 @@ func NewRewardProgram(
 		RemainingPoolBalance:        totalRewardPool,
 		ClaimedAmount:               sdk.NewInt64Coin(totalRewardPool.Denom, 0),
 		MaxRewardByAddress:          maxRewardByAddress,
-		ProgramStartTime:            programStartTime,
+		ProgramStartTime:            programStartTime.UTC(),
 		ExpectedProgramEndTime:      expectedProgramEndTime,
 		ProgramEndTimeMax:           programEndTimeMax,
 		ClaimPeriodSeconds:          claimPeriodSeconds,
@@ -252,21 +252,16 @@ func (s *RewardAccountState) String() string {
 }
 
 func CalculateExpectedEndTime(programStartTime time.Time, claimPeriodSeconds, numberOfClaimPeriods uint64) time.Time {
-	return programStartTime.Add(time.Duration(claimPeriodSeconds*numberOfClaimPeriods) * time.Second)
+	return programStartTime.Add(time.Duration(claimPeriodSeconds*numberOfClaimPeriods) * time.Second).UTC()
 }
 
 func CalculateEndTimeMax(programStartTime time.Time, claimPeriodSeconds, numberOfClaimPeriods uint64, maxRolloverPeriods uint64) time.Time {
-	return programStartTime.Add(time.Duration(claimPeriodSeconds*(numberOfClaimPeriods+maxRolloverPeriods)) * time.Second)
+	return programStartTime.Add(time.Duration(claimPeriodSeconds*(numberOfClaimPeriods+maxRolloverPeriods)) * time.Second).UTC()
 }
 
-// DateOnOrAfter compares day1 with day2 and returns true if the date of day2 is on or after the date of day1 ignoring time part.
-func DateOnOrAfter(day1 time.Time, day2 time.Time) bool {
-	y1, m1, d1 := day1.UTC().Date()
-	y2, m2, d2 := day2.UTC().Date()
-	if y2 >= y1 && m2 >= m1 && d2 >= d1 {
-		return true
-	}
-	return false
+// TimeOnOrAfter compares day1 with day2 and returns true if the time of day2 is on or after the time of day1 ignoring time part.
+func TimeOnOrAfter(day1 time.Time, day2 time.Time) bool {
+	return day1.Before(day2) || day1.Equal(day2)
 }
 
 // ============ Claim Period Reward Distribution ============

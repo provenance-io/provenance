@@ -14,12 +14,11 @@ func (k Keeper) CreateRewardProgram(ctx sdk.Context, rewardProgram types.RewardP
 		return err
 	}
 
-	y1 := ctx.BlockTime().UTC()
-	y2 := rewardProgram.ProgramStartTime.UTC()
-	if y2.Before(y1) {
-		return fmt.Errorf("start time is before current block time %v : %v ", y2, y1)
+	blockTime := ctx.BlockTime().UTC()
+	proposedStartTime := rewardProgram.ProgramStartTime.UTC()
+	if !types.TimeOnOrAfter(blockTime, proposedStartTime) {
+		return fmt.Errorf("start time is before current block time %v : %v ", blockTime, proposedStartTime)
 	}
-
 	// error check done in reward Validate()
 	acc, _ := sdk.AccAddressFromBech32(rewardProgram.DistributeFromAddress)
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.ModuleName, sdk.NewCoins(rewardProgram.TotalRewardPool))
