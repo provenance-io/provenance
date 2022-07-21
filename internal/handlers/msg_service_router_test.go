@@ -455,13 +455,11 @@ func TestRewardsProgramStartError(t *testing.T) {
 func TestRewardsProgramStart(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	priv, _, addr := testdata.KeyTestPubAddr()
-	//_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
 	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin("atom", 1000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000))
 	app := piosimapp.SetupWithGenesisAccounts([]authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	time := ctx.BlockTime()
 	check(simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
 
 	rewardProgram := *rewardtypes.NewMsgCreateRewardProgramRequest(
@@ -470,11 +468,11 @@ func TestRewardsProgramStart(t *testing.T) {
 		acct1.Address,
 		sdk.NewInt64Coin("nhash", 1000),
 		sdk.NewInt64Coin("nhash", 100),
-		time,
+		time.Now().Add(time.Duration(1)*time.Second),
 		9,
 		3,
 		3,
-		uint64(time.Day()),
+		10,
 		[]rewardtypes.QualifyingAction{
 			{
 				Type: &rewardtypes.QualifyingAction_Transfer{
@@ -487,11 +485,15 @@ func TestRewardsProgramStart(t *testing.T) {
 			},
 		},
 	)
-
-	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &rewardProgram)
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	txReward, err := SignTx(NewTestGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &rewardProgram)
 	require.NoError(t, err)
-	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	require.Equal(t, true, res.IsOK(), "should return error", res)
+	_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), txReward)
+	check(errFromDeliverTx)
+	assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+	app.EndBlock(abci.RequestEndBlock{Height: 2})
+	app.Commit()
+
 	assert.Equal(t, 13, len(res.Events))
 	lookForRewardCreatedEvent, found := contains(res.Events, "reward_program_created")
 	assert.Equal(t, true, found, "event reward_program_created should exist")
@@ -511,7 +513,6 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	app := piosimapp.SetupWithGenesisAccounts([]authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	blockTime := ctx.BlockTime()
 	check(simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
 
 	rewardProgram := *rewardtypes.NewMsgCreateRewardProgramRequest(
@@ -520,11 +521,11 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 		acct1.Address,
 		sdk.NewInt64Coin("nhash", 1000),
 		sdk.NewInt64Coin("nhash", 100),
-		blockTime,
+		time.Now().Add(time.Duration(1)*time.Second),
 		9,
 		3,
 		3,
-		uint64(blockTime.Day()),
+		10,
 		[]rewardtypes.QualifyingAction{
 			{
 				Type: &rewardtypes.QualifyingAction_Transfer{
@@ -537,7 +538,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 			},
 		},
 	)
-	//app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
 	txReward, err := SignTx(NewTestGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &rewardProgram)
 	require.NoError(t, err)
 	_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), txReward)
@@ -546,13 +547,14 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	app.EndBlock(abci.RequestEndBlock{Height: 2})
 	app.Commit()
 
+	time.Sleep(1 * time.Second)
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
 	for height := int64(3); height <= int64(100); height++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height}})
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
 		check(acct1.SetSequence(seq))
 		tx1, err1 := SignTx(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1)
