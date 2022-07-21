@@ -449,3 +449,37 @@ func (s *RewardTypesTestSuite) TestDateOnOrAfter() {
 	s.Assert().True(DateOnOrAfter(compareConstant, hourAfter))
 	s.Assert().True(DateOnOrAfter(compareConstant, compareConstant))
 }
+func (s *RewardTypesTestSuite) TestCalculateExpectedEndTime() {
+	compareConstant, err := time.Parse(time.RFC3339, "2022-01-21T15:00:00Z")
+	s.Require().NoError(err)
+
+	result := CalculateExpectedEndTime(compareConstant, uint64(DayInSeconds), 7)
+	expected, err := time.Parse(time.RFC3339, "2022-01-28T15:00:00Z")
+	s.Require().NoError(err)
+	s.Assert().True(result.Equal(expected))
+
+	result = CalculateExpectedEndTime(compareConstant, uint64(DayInSeconds), 0)
+	s.Require().NoError(err)
+	s.Assert().True(result.Equal(compareConstant))
+
+}
+
+func (s *RewardTypesTestSuite) TestCalculateEndTimeMax() {
+	compareConstant, err := time.Parse(time.RFC3339, "2022-01-21T15:00:00Z")
+	s.Require().NoError(err)
+
+	result := CalculateEndTimeMax(compareConstant, uint64(DayInSeconds), 7, 0)
+	expected, err := time.Parse(time.RFC3339, "2022-01-28T15:00:00Z")
+	s.Require().NoError(err)
+	s.Assert().True(result.Equal(expected))
+
+	result = CalculateEndTimeMax(compareConstant, uint64(DayInSeconds), 7, 1)
+	expected, err = time.Parse(time.RFC3339, "2022-01-29T15:00:00Z")
+	s.Require().NoError(err)
+	s.Assert().True(result.Equal(expected))
+
+	result = CalculateEndTimeMax(compareConstant, uint64(DayInSeconds), 0, 0)
+	s.Require().NoError(err)
+	s.Assert().True(result.Equal(compareConstant))
+
+}
