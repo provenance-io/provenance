@@ -13,7 +13,7 @@ import (
 func (suite *KeeperTestSuite) TestNewRewardProgram() {
 	suite.SetupTest()
 
-	time := time.Now()
+	time := time.Now().UTC()
 	program := types.NewRewardProgram(
 		"title",
 		"description",

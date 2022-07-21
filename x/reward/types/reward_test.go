@@ -350,12 +350,46 @@ func (s *RewardTypesTestSuite) TesRewardAccountStateValidateBasic() {
 }
 
 func (s *RewardTypesTestSuite) TestActionDelegateCreation() {
-	action := NewActionDelegate()
-	s.Assert().Nil(action.ValidateBasic(), "validate basic must have no error")
+	minDelegation := sdk.NewInt64Coin("nhash", 4)
+	maxDelegation := sdk.NewInt64Coin("nhash", 40)
+
+	action := ActionDelegate{
+		MinimumActions:               0,
+		MaximumActions:               1,
+		MinimumDelegationAmount:      &minDelegation,
+		MaximumDelegationAmount:      &maxDelegation,
+		MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+		MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+	}
+	s.Assert().Nil(action.Validate(), "validate basic must have no error")
 	s.Assert().Equal("ActionDelegate", action.ActionType(), "must have appropriate action type")
-	//s.Assert().Equal("message", action.GetEventCriteria().EventType, "must have correct event type criteria")
-	//s.Assert().Equal("staking", action.GetEventCriteria().Attributes, "must have correct attribute criteria")
-	//s.Assert().Equal("sender", action.GetEventCriteria().AttributeValue, "must have correct attribute value criteria")
+	s.Assert().Equal(true, action.GetBuilder() != nil, "must have appropriate builder")
+}
+
+func (s *RewardTypesTestSuite) TestActionVoteCreation() {
+	minDelegation := sdk.NewInt64Coin("nhash", 4)
+
+	action := ActionVote{
+		MinimumActions:          0,
+		MaximumActions:          1,
+		MinimumDelegationAmount: minDelegation,
+	}
+	s.Assert().Nil(action.Validate(), "validate basic must have no error")
+	s.Assert().Equal("ActionVote", action.ActionType(), "must have appropriate action type")
+	s.Assert().Equal(true, action.GetBuilder() != nil, "must have appropriate builder")
+}
+
+func (s *RewardTypesTestSuite) TestActionTransferCreation() {
+	minDelegation := sdk.NewInt64Coin("nhash", 4)
+
+	action := ActionTransfer{
+		MinimumActions:          0,
+		MaximumActions:          1,
+		MinimumDelegationAmount: minDelegation,
+	}
+	s.Assert().Nil(action.ValidateBasic(), "validate basic must have no error")
+	s.Assert().Equal("ActionTransfer", action.ActionType(), "must have appropriate action type")
+	s.Assert().Equal(true, action.GetBuilder() != nil, "must have appropriate builder")
 }
 
 func (s *RewardTypesTestSuite) TestNewEventCriteria() {

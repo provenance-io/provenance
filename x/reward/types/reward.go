@@ -304,7 +304,17 @@ func NewActionDelegate() ActionDelegate {
 	return ActionDelegate{}
 }
 
-func (ad *ActionDelegate) ValidateBasic() error {
+func (ad *ActionDelegate) Validate() error {
+	if ad.MinimumActions > ad.MaximumActions {
+		return errors.New("minimum action cannot be greater than maximum actions")
+	}
+	if ad.MinimumDelegationAmount != nil && ad.MaximumDelegationAmount != nil && ad.MaximumDelegationAmount.IsLT(*ad.MinimumDelegationAmount) {
+		return errors.New("maximum delegation amount cannot be less than minimum delegation amount")
+	}
+
+	if ad.MaximumActiveStakePercentile.LT(ad.MinimumActiveStakePercentile) {
+		return errors.New("maximum active stake percentile cannot be less than minimum active stake percentile")
+	}
 	return nil
 }
 
@@ -410,6 +420,9 @@ func NewActionTransfer() ActionTransfer {
 }
 
 func (at *ActionTransfer) ValidateBasic() error {
+	if at.MinimumActions > at.MaximumActions {
+		return errors.New("minimum action cannot be greater than maximum actions")
+	}
 	return nil
 }
 
@@ -467,7 +480,10 @@ func NewActionVote() ActionVote {
 	return ActionVote{}
 }
 
-func (atd *ActionVote) ValidateBasic() error {
+func (atd *ActionVote) Validate() error {
+	if atd.MinimumActions > atd.MaximumActions {
+		return errors.New("minimum action cannot be greater than maximum actions")
+	}
 	return nil
 }
 

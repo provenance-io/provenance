@@ -28,7 +28,7 @@ func (b *TransferActionBuilder) GetEventCriteria() *EventCriteria {
 		{
 			Type: sdk.EventTypeMessage,
 			Attributes: map[string][]byte{
-				"action": []byte(sdk.MsgTypeURL(&banktypes.MsgSend{})),
+				sdk.AttributeKeyAction: []byte(sdk.MsgTypeURL(&banktypes.MsgSend{})),
 			},
 		},
 		{
