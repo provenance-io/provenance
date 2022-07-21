@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
@@ -34,7 +35,7 @@ func (suite *KeeperTestSuite) TestNewRewardProgram() {
 	suite.Assert().Equal("insert address", program.GetDistributeFromAddress(), "address should match input")
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 100000), program.GetTotalRewardPool(), "coin should match input")
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 1000), program.GetMaxRewardByAddress(), "max reward by address should match")
-	suite.Assert().Equal(time, program.GetProgramStartTime(), "program start time should match input")
+	suite.Assert().Equal(time.UTC(), program.GetProgramStartTime(), "program start time should match input")
 	suite.Assert().Equal(uint64(60*60), program.GetClaimPeriodSeconds(), "claim period seconds should match input")
 	suite.Assert().Equal(uint64(3), program.GetClaimPeriods(), "claim periods should match input")
 	suite.Assert().Equal(0, len(program.GetQualifyingActions()), "qualifying actions should match input")
@@ -788,16 +789,18 @@ func (suite *KeeperTestSuite) TestRefundRemainingBalance() {
 		uint64(time.Day()),
 		[]types.QualifyingAction{},
 	)
-	rewardProgram.RemainingPoolBalance = rewardProgram.GetTotalRewardPool()
+	remainingBalance := rewardProgram.GetTotalRewardPool()
+	rewardProgram.RemainingPoolBalance = remainingBalance
 	rewardProgram.ClaimedAmount = sdk.NewInt64Coin("nhash", 0)
 
 	addr, _ := sdk.AccAddressFromBech32("cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
 	beforeBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
-	err := suite.app.RewardKeeper.RefundRemainingBalance(suite.ctx, rewardProgram)
+	err := suite.app.RewardKeeper.RefundRemainingBalance(suite.ctx, &rewardProgram)
 	afterBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
 
 	suite.Assert().NoError(err, "no error should be thrown")
-	suite.Assert().Equal(beforeBalance.Add(rewardProgram.RemainingPoolBalance), afterBalance, "balance should be given remaining pool balance")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), rewardProgram.GetRemainingPoolBalance(), "no remaining balance should be left")
+	suite.Assert().Equal(beforeBalance.Add(remainingBalance), afterBalance, "balance should be given remaining pool balance")
 }
 
 func (suite *KeeperTestSuite) TestRefundRemainingBalanceEmpty() {
@@ -822,9 +825,10 @@ func (suite *KeeperTestSuite) TestRefundRemainingBalanceEmpty() {
 
 	addr, _ := sdk.AccAddressFromBech32("cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
 	beforeBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
-	err := suite.app.RewardKeeper.RefundRemainingBalance(suite.ctx, rewardProgram)
+	err := suite.app.RewardKeeper.RefundRemainingBalance(suite.ctx, &rewardProgram)
 	afterBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
 
 	suite.Assert().NoError(err, "no error should be thrown")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), rewardProgram.GetRemainingPoolBalance(), "no remaining balance should be left")
 	suite.Assert().Equal(beforeBalance, afterBalance, "balance should remain same because there is no remaining pool balance")
 }

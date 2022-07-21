@@ -175,7 +175,7 @@ func (k Keeper) ExpireRewardProgram(ctx sdk.Context, rewardProgram *types.Reward
 	if err != nil {
 		ctx.Logger().Error("NOTICE: Failed to refund reward claims. %v", err)
 	}
-	err = k.RefundRemainingBalance(ctx, *rewardProgram)
+	err = k.RefundRemainingBalance(ctx, rewardProgram)
 	if err != nil {
 		ctx.Logger().Error("NOTICE: Failed to refund remaining balance. %v", err)
 	}

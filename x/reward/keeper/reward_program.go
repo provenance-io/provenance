@@ -165,13 +165,12 @@ func (k Keeper) GetNextRewardProgramID(ctx sdk.Context) (rewardProgramID uint64,
 }
 
 // RefundRemainingBalance returns the remaining pool balance to the reward program creator
-func (k Keeper) RefundRemainingBalance(ctx sdk.Context, rewardProgram types.RewardProgram) error {
+func (k Keeper) RefundRemainingBalance(ctx sdk.Context, rewardProgram *types.RewardProgram) error {
 	_, err := k.sendCoinsToAccount(ctx, rewardProgram.GetRemainingPoolBalance(), rewardProgram.GetDistributeFromAddress())
 	if err != nil {
 		return err
 	}
 
 	rewardProgram.RemainingPoolBalance = sdk.NewInt64Coin(rewardProgram.RemainingPoolBalance.GetDenom(), 0)
-	k.SetRewardProgram(ctx, rewardProgram)
 	return nil
 }

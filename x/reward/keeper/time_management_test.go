@@ -943,10 +943,11 @@ func (suite *KeeperTestSuite) TestUpdate() {
 		0,
 		[]types.QualifyingAction{},
 	)
+	remainingBalance := expiring.GetTotalRewardPool()
 	expiring.ActualProgramEndTime = blockTime
 	expiring.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
 	expiring.State = types.RewardProgram_FINISHED
-	expiring.RemainingPoolBalance = timeout.GetTotalRewardPool()
+	expiring.RemainingPoolBalance = remainingBalance
 
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, notStarted)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, starting)
@@ -985,5 +986,5 @@ func (suite *KeeperTestSuite) TestUpdate() {
 	suite.Assert().Equal(timeout.State, types.RewardProgram_FINISHED, "should be in finished state")
 
 	suite.Assert().Equal(expiring.State, types.RewardProgram_EXPIRED, "should be in expired state")
-	suite.Assert().Equal(beforeBalance.Add(expiring.GetRemainingPoolBalance()), afterBalance, "balance should be refunded")
+	suite.Assert().Equal(beforeBalance.Add(remainingBalance), afterBalance, "balance should be refunded")
 }
