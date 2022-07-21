@@ -197,10 +197,7 @@ func (k Keeper) CalculateRewardClaimPeriodRewards(ctx sdk.Context, maxReward sdk
 	}
 
 	for _, participant := range participants {
-		reward := k.CalculateParticipantReward(ctx, int64(participant.GetSharesEarned()), claimPeriodReward.GetTotalShares(), claimPeriodReward.GetRewardsPool())
-		if maxReward.IsLT(reward) {
-			reward = maxReward
-		}
+		reward := k.CalculateParticipantReward(ctx, int64(participant.GetSharesEarned()), claimPeriodReward.GetTotalShares(), claimPeriodReward.GetRewardsPool(), maxReward)
 
 		sum = sum.Add(reward)
 	}
@@ -208,7 +205,7 @@ func (k Keeper) CalculateRewardClaimPeriodRewards(ctx sdk.Context, maxReward sdk
 	return sum, nil
 }
 
-func (k Keeper) CalculateParticipantReward(ctx sdk.Context, shares int64, totalShares int64, claimRewardPool sdk.Coin) sdk.Coin {
+func (k Keeper) CalculateParticipantReward(ctx sdk.Context, shares int64, totalShares int64, claimRewardPool sdk.Coin, maxReward sdk.Coin) sdk.Coin {
 	numerator := sdk.NewDec(shares)
 	denom := sdk.NewDec(totalShares)
 
@@ -218,5 +215,11 @@ func (k Keeper) CalculateParticipantReward(ctx sdk.Context, shares int64, totalS
 	}
 
 	pool := sdk.NewDec(claimRewardPool.Amount.Int64())
-	return sdk.NewInt64Coin(claimRewardPool.Denom, pool.Mul(percentage).TruncateInt64())
+	reward := sdk.NewInt64Coin(claimRewardPool.Denom, pool.Mul(percentage).TruncateInt64())
+
+	if maxReward.IsLT(reward) {
+		reward = maxReward
+	}
+
+	return reward
 }

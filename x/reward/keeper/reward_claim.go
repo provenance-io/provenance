@@ -59,7 +59,7 @@ func (k Keeper) claimRewardForPeriod(ctx sdk.Context, rewardProgram types.Reward
 		return reward, false
 	}
 
-	participantReward := k.CalculateParticipantReward(ctx, int64(state.GetSharesEarned()), distribution.GetTotalShares(), distribution.GetRewardsPool())
+	participantReward := k.CalculateParticipantReward(ctx, int64(state.GetSharesEarned()), distribution.GetTotalShares(), distribution.GetRewardsPool(), rewardProgram.MaxRewardByAddress)
 	reward = types.ClaimedRewardPeriodDetail{
 		ClaimPeriodId:     period,
 		TotalShares:       state.GetSharesEarned(),
