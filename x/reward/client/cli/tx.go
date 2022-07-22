@@ -40,7 +40,9 @@ func NewTxCmd() *cobra.Command {
 	}
 
 	txCmd.AddCommand(
-		GetCmdRewardProgramAdd(), GetCmdClaimReward(),
+		GetCmdRewardProgramAdd(),
+		GetCmdEndRewardProgram(),
+		GetCmdClaimReward(),
 	)
 
 	return txCmd
@@ -169,6 +171,36 @@ func convertDateToTime(dateStr string) (time.Time, error) {
 	}
 	startTime := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
 	return startTime, nil
+}
+
+func GetCmdEndRewardProgram() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "end-reward-program [reward-program-id]",
+		Args:    cobra.ExactArgs(1),
+		Aliases: []string{"erp", "end", "er"},
+		Short:   "End a reward program",
+		Long:    strings.TrimSpace(`End a reward program.  This will trigger the reward program to end after the current claim period`),
+		Example: fmt.Sprintf(`$ %[1]s tx reward end-reward-program 1`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			callerAddr := clientCtx.GetFromAddress()
+			programID, err := strconv.Atoi(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid argument : %s", args[0])
+			}
+
+			msg := types.NewMsgEndRewardProgramRequest(
+				uint64(programID),
+				callerAddr.String(),
+			)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }
 
 func GetCmdClaimReward() *cobra.Command {
