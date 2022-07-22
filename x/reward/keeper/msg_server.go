@@ -62,6 +62,30 @@ func (s msgServer) CreateRewardProgram(goCtx context.Context, msg *types.MsgCrea
 	return &types.MsgCreateRewardProgramResponse{Id: rewardProgramID}, nil
 }
 
+// EndRewardProgram ends reward program from msg
+func (s msgServer) EndRewardProgram(goCtx context.Context, msg *types.MsgEndRewardProgramRequest) (*types.MsgEndRewardProgramResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	rewardProgram, err := s.Keeper.GetRewardProgram(ctx, msg.RewardProgramId)
+	if err != nil {
+		return &types.MsgEndRewardProgramResponse{}, err
+	}
+	if rewardProgram.DistributeFromAddress != msg.ProgramOwnerAddress {
+		return &types.MsgEndRewardProgramResponse{}, fmt.Errorf("%v not authorized is not program owner", msg.ProgramOwnerAddress)
+	}
+
+	s.Keeper.EndingRewardProgram(ctx, rewardProgram)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeRewardProgramEnded,
+			sdk.NewAttribute(types.AttributeKeyRewardProgramID, fmt.Sprintf("%d", rewardProgram.Id)),
+		),
+	)
+
+	return &types.MsgEndRewardProgramResponse{}, nil
+}
+
 func (s msgServer) ClaimRewards(goCtx context.Context, req *types.MsgClaimRewardRequest) (*types.MsgClaimRewardResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

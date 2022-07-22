@@ -19,6 +19,9 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgCreateRewardProgramRequest:
 			res, err := msgServer.CreateRewardProgram(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgEndRewardProgramRequest:
+			res, err := msgServer.EndRewardProgram(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgClaimRewardRequest:
 			res, err := msgServer.ClaimRewards(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)

@@ -427,6 +427,8 @@
     - [MsgClaimRewardResponse](#provenance.reward.v1.MsgClaimRewardResponse)
     - [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest)
     - [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse)
+    - [MsgEndRewardProgramRequest](#provenance.reward.v1.MsgEndRewardProgramRequest)
+    - [MsgEndRewardProgramResponse](#provenance.reward.v1.MsgEndRewardProgramResponse)
   
     - [Msg](#provenance.reward.v1.Msg)
   
@@ -6456,6 +6458,32 @@ MsgCreateRewardProgramResponse is the response type for creating a reward progra
 
 
 
+
+<a name="provenance.reward.v1.MsgEndRewardProgramRequest"></a>
+
+### MsgEndRewardProgramRequest
+MsgEndRewardProgramRequest is the request type for ending a reward program RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_program_id` | [uint64](#uint64) |  | reward program id to end |
+| `program_owner_address` | [string](#string) |  | owner of the reward program that funds were distributed from |
+
+
+
+
+
+
+<a name="provenance.reward.v1.MsgEndRewardProgramResponse"></a>
+
+### MsgEndRewardProgramResponse
+MsgEndRewardProgramResponse is the response type for ending a reward program RPC
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -6471,6 +6499,7 @@ Msg
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `CreateRewardProgram` | [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest) | [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse) | CreateRewardProgram is the RPC endpoint for creating a rewards program | |
+| `EndRewardProgram` | [MsgEndRewardProgramRequest](#provenance.reward.v1.MsgEndRewardProgramRequest) | [MsgEndRewardProgramResponse](#provenance.reward.v1.MsgEndRewardProgramResponse) | EndRewardProgram is the RPC endpoint for ending a rewards program | |
 | `ClaimRewards` | [MsgClaimRewardRequest](#provenance.reward.v1.MsgClaimRewardRequest) | [MsgClaimRewardResponse](#provenance.reward.v1.MsgClaimRewardResponse) | ClaimRewards is the RPC endpoint for claiming rewards for completed claim periods of a reward program | |
 
  <!-- end services -->

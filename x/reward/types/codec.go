@@ -10,6 +10,7 @@ import (
 // reward module.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCreateRewardProgramRequest{}, "provenance/reward/MsgCreateRewardProgramRequest", nil)
+	cdc.RegisterConcrete(&MsgEndRewardProgramRequest{}, "provenance/reward/MsgEndRewardProgramRequest", nil)
 }
 
 // ignoring RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
@@ -25,6 +26,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreateRewardProgramRequest{},
+		&MsgEndRewardProgramRequest{},
 		&MsgClaimRewardRequest{},
 	)
 }

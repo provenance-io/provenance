@@ -17,6 +17,9 @@ service Msg {
   // CreateRewardProgram is the RPC endpoint for creating a rewards program
   rpc CreateRewardProgram(MsgCreateRewardProgramRequest) returns (MsgCreateRewardProgramResponse);
 
+  // EndRewardProgram is the RPC endpoint for ending a rewards program
+  rpc EndRewardProgram(MsgEndRewardProgramRequest) returns (MsgEndRewardProgramResponse);
+
   // ClaimRewards is the RPC endpoint for claiming rewards for completed claim periods of a reward program
   rpc ClaimRewards(MsgClaimRewardRequest) returns (MsgClaimRewardResponse);
 }
@@ -52,6 +55,19 @@ message MsgCreateRewardProgramRequest {
 // MsgCreateRewardProgramResponse is the response type for creating a reward program RPC
 message MsgCreateRewardProgramResponse {
   uint64 id = 1; // reward program id that is generated on creation
+}
+
+// MsgEndRewardProgramRequest is the request type for ending a reward program RPC
+message MsgEndRewardProgramRequest {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  uint64 reward_program_id     = 1; // reward program id to end
+  string program_owner_address = 2; // owner of the reward program that funds were distributed from
+}
+
+// MsgEndRewardProgramResponse is the response type for ending a reward program RPC
+message MsgEndRewardProgramResponse { // reward program id that is generated on creation
 }
 
 // MsgClaimRewardRequest is the request type for claiming reward from reward program RPC

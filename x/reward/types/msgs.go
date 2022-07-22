@@ -12,6 +12,7 @@ import (
 
 const (
 	TypeMsgCreateRewardProgramRequest = "create_reward_program"
+	TypeMsgEndRewardProgramRequest    = "end_reward_program"
 	TypeMsgClaimRewardRequest         = "claim_reward"
 )
 
@@ -114,6 +115,56 @@ func (msg MsgCreateRewardProgramRequest) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes encodes the message for signing
 func (msg MsgCreateRewardProgramRequest) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// Compile time interface checks.
+var _ sdk.Msg = &MsgEndRewardProgramRequest{}
+
+// NewMsgEndRewardProgramRequest ends a reward program request
+func NewMsgEndRewardProgramRequest(
+	rewardProgramId uint64,
+	programOwnerAddress string) *MsgEndRewardProgramRequest {
+	return &MsgEndRewardProgramRequest{
+		RewardProgramId:     rewardProgramId,
+		ProgramOwnerAddress: programOwnerAddress,
+	}
+}
+
+// Route implements Msg
+func (msg MsgEndRewardProgramRequest) Route() string { return ModuleName }
+
+// Type implements Msg
+func (msg MsgEndRewardProgramRequest) Type() string { return TypeMsgEndRewardProgramRequest }
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgEndRewardProgramRequest) ValidateBasic() error {
+	if msg.RewardProgramId < 1 {
+		return fmt.Errorf("invalid reward program id: %v", msg.RewardProgramId)
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.ProgramOwnerAddress); err != nil {
+		return fmt.Errorf("invalid address for rewards program distribution from address: %w", err)
+	}
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgEndRewardProgramRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners indicates that the message must have been signed by the parent.
+func (msg MsgEndRewardProgramRequest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.ProgramOwnerAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgEndRewardProgramRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }

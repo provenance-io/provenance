@@ -29,6 +29,14 @@ func (k Keeper) CreateRewardProgram(ctx sdk.Context, rewardProgram types.RewardP
 	return nil
 }
 
+func (k Keeper) EndingRewardProgram(ctx sdk.Context, rewardProgram types.RewardProgram) {
+	rewardProgram.ClaimPeriods = rewardProgram.CurrentClaimPeriod
+	rewardProgram.MaxRolloverClaimPeriods = 0
+	rewardProgram.ExpectedProgramEndTime = rewardProgram.ClaimPeriodEndTime
+	rewardProgram.ProgramEndTimeMax = rewardProgram.ClaimPeriodEndTime
+	k.SetRewardProgram(ctx, rewardProgram)
+}
+
 // SetRewardProgram sets the reward program in the keeper
 func (k Keeper) SetRewardProgram(ctx sdk.Context, rewardProgram types.RewardProgram) {
 	store := ctx.KVStore(k.storeKey)
