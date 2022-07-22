@@ -508,7 +508,7 @@ func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state 
 
 	// get the address that voted
 	addressVoting := event.Address
-	if atd.MinimumDelegationAmount.IsGTE(sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.ZeroInt())) {
+	if !sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.ZeroInt()).IsGTE(atd.MinimumDelegationAmount) {
 		// now check if it has any delegations
 
 		totalDelegations, found := getAllDelegations(ctx, provider, addressVoting)
@@ -519,7 +519,7 @@ func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state 
 			return true
 		}
 	}
-	return false
+	return true
 }
 
 func (atd *ActionVote) PreEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
