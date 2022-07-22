@@ -177,8 +177,6 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 		owners     []types.Party
 		signers    []string
 		msgTypeURL string
-		granter    sdk.AccAddress
-		grantee    sdk.AccAddress
 		errorMsg   string
 	}{
 		"no owners - no signers": {
@@ -237,48 +235,40 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 			msgTypeURL: "",
 			errorMsg:   "missing signature from [owner (PARTY_TYPE_OWNER)]",
 		},
-		// generic authorization test cases
-		"three parties - one missing signature with authz grant - two signers": {
+		// authz test cases
+		"two parties - one missing signature with authz grant - two signers": {
 			owners: []types.Party{
 				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}}, // grantee of singer 1
 			signers:    []string{s.user2, s.user3},
 			msgTypeURL: types.TypeURLMsgWriteScopeRequest,
-			granter:    s.user1Addr,
-			grantee:    s.user3Addr,
 			errorMsg:   "",
 		},
-		"three parties - one missing signature without authz grant - one signer": {
+		"two parties - one missing signature without authz grant - one signer": {
 			owners: []types.Party{
 				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:    []string{s.user2},
 			msgTypeURL: types.TypeURLMsgWriteScopeRequest,
-			granter:    nil,
-			grantee:    nil,
 			errorMsg:   fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user3),
 		},
-		"three parties - one missing signature with a special case message type - authz grant - two signers": {
+		"two parties - one missing signature with a special case message type - authz grant - two signers": {
 			owners: []types.Party{
 				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}}, // grantee of singer 2
 			signers:    []string{s.user1, s.user3},
 			msgTypeURL: types.TypeURLMsgAddScopeDataAccessRequest,
-			granter:    s.user2Addr,
-			grantee:    s.user3Addr,
 			errorMsg:   "",
 		},
-		"three parties - one missing signature with a special case message type - authz grant on parent message type - two signers": {
+		"two parties - one missing signature with a special case message type - authz grant on parent message type - two signers": {
 			owners: []types.Party{
 				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
 				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}}, // grantee of singer 2
 			signers:    []string{s.user1, s.user3},
 			msgTypeURL: types.TypeURLMsgAddContractSpecToScopeSpecRequest,
-			granter:    s.user2Addr,
-			grantee:    s.user3Addr,
 			errorMsg:   "",
 		},
 		"two parties - one missing signature with a special case message type without authz grant - one signer": {
@@ -287,25 +277,40 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}},
 			signers:    []string{s.user3},
 			msgTypeURL: types.TypeURLMsgDeleteRecordRequest,
-			granter:    nil,
-			grantee:    nil,
 			errorMsg:   fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user2),
 		},
 	}
 
+	// Add a few authorizations
+
+	// A missing signature with an authz grant on MsgAddScopeOwnerRequest
 	now := s.ctx.BlockHeader().Time
 	s.Require().NotNil(now)
+	granter := s.user1Addr
+	grantee := s.user3Addr
+	a := authz.NewGenericAuthorization(types.TypeURLMsgWriteScopeRequest)
+	err := s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour))
+	s.Require().NoError(err)
+
+	// A missing signature on a special case message type with an authz grant on that type.
+	// Add (a child msg type) TypeURLMsgAddScopeDataAccessRequest  (of a parent) TypeURLMsgWriteScopeRequest
+	granter = s.user2Addr
+	grantee = s.user3Addr
+	a = authz.NewGenericAuthorization(types.TypeURLMsgAddScopeDataAccessRequest)
+	err = s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour))
+	s.Require().NoError(err)
+
+	// A missing signature on a special case message type with an authz grant on its parent type.
+	// Add grant on the parent type of TypeURLMsgAddContractSpecToScopeSpecRequest.
+	granter = s.user2Addr
+	grantee = s.user3Addr
+	a = authz.NewGenericAuthorization(types.TypeURLMsgWriteScopeSpecificationRequest)
+	err = s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour))
+	s.Require().NoError(err)
 
 	// Test cases
 	for n, tc := range cases {
 		s.T().Run(n, func(t *testing.T) {
-			createAuth := tc.grantee != nil && tc.granter != nil
-			if createAuth {
-				a := authz.NewGenericAuthorization(tc.msgTypeURL)
-				err := s.app.AuthzKeeper.SaveGrant(s.ctx, tc.grantee, tc.granter, a, now.Add(time.Hour))
-				s.Require().NoError(err)
-			}
-
 			err := s.app.MetadataKeeper.ValidateAllPartiesAreSignersWithAuthz(s.ctx, tc.owners, tc.signers, tc.msgTypeURL)
 			if len(tc.errorMsg) == 0 {
 				assert.NoError(t, err, "%s unexpected error", n)
@@ -511,8 +516,6 @@ func (s *KeeperTestSuite) TestValidateAllOwnersAreSigners() {
 		owners     []string
 		signers    []string
 		msgTypeURL string
-		granter    sdk.AccAddress
-		grantee    sdk.AccAddress
 		errorMsg   string
 	}{
 		"Scope Spec with 1 owner: no signers - error": {
@@ -583,61 +586,68 @@ func (s *KeeperTestSuite) TestValidateAllOwnersAreSigners() {
 			msgTypeURL: "",
 			errorMsg:   "",
 		},
-		// generic authorization test cases
+		// authz test cases
 		"Scope Spec with 2 owners - both in signers list - authz": {
 			owners:     []string{s.user2, s.user3},
 			signers:    []string{s.user2, s.user3},
-			msgTypeURL: types.TypeURLMsgAddScopeOwnerRequest,
-			granter:    s.user2Addr,
-			grantee:    s.user3Addr,
+			msgTypeURL: types.TypeURLMsgAddScopeDataAccessRequest,
 			errorMsg:   "",
 		},
 		"Scope Spec with 2 owners - one signer - authz - error": {
 			owners:     []string{s.user2, s.user3},
 			signers:    []string{s.user2},
 			msgTypeURL: types.TypeURLMsgWriteScopeRequest,
-			granter:    s.user2Addr,
-			grantee:    s.user3Addr,
 			errorMsg:   fmt.Sprintf("missing signature from existing owner %s; required for update", s.user3),
 		},
 		"Scope Spec with 3 owners - one signer with a special case message type - with grant - authz": {
 			owners:     []string{s.user1, s.user2, s.user3},
 			signers:    []string{s.user1, s.user3}, // signer 3 is grantee of singer 2
 			msgTypeURL: types.TypeURLMsgAddScopeDataAccessRequest,
-			granter:    s.user2Addr,
-			grantee:    s.user3Addr,
 			errorMsg:   "",
 		},
 		"Scope Spec with 3 owners - two signers with a special case message type - grant on parent of special case message type - authz": {
 			owners:     []string{s.user1, s.user2, s.user3},
 			signers:    []string{s.user1, s.user3}, // signer 3 grantee of signer 2
 			msgTypeURL: types.TypeURLMsgDeleteContractSpecFromScopeSpecRequest,
-			granter:    s.user2Addr,
-			grantee:    s.user3Addr,
 			errorMsg:   "",
 		},
 		"Scope Spec with 2 owners - one signer - no grant - authz - error": {
 			owners:     []string{s.user2, s.user3},
 			signers:    []string{s.user3},
 			msgTypeURL: types.TypeURLMsgDeleteRecordRequest,
-			granter:    nil,
-			grantee:    nil,
 			errorMsg:   fmt.Sprintf("missing signature from existing owner %s; required for update", s.user2),
 		},
 	}
 
+	// Add a few authorizations
+
+	// A missing signature with an authz grant on MsgAddScopeOwnerRequest
 	now := s.ctx.BlockHeader().Time
 	s.Require().NotNil(now)
+	granter := s.user1Addr
+	grantee := s.user3Addr
+	a := authz.NewGenericAuthorization(types.TypeURLMsgAddScopeOwnerRequest)
+	err := s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour))
+	s.Require().NoError(err)
+
+	// A missing signature on a special case message type with an authz grant on that type.
+	// Add (a child msg type) TypeURLMsgAddScopeDataAccessRequest  (of a parent) TypeURLMsgWriteScopeRequest
+	granter = s.user2Addr
+	grantee = s.user3Addr
+	a = authz.NewGenericAuthorization(types.TypeURLMsgAddScopeDataAccessRequest)
+	err = s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour))
+	s.Require().NoError(err)
+
+	// A missing signature on a special case message type with an authz grant on its parent type.
+	// Add grant on the parent type of TypeURLMsgAddContractSpecToScopeSpecRequest.
+	granter = s.user2Addr
+	grantee = s.user3Addr
+	a = authz.NewGenericAuthorization(types.TypeURLMsgWriteScopeSpecificationRequest)
+	err = s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour))
+	s.Require().NoError(err)
 
 	for n, tc := range tests {
 		s.T().Run(n, func(t *testing.T) {
-			createAuth := tc.grantee != nil && tc.granter != nil
-			if createAuth {
-				a := authz.NewGenericAuthorization(tc.msgTypeURL)
-				err := s.app.AuthzKeeper.SaveGrant(s.ctx, tc.grantee, tc.granter, a, now.Add(time.Hour))
-				s.Require().NoError(err)
-			}
-
 			err := s.app.MetadataKeeper.ValidateAllOwnersAreSignersWithAuthz(s.ctx, tc.owners, tc.signers, tc.msgTypeURL)
 			if len(tc.errorMsg) == 0 {
 				assert.NoError(t, err, "ValidateAllOwnersAreSigners unexpected error")
@@ -745,89 +755,6 @@ func (s *KeeperTestSuite) TestValidateAllOwnersAreSignersWithCountAuthorization(
 				} else {
 					actual := auth.(*authz.CountAuthorization).AllowedAuthorizations
 					assert.Equal(t, tc.allowedAuthorizations-1, actual)
-				}
-			}
-		})
-	}
-
-	// test cases with owners that have different signers
-
-	type grant struct {
-		allowedAuthorizations int32
-		granter               sdk.AccAddress
-		grantee               sdk.AccAddress
-		errorMsg              string
-	}
-
-	tests2 := []struct {
-		name       string
-		owners     []string
-		signers    []string
-		msgTypeURL string
-		grants     []grant
-	}{
-		// test with two owners (1 & 2), and two different signers (3 & 4),
-		// with two authz count authorization
-		//	- grants:
-		//		granter: 1, grantee: 3, count: 1
-		//		granter: 2, grantee: 4, count: 2
-		//
-		//	Then a message is executed, and we check that both grants have updated appropriately.
-		//	Then another message is executed, and we make sure it fails (because the first grant only had 1 use),
-		//	and that the second grant still exists with 1 use left.
-		{
-			name:       "Scope Spec with 2 owners - two different signer - count grant is one - authz",
-			owners:     []string{s.user1, s.user2},
-			signers:    []string{s.user3, s.user4},
-			msgTypeURL: types.TypeURLMsgDeleteScopeRequest,
-			grants: []grant{
-				{
-					allowedAuthorizations: 1,
-					granter:               s.user1Addr,
-					grantee:               s.user3Addr,
-					errorMsg:              "",
-				},
-				{
-					allowedAuthorizations: 2,
-					granter:               s.user2Addr,
-					grantee:               s.user4Addr,
-					errorMsg:              fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
-				},
-			},
-		},
-	}
-
-	for _, tc := range tests2 {
-		s.T().Run(tc.name, func(t *testing.T) {
-			// we must first create all grants prior to running any tests cases
-			for _, g := range tc.grants {
-				createAuth := g.grantee != nil && g.granter != nil
-				if createAuth {
-					a := authz.NewCountAuthorization(tc.msgTypeURL, g.allowedAuthorizations)
-					err := s.app.AuthzKeeper.SaveGrant(s.ctx, g.grantee, g.granter, a, now.Add(time.Hour))
-					require.NoError(t, err, "SaveGrant", tc.name)
-				}
-			}
-
-			// run test cases
-			for _, g := range tc.grants {
-				err := s.app.MetadataKeeper.ValidateAllOwnersAreSignersWithAuthz(s.ctx, tc.owners, tc.signers, tc.msgTypeURL)
-				if len(g.errorMsg) == 0 {
-					assert.NoError(t, err, "ValidateAllOwnersAreSigners unexpected error", tc.name)
-				} else {
-					assert.EqualError(t, err, g.errorMsg, "ValidateAllOwnersAreSigners error", tc.name)
-				}
-
-				// validate allowedAuthorizations
-				if err == nil {
-					auth, _ := s.app.AuthzKeeper.GetCleanAuthorization(s.ctx, g.grantee, g.granter, tc.msgTypeURL)
-					if g.allowedAuthorizations == 1 {
-						// authorization is deleted after one use
-						assert.Nil(t, auth)
-					} else {
-						actual := auth.(*authz.CountAuthorization).AllowedAuthorizations
-						assert.Equal(t, g.allowedAuthorizations-1, actual)
-					}
 				}
 			}
 		})
