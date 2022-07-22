@@ -211,7 +211,7 @@ func (rp *RewardProgram) Validate() error {
 		return errors.New("reward program must have at least one qualifying action")
 	}
 	for _, qa := range rp.QualifyingActions {
-		if err := qa.GetDelegate().Validate(); err != nil {
+		if err := qa.Validate(); err != nil {
 			return err
 		}
 	}
