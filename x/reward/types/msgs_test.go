@@ -284,6 +284,50 @@ func (s *RewardMsgTypesTestSuite) TestMsgCreateRewardProgramRequestValidateBasic
 	}
 }
 
+func (s *RewardMsgTypesTestSuite) TestMsgEndRewardProgramRequestValidateBasic() {
+	tests := []struct {
+		name                          string
+		msgCreateRewardProgramRequest MsgEndRewardProgramRequest
+		want                          string
+	}{
+		{
+			"valid",
+			*NewMsgEndRewardProgramRequest(
+				1,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+			),
+			"",
+		},
+		{
+			"invalid program id",
+			*NewMsgEndRewardProgramRequest(
+				0,
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+			),
+			"invalid reward program id: 0",
+		},
+		{
+			"valid program owner address",
+			*NewMsgEndRewardProgramRequest(
+				1,
+				"invalid-address",
+			),
+			"invalid address for rewards program distribution from address: decoding bech32 failed: invalid separator index -1",
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			err := tt.msgCreateRewardProgramRequest.ValidateBasic()
+			if err != nil {
+				assert.Equal(t, tt.want, err.Error())
+			} else if len(tt.want) > 0 {
+				t.Errorf("MsgEndRewardProgramRequest ValidateBasic error = nil, expected: %s", tt.want)
+			}
+		})
+	}
+}
+
 func (s *RewardMsgTypesTestSuite) TestMsgClaimRewardValidateBasic() {
 	tests := []struct {
 		name                  string
