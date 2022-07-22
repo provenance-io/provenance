@@ -1137,19 +1137,23 @@ func SetupEventHistoryWithVotes(suite *KeeperTestSuite) {
 	sender := "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
 	attributes1 := []sdk.Attribute{
 		sdk.NewAttribute("action", "/cosmos.gov.v1beta1.MsgVote"),
-		sdk.NewAttribute("module", "governance"),
-		sdk.NewAttribute("sender", sender),
 	}
 	attributes2 := []sdk.Attribute{
 		sdk.NewAttribute("option", "{\"option\":1,\"weight\":\"1.000000000000000000\"}"),
 		sdk.NewAttribute("proposal_id", "1"),
 	}
+	attributes3 := []sdk.Attribute{
+		sdk.NewAttribute("module", "governance"),
+		sdk.NewAttribute("sender", sender),
+	}
 
 	event1 := sdk.NewEvent("message", attributes1...)
 	event2 := sdk.NewEvent("proposal_vote", attributes2...)
+	event3 := sdk.NewEvent("message", attributes3...)
 	loggedEvents := sdk.Events{
 		event1,
 		event2,
+		event3,
 	}
 	newEvents := loggedEvents.ToABCIEvents()
 	newEvents = append(newEvents, suite.ctx.EventManager().GetABCIEventHistory()...)

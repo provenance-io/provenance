@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -176,10 +177,11 @@ func (b *DelegateActionBuilder) Reset() {
 
 type VoteActionBuilder struct {
 	Voter sdk.AccAddress
+	Voted bool
 }
 
 func (v *VoteActionBuilder) CanBuild() bool {
-	return !v.Voter.Empty()
+	return !v.Voter.Empty() && v.Voted
 }
 
 func (v *VoteActionBuilder) BuildAction() (EvaluationResult, error) {
@@ -197,6 +199,7 @@ func (v *VoteActionBuilder) BuildAction() (EvaluationResult, error) {
 
 func (v *VoteActionBuilder) Reset() {
 	v.Voter = sdk.AccAddress{}
+	v.Voted = false
 }
 
 func (v *VoteActionBuilder) GetEventCriteria() *EventCriteria {
@@ -205,23 +208,27 @@ func (v *VoteActionBuilder) GetEventCriteria() *EventCriteria {
 			Type:       sdk.EventTypeMessage,
 			Attributes: map[string][]byte{sdk.AttributeKeyModule: []byte(types.AttributeValueCategory)},
 		},
+		{
+			Type:       sdk.EventTypeMessage,
+			Attributes: map[string][]byte{sdk.AttributeKeyAction: nil},
+		},
 	})
 }
 
 func (v *VoteActionBuilder) AddEvent(eventType string, attributes *map[string][]byte) error {
-	if eventType == sdk.EventTypeMessage {
-		// get the action
-		action := (*attributes)[sdk.AttributeKeyAction]
-		// accounts for legacy proto message for voting and newer msg type
-		if string(action) == sdk.MsgTypeURL(&types.MsgVote{}) || string(action) == sdk.MsgTypeURL(&types.MsgVoteWeighted{}) {
-			// Update the result with the voters address
-			address := (*attributes)[banktypes.AttributeKeySender]
-			address, err := sdk.AccAddressFromBech32(string(address))
-			if err != nil {
-				return err
-			}
-			v.Voter = address
+	if _, ok := (*attributes)[sdk.AttributeKeyModule]; ok {
+		address := (*attributes)[banktypes.AttributeKeySender]
+		address, err := sdk.AccAddressFromBech32(string(address))
+		if err != nil {
+			return err
 		}
+		v.Voter = address
+	} else if action, ok := (*attributes)[sdk.AttributeKeyAction]; ok {
+		if string(action) != sdk.MsgTypeURL(&types.MsgVote{}) && string(action) != sdk.MsgTypeURL(&types.MsgVoteWeighted{}) {
+			return nil
+		}
+
+		v.Voted = true
 	}
 
 	return nil
