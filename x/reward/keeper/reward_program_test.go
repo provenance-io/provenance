@@ -77,6 +77,38 @@ func (suite *KeeperTestSuite) TestGetSetRewardProgram() {
 	suite.Assert().Equal(len(program.GetQualifyingActions()), len(program2.GetQualifyingActions()), "qualifying actions should match")
 }
 
+func (suite *KeeperTestSuite) TestEndingRewardProgram() {
+	suite.SetupTest()
+
+	time := time.Now()
+	program := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"insert address",
+		sdk.NewInt64Coin("nhash", 100000),
+		sdk.NewInt64Coin("nhash", 1000),
+		time,
+		60*60,
+		3,
+		3,
+		0,
+		[]types.QualifyingAction{},
+	)
+
+	program.CurrentClaimPeriod = 2
+	program.ClaimPeriodEndTime = time
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program)
+	suite.app.RewardKeeper.EndingRewardProgram(suite.ctx, program)
+
+	endingRewardProgram, err := suite.app.RewardKeeper.GetRewardProgram(suite.ctx, 1)
+	suite.Assert().NoError(err)
+	suite.Assert().Equal(uint64(2), endingRewardProgram.ClaimPeriods)
+	suite.Assert().Equal(uint64(0), endingRewardProgram.MaxRolloverClaimPeriods)
+	suite.Assert().Equal(time.UTC(), endingRewardProgram.ExpectedProgramEndTime)
+	suite.Assert().Equal(time.UTC(), endingRewardProgram.ProgramEndTimeMax)
+}
+
 func (suite *KeeperTestSuite) TestRemoveValidRewardProgram() {
 	suite.SetupTest()
 
