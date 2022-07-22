@@ -517,6 +517,8 @@ func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state 
 		}
 		if totalDelegations.IsGTE(atd.MinimumDelegationAmount) {
 			return true
+		} else {
+			return false
 		}
 	}
 	return true
