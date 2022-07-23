@@ -435,35 +435,41 @@ func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUsesMaxReward
 
 func (suite *KeeperTestSuite) TestCalculateParticipantReward() {
 	suite.SetupTest()
-	reward := suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 1, 2, sdk.NewInt64Coin("nhash", 100))
+	reward := suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 1, 2, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100))
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 50), reward, "should get correct cut of pool")
+}
+
+func (suite *KeeperTestSuite) TestCalculateParticipantRewardLimitsToMaximum() {
+	suite.SetupTest()
+	reward := suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 1, 2, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 10))
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 10), reward, "should get correct cut of pool")
 }
 
 func (suite *KeeperTestSuite) TestCalculateParticipantRewardCanHandleZeroTotalShares() {
 	suite.SetupTest()
-	reward := suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 1, 0, sdk.NewInt64Coin("nhash", 100))
+	reward := suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 1, 0, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100))
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward, "should have no reward")
 }
 
 func (suite *KeeperTestSuite) TestCalculateParticipantRewardCanHandleZeroEarnedShares() {
 	suite.SetupTest()
-	reward := suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 0, 10, sdk.NewInt64Coin("nhash", 100))
+	reward := suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 0, 10, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100))
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward, "should have no reward")
 }
 
 func (suite *KeeperTestSuite) TestCalculateParticipantRewardCanHandleZeroRewardPool() {
 	suite.SetupTest()
-	reward := suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 1, 1, sdk.NewInt64Coin("nhash", 0))
+	reward := suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 1, 1, sdk.NewInt64Coin("nhash", 0), sdk.NewInt64Coin("nhash", 100))
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward, "should have no reward")
 }
 
 func (suite *KeeperTestSuite) TestCalculateParticipantRewardTruncates() {
 	suite.SetupTest()
 
-	reward := suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 1, 3, sdk.NewInt64Coin("nhash", 100))
+	reward := suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 1, 3, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100))
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 33), reward, "reward should truncate when < .5")
 
-	reward = suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 2, 3, sdk.NewInt64Coin("nhash", 100))
+	reward = suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 2, 3, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100))
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 66), reward, "reward should truncate when >= .5")
 }
 
