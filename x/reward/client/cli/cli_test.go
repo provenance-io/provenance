@@ -2,7 +2,6 @@ package cli_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 	"time"
 
@@ -289,7 +288,6 @@ func containsId(rewardPrograms []types.RewardProgram, id uint64) bool {
 func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 	actions := "{\"qualifying_actions\":[{\"delegate\":{\"minimum_actions\":\"0\",\"maximum_actions\":\"0\",\"minimum_delegation_amount\":{\"denom\":\"nhash\",\"amount\":\"0\"},\"maximum_delegation_amount\":{\"denom\":\"nhash\",\"amount\":\"100\"},\"minimum_active_stake_percentile\":\"0.000000000000000000\",\"maximum_active_stake_percentile\":\"1.000000000000000000\"}}]}"
 	soon := time.Now().Add(time.Hour * 24)
-	date := strings.Split(soon.String(), " ")
 
 	testCases := []struct {
 		name         string
@@ -306,7 +304,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
 				"--claim-periods=52364",
 				"--claim-period-days=7",
-				fmt.Sprintf("--start-time=%s", date[0]),
+				fmt.Sprintf("--start-time=%s", soon.Format(time.RFC3339)),
 				"--expire-days=14",
 				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
@@ -322,7 +320,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
 				"--claim-periods=52",
 				"--claim-period-days=10",
-				"--start-time=2022-05-10",
+				fmt.Sprintf("--start-time=%s", soon.Format(time.RFC3339)),
 				"--expire-days=14",
 				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
@@ -337,7 +335,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
 				"--max-reward-by-address=invalid",
 				"--claim-period-days=10",
-				"--start-time=2022-05-10",
+				fmt.Sprintf("--start-time=%s", soon.Format(time.RFC3339)),
 				"--expire-days=14",
 				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
@@ -353,7 +351,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
 				"--claim-periods=52",
 				"--claim-period-days=-1",
-				"--start-time=2022-05-10",
+				fmt.Sprintf("--start-time=%s", soon.Format(time.RFC3339)),
 				"--expire-days=14",
 				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
@@ -369,7 +367,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
 				"--claim-periods=52",
 				"--claim-period-days=10",
-				"--start-time=2022-05-10",
+				fmt.Sprintf("--start-time=%s", soon.Format(time.RFC3339)),
 				"--expire-days=-1",
 				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
@@ -385,7 +383,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
 				"--claim-periods=-52",
 				"--claim-period-days=10",
-				"--start-time=2022-05-10",
+				fmt.Sprintf("--start-time=%s", soon.Format(time.RFC3339)),
 				"--expire-days=1",
 				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
@@ -406,7 +404,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
 			true,
-			"error parsing start date must be of format YYYY-MM-dd: invalid",
+			"unable to parse time (invalid) required format is RFC3339 (2006-01-02T15:04:05Z07:00) , parsing time \"invalid\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"invalid\" as \"2006\"",
 			0,
 		},
 		{"add reward program tx - invalid ec",
@@ -417,7 +415,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
 				"--claim-periods=52",
 				"--claim-period-days=10",
-				"--start-time=2022-05-10",
+				fmt.Sprintf("--start-time=%s", soon.Format(time.RFC3339)),
 				"--expire-days=14",
 				fmt.Sprintf("--qualifying-actions=%s", "actions"),
 			},

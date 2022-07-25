@@ -92,9 +92,9 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 			if err != nil || len(startTimeStr) == 0 {
 				return err
 			}
-			startTime, err := convertDateToTime(startTimeStr)
+			startTime, err := time.Parse(time.RFC3339, startTimeStr)
 			if err != nil {
-				return err
+				return fmt.Errorf("unable to parse time (%v) required format is RFC3339 (%v) , %v", startTimeStr, time.RFC3339, err)
 			}
 			rewardProgramDays, err := cmd.Flags().GetUint64(FlagClaimPeriods)
 			if err != nil {
@@ -108,7 +108,6 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			contents, err := cmd.Flags().GetString(FlagQualifyingActions)
 			if err != nil {
 				return err
@@ -149,28 +148,6 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 	cmd.Flags().String(FlagQualifyingActions, "", "json representation of qualifying actions")
 	cmd.Flags().Uint64(FlagMaxRolloverClaimPeriods, 0, "max number of rollover claim periods")
 	return cmd
-}
-
-// convertDateToTime takes in a string of format YYYY-MM-dd and returns a time.Time or parsing error
-func convertDateToTime(dateStr string) (time.Time, error) {
-	dateParts := strings.Split(dateStr, "-")
-	if len(dateParts) != 3 {
-		return time.Time{}, fmt.Errorf("error parsing start date must be of format YYYY-MM-dd: %v", dateStr)
-	}
-	year, err := strconv.Atoi(dateParts[0])
-	if err != nil {
-		return time.Time{}, err
-	}
-	month, err := strconv.Atoi(dateParts[1])
-	if err != nil {
-		return time.Time{}, err
-	}
-	day, err := strconv.Atoi(dateParts[2])
-	if err != nil {
-		return time.Time{}, err
-	}
-	startTime := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
-	return startTime, nil
 }
 
 func GetCmdEndRewardProgram() *cobra.Command {

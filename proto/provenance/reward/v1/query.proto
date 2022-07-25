@@ -6,6 +6,7 @@ import "google/api/annotations.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 import "provenance/reward/v1/reward.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/reward/types";
@@ -36,6 +37,12 @@ service Query {
     option (google.api.http).get =
         "/provenance/rewards/v1/claim_period_reward_distributions/{rewardId}/claimPeriods/{claimPeriodId}";
   }
+
+  // returns a ClaimPeriodRewardDistribution by address
+  rpc ClaimPeriodRewardDistributionsByAddress(ClaimPeriodRewardDistributionByAddressRequest)
+      returns (ClaimPeriodRewardDistributionByIDResponse) {
+    option (google.api.http).get = "/provenance/rewards/v1/claim_period_reward_distributions/{address}";
+  }
 }
 
 message RewardProgramByIDRequest {
@@ -61,14 +68,21 @@ message RewardProgramsResponse {
   repeated RewardProgram reward_programs = 1 [(gogoproto.nullable) = false];
 }
 
-message ClaimPeriodRewardDistributionRequest {}
+message ClaimPeriodRewardDistributionRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
 message ClaimPeriodRewardDistributionResponse {
   repeated ClaimPeriodRewardDistribution claim_period_reward_distribution = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination                       = 99;
 }
 
 message ClaimPeriodRewardDistributionByIDRequest {
   uint64 rewardId      = 1;
   uint64 claimPeriodId = 2;
+}
+
+message ClaimPeriodRewardDistributionByAddressRequest {
+  string address = 1;
 }
 
 message ClaimPeriodRewardDistributionByIDResponse {
