@@ -95,18 +95,32 @@ func (suite *KeeperTestSuite) TestEndingRewardProgram() {
 		0,
 		[]types.QualifyingAction{},
 	)
+	program.State = types.RewardProgram_STARTED
+	program.Id = 10
 
 	program.CurrentClaimPeriod = 2
 	program.ClaimPeriodEndTime = time
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program)
 	suite.app.RewardKeeper.EndingRewardProgram(suite.ctx, program)
 
-	endingRewardProgram, err := suite.app.RewardKeeper.GetRewardProgram(suite.ctx, 1)
+	endingRewardProgram, err := suite.app.RewardKeeper.GetRewardProgram(suite.ctx, 10)
 	suite.Assert().NoError(err)
 	suite.Assert().Equal(uint64(2), endingRewardProgram.ClaimPeriods)
 	suite.Assert().Equal(uint64(0), endingRewardProgram.MaxRolloverClaimPeriods)
 	suite.Assert().Equal(time.UTC(), endingRewardProgram.ExpectedProgramEndTime)
 	suite.Assert().Equal(time.UTC(), endingRewardProgram.ProgramEndTimeMax)
+
+	program.State = types.RewardProgram_PENDING
+	program.Id = 20
+	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program)
+	endingRewardProgram, err = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, 20)
+	suite.Assert().NoError(err)
+	suite.Assert().Equal(uint64(20), endingRewardProgram.Id)
+
+	suite.app.RewardKeeper.EndingRewardProgram(suite.ctx, program)
+	endingRewardProgram, err = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, 20)
+	suite.Assert().NoError(err)
+	suite.Assert().Equal(uint64(0), endingRewardProgram.Id)
 }
 
 func (suite *KeeperTestSuite) TestRemoveValidRewardProgram() {
