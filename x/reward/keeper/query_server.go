@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
@@ -95,6 +96,12 @@ func (k Keeper) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *typ
 
 // ClaimPeriodRewardDistributionsByAddress returns ClaimPeriodRewardDistributionByIDResponse for the given address
 func (k Keeper) ClaimPeriodRewardDistributionsByAddress(ctx context.Context, request *types.ClaimPeriodRewardDistributionByAddressRequest) (*types.ClaimPeriodRewardDistributionByIDResponse, error) {
-	//TODO implement me
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	_, err := sdk.AccAddressFromBech32(request.Address)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
+	}
 	panic("implement me")
 }

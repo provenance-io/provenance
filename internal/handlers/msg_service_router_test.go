@@ -1435,10 +1435,12 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 			{
 				Type: &rewardtypes.QualifyingAction_Delegate{
 					Delegate: &rewardtypes.ActionDelegate{
-						MinimumActions:          0,
-						MaximumActions:          10,
-						MinimumDelegationAmount: &minDelegation,
-						MaximumDelegationAmount: &maxDelegation,
+						MinimumActions:               0,
+						MaximumActions:               10,
+						MinimumDelegationAmount:      &minDelegation,
+						MaximumDelegationAmount:      &maxDelegation,
+						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdk.NewDecWithPrec(100, 0),
 					},
 				},
 			},
