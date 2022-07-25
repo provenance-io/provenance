@@ -72,7 +72,7 @@ func (k Keeper) ClaimPeriodRewardDistributions(ctx context.Context, req *types.C
 	return &response, nil
 }
 
-// returns a ClaimPeriodRewardDistribution by rewardId and epochId
+// ClaimPeriodRewardDistributionsByID returns a ClaimPeriodRewardDistribution by rewardId and epochId
 func (k Keeper) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *types.ClaimPeriodRewardDistributionByIDRequest) (*types.ClaimPeriodRewardDistributionByIDResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -91,4 +91,10 @@ func (k Keeper) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *typ
 	}
 
 	return &response, nil
+}
+
+// ClaimPeriodRewardDistributionsByAddress returns ClaimPeriodRewardDistributionByIDResponse for the given address
+func (k Keeper) ClaimPeriodRewardDistributionsByAddress(ctx context.Context, request *types.ClaimPeriodRewardDistributionByAddressRequest) (*types.ClaimPeriodRewardDistributionByIDResponse, error) {
+	//TODO implement me
+	panic("implement me")
 }
