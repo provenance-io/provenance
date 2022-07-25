@@ -36,6 +36,13 @@ service Query {
     option (google.api.http).get =
         "/provenance/rewards/v1/claim_period_reward_distributions/{rewardId}/claimPeriods/{claimPeriodId}";
   }
+
+  // returns a ClaimPeriodRewardDistribution by address
+  rpc ClaimPeriodRewardDistributionsByAddress(ClaimPeriodRewardDistributionByAddressRequest)
+      returns (ClaimPeriodRewardDistributionByIDResponse) {
+    option (google.api.http).get =
+        "/provenance/rewards/v1/claim_period_reward_distributions/{address}";
+  }
 }
 
 message RewardProgramByIDRequest {
@@ -69,6 +76,10 @@ message ClaimPeriodRewardDistributionResponse {
 message ClaimPeriodRewardDistributionByIDRequest {
   uint64 rewardId      = 1;
   uint64 claimPeriodId = 2;
+}
+
+message ClaimPeriodRewardDistributionByAddressRequest {
+  string address    = 1;
 }
 
 message ClaimPeriodRewardDistributionByIDResponse {
