@@ -3,7 +3,10 @@ package keeper
 import (
 	"context"
 	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
@@ -13,6 +16,8 @@ import (
 )
 
 var _ types.QueryServer = Keeper{}
+
+const defaultPerPageLimit = 100
 
 func (k Keeper) RewardPrograms(ctx context.Context, req *types.RewardProgramsRequest) (*types.RewardProgramsResponse, error) {
 	if req == nil {
@@ -56,20 +61,30 @@ func (k Keeper) RewardProgramByID(ctx context.Context, req *types.RewardProgramB
 	return &types.RewardProgramByIDResponse{RewardProgram: &rewardProgram}, nil
 }
 
-// returns all ClaimPeriodRewardDistributions
+// returns paginated ClaimPeriodRewardDistributions
 func (k Keeper) ClaimPeriodRewardDistributions(ctx context.Context, req *types.ClaimPeriodRewardDistributionRequest) (*types.ClaimPeriodRewardDistributionResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
+	pageRequest := getPageRequest(req)
 
 	response := types.ClaimPeriodRewardDistributionResponse{}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	rewardDistributions, err := k.GetAllClaimPeriodRewardDistributions(sdkCtx)
+	kvStore := sdkCtx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(kvStore, types.ClaimPeriodRewardDistributionKeyPrefix)
+	pageRes, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
+		var claimPeriodRewardDist types.ClaimPeriodRewardDistribution
+		vErr := claimPeriodRewardDist.Unmarshal(value)
+		if vErr == nil {
+			response.ClaimPeriodRewardDistribution = append(response.ClaimPeriodRewardDistribution, claimPeriodRewardDist)
+		}
+		// move on for now, even if error
+		return nil
+	})
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to query epoch reward distributions: %v", err))
+		return &response, status.Error(codes.Unavailable, err.Error())
 	}
-	response.ClaimPeriodRewardDistribution = rewardDistributions
-
+	response.Pagination = pageRes
 	return &response, nil
 }
 
@@ -104,4 +119,25 @@ func (k Keeper) ClaimPeriodRewardDistributionsByAddress(ctx context.Context, req
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
 	}
 	panic("implement me")
+}
+
+// hasPageRequest is just for use with the getPageRequest func below.
+type hasPageRequest interface {
+	GetPagination() *query.PageRequest
+}
+
+// Gets the query.PageRequest from the provided request if there is one.
+// Also sets the default limit if it's not already set yet.
+func getPageRequest(req hasPageRequest) *query.PageRequest {
+	var pageRequest *query.PageRequest
+	if req != nil {
+		pageRequest = req.GetPagination()
+	}
+	if pageRequest == nil {
+		pageRequest = &query.PageRequest{}
+	}
+	if pageRequest.Limit == 0 {
+		pageRequest.Limit = defaultPerPageLimit
+	}
+	return pageRequest
 }
