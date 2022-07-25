@@ -401,6 +401,17 @@ func (m MockStakingKeeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress
 	}, true
 }
 
+func (m MockStakingKeeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) (power int64) {
+	validators := m.GetBondedValidatorsByPower(ctx)
+	for i, v := range validators {
+		power := int64(len(validators) - i)
+		if v.GetOperator().String() == operator.String() {
+			return power
+		}
+	}
+	return 0
+}
+
 func (suite *KeeperTestSuite) createTestValidators(amount int) {
 	addrDels := simapp.AddTestAddrsIncremental(suite.app, suite.ctx, amount, sdk.NewInt(10000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)

@@ -344,21 +344,23 @@ func (ad *ActionDelegate) getTokensFromValidator(ctx sdk.Context, provider Keepe
 	return tokens, found
 }
 
-// The percentile is dictated by its placement in the BondedValidator list
-// If there are 5 validators and the first validator matches then that validator is in the top 80%
+// The percentile is dictated by the powers of the validators
+// If there are 5 validators and the first validator matches then that validator is in the 80th percentile
+// If there is 1 validator then that validator is in the 0 percentile.
 func (ad *ActionDelegate) getValidatorRankPercentile(ctx sdk.Context, provider KeeperProvider, validator sdk.ValAddress) sdk.Dec {
 	validators := provider.GetStakingKeeper().GetBondedValidatorsByPower(ctx)
+	ourPower := provider.GetStakingKeeper().GetLastValidatorPower(ctx, validator)
+	var numBelow int64 = 0
 	numValidators := int64(len(validators))
-	rank := numValidators
 	for i := int64(0); i < numValidators; i++ {
 		v := validators[i]
-		validatorString := validator.String()
-		if v.OperatorAddress == validatorString {
-			rank = i + 1
-			break
+		power := provider.GetStakingKeeper().GetLastValidatorPower(ctx, v.GetOperator())
+		if power < ourPower {
+			numBelow++
 		}
 	}
-	placement := sdk.NewDec(numValidators - rank)
+	// We want the number of values that are less
+	placement := sdk.NewDec(numBelow)
 	vals := sdk.NewDec(numValidators)
 	percentile := placement.Quo(vals)
 
