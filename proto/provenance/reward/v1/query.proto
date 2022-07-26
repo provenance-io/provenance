@@ -6,6 +6,7 @@ import "google/api/annotations.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 import "provenance/reward/v1/reward.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/reward/types";
@@ -38,10 +39,9 @@ service Query {
   }
 
   // returns a ClaimPeriodRewardDistribution by address
-  rpc QueryRewardDistributionsByAddress(RewardAccountByAddressRequest)
-      returns (RewardAccountByAddressResponse) {
-    option (google.api.http).get =
-        "/provenance/rewards/v1/reward_accounts/{address}";
+  rpc ClaimPeriodRewardDistributionsByAddress(ClaimPeriodRewardDistributionByAddressRequest)
+      returns (ClaimPeriodRewardDistributionByIDResponse) {
+    option (google.api.http).get = "/provenance/rewards/v1/claim_period_reward_distributions/{address}";
   }
 }
 
@@ -64,23 +64,16 @@ message RewardProgramsRequest {
   QueryType query_type = 1;
 }
 
-message RewardAccountResponse {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = true;
-
-  uint64              reward_program_id = 1; // The id of the reward program that this share belongs to
-  string              address           = 2 [(gogoproto.moretags) = "yaml:\"address\""]; // Owner of the share
-  cosmos.base.v1beta1.Coin total_reward_claim = 3 [(gogoproto.nullable) = false]; // total rewards claimed for all eligible claim periods in program
-  RewardAccountState.ClaimStatus claim_status  = 4; // The status of the claim
-}
-
 message RewardProgramsResponse {
   repeated RewardProgram reward_programs = 1 [(gogoproto.nullable) = false];
 }
 
-message ClaimPeriodRewardDistributionRequest {}
+message ClaimPeriodRewardDistributionRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
 message ClaimPeriodRewardDistributionResponse {
   repeated ClaimPeriodRewardDistribution claim_period_reward_distribution = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination                       = 99;
 }
 
 message ClaimPeriodRewardDistributionByIDRequest {
@@ -88,17 +81,10 @@ message ClaimPeriodRewardDistributionByIDRequest {
   uint64 claimPeriodId = 2;
 }
 
+message ClaimPeriodRewardDistributionByAddressRequest {
+  string address = 1;
+}
 
 message ClaimPeriodRewardDistributionByIDResponse {
   ClaimPeriodRewardDistribution claim_period_reward_distribution = 1;
 }
-
-message RewardAccountByAddressRequest {
-  string address    = 1;
-}
-
-message RewardAccountByAddressResponse {
-  string address    = 1;
-  repeated RewardAccountResponse reward_account_state = 2 [(gogoproto.nullable) = false];
-}
-

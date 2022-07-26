@@ -6,7 +6,8 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	types "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/cosmos-sdk/types"
+	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
@@ -198,74 +199,6 @@ func (m *RewardProgramsRequest) GetQueryType() RewardProgramsRequest_QueryType {
 	return RewardProgramsRequest_ALL
 }
 
-type RewardAccountResponse struct {
-	RewardProgramId  uint64                         `protobuf:"varint,1,opt,name=reward_program_id,json=rewardProgramId,proto3" json:"reward_program_id,omitempty"`
-	Address          string                         `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty" yaml:"address"`
-	TotalRewardClaim types.Coin                     `protobuf:"bytes,3,opt,name=total_reward_claim,json=totalRewardClaim,proto3" json:"total_reward_claim"`
-	ClaimStatus      RewardAccountState_ClaimStatus `protobuf:"varint,4,opt,name=claim_status,json=claimStatus,proto3,enum=provenance.reward.v1.RewardAccountState_ClaimStatus" json:"claim_status,omitempty"`
-}
-
-func (m *RewardAccountResponse) Reset()         { *m = RewardAccountResponse{} }
-func (m *RewardAccountResponse) String() string { return proto.CompactTextString(m) }
-func (*RewardAccountResponse) ProtoMessage()    {}
-func (*RewardAccountResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_89e47dd1c3e4febf, []int{3}
-}
-func (m *RewardAccountResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *RewardAccountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_RewardAccountResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *RewardAccountResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_RewardAccountResponse.Merge(m, src)
-}
-func (m *RewardAccountResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *RewardAccountResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_RewardAccountResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_RewardAccountResponse proto.InternalMessageInfo
-
-func (m *RewardAccountResponse) GetRewardProgramId() uint64 {
-	if m != nil {
-		return m.RewardProgramId
-	}
-	return 0
-}
-
-func (m *RewardAccountResponse) GetAddress() string {
-	if m != nil {
-		return m.Address
-	}
-	return ""
-}
-
-func (m *RewardAccountResponse) GetTotalRewardClaim() types.Coin {
-	if m != nil {
-		return m.TotalRewardClaim
-	}
-	return types.Coin{}
-}
-
-func (m *RewardAccountResponse) GetClaimStatus() RewardAccountState_ClaimStatus {
-	if m != nil {
-		return m.ClaimStatus
-	}
-	return RewardAccountState_UNCLAIMABLE
-}
-
 type RewardProgramsResponse struct {
 	RewardPrograms []RewardProgram `protobuf:"bytes,1,rep,name=reward_programs,json=rewardPrograms,proto3" json:"reward_programs"`
 }
@@ -274,7 +207,7 @@ func (m *RewardProgramsResponse) Reset()         { *m = RewardProgramsResponse{}
 func (m *RewardProgramsResponse) String() string { return proto.CompactTextString(m) }
 func (*RewardProgramsResponse) ProtoMessage()    {}
 func (*RewardProgramsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_89e47dd1c3e4febf, []int{4}
+	return fileDescriptor_89e47dd1c3e4febf, []int{3}
 }
 func (m *RewardProgramsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -311,13 +244,14 @@ func (m *RewardProgramsResponse) GetRewardPrograms() []RewardProgram {
 }
 
 type ClaimPeriodRewardDistributionRequest struct {
+	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *ClaimPeriodRewardDistributionRequest) Reset()         { *m = ClaimPeriodRewardDistributionRequest{} }
 func (m *ClaimPeriodRewardDistributionRequest) String() string { return proto.CompactTextString(m) }
 func (*ClaimPeriodRewardDistributionRequest) ProtoMessage()    {}
 func (*ClaimPeriodRewardDistributionRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_89e47dd1c3e4febf, []int{5}
+	return fileDescriptor_89e47dd1c3e4febf, []int{4}
 }
 func (m *ClaimPeriodRewardDistributionRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -346,15 +280,23 @@ func (m *ClaimPeriodRewardDistributionRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ClaimPeriodRewardDistributionRequest proto.InternalMessageInfo
 
+func (m *ClaimPeriodRewardDistributionRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
 type ClaimPeriodRewardDistributionResponse struct {
 	ClaimPeriodRewardDistribution []ClaimPeriodRewardDistribution `protobuf:"bytes,1,rep,name=claim_period_reward_distribution,json=claimPeriodRewardDistribution,proto3" json:"claim_period_reward_distribution"`
+	Pagination                    *query.PageResponse             `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *ClaimPeriodRewardDistributionResponse) Reset()         { *m = ClaimPeriodRewardDistributionResponse{} }
 func (m *ClaimPeriodRewardDistributionResponse) String() string { return proto.CompactTextString(m) }
 func (*ClaimPeriodRewardDistributionResponse) ProtoMessage()    {}
 func (*ClaimPeriodRewardDistributionResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_89e47dd1c3e4febf, []int{6}
+	return fileDescriptor_89e47dd1c3e4febf, []int{5}
 }
 func (m *ClaimPeriodRewardDistributionResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -390,6 +332,13 @@ func (m *ClaimPeriodRewardDistributionResponse) GetClaimPeriodRewardDistribution
 	return nil
 }
 
+func (m *ClaimPeriodRewardDistributionResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
 type ClaimPeriodRewardDistributionByIDRequest struct {
 	RewardId      uint64 `protobuf:"varint,1,opt,name=rewardId,proto3" json:"rewardId,omitempty"`
 	ClaimPeriodId uint64 `protobuf:"varint,2,opt,name=claimPeriodId,proto3" json:"claimPeriodId,omitempty"`
@@ -401,7 +350,7 @@ func (m *ClaimPeriodRewardDistributionByIDRequest) Reset() {
 func (m *ClaimPeriodRewardDistributionByIDRequest) String() string { return proto.CompactTextString(m) }
 func (*ClaimPeriodRewardDistributionByIDRequest) ProtoMessage()    {}
 func (*ClaimPeriodRewardDistributionByIDRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_89e47dd1c3e4febf, []int{7}
+	return fileDescriptor_89e47dd1c3e4febf, []int{6}
 }
 func (m *ClaimPeriodRewardDistributionByIDRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -442,6 +391,54 @@ func (m *ClaimPeriodRewardDistributionByIDRequest) GetClaimPeriodId() uint64 {
 		return m.ClaimPeriodId
 	}
 	return 0
+}
+
+type ClaimPeriodRewardDistributionByAddressRequest struct {
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (m *ClaimPeriodRewardDistributionByAddressRequest) Reset() {
+	*m = ClaimPeriodRewardDistributionByAddressRequest{}
+}
+func (m *ClaimPeriodRewardDistributionByAddressRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*ClaimPeriodRewardDistributionByAddressRequest) ProtoMessage() {}
+func (*ClaimPeriodRewardDistributionByAddressRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_89e47dd1c3e4febf, []int{7}
+}
+func (m *ClaimPeriodRewardDistributionByAddressRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ClaimPeriodRewardDistributionByAddressRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ClaimPeriodRewardDistributionByAddressRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ClaimPeriodRewardDistributionByAddressRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClaimPeriodRewardDistributionByAddressRequest.Merge(m, src)
+}
+func (m *ClaimPeriodRewardDistributionByAddressRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ClaimPeriodRewardDistributionByAddressRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClaimPeriodRewardDistributionByAddressRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ClaimPeriodRewardDistributionByAddressRequest proto.InternalMessageInfo
+
+func (m *ClaimPeriodRewardDistributionByAddressRequest) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
 }
 
 type ClaimPeriodRewardDistributionByIDResponse struct {
@@ -492,216 +489,76 @@ func (m *ClaimPeriodRewardDistributionByIDResponse) GetClaimPeriodRewardDistribu
 	return nil
 }
 
-type RewardAccountByAddressRequest struct {
-	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-}
-
-func (m *RewardAccountByAddressRequest) Reset()         { *m = RewardAccountByAddressRequest{} }
-func (m *RewardAccountByAddressRequest) String() string { return proto.CompactTextString(m) }
-func (*RewardAccountByAddressRequest) ProtoMessage()    {}
-func (*RewardAccountByAddressRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_89e47dd1c3e4febf, []int{9}
-}
-func (m *RewardAccountByAddressRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *RewardAccountByAddressRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_RewardAccountByAddressRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *RewardAccountByAddressRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_RewardAccountByAddressRequest.Merge(m, src)
-}
-func (m *RewardAccountByAddressRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *RewardAccountByAddressRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_RewardAccountByAddressRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_RewardAccountByAddressRequest proto.InternalMessageInfo
-
-func (m *RewardAccountByAddressRequest) GetAddress() string {
-	if m != nil {
-		return m.Address
-	}
-	return ""
-}
-
-type RewardAccountByAddressResponse struct {
-	Address            string                  `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	RewardAccountState []RewardAccountResponse `protobuf:"bytes,2,rep,name=reward_account_state,json=rewardAccountState,proto3" json:"reward_account_state"`
-}
-
-func (m *RewardAccountByAddressResponse) Reset()         { *m = RewardAccountByAddressResponse{} }
-func (m *RewardAccountByAddressResponse) String() string { return proto.CompactTextString(m) }
-func (*RewardAccountByAddressResponse) ProtoMessage()    {}
-func (*RewardAccountByAddressResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_89e47dd1c3e4febf, []int{10}
-}
-func (m *RewardAccountByAddressResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *RewardAccountByAddressResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_RewardAccountByAddressResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *RewardAccountByAddressResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_RewardAccountByAddressResponse.Merge(m, src)
-}
-func (m *RewardAccountByAddressResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *RewardAccountByAddressResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_RewardAccountByAddressResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_RewardAccountByAddressResponse proto.InternalMessageInfo
-
-func (m *RewardAccountByAddressResponse) GetAddress() string {
-	if m != nil {
-		return m.Address
-	}
-	return ""
-}
-
-func (m *RewardAccountByAddressResponse) GetRewardAccountState() []RewardAccountResponse {
-	if m != nil {
-		return m.RewardAccountState
-	}
-	return nil
-}
-
 func init() {
 	proto.RegisterEnum("provenance.reward.v1.RewardProgramsRequest_QueryType", RewardProgramsRequest_QueryType_name, RewardProgramsRequest_QueryType_value)
 	proto.RegisterType((*RewardProgramByIDRequest)(nil), "provenance.reward.v1.RewardProgramByIDRequest")
 	proto.RegisterType((*RewardProgramByIDResponse)(nil), "provenance.reward.v1.RewardProgramByIDResponse")
 	proto.RegisterType((*RewardProgramsRequest)(nil), "provenance.reward.v1.RewardProgramsRequest")
-	proto.RegisterType((*RewardAccountResponse)(nil), "provenance.reward.v1.RewardAccountResponse")
 	proto.RegisterType((*RewardProgramsResponse)(nil), "provenance.reward.v1.RewardProgramsResponse")
 	proto.RegisterType((*ClaimPeriodRewardDistributionRequest)(nil), "provenance.reward.v1.ClaimPeriodRewardDistributionRequest")
 	proto.RegisterType((*ClaimPeriodRewardDistributionResponse)(nil), "provenance.reward.v1.ClaimPeriodRewardDistributionResponse")
 	proto.RegisterType((*ClaimPeriodRewardDistributionByIDRequest)(nil), "provenance.reward.v1.ClaimPeriodRewardDistributionByIDRequest")
+	proto.RegisterType((*ClaimPeriodRewardDistributionByAddressRequest)(nil), "provenance.reward.v1.ClaimPeriodRewardDistributionByAddressRequest")
 	proto.RegisterType((*ClaimPeriodRewardDistributionByIDResponse)(nil), "provenance.reward.v1.ClaimPeriodRewardDistributionByIDResponse")
-	proto.RegisterType((*RewardAccountByAddressRequest)(nil), "provenance.reward.v1.RewardAccountByAddressRequest")
-	proto.RegisterType((*RewardAccountByAddressResponse)(nil), "provenance.reward.v1.RewardAccountByAddressResponse")
 }
 
 func init() { proto.RegisterFile("provenance/reward/v1/query.proto", fileDescriptor_89e47dd1c3e4febf) }
 
 var fileDescriptor_89e47dd1c3e4febf = []byte{
-	// 967 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x56, 0x4d, 0x6f, 0x1b, 0x45,
-	0x18, 0xf6, 0x38, 0xa6, 0x49, 0xde, 0xb4, 0x8e, 0x3b, 0x0a, 0xe0, 0x5a, 0x74, 0xed, 0x2e, 0xa5,
-	0x0a, 0x6d, 0xd9, 0x21, 0x4e, 0x91, 0x4a, 0x90, 0x00, 0x3b, 0x09, 0x60, 0x14, 0x42, 0xd8, 0x18,
-	0x90, 0xb8, 0x98, 0xf5, 0xee, 0xe0, 0xae, 0x64, 0x7b, 0x36, 0x3b, 0xe3, 0x80, 0x15, 0x7c, 0xe9,
-	0x1f, 0x00, 0xc4, 0x05, 0x89, 0x03, 0x95, 0x38, 0x21, 0x21, 0xfe, 0x00, 0x7f, 0x20, 0xc7, 0x4a,
-	0x5c, 0x90, 0x90, 0x22, 0x94, 0x70, 0xe0, 0xcc, 0x2f, 0x40, 0x9e, 0x9d, 0xb5, 0xbd, 0x89, 0xe3,
-	0x6c, 0x7c, 0xf3, 0x78, 0xde, 0x8f, 0xe7, 0x7d, 0xf6, 0x79, 0xde, 0x5d, 0x28, 0x78, 0x3e, 0xdb,
-	0xa7, 0x6d, 0xab, 0x6d, 0x53, 0xe2, 0xd3, 0x2f, 0x2d, 0xdf, 0x21, 0xfb, 0x2b, 0x64, 0xaf, 0x43,
-	0xfd, 0xae, 0xe1, 0xf9, 0x4c, 0x30, 0xbc, 0x34, 0x8c, 0x30, 0x82, 0x08, 0x63, 0x7f, 0x25, 0xb7,
-	0xd4, 0x60, 0x0d, 0x26, 0x03, 0x48, 0xff, 0x57, 0x10, 0x9b, 0x7b, 0xa1, 0xc1, 0x58, 0xa3, 0x49,
-	0x89, 0xe5, 0xb9, 0xc4, 0x6a, 0xb7, 0x99, 0xb0, 0x84, 0xcb, 0xda, 0x5c, 0xdd, 0x6a, 0xea, 0x56,
-	0x9e, 0xea, 0x9d, 0x2f, 0x88, 0xd3, 0xf1, 0x65, 0x80, 0xba, 0xcf, 0x9f, 0xbe, 0x17, 0x6e, 0x8b,
-	0x72, 0x61, 0xb5, 0xbc, 0xb0, 0x80, 0xcd, 0x78, 0x8b, 0x71, 0x52, 0xb7, 0x38, 0x25, 0xfb, 0x2b,
-	0x75, 0x2a, 0xac, 0x15, 0x62, 0x33, 0x37, 0x2c, 0x70, 0x6b, 0xec, 0x30, 0x0a, 0xb4, 0x0c, 0xd1,
-	0xef, 0x42, 0xd6, 0x94, 0xe7, 0x1d, 0x9f, 0x35, 0x7c, 0xab, 0x55, 0xee, 0x56, 0x36, 0x4c, 0xba,
-	0xd7, 0xa1, 0x5c, 0xe0, 0x34, 0x24, 0x5d, 0x27, 0x8b, 0x0a, 0x68, 0x39, 0x65, 0x26, 0x5d, 0x47,
-	0x6f, 0xc0, 0x8d, 0x31, 0xb1, 0xdc, 0x63, 0x6d, 0x4e, 0xf1, 0xfb, 0x90, 0x0e, 0x0a, 0xd7, 0xbc,
-	0xe0, 0x56, 0x26, 0x2e, 0x14, 0x5f, 0x34, 0xc6, 0xf1, 0x65, 0x44, 0x0a, 0x99, 0xd7, 0xfc, 0xd1,
-	0xa3, 0xfe, 0x3b, 0x82, 0x67, 0x23, 0x01, 0x3c, 0x84, 0x54, 0x05, 0x90, 0xcf, 0xa2, 0x26, 0xba,
-	0x1e, 0x95, 0x1d, 0xd2, 0xc5, 0xd7, 0x62, 0x74, 0x08, 0x0b, 0x18, 0x1f, 0xf5, 0xb3, 0xab, 0x5d,
-	0x8f, 0x9a, 0xf3, 0x7b, 0xe1, 0x4f, 0x7d, 0x0b, 0xe6, 0x07, 0xff, 0xe3, 0x59, 0x98, 0x29, 0x6d,
-	0x6d, 0x65, 0x12, 0x78, 0x01, 0x66, 0x77, 0x36, 0xb7, 0x37, 0x2a, 0xdb, 0xef, 0x66, 0x10, 0x06,
-	0xb8, 0x52, 0x5a, 0xaf, 0x56, 0x3e, 0xd9, 0xcc, 0x24, 0xf1, 0x22, 0x2c, 0x7c, 0xf8, 0x71, 0x75,
-	0xb7, 0x5a, 0x0a, 0x2e, 0x67, 0xf0, 0x55, 0x98, 0x7b, 0xa7, 0xb2, 0x5d, 0xd9, 0x7d, 0x6f, 0x73,
-	0x23, 0x93, 0xd2, 0x7f, 0x4e, 0x86, 0xe8, 0x4b, 0xb6, 0xcd, 0x3a, 0x6d, 0x31, 0xe0, 0xe8, 0x2e,
-	0x5c, 0x8f, 0x72, 0x54, 0x1b, 0xf0, 0xbb, 0x18, 0x61, 0xa0, 0xe2, 0xe0, 0xfb, 0x30, 0x6b, 0x39,
-	0x8e, 0x4f, 0x39, 0xcf, 0x26, 0x0b, 0x68, 0x79, 0xbe, 0x8c, 0xff, 0x3b, 0xca, 0xa7, 0xbb, 0x56,
-	0xab, 0xb9, 0xa6, 0xab, 0x0b, 0xdd, 0x0c, 0x43, 0xf0, 0x07, 0x80, 0x05, 0x13, 0x56, 0xb3, 0xa6,
-	0xea, 0xdb, 0x4d, 0xcb, 0x6d, 0x65, 0x67, 0xe4, 0x13, 0xb8, 0x61, 0x04, 0x32, 0x31, 0xfa, 0x32,
-	0x31, 0x94, 0x4c, 0x8c, 0x75, 0xe6, 0xb6, 0xcb, 0xa9, 0xc3, 0xa3, 0x7c, 0xc2, 0xcc, 0xc8, 0xd4,
-	0x00, 0xf2, 0x7a, 0x3f, 0x11, 0x7f, 0x0a, 0x57, 0x65, 0x85, 0x1a, 0x17, 0x96, 0xe8, 0xf0, 0x6c,
-	0x4a, 0x12, 0xfd, 0x60, 0x12, 0xd1, 0x6a, 0xd6, 0x5d, 0x61, 0x09, 0x6a, 0xc8, 0x2a, 0xbb, 0x32,
-	0xd7, 0x5c, 0xb0, 0x87, 0x87, 0xb5, 0xb9, 0x1f, 0x9e, 0xe4, 0xd1, 0xbf, 0x4f, 0xf2, 0x48, 0x6f,
-	0xc2, 0x73, 0xa7, 0x9f, 0x90, 0x62, 0xc9, 0x84, 0xc5, 0x28, 0x4b, 0x3c, 0x8b, 0x0a, 0x33, 0x31,
-	0xa5, 0xa4, 0x46, 0x4a, 0x47, 0xe8, 0xe4, 0xfa, 0x1d, 0xb8, 0x2d, 0x31, 0xed, 0x50, 0xdf, 0x65,
-	0x4e, 0x90, 0xb1, 0xe1, 0x72, 0xe1, 0xbb, 0xf5, 0x4e, 0xdf, 0x71, 0x4a, 0x1e, 0xfa, 0xaf, 0x08,
-	0x5e, 0xba, 0x20, 0x50, 0xa1, 0x7c, 0x8c, 0xa0, 0x10, 0x70, 0xe4, 0xc9, 0xd0, 0x90, 0x79, 0x67,
-	0x24, 0x58, 0xe1, 0x5e, 0x1d, 0x8f, 0x7b, 0x62, 0x1f, 0x35, 0xc7, 0x4d, 0x7b, 0x52, 0x90, 0xde,
-	0x84, 0xe5, 0xc9, 0x55, 0x46, 0xdc, 0x9c, 0x83, 0xb9, 0xa0, 0x77, 0x25, 0xd4, 0xdc, 0xe0, 0x8c,
-	0x6f, 0xc3, 0xb5, 0x91, 0x46, 0x15, 0x47, 0x4a, 0x2e, 0x65, 0x46, 0xff, 0xd4, 0x7f, 0x41, 0xf0,
-	0x72, 0x8c, 0x76, 0x8a, 0xa0, 0xaf, 0x63, 0xf1, 0x83, 0xa6, 0xe4, 0xe7, 0x22, 0x66, 0x5e, 0x87,
-	0x9b, 0x11, 0x5d, 0x96, 0xbb, 0xa5, 0xc0, 0x2a, 0x21, 0x1d, 0xd9, 0xa1, 0xbf, 0xfa, 0x28, 0xe6,
-	0x07, 0x5e, 0xd2, 0x7f, 0x42, 0xa0, 0x9d, 0x97, 0xab, 0x66, 0x3b, 0x37, 0x19, 0xdb, 0xb0, 0xa4,
-	0x06, 0xb5, 0x82, 0x64, 0x69, 0x21, 0x9a, 0x4d, 0x4a, 0x25, 0xdc, 0x8b, 0xe1, 0xa0, 0xb0, 0x89,
-	0x52, 0x00, 0xf6, 0xcf, 0xd8, 0xab, 0xf8, 0xdd, 0x1c, 0x3c, 0x23, 0x17, 0x16, 0xfe, 0x0d, 0xc1,
-	0xf5, 0x33, 0x3b, 0x19, 0x1b, 0x71, 0x8c, 0x32, 0x94, 0x46, 0x8e, 0xc4, 0x8e, 0x0f, 0xa0, 0xe9,
-	0x0f, 0x1f, 0xff, 0xf1, 0xcf, 0xf7, 0xc9, 0x22, 0x7e, 0x95, 0x9c, 0x79, 0xc3, 0xf0, 0xe1, 0x2b,
-	0x66, 0xb0, 0xe5, 0xea, 0xdd, 0x9a, 0xeb, 0x90, 0x03, 0xd7, 0xe9, 0xe1, 0x1f, 0x11, 0xa4, 0xa3,
-	0xbe, 0xc7, 0xf7, 0x2e, 0xb1, 0xbf, 0x73, 0xf7, 0xe3, 0x05, 0x2b, 0x9c, 0x86, 0xc4, 0xb9, 0x8c,
-	0xef, 0xc4, 0xc2, 0xc9, 0xf1, 0x5f, 0x08, 0xb4, 0x89, 0xb2, 0xe3, 0x78, 0x6d, 0x1a, 0xb1, 0x2a,
-	0xf0, 0x6f, 0x4c, 0x95, 0xab, 0x66, 0x79, 0x5b, 0xce, 0xb2, 0x86, 0x1f, 0x9e, 0x33, 0xcb, 0x45,
-	0x66, 0xe3, 0xf8, 0x9b, 0x24, 0xe8, 0x93, 0xa7, 0x93, 0xea, 0x79, 0x73, 0x9a, 0x75, 0x35, 0xa2,
-	0xa6, 0xb7, 0xa6, 0xce, 0x57, 0x93, 0x3e, 0x92, 0x93, 0xd6, 0xf1, 0xe7, 0xd3, 0x4e, 0x4a, 0x0e,
-	0xc2, 0xcd, 0xd6, 0x23, 0x23, 0x6b, 0x82, 0x93, 0x83, 0xc8, 0x42, 0xeb, 0xe1, 0x43, 0x04, 0xb7,
-	0xa4, 0x91, 0xc6, 0x72, 0xa1, 0x5c, 0x8f, 0x57, 0x63, 0xb8, 0xf6, 0xf4, 0x7e, 0xc9, 0x3d, 0xb8,
-	0x5c, 0xd2, 0xe5, 0x8c, 0xa5, 0x76, 0x0b, 0x27, 0x07, 0x6a, 0xef, 0xf4, 0xca, 0x8d, 0xc3, 0x63,
-	0x0d, 0x3d, 0x3d, 0xd6, 0xd0, 0xdf, 0xc7, 0x1a, 0xfa, 0xf6, 0x44, 0x4b, 0x3c, 0x3d, 0xd1, 0x12,
-	0x7f, 0x9e, 0x68, 0x09, 0x78, 0xde, 0x65, 0x63, 0xb1, 0xec, 0xa0, 0xcf, 0x8a, 0x0d, 0x57, 0x3c,
-	0xea, 0xd4, 0x0d, 0x9b, 0xb5, 0x46, 0x1a, 0xbe, 0xe2, 0xb2, 0xd1, 0xf6, 0x5f, 0x85, 0xdf, 0x8e,
-	0xfd, 0x6f, 0x2e, 0x5e, 0xbf, 0x22, 0x3f, 0x1c, 0x57, 0xff, 0x0f, 0x00, 0x00, 0xff, 0xff, 0x15,
-	0xb2, 0x8a, 0xda, 0x2a, 0x0b, 0x00, 0x00,
-}
-
-func (this *RewardAccountResponse) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*RewardAccountResponse)
-	if !ok {
-		that2, ok := that.(RewardAccountResponse)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.RewardProgramId != that1.RewardProgramId {
-		return false
-	}
-	if this.Address != that1.Address {
-		return false
-	}
-	if !this.TotalRewardClaim.Equal(&that1.TotalRewardClaim) {
-		return false
-	}
-	if this.ClaimStatus != that1.ClaimStatus {
-		return false
-	}
-	return true
+	// 844 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x56, 0x4f, 0x8f, 0xdb, 0x44,
+	0x14, 0xcf, 0x64, 0x97, 0xee, 0xee, 0x5b, 0x9a, 0x2e, 0xa3, 0x02, 0x21, 0x02, 0x77, 0x31, 0xa5,
+	0x5d, 0x0a, 0xf5, 0xb0, 0xa9, 0x90, 0xaa, 0x22, 0x01, 0x9b, 0xcd, 0xb6, 0xb8, 0x5a, 0x2d, 0xc1,
+	0x0d, 0x1c, 0xb8, 0x04, 0x3b, 0x1e, 0xdc, 0x91, 0x12, 0x8f, 0xd7, 0xe3, 0x04, 0xa2, 0x25, 0x97,
+	0x7e, 0x01, 0x90, 0x38, 0xf2, 0x09, 0xb8, 0xf0, 0x05, 0xb8, 0x72, 0xe8, 0xb1, 0x12, 0x17, 0x24,
+	0x24, 0x84, 0x76, 0xf9, 0x0a, 0x9c, 0xb8, 0xa0, 0x8c, 0xc7, 0x89, 0xdd, 0x0d, 0x89, 0x31, 0x37,
+	0x8f, 0xdf, 0xef, 0xcd, 0x7b, 0xbf, 0xdf, 0xfb, 0xa3, 0x81, 0xed, 0x20, 0xe4, 0x43, 0xea, 0xdb,
+	0x7e, 0x97, 0x92, 0x90, 0x7e, 0x69, 0x87, 0x2e, 0x19, 0xee, 0x92, 0xe3, 0x01, 0x0d, 0x47, 0x46,
+	0x10, 0xf2, 0x88, 0xe3, 0xcb, 0x33, 0x84, 0x11, 0x23, 0x8c, 0xe1, 0x6e, 0xed, 0xb2, 0xc7, 0x3d,
+	0x2e, 0x01, 0x64, 0xf2, 0x15, 0x63, 0x6b, 0x2f, 0x7b, 0x9c, 0x7b, 0x3d, 0x4a, 0xec, 0x80, 0x11,
+	0xdb, 0xf7, 0x79, 0x64, 0x47, 0x8c, 0xfb, 0x42, 0x59, 0x35, 0x65, 0x95, 0x27, 0x67, 0xf0, 0x05,
+	0x71, 0x07, 0xa1, 0x04, 0x28, 0xfb, 0x95, 0xa7, 0xed, 0x11, 0xeb, 0x53, 0x11, 0xd9, 0xfd, 0x20,
+	0xb9, 0xa0, 0xcb, 0x45, 0x9f, 0x0b, 0xe2, 0xd8, 0x82, 0x92, 0xe1, 0xae, 0x43, 0x23, 0x7b, 0x97,
+	0x74, 0x39, 0x4b, 0x2e, 0xb8, 0x91, 0xb6, 0x4b, 0x0e, 0x53, 0x54, 0x60, 0x7b, 0xcc, 0x4f, 0x07,
+	0x7b, 0x75, 0x2e, 0x71, 0x45, 0x50, 0x42, 0xf4, 0x1b, 0x50, 0xb5, 0xe4, 0xb9, 0x15, 0x72, 0x2f,
+	0xb4, 0xfb, 0x8d, 0x91, 0xd9, 0xb4, 0xe8, 0xf1, 0x80, 0x8a, 0x08, 0x57, 0xa0, 0xcc, 0xdc, 0x2a,
+	0xda, 0x46, 0x3b, 0xab, 0x56, 0x99, 0xb9, 0xba, 0x07, 0x2f, 0xcd, 0xc1, 0x8a, 0x80, 0xfb, 0x82,
+	0xe2, 0xfb, 0x50, 0x89, 0x2f, 0xee, 0x04, 0xb1, 0x55, 0x3a, 0x6e, 0xd6, 0x5f, 0x33, 0xe6, 0x69,
+	0x6b, 0x64, 0x2e, 0xb2, 0x2e, 0x86, 0xe9, 0xa3, 0xfe, 0x13, 0x82, 0xe7, 0x33, 0x00, 0x91, 0xa4,
+	0xd4, 0x06, 0x90, 0x9c, 0x3b, 0xd1, 0x28, 0xa0, 0x32, 0x42, 0xa5, 0xfe, 0x4e, 0x8e, 0x08, 0xc9,
+	0x05, 0xc6, 0xc7, 0x13, 0xef, 0xf6, 0x28, 0xa0, 0xd6, 0xc6, 0x71, 0xf2, 0xa9, 0x1f, 0xc2, 0xc6,
+	0xf4, 0x3f, 0x5e, 0x83, 0x95, 0xbd, 0xc3, 0xc3, 0xad, 0x12, 0xde, 0x84, 0xb5, 0xd6, 0xc1, 0x51,
+	0xd3, 0x3c, 0xba, 0xb7, 0x85, 0x30, 0xc0, 0x85, 0xbd, 0xfd, 0xb6, 0xf9, 0xe9, 0xc1, 0x56, 0x19,
+	0x5f, 0x82, 0xcd, 0x8f, 0x3e, 0x69, 0x3f, 0x68, 0xef, 0xc5, 0xc6, 0x15, 0xfc, 0x2c, 0xac, 0xdf,
+	0x35, 0x8f, 0xcc, 0x07, 0x1f, 0x1e, 0x34, 0xb7, 0x56, 0xf5, 0x1e, 0xbc, 0xf0, 0x74, 0x6c, 0xa5,
+	0x91, 0x05, 0x97, 0xb2, 0x1a, 0x89, 0x2a, 0xda, 0x5e, 0xc9, 0x29, 0x52, 0x63, 0xf5, 0xf1, 0xef,
+	0x57, 0x4a, 0x56, 0x25, 0x23, 0x95, 0xd0, 0x7d, 0xb8, 0xba, 0xdf, 0xb3, 0x59, 0xbf, 0x45, 0x43,
+	0xc6, 0xdd, 0xd8, 0xa3, 0xc9, 0x44, 0x14, 0x32, 0x67, 0x30, 0x69, 0x85, 0x44, 0xb9, 0xbb, 0x00,
+	0xb3, 0xfe, 0xa8, 0x76, 0x65, 0x6d, 0xae, 0x19, 0x71, 0x33, 0x19, 0x93, 0x66, 0x32, 0xe2, 0x81,
+	0x50, 0xcd, 0x64, 0xb4, 0x6c, 0x8f, 0x2a, 0x5f, 0x2b, 0xe5, 0xa9, 0xff, 0x85, 0xe0, 0xf5, 0x25,
+	0x01, 0x15, 0xdb, 0x47, 0x08, 0xb6, 0xbb, 0x13, 0x64, 0x27, 0x90, 0xd0, 0x8e, 0xe2, 0xee, 0xa6,
+	0xc0, 0x8a, 0xff, 0xad, 0xf9, 0xfc, 0x17, 0xc6, 0x51, 0x7a, 0xbc, 0xd2, 0x5d, 0x04, 0xc2, 0xf7,
+	0xe6, 0xd0, 0xbe, 0xbe, 0x94, 0x76, 0xcc, 0x20, 0xc3, 0xbb, 0x07, 0x3b, 0x8b, 0xd3, 0x49, 0x0d,
+	0x4e, 0x0d, 0xd6, 0x63, 0x12, 0x66, 0x32, 0x3e, 0xd3, 0x33, 0xbe, 0x0a, 0x17, 0x53, 0x19, 0x9b,
+	0x6e, 0xb5, 0x2c, 0x01, 0xd9, 0x9f, 0xba, 0x09, 0x37, 0x97, 0x44, 0xdb, 0x73, 0xdd, 0x90, 0x8a,
+	0xe9, 0x60, 0x54, 0x61, 0xcd, 0x8e, 0xff, 0xc8, 0x88, 0x1b, 0x56, 0x72, 0xd4, 0x7f, 0x40, 0xf0,
+	0x46, 0x8e, 0xcc, 0x55, 0xd1, 0xbe, 0xce, 0x55, 0x33, 0x54, 0xb0, 0x66, 0x4b, 0xaa, 0x55, 0xff,
+	0x79, 0x1d, 0x9e, 0x91, 0x93, 0x88, 0x7f, 0x44, 0xf0, 0xdc, 0xb9, 0x65, 0x83, 0x8d, 0x3c, 0x73,
+	0x32, 0x2b, 0x44, 0x8d, 0xe4, 0xc6, 0xc7, 0xf4, 0xf5, 0xdb, 0x8f, 0x7e, 0xf9, 0xf3, 0xbb, 0x72,
+	0x1d, 0xbf, 0x4d, 0xce, 0xad, 0x4e, 0x31, 0xdb, 0x9d, 0xc9, 0xf8, 0x76, 0x9c, 0x51, 0x87, 0xb9,
+	0xe4, 0x84, 0xb9, 0x63, 0xfc, 0x3d, 0x82, 0x4a, 0x76, 0xec, 0xf1, 0x9b, 0xff, 0x61, 0x31, 0xd5,
+	0xde, 0xca, 0x07, 0x56, 0x79, 0x1a, 0x32, 0xcf, 0x1d, 0x7c, 0x2d, 0x57, 0x9e, 0x02, 0xff, 0x86,
+	0x40, 0x5b, 0x58, 0x19, 0x81, 0xef, 0x14, 0xa9, 0xa7, 0x4a, 0xfe, 0xdd, 0x42, 0xbe, 0x8a, 0xcb,
+	0x07, 0x92, 0xcb, 0x1d, 0x7c, 0xfb, 0x5f, 0xb8, 0x2c, 0xeb, 0x47, 0x81, 0xbf, 0x29, 0x83, 0xbe,
+	0x98, 0x9d, 0xec, 0x9e, 0xf7, 0x8a, 0x6c, 0x99, 0x54, 0x37, 0xbd, 0x5f, 0xd8, 0x5f, 0x31, 0x7d,
+	0x28, 0x99, 0x3a, 0xf8, 0xf3, 0xa2, 0x4c, 0xc9, 0x49, 0xb2, 0x47, 0xc6, 0x24, 0x35, 0x49, 0x82,
+	0x9c, 0x64, 0xd6, 0xc7, 0x18, 0xff, 0x8d, 0xe0, 0xfa, 0x32, 0x45, 0xd4, 0x06, 0xc1, 0xfb, 0x85,
+	0x68, 0x65, 0xf7, 0xcf, 0xff, 0xd7, 0xe6, 0xbe, 0xd4, 0xa6, 0x89, 0x1b, 0xc5, 0xb5, 0x51, 0x1b,
+	0x6f, 0xdc, 0xf0, 0x1e, 0x9f, 0x6a, 0xe8, 0xc9, 0xa9, 0x86, 0xfe, 0x38, 0xd5, 0xd0, 0xb7, 0x67,
+	0x5a, 0xe9, 0xc9, 0x99, 0x56, 0xfa, 0xf5, 0x4c, 0x2b, 0xc1, 0x8b, 0x8c, 0xcf, 0x4d, 0xb4, 0x85,
+	0x3e, 0xab, 0x7b, 0x2c, 0x7a, 0x38, 0x70, 0x8c, 0x2e, 0xef, 0xa7, 0x52, 0xb8, 0xc9, 0x78, 0x3a,
+	0xa1, 0xaf, 0x92, 0x77, 0xd4, 0xe4, 0xfd, 0x21, 0x9c, 0x0b, 0xf2, 0x11, 0x75, 0xeb, 0x9f, 0x00,
+	0x00, 0x00, 0xff, 0xff, 0x03, 0xa9, 0xd6, 0x86, 0x62, 0x0a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -725,7 +582,7 @@ type QueryClient interface {
 	// returns a ClaimPeriodRewardDistribution by rewardId and claimPeriodId
 	ClaimPeriodRewardDistributionsByID(ctx context.Context, in *ClaimPeriodRewardDistributionByIDRequest, opts ...grpc.CallOption) (*ClaimPeriodRewardDistributionByIDResponse, error)
 	// returns a ClaimPeriodRewardDistribution by address
-	QueryRewardDistributionsByAddress(ctx context.Context, in *RewardAccountByAddressRequest, opts ...grpc.CallOption) (*RewardAccountByAddressResponse, error)
+	ClaimPeriodRewardDistributionsByAddress(ctx context.Context, in *ClaimPeriodRewardDistributionByAddressRequest, opts ...grpc.CallOption) (*ClaimPeriodRewardDistributionByIDResponse, error)
 }
 
 type queryClient struct {
@@ -772,9 +629,9 @@ func (c *queryClient) ClaimPeriodRewardDistributionsByID(ctx context.Context, in
 	return out, nil
 }
 
-func (c *queryClient) QueryRewardDistributionsByAddress(ctx context.Context, in *RewardAccountByAddressRequest, opts ...grpc.CallOption) (*RewardAccountByAddressResponse, error) {
-	out := new(RewardAccountByAddressResponse)
-	err := c.cc.Invoke(ctx, "/provenance.reward.v1.Query/QueryRewardDistributionsByAddress", in, out, opts...)
+func (c *queryClient) ClaimPeriodRewardDistributionsByAddress(ctx context.Context, in *ClaimPeriodRewardDistributionByAddressRequest, opts ...grpc.CallOption) (*ClaimPeriodRewardDistributionByIDResponse, error) {
+	out := new(ClaimPeriodRewardDistributionByIDResponse)
+	err := c.cc.Invoke(ctx, "/provenance.reward.v1.Query/ClaimPeriodRewardDistributionsByAddress", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -792,7 +649,7 @@ type QueryServer interface {
 	// returns a ClaimPeriodRewardDistribution by rewardId and claimPeriodId
 	ClaimPeriodRewardDistributionsByID(context.Context, *ClaimPeriodRewardDistributionByIDRequest) (*ClaimPeriodRewardDistributionByIDResponse, error)
 	// returns a ClaimPeriodRewardDistribution by address
-	QueryRewardDistributionsByAddress(context.Context, *RewardAccountByAddressRequest) (*RewardAccountByAddressResponse, error)
+	ClaimPeriodRewardDistributionsByAddress(context.Context, *ClaimPeriodRewardDistributionByAddressRequest) (*ClaimPeriodRewardDistributionByIDResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -811,8 +668,8 @@ func (*UnimplementedQueryServer) ClaimPeriodRewardDistributions(ctx context.Cont
 func (*UnimplementedQueryServer) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *ClaimPeriodRewardDistributionByIDRequest) (*ClaimPeriodRewardDistributionByIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClaimPeriodRewardDistributionsByID not implemented")
 }
-func (*UnimplementedQueryServer) QueryRewardDistributionsByAddress(ctx context.Context, req *RewardAccountByAddressRequest) (*RewardAccountByAddressResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryRewardDistributionsByAddress not implemented")
+func (*UnimplementedQueryServer) ClaimPeriodRewardDistributionsByAddress(ctx context.Context, req *ClaimPeriodRewardDistributionByAddressRequest) (*ClaimPeriodRewardDistributionByIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClaimPeriodRewardDistributionsByAddress not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -891,20 +748,20 @@ func _Query_ClaimPeriodRewardDistributionsByID_Handler(srv interface{}, ctx cont
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_QueryRewardDistributionsByAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RewardAccountByAddressRequest)
+func _Query_ClaimPeriodRewardDistributionsByAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClaimPeriodRewardDistributionByAddressRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).QueryRewardDistributionsByAddress(ctx, in)
+		return srv.(QueryServer).ClaimPeriodRewardDistributionsByAddress(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.reward.v1.Query/QueryRewardDistributionsByAddress",
+		FullMethod: "/provenance.reward.v1.Query/ClaimPeriodRewardDistributionsByAddress",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryRewardDistributionsByAddress(ctx, req.(*RewardAccountByAddressRequest))
+		return srv.(QueryServer).ClaimPeriodRewardDistributionsByAddress(ctx, req.(*ClaimPeriodRewardDistributionByAddressRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -930,8 +787,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_ClaimPeriodRewardDistributionsByID_Handler,
 		},
 		{
-			MethodName: "QueryRewardDistributionsByAddress",
-			Handler:    _Query_QueryRewardDistributionsByAddress_Handler,
+			MethodName: "ClaimPeriodRewardDistributionsByAddress",
+			Handler:    _Query_ClaimPeriodRewardDistributionsByAddress_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1029,56 +886,6 @@ func (m *RewardProgramsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *RewardAccountResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *RewardAccountResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *RewardAccountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.ClaimStatus != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.ClaimStatus))
-		i--
-		dAtA[i] = 0x20
-	}
-	{
-		size, err := m.TotalRewardClaim.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintQuery(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x1a
-	if len(m.Address) > 0 {
-		i -= len(m.Address)
-		copy(dAtA[i:], m.Address)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if m.RewardProgramId != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.RewardProgramId))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *RewardProgramsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1136,6 +943,20 @@ func (m *ClaimPeriodRewardDistributionRequest) MarshalToSizedBuffer(dAtA []byte)
 	_ = i
 	var l int
 	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -1159,6 +980,20 @@ func (m *ClaimPeriodRewardDistributionResponse) MarshalToSizedBuffer(dAtA []byte
 	_ = i
 	var l int
 	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
 	if len(m.ClaimPeriodRewardDistribution) > 0 {
 		for iNdEx := len(m.ClaimPeriodRewardDistribution) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -1209,6 +1044,36 @@ func (m *ClaimPeriodRewardDistributionByIDRequest) MarshalToSizedBuffer(dAtA []b
 	return len(dAtA) - i, nil
 }
 
+func (m *ClaimPeriodRewardDistributionByAddressRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ClaimPeriodRewardDistributionByAddressRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ClaimPeriodRewardDistributionByAddressRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *ClaimPeriodRewardDistributionByIDResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1238,80 +1103,6 @@ func (m *ClaimPeriodRewardDistributionByIDResponse) MarshalToSizedBuffer(dAtA []
 			i -= size
 			i = encodeVarintQuery(dAtA, i, uint64(size))
 		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *RewardAccountByAddressRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *RewardAccountByAddressRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *RewardAccountByAddressRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Address) > 0 {
-		i -= len(m.Address)
-		copy(dAtA[i:], m.Address)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *RewardAccountByAddressResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *RewardAccountByAddressResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *RewardAccountByAddressResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.RewardAccountState) > 0 {
-		for iNdEx := len(m.RewardAccountState) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.RewardAccountState[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintQuery(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x12
-		}
-	}
-	if len(m.Address) > 0 {
-		i -= len(m.Address)
-		copy(dAtA[i:], m.Address)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1366,27 +1157,6 @@ func (m *RewardProgramsRequest) Size() (n int) {
 	return n
 }
 
-func (m *RewardAccountResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.RewardProgramId != 0 {
-		n += 1 + sovQuery(uint64(m.RewardProgramId))
-	}
-	l = len(m.Address)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	l = m.TotalRewardClaim.Size()
-	n += 1 + l + sovQuery(uint64(l))
-	if m.ClaimStatus != 0 {
-		n += 1 + sovQuery(uint64(m.ClaimStatus))
-	}
-	return n
-}
-
 func (m *RewardProgramsResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1408,6 +1178,10 @@ func (m *ClaimPeriodRewardDistributionRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
+	}
 	return n
 }
 
@@ -1422,6 +1196,10 @@ func (m *ClaimPeriodRewardDistributionResponse) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
 	}
 	return n
 }
@@ -1441,6 +1219,19 @@ func (m *ClaimPeriodRewardDistributionByIDRequest) Size() (n int) {
 	return n
 }
 
+func (m *ClaimPeriodRewardDistributionByAddressRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
 func (m *ClaimPeriodRewardDistributionByIDResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1450,38 +1241,6 @@ func (m *ClaimPeriodRewardDistributionByIDResponse) Size() (n int) {
 	if m.ClaimPeriodRewardDistribution != nil {
 		l = m.ClaimPeriodRewardDistribution.Size()
 		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *RewardAccountByAddressRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Address)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *RewardAccountByAddressResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Address)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	if len(m.RewardAccountState) > 0 {
-		for _, e := range m.RewardAccountState {
-			l = e.Size()
-			n += 1 + l + sovQuery(uint64(l))
-		}
 	}
 	return n
 }
@@ -1716,159 +1475,6 @@ func (m *RewardProgramsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *RewardAccountResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: RewardAccountResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: RewardAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RewardProgramId", wireType)
-			}
-			m.RewardProgramId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.RewardProgramId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Address = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TotalRewardClaim", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.TotalRewardClaim.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClaimStatus", wireType)
-			}
-			m.ClaimStatus = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ClaimStatus |= RewardAccountState_ClaimStatus(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *RewardProgramsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1982,6 +1588,42 @@ func (m *ClaimPeriodRewardDistributionRequest) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: ClaimPeriodRewardDistributionRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -2063,6 +1705,42 @@ func (m *ClaimPeriodRewardDistributionResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.ClaimPeriodRewardDistribution = append(m.ClaimPeriodRewardDistribution, ClaimPeriodRewardDistribution{})
 			if err := m.ClaimPeriodRewardDistribution[len(m.ClaimPeriodRewardDistribution)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2175,6 +1853,88 @@ func (m *ClaimPeriodRewardDistributionByIDRequest) Unmarshal(dAtA []byte) error 
 	}
 	return nil
 }
+func (m *ClaimPeriodRewardDistributionByAddressRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ClaimPeriodRewardDistributionByAddressRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ClaimPeriodRewardDistributionByAddressRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *ClaimPeriodRewardDistributionByIDResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2237,204 +1997,6 @@ func (m *ClaimPeriodRewardDistributionByIDResponse) Unmarshal(dAtA []byte) error
 				m.ClaimPeriodRewardDistribution = &ClaimPeriodRewardDistribution{}
 			}
 			if err := m.ClaimPeriodRewardDistribution.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *RewardAccountByAddressRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: RewardAccountByAddressRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: RewardAccountByAddressRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Address = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *RewardAccountByAddressResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: RewardAccountByAddressResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: RewardAccountByAddressResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Address = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RewardAccountState", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.RewardAccountState = append(m.RewardAccountState, RewardAccountResponse{})
-			if err := m.RewardAccountState[len(m.RewardAccountState)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

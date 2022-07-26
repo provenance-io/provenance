@@ -6249,6 +6249,11 @@ GenesisState defines the reward module's genesis state.
 
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
+
+
 
 
 
@@ -6262,6 +6267,7 @@ GenesisState defines the reward module's genesis state.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `claim_period_reward_distribution` | [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
 
 
 
