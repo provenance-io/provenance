@@ -391,13 +391,13 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 				s.Assert().Equal(tc.expectedIds[0], response.ClaimPeriodRewardDistribution.RewardProgramId)
 				s.Assert().Equal(tc.expectedIds[1], response.ClaimPeriodRewardDistribution.ClaimPeriodId)
 			} else {
-				var response types.ClaimPeriodRewardDistributionResponse
+				var response types.ClaimPeriodRewardDistributionsResponse
 				s.Assert().NoError(err)
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
 				s.Assert().NoError(err)
-				s.Assert().Equal(len(tc.expectedIds), len(response.ClaimPeriodRewardDistribution))
+				s.Assert().Equal(len(tc.expectedIds), len(response.ClaimPeriodRewardDistributions))
 				for _, expectedId := range tc.expectedIds {
-					s.Assert().True(containsClaimPeriodId(response.ClaimPeriodRewardDistribution, expectedId))
+					s.Assert().True(containsClaimPeriodId(response.ClaimPeriodRewardDistributions, expectedId))
 				}
 			}
 		})

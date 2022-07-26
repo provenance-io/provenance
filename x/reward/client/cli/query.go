@@ -157,10 +157,10 @@ func outputClaimPeriodRewardDistributionAll(cmd *cobra.Command) error {
 
 	queryClient := types.NewQueryClient(clientCtx)
 
-	var response *types.ClaimPeriodRewardDistributionResponse
+	var response *types.ClaimPeriodRewardDistributionsResponse
 	if response, err = queryClient.ClaimPeriodRewardDistributions(
 		context.Background(),
-		&types.ClaimPeriodRewardDistributionRequest{Pagination: pageReq},
+		&types.ClaimPeriodRewardDistributionsRequest{Pagination: pageReq},
 	); err != nil {
 		return fmt.Errorf("failed to query reward programs: %s", err.Error())
 	}

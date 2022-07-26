@@ -62,13 +62,13 @@ func (k Keeper) RewardProgramByID(ctx context.Context, req *types.RewardProgramB
 }
 
 // returns paginated ClaimPeriodRewardDistributions
-func (k Keeper) ClaimPeriodRewardDistributions(ctx context.Context, req *types.ClaimPeriodRewardDistributionRequest) (*types.ClaimPeriodRewardDistributionResponse, error) {
+func (k Keeper) ClaimPeriodRewardDistributions(ctx context.Context, req *types.ClaimPeriodRewardDistributionsRequest) (*types.ClaimPeriodRewardDistributionsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	pageRequest := getPageRequest(req)
 
-	response := types.ClaimPeriodRewardDistributionResponse{}
+	response := types.ClaimPeriodRewardDistributionsResponse{}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	kvStore := sdkCtx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(kvStore, types.ClaimPeriodRewardDistributionKeyPrefix)
@@ -76,14 +76,14 @@ func (k Keeper) ClaimPeriodRewardDistributions(ctx context.Context, req *types.C
 		var claimPeriodRewardDist types.ClaimPeriodRewardDistribution
 		vErr := claimPeriodRewardDist.Unmarshal(value)
 		if vErr == nil {
-			response.ClaimPeriodRewardDistribution = append(response.ClaimPeriodRewardDistribution, claimPeriodRewardDist)
+			response.ClaimPeriodRewardDistributions = append(response.ClaimPeriodRewardDistributions, claimPeriodRewardDist)
 		}
 		return nil
 	})
 	if err != nil {
 		return &response, status.Error(codes.Unavailable, err.Error())
 	}
-	pageRes.Total = uint64(len(response.ClaimPeriodRewardDistribution))
+	pageRes.Total = uint64(len(response.ClaimPeriodRewardDistributions))
 	response.Pagination = pageRes
 	return &response, nil
 }
