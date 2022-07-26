@@ -408,20 +408,20 @@
     - [GenesisState](#provenance.reward.v1.GenesisState)
   
 - [provenance/reward/v1/query.proto](#provenance/reward/v1/query.proto)
-    - [ClaimPeriodRewardDistributionByIDRequest](#provenance.reward.v1.ClaimPeriodRewardDistributionByIDRequest)
-    - [ClaimPeriodRewardDistributionByIDResponse](#provenance.reward.v1.ClaimPeriodRewardDistributionByIDResponse)
-    - [ClaimPeriodRewardDistributionRequest](#provenance.reward.v1.ClaimPeriodRewardDistributionRequest)
-    - [ClaimPeriodRewardDistributionResponse](#provenance.reward.v1.ClaimPeriodRewardDistributionResponse)
     - [QueryAccountByAddressResponse](#provenance.reward.v1.QueryAccountByAddressResponse)
+    - [QueryClaimPeriodRewardDistributionByIDRequest](#provenance.reward.v1.QueryClaimPeriodRewardDistributionByIDRequest)
+    - [QueryClaimPeriodRewardDistributionByIDResponse](#provenance.reward.v1.QueryClaimPeriodRewardDistributionByIDResponse)
+    - [QueryClaimPeriodRewardDistributionsRequest](#provenance.reward.v1.QueryClaimPeriodRewardDistributionsRequest)
+    - [QueryClaimPeriodRewardDistributionsResponse](#provenance.reward.v1.QueryClaimPeriodRewardDistributionsResponse)
+    - [QueryRewardProgramByIDRequest](#provenance.reward.v1.QueryRewardProgramByIDRequest)
+    - [QueryRewardProgramByIDResponse](#provenance.reward.v1.QueryRewardProgramByIDResponse)
+    - [QueryRewardProgramsRequest](#provenance.reward.v1.QueryRewardProgramsRequest)
+    - [QueryRewardProgramsResponse](#provenance.reward.v1.QueryRewardProgramsResponse)
     - [QueryRewardsByAddressRequest](#provenance.reward.v1.QueryRewardsByAddressRequest)
     - [RewardAccountResponse](#provenance.reward.v1.RewardAccountResponse)
-    - [RewardProgramByIDRequest](#provenance.reward.v1.RewardProgramByIDRequest)
-    - [RewardProgramByIDResponse](#provenance.reward.v1.RewardProgramByIDResponse)
-    - [RewardProgramsRequest](#provenance.reward.v1.RewardProgramsRequest)
-    - [RewardProgramsResponse](#provenance.reward.v1.RewardProgramsResponse)
   
+    - [QueryRewardProgramsRequest.QueryType](#provenance.reward.v1.QueryRewardProgramsRequest.QueryType)
     - [QueryRewardsByAddressRequest.RewardAccountQueryParam](#provenance.reward.v1.QueryRewardsByAddressRequest.RewardAccountQueryParam)
-    - [RewardProgramsRequest.QueryType](#provenance.reward.v1.RewardProgramsRequest.QueryType)
   
     - [Query](#provenance.reward.v1.Query)
   
@@ -6216,9 +6216,25 @@ GenesisState defines the reward module's genesis state.
 
 
 
-<a name="provenance.reward.v1.ClaimPeriodRewardDistributionByIDRequest"></a>
+<a name="provenance.reward.v1.QueryAccountByAddressResponse"></a>
 
-### ClaimPeriodRewardDistributionByIDRequest
+### QueryAccountByAddressResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `reward_account_state` | [RewardAccountResponse](#provenance.reward.v1.RewardAccountResponse) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryClaimPeriodRewardDistributionByIDRequest"></a>
+
+### QueryClaimPeriodRewardDistributionByIDRequest
 
 
 
@@ -6232,9 +6248,9 @@ GenesisState defines the reward module's genesis state.
 
 
 
-<a name="provenance.reward.v1.ClaimPeriodRewardDistributionByIDResponse"></a>
+<a name="provenance.reward.v1.QueryClaimPeriodRewardDistributionByIDResponse"></a>
 
-### ClaimPeriodRewardDistributionByIDResponse
+### QueryClaimPeriodRewardDistributionByIDResponse
 
 
 
@@ -6247,9 +6263,9 @@ GenesisState defines the reward module's genesis state.
 
 
 
-<a name="provenance.reward.v1.ClaimPeriodRewardDistributionRequest"></a>
+<a name="provenance.reward.v1.QueryClaimPeriodRewardDistributionsRequest"></a>
 
-### ClaimPeriodRewardDistributionRequest
+### QueryClaimPeriodRewardDistributionsRequest
 
 
 
@@ -6262,15 +6278,15 @@ GenesisState defines the reward module's genesis state.
 
 
 
-<a name="provenance.reward.v1.ClaimPeriodRewardDistributionResponse"></a>
+<a name="provenance.reward.v1.QueryClaimPeriodRewardDistributionsResponse"></a>
 
-### ClaimPeriodRewardDistributionResponse
+### QueryClaimPeriodRewardDistributionsResponse
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `claim_period_reward_distribution` | [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution) | repeated |  |
+| `claim_period_reward_distributions` | [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
 
 
@@ -6278,16 +6294,60 @@ GenesisState defines the reward module's genesis state.
 
 
 
-<a name="provenance.reward.v1.QueryAccountByAddressResponse"></a>
+<a name="provenance.reward.v1.QueryRewardProgramByIDRequest"></a>
 
-### QueryAccountByAddressResponse
+### QueryRewardProgramByIDRequest
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-| `reward_account_state` | [RewardAccountResponse](#provenance.reward.v1.RewardAccountResponse) | repeated |  |
+| `id` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryRewardProgramByIDResponse"></a>
+
+### QueryRewardProgramByIDResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_program` | [RewardProgram](#provenance.reward.v1.RewardProgram) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryRewardProgramsRequest"></a>
+
+### QueryRewardProgramsRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `query_type` | [QueryRewardProgramsRequest.QueryType](#provenance.reward.v1.QueryRewardProgramsRequest.QueryType) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryRewardProgramsResponse"></a>
+
+### QueryRewardProgramsResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_programs` | [RewardProgram](#provenance.reward.v1.RewardProgram) | repeated |  |
 
 
 
@@ -6320,73 +6380,28 @@ GenesisState defines the reward module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this share belongs to |
 | `total_reward_claim` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | total rewards claimed for all eligible claim periods in program |
-| `claim_status` | [RewardAccountState.ClaimStatus](#provenance.reward.v1.RewardAccountState.ClaimStatus) |  | The status of the claim |
-
-
-
-
-
-
-<a name="provenance.reward.v1.RewardProgramByIDRequest"></a>
-
-### RewardProgramByIDRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `id` | [uint64](#uint64) |  |  |
-
-
-
-
-
-
-<a name="provenance.reward.v1.RewardProgramByIDResponse"></a>
-
-### RewardProgramByIDResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `reward_program` | [RewardProgram](#provenance.reward.v1.RewardProgram) |  |  |
-
-
-
-
-
-
-<a name="provenance.reward.v1.RewardProgramsRequest"></a>
-
-### RewardProgramsRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `query_type` | [RewardProgramsRequest.QueryType](#provenance.reward.v1.RewardProgramsRequest.QueryType) |  |  |
-
-
-
-
-
-
-<a name="provenance.reward.v1.RewardProgramsResponse"></a>
-
-### RewardProgramsResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `reward_programs` | [RewardProgram](#provenance.reward.v1.RewardProgram) | repeated |  |
+| `claim_status` | [RewardAccountState.ClaimStatus](#provenance.reward.v1.RewardAccountState.ClaimStatus) |  | The status of the claim} |
 
 
 
 
 
  <!-- end messages -->
+
+
+<a name="provenance.reward.v1.QueryRewardProgramsRequest.QueryType"></a>
+
+### QueryRewardProgramsRequest.QueryType
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| ALL | 0 |  |
+| PENDING | 1 |  |
+| ACTIVE | 2 |  |
+| OUTSTANDING | 3 |  |
+| FINISHED | 4 |  |
+
 
 
 <a name="provenance.reward.v1.QueryRewardsByAddressRequest.RewardAccountQueryParam"></a>
@@ -6403,21 +6418,6 @@ GenesisState defines the reward module's genesis state.
 | EXPIRED | 4 |  |
 
 
-
-<a name="provenance.reward.v1.RewardProgramsRequest.QueryType"></a>
-
-### RewardProgramsRequest.QueryType
-
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| ALL | 0 |  |
-| PENDING | 1 |  |
-| ACTIVE | 2 |  |
-| OUTSTANDING | 3 |  |
-| FINISHED | 4 |  |
-
-
  <!-- end enums -->
 
  <!-- end HasExtensions -->
@@ -6430,11 +6430,11 @@ Query defines the gRPC querier service for reward module.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `RewardProgramByID` | [RewardProgramByIDRequest](#provenance.reward.v1.RewardProgramByIDRequest) | [RewardProgramByIDResponse](#provenance.reward.v1.RewardProgramByIDResponse) | returns RewardProgram by id | GET|/provenance/rewards/v1/reward_program_by_id/{id}|
-| `RewardPrograms` | [RewardProgramsRequest](#provenance.reward.v1.RewardProgramsRequest) | [RewardProgramsResponse](#provenance.reward.v1.RewardProgramsResponse) | returns RewardPrograms both upcoming and active | GET|/provenance/rewards/v1/reward_programs|
-| `ClaimPeriodRewardDistributions` | [ClaimPeriodRewardDistributionRequest](#provenance.reward.v1.ClaimPeriodRewardDistributionRequest) | [ClaimPeriodRewardDistributionResponse](#provenance.reward.v1.ClaimPeriodRewardDistributionResponse) | returns all ClaimPeriodRewardDistributionResponse | GET|/provenance/rewards/v1/claim_period_reward_distributions|
-| `ClaimPeriodRewardDistributionsByID` | [ClaimPeriodRewardDistributionByIDRequest](#provenance.reward.v1.ClaimPeriodRewardDistributionByIDRequest) | [ClaimPeriodRewardDistributionByIDResponse](#provenance.reward.v1.ClaimPeriodRewardDistributionByIDResponse) | returns a ClaimPeriodRewardDistribution by rewardId and claimPeriodId | GET|/provenance/rewards/v1/claim_period_reward_distributions/{reward_id}/claimPeriods/{claim_period_id}|
-| `QueryRewardDistributionsByAddress` | [QueryRewardsByAddressRequest](#provenance.reward.v1.QueryRewardsByAddressRequest) | [QueryAccountByAddressResponse](#provenance.reward.v1.QueryAccountByAddressResponse) | returns a ClaimPeriodRewardDistribution by address | GET|/provenance/rewards/v1/reward_accounts/{address}/{claim_status}|
+| `RewardProgramByID` | [QueryRewardProgramByIDRequest](#provenance.reward.v1.QueryRewardProgramByIDRequest) | [QueryRewardProgramByIDResponse](#provenance.reward.v1.QueryRewardProgramByIDResponse) | returns RewardProgram by id | GET|/provenance/rewards/v1/reward_program_by_id/{id}|
+| `RewardPrograms` | [QueryRewardProgramsRequest](#provenance.reward.v1.QueryRewardProgramsRequest) | [QueryRewardProgramsResponse](#provenance.reward.v1.QueryRewardProgramsResponse) | returns RewardPrograms both upcoming and active | GET|/provenance/rewards/v1/reward_programs|
+| `ClaimPeriodRewardDistributions` | [QueryClaimPeriodRewardDistributionsRequest](#provenance.reward.v1.QueryClaimPeriodRewardDistributionsRequest) | [QueryClaimPeriodRewardDistributionsResponse](#provenance.reward.v1.QueryClaimPeriodRewardDistributionsResponse) | returns all with pagination QueryClaimPeriodRewardDistributionsRequest | GET|/provenance/rewards/v1/claim_period_reward_distributions|
+| `ClaimPeriodRewardDistributionsByID` | [QueryClaimPeriodRewardDistributionByIDRequest](#provenance.reward.v1.QueryClaimPeriodRewardDistributionByIDRequest) | [QueryClaimPeriodRewardDistributionByIDResponse](#provenance.reward.v1.QueryClaimPeriodRewardDistributionByIDResponse) | returns a ClaimPeriodRewardDistribution by rewardId and claimPeriodId | GET|/provenance/rewards/v1/claim_period_reward_distributions/{reward_id}/claimPeriods/{claim_period_id}|
+| `QueryRewardDistributionsByAddress` | [QueryRewardsByAddressRequest](#provenance.reward.v1.QueryRewardsByAddressRequest) | [QueryAccountByAddressResponse](#provenance.reward.v1.QueryAccountByAddressResponse) | returns rewards for an address based on request criteria(all, claimed, claimable etc) | GET|/provenance/rewards/v1/reward_accounts/{address}/{claim_status}|
 
  <!-- end services -->
 

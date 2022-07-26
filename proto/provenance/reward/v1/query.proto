@@ -17,42 +17,42 @@ option java_multiple_files = true;
 service Query {
 
   // returns RewardProgram by id
-  rpc RewardProgramByID(RewardProgramByIDRequest) returns (RewardProgramByIDResponse) {
+  rpc RewardProgramByID(QueryRewardProgramByIDRequest) returns (QueryRewardProgramByIDResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/reward_program_by_id/{id}";
   }
   // returns RewardPrograms both upcoming and active
-  rpc RewardPrograms(RewardProgramsRequest) returns (RewardProgramsResponse) {
+  rpc RewardPrograms(QueryRewardProgramsRequest) returns (QueryRewardProgramsResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/reward_programs";
   }
 
-  // returns all ClaimPeriodRewardDistributionResponse
-  rpc ClaimPeriodRewardDistributions(ClaimPeriodRewardDistributionRequest)
-      returns (ClaimPeriodRewardDistributionResponse) {
+  // returns all with pagination QueryClaimPeriodRewardDistributionsRequest
+  rpc ClaimPeriodRewardDistributions(QueryClaimPeriodRewardDistributionsRequest)
+      returns (QueryClaimPeriodRewardDistributionsResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/claim_period_reward_distributions";
   }
 
   // returns a ClaimPeriodRewardDistribution by rewardId and claimPeriodId
-  rpc ClaimPeriodRewardDistributionsByID(ClaimPeriodRewardDistributionByIDRequest)
-      returns (ClaimPeriodRewardDistributionByIDResponse) {
+  rpc ClaimPeriodRewardDistributionsByID(QueryClaimPeriodRewardDistributionByIDRequest)
+      returns (QueryClaimPeriodRewardDistributionByIDResponse) {
     option (google.api.http).get =
         "/provenance/rewards/v1/claim_period_reward_distributions/{reward_id}/claimPeriods/{claim_period_id}";
   }
 
-  // returns a ClaimPeriodRewardDistribution by address
+  // returns rewards for an address based on request criteria(all, claimed, claimable etc)
   rpc QueryRewardDistributionsByAddress(QueryRewardsByAddressRequest) returns (QueryAccountByAddressResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/reward_accounts/{address}/{claim_status}";
   }
 }
 
-message RewardProgramByIDRequest {
+message QueryRewardProgramByIDRequest {
   uint64 id = 1;
 }
 
-message RewardProgramByIDResponse {
+message QueryRewardProgramByIDResponse {
   RewardProgram reward_program = 1;
 }
 
-message RewardProgramsRequest {
+message QueryRewardProgramsRequest {
   enum QueryType {
     ALL         = 0;
     PENDING     = 1;
@@ -63,24 +63,24 @@ message RewardProgramsRequest {
   QueryType query_type = 1;
 }
 
-message RewardProgramsResponse {
+message QueryRewardProgramsResponse {
   repeated RewardProgram reward_programs = 1 [(gogoproto.nullable) = false];
 }
 
-message ClaimPeriodRewardDistributionRequest {
+message QueryClaimPeriodRewardDistributionsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
-message ClaimPeriodRewardDistributionResponse {
-  repeated ClaimPeriodRewardDistribution claim_period_reward_distribution = 1 [(gogoproto.nullable) = false];
-  cosmos.base.query.v1beta1.PageResponse pagination                       = 99;
+message QueryClaimPeriodRewardDistributionsResponse {
+  repeated ClaimPeriodRewardDistribution claim_period_reward_distributions = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination                        = 99;
 }
 
-message ClaimPeriodRewardDistributionByIDRequest {
+message QueryClaimPeriodRewardDistributionByIDRequest {
   uint64 reward_id       = 1;
   uint64 claim_period_id = 2;
 }
 
-message ClaimPeriodRewardDistributionByIDResponse {
+message QueryClaimPeriodRewardDistributionByIDResponse {
   ClaimPeriodRewardDistribution claim_period_reward_distribution = 1;
 }
 
@@ -108,5 +108,5 @@ message RewardAccountResponse {
   uint64                   reward_program_id  = 1; // The id of the reward program that this share belongs to
   cosmos.base.v1beta1.Coin total_reward_claim = 2
       [(gogoproto.nullable) = false];              // total rewards claimed for all eligible claim periods in program
-  RewardAccountState.ClaimStatus claim_status = 3; // The status of the claim
+  RewardAccountState.ClaimStatus claim_status = 3; // The status of the claim}
 }

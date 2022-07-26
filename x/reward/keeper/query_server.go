@@ -19,7 +19,7 @@ var _ types.QueryServer = Keeper{}
 
 const defaultPerPageLimit = 100
 
-func (k Keeper) RewardPrograms(ctx context.Context, req *types.RewardProgramsRequest) (*types.RewardProgramsResponse, error) {
+func (k Keeper) RewardPrograms(ctx context.Context, req *types.QueryRewardProgramsRequest) (*types.QueryRewardProgramsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -29,15 +29,15 @@ func (k Keeper) RewardPrograms(ctx context.Context, req *types.RewardProgramsReq
 	var err error
 
 	switch req.QueryType {
-	case types.RewardProgramsRequest_ALL:
+	case types.QueryRewardProgramsRequest_ALL:
 		rewardPrograms, err = k.GetAllRewardPrograms(sdkCtx)
-	case types.RewardProgramsRequest_PENDING:
+	case types.QueryRewardProgramsRequest_PENDING:
 		rewardPrograms, err = k.GetAllPendingRewardPrograms(sdkCtx)
-	case types.RewardProgramsRequest_ACTIVE:
+	case types.QueryRewardProgramsRequest_ACTIVE:
 		rewardPrograms, err = k.GetAllActiveRewardPrograms(sdkCtx)
-	case types.RewardProgramsRequest_FINISHED:
+	case types.QueryRewardProgramsRequest_FINISHED:
 		rewardPrograms, err = k.GetAllCompletedRewardPrograms(sdkCtx)
-	case types.RewardProgramsRequest_OUTSTANDING:
+	case types.QueryRewardProgramsRequest_OUTSTANDING:
 		rewardPrograms, err = k.GetOutstandingRewardPrograms(sdkCtx)
 	}
 
@@ -45,10 +45,10 @@ func (k Keeper) RewardPrograms(ctx context.Context, req *types.RewardProgramsReq
 		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to query all reward programs: %v", err))
 	}
 
-	return &types.RewardProgramsResponse{RewardPrograms: rewardPrograms}, nil
+	return &types.QueryRewardProgramsResponse{RewardPrograms: rewardPrograms}, nil
 }
 
-func (k Keeper) RewardProgramByID(ctx context.Context, req *types.RewardProgramByIDRequest) (*types.RewardProgramByIDResponse, error) {
+func (k Keeper) RewardProgramByID(ctx context.Context, req *types.QueryRewardProgramByIDRequest) (*types.QueryRewardProgramByIDResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -56,19 +56,19 @@ func (k Keeper) RewardProgramByID(ctx context.Context, req *types.RewardProgramB
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	rewardProgram, err := k.GetRewardProgram(sdkCtx, req.GetId())
 	if err != nil {
-		return &types.RewardProgramByIDResponse{}, status.Errorf(codes.Internal, fmt.Sprintf("unable to query for reward program: %v", err))
+		return &types.QueryRewardProgramByIDResponse{}, status.Errorf(codes.Internal, fmt.Sprintf("unable to query for reward program: %v", err))
 	}
-	return &types.RewardProgramByIDResponse{RewardProgram: &rewardProgram}, nil
+	return &types.QueryRewardProgramByIDResponse{RewardProgram: &rewardProgram}, nil
 }
 
 // returns paginated ClaimPeriodRewardDistributions
-func (k Keeper) ClaimPeriodRewardDistributions(ctx context.Context, req *types.ClaimPeriodRewardDistributionRequest) (*types.ClaimPeriodRewardDistributionResponse, error) {
+func (k Keeper) ClaimPeriodRewardDistributions(ctx context.Context, req *types.QueryClaimPeriodRewardDistributionsRequest) (*types.QueryClaimPeriodRewardDistributionsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	pageRequest := getPageRequest(req)
 
-	response := types.ClaimPeriodRewardDistributionResponse{}
+	response := types.QueryClaimPeriodRewardDistributionsResponse{}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	kvStore := sdkCtx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(kvStore, types.ClaimPeriodRewardDistributionKeyPrefix)
@@ -76,25 +76,25 @@ func (k Keeper) ClaimPeriodRewardDistributions(ctx context.Context, req *types.C
 		var claimPeriodRewardDist types.ClaimPeriodRewardDistribution
 		vErr := claimPeriodRewardDist.Unmarshal(value)
 		if vErr == nil {
-			response.ClaimPeriodRewardDistribution = append(response.ClaimPeriodRewardDistribution, claimPeriodRewardDist)
+			response.ClaimPeriodRewardDistributions = append(response.ClaimPeriodRewardDistributions, claimPeriodRewardDist)
 		}
-		// move on for now, even if error
 		return nil
 	})
 	if err != nil {
 		return &response, status.Error(codes.Unavailable, err.Error())
 	}
+	pageRes.Total = uint64(len(response.ClaimPeriodRewardDistributions))
 	response.Pagination = pageRes
 	return &response, nil
 }
 
 // ClaimPeriodRewardDistributionsByID returns a ClaimPeriodRewardDistribution by rewardId and epochId
-func (k Keeper) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *types.ClaimPeriodRewardDistributionByIDRequest) (*types.ClaimPeriodRewardDistributionByIDResponse, error) {
+func (k Keeper) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *types.QueryClaimPeriodRewardDistributionByIDRequest) (*types.QueryClaimPeriodRewardDistributionByIDResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	response := types.ClaimPeriodRewardDistributionByIDResponse{}
+	response := types.QueryClaimPeriodRewardDistributionByIDResponse{}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	ClaimPeriodReward, err := k.GetClaimPeriodRewardDistribution(sdkCtx, req.GetClaimPeriodId(), req.GetRewardId())
@@ -175,7 +175,7 @@ func getPageRequest(req hasPageRequest) *query.PageRequest {
 	if pageRequest == nil {
 		pageRequest = &query.PageRequest{}
 	}
-	if pageRequest.Limit == 0 {
+	if pageRequest.Limit == 0 || pageRequest.Limit > defaultPerPageLimit {
 		pageRequest.Limit = defaultPerPageLimit
 	}
 	return pageRequest

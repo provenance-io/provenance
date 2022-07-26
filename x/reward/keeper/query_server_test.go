@@ -6,7 +6,7 @@ func (s *KeeperTestSuite) TestQueryRewardPrograms() {
 	queryClient := s.queryClient
 
 	// Test against empty set
-	response, err := queryClient.RewardPrograms(gocontext.Background(), &types.RewardProgramsRequest{})
+	response, err := queryClient.RewardPrograms(gocontext.Background(), &types.QueryRewardProgramsRequest{})
 	s.Assert().Nil(err, "Error should be nil")
 	s.Assert().Equal(len(response.RewardPrograms), 0, "response should contain empty list")
 
@@ -15,7 +15,7 @@ func (s *KeeperTestSuite) TestQueryRewardPrograms() {
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, *rewardProgram)
 
 	// Test with 1 item
-	response, err = queryClient.RewardPrograms(gocontext.Background(), &types.RewardProgramsRequest{})
+	response, err = queryClient.RewardPrograms(gocontext.Background(), &types.QueryRewardProgramsRequest{})
 	s.Assert().Nil(err, "Error should be nil")
 	s.Assert().Equal(len(response.RewardPrograms), 1, "response should contain the added element")
 	s.Assert().True(rewardProgram.Equal(response.RewardPrograms[0]), "reward programs should match")
@@ -24,7 +24,7 @@ func (s *KeeperTestSuite) TestQueryRewardPrograms() {
 	rewardProgram2 := newRewardProgram("catthejack", 2, 1)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, *rewardProgram2)
 
-	response, err = queryClient.RewardPrograms(gocontext.Background(), &types.RewardProgramsRequest{})
+	response, err = queryClient.RewardPrograms(gocontext.Background(), &types.QueryRewardProgramsRequest{})
 	s.Assert().Nil(err, "Error should be nil")
 	s.Assert().Equal(len(response.RewardPrograms), 2, "response should contain the added element")
 	s.Assert().True(rewardProgram2.Equal(response.RewardPrograms[1]), "reward programs should match")
@@ -40,7 +40,7 @@ func (s *KeeperTestSuite) TestActiveRewardPrograms() {
 	setupEpoch(s, uint64(initialBlockHeight))
 
 	// Check against no reward programs
-	resp, err := queryClient.ActiveRewardPrograms(gocontext.Background(), &types.ActiveRewardProgramsRequest{})
+	resp, err := queryClient.ActiveRewardPrograms(gocontext.Background(), &types.ActiveQueryRewardProgramsRequest{})
 	s.Assert().Nil(err)
 	s.Assert().Equal(0, len(resp.GetRewardPrograms()), "no reward programs returned when none exist.")
 
@@ -53,7 +53,7 @@ func (s *KeeperTestSuite) TestActiveRewardPrograms() {
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, *rewardProgram3)
 
 	// Check against ACTIVE reward programs
-	resp, err = queryClient.ActiveRewardPrograms(gocontext.Background(), &types.ActiveRewardProgramsRequest{})
+	resp, err = queryClient.ActiveRewardPrograms(gocontext.Background(), &types.ActiveQueryRewardProgramsRequest{})
 	s.Assert().Nil(err)
 	s.Assert().Equal(2, len(resp.GetRewardPrograms()), "must contain all active reward programs")
 }
@@ -70,7 +70,7 @@ func (s *KeeperTestSuite) TestRewardProgramByID() {
 	s.SetupTest()
 	queryClient := s.queryClient
 
-	request := types.RewardProgramByIDRequest{
+	request := types.QueryRewardProgramByIDRequest{
 		Id: 1,
 	}
 
