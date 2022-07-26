@@ -261,13 +261,13 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 				s.Assert().Error(err)
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
 			} else if tc.byId {
-				var response types.RewardProgramByIDResponse
+				var response types.QueryRewardProgramByIDResponse
 				s.Assert().NoError(err)
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
 				s.Assert().NoError(err)
 				s.Assert().Equal(tc.expectedIds[0], response.RewardProgram.Id)
 			} else {
-				var response types.RewardProgramsResponse
+				var response types.QueryRewardProgramsResponse
 				s.Assert().NoError(err)
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
 				s.Assert().NoError(err)
@@ -384,14 +384,14 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 				s.Assert().Error(err)
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
 			} else if tc.byId {
-				var response types.ClaimPeriodRewardDistributionByIDResponse
+				var response types.QueryClaimPeriodRewardDistributionByIDResponse
 				s.Assert().NoError(err)
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
 				s.Assert().NoError(err)
 				s.Assert().Equal(tc.expectedIds[0], response.ClaimPeriodRewardDistribution.RewardProgramId)
 				s.Assert().Equal(tc.expectedIds[1], response.ClaimPeriodRewardDistribution.ClaimPeriodId)
 			} else {
-				var response types.ClaimPeriodRewardDistributionsResponse
+				var response types.QueryClaimPeriodRewardDistributionsResponse
 				s.Assert().NoError(err)
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
 				s.Assert().NoError(err)

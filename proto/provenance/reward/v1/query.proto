@@ -17,23 +17,23 @@ option java_multiple_files = true;
 service Query {
 
   // returns RewardProgram by id
-  rpc RewardProgramByID(RewardProgramByIDRequest) returns (RewardProgramByIDResponse) {
+  rpc RewardProgramByID(QueryRewardProgramByIDRequest) returns (QueryRewardProgramByIDResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/reward_program_by_id/{id}";
   }
   // returns RewardPrograms both upcoming and active
-  rpc RewardPrograms(RewardProgramsRequest) returns (RewardProgramsResponse) {
+  rpc RewardPrograms(QueryRewardProgramsRequest) returns (QueryRewardProgramsResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/reward_programs";
   }
 
-  // returns all with pagination ClaimPeriodRewardDistributionsRequest
-  rpc ClaimPeriodRewardDistributions(ClaimPeriodRewardDistributionsRequest)
-      returns (ClaimPeriodRewardDistributionsResponse) {
+  // returns all with pagination QueryClaimPeriodRewardDistributionsRequest
+  rpc ClaimPeriodRewardDistributions(QueryClaimPeriodRewardDistributionsRequest)
+      returns (QueryClaimPeriodRewardDistributionsResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/claim_period_reward_distributions";
   }
 
   // returns a ClaimPeriodRewardDistribution by rewardId and claimPeriodId
-  rpc ClaimPeriodRewardDistributionsByID(ClaimPeriodRewardDistributionByIDRequest)
-      returns (ClaimPeriodRewardDistributionByIDResponse) {
+  rpc ClaimPeriodRewardDistributionsByID(QueryClaimPeriodRewardDistributionByIDRequest)
+      returns (QueryClaimPeriodRewardDistributionByIDResponse) {
     option (google.api.http).get =
         "/provenance/rewards/v1/claim_period_reward_distributions/{reward_id}/claimPeriods/{claim_period_id}";
   }
@@ -44,15 +44,15 @@ service Query {
   }
 }
 
-message RewardProgramByIDRequest {
+message QueryRewardProgramByIDRequest {
   uint64 id = 1;
 }
 
-message RewardProgramByIDResponse {
+message QueryRewardProgramByIDResponse {
   RewardProgram reward_program = 1;
 }
 
-message RewardProgramsRequest {
+message QueryRewardProgramsRequest {
   enum QueryType {
     ALL         = 0;
     PENDING     = 1;
@@ -63,24 +63,24 @@ message RewardProgramsRequest {
   QueryType query_type = 1;
 }
 
-message RewardProgramsResponse {
+message QueryRewardProgramsResponse {
   repeated RewardProgram reward_programs = 1 [(gogoproto.nullable) = false];
 }
 
-message ClaimPeriodRewardDistributionsRequest {
+message QueryClaimPeriodRewardDistributionsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
-message ClaimPeriodRewardDistributionsResponse {
+message QueryClaimPeriodRewardDistributionsResponse {
   repeated ClaimPeriodRewardDistribution claim_period_reward_distributions = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination                        = 99;
 }
 
-message ClaimPeriodRewardDistributionByIDRequest {
+message QueryClaimPeriodRewardDistributionByIDRequest {
   uint64 reward_id       = 1;
   uint64 claim_period_id = 2;
 }
 
-message ClaimPeriodRewardDistributionByIDResponse {
+message QueryClaimPeriodRewardDistributionByIDResponse {
   ClaimPeriodRewardDistribution claim_period_reward_distribution = 1;
 }
 

@@ -61,24 +61,24 @@ func GetRewardProgramCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			var request types.RewardProgramsRequest
+			var request types.QueryRewardProgramsRequest
 			arg0 := strings.TrimSpace(args[0])
 			switch arg0 {
 			case all:
-				request.QueryType = types.RewardProgramsRequest_ALL
+				request.QueryType = types.QueryRewardProgramsRequest_ALL
 			case pending:
-				request.QueryType = types.RewardProgramsRequest_PENDING
+				request.QueryType = types.QueryRewardProgramsRequest_PENDING
 			case active:
-				request.QueryType = types.RewardProgramsRequest_ACTIVE
+				request.QueryType = types.QueryRewardProgramsRequest_ACTIVE
 			case completed:
-				request.QueryType = types.RewardProgramsRequest_FINISHED
+				request.QueryType = types.QueryRewardProgramsRequest_FINISHED
 			case outstanding:
-				request.QueryType = types.RewardProgramsRequest_OUTSTANDING
+				request.QueryType = types.QueryRewardProgramsRequest_OUTSTANDING
 			default:
 				return outputRewardProgramByID(clientCtx, queryClient, arg0)
 			}
 
-			var response *types.RewardProgramsResponse
+			var response *types.QueryRewardProgramsResponse
 			if response, err = queryClient.RewardPrograms(
 				context.Background(),
 				&request,
@@ -99,10 +99,10 @@ func outputRewardProgramByID(client client.Context, queryClient types.QueryClien
 		return fmt.Errorf("invalid argument arg : %s", arg)
 	}
 
-	var response *types.RewardProgramByIDResponse
+	var response *types.QueryRewardProgramByIDResponse
 	if response, err = queryClient.RewardProgramByID(
 		context.Background(),
-		&types.RewardProgramByIDRequest{Id: uint64(programID)},
+		&types.QueryRewardProgramByIDRequest{Id: uint64(programID)},
 	); err != nil {
 		return fmt.Errorf("failed to query reward program %d: %s", programID, err.Error())
 	}
@@ -157,10 +157,10 @@ func outputClaimPeriodRewardDistributionAll(cmd *cobra.Command) error {
 
 	queryClient := types.NewQueryClient(clientCtx)
 
-	var response *types.ClaimPeriodRewardDistributionsResponse
+	var response *types.QueryClaimPeriodRewardDistributionsResponse
 	if response, err = queryClient.ClaimPeriodRewardDistributions(
 		context.Background(),
-		&types.ClaimPeriodRewardDistributionsRequest{Pagination: pageReq},
+		&types.QueryClaimPeriodRewardDistributionsRequest{Pagination: pageReq},
 	); err != nil {
 		return fmt.Errorf("failed to query reward programs: %s", err.Error())
 	}
@@ -183,10 +183,10 @@ func outputClaimPeriodRewardDistributionByID(cmd *cobra.Command, rewardID, claim
 	if err != nil {
 		return err
 	}
-	var response *types.ClaimPeriodRewardDistributionByIDResponse
+	var response *types.QueryClaimPeriodRewardDistributionByIDResponse
 	if response, err = queryClient.ClaimPeriodRewardDistributionsByID(
 		context.Background(),
-		&types.ClaimPeriodRewardDistributionByIDRequest{
+		&types.QueryClaimPeriodRewardDistributionByIDRequest{
 			RewardId:      uint64(id),
 			ClaimPeriodId: uint64(claimID),
 		},

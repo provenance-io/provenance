@@ -32,7 +32,7 @@ var _ = utilities.NewDoubleArray
 var _ = descriptor.ForMessage
 
 func request_Query_RewardProgramByID_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq RewardProgramByIDRequest
+	var protoReq QueryRewardProgramByIDRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -59,7 +59,7 @@ func request_Query_RewardProgramByID_0(ctx context.Context, marshaler runtime.Ma
 }
 
 func local_request_Query_RewardProgramByID_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq RewardProgramByIDRequest
+	var protoReq QueryRewardProgramByIDRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -90,7 +90,7 @@ var (
 )
 
 func request_Query_RewardPrograms_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq RewardProgramsRequest
+	var protoReq QueryRewardProgramsRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -106,7 +106,7 @@ func request_Query_RewardPrograms_0(ctx context.Context, marshaler runtime.Marsh
 }
 
 func local_request_Query_RewardPrograms_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq RewardProgramsRequest
+	var protoReq QueryRewardProgramsRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -126,7 +126,7 @@ var (
 )
 
 func request_Query_ClaimPeriodRewardDistributions_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ClaimPeriodRewardDistributionsRequest
+	var protoReq QueryClaimPeriodRewardDistributionsRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -142,7 +142,7 @@ func request_Query_ClaimPeriodRewardDistributions_0(ctx context.Context, marshal
 }
 
 func local_request_Query_ClaimPeriodRewardDistributions_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ClaimPeriodRewardDistributionsRequest
+	var protoReq QueryClaimPeriodRewardDistributionsRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -158,7 +158,7 @@ func local_request_Query_ClaimPeriodRewardDistributions_0(ctx context.Context, m
 }
 
 func request_Query_ClaimPeriodRewardDistributionsByID_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ClaimPeriodRewardDistributionByIDRequest
+	var protoReq QueryClaimPeriodRewardDistributionByIDRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -196,7 +196,7 @@ func request_Query_ClaimPeriodRewardDistributionsByID_0(ctx context.Context, mar
 }
 
 func local_request_Query_ClaimPeriodRewardDistributionsByID_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ClaimPeriodRewardDistributionByIDRequest
+	var protoReq QueryClaimPeriodRewardDistributionByIDRequest
 	var metadata runtime.ServerMetadata
 
 	var (
