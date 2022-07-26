@@ -59,6 +59,14 @@ func (k Keeper) StartRewardProgram(ctx sdk.Context, rewardProgram *types.RewardP
 	if err != nil {
 		return err
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeRewardProgramStarted,
+			sdk.NewAttribute(types.AttributeKeyRewardProgramID, fmt.Sprintf("%d", rewardProgram.GetId())),
+		),
+	)
+
 	return nil
 }
 
@@ -156,6 +164,13 @@ func (k Keeper) EndRewardProgram(ctx sdk.Context, rewardProgram *types.RewardPro
 	rewardProgram.State = types.RewardProgram_FINISHED
 	rewardProgram.ActualProgramEndTime = blockTime
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeRewardProgramFinished,
+			sdk.NewAttribute(types.AttributeKeyRewardProgramID, fmt.Sprintf("%d", rewardProgram.GetId())),
+		),
+	)
+
 	return nil
 }
 
@@ -179,6 +194,14 @@ func (k Keeper) ExpireRewardProgram(ctx sdk.Context, rewardProgram *types.Reward
 	if err != nil {
 		ctx.Logger().Error("NOTICE: Failed to refund remaining balance. %v", err)
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeRewardProgramExpired,
+			sdk.NewAttribute(types.AttributeKeyRewardProgramID, fmt.Sprintf("%d", rewardProgram.GetId())),
+		),
+	)
+
 	return err
 }
 

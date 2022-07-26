@@ -44,6 +44,12 @@ func (suite *KeeperTestSuite) TestStartRewardProgram() {
 	suite.Assert().Equal(uint64(1), reward.GetClaimPeriodId())
 	suite.Assert().Equal(claimPeriodPool, reward.GetRewardsPool())
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward.GetTotalRewardsPoolForClaimPeriod())
+
+	events := suite.ctx.EventManager().ABCIEvents()
+	newEvent := events[len(events)-1]
+	suite.Assert().Equal("reward_program_started", newEvent.GetType(), "should emit the correct event type")
+	suite.Assert().Equal([]byte("reward_program_id"), newEvent.GetAttributes()[0].GetKey(), "should emit the correct attribute name")
+	suite.Assert().Equal([]byte("1"), newEvent.GetAttributes()[0].GetValue(), "should emit the correct attribute value")
 }
 
 func (suite *KeeperTestSuite) TestStartRewardProgramNoBalance() {
@@ -243,6 +249,11 @@ func (suite *KeeperTestSuite) TestEndRewardProgram() {
 
 	suite.app.RewardKeeper.EndRewardProgram(suite.ctx, &program)
 
+	events := suite.ctx.EventManager().ABCIEvents()
+	newEvent := events[len(events)-1]
+	suite.Assert().Equal("reward_program_finished", newEvent.GetType(), "should emit the correct event type")
+	suite.Assert().Equal([]byte("reward_program_id"), newEvent.GetAttributes()[0].GetKey(), "should emit the correct attribute name")
+	suite.Assert().Equal([]byte("1"), newEvent.GetAttributes()[0].GetValue(), "should emit the correct attribute value")
 	suite.Assert().Equal(program.State, types.RewardProgram_FINISHED, "reward program should be in finished state")
 	suite.Assert().Equal(blockTime, program.ActualProgramEndTime, "actual program end time should be set")
 }
@@ -274,6 +285,11 @@ func (suite *KeeperTestSuite) TestExpireRewardProgram() {
 
 	suite.app.RewardKeeper.ExpireRewardProgram(suite.ctx, &program)
 	suite.Assert().Equal(program.State, types.RewardProgram_EXPIRED, "reward program should be in expired state")
+	events := suite.ctx.EventManager().ABCIEvents()
+	newEvent := events[len(events)-1]
+	suite.Assert().Equal("reward_program_expired", newEvent.GetType(), "should emit the correct event type")
+	suite.Assert().Equal([]byte("reward_program_id"), newEvent.GetAttributes()[0].GetKey(), "should emit the correct attribute name")
+	suite.Assert().Equal([]byte("1"), newEvent.GetAttributes()[0].GetValue(), "should emit the correct attribute value")
 }
 
 func (suite *KeeperTestSuite) TestExpireRewardProgramNil() {
