@@ -780,7 +780,7 @@ type QueryClient interface {
 	ClaimPeriodRewardDistributions(ctx context.Context, in *ClaimPeriodRewardDistributionRequest, opts ...grpc.CallOption) (*ClaimPeriodRewardDistributionResponse, error)
 	// returns a ClaimPeriodRewardDistribution by rewardId and claimPeriodId
 	ClaimPeriodRewardDistributionsByID(ctx context.Context, in *ClaimPeriodRewardDistributionByIDRequest, opts ...grpc.CallOption) (*ClaimPeriodRewardDistributionByIDResponse, error)
-	// returns a ClaimPeriodRewardDistribution by address
+	// returns rewards for an address based on request criteria(all, claimed, claimable etc)
 	QueryRewardDistributionsByAddress(ctx context.Context, in *QueryRewardsByAddressRequest, opts ...grpc.CallOption) (*QueryAccountByAddressResponse, error)
 }
 
@@ -847,7 +847,7 @@ type QueryServer interface {
 	ClaimPeriodRewardDistributions(context.Context, *ClaimPeriodRewardDistributionRequest) (*ClaimPeriodRewardDistributionResponse, error)
 	// returns a ClaimPeriodRewardDistribution by rewardId and claimPeriodId
 	ClaimPeriodRewardDistributionsByID(context.Context, *ClaimPeriodRewardDistributionByIDRequest) (*ClaimPeriodRewardDistributionByIDResponse, error)
-	// returns a ClaimPeriodRewardDistribution by address
+	// returns rewards for an address based on request criteria(all, claimed, claimable etc)
 	QueryRewardDistributionsByAddress(context.Context, *QueryRewardsByAddressRequest) (*QueryAccountByAddressResponse, error)
 }
 

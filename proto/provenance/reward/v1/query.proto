@@ -38,7 +38,7 @@ service Query {
         "/provenance/rewards/v1/claim_period_reward_distributions/{reward_id}/claimPeriods/{claim_period_id}";
   }
 
-  // returns a ClaimPeriodRewardDistribution by address
+  // returns rewards for an address based on request criteria(all, claimed, claimable etc)
   rpc QueryRewardDistributionsByAddress(QueryRewardsByAddressRequest)
       returns (QueryAccountByAddressResponse) {
     option (google.api.http).get =
