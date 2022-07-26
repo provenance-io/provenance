@@ -14,6 +14,7 @@ const (
 	TypeMsgCreateRewardProgramRequest = "create_reward_program"
 	TypeMsgEndRewardProgramRequest    = "end_reward_program"
 	TypeMsgClaimRewardRequest         = "claim_reward"
+	TypeMsgClaimAllRewardRequest      = "claim_all_rewards"
 )
 
 // Compile time interface checks.
@@ -204,6 +205,43 @@ func (msg MsgClaimRewardRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the parent.
 func (msg MsgClaimRewardRequest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.RewardAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+// NewMsgClaimRewardRequest creates a new claim all request
+func NewMsgClaimAllRewardsRequest(
+	rewardAddress string,
+) *MsgClaimAllRewardsRequest {
+	return &MsgClaimAllRewardsRequest{
+		RewardAddress: rewardAddress,
+	}
+}
+
+// Route implements Msg
+func (msg MsgClaimAllRewardsRequest) Route() string { return ModuleName }
+
+// Type implements Msg
+func (msg MsgClaimAllRewardsRequest) Type() string { return TypeMsgClaimAllRewardRequest }
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgClaimAllRewardsRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.RewardAddress); err != nil {
+		return fmt.Errorf("invalid reward address : %w", err)
+	}
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgClaimAllRewardsRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners indicates that the message must have been signed by the parent.
+func (msg MsgClaimAllRewardsRequest) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.RewardAddress)
 	if err != nil {
 		panic(err)

@@ -181,31 +181,48 @@ func GetCmdEndRewardProgram() *cobra.Command {
 }
 
 func GetCmdClaimReward() *cobra.Command {
+	const all = "all"
 	cmd := &cobra.Command{
-		Use:     "claim-reward [reward-program-id]",
+		Use:     "claim-reward [reward-program-id|all]",
 		Args:    cobra.ExactArgs(1),
 		Aliases: []string{"cr", "claim"},
-		Short:   "Claim reward for specified reward program",
-		Long:    strings.TrimSpace(`Claim reward for a specified reward program.  This will transfer all unclaimed rewards for outstanding claim periods to signers address.`),
-		Example: fmt.Sprintf(`$ %[1]s tx reward claim-reward 1 --from mykey`, version.AppName),
+		Short:   "Claim reward for specified reward program or all programs",
+		Long:    strings.TrimSpace(`Claim reward for a specified reward program or all programs.  This will transfer all unclaimed rewards for outstanding claim periods to signers address.`),
+		Example: fmt.Sprintf(`$ %[1]s tx reward claim-reward 1 --from mykey
+$ %[1]s tx reward claim-reward all --from mykey`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			callerAddr := clientCtx.GetFromAddress()
-			programID, err := strconv.Atoi(args[0])
-			if err != nil {
-				return fmt.Errorf("invalid argument : %s", args[0])
+
+			arg0 := strings.TrimSpace(args[0])
+			if arg0 != all {
+				return claimRewardProgramByID(clientCtx, arg0, cmd)
 			}
 
-			msg := types.NewMsgClaimRewardRequest(
-				uint64(programID),
+			callerAddr := clientCtx.GetFromAddress()
+			msg := types.NewMsgClaimAllRewardsRequest(
 				callerAddr.String(),
 			)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
+}
+
+func claimRewardProgramByID(client client.Context, arg string, cmd *cobra.Command) error {
+	programID, err := strconv.Atoi(arg)
+	if err != nil {
+		return fmt.Errorf("invalid argument arg : %s", arg)
+	}
+	callerAddr := client.GetFromAddress()
+
+	msg := types.NewMsgClaimRewardRequest(
+		uint64(programID),
+		callerAddr.String(),
+	)
+	return tx.GenerateOrBroadcastTxCLI(client, cmd.Flags(), msg)
 }

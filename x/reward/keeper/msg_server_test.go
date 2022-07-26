@@ -239,7 +239,7 @@ func (s *KeeperTestSuite) TestRewardClaimTransactionInvalidClaimer() {
 
 	var response types.MsgClaimRewardResponse
 	response.Unmarshal(result.Data)
-	s.Assert().Equal(uint64(1), response.GetRewardProgramId(), "should have correct reward program id")
-	s.Assert().Equal(0, len(response.GetClaimedRewardPeriodDetails()), "should have no details")
-	s.Assert().Equal(sdk.NewInt64Coin("nhash", 0), response.GetTotalRewardClaim(), "should have no reward claim")
+	s.Assert().Equal(uint64(1), response.GetClaimDetails().RewardProgramId, "should have correct reward program id")
+	s.Assert().Equal(0, len(response.GetClaimDetails().ClaimedRewardPeriodDetails), "should have no details")
+	s.Assert().Equal(sdk.NewInt64Coin("nhash", 0), response.GetClaimDetails().TotalRewardClaim, "should have no reward claim")
 }

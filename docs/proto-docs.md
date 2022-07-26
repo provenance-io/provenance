@@ -427,12 +427,15 @@
   
 - [provenance/reward/v1/tx.proto](#provenance/reward/v1/tx.proto)
     - [ClaimedRewardPeriodDetail](#provenance.reward.v1.ClaimedRewardPeriodDetail)
+    - [MsgClaimAllRewardsRequest](#provenance.reward.v1.MsgClaimAllRewardsRequest)
+    - [MsgClaimAllRewardsResponse](#provenance.reward.v1.MsgClaimAllRewardsResponse)
     - [MsgClaimRewardRequest](#provenance.reward.v1.MsgClaimRewardRequest)
     - [MsgClaimRewardResponse](#provenance.reward.v1.MsgClaimRewardResponse)
     - [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest)
     - [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse)
     - [MsgEndRewardProgramRequest](#provenance.reward.v1.MsgEndRewardProgramRequest)
     - [MsgEndRewardProgramResponse](#provenance.reward.v1.MsgEndRewardProgramResponse)
+    - [RewardProgramClaimDetail](#provenance.reward.v1.RewardProgramClaimDetail)
   
     - [Msg](#provenance.reward.v1.Msg)
   
@@ -6453,8 +6456,39 @@ Query defines the gRPC querier service for reward module.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `claim_period_id` | [uint64](#uint64) |  | claim period id |
-| `total_shares` | [uint64](#uint64) |  | total shares accumulated |
+| `total_shares` | [uint64](#uint64) |  | total shares accumulated for claim period |
 | `claim_period_reward` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | total rewards for claim period |
+
+
+
+
+
+
+<a name="provenance.reward.v1.MsgClaimAllRewardsRequest"></a>
+
+### MsgClaimAllRewardsRequest
+MsgClaimRewardResponse is the request type for claiming rewards from all reward programs RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_address` | [string](#string) |  | reward address and signer of msg to send claimed rewards to |
+
+
+
+
+
+
+<a name="provenance.reward.v1.MsgClaimAllRewardsResponse"></a>
+
+### MsgClaimAllRewardsResponse
+MsgClaimRewardResponse is the response type for claiming rewards from all reward programs RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `total_reward_claim` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | total rewards claimed for all eligible claim periods in all programs |
+| `claim_details` | [RewardProgramClaimDetail](#provenance.reward.v1.RewardProgramClaimDetail) | repeated | details about acquired rewards from a reward program |
 
 
 
@@ -6485,9 +6519,7 @@ MsgClaimRewardResponse is the response type for claiming reward from reward prog
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `reward_program_id` | [uint64](#uint64) |  | reward program id |
-| `total_reward_claim` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | total rewards claimed for all eligible claim periods in program |
-| `claimed_reward_period_details` | [ClaimedRewardPeriodDetail](#provenance.reward.v1.ClaimedRewardPeriodDetail) | repeated | claim period details |
+| `claim_details` | [RewardProgramClaimDetail](#provenance.reward.v1.RewardProgramClaimDetail) |  | details about acquired rewards from reward program |
 
 
 
@@ -6559,6 +6591,23 @@ MsgEndRewardProgramResponse is the response type for ending a reward program RPC
 
 
 
+
+<a name="provenance.reward.v1.RewardProgramClaimDetail"></a>
+
+### RewardProgramClaimDetail
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_program_id` | [uint64](#uint64) |  | reward program id |
+| `total_reward_claim` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | total rewards claimed for all eligible claim periods in program |
+| `claimed_reward_period_details` | [ClaimedRewardPeriodDetail](#provenance.reward.v1.ClaimedRewardPeriodDetail) | repeated | claim period details |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -6576,6 +6625,7 @@ Msg
 | `CreateRewardProgram` | [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest) | [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse) | CreateRewardProgram is the RPC endpoint for creating a rewards program | |
 | `EndRewardProgram` | [MsgEndRewardProgramRequest](#provenance.reward.v1.MsgEndRewardProgramRequest) | [MsgEndRewardProgramResponse](#provenance.reward.v1.MsgEndRewardProgramResponse) | EndRewardProgram is the RPC endpoint for ending a rewards program | |
 | `ClaimRewards` | [MsgClaimRewardRequest](#provenance.reward.v1.MsgClaimRewardRequest) | [MsgClaimRewardResponse](#provenance.reward.v1.MsgClaimRewardResponse) | ClaimRewards is the RPC endpoint for claiming rewards for completed claim periods of a reward program | |
+| `ClaimAllRewards` | [MsgClaimAllRewardsRequest](#provenance.reward.v1.MsgClaimAllRewardsRequest) | [MsgClaimAllRewardsResponse](#provenance.reward.v1.MsgClaimAllRewardsResponse) |  | |
 
  <!-- end services -->
 

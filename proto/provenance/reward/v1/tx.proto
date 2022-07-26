@@ -22,6 +22,8 @@ service Msg {
 
   // ClaimRewards is the RPC endpoint for claiming rewards for completed claim periods of a reward program
   rpc ClaimRewards(MsgClaimRewardRequest) returns (MsgClaimRewardResponse);
+
+  rpc ClaimAllRewards(MsgClaimAllRewardsRequest) returns (MsgClaimAllRewardsResponse);
 }
 
 // MsgCreateRewardProgramRequest is the request type for creating a reward program RPC
@@ -78,16 +80,35 @@ message MsgClaimRewardRequest {
 
 // MsgClaimRewardResponse is the response type for claiming reward from reward program RPC
 message MsgClaimRewardResponse {
+  option (gogoproto.equal)               = true;
+  RewardProgramClaimDetail claim_details = 1
+      [(gogoproto.nullable) = false]; // details about acquired rewards from reward program
+}
+
+// MsgClaimRewardResponse is the request type for claiming rewards from all reward programs RPC
+message MsgClaimAllRewardsRequest {
+  string reward_address = 1; // reward address and signer of msg to send claimed rewards to
+}
+
+// MsgClaimRewardResponse is the response type for claiming rewards from all reward programs RPC
+message MsgClaimAllRewardsResponse {
   option (gogoproto.equal)                    = true;
-  uint64                   reward_program_id  = 1; // reward program id
-  cosmos.base.v1beta1.Coin total_reward_claim = 2
-      [(gogoproto.nullable) = false]; // total rewards claimed for all eligible claim periods in program
-  repeated ClaimedRewardPeriodDetail claimed_reward_period_details = 3; // claim period details
+  cosmos.base.v1beta1.Coin total_reward_claim = 1
+      [(gogoproto.nullable) = false]; // total rewards claimed for all eligible claim periods in all programs
+  repeated RewardProgramClaimDetail claim_details = 2; // details about acquired rewards from a reward program
 }
 
 message ClaimedRewardPeriodDetail {
   option (gogoproto.equal)                     = true;
-  uint64                   claim_period_id     = 1;                                // claim period id
-  uint64                   total_shares        = 2;                                // total shares accumulated
+  uint64                   claim_period_id     = 1; // claim period id
+  uint64                   total_shares        = 2; // total shares accumulated for claim period
   cosmos.base.v1beta1.Coin claim_period_reward = 3 [(gogoproto.nullable) = false]; // total rewards for claim period
+}
+
+message RewardProgramClaimDetail {
+  option (gogoproto.equal)                    = true;
+  uint64                   reward_program_id  = 1; // reward program id
+  cosmos.base.v1beta1.Coin total_reward_claim = 2  // total amount claimed for reward program
+      [(gogoproto.nullable) = false];              // total rewards claimed for all eligible claim periods in program
+  repeated ClaimedRewardPeriodDetail claimed_reward_period_details = 3; // claim period details
 }

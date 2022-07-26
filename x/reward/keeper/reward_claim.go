@@ -111,3 +111,34 @@ func (k Keeper) RefundRewardClaims(ctx sdk.Context, rewardProgram types.RewardPr
 	_, err := k.sendCoinsToAccount(ctx, amount, rewardProgram.GetDistributeFromAddress())
 	return err
 }
+
+func (k Keeper) ClaimAllRewards(ctx sdk.Context, addr string) ([]*types.RewardProgramClaimDetail, sdk.Coin, error) {
+	allProgramDetails := []*types.RewardProgramClaimDetail{}
+	allRewards := sdk.NewInt64Coin("nhash", 0)
+	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
+		details, reward, err := k.ClaimRewards(ctx, rewardProgram.GetId(), addr)
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("NOTICE: Unable to claim reward program %d. Error: %v ", rewardProgram.GetId(), err))
+			return false
+		}
+		if reward.IsZero() {
+			ctx.Logger().Info(fmt.Sprintf("NOTICE: Skipping reward program %d. It has no rewards.", rewardProgram.GetId()))
+			return false
+		}
+
+		programDetails := types.RewardProgramClaimDetail{
+			RewardProgramId:            rewardProgram.GetId(),
+			TotalRewardClaim:           reward,
+			ClaimedRewardPeriodDetails: details,
+		}
+		allProgramDetails = append(allProgramDetails, &programDetails)
+		allRewards = allRewards.Add(reward)
+
+		return false
+	})
+	if err != nil {
+		return nil, sdk.Coin{}, err
+	}
+
+	return allProgramDetails, allRewards, nil
+}

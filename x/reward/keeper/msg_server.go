@@ -108,8 +108,39 @@ func (s msgServer) ClaimRewards(goCtx context.Context, req *types.MsgClaimReward
 	}
 
 	return &types.MsgClaimRewardResponse{
-		RewardProgramId:            req.GetRewardProgramId(),
-		TotalRewardClaim:           reward,
-		ClaimedRewardPeriodDetails: details,
+		ClaimDetails: types.RewardProgramClaimDetail{
+			RewardProgramId:            req.GetRewardProgramId(),
+			TotalRewardClaim:           reward,
+			ClaimedRewardPeriodDetails: details,
+		},
+	}, nil
+}
+
+func (s msgServer) ClaimAllRewards(goCtx context.Context, req *types.MsgClaimAllRewardsRequest) (*types.MsgClaimAllRewardsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	details, reward, err := s.Keeper.ClaimAllRewards(ctx, req.GetRewardAddress())
+	if err != nil {
+		return nil, err
+	}
+
+	programIDs := []uint64{}
+	for _, detail := range details {
+		programIDs = append(programIDs, detail.GetRewardProgramId())
+	}
+
+	if len(details) > 0 {
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeClaimAllRewards,
+				sdk.NewAttribute(types.AttributeKeyRewardProgramIDs, fmt.Sprintf("%v", programIDs)),
+				sdk.NewAttribute(types.AttributeKeyRewardsClaimAddress, req.GetRewardAddress()),
+			),
+		)
+	}
+
+	return &types.MsgClaimAllRewardsResponse{
+		TotalRewardClaim: reward,
+		ClaimDetails:     details,
 	}, nil
 }
