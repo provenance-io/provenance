@@ -81,7 +81,7 @@ message MsgClaimRewardResponse {
   option (gogoproto.equal)                    = true;
   uint64                   reward_program_id  = 1; // reward program id
   cosmos.base.v1beta1.Coin total_reward_claim = 2
-      [(gogoproto.nullable) = false]; // total rewards claimed for all elegible claim periods in program
+      [(gogoproto.nullable) = false]; // total rewards claimed for all eligible claim periods in program
   repeated ClaimedRewardPeriodDetail claimed_reward_period_details = 3; // claim period details
 }
 

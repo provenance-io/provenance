@@ -94,14 +94,53 @@ func (k Keeper) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *typ
 	return &response, nil
 }
 
-// ClaimPeriodRewardDistributionsByAddress returns ClaimPeriodRewardDistributionByIDResponse for the given address
-func (k Keeper) ClaimPeriodRewardDistributionsByAddress(ctx context.Context, request *types.ClaimPeriodRewardDistributionByAddressRequest) (*types.ClaimPeriodRewardDistributionByIDResponse, error) {
+func (k Keeper) QueryRewardDistributionsByAddress(ctx context.Context, request *types.RewardAccountByAddressRequest) (*types.RewardAccountByAddressResponse, error) {
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	_, err := sdk.AccAddressFromBech32(request.Address)
+	address, err := sdk.AccAddressFromBech32(request.Address)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
 	}
-	panic("implement me")
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	var states []types.RewardAccountState
+	err = k.IterateAllRewardAccountStates(sdkCtx, func(state types.RewardAccountState) bool {
+		if state.GetSharesEarned() > 0 && state.Address == address.String() {
+			states = append(states, state)
+			return true
+		}
+		return false
+	})
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
+	}
+
+	rewardAccountResponses := k.convertRewardAccountStateToRewardAccountResponse(sdkCtx, states)
+	rewardAccountByAddressResponse := types.RewardAccountByAddressResponse{
+		Address:            request.Address,
+		RewardAccountState: rewardAccountResponses,
+	}
+	return &rewardAccountByAddressResponse, nil
+}
+
+func (k Keeper) convertRewardAccountStateToRewardAccountResponse(ctx sdk.Context, states []types.RewardAccountState) []types.RewardAccountResponse {
+	var rewardAccountResponse []types.RewardAccountResponse
+	for _, state := range states {
+		rewardProgram, err := k.GetRewardProgram(ctx, state.GetRewardProgramId())
+		distribution, err := k.GetClaimPeriodRewardDistribution(ctx, state.ClaimPeriodId, state.RewardProgramId)
+		if err != nil {
+			continue
+		}
+
+		participantReward := k.CalculateParticipantReward(ctx, int64(state.GetSharesEarned()), distribution.GetTotalShares(), distribution.GetRewardsPool(), rewardProgram.MaxRewardByAddress)
+		accountResponse := types.RewardAccountResponse{
+			RewardProgramId:  state.RewardProgramId,
+			Address:          state.Address,
+			TotalRewardClaim: participantReward,
+			ClaimStatus:      state.ClaimStatus,
+		}
+		rewardAccountResponse = append(rewardAccountResponse, accountResponse)
+	}
+
+	return rewardAccountResponse
 }
