@@ -359,7 +359,6 @@ func (ad *ActionDelegate) getValidatorRankPercentile(ctx sdk.Context, provider K
 			numBelow++
 		}
 	}
-	// We want the number of values that are less
 	placement := sdk.NewDec(numBelow)
 	vals := sdk.NewDec(numValidators)
 	percentile := placement.Quo(vals)
@@ -377,7 +376,6 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	}
 	percentile := ad.getValidatorRankPercentile(ctx, provider, validator)
 
-	// TODO Is this correct to truncate the tokens?
 	delegatedHash := sdk.NewInt64Coin(provenanceconfig.DefaultBondDenom, tokens.TruncateInt64())
 	minDelegation := ad.GetMinimumDelegationAmount()
 	maxDelegation := ad.GetMaximumDelegationAmount()
