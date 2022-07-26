@@ -136,11 +136,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	)
 	s.expiredRewardProgram.State = types.RewardProgram_EXPIRED
 
+	claimPeriodRewardDistributions := make([]rewardtypes.ClaimPeriodRewardDistribution, 101)
+	for i := 0; i < 101; i++ {
+		claimPeriodRewardDistributions[i] = rewardtypes.NewClaimPeriodRewardDistribution(uint64(i+1), 1, sdk.NewInt64Coin("jackthecat", 100), sdk.NewInt64Coin("jackthecat", 10), int64(i), false)
+	}
+
 	rewardData := rewardtypes.NewGenesisState(
 		[]rewardtypes.RewardProgram{
 			s.activeRewardProgram, s.pendingRewardProgram, s.finishedRewardProgram, s.expiredRewardProgram,
 		},
-		[]rewardtypes.ClaimPeriodRewardDistribution{},
+		claimPeriodRewardDistributions,
 		[]rewardtypes.RewardAccountState{},
 	)
 
@@ -269,20 +274,134 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 				s.Assert().Equal(len(tc.expectedIds), len(response.RewardPrograms))
 				//s.Assert().Equal(tc.expectedOutput, response)
 				for _, expectedId := range tc.expectedIds {
-					s.Assert().True(containsId(response.RewardPrograms, expectedId))
+					s.Assert().True(containsRewardProgramId(response.RewardPrograms, expectedId))
 				}
 			}
 		})
 	}
 }
 
-func containsId(rewardPrograms []types.RewardProgram, id uint64) bool {
+func containsRewardProgramId(rewardPrograms []types.RewardProgram, id uint64) bool {
 	for _, rewardProgram := range rewardPrograms {
 		if rewardProgram.Id == id {
 			return true
 		}
 	}
 	return false
+}
+
+func containsClaimPeriodId(claimPeriodDist []types.ClaimPeriodRewardDistribution, id uint64) bool {
+	for _, dist := range claimPeriodDist {
+		if dist.ClaimPeriodId == id {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
+	defaultMaxQueryIds := make([]uint64, 100)
+	for i := 0; i < 100; i++ {
+		defaultMaxQueryIds[i] = uint64(i + 1)
+	}
+	testCases := []struct {
+		name         string
+		args         []string
+		byId         bool
+		expectErr    bool
+		expectErrMsg string
+		expectedCode uint32
+		expectedIds  []uint64
+	}{
+		{"query all reward programs get default page size of 100",
+			[]string{
+				"all",
+			},
+			false,
+			false,
+			"",
+			0,
+			defaultMaxQueryIds,
+		},
+		{"query all reward programs max out to default page size",
+			[]string{
+				"all",
+				"--limit",
+				"101",
+			},
+			false,
+			false,
+			"",
+			0,
+			defaultMaxQueryIds,
+		},
+		{"query all reward programs first page with 5 results",
+			[]string{
+				"all",
+				"--limit",
+				"5",
+			},
+			false,
+			false,
+			"",
+			0,
+			[]uint64{1, 2, 3, 4, 5},
+		},
+		{"query all reward programs second page with 5 results",
+			[]string{
+				"all",
+				"--limit",
+				"5",
+				"--page",
+				"2",
+			},
+			false,
+			false,
+			"",
+			0,
+			[]uint64{6, 7, 8, 9, 10},
+		},
+		{"query by program id and claim period",
+			[]string{
+				"1",
+				"2",
+			},
+			true,
+			false,
+			"",
+			0,
+			[]uint64{1, 2},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.network.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetClaimPeriodRewardDistributionCmd(), tc.args)
+			if tc.expectErr {
+				s.Assert().Error(err)
+				s.Assert().Equal(tc.expectErrMsg, err.Error())
+			} else if tc.byId {
+				var response types.ClaimPeriodRewardDistributionByIDResponse
+				s.Assert().NoError(err)
+				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
+				s.Assert().NoError(err)
+				s.Assert().Equal(tc.expectedIds[0], response.ClaimPeriodRewardDistribution.RewardProgramId)
+				s.Assert().Equal(tc.expectedIds[1], response.ClaimPeriodRewardDistribution.ClaimPeriodId)
+			} else {
+				var response types.ClaimPeriodRewardDistributionResponse
+				s.Assert().NoError(err)
+				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
+				s.Assert().NoError(err)
+				s.Assert().Equal(len(tc.expectedIds), len(response.ClaimPeriodRewardDistribution))
+				for _, expectedId := range tc.expectedIds {
+					s.Assert().True(containsClaimPeriodId(response.ClaimPeriodRewardDistribution, expectedId))
+				}
+			}
+		})
+	}
 }
 
 func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {

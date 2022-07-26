@@ -2,13 +2,17 @@ package cli
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
+
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 
 	"github.com/provenance-io/provenance/x/reward/types"
 )
@@ -118,10 +122,10 @@ func GetClaimPeriodRewardDistributionCmd() *cobra.Command {
 		Aliases: []string{"cprd", "reward-distribution", "rd", "claim-periods"},
 		Short:   "Query the current claim period reward distributions",
 		Long: fmt.Sprintf(`%[1]s claim-period-reward-distribution {reward_program_id} {claim_period_id} - gets the reward program for the given reward_program_id and claim_period_id
-%[1]s epoch-reward-distribution all - gets all the claim period reward distributions`, cmdStart),
+%[1]s reward-distribution all - gets all the claim period reward distributions`, cmdStart),
 		Args: cobra.RangeArgs(1, 2),
 		Example: fmt.Sprintf(`%[1]s claim-period-reward-distribution 1 1
-%[1]s epoch-reward-distribution all`, cmdStart),
+%[1]s reward-distribution all`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
 			if arg0 == all {
@@ -136,7 +140,7 @@ func GetClaimPeriodRewardDistributionCmd() *cobra.Command {
 			return outputClaimPeriodRewardDistributionByID(cmd, arg0, arg1)
 		},
 	}
-
+	flags.AddPaginationFlagsToCmd(cmd, "all")
 	return cmd
 }
 
@@ -146,13 +150,17 @@ func outputClaimPeriodRewardDistributionAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
+	pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	if err != nil {
+		return err
+	}
 
 	queryClient := types.NewQueryClient(clientCtx)
 
 	var response *types.ClaimPeriodRewardDistributionResponse
 	if response, err = queryClient.ClaimPeriodRewardDistributions(
 		context.Background(),
-		&types.ClaimPeriodRewardDistributionRequest{},
+		&types.ClaimPeriodRewardDistributionRequest{Pagination: pageReq},
 	); err != nil {
 		return fmt.Errorf("failed to query reward programs: %s", err.Error())
 	}
@@ -191,4 +199,18 @@ func outputClaimPeriodRewardDistributionByID(cmd *cobra.Command, rewardID, claim
 	}
 
 	return clientCtx.PrintProto(response)
+}
+
+// sdk ReadPageRequest expects binary but we encoded to base64 in our marshaller
+func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
+	encoded, err := flagSet.GetString(flags.FlagPageKey)
+	if err != nil {
+		panic(err.Error())
+	}
+	raw, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		panic(err.Error())
+	}
+	_ = flagSet.Set(flags.FlagPageKey, string(raw))
+	return flagSet
 }

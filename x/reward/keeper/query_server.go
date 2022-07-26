@@ -78,12 +78,12 @@ func (k Keeper) ClaimPeriodRewardDistributions(ctx context.Context, req *types.C
 		if vErr == nil {
 			response.ClaimPeriodRewardDistribution = append(response.ClaimPeriodRewardDistribution, claimPeriodRewardDist)
 		}
-		// move on for now, even if error
 		return nil
 	})
 	if err != nil {
 		return &response, status.Error(codes.Unavailable, err.Error())
 	}
+	pageRes.Total = uint64(len(response.ClaimPeriodRewardDistribution))
 	response.Pagination = pageRes
 	return &response, nil
 }
@@ -175,7 +175,7 @@ func getPageRequest(req hasPageRequest) *query.PageRequest {
 	if pageRequest == nil {
 		pageRequest = &query.PageRequest{}
 	}
-	if pageRequest.Limit == 0 {
+	if pageRequest.Limit == 0 || pageRequest.Limit > defaultPerPageLimit {
 		pageRequest.Limit = defaultPerPageLimit
 	}
 	return pageRequest

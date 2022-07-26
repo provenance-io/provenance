@@ -115,9 +115,13 @@ func GetRewardClaimsKey(addr []byte) []byte {
 }
 
 func GetClaimPeriodRewardDistributionKey(claimID uint64, rewardID uint64) []byte {
+	claimBytes := make([]byte, 8)
+	rewardBytes := make([]byte, 8)
 	key := ClaimPeriodRewardDistributionKeyPrefix
-	key = append(key, []byte(strconv.FormatUint(claimID, 10))...)
-	return append(key, []byte(strconv.FormatUint(rewardID, 10))...)
+	binary.LittleEndian.PutUint64(claimBytes, claimID)
+	binary.LittleEndian.PutUint64(rewardBytes, rewardID)
+	key = append(key, claimBytes...)
+	return append(key, rewardBytes...)
 }
 
 func GetEligibilityCriteriaKey(name string) []byte {
