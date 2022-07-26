@@ -126,10 +126,4 @@ func (s *KeeperTestSuite) TestClaimPeriodRewardDistributionByID() {
 	s.Assert().Equal(response.ClaimPeriodRewardDistribution.ClaimPeriodId, uint64(99))
 }
 
-func (s *KeeperTestSuite) TestGetPageRequest() {
-	result := GetPageRequest(nil)
-	s.Assert().NotNil(result)
-	s.Assert().Equal(defaultPerPageLimit)
-}
-
 // TODO: QueryRewardDistributionsByAddress
