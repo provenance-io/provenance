@@ -249,3 +249,73 @@ func (suite *KeeperTestSuite) TestClaimAllRewards() {
 		suite.Assert().Equal(uint64(i+1), details[i].RewardProgramId, "should have the correct id")
 	}
 }
+
+func (suite *KeeperTestSuite) TestClaimAllRewardsExpired() {
+	suite.SetupTest()
+
+	time := suite.ctx.BlockTime()
+
+	for i := 0; i < 3; i++ {
+		rewardProgram := types.NewRewardProgram(
+			"title",
+			"description",
+			uint64(i+1),
+			"cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv",
+			sdk.NewInt64Coin("nhash", 1000),
+			sdk.NewInt64Coin("nhash", 100),
+			time,
+			10,
+			3,
+			0,
+			uint64(time.Day()),
+			[]types.QualifyingAction{
+				{
+					Type: &types.QualifyingAction_Vote{
+						Vote: &types.ActionVote{
+							MinimumActions:          0,
+							MaximumActions:          1,
+							MinimumDelegationAmount: minDelegation,
+						},
+					},
+				},
+				{
+					Type: &types.QualifyingAction_Delegate{
+						Delegate: &types.ActionDelegate{
+							MinimumActions:               0,
+							MaximumActions:               1,
+							MinimumDelegationAmount:      &minDelegation,
+							MaximumDelegationAmount:      &maxDelegation,
+							MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+							MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+						},
+					},
+				},
+			},
+		)
+		rewardProgram.State = types.RewardProgram_EXPIRED
+		rewardProgram.CurrentClaimPeriod = rewardProgram.GetClaimPeriods()
+		suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
+
+		for j := 1; j <= int(rewardProgram.GetClaimPeriods()); j++ {
+			state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(j), "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1)
+			state.ClaimStatus = types.RewardAccountState_EXPIRED
+			suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
+			distribution := types.NewClaimPeriodRewardDistribution(uint64(j), rewardProgram.GetId(), sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 1, true)
+			suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, distribution)
+		}
+	}
+
+	details, reward, err := suite.app.RewardKeeper.ClaimAllRewards(suite.ctx, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
+	suite.Assert().NoError(err, "should throw no error")
+	suite.Assert().Equal(0, len(details), "should have rewards from every program")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward, "should total up the rewards from the periods")
+}
+
+func (suite *KeeperTestSuite) TestClaimAllRewardsNoPrograms() {
+	suite.SetupTest()
+
+	details, reward, err := suite.app.RewardKeeper.ClaimAllRewards(suite.ctx, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
+	suite.Assert().NoError(err, "should throw no error")
+	suite.Assert().Equal(0, len(details), "should have rewards from every program")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward, "should total up the rewards from the periods")
+}
