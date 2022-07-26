@@ -109,7 +109,7 @@ func (k Keeper) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *typ
 	return &response, nil
 }
 
-func (k Keeper) QueryRewardDistributionsByAddress(ctx context.Context, request *types.RewardAccountByAddressRequest) (*types.RewardAccountByAddressResponse, error) {
+func (k Keeper) QueryRewardDistributionsByAddress(ctx context.Context, request *types.QueryRewardsByAddressRequest) (*types.QueryAccountByAddressResponse, error) {
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -117,10 +117,11 @@ func (k Keeper) QueryRewardDistributionsByAddress(ctx context.Context, request *
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
 	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	var states []types.RewardAccountState
 	err = k.IterateAllRewardAccountStates(sdkCtx, func(state types.RewardAccountState) bool {
-		if state.GetSharesEarned() > 0 && state.Address == address.String() {
+		if state.GetSharesEarned() > 0 && state.Address == address.String() && (request.ClaimStatus == types.QueryRewardsByAddressRequest_ALL || request.ClaimStatus.String() == state.ClaimStatus.String()) {
 			states = append(states, state)
 			return true
 		}
@@ -131,7 +132,7 @@ func (k Keeper) QueryRewardDistributionsByAddress(ctx context.Context, request *
 	}
 
 	rewardAccountResponses := k.convertRewardAccountStateToRewardAccountResponse(sdkCtx, states)
-	rewardAccountByAddressResponse := types.RewardAccountByAddressResponse{
+	rewardAccountByAddressResponse := types.QueryAccountByAddressResponse{
 		Address:            request.Address,
 		RewardAccountState: rewardAccountResponses,
 	}
@@ -150,7 +151,6 @@ func (k Keeper) convertRewardAccountStateToRewardAccountResponse(ctx sdk.Context
 		participantReward := k.CalculateParticipantReward(ctx, int64(state.GetSharesEarned()), distribution.GetTotalShares(), distribution.GetRewardsPool(), rewardProgram.MaxRewardByAddress)
 		accountResponse := types.RewardAccountResponse{
 			RewardProgramId:  state.RewardProgramId,
-			Address:          state.Address,
 			TotalRewardClaim: participantReward,
 			ClaimStatus:      state.ClaimStatus,
 		}

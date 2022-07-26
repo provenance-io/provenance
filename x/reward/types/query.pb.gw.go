@@ -168,26 +168,26 @@ func request_Query_ClaimPeriodRewardDistributionsByID_0(ctx context.Context, mar
 		_   = err
 	)
 
-	val, ok = pathParams["rewardId"]
+	val, ok = pathParams["reward_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "rewardId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "reward_id")
 	}
 
 	protoReq.RewardId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "rewardId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "reward_id", err)
 	}
 
-	val, ok = pathParams["claimPeriodId"]
+	val, ok = pathParams["claim_period_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "claimPeriodId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "claim_period_id")
 	}
 
 	protoReq.ClaimPeriodId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "claimPeriodId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "claim_period_id", err)
 	}
 
 	msg, err := client.ClaimPeriodRewardDistributionsByID(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -206,26 +206,26 @@ func local_request_Query_ClaimPeriodRewardDistributionsByID_0(ctx context.Contex
 		_   = err
 	)
 
-	val, ok = pathParams["rewardId"]
+	val, ok = pathParams["reward_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "rewardId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "reward_id")
 	}
 
 	protoReq.RewardId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "rewardId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "reward_id", err)
 	}
 
-	val, ok = pathParams["claimPeriodId"]
+	val, ok = pathParams["claim_period_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "claimPeriodId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "claim_period_id")
 	}
 
 	protoReq.ClaimPeriodId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "claimPeriodId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "claim_period_id", err)
 	}
 
 	msg, err := server.ClaimPeriodRewardDistributionsByID(ctx, &protoReq)
@@ -234,11 +234,12 @@ func local_request_Query_ClaimPeriodRewardDistributionsByID_0(ctx context.Contex
 }
 
 func request_Query_QueryRewardDistributionsByAddress_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq RewardAccountByAddressRequest
+	var protoReq QueryRewardsByAddressRequest
 	var metadata runtime.ServerMetadata
 
 	var (
 		val string
+		e   int32
 		ok  bool
 		err error
 		_   = err
@@ -254,6 +255,19 @@ func request_Query_QueryRewardDistributionsByAddress_0(ctx context.Context, mars
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "address", err)
 	}
+
+	val, ok = pathParams["claim_status"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "claim_status")
+	}
+
+	e, err = runtime.Enum(val, QueryRewardsByAddressRequest_RewardAccountQueryParam_value)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "claim_status", err)
+	}
+
+	protoReq.ClaimStatus = QueryRewardsByAddressRequest_RewardAccountQueryParam(e)
 
 	msg, err := client.QueryRewardDistributionsByAddress(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -261,11 +275,12 @@ func request_Query_QueryRewardDistributionsByAddress_0(ctx context.Context, mars
 }
 
 func local_request_Query_QueryRewardDistributionsByAddress_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq RewardAccountByAddressRequest
+	var protoReq QueryRewardsByAddressRequest
 	var metadata runtime.ServerMetadata
 
 	var (
 		val string
+		e   int32
 		ok  bool
 		err error
 		_   = err
@@ -281,6 +296,19 @@ func local_request_Query_QueryRewardDistributionsByAddress_0(ctx context.Context
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "address", err)
 	}
+
+	val, ok = pathParams["claim_status"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "claim_status")
+	}
+
+	e, err = runtime.Enum(val, QueryRewardsByAddressRequest_RewardAccountQueryParam_value)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "claim_status", err)
+	}
+
+	protoReq.ClaimStatus = QueryRewardsByAddressRequest_RewardAccountQueryParam(e)
 
 	msg, err := server.QueryRewardDistributionsByAddress(ctx, &protoReq)
 	return msg, metadata, err
@@ -544,9 +572,9 @@ var (
 
 	pattern_Query_ClaimPeriodRewardDistributions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"provenance", "rewards", "v1", "claim_period_reward_distributions"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ClaimPeriodRewardDistributionsByID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"provenance", "rewards", "v1", "claim_period_reward_distributions", "rewardId", "claimPeriods", "claimPeriodId"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_ClaimPeriodRewardDistributionsByID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"provenance", "rewards", "v1", "claim_period_reward_distributions", "reward_id", "claimPeriods", "claim_period_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_QueryRewardDistributionsByAddress_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "rewards", "v1", "reward_accounts", "address"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_QueryRewardDistributionsByAddress_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "rewards", "v1", "reward_accounts", "address", "claim_status"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

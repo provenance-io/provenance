@@ -35,13 +35,14 @@ service Query {
   rpc ClaimPeriodRewardDistributionsByID(ClaimPeriodRewardDistributionByIDRequest)
       returns (ClaimPeriodRewardDistributionByIDResponse) {
     option (google.api.http).get =
-        "/provenance/rewards/v1/claim_period_reward_distributions/{rewardId}/claimPeriods/{claimPeriodId}";
+        "/provenance/rewards/v1/claim_period_reward_distributions/{reward_id}/claimPeriods/{claim_period_id}";
   }
 
   // returns a ClaimPeriodRewardDistribution by address
-  rpc ClaimPeriodRewardDistributionsByAddress(ClaimPeriodRewardDistributionByAddressRequest)
-      returns (ClaimPeriodRewardDistributionByIDResponse) {
-    option (google.api.http).get = "/provenance/rewards/v1/claim_period_reward_distributions/{address}";
+  rpc QueryRewardDistributionsByAddress(QueryRewardsByAddressRequest)
+      returns (QueryAccountByAddressResponse) {
+    option (google.api.http).get =
+        "/provenance/rewards/v1/reward_accounts/{address}/{claim_status}";
   }
 }
 
@@ -77,14 +78,37 @@ message ClaimPeriodRewardDistributionResponse {
 }
 
 message ClaimPeriodRewardDistributionByIDRequest {
-  uint64 rewardId      = 1;
-  uint64 claimPeriodId = 2;
+  uint64 reward_id      = 1;
+  uint64 claim_period_id = 2;
 }
 
-message ClaimPeriodRewardDistributionByAddressRequest {
-  string address = 1;
-}
 
 message ClaimPeriodRewardDistributionByIDResponse {
   ClaimPeriodRewardDistribution claim_period_reward_distribution = 1;
+}
+
+message QueryRewardsByAddressRequest {
+  enum RewardAccountQueryParam {
+    ALL = 0;
+    UNCLAIMABLE = 1;
+    CLAIMABLE   = 2;
+    CLAIMED     = 3;
+    EXPIRED     = 4;
+  }
+  string address    = 1;
+  RewardAccountQueryParam claim_status =2;
+}
+
+message QueryAccountByAddressResponse {
+  string address    = 1;
+  repeated RewardAccountResponse reward_account_state = 2 [(gogoproto.nullable) = false];
+}
+
+message RewardAccountResponse {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  uint64              reward_program_id = 1; // The id of the reward program that this share belongs to
+  cosmos.base.v1beta1.Coin total_reward_claim = 2 [(gogoproto.nullable) = false]; // total rewards claimed for all eligible claim periods in program
+  RewardAccountState.ClaimStatus claim_status  = 3; // The status of the claim
 }
