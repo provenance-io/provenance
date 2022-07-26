@@ -587,6 +587,14 @@ func (s *IntegrationTestSuite) TestTxClaimReward() {
 			"",
 			0,
 		},
+		{"claim rewards tx - all",
+			[]string{
+				"all",
+			},
+			false,
+			"",
+			0,
+		},
 	}
 
 	for _, tc := range testCases {
