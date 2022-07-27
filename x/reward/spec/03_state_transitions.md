@@ -17,16 +17,22 @@ State transition for Reward Programs happen on `BeginBlock` and make use of the 
 A Reward Program can be `Pending`, `Started`, `Finished`, or `Expired`. A Reward Program will move through all these states, and will initially be in the `Pending` state.
 
 #### Note
-A user may delete a Reward Program while it's in `Pending` State. In this case the Reward Program will be deleted and not progress through all the states.
+A Reward Program creator may end a Reward Program early while it's in `Pending` or `Started` state. A Reward Program in the `Pending` state will be deleted and not progress through all the states. Any program that is ended after it's in the `Started` state will transition to the `Finished` state on the next `BeginBlock`.
 
 ### Pending 
-Reward program has *not* started. A user may force a Reward Program in this state to end with the `end-reward` transaction. In this case the Reward Program will be deleted and not progress.
+Reward program has *not* started. 
+
+#### Note
+A user may force a Reward Program in this state to end with the `end-reward-program` transaction. In this case the Reward Program will be deleted and not progress.
 
 ### Started 
 The Reward Program has started, and users can participate by performing qualifying actions. Participants can claim their rewards at the end of the claim period that the qualifying action was performed in.
 
 ### Finished 
 The Reward Program has ended, and participants can no longer make qualifying actions. Participants have a limited amount of time to collect their remaining rewards.
+
+#### Note
+A user may force a Reward Program in this state to end with the `end-reward-program` transaction. The Reward Program will transition to the `Finished` state on the next `BeginBlock`.
 
 ### Expired
 Reward program has passed its expiration date, and participants can no longer claim rewards. The remaining balance and any unclaimed rewards will be returned to the creator.
