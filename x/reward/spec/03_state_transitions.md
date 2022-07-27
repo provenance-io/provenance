@@ -6,8 +6,8 @@ order: 3
 
 This document describes the state transition operations pertaining to:
 
-1. [Reward Programs](./02_state_transitions.md#reward-programs)
-2. [Reward Claims](./02_state_transitions.md#reward-claims)
+1. [Reward Programs](./03_state_transitions.md#reward-programs)
+2. [Reward Claims](./03_state_transitions.md#reward-claims)
 
 <!-- TOC 2 2 -->
  
@@ -16,8 +16,11 @@ State transition for Reward Programs happen on `BeginBlock` and make use of the 
 
 A Reward Program can be `Pending`, `Started`, `Finished`, or `Expired`. A Reward Program will move through all these states, and will initially be in the `Pending` state.
 
+#### Note
+A user may delete a Reward Program while it's in `Pending` State. In this case the Reward Program will be deleted and not progress through all the states.
+
 ### Pending 
-Reward program has *not* started.
+Reward program has *not* started. A user may force a Reward Program in this state to end with the `end-reward` transaction. In this case the Reward Program will be deleted and not progress.
 
 ### Started 
 The Reward Program has started, and users can participate by performing qualifying actions. Participants can claim their rewards at the end of the claim period that the qualifying action was performed in.
