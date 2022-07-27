@@ -1516,6 +1516,14 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	check(err)
 	assert.Equal(t, 20, int(accountState.ActionCounter["ActionDelegate"]), "account state incorrect")
 	assert.Equal(t, 10, int(accountState.SharesEarned), "account state incorrect")
+
+	byAddress, err := app.RewardKeeper.QueryRewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardsByAddressRequest{
+		Address:     acct1.Address,
+		ClaimStatus: rewardtypes.QueryRewardsByAddressRequest_ALL,
+	})
+	check(err)
+	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "QueryRewardDistributionsByAddress incorrect")
+
 }
 
 // ContentFromProposalType returns a Content object based on the proposal type.
