@@ -241,8 +241,6 @@ func (s *KeeperTestSuite) TestRewardClaimTransactionInvalidClaimer() {
 	s.Assert().Equal(sdk.NewInt64Coin("nhash", 0), response.GetClaimDetails().TotalRewardClaim, "should have no reward claim")
 }
 
-// TODO Test theses
-
 func (suite *KeeperTestSuite) TestClaimAllRewardsTransaction() {
 	suite.SetupTest()
 
@@ -253,7 +251,7 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsTransaction() {
 			"title",
 			"description",
 			uint64(i+1),
-			"cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv",
+			suite.accountAddresses[0].String(),
 			sdk.NewInt64Coin("nhash", 1000),
 			sdk.NewInt64Coin("nhash", 100),
 			time,
@@ -290,7 +288,7 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsTransaction() {
 		suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
 		for j := 1; j <= int(rewardProgram.GetClaimPeriods()); j++ {
-			state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(j), "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1)
+			state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(j), suite.accountAddresses[0].String(), 1)
 			state.ClaimStatus = types.RewardAccountState_CLAIMABLE
 			suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
 			distribution := types.NewClaimPeriodRewardDistribution(uint64(j), rewardProgram.GetId(), sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 1, true)
@@ -298,11 +296,17 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsTransaction() {
 		}
 	}
 
-	details, reward, err := suite.app.RewardKeeper.ClaimAllRewards(suite.ctx, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
-	suite.Assert().NoError(err, "should throw no error")
-	suite.Assert().Equal(3, len(details), "should have rewards from every program")
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 900), reward, "should total up the rewards from the periods")
+	msg := types.NewMsgClaimAllRewardsRequest(suite.accountAddresses[0].String())
+	suite.ctx = suite.ctx.WithEventManager(sdk.NewEventManager())
+	result, err := suite.handler(suite.ctx, msg)
+	suite.Assert().NoError(err, "msg server should handle valid reward claim")
+	suite.Assert().NotNil(result, "msg server should emit events")
 
+	var response types.MsgClaimAllRewardsResponse
+	response.Unmarshal(result.Data)
+	details := response.ClaimDetails
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 900), response.TotalRewardClaim, "should total up the rewards from the periods")
+	suite.Assert().Equal(3, len(details), "should have every reward program")
 	for i := 0; i < len(details); i++ {
 		suite.Assert().Equal(3, len(details[i].ClaimedRewardPeriodDetails), "should have claims from every period")
 		suite.Assert().Equal(sdk.NewInt64Coin("nhash", 300), details[i].TotalRewardClaim, "should total up the rewards from the periods")
@@ -310,7 +314,23 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsTransaction() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestClaimAllRewardsTransactionExpired() {
+func (suite *KeeperTestSuite) TestClaimAllRewardsNoProgramsTransaction() {
+	suite.SetupTest()
+
+	msg := types.NewMsgClaimAllRewardsRequest(suite.accountAddresses[0].String())
+	suite.ctx = suite.ctx.WithEventManager(sdk.NewEventManager())
+	result, err := suite.handler(suite.ctx, msg)
+	suite.Assert().NoError(err, "no error should be returned in a valid call")
+
+	var response types.MsgClaimAllRewardsResponse
+	response.Unmarshal(result.Data)
+	details := response.ClaimDetails
+
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), response.TotalRewardClaim, "should have no nhash")
+	suite.Assert().Equal(0, len(details), "should have no reward program")
+}
+
+func (suite *KeeperTestSuite) TestRewardClaimAllRewardsInvalidAddressTransaction() {
 	suite.SetupTest()
 
 	time := suite.ctx.BlockTime()
@@ -320,7 +340,7 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsTransactionExpired() {
 			"title",
 			"description",
 			uint64(i+1),
-			"cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv",
+			suite.accountAddresses[0].String(),
 			sdk.NewInt64Coin("nhash", 1000),
 			sdk.NewInt64Coin("nhash", 100),
 			time,
@@ -352,12 +372,80 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsTransactionExpired() {
 				},
 			},
 		)
-		rewardProgram.State = types.RewardProgram_EXPIRED
+		rewardProgram.State = types.RewardProgram_FINISHED
 		rewardProgram.CurrentClaimPeriod = rewardProgram.GetClaimPeriods()
 		suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
 		for j := 1; j <= int(rewardProgram.GetClaimPeriods()); j++ {
-			state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(j), "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1)
+			state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(j), suite.accountAddresses[0].String(), 1)
+			state.ClaimStatus = types.RewardAccountState_CLAIMABLE
+			suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
+			distribution := types.NewClaimPeriodRewardDistribution(uint64(j), rewardProgram.GetId(), sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 1, true)
+			suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, distribution)
+		}
+	}
+
+	msg := types.NewMsgClaimAllRewardsRequest("invalid address")
+	suite.ctx = suite.ctx.WithEventManager(sdk.NewEventManager())
+	result, err := suite.handler(suite.ctx, msg)
+	suite.Assert().NoError(err, "no error should be returned in a valid call")
+
+	var response types.MsgClaimAllRewardsResponse
+	response.Unmarshal(result.Data)
+	details := response.ClaimDetails
+
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), response.TotalRewardClaim, "should have no nhash")
+	suite.Assert().Equal(0, len(details), "should have no reward program")
+}
+
+func (suite *KeeperTestSuite) TestClaimAllRewardsExpiredTransaction() {
+	suite.SetupTest()
+
+	time := suite.ctx.BlockTime()
+
+	for i := 0; i < 3; i++ {
+		rewardProgram := types.NewRewardProgram(
+			"title",
+			"description",
+			uint64(i+1),
+			suite.accountAddresses[0].String(),
+			sdk.NewInt64Coin("nhash", 1000),
+			sdk.NewInt64Coin("nhash", 100),
+			time,
+			10,
+			3,
+			0,
+			uint64(time.Day()),
+			[]types.QualifyingAction{
+				{
+					Type: &types.QualifyingAction_Vote{
+						Vote: &types.ActionVote{
+							MinimumActions:          0,
+							MaximumActions:          1,
+							MinimumDelegationAmount: minDelegation,
+						},
+					},
+				},
+				{
+					Type: &types.QualifyingAction_Delegate{
+						Delegate: &types.ActionDelegate{
+							MinimumActions:               0,
+							MaximumActions:               1,
+							MinimumDelegationAmount:      &minDelegation,
+							MaximumDelegationAmount:      &maxDelegation,
+							MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+							MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+						},
+					},
+				},
+			},
+		)
+		rewardProgram.State = types.RewardProgram_FINISHED
+		rewardProgram.CurrentClaimPeriod = rewardProgram.GetClaimPeriods()
+		suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
+
+		for j := 1; j <= int(rewardProgram.GetClaimPeriods()); j++ {
+			state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(j), suite.accountAddresses[0].String(), 1)
 			state.ClaimStatus = types.RewardAccountState_EXPIRED
 			suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
 			distribution := types.NewClaimPeriodRewardDistribution(uint64(j), rewardProgram.GetId(), sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 1, true)
@@ -365,17 +453,15 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsTransactionExpired() {
 		}
 	}
 
-	details, reward, err := suite.app.RewardKeeper.ClaimAllRewards(suite.ctx, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
-	suite.Assert().NoError(err, "should throw no error")
-	suite.Assert().Equal(0, len(details), "should have rewards from every program")
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward, "should total up the rewards from the periods")
-}
+	msg := types.NewMsgClaimAllRewardsRequest(suite.accountAddresses[0].String())
+	suite.ctx = suite.ctx.WithEventManager(sdk.NewEventManager())
+	result, err := suite.handler(suite.ctx, msg)
+	suite.Assert().NoError(err, "no error should be returned in a valid call")
 
-func (suite *KeeperTestSuite) TestClaimAllRewardsTransactionNoPrograms() {
-	suite.SetupTest()
+	var response types.MsgClaimAllRewardsResponse
+	response.Unmarshal(result.Data)
+	details := response.ClaimDetails
 
-	details, reward, err := suite.app.RewardKeeper.ClaimAllRewards(suite.ctx, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
-	suite.Assert().NoError(err, "should throw no error")
-	suite.Assert().Equal(0, len(details), "should have rewards from every program")
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward, "should total up the rewards from the periods")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), response.TotalRewardClaim, "should have no nhash")
+	suite.Assert().Equal(0, len(details), "should have no reward program")
 }
