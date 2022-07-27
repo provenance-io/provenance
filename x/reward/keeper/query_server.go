@@ -128,7 +128,7 @@ func (k Keeper) QueryRewardDistributionsByAddress(ctx context.Context, request *
 		return false
 	})
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
+		return nil, sdkerrors.Wrap(types.ErrIterateAllRewardAccountStates, err.Error())
 	}
 
 	rewardAccountResponses := k.convertRewardAccountStateToRewardAccountResponse(sdkCtx, states)
