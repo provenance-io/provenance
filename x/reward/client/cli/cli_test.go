@@ -624,3 +624,59 @@ func (s *IntegrationTestSuite) TestTxClaimReward() {
 		})
 	}
 }
+
+func containsRewardClaimId(rewardAccountResponses []types.RewardAccountResponse, id uint64) bool {
+	for _, rewardAccountResponse := range rewardAccountResponses {
+		if rewardAccountResponse.RewardProgramId == id {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
+	testCases := []struct {
+		name         string
+		args         []string
+		byId         bool
+		expectErr    bool
+		expectErrMsg string
+		expectedCode uint32
+		expectedIds  []uint64
+	}{
+		{"query all reward by address",
+			[]string{s.accountAddr.String(), "all"},
+			false,
+			false,
+			"",
+			0,
+			[]uint64{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.network.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardsByAddressCmd(), tc.args)
+			if tc.expectErr {
+				s.Assert().Error(err)
+				s.Assert().Equal(tc.expectErrMsg, err.Error())
+			} else if tc.byId {
+				var response types.QueryAccountByAddressResponse
+				s.Assert().NoError(err)
+				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
+				s.Assert().NoError(err)
+			} else {
+				var response types.QueryAccountByAddressResponse
+				s.Assert().NoError(err)
+				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
+				s.Assert().NoError(err)
+				for _, expectedId := range tc.expectedIds {
+					s.Assert().True(containsRewardClaimId(response.RewardAccountState, expectedId))
+				}
+			}
+		})
+	}
+}
