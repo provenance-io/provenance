@@ -184,6 +184,7 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 		{"query all reward programs",
 			[]string{
 				"all",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
 			false,
@@ -258,7 +259,7 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardProgramCmd(), tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardProgramCmd(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
 			if tc.expectErr {
 				s.Assert().Error(err)
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
@@ -318,8 +319,6 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 		{"query all reward programs get default page size of 100",
 			[]string{
 				"all",
-				"-o",
-				"json",
 			},
 			false,
 			false,
@@ -332,8 +331,6 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 				"all",
 				"--limit",
 				"101",
-				"-o",
-				"json",
 			},
 			false,
 			false,
@@ -346,8 +343,6 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 				"all",
 				"--limit",
 				"5",
-				"-o",
-				"json",
 			},
 			false,
 			false,
@@ -362,8 +357,6 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 				"5",
 				"--page",
 				"2",
-				"-o",
-				"json",
 			},
 			false,
 			false,
@@ -375,8 +368,6 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 			[]string{
 				"1",
 				"2",
-				"-o",
-				"json",
 			},
 			true,
 			false,
@@ -391,7 +382,7 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetClaimPeriodRewardDistributionCmd(), tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetClaimPeriodRewardDistributionCmd(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
 			if tc.expectErr {
 				s.Assert().Error(err)
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
@@ -569,7 +560,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 			}
 			tc.args = append(tc.args, args...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdRewardProgramAdd(), tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdRewardProgramAdd(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
 			var response sdk.TxResponse
 			marshalErr := clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response)
 			if tc.expectErr {
