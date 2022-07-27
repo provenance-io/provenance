@@ -144,6 +144,28 @@ func GetClaimPeriodRewardDistributionCmd() *cobra.Command {
 	return cmd
 }
 
+func GetRewardsByAddressCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "reward-by-address {\"all\"}",
+		Aliases: []string{"rpa", "reward-per-address"},
+		Short:   "Query all the reward distributions for an address",
+		Long:    fmt.Sprintf(`%[1]s reward-by-address {address} {query-type} - gets the reward amount for the given address based on the filter values`, cmdStart),
+		Args:    cobra.RangeArgs(1, 2),
+		Example: fmt.Sprintf(`%[1]s reward-by-address all`, cmdStart),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			arg0 := strings.TrimSpace(args[0])
+
+			if len(args) < 1 {
+				return fmt.Errorf("an address is needed")
+			}
+			arg1 := args[1]
+
+			return queryRewardDistributionByAddress(cmd, arg0, arg1)
+		},
+	}
+	return cmd
+}
+
 // Query for all ClaimPeriodRewardDistributions
 func outputClaimPeriodRewardDistributionAll(cmd *cobra.Command) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
@@ -213,4 +235,43 @@ func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
 	}
 	_ = flagSet.Set(flags.FlagPageKey, string(raw))
 	return flagSet
+}
+
+// Query for all RewardAccountByAddress
+func queryRewardDistributionByAddress(cmd *cobra.Command, address string, queryType string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+
+	var claimStatus types.QueryRewardsByAddressRequest_RewardAccountQueryParam
+	switch queryType {
+	case "all":
+		claimStatus = types.QueryRewardsByAddressRequest_ALL
+	case "unclaimable":
+		claimStatus = types.QueryRewardsByAddressRequest_UNCLAIMABLE
+	case "claimable":
+		claimStatus = types.QueryRewardsByAddressRequest_CLAIMABLE
+	case "claimed":
+		claimStatus = types.QueryRewardsByAddressRequest_CLAIMED
+	case "expired":
+		claimStatus = types.QueryRewardsByAddressRequest_EXPIRED
+	default:
+		claimStatus = types.QueryRewardsByAddressRequest_ALL
+	}
+
+	queryClient := types.NewQueryClient(clientCtx)
+
+	var response *types.QueryAccountByAddressResponse
+	if response, err = queryClient.QueryRewardDistributionsByAddress(
+		context.Background(),
+		&types.QueryRewardsByAddressRequest{
+			Address:     address,
+			ClaimStatus: claimStatus,
+		},
+	); err != nil {
+		return fmt.Errorf("failed to query reward programs: %s", err.Error())
+	}
+
+	return clientCtx.PrintProto(response)
 }
