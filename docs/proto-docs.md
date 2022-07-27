@@ -6028,7 +6028,7 @@ EventSetRewardProgram event emitted when a reward program is is updated
 | `claim_period_end_time` | [string](#string) |  |  |
 | `claim_periods` | [string](#string) |  |  |
 | `state` | [string](#string) |  |  |
-| `reward_claim_expiration_offset` | [string](#string) |  |  |
+| `expiration_offset` | [string](#string) |  |  |
 | `qualifying_actions` | [string](#string) |  |  |
 
 
@@ -6131,7 +6131,7 @@ RewardProgram
 | `current_claim_period` | [uint64](#uint64) |  | Current claim period of the RewardProgram. Uses 1-based indexing. |
 | `max_rollover_claim_periods` | [uint64](#uint64) |  | maximum number of claim periods a reward program can rollover |
 | `state` | [RewardProgram.State](#provenance.reward.v1.RewardProgram.State) |  | Current state of the RewardProgram. |
-| `reward_claim_expiration_offset` | [uint64](#uint64) |  | Grace period after a RewardProgram FINISHED. It is the number of |
+| `expiration_offset` | [uint64](#uint64) |  | Grace period after a RewardProgram FINISHED. It is the number of |
 | `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated | Actions that count towards the reward |
 
 

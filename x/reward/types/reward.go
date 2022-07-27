@@ -122,24 +122,24 @@ func NewRewardProgram(
 	expectedProgramEndTime := CalculateExpectedEndTime(programStartTime.UTC(), claimPeriodSeconds, claimPeriods)
 	programEndTimeMax := CalculateEndTimeMax(programStartTime.UTC(), claimPeriodSeconds, claimPeriods, maxRolloverClaimPeriods)
 	return RewardProgram{
-		Title:                       title,
-		Description:                 description,
-		Id:                          id,
-		DistributeFromAddress:       distributeFromAddress,
-		TotalRewardPool:             totalRewardPool,
-		RemainingPoolBalance:        totalRewardPool,
-		ClaimedAmount:               sdk.NewInt64Coin(totalRewardPool.Denom, 0),
-		MaxRewardByAddress:          maxRewardByAddress,
-		ProgramStartTime:            programStartTime.UTC(),
-		ExpectedProgramEndTime:      expectedProgramEndTime,
-		ProgramEndTimeMax:           programEndTimeMax,
-		ClaimPeriodSeconds:          claimPeriodSeconds,
-		ClaimPeriods:                claimPeriods,
-		MaxRolloverClaimPeriods:     maxRolloverClaimPeriods,
-		RewardClaimExpirationOffset: rewardClaimExpirationOffset,
-		State:                       RewardProgram_PENDING,
-		QualifyingActions:           qualifyingActions,
-		MinimumRolloverAmount:       sdk.NewInt64Coin(totalRewardPool.Denom, 100_000_000_000),
+		Title:                   title,
+		Description:             description,
+		Id:                      id,
+		DistributeFromAddress:   distributeFromAddress,
+		TotalRewardPool:         totalRewardPool,
+		RemainingPoolBalance:    totalRewardPool,
+		ClaimedAmount:           sdk.NewInt64Coin(totalRewardPool.Denom, 0),
+		MaxRewardByAddress:      maxRewardByAddress,
+		ProgramStartTime:        programStartTime.UTC(),
+		ExpectedProgramEndTime:  expectedProgramEndTime,
+		ProgramEndTimeMax:       programEndTimeMax,
+		ClaimPeriodSeconds:      claimPeriodSeconds,
+		ClaimPeriods:            claimPeriods,
+		MaxRolloverClaimPeriods: maxRolloverClaimPeriods,
+		ExpirationOffset:        rewardClaimExpirationOffset,
+		State:                   RewardProgram_PENDING,
+		QualifyingActions:       qualifyingActions,
+		MinimumRolloverAmount:   sdk.NewInt64Coin(totalRewardPool.Denom, 100_000_000_000),
 	}
 }
 
@@ -158,7 +158,7 @@ func (rp *RewardProgram) IsEndingClaimPeriod(ctx sdk.Context) bool {
 // TODO Test this
 func (rp *RewardProgram) IsExpiring(ctx sdk.Context) bool {
 	blockTime := ctx.BlockTime()
-	expireTime := rp.ActualProgramEndTime.Add(time.Second * time.Duration(rp.RewardClaimExpirationOffset))
+	expireTime := rp.ActualProgramEndTime.Add(time.Second * time.Duration(rp.ExpirationOffset))
 	return rp.State == RewardProgram_FINISHED && (blockTime.After(expireTime) || blockTime.Equal(expireTime))
 }
 
