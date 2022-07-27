@@ -2,9 +2,10 @@ package cli_test
 
 import (
 	"fmt"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"testing"
 	"time"
+
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 
@@ -317,6 +318,8 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 		{"query all reward programs get default page size of 100",
 			[]string{
 				"all",
+				"-o",
+				"json",
 			},
 			false,
 			false,
@@ -329,6 +332,8 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 				"all",
 				"--limit",
 				"101",
+				"-o",
+				"json",
 			},
 			false,
 			false,
@@ -341,6 +346,8 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 				"all",
 				"--limit",
 				"5",
+				"-o",
+				"json",
 			},
 			false,
 			false,
@@ -355,6 +362,8 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 				"5",
 				"--page",
 				"2",
+				"-o",
+				"json",
 			},
 			false,
 			false,
@@ -366,6 +375,8 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 			[]string{
 				"1",
 				"2",
+				"-o",
+				"json",
 			},
 			true,
 			false,

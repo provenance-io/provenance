@@ -141,8 +141,8 @@ func GetClaimPeriodRewardDistributionCmd() *cobra.Command {
 			return outputClaimPeriodRewardDistributionByID(cmd, arg0, arg1)
 		},
 	}
-	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "all")
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
 
