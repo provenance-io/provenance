@@ -30,6 +30,7 @@ func GetQueryCmd() *cobra.Command {
 	queryCmd.AddCommand(
 		GetRewardProgramCmd(),
 		GetClaimPeriodRewardDistributionCmd(),
+		GetRewardsByAddressCmd(),
 	)
 	return queryCmd
 }
@@ -89,7 +90,7 @@ func GetRewardProgramCmd() *cobra.Command {
 			return clientCtx.PrintProto(response)
 		},
 	}
-
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
 
@@ -140,6 +141,7 @@ func GetClaimPeriodRewardDistributionCmd() *cobra.Command {
 			return outputClaimPeriodRewardDistributionByID(cmd, arg0, arg1)
 		},
 	}
+	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "all")
 	return cmd
 }
