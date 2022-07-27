@@ -163,6 +163,7 @@ func GetRewardsByAddressCmd() *cobra.Command {
 			return queryRewardDistributionByAddress(cmd, arg0, arg1)
 		},
 	}
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
 

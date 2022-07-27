@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"fmt"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"testing"
 	"time"
 
@@ -645,7 +646,7 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 		expectedIds  []uint64
 	}{
 		{"query all reward by address",
-			[]string{s.accountAddr.String(), "all"},
+			[]string{s.accountAddr.String(), "all", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			false,
 			"",
