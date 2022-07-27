@@ -20,7 +20,10 @@ A `Qualifying Action` is one or more transactions that a user performs on the Pr
 A `Reward Program` is split into one or more time intervals known as `Claim Periods`. Each of these `Claim Periods` gets an equal portion of their `Reward Program's` total funds. Users that participate within these `Claim Periods` will be eligible to obtain a reward once the `Claim Period` they participated in ends.
 
 ** Claim Period Reward**
-Claim Period Reward Pool \times \left Participants Shares \over Claim Period Shares \right
+```math
+\sqrt{3}
+```
+$$Claim Period Reward Pool \times \left Participants Shares \over Claim Period Shares \right$$
 
 ## Reward Claim
 When a user participates in a `Reward Program` they are granted one or more shares of the `Claim Period's` reward pool. Once the`Claim Period` ends, the participant will be able to claim their reward by performing a claim transaction. The participant's reward is calculated with the following formula: `Claim Period's reward pool` * `number of shares in the claim period` / `sum of all shares in the reward program's claim period`. 
