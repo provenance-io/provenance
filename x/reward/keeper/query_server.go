@@ -123,7 +123,6 @@ func (k Keeper) QueryRewardDistributionsByAddress(ctx context.Context, request *
 	err = k.IterateAllRewardAccountStates(sdkCtx, func(state types.RewardAccountState) bool {
 		if state.GetSharesEarned() > 0 && state.Address == address.String() && (request.ClaimStatus == types.QueryRewardsByAddressRequest_ALL || request.ClaimStatus.String() == state.ClaimStatus.String()) {
 			states = append(states, state)
-			return true
 		}
 		return false
 	})
