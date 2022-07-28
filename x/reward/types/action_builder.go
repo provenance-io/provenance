@@ -71,7 +71,6 @@ func (b *TransferActionBuilder) AddEvent(eventType string, attributes *map[strin
 			return errFromParsingRecipientAddress
 		}
 		b.Recipient = addressRecipientAddr
-
 	}
 	return nil
 }

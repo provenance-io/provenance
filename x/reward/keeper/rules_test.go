@@ -496,7 +496,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluatePasses() {
 	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
-	state := types.NewRewardAccountState(0, 0, "", 0)
+	state := types.NewRewardAccountState(0, 0, "", 0, map[string]uint64{})
 	state.ActionCounter[action.ActionType()] += 1
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
@@ -524,7 +524,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActionsN
 	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
-	state := types.NewRewardAccountState(0, 0, "", 0)
+	state := types.NewRewardAccountState(0, 0, "", 0, map[string]uint64{})
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
 	delegator, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
@@ -551,7 +551,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumActionsN
 	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
-	state := types.NewRewardAccountState(0, 0, "", 0)
+	state := types.NewRewardAccountState(0, 0, "", 0, map[string]uint64{})
 	state.ActionCounter[action.ActionType()] += 3
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
@@ -579,7 +579,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegati
 	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
-	state := types.NewRewardAccountState(0, 0, "", 0)
+	state := types.NewRewardAccountState(0, 0, "", 0, map[string]uint64{})
 	state.ActionCounter[action.ActionType()] += 1
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
@@ -607,7 +607,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumDelegati
 	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
-	state := types.NewRewardAccountState(0, 0, "", 0)
+	state := types.NewRewardAccountState(0, 0, "", 0, map[string]uint64{})
 	state.ActionCounter[action.ActionType()] += 1
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
@@ -635,7 +635,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActiveSt
 	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
-	state := types.NewRewardAccountState(0, 0, "", 0)
+	state := types.NewRewardAccountState(0, 0, "", 0, map[string]uint64{})
 	state.ActionCounter[action.ActionType()] += 1
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
@@ -663,7 +663,7 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegati
 	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
-	state := types.NewRewardAccountState(0, 0, "", 0)
+	state := types.NewRewardAccountState(0, 0, "", 0, map[string]uint64{})
 	state.ActionCounter[action.ActionType()] += 1
 
 	validator, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
@@ -889,7 +889,7 @@ func (suite *KeeperTestSuite) TestRewardSharesSingle() {
 		},
 	}
 
-	state := types.NewRewardAccountState(rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String(), 0)
+	state := types.NewRewardAccountState(rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String(), 0, map[string]uint64{})
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
 	claimPeriodRewardDistribution := types.NewClaimPeriodRewardDistribution(rewardProgram.GetCurrentClaimPeriod(),
 		rewardProgram.GetId(),
@@ -944,7 +944,7 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidClaimPeriodRewardDistributi
 		},
 	}
 
-	state := types.NewRewardAccountState(rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String(), 0)
+	state := types.NewRewardAccountState(rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String(), 0, map[string]uint64{})
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
 	claimPeriodRewardDistribution := types.NewClaimPeriodRewardDistribution(rewardProgram.GetCurrentClaimPeriod(),
 		rewardProgram.GetId(),
@@ -999,7 +999,7 @@ func (suite *KeeperTestSuite) TestRewardSharesMultiple() {
 		},
 	}
 
-	state := types.NewRewardAccountState(rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String(), 0)
+	state := types.NewRewardAccountState(rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String(), 0, map[string]uint64{})
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
 	claimPeriodRewardDistribution := types.NewClaimPeriodRewardDistribution(rewardProgram.GetCurrentClaimPeriod(),
 		rewardProgram.GetId(),
@@ -1109,7 +1109,7 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidAddress() {
 	)
 	suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, claimPeriodRewardDistribution)
 
-	state := types.NewRewardAccountState(rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String(), 1)
+	state := types.NewRewardAccountState(rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String(), 1, map[string]uint64{})
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
 	err := suite.app.RewardKeeper.RewardShares(suite.ctx, &rewardProgram, results)
 	state, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String())
