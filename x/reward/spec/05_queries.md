@@ -5,6 +5,13 @@ order: 5
 # Rewards Queries
 In this section we describe the queries available for looking up rewards information.
 
+<!-- TOC 2 -->
+  - [Query Reward Program By ID](#query-reward-program-by-id)
+  - [Query Reward Programs](#query-reward-programs)
+  - [Query Claim Period Reward Distribution By ID](#query-claim-period-reward-distribution-by-id)
+  - [Query Claim Period Reward Distributions](#query-claim-period-reward-distributions)
+  - [Query Rewards By Address](#query-rewards-by-address)
+
 
 ---
 ## Query Reward Program By ID
@@ -21,7 +28,7 @@ The `id` is the unique identifier for the Reward Program.
 
 ---
 ## Query Reward Programs
-The `QueryRewardProgramByID` query is used to obtain the content of all Reward Programs matching the supplied `query_type`.
+The `QueryRewardPrograms` query is used to obtain the content of all Reward Programs matching the supplied `query_type`.
 
 ### Request
 +++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/query.proto#L55-L64
