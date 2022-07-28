@@ -139,9 +139,12 @@ func (k Keeper) QueryRewardDistributionsByAddress(ctx context.Context, request *
 }
 
 func (k Keeper) convertRewardAccountStateToRewardAccountResponse(ctx sdk.Context, states []types.RewardAccountState) []types.RewardAccountResponse {
-	var rewardAccountResponse []types.RewardAccountResponse
+	rewardAccountResponse := make([]types.RewardAccountResponse, 0)
 	for _, state := range states {
 		rewardProgram, err := k.GetRewardProgram(ctx, state.GetRewardProgramId())
+		if err != nil {
+			continue
+		}
 		distribution, err := k.GetClaimPeriodRewardDistribution(ctx, state.ClaimPeriodId, state.RewardProgramId)
 		if err != nil {
 			continue

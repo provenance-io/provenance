@@ -46,12 +46,13 @@ func (k Keeper) SetRewardAccountState(ctx sdk.Context, state types.RewardAccount
 	bz := k.cdc.MustMarshal(&state)
 	key := types.GetRewardAccountStateKey(state.GetRewardProgramId(), state.GetClaimPeriodId(), []byte(state.GetAddress()))
 	store.Set(key, bz)
+	// [0x10] :: [addr-bytes::reward programid bytes]::[claim period bytes] { [reward program id ]::[claim period ]}
 }
 
 // IterateRewardAccountStates Iterates over the account states for a reward program's claim period
 func (k Keeper) IterateRewardAccountStates(ctx sdk.Context, rewardProgramID, rewardClaimPeriodID uint64, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetRewardAccountStateKeyPrefix(rewardProgramID, rewardClaimPeriodID))
+	iterator := sdk.KVStorePrefixIterator(store, types.GetRewardAccountStateClaimPeriodKey(rewardProgramID, rewardClaimPeriodID))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -69,7 +70,7 @@ func (k Keeper) IterateRewardAccountStates(ctx sdk.Context, rewardProgramID, rew
 // Iterates over the account states for every reward program
 func (k Keeper) IterateAllRewardAccountStates(ctx sdk.Context, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetAllRewardAccountStateKeyPrefix())
+	iterator := sdk.KVStorePrefixIterator(store, types.GetAllRewardAccountStateKey())
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -87,7 +88,7 @@ func (k Keeper) IterateAllRewardAccountStates(ctx sdk.Context, handle func(state
 // Iterates over the account states for a reward program
 func (k Keeper) IterateRewardAccountStatesForRewardProgram(ctx sdk.Context, rewardProgramID uint64, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetRewardProgramRewardAccountStateKeyPrefix(rewardProgramID))
+	iterator := sdk.KVStorePrefixIterator(store, types.GetRewardProgramRewardAccountStateKey(rewardProgramID))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

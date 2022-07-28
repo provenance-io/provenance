@@ -45,54 +45,43 @@ func GetRewardProgramKey(id uint64) []byte {
 	return append(RewardProgramKeyPrefix, idByte...)
 }
 
-func GetRewardProgramBalanceKey(rewardProgramID uint64) []byte {
-	idByte := []byte(strconv.FormatUint(rewardProgramID, 10))
-	return append(RewardProgramBalanceKeyPrefix, idByte...)
-}
-
 // GetRewardAccountStateKey converts a reward program id, claim period id, and address into an AccountStateKey
 func GetRewardAccountStateKey(rewardID uint64, rewardClaimPeriodID uint64, addr []byte) []byte {
 	key := AccountStateKeyPrefix
-	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
-	claimPeriodByte := []byte(strconv.FormatUint(rewardClaimPeriodID, 10))
-	key = append(key, rewardByte...)
-	key = append(key, claimPeriodByte...)
+
+	rewardBytes := make([]byte, 8)
+	claimPeriodBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(rewardBytes, rewardID)
+	binary.BigEndian.PutUint64(claimPeriodBytes, rewardClaimPeriodID)
+	key = append(key, rewardBytes...)
+	key = append(key, claimPeriodBytes...)
 	key = append(key, address.MustLengthPrefix(addr)...)
 	return key
 }
 
-// GetRewardAccountStateKeyPrefix converts a reward program id and claim period into a prefix for iterating
-func GetRewardAccountStateKeyPrefix(rewardID uint64, rewardClaimPeriodID uint64) []byte {
+// GetRewardAccountStateClaimPeriodKey converts a reward program id and claim period into a prefix for iterating
+func GetRewardAccountStateClaimPeriodKey(rewardID uint64, rewardClaimPeriodID uint64) []byte {
 	key := AccountStateKeyPrefix
-	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
-	claimPeriodByte := []byte(strconv.FormatUint(rewardClaimPeriodID, 10))
-	key = append(key, rewardByte...)
-	key = append(key, claimPeriodByte...)
+	rewardBytes := make([]byte, 8)
+	claimPeriodBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(rewardBytes, rewardID)
+	binary.BigEndian.PutUint64(claimPeriodBytes, rewardClaimPeriodID)
+	key = append(key, rewardBytes...)
+	key = append(key, claimPeriodBytes...)
 	return key
 }
 
-// TODO Test this
-// GetRewardAccountStateKeyPrefix returns the key to iterate over all RewardAccountStates for a RewardProgram
-func GetRewardProgramRewardAccountStateKeyPrefix(rewardID uint64) []byte {
+// GetRewardProgramRewardAccountStateKey returns the key to iterate over all RewardAccountStates for a RewardProgram
+func GetRewardProgramRewardAccountStateKey(rewardID uint64) []byte {
 	key := AccountStateKeyPrefix
-	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
-	key = append(key, rewardByte...)
+	rewardBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(rewardBytes, rewardID)
+	key = append(key, rewardBytes...)
 	return key
 }
 
-// TODO Test this
-func GetClaimPeriodRewardAccountStateKeyPrefix(rewardID, claimID uint64) []byte {
-	key := AccountStateKeyPrefix
-	rewardByte := []byte(strconv.FormatUint(rewardID, 10))
-	claimByte := []byte(strconv.FormatUint(claimID, 10))
-	key = append(key, rewardByte...)
-	key = append(key, claimByte...)
-	return key
-}
-
-// TODO Test this
-// GetRewardAccountStateKeyPrefix returns the key to iterate over all RewardAccountStates
-func GetAllRewardAccountStateKeyPrefix() []byte {
+// GetAllRewardAccountStateKey returns the key to iterate over all AccountStates
+func GetAllRewardAccountStateKey() []byte {
 	key := AccountStateKeyPrefix
 	return key
 }
@@ -109,33 +98,13 @@ func GetRewardProgramIDFromBytes(bz []byte) (rewardprogramID uint64) {
 	return binary.BigEndian.Uint64(bz)
 }
 
-// GetRewardClaimsKey converts an reward claim
-func GetRewardClaimsKey(addr []byte) []byte {
-	return append(RewardClaimKeyPrefix, address.MustLengthPrefix(addr)...)
-}
-
+// GetClaimPeriodRewardDistributionKey returns claim period reward distribution key
 func GetClaimPeriodRewardDistributionKey(claimID uint64, rewardID uint64) []byte {
 	claimBytes := make([]byte, 8)
 	rewardBytes := make([]byte, 8)
 	key := ClaimPeriodRewardDistributionKeyPrefix
-	binary.LittleEndian.PutUint64(claimBytes, claimID)
-	binary.LittleEndian.PutUint64(rewardBytes, rewardID)
+	binary.BigEndian.PutUint64(claimBytes, claimID)
+	binary.BigEndian.PutUint64(rewardBytes, rewardID)
 	key = append(key, claimBytes...)
 	return append(key, rewardBytes...)
-}
-
-func GetEligibilityCriteriaKey(name string) []byte {
-	return append(EligibilityCriteriaKeyPrefix, []byte(name)...)
-}
-
-func GetActionKey(actionType string) []byte {
-	return append(ActionKeyPrefix, []byte(actionType)...)
-}
-
-func GetActionDelegateKey() []byte {
-	return append(ActionKeyPrefix, ActionDelegateKey...)
-}
-
-func GetActionTransferDelegationsKey() []byte {
-	return append(ActionKeyPrefix, ActionTransferDelegationsKey...)
 }
