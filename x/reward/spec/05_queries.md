@@ -23,7 +23,7 @@ The `QueryRewardProgramByID` query is used to obtain the content of a specific R
 The `id` is the unique identifier for the Reward Program.
 
 ### Response
-+++ (https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/query.proto#L51-L53)
++++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/query.proto#L51-L53
 
 
 ---
@@ -75,7 +75,7 @@ The `pagination` field is used to help limit the number of results.
 The `QueryRewardsByAddress` query is used to obtain the status of the address' Reward Claims.
 
 ### Request
-+++ (https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/query.proto#L87-L97)
++++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/query.proto#L87-L97
 
 The `address` field is the bech32 address of the user to list Reward Claims for. The `claim_status` is used to filter on the Reward Claim. The following are a list of `claim_status`.
 * ALL - All Reward Claims are returned.
