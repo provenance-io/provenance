@@ -19,7 +19,7 @@ func (k Keeper) ClaimRewards(ctx sdk.Context, rewardProgramID uint64, addr strin
 	}
 
 	rewards := k.claimRewardsForProgram(ctx, rewardProgram, addr)
-	sent, err := k.sendRewards(ctx, rewardProgram, rewards, addr)
+	sent, err := k.sendRewards(ctx, rewards, addr)
 	if err != nil {
 		// Rollback is handled by the chain automatically
 		// k.rollbackClaims(ctx, rewardProgram, rewards, addr)
@@ -72,7 +72,7 @@ func (k Keeper) claimRewardForPeriod(ctx sdk.Context, rewardProgram types.Reward
 	return reward, true
 }
 
-func (k Keeper) sendRewards(ctx sdk.Context, rewardProgram types.RewardProgram, rewards []*types.ClaimedRewardPeriodDetail, addr string) (sdk.Coin, error) {
+func (k Keeper) sendRewards(ctx sdk.Context, rewards []*types.ClaimedRewardPeriodDetail, addr string) (sdk.Coin, error) {
 	amount := sdk.NewInt64Coin("nhash", 0)
 
 	if len(rewards) == 0 {
