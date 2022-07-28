@@ -13,9 +13,6 @@ func TestScopeKey(t *testing.T) {
 	rewardProgramKey := GetRewardProgramKey(1)
 	assert.EqualValues(t, RewardProgramKeyPrefix, rewardProgramKey[0:1])
 
-	rewardProgramBalanceKey := GetRewardProgramBalanceKey(1)
-	assert.EqualValues(t, RewardProgramBalanceKeyPrefix, rewardProgramBalanceKey[0:1])
-
 	// Test account state key
 	accountStateKey := GetRewardAccountStateKey(1, 2, []byte("test"))
 	assert.EqualValues(t, AccountStateKeyPrefix, accountStateKey[0:1])
