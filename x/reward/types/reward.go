@@ -149,7 +149,6 @@ func (rp *RewardProgram) IsStarting(ctx sdk.Context) bool {
 	return rp.State == RewardProgram_PENDING && (blockTime.After(rp.ProgramStartTime) || blockTime.Equal(rp.ProgramStartTime))
 }
 
-// TODO Test this
 func (rp *RewardProgram) IsEndingClaimPeriod(ctx sdk.Context) bool {
 	blockTime := ctx.BlockTime()
 	return rp.State == RewardProgram_STARTED && (blockTime.After(rp.ClaimPeriodEndTime) || blockTime.Equal(rp.ClaimPeriodEndTime))
