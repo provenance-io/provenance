@@ -140,7 +140,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	claimPeriodRewardDistributions := make([]rewardtypes.ClaimPeriodRewardDistribution, 101)
 	for i := 0; i < 101; i++ {
-		claimPeriodRewardDistributions[i] = rewardtypes.NewClaimPeriodRewardDistribution(uint64(i+1), 1, sdk.NewInt64Coin("jackthecat", 100), sdk.NewInt64Coin("jackthecat", 10), int64(i), false)
+		claimPeriodRewardDistributions[i] = rewardtypes.NewClaimPeriodRewardDistribution(uint64(i+1), 1, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 10), int64(i), false)
+	}
+
+	rewardAccountState := make([]rewardtypes.RewardAccountState, 101)
+	for i := 0; i < 101; i++ {
+		rewardAccountState[i] = rewardtypes.NewRewardAccountState(1, uint64(i+1), s.accountAddr.String(), 10, map[string]uint64{})
 	}
 
 	rewardData := rewardtypes.NewGenesisState(
@@ -148,7 +153,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			s.activeRewardProgram, s.pendingRewardProgram, s.finishedRewardProgram, s.expiredRewardProgram,
 		},
 		claimPeriodRewardDistributions,
-		[]rewardtypes.RewardAccountState{},
+		rewardAccountState,
 	)
 
 	rewardDataBz, err := s.cfg.Codec.MarshalJSON(rewardData)
@@ -653,7 +658,7 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 			false,
 			"",
 			0,
-			[]uint64{},
+			[]uint64{1},
 		},
 	}
 
@@ -678,6 +683,7 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 				s.Assert().NoError(err)
 				for _, expectedId := range tc.expectedIds {
 					s.Assert().True(containsRewardClaimId(response.RewardAccountState, expectedId))
+					s.Assert().True(len(response.RewardAccountState) == 101)
 				}
 			}
 		})
