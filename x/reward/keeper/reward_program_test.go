@@ -119,7 +119,7 @@ func (suite *KeeperTestSuite) TestEndingRewardProgram() {
 
 	suite.app.RewardKeeper.EndingRewardProgram(suite.ctx, program)
 	endingRewardProgram, err = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, 20)
-	suite.Assert().NoError(err)
+	suite.Assert().Error(err)
 	suite.Assert().Equal(uint64(0), endingRewardProgram.Id)
 }
 
@@ -147,14 +147,14 @@ func (suite *KeeperTestSuite) TestRemoveValidRewardProgram() {
 	suite.Assert().True(removed, "remove should succeed")
 
 	invalidProgram, err := suite.app.RewardKeeper.GetRewardProgram(suite.ctx, 1)
-	suite.Assert().NoError(err)
+	suite.Assert().Error(err)
 	suite.Assert().Equal(uint64(0), invalidProgram.Id)
 }
 
 func (suite *KeeperTestSuite) TestRemoveInvalidRewardProgram() {
 	suite.SetupTest()
 	invalidProgram, err := suite.app.RewardKeeper.GetRewardProgram(suite.ctx, 1)
-	suite.Assert().NoError(err)
+	suite.Assert().Error(err)
 	suite.Assert().Equal(uint64(0), invalidProgram.Id)
 }
 

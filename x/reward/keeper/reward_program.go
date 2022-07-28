@@ -65,7 +65,7 @@ func (k Keeper) GetRewardProgram(ctx sdk.Context, id uint64) (rewardProgram type
 	key := types.GetRewardProgramKey(id)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return rewardProgram, nil
+		return rewardProgram, types.ErrRewardProgramNotFound
 	}
 	err = k.cdc.Unmarshal(bz, &rewardProgram)
 	return rewardProgram, err

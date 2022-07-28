@@ -94,7 +94,7 @@ func (s *KeeperTestSuite) TestCreateRewardProgramFailedTransaction() {
 	s.Assert().Nil(result, "result should be nil and have no events")
 
 	program, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
-	s.Assert().NoError(err, "No error should be returned")
+	s.Assert().Error(err, "error should be returned")
 	s.Assert().NotNil(program.Validate(), "should have validation issue for invalid program")
 }
 

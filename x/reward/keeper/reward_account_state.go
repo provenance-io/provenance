@@ -46,6 +46,7 @@ func (k Keeper) SetRewardAccountState(ctx sdk.Context, state types.RewardAccount
 	bz := k.cdc.MustMarshal(&state)
 	key := types.GetRewardAccountStateKey(state.GetRewardProgramId(), state.GetClaimPeriodId(), []byte(state.GetAddress()))
 	store.Set(key, bz)
+	// [0x10] :: [addr-bytes::reward programid bytes]::[claim period bytes] { [reward program id ]::[claim period ]}
 }
 
 // IterateRewardAccountStates Iterates over the account states for a reward program's claim period
