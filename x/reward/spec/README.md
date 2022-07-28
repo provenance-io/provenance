@@ -2,14 +2,7 @@
 
 ## Overview
 
-Active Participation and Engagement (APE) rewards module.
-This module has the following goals
-* Incentivize participation/engagement on the chain by allowing the foundation or other interested parties to 
-create reward programs based on certain Qualifying events.
-* Assign shares/rewards to accounts, based on qualifying actions performed for a claim period
-* Allow accounts to claim the above said rewards
-
-
+The purpose of the rewards module, also known as 'Active Participation and Engagement (APE) module', is to reward users for Provenance Blockchain activity. The Provenance Blockchain Foundation, or any other interested party, can create and customize their own campaigns known as Reward Programs. Provenance Blockchain users can then participate in these programs by performing the actions defined on the them. Participants will be granted shares for each qualifying action and can claim them for the respective Reward Program's reward.
 
 ## Contents
 
