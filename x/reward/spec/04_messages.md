@@ -10,7 +10,7 @@ In this section we describe the processing of the reward messages and the corres
 
 Creates a Reward Program that users can participate in.
 
-+++ [https://github.com/provenance-io/provenance/blob/main/proto/provenance/reward/v1/reward.proto#L30-L55](../../../proto/provenance/reward/v1/tx.proto#L30-L55)
++++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/tx.proto#L30-L55
 
 The message will fail under the following conditions:
 * The program start time is at the current block time or after
@@ -28,7 +28,7 @@ The message will fail under the following conditions:
 
 Ends a Reward Program that is in either the PENDING or STARTED state.
 
-+++ [https://github.com/provenance-io/provenance/blob/main/proto/provenance/reward/v1/reward.proto#L63-L69](../../../proto/provenance/reward/v1/tx.proto#L63-L69)
++++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/tx.proto#L63-L69
 
 The message will fail under the following conditions:
 * The Reward Program does not end
@@ -39,7 +39,7 @@ The message will fail under the following conditions:
 
 Allows a participant to claim all their rewards for all past claim periods on a reward program.
 
-+++ [https://github.com/provenance-io/provenance/blob/main/proto/provenance/reward/v1/reward.proto#L76-L79](../../../proto/provenance/reward/v1/tx.proto#L76-L79)
++++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/tx.proto#L76-L79
 
 The message will fail under the following conditions:
 * The Reward Program does not exist
@@ -50,7 +50,7 @@ The message will fail under the following conditions:
 
 Allows a participant to claim all their rewards for all past claim periods on all reward programs.
 
-+++ [https://github.com/provenance-io/provenance/blob/main/proto/provenance/reward/v1/reward.proto#L89-L91](../../../proto/provenance/reward/v1/tx.proto#L89-L91)
++++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/tx.proto#L89-L91
 
 The message will fail under the following conditions:
 * The Reward Address does not exist
