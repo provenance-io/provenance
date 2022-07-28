@@ -6,7 +6,14 @@ order: 4
 
 In this section we describe the processing of the reward messages and the corresponding updates to the state.
 
-## MsgCreateRewardProgramRequest
+<!-- TOC 2 -->
+  - [Msg/CreateRewardProgramRequest](#msg-createrewardprogramrequest)
+  - [Msg/EndRewardProgramRequest](#msg-endrewardprogramrequest)
+  - [Msg/ClaimRewardRequest](#msg-claimrewardrequest)
+  - [Msg/ClaimAllRewardsRequest](#msg-claimallrewardsrequest)
+
+
+## Msg/CreateRewardProgramRequest
 
 Creates a Reward Program that users can participate in.
 
@@ -24,7 +31,7 @@ The message will fail under the following conditions:
 * There are no qualifying actions
 * The qualifying actions are not valid
 
-## MsgEndRewardProgramRequest
+## Msg/EndRewardProgramRequest
 
 Ends a Reward Program that is in either the PENDING or STARTED state.
 
@@ -35,7 +42,7 @@ The message will fail under the following conditions:
 * The Reward Program is not in PENDING or STARTED state
 * The Reward Program owner does not match the specified address
 
-## MsgClaimRewardRequest
+## Msg/ClaimRewardRequest
 
 Allows a participant to claim all their rewards for all past claim periods on a reward program.
 
@@ -46,7 +53,7 @@ The message will fail under the following conditions:
 * The Reward Program is expired
 * The Reward Address does not exist
 
-## MsgClaimAllRewardsRequest
+## Msg/ClaimAllRewardsRequest
 
 Allows a participant to claim all their rewards for all past claim periods on all reward programs.
 
