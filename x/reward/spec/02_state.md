@@ -4,83 +4,64 @@ order: 2
 
 # State
 
+<!-- TOC -->
+- [State](#state)
+  - [Reward Program](#reward-program)
+  - [Claim Period Reward Distribution](#claim-period-reward-distribution)
+  - [Reward Account State](#reward-account-state)
+  - [Qualifying Actions](#qualifying-actions)
+    - [Action Delegate](#action-delegate)
+    - [Action Transfer](#action-transfer)
+    - [Action Vote](#action-vote)
+
+---
 ## Reward Program
 
-A reward program is the main data structure used by the Active Participation and Engagement (APE) module.
+A `RewardProgram` is the main data structure used by the Active Participation and Engagement (APE) module. It keeps track of the state, balances, qualifying actions, timers, and counters for a single Reward Program.
 
-```go
-// RewardProgram
-message RewardProgram {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
-  enum State {
-    PENDING  = 0;
-    STARTED  = 1;
-    FINISHED = 2;
-    EXPIRED  = 3;
-  }
++++ https://github.com/provenance-io/provenance/blob/4e354a9fd554a420f7970522d2e8b0b749baad9d/proto/provenance/reward/v1/reward.proto#L15-L91
 
-  uint64                   id                      = 1; // An integer to uniquely identify the reward program.
-  string                   title                   = 2; // Name to help identify the Reward Program.
-  string                   description             = 3; // Short summary describing the Reward Program.
-  string                   distribute_from_address = 4; // Community pool for now (who provides the money)
-  cosmos.base.v1beta1.Coin total_reward_pool       = 5
-      [(gogoproto.nullable) = false]; // The total amount of funding given to the RewardProgram.
-  cosmos.base.v1beta1.Coin remaining_pool_balance = 6
-      [(gogoproto.nullable) = false]; // The remaining funds available to distribute.
-  cosmos.base.v1beta1.Coin claimed_amount = 7
-      [(gogoproto.nullable) = false]; // The total amount of funds claimed by participants.
-  cosmos.base.v1beta1.Coin max_reward_by_address = 8
-      [(gogoproto.nullable) = false]; // Maximum reward per claim per address
-  cosmos.base.v1beta1.Coin minimum_rollover_amount = 9
-      [(gogoproto.nullable) = false]; // Minimum amount of coins for a program to rollover
+---
+## Claim Period Reward Distribution
 
-  uint64                    claim_period_seconds = 10; // Number of seconds that a claim period lasts.
-  google.protobuf.Timestamp program_start_time   = 11 [
-    (gogoproto.stdtime)  = true,
-    (gogoproto.nullable) = false,
-    (gogoproto.jsontag)  = "program_start_time,omitempty",
-    (gogoproto.moretags) = "yaml:\"program_start_time,omitempty\""
-  ]; // Time that a RewardProgram should start and switch to STARTED state.
-  google.protobuf.Timestamp expected_program_end_time = 12 [
-    (gogoproto.stdtime)  = true,
-    (gogoproto.nullable) = false,
-    (gogoproto.jsontag)  = "expected_program_end_time,omitempty",
-    (gogoproto.moretags) = "yaml:\"expected_program_end_time,omitempty\""
-  ]; // Time that a RewardProgram MUST end.
+A `ClaimPeriodRewardDistribution` is created for each claim period of every `RewardProgram`. Its purpose is to track live claim period specific information. Examples of this include the total number of granted shares in the claim period, sum of of all its rewards given out as claims, and the amount of reward allocated to it from the `RewardProgram`.
 
-  google.protobuf.Timestamp claim_period_end_time = 13 [
-    (gogoproto.stdtime)  = true,
-    (gogoproto.nullable) = false,
-    (gogoproto.jsontag)  = "claim_period_end_time,omitempty",
-    (gogoproto.moretags) = "yaml:\"claim_period_end_time,omitempty\""
-  ]; // Used internally to calculate and track the current claim period's ending time.
++++ https://github.com/provenance-io/provenance/blob/4e354a9fd554a420f7970522d2e8b0b749baad9d/proto/provenance/reward/v1/reward.proto#L114-L130
 
-  google.protobuf.Timestamp actual_program_end_time = 14 [
-    (gogoproto.stdtime)  = true,
-    (gogoproto.nullable) = false,
-    (gogoproto.jsontag)  = "finished_time,omitempty",
-    (gogoproto.moretags) = "yaml:\"finished_time,omitempty\""
-  ]; // Time the RewardProgram switched to FINISHED state. Initially set as empty.
+---
+## Reward Account State
 
-  uint64 claim_periods = 15; // Number of claim periods this program will run for
+The purpose of `RewardAccountState` is to track state at the address level of a claim period. It counts the number of claim period shares the user obtained, the status of their `RewardClaim`, and other stateful information that assists the system in properly granting rewards. 
 
-  uint64 current_claim_period = 16; // Current claim period of the RewardProgram. Uses 1-based indexing.
++++ https://github.com/provenance-io/provenance/blob/4e354a9fd554a420f7970522d2e8b0b749baad9d/proto/provenance/reward/v1/reward.proto#L132-L148
 
-  State state = 17; // Current state of the RewardProgram.
-
-  uint64 reward_claim_expiration_offset = 18; // Grace period after a RewardProgram FINISHED. It is the number of
-                                              // seconds until a RewardProgram enters the EXPIRED state.
-
-  repeated QualifyingAction qualifying_actions = 19 [
-    (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"qualifying_actions"
-  ]; // Actions that count towards the reward
-}
-```
-
-## ClaimPeriod Reward Distribution
-
-## RewardAccount State
-
+---
 ## Qualifying Actions
+
+A list of one or more actions that a user can perform to attempt to participate in a `RewardProgram`. In order to be considered a participant and granted a share then all the `EligiblityCriteria` on the action must be met. Each action has its own `EligiblityCriteria`, which is independently evaluated against system state and `RewardAccountState` for that user. Each `Qualifying Action` is evaluated independently, thus it is possible for a user to earn more than one reward for a single action.
+
++++ https://github.com/provenance-io/provenance/blob/4e354a9fd554a420f7970522d2e8b0b749baad9d/proto/provenance/reward/v1/reward.proto#L150-L165
+
+### Action Delegate
+
+`ActionDelegate` is when a user performs a delegate.
+
++++ https://github.com/provenance-io/provenance/blob/4e354a9fd554a420f7970522d2e8b0b749baad9d/proto/provenance/reward/v1/reward.proto#L169-L181
+
+The triggering account must have a total delegation amount within the bands of [`minimum_delegation_amount`,`maximum_delegation_amount`]. Additionally, the validator they are staking to must be within the [`minimum_active_stake_percentile`,`maximum_active_stake_percentile`] power percentile. If both of these criteria are met then the delegate is considered successful. The `minimum_actions` and `maximum_actions` fields are the number of successful delegate that must be performed. Once all these conditions are met then the user will receive a share.
+
+### Action Transfer
+
+`ActionTransfer` is when a user transfers coins.
+
++++ https://github.com/provenance-io/provenance/blob/4e354a9fd554a420f7970522d2e8b0b749baad9d/proto/provenance/reward/v1/reward.proto#L185-L196
+
+If the triggering account has delegated at least the `minimum_delegation_amount`, then the transfer action will be considered successful. The `minimum_actions` and `maximum_actions` fields are the number of successful transfer that must be performed. When all these conditions are met, then the user will receive a share.
+
+### Action Vote
+
+`ActionVote` is when a user votes on a proposal.
+
++++ https://github.com/provenance-io/provenance/blob/4e354a9fd554a420f7970522d2e8b0b749baad9d/proto/provenance/reward/v1/reward.proto#L199-L208
+
+If the triggering account has delegated at least the `minimum_delegation_amount`, then the vote action will be considered successful. The `minimum_actions` and `maximum_actions` fields are the number of successful votes that must be performed. When all these conditions are met, then the user will receive a share.
