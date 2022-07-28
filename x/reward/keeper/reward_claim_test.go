@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) TestClaimRewards() {
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
 	for i := 1; i <= int(rewardProgram.GetClaimPeriods()); i++ {
-		state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(i), "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1)
+		state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(i), "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1, map[string]uint64{})
 		state.ClaimStatus = types.RewardAccountState_CLAIMABLE
 		suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
 		distribution := types.NewClaimPeriodRewardDistribution(uint64(i), rewardProgram.GetId(), sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 1, true)
@@ -230,7 +230,7 @@ func (suite *KeeperTestSuite) TestClaimAllRewards() {
 		suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
 		for j := 1; j <= int(rewardProgram.GetClaimPeriods()); j++ {
-			state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(j), "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1)
+			state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(j), "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1, map[string]uint64{})
 			state.ClaimStatus = types.RewardAccountState_CLAIMABLE
 			suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
 			distribution := types.NewClaimPeriodRewardDistribution(uint64(j), rewardProgram.GetId(), sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 1, true)
@@ -297,7 +297,7 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsExpired() {
 		suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
 		for j := 1; j <= int(rewardProgram.GetClaimPeriods()); j++ {
-			state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(j), "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1)
+			state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(j), "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1, map[string]uint64{})
 			state.ClaimStatus = types.RewardAccountState_EXPIRED
 			suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
 			distribution := types.NewClaimPeriodRewardDistribution(uint64(j), rewardProgram.GetId(), sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 1, true)

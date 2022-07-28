@@ -206,7 +206,6 @@ $ %[1]s tx reward claim-reward all --from mykey`, version.AppName),
 				callerAddr.String(),
 			)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)

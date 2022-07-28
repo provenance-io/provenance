@@ -14,7 +14,7 @@ func (suite *KeeperTestSuite) TestNewRewardAccountState() {
 		2,
 		"test",
 		3,
-	)
+		map[string]uint64{})
 
 	suite.Assert().Equal(uint64(1), accountState.GetRewardProgramId(), "reward program id must match")
 	suite.Assert().Equal(uint64(2), accountState.GetClaimPeriodId(), "reward claim period id must match")
@@ -32,6 +32,7 @@ func (suite *KeeperTestSuite) TestGetSetRewardAccountState() {
 		2,
 		"test",
 		3,
+		map[string]uint64{},
 	)
 
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, expectedState)
@@ -69,6 +70,7 @@ func (suite *KeeperTestSuite) TestRemoveValidAccountState() {
 		2,
 		"test",
 		0,
+		map[string]uint64{},
 	)
 
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, expectedState)
@@ -95,6 +97,7 @@ func (suite *KeeperTestSuite) TestRemoveInvalidAccountState() {
 		2,
 		"test",
 		0,
+		map[string]uint64{},
 	)
 
 	removed := suite.app.RewardKeeper.RemoveRewardAccountState(suite.ctx,
@@ -108,11 +111,11 @@ func (suite *KeeperTestSuite) TestRemoveInvalidAccountState() {
 func (suite *KeeperTestSuite) TestIterateAccountStates() {
 	suite.SetupTest()
 
-	state1 := types.NewRewardAccountState(1, 2, "test", 0)
-	state2 := types.NewRewardAccountState(1, 3, "test", 0)
-	state3 := types.NewRewardAccountState(2, 1, "test", 0)
-	state4 := types.NewRewardAccountState(2, 2, "test", 0)
-	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
+	state1 := types.NewRewardAccountState(1, 2, "test", 0, map[string]uint64{})
+	state2 := types.NewRewardAccountState(1, 3, "test", 0, map[string]uint64{})
+	state3 := types.NewRewardAccountState(2, 1, "test", 0, map[string]uint64{})
+	state4 := types.NewRewardAccountState(2, 2, "test", 0, map[string]uint64{})
+	state5 := types.NewRewardAccountState(2, 2, "test2", 0, map[string]uint64{})
 
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
@@ -132,11 +135,11 @@ func (suite *KeeperTestSuite) TestIterateAccountStates() {
 func (suite *KeeperTestSuite) TestEmptyIterateAccountStates() {
 	suite.SetupTest()
 
-	state1 := types.NewRewardAccountState(1, 2, "test", 0)
-	state2 := types.NewRewardAccountState(1, 3, "test", 0)
-	state3 := types.NewRewardAccountState(2, 1, "test", 0)
-	state4 := types.NewRewardAccountState(2, 2, "test", 0)
-	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
+	state1 := types.NewRewardAccountState(1, 2, "test", 0, map[string]uint64{})
+	state2 := types.NewRewardAccountState(1, 3, "test", 0, map[string]uint64{})
+	state3 := types.NewRewardAccountState(2, 1, "test", 0, map[string]uint64{})
+	state4 := types.NewRewardAccountState(2, 2, "test", 0, map[string]uint64{})
+	state5 := types.NewRewardAccountState(2, 2, "test2", 0, map[string]uint64{})
 
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
@@ -156,11 +159,11 @@ func (suite *KeeperTestSuite) TestEmptyIterateAccountStates() {
 func (suite *KeeperTestSuite) TestIterateAccountStatesHalt() {
 	suite.SetupTest()
 
-	state1 := types.NewRewardAccountState(1, 2, "test", 0)
-	state2 := types.NewRewardAccountState(1, 3, "test", 0)
-	state3 := types.NewRewardAccountState(2, 1, "test", 0)
-	state4 := types.NewRewardAccountState(2, 2, "test", 0)
-	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
+	state1 := types.NewRewardAccountState(1, 2, "test", 0, map[string]uint64{})
+	state2 := types.NewRewardAccountState(1, 3, "test", 0, map[string]uint64{})
+	state3 := types.NewRewardAccountState(2, 1, "test", 0, map[string]uint64{})
+	state4 := types.NewRewardAccountState(2, 2, "test", 0, map[string]uint64{})
+	state5 := types.NewRewardAccountState(2, 2, "test2", 0, map[string]uint64{})
 
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
@@ -180,11 +183,11 @@ func (suite *KeeperTestSuite) TestIterateAccountStatesHalt() {
 func (suite *KeeperTestSuite) TestIterateAllAccountStates() {
 	suite.SetupTest()
 
-	state1 := types.NewRewardAccountState(1, 2, "test", 0)
-	state2 := types.NewRewardAccountState(1, 3, "test", 0)
-	state3 := types.NewRewardAccountState(2, 1, "test", 0)
-	state4 := types.NewRewardAccountState(2, 2, "test", 0)
-	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
+	state1 := types.NewRewardAccountState(1, 2, "test", 0, map[string]uint64{})
+	state2 := types.NewRewardAccountState(1, 3, "test", 0, map[string]uint64{})
+	state3 := types.NewRewardAccountState(2, 1, "test", 0, map[string]uint64{})
+	state4 := types.NewRewardAccountState(2, 2, "test", 0, map[string]uint64{})
+	state5 := types.NewRewardAccountState(2, 2, "test2", 0, map[string]uint64{})
 
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
@@ -216,11 +219,11 @@ func (suite *KeeperTestSuite) TestEmptyIterateAllAccountStates() {
 func (suite *KeeperTestSuite) TestIterateAllAccountStatesHalt() {
 	suite.SetupTest()
 
-	state1 := types.NewRewardAccountState(1, 2, "test", 0)
-	state2 := types.NewRewardAccountState(1, 3, "test", 0)
-	state3 := types.NewRewardAccountState(2, 1, "test", 0)
-	state4 := types.NewRewardAccountState(2, 2, "test", 0)
-	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
+	state1 := types.NewRewardAccountState(1, 2, "test", 0, map[string]uint64{})
+	state2 := types.NewRewardAccountState(1, 3, "test", 0, map[string]uint64{})
+	state3 := types.NewRewardAccountState(2, 1, "test", 0, map[string]uint64{})
+	state4 := types.NewRewardAccountState(2, 2, "test", 0, map[string]uint64{})
+	state5 := types.NewRewardAccountState(2, 2, "test2", 0, map[string]uint64{})
 
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
@@ -240,11 +243,11 @@ func (suite *KeeperTestSuite) TestIterateAllAccountStatesHalt() {
 func (suite *KeeperTestSuite) TestIterateRewardAccountStatesForRewardProgram() {
 	suite.SetupTest()
 
-	state1 := types.NewRewardAccountState(1, 2, "test", 0)
-	state2 := types.NewRewardAccountState(1, 3, "test", 0)
-	state3 := types.NewRewardAccountState(2, 1, "test", 0)
-	state4 := types.NewRewardAccountState(2, 2, "test", 0)
-	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
+	state1 := types.NewRewardAccountState(1, 2, "test", 0, map[string]uint64{})
+	state2 := types.NewRewardAccountState(1, 3, "test", 0, map[string]uint64{})
+	state3 := types.NewRewardAccountState(2, 1, "test", 0, map[string]uint64{})
+	state4 := types.NewRewardAccountState(2, 2, "test", 0, map[string]uint64{})
+	state5 := types.NewRewardAccountState(2, 2, "test2", 0, map[string]uint64{})
 
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
@@ -276,11 +279,11 @@ func (suite *KeeperTestSuite) TestEmptyIterateRewardAccountStatesForRewardProgra
 func (suite *KeeperTestSuite) TestIterateRewardAccountStatesForRewardProgramHalt() {
 	suite.SetupTest()
 
-	state1 := types.NewRewardAccountState(1, 2, "test", 0)
-	state2 := types.NewRewardAccountState(1, 3, "test", 0)
-	state3 := types.NewRewardAccountState(2, 1, "test", 0)
-	state4 := types.NewRewardAccountState(2, 2, "test", 0)
-	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
+	state1 := types.NewRewardAccountState(1, 2, "test", 0, map[string]uint64{})
+	state2 := types.NewRewardAccountState(1, 3, "test", 0, map[string]uint64{})
+	state3 := types.NewRewardAccountState(2, 1, "test", 0, map[string]uint64{})
+	state4 := types.NewRewardAccountState(2, 2, "test", 0, map[string]uint64{})
+	state5 := types.NewRewardAccountState(2, 2, "test2", 0, map[string]uint64{})
 
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
@@ -300,11 +303,11 @@ func (suite *KeeperTestSuite) TestIterateRewardAccountStatesForRewardProgramHalt
 func (suite *KeeperTestSuite) TestGetRewardAccountStatesForClaimPeriod() {
 	suite.SetupTest()
 
-	state1 := types.NewRewardAccountState(1, 2, "test", 0)
-	state2 := types.NewRewardAccountState(1, 3, "test", 0)
-	state3 := types.NewRewardAccountState(2, 1, "test", 0)
-	state4 := types.NewRewardAccountState(2, 2, "test", 0)
-	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
+	state1 := types.NewRewardAccountState(1, 2, "test", 0, map[string]uint64{})
+	state2 := types.NewRewardAccountState(1, 3, "test", 0, map[string]uint64{})
+	state3 := types.NewRewardAccountState(2, 1, "test", 0, map[string]uint64{})
+	state4 := types.NewRewardAccountState(2, 2, "test", 0, map[string]uint64{})
+	state5 := types.NewRewardAccountState(2, 2, "test2", 0, map[string]uint64{})
 
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
@@ -328,11 +331,11 @@ func (suite *KeeperTestSuite) TestGetRewardAccountStatesForClaimPeriodHandlesEmp
 func (suite *KeeperTestSuite) TestGetRewardAccountStatesForRewardProgram() {
 	suite.SetupTest()
 
-	state1 := types.NewRewardAccountState(1, 2, "test", 0)
-	state2 := types.NewRewardAccountState(1, 3, "test", 0)
-	state3 := types.NewRewardAccountState(2, 1, "test", 0)
-	state4 := types.NewRewardAccountState(2, 2, "test", 0)
-	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
+	state1 := types.NewRewardAccountState(1, 2, "test", 0, map[string]uint64{})
+	state2 := types.NewRewardAccountState(1, 3, "test", 0, map[string]uint64{})
+	state3 := types.NewRewardAccountState(2, 1, "test", 0, map[string]uint64{})
+	state4 := types.NewRewardAccountState(2, 2, "test", 0, map[string]uint64{})
+	state5 := types.NewRewardAccountState(2, 2, "test2", 0, map[string]uint64{})
 
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
@@ -356,11 +359,11 @@ func (suite *KeeperTestSuite) TestGetRewardAccountStatesForRewardProgramHandlesE
 func (suite *KeeperTestSuite) TestMakeRewardClaimsClaimableForPeriod() {
 	suite.SetupTest()
 
-	state1 := types.NewRewardAccountState(1, 2, "test", 0)
-	state2 := types.NewRewardAccountState(1, 3, "test", 0)
-	state3 := types.NewRewardAccountState(2, 1, "test", 0)
-	state4 := types.NewRewardAccountState(2, 2, "test", 0)
-	state5 := types.NewRewardAccountState(2, 2, "test2", 0)
+	state1 := types.NewRewardAccountState(1, 2, "test", 0, map[string]uint64{})
+	state2 := types.NewRewardAccountState(1, 3, "test", 0, map[string]uint64{})
+	state3 := types.NewRewardAccountState(2, 1, "test", 0, map[string]uint64{})
+	state4 := types.NewRewardAccountState(2, 2, "test", 0, map[string]uint64{})
+	state5 := types.NewRewardAccountState(2, 2, "test2", 0, map[string]uint64{})
 
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
@@ -394,10 +397,10 @@ func (suite *KeeperTestSuite) TestMakeRewardClaimsClaimableForPeriodHandlesEmpty
 func (suite *KeeperTestSuite) TestExpireRewardClaimsForRewardProgram() {
 	suite.SetupTest()
 
-	state1 := types.NewRewardAccountState(1, 1, "test", 0)
-	state2 := types.NewRewardAccountState(1, 1, "test2", 0)
-	state3 := types.NewRewardAccountState(1, 2, "test", 0)
-	state4 := types.NewRewardAccountState(1, 2, "test2", 0)
+	state1 := types.NewRewardAccountState(1, 1, "test", 0, map[string]uint64{})
+	state2 := types.NewRewardAccountState(1, 1, "test2", 0, map[string]uint64{})
+	state3 := types.NewRewardAccountState(1, 2, "test", 0, map[string]uint64{})
+	state4 := types.NewRewardAccountState(1, 2, "test2", 0, map[string]uint64{})
 	state4.ClaimStatus = types.RewardAccountState_CLAIMED
 
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)

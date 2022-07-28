@@ -46,7 +46,6 @@ func MinActionsFn(r *rand.Rand) uint64 {
 
 // RandomizedGenState generates a random GenesisState for distribution
 func RandomizedGenState(simState *module.SimulationState) {
-
 	var totalRewardsPool sdk.Coin
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, TotalRewardsPool, &totalRewardsPool, simState.Rand,

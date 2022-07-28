@@ -372,8 +372,8 @@ func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsEvenDistribut
 		false,
 	)
 
-	state1 := types.NewRewardAccountState(1, 1, "address1", 1)
-	state2 := types.NewRewardAccountState(1, 1, "address2", 1)
+	state1 := types.NewRewardAccountState(1, 1, "address1", 1, map[string]uint64{})
+	state2 := types.NewRewardAccountState(1, 1, "address2", 1, map[string]uint64{})
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
 
@@ -393,9 +393,9 @@ func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsEvenDistribut
 		false,
 	)
 
-	state1 := types.NewRewardAccountState(1, 1, "address1", 1)
-	state2 := types.NewRewardAccountState(1, 1, "address2", 1)
-	state3 := types.NewRewardAccountState(1, 1, "address3", 1)
+	state1 := types.NewRewardAccountState(1, 1, "address1", 1, map[string]uint64{})
+	state2 := types.NewRewardAccountState(1, 1, "address2", 1, map[string]uint64{})
+	state3 := types.NewRewardAccountState(1, 1, "address3", 1, map[string]uint64{})
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state3)
@@ -416,9 +416,9 @@ func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUnevenDistrib
 		false,
 	)
 
-	state1 := types.NewRewardAccountState(1, 1, "address1", 2)
-	state2 := types.NewRewardAccountState(1, 1, "address2", 1)
-	state3 := types.NewRewardAccountState(1, 1, "address3", 1)
+	state1 := types.NewRewardAccountState(1, 1, "address1", 2, map[string]uint64{})
+	state2 := types.NewRewardAccountState(1, 1, "address2", 1, map[string]uint64{})
+	state3 := types.NewRewardAccountState(1, 1, "address3", 1, map[string]uint64{})
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state3)
@@ -439,8 +439,8 @@ func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUsesMaxReward
 		false,
 	)
 
-	state1 := types.NewRewardAccountState(1, 1, "address1", 1)
-	state2 := types.NewRewardAccountState(1, 1, "address2", 1)
+	state1 := types.NewRewardAccountState(1, 1, "address1", 1, map[string]uint64{})
+	state2 := types.NewRewardAccountState(1, 1, "address2", 1, map[string]uint64{})
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
 
@@ -582,7 +582,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEnd() {
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
-	state1 := types.NewRewardAccountState(1, 1, "address1", 1)
+	state1 := types.NewRewardAccountState(1, 1, "address1", 1, map[string]uint64{})
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	program.RemainingPoolBalance = program.GetTotalRewardPool()
 
@@ -626,8 +626,8 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransition() {
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
 	program.RemainingPoolBalance = program.GetTotalRewardPool()
 
-	state1 := types.NewRewardAccountState(1, 1, "address1", 1)
-	state2 := types.NewRewardAccountState(1, 2, "address2", 1)
+	state1 := types.NewRewardAccountState(1, 1, "address1", 1, map[string]uint64{})
+	state2 := types.NewRewardAccountState(1, 2, "address2", 1, map[string]uint64{})
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
 
@@ -736,9 +736,9 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesClaimStatus(
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
 	program.RemainingPoolBalance = program.GetTotalRewardPool()
 
-	state1 := types.NewRewardAccountState(1, 1, "address1", 1)
+	state1 := types.NewRewardAccountState(1, 1, "address1", 1, map[string]uint64{})
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
-	state2 := types.NewRewardAccountState(1, 1, "address2", 1)
+	state2 := types.NewRewardAccountState(1, 1, "address2", 1, map[string]uint64{})
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
 
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
@@ -777,7 +777,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesBalances() {
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
 	program.RemainingPoolBalance = program.GetTotalRewardPool()
 
-	state1 := types.NewRewardAccountState(1, 1, "address1", 1)
+	state1 := types.NewRewardAccountState(1, 1, "address1", 1, map[string]uint64{})
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
@@ -823,7 +823,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRollo
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
 
 	// Create the shares
-	state1 := types.NewRewardAccountState(1, 1, "address1", 1)
+	state1 := types.NewRewardAccountState(1, 1, "address1", 1, map[string]uint64{})
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	reward, _ := suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 1, 1)
 	reward.TotalShares = 1
@@ -918,7 +918,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 	)
 	ending.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
 	ending.RemainingPoolBalance = sdk.NewInt64Coin("nhash", 0)
-	state1 := types.NewRewardAccountState(4, 1, "address1", 1)
+	state1 := types.NewRewardAccountState(4, 1, "address1", 1, map[string]uint64{})
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &ending)
 	ending.ClaimPeriodEndTime = blockTime

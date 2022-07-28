@@ -2,9 +2,10 @@ package cli_test
 
 import (
 	"fmt"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"testing"
 	"time"
+
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 
@@ -139,7 +140,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	claimPeriodRewardDistributions := make([]rewardtypes.ClaimPeriodRewardDistribution, 101)
 	for i := 0; i < 101; i++ {
-		claimPeriodRewardDistributions[i] = rewardtypes.NewClaimPeriodRewardDistribution(uint64(i+1), 1, sdk.NewInt64Coin("jackthecat", 100), sdk.NewInt64Coin("jackthecat", 10), int64(i), false)
+		claimPeriodRewardDistributions[i] = rewardtypes.NewClaimPeriodRewardDistribution(uint64(i+1), 1, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 10), int64(i), false)
+	}
+
+	rewardAccountState := make([]rewardtypes.RewardAccountState, 101)
+	for i := 0; i < 101; i++ {
+		rewardAccountState[i] = rewardtypes.NewRewardAccountState(1, uint64(i+1), s.accountAddr.String(), 10, map[string]uint64{})
 	}
 
 	rewardData := rewardtypes.NewGenesisState(
@@ -147,7 +153,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			s.activeRewardProgram, s.pendingRewardProgram, s.finishedRewardProgram, s.expiredRewardProgram,
 		},
 		claimPeriodRewardDistributions,
-		[]rewardtypes.RewardAccountState{},
+		rewardAccountState,
 	)
 
 	rewardDataBz, err := s.cfg.Codec.MarshalJSON(rewardData)
@@ -183,6 +189,7 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 		{"query all reward programs",
 			[]string{
 				"all",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
 			false,
@@ -257,7 +264,7 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardProgramCmd(), tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardProgramCmd(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
 			if tc.expectErr {
 				s.Assert().Error(err)
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
@@ -380,7 +387,7 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetClaimPeriodRewardDistributionCmd(), tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetClaimPeriodRewardDistributionCmd(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
 			if tc.expectErr {
 				s.Assert().Error(err)
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
@@ -558,7 +565,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 			}
 			tc.args = append(tc.args, args...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdRewardProgramAdd(), tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdRewardProgramAdd(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
 			var response sdk.TxResponse
 			marshalErr := clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response)
 			if tc.expectErr {
@@ -651,7 +658,7 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 			false,
 			"",
 			0,
-			[]uint64{},
+			[]uint64{1},
 		},
 	}
 
@@ -676,6 +683,7 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 				s.Assert().NoError(err)
 				for _, expectedId := range tc.expectedIds {
 					s.Assert().True(containsRewardClaimId(response.RewardAccountState, expectedId))
+					s.Assert().True(len(response.RewardAccountState) == 101)
 				}
 			}
 		})

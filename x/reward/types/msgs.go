@@ -125,10 +125,10 @@ var _ sdk.Msg = &MsgEndRewardProgramRequest{}
 
 // NewMsgEndRewardProgramRequest ends a reward program request
 func NewMsgEndRewardProgramRequest(
-	rewardProgramId uint64,
+	rewardProgramID uint64,
 	programOwnerAddress string) *MsgEndRewardProgramRequest {
 	return &MsgEndRewardProgramRequest{
-		RewardProgramId:     rewardProgramId,
+		RewardProgramId:     rewardProgramID,
 		ProgramOwnerAddress: programOwnerAddress,
 	}
 }

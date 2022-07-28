@@ -80,7 +80,7 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 			continue
 		}
 		if state.ValidateBasic() != nil {
-			state = types.NewRewardAccountState(program.GetId(), program.GetCurrentClaimPeriod(), action.Address.String(), 0)
+			state = types.NewRewardAccountState(program.GetId(), program.GetCurrentClaimPeriod(), action.Address.String(), 0, map[string]uint64{})
 		}
 
 		if !processor.PreEvaluate(ctx, k, state) {

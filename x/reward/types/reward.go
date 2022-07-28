@@ -225,12 +225,12 @@ func (rp *RewardProgram) String() string {
 
 // ============ Account State ============
 
-func NewRewardAccountState(rewardProgramID, rewardClaimPeriodID uint64, address string, shares uint64) RewardAccountState {
+func NewRewardAccountState(rewardProgramID, rewardClaimPeriodID uint64, address string, shares uint64, actionCounter map[string]uint64) RewardAccountState {
 	return RewardAccountState{
 		RewardProgramId: rewardProgramID,
 		ClaimPeriodId:   rewardClaimPeriodID,
 		Address:         address,
-		ActionCounter:   map[string]uint64{},
+		ActionCounter:   actionCounter,
 		SharesEarned:    shares,
 		ClaimStatus:     RewardAccountState_UNCLAIMABLE,
 	}
@@ -350,7 +350,7 @@ func (ad *ActionDelegate) getTokensFromValidator(ctx sdk.Context, provider Keepe
 func (ad *ActionDelegate) getValidatorRankPercentile(ctx sdk.Context, provider KeeperProvider, validator sdk.ValAddress) sdk.Dec {
 	validators := provider.GetStakingKeeper().GetBondedValidatorsByPower(ctx)
 	ourPower := provider.GetStakingKeeper().GetLastValidatorPower(ctx, validator)
-	var numBelow int64 = 0
+	var numBelow int64
 	numValidators := int64(len(validators))
 	for i := int64(0); i < numValidators; i++ {
 		v := validators[i]
@@ -461,9 +461,8 @@ func (at *ActionTransfer) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 		}
 		if totalDelegations.IsGTE(at.MinimumDelegationAmount) {
 			return true
-		} else {
-			return false
 		}
+		return false
 	}
 	return true
 }
@@ -505,21 +504,18 @@ func (atd *ActionVote) ActionType() string {
 }
 
 func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
-
 	// get the address that voted
 	addressVoting := event.Address
 	if !sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.ZeroInt()).IsGTE(atd.MinimumDelegationAmount) {
 		// now check if it has any delegations
-
 		totalDelegations, found := getAllDelegations(ctx, provider, addressVoting)
 		if !found {
 			return false
 		}
 		if totalDelegations.IsGTE(atd.MinimumDelegationAmount) {
 			return true
-		} else {
-			return false
 		}
+		return false
 	}
 	return true
 }
