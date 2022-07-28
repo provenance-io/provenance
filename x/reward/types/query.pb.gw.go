@@ -233,6 +233,10 @@ func local_request_Query_ClaimPeriodRewardDistributionsByID_0(ctx context.Contex
 
 }
 
+var (
+	filter_Query_QueryRewardDistributionsByAddress_0 = &utilities.DoubleArray{Encoding: map[string]int{"address": 0, "claim_status": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+)
+
 func request_Query_QueryRewardDistributionsByAddress_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryRewardsByAddressRequest
 	var metadata runtime.ServerMetadata
@@ -268,6 +272,13 @@ func request_Query_QueryRewardDistributionsByAddress_0(ctx context.Context, mars
 	}
 
 	protoReq.ClaimStatus = QueryRewardsByAddressRequest_RewardAccountQueryParam(e)
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_QueryRewardDistributionsByAddress_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 
 	msg, err := client.QueryRewardDistributionsByAddress(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -309,6 +320,13 @@ func local_request_Query_QueryRewardDistributionsByAddress_0(ctx context.Context
 	}
 
 	protoReq.ClaimStatus = QueryRewardsByAddressRequest_RewardAccountQueryParam(e)
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_QueryRewardDistributionsByAddress_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 
 	msg, err := server.QueryRewardDistributionsByAddress(ctx, &protoReq)
 	return msg, metadata, err

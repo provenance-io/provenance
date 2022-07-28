@@ -93,19 +93,24 @@ func (s *KeeperTestSuite) TestClaimPeriodRewardDistributions() {
 	for i := 0; i < 101; i++ {
 		s.app.RewardKeeper.SetClaimPeriodRewardDistribution(s.ctx, types.NewClaimPeriodRewardDistribution(uint64(i+1), 1, sdk.NewInt64Coin("jackthecat", 100), sdk.NewInt64Coin("jackthecat", 10), int64(i), false))
 	}
-	response, err := queryClient.ClaimPeriodRewardDistributions(s.ctx.Context(), &types.QueryClaimPeriodRewardDistributionsRequest{})
+	pageRequest := &query.PageRequest{}
+	pageRequest.Limit = 100
+	pageRequest.CountTotal = true
+	response, err := queryClient.ClaimPeriodRewardDistributions(s.ctx.Context(), &types.QueryClaimPeriodRewardDistributionsRequest{pageRequest})
 	s.Assert().NoError(err, "query should not error")
-	s.Assert().Equal(response.Pagination.Total, uint64(100))
+	s.Assert().Equal(response.Pagination.Total, uint64(101))
 	s.Assert().Equal(100, len(response.ClaimPeriodRewardDistributions))
 
 	response, err = queryClient.ClaimPeriodRewardDistributions(s.ctx.Context(), &types.QueryClaimPeriodRewardDistributionsRequest{Pagination: &query.PageRequest{Limit: 10000}})
 	s.Assert().NoError(err, "query should not error")
-	s.Assert().Equal(response.Pagination.Total, uint64(100), "should only return 100")
+	// 0 since pageRequest.CountTotal = false by default
+	s.Assert().Equal(response.Pagination.Total, uint64(0), "should only return 100")
 	s.Assert().Equal(100, len(response.ClaimPeriodRewardDistributions), "should only return 100 (max allowed per page)")
 
 	response, err = queryClient.ClaimPeriodRewardDistributions(s.ctx.Context(), &types.QueryClaimPeriodRewardDistributionsRequest{Pagination: &query.PageRequest{Limit: 1, Offset: 9}})
 	s.Assert().NoError(err, "query should not error")
-	s.Assert().Equal(response.Pagination.Total, uint64(1), "should only return 100")
+	// 0 since pageRequest.CountTotal = false by default
+	s.Assert().Equal(response.Pagination.Total, uint64(0), "should only return 100")
 	s.Assert().Equal(1, len(response.ClaimPeriodRewardDistributions), "should only return 1")
 	s.Assert().Equal(uint64(10), response.ClaimPeriodRewardDistributions[0].ClaimPeriodId)
 }
@@ -155,17 +160,53 @@ func (s *KeeperTestSuite) TestQueryRewardDistributionsByAddress() {
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	queryClient := s.queryClient
-	for i := 0; i < 101; i++ {
+	for i := 0; i < 402; i++ {
 		s.app.RewardKeeper.SetClaimPeriodRewardDistribution(s.ctx, types.NewClaimPeriodRewardDistribution(uint64(i+1), 1, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 10), int64(i), false))
 	}
-	for i := 0; i < 101; i++ {
+
+	for i := 0; i < 201; i++ {
 		s.app.RewardKeeper.SetRewardAccountState(s.ctx, types.NewRewardAccountState(1, uint64(i+1), s.accountAddr.String(), 10, map[string]uint64{}))
+		s.app.RewardKeeper.SetRewardAccountState(s.ctx, types.NewRewardAccountState(1, uint64(201+i+1), s.accountAddresses[2].String(), 10, map[string]uint64{}))
 	}
+	println(s.accountAddresses[2].String())
+	println(s.accountAddr.String())
+	s.Assert().NotEqual(s.accountAddr.String(), s.accountAddresses[2].String())
+	pageRequest := &query.PageRequest{}
+	pageRequest.Limit = 100
+	pageRequest.CountTotal = true
 	response, err := queryClient.QueryRewardDistributionsByAddress(s.ctx.Context(), &types.QueryRewardsByAddressRequest{
 		Address:     s.accountAddr.String(),
 		ClaimStatus: types.QueryRewardsByAddressRequest_ALL,
+		Pagination:  pageRequest,
 	})
 	s.Assert().NoError(err, "query should not error")
-	s.Assert().Equal(101, len(response.RewardAccountState))
+	s.Assert().Equal(100, len(response.RewardAccountState))
+	s.Assert().Equal(uint64(201), response.Pagination.Total)
+	pageRequest1 := &query.PageRequest{}
+	pageRequest1.Limit = 100
+	pageRequest1.CountTotal = true
+	s.Assert().NotNil(response.Pagination.NextKey)
+	pageRequest1.Key = response.Pagination.NextKey
+	response1, err := queryClient.QueryRewardDistributionsByAddress(s.ctx.Context(), &types.QueryRewardsByAddressRequest{
+		Address:     s.accountAddr.String(),
+		ClaimStatus: types.QueryRewardsByAddressRequest_ALL,
+		Pagination:  pageRequest1,
+	})
+
+	s.Assert().NoError(err, "query should not error")
+	s.Assert().Equal(100, len(response1.RewardAccountState))
+	pageRequest2 := &query.PageRequest{}
+	pageRequest2.Limit = 100
+	pageRequest2.CountTotal = true
+	s.Assert().NotNil(response1.Pagination.NextKey)
+	pageRequest2.Key = response1.Pagination.NextKey
+	response2, err := queryClient.QueryRewardDistributionsByAddress(s.ctx.Context(), &types.QueryRewardsByAddressRequest{
+		Address:     s.accountAddr.String(),
+		ClaimStatus: types.QueryRewardsByAddressRequest_ALL,
+		Pagination:  pageRequest2,
+	})
+
+	s.Assert().NoError(err, "query should not error")
+	s.Assert().Equal(1, len(response2.RewardAccountState))
 
 }

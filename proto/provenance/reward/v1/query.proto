@@ -94,11 +94,13 @@ message QueryRewardsByAddressRequest {
   }
   string                  address      = 1;
   RewardAccountQueryParam claim_status = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
 message QueryAccountByAddressResponse {
   string                         address              = 1;
   repeated RewardAccountResponse reward_account_state = 2 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination                        = 99;
 }
 
 message RewardAccountResponse {
@@ -109,4 +111,5 @@ message RewardAccountResponse {
   cosmos.base.v1beta1.Coin total_reward_claim = 2
       [(gogoproto.nullable) = false];              // total rewards claimed for all eligible claim periods in program
   RewardAccountState.ClaimStatus claim_status = 3; // The status of the claim}
+  uint64                   claim_id  = 4;
 }

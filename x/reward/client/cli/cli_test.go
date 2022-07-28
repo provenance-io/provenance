@@ -683,7 +683,7 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 				s.Assert().NoError(err)
 				for _, expectedId := range tc.expectedIds {
 					s.Assert().True(containsRewardClaimId(response.RewardAccountState, expectedId))
-					s.Assert().True(len(response.RewardAccountState) == 101)
+					s.Assert().True(len(response.RewardAccountState) == 100)
 				}
 			}
 		})

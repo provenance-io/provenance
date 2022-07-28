@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -83,7 +82,6 @@ func (k Keeper) ClaimPeriodRewardDistributions(ctx context.Context, req *types.Q
 	if err != nil {
 		return &response, status.Error(codes.Unavailable, err.Error())
 	}
-	pageRes.Total = uint64(len(response.ClaimPeriodRewardDistributions))
 	response.Pagination = pageRes
 	return &response, nil
 }
@@ -118,14 +116,28 @@ func (k Keeper) QueryRewardDistributionsByAddress(ctx context.Context, request *
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
 	}
 
+	pageRequest := getPageRequest(request)
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	var states []types.RewardAccountState
-	err = k.IterateAllRewardAccountStates(sdkCtx, func(state types.RewardAccountState) bool {
-		if state.GetSharesEarned() > 0 && state.Address == address.String() && (request.ClaimStatus == types.QueryRewardsByAddressRequest_ALL || request.ClaimStatus.String() == state.ClaimStatus.String()) {
-			states = append(states, state)
+	getAllRewardAccountStore := prefix.NewStore(sdk.UnwrapSDKContext(ctx).KVStore(k.storeKey), types.GetAllRewardAccountStateKey())
+
+	pageRes, err := query.FilteredPaginate(getAllRewardAccountStore, pageRequest, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var result types.RewardAccountState
+		err := k.cdc.Unmarshal(value, &result)
+		if err != nil {
+			return false, err
 		}
-		return false
+		if !(result.GetSharesEarned() > 0 && result.Address == address.String() && (request.ClaimStatus == types.QueryRewardsByAddressRequest_ALL || request.ClaimStatus.String() == result.ClaimStatus.String())) {
+			return false, nil
+		}
+
+		if accumulate {
+			states = append(states, result)
+		}
+		return true, nil
 	})
+
 	if err != nil {
 		return nil, sdkerrors.Wrap(types.ErrIterateAllRewardAccountStates, err.Error())
 	}
@@ -134,7 +146,9 @@ func (k Keeper) QueryRewardDistributionsByAddress(ctx context.Context, request *
 	rewardAccountByAddressResponse := types.QueryAccountByAddressResponse{
 		Address:            request.Address,
 		RewardAccountState: rewardAccountResponses,
+		Pagination:         pageRes,
 	}
+
 	return &rewardAccountByAddressResponse, nil
 }
 
@@ -155,6 +169,7 @@ func (k Keeper) convertRewardAccountStateToRewardAccountResponse(ctx sdk.Context
 			RewardProgramId:  state.RewardProgramId,
 			TotalRewardClaim: participantReward,
 			ClaimStatus:      state.ClaimStatus,
+			ClaimId:          state.ClaimPeriodId,
 		}
 		rewardAccountResponse = append(rewardAccountResponse, accountResponse)
 	}
@@ -173,6 +188,7 @@ func getPageRequest(req hasPageRequest) *query.PageRequest {
 	var pageRequest *query.PageRequest
 	if req != nil {
 		pageRequest = req.GetPagination()
+		return pageRequest
 	}
 	if pageRequest == nil {
 		pageRequest = &query.PageRequest{}

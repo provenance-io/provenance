@@ -6226,6 +6226,7 @@ GenesisState defines the reward module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
 | `reward_account_state` | [RewardAccountResponse](#provenance.reward.v1.RewardAccountResponse) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
 
 
 
@@ -6364,6 +6365,7 @@ GenesisState defines the reward module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
 | `claim_status` | [QueryRewardsByAddressRequest.RewardAccountQueryParam](#provenance.reward.v1.QueryRewardsByAddressRequest.RewardAccountQueryParam) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
 
 
 
@@ -6381,6 +6383,7 @@ GenesisState defines the reward module's genesis state.
 | `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this share belongs to |
 | `total_reward_claim` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | total rewards claimed for all eligible claim periods in program |
 | `claim_status` | [RewardAccountState.ClaimStatus](#provenance.reward.v1.RewardAccountState.ClaimStatus) |  | The status of the claim} |
+| `claim_id` | [uint64](#uint64) |  |  |
 
 
 
