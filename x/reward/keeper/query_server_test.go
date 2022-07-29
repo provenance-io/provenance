@@ -166,10 +166,10 @@ func (s *KeeperTestSuite) TestQueryRewardDistributionsByAddress() {
 
 	for i := 0; i < 201; i++ {
 		s.app.RewardKeeper.SetRewardAccountState(s.ctx, types.NewRewardAccountState(1, uint64(i+1), s.accountAddr.String(), 10, map[string]uint64{}))
-		s.app.RewardKeeper.SetRewardAccountState(s.ctx, types.NewRewardAccountState(1, uint64(201+i+1), s.accountAddresses[2].String(), 10, map[string]uint64{}))
+		s.app.RewardKeeper.SetRewardAccountState(s.ctx, types.NewRewardAccountState(1, uint64(i+1), s.accountAddresses[2].String(), 10, map[string]uint64{}))
 	}
-	println(s.accountAddresses[2].String())
-	println(s.accountAddr.String())
+	//println(s.accountAddresses[2].String())
+	//println(s.accountAddr.String())
 	s.Assert().NotEqual(s.accountAddr.String(), s.accountAddresses[2].String())
 	pageRequest := &query.PageRequest{}
 	pageRequest.Limit = 100

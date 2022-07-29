@@ -123,3 +123,10 @@ func GetClaimPeriodRewardDistributionKey(claimID uint64, rewardID uint64) []byte
 	key = append(key, claimBytes...)
 	return append(key, rewardBytes...)
 }
+
+// GetAllRewardAccountByAddressPartialKey returns the key to iterate over all AccountStateAddressLookup by address
+func GetAllRewardAccountByAddressPartialKey(addr []byte) []byte {
+	key := AccountStateAddressLookupKeyPrefix
+	key = append(key, address.MustLengthPrefix(addr)...)
+	return key
+}

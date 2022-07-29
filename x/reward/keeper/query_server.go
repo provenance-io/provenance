@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -116,20 +117,22 @@ func (k Keeper) QueryRewardDistributionsByAddress(ctx context.Context, request *
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
 	}
-
 	pageRequest := getPageRequest(request)
-
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	var states []types.RewardAccountState
-	getAllRewardAccountStore := prefix.NewStore(sdk.UnwrapSDKContext(ctx).KVStore(k.storeKey), types.GetAllRewardAccountStateKey())
+	getAllRewardAccountStore := prefix.NewStore(sdk.UnwrapSDKContext(ctx).KVStore(k.storeKey), types.GetAllRewardAccountByAddressPartialKey([]byte(address.String())))
 
 	pageRes, err := query.FilteredPaginate(getAllRewardAccountStore, pageRequest, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var result types.RewardAccountState
-		err := k.cdc.Unmarshal(value, &result)
-		if err != nil {
+		lookupVal, errFromParsingKey := ParseFilterLookUpKey(key, address)
+		if errFromParsingKey != nil {
 			return false, err
 		}
-		if !(result.GetSharesEarned() > 0 && result.Address == address.String() && (request.ClaimStatus == types.QueryRewardsByAddressRequest_ALL || request.ClaimStatus.String() == result.ClaimStatus.String())) {
+		result, errFromGetRewardAccount := k.GetRewardAccountState(sdkCtx, lookupVal.rewardId, lookupVal.claimId, lookupVal.addr.String())
+		// think ignoring the error maybe ok here since it's just another lookup
+		if errFromGetRewardAccount != nil {
+			return false, nil
+		}
+		if !(result.GetSharesEarned() > 0 && (request.ClaimStatus == types.QueryRewardsByAddressRequest_ALL || request.ClaimStatus.String() == result.ClaimStatus.String())) {
 			return false, nil
 		}
 
@@ -187,15 +190,37 @@ type hasPageRequest interface {
 // Also sets the default limit if it's not already set yet.
 func getPageRequest(req hasPageRequest) *query.PageRequest {
 	var pageRequest *query.PageRequest
-	if req != nil {
+	if req.GetPagination() != nil {
 		pageRequest = req.GetPagination()
+		// enforce max/min page limit
+		enforceMaxMinPageLimit(pageRequest)
 		return pageRequest
 	}
 	if pageRequest == nil {
 		pageRequest = &query.PageRequest{}
 	}
+	enforceMaxMinPageLimit(pageRequest)
+	return pageRequest
+}
+
+func enforceMaxMinPageLimit(pageRequest *query.PageRequest) {
 	if pageRequest.Limit == 0 || pageRequest.Limit > defaultPerPageLimit {
 		pageRequest.Limit = defaultPerPageLimit
 	}
-	return pageRequest
+}
+
+func ParseFilterLookUpKey(accountStateAddressLookupKey []byte, addr sdk.AccAddress) (RewardAccountLookup, error) {
+	rewardId := binary.BigEndian.Uint64(accountStateAddressLookupKey[0:8])
+	claimId := binary.BigEndian.Uint64(accountStateAddressLookupKey[8:16])
+	return RewardAccountLookup{
+		addr:     addr,
+		rewardId: rewardId,
+		claimId:  claimId,
+	}, nil
+}
+
+type RewardAccountLookup struct {
+	addr     sdk.Address
+	rewardId uint64
+	claimId  uint64
 }

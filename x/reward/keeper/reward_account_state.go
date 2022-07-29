@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"encoding/binary"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/reward/types"
@@ -46,7 +48,12 @@ func (k Keeper) SetRewardAccountState(ctx sdk.Context, state types.RewardAccount
 	bz := k.cdc.MustMarshal(&state)
 	key := types.GetRewardAccountStateKey(state.GetRewardProgramId(), state.GetClaimPeriodId(), []byte(state.GetAddress()))
 	store.Set(key, bz)
-	// [0x10] :: [addr-bytes::reward programid bytes]::[claim period bytes] { [reward program id ]::[claim period ]}
+	// since there is a significant use case of looking up this via address create a secondary index
+	// [0x8] :: [addr-bytes::reward program id bytes]::[claim period id bytes] {}
+	addressLookupKey := types.GetRewardAccountStateAddressLookupKey([]byte(state.GetAddress()), state.GetRewardProgramId(), state.GetClaimPeriodId())
+	// no need for a value a key can derive all the info needed
+	store.Set(addressLookupKey, []byte{})
+
 }
 
 // IterateRewardAccountStates Iterates over the account states for a reward program's claim period
@@ -60,6 +67,27 @@ func (k Keeper) IterateRewardAccountStates(ctx sdk.Context, rewardProgramID, rew
 		if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {
 			return err
 		}
+		if handle(record) {
+			break
+		}
+	}
+	return nil
+}
+
+// IterateRewardAccountStates Iterates over the account states for a reward program's claim period
+func (k Keeper) IterateRewardAccountStatesByAddress(ctx sdk.Context, addr sdk.AccAddress, handle func(state types.RewardAccountState) (stop bool)) error {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.GetAllRewardAccountByAddressPartialKey([]byte(addr.String())))
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		record := types.RewardAccountState{}
+		keyParsed, err := ParseRewardAccountLookUpKey(iterator.Key(), addr)
+		if err != nil {
+			return err
+		}
+		record, _ = k.GetRewardAccountState(ctx, keyParsed.rewardId, keyParsed.claimId, addr.String())
+
 		if handle(record) {
 			break
 		}
@@ -144,4 +172,19 @@ func (k Keeper) ExpireRewardClaimsForRewardProgram(ctx sdk.Context, rewardProgra
 		k.SetRewardAccountState(ctx, state)
 	}
 	return err
+}
+
+func ParseRewardAccountLookUpKey(accountStateAddressLookupKey []byte, addr sdk.AccAddress) (RewardAccountLookup, error) {
+	lengthOfAddress := int64(accountStateAddressLookupKey[1:2][0])
+	address := accountStateAddressLookupKey[2 : lengthOfAddress+2]
+	if addr.String() != string(address) {
+		return RewardAccountLookup{}, fmt.Errorf("addresses do not match up")
+	}
+	rewardId := binary.BigEndian.Uint64(accountStateAddressLookupKey[lengthOfAddress+2 : lengthOfAddress+2+8])
+	claimId := binary.BigEndian.Uint64(accountStateAddressLookupKey[lengthOfAddress+2+8 : lengthOfAddress+2+16])
+	return RewardAccountLookup{
+		addr:     addr,
+		rewardId: rewardId,
+		claimId:  claimId,
+	}, nil
 }

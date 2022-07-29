@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"reflect"
 
 	"github.com/provenance-io/provenance/x/reward/types"
@@ -130,6 +131,32 @@ func (suite *KeeperTestSuite) TestIterateAccountStates() {
 	})
 
 	suite.Assert().Equal(2, counter, "should have correct number of iterations")
+}
+
+func (suite *KeeperTestSuite) TestIterateAccountStatesByAddress() {
+	suite.SetupTest()
+
+	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
+	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
+	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
+	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
+	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, map[string]uint64{})
+
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state3)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state4)
+	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state5)
+
+	counter := 0
+	addr, err := sdk.AccAddressFromBech32("cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
+	suite.Assert().NoError(err, "no error should be thrown")
+	suite.app.RewardKeeper.IterateRewardAccountStatesByAddress(suite.ctx, addr, func(state types.RewardAccountState) bool {
+		counter += 1
+		return false
+	})
+
+	suite.Assert().Equal(4, counter, "should have correct number of iterations")
 }
 
 func (suite *KeeperTestSuite) TestEmptyIterateAccountStates() {
