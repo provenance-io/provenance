@@ -1,4 +1,4 @@
-FROM golang:1.17-buster as build
+FROM golang:1.17-bullseye as build
 ARG VERSION
 
 WORKDIR /go/src/github.com/provenance-io/provenance
@@ -27,7 +27,7 @@ WORKDIR /testrosetta
 RUN provenanced testnet -t --v 1 -o . --starting-ip-address=0.0.0.0 --keyring-backend=test --chain-id=chain-local
 
 ###
-FROM debian:buster-slim
+FROM debian:bullseye-slim
 ENV LOCALNET=1
 
 RUN apt-get update && \

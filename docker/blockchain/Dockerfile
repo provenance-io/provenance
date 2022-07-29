@@ -1,4 +1,4 @@
-FROM golang:1.17-buster as build
+FROM golang:1.17-bullseye as build
 ARG VERSION
 
 WORKDIR /go/src/github.com/provenance-io/provenance
@@ -26,7 +26,7 @@ ENV VERSION=$VERSION
 RUN make VERSION=${VERSION} install
 
 ###
-FROM debian:buster-slim as run
+FROM debian:bullseye-slim as run
 
 RUN apt-get update && \
     apt-get upgrade -y && \
