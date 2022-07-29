@@ -4,6 +4,7 @@ package provenance.reward.v1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
+import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "provenance/reward/v1/reward.proto";
 
@@ -15,15 +16,24 @@ option java_multiple_files = true;
 service Msg {
 
   // CreateRewardProgram is the RPC endpoint for creating a rewards program
-  rpc CreateRewardProgram(MsgCreateRewardProgramRequest) returns (MsgCreateRewardProgramResponse);
+  rpc CreateRewardProgram(MsgCreateRewardProgramRequest) returns (MsgCreateRewardProgramResponse) {
+    option (google.api.http).post = "/provenance/reward/v1/reward_programs";
+  }
 
   // EndRewardProgram is the RPC endpoint for ending a rewards program
-  rpc EndRewardProgram(MsgEndRewardProgramRequest) returns (MsgEndRewardProgramResponse);
+  rpc EndRewardProgram(MsgEndRewardProgramRequest) returns (MsgEndRewardProgramResponse) {
+    option (google.api.http).patch = "/provenance/reward/v1/reward_programs/{reward_program_id}";
+  }
 
   // ClaimRewards is the RPC endpoint for claiming rewards for completed claim periods of a reward program
-  rpc ClaimRewards(MsgClaimRewardRequest) returns (MsgClaimRewardResponse);
+  rpc ClaimRewards(MsgClaimRewardRequest) returns (MsgClaimRewardResponse) {
+    option (google.api.http).patch =
+        "/provenance/reward/v1/reward_claims/{reward_address}/reward_programs/{reward_program_id}";
+  }
 
-  rpc ClaimAllRewards(MsgClaimAllRewardsRequest) returns (MsgClaimAllRewardsResponse);
+  rpc ClaimAllRewards(MsgClaimAllRewardsRequest) returns (MsgClaimAllRewardsResponse) {
+    option (google.api.http).patch = "/provenance/reward/v1/reward_claims/{reward_address}";
+  }
 }
 
 // MsgCreateRewardProgramRequest is the request type for creating a reward program RPC

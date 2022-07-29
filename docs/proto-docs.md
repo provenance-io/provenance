@@ -6433,11 +6433,11 @@ Query defines the gRPC querier service for reward module.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `RewardProgramByID` | [QueryRewardProgramByIDRequest](#provenance.reward.v1.QueryRewardProgramByIDRequest) | [QueryRewardProgramByIDResponse](#provenance.reward.v1.QueryRewardProgramByIDResponse) | returns RewardProgram by id | GET|/provenance/rewards/v1/reward_program_by_id/{id}|
+| `RewardProgramByID` | [QueryRewardProgramByIDRequest](#provenance.reward.v1.QueryRewardProgramByIDRequest) | [QueryRewardProgramByIDResponse](#provenance.reward.v1.QueryRewardProgramByIDResponse) | returns RewardProgram by id | GET|/provenance/rewards/v1/reward_programs/{id}|
 | `RewardPrograms` | [QueryRewardProgramsRequest](#provenance.reward.v1.QueryRewardProgramsRequest) | [QueryRewardProgramsResponse](#provenance.reward.v1.QueryRewardProgramsResponse) | returns RewardPrograms both upcoming and active | GET|/provenance/rewards/v1/reward_programs|
 | `ClaimPeriodRewardDistributions` | [QueryClaimPeriodRewardDistributionsRequest](#provenance.reward.v1.QueryClaimPeriodRewardDistributionsRequest) | [QueryClaimPeriodRewardDistributionsResponse](#provenance.reward.v1.QueryClaimPeriodRewardDistributionsResponse) | returns all with pagination QueryClaimPeriodRewardDistributionsRequest | GET|/provenance/rewards/v1/claim_period_reward_distributions|
-| `ClaimPeriodRewardDistributionsByID` | [QueryClaimPeriodRewardDistributionByIDRequest](#provenance.reward.v1.QueryClaimPeriodRewardDistributionByIDRequest) | [QueryClaimPeriodRewardDistributionByIDResponse](#provenance.reward.v1.QueryClaimPeriodRewardDistributionByIDResponse) | returns a ClaimPeriodRewardDistribution by rewardId and claimPeriodId | GET|/provenance/rewards/v1/claim_period_reward_distributions/{reward_id}/claimPeriods/{claim_period_id}|
-| `QueryRewardDistributionsByAddress` | [QueryRewardsByAddressRequest](#provenance.reward.v1.QueryRewardsByAddressRequest) | [QueryAccountByAddressResponse](#provenance.reward.v1.QueryAccountByAddressResponse) | returns rewards for an address based on request criteria(all, claimed, claimable etc) | GET|/provenance/rewards/v1/reward_accounts/{address}/{claim_status}|
+| `ClaimPeriodRewardDistributionsByID` | [QueryClaimPeriodRewardDistributionByIDRequest](#provenance.reward.v1.QueryClaimPeriodRewardDistributionByIDRequest) | [QueryClaimPeriodRewardDistributionByIDResponse](#provenance.reward.v1.QueryClaimPeriodRewardDistributionByIDResponse) | returns a ClaimPeriodRewardDistribution by rewardId and claimPeriodId | GET|/provenance/rewards/v1/claim_period_reward_distributions/{reward_id}/claim_periods/{claim_period_id}|
+| `QueryRewardDistributionsByAddress` | [QueryRewardsByAddressRequest](#provenance.reward.v1.QueryRewardsByAddressRequest) | [QueryAccountByAddressResponse](#provenance.reward.v1.QueryAccountByAddressResponse) | returns rewards for an address based on request criteria(all, claimed, claimable etc) | GET|/provenance/rewards/v1/reward_claims/{address}|
 
  <!-- end services -->
 
@@ -6625,10 +6625,10 @@ Msg
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `CreateRewardProgram` | [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest) | [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse) | CreateRewardProgram is the RPC endpoint for creating a rewards program | |
-| `EndRewardProgram` | [MsgEndRewardProgramRequest](#provenance.reward.v1.MsgEndRewardProgramRequest) | [MsgEndRewardProgramResponse](#provenance.reward.v1.MsgEndRewardProgramResponse) | EndRewardProgram is the RPC endpoint for ending a rewards program | |
-| `ClaimRewards` | [MsgClaimRewardRequest](#provenance.reward.v1.MsgClaimRewardRequest) | [MsgClaimRewardResponse](#provenance.reward.v1.MsgClaimRewardResponse) | ClaimRewards is the RPC endpoint for claiming rewards for completed claim periods of a reward program | |
-| `ClaimAllRewards` | [MsgClaimAllRewardsRequest](#provenance.reward.v1.MsgClaimAllRewardsRequest) | [MsgClaimAllRewardsResponse](#provenance.reward.v1.MsgClaimAllRewardsResponse) |  | |
+| `CreateRewardProgram` | [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest) | [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse) | CreateRewardProgram is the RPC endpoint for creating a rewards program | POST|/provenance/reward/v1/reward_programs|
+| `EndRewardProgram` | [MsgEndRewardProgramRequest](#provenance.reward.v1.MsgEndRewardProgramRequest) | [MsgEndRewardProgramResponse](#provenance.reward.v1.MsgEndRewardProgramResponse) | EndRewardProgram is the RPC endpoint for ending a rewards program | PATCH|/provenance/reward/v1/reward_programs/{reward_program_id}|
+| `ClaimRewards` | [MsgClaimRewardRequest](#provenance.reward.v1.MsgClaimRewardRequest) | [MsgClaimRewardResponse](#provenance.reward.v1.MsgClaimRewardResponse) | ClaimRewards is the RPC endpoint for claiming rewards for completed claim periods of a reward program | PATCH|/provenance/reward/v1/reward_claims/{reward_address}/reward_programs/{reward_program_id}|
+| `ClaimAllRewards` | [MsgClaimAllRewardsRequest](#provenance.reward.v1.MsgClaimAllRewardsRequest) | [MsgClaimAllRewardsResponse](#provenance.reward.v1.MsgClaimAllRewardsResponse) |  | PATCH|/provenance/reward/v1/reward_claims/{reward_address}|
 
  <!-- end services -->
 

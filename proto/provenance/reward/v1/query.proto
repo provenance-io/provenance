@@ -16,7 +16,7 @@ service Query {
 
   // returns RewardProgram by id
   rpc RewardProgramByID(QueryRewardProgramByIDRequest) returns (QueryRewardProgramByIDResponse) {
-    option (google.api.http).get = "/provenance/rewards/v1/reward_program_by_id/{id}";
+    option (google.api.http).get = "/provenance/rewards/v1/reward_programs/{id}";
   }
   // returns RewardPrograms both upcoming and active
   rpc RewardPrograms(QueryRewardProgramsRequest) returns (QueryRewardProgramsResponse) {
@@ -33,12 +33,12 @@ service Query {
   rpc ClaimPeriodRewardDistributionsByID(QueryClaimPeriodRewardDistributionByIDRequest)
       returns (QueryClaimPeriodRewardDistributionByIDResponse) {
     option (google.api.http).get =
-        "/provenance/rewards/v1/claim_period_reward_distributions/{reward_id}/claimPeriods/{claim_period_id}";
+        "/provenance/rewards/v1/claim_period_reward_distributions/{reward_id}/claim_periods/{claim_period_id}";
   }
 
   // returns rewards for an address based on request criteria(all, claimed, claimable etc)
   rpc QueryRewardDistributionsByAddress(QueryRewardsByAddressRequest) returns (QueryAccountByAddressResponse) {
-    option (google.api.http).get = "/provenance/rewards/v1/reward_accounts/{address}/{claim_status}";
+    option (google.api.http).get = "/provenance/rewards/v1/reward_claims/{address}";
   }
 }
 

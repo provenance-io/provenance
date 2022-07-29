@@ -234,7 +234,7 @@ func local_request_Query_ClaimPeriodRewardDistributionsByID_0(ctx context.Contex
 }
 
 var (
-	filter_Query_QueryRewardDistributionsByAddress_0 = &utilities.DoubleArray{Encoding: map[string]int{"address": 0, "claim_status": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+	filter_Query_QueryRewardDistributionsByAddress_0 = &utilities.DoubleArray{Encoding: map[string]int{"address": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
 func request_Query_QueryRewardDistributionsByAddress_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -243,7 +243,6 @@ func request_Query_QueryRewardDistributionsByAddress_0(ctx context.Context, mars
 
 	var (
 		val string
-		e   int32
 		ok  bool
 		err error
 		_   = err
@@ -259,19 +258,6 @@ func request_Query_QueryRewardDistributionsByAddress_0(ctx context.Context, mars
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "address", err)
 	}
-
-	val, ok = pathParams["claim_status"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "claim_status")
-	}
-
-	e, err = runtime.Enum(val, QueryRewardsByAddressRequest_RewardAccountQueryParam_value)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "claim_status", err)
-	}
-
-	protoReq.ClaimStatus = QueryRewardsByAddressRequest_RewardAccountQueryParam(e)
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -291,7 +277,6 @@ func local_request_Query_QueryRewardDistributionsByAddress_0(ctx context.Context
 
 	var (
 		val string
-		e   int32
 		ok  bool
 		err error
 		_   = err
@@ -307,19 +292,6 @@ func local_request_Query_QueryRewardDistributionsByAddress_0(ctx context.Context
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "address", err)
 	}
-
-	val, ok = pathParams["claim_status"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "claim_status")
-	}
-
-	e, err = runtime.Enum(val, QueryRewardsByAddressRequest_RewardAccountQueryParam_value)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "claim_status", err)
-	}
-
-	protoReq.ClaimStatus = QueryRewardsByAddressRequest_RewardAccountQueryParam(e)
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -584,15 +556,15 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_RewardProgramByID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "rewards", "v1", "reward_program_by_id", "id"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_RewardProgramByID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "rewards", "v1", "reward_programs", "id"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_RewardPrograms_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"provenance", "rewards", "v1", "reward_programs"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_ClaimPeriodRewardDistributions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"provenance", "rewards", "v1", "claim_period_reward_distributions"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ClaimPeriodRewardDistributionsByID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"provenance", "rewards", "v1", "claim_period_reward_distributions", "reward_id", "claimPeriods", "claim_period_id"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_ClaimPeriodRewardDistributionsByID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"provenance", "rewards", "v1", "claim_period_reward_distributions", "reward_id", "claim_periods", "claim_period_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_QueryRewardDistributionsByAddress_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "rewards", "v1", "reward_accounts", "address", "claim_status"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_QueryRewardDistributionsByAddress_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "rewards", "v1", "reward_claims", "address"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
