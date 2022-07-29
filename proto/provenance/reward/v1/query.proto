@@ -3,8 +3,6 @@ package provenance.reward.v1;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "google/protobuf/duration.proto";
-import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "provenance/reward/v1/reward.proto";
@@ -44,14 +42,17 @@ service Query {
   }
 }
 
+// QueryRewardProgramByIDRequest queries for the Reward Program with an identifier of id
 message QueryRewardProgramByIDRequest {
   uint64 id = 1;
 }
 
+// QueryRewardProgramByIDResponse contains the requested RewardProgram
 message QueryRewardProgramByIDResponse {
   RewardProgram reward_program = 1;
 }
 
+// QueryRewardProgramsRequest queries for all RewardPrograms matching the query_type
 message QueryRewardProgramsRequest {
   enum QueryType {
     ALL         = 0;
@@ -63,23 +64,29 @@ message QueryRewardProgramsRequest {
   QueryType query_type = 1;
 }
 
+// QueryRewardProgramsResponse contains the list of RewardPrograms matching the query
 message QueryRewardProgramsResponse {
   repeated RewardProgram reward_programs = 1 [(gogoproto.nullable) = false];
 }
 
+// QueryClaimPeriodRewardDistributionsRequest queries for all the ClaimPeriodRewardDistributions with pagination.
 message QueryClaimPeriodRewardDistributionsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
+
+// QueryClaimPeriodRewardDistributionsResponse returns the list of paginated ClaimPeriodRewardDistributions
 message QueryClaimPeriodRewardDistributionsResponse {
   repeated ClaimPeriodRewardDistribution claim_period_reward_distributions = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination                        = 99;
 }
 
+// QueryClaimPeriodRewardDistributionByIDRequest queries for a single ClaimPeriodRewardDistribution
 message QueryClaimPeriodRewardDistributionByIDRequest {
   uint64 reward_id       = 1;
   uint64 claim_period_id = 2;
 }
 
+// QueryClaimPeriodRewardDistributionByIDResponse returns the requested ClaimPeriodRewardDistribution
 message QueryClaimPeriodRewardDistributionByIDResponse {
   ClaimPeriodRewardDistribution claim_period_reward_distribution = 1;
 }
@@ -92,15 +99,15 @@ message QueryRewardsByAddressRequest {
     CLAIMED     = 3;
     EXPIRED     = 4;
   }
-  string                  address      = 1;
-  RewardAccountQueryParam claim_status = 2;
-  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+  string                                address      = 1;
+  RewardAccountQueryParam               claim_status = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination   = 99;
 }
 
 message QueryAccountByAddressResponse {
-  string                         address              = 1;
-  repeated RewardAccountResponse reward_account_state = 2 [(gogoproto.nullable) = false];
-  cosmos.base.query.v1beta1.PageResponse pagination                        = 99;
+  string                                 address              = 1;
+  repeated RewardAccountResponse         reward_account_state = 2 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination           = 99;
 }
 
 message RewardAccountResponse {
@@ -111,5 +118,5 @@ message RewardAccountResponse {
   cosmos.base.v1beta1.Coin total_reward_claim = 2
       [(gogoproto.nullable) = false];              // total rewards claimed for all eligible claim periods in program
   RewardAccountState.ClaimStatus claim_status = 3; // The status of the claim}
-  uint64                   claim_id  = 4;
+  uint64                         claim_id     = 4;
 }

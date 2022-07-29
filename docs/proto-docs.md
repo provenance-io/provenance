@@ -6236,7 +6236,7 @@ GenesisState defines the reward module's genesis state.
 <a name="provenance.reward.v1.QueryClaimPeriodRewardDistributionByIDRequest"></a>
 
 ### QueryClaimPeriodRewardDistributionByIDRequest
-
+QueryClaimPeriodRewardDistributionByIDRequest queries for a single ClaimPeriodRewardDistribution
 
 
 | Field | Type | Label | Description |
@@ -6252,7 +6252,7 @@ GenesisState defines the reward module's genesis state.
 <a name="provenance.reward.v1.QueryClaimPeriodRewardDistributionByIDResponse"></a>
 
 ### QueryClaimPeriodRewardDistributionByIDResponse
-
+QueryClaimPeriodRewardDistributionByIDResponse returns the requested ClaimPeriodRewardDistribution
 
 
 | Field | Type | Label | Description |
@@ -6267,7 +6267,7 @@ GenesisState defines the reward module's genesis state.
 <a name="provenance.reward.v1.QueryClaimPeriodRewardDistributionsRequest"></a>
 
 ### QueryClaimPeriodRewardDistributionsRequest
-
+QueryClaimPeriodRewardDistributionsRequest queries for all the ClaimPeriodRewardDistributions with pagination.
 
 
 | Field | Type | Label | Description |
@@ -6282,7 +6282,7 @@ GenesisState defines the reward module's genesis state.
 <a name="provenance.reward.v1.QueryClaimPeriodRewardDistributionsResponse"></a>
 
 ### QueryClaimPeriodRewardDistributionsResponse
-
+QueryClaimPeriodRewardDistributionsResponse returns the list of paginated ClaimPeriodRewardDistributions
 
 
 | Field | Type | Label | Description |
@@ -6298,7 +6298,7 @@ GenesisState defines the reward module's genesis state.
 <a name="provenance.reward.v1.QueryRewardProgramByIDRequest"></a>
 
 ### QueryRewardProgramByIDRequest
-
+QueryRewardProgramByIDRequest queries for the Reward Program with an identifier of id
 
 
 | Field | Type | Label | Description |
@@ -6313,7 +6313,7 @@ GenesisState defines the reward module's genesis state.
 <a name="provenance.reward.v1.QueryRewardProgramByIDResponse"></a>
 
 ### QueryRewardProgramByIDResponse
-
+QueryRewardProgramByIDResponse contains the requested RewardProgram
 
 
 | Field | Type | Label | Description |
@@ -6328,7 +6328,7 @@ GenesisState defines the reward module's genesis state.
 <a name="provenance.reward.v1.QueryRewardProgramsRequest"></a>
 
 ### QueryRewardProgramsRequest
-
+QueryRewardProgramsRequest queries for all RewardPrograms matching the query_type
 
 
 | Field | Type | Label | Description |
@@ -6343,7 +6343,7 @@ GenesisState defines the reward module's genesis state.
 <a name="provenance.reward.v1.QueryRewardProgramsResponse"></a>
 
 ### QueryRewardProgramsResponse
-
+QueryRewardProgramsResponse contains the list of RewardPrograms matching the query
 
 
 | Field | Type | Label | Description |

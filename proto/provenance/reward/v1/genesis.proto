@@ -2,7 +2,6 @@ syntax = "proto3";
 package provenance.reward.v1;
 
 import "gogoproto/gogo.proto";
-import "google/protobuf/any.proto";
 import "provenance/reward/v1/reward.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/reward/types";
