@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/binary"
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/reward/types"
@@ -53,7 +54,6 @@ func (k Keeper) SetRewardAccountState(ctx sdk.Context, state types.RewardAccount
 	addressLookupKey := types.GetRewardAccountStateAddressLookupKey([]byte(state.GetAddress()), state.GetRewardProgramId(), state.GetClaimPeriodId())
 	// no need for a value a key can derive all the info needed
 	store.Set(addressLookupKey, []byte{})
-
 }
 
 // IterateRewardAccountStates Iterates over the account states for a reward program's claim period
@@ -81,13 +81,14 @@ func (k Keeper) IterateRewardAccountStatesByAddress(ctx sdk.Context, addr sdk.Ac
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		record := types.RewardAccountState{}
 		keyParsed, err := ParseRewardAccountLookUpKey(iterator.Key(), addr)
 		if err != nil {
 			return err
 		}
-		record, _ = k.GetRewardAccountState(ctx, keyParsed.rewardId, keyParsed.claimId, addr.String())
-
+		record, err := k.GetRewardAccountState(ctx, keyParsed.rewardID, keyParsed.claimID, addr.String())
+		if err != nil {
+			return err
+		}
 		if handle(record) {
 			break
 		}
@@ -180,11 +181,11 @@ func ParseRewardAccountLookUpKey(accountStateAddressLookupKey []byte, addr sdk.A
 	if addr.String() != string(address) {
 		return RewardAccountLookup{}, fmt.Errorf("addresses do not match up")
 	}
-	rewardId := binary.BigEndian.Uint64(accountStateAddressLookupKey[lengthOfAddress+2 : lengthOfAddress+2+8])
-	claimId := binary.BigEndian.Uint64(accountStateAddressLookupKey[lengthOfAddress+2+8 : lengthOfAddress+2+16])
+	rewardID := binary.BigEndian.Uint64(accountStateAddressLookupKey[lengthOfAddress+2 : lengthOfAddress+2+8])
+	claimID := binary.BigEndian.Uint64(accountStateAddressLookupKey[lengthOfAddress+2+8 : lengthOfAddress+2+16])
 	return RewardAccountLookup{
 		addr:     addr,
-		rewardId: rewardId,
-		claimId:  claimId,
+		rewardID: rewardID,
+		claimID:  claimID,
 	}, nil
 }

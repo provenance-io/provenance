@@ -88,7 +88,7 @@ func (k Keeper) ClaimPeriodRewardDistributions(ctx context.Context, req *types.Q
 	return &response, nil
 }
 
-// ClaimPeriodRewardDistributionsByID returns a ClaimPeriodRewardDistribution by rewardId and epochId
+// ClaimPeriodRewardDistributionsByID returns a ClaimPeriodRewardDistribution by rewardID and claimPeriodID
 func (k Keeper) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *types.QueryClaimPeriodRewardDistributionByIDRequest) (*types.QueryClaimPeriodRewardDistributionByIDResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -127,7 +127,7 @@ func (k Keeper) QueryRewardDistributionsByAddress(ctx context.Context, request *
 		if errFromParsingKey != nil {
 			return false, err
 		}
-		result, errFromGetRewardAccount := k.GetRewardAccountState(sdkCtx, lookupVal.rewardId, lookupVal.claimId, lookupVal.addr.String())
+		result, errFromGetRewardAccount := k.GetRewardAccountState(sdkCtx, lookupVal.rewardID, lookupVal.claimID, lookupVal.addr.String())
 		// think ignoring the error maybe ok here since it's just another lookup
 		if errFromGetRewardAccount != nil {
 			return false, nil
@@ -210,17 +210,17 @@ func enforceMaxMinPageLimit(pageRequest *query.PageRequest) {
 }
 
 func ParseFilterLookUpKey(accountStateAddressLookupKey []byte, addr sdk.AccAddress) (RewardAccountLookup, error) {
-	rewardId := binary.BigEndian.Uint64(accountStateAddressLookupKey[0:8])
-	claimId := binary.BigEndian.Uint64(accountStateAddressLookupKey[8:16])
+	rewardID := binary.BigEndian.Uint64(accountStateAddressLookupKey[0:8])
+	claimID := binary.BigEndian.Uint64(accountStateAddressLookupKey[8:16])
 	return RewardAccountLookup{
 		addr:     addr,
-		rewardId: rewardId,
-		claimId:  claimId,
+		rewardID: rewardID,
+		claimID:  claimID,
 	}, nil
 }
 
 type RewardAccountLookup struct {
 	addr     sdk.Address
-	rewardId uint64
-	claimId  uint64
+	rewardID uint64
+	claimID  uint64
 }
