@@ -280,6 +280,8 @@ func (k Keeper) ValidateScopeUpdate(
 		return err
 	}
 
+	var validatedParties []types.Party
+
 	if len(existing.Owners) > 0 {
 		// Existing owners are not required to sign when the ONLY change is from one value owner to another.
 		// If the value owner wasn't previously set, and is being set now, existing owners must sign.
@@ -292,17 +294,18 @@ func (k Keeper) ValidateScopeUpdate(
 			if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msgTypeURL); err != nil {
 				return err
 			}
+			validatedParties = existing.Owners
 		}
 	}
 
-	if err := k.validateScopeUpdateValueOwner(ctx, existing.ValueOwnerAddress, proposed.ValueOwnerAddress, existing.Owners, signers, msgTypeURL); err != nil {
+	if err := k.validateScopeUpdateValueOwner(ctx, existing.ValueOwnerAddress, proposed.ValueOwnerAddress, validatedParties, signers, msgTypeURL); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// ValidateScopeRemove checks the current scope and the proposed removal scope to determine if the the proposed remove is valid
+// ValidateScopeRemove checks the current scope and the proposed removal scope to determine if the proposed remove is valid
 // based on the existing state
 func (k Keeper) ValidateScopeRemove(ctx sdk.Context, scope types.Scope, signers []string, msgTypeURL string) error {
 	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, scope.Owners, signers, msgTypeURL); err != nil {
