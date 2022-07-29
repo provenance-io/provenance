@@ -17,5 +17,5 @@ func ConfigOptions() string {
 	for k := range StreamServiceInitializers {
 		keys = append(keys, k)
 	}
-	return strings.Join(keys[:], ",")
+	return strings.Join(keys, ",")
 }
