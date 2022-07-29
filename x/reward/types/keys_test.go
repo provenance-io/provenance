@@ -2,6 +2,8 @@ package types
 
 import (
 	"encoding/binary"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -10,6 +12,7 @@ import (
 
 func TestRewardModuleTypeKeys(t *testing.T) {
 	testAddress := "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27"
+	addressFromSec256k1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	rewardProgramId := uint64(123456)
 	claimPeriodId := uint64(7891011)
 
@@ -44,4 +47,13 @@ func TestRewardModuleTypeKeys(t *testing.T) {
 	assert.EqualValues(t, ClaimPeriodRewardDistributionKeyPrefix, claimPeriodRewardDistributionKey[0:1])
 	assert.EqualValues(t, claimPeriodId, binary.BigEndian.Uint64(claimPeriodRewardDistributionKey[1:9]))
 	assert.EqualValues(t, rewardProgramId, binary.BigEndian.Uint64(claimPeriodRewardDistributionKey[9:17]))
+
+	accountStateAddressLookupKey := GetRewardAccountStateAddressLookupKey(addressFromSec256k1.Bytes(), rewardProgramId, claimPeriodId)
+	assert.EqualValues(t, AccountStateAddressLookupKeyPrefix, accountStateAddressLookupKey[0:1])
+
+	assert.Equal(t, byte(20), accountStateAddressLookupKey[1:2][0], "should be the length of key 20 for secp256k1")
+	assert.EqualValues(t, addressFromSec256k1.Bytes(), accountStateAddressLookupKey[2:22])
+	assert.EqualValues(t, rewardProgramId, binary.BigEndian.Uint64(accountStateAddressLookupKey[22:30]))
+	assert.EqualValues(t, claimPeriodId, uint64(binary.BigEndian.Uint64(accountStateAddressLookupKey[30:38])))
+
 }
