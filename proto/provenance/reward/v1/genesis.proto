@@ -13,9 +13,10 @@ message GenesisState {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
+  // Reward programs to initially start with.
   repeated RewardProgram reward_programs = 1 [(gogoproto.nullable) = false];
-
+  // Claim period reward distributions to initially start with.
   repeated ClaimPeriodRewardDistribution claim_period_reward_distributions = 2 [(gogoproto.nullable) = false];
-
+  // Reward account states to initially start with.
   repeated RewardAccountState reward_account_states = 3 [(gogoproto.nullable) = false];
 }

@@ -14,29 +14,30 @@ option java_multiple_files = true;
 // Query defines the gRPC querier service for reward module.
 service Query {
 
-  // returns RewardProgram by id
+  // RewardProgramByID returns a reward program matching the ID.
   rpc RewardProgramByID(QueryRewardProgramByIDRequest) returns (QueryRewardProgramByIDResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/reward_programs/{id}";
   }
-  // returns RewardPrograms both upcoming and active
+  // RewardPrograms returns a list of reward programs matching the query type.
   rpc RewardPrograms(QueryRewardProgramsRequest) returns (QueryRewardProgramsResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/reward_programs";
   }
 
-  // returns all with pagination QueryClaimPeriodRewardDistributionsRequest
+  // ClaimPeriodRewardDistributions returns a list of claim period reward distributions matching the claim_status.
   rpc ClaimPeriodRewardDistributions(QueryClaimPeriodRewardDistributionsRequest)
       returns (QueryClaimPeriodRewardDistributionsResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/claim_period_reward_distributions";
   }
 
-  // returns a ClaimPeriodRewardDistribution by rewardId and claimPeriodId
+  // ClaimPeriodRewardDistributionsByID returns a claim period reward distribution matching the ID.
   rpc ClaimPeriodRewardDistributionsByID(QueryClaimPeriodRewardDistributionByIDRequest)
       returns (QueryClaimPeriodRewardDistributionByIDResponse) {
     option (google.api.http).get =
         "/provenance/rewards/v1/claim_period_reward_distributions/{reward_id}/claim_periods/{claim_period_id}";
   }
 
-  // returns rewards for an address based on request criteria(all, claimed, claimable etc)
+  // QueryRewardDistributionsByAddress returns a list of reward claims belonging to the account and matching the claim
+  // status.
   rpc QueryRewardDistributionsByAddress(QueryRewardsByAddressRequest) returns (QueryAccountByAddressResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/reward_claims/{address}";
   }
@@ -44,15 +45,17 @@ service Query {
 
 // QueryRewardProgramByIDRequest queries for the Reward Program with an identifier of id
 message QueryRewardProgramByIDRequest {
-  uint64 id = 1; // The id of the reward program to query
+  // The id of the reward program to query.
+  uint64 id = 1;
 }
 
 // QueryRewardProgramByIDResponse contains the requested RewardProgram
 message QueryRewardProgramByIDResponse {
-  RewardProgram reward_program = 1; // The reward program object that was queried for
+  // The reward program object that was queried for.
+  RewardProgram reward_program = 1;
 }
 
-// QueryRewardProgramsRequest queries for all RewardPrograms matching the query_type
+// QueryRewardProgramsRequest queries for all reward programs matching the query_type
 message QueryRewardProgramsRequest {
   enum QueryType {
     ALL         = 0;
@@ -61,39 +64,45 @@ message QueryRewardProgramsRequest {
     OUTSTANDING = 3;
     FINISHED    = 4;
   }
-  QueryType query_type = 1; // A filter on the types of RewardPrograms
+  // A filter on the types of reward programs.
+  QueryType query_type = 1;
 }
 
 // QueryRewardProgramsResponse contains the list of RewardPrograms matching the query
 message QueryRewardProgramsResponse {
-  repeated RewardProgram reward_programs = 1
-      [(gogoproto.nullable) = false]; // List of RewardProgram objects matching the query_type
+  // List of RewardProgram objects matching the query_type.
+  repeated RewardProgram reward_programs = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryClaimPeriodRewardDistributionsRequest queries for all the ClaimPeriodRewardDistributions with pagination.
 message QueryClaimPeriodRewardDistributionsRequest {
-  cosmos.base.query.v1beta1.PageRequest pagination = 99; // pagination defines an optional pagination for the request.
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
 // QueryClaimPeriodRewardDistributionsResponse returns the list of paginated ClaimPeriodRewardDistributions
 message QueryClaimPeriodRewardDistributionsResponse {
-  repeated ClaimPeriodRewardDistribution claim_period_reward_distributions = 1
-      [(gogoproto.nullable) = false]; // List of all ClaimPeriodRewardDistribution objects queried for.
-  cosmos.base.query.v1beta1.PageResponse pagination = 99; // pagination defines an optional pagination for the response.
+  // List of all ClaimPeriodRewardDistribution objects queried for.
+  repeated ClaimPeriodRewardDistribution claim_period_reward_distributions = 1 [(gogoproto.nullable) = false];
+  // pagination defines an optional pagination for the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // QueryClaimPeriodRewardDistributionByIDRequest queries for a single ClaimPeriodRewardDistribution
 message QueryClaimPeriodRewardDistributionByIDRequest {
-  uint64 reward_id       = 1; // The reward program that the claim period reward distribution belongs to
-  uint64 claim_period_id = 2; // The claim period that the claim period reward distribution was created for
+  // The reward program that the claim period reward distribution belongs to.
+  uint64 reward_id = 1;
+  // The claim period that the claim period reward distribution was created for.
+  uint64 claim_period_id = 2;
 }
 
 // QueryClaimPeriodRewardDistributionByIDResponse returns the requested ClaimPeriodRewardDistribution
 message QueryClaimPeriodRewardDistributionByIDResponse {
-  ClaimPeriodRewardDistribution claim_period_reward_distribution =
-      1; // The ClaimPeriodRewardDistribution object that was queried for
+  // The ClaimPeriodRewardDistribution object that was queried for.
+  ClaimPeriodRewardDistribution claim_period_reward_distribution = 1;
 }
 
+// QueryRewardsByAddressRequest queries for reward claims by address that match the claim_status.
 message QueryRewardsByAddressRequest {
   enum RewardAccountQueryParam {
     ALL         = 0;
@@ -102,25 +111,36 @@ message QueryRewardsByAddressRequest {
     CLAIMED     = 3;
     EXPIRED     = 4;
   }
-  string                                address      = 1;  // The address that the claim belongs to
-  RewardAccountQueryParam               claim_status = 2;  // The status that the reward account must have
-  cosmos.base.query.v1beta1.PageRequest pagination   = 99; // pagination defines an optional pagination for the request.
+  // The address that the claim belongs to.
+  string address = 1;
+  // The status that the reward account must have.
+  RewardAccountQueryParam claim_status = 2;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
+// QueryAccountByAddressResponse returns the reward claims for an address that match the claim_status.
 message QueryAccountByAddressResponse {
-  string                         address              = 1; // The address that the reward account belongs to
-  repeated RewardAccountResponse reward_account_state = 2
-      [(gogoproto.nullable) = false];                     // List of RewardAccounts queried for
-  cosmos.base.query.v1beta1.PageResponse pagination = 99; // pagination defines an optional pagination for the response.
+  // The address that the reward account belongs to.
+  string address = 1;
+  // List of RewardAccounts queried for.
+  repeated RewardAccountResponse reward_account_state = 2 [(gogoproto.nullable) = false];
+  // pagination defines an optional pagination for the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
+// RewardAccountResponse is an address' reward claim for a reward program's claim period.
 message RewardAccountResponse {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;
 
-  uint64                   reward_program_id  = 1; // The id of the reward program that this claim belongs to
-  cosmos.base.v1beta1.Coin total_reward_claim = 2
-      [(gogoproto.nullable) = false];              // total rewards claimed for all eligible claim periods in program
-  RewardAccountState.ClaimStatus claim_status = 3; // The status of the claim
-  uint64                         claim_id     = 4; // The claim period that the claim belongs to
+  // The id of the reward program that this claim belongs to.
+  uint64 reward_program_id = 1;
+
+  // total rewards claimed for all eligible claim periods in program.
+  cosmos.base.v1beta1.Coin total_reward_claim = 2 [(gogoproto.nullable) = false];
+  // The status of the claim.
+  RewardAccountState.ClaimStatus claim_status = 3;
+  // The claim period that the claim belongs to.
+  uint64 claim_id = 4;
 }

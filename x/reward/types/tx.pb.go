@@ -37,17 +37,28 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // MsgCreateRewardProgramRequest is the request type for creating a reward program RPC
 type MsgCreateRewardProgramRequest struct {
-	Title                    string             `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description              string             `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	DistributeFromAddress    string             `protobuf:"bytes,3,opt,name=distribute_from_address,json=distributeFromAddress,proto3" json:"distribute_from_address,omitempty"`
-	TotalRewardPool          types.Coin         `protobuf:"bytes,4,opt,name=total_reward_pool,json=totalRewardPool,proto3" json:"total_reward_pool"`
-	MaxRewardPerClaimAddress types.Coin         `protobuf:"bytes,5,opt,name=max_reward_per_claim_address,json=maxRewardPerClaimAddress,proto3" json:"max_reward_per_claim_address"`
-	ProgramStartTime         time.Time          `protobuf:"bytes,6,opt,name=program_start_time,json=programStartTime,proto3,stdtime" json:"program_start_time,omitempty" yaml:"program_start_time,omitempty"`
-	ClaimPeriods             uint64             `protobuf:"varint,7,opt,name=claim_periods,json=claimPeriods,proto3" json:"claim_periods,omitempty"`
-	ClaimPeriodDays          uint64             `protobuf:"varint,8,opt,name=claim_period_days,json=claimPeriodDays,proto3" json:"claim_period_days,omitempty"`
-	MaxRolloverClaimPeriods  uint64             `protobuf:"varint,9,opt,name=max_rollover_claim_periods,json=maxRolloverClaimPeriods,proto3" json:"max_rollover_claim_periods,omitempty"`
-	ExpireDays               uint64             `protobuf:"varint,10,opt,name=expire_days,json=expireDays,proto3" json:"expire_days,omitempty"`
-	QualifyingActions        []QualifyingAction `protobuf:"bytes,11,rep,name=qualifying_actions,json=qualifyingActions,proto3" json:"qualifying_actions" yaml:"qualifying_actions`
+	// title for the reward program.
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// description for the reward program.
+	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	// provider address for the reward program funds and signer of message.
+	DistributeFromAddress string `protobuf:"bytes,3,opt,name=distribute_from_address,json=distributeFromAddress,proto3" json:"distribute_from_address,omitempty"`
+	// total reward pool for the reward program.
+	TotalRewardPool types.Coin `protobuf:"bytes,4,opt,name=total_reward_pool,json=totalRewardPool,proto3" json:"total_reward_pool"`
+	// maximum amount of funds an address can be rewarded per claim period.
+	MaxRewardPerClaimAddress types.Coin `protobuf:"bytes,5,opt,name=max_reward_per_claim_address,json=maxRewardPerClaimAddress,proto3" json:"max_reward_per_claim_address"`
+	// start time of the reward program.
+	ProgramStartTime time.Time `protobuf:"bytes,6,opt,name=program_start_time,json=programStartTime,proto3,stdtime" json:"program_start_time,omitempty" yaml:"program_start_time,omitempty"`
+	// number of claim periods the reward program runs for.
+	ClaimPeriods uint64 `protobuf:"varint,7,opt,name=claim_periods,json=claimPeriods,proto3" json:"claim_periods,omitempty"`
+	// number of days a claim period will exist.
+	ClaimPeriodDays uint64 `protobuf:"varint,8,opt,name=claim_period_days,json=claimPeriodDays,proto3" json:"claim_period_days,omitempty"`
+	// maximum number of claim periods a reward program can rollover.
+	MaxRolloverClaimPeriods uint64 `protobuf:"varint,9,opt,name=max_rollover_claim_periods,json=maxRolloverClaimPeriods,proto3" json:"max_rollover_claim_periods,omitempty"`
+	// number of days before a reward program will expire after it has ended.
+	ExpireDays uint64 `protobuf:"varint,10,opt,name=expire_days,json=expireDays,proto3" json:"expire_days,omitempty"`
+	// actions that count towards the reward.
+	QualifyingActions []QualifyingAction `protobuf:"bytes,11,rep,name=qualifying_actions,json=qualifyingActions,proto3" json:"qualifying_actions" yaml:"qualifying_actions`
 }
 
 func (m *MsgCreateRewardProgramRequest) Reset()      { *m = MsgCreateRewardProgramRequest{} }
@@ -161,6 +172,7 @@ func (m *MsgCreateRewardProgramRequest) GetQualifyingActions() []QualifyingActio
 
 // MsgCreateRewardProgramResponse is the response type for creating a reward program RPC
 type MsgCreateRewardProgramResponse struct {
+	// reward program id that is generated on creation.
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
@@ -206,7 +218,9 @@ func (m *MsgCreateRewardProgramResponse) GetId() uint64 {
 
 // MsgEndRewardProgramRequest is the request type for ending a reward program RPC
 type MsgEndRewardProgramRequest struct {
-	RewardProgramId     uint64 `protobuf:"varint,1,opt,name=reward_program_id,json=rewardProgramId,proto3" json:"reward_program_id,omitempty"`
+	// reward program id to end.
+	RewardProgramId uint64 `protobuf:"varint,1,opt,name=reward_program_id,json=rewardProgramId,proto3" json:"reward_program_id,omitempty"`
+	// owner of the reward program that funds were distributed from.
 	ProgramOwnerAddress string `protobuf:"bytes,2,opt,name=program_owner_address,json=programOwnerAddress,proto3" json:"program_owner_address,omitempty"`
 }
 
@@ -295,8 +309,10 @@ var xxx_messageInfo_MsgEndRewardProgramResponse proto.InternalMessageInfo
 
 // MsgClaimRewardRequest is the request type for claiming reward from reward program RPC
 type MsgClaimRewardRequest struct {
+	// reward program id to claim rewards.
 	RewardProgramId uint64 `protobuf:"varint,1,opt,name=reward_program_id,json=rewardProgramId,proto3" json:"reward_program_id,omitempty"`
-	RewardAddress   string `protobuf:"bytes,2,opt,name=reward_address,json=rewardAddress,proto3" json:"reward_address,omitempty"`
+	// reward address and signer of msg to send claimed rewards to.
+	RewardAddress string `protobuf:"bytes,2,opt,name=reward_address,json=rewardAddress,proto3" json:"reward_address,omitempty"`
 }
 
 func (m *MsgClaimRewardRequest) Reset()         { *m = MsgClaimRewardRequest{} }
@@ -348,6 +364,7 @@ func (m *MsgClaimRewardRequest) GetRewardAddress() string {
 
 // MsgClaimRewardResponse is the response type for claiming reward from reward program RPC
 type MsgClaimRewardResponse struct {
+	// details about acquired rewards from reward program.
 	ClaimDetails RewardProgramClaimDetail `protobuf:"bytes,1,opt,name=claim_details,json=claimDetails,proto3" json:"claim_details"`
 }
 
@@ -393,6 +410,7 @@ func (m *MsgClaimRewardResponse) GetClaimDetails() RewardProgramClaimDetail {
 
 // MsgClaimRewardResponse is the request type for claiming rewards from all reward programs RPC
 type MsgClaimAllRewardsRequest struct {
+	// reward address and signer of msg to send claimed rewards to.
 	RewardAddress string `protobuf:"bytes,1,opt,name=reward_address,json=rewardAddress,proto3" json:"reward_address,omitempty"`
 }
 
@@ -438,8 +456,10 @@ func (m *MsgClaimAllRewardsRequest) GetRewardAddress() string {
 
 // MsgClaimRewardResponse is the response type for claiming rewards from all reward programs RPC
 type MsgClaimAllRewardsResponse struct {
-	TotalRewardClaim types.Coin                  `protobuf:"bytes,1,opt,name=total_reward_claim,json=totalRewardClaim,proto3" json:"total_reward_claim"`
-	ClaimDetails     []*RewardProgramClaimDetail `protobuf:"bytes,2,rep,name=claim_details,json=claimDetails,proto3" json:"claim_details,omitempty"`
+	// total rewards claimed for all eligible claim periods in all programs.
+	TotalRewardClaim types.Coin `protobuf:"bytes,1,opt,name=total_reward_claim,json=totalRewardClaim,proto3" json:"total_reward_claim"`
+	// details about acquired rewards from a reward program.
+	ClaimDetails []*RewardProgramClaimDetail `protobuf:"bytes,2,rep,name=claim_details,json=claimDetails,proto3" json:"claim_details,omitempty"`
 }
 
 func (m *MsgClaimAllRewardsResponse) Reset()         { *m = MsgClaimAllRewardsResponse{} }
@@ -489,6 +509,7 @@ func (m *MsgClaimAllRewardsResponse) GetClaimDetails() []*RewardProgramClaimDeta
 	return nil
 }
 
+// ClaimedRewardPeriodDetail is information regarding an addresses' shares and reward for a claim period.
 type ClaimedRewardPeriodDetail struct {
 	ClaimPeriodId     uint64     `protobuf:"varint,1,opt,name=claim_period_id,json=claimPeriodId,proto3" json:"claim_period_id,omitempty"`
 	TotalShares       uint64     `protobuf:"varint,2,opt,name=total_shares,json=totalShares,proto3" json:"total_shares,omitempty"`
@@ -549,9 +570,13 @@ func (m *ClaimedRewardPeriodDetail) GetClaimPeriodReward() types.Coin {
 	return types.Coin{}
 }
 
+// RewardProgramClaimDetail is information regarding an addresses' shares and reward for a reward program.
 type RewardProgramClaimDetail struct {
-	RewardProgramId            uint64                       `protobuf:"varint,1,opt,name=reward_program_id,json=rewardProgramId,proto3" json:"reward_program_id,omitempty"`
-	TotalRewardClaim           types.Coin                   `protobuf:"bytes,2,opt,name=total_reward_claim,json=totalRewardClaim,proto3" json:"total_reward_claim"`
+	// reward program id.
+	RewardProgramId uint64 `protobuf:"varint,1,opt,name=reward_program_id,json=rewardProgramId,proto3" json:"reward_program_id,omitempty"`
+	// total rewards claimed for all eligible claim periods in program.
+	TotalRewardClaim types.Coin `protobuf:"bytes,2,opt,name=total_reward_claim,json=totalRewardClaim,proto3" json:"total_reward_claim"`
+	// claim period details.
 	ClaimedRewardPeriodDetails []*ClaimedRewardPeriodDetail `protobuf:"bytes,3,rep,name=claimed_reward_period_details,json=claimedRewardPeriodDetails,proto3" json:"claimed_reward_period_details,omitempty"`
 }
 
@@ -921,7 +946,7 @@ type MsgClient interface {
 	CreateRewardProgram(ctx context.Context, in *MsgCreateRewardProgramRequest, opts ...grpc.CallOption) (*MsgCreateRewardProgramResponse, error)
 	// EndRewardProgram is the RPC endpoint for ending a rewards program
 	EndRewardProgram(ctx context.Context, in *MsgEndRewardProgramRequest, opts ...grpc.CallOption) (*MsgEndRewardProgramResponse, error)
-	// ClaimRewards is the RPC endpoint for claiming rewards for completed claim periods of a reward program
+	// ClaimRewards is the RPC endpoint for claiming rewards belonging to completed claim periods of a reward program
 	ClaimRewards(ctx context.Context, in *MsgClaimRewardRequest, opts ...grpc.CallOption) (*MsgClaimRewardResponse, error)
 	// ClaimRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program
 	ClaimAllRewards(ctx context.Context, in *MsgClaimAllRewardsRequest, opts ...grpc.CallOption) (*MsgClaimAllRewardsResponse, error)
@@ -977,7 +1002,7 @@ type MsgServer interface {
 	CreateRewardProgram(context.Context, *MsgCreateRewardProgramRequest) (*MsgCreateRewardProgramResponse, error)
 	// EndRewardProgram is the RPC endpoint for ending a rewards program
 	EndRewardProgram(context.Context, *MsgEndRewardProgramRequest) (*MsgEndRewardProgramResponse, error)
-	// ClaimRewards is the RPC endpoint for claiming rewards for completed claim periods of a reward program
+	// ClaimRewards is the RPC endpoint for claiming rewards belonging to completed claim periods of a reward program
 	ClaimRewards(context.Context, *MsgClaimRewardRequest) (*MsgClaimRewardResponse, error)
 	// ClaimRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program
 	ClaimAllRewards(context.Context, *MsgClaimAllRewardsRequest) (*MsgClaimAllRewardsResponse, error)

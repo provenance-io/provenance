@@ -22,113 +22,134 @@ message RewardProgram {
     EXPIRED  = 3;
   }
 
-  uint64                   id                      = 1; // An integer to uniquely identify the reward program.
-  string                   title                   = 2; // Name to help identify the Reward Program.
-  string                   description             = 3; // Short summary describing the Reward Program.
-  string                   distribute_from_address = 4; // Community pool for now (who provides the money)
-  cosmos.base.v1beta1.Coin total_reward_pool       = 5
-      [(gogoproto.nullable) = false]; // The total amount of funding given to the RewardProgram.
-  cosmos.base.v1beta1.Coin remaining_pool_balance = 6
-      [(gogoproto.nullable) = false]; // The remaining funds available to distribute.
-  cosmos.base.v1beta1.Coin claimed_amount = 7
-      [(gogoproto.nullable) = false]; // The total amount of funds claimed by participants.
-  cosmos.base.v1beta1.Coin max_reward_by_address = 8
-      [(gogoproto.nullable) = false]; // Maximum reward per claim per address
-  cosmos.base.v1beta1.Coin minimum_rollover_amount = 9
-      [(gogoproto.nullable) = false]; // Minimum amount of coins for a program to rollover
-
-  uint64                    claim_period_seconds = 10; // Number of seconds that a claim period lasts.
-  google.protobuf.Timestamp program_start_time   = 11 [
+  // An integer to uniquely identify the reward program.
+  uint64 id = 1;
+  // Name to help identify the Reward Program.
+  string title = 2;
+  // Short summary describing the Reward Program.
+  string description = 3;
+  // Community pool for now (who provides the money).
+  string distribute_from_address = 4;
+  // The total amount of funding given to the RewardProgram.
+  cosmos.base.v1beta1.Coin total_reward_pool = 5 [(gogoproto.nullable) = false];
+  // The remaining funds available to distribute.
+  cosmos.base.v1beta1.Coin remaining_pool_balance = 6 [(gogoproto.nullable) = false];
+  // The total amount of funds claimed by participants.
+  cosmos.base.v1beta1.Coin claimed_amount = 7 [(gogoproto.nullable) = false];
+  // Maximum reward per claim per address.
+  cosmos.base.v1beta1.Coin max_reward_by_address = 8 [(gogoproto.nullable) = false];
+  // Minimum amount of coins for a program to rollover.
+  cosmos.base.v1beta1.Coin minimum_rollover_amount = 9 [(gogoproto.nullable) = false];
+  // Number of seconds that a claim period lasts.
+  uint64 claim_period_seconds = 10;
+  // Time that a RewardProgram should start and switch to STARTED state.
+  google.protobuf.Timestamp program_start_time = 11 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "program_start_time,omitempty",
     (gogoproto.moretags) = "yaml:\"program_start_time,omitempty\""
-  ]; // Time that a RewardProgram should start and switch to STARTED state.
-
+  ];
+  // Time that a RewardProgram MUST end.
   google.protobuf.Timestamp expected_program_end_time = 12 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "expected_program_end_time,omitempty",
     (gogoproto.moretags) = "yaml:\"expected_program_end_time,omitempty\""
-  ]; // Time that a RewardProgram MUST end.
-
+  ];
+  // Time that a RewardProgram MUST end.
   google.protobuf.Timestamp program_end_time_max = 13 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "program_end_time_max,omitempty",
     (gogoproto.moretags) = "yaml:\"program_end_time_max,omitempty\""
-  ]; // Time that a RewardProgram MUST end.
-
+  ];
+  // Used internally to calculate and track the current claim period's ending time.
   google.protobuf.Timestamp claim_period_end_time = 14 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "claim_period_end_time,omitempty",
     (gogoproto.moretags) = "yaml:\"claim_period_end_time,omitempty\""
-  ]; // Used internally to calculate and track the current claim period's ending time.
-
+  ];
+  // Time the RewardProgram switched to FINISHED state. Initially set as empty.
   google.protobuf.Timestamp actual_program_end_time = 15 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "finished_time,omitempty",
     (gogoproto.moretags) = "yaml:\"finished_time,omitempty\""
-  ]; // Time the RewardProgram switched to FINISHED state. Initially set as empty.
-
-  uint64 claim_periods = 16; // Number of claim periods this program will run for
-
-  uint64 current_claim_period = 17; // Current claim period of the RewardProgram. Uses 1-based indexing.
-
-  uint64 max_rollover_claim_periods = 18; // maximum number of claim periods a reward program can rollover
-
-  State state = 19; // Current state of the RewardProgram.
-
-  uint64 expiration_offset = 20; // Grace period after a RewardProgram FINISHED. It is the number of
-                                 // seconds until a RewardProgram enters the EXPIRED state.
-
-  repeated QualifyingAction qualifying_actions = 21 [
-    (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"qualifying_actions"
-  ]; // Actions that count towards the reward
+  ];
+  // Number of claim periods this program will run for.
+  uint64 claim_periods = 16;
+  // Current claim period of the RewardProgram. Uses 1-based indexing.
+  uint64 current_claim_period = 17;
+  // maximum number of claim periods a reward program can rollover.
+  uint64 max_rollover_claim_periods = 18;
+  // Current state of the RewardProgram.
+  State state = 19;
+  // Grace period after a RewardProgram FINISHED. It is the number of seconds until a RewardProgram enters the EXPIRED
+  // state.
+  uint64 expiration_offset = 20;
+  // Actions that count towards the reward.
+  repeated QualifyingAction qualifying_actions = 21
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"qualifying_actions"];
 }
 
 // EventSetRewardProgram event emitted when a reward program is is updated
 message EventSetRewardProgram {
-  string id                        = 1;
-  string title                     = 2;
-  string description               = 3;
-  string distribute_from_address   = 4;
-  string total_reward_pool         = 5;
-  string max_reward_by_address     = 6;
-  string minimum_rollover_amount   = 7;
-  uint64 claim_period_seconds      = 8;
-  string program_start_time        = 9;
+  // An integer to uniquely identify the reward program.
+  string id = 1;
+  // Name to help identify the Reward Program.
+  string title = 2;
+  // Short summary describing the Reward Program.
+  string description = 3;
+  // Community pool for now (who provides the money).
+  string distribute_from_address = 4;
+  // The total amount of funding given to the RewardProgram.
+  string total_reward_pool = 5;
+  // Maximum reward per claim per address.
+  string max_reward_by_address = 6;
+  // Minimum amount of coins for a program to rollover.
+  string minimum_rollover_amount = 7;
+  // Number of seconds that a claim period lasts.
+  uint64 claim_period_seconds = 8;
+  // Time that a RewardProgram should start and switch to STARTED state.
+  string program_start_time = 9;
+  // Time that a RewardProgram MUST end.
   string expected_program_end_time = 10;
-  string claim_period_end_time     = 11;
-  string claim_periods             = 12;
-  string state                     = 13;
-  string expiration_offset         = 14;
-  string qualifying_actions        = 15;
+  // Used internally to calculate and track the current claim period's ending time.
+  string claim_period_end_time = 11;
+  // Number of claim periods this program will run for.
+  string claim_periods = 12;
+  // Current state of the RewardProgram.
+  string state = 13;
+  // Grace period after a RewardProgram FINISHED. It is the number of seconds until a RewardProgram enters the EXPIRED
+  // state.
+  string expiration_offset = 14;
+  // Actions that count towards the reward
+  string qualifying_actions = 15;
 }
 
-// ClaimPeriodRewardDistribution, this will updated at the end of every claim period
-// Reward Program Id + Claim Period Id
+// ClaimPeriodRewardDistribution, this will updated at the end of every claim period.
 message ClaimPeriodRewardDistribution {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  uint64                   claim_period_id   = 1; // The id of the claim period that this reward belongs to
-  uint64                   reward_program_id = 2; // The id of the reward program that this reward belongs to
-  cosmos.base.v1beta1.Coin total_rewards_pool_for_claim_period = 3 [
-    (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"total_rewards_pool\""
-  ]; // The sum of all the granted rewards for this claim period
-  cosmos.base.v1beta1.Coin rewards_pool = 4 [
-    (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"rewards_pool\""
-  ];                            // The allocated rewards for this claim period
-  int64 total_shares       = 5; // The total number of granted shares for this claim period
-  bool  claim_period_ended = 6; // A flag representing if the claim period for this reward has ended
+  // The id of the claim period that this reward belongs to.
+  uint64 claim_period_id = 1;
+  // The id of the reward program that this reward belongs to.
+  uint64 reward_program_id = 2;
+  // The sum of all the granted rewards for this claim period.
+  cosmos.base.v1beta1.Coin total_rewards_pool_for_claim_period = 3
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"total_rewards_pool\""];
+  // The allocated rewards for this claim period.
+  cosmos.base.v1beta1.Coin rewards_pool = 4
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"rewards_pool\""];
+  // The total number of granted shares for this claim period.
+  int64 total_shares = 5;
+  // A flag representing if the claim period for this reward has ended.
+  bool claim_period_ended = 6;
 }
 
+// RewardAccountState contains state at the claim period level for a specific address.
 message RewardAccountState {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
@@ -138,15 +159,21 @@ message RewardAccountState {
     CLAIMED     = 2;
     EXPIRED     = 3;
   }
-
-  uint64              reward_program_id = 1; // The id of the reward program that this share belongs to
-  uint64              claim_period_id   = 2; // The id of the claim period that the share belongs to
-  string              address           = 3 [(gogoproto.moretags) = "yaml:\"address\""]; // Owner of the share
-  map<string, uint64> action_counter    = 4; // The number of actions done by this account
-  uint64      shares_earned = 5; // The amount of granted shares for the address in the reward program's claim period
-  ClaimStatus claim_status  = 6; // The status of the claim
+  // The id of the reward program that this share belongs to.
+  uint64 reward_program_id = 1;
+  // The id of the claim period that the share belongs to.
+  uint64 claim_period_id = 2;
+  // Owner of the reward account state.
+  string address = 3 [(gogoproto.moretags) = "yaml:\"address\""];
+  // The number of actions done by this account.
+  map<string, uint64> action_counter = 4;
+  // The amount of granted shares for the address in the reward program's claim period.
+  uint64 shares_earned = 5;
+  // The status of the claim.
+  ClaimStatus claim_status = 6;
 }
 
+// QualifyingAction can be one of many action types.
 message QualifyingAction {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;
@@ -157,52 +184,58 @@ message QualifyingAction {
   }
 }
 
+// QualifyingActions contains a list of QualifyingActions.
 message QualifyingActions {
-  repeated QualifyingAction qualifying_actions = 1 [
-    (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"qualifying_actions"
-  ]; // The actions that count towards the reward
+  // The actions that count towards the reward.
+  repeated QualifyingAction qualifying_actions = 1
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"qualifying_actions"];
 }
-// ActionDelegate, accounts that have delegated in an epoch period.
-// rule: ActionDelegate " when account delegates in epoch period,
-// if above min and below max, increase shares earned for rewards pool by 1.
+
+// ActionDelegate represents the delegate action and its required eligibility criteria.
 message ActionDelegate {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  uint64                   minimum_actions                 = 1;
-  uint64                   maximum_actions                 = 2;
-  cosmos.base.v1beta1.Coin minimum_delegation_amount       = 3;
-  cosmos.base.v1beta1.Coin maximum_delegation_amount       = 4;
-  string                   minimum_active_stake_percentile = 5
+  // Minimum number of successful delegates.
+  uint64 minimum_actions = 1;
+  // Maximum number of successful delegates.
+  uint64 maximum_actions = 2;
+  // Minimum amount that the user must have currently delegated on the validator.
+  cosmos.base.v1beta1.Coin minimum_delegation_amount = 3;
+  // Maximum amount that the user must have currently delegated on the validator.
+  cosmos.base.v1beta1.Coin maximum_delegation_amount = 4;
+  // Minimum percentile that can be below the validator's power ranking.
+  string minimum_active_stake_percentile = 5
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  // Maximum percentile that can be below the validator's power ranking.
   string maximum_active_stake_percentile = 6
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
-// accounts that have made transfers, from accounts that have active delegations
-// rule: ActionTransfer "When transfer has occurred and the account has an active delegation,
-// give it a share of the rewards pool, assuming it has not gone over max value and is above a min value" {
+
+// ActionTransfer represents the transfer action and its required eligibility criteria.
 message ActionTransfer {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
+  // Minimum number of successful delegates.
   uint64 minimum_actions = 1;
+  // Maximum number of successful delegates.
   uint64 maximum_actions = 2;
-
-  // minimum_delegation_amount when set to a coin amount greater than zero will only reward accounts with delegations
-  // equal or greater than amount, if minimum_delegation_amount is zero then every send will be elegible for reward
+  // Minimum delegation amount the account must have across all validators.
   cosmos.base.v1beta1.Coin minimum_delegation_amount = 3
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"minimum_delegation_amount\""];
 }
 
-// ActionVote reward, participants for voting on provenance gov proposals.
+// ActionTransfer represents the voting action and its required eligibility criteria.
 message ActionVote {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
+  // Minimum number of successful delegates.
   uint64 minimum_actions = 1;
+  // Maximum number of successful delegates.
   uint64 maximum_actions = 2;
-  // votes from only account that have delegations will be tallied hence this rule will enforce that .
+  // Minimum delegation amount the account must have across all validators.
   cosmos.base.v1beta1.Coin minimum_delegation_amount = 3
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"minimum_delegation_amount\""];
 }

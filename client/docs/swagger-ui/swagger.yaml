@@ -41622,20 +41622,15 @@ paths:
             type: object
             properties:
               total_reward_claim:
+                description: >-
+                  total rewards claimed for all eligible claim periods in all
+                  programs.
                 type: object
                 properties:
                   denom:
                     type: string
                   amount:
                     type: string
-                description: >-
-                  Coin defines a token with a denomination and an amount.
-
-
-                  NOTE: The amount field is an Int which implements the custom
-                  method
-
-                  signatures required by gogoproto.
               claim_details:
                 type: array
                 items:
@@ -41644,21 +41639,17 @@ paths:
                     reward_program_id:
                       type: string
                       format: uint64
+                      description: reward program id.
                     total_reward_claim:
+                      description: >-
+                        total rewards claimed for all eligible claim periods in
+                        program.
                       type: object
                       properties:
                         denom:
                           type: string
                         amount:
                           type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
                     claimed_reward_period_details:
                       type: array
                       items:
@@ -41686,6 +41677,14 @@ paths:
                               the custom method
 
                               signatures required by gogoproto.
+                        description: >-
+                          ClaimedRewardPeriodDetail is information regarding an
+                          addresses' shares and reward for a claim period.
+                      description: claim period details.
+                  description: >-
+                    RewardProgramClaimDetail is information regarding an
+                    addresses' shares and reward for a reward program.
+                description: details about acquired rewards from a reward program.
             title: >-
               MsgClaimRewardResponse is the response type for claiming rewards
               from all reward programs RPC
@@ -41880,6 +41879,7 @@ paths:
                         }
       parameters:
         - name: reward_address
+          description: reward address and signer of msg to send claimed rewards to.
           in: path
           required: true
           type: string
@@ -41888,8 +41888,8 @@ paths:
   '/provenance/reward/v1/reward_claims/{reward_address}/reward_programs/{reward_program_id}':
     patch:
       summary: >-
-        ClaimRewards is the RPC endpoint for claiming rewards for completed
-        claim periods of a reward program
+        ClaimRewards is the RPC endpoint for claiming rewards belonging to
+        completed claim periods of a reward program
       operationId: ClaimRewards
       responses:
         '200':
@@ -41903,21 +41903,17 @@ paths:
                   reward_program_id:
                     type: string
                     format: uint64
+                    description: reward program id.
                   total_reward_claim:
+                    description: >-
+                      total rewards claimed for all eligible claim periods in
+                      program.
                     type: object
                     properties:
                       denom:
                         type: string
                       amount:
                         type: string
-                    description: >-
-                      Coin defines a token with a denomination and an amount.
-
-
-                      NOTE: The amount field is an Int which implements the
-                      custom method
-
-                      signatures required by gogoproto.
                   claimed_reward_period_details:
                     type: array
                     items:
@@ -41945,6 +41941,13 @@ paths:
                             the custom method
 
                             signatures required by gogoproto.
+                      description: >-
+                        ClaimedRewardPeriodDetail is information regarding an
+                        addresses' shares and reward for a claim period.
+                    description: claim period details.
+                description: >-
+                  RewardProgramClaimDetail is information regarding an
+                  addresses' shares and reward for a reward program.
             title: >-
               MsgClaimRewardResponse is the response type for claiming reward
               from reward program RPC
@@ -42139,10 +42142,12 @@ paths:
                         }
       parameters:
         - name: reward_address
+          description: reward address and signer of msg to send claimed rewards to.
           in: path
           required: true
           type: string
         - name: reward_program_id
+          description: reward program id to claim rewards.
           in: path
           required: true
           type: string
@@ -42162,6 +42167,7 @@ paths:
               id:
                 type: string
                 format: uint64
+                description: reward program id that is generated on creation.
             title: >-
               MsgCreateRewardProgramResponse is the response type for creating a
               reward program RPC
@@ -42559,6 +42565,7 @@ paths:
                         }
       parameters:
         - name: reward_program_id
+          description: reward program id to end.
           in: path
           required: true
           type: string
@@ -42567,7 +42574,9 @@ paths:
         - Msg
   /provenance/rewards/v1/claim_period_reward_distributions:
     get:
-      summary: returns all with pagination QueryClaimPeriodRewardDistributionsRequest
+      summary: >-
+        ClaimPeriodRewardDistributions returns a list of claim period reward
+        distributions matching the claim_status.
       operationId: ClaimPeriodRewardDistributions
       responses:
         '200':
@@ -42583,51 +42592,49 @@ paths:
                     claim_period_id:
                       type: string
                       format: uint64
+                      description: The id of the claim period that this reward belongs to.
                     reward_program_id:
                       type: string
                       format: uint64
+                      description: >-
+                        The id of the reward program that this reward belongs
+                        to.
                     total_rewards_pool_for_claim_period:
+                      description: >-
+                        The sum of all the granted rewards for this claim
+                        period.
                       type: object
                       properties:
                         denom:
                           type: string
                         amount:
                           type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
                     rewards_pool:
+                      description: The allocated rewards for this claim period.
                       type: object
                       properties:
                         denom:
                           type: string
                         amount:
                           type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
                     total_shares:
                       type: string
                       format: int64
+                      description: >-
+                        The total number of granted shares for this claim
+                        period.
                     claim_period_ended:
                       type: boolean
                       format: boolean
-                  title: >-
+                      description: >-
+                        A flag representing if the claim period for this reward
+                        has ended.
+                  description: >-
                     ClaimPeriodRewardDistribution, this will updated at the end
-                    of every claim period
-
-                    Reward Program Id + Claim Period Id
+                    of every claim period.
+                description: List of all ClaimPeriodRewardDistribution objects queried for.
               pagination:
+                description: pagination defines an optional pagination for the response.
                 type: object
                 properties:
                   next_key:
@@ -42644,16 +42651,6 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
-                description: >-
-                  PageResponse is to be embedded in gRPC response messages where
-                  the
-
-                  corresponding request message has used PageRequest.
-
-                   message SomeResponse {
-                           repeated Bar results = 1;
-                           PageResponse page = 2;
-                   }
             title: >-
               QueryClaimPeriodRewardDistributionsResponse returns the list of
               paginated ClaimPeriodRewardDistributions
@@ -42909,7 +42906,9 @@ paths:
         - Query
   '/provenance/rewards/v1/claim_period_reward_distributions/{reward_id}/claim_periods/{claim_period_id}':
     get:
-      summary: returns a ClaimPeriodRewardDistribution by rewardId and claimPeriodId
+      summary: >-
+        ClaimPeriodRewardDistributionsByID returns a claim period reward
+        distribution matching the ID.
       operationId: ClaimPeriodRewardDistributionsByID
       responses:
         '200':
@@ -42923,50 +42922,40 @@ paths:
                   claim_period_id:
                     type: string
                     format: uint64
+                    description: The id of the claim period that this reward belongs to.
                   reward_program_id:
                     type: string
                     format: uint64
+                    description: The id of the reward program that this reward belongs to.
                   total_rewards_pool_for_claim_period:
+                    description: The sum of all the granted rewards for this claim period.
                     type: object
                     properties:
                       denom:
                         type: string
                       amount:
                         type: string
-                    description: >-
-                      Coin defines a token with a denomination and an amount.
-
-
-                      NOTE: The amount field is an Int which implements the
-                      custom method
-
-                      signatures required by gogoproto.
                   rewards_pool:
+                    description: The allocated rewards for this claim period.
                     type: object
                     properties:
                       denom:
                         type: string
                       amount:
                         type: string
-                    description: >-
-                      Coin defines a token with a denomination and an amount.
-
-
-                      NOTE: The amount field is an Int which implements the
-                      custom method
-
-                      signatures required by gogoproto.
                   total_shares:
                     type: string
                     format: int64
+                    description: The total number of granted shares for this claim period.
                   claim_period_ended:
                     type: boolean
                     format: boolean
-                title: >-
+                    description: >-
+                      A flag representing if the claim period for this reward
+                      has ended.
+                description: >-
                   ClaimPeriodRewardDistribution, this will updated at the end of
-                  every claim period
-
-                  Reward Program Id + Claim Period Id
+                  every claim period.
             title: >-
               QueryClaimPeriodRewardDistributionByIDResponse returns the
               requested ClaimPeriodRewardDistribution
@@ -43161,11 +43150,17 @@ paths:
                         }
       parameters:
         - name: reward_id
+          description: >-
+            The reward program that the claim period reward distribution belongs
+            to.
           in: path
           required: true
           type: string
           format: uint64
         - name: claim_period_id
+          description: >-
+            The claim period that the claim period reward distribution was
+            created for.
           in: path
           required: true
           type: string
@@ -43175,8 +43170,10 @@ paths:
   '/provenance/rewards/v1/reward_claims/{address}':
     get:
       summary: >-
-        returns rewards for an address based on request criteria(all, claimed,
-        claimable etc)
+        QueryRewardDistributionsByAddress returns a list of reward claims
+        belonging to the account and matching the claim
+
+        status.
       operationId: QueryRewardDistributionsByAddress
       responses:
         '200':
@@ -43186,6 +43183,7 @@ paths:
             properties:
               address:
                 type: string
+                description: The address that the reward account belongs to.
               reward_account_state:
                 type: array
                 items:
@@ -43194,22 +43192,19 @@ paths:
                     reward_program_id:
                       type: string
                       format: uint64
+                      description: The id of the reward program that this claim belongs to.
                     total_reward_claim:
+                      description: >-
+                        total rewards claimed for all eligible claim periods in
+                        program.
                       type: object
                       properties:
                         denom:
                           type: string
                         amount:
                           type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
                     claim_status:
+                      description: The status of the claim.
                       type: string
                       enum:
                         - UNCLAIMABLE
@@ -43220,7 +43215,13 @@ paths:
                     claim_id:
                       type: string
                       format: uint64
+                      description: The claim period that the claim belongs to.
+                  description: >-
+                    RewardAccountResponse is an address' reward claim for a
+                    reward program's claim period.
+                description: List of RewardAccounts queried for.
               pagination:
+                description: pagination defines an optional pagination for the response.
                 type: object
                 properties:
                   next_key:
@@ -43237,16 +43238,9 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
-                description: >-
-                  PageResponse is to be embedded in gRPC response messages where
-                  the
-
-                  corresponding request message has used PageRequest.
-
-                   message SomeResponse {
-                           repeated Bar results = 1;
-                           PageResponse page = 2;
-                   }
+            description: >-
+              QueryAccountByAddressResponse returns the reward claims for an
+              address that match the claim_status.
         default:
           description: An unexpected error response
           schema:
@@ -43438,10 +43432,12 @@ paths:
                         }
       parameters:
         - name: address
+          description: The address that the claim belongs to.
           in: path
           required: true
           type: string
         - name: claim_status
+          description: The status that the reward account must have.
           in: query
           required: false
           type: string
@@ -43514,7 +43510,9 @@ paths:
         - Query
   /provenance/rewards/v1/reward_programs:
     get:
-      summary: returns RewardPrograms both upcoming and active
+      summary: >-
+        RewardPrograms returns a list of reward programs matching the query
+        type.
       operationId: RewardPrograms
       responses:
         '200':
@@ -43530,115 +43528,104 @@ paths:
                     id:
                       type: string
                       format: uint64
+                      description: An integer to uniquely identify the reward program.
                     title:
                       type: string
+                      description: Name to help identify the Reward Program.
                     description:
                       type: string
+                      description: Short summary describing the Reward Program.
                     distribute_from_address:
                       type: string
+                      description: Community pool for now (who provides the money).
                     total_reward_pool:
+                      description: The total amount of funding given to the RewardProgram.
                       type: object
                       properties:
                         denom:
                           type: string
                         amount:
                           type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
                     remaining_pool_balance:
+                      description: The remaining funds available to distribute.
                       type: object
                       properties:
                         denom:
                           type: string
                         amount:
                           type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
                     claimed_amount:
+                      description: The total amount of funds claimed by participants.
                       type: object
                       properties:
                         denom:
                           type: string
                         amount:
                           type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
                     max_reward_by_address:
+                      description: Maximum reward per claim per address.
                       type: object
                       properties:
                         denom:
                           type: string
                         amount:
                           type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
                     minimum_rollover_amount:
+                      description: Minimum amount of coins for a program to rollover.
                       type: object
                       properties:
                         denom:
                           type: string
                         amount:
                           type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
                     claim_period_seconds:
                       type: string
                       format: uint64
+                      description: Number of seconds that a claim period lasts.
                     program_start_time:
                       type: string
                       format: date-time
+                      description: >-
+                        Time that a RewardProgram should start and switch to
+                        STARTED state.
                     expected_program_end_time:
                       type: string
                       format: date-time
+                      description: Time that a RewardProgram MUST end.
                     program_end_time_max:
                       type: string
                       format: date-time
+                      description: Time that a RewardProgram MUST end.
                     claim_period_end_time:
                       type: string
                       format: date-time
+                      description: >-
+                        Used internally to calculate and track the current claim
+                        period's ending time.
                     actual_program_end_time:
                       type: string
                       format: date-time
+                      description: >-
+                        Time the RewardProgram switched to FINISHED state.
+                        Initially set as empty.
                     claim_periods:
                       type: string
                       format: uint64
+                      description: Number of claim periods this program will run for.
                     current_claim_period:
                       type: string
                       format: uint64
+                      description: >-
+                        Current claim period of the RewardProgram. Uses 1-based
+                        indexing.
                     max_rollover_claim_periods:
                       type: string
                       format: uint64
+                      description: >-
+                        maximum number of claim periods a reward program can
+                        rollover.
                     state:
+                      description: Current state of the RewardProgram.
                       type: string
                       enum:
                         - PENDING
@@ -43649,6 +43636,12 @@ paths:
                     expiration_offset:
                       type: string
                       format: uint64
+                      description: >-
+                        Grace period after a RewardProgram FINISHED. It is the
+                        number of seconds until a RewardProgram enters the
+                        EXPIRED
+
+                        state.
                     qualifying_actions:
                       type: array
                       items:
@@ -43660,126 +43653,96 @@ paths:
                               minimum_actions:
                                 type: string
                                 format: uint64
+                                description: Minimum number of successful delegates.
                               maximum_actions:
                                 type: string
                                 format: uint64
+                                description: Maximum number of successful delegates.
                               minimum_delegation_amount:
+                                description: >-
+                                  Minimum amount that the user must have
+                                  currently delegated on the validator.
                                 type: object
                                 properties:
                                   denom:
                                     type: string
                                   amount:
                                     type: string
-                                description: >-
-                                  Coin defines a token with a denomination and
-                                  an amount.
-
-
-                                  NOTE: The amount field is an Int which
-                                  implements the custom method
-
-                                  signatures required by gogoproto.
                               maximum_delegation_amount:
+                                description: >-
+                                  Maximum amount that the user must have
+                                  currently delegated on the validator.
                                 type: object
                                 properties:
                                   denom:
                                     type: string
                                   amount:
                                     type: string
-                                description: >-
-                                  Coin defines a token with a denomination and
-                                  an amount.
-
-
-                                  NOTE: The amount field is an Int which
-                                  implements the custom method
-
-                                  signatures required by gogoproto.
                               minimum_active_stake_percentile:
                                 type: string
+                                description: >-
+                                  Minimum percentile that can be below the
+                                  validator's power ranking.
                               maximum_active_stake_percentile:
                                 type: string
+                                description: >-
+                                  Maximum percentile that can be below the
+                                  validator's power ranking.
                             description: >-
-                              ActionDelegate, accounts that have delegated in an
-                              epoch period.
-
-                              rule: ActionDelegate " when account delegates in
-                              epoch period,
-
-                              if above min and below max, increase shares earned
-                              for rewards pool by 1.
+                              ActionDelegate represents the delegate action and
+                              its required eligibility criteria.
                           transfer:
                             type: object
                             properties:
                               minimum_actions:
                                 type: string
                                 format: uint64
+                                description: Minimum number of successful delegates.
                               maximum_actions:
                                 type: string
                                 format: uint64
+                                description: Maximum number of successful delegates.
                               minimum_delegation_amount:
+                                description: >-
+                                  Minimum delegation amount the account must
+                                  have across all validators.
                                 type: object
                                 properties:
                                   denom:
                                     type: string
                                   amount:
                                     type: string
-                                description: >-
-                                  Coin defines a token with a denomination and
-                                  an amount.
-
-
-                                  NOTE: The amount field is an Int which
-                                  implements the custom method
-
-                                  signatures required by gogoproto.
-                                title: >-
-                                  minimum_delegation_amount when set to a coin
-                                  amount greater than zero will only reward
-                                  accounts with delegations
-
-                                  equal or greater than amount, if
-                                  minimum_delegation_amount is zero then every
-                                  send will be elegible for reward
-                            title: >-
-                              accounts that have made transfers, from accounts
-                              that have active delegations
-
-                              rule: ActionTransfer "When transfer has occurred
-                              and the account has an active delegation,
-
-                              give it a share of the rewards pool, assuming it
-                              has not gone over max value and is above a min
-                              value" {
+                            description: >-
+                              ActionTransfer represents the transfer action and
+                              its required eligibility criteria.
                           vote:
                             type: object
                             properties:
                               minimum_actions:
                                 type: string
                                 format: uint64
+                                description: Minimum number of successful delegates.
                               maximum_actions:
                                 type: string
                                 format: uint64
+                                description: Maximum number of successful delegates.
                               minimum_delegation_amount:
+                                description: >-
+                                  Minimum delegation amount the account must
+                                  have across all validators.
                                 type: object
                                 properties:
                                   denom:
                                     type: string
                                   amount:
                                     type: string
-                                description: >-
-                                  Coin defines a token with a denomination and
-                                  an amount.
-
-
-                                  NOTE: The amount field is an Int which
-                                  implements the custom method
-
-                                  signatures required by gogoproto.
                             description: >-
-                              ActionVote reward, participants for voting on
-                              provenance gov proposals.
+                              ActionTransfer represents the voting action and
+                              its required eligibility criteria.
+                        description: QualifyingAction can be one of many action types.
+                      description: Actions that count towards the reward.
                   title: RewardProgram
+                description: List of RewardProgram objects matching the query_type.
             title: >-
               QueryRewardProgramsResponse contains the list of RewardPrograms
               matching the query
@@ -43974,6 +43937,7 @@ paths:
                         }
       parameters:
         - name: query_type
+          description: A filter on the types of reward programs.
           in: query
           required: false
           type: string
@@ -43988,7 +43952,7 @@ paths:
         - Query
   '/provenance/rewards/v1/reward_programs/{id}':
     get:
-      summary: returns RewardProgram by id
+      summary: RewardProgramByID returns a reward program matching the ID.
       operationId: RewardProgramByID
       responses:
         '200':
@@ -44002,115 +43966,104 @@ paths:
                   id:
                     type: string
                     format: uint64
+                    description: An integer to uniquely identify the reward program.
                   title:
                     type: string
+                    description: Name to help identify the Reward Program.
                   description:
                     type: string
+                    description: Short summary describing the Reward Program.
                   distribute_from_address:
                     type: string
+                    description: Community pool for now (who provides the money).
                   total_reward_pool:
+                    description: The total amount of funding given to the RewardProgram.
                     type: object
                     properties:
                       denom:
                         type: string
                       amount:
                         type: string
-                    description: >-
-                      Coin defines a token with a denomination and an amount.
-
-
-                      NOTE: The amount field is an Int which implements the
-                      custom method
-
-                      signatures required by gogoproto.
                   remaining_pool_balance:
+                    description: The remaining funds available to distribute.
                     type: object
                     properties:
                       denom:
                         type: string
                       amount:
                         type: string
-                    description: >-
-                      Coin defines a token with a denomination and an amount.
-
-
-                      NOTE: The amount field is an Int which implements the
-                      custom method
-
-                      signatures required by gogoproto.
                   claimed_amount:
+                    description: The total amount of funds claimed by participants.
                     type: object
                     properties:
                       denom:
                         type: string
                       amount:
                         type: string
-                    description: >-
-                      Coin defines a token with a denomination and an amount.
-
-
-                      NOTE: The amount field is an Int which implements the
-                      custom method
-
-                      signatures required by gogoproto.
                   max_reward_by_address:
+                    description: Maximum reward per claim per address.
                     type: object
                     properties:
                       denom:
                         type: string
                       amount:
                         type: string
-                    description: >-
-                      Coin defines a token with a denomination and an amount.
-
-
-                      NOTE: The amount field is an Int which implements the
-                      custom method
-
-                      signatures required by gogoproto.
                   minimum_rollover_amount:
+                    description: Minimum amount of coins for a program to rollover.
                     type: object
                     properties:
                       denom:
                         type: string
                       amount:
                         type: string
-                    description: >-
-                      Coin defines a token with a denomination and an amount.
-
-
-                      NOTE: The amount field is an Int which implements the
-                      custom method
-
-                      signatures required by gogoproto.
                   claim_period_seconds:
                     type: string
                     format: uint64
+                    description: Number of seconds that a claim period lasts.
                   program_start_time:
                     type: string
                     format: date-time
+                    description: >-
+                      Time that a RewardProgram should start and switch to
+                      STARTED state.
                   expected_program_end_time:
                     type: string
                     format: date-time
+                    description: Time that a RewardProgram MUST end.
                   program_end_time_max:
                     type: string
                     format: date-time
+                    description: Time that a RewardProgram MUST end.
                   claim_period_end_time:
                     type: string
                     format: date-time
+                    description: >-
+                      Used internally to calculate and track the current claim
+                      period's ending time.
                   actual_program_end_time:
                     type: string
                     format: date-time
+                    description: >-
+                      Time the RewardProgram switched to FINISHED state.
+                      Initially set as empty.
                   claim_periods:
                     type: string
                     format: uint64
+                    description: Number of claim periods this program will run for.
                   current_claim_period:
                     type: string
                     format: uint64
+                    description: >-
+                      Current claim period of the RewardProgram. Uses 1-based
+                      indexing.
                   max_rollover_claim_periods:
                     type: string
                     format: uint64
+                    description: >-
+                      maximum number of claim periods a reward program can
+                      rollover.
                   state:
+                    description: Current state of the RewardProgram.
                     type: string
                     enum:
                       - PENDING
@@ -44121,6 +44074,11 @@ paths:
                   expiration_offset:
                     type: string
                     format: uint64
+                    description: >-
+                      Grace period after a RewardProgram FINISHED. It is the
+                      number of seconds until a RewardProgram enters the EXPIRED
+
+                      state.
                   qualifying_actions:
                     type: array
                     items:
@@ -44132,125 +44090,96 @@ paths:
                             minimum_actions:
                               type: string
                               format: uint64
+                              description: Minimum number of successful delegates.
                             maximum_actions:
                               type: string
                               format: uint64
+                              description: Maximum number of successful delegates.
                             minimum_delegation_amount:
+                              description: >-
+                                Minimum amount that the user must have currently
+                                delegated on the validator.
                               type: object
                               properties:
                                 denom:
                                   type: string
                                 amount:
                                   type: string
-                              description: >-
-                                Coin defines a token with a denomination and an
-                                amount.
-
-
-                                NOTE: The amount field is an Int which
-                                implements the custom method
-
-                                signatures required by gogoproto.
                             maximum_delegation_amount:
+                              description: >-
+                                Maximum amount that the user must have currently
+                                delegated on the validator.
                               type: object
                               properties:
                                 denom:
                                   type: string
                                 amount:
                                   type: string
-                              description: >-
-                                Coin defines a token with a denomination and an
-                                amount.
-
-
-                                NOTE: The amount field is an Int which
-                                implements the custom method
-
-                                signatures required by gogoproto.
                             minimum_active_stake_percentile:
                               type: string
+                              description: >-
+                                Minimum percentile that can be below the
+                                validator's power ranking.
                             maximum_active_stake_percentile:
                               type: string
+                              description: >-
+                                Maximum percentile that can be below the
+                                validator's power ranking.
                           description: >-
-                            ActionDelegate, accounts that have delegated in an
-                            epoch period.
-
-                            rule: ActionDelegate " when account delegates in
-                            epoch period,
-
-                            if above min and below max, increase shares earned
-                            for rewards pool by 1.
+                            ActionDelegate represents the delegate action and
+                            its required eligibility criteria.
                         transfer:
                           type: object
                           properties:
                             minimum_actions:
                               type: string
                               format: uint64
+                              description: Minimum number of successful delegates.
                             maximum_actions:
                               type: string
                               format: uint64
+                              description: Maximum number of successful delegates.
                             minimum_delegation_amount:
+                              description: >-
+                                Minimum delegation amount the account must have
+                                across all validators.
                               type: object
                               properties:
                                 denom:
                                   type: string
                                 amount:
                                   type: string
-                              description: >-
-                                Coin defines a token with a denomination and an
-                                amount.
-
-
-                                NOTE: The amount field is an Int which
-                                implements the custom method
-
-                                signatures required by gogoproto.
-                              title: >-
-                                minimum_delegation_amount when set to a coin
-                                amount greater than zero will only reward
-                                accounts with delegations
-
-                                equal or greater than amount, if
-                                minimum_delegation_amount is zero then every
-                                send will be elegible for reward
-                          title: >-
-                            accounts that have made transfers, from accounts
-                            that have active delegations
-
-                            rule: ActionTransfer "When transfer has occurred and
-                            the account has an active delegation,
-
-                            give it a share of the rewards pool, assuming it has
-                            not gone over max value and is above a min value" {
+                          description: >-
+                            ActionTransfer represents the transfer action and
+                            its required eligibility criteria.
                         vote:
                           type: object
                           properties:
                             minimum_actions:
                               type: string
                               format: uint64
+                              description: Minimum number of successful delegates.
                             maximum_actions:
                               type: string
                               format: uint64
+                              description: Maximum number of successful delegates.
                             minimum_delegation_amount:
+                              description: >-
+                                Minimum delegation amount the account must have
+                                across all validators.
                               type: object
                               properties:
                                 denom:
                                   type: string
                                 amount:
                                   type: string
-                              description: >-
-                                Coin defines a token with a denomination and an
-                                amount.
-
-
-                                NOTE: The amount field is an Int which
-                                implements the custom method
-
-                                signatures required by gogoproto.
                           description: >-
-                            ActionVote reward, participants for voting on
-                            provenance gov proposals.
+                            ActionTransfer represents the voting action and its
+                            required eligibility criteria.
+                      description: QualifyingAction can be one of many action types.
+                    description: Actions that count towards the reward.
                 title: RewardProgram
+                description: The reward program object that was queried for.
             title: >-
               QueryRewardProgramByIDResponse contains the requested
               RewardProgram
@@ -44445,6 +44374,7 @@ paths:
                         }
       parameters:
         - name: id
+          description: The id of the reward program to query.
           in: path
           required: true
           type: string
@@ -74166,9 +74096,11 @@ definitions:
       minimum_actions:
         type: string
         format: uint64
+        description: Minimum number of successful delegates.
       maximum_actions:
         type: string
         format: uint64
+        description: Maximum number of successful delegates.
       minimum_delegation_amount:
         type: object
         properties:
@@ -74195,21 +74127,24 @@ definitions:
           signatures required by gogoproto.
       minimum_active_stake_percentile:
         type: string
+        description: Minimum percentile that can be below the validator's power ranking.
       maximum_active_stake_percentile:
         type: string
-    description: |-
-      ActionDelegate, accounts that have delegated in an epoch period.
-      rule: ActionDelegate " when account delegates in epoch period,
-      if above min and below max, increase shares earned for rewards pool by 1.
+        description: Maximum percentile that can be below the validator's power ranking.
+    description: >-
+      ActionDelegate represents the delegate action and its required eligibility
+      criteria.
   provenance.reward.v1.ActionTransfer:
     type: object
     properties:
       minimum_actions:
         type: string
         format: uint64
+        description: Minimum number of successful delegates.
       maximum_actions:
         type: string
         format: uint64
+        description: Maximum number of successful delegates.
       minimum_delegation_amount:
         type: object
         properties:
@@ -74222,30 +74157,20 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-        title: >-
-          minimum_delegation_amount when set to a coin amount greater than zero
-          will only reward accounts with delegations
-
-          equal or greater than amount, if minimum_delegation_amount is zero
-          then every send will be elegible for reward
-    title: >-
-      accounts that have made transfers, from accounts that have active
-      delegations
-
-      rule: ActionTransfer "When transfer has occurred and the account has an
-      active delegation,
-
-      give it a share of the rewards pool, assuming it has not gone over max
-      value and is above a min value" {
+    description: >-
+      ActionTransfer represents the transfer action and its required eligibility
+      criteria.
   provenance.reward.v1.ActionVote:
     type: object
     properties:
       minimum_actions:
         type: string
         format: uint64
+        description: Minimum number of successful delegates.
       maximum_actions:
         type: string
         format: uint64
+        description: Maximum number of successful delegates.
       minimum_delegation_amount:
         type: object
         properties:
@@ -74258,7 +74183,9 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-    description: 'ActionVote reward, participants for voting on provenance gov proposals.'
+    description: >-
+      ActionTransfer represents the voting action and its required eligibility
+      criteria.
   provenance.reward.v1.ClaimedRewardPeriodDetail:
     type: object
     properties:
@@ -74280,21 +74207,20 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
+    description: >-
+      ClaimedRewardPeriodDetail is information regarding an addresses' shares
+      and reward for a claim period.
   provenance.reward.v1.MsgClaimAllRewardsResponse:
     type: object
     properties:
       total_reward_claim:
+        description: total rewards claimed for all eligible claim periods in all programs.
         type: object
         properties:
           denom:
             type: string
           amount:
             type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
       claim_details:
         type: array
         items:
@@ -74303,21 +74229,15 @@ definitions:
             reward_program_id:
               type: string
               format: uint64
+              description: reward program id.
             total_reward_claim:
+              description: total rewards claimed for all eligible claim periods in program.
               type: object
               properties:
                 denom:
                   type: string
                 amount:
                   type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
             claimed_reward_period_details:
               type: array
               items:
@@ -74344,6 +74264,14 @@ definitions:
                       custom method
 
                       signatures required by gogoproto.
+                description: >-
+                  ClaimedRewardPeriodDetail is information regarding an
+                  addresses' shares and reward for a claim period.
+              description: claim period details.
+          description: >-
+            RewardProgramClaimDetail is information regarding an addresses'
+            shares and reward for a reward program.
+        description: details about acquired rewards from a reward program.
     title: >-
       MsgClaimRewardResponse is the response type for claiming rewards from all
       reward programs RPC
@@ -74356,21 +74284,15 @@ definitions:
           reward_program_id:
             type: string
             format: uint64
+            description: reward program id.
           total_reward_claim:
+            description: total rewards claimed for all eligible claim periods in program.
             type: object
             properties:
               denom:
                 type: string
               amount:
                 type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
           claimed_reward_period_details:
             type: array
             items:
@@ -74397,6 +74319,13 @@ definitions:
                     method
 
                     signatures required by gogoproto.
+              description: >-
+                ClaimedRewardPeriodDetail is information regarding an addresses'
+                shares and reward for a claim period.
+            description: claim period details.
+        description: >-
+          RewardProgramClaimDetail is information regarding an addresses' shares
+          and reward for a reward program.
     title: >-
       MsgClaimRewardResponse is the response type for claiming reward from
       reward program RPC
@@ -74406,6 +74335,7 @@ definitions:
       id:
         type: string
         format: uint64
+        description: reward program id that is generated on creation.
     title: >-
       MsgCreateRewardProgramResponse is the response type for creating a reward
       program RPC
@@ -74423,9 +74353,11 @@ definitions:
           minimum_actions:
             type: string
             format: uint64
+            description: Minimum number of successful delegates.
           maximum_actions:
             type: string
             format: uint64
+            description: Maximum number of successful delegates.
           minimum_delegation_amount:
             type: object
             properties:
@@ -74458,63 +74390,28 @@ definitions:
               signatures required by gogoproto.
           minimum_active_stake_percentile:
             type: string
+            description: >-
+              Minimum percentile that can be below the validator's power
+              ranking.
           maximum_active_stake_percentile:
             type: string
+            description: >-
+              Maximum percentile that can be below the validator's power
+              ranking.
         description: >-
-          ActionDelegate, accounts that have delegated in an epoch period.
-
-          rule: ActionDelegate " when account delegates in epoch period,
-
-          if above min and below max, increase shares earned for rewards pool by
-          1.
+          ActionDelegate represents the delegate action and its required
+          eligibility criteria.
       transfer:
         type: object
         properties:
           minimum_actions:
             type: string
             format: uint64
+            description: Minimum number of successful delegates.
           maximum_actions:
             type: string
             format: uint64
-          minimum_delegation_amount:
-            type: object
-            properties:
-              denom:
-                type: string
-              amount:
-                type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
-            title: >-
-              minimum_delegation_amount when set to a coin amount greater than
-              zero will only reward accounts with delegations
-
-              equal or greater than amount, if minimum_delegation_amount is zero
-              then every send will be elegible for reward
-        title: >-
-          accounts that have made transfers, from accounts that have active
-          delegations
-
-          rule: ActionTransfer "When transfer has occurred and the account has
-          an active delegation,
-
-          give it a share of the rewards pool, assuming it has not gone over max
-          value and is above a min value" {
-      vote:
-        type: object
-        properties:
-          minimum_actions:
-            type: string
-            format: uint64
-          maximum_actions:
-            type: string
-            format: uint64
+            description: Maximum number of successful delegates.
           minimum_delegation_amount:
             type: object
             properties:
@@ -74531,26 +74428,53 @@ definitions:
 
               signatures required by gogoproto.
         description: >-
-          ActionVote reward, participants for voting on provenance gov
-          proposals.
+          ActionTransfer represents the transfer action and its required
+          eligibility criteria.
+      vote:
+        type: object
+        properties:
+          minimum_actions:
+            type: string
+            format: uint64
+            description: Minimum number of successful delegates.
+          maximum_actions:
+            type: string
+            format: uint64
+            description: Maximum number of successful delegates.
+          minimum_delegation_amount:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
+        description: >-
+          ActionTransfer represents the voting action and its required
+          eligibility criteria.
+    description: QualifyingAction can be one of many action types.
   provenance.reward.v1.RewardProgramClaimDetail:
     type: object
     properties:
       reward_program_id:
         type: string
         format: uint64
+        description: reward program id.
       total_reward_claim:
+        description: total rewards claimed for all eligible claim periods in program.
         type: object
         properties:
           denom:
             type: string
           amount:
             type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
       claimed_reward_period_details:
         type: array
         items:
@@ -74577,55 +74501,57 @@ definitions:
                 method
 
                 signatures required by gogoproto.
+          description: >-
+            ClaimedRewardPeriodDetail is information regarding an addresses'
+            shares and reward for a claim period.
+        description: claim period details.
+    description: >-
+      RewardProgramClaimDetail is information regarding an addresses' shares and
+      reward for a reward program.
   provenance.reward.v1.ClaimPeriodRewardDistribution:
     type: object
     properties:
       claim_period_id:
         type: string
         format: uint64
+        description: The id of the claim period that this reward belongs to.
       reward_program_id:
         type: string
         format: uint64
+        description: The id of the reward program that this reward belongs to.
       total_rewards_pool_for_claim_period:
+        description: The sum of all the granted rewards for this claim period.
         type: object
         properties:
           denom:
             type: string
           amount:
             type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
       rewards_pool:
+        description: The allocated rewards for this claim period.
         type: object
         properties:
           denom:
             type: string
           amount:
             type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
       total_shares:
         type: string
         format: int64
+        description: The total number of granted shares for this claim period.
       claim_period_ended:
         type: boolean
         format: boolean
-    title: >-
+        description: A flag representing if the claim period for this reward has ended.
+    description: >-
       ClaimPeriodRewardDistribution, this will updated at the end of every claim
-      period
-
-      Reward Program Id + Claim Period Id
+      period.
   provenance.reward.v1.QueryAccountByAddressResponse:
     type: object
     properties:
       address:
         type: string
+        description: The address that the reward account belongs to.
       reward_account_state:
         type: array
         items:
@@ -74634,22 +74560,17 @@ definitions:
             reward_program_id:
               type: string
               format: uint64
+              description: The id of the reward program that this claim belongs to.
             total_reward_claim:
+              description: total rewards claimed for all eligible claim periods in program.
               type: object
               properties:
                 denom:
                   type: string
                 amount:
                   type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
             claim_status:
+              description: The status of the claim.
               type: string
               enum:
                 - UNCLAIMABLE
@@ -74660,7 +74581,13 @@ definitions:
             claim_id:
               type: string
               format: uint64
+              description: The claim period that the claim belongs to.
+          description: >-
+            RewardAccountResponse is an address' reward claim for a reward
+            program's claim period.
+        description: List of RewardAccounts queried for.
       pagination:
+        description: pagination defines an optional pagination for the response.
         type: object
         properties:
           next_key:
@@ -74677,14 +74604,9 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-        description: |-
-          PageResponse is to be embedded in gRPC response messages where the
-          corresponding request message has used PageRequest.
-
-           message SomeResponse {
-                   repeated Bar results = 1;
-                   PageResponse page = 2;
-           }
+    description: >-
+      QueryAccountByAddressResponse returns the reward claims for an address
+      that match the claim_status.
   provenance.reward.v1.QueryClaimPeriodRewardDistributionByIDResponse:
     type: object
     properties:
@@ -74694,50 +74616,38 @@ definitions:
           claim_period_id:
             type: string
             format: uint64
+            description: The id of the claim period that this reward belongs to.
           reward_program_id:
             type: string
             format: uint64
+            description: The id of the reward program that this reward belongs to.
           total_rewards_pool_for_claim_period:
+            description: The sum of all the granted rewards for this claim period.
             type: object
             properties:
               denom:
                 type: string
               amount:
                 type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
           rewards_pool:
+            description: The allocated rewards for this claim period.
             type: object
             properties:
               denom:
                 type: string
               amount:
                 type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
           total_shares:
             type: string
             format: int64
+            description: The total number of granted shares for this claim period.
           claim_period_ended:
             type: boolean
             format: boolean
-        title: >-
+            description: A flag representing if the claim period for this reward has ended.
+        description: >-
           ClaimPeriodRewardDistribution, this will updated at the end of every
-          claim period
-
-          Reward Program Id + Claim Period Id
+          claim period.
     title: >-
       QueryClaimPeriodRewardDistributionByIDResponse returns the requested
       ClaimPeriodRewardDistribution
@@ -74752,51 +74662,43 @@ definitions:
             claim_period_id:
               type: string
               format: uint64
+              description: The id of the claim period that this reward belongs to.
             reward_program_id:
               type: string
               format: uint64
+              description: The id of the reward program that this reward belongs to.
             total_rewards_pool_for_claim_period:
+              description: The sum of all the granted rewards for this claim period.
               type: object
               properties:
                 denom:
                   type: string
                 amount:
                   type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
             rewards_pool:
+              description: The allocated rewards for this claim period.
               type: object
               properties:
                 denom:
                   type: string
                 amount:
                   type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
             total_shares:
               type: string
               format: int64
+              description: The total number of granted shares for this claim period.
             claim_period_ended:
               type: boolean
               format: boolean
-          title: >-
+              description: >-
+                A flag representing if the claim period for this reward has
+                ended.
+          description: >-
             ClaimPeriodRewardDistribution, this will updated at the end of every
-            claim period
-
-            Reward Program Id + Claim Period Id
+            claim period.
+        description: List of all ClaimPeriodRewardDistribution objects queried for.
       pagination:
+        description: pagination defines an optional pagination for the response.
         type: object
         properties:
           next_key:
@@ -74813,14 +74715,6 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-        description: |-
-          PageResponse is to be embedded in gRPC response messages where the
-          corresponding request message has used PageRequest.
-
-           message SomeResponse {
-                   repeated Bar results = 1;
-                   PageResponse page = 2;
-           }
     title: >-
       QueryClaimPeriodRewardDistributionsResponse returns the list of paginated
       ClaimPeriodRewardDistributions
@@ -74833,115 +74727,100 @@ definitions:
           id:
             type: string
             format: uint64
+            description: An integer to uniquely identify the reward program.
           title:
             type: string
+            description: Name to help identify the Reward Program.
           description:
             type: string
+            description: Short summary describing the Reward Program.
           distribute_from_address:
             type: string
+            description: Community pool for now (who provides the money).
           total_reward_pool:
+            description: The total amount of funding given to the RewardProgram.
             type: object
             properties:
               denom:
                 type: string
               amount:
                 type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
           remaining_pool_balance:
+            description: The remaining funds available to distribute.
             type: object
             properties:
               denom:
                 type: string
               amount:
                 type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
           claimed_amount:
+            description: The total amount of funds claimed by participants.
             type: object
             properties:
               denom:
                 type: string
               amount:
                 type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
           max_reward_by_address:
+            description: Maximum reward per claim per address.
             type: object
             properties:
               denom:
                 type: string
               amount:
                 type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
           minimum_rollover_amount:
+            description: Minimum amount of coins for a program to rollover.
             type: object
             properties:
               denom:
                 type: string
               amount:
                 type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
           claim_period_seconds:
             type: string
             format: uint64
+            description: Number of seconds that a claim period lasts.
           program_start_time:
             type: string
             format: date-time
+            description: >-
+              Time that a RewardProgram should start and switch to STARTED
+              state.
           expected_program_end_time:
             type: string
             format: date-time
+            description: Time that a RewardProgram MUST end.
           program_end_time_max:
             type: string
             format: date-time
+            description: Time that a RewardProgram MUST end.
           claim_period_end_time:
             type: string
             format: date-time
+            description: >-
+              Used internally to calculate and track the current claim period's
+              ending time.
           actual_program_end_time:
             type: string
             format: date-time
+            description: >-
+              Time the RewardProgram switched to FINISHED state. Initially set
+              as empty.
           claim_periods:
             type: string
             format: uint64
+            description: Number of claim periods this program will run for.
           current_claim_period:
             type: string
             format: uint64
+            description: Current claim period of the RewardProgram. Uses 1-based indexing.
           max_rollover_claim_periods:
             type: string
             format: uint64
+            description: maximum number of claim periods a reward program can rollover.
           state:
+            description: Current state of the RewardProgram.
             type: string
             enum:
               - PENDING
@@ -74952,6 +74831,11 @@ definitions:
           expiration_offset:
             type: string
             format: uint64
+            description: >-
+              Grace period after a RewardProgram FINISHED. It is the number of
+              seconds until a RewardProgram enters the EXPIRED
+
+              state.
           qualifying_actions:
             type: array
             items:
@@ -74963,121 +74847,96 @@ definitions:
                     minimum_actions:
                       type: string
                       format: uint64
+                      description: Minimum number of successful delegates.
                     maximum_actions:
                       type: string
                       format: uint64
+                      description: Maximum number of successful delegates.
                     minimum_delegation_amount:
+                      description: >-
+                        Minimum amount that the user must have currently
+                        delegated on the validator.
                       type: object
                       properties:
                         denom:
                           type: string
                         amount:
                           type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
                     maximum_delegation_amount:
+                      description: >-
+                        Maximum amount that the user must have currently
+                        delegated on the validator.
                       type: object
                       properties:
                         denom:
                           type: string
                         amount:
                           type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
                     minimum_active_stake_percentile:
                       type: string
+                      description: >-
+                        Minimum percentile that can be below the validator's
+                        power ranking.
                     maximum_active_stake_percentile:
                       type: string
+                      description: >-
+                        Maximum percentile that can be below the validator's
+                        power ranking.
                   description: >-
-                    ActionDelegate, accounts that have delegated in an epoch
-                    period.
-
-                    rule: ActionDelegate " when account delegates in epoch
-                    period,
-
-                    if above min and below max, increase shares earned for
-                    rewards pool by 1.
+                    ActionDelegate represents the delegate action and its
+                    required eligibility criteria.
                 transfer:
                   type: object
                   properties:
                     minimum_actions:
                       type: string
                       format: uint64
+                      description: Minimum number of successful delegates.
                     maximum_actions:
                       type: string
                       format: uint64
+                      description: Maximum number of successful delegates.
                     minimum_delegation_amount:
+                      description: >-
+                        Minimum delegation amount the account must have across
+                        all validators.
                       type: object
                       properties:
                         denom:
                           type: string
                         amount:
                           type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
-                      title: >-
-                        minimum_delegation_amount when set to a coin amount
-                        greater than zero will only reward accounts with
-                        delegations
-
-                        equal or greater than amount, if
-                        minimum_delegation_amount is zero then every send will
-                        be elegible for reward
-                  title: >-
-                    accounts that have made transfers, from accounts that have
-                    active delegations
-
-                    rule: ActionTransfer "When transfer has occurred and the
-                    account has an active delegation,
-
-                    give it a share of the rewards pool, assuming it has not
-                    gone over max value and is above a min value" {
+                  description: >-
+                    ActionTransfer represents the transfer action and its
+                    required eligibility criteria.
                 vote:
                   type: object
                   properties:
                     minimum_actions:
                       type: string
                       format: uint64
+                      description: Minimum number of successful delegates.
                     maximum_actions:
                       type: string
                       format: uint64
+                      description: Maximum number of successful delegates.
                     minimum_delegation_amount:
+                      description: >-
+                        Minimum delegation amount the account must have across
+                        all validators.
                       type: object
                       properties:
                         denom:
                           type: string
                         amount:
                           type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
                   description: >-
-                    ActionVote reward, participants for voting on provenance gov
-                    proposals.
+                    ActionTransfer represents the voting action and its required
+                    eligibility criteria.
+              description: QualifyingAction can be one of many action types.
+            description: Actions that count towards the reward.
         title: RewardProgram
+        description: The reward program object that was queried for.
     title: QueryRewardProgramByIDResponse contains the requested RewardProgram
   provenance.reward.v1.QueryRewardProgramsRequest.QueryType:
     type: string
@@ -75099,115 +74958,102 @@ definitions:
             id:
               type: string
               format: uint64
+              description: An integer to uniquely identify the reward program.
             title:
               type: string
+              description: Name to help identify the Reward Program.
             description:
               type: string
+              description: Short summary describing the Reward Program.
             distribute_from_address:
               type: string
+              description: Community pool for now (who provides the money).
             total_reward_pool:
+              description: The total amount of funding given to the RewardProgram.
               type: object
               properties:
                 denom:
                   type: string
                 amount:
                   type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
             remaining_pool_balance:
+              description: The remaining funds available to distribute.
               type: object
               properties:
                 denom:
                   type: string
                 amount:
                   type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
             claimed_amount:
+              description: The total amount of funds claimed by participants.
               type: object
               properties:
                 denom:
                   type: string
                 amount:
                   type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
             max_reward_by_address:
+              description: Maximum reward per claim per address.
               type: object
               properties:
                 denom:
                   type: string
                 amount:
                   type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
             minimum_rollover_amount:
+              description: Minimum amount of coins for a program to rollover.
               type: object
               properties:
                 denom:
                   type: string
                 amount:
                   type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
             claim_period_seconds:
               type: string
               format: uint64
+              description: Number of seconds that a claim period lasts.
             program_start_time:
               type: string
               format: date-time
+              description: >-
+                Time that a RewardProgram should start and switch to STARTED
+                state.
             expected_program_end_time:
               type: string
               format: date-time
+              description: Time that a RewardProgram MUST end.
             program_end_time_max:
               type: string
               format: date-time
+              description: Time that a RewardProgram MUST end.
             claim_period_end_time:
               type: string
               format: date-time
+              description: >-
+                Used internally to calculate and track the current claim
+                period's ending time.
             actual_program_end_time:
               type: string
               format: date-time
+              description: >-
+                Time the RewardProgram switched to FINISHED state. Initially set
+                as empty.
             claim_periods:
               type: string
               format: uint64
+              description: Number of claim periods this program will run for.
             current_claim_period:
               type: string
               format: uint64
+              description: >-
+                Current claim period of the RewardProgram. Uses 1-based
+                indexing.
             max_rollover_claim_periods:
               type: string
               format: uint64
+              description: maximum number of claim periods a reward program can rollover.
             state:
+              description: Current state of the RewardProgram.
               type: string
               enum:
                 - PENDING
@@ -75218,6 +75064,11 @@ definitions:
             expiration_offset:
               type: string
               format: uint64
+              description: >-
+                Grace period after a RewardProgram FINISHED. It is the number of
+                seconds until a RewardProgram enters the EXPIRED
+
+                state.
             qualifying_actions:
               type: array
               items:
@@ -75229,125 +75080,96 @@ definitions:
                       minimum_actions:
                         type: string
                         format: uint64
+                        description: Minimum number of successful delegates.
                       maximum_actions:
                         type: string
                         format: uint64
+                        description: Maximum number of successful delegates.
                       minimum_delegation_amount:
+                        description: >-
+                          Minimum amount that the user must have currently
+                          delegated on the validator.
                         type: object
                         properties:
                           denom:
                             type: string
                           amount:
                             type: string
-                        description: >-
-                          Coin defines a token with a denomination and an
-                          amount.
-
-
-                          NOTE: The amount field is an Int which implements the
-                          custom method
-
-                          signatures required by gogoproto.
                       maximum_delegation_amount:
+                        description: >-
+                          Maximum amount that the user must have currently
+                          delegated on the validator.
                         type: object
                         properties:
                           denom:
                             type: string
                           amount:
                             type: string
-                        description: >-
-                          Coin defines a token with a denomination and an
-                          amount.
-
-
-                          NOTE: The amount field is an Int which implements the
-                          custom method
-
-                          signatures required by gogoproto.
                       minimum_active_stake_percentile:
                         type: string
+                        description: >-
+                          Minimum percentile that can be below the validator's
+                          power ranking.
                       maximum_active_stake_percentile:
                         type: string
+                        description: >-
+                          Maximum percentile that can be below the validator's
+                          power ranking.
                     description: >-
-                      ActionDelegate, accounts that have delegated in an epoch
-                      period.
-
-                      rule: ActionDelegate " when account delegates in epoch
-                      period,
-
-                      if above min and below max, increase shares earned for
-                      rewards pool by 1.
+                      ActionDelegate represents the delegate action and its
+                      required eligibility criteria.
                   transfer:
                     type: object
                     properties:
                       minimum_actions:
                         type: string
                         format: uint64
+                        description: Minimum number of successful delegates.
                       maximum_actions:
                         type: string
                         format: uint64
+                        description: Maximum number of successful delegates.
                       minimum_delegation_amount:
+                        description: >-
+                          Minimum delegation amount the account must have across
+                          all validators.
                         type: object
                         properties:
                           denom:
                             type: string
                           amount:
                             type: string
-                        description: >-
-                          Coin defines a token with a denomination and an
-                          amount.
-
-
-                          NOTE: The amount field is an Int which implements the
-                          custom method
-
-                          signatures required by gogoproto.
-                        title: >-
-                          minimum_delegation_amount when set to a coin amount
-                          greater than zero will only reward accounts with
-                          delegations
-
-                          equal or greater than amount, if
-                          minimum_delegation_amount is zero then every send will
-                          be elegible for reward
-                    title: >-
-                      accounts that have made transfers, from accounts that have
-                      active delegations
-
-                      rule: ActionTransfer "When transfer has occurred and the
-                      account has an active delegation,
-
-                      give it a share of the rewards pool, assuming it has not
-                      gone over max value and is above a min value" {
+                    description: >-
+                      ActionTransfer represents the transfer action and its
+                      required eligibility criteria.
                   vote:
                     type: object
                     properties:
                       minimum_actions:
                         type: string
                         format: uint64
+                        description: Minimum number of successful delegates.
                       maximum_actions:
                         type: string
                         format: uint64
+                        description: Maximum number of successful delegates.
                       minimum_delegation_amount:
+                        description: >-
+                          Minimum delegation amount the account must have across
+                          all validators.
                         type: object
                         properties:
                           denom:
                             type: string
                           amount:
                             type: string
-                        description: >-
-                          Coin defines a token with a denomination and an
-                          amount.
-
-
-                          NOTE: The amount field is an Int which implements the
-                          custom method
-
-                          signatures required by gogoproto.
                     description: >-
-                      ActionVote reward, participants for voting on provenance
-                      gov proposals.
+                      ActionTransfer represents the voting action and its
+                      required eligibility criteria.
+                description: QualifyingAction can be one of many action types.
+              description: Actions that count towards the reward.
           title: RewardProgram
+        description: List of RewardProgram objects matching the query_type.
     title: >-
       QueryRewardProgramsResponse contains the list of RewardPrograms matching
       the query
@@ -75366,19 +75188,17 @@ definitions:
       reward_program_id:
         type: string
         format: uint64
+        description: The id of the reward program that this claim belongs to.
       total_reward_claim:
+        description: total rewards claimed for all eligible claim periods in program.
         type: object
         properties:
           denom:
             type: string
           amount:
             type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
       claim_status:
+        description: The status of the claim.
         type: string
         enum:
           - UNCLAIMABLE
@@ -75389,6 +75209,10 @@ definitions:
       claim_id:
         type: string
         format: uint64
+        description: The claim period that the claim belongs to.
+    description: >-
+      RewardAccountResponse is an address' reward claim for a reward program's
+      claim period.
   provenance.reward.v1.RewardAccountState.ClaimStatus:
     type: string
     enum:
@@ -75403,100 +75227,98 @@ definitions:
       id:
         type: string
         format: uint64
+        description: An integer to uniquely identify the reward program.
       title:
         type: string
+        description: Name to help identify the Reward Program.
       description:
         type: string
+        description: Short summary describing the Reward Program.
       distribute_from_address:
         type: string
+        description: Community pool for now (who provides the money).
       total_reward_pool:
+        description: The total amount of funding given to the RewardProgram.
         type: object
         properties:
           denom:
             type: string
           amount:
             type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
       remaining_pool_balance:
+        description: The remaining funds available to distribute.
         type: object
         properties:
           denom:
             type: string
           amount:
             type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
       claimed_amount:
+        description: The total amount of funds claimed by participants.
         type: object
         properties:
           denom:
             type: string
           amount:
             type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
       max_reward_by_address:
+        description: Maximum reward per claim per address.
         type: object
         properties:
           denom:
             type: string
           amount:
             type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
       minimum_rollover_amount:
+        description: Minimum amount of coins for a program to rollover.
         type: object
         properties:
           denom:
             type: string
           amount:
             type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
       claim_period_seconds:
         type: string
         format: uint64
+        description: Number of seconds that a claim period lasts.
       program_start_time:
         type: string
         format: date-time
+        description: Time that a RewardProgram should start and switch to STARTED state.
       expected_program_end_time:
         type: string
         format: date-time
+        description: Time that a RewardProgram MUST end.
       program_end_time_max:
         type: string
         format: date-time
+        description: Time that a RewardProgram MUST end.
       claim_period_end_time:
         type: string
         format: date-time
+        description: >-
+          Used internally to calculate and track the current claim period's
+          ending time.
       actual_program_end_time:
         type: string
         format: date-time
+        description: >-
+          Time the RewardProgram switched to FINISHED state. Initially set as
+          empty.
       claim_periods:
         type: string
         format: uint64
+        description: Number of claim periods this program will run for.
       current_claim_period:
         type: string
         format: uint64
+        description: Current claim period of the RewardProgram. Uses 1-based indexing.
       max_rollover_claim_periods:
         type: string
         format: uint64
+        description: maximum number of claim periods a reward program can rollover.
       state:
+        description: Current state of the RewardProgram.
         type: string
         enum:
           - PENDING
@@ -75507,6 +75329,11 @@ definitions:
       expiration_offset:
         type: string
         format: uint64
+        description: >-
+          Grace period after a RewardProgram FINISHED. It is the number of
+          seconds until a RewardProgram enters the EXPIRED
+
+          state.
       qualifying_actions:
         type: array
         items:
@@ -75518,116 +75345,94 @@ definitions:
                 minimum_actions:
                   type: string
                   format: uint64
+                  description: Minimum number of successful delegates.
                 maximum_actions:
                   type: string
                   format: uint64
+                  description: Maximum number of successful delegates.
                 minimum_delegation_amount:
+                  description: >-
+                    Minimum amount that the user must have currently delegated
+                    on the validator.
                   type: object
                   properties:
                     denom:
                       type: string
                     amount:
                       type: string
-                  description: >-
-                    Coin defines a token with a denomination and an amount.
-
-
-                    NOTE: The amount field is an Int which implements the custom
-                    method
-
-                    signatures required by gogoproto.
                 maximum_delegation_amount:
+                  description: >-
+                    Maximum amount that the user must have currently delegated
+                    on the validator.
                   type: object
                   properties:
                     denom:
                       type: string
                     amount:
                       type: string
-                  description: >-
-                    Coin defines a token with a denomination and an amount.
-
-
-                    NOTE: The amount field is an Int which implements the custom
-                    method
-
-                    signatures required by gogoproto.
                 minimum_active_stake_percentile:
                   type: string
+                  description: >-
+                    Minimum percentile that can be below the validator's power
+                    ranking.
                 maximum_active_stake_percentile:
                   type: string
+                  description: >-
+                    Maximum percentile that can be below the validator's power
+                    ranking.
               description: >-
-                ActionDelegate, accounts that have delegated in an epoch period.
-
-                rule: ActionDelegate " when account delegates in epoch period,
-
-                if above min and below max, increase shares earned for rewards
-                pool by 1.
+                ActionDelegate represents the delegate action and its required
+                eligibility criteria.
             transfer:
               type: object
               properties:
                 minimum_actions:
                   type: string
                   format: uint64
+                  description: Minimum number of successful delegates.
                 maximum_actions:
                   type: string
                   format: uint64
+                  description: Maximum number of successful delegates.
                 minimum_delegation_amount:
+                  description: >-
+                    Minimum delegation amount the account must have across all
+                    validators.
                   type: object
                   properties:
                     denom:
                       type: string
                     amount:
                       type: string
-                  description: >-
-                    Coin defines a token with a denomination and an amount.
-
-
-                    NOTE: The amount field is an Int which implements the custom
-                    method
-
-                    signatures required by gogoproto.
-                  title: >-
-                    minimum_delegation_amount when set to a coin amount greater
-                    than zero will only reward accounts with delegations
-
-                    equal or greater than amount, if minimum_delegation_amount
-                    is zero then every send will be elegible for reward
-              title: >-
-                accounts that have made transfers, from accounts that have
-                active delegations
-
-                rule: ActionTransfer "When transfer has occurred and the account
-                has an active delegation,
-
-                give it a share of the rewards pool, assuming it has not gone
-                over max value and is above a min value" {
+              description: >-
+                ActionTransfer represents the transfer action and its required
+                eligibility criteria.
             vote:
               type: object
               properties:
                 minimum_actions:
                   type: string
                   format: uint64
+                  description: Minimum number of successful delegates.
                 maximum_actions:
                   type: string
                   format: uint64
+                  description: Maximum number of successful delegates.
                 minimum_delegation_amount:
+                  description: >-
+                    Minimum delegation amount the account must have across all
+                    validators.
                   type: object
                   properties:
                     denom:
                       type: string
                     amount:
                       type: string
-                  description: >-
-                    Coin defines a token with a denomination and an amount.
-
-
-                    NOTE: The amount field is an Int which implements the custom
-                    method
-
-                    signatures required by gogoproto.
               description: >-
-                ActionVote reward, participants for voting on provenance gov
-                proposals.
+                ActionTransfer represents the voting action and its required
+                eligibility criteria.
+          description: QualifyingAction can be one of many action types.
+        description: Actions that count towards the reward.
     title: RewardProgram
   provenance.reward.v1.RewardProgram.State:
     type: string

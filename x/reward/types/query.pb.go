@@ -101,6 +101,7 @@ func (QueryRewardsByAddressRequest_RewardAccountQueryParam) EnumDescriptor() ([]
 
 // QueryRewardProgramByIDRequest queries for the Reward Program with an identifier of id
 type QueryRewardProgramByIDRequest struct {
+	// The id of the reward program to query.
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
@@ -146,6 +147,7 @@ func (m *QueryRewardProgramByIDRequest) GetId() uint64 {
 
 // QueryRewardProgramByIDResponse contains the requested RewardProgram
 type QueryRewardProgramByIDResponse struct {
+	// The reward program object that was queried for.
 	RewardProgram *RewardProgram `protobuf:"bytes,1,opt,name=reward_program,json=rewardProgram,proto3" json:"reward_program,omitempty"`
 }
 
@@ -189,8 +191,9 @@ func (m *QueryRewardProgramByIDResponse) GetRewardProgram() *RewardProgram {
 	return nil
 }
 
-// QueryRewardProgramsRequest queries for all RewardPrograms matching the query_type
+// QueryRewardProgramsRequest queries for all reward programs matching the query_type
 type QueryRewardProgramsRequest struct {
+	// A filter on the types of reward programs.
 	QueryType QueryRewardProgramsRequest_QueryType `protobuf:"varint,1,opt,name=query_type,json=queryType,proto3,enum=provenance.reward.v1.QueryRewardProgramsRequest_QueryType" json:"query_type,omitempty"`
 }
 
@@ -236,6 +239,7 @@ func (m *QueryRewardProgramsRequest) GetQueryType() QueryRewardProgramsRequest_Q
 
 // QueryRewardProgramsResponse contains the list of RewardPrograms matching the query
 type QueryRewardProgramsResponse struct {
+	// List of RewardProgram objects matching the query_type.
 	RewardPrograms []RewardProgram `protobuf:"bytes,1,rep,name=reward_programs,json=rewardPrograms,proto3" json:"reward_programs"`
 }
 
@@ -281,6 +285,7 @@ func (m *QueryRewardProgramsResponse) GetRewardPrograms() []RewardProgram {
 
 // QueryClaimPeriodRewardDistributionsRequest queries for all the ClaimPeriodRewardDistributions with pagination.
 type QueryClaimPeriodRewardDistributionsRequest struct {
+	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -330,8 +335,10 @@ func (m *QueryClaimPeriodRewardDistributionsRequest) GetPagination() *query.Page
 
 // QueryClaimPeriodRewardDistributionsResponse returns the list of paginated ClaimPeriodRewardDistributions
 type QueryClaimPeriodRewardDistributionsResponse struct {
+	// List of all ClaimPeriodRewardDistribution objects queried for.
 	ClaimPeriodRewardDistributions []ClaimPeriodRewardDistribution `protobuf:"bytes,1,rep,name=claim_period_reward_distributions,json=claimPeriodRewardDistributions,proto3" json:"claim_period_reward_distributions"`
-	Pagination                     *query.PageResponse             `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines an optional pagination for the response.
+	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryClaimPeriodRewardDistributionsResponse) Reset() {
@@ -387,7 +394,9 @@ func (m *QueryClaimPeriodRewardDistributionsResponse) GetPagination() *query.Pag
 
 // QueryClaimPeriodRewardDistributionByIDRequest queries for a single ClaimPeriodRewardDistribution
 type QueryClaimPeriodRewardDistributionByIDRequest struct {
-	RewardId      uint64 `protobuf:"varint,1,opt,name=reward_id,json=rewardId,proto3" json:"reward_id,omitempty"`
+	// The reward program that the claim period reward distribution belongs to.
+	RewardId uint64 `protobuf:"varint,1,opt,name=reward_id,json=rewardId,proto3" json:"reward_id,omitempty"`
+	// The claim period that the claim period reward distribution was created for.
 	ClaimPeriodId uint64 `protobuf:"varint,2,opt,name=claim_period_id,json=claimPeriodId,proto3" json:"claim_period_id,omitempty"`
 }
 
@@ -444,6 +453,7 @@ func (m *QueryClaimPeriodRewardDistributionByIDRequest) GetClaimPeriodId() uint6
 
 // QueryClaimPeriodRewardDistributionByIDResponse returns the requested ClaimPeriodRewardDistribution
 type QueryClaimPeriodRewardDistributionByIDResponse struct {
+	// The ClaimPeriodRewardDistribution object that was queried for.
 	ClaimPeriodRewardDistribution *ClaimPeriodRewardDistribution `protobuf:"bytes,1,opt,name=claim_period_reward_distribution,json=claimPeriodRewardDistribution,proto3" json:"claim_period_reward_distribution,omitempty"`
 }
 
@@ -491,10 +501,14 @@ func (m *QueryClaimPeriodRewardDistributionByIDResponse) GetClaimPeriodRewardDis
 	return nil
 }
 
+// QueryRewardsByAddressRequest queries for reward claims by address that match the claim_status.
 type QueryRewardsByAddressRequest struct {
-	Address     string                                               `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// The address that the claim belongs to.
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// The status that the reward account must have.
 	ClaimStatus QueryRewardsByAddressRequest_RewardAccountQueryParam `protobuf:"varint,2,opt,name=claim_status,json=claimStatus,proto3,enum=provenance.reward.v1.QueryRewardsByAddressRequest_RewardAccountQueryParam" json:"claim_status,omitempty"`
-	Pagination  *query.PageRequest                                   `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryRewardsByAddressRequest) Reset()         { *m = QueryRewardsByAddressRequest{} }
@@ -551,10 +565,14 @@ func (m *QueryRewardsByAddressRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
+// QueryAccountByAddressResponse returns the reward claims for an address that match the claim_status.
 type QueryAccountByAddressResponse struct {
-	Address            string                  `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// The address that the reward account belongs to.
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// List of RewardAccounts queried for.
 	RewardAccountState []RewardAccountResponse `protobuf:"bytes,2,rep,name=reward_account_state,json=rewardAccountState,proto3" json:"reward_account_state"`
-	Pagination         *query.PageResponse     `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines an optional pagination for the response.
+	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryAccountByAddressResponse) Reset()         { *m = QueryAccountByAddressResponse{} }
@@ -611,11 +629,16 @@ func (m *QueryAccountByAddressResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
+// RewardAccountResponse is an address' reward claim for a reward program's claim period.
 type RewardAccountResponse struct {
-	RewardProgramId  uint64                         `protobuf:"varint,1,opt,name=reward_program_id,json=rewardProgramId,proto3" json:"reward_program_id,omitempty"`
-	TotalRewardClaim types.Coin                     `protobuf:"bytes,2,opt,name=total_reward_claim,json=totalRewardClaim,proto3" json:"total_reward_claim"`
-	ClaimStatus      RewardAccountState_ClaimStatus `protobuf:"varint,3,opt,name=claim_status,json=claimStatus,proto3,enum=provenance.reward.v1.RewardAccountState_ClaimStatus" json:"claim_status,omitempty"`
-	ClaimId          uint64                         `protobuf:"varint,4,opt,name=claim_id,json=claimId,proto3" json:"claim_id,omitempty"`
+	// The id of the reward program that this claim belongs to.
+	RewardProgramId uint64 `protobuf:"varint,1,opt,name=reward_program_id,json=rewardProgramId,proto3" json:"reward_program_id,omitempty"`
+	// total rewards claimed for all eligible claim periods in program.
+	TotalRewardClaim types.Coin `protobuf:"bytes,2,opt,name=total_reward_claim,json=totalRewardClaim,proto3" json:"total_reward_claim"`
+	// The status of the claim.
+	ClaimStatus RewardAccountState_ClaimStatus `protobuf:"varint,3,opt,name=claim_status,json=claimStatus,proto3,enum=provenance.reward.v1.RewardAccountState_ClaimStatus" json:"claim_status,omitempty"`
+	// The claim period that the claim belongs to.
+	ClaimId uint64 `protobuf:"varint,4,opt,name=claim_id,json=claimId,proto3" json:"claim_id,omitempty"`
 }
 
 func (m *RewardAccountResponse) Reset()         { *m = RewardAccountResponse{} }
@@ -815,15 +838,16 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// returns RewardProgram by id
+	// RewardProgramByID returns a reward program matching the ID.
 	RewardProgramByID(ctx context.Context, in *QueryRewardProgramByIDRequest, opts ...grpc.CallOption) (*QueryRewardProgramByIDResponse, error)
-	// returns RewardPrograms both upcoming and active
+	// RewardPrograms returns a list of reward programs matching the query type.
 	RewardPrograms(ctx context.Context, in *QueryRewardProgramsRequest, opts ...grpc.CallOption) (*QueryRewardProgramsResponse, error)
-	// returns all with pagination QueryClaimPeriodRewardDistributionsRequest
+	// ClaimPeriodRewardDistributions returns a list of claim period reward distributions matching the claim_status.
 	ClaimPeriodRewardDistributions(ctx context.Context, in *QueryClaimPeriodRewardDistributionsRequest, opts ...grpc.CallOption) (*QueryClaimPeriodRewardDistributionsResponse, error)
-	// returns a ClaimPeriodRewardDistribution by rewardId and claimPeriodId
+	// ClaimPeriodRewardDistributionsByID returns a claim period reward distribution matching the ID.
 	ClaimPeriodRewardDistributionsByID(ctx context.Context, in *QueryClaimPeriodRewardDistributionByIDRequest, opts ...grpc.CallOption) (*QueryClaimPeriodRewardDistributionByIDResponse, error)
-	// returns rewards for an address based on request criteria(all, claimed, claimable etc)
+	// QueryRewardDistributionsByAddress returns a list of reward claims belonging to the account and matching the claim
+	// status.
 	QueryRewardDistributionsByAddress(ctx context.Context, in *QueryRewardsByAddressRequest, opts ...grpc.CallOption) (*QueryAccountByAddressResponse, error)
 }
 
@@ -882,15 +906,16 @@ func (c *queryClient) QueryRewardDistributionsByAddress(ctx context.Context, in 
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// returns RewardProgram by id
+	// RewardProgramByID returns a reward program matching the ID.
 	RewardProgramByID(context.Context, *QueryRewardProgramByIDRequest) (*QueryRewardProgramByIDResponse, error)
-	// returns RewardPrograms both upcoming and active
+	// RewardPrograms returns a list of reward programs matching the query type.
 	RewardPrograms(context.Context, *QueryRewardProgramsRequest) (*QueryRewardProgramsResponse, error)
-	// returns all with pagination QueryClaimPeriodRewardDistributionsRequest
+	// ClaimPeriodRewardDistributions returns a list of claim period reward distributions matching the claim_status.
 	ClaimPeriodRewardDistributions(context.Context, *QueryClaimPeriodRewardDistributionsRequest) (*QueryClaimPeriodRewardDistributionsResponse, error)
-	// returns a ClaimPeriodRewardDistribution by rewardId and claimPeriodId
+	// ClaimPeriodRewardDistributionsByID returns a claim period reward distribution matching the ID.
 	ClaimPeriodRewardDistributionsByID(context.Context, *QueryClaimPeriodRewardDistributionByIDRequest) (*QueryClaimPeriodRewardDistributionByIDResponse, error)
-	// returns rewards for an address based on request criteria(all, claimed, claimable etc)
+	// QueryRewardDistributionsByAddress returns a list of reward claims belonging to the account and matching the claim
+	// status.
 	QueryRewardDistributionsByAddress(context.Context, *QueryRewardsByAddressRequest) (*QueryAccountByAddressResponse, error)
 }
 

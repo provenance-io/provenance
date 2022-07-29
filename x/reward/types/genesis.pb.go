@@ -25,9 +25,12 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the reward module's genesis state.
 type GenesisState struct {
-	RewardPrograms                 []RewardProgram                 `protobuf:"bytes,1,rep,name=reward_programs,json=rewardPrograms,proto3" json:"reward_programs"`
+	// Reward programs to initially start with.
+	RewardPrograms []RewardProgram `protobuf:"bytes,1,rep,name=reward_programs,json=rewardPrograms,proto3" json:"reward_programs"`
+	// Claim period reward distributions to initially start with.
 	ClaimPeriodRewardDistributions []ClaimPeriodRewardDistribution `protobuf:"bytes,2,rep,name=claim_period_reward_distributions,json=claimPeriodRewardDistributions,proto3" json:"claim_period_reward_distributions"`
-	RewardAccountStates            []RewardAccountState            `protobuf:"bytes,3,rep,name=reward_account_states,json=rewardAccountStates,proto3" json:"reward_account_states"`
+	// Reward account states to initially start with.
+	RewardAccountStates []RewardAccountState `protobuf:"bytes,3,rep,name=reward_account_states,json=rewardAccountStates,proto3" json:"reward_account_states"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
