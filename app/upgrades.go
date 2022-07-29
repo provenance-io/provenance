@@ -33,9 +33,10 @@ var handlers = map[string]appUpgrade{
 			params := app.MsgFeesKeeper.GetParams(ctx)
 			app.MsgFeesKeeper.SetParams(ctx, params)
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			return versionMap, nil
+			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
-	}, // upgrade for 1.11.x
+	}, // upgrade for 1.11.1
+	"mango-rc4": {}, // upgrade for 1.11.1-rc4
 	// TODO - Add new upgrade definitions here.
 	//TODO - CHECK UPGRADE HANDLER
 	"nickel": {
