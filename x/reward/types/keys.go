@@ -32,8 +32,9 @@ var (
 
 	EligibilityCriteriaKeyPrefix = []byte{0x06}
 
-	ActionKeyPrefix       = []byte{0x07}
-	AccountStateKeyPrefix = []byte{0x09}
+	ActionKeyPrefix                    = []byte{0x07}
+	AccountStateAddressLookupKeyPrefix = []byte{0x08}
+	AccountStateKeyPrefix              = []byte{0x09}
 
 	ActionDelegateKey            = []byte("Delegate")
 	ActionTransferDelegationsKey = []byte("TransferDelegations")
@@ -56,6 +57,20 @@ func GetRewardAccountStateKey(rewardID uint64, rewardClaimPeriodID uint64, addr 
 	key = append(key, rewardBytes...)
 	key = append(key, claimPeriodBytes...)
 	key = append(key, address.MustLengthPrefix(addr)...)
+	return key
+}
+
+// GetRewardAccountStateAddressLookupKey facilitates lookup of AccountState via address
+func GetRewardAccountStateAddressLookupKey(addr []byte, rewardID uint64, rewardClaimPeriodID uint64) []byte {
+	key := AccountStateAddressLookupKeyPrefix
+
+	rewardBytes := make([]byte, 8)
+	claimPeriodBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(rewardBytes, rewardID)
+	binary.BigEndian.PutUint64(claimPeriodBytes, rewardClaimPeriodID)
+	key = append(key, address.MustLengthPrefix(addr)...)
+	key = append(key, rewardBytes...)
+	key = append(key, claimPeriodBytes...)
 	return key
 }
 

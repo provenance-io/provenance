@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -55,7 +56,7 @@ func (k Keeper) RewardProgramByID(ctx context.Context, req *types.QueryRewardPro
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	rewardProgram, err := k.GetRewardProgram(sdkCtx, req.GetId())
 	if err != nil {
-		return &types.QueryRewardProgramByIDResponse{}, status.Errorf(codes.Internal, fmt.Sprintf("unable to query for reward program: %v", err))
+		return &types.QueryRewardProgramByIDResponse{}, status.Errorf(codes.Internal, fmt.Sprintf("unable to query for reward program by ID: %v", err))
 	}
 	return &types.QueryRewardProgramByIDResponse{RewardProgram: &rewardProgram}, nil
 }
@@ -97,7 +98,7 @@ func (k Keeper) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *typ
 
 	ClaimPeriodReward, err := k.GetClaimPeriodRewardDistribution(sdkCtx, req.GetClaimPeriodId(), req.GetRewardId())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to query epoch reward distributions: %v", err))
+		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("unable to query claim period reward distributions by ID: %v", err))
 	}
 
 	if k.ClaimPeriodRewardDistributionIsValid(&ClaimPeriodReward) {
