@@ -41611,6 +41611,9 @@ paths:
         - Query
   '/provenance/reward/v1/reward_claims/{reward_address}':
     patch:
+      summary: >-
+        ClaimRewards is the RPC endpoint for claiming rewards for completed
+        claim periods of every reward program
       operationId: ClaimAllRewards
       responses:
         '200':

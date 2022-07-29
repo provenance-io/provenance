@@ -6224,9 +6224,9 @@ GenesisState defines the reward module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-| `reward_account_state` | [RewardAccountResponse](#provenance.reward.v1.RewardAccountResponse) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
+| `address` | [string](#string) |  | The address that the reward account belongs to |
+| `reward_account_state` | [RewardAccountResponse](#provenance.reward.v1.RewardAccountResponse) | repeated | List of RewardAccounts queried for |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the response. |
 
 
 
@@ -6241,8 +6241,8 @@ QueryClaimPeriodRewardDistributionByIDRequest queries for a single ClaimPeriodRe
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `reward_id` | [uint64](#uint64) |  |  |
-| `claim_period_id` | [uint64](#uint64) |  |  |
+| `reward_id` | [uint64](#uint64) |  | The reward program that the claim period reward distribution belongs to |
+| `claim_period_id` | [uint64](#uint64) |  | The claim period that the claim period reward distribution was created for |
 
 
 
@@ -6257,7 +6257,7 @@ QueryClaimPeriodRewardDistributionByIDResponse returns the requested ClaimPeriod
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `claim_period_reward_distribution` | [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution) |  |  |
+| `claim_period_reward_distribution` | [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution) |  | The ClaimPeriodRewardDistribution object that was queried for |
 
 
 
@@ -6272,7 +6272,7 @@ QueryClaimPeriodRewardDistributionsRequest queries for all the ClaimPeriodReward
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
 
 
 
@@ -6287,8 +6287,8 @@ QueryClaimPeriodRewardDistributionsResponse returns the list of paginated ClaimP
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `claim_period_reward_distributions` | [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
+| `claim_period_reward_distributions` | [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution) | repeated | List of all ClaimPeriodRewardDistribution objects queried for. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the response. |
 
 
 
@@ -6303,7 +6303,7 @@ QueryRewardProgramByIDRequest queries for the Reward Program with an identifier 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `id` | [uint64](#uint64) |  |  |
+| `id` | [uint64](#uint64) |  | The id of the reward program to query |
 
 
 
@@ -6318,7 +6318,7 @@ QueryRewardProgramByIDResponse contains the requested RewardProgram
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `reward_program` | [RewardProgram](#provenance.reward.v1.RewardProgram) |  |  |
+| `reward_program` | [RewardProgram](#provenance.reward.v1.RewardProgram) |  | The reward program object that was queried for |
 
 
 
@@ -6333,7 +6333,7 @@ QueryRewardProgramsRequest queries for all RewardPrograms matching the query_typ
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `query_type` | [QueryRewardProgramsRequest.QueryType](#provenance.reward.v1.QueryRewardProgramsRequest.QueryType) |  |  |
+| `query_type` | [QueryRewardProgramsRequest.QueryType](#provenance.reward.v1.QueryRewardProgramsRequest.QueryType) |  | A filter on the types of RewardPrograms |
 
 
 
@@ -6348,7 +6348,7 @@ QueryRewardProgramsResponse contains the list of RewardPrograms matching the que
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `reward_programs` | [RewardProgram](#provenance.reward.v1.RewardProgram) | repeated |  |
+| `reward_programs` | [RewardProgram](#provenance.reward.v1.RewardProgram) | repeated | List of RewardProgram objects matching the query_type |
 
 
 
@@ -6363,9 +6363,9 @@ QueryRewardProgramsResponse contains the list of RewardPrograms matching the que
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-| `claim_status` | [QueryRewardsByAddressRequest.RewardAccountQueryParam](#provenance.reward.v1.QueryRewardsByAddressRequest.RewardAccountQueryParam) |  |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
+| `address` | [string](#string) |  | The address that the claim belongs to |
+| `claim_status` | [QueryRewardsByAddressRequest.RewardAccountQueryParam](#provenance.reward.v1.QueryRewardsByAddressRequest.RewardAccountQueryParam) |  | The status that the reward account must have |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
 
 
 
@@ -6380,10 +6380,10 @@ QueryRewardProgramsResponse contains the list of RewardPrograms matching the que
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this share belongs to |
+| `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this claim belongs to |
 | `total_reward_claim` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | total rewards claimed for all eligible claim periods in program |
-| `claim_status` | [RewardAccountState.ClaimStatus](#provenance.reward.v1.RewardAccountState.ClaimStatus) |  | The status of the claim} |
-| `claim_id` | [uint64](#uint64) |  |  |
+| `claim_status` | [RewardAccountState.ClaimStatus](#provenance.reward.v1.RewardAccountState.ClaimStatus) |  | The status of the claim |
+| `claim_id` | [uint64](#uint64) |  | The claim period that the claim belongs to |
 
 
 
@@ -6628,7 +6628,7 @@ Msg
 | `CreateRewardProgram` | [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest) | [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse) | CreateRewardProgram is the RPC endpoint for creating a rewards program | POST|/provenance/reward/v1/reward_programs|
 | `EndRewardProgram` | [MsgEndRewardProgramRequest](#provenance.reward.v1.MsgEndRewardProgramRequest) | [MsgEndRewardProgramResponse](#provenance.reward.v1.MsgEndRewardProgramResponse) | EndRewardProgram is the RPC endpoint for ending a rewards program | PATCH|/provenance/reward/v1/reward_programs/{reward_program_id}|
 | `ClaimRewards` | [MsgClaimRewardRequest](#provenance.reward.v1.MsgClaimRewardRequest) | [MsgClaimRewardResponse](#provenance.reward.v1.MsgClaimRewardResponse) | ClaimRewards is the RPC endpoint for claiming rewards for completed claim periods of a reward program | PATCH|/provenance/reward/v1/reward_claims/{reward_address}/reward_programs/{reward_program_id}|
-| `ClaimAllRewards` | [MsgClaimAllRewardsRequest](#provenance.reward.v1.MsgClaimAllRewardsRequest) | [MsgClaimAllRewardsResponse](#provenance.reward.v1.MsgClaimAllRewardsResponse) |  | PATCH|/provenance/reward/v1/reward_claims/{reward_address}|
+| `ClaimAllRewards` | [MsgClaimAllRewardsRequest](#provenance.reward.v1.MsgClaimAllRewardsRequest) | [MsgClaimAllRewardsResponse](#provenance.reward.v1.MsgClaimAllRewardsResponse) | ClaimRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program | PATCH|/provenance/reward/v1/reward_claims/{reward_address}|
 
  <!-- end services -->
 
