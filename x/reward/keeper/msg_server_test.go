@@ -234,7 +234,7 @@ func (s *KeeperTestSuite) TestRewardClaimTransactionInvalidClaimer() {
 	s.Assert().NoError(err, "msg server should handle valid reward claim")
 	s.Assert().NotNil(result, "msg server should emit events")
 
-	var response types.MsgClaimRewardResponse
+	var response types.MsgClaimRewardsResponse
 	response.Unmarshal(result.Data)
 	s.Assert().Equal(uint64(1), response.GetClaimDetails().RewardProgramId, "should have correct reward program id")
 	s.Assert().Equal(0, len(response.GetClaimDetails().ClaimedRewardPeriodDetails), "should have no details")
