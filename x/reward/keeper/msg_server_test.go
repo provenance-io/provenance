@@ -150,7 +150,7 @@ func (s *KeeperTestSuite) TestRewardClaimTransaction() {
 		s.app.RewardKeeper.SetClaimPeriodRewardDistribution(s.ctx, distribution)
 	}
 
-	msg := types.NewMsgClaimRewardRequest(1, s.accountAddresses[0].String())
+	msg := types.NewMsgClaimRewardsRequest(1, s.accountAddresses[0].String())
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	result, err := s.handler(s.ctx, msg)
 
@@ -168,7 +168,7 @@ func (s *KeeperTestSuite) TestRewardClaimTransaction() {
 func (s *KeeperTestSuite) TestRewardClaimInvalidTransaction() {
 	s.SetupTest()
 
-	msg := types.NewMsgClaimRewardRequest(1, "invalid address")
+	msg := types.NewMsgClaimRewardsRequest(1, "invalid address")
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	result, err := s.handler(s.ctx, msg)
 
@@ -228,7 +228,7 @@ func (s *KeeperTestSuite) TestRewardClaimTransactionInvalidClaimer() {
 		s.app.RewardKeeper.SetClaimPeriodRewardDistribution(s.ctx, distribution)
 	}
 
-	msg := types.NewMsgClaimRewardRequest(1, s.accountAddresses[1].String())
+	msg := types.NewMsgClaimRewardsRequest(1, s.accountAddresses[1].String())
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	result, err := s.handler(s.ctx, msg)
 	s.Assert().NoError(err, "msg server should handle valid reward claim")

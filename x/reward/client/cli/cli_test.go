@@ -392,7 +392,7 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 				s.Assert().Error(err)
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
 			} else if tc.byId {
-				var response types.QueryClaimPeriodRewardDistributionByIDResponse
+				var response types.QueryClaimPeriodRewardDistributionsByIDResponse
 				s.Assert().NoError(err)
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
 				s.Assert().NoError(err)
@@ -672,12 +672,12 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 				s.Assert().Error(err)
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
 			} else if tc.byId {
-				var response types.QueryAccountByAddressResponse
+				var response types.QueryRewardDistributionsByAddressResponse
 				s.Assert().NoError(err)
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
 				s.Assert().NoError(err)
 			} else {
-				var response types.QueryAccountByAddressResponse
+				var response types.QueryRewardDistributionsByAddressResponse
 				s.Assert().NoError(err)
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
 				s.Assert().NoError(err)

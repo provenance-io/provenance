@@ -219,7 +219,7 @@ func claimRewardProgramByID(client client.Context, arg string, cmd *cobra.Comman
 	}
 	callerAddr := client.GetFromAddress()
 
-	msg := types.NewMsgClaimRewardRequest(
+	msg := types.NewMsgClaimRewardsRequest(
 		uint64(programID),
 		callerAddr.String(),
 	)

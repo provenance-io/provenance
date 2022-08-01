@@ -42957,7 +42957,7 @@ paths:
                   ClaimPeriodRewardDistribution, this will updated at the end of
                   every claim period.
             title: >-
-              QueryClaimPeriodRewardDistributionByIDResponse returns the
+              QueryClaimPeriodRewardDistributionsByIDResponse returns the
               requested ClaimPeriodRewardDistribution
         default:
           description: An unexpected error response
@@ -43170,11 +43170,11 @@ paths:
   '/provenance/rewards/v1/reward_claims/{address}':
     get:
       summary: >-
-        QueryRewardDistributionsByAddress returns a list of reward claims
+        RewardDistributionsByAddress returns a list of reward claims
         belonging to the account and matching the claim
 
         status.
-      operationId: QueryRewardDistributionsByAddress
+      operationId: RewardDistributionsByAddress
       responses:
         '200':
           description: A successful response.
@@ -43239,7 +43239,7 @@ paths:
 
                       was set, its value is undefined otherwise
             description: >-
-              QueryAccountByAddressResponse returns the reward claims for an
+              QueryRewardDistributionsByAddressResponse returns the reward claims for an
               address that match the claim_status.
         default:
           description: An unexpected error response
@@ -74546,7 +74546,7 @@ definitions:
     description: >-
       ClaimPeriodRewardDistribution, this will updated at the end of every claim
       period.
-  provenance.reward.v1.QueryAccountByAddressResponse:
+  provenance.reward.v1.QueryRewardDistributionsByAddressResponse:
     type: object
     properties:
       address:
@@ -74605,9 +74605,9 @@ definitions:
 
               was set, its value is undefined otherwise
     description: >-
-      QueryAccountByAddressResponse returns the reward claims for an address
+      QueryRewardDistributionsByAddressResponse returns the reward claims for an address
       that match the claim_status.
-  provenance.reward.v1.QueryClaimPeriodRewardDistributionByIDResponse:
+  provenance.reward.v1.QueryClaimPeriodRewardDistributionsByIDResponse:
     type: object
     properties:
       claim_period_reward_distribution:
@@ -74649,7 +74649,7 @@ definitions:
           ClaimPeriodRewardDistribution, this will updated at the end of every
           claim period.
     title: >-
-      QueryClaimPeriodRewardDistributionByIDResponse returns the requested
+      QueryClaimPeriodRewardDistributionsByIDResponse returns the requested
       ClaimPeriodRewardDistribution
   provenance.reward.v1.QueryClaimPeriodRewardDistributionsResponse:
     type: object
@@ -75173,7 +75173,7 @@ definitions:
     title: >-
       QueryRewardProgramsResponse contains the list of RewardPrograms matching
       the query
-  provenance.reward.v1.QueryRewardsByAddressRequest.RewardAccountQueryParam:
+  provenance.reward.v1.QueryRewardDistributionsByAddressRequest.RewardAccountQueryParam:
     type: string
     enum:
       - ALL

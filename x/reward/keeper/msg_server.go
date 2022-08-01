@@ -89,7 +89,7 @@ func (s msgServer) EndRewardProgram(goCtx context.Context, msg *types.MsgEndRewa
 	return &types.MsgEndRewardProgramResponse{}, nil
 }
 
-func (s msgServer) ClaimRewards(goCtx context.Context, req *types.MsgClaimRewardRequest) (*types.MsgClaimRewardResponse, error) {
+func (s msgServer) ClaimRewards(goCtx context.Context, req *types.MsgClaimRewardsRequest) (*types.MsgClaimRewardsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	details, reward, err := s.Keeper.ClaimRewards(ctx, req.GetRewardProgramId(), req.GetRewardAddress())
@@ -107,7 +107,7 @@ func (s msgServer) ClaimRewards(goCtx context.Context, req *types.MsgClaimReward
 		)
 	}
 
-	return &types.MsgClaimRewardResponse{
+	return &types.MsgClaimRewardsResponse{
 		ClaimDetails: types.RewardProgramClaimDetail{
 			RewardProgramId:            req.GetRewardProgramId(),
 			TotalRewardClaim:           reward,

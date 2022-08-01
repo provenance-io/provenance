@@ -208,10 +208,10 @@ func outputClaimPeriodRewardDistributionByID(cmd *cobra.Command, rewardID, claim
 	if err != nil {
 		return err
 	}
-	var response *types.QueryClaimPeriodRewardDistributionByIDResponse
+	var response *types.QueryClaimPeriodRewardDistributionsByIDResponse
 	if response, err = queryClient.ClaimPeriodRewardDistributionsByID(
 		context.Background(),
-		&types.QueryClaimPeriodRewardDistributionByIDRequest{
+		&types.QueryClaimPeriodRewardDistributionsByIDRequest{
 			RewardId:      uint64(id),
 			ClaimPeriodId: uint64(claimID),
 		},
@@ -247,28 +247,28 @@ func queryRewardDistributionByAddress(cmd *cobra.Command, address string, queryT
 		return err
 	}
 
-	var claimStatus types.QueryRewardsByAddressRequest_RewardAccountQueryParam
+	var claimStatus types.QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam
 	switch queryType {
 	case "all":
-		claimStatus = types.QueryRewardsByAddressRequest_ALL
+		claimStatus = types.QueryRewardDistributionsByAddressRequest_ALL
 	case "unclaimable":
-		claimStatus = types.QueryRewardsByAddressRequest_UNCLAIMABLE
+		claimStatus = types.QueryRewardDistributionsByAddressRequest_UNCLAIMABLE
 	case "claimable":
-		claimStatus = types.QueryRewardsByAddressRequest_CLAIMABLE
+		claimStatus = types.QueryRewardDistributionsByAddressRequest_CLAIMABLE
 	case "claimed":
-		claimStatus = types.QueryRewardsByAddressRequest_CLAIMED
+		claimStatus = types.QueryRewardDistributionsByAddressRequest_CLAIMED
 	case "expired":
-		claimStatus = types.QueryRewardsByAddressRequest_EXPIRED
+		claimStatus = types.QueryRewardDistributionsByAddressRequest_EXPIRED
 	default:
-		claimStatus = types.QueryRewardsByAddressRequest_ALL
+		claimStatus = types.QueryRewardDistributionsByAddressRequest_ALL
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
 
-	var response *types.QueryAccountByAddressResponse
-	if response, err = queryClient.QueryRewardDistributionsByAddress(
+	var response *types.QueryRewardDistributionsByAddressResponse
+	if response, err = queryClient.RewardDistributionsByAddress(
 		context.Background(),
-		&types.QueryRewardsByAddressRequest{
+		&types.QueryRewardDistributionsByAddressRequest{
 			Address:     address,
 			ClaimStatus: claimStatus,
 		},

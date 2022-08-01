@@ -89,12 +89,12 @@ func (k Keeper) ClaimPeriodRewardDistributions(ctx context.Context, req *types.Q
 }
 
 // ClaimPeriodRewardDistributionsByID returns a ClaimPeriodRewardDistribution by rewardID and claimPeriodID
-func (k Keeper) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *types.QueryClaimPeriodRewardDistributionByIDRequest) (*types.QueryClaimPeriodRewardDistributionByIDResponse, error) {
+func (k Keeper) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *types.QueryClaimPeriodRewardDistributionsByIDRequest) (*types.QueryClaimPeriodRewardDistributionsByIDResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	response := types.QueryClaimPeriodRewardDistributionByIDResponse{}
+	response := types.QueryClaimPeriodRewardDistributionsByIDResponse{}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	ClaimPeriodReward, err := k.GetClaimPeriodRewardDistribution(sdkCtx, req.GetClaimPeriodId(), req.GetRewardId())
@@ -109,7 +109,7 @@ func (k Keeper) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *typ
 	return &response, nil
 }
 
-func (k Keeper) QueryRewardDistributionsByAddress(ctx context.Context, request *types.QueryRewardsByAddressRequest) (*types.QueryAccountByAddressResponse, error) {
+func (k Keeper) RewardDistributionsByAddress(ctx context.Context, request *types.QueryRewardDistributionsByAddressRequest) (*types.QueryRewardDistributionsByAddressResponse, error) {
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -132,7 +132,7 @@ func (k Keeper) QueryRewardDistributionsByAddress(ctx context.Context, request *
 		if errFromGetRewardAccount != nil {
 			return false, nil
 		}
-		if !(result.GetSharesEarned() > 0 && (request.ClaimStatus == types.QueryRewardsByAddressRequest_ALL || request.ClaimStatus.String() == result.ClaimStatus.String())) {
+		if !(result.GetSharesEarned() > 0 && (request.ClaimStatus == types.QueryRewardDistributionsByAddressRequest_ALL || request.ClaimStatus.String() == result.ClaimStatus.String())) {
 			return false, nil
 		}
 
@@ -147,7 +147,7 @@ func (k Keeper) QueryRewardDistributionsByAddress(ctx context.Context, request *
 	}
 
 	rewardAccountResponses := k.convertRewardAccountStateToRewardAccountResponse(sdkCtx, states)
-	rewardAccountByAddressResponse := types.QueryAccountByAddressResponse{
+	rewardAccountByAddressResponse := types.QueryRewardDistributionsByAddressResponse{
 		Address:            request.Address,
 		RewardAccountState: rewardAccountResponses,
 		Pagination:         pageRes,

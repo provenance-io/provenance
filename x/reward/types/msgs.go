@@ -13,7 +13,7 @@ import (
 const (
 	TypeMsgCreateRewardProgramRequest = "create_reward_program"
 	TypeMsgEndRewardProgramRequest    = "end_reward_program"
-	TypeMsgClaimRewardRequest         = "claim_reward"
+	TypeMsgClaimRewardsRequest         = "claim_reward"
 	TypeMsgClaimAllRewardRequest      = "claim_all_rewards"
 )
 
@@ -170,25 +170,25 @@ func (msg MsgEndRewardProgramRequest) String() string {
 	return string(out)
 }
 
-// NewMsgClaimRewardRequest creates a new reward claim request
-func NewMsgClaimRewardRequest(
+// NewMsgClaimRewardsRequest creates a new reward claim request
+func NewMsgClaimRewardsRequest(
 	rewardProgramID uint64,
 	rewardAddress string,
-) *MsgClaimRewardRequest {
-	return &MsgClaimRewardRequest{
+) *MsgClaimRewardsRequest {
+	return &MsgClaimRewardsRequest{
 		RewardProgramId: rewardProgramID,
 		RewardAddress:   rewardAddress,
 	}
 }
 
 // Route implements Msg
-func (msg MsgClaimRewardRequest) Route() string { return ModuleName }
+func (msg MsgClaimRewardsRequest) Route() string { return ModuleName }
 
 // Type implements Msg
-func (msg MsgClaimRewardRequest) Type() string { return TypeMsgClaimRewardRequest }
+func (msg MsgClaimRewardsRequest) Type() string { return TypeMsgClaimRewardsRequest }
 
 // ValidateBasic runs stateless validation checks on the message.
-func (msg MsgClaimRewardRequest) ValidateBasic() error {
+func (msg MsgClaimRewardsRequest) ValidateBasic() error {
 	if msg.RewardProgramId < 1 {
 		return fmt.Errorf("invalid rewards program id : %d", msg.RewardProgramId)
 	}
@@ -199,12 +199,12 @@ func (msg MsgClaimRewardRequest) ValidateBasic() error {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgClaimRewardRequest) GetSignBytes() []byte {
+func (msg MsgClaimRewardsRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners indicates that the message must have been signed by the parent.
-func (msg MsgClaimRewardRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgClaimRewardsRequest) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.RewardAddress)
 	if err != nil {
 		panic(err)
@@ -212,7 +212,7 @@ func (msg MsgClaimRewardRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewMsgClaimRewardRequest creates a new claim all request
+// NewMsgClaimRewardsRequest creates a new claim all request
 func NewMsgClaimAllRewardsRequest(
 	rewardAddress string,
 ) *MsgClaimAllRewardsRequest {

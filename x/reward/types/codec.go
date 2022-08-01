@@ -27,7 +27,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgCreateRewardProgramRequest{},
 		&MsgEndRewardProgramRequest{},
-		&MsgClaimRewardRequest{},
+		&MsgClaimRewardsRequest{},
 		&MsgClaimAllRewardsRequest{},
 	)
 }

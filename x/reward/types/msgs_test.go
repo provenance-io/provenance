@@ -331,17 +331,17 @@ func (s *RewardMsgTypesTestSuite) TestMsgEndRewardProgramRequestValidateBasic() 
 func (s *RewardMsgTypesTestSuite) TestMsgClaimRewardValidateBasic() {
 	tests := []struct {
 		name                  string
-		msgClaimRewardRequest MsgClaimRewardRequest
+		MsgClaimRewardsRequest MsgClaimRewardsRequest
 		want                  string
 	}{
 		{
 			"valid",
-			*NewMsgClaimRewardRequest(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+			*NewMsgClaimRewardsRequest(1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
 			"",
 		},
 		{
 			"invalid - address incorrect",
-			*NewMsgClaimRewardRequest(
+			*NewMsgClaimRewardsRequest(
 				1,
 				"invalid",
 			),
@@ -349,7 +349,7 @@ func (s *RewardMsgTypesTestSuite) TestMsgClaimRewardValidateBasic() {
 		},
 		{
 			"invalid - incorrect reward id",
-			*NewMsgClaimRewardRequest(
+			*NewMsgClaimRewardsRequest(
 				0,
 				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 			),
@@ -359,11 +359,11 @@ func (s *RewardMsgTypesTestSuite) TestMsgClaimRewardValidateBasic() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := tt.msgClaimRewardRequest.ValidateBasic()
+			err := tt.MsgClaimRewardsRequest.ValidateBasic()
 			if err != nil {
 				assert.Equal(t, tt.want, err.Error())
 			} else if len(tt.want) > 0 {
-				t.Errorf("MsgClaimRewardRequest ValidateBasic error = nil, expected: %s", tt.want)
+				t.Errorf("MsgClaimRewardsRequest ValidateBasic error = nil, expected: %s", tt.want)
 			}
 		})
 	}

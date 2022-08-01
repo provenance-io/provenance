@@ -22,7 +22,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgEndRewardProgramRequest:
 			res, err := msgServer.EndRewardProgram(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgClaimRewardRequest:
+		case *types.MsgClaimRewardsRequest:
 			res, err := msgServer.ClaimRewards(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgClaimAllRewardsRequest:

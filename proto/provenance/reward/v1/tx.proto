@@ -3,7 +3,6 @@ package provenance.reward.v1;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "provenance/reward/v1/reward.proto";
@@ -26,7 +25,7 @@ service Msg {
   }
 
   // ClaimRewards is the RPC endpoint for claiming rewards belonging to completed claim periods of a reward program
-  rpc ClaimRewards(MsgClaimRewardRequest) returns (MsgClaimRewardResponse) {
+  rpc ClaimRewards(MsgClaimRewardsRequest) returns (MsgClaimRewardsResponse) {
     option (google.api.http).patch =
         "/provenance/reward/v1/reward_claims/{reward_address}/reward_programs/{reward_program_id}";
   }
@@ -92,28 +91,28 @@ message MsgEndRewardProgramRequest {
 // MsgEndRewardProgramResponse is the response type for ending a reward program RPC
 message MsgEndRewardProgramResponse {}
 
-// MsgClaimRewardRequest is the request type for claiming reward from reward program RPC
-message MsgClaimRewardRequest {
+// MsgClaimRewardsRequest is the request type for claiming reward from reward program RPC
+message MsgClaimRewardsRequest {
   // reward program id to claim rewards.
   uint64 reward_program_id = 1;
   // reward address and signer of msg to send claimed rewards to.
   string reward_address = 2;
 }
 
-// MsgClaimRewardResponse is the response type for claiming reward from reward program RPC
-message MsgClaimRewardResponse {
+// MsgClaimRewardsResponse is the response type for claiming reward from reward program RPC
+message MsgClaimRewardsResponse {
   option (gogoproto.equal) = true;
   // details about acquired rewards from reward program.
   RewardProgramClaimDetail claim_details = 1 [(gogoproto.nullable) = false];
 }
 
-// MsgClaimRewardResponse is the request type for claiming rewards from all reward programs RPC
+// MsgClaimRewardsResponse is the request type for claiming rewards from all reward programs RPC
 message MsgClaimAllRewardsRequest {
   // reward address and signer of msg to send claimed rewards to.
   string reward_address = 1;
 }
 
-// MsgClaimRewardResponse is the response type for claiming rewards from all reward programs RPC
+// MsgClaimRewardsResponse is the response type for claiming rewards from all reward programs RPC
 message MsgClaimAllRewardsResponse {
   option (gogoproto.equal) = true;
   // total rewards claimed for all eligible claim periods in all programs.

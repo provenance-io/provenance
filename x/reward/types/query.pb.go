@@ -65,17 +65,17 @@ func (QueryRewardProgramsRequest_QueryType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_89e47dd1c3e4febf, []int{2, 0}
 }
 
-type QueryRewardsByAddressRequest_RewardAccountQueryParam int32
+type QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam int32
 
 const (
-	QueryRewardsByAddressRequest_ALL         QueryRewardsByAddressRequest_RewardAccountQueryParam = 0
-	QueryRewardsByAddressRequest_UNCLAIMABLE QueryRewardsByAddressRequest_RewardAccountQueryParam = 1
-	QueryRewardsByAddressRequest_CLAIMABLE   QueryRewardsByAddressRequest_RewardAccountQueryParam = 2
-	QueryRewardsByAddressRequest_CLAIMED     QueryRewardsByAddressRequest_RewardAccountQueryParam = 3
-	QueryRewardsByAddressRequest_EXPIRED     QueryRewardsByAddressRequest_RewardAccountQueryParam = 4
+	QueryRewardDistributionsByAddressRequest_ALL         QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam = 0
+	QueryRewardDistributionsByAddressRequest_UNCLAIMABLE QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam = 1
+	QueryRewardDistributionsByAddressRequest_CLAIMABLE   QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam = 2
+	QueryRewardDistributionsByAddressRequest_CLAIMED     QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam = 3
+	QueryRewardDistributionsByAddressRequest_EXPIRED     QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam = 4
 )
 
-var QueryRewardsByAddressRequest_RewardAccountQueryParam_name = map[int32]string{
+var QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam_name = map[int32]string{
 	0: "ALL",
 	1: "UNCLAIMABLE",
 	2: "CLAIMABLE",
@@ -83,7 +83,7 @@ var QueryRewardsByAddressRequest_RewardAccountQueryParam_name = map[int32]string
 	4: "EXPIRED",
 }
 
-var QueryRewardsByAddressRequest_RewardAccountQueryParam_value = map[string]int32{
+var QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam_value = map[string]int32{
 	"ALL":         0,
 	"UNCLAIMABLE": 1,
 	"CLAIMABLE":   2,
@@ -91,11 +91,11 @@ var QueryRewardsByAddressRequest_RewardAccountQueryParam_value = map[string]int3
 	"EXPIRED":     4,
 }
 
-func (x QueryRewardsByAddressRequest_RewardAccountQueryParam) String() string {
-	return proto.EnumName(QueryRewardsByAddressRequest_RewardAccountQueryParam_name, int32(x))
+func (x QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam) String() string {
+	return proto.EnumName(QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam_name, int32(x))
 }
 
-func (QueryRewardsByAddressRequest_RewardAccountQueryParam) EnumDescriptor() ([]byte, []int) {
+func (QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_89e47dd1c3e4febf, []int{8, 0}
 }
 
@@ -392,30 +392,30 @@ func (m *QueryClaimPeriodRewardDistributionsResponse) GetPagination() *query.Pag
 	return nil
 }
 
-// QueryClaimPeriodRewardDistributionByIDRequest queries for a single ClaimPeriodRewardDistribution
-type QueryClaimPeriodRewardDistributionByIDRequest struct {
+// QueryClaimPeriodRewardDistributionsByIDRequest queries for a single ClaimPeriodRewardDistribution
+type QueryClaimPeriodRewardDistributionsByIDRequest struct {
 	// The reward program that the claim period reward distribution belongs to.
 	RewardId uint64 `protobuf:"varint,1,opt,name=reward_id,json=rewardId,proto3" json:"reward_id,omitempty"`
 	// The claim period that the claim period reward distribution was created for.
 	ClaimPeriodId uint64 `protobuf:"varint,2,opt,name=claim_period_id,json=claimPeriodId,proto3" json:"claim_period_id,omitempty"`
 }
 
-func (m *QueryClaimPeriodRewardDistributionByIDRequest) Reset() {
-	*m = QueryClaimPeriodRewardDistributionByIDRequest{}
+func (m *QueryClaimPeriodRewardDistributionsByIDRequest) Reset() {
+	*m = QueryClaimPeriodRewardDistributionsByIDRequest{}
 }
-func (m *QueryClaimPeriodRewardDistributionByIDRequest) String() string {
+func (m *QueryClaimPeriodRewardDistributionsByIDRequest) String() string {
 	return proto.CompactTextString(m)
 }
-func (*QueryClaimPeriodRewardDistributionByIDRequest) ProtoMessage() {}
-func (*QueryClaimPeriodRewardDistributionByIDRequest) Descriptor() ([]byte, []int) {
+func (*QueryClaimPeriodRewardDistributionsByIDRequest) ProtoMessage() {}
+func (*QueryClaimPeriodRewardDistributionsByIDRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_89e47dd1c3e4febf, []int{6}
 }
-func (m *QueryClaimPeriodRewardDistributionByIDRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryClaimPeriodRewardDistributionsByIDRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryClaimPeriodRewardDistributionByIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryClaimPeriodRewardDistributionsByIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryClaimPeriodRewardDistributionByIDRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryClaimPeriodRewardDistributionsByIDRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -425,54 +425,54 @@ func (m *QueryClaimPeriodRewardDistributionByIDRequest) XXX_Marshal(b []byte, de
 		return b[:n], nil
 	}
 }
-func (m *QueryClaimPeriodRewardDistributionByIDRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryClaimPeriodRewardDistributionByIDRequest.Merge(m, src)
+func (m *QueryClaimPeriodRewardDistributionsByIDRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryClaimPeriodRewardDistributionsByIDRequest.Merge(m, src)
 }
-func (m *QueryClaimPeriodRewardDistributionByIDRequest) XXX_Size() int {
+func (m *QueryClaimPeriodRewardDistributionsByIDRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryClaimPeriodRewardDistributionByIDRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryClaimPeriodRewardDistributionByIDRequest.DiscardUnknown(m)
+func (m *QueryClaimPeriodRewardDistributionsByIDRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryClaimPeriodRewardDistributionsByIDRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryClaimPeriodRewardDistributionByIDRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryClaimPeriodRewardDistributionsByIDRequest proto.InternalMessageInfo
 
-func (m *QueryClaimPeriodRewardDistributionByIDRequest) GetRewardId() uint64 {
+func (m *QueryClaimPeriodRewardDistributionsByIDRequest) GetRewardId() uint64 {
 	if m != nil {
 		return m.RewardId
 	}
 	return 0
 }
 
-func (m *QueryClaimPeriodRewardDistributionByIDRequest) GetClaimPeriodId() uint64 {
+func (m *QueryClaimPeriodRewardDistributionsByIDRequest) GetClaimPeriodId() uint64 {
 	if m != nil {
 		return m.ClaimPeriodId
 	}
 	return 0
 }
 
-// QueryClaimPeriodRewardDistributionByIDResponse returns the requested ClaimPeriodRewardDistribution
-type QueryClaimPeriodRewardDistributionByIDResponse struct {
+// QueryClaimPeriodRewardDistributionsByIDResponse returns the requested ClaimPeriodRewardDistribution
+type QueryClaimPeriodRewardDistributionsByIDResponse struct {
 	// The ClaimPeriodRewardDistribution object that was queried for.
 	ClaimPeriodRewardDistribution *ClaimPeriodRewardDistribution `protobuf:"bytes,1,opt,name=claim_period_reward_distribution,json=claimPeriodRewardDistribution,proto3" json:"claim_period_reward_distribution,omitempty"`
 }
 
-func (m *QueryClaimPeriodRewardDistributionByIDResponse) Reset() {
-	*m = QueryClaimPeriodRewardDistributionByIDResponse{}
+func (m *QueryClaimPeriodRewardDistributionsByIDResponse) Reset() {
+	*m = QueryClaimPeriodRewardDistributionsByIDResponse{}
 }
-func (m *QueryClaimPeriodRewardDistributionByIDResponse) String() string {
+func (m *QueryClaimPeriodRewardDistributionsByIDResponse) String() string {
 	return proto.CompactTextString(m)
 }
-func (*QueryClaimPeriodRewardDistributionByIDResponse) ProtoMessage() {}
-func (*QueryClaimPeriodRewardDistributionByIDResponse) Descriptor() ([]byte, []int) {
+func (*QueryClaimPeriodRewardDistributionsByIDResponse) ProtoMessage() {}
+func (*QueryClaimPeriodRewardDistributionsByIDResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_89e47dd1c3e4febf, []int{7}
 }
-func (m *QueryClaimPeriodRewardDistributionByIDResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryClaimPeriodRewardDistributionsByIDResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryClaimPeriodRewardDistributionByIDResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryClaimPeriodRewardDistributionsByIDResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryClaimPeriodRewardDistributionByIDResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryClaimPeriodRewardDistributionsByIDResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -482,47 +482,49 @@ func (m *QueryClaimPeriodRewardDistributionByIDResponse) XXX_Marshal(b []byte, d
 		return b[:n], nil
 	}
 }
-func (m *QueryClaimPeriodRewardDistributionByIDResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryClaimPeriodRewardDistributionByIDResponse.Merge(m, src)
+func (m *QueryClaimPeriodRewardDistributionsByIDResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryClaimPeriodRewardDistributionsByIDResponse.Merge(m, src)
 }
-func (m *QueryClaimPeriodRewardDistributionByIDResponse) XXX_Size() int {
+func (m *QueryClaimPeriodRewardDistributionsByIDResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryClaimPeriodRewardDistributionByIDResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryClaimPeriodRewardDistributionByIDResponse.DiscardUnknown(m)
+func (m *QueryClaimPeriodRewardDistributionsByIDResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryClaimPeriodRewardDistributionsByIDResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryClaimPeriodRewardDistributionByIDResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryClaimPeriodRewardDistributionsByIDResponse proto.InternalMessageInfo
 
-func (m *QueryClaimPeriodRewardDistributionByIDResponse) GetClaimPeriodRewardDistribution() *ClaimPeriodRewardDistribution {
+func (m *QueryClaimPeriodRewardDistributionsByIDResponse) GetClaimPeriodRewardDistribution() *ClaimPeriodRewardDistribution {
 	if m != nil {
 		return m.ClaimPeriodRewardDistribution
 	}
 	return nil
 }
 
-// QueryRewardsByAddressRequest queries for reward claims by address that match the claim_status.
-type QueryRewardsByAddressRequest struct {
+// QueryRewardDistributionsByAddressRequest queries for reward claims by address that match the claim_status.
+type QueryRewardDistributionsByAddressRequest struct {
 	// The address that the claim belongs to.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	// The status that the reward account must have.
-	ClaimStatus QueryRewardsByAddressRequest_RewardAccountQueryParam `protobuf:"varint,2,opt,name=claim_status,json=claimStatus,proto3,enum=provenance.reward.v1.QueryRewardsByAddressRequest_RewardAccountQueryParam" json:"claim_status,omitempty"`
+	ClaimStatus QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam `protobuf:"varint,2,opt,name=claim_status,json=claimStatus,proto3,enum=provenance.reward.v1.QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam" json:"claim_status,omitempty"`
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryRewardsByAddressRequest) Reset()         { *m = QueryRewardsByAddressRequest{} }
-func (m *QueryRewardsByAddressRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryRewardsByAddressRequest) ProtoMessage()    {}
-func (*QueryRewardsByAddressRequest) Descriptor() ([]byte, []int) {
+func (m *QueryRewardDistributionsByAddressRequest) Reset() {
+	*m = QueryRewardDistributionsByAddressRequest{}
+}
+func (m *QueryRewardDistributionsByAddressRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryRewardDistributionsByAddressRequest) ProtoMessage()    {}
+func (*QueryRewardDistributionsByAddressRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_89e47dd1c3e4febf, []int{8}
 }
-func (m *QueryRewardsByAddressRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryRewardDistributionsByAddressRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryRewardsByAddressRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryRewardDistributionsByAddressRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryRewardsByAddressRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryRewardDistributionsByAddressRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -532,41 +534,41 @@ func (m *QueryRewardsByAddressRequest) XXX_Marshal(b []byte, deterministic bool)
 		return b[:n], nil
 	}
 }
-func (m *QueryRewardsByAddressRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryRewardsByAddressRequest.Merge(m, src)
+func (m *QueryRewardDistributionsByAddressRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRewardDistributionsByAddressRequest.Merge(m, src)
 }
-func (m *QueryRewardsByAddressRequest) XXX_Size() int {
+func (m *QueryRewardDistributionsByAddressRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryRewardsByAddressRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryRewardsByAddressRequest.DiscardUnknown(m)
+func (m *QueryRewardDistributionsByAddressRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRewardDistributionsByAddressRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryRewardsByAddressRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryRewardDistributionsByAddressRequest proto.InternalMessageInfo
 
-func (m *QueryRewardsByAddressRequest) GetAddress() string {
+func (m *QueryRewardDistributionsByAddressRequest) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
 	return ""
 }
 
-func (m *QueryRewardsByAddressRequest) GetClaimStatus() QueryRewardsByAddressRequest_RewardAccountQueryParam {
+func (m *QueryRewardDistributionsByAddressRequest) GetClaimStatus() QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam {
 	if m != nil {
 		return m.ClaimStatus
 	}
-	return QueryRewardsByAddressRequest_ALL
+	return QueryRewardDistributionsByAddressRequest_ALL
 }
 
-func (m *QueryRewardsByAddressRequest) GetPagination() *query.PageRequest {
+func (m *QueryRewardDistributionsByAddressRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryAccountByAddressResponse returns the reward claims for an address that match the claim_status.
-type QueryAccountByAddressResponse struct {
+// QueryRewardDistributionsByAddressResponse returns the reward claims for an address that match the claim_status.
+type QueryRewardDistributionsByAddressResponse struct {
 	// The address that the reward account belongs to.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	// List of RewardAccounts queried for.
@@ -575,18 +577,22 @@ type QueryAccountByAddressResponse struct {
 	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryAccountByAddressResponse) Reset()         { *m = QueryAccountByAddressResponse{} }
-func (m *QueryAccountByAddressResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryAccountByAddressResponse) ProtoMessage()    {}
-func (*QueryAccountByAddressResponse) Descriptor() ([]byte, []int) {
+func (m *QueryRewardDistributionsByAddressResponse) Reset() {
+	*m = QueryRewardDistributionsByAddressResponse{}
+}
+func (m *QueryRewardDistributionsByAddressResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryRewardDistributionsByAddressResponse) ProtoMessage() {}
+func (*QueryRewardDistributionsByAddressResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_89e47dd1c3e4febf, []int{9}
 }
-func (m *QueryAccountByAddressResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryRewardDistributionsByAddressResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryAccountByAddressResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryRewardDistributionsByAddressResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryAccountByAddressResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryRewardDistributionsByAddressResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -596,33 +602,33 @@ func (m *QueryAccountByAddressResponse) XXX_Marshal(b []byte, deterministic bool
 		return b[:n], nil
 	}
 }
-func (m *QueryAccountByAddressResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryAccountByAddressResponse.Merge(m, src)
+func (m *QueryRewardDistributionsByAddressResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRewardDistributionsByAddressResponse.Merge(m, src)
 }
-func (m *QueryAccountByAddressResponse) XXX_Size() int {
+func (m *QueryRewardDistributionsByAddressResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryAccountByAddressResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryAccountByAddressResponse.DiscardUnknown(m)
+func (m *QueryRewardDistributionsByAddressResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRewardDistributionsByAddressResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryAccountByAddressResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryRewardDistributionsByAddressResponse proto.InternalMessageInfo
 
-func (m *QueryAccountByAddressResponse) GetAddress() string {
+func (m *QueryRewardDistributionsByAddressResponse) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
 	return ""
 }
 
-func (m *QueryAccountByAddressResponse) GetRewardAccountState() []RewardAccountResponse {
+func (m *QueryRewardDistributionsByAddressResponse) GetRewardAccountState() []RewardAccountResponse {
 	if m != nil {
 		return m.RewardAccountState
 	}
 	return nil
 }
 
-func (m *QueryAccountByAddressResponse) GetPagination() *query.PageResponse {
+func (m *QueryRewardDistributionsByAddressResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
@@ -704,92 +710,91 @@ func (m *RewardAccountResponse) GetClaimId() uint64 {
 
 func init() {
 	proto.RegisterEnum("provenance.reward.v1.QueryRewardProgramsRequest_QueryType", QueryRewardProgramsRequest_QueryType_name, QueryRewardProgramsRequest_QueryType_value)
-	proto.RegisterEnum("provenance.reward.v1.QueryRewardsByAddressRequest_RewardAccountQueryParam", QueryRewardsByAddressRequest_RewardAccountQueryParam_name, QueryRewardsByAddressRequest_RewardAccountQueryParam_value)
+	proto.RegisterEnum("provenance.reward.v1.QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam", QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam_name, QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam_value)
 	proto.RegisterType((*QueryRewardProgramByIDRequest)(nil), "provenance.reward.v1.QueryRewardProgramByIDRequest")
 	proto.RegisterType((*QueryRewardProgramByIDResponse)(nil), "provenance.reward.v1.QueryRewardProgramByIDResponse")
 	proto.RegisterType((*QueryRewardProgramsRequest)(nil), "provenance.reward.v1.QueryRewardProgramsRequest")
 	proto.RegisterType((*QueryRewardProgramsResponse)(nil), "provenance.reward.v1.QueryRewardProgramsResponse")
 	proto.RegisterType((*QueryClaimPeriodRewardDistributionsRequest)(nil), "provenance.reward.v1.QueryClaimPeriodRewardDistributionsRequest")
 	proto.RegisterType((*QueryClaimPeriodRewardDistributionsResponse)(nil), "provenance.reward.v1.QueryClaimPeriodRewardDistributionsResponse")
-	proto.RegisterType((*QueryClaimPeriodRewardDistributionByIDRequest)(nil), "provenance.reward.v1.QueryClaimPeriodRewardDistributionByIDRequest")
-	proto.RegisterType((*QueryClaimPeriodRewardDistributionByIDResponse)(nil), "provenance.reward.v1.QueryClaimPeriodRewardDistributionByIDResponse")
-	proto.RegisterType((*QueryRewardsByAddressRequest)(nil), "provenance.reward.v1.QueryRewardsByAddressRequest")
-	proto.RegisterType((*QueryAccountByAddressResponse)(nil), "provenance.reward.v1.QueryAccountByAddressResponse")
+	proto.RegisterType((*QueryClaimPeriodRewardDistributionsByIDRequest)(nil), "provenance.reward.v1.QueryClaimPeriodRewardDistributionsByIDRequest")
+	proto.RegisterType((*QueryClaimPeriodRewardDistributionsByIDResponse)(nil), "provenance.reward.v1.QueryClaimPeriodRewardDistributionsByIDResponse")
+	proto.RegisterType((*QueryRewardDistributionsByAddressRequest)(nil), "provenance.reward.v1.QueryRewardDistributionsByAddressRequest")
+	proto.RegisterType((*QueryRewardDistributionsByAddressResponse)(nil), "provenance.reward.v1.QueryRewardDistributionsByAddressResponse")
 	proto.RegisterType((*RewardAccountResponse)(nil), "provenance.reward.v1.RewardAccountResponse")
 }
 
 func init() { proto.RegisterFile("provenance/reward/v1/query.proto", fileDescriptor_89e47dd1c3e4febf) }
 
 var fileDescriptor_89e47dd1c3e4febf = []byte{
-	// 1073 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0x4f, 0x6b, 0x1b, 0x47,
-	0x14, 0xf7, 0xac, 0xdc, 0x58, 0x7a, 0x8a, 0x25, 0x65, 0x70, 0x89, 0xa2, 0x24, 0x6b, 0x7b, 0x0b,
-	0x6e, 0xb0, 0xf1, 0x6e, 0x24, 0x87, 0x52, 0x7c, 0x8a, 0xfe, 0x25, 0xdd, 0xa0, 0xb8, 0xea, 0xda,
-	0xe9, 0x3f, 0x0a, 0x66, 0xb5, 0xbb, 0x55, 0x17, 0x24, 0x8d, 0xbc, 0xbb, 0x72, 0x2b, 0x5c, 0x5f,
-	0x4a, 0x3f, 0x40, 0xa0, 0x97, 0x5e, 0x0a, 0xb9, 0xf4, 0xda, 0x4b, 0xa1, 0x9f, 0xa0, 0x85, 0x5c,
-	0x0a, 0x81, 0x5e, 0x7a, 0x2a, 0xc5, 0x2e, 0xa4, 0x5f, 0xa2, 0x50, 0xf4, 0x76, 0x24, 0xed, 0xda,
-	0xfa, 0x67, 0x27, 0x37, 0xcd, 0xcc, 0x9b, 0xf7, 0xde, 0xef, 0x37, 0xbf, 0xf7, 0xde, 0x0a, 0x56,
-	0xda, 0x0e, 0x3b, 0xb4, 0x5a, 0x7a, 0xcb, 0xb0, 0x14, 0xc7, 0xfa, 0x52, 0x77, 0x4c, 0xe5, 0x30,
-	0xab, 0x1c, 0x74, 0x2c, 0xa7, 0x2b, 0xb7, 0x1d, 0xe6, 0x31, 0xba, 0x34, 0xb4, 0x90, 0x7d, 0x0b,
-	0xf9, 0x30, 0x9b, 0x59, 0xaa, 0xb3, 0x3a, 0x43, 0x03, 0xa5, 0xf7, 0xcb, 0xb7, 0xcd, 0xdc, 0xaa,
-	0x33, 0x56, 0x6f, 0x58, 0x8a, 0xde, 0xb6, 0x15, 0xbd, 0xd5, 0x62, 0x9e, 0xee, 0xd9, 0xac, 0xe5,
-	0xf2, 0x53, 0xd1, 0x60, 0x6e, 0x93, 0xb9, 0x4a, 0x4d, 0x77, 0x2d, 0xe5, 0x30, 0x5b, 0xb3, 0x3c,
-	0x3d, 0xab, 0x18, 0xcc, 0x6e, 0xf1, 0xf3, 0xf5, 0xe0, 0x39, 0xa6, 0x30, 0xb0, 0x6a, 0xeb, 0x75,
-	0xbb, 0x85, 0xce, 0xb8, 0xed, 0xea, 0xc8, 0xbc, 0x79, 0x7e, 0x68, 0x22, 0x29, 0x70, 0xfb, 0x83,
-	0x9e, 0x13, 0x0d, 0x37, 0xab, 0x0e, 0xab, 0x3b, 0x7a, 0xb3, 0xd0, 0x55, 0x4b, 0x9a, 0x75, 0xd0,
-	0xb1, 0x5c, 0x8f, 0x26, 0x40, 0xb0, 0xcd, 0x34, 0x59, 0x21, 0x77, 0xe6, 0x35, 0xc1, 0x36, 0xa5,
-	0x06, 0x88, 0xe3, 0x2e, 0xb8, 0x6d, 0xd6, 0x72, 0x2d, 0xfa, 0x08, 0x12, 0x7e, 0x88, 0xfd, 0xb6,
-	0x7f, 0x8a, 0xb7, 0xe3, 0xb9, 0xb7, 0xe4, 0x51, 0x24, 0xc9, 0x21, 0x47, 0xda, 0xa2, 0x13, 0x5c,
-	0x4a, 0xbf, 0x11, 0xc8, 0x9c, 0x0f, 0xe7, 0xf6, 0x93, 0xfb, 0x04, 0x00, 0x29, 0xd8, 0xf7, 0xba,
-	0x6d, 0x0b, 0xc3, 0x24, 0x72, 0xdb, 0xa3, 0xc3, 0x8c, 0xf7, 0xe2, 0x1f, 0xed, 0x75, 0xdb, 0x96,
-	0x16, 0x3b, 0xe8, 0xff, 0x94, 0x2a, 0x10, 0x1b, 0xec, 0xd3, 0x05, 0x88, 0xe4, 0x2b, 0x95, 0xd4,
-	0x1c, 0x8d, 0xc3, 0x42, 0xb5, 0xbc, 0x53, 0x52, 0x77, 0x1e, 0xa6, 0x08, 0x05, 0xb8, 0x92, 0x2f,
-	0xee, 0xa9, 0x1f, 0x96, 0x53, 0x02, 0x4d, 0x42, 0xfc, 0xfd, 0x27, 0x7b, 0xbb, 0x7b, 0x79, 0xff,
-	0x30, 0x42, 0xaf, 0x42, 0xf4, 0x81, 0xba, 0xa3, 0xee, 0xbe, 0x57, 0x2e, 0xa5, 0xe6, 0xa5, 0x03,
-	0xb8, 0x39, 0x32, 0x01, 0x4e, 0x99, 0x06, 0xc9, 0x30, 0x65, 0x6e, 0x9a, 0xac, 0x44, 0x66, 0xe4,
-	0xac, 0x30, 0xff, 0xfc, 0xaf, 0xe5, 0x39, 0x2d, 0x11, 0x62, 0xce, 0x95, 0x3c, 0x58, 0xc7, 0x90,
-	0xc5, 0x86, 0x6e, 0x37, 0xab, 0x96, 0x63, 0x33, 0xd3, 0xbf, 0x56, 0xb2, 0x5d, 0xcf, 0xb1, 0x6b,
-	0x1d, 0x54, 0x5d, 0x9f, 0xc9, 0x07, 0x00, 0x43, 0xf9, 0xa4, 0x0d, 0x7c, 0xb0, 0x35, 0xd9, 0xd7,
-	0x9a, 0xdc, 0xd3, 0x9a, 0xec, 0xcb, 0x9d, 0x6b, 0x4d, 0xae, 0xea, 0x75, 0x8b, 0xdf, 0xd5, 0x02,
-	0x37, 0xa5, 0xff, 0x08, 0x6c, 0xcc, 0x14, 0x96, 0x23, 0xff, 0x96, 0xc0, 0xaa, 0xd1, 0x33, 0xdd,
-	0x6f, 0xa3, 0xed, 0x3e, 0xe7, 0xc1, 0x0c, 0x5a, 0x73, 0x32, 0xb6, 0x46, 0x93, 0x31, 0x31, 0x12,
-	0x27, 0x47, 0x34, 0x26, 0xa6, 0x43, 0x1f, 0x8e, 0x80, 0xff, 0xf6, 0x54, 0xf8, 0x3e, 0x86, 0x10,
-	0x7e, 0x0f, 0x36, 0xa7, 0xc3, 0x0f, 0xd6, 0xd7, 0x4d, 0x88, 0x71, 0xc8, 0x83, 0x32, 0x8b, 0xfa,
-	0x1b, 0xaa, 0x49, 0xd7, 0x20, 0x19, 0x22, 0xc7, 0x36, 0xd3, 0x02, 0x9a, 0x2c, 0x06, 0xf0, 0xa8,
-	0xa6, 0xf4, 0x13, 0x01, 0x79, 0xd6, 0xb0, 0x9c, 0xf8, 0xaf, 0x61, 0x65, 0x1a, 0xef, 0xbc, 0x6e,
-	0x2f, 0x43, 0xbb, 0x76, 0x7b, 0x22, 0xe1, 0xd2, 0xef, 0x02, 0xdc, 0x0a, 0x14, 0x84, 0x5b, 0xe8,
-	0xe6, 0x4d, 0xd3, 0xb1, 0xdc, 0x81, 0x1e, 0xd3, 0xb0, 0xa0, 0xfb, 0x3b, 0x98, 0x45, 0x4c, 0xeb,
-	0x2f, 0x69, 0x13, 0xae, 0xfa, 0x89, 0xbb, 0x9e, 0xee, 0x75, 0x5c, 0x24, 0x24, 0x91, 0x7b, 0x34,
-	0xb5, 0xea, 0xcf, 0xc5, 0xe0, 0x55, 0x94, 0x37, 0x0c, 0xd6, 0x69, 0x79, 0x68, 0x59, 0xd5, 0x7b,
-	0x3d, 0x28, 0x8e, 0xfe, 0x77, 0xd1, 0xfd, 0x6b, 0x2b, 0x8c, 0xcf, 0xe0, 0xfa, 0x98, 0x78, 0xc3,
-	0xee, 0x92, 0x84, 0xf8, 0x93, 0x9d, 0x62, 0x25, 0xaf, 0x3e, 0xce, 0x17, 0x2a, 0xe5, 0x14, 0xa1,
-	0x8b, 0x10, 0x1b, 0x2e, 0x85, 0x5e, 0xf7, 0xc1, 0x65, 0xb9, 0x94, 0x8a, 0xf4, 0x16, 0xe5, 0x8f,
-	0xab, 0xaa, 0x86, 0xfd, 0xe5, 0x25, 0xe1, 0x7d, 0x9c, 0x7b, 0x0f, 0x60, 0xe5, 0xef, 0x3d, 0x9e,
-	0x50, 0x03, 0x96, 0xf8, 0xe3, 0xeb, 0xfe, 0x65, 0x64, 0xd6, 0x4a, 0x0b, 0x58, 0x74, 0x1b, 0x93,
-	0x3a, 0x10, 0x8f, 0xd6, 0x0f, 0xc2, 0x8b, 0x8d, 0x3a, 0xc1, 0xc3, 0x1e, 0x8f, 0xd6, 0xeb, 0x2b,
-	0xb0, 0xa7, 0x02, 0xbc, 0x39, 0x32, 0x38, 0x5d, 0x87, 0x6b, 0xe1, 0x26, 0x3a, 0xac, 0xa8, 0x64,
-	0xa8, 0x37, 0xaa, 0x26, 0x7d, 0x0c, 0xd4, 0x63, 0x9e, 0xde, 0xe8, 0xcb, 0x1e, 0x5f, 0x1c, 0xa5,
-	0x14, 0xcf, 0xdd, 0x08, 0xa5, 0xd5, 0x4f, 0xa8, 0xc8, 0xec, 0x7e, 0x33, 0x49, 0xe1, 0x55, 0x3f,
-	0x09, 0xac, 0x02, 0xfa, 0xd1, 0x19, 0x4d, 0x46, 0x50, 0x93, 0xf7, 0x66, 0xa0, 0x0e, 0xd9, 0xf1,
-	0x6b, 0xc9, 0x17, 0x5c, 0x58, 0x7d, 0x37, 0x20, 0xea, 0x3b, 0xb6, 0xcd, 0xf4, 0x3c, 0x42, 0x59,
-	0xc0, 0xb5, 0x6a, 0x6e, 0x47, 0xbf, 0x7f, 0xb6, 0x4c, 0xfe, 0x7d, 0xb6, 0x4c, 0x72, 0xbf, 0x44,
-	0xe1, 0x0d, 0x7c, 0x7c, 0xfa, 0x33, 0x81, 0x6b, 0xe7, 0x06, 0x33, 0xdd, 0x9a, 0x75, 0x22, 0x06,
-	0xfa, 0x52, 0xe6, 0xde, 0xc5, 0x2e, 0xf9, 0x6f, 0x20, 0x6d, 0x7d, 0xf3, 0xc7, 0x3f, 0xdf, 0x09,
-	0x9b, 0x74, 0x43, 0x39, 0xf7, 0xe9, 0xe1, 0x0e, 0xbf, 0x3d, 0x06, 0x53, 0x4e, 0x39, 0xb2, 0xcd,
-	0x63, 0xfa, 0x23, 0x81, 0x44, 0x78, 0x30, 0xd2, 0xbb, 0x17, 0x1d, 0xe2, 0x99, 0xec, 0x05, 0x6e,
-	0xf0, 0x64, 0x65, 0x4c, 0xf6, 0x0e, 0x5d, 0x9b, 0x2d, 0x59, 0xfa, 0x92, 0x80, 0x38, 0x79, 0xac,
-	0xd1, 0xfb, 0x13, 0xb2, 0x98, 0x69, 0x10, 0x67, 0xf2, 0xaf, 0xe0, 0x81, 0xe3, 0xba, 0x8f, 0xb8,
-	0xb6, 0xe9, 0xbb, 0x63, 0x70, 0x4d, 0x9d, 0xb7, 0xf4, 0x07, 0x01, 0xa4, 0xc9, 0xc1, 0x50, 0x58,
-	0xc5, 0xcb, 0xe6, 0x1a, 0x14, 0x5a, 0xe9, 0xd5, 0x9c, 0x70, 0xcc, 0x0d, 0xc4, 0xfc, 0x39, 0x35,
-	0x2f, 0x8b, 0x59, 0x39, 0x1a, 0x8c, 0xe1, 0xe3, 0x90, 0xb5, 0xab, 0x1c, 0x9d, 0x99, 0xc1, 0xc7,
-	0xf4, 0x57, 0x02, 0xab, 0x01, 0x65, 0x9d, 0x61, 0x86, 0xb7, 0x5e, 0x9a, 0xbb, 0xf8, 0x4c, 0xca,
-	0x4c, 0xaa, 0xd5, 0x71, 0xbd, 0x5d, 0x7a, 0x07, 0xc1, 0xdf, 0xa5, 0xf2, 0x64, 0x21, 0x23, 0x0c,
-	0x57, 0x39, 0xe2, 0x8d, 0xff, 0xb8, 0x50, 0x7f, 0x7e, 0x22, 0x92, 0x17, 0x27, 0x22, 0xf9, 0xfb,
-	0x44, 0x24, 0x4f, 0x4f, 0xc5, 0xb9, 0x17, 0xa7, 0xe2, 0xdc, 0x9f, 0xa7, 0xe2, 0x1c, 0x5c, 0xb7,
-	0xd9, 0xc8, 0x44, 0xaa, 0xe4, 0xd3, 0x5c, 0xdd, 0xf6, 0xbe, 0xe8, 0xd4, 0x64, 0x83, 0x35, 0x03,
-	0xe1, 0x36, 0x6d, 0x16, 0x0c, 0xfe, 0x55, 0xff, 0xff, 0x46, 0xef, 0xc3, 0xdc, 0xad, 0x5d, 0xc1,
-	0x3f, 0x1b, 0x5b, 0xff, 0x07, 0x00, 0x00, 0xff, 0xff, 0xdc, 0x4d, 0xeb, 0x7c, 0x49, 0x0d, 0x00,
-	0x00,
+	// 1065 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0xcd, 0x6f, 0x1b, 0x45,
+	0x14, 0xcf, 0x6c, 0x42, 0x13, 0x3f, 0x37, 0xb6, 0x3b, 0x0a, 0xaa, 0xeb, 0xb6, 0x9b, 0x74, 0x91,
+	0x42, 0x48, 0xd4, 0xdd, 0xda, 0xa9, 0x10, 0xca, 0x01, 0xea, 0xc4, 0x6e, 0x59, 0xe4, 0x06, 0xb3,
+	0x49, 0xcb, 0x87, 0x90, 0xa2, 0xf5, 0xee, 0x62, 0x56, 0x72, 0x3c, 0xce, 0xee, 0x3a, 0x60, 0x85,
+	0x5c, 0x10, 0x7f, 0x40, 0x25, 0x2e, 0xdc, 0xe8, 0x85, 0x33, 0x07, 0xfe, 0x06, 0xa4, 0x4a, 0x5c,
+	0x2a, 0x71, 0x80, 0x13, 0x42, 0x09, 0x08, 0xee, 0x9c, 0x91, 0x2a, 0xbf, 0x19, 0xdb, 0xbb, 0x89,
+	0xbf, 0x92, 0xf4, 0xb6, 0x33, 0xf3, 0xde, 0xbc, 0xdf, 0xef, 0xb7, 0xef, 0x63, 0x17, 0x16, 0x1a,
+	0x1e, 0xdb, 0x77, 0xea, 0x66, 0xdd, 0x72, 0x34, 0xcf, 0xf9, 0xc2, 0xf4, 0x6c, 0x6d, 0x3f, 0xab,
+	0xed, 0x35, 0x1d, 0xaf, 0xa5, 0x36, 0x3c, 0x16, 0x30, 0x3a, 0xd7, 0xb3, 0x50, 0xb9, 0x85, 0xba,
+	0x9f, 0xcd, 0xcc, 0x55, 0x59, 0x95, 0xa1, 0x81, 0xd6, 0x7e, 0xe2, 0xb6, 0x99, 0x1b, 0x55, 0xc6,
+	0xaa, 0x35, 0x47, 0x33, 0x1b, 0xae, 0x66, 0xd6, 0xeb, 0x2c, 0x30, 0x03, 0x97, 0xd5, 0x7d, 0x71,
+	0x2a, 0x5b, 0xcc, 0xdf, 0x65, 0xbe, 0x56, 0x31, 0x7d, 0x47, 0xdb, 0xcf, 0x56, 0x9c, 0xc0, 0xcc,
+	0x6a, 0x16, 0x73, 0xeb, 0xe2, 0x7c, 0x39, 0x7c, 0x8e, 0x10, 0xba, 0x56, 0x0d, 0xb3, 0xea, 0xd6,
+	0xf1, 0x32, 0x61, 0x7b, 0xab, 0x2f, 0x6e, 0x81, 0x0f, 0x4d, 0x14, 0x0d, 0x6e, 0x7e, 0xd0, 0xbe,
+	0xc4, 0xc0, 0xcd, 0xb2, 0xc7, 0xaa, 0x9e, 0xb9, 0xbb, 0xde, 0xd2, 0x0b, 0x86, 0xb3, 0xd7, 0x74,
+	0xfc, 0x80, 0x26, 0x40, 0x72, 0xed, 0x34, 0x59, 0x20, 0x4b, 0x53, 0x86, 0xe4, 0xda, 0x4a, 0x0d,
+	0xe4, 0x41, 0x0e, 0x7e, 0x83, 0xd5, 0x7d, 0x87, 0xbe, 0x07, 0x09, 0x1e, 0x62, 0xa7, 0xc1, 0x4f,
+	0xd1, 0x3b, 0x9e, 0x7b, 0x4d, 0xed, 0x27, 0x92, 0x1a, 0xb9, 0xc8, 0x98, 0xf5, 0xc2, 0x4b, 0xe5,
+	0x67, 0x02, 0x99, 0xd3, 0xe1, 0xfc, 0x0e, 0xb8, 0x8f, 0x01, 0x50, 0x82, 0x9d, 0xa0, 0xd5, 0x70,
+	0x30, 0x4c, 0x22, 0xb7, 0xd6, 0x3f, 0xcc, 0xe0, 0x5b, 0xf8, 0xd1, 0x76, 0xab, 0xe1, 0x18, 0xb1,
+	0xbd, 0xce, 0xa3, 0x52, 0x82, 0x58, 0x77, 0x9f, 0x4e, 0xc3, 0x64, 0xbe, 0x54, 0x4a, 0x4d, 0xd0,
+	0x38, 0x4c, 0x97, 0x8b, 0x9b, 0x05, 0x7d, 0xf3, 0x41, 0x8a, 0x50, 0x80, 0x4b, 0xf9, 0x8d, 0x6d,
+	0xfd, 0x71, 0x31, 0x25, 0xd1, 0x24, 0xc4, 0xdf, 0x7f, 0xb4, 0xbd, 0xb5, 0x9d, 0xe7, 0x87, 0x93,
+	0xf4, 0x32, 0xcc, 0xdc, 0xd7, 0x37, 0xf5, 0xad, 0x77, 0x8b, 0x85, 0xd4, 0x94, 0xb2, 0x07, 0xd7,
+	0xfb, 0x02, 0x10, 0x92, 0x19, 0x90, 0x8c, 0x4a, 0xe6, 0xa7, 0xc9, 0xc2, 0xe4, 0x98, 0x9a, 0xad,
+	0x4f, 0x3d, 0xfb, 0x63, 0x7e, 0xc2, 0x48, 0x44, 0x94, 0xf3, 0x95, 0x00, 0x96, 0x31, 0xe4, 0x46,
+	0xcd, 0x74, 0x77, 0xcb, 0x8e, 0xe7, 0x32, 0x9b, 0xbb, 0x15, 0x5c, 0x3f, 0xf0, 0xdc, 0x4a, 0x13,
+	0xb3, 0xae, 0xa3, 0xe4, 0x7d, 0x80, 0x5e, 0xfa, 0xa4, 0x2d, 0x7c, 0x61, 0x8b, 0x2a, 0xcf, 0x35,
+	0xb5, 0x9d, 0x6b, 0x2a, 0x4f, 0x77, 0x91, 0x6b, 0x6a, 0xd9, 0xac, 0x3a, 0xc2, 0xd7, 0x08, 0x79,
+	0x2a, 0xff, 0x13, 0x58, 0x19, 0x2b, 0xac, 0x60, 0xfe, 0x0d, 0x81, 0x5b, 0x56, 0xdb, 0x74, 0xa7,
+	0x81, 0xb6, 0x3b, 0x42, 0x07, 0x3b, 0x6c, 0x2d, 0xc4, 0x58, 0xed, 0x2f, 0xc6, 0xd0, 0x48, 0x42,
+	0x1c, 0xd9, 0x1a, 0x0a, 0x87, 0x3e, 0xe8, 0x43, 0xff, 0xf5, 0x91, 0xf4, 0x39, 0x87, 0x08, 0xff,
+	0x26, 0xa8, 0x63, 0xd0, 0x0f, 0x17, 0xd8, 0x75, 0x88, 0x09, 0xce, 0xdd, 0x3a, 0x9b, 0xe1, 0x1b,
+	0xba, 0x4d, 0x17, 0x21, 0x19, 0x51, 0xc7, 0xb5, 0xd3, 0x12, 0x9a, 0xcc, 0x86, 0x08, 0xe9, 0xb6,
+	0xf2, 0x23, 0x01, 0x6d, 0xec, 0xb8, 0x42, 0xfa, 0xaf, 0x60, 0x61, 0x94, 0xf2, 0xa2, 0x72, 0xcf,
+	0x23, 0xbc, 0x71, 0x73, 0xa8, 0xe4, 0xca, 0xdf, 0x12, 0x2c, 0x85, 0x4a, 0xe2, 0x04, 0xcc, 0xbc,
+	0x6d, 0x7b, 0x8e, 0xdf, 0xcd, 0xce, 0x34, 0x4c, 0x9b, 0x7c, 0x07, 0x11, 0xc5, 0x8c, 0xce, 0x92,
+	0xb6, 0xe0, 0x32, 0x27, 0xe1, 0x07, 0x66, 0xd0, 0xf4, 0x51, 0x9d, 0x44, 0xee, 0xf1, 0xc8, 0x1e,
+	0x30, 0x34, 0x9e, 0xa8, 0xaf, 0xbc, 0x65, 0xb1, 0x66, 0x3d, 0x40, 0xaf, 0xb2, 0xd9, 0xee, 0x4e,
+	0x71, 0x8c, 0xb5, 0x85, 0xa1, 0x5e, 0x5a, 0xc9, 0x7c, 0x0a, 0x57, 0x07, 0xc4, 0xeb, 0xf5, 0x9d,
+	0x24, 0xc4, 0x1f, 0x6d, 0x6e, 0x94, 0xf2, 0xfa, 0xc3, 0xfc, 0x7a, 0xa9, 0x98, 0x22, 0x74, 0x16,
+	0x62, 0xbd, 0xa5, 0xd4, 0xee, 0x4b, 0xb8, 0x2c, 0x16, 0x52, 0x93, 0xed, 0x45, 0xf1, 0xa3, 0xb2,
+	0x6e, 0x60, 0xe7, 0xf9, 0x8f, 0xc0, 0x1b, 0x63, 0xf0, 0x16, 0x39, 0x31, 0x58, 0x68, 0x0b, 0xe6,
+	0x44, 0x82, 0x98, 0x1c, 0x26, 0x2a, 0xee, 0xa4, 0x25, 0x2c, 0xcd, 0x95, 0x61, 0x7d, 0x4a, 0xf0,
+	0xea, 0x04, 0x11, 0x25, 0x49, 0xbd, 0xf0, 0x61, 0x5b, 0x53, 0xe7, 0xe5, 0x95, 0xe1, 0x13, 0x09,
+	0x5e, 0xed, 0x1b, 0x9c, 0x2e, 0xc3, 0x95, 0x68, 0xab, 0xed, 0x95, 0x5d, 0x32, 0xd2, 0x41, 0x75,
+	0x9b, 0x3e, 0x04, 0x1a, 0xb0, 0xc0, 0xac, 0x75, 0x4a, 0x03, 0xdf, 0x3e, 0xa6, 0x58, 0x3c, 0x77,
+	0x2d, 0x02, 0xab, 0x03, 0x68, 0x83, 0xb9, 0x9d, 0x96, 0x93, 0x42, 0x57, 0x0e, 0x02, 0x2b, 0x85,
+	0x7e, 0x78, 0x22, 0x57, 0x27, 0x31, 0x57, 0xef, 0x8e, 0x21, 0x1d, 0xaa, 0xc3, 0xeb, 0x8d, 0x27,
+	0x5f, 0x34, 0x13, 0xaf, 0xc1, 0x0c, 0xbf, 0xd8, 0xb5, 0xd3, 0x53, 0x48, 0x65, 0x1a, 0xd7, 0xba,
+	0xbd, 0x36, 0xf3, 0xdd, 0xd3, 0x79, 0xf2, 0xef, 0xd3, 0x79, 0x92, 0xfb, 0x65, 0x06, 0x5e, 0xc1,
+	0x44, 0xa0, 0x3f, 0x11, 0xb8, 0x72, 0x6a, 0x7c, 0xd3, 0xd5, 0x71, 0xe7, 0x66, 0xa8, 0x79, 0x65,
+	0xee, 0x9e, 0xcd, 0x89, 0xbf, 0x03, 0x65, 0xf5, 0xeb, 0x5f, 0xff, 0xfa, 0x56, 0xba, 0x4d, 0x57,
+	0xb4, 0x53, 0x1f, 0x28, 0x7e, 0xef, 0x0b, 0xa5, 0x3b, 0x0b, 0xb5, 0x03, 0xd7, 0x3e, 0xa4, 0x3f,
+	0x10, 0x48, 0x44, 0xc7, 0x27, 0xbd, 0x73, 0xd6, 0x51, 0x9f, 0xc9, 0x9e, 0xc1, 0x43, 0x80, 0x55,
+	0x11, 0xec, 0x12, 0x5d, 0x1c, 0x0f, 0x2c, 0xfd, 0x87, 0x80, 0x3c, 0xbc, 0x0b, 0xd3, 0x7b, 0x43,
+	0x50, 0x8c, 0x35, 0xae, 0x33, 0xf9, 0x0b, 0xdc, 0x20, 0x78, 0xdd, 0x43, 0x5e, 0x6b, 0xf4, 0xad,
+	0x01, 0xbc, 0x46, 0x4e, 0x65, 0xfa, 0xbd, 0x04, 0xca, 0xe8, 0x79, 0x43, 0x0b, 0xe7, 0xc6, 0x1a,
+	0xce, 0xb4, 0xe2, 0x05, 0x6f, 0x11, 0xac, 0x6b, 0xc8, 0xfa, 0x33, 0x6a, 0x9f, 0x97, 0xb5, 0x76,
+	0xd0, 0x9d, 0xd6, 0x87, 0x11, 0x6b, 0x5f, 0x3b, 0x38, 0x31, 0xaa, 0x0f, 0xe9, 0x6f, 0x04, 0x6e,
+	0x0c, 0xeb, 0xbb, 0xf4, 0xed, 0x8b, 0x0d, 0xaa, 0xcc, 0x3b, 0xe7, 0xf6, 0x17, 0x7a, 0xbc, 0x89,
+	0x7a, 0xdc, 0xa1, 0xea, 0xf0, 0xec, 0x46, 0x66, 0xbe, 0x76, 0x20, 0xa6, 0xc1, 0xe1, 0x7a, 0xf5,
+	0xd9, 0x91, 0x4c, 0x9e, 0x1f, 0xc9, 0xe4, 0xcf, 0x23, 0x99, 0x3c, 0x39, 0x96, 0x27, 0x9e, 0x1f,
+	0xcb, 0x13, 0xbf, 0x1f, 0xcb, 0x13, 0x70, 0xd5, 0x65, 0x7d, 0x41, 0x95, 0xc9, 0x27, 0xb9, 0xaa,
+	0x1b, 0x7c, 0xde, 0xac, 0xa8, 0x16, 0xdb, 0x0d, 0x85, 0xbb, 0xed, 0xb2, 0x70, 0xf0, 0x2f, 0x3b,
+	0xbf, 0x2a, 0xed, 0x6f, 0x7a, 0xbf, 0x72, 0x09, 0xff, 0x53, 0x56, 0x5f, 0x04, 0x00, 0x00, 0xff,
+	0xff, 0xcd, 0xbe, 0x0a, 0x7b, 0x84, 0x0d, 0x00, 0x00,
 }
 
 func (this *RewardAccountResponse) Equal(that interface{}) bool {
@@ -845,10 +850,10 @@ type QueryClient interface {
 	// ClaimPeriodRewardDistributions returns a list of claim period reward distributions matching the claim_status.
 	ClaimPeriodRewardDistributions(ctx context.Context, in *QueryClaimPeriodRewardDistributionsRequest, opts ...grpc.CallOption) (*QueryClaimPeriodRewardDistributionsResponse, error)
 	// ClaimPeriodRewardDistributionsByID returns a claim period reward distribution matching the ID.
-	ClaimPeriodRewardDistributionsByID(ctx context.Context, in *QueryClaimPeriodRewardDistributionByIDRequest, opts ...grpc.CallOption) (*QueryClaimPeriodRewardDistributionByIDResponse, error)
-	// QueryRewardDistributionsByAddress returns a list of reward claims belonging to the account and matching the claim
+	ClaimPeriodRewardDistributionsByID(ctx context.Context, in *QueryClaimPeriodRewardDistributionsByIDRequest, opts ...grpc.CallOption) (*QueryClaimPeriodRewardDistributionsByIDResponse, error)
+	// RewardDistributionsByAddress returns a list of reward claims belonging to the account and matching the claim
 	// status.
-	QueryRewardDistributionsByAddress(ctx context.Context, in *QueryRewardsByAddressRequest, opts ...grpc.CallOption) (*QueryAccountByAddressResponse, error)
+	RewardDistributionsByAddress(ctx context.Context, in *QueryRewardDistributionsByAddressRequest, opts ...grpc.CallOption) (*QueryRewardDistributionsByAddressResponse, error)
 }
 
 type queryClient struct {
@@ -886,8 +891,8 @@ func (c *queryClient) ClaimPeriodRewardDistributions(ctx context.Context, in *Qu
 	return out, nil
 }
 
-func (c *queryClient) ClaimPeriodRewardDistributionsByID(ctx context.Context, in *QueryClaimPeriodRewardDistributionByIDRequest, opts ...grpc.CallOption) (*QueryClaimPeriodRewardDistributionByIDResponse, error) {
-	out := new(QueryClaimPeriodRewardDistributionByIDResponse)
+func (c *queryClient) ClaimPeriodRewardDistributionsByID(ctx context.Context, in *QueryClaimPeriodRewardDistributionsByIDRequest, opts ...grpc.CallOption) (*QueryClaimPeriodRewardDistributionsByIDResponse, error) {
+	out := new(QueryClaimPeriodRewardDistributionsByIDResponse)
 	err := c.cc.Invoke(ctx, "/provenance.reward.v1.Query/ClaimPeriodRewardDistributionsByID", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -895,9 +900,9 @@ func (c *queryClient) ClaimPeriodRewardDistributionsByID(ctx context.Context, in
 	return out, nil
 }
 
-func (c *queryClient) QueryRewardDistributionsByAddress(ctx context.Context, in *QueryRewardsByAddressRequest, opts ...grpc.CallOption) (*QueryAccountByAddressResponse, error) {
-	out := new(QueryAccountByAddressResponse)
-	err := c.cc.Invoke(ctx, "/provenance.reward.v1.Query/QueryRewardDistributionsByAddress", in, out, opts...)
+func (c *queryClient) RewardDistributionsByAddress(ctx context.Context, in *QueryRewardDistributionsByAddressRequest, opts ...grpc.CallOption) (*QueryRewardDistributionsByAddressResponse, error) {
+	out := new(QueryRewardDistributionsByAddressResponse)
+	err := c.cc.Invoke(ctx, "/provenance.reward.v1.Query/RewardDistributionsByAddress", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -913,10 +918,10 @@ type QueryServer interface {
 	// ClaimPeriodRewardDistributions returns a list of claim period reward distributions matching the claim_status.
 	ClaimPeriodRewardDistributions(context.Context, *QueryClaimPeriodRewardDistributionsRequest) (*QueryClaimPeriodRewardDistributionsResponse, error)
 	// ClaimPeriodRewardDistributionsByID returns a claim period reward distribution matching the ID.
-	ClaimPeriodRewardDistributionsByID(context.Context, *QueryClaimPeriodRewardDistributionByIDRequest) (*QueryClaimPeriodRewardDistributionByIDResponse, error)
-	// QueryRewardDistributionsByAddress returns a list of reward claims belonging to the account and matching the claim
+	ClaimPeriodRewardDistributionsByID(context.Context, *QueryClaimPeriodRewardDistributionsByIDRequest) (*QueryClaimPeriodRewardDistributionsByIDResponse, error)
+	// RewardDistributionsByAddress returns a list of reward claims belonging to the account and matching the claim
 	// status.
-	QueryRewardDistributionsByAddress(context.Context, *QueryRewardsByAddressRequest) (*QueryAccountByAddressResponse, error)
+	RewardDistributionsByAddress(context.Context, *QueryRewardDistributionsByAddressRequest) (*QueryRewardDistributionsByAddressResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -932,11 +937,11 @@ func (*UnimplementedQueryServer) RewardPrograms(ctx context.Context, req *QueryR
 func (*UnimplementedQueryServer) ClaimPeriodRewardDistributions(ctx context.Context, req *QueryClaimPeriodRewardDistributionsRequest) (*QueryClaimPeriodRewardDistributionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClaimPeriodRewardDistributions not implemented")
 }
-func (*UnimplementedQueryServer) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *QueryClaimPeriodRewardDistributionByIDRequest) (*QueryClaimPeriodRewardDistributionByIDResponse, error) {
+func (*UnimplementedQueryServer) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *QueryClaimPeriodRewardDistributionsByIDRequest) (*QueryClaimPeriodRewardDistributionsByIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClaimPeriodRewardDistributionsByID not implemented")
 }
-func (*UnimplementedQueryServer) QueryRewardDistributionsByAddress(ctx context.Context, req *QueryRewardsByAddressRequest) (*QueryAccountByAddressResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryRewardDistributionsByAddress not implemented")
+func (*UnimplementedQueryServer) RewardDistributionsByAddress(ctx context.Context, req *QueryRewardDistributionsByAddressRequest) (*QueryRewardDistributionsByAddressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RewardDistributionsByAddress not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -998,7 +1003,7 @@ func _Query_ClaimPeriodRewardDistributions_Handler(srv interface{}, ctx context.
 }
 
 func _Query_ClaimPeriodRewardDistributionsByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryClaimPeriodRewardDistributionByIDRequest)
+	in := new(QueryClaimPeriodRewardDistributionsByIDRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1010,25 +1015,25 @@ func _Query_ClaimPeriodRewardDistributionsByID_Handler(srv interface{}, ctx cont
 		FullMethod: "/provenance.reward.v1.Query/ClaimPeriodRewardDistributionsByID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).ClaimPeriodRewardDistributionsByID(ctx, req.(*QueryClaimPeriodRewardDistributionByIDRequest))
+		return srv.(QueryServer).ClaimPeriodRewardDistributionsByID(ctx, req.(*QueryClaimPeriodRewardDistributionsByIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_QueryRewardDistributionsByAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryRewardsByAddressRequest)
+func _Query_RewardDistributionsByAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRewardDistributionsByAddressRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).QueryRewardDistributionsByAddress(ctx, in)
+		return srv.(QueryServer).RewardDistributionsByAddress(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.reward.v1.Query/QueryRewardDistributionsByAddress",
+		FullMethod: "/provenance.reward.v1.Query/RewardDistributionsByAddress",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryRewardDistributionsByAddress(ctx, req.(*QueryRewardsByAddressRequest))
+		return srv.(QueryServer).RewardDistributionsByAddress(ctx, req.(*QueryRewardDistributionsByAddressRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1054,8 +1059,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_ClaimPeriodRewardDistributionsByID_Handler,
 		},
 		{
-			MethodName: "QueryRewardDistributionsByAddress",
-			Handler:    _Query_QueryRewardDistributionsByAddress_Handler,
+			MethodName: "RewardDistributionsByAddress",
+			Handler:    _Query_RewardDistributionsByAddress_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1278,7 +1283,7 @@ func (m *QueryClaimPeriodRewardDistributionsResponse) MarshalToSizedBuffer(dAtA 
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryClaimPeriodRewardDistributionByIDRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryClaimPeriodRewardDistributionsByIDRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1288,12 +1293,12 @@ func (m *QueryClaimPeriodRewardDistributionByIDRequest) Marshal() (dAtA []byte, 
 	return dAtA[:n], nil
 }
 
-func (m *QueryClaimPeriodRewardDistributionByIDRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryClaimPeriodRewardDistributionsByIDRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryClaimPeriodRewardDistributionByIDRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryClaimPeriodRewardDistributionsByIDRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1311,7 +1316,7 @@ func (m *QueryClaimPeriodRewardDistributionByIDRequest) MarshalToSizedBuffer(dAt
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryClaimPeriodRewardDistributionByIDResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryClaimPeriodRewardDistributionsByIDResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1321,12 +1326,12 @@ func (m *QueryClaimPeriodRewardDistributionByIDResponse) Marshal() (dAtA []byte,
 	return dAtA[:n], nil
 }
 
-func (m *QueryClaimPeriodRewardDistributionByIDResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryClaimPeriodRewardDistributionsByIDResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryClaimPeriodRewardDistributionByIDResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryClaimPeriodRewardDistributionsByIDResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1346,7 +1351,7 @@ func (m *QueryClaimPeriodRewardDistributionByIDResponse) MarshalToSizedBuffer(dA
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryRewardsByAddressRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryRewardDistributionsByAddressRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1356,12 +1361,12 @@ func (m *QueryRewardsByAddressRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryRewardsByAddressRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryRewardDistributionsByAddressRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryRewardsByAddressRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryRewardDistributionsByAddressRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1395,7 +1400,7 @@ func (m *QueryRewardsByAddressRequest) MarshalToSizedBuffer(dAtA []byte) (int, e
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryAccountByAddressResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryRewardDistributionsByAddressResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1405,12 +1410,12 @@ func (m *QueryAccountByAddressResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryAccountByAddressResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryRewardDistributionsByAddressResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryAccountByAddressResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryRewardDistributionsByAddressResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1596,7 +1601,7 @@ func (m *QueryClaimPeriodRewardDistributionsResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryClaimPeriodRewardDistributionByIDRequest) Size() (n int) {
+func (m *QueryClaimPeriodRewardDistributionsByIDRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1611,7 +1616,7 @@ func (m *QueryClaimPeriodRewardDistributionByIDRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryClaimPeriodRewardDistributionByIDResponse) Size() (n int) {
+func (m *QueryClaimPeriodRewardDistributionsByIDResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1624,7 +1629,7 @@ func (m *QueryClaimPeriodRewardDistributionByIDResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryRewardsByAddressRequest) Size() (n int) {
+func (m *QueryRewardDistributionsByAddressRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1644,7 +1649,7 @@ func (m *QueryRewardsByAddressRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryAccountByAddressResponse) Size() (n int) {
+func (m *QueryRewardDistributionsByAddressResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2207,7 +2212,7 @@ func (m *QueryClaimPeriodRewardDistributionsResponse) Unmarshal(dAtA []byte) err
 	}
 	return nil
 }
-func (m *QueryClaimPeriodRewardDistributionByIDRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryClaimPeriodRewardDistributionsByIDRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2230,10 +2235,10 @@ func (m *QueryClaimPeriodRewardDistributionByIDRequest) Unmarshal(dAtA []byte) e
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryClaimPeriodRewardDistributionByIDRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryClaimPeriodRewardDistributionsByIDRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryClaimPeriodRewardDistributionByIDRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryClaimPeriodRewardDistributionsByIDRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2295,7 +2300,7 @@ func (m *QueryClaimPeriodRewardDistributionByIDRequest) Unmarshal(dAtA []byte) e
 	}
 	return nil
 }
-func (m *QueryClaimPeriodRewardDistributionByIDResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryClaimPeriodRewardDistributionsByIDResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2318,10 +2323,10 @@ func (m *QueryClaimPeriodRewardDistributionByIDResponse) Unmarshal(dAtA []byte) 
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryClaimPeriodRewardDistributionByIDResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryClaimPeriodRewardDistributionsByIDResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryClaimPeriodRewardDistributionByIDResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryClaimPeriodRewardDistributionsByIDResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2381,7 +2386,7 @@ func (m *QueryClaimPeriodRewardDistributionByIDResponse) Unmarshal(dAtA []byte) 
 	}
 	return nil
 }
-func (m *QueryRewardsByAddressRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryRewardDistributionsByAddressRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2404,10 +2409,10 @@ func (m *QueryRewardsByAddressRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryRewardsByAddressRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryRewardDistributionsByAddressRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryRewardsByAddressRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryRewardDistributionsByAddressRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2456,7 +2461,7 @@ func (m *QueryRewardsByAddressRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ClaimStatus |= QueryRewardsByAddressRequest_RewardAccountQueryParam(b&0x7F) << shift
+				m.ClaimStatus |= QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2518,7 +2523,7 @@ func (m *QueryRewardsByAddressRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryAccountByAddressResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryRewardDistributionsByAddressResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2541,10 +2546,10 @@ func (m *QueryAccountByAddressResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryAccountByAddressResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryRewardDistributionsByAddressResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryAccountByAddressResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryRewardDistributionsByAddressResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

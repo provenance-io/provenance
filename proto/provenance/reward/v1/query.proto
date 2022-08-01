@@ -30,15 +30,15 @@ service Query {
   }
 
   // ClaimPeriodRewardDistributionsByID returns a claim period reward distribution matching the ID.
-  rpc ClaimPeriodRewardDistributionsByID(QueryClaimPeriodRewardDistributionByIDRequest)
-      returns (QueryClaimPeriodRewardDistributionByIDResponse) {
+  rpc ClaimPeriodRewardDistributionsByID(QueryClaimPeriodRewardDistributionsByIDRequest)
+      returns (QueryClaimPeriodRewardDistributionsByIDResponse) {
     option (google.api.http).get =
         "/provenance/rewards/v1/claim_period_reward_distributions/{reward_id}/claim_periods/{claim_period_id}";
   }
 
-  // QueryRewardDistributionsByAddress returns a list of reward claims belonging to the account and matching the claim
+  // RewardDistributionsByAddress returns a list of reward claims belonging to the account and matching the claim
   // status.
-  rpc QueryRewardDistributionsByAddress(QueryRewardsByAddressRequest) returns (QueryAccountByAddressResponse) {
+  rpc RewardDistributionsByAddress(QueryRewardDistributionsByAddressRequest) returns (QueryRewardDistributionsByAddressResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/reward_claims/{address}";
   }
 }
@@ -88,22 +88,22 @@ message QueryClaimPeriodRewardDistributionsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
-// QueryClaimPeriodRewardDistributionByIDRequest queries for a single ClaimPeriodRewardDistribution
-message QueryClaimPeriodRewardDistributionByIDRequest {
+// QueryClaimPeriodRewardDistributionsByIDRequest queries for a single ClaimPeriodRewardDistribution
+message QueryClaimPeriodRewardDistributionsByIDRequest {
   // The reward program that the claim period reward distribution belongs to.
   uint64 reward_id = 1;
   // The claim period that the claim period reward distribution was created for.
   uint64 claim_period_id = 2;
 }
 
-// QueryClaimPeriodRewardDistributionByIDResponse returns the requested ClaimPeriodRewardDistribution
-message QueryClaimPeriodRewardDistributionByIDResponse {
+// QueryClaimPeriodRewardDistributionsByIDResponse returns the requested ClaimPeriodRewardDistribution
+message QueryClaimPeriodRewardDistributionsByIDResponse {
   // The ClaimPeriodRewardDistribution object that was queried for.
   ClaimPeriodRewardDistribution claim_period_reward_distribution = 1;
 }
 
-// QueryRewardsByAddressRequest queries for reward claims by address that match the claim_status.
-message QueryRewardsByAddressRequest {
+// QueryRewardDistributionsByAddressRequest queries for reward claims by address that match the claim_status.
+message QueryRewardDistributionsByAddressRequest {
   enum RewardAccountQueryParam {
     ALL         = 0;
     UNCLAIMABLE = 1;
@@ -119,8 +119,8 @@ message QueryRewardsByAddressRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
-// QueryAccountByAddressResponse returns the reward claims for an address that match the claim_status.
-message QueryAccountByAddressResponse {
+// QueryRewardDistributionsByAddressResponse returns the reward claims for an address that match the claim_status.
+message QueryRewardDistributionsByAddressResponse {
   // The address that the reward account belongs to.
   string address = 1;
   // List of RewardAccounts queried for.

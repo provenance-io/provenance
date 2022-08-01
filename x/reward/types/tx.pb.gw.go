@@ -140,7 +140,7 @@ func local_request_Msg_EndRewardProgram_0(ctx context.Context, marshaler runtime
 }
 
 func request_Msg_ClaimRewards_0(ctx context.Context, marshaler runtime.Marshaler, client MsgClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq MsgClaimRewardRequest
+	var protoReq MsgClaimRewardsRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -178,7 +178,7 @@ func request_Msg_ClaimRewards_0(ctx context.Context, marshaler runtime.Marshaler
 }
 
 func local_request_Msg_ClaimRewards_0(ctx context.Context, marshaler runtime.Marshaler, server MsgServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq MsgClaimRewardRequest
+	var protoReq MsgClaimRewardsRequest
 	var metadata runtime.ServerMetadata
 
 	var (
