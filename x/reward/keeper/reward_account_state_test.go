@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"reflect"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/reward/types"
 )
@@ -21,7 +22,7 @@ func (suite *KeeperTestSuite) TestNewRewardAccountState() {
 	suite.Assert().Equal(uint64(2), accountState.GetClaimPeriodId(), "reward claim period id must match")
 	suite.Assert().Equal(uint64(3), accountState.GetSharesEarned(), "earned shares must match")
 	suite.Assert().Equal("test", accountState.GetAddress(), "address must match")
-	suite.Assert().Equal(types.RewardAccountState_UNCLAIMABLE, accountState.GetClaimStatus(), "should be set to unclaimable initially")
+	suite.Assert().Equal(types.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, accountState.GetClaimStatus(), "should be set to unclaimable initially")
 	suite.Assert().True(reflect.DeepEqual(map[string]uint64{}, accountState.GetActionCounter()), "action counter must match")
 }
 
@@ -407,11 +408,11 @@ func (suite *KeeperTestSuite) TestMakeRewardClaimsClaimableForPeriod() {
 	state4, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 2, 2, "test")
 	state5, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 2, 2, "test2")
 
-	suite.Assert().NotEqual(types.RewardAccountState_CLAIMABLE, state1.GetClaimStatus(), "account state should not be updated to be claimable")
-	suite.Assert().NotEqual(types.RewardAccountState_CLAIMABLE, state2.GetClaimStatus(), "account state should not be updated to be claimable")
-	suite.Assert().NotEqual(types.RewardAccountState_CLAIMABLE, state3.GetClaimStatus(), "account state should not be updated to be claimable")
-	suite.Assert().Equal(types.RewardAccountState_CLAIMABLE, state4.GetClaimStatus(), "account state should not be updated to be claimable")
-	suite.Assert().Equal(types.RewardAccountState_CLAIMABLE, state5.GetClaimStatus(), "account state should not be updated to be claimable")
+	suite.Assert().NotEqual(types.RewardAccountState_CLAIM_STATUS_CLAIMABLE, state1.GetClaimStatus(), "account state should not be updated to be claimable")
+	suite.Assert().NotEqual(types.RewardAccountState_CLAIM_STATUS_CLAIMABLE, state2.GetClaimStatus(), "account state should not be updated to be claimable")
+	suite.Assert().NotEqual(types.RewardAccountState_CLAIM_STATUS_CLAIMABLE, state3.GetClaimStatus(), "account state should not be updated to be claimable")
+	suite.Assert().Equal(types.RewardAccountState_CLAIM_STATUS_CLAIMABLE, state4.GetClaimStatus(), "account state should not be updated to be claimable")
+	suite.Assert().Equal(types.RewardAccountState_CLAIM_STATUS_CLAIMABLE, state5.GetClaimStatus(), "account state should not be updated to be claimable")
 }
 
 func (suite *KeeperTestSuite) TestMakeRewardClaimsClaimableForPeriodHandlesEmpty() {
@@ -428,7 +429,7 @@ func (suite *KeeperTestSuite) TestExpireRewardClaimsForRewardProgram() {
 	state2 := types.NewRewardAccountState(1, 1, "test2", 0, map[string]uint64{})
 	state3 := types.NewRewardAccountState(1, 2, "test", 0, map[string]uint64{})
 	state4 := types.NewRewardAccountState(1, 2, "test2", 0, map[string]uint64{})
-	state4.ClaimStatus = types.RewardAccountState_CLAIMED
+	state4.ClaimStatus = types.RewardAccountState_CLAIM_STATUS_CLAIMED
 
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state1)
 	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state2)
@@ -443,10 +444,10 @@ func (suite *KeeperTestSuite) TestExpireRewardClaimsForRewardProgram() {
 	state3, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 1, 2, "test")
 	state4, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 1, 2, "test2")
 
-	suite.Assert().Equal(types.RewardAccountState_EXPIRED, state1.GetClaimStatus(), "account state should be updated to expired")
-	suite.Assert().Equal(types.RewardAccountState_EXPIRED, state2.GetClaimStatus(), "account state should be updated to expired")
-	suite.Assert().Equal(types.RewardAccountState_EXPIRED, state3.GetClaimStatus(), "account state should be updated to expired")
-	suite.Assert().Equal(types.RewardAccountState_CLAIMED, state4.GetClaimStatus(), "account state should not be updated to expired if claimed")
+	suite.Assert().Equal(types.RewardAccountState_CLAIM_STATUS_EXPIRED, state1.GetClaimStatus(), "account state should be updated to expired")
+	suite.Assert().Equal(types.RewardAccountState_CLAIM_STATUS_EXPIRED, state2.GetClaimStatus(), "account state should be updated to expired")
+	suite.Assert().Equal(types.RewardAccountState_CLAIM_STATUS_EXPIRED, state3.GetClaimStatus(), "account state should be updated to expired")
+	suite.Assert().Equal(types.RewardAccountState_CLAIM_STATUS_CLAIMED, state4.GetClaimStatus(), "account state should not be updated to expired if claimed")
 }
 
 func (suite *KeeperTestSuite) TestExpireRewardClaimsForRewardProgramHandlesEmpty() {

@@ -13,11 +13,18 @@ option java_multiple_files = true;
 message RewardProgram {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
+  // State is the state of the reward program
   enum State {
-    PENDING  = 0;
-    STARTED  = 1;
-    FINISHED = 2;
-    EXPIRED  = 3;
+    // undefined program state
+    STATE_UNSPECIFIED = 0;
+    // pending state of reward program
+    STATE_PENDING = 1;
+    // started state of reward program
+    STATE_STARTED = 2;
+    // finished state of reward program
+    STATE_FINISHED = 3;
+    // expired state of reward program
+    STATE_EXPIRED = 4;
   }
 
   // An integer to uniquely identify the reward program.
@@ -151,11 +158,18 @@ message ClaimPeriodRewardDistribution {
 message RewardAccountState {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
+  // ClaimStatus is the state a claim is in
   enum ClaimStatus {
-    UNCLAIMABLE = 0;
-    CLAIMABLE   = 1;
-    CLAIMED     = 2;
-    EXPIRED     = 3;
+    // undefined state
+    CLAIM_STATUS_UNSPECIFIED = 0;
+    // unclaimable status
+    CLAIM_STATUS_UNCLAIMABLE = 1;
+    // unclaimable claimable
+    CLAIM_STATUS_CLAIMABLE = 2;
+    // unclaimable claimed
+    CLAIM_STATUS_CLAIMED = 3;
+    // unclaimable expired
+    CLAIM_STATUS_EXPIRED = 4;
   }
   // The id of the reward program that this share belongs to.
   uint64 reward_program_id = 1;
@@ -175,6 +189,7 @@ message RewardAccountState {
 message QualifyingAction {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;
+  // type of action to process
   oneof type {
     ActionDelegate delegate = 1;
     ActionTransfer transfer = 2;

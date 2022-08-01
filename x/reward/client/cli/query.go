@@ -66,15 +66,15 @@ func GetRewardProgramCmd() *cobra.Command {
 			arg0 := strings.TrimSpace(args[0])
 			switch arg0 {
 			case all:
-				request.QueryType = types.QueryRewardProgramsRequest_ALL
+				request.QueryType = types.QueryRewardProgramsRequest_QUERY_TYPE_ALL
 			case pending:
-				request.QueryType = types.QueryRewardProgramsRequest_PENDING
+				request.QueryType = types.QueryRewardProgramsRequest_QUERY_TYPE_PENDING
 			case active:
-				request.QueryType = types.QueryRewardProgramsRequest_ACTIVE
+				request.QueryType = types.QueryRewardProgramsRequest_QUERY_TYPE_ACTIVE
 			case completed:
-				request.QueryType = types.QueryRewardProgramsRequest_FINISHED
+				request.QueryType = types.QueryRewardProgramsRequest_QUERY_TYPE_FINISHED
 			case outstanding:
-				request.QueryType = types.QueryRewardProgramsRequest_OUTSTANDING
+				request.QueryType = types.QueryRewardProgramsRequest_QUERY_TYPE_OUTSTANDING
 			default:
 				return outputRewardProgramByID(clientCtx, queryClient, arg0)
 			}
@@ -250,17 +250,17 @@ func queryRewardDistributionByAddress(cmd *cobra.Command, address string, queryT
 	var claimStatus types.QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam
 	switch queryType {
 	case "all":
-		claimStatus = types.QueryRewardDistributionsByAddressRequest_ALL
+		claimStatus = types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL
 	case "unclaimable":
-		claimStatus = types.QueryRewardDistributionsByAddressRequest_UNCLAIMABLE
+		claimStatus = types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_UNCLAIMABLE
 	case "claimable":
-		claimStatus = types.QueryRewardDistributionsByAddressRequest_CLAIMABLE
+		claimStatus = types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_CLAIMABLE
 	case "claimed":
-		claimStatus = types.QueryRewardDistributionsByAddressRequest_CLAIMED
+		claimStatus = types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_CLAIMED
 	case "expired":
-		claimStatus = types.QueryRewardDistributionsByAddressRequest_EXPIRED
+		claimStatus = types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_EXPIRED
 	default:
-		claimStatus = types.QueryRewardDistributionsByAddressRequest_ALL
+		claimStatus = types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)

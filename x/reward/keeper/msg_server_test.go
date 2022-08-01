@@ -138,13 +138,13 @@ func (s *KeeperTestSuite) TestRewardClaimTransaction() {
 			},
 		},
 	)
-	rewardProgram.State = types.RewardProgram_FINISHED
+	rewardProgram.State = types.RewardProgram_STATE_FINISHED
 	rewardProgram.CurrentClaimPeriod = rewardProgram.GetClaimPeriods()
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	for i := 1; i <= int(rewardProgram.GetClaimPeriods()); i++ {
 		state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(i), s.accountAddresses[0].String(), 1, map[string]uint64{})
-		state.ClaimStatus = types.RewardAccountState_CLAIMABLE
+		state.ClaimStatus = types.RewardAccountState_CLAIM_STATUS_CLAIMABLE
 		s.app.RewardKeeper.SetRewardAccountState(s.ctx, state)
 		distribution := types.NewClaimPeriodRewardDistribution(uint64(i), rewardProgram.GetId(), sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 1, true)
 		s.app.RewardKeeper.SetClaimPeriodRewardDistribution(s.ctx, distribution)
@@ -216,13 +216,13 @@ func (s *KeeperTestSuite) TestRewardClaimTransactionInvalidClaimer() {
 			},
 		},
 	)
-	rewardProgram.State = types.RewardProgram_FINISHED
+	rewardProgram.State = types.RewardProgram_STATE_FINISHED
 	rewardProgram.CurrentClaimPeriod = rewardProgram.GetClaimPeriods()
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	for i := 1; i <= int(rewardProgram.GetClaimPeriods()); i++ {
 		state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(i), s.accountAddresses[0].String(), 1, map[string]uint64{})
-		state.ClaimStatus = types.RewardAccountState_CLAIMABLE
+		state.ClaimStatus = types.RewardAccountState_CLAIM_STATUS_CLAIMABLE
 		s.app.RewardKeeper.SetRewardAccountState(s.ctx, state)
 		distribution := types.NewClaimPeriodRewardDistribution(uint64(i), rewardProgram.GetId(), sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 1, true)
 		s.app.RewardKeeper.SetClaimPeriodRewardDistribution(s.ctx, distribution)
@@ -283,13 +283,13 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsTransaction() {
 				},
 			},
 		)
-		rewardProgram.State = types.RewardProgram_FINISHED
+		rewardProgram.State = types.RewardProgram_STATE_FINISHED
 		rewardProgram.CurrentClaimPeriod = rewardProgram.GetClaimPeriods()
 		suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
 		for j := 1; j <= int(rewardProgram.GetClaimPeriods()); j++ {
 			state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(j), suite.accountAddresses[0].String(), 1, map[string]uint64{})
-			state.ClaimStatus = types.RewardAccountState_CLAIMABLE
+			state.ClaimStatus = types.RewardAccountState_CLAIM_STATUS_CLAIMABLE
 			suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
 			distribution := types.NewClaimPeriodRewardDistribution(uint64(j), rewardProgram.GetId(), sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 1, true)
 			suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, distribution)
@@ -372,13 +372,13 @@ func (suite *KeeperTestSuite) TestRewardClaimAllRewardsInvalidAddressTransaction
 				},
 			},
 		)
-		rewardProgram.State = types.RewardProgram_FINISHED
+		rewardProgram.State = types.RewardProgram_STATE_FINISHED
 		rewardProgram.CurrentClaimPeriod = rewardProgram.GetClaimPeriods()
 		suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
 		for j := 1; j <= int(rewardProgram.GetClaimPeriods()); j++ {
 			state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(j), suite.accountAddresses[0].String(), 1, map[string]uint64{})
-			state.ClaimStatus = types.RewardAccountState_CLAIMABLE
+			state.ClaimStatus = types.RewardAccountState_CLAIM_STATUS_CLAIMABLE
 			suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
 			distribution := types.NewClaimPeriodRewardDistribution(uint64(j), rewardProgram.GetId(), sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 1, true)
 			suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, distribution)
@@ -440,13 +440,13 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsExpiredTransaction() {
 				},
 			},
 		)
-		rewardProgram.State = types.RewardProgram_FINISHED
+		rewardProgram.State = types.RewardProgram_STATE_FINISHED
 		rewardProgram.CurrentClaimPeriod = rewardProgram.GetClaimPeriods()
 		suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
 		for j := 1; j <= int(rewardProgram.GetClaimPeriods()); j++ {
 			state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(j), suite.accountAddresses[0].String(), 1, map[string]uint64{})
-			state.ClaimStatus = types.RewardAccountState_EXPIRED
+			state.ClaimStatus = types.RewardAccountState_CLAIM_STATUS_EXPIRED
 			suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
 			distribution := types.NewClaimPeriodRewardDistribution(uint64(j), rewardProgram.GetId(), sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 1, true)
 			suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, distribution)

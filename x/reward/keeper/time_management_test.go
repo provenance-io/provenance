@@ -32,7 +32,7 @@ func (suite *KeeperTestSuite) TestStartRewardProgram() {
 
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
 
-	suite.Assert().Equal(program.State, types.RewardProgram_STARTED, "reward program should be in started state")
+	suite.Assert().Equal(program.State, types.RewardProgram_STATE_STARTED, "reward program should be in started state")
 	suite.Assert().Equal(uint64(1), program.CurrentClaimPeriod, "current claim period should be set to 1")
 	suite.Assert().Equal(blockTime.Add(time.Duration(program.ClaimPeriodSeconds)*time.Second), program.ClaimPeriodEndTime, "claim period end time should be set")
 
@@ -75,7 +75,7 @@ func (suite *KeeperTestSuite) TestStartRewardProgramNoBalance() {
 
 	err := suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
 	suite.Assert().Error(err, "an error should be thrown when there is no balance")
-	suite.Assert().Equal(program.State, types.RewardProgram_PENDING, "reward program should be in pending state")
+	suite.Assert().Equal(program.State, types.RewardProgram_STATE_PENDING, "reward program should be in pending state")
 	suite.Assert().Equal(uint64(0), program.CurrentClaimPeriod, "current claim period should be set to 0")
 }
 
@@ -254,7 +254,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgram() {
 	suite.Assert().Equal("reward_program_finished", newEvent.GetType(), "should emit the correct event type")
 	suite.Assert().Equal([]byte("reward_program_id"), newEvent.GetAttributes()[0].GetKey(), "should emit the correct attribute name")
 	suite.Assert().Equal([]byte("1"), newEvent.GetAttributes()[0].GetValue(), "should emit the correct attribute value")
-	suite.Assert().Equal(program.State, types.RewardProgram_FINISHED, "reward program should be in finished state")
+	suite.Assert().Equal(program.State, types.RewardProgram_STATE_FINISHED, "reward program should be in finished state")
 	suite.Assert().Equal(blockTime, program.ActualProgramEndTime, "actual program end time should be set")
 }
 
@@ -284,7 +284,7 @@ func (suite *KeeperTestSuite) TestExpireRewardProgram() {
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
 
 	suite.app.RewardKeeper.ExpireRewardProgram(suite.ctx, &program)
-	suite.Assert().Equal(program.State, types.RewardProgram_EXPIRED, "reward program should be in expired state")
+	suite.Assert().Equal(program.State, types.RewardProgram_STATE_EXPIRED, "reward program should be in expired state")
 	events := suite.ctx.EventManager().ABCIEvents()
 	newEvent := events[len(events)-1]
 	suite.Assert().Equal("reward_program_expired", newEvent.GetType(), "should emit the correct event type")
@@ -327,7 +327,7 @@ func (suite *KeeperTestSuite) TestExpireRewardProgramRefunds() {
 	afterBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
 
 	suite.Assert().Equal(beforeBalance.Add(sdk.NewInt64Coin("nhash", 90000)), afterBalance, "account should get remaining balance and claims")
-	suite.Assert().Equal(program.State, types.RewardProgram_EXPIRED, "reward program should be in expired state")
+	suite.Assert().Equal(program.State, types.RewardProgram_STATE_EXPIRED, "reward program should be in expired state")
 }
 
 func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsNonMatchingDenoms() {
@@ -599,7 +599,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEnd() {
 
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 50000), program.RemainingPoolBalance, "balance should subtract the claim period reward")
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 50000), reward.TotalRewardsPoolForClaimPeriod, "total claim should be increased by the amount rewarded")
-	suite.Assert().Equal(program.State, types.RewardProgram_STARTED, "reward program should be in started state")
+	suite.Assert().Equal(program.State, types.RewardProgram_STATE_STARTED, "reward program should be in started state")
 	suite.Assert().Equal(uint64(2), program.CurrentClaimPeriod, "current claim period should be updated")
 	suite.Assert().Equal(blockTime.Add(time.Duration(program.ClaimPeriodSeconds)*time.Second), program.ClaimPeriodEndTime, "claim period end time should be set")
 }
@@ -641,7 +641,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransition() {
 	suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, reward)
 	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
 
-	suite.Assert().Equal(program.State, types.RewardProgram_FINISHED, "reward program should be in finished state")
+	suite.Assert().Equal(program.State, types.RewardProgram_STATE_FINISHED, "reward program should be in finished state")
 	suite.Assert().Equal(uint64(2), program.CurrentClaimPeriod, "current claim period should not be updated")
 	suite.Assert().Equal(blockTime.Add(time.Duration(program.ClaimPeriodSeconds)*time.Second), program.ClaimPeriodEndTime, "claim period end time should be set")
 	suite.Assert().Equal(blockTime, program.ActualProgramEndTime, "claim period end time should be set")
@@ -676,7 +676,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransitionExpired()
 	program.ProgramEndTimeMax = currentTime
 	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
 
-	suite.Assert().Equal(types.RewardProgram_FINISHED, program.State, "reward program should be in finished state")
+	suite.Assert().Equal(types.RewardProgram_STATE_FINISHED, program.State, "reward program should be in finished state")
 	suite.Assert().Equal(uint64(2), program.CurrentClaimPeriod, "current claim period should not be updated")
 	suite.Assert().Equal(blockTime.Add(time.Duration(program.ClaimPeriodSeconds)*time.Second), program.ClaimPeriodEndTime, "claim period end time should be set")
 	suite.Assert().Equal(blockTime, program.ActualProgramEndTime, "claim period end time should be set")
@@ -708,7 +708,7 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndNoBalance() {
 	suite.app.RewardKeeper.StartRewardProgram(suite.ctx, &program)
 	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
 
-	suite.Assert().Equal(types.RewardProgram_FINISHED, program.State, "reward program should be in finished state")
+	suite.Assert().Equal(types.RewardProgram_STATE_FINISHED, program.State, "reward program should be in finished state")
 	suite.Assert().Equal(uint64(1), program.CurrentClaimPeriod, "current claim period should not be updated")
 	suite.Assert().Equal(program.ClaimPeriodEndTime, program.ClaimPeriodEndTime, "claim period end time should not be updated")
 	suite.Assert().Equal(blockTime, program.ActualProgramEndTime, "actual end time should be set")
@@ -751,8 +751,8 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesClaimStatus(
 	state2, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, 1, 1, "address2")
 
 	// Adjusted after ending period
-	suite.Assert().Equal(types.RewardAccountState_CLAIMABLE, state1.GetClaimStatus(), "first claim status should be updated to claimable")
-	suite.Assert().Equal(types.RewardAccountState_CLAIMABLE, state2.GetClaimStatus(), "second claim status should be updated to claimable")
+	suite.Assert().Equal(types.RewardAccountState_CLAIM_STATUS_CLAIMABLE, state1.GetClaimStatus(), "first claim status should be updated to claimable")
+	suite.Assert().Equal(types.RewardAccountState_CLAIM_STATUS_CLAIMABLE, state2.GetClaimStatus(), "second claim status should be updated to claimable")
 }
 
 func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesBalances() {
@@ -792,7 +792,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesBalances() {
 	expectedProgramBalance := program.GetTotalRewardPool().Sub(claimAmount)
 	suite.Assert().Equal(claimAmount, reward.GetTotalRewardsPoolForClaimPeriod(), "the reward for the claim period should be added to total reward")
 	suite.Assert().Equal(expectedProgramBalance, program.GetRemainingPoolBalance(), "the reward for the claim period should be subtracted out of the program balance")
-	suite.Assert().Equal(types.RewardProgram_STARTED, program.State, "reward program should be in started state")
+	suite.Assert().Equal(types.RewardProgram_STATE_STARTED, program.State, "reward program should be in started state")
 	suite.Assert().Equal(uint64(2), program.CurrentClaimPeriod, "next iteration should start")
 	suite.Assert().Equal(true, reward.ClaimPeriodEnded, "claim period should be marked as ended")
 }
@@ -832,7 +832,7 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRollo
 	// Should end because the balance should be below 501
 	suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, &program)
 
-	suite.Assert().Equal(types.RewardProgram_FINISHED, program.State, "reward program should be in finished state")
+	suite.Assert().Equal(types.RewardProgram_STATE_FINISHED, program.State, "reward program should be in finished state")
 	suite.Assert().Equal(uint64(1), program.CurrentClaimPeriod, "current claim period should not be updated")
 	suite.Assert().Equal(program.ClaimPeriodEndTime, program.ClaimPeriodEndTime, "claim period end time should not be updated")
 	suite.Assert().Equal(blockTime, program.ActualProgramEndTime, "actual end time should be set")
@@ -962,7 +962,7 @@ func (suite *KeeperTestSuite) TestUpdate() {
 	remainingBalance := expiring.GetTotalRewardPool()
 	expiring.ActualProgramEndTime = blockTime
 	expiring.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
-	expiring.State = types.RewardProgram_FINISHED
+	expiring.State = types.RewardProgram_STATE_FINISHED
 	expiring.RemainingPoolBalance = remainingBalance
 
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, notStarted)
@@ -987,20 +987,20 @@ func (suite *KeeperTestSuite) TestUpdate() {
 	expiring, _ = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, expiring.Id)
 
 	suite.Assert().Equal(uint64(0), notStarted.CurrentClaimPeriod, "claim period should be 0 for a program that is not started")
-	suite.Assert().Equal(notStarted.State, types.RewardProgram_PENDING, "should be in pending state")
+	suite.Assert().Equal(notStarted.State, types.RewardProgram_STATE_PENDING, "should be in pending state")
 
 	suite.Assert().Equal(uint64(1), starting.CurrentClaimPeriod, "claim period should be 1 for a program that just started")
-	suite.Assert().Equal(starting.State, types.RewardProgram_STARTED, "should be in started state")
+	suite.Assert().Equal(starting.State, types.RewardProgram_STATE_STARTED, "should be in started state")
 
 	suite.Assert().Equal(uint64(2), nextClaimPeriod.CurrentClaimPeriod, "claim period should be 2 for a program that went to next claim period")
-	suite.Assert().Equal(nextClaimPeriod.State, types.RewardProgram_STARTED, "should be in started state")
+	suite.Assert().Equal(nextClaimPeriod.State, types.RewardProgram_STATE_STARTED, "should be in started state")
 
 	suite.Assert().Equal(uint64(1), ending.CurrentClaimPeriod, "claim period should not increment")
-	suite.Assert().Equal(ending.State, types.RewardProgram_FINISHED, "should be in finished state")
+	suite.Assert().Equal(ending.State, types.RewardProgram_STATE_FINISHED, "should be in finished state")
 
 	suite.Assert().Equal(uint64(1), timeout.CurrentClaimPeriod, "claim period should not increment")
-	suite.Assert().Equal(timeout.State, types.RewardProgram_FINISHED, "should be in finished state")
+	suite.Assert().Equal(timeout.State, types.RewardProgram_STATE_FINISHED, "should be in finished state")
 
-	suite.Assert().Equal(expiring.State, types.RewardProgram_EXPIRED, "should be in expired state")
+	suite.Assert().Equal(expiring.State, types.RewardProgram_STATE_EXPIRED, "should be in expired state")
 	suite.Assert().Equal(beforeBalance.Add(remainingBalance), afterBalance, "balance should be refunded")
 }

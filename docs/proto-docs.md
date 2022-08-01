@@ -6139,28 +6139,30 @@ RewardProgram
 <a name="provenance.reward.v1.RewardAccountState.ClaimStatus"></a>
 
 ### RewardAccountState.ClaimStatus
-
+ClaimStatus is the state a claim is in
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| UNCLAIMABLE | 0 |  |
-| CLAIMABLE | 1 |  |
-| CLAIMED | 2 |  |
-| EXPIRED | 3 |  |
+| CLAIM_STATUS_UNSPECIFIED | 0 | undefined state |
+| CLAIM_STATUS_UNCLAIMABLE | 1 | unclaimable status |
+| CLAIM_STATUS_CLAIMABLE | 2 | unclaimable claimable |
+| CLAIM_STATUS_CLAIMED | 3 | unclaimable claimed |
+| CLAIM_STATUS_EXPIRED | 4 | unclaimable expired |
 
 
 
 <a name="provenance.reward.v1.RewardProgram.State"></a>
 
 ### RewardProgram.State
-
+State is the state of the reward program
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| PENDING | 0 |  |
-| STARTED | 1 |  |
-| FINISHED | 2 |  |
-| EXPIRED | 3 |  |
+| STATE_UNSPECIFIED | 0 | undefined program state |
+| STATE_PENDING | 1 | pending state of reward program |
+| STATE_STARTED | 2 | started state of reward program |
+| STATE_FINISHED | 3 | finished state of reward program |
+| STATE_EXPIRED | 4 | expired state of reward program |
 
 
  <!-- end enums -->
@@ -6390,30 +6392,32 @@ RewardAccountResponse is an address' reward claim for a reward program's claim p
 <a name="provenance.reward.v1.QueryRewardDistributionsByAddressRequest.RewardAccountQueryParam"></a>
 
 ### QueryRewardDistributionsByAddressRequest.RewardAccountQueryParam
-
+RewardAccountQueryParam enum value of type of reward distribution to query
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| ALL | 0 |  |
-| UNCLAIMABLE | 1 |  |
-| CLAIMABLE | 2 |  |
-| CLAIMED | 3 |  |
-| EXPIRED | 4 |  |
+| REWARD_ACCOUNT_QUERY_PARAM_UNSPECIFIED | 0 | unspecified distribution type |
+| REWARD_ACCOUNT_QUERY_PARAM_ALL | 1 | all reward distributions |
+| REWARD_ACCOUNT_QUERY_PARAM_UNCLAIMABLE | 2 | unclaimable reward distributions |
+| REWARD_ACCOUNT_QUERY_PARAM_CLAIMABLE | 3 | claimable reward distributions |
+| REWARD_ACCOUNT_QUERY_PARAM_CLAIMED | 4 | claimed reward distributions |
+| REWARD_ACCOUNT_QUERY_PARAM_EXPIRED | 5 | expired reward distributions |
 
 
 
 <a name="provenance.reward.v1.QueryRewardProgramsRequest.QueryType"></a>
 
 ### QueryRewardProgramsRequest.QueryType
-
+QueryType is the state of reward program to query
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| ALL | 0 |  |
-| PENDING | 1 |  |
-| ACTIVE | 2 |  |
-| OUTSTANDING | 3 |  |
-| FINISHED | 4 |  |
+| QUERY_TYPE_UNSPECIFIED | 0 | unspecified type |
+| QUERY_TYPE_ALL | 1 | all reward programs states |
+| QUERY_TYPE_PENDING | 2 | pending reward program state= |
+| QUERY_TYPE_ACTIVE | 3 | active reward program state |
+| QUERY_TYPE_OUTSTANDING | 4 | pending and active reward program states |
+| QUERY_TYPE_FINISHED | 5 | finished reward program state |
 
 
  <!-- end enums -->

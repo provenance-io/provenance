@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -14,7 +15,7 @@ func (k Keeper) ClaimRewards(ctx sdk.Context, rewardProgramID uint64, addr strin
 		return nil, sdk.Coin{}, fmt.Errorf("reward program %d does not exist", rewardProgramID)
 	}
 
-	if rewardProgram.State == types.RewardProgram_EXPIRED {
+	if rewardProgram.State == types.RewardProgram_STATE_EXPIRED {
 		return nil, sdk.Coin{}, fmt.Errorf("reward program %d has expired", rewardProgramID)
 	}
 
@@ -61,7 +62,7 @@ func (k Keeper) claimRewardForPeriod(ctx sdk.Context, rewardProgram types.Reward
 	if err != nil {
 		return reward, false
 	}
-	if state.GetClaimStatus() != types.RewardAccountState_CLAIMABLE {
+	if state.GetClaimStatus() != types.RewardAccountState_CLAIM_STATUS_CLAIMABLE {
 		return reward, false
 	}
 
@@ -77,7 +78,7 @@ func (k Keeper) claimRewardForPeriod(ctx sdk.Context, rewardProgram types.Reward
 		ClaimPeriodReward: participantReward,
 	}
 
-	state.ClaimStatus = types.RewardAccountState_CLAIMED
+	state.ClaimStatus = types.RewardAccountState_CLAIM_STATUS_CLAIMED
 	k.SetRewardAccountState(ctx, state)
 
 	return reward, true

@@ -43,36 +43,36 @@ func (s *KeeperTestSuite) TestQueryRewardPrograms() {
 	)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 	rewardProgram.Id = 2
-	rewardProgram.State = types.RewardProgram_STARTED
+	rewardProgram.State = types.RewardProgram_STATE_STARTED
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 	rewardProgram.Id = 3
-	rewardProgram.State = types.RewardProgram_FINISHED
+	rewardProgram.State = types.RewardProgram_STATE_FINISHED
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 	rewardProgram.Id = 4
-	rewardProgram.State = types.RewardProgram_EXPIRED
+	rewardProgram.State = types.RewardProgram_STATE_EXPIRED
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
-	response, err = queryClient.RewardPrograms(s.ctx.Context(), &types.QueryRewardProgramsRequest{})
+	response, err = queryClient.RewardPrograms(s.ctx.Context(), &types.QueryRewardProgramsRequest{QueryType: types.QueryRewardProgramsRequest_QUERY_TYPE_ALL})
 	s.Assert().NoError(err, "query should not error")
 	s.Assert().Equal(len(response.RewardPrograms), 4, "response should contain the added element")
 
-	response, err = queryClient.RewardPrograms(s.ctx.Context(), &types.QueryRewardProgramsRequest{QueryType: types.QueryRewardProgramsRequest_PENDING})
+	response, err = queryClient.RewardPrograms(s.ctx.Context(), &types.QueryRewardProgramsRequest{QueryType: types.QueryRewardProgramsRequest_QUERY_TYPE_PENDING})
 	s.Assert().NoError(err, "query should not error")
 	s.Assert().Equal(len(response.RewardPrograms), 1, "response should contain the added element")
 	s.Assert().Equal(uint64(1), response.RewardPrograms[0].Id, "response should contain pending program")
 
-	response, err = queryClient.RewardPrograms(s.ctx.Context(), &types.QueryRewardProgramsRequest{QueryType: types.QueryRewardProgramsRequest_ACTIVE})
+	response, err = queryClient.RewardPrograms(s.ctx.Context(), &types.QueryRewardProgramsRequest{QueryType: types.QueryRewardProgramsRequest_QUERY_TYPE_ACTIVE})
 	s.Assert().NoError(err, "query should not error")
 	s.Assert().Equal(len(response.RewardPrograms), 1, "response should contain the added element")
 	s.Assert().Equal(uint64(2), response.RewardPrograms[0].Id, "response should contain active program")
 
-	response, err = queryClient.RewardPrograms(s.ctx.Context(), &types.QueryRewardProgramsRequest{QueryType: types.QueryRewardProgramsRequest_OUTSTANDING})
+	response, err = queryClient.RewardPrograms(s.ctx.Context(), &types.QueryRewardProgramsRequest{QueryType: types.QueryRewardProgramsRequest_QUERY_TYPE_OUTSTANDING})
 	s.Assert().NoError(err, "query should not error")
 	s.Assert().Equal(len(response.RewardPrograms), 2, "response should contain the added element")
 	s.Assert().Equal(uint64(1), response.RewardPrograms[0].Id, "response should contain the pending program")
 	s.Assert().Equal(uint64(2), response.RewardPrograms[1].Id, "response should contain the active program")
 
-	response, err = queryClient.RewardPrograms(s.ctx.Context(), &types.QueryRewardProgramsRequest{QueryType: types.QueryRewardProgramsRequest_FINISHED})
+	response, err = queryClient.RewardPrograms(s.ctx.Context(), &types.QueryRewardProgramsRequest{QueryType: types.QueryRewardProgramsRequest_QUERY_TYPE_FINISHED})
 	s.Assert().NoError(err, "query should not error")
 	s.Assert().Equal(len(response.RewardPrograms), 2, "response should contain the added element")
 	s.Assert().Equal(uint64(3), response.RewardPrograms[0].Id, "response should contain the finished program")
@@ -176,7 +176,7 @@ func (s *KeeperTestSuite) TestRewardDistributionsByAddress() {
 	pageRequest.CountTotal = true
 	response, err := queryClient.RewardDistributionsByAddress(s.ctx.Context(), &types.QueryRewardDistributionsByAddressRequest{
 		Address:     s.accountAddr.String(),
-		ClaimStatus: types.QueryRewardDistributionsByAddressRequest_ALL,
+		ClaimStatus: types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL,
 		Pagination:  pageRequest,
 	})
 	s.Assert().NoError(err, "query should not error")
@@ -189,7 +189,7 @@ func (s *KeeperTestSuite) TestRewardDistributionsByAddress() {
 	pageRequest1.Key = response.Pagination.NextKey
 	response1, err := queryClient.RewardDistributionsByAddress(s.ctx.Context(), &types.QueryRewardDistributionsByAddressRequest{
 		Address:     s.accountAddr.String(),
-		ClaimStatus: types.QueryRewardDistributionsByAddressRequest_ALL,
+		ClaimStatus: types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL,
 		Pagination:  pageRequest1,
 	})
 
@@ -202,7 +202,7 @@ func (s *KeeperTestSuite) TestRewardDistributionsByAddress() {
 	pageRequest2.Key = response1.Pagination.NextKey
 	response2, err := queryClient.RewardDistributionsByAddress(s.ctx.Context(), &types.QueryRewardDistributionsByAddressRequest{
 		Address:     s.accountAddr.String(),
-		ClaimStatus: types.QueryRewardDistributionsByAddressRequest_ALL,
+		ClaimStatus: types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL,
 		Pagination:  pageRequest2,
 	})
 

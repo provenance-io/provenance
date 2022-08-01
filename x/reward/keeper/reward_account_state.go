@@ -167,7 +167,7 @@ func (k Keeper) GetRewardAccountStatesForRewardProgram(ctx sdk.Context, rewardPr
 func (k Keeper) MakeRewardClaimsClaimableForPeriod(ctx sdk.Context, rewardProgramID, claimPeriodID uint64) error {
 	states, err := k.GetRewardAccountStatesForClaimPeriod(ctx, rewardProgramID, claimPeriodID)
 	for _, state := range states {
-		state.ClaimStatus = types.RewardAccountState_CLAIMABLE
+		state.ClaimStatus = types.RewardAccountState_CLAIM_STATUS_CLAIMABLE
 		k.SetRewardAccountState(ctx, state)
 	}
 	return err
@@ -177,10 +177,10 @@ func (k Keeper) MakeRewardClaimsClaimableForPeriod(ctx sdk.Context, rewardProgra
 func (k Keeper) ExpireRewardClaimsForRewardProgram(ctx sdk.Context, rewardProgramID uint64) error {
 	states, err := k.GetRewardAccountStatesForRewardProgram(ctx, rewardProgramID)
 	for _, state := range states {
-		if state.ClaimStatus == types.RewardAccountState_CLAIMED {
+		if state.ClaimStatus == types.RewardAccountState_CLAIM_STATUS_CLAIMED {
 			continue
 		}
-		state.ClaimStatus = types.RewardAccountState_EXPIRED
+		state.ClaimStatus = types.RewardAccountState_CLAIM_STATUS_EXPIRED
 		k.SetRewardAccountState(ctx, state)
 	}
 	return err
