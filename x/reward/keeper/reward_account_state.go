@@ -74,11 +74,22 @@ func (k Keeper) IterateRewardAccountStates(ctx sdk.Context, rewardProgramID, rew
 	return nil
 }
 
-// IterateRewardAccountStates Iterates over the account states for a reward program's claim period
+// IterateRewardAccountStatesByAddress Iterates over the account states by address iterator
 func (k Keeper) IterateRewardAccountStatesByAddress(ctx sdk.Context, addr sdk.AccAddress, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.GetAllRewardAccountByAddressPartialKey([]byte(addr.String())))
+	return k.IterateRewardAccountStatesByLookUpIndex(ctx, addr, iterator, handle)
+}
 
+// IterateRewardAccountStatesByAddressAndRewardsId Iterates over the account states by address iterator and reward id
+func (k Keeper) IterateRewardAccountStatesByAddressAndRewardsId(ctx sdk.Context, addr sdk.AccAddress, rewardsId uint64, handle func(state types.RewardAccountState) (stop bool)) error {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.GetAllRewardAccountByAddressAndRewardsIdPartialKey([]byte(addr.String()), rewardsId))
+	return k.IterateRewardAccountStatesByLookUpIndex(ctx, addr, iterator, handle)
+}
+
+// IterateRewardAccountStatesByLookUpIndex iterates reward account states by secondary index // [0x8] :: [addr-bytes::reward program id bytes]::[claim period id bytes] {}
+func (k Keeper) IterateRewardAccountStatesByLookUpIndex(ctx sdk.Context, addr sdk.AccAddress, iterator sdk.Iterator, handle func(state types.RewardAccountState) (stop bool)) error {
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		keyParsed, err := ParseRewardAccountLookUpKey(iterator.Key(), addr)
@@ -96,7 +107,7 @@ func (k Keeper) IterateRewardAccountStatesByAddress(ctx sdk.Context, addr sdk.Ac
 	return nil
 }
 
-// Iterates over the account states for every reward program
+// IterateAllRewardAccountStates Iterates over the account states for every reward program
 func (k Keeper) IterateAllRewardAccountStates(ctx sdk.Context, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.GetAllRewardAccountStateKey())
@@ -114,7 +125,7 @@ func (k Keeper) IterateAllRewardAccountStates(ctx sdk.Context, handle func(state
 	return nil
 }
 
-// Iterates over the account states for a reward program
+// IterateRewardAccountStatesForRewardProgram Iterates over the account states for a reward program
 func (k Keeper) IterateRewardAccountStatesForRewardProgram(ctx sdk.Context, rewardProgramID uint64, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.GetRewardProgramRewardAccountStateKey(rewardProgramID))

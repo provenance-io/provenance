@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/provenance-io/provenance/x/reward/types"
 )
@@ -18,11 +18,13 @@ func (k Keeper) ClaimRewards(ctx sdk.Context, rewardProgramID uint64, addr strin
 		return nil, sdk.Coin{}, fmt.Errorf("reward program %d has expired", rewardProgramID)
 	}
 
-	rewards := k.claimRewardsForProgram(ctx, rewardProgram, addr)
+	rewards, err := k.claimRewardsForProgram(ctx, rewardProgram, addr)
+	if err != nil {
+		return nil, sdk.Coin{}, err
+	}
 	sent, err := k.sendRewards(ctx, rewards, addr)
 	if err != nil {
 		// Rollback is handled by the chain automatically
-		// k.rollbackClaims(ctx, rewardProgram, rewards, addr)
 		return nil, sdk.Coin{}, err
 	}
 	rewardProgram.ClaimedAmount = rewardProgram.ClaimedAmount.Add(sent)
@@ -31,18 +33,27 @@ func (k Keeper) ClaimRewards(ctx sdk.Context, rewardProgramID uint64, addr strin
 	return rewards, sent, nil
 }
 
-func (k Keeper) claimRewardsForProgram(ctx sdk.Context, rewardProgram types.RewardProgram, addr string) []*types.ClaimedRewardPeriodDetail {
-	rewards := []*types.ClaimedRewardPeriodDetail{}
-
-	for period := 1; period <= int(rewardProgram.CurrentClaimPeriod); period++ {
-		reward, found := k.claimRewardForPeriod(ctx, rewardProgram, uint64(period), addr)
+func (k Keeper) claimRewardsForProgram(ctx sdk.Context, rewardProgram types.RewardProgram, addr string) ([]*types.ClaimedRewardPeriodDetail, error) {
+	var rewards []*types.ClaimedRewardPeriodDetail
+	var states []types.RewardAccountState
+	address, err := sdk.AccAddressFromBech32(addr)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
+	}
+	k.IterateRewardAccountStatesByAddressAndRewardsId(ctx, address, rewardProgram.GetId(), func(state types.RewardAccountState) bool {
+		if state.GetSharesEarned() > 0 && state.Address == address.String() {
+			states = append(states, state)
+		}
+		return false
+	})
+	for _, account := range states {
+		reward, found := k.claimRewardForPeriod(ctx, rewardProgram, account.ClaimPeriodId, addr)
 		if !found {
 			continue
 		}
 		rewards = append(rewards, &reward)
 	}
-
-	return rewards
+	return rewards, nil
 }
 
 func (k Keeper) claimRewardForPeriod(ctx sdk.Context, rewardProgram types.RewardProgram, period uint64, addr string) (reward types.ClaimedRewardPeriodDetail, found bool) {
@@ -113,7 +124,7 @@ func (k Keeper) RefundRewardClaims(ctx sdk.Context, rewardProgram types.RewardPr
 }
 
 func (k Keeper) ClaimAllRewards(ctx sdk.Context, addr string) ([]*types.RewardProgramClaimDetail, sdk.Coin, error) {
-	allProgramDetails := []*types.RewardProgramClaimDetail{}
+	var allProgramDetails []*types.RewardProgramClaimDetail
 	allRewards := sdk.NewInt64Coin("nhash", 0)
 	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
 		details, reward, err := k.ClaimRewards(ctx, rewardProgram.GetId(), addr)

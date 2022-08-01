@@ -130,3 +130,13 @@ func GetAllRewardAccountByAddressPartialKey(addr []byte) []byte {
 	key = append(key, address.MustLengthPrefix(addr)...)
 	return key
 }
+
+// GetAllRewardAccountByAddressAndRewardsIdPartialKey returns the key to iterate over all AccountStateAddressLookup by address and rewards id
+func GetAllRewardAccountByAddressAndRewardsIdPartialKey(addr []byte, rewardID uint64) []byte {
+	key := AccountStateAddressLookupKeyPrefix
+	rewardBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(rewardBytes, rewardID)
+	key = append(key, address.MustLengthPrefix(addr)...)
+	key = append(key, rewardBytes...)
+	return key
+}

@@ -124,7 +124,7 @@ func (s msgServer) ClaimAllRewards(goCtx context.Context, req *types.MsgClaimAll
 		return nil, err
 	}
 
-	programIDs := []uint64{}
+	var programIDs []uint64
 	for _, detail := range details {
 		programIDs = append(programIDs, detail.GetRewardProgramId())
 	}

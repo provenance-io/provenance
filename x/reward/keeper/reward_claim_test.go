@@ -229,6 +229,7 @@ func (suite *KeeperTestSuite) TestClaimAllRewards() {
 		rewardProgram.CurrentClaimPeriod = rewardProgram.GetClaimPeriods()
 		suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
+		println(rewardProgram.GetClaimPeriods())
 		for j := 1; j <= int(rewardProgram.GetClaimPeriods()); j++ {
 			state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(j), "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1, map[string]uint64{})
 			state.ClaimStatus = types.RewardAccountState_CLAIMABLE
@@ -241,6 +242,7 @@ func (suite *KeeperTestSuite) TestClaimAllRewards() {
 	details, reward, err := suite.app.RewardKeeper.ClaimAllRewards(suite.ctx, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
 	suite.Assert().NoError(err, "should throw no error")
 	suite.Assert().Equal(3, len(details), "should have rewards from every program")
+	println(reward.Amount.String())
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 900), reward, "should total up the rewards from the periods")
 
 	for i := 0; i < len(details); i++ {
