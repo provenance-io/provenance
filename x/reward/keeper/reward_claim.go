@@ -24,7 +24,6 @@ func (k Keeper) ClaimRewards(ctx sdk.Context, rewardProgramID uint64, addr strin
 	}
 	sent, err := k.sendRewards(ctx, rewards, addr)
 	if err != nil {
-		// Rollback is handled by the chain automatically
 		return nil, sdk.Coin{}, err
 	}
 	rewardProgram.ClaimedAmount = rewardProgram.ClaimedAmount.Add(sent)
