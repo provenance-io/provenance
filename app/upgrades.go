@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 )
 
 var (
@@ -45,6 +46,7 @@ var handlers = map[string]appUpgrade{
 			ctx.Logger().Info("NOTICE: Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
+		Added: []string{rewardtypes.ModuleName},
 	},
 }
 
