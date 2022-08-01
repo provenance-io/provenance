@@ -43,6 +43,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump IBC to 2.3.0 and update third-party protos [PR 868](https://github.com/provenance-io/provenance/pull/868)
 * Update docker images from `buster` to b`bullseye` [#963](https://github.com/provenance-io/provenance/issues/963)
 
+### Features
+
+* Bump Cosmos-SDK to `v0.45.4-pio-4` (from `v0.45.4-pio-2`) to utilize the new `CountAuthorization` authz grant type. [#807](https://github.com/provenance-io/provenance/issues/807)
+* Update metadata module authz handling to properly call `Accept` and delete/update authorizations as they're used [#905](https://github.com/provenance-io/provenance/issues/905)
+
 ### Bug Fixes
 
 * Support standard flags on msgfees params query cli command [#936](https://github.com/provenance-io/provenance/issues/936)
