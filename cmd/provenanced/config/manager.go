@@ -397,10 +397,35 @@ func unquote(str string) string {
 
 // LoadConfigFromFiles loads configurations appropriately.
 func LoadConfigFromFiles(cmd *cobra.Command) error {
+	if err := loadUnmanagedConfig(cmd); err != nil {
+		return err
+	}
 	if IsPacked(cmd) {
 		return loadPackedConfig(cmd)
 	}
 	return loadUnpackedConfig(cmd)
+}
+
+// loadUnmanagedConfig reads the unmanaged config file into viper. It does not apply anything to any contexts though.
+func loadUnmanagedConfig(cmd *cobra.Command) error {
+	unmanagedConfFile := GetFullPathToUnmanagedConf(cmd)
+	// Both the server context and client context should be using the same Viper, so this is good for both.
+	vpr := server.GetServerContextFromCmd(cmd).Viper
+	// Load the unmanaged config if it exists, or else do nothing.
+	switch _, err := os.Stat(unmanagedConfFile); {
+	case os.IsNotExist(err):
+		// It doesn't exist. Nothing to do.
+		return nil
+	case err != nil:
+		return fmt.Errorf("unmanaged config file stat error: %v", err)
+	default:
+		vpr.SetConfigFile(unmanagedConfFile)
+		rerr := vpr.MergeInConfig()
+		if rerr != nil {
+			return fmt.Errorf("unmanaged config file read error: %v", rerr)
+		}
+	}
+	return nil
 }
 
 // loadUnpackedConfig attempts to read the unpacked config files and apply them to the appropriate contexts.
