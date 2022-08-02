@@ -20,6 +20,8 @@ const (
 	TmConfFilename = "config.toml"
 	// ClientConfFilename is the filename of the client configuration file.
 	ClientConfFilename = "client.toml"
+	// UnmanagedConfFilename is the filename of the unmanaged configuration file.
+	UnmanagedConfFilename = "custom.toml"
 
 	// This one is in our full control but it's still probably not a good idea to change it.
 
@@ -50,6 +52,11 @@ func GetFullPathToTmConf(cmd *cobra.Command) string {
 // GetFullPathToClientConf gets the full path to the client config file.
 func GetFullPathToClientConf(cmd *cobra.Command) string {
 	return filepath.Join(GetHomeDir(cmd), ConfigSubDir, ClientConfFilename)
+}
+
+// GetFullPathToUnmanagedConf gets the full path to the unmanaged config file.
+func GetFullPathToUnmanagedConf(cmd *cobra.Command) string {
+	return filepath.Join(GetHomeDir(cmd), ConfigSubDir, UnmanagedConfFilename)
 }
 
 // GetFullPathToPackedConf gets the full path to the packed/non-defaults config file.
