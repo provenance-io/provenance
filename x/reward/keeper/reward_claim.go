@@ -35,7 +35,6 @@ func (k Keeper) ClaimRewards(ctx sdk.Context, rewardProgramID uint64, addr strin
 }
 
 func (k Keeper) claimRewardsForProgram(ctx sdk.Context, rewardProgram types.RewardProgram, addr string) ([]*types.ClaimedRewardPeriodDetail, error) {
-	var rewards []*types.ClaimedRewardPeriodDetail
 	var states []types.RewardAccountState
 	address, err := sdk.AccAddressFromBech32(addr)
 	if err != nil {
@@ -47,6 +46,8 @@ func (k Keeper) claimRewardsForProgram(ctx sdk.Context, rewardProgram types.Rewa
 		}
 		return false
 	})
+
+	rewards := make([]*types.ClaimedRewardPeriodDetail, 0, len(states))
 	for _, account := range states {
 		reward, found := k.claimRewardForPeriod(ctx, rewardProgram, account.ClaimPeriodId, addr)
 		if !found {
