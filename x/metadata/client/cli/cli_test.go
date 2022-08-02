@@ -2,7 +2,6 @@ package cli_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client"
 	"strings"
 	"testing"
 	"time"
@@ -16,6 +15,7 @@ import (
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -24,7 +24,6 @@ import (
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	authzcli "github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
@@ -55,9 +54,6 @@ type IntegrationCLITestSuite struct {
 
 	user2Addr    sdk.AccAddress
 	user2AddrStr string
-
-	user3Addr    sdk.AccAddress
-	user3AddrStr string
 
 	userOtherAddr sdk.AccAddress
 	userOtherStr  string
@@ -130,7 +126,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	cfg := testutil.DefaultTestNetworkConfig()
 	cfg.NumValidators = 1
 	genesisState := cfg.GenesisState
-	s.generateAccountsWithKeyrings(4)
+	s.generateAccountsWithKeyrings(3)
 
 	// An account
 	s.accountAddr = s.keyringAccounts[0].GetAddress()
@@ -144,10 +140,6 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.user2Addr = s.keyringAccounts[2].GetAddress()
 	s.user2AddrStr = s.user2Addr.String()
 
-	// A third user account
-	s.user3Addr = s.keyringAccounts[3].GetAddress()
-	s.user3AddrStr = s.user3Addr.String()
-
 	// An account that isn't known
 	s.userOtherAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	s.userOtherStr = s.userOtherAddr.String()
@@ -159,7 +151,6 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddr, nil, 3, 0))
 	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.user1Addr, nil, 4, 0))
 	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.user2Addr, nil, 5, 0))
-	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.user3Addr, nil, 6, 0))
 	accounts, err := authtypes.PackAccounts(genAccounts)
 	s.Require().NoError(err)
 	authData.Accounts = accounts
@@ -178,9 +169,6 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 		sdk.NewCoin("authzhotdog", sdk.NewInt(100)),
 	).Sort()})
 	genBalances = append(genBalances, banktypes.Balance{Address: s.user2AddrStr, Coins: sdk.NewCoins(
-		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
-	).Sort()})
-	genBalances = append(genBalances, banktypes.Balance{Address: s.user3AddrStr, Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
 	).Sort()})
 	var bankGenState banktypes.GenesisState
@@ -3406,117 +3394,6 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 			"",
 			&sdk.TxResponse{},
 			0,
-		},
-	}
-
-	runTxCmdTestCases(s, testCases)
-}
-
-// ---------- tx cmd CountAuthorization tests ----------
-
-func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
-	// The scenario being tested is as follows:
-	// There are two owners (1 & 2) and two signers (3 & 4).
-	// 1 & 2 are required signers and 3 & 4 are the actual signers.
-	// It should find a grant (granter: 1 -> grantee: 3) and complain
-	// about 4 not being one of the required signers because grant (granter: 2 -> grantee: 4) does not exist.
-	//
-	// NOTE: Signing in DIRECT mode is only supported for transactions with one signer only.
-	//       So we'll test two owners with one signer the following way:
-	//			1. create scope spec
-	//			2. create scope with two owners (1 & 2) and value owner (1)
-	//			3. add CountAuthorization: grant (granter: 1 -> grantee: 3, allowedAuthorizations: 1).
-	//			4. validate that it "fails" to delete scope due to missing grant from 2 -> 3
-	//			5. add CountAuthorization: grant (granter: 2 -> grantee: 3, allowedAuthorizations: 2 (helps distinguish grants in debugger)).
-	//			6. validate that it "removes" scope because signer 3 has now been assigned two grants (1 -> 3 and 2 -> 3).
-
-	scopeID := metadatatypes.ScopeMetadataAddress(uuid.New()).String()
-	scopeSpecID := metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String()
-	testCases := []txCmdTestCase{
-		{
-			"should successfully add scope specification for test setup",
-			cli.WriteScopeSpecificationCmd(),
-			[]string{
-				scopeSpecID,
-				s.accountAddrStr,
-				"owner",
-				s.contractSpecID.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, "", &sdk.TxResponse{}, 0,
-		},
-		{
-			"should successfully add metadata scope with two owners - owner 1 as value owner",
-			cli.WriteScopeCmd(),
-			[]string{
-				scopeID,
-				scopeSpecID,
-				fmt.Sprintf("%s,%s", s.user1AddrStr, s.user2AddrStr),
-				s.user1AddrStr,
-				s.user1AddrStr,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, "", &sdk.TxResponse{}, 0,
-		},
-		{
-			"should successfully add count authorization from owner 1 to signer 3",
-			authzcli.NewCmdGrantAuthorization(),
-			[]string{
-				s.user3AddrStr,
-				"count",
-				fmt.Sprintf("--%s=%d", authzcli.FlagAllowedAuthorizations, 1),
-				fmt.Sprintf("--%s=%s", authzcli.FlagMsgType, metadatatypes.TypeURLMsgDeleteScopeRequest),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user1AddrStr),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, "", &sdk.TxResponse{}, 0,
-		},
-		{
-			"should fail to remove metadata scope with signer 3 due to missing authz grant from owner 2",
-			cli.RemoveScopeCmd(),
-			[]string{
-				scopeID,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user3AddrStr),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, "", &sdk.TxResponse{}, 1,
-		},
-		{
-			"should successfully add count authorization from owner 2 to signer 3",
-			authzcli.NewCmdGrantAuthorization(),
-			[]string{
-				s.user3AddrStr,
-				"count",
-				fmt.Sprintf("--%s=%d", authzcli.FlagAllowedAuthorizations, 2),
-				fmt.Sprintf("--%s=%s", authzcli.FlagMsgType, metadatatypes.TypeURLMsgDeleteScopeRequest),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user2AddrStr),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, "", &sdk.TxResponse{}, 0,
-		},
-		{
-			"should successfully remove metadata scope with signer 3, found grants for owner 1 & 2",
-			cli.RemoveScopeCmd(),
-			[]string{
-				scopeID,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user3AddrStr),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, "", &sdk.TxResponse{}, 0,
 		},
 	}
 
