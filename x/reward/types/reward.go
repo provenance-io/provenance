@@ -137,7 +137,7 @@ func NewRewardProgram(
 		ClaimPeriods:            claimPeriods,
 		MaxRolloverClaimPeriods: maxRolloverClaimPeriods,
 		ExpirationOffset:        rewardClaimExpirationOffset,
-		State:                   RewardProgram_PENDING,
+		State:                   RewardProgram_STATE_PENDING,
 		QualifyingActions:       qualifyingActions,
 		MinimumRolloverAmount:   sdk.NewInt64Coin(totalRewardPool.Denom, 100_000_000_000),
 	}
@@ -146,20 +146,20 @@ func NewRewardProgram(
 // TODO Test this
 func (rp *RewardProgram) IsStarting(ctx sdk.Context) bool {
 	blockTime := ctx.BlockTime()
-	return rp.State == RewardProgram_PENDING && (blockTime.After(rp.ProgramStartTime) || blockTime.Equal(rp.ProgramStartTime))
+	return rp.State == RewardProgram_STATE_PENDING && (blockTime.After(rp.ProgramStartTime) || blockTime.Equal(rp.ProgramStartTime))
 }
 
 // TODO Test this
 func (rp *RewardProgram) IsEndingClaimPeriod(ctx sdk.Context) bool {
 	blockTime := ctx.BlockTime()
-	return rp.State == RewardProgram_STARTED && (blockTime.After(rp.ClaimPeriodEndTime) || blockTime.Equal(rp.ClaimPeriodEndTime))
+	return rp.State == RewardProgram_STATE_STARTED && (blockTime.After(rp.ClaimPeriodEndTime) || blockTime.Equal(rp.ClaimPeriodEndTime))
 }
 
 // TODO Test this
 func (rp *RewardProgram) IsExpiring(ctx sdk.Context) bool {
 	blockTime := ctx.BlockTime()
 	expireTime := rp.ActualProgramEndTime.Add(time.Second * time.Duration(rp.ExpirationOffset))
-	return rp.State == RewardProgram_FINISHED && (blockTime.After(expireTime) || blockTime.Equal(expireTime))
+	return rp.State == RewardProgram_STATE_FINISHED && (blockTime.After(expireTime) || blockTime.Equal(expireTime))
 }
 
 // TODO Test this
@@ -167,7 +167,7 @@ func (rp *RewardProgram) IsEnding(ctx sdk.Context, programBalance sdk.Coin) bool
 	blockTime := ctx.BlockTime()
 	isProgramExpired := !rp.GetProgramEndTimeMax().IsZero() && (blockTime.After(rp.ProgramEndTimeMax) || blockTime.Equal(rp.ProgramEndTimeMax))
 	canRollover := programBalance.IsGTE(rp.GetMinimumRolloverAmount())
-	return rp.State == RewardProgram_STARTED && (isProgramExpired || !canRollover)
+	return rp.State == RewardProgram_STATE_STARTED && (isProgramExpired || !canRollover)
 }
 
 func (rp *RewardProgram) Validate() error {
@@ -232,7 +232,7 @@ func NewRewardAccountState(rewardProgramID, rewardClaimPeriodID uint64, address 
 		Address:         address,
 		ActionCounter:   actionCounter,
 		SharesEarned:    shares,
-		ClaimStatus:     RewardAccountState_UNCLAIMABLE,
+		ClaimStatus:     RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
 	}
 }
 

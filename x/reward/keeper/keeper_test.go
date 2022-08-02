@@ -207,7 +207,7 @@ func (suite *KeeperTestSuite) TestNonDelegateAgainstRewardProgram() {
 			},
 		},
 	)
-	rewardProgram.State = types.RewardProgram_STARTED
+	rewardProgram.State = types.RewardProgram_STATE_STARTED
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
 
 	reward.EndBlocker(suite.ctx, suite.app.RewardKeeper)

@@ -38,7 +38,8 @@ service Query {
 
   // RewardDistributionsByAddress returns a list of reward claims belonging to the account and matching the claim
   // status.
-  rpc RewardDistributionsByAddress(QueryRewardDistributionsByAddressRequest) returns (QueryRewardDistributionsByAddressResponse) {
+  rpc RewardDistributionsByAddress(QueryRewardDistributionsByAddressRequest)
+      returns (QueryRewardDistributionsByAddressResponse) {
     option (google.api.http).get = "/provenance/rewards/v1/reward_claims/{address}";
   }
 }
@@ -57,12 +58,20 @@ message QueryRewardProgramByIDResponse {
 
 // QueryRewardProgramsRequest queries for all reward programs matching the query_type
 message QueryRewardProgramsRequest {
+  // QueryType is the state of reward program to query
   enum QueryType {
-    ALL         = 0;
-    PENDING     = 1;
-    ACTIVE      = 2;
-    OUTSTANDING = 3;
-    FINISHED    = 4;
+    // unspecified type
+    QUERY_TYPE_UNSPECIFIED = 0;
+    // all reward programs states
+    QUERY_TYPE_ALL = 1;
+    // pending reward program state=
+    QUERY_TYPE_PENDING = 2;
+    // active reward program state
+    QUERY_TYPE_ACTIVE = 3;
+    // pending and active reward program states
+    QUERY_TYPE_OUTSTANDING = 4;
+    // finished reward program state
+    QUERY_TYPE_FINISHED = 5;
   }
   // A filter on the types of reward programs.
   QueryType query_type = 1;
@@ -104,12 +113,20 @@ message QueryClaimPeriodRewardDistributionsByIDResponse {
 
 // QueryRewardDistributionsByAddressRequest queries for reward claims by address that match the claim_status.
 message QueryRewardDistributionsByAddressRequest {
+  // RewardAccountQueryParam enum value of type of reward distribution to query
   enum RewardAccountQueryParam {
-    ALL         = 0;
-    UNCLAIMABLE = 1;
-    CLAIMABLE   = 2;
-    CLAIMED     = 3;
-    EXPIRED     = 4;
+    // unspecified distribution type
+    REWARD_ACCOUNT_QUERY_PARAM_UNSPECIFIED = 0;
+    // all reward distributions
+    REWARD_ACCOUNT_QUERY_PARAM_ALL = 1;
+    // unclaimable reward distributions
+    REWARD_ACCOUNT_QUERY_PARAM_UNCLAIMABLE = 2;
+    // claimable reward distributions
+    REWARD_ACCOUNT_QUERY_PARAM_CLAIMABLE = 3;
+    // claimed reward distributions
+    REWARD_ACCOUNT_QUERY_PARAM_CLAIMED = 4;
+    // expired reward distributions
+    REWARD_ACCOUNT_QUERY_PARAM_EXPIRED = 5;
   }
   // The address that the claim belongs to.
   string address = 1;

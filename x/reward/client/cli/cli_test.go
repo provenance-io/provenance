@@ -87,7 +87,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		0,
 		s.qualifyingActions,
 	)
-	s.activeRewardProgram.State = types.RewardProgram_STARTED
+	s.activeRewardProgram.State = types.RewardProgram_STATE_STARTED
 
 	s.finishedRewardProgram = types.NewRewardProgram(
 		"finished title",
@@ -104,7 +104,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.qualifyingActions,
 	)
 	s.finishedRewardProgram.ActualProgramEndTime = now
-	s.finishedRewardProgram.State = types.RewardProgram_FINISHED
+	s.finishedRewardProgram.State = types.RewardProgram_STATE_FINISHED
 
 	s.pendingRewardProgram = types.NewRewardProgram(
 		"pending title",
@@ -120,7 +120,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		0,
 		s.qualifyingActions,
 	)
-	s.pendingRewardProgram.State = types.RewardProgram_PENDING
+	s.pendingRewardProgram.State = types.RewardProgram_STATE_PENDING
 
 	s.expiredRewardProgram = types.NewRewardProgram(
 		"expired title",
@@ -136,7 +136,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		0,
 		s.qualifyingActions,
 	)
-	s.expiredRewardProgram.State = types.RewardProgram_EXPIRED
+	s.expiredRewardProgram.State = types.RewardProgram_STATE_EXPIRED
 
 	claimPeriodRewardDistributions := make([]rewardtypes.ClaimPeriodRewardDistribution, 101)
 	for i := 0; i < 101; i++ {

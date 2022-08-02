@@ -73,7 +73,7 @@ func (s msgServer) EndRewardProgram(goCtx context.Context, msg *types.MsgEndRewa
 	if rewardProgram.DistributeFromAddress != msg.ProgramOwnerAddress {
 		return &types.MsgEndRewardProgramResponse{}, fmt.Errorf("%v not authorized is not program owner", msg.ProgramOwnerAddress)
 	}
-	if rewardProgram.State != types.RewardProgram_PENDING && rewardProgram.State != types.RewardProgram_STARTED {
+	if rewardProgram.State != types.RewardProgram_STATE_PENDING && rewardProgram.State != types.RewardProgram_STATE_STARTED {
 		return &types.MsgEndRewardProgramResponse{}, fmt.Errorf("cannot end program in state ended or expired state")
 	}
 
@@ -124,7 +124,7 @@ func (s msgServer) ClaimAllRewards(goCtx context.Context, req *types.MsgClaimAll
 		return nil, err
 	}
 
-	var programIDs []uint64
+	programIDs := make([]uint64, 0, len(details))
 	for _, detail := range details {
 		programIDs = append(programIDs, detail.GetRewardProgramId())
 	}

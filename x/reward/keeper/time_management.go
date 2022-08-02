@@ -54,7 +54,7 @@ func (k Keeper) StartRewardProgram(ctx sdk.Context, rewardProgram *types.RewardP
 	}
 
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Starting reward program: %v ", rewardProgram))
-	rewardProgram.State = types.RewardProgram_STARTED
+	rewardProgram.State = types.RewardProgram_STATE_STARTED
 	err := k.StartRewardProgramClaimPeriod(ctx, rewardProgram)
 	if err != nil {
 		return err
@@ -161,7 +161,7 @@ func (k Keeper) EndRewardProgram(ctx sdk.Context, rewardProgram *types.RewardPro
 
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Ending reward program %v ", rewardProgram))
 	blockTime := ctx.BlockTime()
-	rewardProgram.State = types.RewardProgram_FINISHED
+	rewardProgram.State = types.RewardProgram_STATE_FINISHED
 	rewardProgram.ActualProgramEndTime = blockTime
 
 	ctx.EventManager().EmitEvent(
@@ -181,7 +181,7 @@ func (k Keeper) ExpireRewardProgram(ctx sdk.Context, rewardProgram *types.Reward
 	}
 	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Expiring reward program %v ", rewardProgram))
 
-	rewardProgram.State = types.RewardProgram_EXPIRED
+	rewardProgram.State = types.RewardProgram_STATE_EXPIRED
 	err := k.ExpireRewardClaimsForRewardProgram(ctx, rewardProgram.GetId())
 	if err != nil {
 		ctx.Logger().Error("NOTICE: Failed to expire reward claims for reward program. %v", err)

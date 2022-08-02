@@ -81,10 +81,10 @@ func (k Keeper) IterateRewardAccountStatesByAddress(ctx sdk.Context, addr sdk.Ac
 	return k.IterateRewardAccountStatesByLookUpIndex(ctx, addr, iterator, handle)
 }
 
-// IterateRewardAccountStatesByAddressAndRewardsId Iterates over the account states by address iterator and reward id
-func (k Keeper) IterateRewardAccountStatesByAddressAndRewardsId(ctx sdk.Context, addr sdk.AccAddress, rewardsId uint64, handle func(state types.RewardAccountState) (stop bool)) error {
+// IterateRewardAccountStatesByAddressAndRewardsID Iterates over the account states by address iterator and reward id
+func (k Keeper) IterateRewardAccountStatesByAddressAndRewardsID(ctx sdk.Context, addr sdk.AccAddress, rewardsID uint64, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetAllRewardAccountByAddressAndRewardsIdPartialKey([]byte(addr.String()), rewardsId))
+	iterator := sdk.KVStorePrefixIterator(store, types.GetAllRewardAccountByAddressAndRewardsIDPartialKey([]byte(addr.String()), rewardsID))
 	return k.IterateRewardAccountStatesByLookUpIndex(ctx, addr, iterator, handle)
 }
 
@@ -167,7 +167,7 @@ func (k Keeper) GetRewardAccountStatesForRewardProgram(ctx sdk.Context, rewardPr
 func (k Keeper) MakeRewardClaimsClaimableForPeriod(ctx sdk.Context, rewardProgramID, claimPeriodID uint64) error {
 	states, err := k.GetRewardAccountStatesForClaimPeriod(ctx, rewardProgramID, claimPeriodID)
 	for _, state := range states {
-		state.ClaimStatus = types.RewardAccountState_CLAIMABLE
+		state.ClaimStatus = types.RewardAccountState_CLAIM_STATUS_CLAIMABLE
 		k.SetRewardAccountState(ctx, state)
 	}
 	return err
@@ -177,10 +177,10 @@ func (k Keeper) MakeRewardClaimsClaimableForPeriod(ctx sdk.Context, rewardProgra
 func (k Keeper) ExpireRewardClaimsForRewardProgram(ctx sdk.Context, rewardProgramID uint64) error {
 	states, err := k.GetRewardAccountStatesForRewardProgram(ctx, rewardProgramID)
 	for _, state := range states {
-		if state.ClaimStatus == types.RewardAccountState_CLAIMED {
+		if state.ClaimStatus == types.RewardAccountState_CLAIM_STATUS_CLAIMED {
 			continue
 		}
-		state.ClaimStatus = types.RewardAccountState_EXPIRED
+		state.ClaimStatus = types.RewardAccountState_CLAIM_STATUS_EXPIRED
 		k.SetRewardAccountState(ctx, state)
 	}
 	return err

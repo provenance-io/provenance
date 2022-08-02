@@ -95,7 +95,7 @@ func (suite *KeeperTestSuite) TestEndingRewardProgram() {
 		0,
 		[]types.QualifyingAction{},
 	)
-	program.State = types.RewardProgram_STARTED
+	program.State = types.RewardProgram_STATE_STARTED
 	program.Id = 10
 
 	program.CurrentClaimPeriod = 2
@@ -110,7 +110,7 @@ func (suite *KeeperTestSuite) TestEndingRewardProgram() {
 	suite.Assert().Equal(time.UTC(), endingRewardProgram.ExpectedProgramEndTime)
 	suite.Assert().Equal(time.UTC(), endingRewardProgram.ProgramEndTimeMax)
 
-	program.State = types.RewardProgram_PENDING
+	program.State = types.RewardProgram_STATE_PENDING
 	program.Id = 20
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program)
 	endingRewardProgram, err = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, 20)
@@ -334,8 +334,8 @@ func (suite *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
 		0,
 		[]types.QualifyingAction{},
 	)
-	program2.State = types.RewardProgram_STARTED
-	program3.State = types.RewardProgram_FINISHED
+	program2.State = types.RewardProgram_STATE_STARTED
+	program3.State = types.RewardProgram_STATE_FINISHED
 
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
@@ -428,10 +428,10 @@ func (suite *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
 		0,
 		[]types.QualifyingAction{},
 	)
-	program2.State = types.RewardProgram_STARTED
-	program3.State = types.RewardProgram_FINISHED
-	program4.State = types.RewardProgram_EXPIRED
-	program5.State = types.RewardProgram_EXPIRED
+	program2.State = types.RewardProgram_STATE_STARTED
+	program3.State = types.RewardProgram_STATE_FINISHED
+	program4.State = types.RewardProgram_STATE_EXPIRED
+	program5.State = types.RewardProgram_STATE_EXPIRED
 
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
@@ -526,10 +526,10 @@ func (suite *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
 		0,
 		[]types.QualifyingAction{},
 	)
-	program2.State = types.RewardProgram_STARTED
-	program3.State = types.RewardProgram_FINISHED
-	program4.State = types.RewardProgram_EXPIRED
-	program5.State = types.RewardProgram_EXPIRED
+	program2.State = types.RewardProgram_STATE_STARTED
+	program3.State = types.RewardProgram_STATE_FINISHED
+	program4.State = types.RewardProgram_STATE_EXPIRED
+	program5.State = types.RewardProgram_STATE_EXPIRED
 
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
@@ -597,8 +597,8 @@ func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 		0,
 		[]types.QualifyingAction{},
 	)
-	program2.State = types.RewardProgram_STARTED
-	program3.State = types.RewardProgram_FINISHED
+	program2.State = types.RewardProgram_STATE_STARTED
+	program3.State = types.RewardProgram_STATE_FINISHED
 
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
@@ -662,8 +662,8 @@ func (suite *KeeperTestSuite) TestGetAllRewardPrograms() {
 		0,
 		[]types.QualifyingAction{},
 	)
-	program2.State = types.RewardProgram_STARTED
-	program3.State = types.RewardProgram_FINISHED
+	program2.State = types.RewardProgram_STATE_STARTED
+	program3.State = types.RewardProgram_STATE_FINISHED
 
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)

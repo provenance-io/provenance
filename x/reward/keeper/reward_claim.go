@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -14,7 +15,7 @@ func (k Keeper) ClaimRewards(ctx sdk.Context, rewardProgramID uint64, addr strin
 		return nil, sdk.Coin{}, fmt.Errorf("reward program %d does not exist", rewardProgramID)
 	}
 
-	if rewardProgram.State == types.RewardProgram_EXPIRED {
+	if rewardProgram.State == types.RewardProgram_STATE_EXPIRED {
 		return nil, sdk.Coin{}, fmt.Errorf("reward program %d has expired", rewardProgramID)
 	}
 
@@ -33,18 +34,19 @@ func (k Keeper) ClaimRewards(ctx sdk.Context, rewardProgramID uint64, addr strin
 }
 
 func (k Keeper) claimRewardsForProgram(ctx sdk.Context, rewardProgram types.RewardProgram, addr string) ([]*types.ClaimedRewardPeriodDetail, error) {
-	var rewards []*types.ClaimedRewardPeriodDetail
 	var states []types.RewardAccountState
 	address, err := sdk.AccAddressFromBech32(addr)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
 	}
-	k.IterateRewardAccountStatesByAddressAndRewardsId(ctx, address, rewardProgram.GetId(), func(state types.RewardAccountState) bool {
+	k.IterateRewardAccountStatesByAddressAndRewardsID(ctx, address, rewardProgram.GetId(), func(state types.RewardAccountState) bool {
 		if state.GetSharesEarned() > 0 && state.Address == address.String() {
 			states = append(states, state)
 		}
 		return false
 	})
+
+	rewards := make([]*types.ClaimedRewardPeriodDetail, 0, len(states))
 	for _, account := range states {
 		reward, found := k.claimRewardForPeriod(ctx, rewardProgram, account.ClaimPeriodId, addr)
 		if !found {
@@ -60,7 +62,7 @@ func (k Keeper) claimRewardForPeriod(ctx sdk.Context, rewardProgram types.Reward
 	if err != nil {
 		return reward, false
 	}
-	if state.GetClaimStatus() != types.RewardAccountState_CLAIMABLE {
+	if state.GetClaimStatus() != types.RewardAccountState_CLAIM_STATUS_CLAIMABLE {
 		return reward, false
 	}
 
@@ -76,7 +78,7 @@ func (k Keeper) claimRewardForPeriod(ctx sdk.Context, rewardProgram types.Reward
 		ClaimPeriodReward: participantReward,
 	}
 
-	state.ClaimStatus = types.RewardAccountState_CLAIMED
+	state.ClaimStatus = types.RewardAccountState_CLAIM_STATUS_CLAIMED
 	k.SetRewardAccountState(ctx, state)
 
 	return reward, true

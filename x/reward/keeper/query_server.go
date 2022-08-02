@@ -30,15 +30,15 @@ func (k Keeper) RewardPrograms(ctx context.Context, req *types.QueryRewardProgra
 	var err error
 
 	switch req.QueryType {
-	case types.QueryRewardProgramsRequest_ALL:
+	case types.QueryRewardProgramsRequest_QUERY_TYPE_ALL:
 		rewardPrograms, err = k.GetAllRewardPrograms(sdkCtx)
-	case types.QueryRewardProgramsRequest_PENDING:
+	case types.QueryRewardProgramsRequest_QUERY_TYPE_PENDING:
 		rewardPrograms, err = k.GetAllPendingRewardPrograms(sdkCtx)
-	case types.QueryRewardProgramsRequest_ACTIVE:
+	case types.QueryRewardProgramsRequest_QUERY_TYPE_ACTIVE:
 		rewardPrograms, err = k.GetAllActiveRewardPrograms(sdkCtx)
-	case types.QueryRewardProgramsRequest_FINISHED:
+	case types.QueryRewardProgramsRequest_QUERY_TYPE_FINISHED:
 		rewardPrograms, err = k.GetAllCompletedRewardPrograms(sdkCtx)
-	case types.QueryRewardProgramsRequest_OUTSTANDING:
+	case types.QueryRewardProgramsRequest_QUERY_TYPE_OUTSTANDING:
 		rewardPrograms, err = k.GetOutstandingRewardPrograms(sdkCtx)
 	}
 
@@ -132,7 +132,7 @@ func (k Keeper) RewardDistributionsByAddress(ctx context.Context, request *types
 		if errFromGetRewardAccount != nil {
 			return false, nil
 		}
-		if !(result.GetSharesEarned() > 0 && (request.ClaimStatus == types.QueryRewardDistributionsByAddressRequest_ALL || request.ClaimStatus.String() == result.ClaimStatus.String())) {
+		if !(result.GetSharesEarned() > 0 && (request.ClaimStatus == types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL || request.ClaimStatus.String() == result.ClaimStatus.String())) {
 			return false, nil
 		}
 
