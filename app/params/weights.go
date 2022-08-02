@@ -44,4 +44,6 @@ const (
 	// MsgFees
 	DefaultWeightAddMsgFeeProposalContent    int = 75
 	DefaultWeightRemoveMsgFeeProposalContent int = 25
+	// Rewards
+	DefaultWeightSubmitCreateRewards int = 100
 )
