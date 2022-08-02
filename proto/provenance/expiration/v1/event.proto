@@ -1,0 +1,30 @@
+// Since: provenance 1.12
+syntax = "proto3";
+package provenance.expiration.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/expiration/types";
+
+// EventTxCompleted is an event message indicating that a TX has completed.
+message EventTxCompleted {
+  // module is the module the TX belongs to.
+  string module = 1;
+  // endpoint is the rpc endpoint that was just completed.
+  string endpoint = 2;
+  // signers are the bech32 address strings of the signers of this TX.
+  repeated string signers = 3;
+}
+
+// EventExpirationCreated is an event message indicating an expiration has been created for a particular asset
+message EventExpirationCreated {
+
+}
+
+// EventExpirationDeleted is an event message indicating an expiration has been deleted for a particular asset
+message EventExpirationDeleted {
+
+}
+
+// EventExpirationUpdated is an event message indicating an expiration has been updated for a particular asset
+message EventExpirationUpdated {
+
+}
