@@ -1,10 +1,10 @@
 package streaming
 
 import (
-	"strings"
-
 	"github.com/provenance-io/provenance/app/streaming/trace"
 	"github.com/provenance-io/provenance/internal/streaming"
+	"sort"
+	"strings"
 )
 
 // StreamServiceInitializers contains a map of supported StreamServiceInitializer implementations
@@ -17,5 +17,6 @@ func ConfigOptions() string {
 	for k := range StreamServiceInitializers {
 		keys = append(keys, k)
 	}
+	sort.Strings(keys)
 	return strings.Join(keys, ",")
 }

@@ -56,8 +56,8 @@ Take a look at [app/streaming/trace/service/service.go](./trace/service/service.
 
 ## Configuration
 
-Streaming services are configured in the `streaming` TOML mapping in the App's `app.toml` file. There are two parameters
-for configuring a service: `streaming.enable` and `streaming.service`. `streaming.enable` is bool that turns on or of a streaming service.
+Streaming services are configured in the `streaming` TOML mapping which can be placed in the App's `custom.toml` file. There are two parameters
+for configuring a service: `streaming.enable` and `streaming.service`. `streaming.enable` is bool that turns on or off a streaming service.
 `streaming.service` specifies the service name that is registered with the App. 
 
 ```toml
@@ -88,5 +88,5 @@ service = "trace"
 
 [streaming.trace]
 # When true, it will print ABCI BeginBlocker and EndBlocker request and response to stdout.
-print_data_to_stdout = false
+print-data-to-stdout = false
 ```

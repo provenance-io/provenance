@@ -15,7 +15,7 @@ const (
 	TomlKey = "trace"
 
 	// PrintDataToStdoutParam is the TraceStreamingService flag that logs full streamed data at debug level
-	PrintDataToStdoutParam = "print_data_to_stdout"
+	PrintDataToStdoutParam = "print-data-to-stdout"
 )
 
 var StreamServiceInitializer = &streamServiceInitializer{}

@@ -420,7 +420,7 @@ func TestAppStateDeterminismWithStateListeningTrace(t *testing.T) {
 	m["streaming.enabled"] = true
 	m["streaming.service"] = []string{"trace"}
 	// example service params
-	m["streaming.trace.print_data_to_stdout"] = true
+	m["streaming.trace.print-data-to-stdout"] = true
 
 	appOpts := viper.New()
 	for key, value := range m {

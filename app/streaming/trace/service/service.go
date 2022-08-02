@@ -40,13 +40,13 @@ func (tss *TraceStreamingService) StreamBeginBlocker(
 
 	// write req
 	if err := tss.write(ctx, &req); err != nil {
-		ctx.Logger().Error(errMsg, "height", req.Header.Height, "err", err)
+		ctx.Logger().Error(errMsg, "action", "write request", "height", req.Header.Height, "err", err)
 		panic(err)
 	}
 
 	// write res
 	if err := tss.write(ctx, &res); err != nil {
-		ctx.Logger().Error(errMsg, "height", ctx.BlockHeight(), "err", err)
+		ctx.Logger().Error(errMsg, "action", "write response", "height", ctx.BlockHeight(), "err", err)
 		panic(err)
 	}
 }
@@ -61,13 +61,13 @@ func (tss *TraceStreamingService) StreamEndBlocker(
 
 	// write req
 	if err := tss.write(ctx, &req); err != nil {
-		ctx.Logger().Error(errMsg, "height", ctx.BlockHeight(), "err", err)
+		ctx.Logger().Error(errMsg, "action", "write request", "height", ctx.BlockHeight(), "err", err)
 		panic(err)
 	}
 
 	// write res
 	if err := tss.write(ctx, &res); err != nil {
-		ctx.Logger().Error(errMsg, "height", ctx.BlockHeight(), "err", err)
+		ctx.Logger().Error(errMsg, "action", "write response", "height", ctx.BlockHeight(), "err", err)
 		panic(err)
 	}
 }

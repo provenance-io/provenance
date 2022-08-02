@@ -1,38 +1,50 @@
 package service
 
 import (
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/tendermint/tendermint/libs/log"
-	"testing"
-
-	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
 	types1 "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 )
 
-var (
-	interfaceRegistry    = codecTypes.NewInterfaceRegistry()
-	testMarshaller       = codec.NewProtoCodec(interfaceRegistry)
+type TraceServiceTestSuite struct {
+	suite.Suite
+
+	ctx sdk.Context
+
 	testStreamingService *TraceStreamingService
-	testingCtx           sdk.Context
+
+	testBeginBlockReq abci.RequestBeginBlock
+	testBeginBlockRes abci.ResponseBeginBlock
+	testEndBlockReq   abci.RequestEndBlock
+	testEndBlockRes   abci.ResponseEndBlock
+}
+
+func (s *TraceServiceTestSuite) SetupTest() {
+	s.ctx = sdk.NewContext(nil, types1.Header{}, false, log.TestingLogger())
+	marshaller := codec.NewProtoCodec(codecTypes.NewInterfaceRegistry())
+	s.testStreamingService = NewTraceStreamingService(true, marshaller)
 
 	// test abci message types
-	mockHash          = []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}
-	testBeginBlockReq = abci.RequestBeginBlock{
+	s.testBeginBlockReq = abci.RequestBeginBlock{
 		Header: types1.Header{
 			Height: 1,
 		},
 		ByzantineValidators: []abci.Evidence{},
-		Hash:                mockHash,
+		Hash:                []byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
 		LastCommitInfo: abci.LastCommitInfo{
 			Round: 1,
 			Votes: []abci.VoteInfo{},
 		},
 	}
-	testBeginBlockRes = abci.ResponseBeginBlock{
+	s.testBeginBlockRes = abci.ResponseBeginBlock{
 		Events: []abci.Event{
 			{
 				Type: "testEventType1",
@@ -42,32 +54,26 @@ var (
 			},
 		},
 	}
-	testEndBlockReq = abci.RequestEndBlock{
+	s.testEndBlockReq = abci.RequestEndBlock{
 		Height: 1,
 	}
-	testEndBlockRes = abci.ResponseEndBlock{
+	s.testEndBlockRes = abci.ResponseEndBlock{
 		Events:                []abci.Event{},
 		ConsensusParamUpdates: &abci.ConsensusParams{},
 		ValidatorUpdates:      []abci.ValidatorUpdate{},
 	}
-)
-
-// change this to write to in-memory io.Writer (e.g. bytes.Buffer)
-func TestStreamingService(t *testing.T) {
-	testingCtx = sdk.NewContext(nil, types1.Header{}, false, log.TestingLogger())
-	testStreamingService = NewTraceStreamingService(true, testMarshaller)
-	require.NotNil(t, testStreamingService)
-	require.IsType(t, &TraceStreamingService{}, testStreamingService)
-	testListenBeginBlocker(t)
-	testListenEndBlocker(t)
 }
 
-func testListenBeginBlocker(t *testing.T) {
-	sbb := testStreamingService.StreamBeginBlocker
-	assert.NotPanicsf(t, func() { sbb(testingCtx, testBeginBlockReq, testBeginBlockRes) }, "StreamBeginBlocker did not panic")
+func TestTraceServiceTestSuite(t *testing.T) {
+	suite.Run(t, new(TraceServiceTestSuite))
 }
 
-func testListenEndBlocker(t *testing.T) {
-	seb := testStreamingService.StreamEndBlocker
-	assert.NotPanicsf(t, func() { seb(testingCtx, testEndBlockReq, testEndBlockRes) }, "StreamEndBlocker did not panic")
+func (s *TraceServiceTestSuite) TestListenBeginBlocker() {
+	sbb := s.testStreamingService.StreamBeginBlocker
+	assert.NotPanicsf(s.T(), func() { sbb(s.ctx, s.testBeginBlockReq, s.testBeginBlockRes) }, "StreamBeginBlocker did not panic")
+}
+
+func (s *TraceServiceTestSuite) TestListenEndBlocker() {
+	seb := s.testStreamingService.StreamEndBlocker
+	assert.NotPanicsf(s.T(), func() { seb(s.ctx, s.testEndBlockReq, s.testEndBlockRes) }, "StreamEndBlocker did not panic")
 }
