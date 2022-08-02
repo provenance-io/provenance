@@ -12,6 +12,7 @@ import (
 
 type RewardTypesTestSuite struct {
 	suite.Suite
+	ctx sdk.Context
 }
 
 func TestRewardTypesTestSuite(t *testing.T) {
@@ -513,4 +514,44 @@ func (s *RewardTypesTestSuite) TestCalculateEndTimeMax() {
 	s.Require().NoError(err)
 	s.Assert().True(result.Equal(compareConstant))
 
+}
+
+func (s *RewardTypesTestSuite) TestIsEndingClaimPeriod() {
+	now := time.Now().UTC()
+	program := NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdk.NewInt64Coin("nhash", 1),
+		sdk.NewInt64Coin("nhash", 2),
+		now,
+		3600,
+		1,
+		0,
+		1,
+		[]QualifyingAction{},
+	)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().AddDate(1, 0, 0))
+
+	// RewardProgram_PENDING and blockTime after ClaimPeriodEndTime
+	program.State = RewardProgram_PENDING
+	s.Assert().False(program.IsEndingClaimPeriod(s.ctx))
+
+	// RewardProgram_STARTED and blockTime after ClaimPeriodEndTime
+	program.State = RewardProgram_STARTED
+	s.Assert().True(program.IsEndingClaimPeriod(s.ctx))
+
+	// RewardProgram_FINISHED and blockTime after ClaimPeriodEndTime
+	program.State = RewardProgram_FINISHED
+	s.Assert().False(program.IsEndingClaimPeriod(s.ctx))
+
+	// RewardProgram_EXPIRED and blockTime after ClaimPeriodEndTime
+	program.State = RewardProgram_EXPIRED
+	s.Assert().False(program.IsEndingClaimPeriod(s.ctx))
+
+	// RewardProgram_STARTED and blockTime before ClaimPeriodEndTime
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().AddDate(-2, 0, 0))
+	program.State = RewardProgram_STARTED
+	s.Assert().False(program.IsEndingClaimPeriod(s.ctx))
 }
