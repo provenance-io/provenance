@@ -39,12 +39,15 @@ func (k Keeper) claimRewardsForProgram(ctx sdk.Context, rewardProgram types.Rewa
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
 	}
-	k.IterateRewardAccountStatesByAddressAndRewardsID(ctx, address, rewardProgram.GetId(), func(state types.RewardAccountState) bool {
+	err = k.IterateRewardAccountStatesByAddressAndRewardsID(ctx, address, rewardProgram.GetId(), func(state types.RewardAccountState) bool {
 		if state.GetSharesEarned() > 0 && state.Address == address.String() {
 			states = append(states, state)
 		}
 		return false
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	rewards := make([]*types.ClaimedRewardPeriodDetail, 0, len(states))
 	for _, account := range states {
