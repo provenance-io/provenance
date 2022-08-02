@@ -13,7 +13,7 @@ import (
 const (
 	TypeMsgCreateRewardProgramRequest = "create_reward_program"
 	TypeMsgEndRewardProgramRequest    = "end_reward_program"
-	TypeMsgClaimRewardsRequest         = "claim_reward"
+	TypeMsgClaimRewardsRequest        = "claim_reward"
 	TypeMsgClaimAllRewardRequest      = "claim_all_rewards"
 )
 

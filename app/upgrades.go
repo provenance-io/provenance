@@ -39,7 +39,7 @@ var handlers = map[string]appUpgrade{
 	}, // upgrade for 1.11.1
 	"mango-rc4": {}, // upgrade for 1.11.1-rc4
 	// TODO - Add new upgrade definitions here.
-	//TODO - CHECK UPGRADE HANDLER
+	// TODO - CHECK UPGRADE HANDLER
 	"nickel": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)

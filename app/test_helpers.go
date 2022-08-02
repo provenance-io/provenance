@@ -7,10 +7,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/provenance-io/provenance/x/reward/types"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/provenance-io/provenance/x/reward/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/stretchr/testify/require"
@@ -460,7 +461,6 @@ func FundModuleAccount(app *App, ctx sdk.Context, recipientMod string, amounts s
 }
 
 func SetupWithGenesisRewardsProgram(genesisRewards types.RewardProgram, genAccs []authtypes.GenesisAccount, valSet []stakingtypes.Validator, balances ...banktypes.Balance) *App {
-
 	app, genesisState := setup(true, 0)
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
@@ -538,5 +538,4 @@ func SetupWithGenesisRewardsProgram(genesisRewards types.RewardProgram, genAccs 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, Time: time.Now().UTC()}})
 
 	return app
-
 }
