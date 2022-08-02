@@ -17,7 +17,7 @@ The examples below are run on a `localnet` docker nodes. For instructions on run
 
 Homebrew (macOS)
 
-```
+```shell
 brew install grpcurl
 ```
 
@@ -27,11 +27,11 @@ brew install grpcurl
 
 To query services we need to manually reference to relevant `.proto` files. Let's go ahead and clone the `provenance` project.
 
-```
+```shell
 git clone https://github.com/provenance-io/provenance.git
 ```
 
-```
+```shell
 cd ./provenance
 make build
 make localnet-start # requires docker
@@ -44,7 +44,7 @@ This section includes query examples for the `bank`, `authz`, `marker`,  and `me
 
 For a full list of all available services, run:
 
-```
+```shell
 grpcurl -plaintext localhost:9090 list
 ```
 
@@ -54,7 +54,7 @@ grpcurl -plaintext localhost:9090 list
 
 Descrie available methods of the `bank` service.
 
-```
+```shell
 grpcurl \
     -import-path ./proto \
     -import-path ./third_party/proto \
@@ -65,7 +65,7 @@ grpcurl \
 
 Running the command above will result in something like the below out.
 
-```
+```shell
 cosmos.bank.v1beta1.Query is a service:
 // Query defines the gRPC querier service.
 service Query {
@@ -112,7 +112,7 @@ In the below example we use the `AllBalances` method to query a particular `addr
 
 Note the use of `-plaintext` and `-d {"address": "<address>"}`
 
-```
+```shell
 grpcurl \
     -plaintext \
     -import-path ./proto \
@@ -123,7 +123,7 @@ grpcurl \
     cosmos.bank.v1beta1.Query/AllBalances
 ```
 
-```
+```shell
 {
   "balances": [
     {
@@ -143,7 +143,7 @@ grpcurl \
 
 List available methods of the `authz` service.
 
-```
+```shell
 grpcurl \
     -import-path ./proto \
     -import-path ./third_party/proto \
@@ -152,7 +152,7 @@ grpcurl \
     describe cosmos.authz.v1beta1.Query
 ```
 
-```
+```shell
 cosmos.authz.v1beta1.Query is a service:
 // Query defines the gRPC querier service.
 service Query {
@@ -165,50 +165,38 @@ service Query {
 
 #### Query service methods
 
-Before we can query the `authz` module we need to grant permissions to a second address to perform certain operations on our behaf.
+Query for grants:
 
-Let's grant the `send` authorization to a second address.
-
-<small>*For a full list of authorization types, run: `provenanced tx authz grant --help`*</small>
-
-```
-./build/provenanced tx authz grant tp10ywpev9jj2502nwxeg7he487wlu3yzean5a85j send \
-    --spend-limit 100000nhash \
-    --from tp1cw2vkz4h4zhc6mtfxrh67q9v2k0d76970nvwrg \
-    --fees 1000000000nhash \
-    -t \
-    --home ./build/node0 \
-    --chain-id chain-local \
-    --keyring-backend test
-```
-
-Now query the address'
-```
+```shell
 grpcurl \
     -plaintext \
     -import-path ./proto \
     -import-path ./third_party/proto \
     -proto ./third_party/proto/cosmos/authz/v1beta1/query.proto \
-    -d '{"granter": "tp1cw2vkz4h4zhc6mtfxrh67q9v2k0d76970nvwrg", "grantee":"tp10ywpev9jj2502nwxeg7he487wlu3yzean5a85j"}' \
+    -d '{"granter": "<address>", "grantee":"<address>"}' \
     localhost:9090 \
     cosmos.authz.v1beta1.Query/Grants
 ```
 
-**@todo**: update with a valid grant message once `authz` is added to `testnet-1`.
-
-```
+You should see the below when no grants are found:
+```shell
 {
-  "grants": [
-    {
-      "authorization": {"@error":"cosmos.bank.v1beta1.SendAuthorization is not recognized; see @value for raw binary message data","@type":"/cosmos.bank.v1beta1.SendAuthorization","@value":"Cg8KBW5oYXNoEgYxMDAwMDA="},
-      "expiration": "2022-09-15T17:33:40Z"
-    }
-  ],
   "pagination": {
-    "total": "1"
+    
   }
 }
+```
 
+To see a response with grants in it, run the below command to `add` a grant:
+```shell
+./build/provenanced tx authz grant <grantee-address> send \
+    --spend-limit 100000nhash \
+    --from <granter-address> \
+    --fees 1000000000nhash \
+    -t \
+    --home ./build/node0 \
+    --chain-id chain-local \
+    --keyring-backend test
 ```
 
 ### Marker Service
@@ -217,7 +205,7 @@ grpcurl \
 
 List available methods of the `marker` module.
 
-```
+```shell
 grpcurl \
     -import-path ./proto \
     -import-path ./third_party/proto \
@@ -227,7 +215,7 @@ grpcurl \
 ```
 
 You should see something like the below.
-```
+```shell
 provenance.marker.v1.Query is a service:
 // Query defines the gRPC querier service for marker module.
 service Query {
@@ -270,7 +258,7 @@ service Query {
 
 Lets query for the current `nhash` supply.
 
-```
+```shell
 grpcurl \
     -plaintext \
     -import-path ./proto \
@@ -281,7 +269,7 @@ grpcurl \
     provenance.marker.v1.Query/Supply
 ```
 
-```
+```shell
 {
   "amount": {
     "denom": "nhash",
@@ -296,7 +284,7 @@ grpcurl \
 
 List available methods of the `metadata` module.
 
-```
+```shell
 grpcurl \
     -import-path ./proto \
     -import-path ./third_party/proto \
@@ -305,7 +293,7 @@ grpcurl \
     describe provenance.metadata.v1.Query
 ```
 
-```
+```shell
 provenance.metadata.v1.Query is a service:
 // Query defines the Metadata Query service.
 service Query {
@@ -481,7 +469,7 @@ service Query {
 Lets query for any locators. To do this will query the `OSAllLocators` method.
 
 
-```
+```shell
 grpcurl \
     -plaintext \
     -import-path ./proto \
@@ -491,7 +479,7 @@ grpcurl \
     provenance.metadata.v1.Query/OSAllLocators
 ```
 
-```
+```shell
 OSAllLocators
 {
   "locators": [
