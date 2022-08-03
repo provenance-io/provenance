@@ -390,6 +390,17 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 			0,
 			[]uint64{1, 2},
 		},
+		{
+			"query without claim period",
+			[]string{
+				"1",
+			},
+			true,
+			true,
+			"a reward_program_id and an claim_period_id are required",
+			0,
+			[]uint64{},
+		},
 	}
 
 	for _, tc := range testCases {
