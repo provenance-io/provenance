@@ -371,7 +371,7 @@ jobs:
     # They are disabled by default for now because they're giving "panic: stored minter should not have been nil".
     # They're left here disabled so that it's more noticeable that they're not being run.
     # TODO: get rid of the && true == false here once they're fixed. https://github.com/provenance-io/provenance/issues/754
-    if: needs.setup.outputs.should-run && true == false
+    if: needs.setup.outputs.should-run
     strategy:
       fail-fast: false
       matrix:
