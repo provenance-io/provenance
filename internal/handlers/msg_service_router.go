@@ -161,7 +161,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 				if !ok {
 					panic("could not convert request msg to MsgAssessCustomMsgFeeRequest")
 				}
-				ctx.Logger().Debug(fmt.Sprintf("NOTICE: Tx Msg is an assess custom msg fee of %v ", assessCustomFee))
+				ctx.Logger().Debug(fmt.Sprintf("Tx Msg is an assess custom msg fee of %v ", assessCustomFee))
 				var msgFeeCoin sdk.Coin
 				msgFeeCoin, err = msr.msgFeesKeeper.ConvertDenomToHash(ctx, assessCustomFee.Amount)
 				if err != nil {

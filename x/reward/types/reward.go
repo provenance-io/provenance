@@ -150,7 +150,6 @@ func (rp *RewardProgram) IsStarting(ctx sdk.Context) bool {
 	return rp.State == RewardProgram_STATE_PENDING && (blockTime.After(rp.ProgramStartTime) || blockTime.Equal(rp.ProgramStartTime))
 }
 
-// TODO Test this
 // IsEndingClaimPeriod returns if claim period has ended for a running reward program
 func (rp *RewardProgram) IsEndingClaimPeriod(ctx sdk.Context) bool {
 	blockTime := ctx.BlockTime()
@@ -568,7 +567,7 @@ func (qa *QualifyingAction) GetRewardAction(ctx sdk.Context) (RewardAction, erro
 		return nil, errors.New(message)
 	}
 
-	ctx.Logger().Info(fmt.Sprintf("NOTICE: The Action type is %s", action.ActionType()))
+	ctx.Logger().Info(fmt.Sprintf("The Action type is %s", action.ActionType()))
 
 	return action, nil
 }
