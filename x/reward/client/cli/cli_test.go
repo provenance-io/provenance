@@ -416,12 +416,12 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 		{
 			"query with invalid reward program id format",
 			[]string{
-				"a",
-				"1",
+				"100",
+				"100",
 			},
 			true,
 			true,
-			"strconv.Atoi: parsing \"a\": invalid syntax",
+			"reward does not exist for reward-id: 100 claim-id 100",
 			0,
 			[]uint64{},
 		},
