@@ -3,11 +3,14 @@ package config
 import (
 	"context"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -151,5 +154,59 @@ func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadGlobalLabels() {
 	s.Require().NotPanics(func() {
 		appConfig2 := serverconfig.GetConfig(vpr)
 		s.Assert().Equal(appConfig.Telemetry.GlobalLabels, appConfig2.Telemetry.GlobalLabels)
+	})
+}
+
+func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
+	s.T().Run("unmanaged config is read with no other config files", func(t *testing.T) {
+		dCmd := s.makeDummyCmd()
+		configDir := GetFullPathToConfigDir(dCmd)
+		uFile := GetFullPathToUnmanagedConf(dCmd)
+		require.NoError(t, os.MkdirAll(configDir, 0o755), "making config dir")
+		require.NoError(t, os.WriteFile(uFile, []byte("banana = \"bananas\"\n"), 0o644), "writing unmanaged config")
+		require.NoError(t, LoadConfigFromFiles(dCmd))
+		ctx := client.GetClientContextFromCmd(dCmd)
+		vpr := ctx.Viper
+		actual := vpr.GetString("banana")
+		assert.Equal(t, "bananas", actual, "unmanaged field value")
+	})
+
+	s.T().Run("unmanaged config entry does not override other config", func(t *testing.T) {
+		dCmd := s.makeDummyCmd()
+		configDir := GetFullPathToConfigDir(dCmd)
+		uFile := GetFullPathToUnmanagedConf(dCmd)
+		require.NoError(t, os.MkdirAll(configDir, 0o755), "making config dir")
+		require.NoError(t, os.WriteFile(uFile, []byte("db_backend = \"still bananas\"\n"), 0o644), "writing unmanaged config")
+		require.NoError(t, LoadConfigFromFiles(dCmd))
+		ctx := client.GetClientContextFromCmd(dCmd)
+		vpr := ctx.Viper
+		actual := vpr.GetString("db_backend")
+		assert.NotEqual(t, "still bananas", actual, "unmanaged field value")
+		assert.Equal(t, tmconfig.DefaultConfig().DBBackend, actual, "unmanaged field default value")
+	})
+
+	s.T().Run("unmanaged config is read with unpacked files", func(t *testing.T) {
+		dCmd := s.makeDummyCmd()
+		uFile := GetFullPathToUnmanagedConf(dCmd)
+		SaveConfigs(dCmd, serverconfig.DefaultConfig(), tmconfig.DefaultConfig(), DefaultClientConfig(), false)
+		require.NoError(t, os.WriteFile(uFile, []byte("my-custom-entry = \"stuff\"\n"), 0o644), "writing unmanaged config")
+		require.NoError(t, LoadConfigFromFiles(dCmd))
+		ctx := client.GetClientContextFromCmd(dCmd)
+		vpr := ctx.Viper
+		actual := vpr.GetString("my-custom-entry")
+		assert.Equal(t, "stuff", actual, "unmanaged field value")
+	})
+
+	s.T().Run("unmanaged config is read with packed config", func(t *testing.T) {
+		dCmd := s.makeDummyCmd()
+		uFile := GetFullPathToUnmanagedConf(dCmd)
+		SaveConfigs(dCmd, serverconfig.DefaultConfig(), tmconfig.DefaultConfig(), DefaultClientConfig(), false)
+		require.NoError(t, PackConfig(dCmd), "packing config")
+		require.NoError(t, os.WriteFile(uFile, []byte("other-custom-entry = 8\n"), 0o644), "writing unmanaged config")
+		require.NoError(t, LoadConfigFromFiles(dCmd))
+		ctx := client.GetClientContextFromCmd(dCmd)
+		vpr := ctx.Viper
+		actual := vpr.GetInt("other-custom-entry")
+		assert.Equal(t, 8, actual, "unmanaged field value")
 	})
 }
