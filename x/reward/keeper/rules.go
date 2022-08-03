@@ -41,7 +41,7 @@ func (k Keeper) ProcessTransactions(ctx sdk.Context) {
 
 // DetectQualifyingActions takes in the RewardProgram and checks if any of the qualifying actions is found in the event history
 func (k Keeper) DetectQualifyingActions(ctx sdk.Context, program *types.RewardProgram) ([]types.EvaluationResult, error) {
-	ctx.Logger().Info(fmt.Sprintf("NOTICE: EvaluateRules for RewardProgram: %d", program.GetId()))
+	ctx.Logger().Info(fmt.Sprintf("EvaluateRules for RewardProgram: %d", program.GetId()))
 	results := []types.EvaluationResult(nil)
 
 	// Check if any of the transactions are qualifying actions
@@ -105,7 +105,7 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 }
 
 func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram, evaluateRes []types.EvaluationResult) error {
-	ctx.Logger().Info(fmt.Sprintf("NOTICE: Recording shares for for rewardProgramId=%d, claimPeriod=%d",
+	ctx.Logger().Info(fmt.Sprintf("Recording shares for for rewardProgramId=%d, claimPeriod=%d",
 		rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod()))
 
 	if rewardProgram == nil {
@@ -126,7 +126,7 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 	for _, res := range evaluateRes {
 		state, err := k.GetRewardAccountState(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), res.Address.String())
 		if state.ValidateBasic() != nil {
-			ctx.Logger().Error(fmt.Sprintf("NOTICE: Account state does not exist for RewardProgram: %d, ClaimPeriod: %d, Address: %s. Skipping...",
+			ctx.Logger().Error(fmt.Sprintf("Account state does not exist for RewardProgram: %d, ClaimPeriod: %d, Address: %s. Skipping...",
 				rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), res.Address.String()))
 			continue
 		}
@@ -247,7 +247,7 @@ func (k *Keeper) SetStakingKeeper(newKeeper types.StakingKeeper) {
 func logEvents(ctx sdk.Context) {
 	history := ctx.EventManager().GetABCIEventHistory()
 	blockTime := ctx.BlockTime()
-	ctx.Logger().Info(fmt.Sprintf("NOTICE: Block time: %v Size of events is %d", blockTime, len(history)))
+	ctx.Logger().Info(fmt.Sprintf("Block time: %v Size of events is %d", blockTime, len(history)))
 	for _, s := range ctx.EventManager().GetABCIEventHistory() {
 		ctx.Logger().Info(fmt.Sprintf("------- %s -------\n", s.Type))
 		for _, y := range s.Attributes {

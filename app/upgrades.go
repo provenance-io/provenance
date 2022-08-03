@@ -43,7 +43,7 @@ var handlers = map[string]appUpgrade{
 	"nickel": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			ctx.Logger().Info("NOTICE: Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
+			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
 		Added: []string{rewardtypes.ModuleName},
