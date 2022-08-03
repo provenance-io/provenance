@@ -72,7 +72,7 @@ This provides node operates with the ability to `opt-in` and enable streaming to
 
 At this time, the only pre-defined service is the [trace](./trace) streaming service.
 AS mentioned above, service can be added by adding the service to the `StreamServiceInitializers` 
-in [app/streaming/streaming.go](./streaming.go) and adding configuration properties in `app.toml`. 
+in [app/streaming/streaming.go](./streaming.go) and adding configuration properties in `custom.toml`. 
 See [Trace streaming service configuration](#trace-streaming-service-configuration) for an example.
 
 ### Trace streaming service configuration
