@@ -401,6 +401,30 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 			0,
 			[]uint64{},
 		},
+		{
+			"query with invalid reward program id format",
+			[]string{
+				"1",
+				"a",
+			},
+			true,
+			true,
+			"strconv.Atoi: parsing \"a\": invalid syntax",
+			0,
+			[]uint64{},
+		},
+		{
+			"query with invalid reward program id format",
+			[]string{
+				"a",
+				"1",
+			},
+			true,
+			true,
+			"strconv.Atoi: parsing \"a\": invalid syntax",
+			0,
+			[]uint64{},
+		},
 	}
 
 	for _, tc := range testCases {
