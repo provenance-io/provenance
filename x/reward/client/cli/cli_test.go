@@ -146,6 +146,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	rewardAccountState := make([]rewardtypes.RewardAccountState, 101)
 	for i := 0; i < 101; i++ {
 		rewardAccountState[i] = rewardtypes.NewRewardAccountState(1, uint64(i+1), s.accountAddr.String(), 10, map[string]uint64{})
+		switch i % 4 {
+		case 0:
+			rewardAccountState[i].ClaimStatus = rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE
+		case 1:
+			rewardAccountState[i].ClaimStatus = rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE
+		case 2:
+			rewardAccountState[i].ClaimStatus = rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMED
+		case 3:
+			rewardAccountState[i].ClaimStatus = rewardtypes.RewardAccountState_CLAIM_STATUS_EXPIRED
+		}
 	}
 
 	rewardData := rewardtypes.NewGenesisState(
@@ -678,9 +688,9 @@ func (s *IntegrationTestSuite) TestTxClaimReward() {
 	}
 }
 
-func containsRewardClaimId(rewardAccountResponses []types.RewardAccountResponse, id uint64) bool {
+func containsRewardClaimId(rewardAccountResponses []types.RewardAccountResponse, rewardProgramId uint64, claimId uint64) bool {
 	for _, rewardAccountResponse := range rewardAccountResponses {
-		if rewardAccountResponse.RewardProgramId == id {
+		if rewardAccountResponse.RewardProgramId == rewardProgramId && rewardAccountResponse.ClaimId == claimId {
 			return true
 		}
 	}
@@ -689,13 +699,14 @@ func containsRewardClaimId(rewardAccountResponses []types.RewardAccountResponse,
 
 func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 	testCases := []struct {
-		name         string
-		args         []string
-		byId         bool
-		expectErr    bool
-		expectErrMsg string
-		expectedCode uint32
-		expectedIds  []uint64
+		name           string
+		args           []string
+		byId           bool
+		expectErr      bool
+		expectErrMsg   string
+		expectedCode   uint32
+		expectedIds    []uint64
+		expectedLength int64
 	}{
 		{"query all reward by address",
 			[]string{s.accountAddr.String(), "all", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
@@ -703,7 +714,53 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 			false,
 			"",
 			0,
-			[]uint64{1},
+			[]uint64{1, 2, 3, 4},
+			100,
+		},
+		{"query unclaimable reward by address",
+			[]string{s.accountAddr.String(), "unclaimable", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+			false,
+			"",
+			0,
+			[]uint64{1, 5},
+			26,
+		},
+		{"query claimable reward by address",
+			[]string{s.accountAddr.String(), "claimable", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+			false,
+			"",
+			0,
+			[]uint64{2, 6},
+			25,
+		},
+		{"query claimed reward by address",
+			[]string{s.accountAddr.String(), "claimed", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+			false,
+			"",
+			0,
+			[]uint64{3, 7},
+			25,
+		},
+		{"query expired reward by address",
+			[]string{s.accountAddr.String(), "expired", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+			false,
+			"",
+			0,
+			[]uint64{4, 8},
+			25,
+		},
+		{"query reward by address",
+			[]string{s.accountAddr.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+			true,
+			"accepts 2 arg(s), received 1",
+			0,
+			[]uint64{1, 2, 3, 4},
+			100,
 		},
 	}
 
@@ -727,8 +784,8 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
 				s.Assert().NoError(err)
 				for _, expectedId := range tc.expectedIds {
-					s.Assert().True(containsRewardClaimId(response.RewardAccountState, expectedId))
-					s.Assert().True(len(response.RewardAccountState) == 100)
+					s.Assert().True(containsRewardClaimId(response.RewardAccountState, 1, expectedId), fmt.Sprintf("missing id %d", expectedId))
+					s.Assert().Equal(int(tc.expectedLength), len(response.RewardAccountState), "length of results does not match")
 				}
 			}
 		})

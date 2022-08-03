@@ -132,7 +132,7 @@ func (k Keeper) RewardDistributionsByAddress(ctx context.Context, request *types
 		if errFromGetRewardAccount != nil {
 			return false, nil
 		}
-		if !(result.GetSharesEarned() > 0 && (request.ClaimStatus == types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL || request.ClaimStatus.String() == result.ClaimStatus.String())) {
+		if result.GetSharesEarned() == 0 || !k.claimStatusMatches(request.ClaimStatus, result.ClaimStatus) {
 			return false, nil
 		}
 
@@ -154,6 +154,21 @@ func (k Keeper) RewardDistributionsByAddress(ctx context.Context, request *types
 	}
 
 	return &rewardAccountByAddressResponse, nil
+}
+
+func (k Keeper) claimStatusMatches(queryClaimStatus types.QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam, resultClaimStatus types.RewardAccountState_ClaimStatus) bool {
+	if queryClaimStatus == types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL {
+		return true
+	} else if queryClaimStatus == types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_UNCLAIMABLE && resultClaimStatus == types.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE {
+		return true
+	} else if queryClaimStatus == types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_CLAIMABLE && resultClaimStatus == types.RewardAccountState_CLAIM_STATUS_CLAIMABLE {
+		return true
+	} else if queryClaimStatus == types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_CLAIMED && resultClaimStatus == types.RewardAccountState_CLAIM_STATUS_CLAIMED {
+		return true
+	} else if queryClaimStatus == types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_EXPIRED && resultClaimStatus == types.RewardAccountState_CLAIM_STATUS_EXPIRED {
+		return true
+	}
+	return false
 }
 
 func (k Keeper) convertRewardAccountStateToRewardAccountResponse(ctx sdk.Context, states []types.RewardAccountState) []types.RewardAccountResponse {
