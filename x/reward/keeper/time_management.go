@@ -176,23 +176,23 @@ func (k Keeper) EndRewardProgram(ctx sdk.Context, rewardProgram *types.RewardPro
 
 func (k Keeper) ExpireRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) error {
 	if rewardProgram == nil {
-		ctx.Logger().Error("NOTICE: Attempting to expire reward program for nil reward program")
+		ctx.Logger().Error("Attempting to expire reward program for nil reward program")
 		return fmt.Errorf("unable to expire reward program for nil reward program")
 	}
-	ctx.Logger().Info(fmt.Sprintf("NOTICE: BeginBlocker - Expiring reward program %v ", rewardProgram))
+	ctx.Logger().Info(fmt.Sprintf("BeginBlocker - Expiring reward program %v ", rewardProgram))
 
 	rewardProgram.State = types.RewardProgram_STATE_EXPIRED
 	err := k.ExpireRewardClaimsForRewardProgram(ctx, rewardProgram.GetId())
 	if err != nil {
-		ctx.Logger().Error("NOTICE: Failed to expire reward claims for reward program. %v", err)
+		ctx.Logger().Error(fmt.Sprintf("Failed to expire reward claims for reward program. %v", err))
 	}
 	err = k.RefundRewardClaims(ctx, *rewardProgram)
 	if err != nil {
-		ctx.Logger().Error("NOTICE: Failed to refund reward claims. %v", err)
+		ctx.Logger().Error(fmt.Sprintf("Failed to refund reward claims. %v", err))
 	}
 	err = k.RefundRemainingBalance(ctx, rewardProgram)
 	if err != nil {
-		ctx.Logger().Error("NOTICE: Failed to refund remaining balance. %v", err)
+		ctx.Logger().Error(fmt.Sprintf("Failed to refund remaining balance. %v", err))
 	}
 
 	ctx.EventManager().EmitEvent(
