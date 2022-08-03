@@ -2,6 +2,9 @@ package simulation
 
 import (
 	"fmt"
+	"math/rand"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -11,17 +14,15 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/reward/keeper"
 	"github.com/provenance-io/provenance/x/reward/types"
-	"math/rand"
-	"time"
 )
 
 // Simulation operation weights constants
 const (
-	//nolint:gosec // not credentials
 	OpWeightSubmitCreateRewardsProposal = "op_weight_submit_create_rewards_proposal"
 )
 
@@ -118,6 +119,9 @@ func Dispatch(
 		Denom:  pioconfig.DefaultBondDenom,
 		Amount: sdk.NewInt(1_000_000_000_000_000),
 	}))
+	if err != nil {
+		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to fund account"), nil, err
+	}
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
 	tx, err := helpers.GenTx(
 		txGen,
