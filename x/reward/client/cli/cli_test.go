@@ -247,6 +247,16 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 			0,
 			[]uint64{2},
 		},
+		{"query by id reward programs",
+			[]string{
+				"99",
+			},
+			true,
+			true,
+			"failed to query reward program 99: rpc error: code = Unknown desc = rpc error: code = Internal desc = unable to query for reward program by ID: reward program not found: unknown request",
+			0,
+			[]uint64{2},
+		},
 		{"query invalid query type",
 			[]string{
 				"invalid",
