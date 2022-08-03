@@ -13,7 +13,7 @@ var StreamServiceInitializers = map[string]streaming.StreamServiceInitializer{
 	"trace": trace.StreamServiceInitializer,
 }
 
-func ConfigOptions() string {
+func GetStreamServiceKeys() string {
 	keys := make([]string, 0, len(StreamServiceInitializers))
 	for k := range StreamServiceInitializers {
 		keys = append(keys, k)
