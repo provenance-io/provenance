@@ -144,17 +144,21 @@ func NewRewardProgram(
 }
 
 // TODO Test this
+// IsStarting checks the state of the reward program and determines if it has started
 func (rp *RewardProgram) IsStarting(ctx sdk.Context) bool {
 	blockTime := ctx.BlockTime()
 	return rp.State == RewardProgram_STATE_PENDING && (blockTime.After(rp.ProgramStartTime) || blockTime.Equal(rp.ProgramStartTime))
 }
 
+// TODO Test this
+// IsEndingClaimPeriod returns if claim period has ended for a running reward program
 func (rp *RewardProgram) IsEndingClaimPeriod(ctx sdk.Context) bool {
 	blockTime := ctx.BlockTime()
 	return rp.State == RewardProgram_STATE_STARTED && (blockTime.After(rp.ClaimPeriodEndTime) || blockTime.Equal(rp.ClaimPeriodEndTime))
 }
 
 // TODO Test this
+// IsExpiring returns if reward program has expired
 func (rp *RewardProgram) IsExpiring(ctx sdk.Context) bool {
 	blockTime := ctx.BlockTime()
 	expireTime := rp.ActualProgramEndTime.Add(time.Second * time.Duration(rp.ExpirationOffset))
@@ -162,11 +166,12 @@ func (rp *RewardProgram) IsExpiring(ctx sdk.Context) bool {
 }
 
 // TODO Test this
+// IsEnding returns if a reward program has ended
 func (rp *RewardProgram) IsEnding(ctx sdk.Context, programBalance sdk.Coin) bool {
 	blockTime := ctx.BlockTime()
-	isProgramExpired := !rp.GetProgramEndTimeMax().IsZero() && (blockTime.After(rp.ProgramEndTimeMax) || blockTime.Equal(rp.ProgramEndTimeMax))
+	isProgramEnding := !rp.GetProgramEndTimeMax().IsZero() && (blockTime.After(rp.ProgramEndTimeMax) || blockTime.Equal(rp.ProgramEndTimeMax))
 	canRollover := programBalance.IsGTE(rp.GetMinimumRolloverAmount())
-	return rp.State == RewardProgram_STATE_STARTED && (isProgramExpired || !canRollover)
+	return rp.State == RewardProgram_STATE_STARTED && (isProgramEnding || !canRollover)
 }
 
 func (rp *RewardProgram) Validate() error {

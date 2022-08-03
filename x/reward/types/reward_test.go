@@ -516,6 +516,27 @@ func (s *RewardTypesTestSuite) TestCalculateEndTimeMax() {
 
 }
 
+func (s *RewardTypesTestSuite) TestIsStarting() {
+	now := time.Now().UTC()
+	program := NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdk.NewInt64Coin("nhash", 1),
+		sdk.NewInt64Coin("nhash", 2),
+		now,
+		3600,
+		1,
+		0,
+		1,
+		[]QualifyingAction{},
+	)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(-10))
+
+	s.Assert().False(program.IsStarting(s.ctx))
+}
+
 func (s *RewardTypesTestSuite) TestIsEndingClaimPeriod() {
 	now := time.Now().UTC()
 	program := NewRewardProgram(

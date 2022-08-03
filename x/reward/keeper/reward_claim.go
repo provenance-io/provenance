@@ -133,11 +133,11 @@ func (k Keeper) ClaimAllRewards(ctx sdk.Context, addr string) ([]*types.RewardPr
 	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
 		details, reward, err := k.ClaimRewards(ctx, rewardProgram.GetId(), addr)
 		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("NOTICE: Unable to claim reward program %d. Error: %v ", rewardProgram.GetId(), err))
+			ctx.Logger().Error(fmt.Sprintf("Unable to claim reward program %d. Error: %v ", rewardProgram.GetId(), err))
 			return false
 		}
 		if reward.IsZero() {
-			ctx.Logger().Info(fmt.Sprintf("NOTICE: Skipping reward program %d. It has no rewards.", rewardProgram.GetId()))
+			ctx.Logger().Info(fmt.Sprintf("Skipping reward program %d. It has no rewards.", rewardProgram.GetId()))
 			return false
 		}
 
