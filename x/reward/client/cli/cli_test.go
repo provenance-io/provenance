@@ -762,6 +762,15 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 			[]uint64{1, 2, 3, 4},
 			100,
 		},
+		{"query reward by address",
+			[]string{s.accountAddr.String(), "invalid", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+			true,
+			"failed to query reward distributions. invalid is not a valid query param",
+			0,
+			[]uint64{},
+			0,
+		},
 	}
 
 	for _, tc := range testCases {

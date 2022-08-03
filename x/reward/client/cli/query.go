@@ -260,7 +260,7 @@ func queryRewardDistributionByAddress(cmd *cobra.Command, address string, queryT
 	case "expired":
 		claimStatus = types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_EXPIRED
 	default:
-		claimStatus = types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL
+		return fmt.Errorf("failed to query reward distributions. %s is not a valid query param", queryType)
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
@@ -273,7 +273,7 @@ func queryRewardDistributionByAddress(cmd *cobra.Command, address string, queryT
 			ClaimStatus: claimStatus,
 		},
 	); err != nil {
-		return fmt.Errorf("failed to query reward programs: %s", err.Error())
+		return fmt.Errorf("failed to query reward distributions: %s", err.Error())
 	}
 
 	return clientCtx.PrintProto(response)
