@@ -148,18 +148,18 @@ func GetClaimPeriodRewardDistributionCmd() *cobra.Command {
 
 func GetRewardsByAddressCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "reward-by-address {\"all\"}",
+		Use:     "reward-by-address {address} {\"all\"|\"unclaimable\"|\"claimable\"|\"claimed\"|\"expired\"}",
 		Aliases: []string{"rpa", "reward-per-address"},
 		Short:   "Query all the reward distributions for an address",
 		Long:    fmt.Sprintf(`%[1]s reward-by-address {address} {query-type} - gets the reward amount for the given address based on the filter values`, cmdStart),
-		Args:    cobra.RangeArgs(1, 2),
-		Example: fmt.Sprintf(`%[1]s reward-by-address all`, cmdStart),
+		Args:    cobra.ExactArgs(2),
+		Example: fmt.Sprintf(`%[1]s reward-by-address pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk all
+%[1]s reward-by-address pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk unclaimable
+%[1]s reward-by-address pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk claimable
+%[1]s reward-by-address pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk claimed
+%[1]s reward-by-address pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk expired`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg0 := strings.TrimSpace(args[0])
-
-			if len(args) < 1 {
-				return fmt.Errorf("an address is needed")
-			}
 			arg1 := args[1]
 
 			return queryRewardDistributionByAddress(cmd, arg0, arg1)
