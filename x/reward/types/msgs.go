@@ -19,6 +19,9 @@ const (
 
 // Compile time interface checks.
 var _ sdk.Msg = &MsgCreateRewardProgramRequest{}
+var _ sdk.Msg = &MsgEndRewardProgramRequest{}
+var _ sdk.Msg = &MsgClaimRewardsRequest{}
+var _ sdk.Msg = &MsgClaimAllRewardsRequest{}
 
 // NewMsgCreateRewardProgramRequest creates a new create reward program request
 func NewMsgCreateRewardProgramRequest(
@@ -119,9 +122,6 @@ func (msg MsgCreateRewardProgramRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
-
-// Compile time interface checks.
-var _ sdk.Msg = &MsgEndRewardProgramRequest{}
 
 // NewMsgEndRewardProgramRequest ends a reward program request
 func NewMsgEndRewardProgramRequest(
