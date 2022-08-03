@@ -3,8 +3,7 @@ package simulation
 import (
 	"bytes"
 	"fmt"
-
-	"github.com/provenance-io/provenance/x/msgfees/types"
+	"github.com/provenance-io/provenance/x/reward/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -15,8 +14,8 @@ import (
 func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
-		case bytes.Equal(kvA.Key[:1], types.MsgFeeKeyPrefix):
-			var attribA, attribB types.MsgFee
+		case bytes.Equal(kvA.Key[:1], types.RewardProgramIDKey):
+			var attribA, attribB types.RewardProgram
 
 			cdc.MustUnmarshal(kvA.Value, &attribA)
 			cdc.MustUnmarshal(kvB.Value, &attribB)
