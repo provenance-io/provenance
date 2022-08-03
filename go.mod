@@ -6,7 +6,6 @@ require (
 	github.com/CosmWasm/wasmd v0.26.0
 	github.com/armon/go-metrics v0.4.0
 	github.com/btcsuite/btcd v0.22.1
-	github.com/confluentinc/confluent-kafka-go v1.8.2
 	github.com/cosmos/cosmos-sdk v0.45.4
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-go/v2 v2.3.0
@@ -131,7 +130,7 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.45.4-pio-2-ape-rewards-3
+replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.45.4-pio-2-ape-rewards-4
 
 replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 
