@@ -945,12 +945,7 @@ func (app *App) RegisterTendermintService(clientCtx client.Context) {
 
 // RegisterStreamingService is used to register a streaming service into the App
 func (app *App) registerStreamingService(appOpts servertypes.AppOptions) {
-	app.Logger().Info(fmt.Sprintf("Streaming Service Config options: "+
-		"\n%s/config/app.toml"+
-		"\n----------------------------------"+
-		"\nset streaming.enable true"+
-		"\nset streaming.service to one of %s\n",
-		os.Getenv("PIO_HOME"), appstreaming.ConfigOptions()))
+	app.Logger().Info(fmt.Sprintf("Available streaming services: %s", appstreaming.ConfigOptions()))
 	enableStreaming := cast.ToBool(appOpts.Get(fmt.Sprintf("%s.%s", streaming.TomlKey, streaming.EnableParam)))
 	if enableStreaming {
 		serviceTomlKey := fmt.Sprintf("%s.%s", streaming.TomlKey, streaming.ServiceParam)
