@@ -1,3 +1,4 @@
+// Since: provenance 1.12
 syntax = "proto3";
 package provenance.expiration.v1;
 
@@ -5,29 +6,33 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/provenance-io/provenance/x/expiration/types";
-
+option go_package          = "github.com/provenance-io/provenance/x/expiration/types";
 option java_package        = "io.provenance.expiration.v1";
 option java_multiple_files = true;
 
 // Params defines the set of params for the expiration module.
 message Params {
   option (gogoproto.goproto_stringer) = false;
+
   // minimum days out to expiration of an asset
-  uint32 min_days_to_expiration = 1;
-  cosmos.base.v1beta1.Coin min_required_deposit = 2;
+  int32                    min_days_to_expiration = 1;
+  cosmos.base.v1beta1.Coin min_required_deposit   = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
 }
 
+// Expiration holds a typed key/value structure for data associated with an
+// expiring module asset
 message Expiration {
   option (gogoproto.goproto_stringer) = false;
+
   // the module asset identifier
-  string module_asset_identifier = 1;
-  // The beck32 owner address of the module asset
-  string owner_address = 2;
+  string module_asset_id = 1 [(gogoproto.nullable) = false];
+  // The owner address the expiration is bound to
+  string owner = 2 [(gogoproto.nullable) = false];
   // The block height the module asset expires
-  int64  expiration_height = 3;
+  int64 expiration_height = 3 [(gogoproto.nullable) = false];
   // The deposit amount held while module asset is in use
-  cosmos.base.v1beta1.Coin deposit = 4;
+  cosmos.base.v1beta1.Coin deposit = 4 [(gogoproto.nullable) = false];
   // Messages relating to the expiring module asset
   repeated google.protobuf.Any expiration_messages = 5;
 }

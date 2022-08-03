@@ -1,3 +1,4 @@
+// Since: provenance 1.12
 syntax = "proto3";
 package provenance.expiration.v1;
 
@@ -16,6 +17,11 @@ service Query {
   // Params queries the parameters for x/expiration
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/provenance/expiration/v1/params";
+  }
+
+  // Query Expiration
+  rpc QueryExpiration(QueryExpirationRequest) returns (QueryExpirationResponse) {
+    option (google.api.http).get = "/provenance/expiration/v1/{}";
   }
 
   // Query all Expirations
@@ -41,18 +47,30 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryAllExpirationsRequest queries all module assets with an expiration
+// QueryExpirationRequest queries for a specific expiration
+message QueryExpirationRequest {
+  string module_asset_id = 1;
+}
+
+// QueryExpirationResponse response for querying for a specific expiration
+message QueryExpirationResponse {
+  Expiration expiration = 1;
+}
+
+// QueryAllExpirationsRequest queries all expirations
 message QueryAllExpirationsRequest {
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
-// response for querying all module assets with an expiration
+// QueryAllExpirationsResponse response for querying all expirations
 message QueryAllExpirationsResponse {
   repeated Expiration expirations = 1;
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
+
+// todo: do we need the below because of the deposit? If not, remove.
 
 // CalculateTxFeesRequest is the request type for the Query RPC method.
 message CalculateTxFeesRequest {
@@ -69,11 +87,11 @@ message CalculateTxFeesRequest {
 message CalculateTxFeesResponse {
   // deposit is the denom amount held for the duration of the module asset on chain
   repeated cosmos.base.v1beta1.Coin deposit = 1
-  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   // total_fees are the total amount of fees needed for the transactions (msg fees + gas fee)
   // note: the gas fee is calculated with the floor gas price module param.
   repeated cosmos.base.v1beta1.Coin total_fees = 2
-  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   // estimated_gas is the amount of gas needed for the transaction
   uint64 estimated_gas = 3 [(gogoproto.moretags) = "yaml:\"estimated_gas\""];
 }

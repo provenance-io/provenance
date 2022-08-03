@@ -2,7 +2,9 @@
 syntax = "proto3";
 package provenance.expiration.v1;
 
-option go_package = "github.com/provenance-io/provenance/x/expiration/types";
+option go_package          = "github.com/provenance-io/provenance/x/expiration/types";
+option java_package        = "io.provenance.expiration.v1";
+option java_multiple_files = true;
 
 // EventTxCompleted is an event message indicating that a TX has completed.
 message EventTxCompleted {
@@ -14,17 +16,20 @@ message EventTxCompleted {
   repeated string signers = 3;
 }
 
-// EventExpirationCreated is an event message indicating an expiration has been created for a particular asset
-message EventExpirationCreated {
-
+// EventExpirationAdd is an event message indicating an expiration has been created
+message EventExpirationAdd {
+  // expiration_addr is the bech32 address string of the expiration id that was created.
+  string expiration_addr = 1;
 }
 
-// EventExpirationDeleted is an event message indicating an expiration has been deleted for a particular asset
-message EventExpirationDeleted {
-
+// EventExpirationExtend is an event message indicating an expiration has been extended
+message EventExpirationExtend {
+  // expiration_addr is the bech32 address string of the expiration id that was created.
+  string expiration_addr = 1;
 }
 
-// EventExpirationUpdated is an event message indicating an expiration has been updated for a particular asset
-message EventExpirationUpdated {
-
+// EventExpirationDelete is an event message indicating an expiration has been deleted
+message EventExpirationDelete {
+  // expiration_addr is the bech32 address string of the expiration id that was created.
+  string expiration_addr = 1;
 }
