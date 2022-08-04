@@ -2,9 +2,10 @@ package types
 
 import (
 	"encoding/binary"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/stretchr/testify/assert"
@@ -16,8 +17,9 @@ func TestRewardModuleTypeKeys(t *testing.T) {
 	rewardProgramId := uint64(123456)
 	claimPeriodId := uint64(7891011)
 
-	rewardProgramKey := GetRewardProgramKey(1)
+	rewardProgramKey := GetRewardProgramKey(rewardProgramId)
 	assert.EqualValues(t, RewardProgramKeyPrefix, rewardProgramKey[0:1])
+	assert.EqualValues(t, rewardProgramId, uint64(binary.BigEndian.Uint64(rewardProgramKey[1:9])))
 
 	accountStateKey := GetRewardAccountStateKey(rewardProgramId, claimPeriodId, []byte(testAddress))
 	assert.EqualValues(t, AccountStateKeyPrefix, accountStateKey[0:1])
