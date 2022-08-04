@@ -2,8 +2,6 @@ package types
 
 import (
 	"encoding/binary"
-	"strconv"
-
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
@@ -42,8 +40,9 @@ var (
 
 // GetRewardProgramKey converts a name into key format.
 func GetRewardProgramKey(id uint64) []byte {
-	idByte := []byte(strconv.FormatUint(id, 10))
-	return append(RewardProgramKeyPrefix, idByte...)
+	rewardIDBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(rewardIDBytes, id)
+	return append(RewardProgramKeyPrefix, rewardIDBytes...)
 }
 
 // GetRewardAccountStateKey converts a reward program id, claim period id, and address into an AccountStateKey
