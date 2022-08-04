@@ -51,36 +51,36 @@ message RewardProgram {
   google.protobuf.Timestamp program_start_time = 11 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
-    (gogoproto.jsontag)  = "program_start_time,omitempty",
-    (gogoproto.moretags) = "yaml:\"program_start_time,omitempty\""
+    (gogoproto.jsontag)  = "program_start_time",
+    (gogoproto.moretags) = "yaml:\"program_start_time\""
   ];
   // Time that a RewardProgram MUST end.
   google.protobuf.Timestamp expected_program_end_time = 12 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
-    (gogoproto.jsontag)  = "expected_program_end_time,omitempty",
-    (gogoproto.moretags) = "yaml:\"expected_program_end_time,omitempty\""
+    (gogoproto.jsontag)  = "expected_program_end_time",
+    (gogoproto.moretags) = "yaml:\"expected_program_end_time\""
   ];
   // Time that a RewardProgram MUST end.
   google.protobuf.Timestamp program_end_time_max = 13 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
-    (gogoproto.jsontag)  = "program_end_time_max,omitempty",
-    (gogoproto.moretags) = "yaml:\"program_end_time_max,omitempty\""
+    (gogoproto.jsontag)  = "program_end_time_max",
+    (gogoproto.moretags) = "yaml:\"program_end_time_max\""
   ];
   // Used internally to calculate and track the current claim period's ending time.
   google.protobuf.Timestamp claim_period_end_time = 14 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
-    (gogoproto.jsontag)  = "claim_period_end_time,omitempty",
-    (gogoproto.moretags) = "yaml:\"claim_period_end_time,omitempty\""
+    (gogoproto.jsontag)  = "claim_period_end_time",
+    (gogoproto.moretags) = "yaml:\"claim_period_end_time\""
   ];
   // Time the RewardProgram switched to FINISHED state. Initially set as empty.
   google.protobuf.Timestamp actual_program_end_time = 15 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
-    (gogoproto.jsontag)  = "finished_time,omitempty",
-    (gogoproto.moretags) = "yaml:\"finished_time,omitempty\""
+    (gogoproto.jsontag)  = "actual_program_end_time",
+    (gogoproto.moretags) = "yaml:\"actual_program_end_time\""
   ];
   // Number of claim periods this program will run for.
   uint64 claim_periods = 16;

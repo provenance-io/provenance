@@ -119,8 +119,8 @@ func NewRewardProgram(
 	rewardClaimExpirationOffset uint64,
 	qualifyingActions []QualifyingAction,
 ) RewardProgram {
-	expectedProgramEndTime := CalculateExpectedEndTime(programStartTime.UTC(), claimPeriodSeconds, claimPeriods)
-	programEndTimeMax := CalculateEndTimeMax(programStartTime.UTC(), claimPeriodSeconds, claimPeriods, maxRolloverClaimPeriods)
+	expectedProgramEndTime := CalculateExpectedEndTime(programStartTime.UTC(), claimPeriodSeconds, claimPeriods).UTC()
+	programEndTimeMax := CalculateEndTimeMax(programStartTime.UTC(), claimPeriodSeconds, claimPeriods, maxRolloverClaimPeriods).UTC()
 	return RewardProgram{
 		Title:                   title,
 		Description:             description,
@@ -131,8 +131,8 @@ func NewRewardProgram(
 		ClaimedAmount:           sdk.NewInt64Coin(totalRewardPool.Denom, 0),
 		MaxRewardByAddress:      maxRewardByAddress,
 		ProgramStartTime:        programStartTime.UTC(),
-		ExpectedProgramEndTime:  expectedProgramEndTime,
-		ProgramEndTimeMax:       programEndTimeMax,
+		ExpectedProgramEndTime:  expectedProgramEndTime.UTC(),
+		ProgramEndTimeMax:       programEndTimeMax.UTC(),
 		ClaimPeriodSeconds:      claimPeriodSeconds,
 		ClaimPeriods:            claimPeriods,
 		MaxRolloverClaimPeriods: maxRolloverClaimPeriods,
