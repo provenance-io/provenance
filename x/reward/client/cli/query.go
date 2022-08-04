@@ -247,18 +247,18 @@ func queryRewardDistributionByAddress(cmd *cobra.Command, address string, queryT
 		return err
 	}
 
-	var claimStatus types.QueryRewardDistributionsByAddressRequest_RewardAccountQueryParam
+	var claimStatus types.RewardAccountState_ClaimStatus
 	switch queryType {
 	case "all":
-		claimStatus = types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL
+		claimStatus = types.RewardAccountState_CLAIM_STATUS_UNSPECIFIED
 	case "unclaimable":
-		claimStatus = types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_UNCLAIMABLE
+		claimStatus = types.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE
 	case "claimable":
-		claimStatus = types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_CLAIMABLE
+		claimStatus = types.RewardAccountState_CLAIM_STATUS_CLAIMABLE
 	case "claimed":
-		claimStatus = types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_CLAIMED
+		claimStatus = types.RewardAccountState_CLAIM_STATUS_CLAIMED
 	case "expired":
-		claimStatus = types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_EXPIRED
+		claimStatus = types.RewardAccountState_CLAIM_STATUS_EXPIRED
 	default:
 		return fmt.Errorf("failed to query reward distributions. %s is not a valid query param", queryType)
 	}

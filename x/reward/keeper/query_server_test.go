@@ -176,7 +176,7 @@ func (s *KeeperTestSuite) TestRewardDistributionsByAddress() {
 	pageRequest.CountTotal = true
 	response, err := queryClient.RewardDistributionsByAddress(s.ctx.Context(), &types.QueryRewardDistributionsByAddressRequest{
 		Address:     s.accountAddr.String(),
-		ClaimStatus: types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL,
+		ClaimStatus: types.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
 		Pagination:  pageRequest,
 	})
 	s.Assert().NoError(err, "query should not error")
@@ -189,7 +189,7 @@ func (s *KeeperTestSuite) TestRewardDistributionsByAddress() {
 	pageRequest1.Key = response.Pagination.NextKey
 	response1, err := queryClient.RewardDistributionsByAddress(s.ctx.Context(), &types.QueryRewardDistributionsByAddressRequest{
 		Address:     s.accountAddr.String(),
-		ClaimStatus: types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL,
+		ClaimStatus: types.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
 		Pagination:  pageRequest1,
 	})
 
@@ -202,7 +202,7 @@ func (s *KeeperTestSuite) TestRewardDistributionsByAddress() {
 	pageRequest2.Key = response1.Pagination.NextKey
 	response2, err := queryClient.RewardDistributionsByAddress(s.ctx.Context(), &types.QueryRewardDistributionsByAddressRequest{
 		Address:     s.accountAddr.String(),
-		ClaimStatus: types.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL,
+		ClaimStatus: types.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
 		Pagination:  pageRequest2,
 	})
 

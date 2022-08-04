@@ -420,7 +420,6 @@
     - [QueryRewardProgramsResponse](#provenance.reward.v1.QueryRewardProgramsResponse)
     - [RewardAccountResponse](#provenance.reward.v1.RewardAccountResponse)
   
-    - [QueryRewardDistributionsByAddressRequest.RewardAccountQueryParam](#provenance.reward.v1.QueryRewardDistributionsByAddressRequest.RewardAccountQueryParam)
     - [QueryRewardProgramsRequest.QueryType](#provenance.reward.v1.QueryRewardProgramsRequest.QueryType)
   
     - [Query](#provenance.reward.v1.Query)
@@ -6285,7 +6284,7 @@ QueryRewardDistributionsByAddressRequest queries for reward claims by address th
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | The address that the claim belongs to. |
-| `claim_status` | [QueryRewardDistributionsByAddressRequest.RewardAccountQueryParam](#provenance.reward.v1.QueryRewardDistributionsByAddressRequest.RewardAccountQueryParam) |  | The status that the reward account must have. |
+| `claim_status` | [RewardAccountState.ClaimStatus](#provenance.reward.v1.RewardAccountState.ClaimStatus) |  | The status that the reward account must have. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
 
 
@@ -6388,22 +6387,6 @@ RewardAccountResponse is an address' reward claim for a reward program's claim p
 
 
  <!-- end messages -->
-
-
-<a name="provenance.reward.v1.QueryRewardDistributionsByAddressRequest.RewardAccountQueryParam"></a>
-
-### QueryRewardDistributionsByAddressRequest.RewardAccountQueryParam
-RewardAccountQueryParam enum value of type of reward distribution to query
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| REWARD_ACCOUNT_QUERY_PARAM_UNSPECIFIED | 0 | unspecified distribution type |
-| REWARD_ACCOUNT_QUERY_PARAM_ALL | 1 | all reward distributions |
-| REWARD_ACCOUNT_QUERY_PARAM_UNCLAIMABLE | 2 | unclaimable reward distributions |
-| REWARD_ACCOUNT_QUERY_PARAM_CLAIMABLE | 3 | claimable reward distributions |
-| REWARD_ACCOUNT_QUERY_PARAM_CLAIMED | 4 | claimed reward distributions |
-| REWARD_ACCOUNT_QUERY_PARAM_EXPIRED | 5 | expired reward distributions |
-
 
 
 <a name="provenance.reward.v1.QueryRewardProgramsRequest.QueryType"></a>

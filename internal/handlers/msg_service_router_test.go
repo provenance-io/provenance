@@ -10,6 +10,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 
 	piosimapp "github.com/provenance-io/provenance/app"
@@ -587,7 +588,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
 	})
 	check(err)
 	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(100)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
@@ -673,7 +674,7 @@ func TestRewardsProgramStartPerformQualifyingActions_1(t *testing.T) {
 	assert.Equal(t, 10, int(accountState.SharesEarned), "account state incorrect")
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
 	})
 	check(err)
 	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
@@ -759,7 +760,7 @@ func TestRewardsProgramStartPerformQualifyingActions_2(t *testing.T) {
 	assert.Equal(t, 1, int(accountState.SharesEarned), "account state incorrect")
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
 	})
 	check(err)
 	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
@@ -850,7 +851,7 @@ func TestRewardsProgramStartPerformQualifyingActions_3(t *testing.T) {
 
 // Checks to see if delegation are met for a Qualifying action in this case Transfer, create an address with delegations
 // transfers which map to QualifyingAction map to the delegated address
-// delegation threshhold is met
+// delegation threshold is met
 func TestRewardsProgramStartPerformQualifyingActions_4(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
@@ -934,7 +935,7 @@ func TestRewardsProgramStartPerformQualifyingActions_4(t *testing.T) {
 
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
 	})
 	check(err)
 	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
@@ -943,7 +944,7 @@ func TestRewardsProgramStartPerformQualifyingActions_4(t *testing.T) {
 
 // Checks to see if delegation are met for a Qualifying action in this case Transfer, create an address with delegations
 // transfers which map to QualifyingAction map to the delegated address
-// delegation threshhold is *not* met
+// delegation threshold is *not* met
 func TestRewardsProgramStartPerformQualifyingActions_5(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
@@ -1231,7 +1232,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 	assert.Equal(t, 0, int(accountState.SharesEarned), "account state incorrect")
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
 	})
 	check(err)
 	assert.Equal(t, true, len(byAddress.RewardAccountState) == 0, "RewardDistributionsByAddress incorrect")
@@ -1341,7 +1342,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
 	})
 	check(err)
 	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
@@ -1451,7 +1452,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
 	})
 	check(err)
 	assert.Equal(t, true, len(byAddress.RewardAccountState) == 0, "RewardDistributionsByAddress incorrect")
@@ -1565,7 +1566,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.QueryRewardDistributionsByAddressRequest_REWARD_ACCOUNT_QUERY_PARAM_ALL,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
 	})
 	check(err)
 	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")

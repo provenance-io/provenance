@@ -113,25 +113,10 @@ message QueryClaimPeriodRewardDistributionsByIDResponse {
 
 // QueryRewardDistributionsByAddressRequest queries for reward claims by address that match the claim_status.
 message QueryRewardDistributionsByAddressRequest {
-  // RewardAccountQueryParam enum value of type of reward distribution to query
-  enum RewardAccountQueryParam {
-    // unspecified distribution type
-    REWARD_ACCOUNT_QUERY_PARAM_UNSPECIFIED = 0;
-    // all reward distributions
-    REWARD_ACCOUNT_QUERY_PARAM_ALL = 1;
-    // unclaimable reward distributions
-    REWARD_ACCOUNT_QUERY_PARAM_UNCLAIMABLE = 2;
-    // claimable reward distributions
-    REWARD_ACCOUNT_QUERY_PARAM_CLAIMABLE = 3;
-    // claimed reward distributions
-    REWARD_ACCOUNT_QUERY_PARAM_CLAIMED = 4;
-    // expired reward distributions
-    REWARD_ACCOUNT_QUERY_PARAM_EXPIRED = 5;
-  }
   // The address that the claim belongs to.
   string address = 1;
   // The status that the reward account must have.
-  RewardAccountQueryParam claim_status = 2;
+  RewardAccountState.ClaimStatus claim_status = 2;
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
