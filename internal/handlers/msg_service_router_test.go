@@ -629,7 +629,7 @@ func TestRewardsProgramStartPerformQualifyingActions_1(t *testing.T) {
 
 	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
 
-	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, nil, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisRewardsProgram(uint64(2), rewardProgram, []authtypes.GenesisAccount{acct1}, nil, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
@@ -714,7 +714,7 @@ func TestRewardsProgramStartPerformQualifyingActions_2(t *testing.T) {
 
 	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
 
-	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, nil, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisRewardsProgram(uint64(2), rewardProgram, []authtypes.GenesisAccount{acct1}, nil, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
@@ -803,7 +803,7 @@ func TestRewardsProgramStartPerformQualifyingActions_3(t *testing.T) {
 
 	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
 
-	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, nil, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisRewardsProgram(uint64(2), rewardProgram, []authtypes.GenesisAccount{acct1}, nil, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
@@ -888,7 +888,7 @@ func TestRewardsProgramStartPerformQualifyingActions_4(t *testing.T) {
 	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
 	err, bondedVal1, bondedVal2 := createTestValidators(pubKey, pubKey2, addr, addr2)
 
-	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, []stakingtypes.Validator{bondedVal1, bondedVal2}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisRewardsProgram(uint64(2), rewardProgram, []authtypes.GenesisAccount{acct1}, []stakingtypes.Validator{bondedVal1, bondedVal2}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
@@ -981,7 +981,7 @@ func TestRewardsProgramStartPerformQualifyingActions_5(t *testing.T) {
 	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
 	err, bondedVal1, bondedVal2 := createTestValidators(pubKey, pubKey2, addr, addr2)
 
-	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, []stakingtypes.Validator{bondedVal1, bondedVal2}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisRewardsProgram(uint64(2), rewardProgram, []authtypes.GenesisAccount{acct1}, []stakingtypes.Validator{bondedVal1, bondedVal2}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
@@ -1061,7 +1061,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 
 	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
 
-	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, nil, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisRewardsProgram(uint64(2), rewardProgram, []authtypes.GenesisAccount{acct1}, nil, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
@@ -1163,7 +1163,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 
 	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
 
-	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, nil, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisRewardsProgram(uint64(2), rewardProgram, []authtypes.GenesisAccount{acct1}, nil, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
@@ -1272,7 +1272,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 
 	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
 	err, bondedVal1, bondedVal2 := createTestValidators(pubKey, pubKey2, addr, addr2)
-	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, []stakingtypes.Validator{bondedVal1, bondedVal2}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisRewardsProgram(uint64(2), rewardProgram, []authtypes.GenesisAccount{acct1}, []stakingtypes.Validator{bondedVal1, bondedVal2}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
@@ -1382,7 +1382,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 
 	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
 	err, bondedVal1, bondedVal2 := createTestValidators(pubKey, pubKey2, addr, addr2)
-	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, []stakingtypes.Validator{bondedVal1, bondedVal2}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisRewardsProgram(uint64(2), rewardProgram, []authtypes.GenesisAccount{acct1}, []stakingtypes.Validator{bondedVal1, bondedVal2}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
@@ -1495,7 +1495,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 
 	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
 	err, bondedVal1, bondedVal2 := createTestValidators(pubKey, pubKey2, addr, addr2)
-	app := piosimapp.SetupWithGenesisRewardsProgram(rewardProgram, []authtypes.GenesisAccount{acct1}, []stakingtypes.Validator{bondedVal1, bondedVal2}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisRewardsProgram(uint64(2), rewardProgram, []authtypes.GenesisAccount{acct1}, []stakingtypes.Validator{bondedVal1, bondedVal2}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())

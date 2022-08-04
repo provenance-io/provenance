@@ -6188,6 +6188,7 @@ GenesisState defines the reward module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `reward_program_id` | [uint64](#uint64) |  | Reward program id is the next auto incremented id to be assigned to the next created reward program |
 | `reward_programs` | [RewardProgram](#provenance.reward.v1.RewardProgram) | repeated | Reward programs to initially start with. |
 | `claim_period_reward_distributions` | [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution) | repeated | Claim period reward distributions to initially start with. |
 | `reward_account_states` | [RewardAccountState](#provenance.reward.v1.RewardAccountState) | repeated | Reward account states to initially start with. |

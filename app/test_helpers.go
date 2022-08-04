@@ -460,7 +460,7 @@ func FundModuleAccount(app *App, ctx sdk.Context, recipientMod string, amounts s
 	return app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, recipientMod, amounts)
 }
 
-func SetupWithGenesisRewardsProgram(genesisRewards types.RewardProgram, genAccs []authtypes.GenesisAccount, valSet []stakingtypes.Validator, balances ...banktypes.Balance) *App {
+func SetupWithGenesisRewardsProgram(nextRewardProgramID uint64, genesisRewards types.RewardProgram, genAccs []authtypes.GenesisAccount, valSet []stakingtypes.Validator, balances ...banktypes.Balance) *App {
 	app, genesisState := setup(true, 0)
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
@@ -513,6 +513,7 @@ func SetupWithGenesisRewardsProgram(genesisRewards types.RewardProgram, genAccs 
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
 	rewardGenesisState := types.NewGenesisState(
+		nextRewardProgramID,
 		[]types.RewardProgram{
 			genesisRewards,
 		},

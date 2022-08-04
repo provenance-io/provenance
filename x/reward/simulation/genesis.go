@@ -103,6 +103,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	)
 
 	rewards := types.NewGenesisState(
+		uint64(100001),
 		[]types.RewardProgram{
 			rewardProgram,
 		},

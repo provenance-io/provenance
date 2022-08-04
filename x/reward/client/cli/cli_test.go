@@ -159,6 +159,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	}
 
 	rewardData := rewardtypes.NewGenesisState(
+		uint64(5),
 		[]rewardtypes.RewardProgram{
 			s.activeRewardProgram, s.pendingRewardProgram, s.finishedRewardProgram, s.expiredRewardProgram,
 		},

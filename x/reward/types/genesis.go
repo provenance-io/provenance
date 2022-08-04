@@ -1,11 +1,15 @@
 package types
 
+import "fmt"
+
 func NewGenesisState(
+	rewardProgramID uint64,
 	rewardProgram []RewardProgram,
 	claimPeriodRewardDistributions []ClaimPeriodRewardDistribution,
 	rewardAccountStates []RewardAccountState,
 ) *GenesisState {
 	return &GenesisState{
+		RewardProgramId:                rewardProgramID,
 		RewardPrograms:                 rewardProgram,
 		ClaimPeriodRewardDistributions: claimPeriodRewardDistributions,
 		RewardAccountStates:            rewardAccountStates,
@@ -15,6 +19,7 @@ func NewGenesisState(
 // DefaultGenesis returns the default reward genesis state
 func DefaultGenesis() *GenesisState {
 	return NewGenesisState(
+		uint64(1),
 		[]RewardProgram{},
 		[]ClaimPeriodRewardDistribution{},
 		[]RewardAccountState{},
@@ -25,6 +30,9 @@ func DefaultGenesis() *GenesisState {
 // failure.
 func (gs GenesisState) Validate() error {
 	for _, rewardProgram := range gs.RewardPrograms {
+		if rewardProgram.Id >= gs.RewardProgramId {
+			return fmt.Errorf("reward program id (%v) must not equal or be less than a current reward program id (%v)", gs.RewardProgramId, rewardProgram.Id)
+		}
 		if err := rewardProgram.Validate(); err != nil {
 			return err
 		}
