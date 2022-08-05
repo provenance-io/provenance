@@ -616,12 +616,13 @@ func (s *RewardTypesTestSuite) TestIsEndingClaimPeriod() {
 		1,
 		[]QualifyingAction{},
 	)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().AddDate(1, 0, 0))
+	s.ctx = s.ctx.WithBlockTime(now.Add(100000))
 
 	// RewardProgram_PENDING and blockTime after ClaimPeriodEndTime
 	program.State = RewardProgram_STATE_PENDING
 	s.Assert().False(program.IsEndingClaimPeriod(s.ctx))
 
+	s.ctx = s.ctx.WithBlockTime(now.Add(-100000))
 	// RewardProgram_STARTED and blockTime after ClaimPeriodEndTime
 	program.State = RewardProgram_STATE_STARTED
 	s.Assert().True(program.IsEndingClaimPeriod(s.ctx))
@@ -634,8 +635,4 @@ func (s *RewardTypesTestSuite) TestIsEndingClaimPeriod() {
 	program.State = RewardProgram_STATE_EXPIRED
 	s.Assert().False(program.IsEndingClaimPeriod(s.ctx))
 
-	// RewardProgram_STARTED and blockTime before ClaimPeriodEndTime
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().AddDate(-2, 0, 0))
-	program.State = RewardProgram_STATE_STARTED
-	s.Assert().False(program.IsEndingClaimPeriod(s.ctx))
 }
