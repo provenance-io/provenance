@@ -3,7 +3,7 @@
 # start the test network and `make localnet-stop` to stop it.
 
 ## Build provenance for x86_64
-FROM golang:1.17-bullseye as build-x86_64
+FROM golang:1.18-bullseye as build-x86_64
 WORKDIR /go/src/github.com/provenance-io/provenance
 ENV GOPRIVATE=github.com/provenance-io
 RUN apt-get update && apt-get upgrade -y && apt-get install -y libleveldb-dev
@@ -52,7 +52,7 @@ CMD ["start"]
 
 
 ## Build provenance for ARM
-FROM golang:1.17-bullseye as build-arm64
+FROM golang:1.18-bullseye as build-arm64
 WORKDIR /go/src/github.com/provenance-io/provenance
 ENV GOPRIVATE=github.com/provenance-io
 RUN apt-get update && apt-get upgrade -y && apt-get install -y libleveldb-dev
