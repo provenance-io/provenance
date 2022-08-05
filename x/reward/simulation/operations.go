@@ -24,6 +24,7 @@ import (
 // Simulation operation weights constants
 const (
 	OpWeightSubmitCreateRewardsProposal = "op_weight_submit_create_rewards_proposal"
+	OpWeightEndRewardsProposal          = "op_weight_submit_end_reward_proposal"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -32,11 +33,17 @@ func WeightedOperations(
 ) simulation.WeightedOperations {
 	var (
 		weightMsgAddRewardsProgram int
+		weightMsgEndRewardProgram  int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightSubmitCreateRewardsProposal, &weightMsgAddRewardsProgram, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddRewardsProgram = simappparams.DefaultWeightSubmitCreateRewards
+		},
+	)
+	appParams.GetOrGenerate(cdc, OpWeightEndRewardsProposal, &weightMsgEndRewardProgram, nil,
+		func(_ *rand.Rand) {
+			weightMsgEndRewardProgram = simappparams.DefaultWeightSubmitEndRewards
 		},
 	)
 
@@ -45,7 +52,12 @@ func WeightedOperations(
 			weightMsgAddRewardsProgram,
 			SimulateMsgCreateRewardsProgram(k, ak, bk),
 		),
+		simulation.NewWeightedOperation(
+			weightMsgEndRewardProgram,
+			SimulateMsgEndRewardsProgram(k, ak, bk),
+		),
 	}
+
 }
 
 func SimulateMsgCreateRewardsProgram(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
@@ -143,4 +155,43 @@ func Dispatch(
 	}
 
 	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), futures, nil
+}
+
+func SimulateMsgEndRewardsProgram(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		rewardProgram := randomRewardProgram(r, ctx, k)
+		if rewardProgram == nil {
+			return simtypes.NoOpMsg(types.ModuleName, "EndRewardProgram", "unable to find a valid reward program"), nil, nil
+		}
+		var simAccount simtypes.Account
+		var found bool
+		addr, err := sdk.AccAddressFromBech32(rewardProgram.DistributeFromAddress)
+		if err != nil {
+			// should just noit be possible and panic on the test
+			panic(err)
+		}
+		simAccount, found = simtypes.FindAccount(accs, addr)
+		if !found {
+			return simtypes.NoOpMsg(types.ModuleName, "EndRewardProgram", "creator of rewards program account does not exist"), nil, nil
+		}
+		var msg sdk.Msg
+		msg = types.NewMsgEndRewardProgramRequest(rewardProgram.Id, rewardProgram.DistributeFromAddress)
+
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
+	}
+}
+
+func randomRewardProgram(r *rand.Rand, ctx sdk.Context, k keeper.Keeper) *types.RewardProgram {
+	var rewardPrograms []types.RewardProgram
+	k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
+		rewardPrograms = append(rewardPrograms, rewardProgram)
+		return false
+	})
+	if len(rewardPrograms) == 0 {
+		return nil
+	}
+	idx := r.Intn(len(rewardPrograms))
+	return &rewardPrograms[idx]
 }
