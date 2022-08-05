@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"math/rand"
 
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
 	rewardModule "github.com/provenance-io/provenance/x/reward"
 	cli "github.com/provenance-io/provenance/x/reward/client/cli"
 	"github.com/provenance-io/provenance/x/reward/keeper"
@@ -105,13 +108,20 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
-	keeper   keeper.Keeper
-	registry cdctypes.InterfaceRegistry
+	keeper        keeper.Keeper
+	accountKeeper authkeeper.AccountKeeper
+	bankKeeper    bankkeeper.Keeper
 }
 
-// ____________________________________________________________________________
-
-// AppModuleSimulation functions
+// NewAppModule creates a new AppModule object
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper) AppModule {
+	return AppModule{
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		keeper:         keeper,
+		accountKeeper:  accountKeeper,
+		bankKeeper:     bankKeeper,
+	}
+}
 
 // GenerateGenesisState creates a randomized GenState of the rewards module.
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
@@ -119,10 +129,12 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+	// currently no gov proposals exist
 	return nil
 }
 
 func (am AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+	// currently no module params exist
 	return nil
 }
 
@@ -131,16 +143,9 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 }
 
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return nil
-}
-
-// NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, registry cdctypes.InterfaceRegistry) AppModule {
-	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
-		keeper:         keeper,
-		registry:       registry,
-	}
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.Cdc, am.keeper, am.accountKeeper, am.bankKeeper,
+	)
 }
 
 // Name returns the reward module's name.

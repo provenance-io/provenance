@@ -10,7 +10,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/reward/types"
-	"github.com/tendermint/tendermint/types/time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -71,25 +70,31 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	minDelegation := sdk.NewInt64Coin(pioconfig.DefaultBondDenom, int64(minActions))
 
-	now := time.Now()
+	now := simState.GenTimestamp
 	claimPeriodSeconds := uint64(simState.Rand.Intn(100000))
-	claimPeriods := uint64(simState.Rand.Intn(100))
+	claimPeriods := uint64(simState.Rand.Intn(100)) + 1
 	maxRolloverPeriods := uint64(simState.Rand.Intn(10))
 	expireClaimPeriods := uint64(simState.Rand.Intn(100000))
-
-	rewardProgram := types.NewRewardProgram(
-		"title",
-		"description",
-		uint64(simState.Rand.Intn(100000)),
-		simState.Accounts[0].Address.String(),
-		totalRewardsPool,
-		maxRewardsByAddress,
-		now,
-		claimPeriodSeconds,
-		claimPeriods,
-		maxRolloverPeriods,
-		expireClaimPeriods,
-		[]types.QualifyingAction{
+	expectedProgramEndTime := types.CalculateExpectedEndTime(now, claimPeriodSeconds, claimPeriods)
+	programEndTimeMax := types.CalculateEndTimeMax(now, claimPeriodSeconds, claimPeriods, maxRolloverPeriods)
+	rewardProgram := types.RewardProgram{
+		Title:                   "title",
+		Description:             "description",
+		Id:                      uint64(simState.Rand.Intn(100000)),
+		DistributeFromAddress:   simState.Accounts[0].Address.String(),
+		TotalRewardPool:         totalRewardsPool,
+		RemainingPoolBalance:    totalRewardsPool,
+		ClaimedAmount:           sdk.NewInt64Coin(totalRewardsPool.Denom, 0),
+		MaxRewardByAddress:      maxRewardsByAddress,
+		ProgramStartTime:        now.UTC(),
+		ExpectedProgramEndTime:  expectedProgramEndTime.UTC(),
+		ProgramEndTimeMax:       programEndTimeMax.UTC(),
+		ClaimPeriodSeconds:      claimPeriodSeconds,
+		ClaimPeriods:            claimPeriods,
+		MaxRolloverClaimPeriods: maxRolloverPeriods,
+		ExpirationOffset:        expireClaimPeriods,
+		State:                   types.RewardProgram_STATE_PENDING,
+		QualifyingActions: []types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Vote{
 					Vote: &types.ActionVote{
@@ -100,7 +105,8 @@ func RandomizedGenState(simState *module.SimulationState) {
 				},
 			},
 		},
-	)
+		MinimumRolloverAmount: sdk.NewInt64Coin(totalRewardsPool.Denom, 100_000_000_000),
+	}
 
 	rewards := types.NewGenesisState(
 		uint64(100001),

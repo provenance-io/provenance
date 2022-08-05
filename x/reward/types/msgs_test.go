@@ -330,9 +330,9 @@ func (s *RewardMsgTypesTestSuite) TestMsgEndRewardProgramRequestValidateBasic() 
 
 func (s *RewardMsgTypesTestSuite) TestMsgClaimRewardValidateBasic() {
 	tests := []struct {
-		name                  string
+		name                   string
 		MsgClaimRewardsRequest MsgClaimRewardsRequest
-		want                  string
+		want                   string
 	}{
 		{
 			"valid",

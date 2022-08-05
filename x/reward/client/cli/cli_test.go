@@ -10,28 +10,35 @@ import (
 	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/testutil"
 	rewardcli "github.com/provenance-io/provenance/x/reward/client/cli"
 	"github.com/provenance-io/provenance/x/reward/types"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
-
-	"github.com/stretchr/testify/suite"
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg     network.Config
-	network *network.Network
+	cfg        network.Config
+	network    *network.Network
+	keyring    keyring.Keyring
+	keyringDir string
 
-	accountAddr sdk.AccAddress
-	accountKey  *secp256k1.PrivKey
+	accountAddr      sdk.AccAddress
+	accountKey       *secp256k1.PrivKey
+	accountAddresses []sdk.AccAddress
 
 	activeRewardProgram   types.RewardProgram
 	pendingRewardProgram  types.RewardProgram
@@ -52,9 +59,36 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.accountAddr = addr
 
 	s.cfg = testutil.DefaultTestNetworkConfig()
-
 	genesisState := s.cfg.GenesisState
+
 	s.cfg.NumValidators = 1
+	s.GenerateAccountsWithKeyrings(2)
+
+	var genBalances []banktypes.Balance
+	for i := range s.accountAddresses {
+		genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[i].String(), Coins: sdk.NewCoins(
+			sdk.NewCoin("nhash", sdk.NewInt(100000000)),
+		).Sort()})
+	}
+	var bankGenState banktypes.GenesisState
+	bankGenState.Params = banktypes.DefaultParams()
+	bankGenState.Balances = genBalances
+	bankDataBz, err := s.cfg.Codec.MarshalJSON(&bankGenState)
+	s.Require().NoError(err)
+	genesisState[banktypes.ModuleName] = bankDataBz
+
+	var authData authtypes.GenesisState
+	var genAccounts []authtypes.GenesisAccount
+	authData.Params = authtypes.DefaultParams()
+	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[0], nil, 3, 0))
+	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[1], nil, 4, 0))
+	accounts, err := authtypes.PackAccounts(genAccounts)
+	s.Require().NoError(err)
+	authData.Accounts = accounts
+	authDataBz, err := s.cfg.Codec.MarshalJSON(&authData)
+	s.Require().NoError(err)
+	genesisState[authtypes.ModuleName] = authDataBz
+
 	now := time.Now().UTC()
 	minimumDelegation := sdk.NewInt64Coin(provenanceconfig.DefaultBondDenom, 0)
 	maximumDelegation := sdk.NewInt64Coin(provenanceconfig.DefaultBondDenom, 10)
@@ -77,7 +111,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		"active title",
 		"active description",
 		1,
-		s.accountAddr.String(),
+		s.accountAddresses[0].String(),
 		sdk.NewInt64Coin("nhash", 100),
 		sdk.NewInt64Coin("nhash", 100),
 		now,
@@ -93,7 +127,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		"finished title",
 		"finished description",
 		2,
-		s.accountAddr.String(),
+		s.accountAddresses[0].String(),
 		sdk.NewInt64Coin("nhash", 100),
 		sdk.NewInt64Coin("nhash", 100),
 		now.Add(-60*60*time.Second),
@@ -110,7 +144,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		"pending title",
 		"pending description",
 		3,
-		s.accountAddr.String(),
+		s.accountAddresses[0].String(),
 		sdk.NewInt64Coin("nhash", 100),
 		sdk.NewInt64Coin("nhash", 100),
 		now.Add(60*60*time.Second),
@@ -126,7 +160,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		"expired title",
 		"expired description",
 		4,
-		s.accountAddr.String(),
+		s.accountAddresses[0].String(),
 		sdk.NewInt64Coin("nhash", 100),
 		sdk.NewInt64Coin("nhash", 100),
 		now.Add(-60*60*time.Second),
@@ -185,6 +219,20 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.WaitForNextBlock()
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
+}
+
+func (s *IntegrationTestSuite) GenerateAccountsWithKeyrings(number int) {
+	path := hd.CreateHDPath(118, 0, 0).String()
+	s.keyringDir = s.T().TempDir()
+	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil)
+	s.Require().NoError(err)
+	s.keyring = kr
+	for i := 0; i < number; i++ {
+		keyId := fmt.Sprintf("test_key%v", i)
+		info, _, err := kr.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+		s.Require().NoError(err)
+		s.accountAddresses = append(s.accountAddresses, info.GetAddress())
+	}
 }
 
 func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
@@ -427,6 +475,18 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 		{
 			"query with invalid reward program id format",
 			[]string{
+				"a",
+				"1",
+			},
+			true,
+			true,
+			"strconv.Atoi: parsing \"a\": invalid syntax",
+			0,
+			[]uint64{},
+		},
+		{
+			"query with invalid reward program id format",
+			[]string{
 				"100",
 				"100",
 			},
@@ -606,6 +666,71 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 			"invalid character 'a' looking for beginning of value",
 			0,
 		},
+		{"add reward program tx - invalid type for claim periods",
+			[]string{
+				"test add reward program",
+				"description",
+				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
+				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
+				"--claim-periods=abc",
+				"--claim-period-days=10",
+				fmt.Sprintf("--start-time=%s", soon.Format(time.RFC3339)),
+				"--expire-days=14",
+				fmt.Sprintf("--qualifying-actions=%s", "actions"),
+			},
+			true,
+			"invalid argument \"abc\" for \"--claim-periods\" flag: strconv.ParseUint: parsing \"abc\": invalid syntax",
+			0,
+		},
+		{"add reward program tx - invalid type for claim period days",
+			[]string{
+				"test add reward program",
+				"description",
+				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
+				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
+				"--claim-periods=52",
+				"--claim-period-days=abc",
+				fmt.Sprintf("--start-time=%s", soon.Format(time.RFC3339)),
+				"--expire-days=14",
+				fmt.Sprintf("--qualifying-actions=%s", "actions"),
+			},
+			true,
+			"invalid argument \"abc\" for \"--claim-period-days\" flag: strconv.ParseUint: parsing \"abc\": invalid syntax",
+			0,
+		},
+		{"add reward program tx - invalid type for claim period days",
+			[]string{
+				"test add reward program",
+				"description",
+				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
+				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
+				"--claim-periods=52",
+				"--claim-period-days=10",
+				fmt.Sprintf("--start-time=%s", soon.Format(time.RFC3339)),
+				"--expire-days=abc",
+				fmt.Sprintf("--qualifying-actions=%s", "actions"),
+			},
+			true,
+			"invalid argument \"abc\" for \"--expire-days\" flag: strconv.ParseUint: parsing \"abc\": invalid syntax",
+			0,
+		},
+		{"add reward program tx - invalid type for claim period days",
+			[]string{
+				"test add reward program",
+				"description",
+				fmt.Sprintf("--total-reward-pool=580%s", s.cfg.BondDenom),
+				fmt.Sprintf("--max-reward-by-address=100%s", s.cfg.BondDenom),
+				"--claim-periods=52",
+				"--claim-period-days=10",
+				fmt.Sprintf("--start-time=%s", soon.Format(time.RFC3339)),
+				"--expire-days=14",
+				"--max-rollover-periods=abc",
+				fmt.Sprintf("--qualifying-actions=%s", "actions"),
+			},
+			true,
+			"invalid argument \"abc\" for \"--max-rollover-periods\" flag: strconv.ParseUint: parsing \"abc\": invalid syntax",
+			0,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -674,6 +799,90 @@ func (s *IntegrationTestSuite) TestTxClaimReward() {
 			}
 			tc.args = append(tc.args, args...)
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdClaimReward(), tc.args)
+			if tc.expectErr {
+				s.Assert().Error(err)
+				s.Assert().Equal(tc.expectErrMsg, err.Error())
+			} else {
+				var response sdk.TxResponse
+				s.Assert().NoError(err)
+				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
+				marshalErr := clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response)
+				s.Assert().NoError(marshalErr)
+				s.Assert().Equal(tc.expectedCode, response.Code)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestTxEndRewardProgram() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{"end reward program - valid",
+			[]string{
+				"1",
+			},
+			false,
+			"",
+			0,
+			s.accountAddresses[0].String(),
+		},
+		{"end reward program - invalid id",
+			[]string{
+				"999",
+			},
+			false,
+			"",
+			3,
+			s.accountAddresses[0].String(),
+		},
+		{"end reward program - invalid state",
+			[]string{
+				"2",
+			},
+			false,
+			"",
+			5,
+			s.accountAddresses[0].String(),
+		},
+		{"end reward program - not authorized",
+			[]string{
+				"1",
+			},
+			false,
+			"",
+			4,
+			s.accountAddresses[1].String(),
+		},
+		{"end reward program - invalid id format",
+			[]string{
+				"abc",
+			},
+			true,
+			"invalid argument : abc",
+			0,
+			s.accountAddresses[0].String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
+			args := []string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			}
+			tc.args = append(tc.args, args...)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdEndRewardProgram(), tc.args)
 			if tc.expectErr {
 				s.Assert().Error(err)
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
