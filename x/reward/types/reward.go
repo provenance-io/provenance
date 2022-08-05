@@ -143,7 +143,6 @@ func NewRewardProgram(
 	}
 }
 
-// TODO Test this
 // IsStarting checks the state of the reward program and determines if it has started
 func (rp *RewardProgram) IsStarting(ctx sdk.Context) bool {
 	blockTime := ctx.BlockTime()
@@ -156,16 +155,14 @@ func (rp *RewardProgram) IsEndingClaimPeriod(ctx sdk.Context) bool {
 	return rp.State == RewardProgram_STATE_STARTED && (blockTime.After(rp.ClaimPeriodEndTime) || blockTime.Equal(rp.ClaimPeriodEndTime))
 }
 
-// TODO Test this
-// IsExpiring returns if reward program has expired
+// IsExpiring returns if reward program has expired for a finished reward program
 func (rp *RewardProgram) IsExpiring(ctx sdk.Context) bool {
 	blockTime := ctx.BlockTime()
 	expireTime := rp.ActualProgramEndTime.Add(time.Second * time.Duration(rp.ExpirationOffset))
 	return rp.State == RewardProgram_STATE_FINISHED && (blockTime.After(expireTime) || blockTime.Equal(expireTime))
 }
 
-// TODO Test this
-// IsEnding returns if a reward program has ended
+// IsEnding returns if a reward program has ended for a running program
 func (rp *RewardProgram) IsEnding(ctx sdk.Context, programBalance sdk.Coin) bool {
 	blockTime := ctx.BlockTime()
 	isProgramEnding := !rp.GetProgramEndTimeMax().IsZero() && (blockTime.After(rp.ProgramEndTimeMax) || blockTime.Equal(rp.ProgramEndTimeMax))

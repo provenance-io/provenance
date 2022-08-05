@@ -532,9 +532,72 @@ func (s *RewardTypesTestSuite) TestIsStarting() {
 		1,
 		[]QualifyingAction{},
 	)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(-10))
-
+	s.ctx = s.ctx.WithBlockTime(now.Add(-1000))
 	s.Assert().False(program.IsStarting(s.ctx))
+
+	s.ctx = s.ctx.WithBlockTime(now.Add(2010))
+	s.Assert().True(program.IsStarting(s.ctx))
+
+}
+
+func (s *RewardTypesTestSuite) TestIsExpiring() {
+	now := time.Now().UTC()
+	program := NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdk.NewInt64Coin("nhash", 1),
+		sdk.NewInt64Coin("nhash", 2),
+		now,
+		3600,
+		1,
+		0,
+		100,
+		[]QualifyingAction{},
+	)
+
+	s.ctx = s.ctx.WithBlockTime(now)
+	s.Assert().False(program.IsExpiring(s.ctx))
+
+	program.ActualProgramEndTime = now
+	program.State = RewardProgram_STATE_FINISHED
+	s.Assert().False(program.IsExpiring(s.ctx))
+
+	program.ExpirationOffset = 0
+	s.Assert().True(program.IsExpiring(s.ctx))
+
+}
+
+func (s *RewardTypesTestSuite) TestIsEnding() {
+	now := time.Now().UTC()
+	program := NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdk.NewInt64Coin("nhash", 1),
+		sdk.NewInt64Coin("nhash", 2),
+		now,
+		3600,
+		1,
+		1,
+		100,
+		[]QualifyingAction{},
+	)
+
+	s.ctx = s.ctx.WithBlockTime(now)
+	s.Assert().False(program.IsEnding(s.ctx, sdk.NewInt64Coin("nhash", 100_000_000_001)))
+
+	program.State = RewardProgram_STATE_STARTED
+	program.ProgramEndTimeMax = now.Add(100000)
+	s.Assert().False(program.IsEnding(s.ctx, sdk.NewInt64Coin("nhash", 100_000_000_000)))
+	s.Assert().False(program.IsEnding(s.ctx, sdk.NewInt64Coin("nhash", 100_000_000_001)))
+	s.Assert().True(program.IsEnding(s.ctx, sdk.NewInt64Coin("nhash", 10_000_000_000)))
+
+	program.ProgramEndTimeMax = now.Add(-100000)
+	s.Assert().True(program.IsEnding(s.ctx, sdk.NewInt64Coin("nhash", 100_000_000_001)))
+
 }
 
 func (s *RewardTypesTestSuite) TestIsEndingClaimPeriod() {
