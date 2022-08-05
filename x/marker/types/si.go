@@ -137,9 +137,9 @@ func SIPrefixFromExponent(exp int) (SIPrefix, error) {
 // ParseSIPrefixedString extracts the prefix from the provided val using root as the base.
 // Returns the SI prefix, and a boolean to indicate that it was successful.
 // Possible reasons for it to be unsuccessful:
-//  - The provided val is shorter than the root.
-//  - The right-most characters in val are not equal to root (case insensitive).
-//  - No SI Prefix can be found matching the left-most portion of val (that isn't root).
+//   - The provided val is shorter than the root.
+//   - The right-most characters in val are not equal to root (case insensitive).
+//   - No SI Prefix can be found matching the left-most portion of val (that isn't root).
 func ParseSIPrefixedString(val string, root string) (SIPrefix, bool) {
 	if len(val) < len(root) {
 		return invalidSIPrefix, false

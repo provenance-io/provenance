@@ -14,18 +14,18 @@ const (
 
 // ValidateDenomMetadataBasic performs validation of the denom metadata fields.
 // It checks that:
-//  - Base and Display denominations are valid coin denominations
-//  - Base and Display denominations are present in the DenomUnit slice
-//  - The first denomination unit entry is the Base denomination and has Exponent 0
-//  - Denomination units are sorted in ascending order by Exponent
-//  - Description is no more than 200 characters.
-//  - All Denomination unit Denom and Alias strings contain the same root name.
-//  - That root name is a valid coin denomination.
-//  - All Denomination unit Denom and Alias strings are valid coin denominations
-//  - All Denomination unit Denom and Alias strings are a SI prefix + the root name (or just the root name).
-//  - All Denomination unit Denom and Alias strings are unique.
-//  - All Denomination unit Aliases have the same SI prefix as their Denom (but maybe different forms, e.g. name vs symbol)
-//  - All Denomination unit Exponents are {SI prefix exponent of the Denom} - {SI prefix exponent of the base}.
+//   - Base and Display denominations are valid coin denominations
+//   - Base and Display denominations are present in the DenomUnit slice
+//   - The first denomination unit entry is the Base denomination and has Exponent 0
+//   - Denomination units are sorted in ascending order by Exponent
+//   - Description is no more than 200 characters.
+//   - All Denomination unit Denom and Alias strings contain the same root name.
+//   - That root name is a valid coin denomination.
+//   - All Denomination unit Denom and Alias strings are valid coin denominations
+//   - All Denomination unit Denom and Alias strings are a SI prefix + the root name (or just the root name).
+//   - All Denomination unit Denom and Alias strings are unique.
+//   - All Denomination unit Aliases have the same SI prefix as their Denom (but maybe different forms, e.g. name vs symbol)
+//   - All Denomination unit Exponents are {SI prefix exponent of the Denom} - {SI prefix exponent of the base}.
 func ValidateDenomMetadataBasic(md banktypes.Metadata) error {
 	if err := md.Validate(); err != nil {
 		return fmt.Errorf("denom metadata %w", err)
@@ -118,10 +118,10 @@ func GetRootCoinName(md banktypes.Metadata) string {
 }
 
 // denomUnitValidateBasic performs validation of the denom unit fields.
-//  - The Denom must pass validateDenom.
-//  - The Exponenet must be {SI prefix exponent of this DenomUnit} - basePrefixExp
-//  - The aliases must all pass validateDenom.
-//  - The aliases must all have the same SI prefix as the Denom (but maybe different forms, e.g. name vs symbol)
+//   - The Denom must pass validateDenom.
+//   - The Exponenet must be {SI prefix exponent of this DenomUnit} - basePrefixExp
+//   - The aliases must all pass validateDenom.
+//   - The aliases must all have the same SI prefix as the Denom (but maybe different forms, e.g. name vs symbol)
 func denomUnitValidateBasic(du *banktypes.DenomUnit, rootCoinName string, basePrefixExp int) error {
 	// Make sure the Denom is valid.
 	denomPrefix, denomError := validateDenom(du.Denom, rootCoinName)
@@ -149,8 +149,8 @@ func denomUnitValidateBasic(du *banktypes.DenomUnit, rootCoinName string, basePr
 }
 
 // validateDenom checks that:
-//  - The denom passes sdk.validateDenom.
-//  - The denom is a SI prefix + root coin name (or just the root coin name).
+//   - The denom passes sdk.validateDenom.
+//   - The denom is a SI prefix + root coin name (or just the root coin name).
 func validateDenom(denom string, rootCoinName string) (SIPrefix, error) {
 	if err := sdk.ValidateDenom(denom); err != nil {
 		return invalidSIPrefix, err

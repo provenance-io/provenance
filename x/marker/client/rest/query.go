@@ -59,7 +59,7 @@ func queryListAllMarkersHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		}
 
 		// This shadow is expected, function will conditionally modify cliCtx as required.
-		// nolint: govet
+		//nolint: govet
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
 			return
@@ -140,7 +140,7 @@ func queryMarkerAssetsHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		}
 
 		// This shadow is expected, function will conditionally modify cliCtx as required.
-		// nolint: govet
+		//nolint: govet
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
 			return
@@ -167,7 +167,7 @@ func queryListMarkerHoldersHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		}
 
 		// This shadow is expected, function will conditionally modify cliCtx as required.
-		// nolint: govet
+		//nolint: govet
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
 			return

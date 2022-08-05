@@ -74,7 +74,7 @@ func NewAddMarkerProposal(
 	markerType MarkerType,
 	access []AccessGrant,
 	fixed bool,
-	allowGov bool, // nolint:interfacer
+	allowGov bool, //nolint:interfacer
 ) *AddMarkerProposal {
 	return &AddMarkerProposal{
 		Title:                  title,
@@ -173,7 +173,7 @@ func (sdp SupplyDecreaseProposal) String() string {
 }
 
 func NewSetAdministratorProposal(
-	title, description, denom string, accessGrants []AccessGrant, // nolint:interfacer
+	title, description, denom string, accessGrants []AccessGrant, //nolint:interfacer
 ) *SetAdministratorProposal {
 	return &SetAdministratorProposal{title, description, denom, accessGrants}
 }
@@ -229,7 +229,7 @@ func (rap RemoveAdministratorProposal) String() string {
 `, rap.Denom, rap.Title, rap.Description, rap.RemovedAddress)
 }
 
-func NewChangeStatusProposal(title, description, denom string, status MarkerStatus) *ChangeStatusProposal { // nolint:interfacer
+func NewChangeStatusProposal(title, description, denom string, status MarkerStatus) *ChangeStatusProposal { //nolint:interfacer
 	return &ChangeStatusProposal{title, description, denom, status}
 }
 
@@ -250,7 +250,7 @@ func (csp ChangeStatusProposal) String() string {
 `, csp.Denom, csp.Title, csp.Description, csp.NewStatus)
 }
 
-func NewWithdrawEscrowProposal(title, description, denom string, amount sdk.Coins, target string) *WithdrawEscrowProposal { // nolint:interfacer
+func NewWithdrawEscrowProposal(title, description, denom string, amount sdk.Coins, target string) *WithdrawEscrowProposal { //nolint:interfacer
 	return &WithdrawEscrowProposal{title, description, denom, amount, target}
 }
 

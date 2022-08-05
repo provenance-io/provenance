@@ -20,19 +20,16 @@ linters:
     - gosimple
     - govet
     - ineffassign
-  
     - misspell
     - nakedret
     - prealloc
     - exportloopref
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
     - unused
     - unparam
-    # - wsl
     - varcheck
     - whitespace
     - nolintlint
@@ -88,6 +85,5 @@ linters-settings:
     - cancelled
   nolintlint:
     allow-unused: false
-    allow-leading-space: true
     require-explanation: false
     require-specific: false

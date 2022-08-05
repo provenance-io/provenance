@@ -722,8 +722,9 @@ func splitDBPath(elem ...string) (string, string) {
 // Returned strings are relative to dataDirPath.
 //
 // Example return values:
-//   return param 1: []string{"application.db", "blockstore.db", "evidence.db", "snapshots/metadata.db", "state.db", "tx_index.db"}
-//   return param 2: []string{"cs.wal", "priv_validator_state.json", "wasm"}
+//
+//	return param 1: []string{"application.db", "blockstore.db", "evidence.db", "snapshots/metadata.db", "state.db", "tx_index.db"}
+//	return param 2: []string{"cs.wal", "priv_validator_state.json", "wasm"}
 func GetDataDirContents(dataDirPath string) ([]string, []string, error) {
 	contents, err := os.ReadDir(dataDirPath)
 	if err != nil {

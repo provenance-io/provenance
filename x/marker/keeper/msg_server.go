@@ -384,6 +384,7 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 }
 
 // Transfer handles a message to send coins from one account to another (used with restricted coins that are not
+//
 //	sent using the normal bank send process)
 func (k msgServer) Transfer(goCtx context.Context, msg *types.MsgTransferRequest) (*types.MsgTransferResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

@@ -84,7 +84,7 @@ Refer to %s tx name bind --help for more information on how to do this.`, versio
 	return cmd
 }
 
-//  NewUpdateAccountAttributeCmd creates a command for adding an account attributes.
+// NewUpdateAccountAttributeCmd creates a command for adding an account attributes.
 func NewUpdateAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "update [name] [address] [original-type] [original-value] [update-type] [update-value]",
