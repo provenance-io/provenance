@@ -1,6 +1,6 @@
 // Since: provenance 1.12
 syntax = "proto3";
-package provenance.name.v1;
+package provenance.expiration.v1;
 
 import "gogoproto/gogo.proto";
 import "provenance/expiration/v1/expiration.proto";

@@ -14,10 +14,8 @@ option java_multiple_files = true;
 message Params {
   option (gogoproto.goproto_stringer) = false;
 
-  // minimum days out to expiration of an asset
-  int32                    min_days_to_expiration = 1;
-  cosmos.base.v1beta1.Coin min_required_deposit   = 2
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+  // the deposit amount for holding module assets on chain
+  cosmos.base.v1beta1.Coin deposit = 2 [(gogoproto.nullable) = false];
 }
 
 // Expiration holds a typed key/value structure for data associated with an
@@ -26,11 +24,11 @@ message Expiration {
   option (gogoproto.goproto_stringer) = false;
 
   // the module asset identifier
-  string module_asset_id = 1 [(gogoproto.nullable) = false];
-  // The owner address the expiration is bound to
-  string owner = 2 [(gogoproto.nullable) = false];
+  string module_asset_id = 1;
+  // The bech32 address the expiration is bound to
+  string owner = 2;
   // The block height the module asset expires
-  int64 expiration_height = 3 [(gogoproto.nullable) = false];
+  int64 expiration_height = 3;
   // The deposit amount held while module asset is in use
   cosmos.base.v1beta1.Coin deposit = 4 [(gogoproto.nullable) = false];
   // Messages relating to the expiring module asset

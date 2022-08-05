@@ -1,0 +1,86 @@
+package types
+
+import (
+	"fmt"
+	"github.com/provenance-io/provenance/app"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"gopkg.in/yaml.v2"
+
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+)
+
+var DefaultDeposit = sdk.Coin{
+	Amount: sdk.NewInt(1905), // todo: set default required amount
+	Denom:  app.DefaultFeeDenom,
+}
+
+var (
+	ParamStoreKeyDeposit = []byte("Deposit")
+)
+
+// ParamKeyTable for marker module
+func ParamKeyTable() paramtypes.KeyTable {
+	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
+}
+
+// NewParams creates a new parameter object
+func NewParams(deposit sdk.Coin) Params {
+	return Params{Deposit: deposit}
+}
+
+// ParamSetPairs - Implements params.ParamSet
+func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
+	return paramtypes.ParamSetPairs{
+		paramtypes.NewParamSetPair(ParamStoreKeyDeposit, &p.Deposit, validateDepositParam),
+	}
+}
+
+// DefaultParams is the default parameter configuration for the bank module
+func DefaultParams() Params {
+	return NewParams(DefaultDeposit)
+}
+
+// String implements the Stringer interface.
+func (p Params) String() string {
+	out, _ := yaml.Marshal(p)
+	return string(out)
+}
+
+// Equal returns true if the given value is equivalent to the current instance of params
+func (p *Params) Equal(that interface{}) bool {
+	if that == nil {
+		return p == nil
+	}
+
+	that1, ok := that.(*Params)
+	if !ok {
+		that2, ok := that.(Params)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return p == nil
+	} else if p == nil {
+		return false
+	}
+	return true
+}
+
+func validateDepositParam(i interface{}) error {
+	coin, ok := i.(sdk.Coin)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	// validate appropriate Coin
+	if coin.Validate() != nil {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
+}

@@ -103,7 +103,7 @@ const (
 	TxEndpoint_WriteSession TxEndpoint = "WriteSession"
 
 	TxEndpoint_WriteRecord  TxEndpoint = "WriteRecord"
-	TxEndpoint_DeleteRecord TxEndpoint = "DeleteRecord"
+	TxEndpoint_DeleteRecord TxEndpoint = "DeleteExpiration"
 
 	TxEndpoint_WriteScopeSpecification  TxEndpoint = "WriteScopeSpecification"
 	TxEndpoint_DeleteScopeSpecification TxEndpoint = "DeleteScopeSpecification"

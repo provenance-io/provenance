@@ -1,56 +1,68 @@
 // Since: provenance 1.12
 syntax = "proto3";
-package cosmos.bank.v1beta1;
+package provenance.expiration.v1;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "cosmos/bank/v1beta1/bank.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/expiration/types";
-option java_package        = "io.provenance.metadata.v1";
+option java_package        = "io.provenance.expiration.v1";
 option java_multiple_files = true;
 
-// Msg defines the bank Msg service.
+// Msg defines the Expiration Msg service.
 service Msg {
   // AddExpiration defines a method for adding an expiration of a module asset
-  rpc AddExpiration(MsgAddExpirationMetadataRequest) returns (MsgAddExpirationMetadataResponse);
+  rpc AddExpiration(MsgAddExpirationRequest) returns (MsgAddExpirationResponse);
   // ExtendExpiration defines a method for extending an expiration of a module asset
-  rpc ExtendExpiration(MsgExtendExpirationMetadataRequest) returns (MsgExtendExpirationMetadataResponse);
+  rpc ExtendExpiration(MsgExtendExpirationRequest) returns (MsgExtendExpirationResponse);
   // DeleteExpiration defines a method for deleting an expiration of a module asset
-  rpc DeleteExpiration(MsgDeleteExpirationMetadataRequest) returns (MsgDeleteExpirationMetadataResponse);
+  rpc DeleteExpiration(MsgDeleteExpirationRequest) returns (MsgDeleteExpirationResponse);
 }
 
 // MsgAddExpirationMetadataRequest represents a message to add an expiration
-message MsgAddExpirationMetadataRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
+message MsgAddExpirationRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
 
-  string                   module_asset_id   = 1 [(gogoproto.moretags) = "yaml:\"module_asset_id\""];
-  string                   owner_address     = 2 [(gogoproto.moretags) = "yaml:\"owner_address\""];
-  int64                    expiration_height = 3 [(gogoproto.moretags) = "yaml:\"expiration_height\""];
-  cosmos.base.v1beta1.Coin deposit           = 4
-      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+  string                   module_asset_id         = 1 [(gogoproto.moretags) = "yaml:\"module_asset_id\""];
+  string                   owner_address           = 2 [(gogoproto.moretags) = "yaml:\"owner_address\""];
+  int64                    expiration_height       = 3 [(gogoproto.moretags) = "yaml:\"expiration_height\""];
+  cosmos.base.v1beta1.Coin deposit                 = 4 [(gogoproto.nullable) = false];
   repeated google.protobuf.Any expiration_messages = 5 [(gogoproto.moretags) = "yaml:\"expiration_messages\""];
 }
 
 // MsgAddExpirationMetadataResponse defines the MsgAddExpirationMetadataRequest response type
-message MsgAddExpirationMetadataResponse {}
+message MsgAddExpirationResponse {}
 
 // MsgExtendExpirationMetadataRequest represents a message to extend an expiration
-message MsgExtendExpirationMetadataRequest {
-  string                   module_asset_id       = 1 [(gogoproto.nullable) = false];
-  int64                    new_expiration_height = 2 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin additional_deposit    = 3 [(gogoproto.nullable) = false];
+message MsgExtendExpirationRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  string                   module_asset_id       = 1 [(gogoproto.moretags) = "yaml:\"module_asset_id\""];
+  int64                    new_expiration_height = 2 [(gogoproto.moretags) = "yaml:\"new_expiration_height\""];
+  cosmos.base.v1beta1.Coin additional_deposit    = 3
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"additional_deposit\""];
 }
 
 // MsgExtendExpirationMetadataResponse defines the MsgExtendExpirationMetadataRequest response type
-message MsgExtendExpirationMetadataResponse {}
+message MsgExtendExpirationResponse {}
 
 // MsgDeleteExpirationMetadataResponse represents a message to delete an expiration
-message MsgDeleteExpirationMetadataRequest {
-  string module_asset_id = 1 [(gogoproto.nullable) = false];
+message MsgDeleteExpirationRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  string module_asset_id = 1 [(gogoproto.moretags) = "yaml:\"module_asset_id\""];
   string owner           = 2;
 }
 
 // MsgDeleteExpirationMetadataResponse defines the MsgDeleteExpirationMetadataRequest response type
-message MsgDeleteExpirationMetadataResponse {}
+message MsgDeleteExpirationResponse {}
