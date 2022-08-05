@@ -11,30 +11,30 @@ linters:
     - depguard
     - dogsled
     - errcheck
+    - errorlint
+    - exportloopref
     - goconst
     - gocritic
     - gofmt
     - goimports
-    - revive
     - gosec
     - gosimple
     - govet
     - ineffassign
     - misspell
     - nakedret
+    - nolintlint
     - prealloc
-    - exportloopref
+    - predeclared
+    - revive
     - staticcheck
     - stylecheck
     - typecheck
     - unconvert
-    - unused
     - unparam
+    - unused
     - varcheck
     - whitespace
-    - nolintlint
-    - predeclared
-    - errorlint
 
 issues:
   exclude-rules:
