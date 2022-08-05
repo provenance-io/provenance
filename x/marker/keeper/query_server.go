@@ -38,11 +38,11 @@ func (k Keeper) AllMarkers(c context.Context, req *types.QueryAllMarkersRequest)
 	pageRes, err := query.Paginate(markerStore, req.Pagination, func(key []byte, value []byte) error {
 		result, err := k.GetMarker(ctx, sdk.AccAddress(value))
 		if err == nil {
-			any, anyErr := codectypes.NewAnyWithValue(result)
+			anyMsg, anyErr := codectypes.NewAnyWithValue(result)
 			if anyErr != nil {
 				return status.Errorf(codes.Internal, anyErr.Error())
 			}
-			markers = append(markers, any)
+			markers = append(markers, anyMsg)
 		}
 		return err
 	})
@@ -62,11 +62,11 @@ func (k Keeper) Marker(c context.Context, req *types.QueryMarkerRequest) (*types
 	if err != nil {
 		return nil, err
 	}
-	any, err := codectypes.NewAnyWithValue(marker)
+	anyMsg, err := codectypes.NewAnyWithValue(marker)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-	return &types.QueryMarkerResponse{Marker: any}, nil
+	return &types.QueryMarkerResponse{Marker: anyMsg}, nil
 }
 
 // Holding query for all accounts holding the given marker coins

@@ -574,7 +574,7 @@ func NewMsgGrantAllowance(
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", msg)
 	}
-	any, err := codectypes.NewAnyWithValue(msg)
+	anyMsg, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
 		return nil, err
 	}
@@ -583,7 +583,7 @@ func NewMsgGrantAllowance(
 		Denom:         denom,
 		Administrator: admin.String(),
 		Grantee:       grantee.String(),
-		Allowance:     any,
+		Allowance:     anyMsg,
 	}, nil
 }
 

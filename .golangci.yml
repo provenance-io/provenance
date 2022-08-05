@@ -33,6 +33,7 @@ linters:
     - varcheck
     - whitespace
     - nolintlint
+    - predeclared
 
 issues:
   exclude-rules:
