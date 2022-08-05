@@ -71,10 +71,10 @@ func (s msgServer) EndRewardProgram(goCtx context.Context, msg *types.MsgEndRewa
 		return &types.MsgEndRewardProgramResponse{}, err
 	}
 	if rewardProgram.DistributeFromAddress != msg.ProgramOwnerAddress {
-		return &types.MsgEndRewardProgramResponse{}, fmt.Errorf("%v not authorized is not program owner", msg.ProgramOwnerAddress)
+		return &types.MsgEndRewardProgramResponse{}, types.ErrEndRewardProgramNotAuthorized
 	}
 	if rewardProgram.State != types.RewardProgram_STATE_PENDING && rewardProgram.State != types.RewardProgram_STATE_STARTED {
-		return &types.MsgEndRewardProgramResponse{}, fmt.Errorf("cannot end program in state ended or expired state")
+		return &types.MsgEndRewardProgramResponse{}, types.ErrEndrewardProgramIncorrectState
 	}
 
 	s.Keeper.EndingRewardProgram(ctx, rewardProgram)
