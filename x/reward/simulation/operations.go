@@ -1,5 +1,7 @@
 package simulation
 
+// DONTCOVER
+
 import (
 	"fmt"
 	"math/rand"
@@ -57,7 +59,6 @@ func WeightedOperations(
 			SimulateMsgEndRewardsProgram(k, ak, bk),
 		),
 	}
-
 }
 
 func SimulateMsgCreateRewardsProgram(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
@@ -176,19 +177,21 @@ func SimulateMsgEndRewardsProgram(k keeper.Keeper, ak authkeeper.AccountKeeperI,
 		if !found {
 			return simtypes.NoOpMsg(types.ModuleName, "EndRewardProgram", "creator of rewards program account does not exist"), nil, nil
 		}
-		var msg sdk.Msg
-		msg = types.NewMsgEndRewardProgramRequest(rewardProgram.Id, rewardProgram.DistributeFromAddress)
-
+		msg := types.NewMsgEndRewardProgramRequest(rewardProgram.Id, rewardProgram.DistributeFromAddress)
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
 	}
 }
 
 func randomRewardProgram(r *rand.Rand, ctx sdk.Context, k keeper.Keeper) *types.RewardProgram {
 	var rewardPrograms []types.RewardProgram
-	k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
+	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
 		rewardPrograms = append(rewardPrograms, rewardProgram)
 		return false
 	})
+	if err != nil {
+		// sim tests should fail if iterator errors
+		panic(err)
+	}
 	if len(rewardPrograms) == 0 {
 		return nil
 	}
