@@ -174,7 +174,7 @@ Valid Proposal Types (and associated parameters):
 			callerAddr := clientCtx.GetFromAddress()
 			msg, err := govtypes.NewMsgSubmitProposal(proposal, deposit, callerAddr)
 			if err != nil {
-				return fmt.Errorf("invalid governance proposal. Error: %s", err)
+				return fmt.Errorf("invalid governance proposal. Error: %w", err)
 			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -218,11 +218,11 @@ with the given supply amount and denomination provided in the coin argument
 			}
 			supplyFixed, err := cmd.Flags().GetBool(FlagSupplyFixed)
 			if err != nil {
-				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %s", FlagSupplyFixed, err)
+				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagSupplyFixed, err)
 			}
 			allowGovernanceControl, err := cmd.Flags().GetBool(FlagAllowGovernanceControl)
 			if err != nil {
-				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %s", FlagAllowGovernanceControl, err)
+				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagAllowGovernanceControl, err)
 			}
 			msg := types.NewMsgAddMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue, supplyFixed, allowGovernanceControl)
 

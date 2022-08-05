@@ -103,7 +103,7 @@ func (k Keeper) AddAccess(
 	// (if marker does not exist then fail)
 	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
-		return fmt.Errorf("marker not found for %s: %s", denom, err)
+		return fmt.Errorf("marker not found for %s: %w", denom, err)
 	}
 	switch m.GetStatus() {
 	// marker is fixed/active, assert permission to make changes by checking for Grant Permission
@@ -148,7 +148,7 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	// (if marker does not exist then fail)
 	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
-		return fmt.Errorf("marker not found for %s: %s", denom, err)
+		return fmt.Errorf("marker not found for %s: %w", denom, err)
 	}
 	switch m.GetStatus() {
 	// marker is fixed/active, assert permission to make changes by checking for Grant Permission
@@ -196,7 +196,7 @@ func (k Keeper) WithdrawCoins(
 	// (if marker does not exist then fail)
 	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
-		return fmt.Errorf("marker not found for %s: %s", denom, err)
+		return fmt.Errorf("marker not found for %s: %w", denom, err)
 	}
 	if !m.AddressHasAccess(caller, types.Access_Withdraw) {
 		return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Withdraw, m.GetDenom())
@@ -233,7 +233,7 @@ func (k Keeper) MintCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	// (if marker does not exist then fail)
 	m, err := k.GetMarkerByDenom(ctx, coin.Denom)
 	if err != nil {
-		return fmt.Errorf("marker not found for %s: %s", coin.Denom, err)
+		return fmt.Errorf("marker not found for %s: %w", coin.Denom, err)
 	}
 	if !m.AddressHasAccess(caller, types.Access_Mint) {
 		return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Mint, m.GetDenom())
@@ -276,7 +276,7 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	// (if marker does not exist then fail)
 	m, err := k.GetMarkerByDenom(ctx, coin.Denom)
 	if err != nil {
-		return fmt.Errorf("marker not found for %s: %s", coin.Denom, err)
+		return fmt.Errorf("marker not found for %s: %w", coin.Denom, err)
 	}
 	if !m.AddressHasAccess(caller, types.Access_Burn) {
 		return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Burn, m.GetDenom())
@@ -431,7 +431,7 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string
 	// (if marker does not exist then fail)
 	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
-		return fmt.Errorf("marker not found for %s: %s", denom, err)
+		return fmt.Errorf("marker not found for %s: %w", denom, err)
 	}
 	// Only the manger can finalize a marker
 	if !m.GetManager().Equals(caller) {
@@ -485,7 +485,7 @@ func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string
 
 	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
-		return fmt.Errorf("marker not found for %s: %s", denom, err)
+		return fmt.Errorf("marker not found for %s: %w", denom, err)
 	}
 	// Only the manger can activate a marker
 	if !m.GetManager().Equals(caller) {
@@ -549,7 +549,7 @@ func (k Keeper) CancelMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 
 	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
-		return fmt.Errorf("marker not found for %s: %s", denom, err)
+		return fmt.Errorf("marker not found for %s: %w", denom, err)
 	}
 
 	switch m.GetStatus() {
@@ -599,7 +599,7 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 
 	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
-		return fmt.Errorf("marker not found for %s: %s", denom, err)
+		return fmt.Errorf("marker not found for %s: %w", denom, err)
 	}
 
 	// either the manager [set if a proposed marker was cancelled] or someone assigned `delete` can perform this action
@@ -623,7 +623,7 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 
 	err = k.DecreaseSupply(ctx, m, sdk.NewCoin(denom, totalSupply))
 	if err != nil {
-		return fmt.Errorf("could not decrease marker supply %s: %s", denom, err)
+		return fmt.Errorf("could not decrease marker supply %s: %w", denom, err)
 	}
 
 	escrow = k.bankKeeper.GetAllBalances(ctx, m.GetAddress())
@@ -634,7 +634,7 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	// get the updated state of the marker afer supply burn...
 	m, err = k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
-		return fmt.Errorf("marker not found for %s: %s", denom, err)
+		return fmt.Errorf("marker not found for %s: %w", denom, err)
 	}
 	if err = m.SetStatus(types.StatusDestroyed); err != nil {
 		return fmt.Errorf("could not update marker status: %w", err)
@@ -659,7 +659,7 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 
 	m, err := k.GetMarkerByDenom(ctx, amount.Denom)
 	if err != nil {
-		return fmt.Errorf("marker not found for %s: %s", amount.Denom, err)
+		return fmt.Errorf("marker not found for %s: %w", amount.Denom, err)
 	}
 	if m.GetMarkerType() != types.MarkerType_RestrictedCoin {
 		return fmt.Errorf("marker type is not restricted_coin, brokered transfer not supported")

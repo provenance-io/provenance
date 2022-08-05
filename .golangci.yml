@@ -34,6 +34,7 @@ linters:
     - whitespace
     - nolintlint
     - predeclared
+    - errorlint
 
 issues:
   exclude-rules:

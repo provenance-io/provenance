@@ -301,7 +301,7 @@ func (k Keeper) ValidateRecordRemove(
 ) error {
 	scopeUUID, err := existing.SessionId.ScopeUUID()
 	if err != nil {
-		return fmt.Errorf("cannot get scope uuid: %s", err)
+		return fmt.Errorf("cannot get scope uuid: %w", err)
 	}
 	scopeID := types.ScopeMetadataAddress(scopeUUID)
 	scope, found := k.GetScope(ctx, scopeID)

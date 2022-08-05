@@ -77,7 +77,7 @@ func ApplyClientConfigToContext(ctx client.Context, config *ClientConfig) (clien
 
 	keyring, krerr := client.NewKeyringFromBackend(ctx, config.KeyringBackend)
 	if krerr != nil {
-		return ctx, fmt.Errorf("couldn't get key ring backend %s: %v", config.KeyringBackend, krerr)
+		return ctx, fmt.Errorf("couldn't get key ring backend %s: %w", config.KeyringBackend, krerr)
 	}
 
 	ctx = ctx.WithKeyring(keyring)
@@ -85,7 +85,7 @@ func ApplyClientConfigToContext(ctx client.Context, config *ClientConfig) (clien
 	// https://github.com/cosmos/cosmos-sdk/issues/8986
 	clnt, nerr := client.NewClientFromNode(config.Node)
 	if nerr != nil {
-		return ctx, fmt.Errorf("couldn't get client from nodeURI: %v", nerr)
+		return ctx, fmt.Errorf("couldn't get client from nodeURI: %w", nerr)
 	}
 
 	ctx = ctx.WithNodeURI(config.Node).

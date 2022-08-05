@@ -333,8 +333,8 @@ func parseScopeID(input string) (MetadataAddress, error) {
 	if uuidErr == nil {
 		return ScopeMetadataAddress(scopeUUID), nil
 	}
-	return MetadataAddress{}, fmt.Errorf("could not convert %s into either a scope metadata address (%s) or uuid (%s)",
-		input, maErr.Error(), uuidErr.Error())
+	return MetadataAddress{}, fmt.Errorf("could not convert %s into either a scope metadata address (%v) or uuid (%v)",
+		input, maErr, uuidErr) //nolint:errorlint // Can't wrap two errors at once.
 }
 
 func parseScopeSpecificationID(input string) (MetadataAddress, error) {
@@ -349,8 +349,8 @@ func parseScopeSpecificationID(input string) (MetadataAddress, error) {
 	if uuidErr == nil {
 		return ScopeSpecMetadataAddress(scopeSpecUUID), nil
 	}
-	return MetadataAddress{}, fmt.Errorf("could not convert %s into either a scope specification metadata address (%s) or uuid (%s)",
-		input, maErr.Error(), uuidErr.Error())
+	return MetadataAddress{}, fmt.Errorf("could not convert %s into either a scope specification metadata address (%v) or uuid (%v)",
+		input, maErr, uuidErr) //nolint:errorlint // Can't wrap two errors at once.
 }
 
 func parseSessionID(scopeID MetadataAddress, input string) (MetadataAddress, error) {
@@ -365,8 +365,8 @@ func parseSessionID(scopeID MetadataAddress, input string) (MetadataAddress, err
 	if uuidErr == nil {
 		return scopeID.AsSessionAddress(sessionUUID)
 	}
-	return MetadataAddress{}, fmt.Errorf("could not convert %s into either session metadata address (%s) or uuid (%s)",
-		input, maErr.Error(), uuidErr.Error())
+	return MetadataAddress{}, fmt.Errorf("could not convert %s into either session metadata address (%v) or uuid (%v)",
+		input, maErr, uuidErr) //nolint:errorlint // Can't wrap two errors at once.
 }
 
 func convertParties(old []*p8e.Recital) (parties []Party, err error) {
@@ -423,7 +423,7 @@ func appendError(err1 error, err2 error) error {
 	if err2 == nil {
 		return err1
 	}
-	return fmt.Errorf("%s, %s", err1.Error(), err2.Error())
+	return fmt.Errorf("%v, %v", err1, err2) //nolint:errorlint // Can't wrap two errors at once.
 }
 
 func getAddressFromSigner(signer *p8e.SigningAndEncryptionPublicKeys) (sdk.AccAddress, error) {
