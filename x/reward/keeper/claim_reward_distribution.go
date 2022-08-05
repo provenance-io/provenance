@@ -65,10 +65,9 @@ func (k Keeper) ClaimPeriodRewardDistributionIsValid(claimPeriodReward *types.Cl
 func (k Keeper) RemoveClaimPeriodRewardDistribution(ctx sdk.Context, claimPeriodID uint64, rewardID uint64) bool {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetClaimPeriodRewardDistributionKey(claimPeriodID, rewardID)
-	bz := store.Get(key)
-	keyExists := store.Has(bz)
+	keyExists := store.Has(key)
 	if keyExists {
-		store.Delete(bz)
+		store.Delete(key)
 	}
 	return keyExists
 }
