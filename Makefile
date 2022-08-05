@@ -478,6 +478,14 @@ localnet-start: localnet-generate localnet-up
 localnet-stop:
 	docker-compose -f networks/local/docker-compose.yml --project-directory ./ down
 
+# Start postgres indexer instance
+indexer-db-up:
+	docker compose -f docker/postgres-indexer/docker-compose.yaml --project-directory ./ up -d
+
+# Stop postgres indexer instance
+indexer-db-stop:
+	docker compose -f docker/postgres-indexer/docker-compose.yaml --project-directory ./ down
+
 # Quick build using devnet environment and go platform target options.
 docker-build-dev: vendor
 	docker build --tag provenance-io/blockchain-dev -f networks/dev/blockchain-dev/Dockerfile .

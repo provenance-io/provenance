@@ -17,6 +17,8 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 
+	_ "github.com/lib/pq"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
