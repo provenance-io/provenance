@@ -38,7 +38,6 @@ jobs:
       - name: Define Variables
         id: def-vars
         run: |
-          echo "::set-output name=go-version::1.17"
           echo "::set-output name=cache-key::${{ runner.os }}-unit-tests-${{ hashFiles('scripts/cleveldb_build_and_install.sh', '.github/workflows/test.yml') }}"
           echo "::set-output name=file-prefix::${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
       - name: Create a file with all the pkgs
@@ -88,7 +87,7 @@ jobs:
         run: CLEVELDB_DO_CLEANUP=false make cleveldb
     outputs:
       should-run: ${{ env.GIT_DIFF }}
-      go-version: ${{ steps.def-vars.outputs.go-version }}
+      go-version: 1.18
       cache-key: ${{ steps.def-vars.outputs.cache-key }}
       file-prefix: ${{ steps.def-vars.outputs.file-prefix }}
       # Note: this needs to match the path: entries in the actions/cache step above.

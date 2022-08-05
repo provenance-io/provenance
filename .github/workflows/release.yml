@@ -57,7 +57,7 @@ jobs:
       version: ${{ steps.vars.outputs.version }}
       is_release: ${{ steps.vars.outputs.is_release }}
       prerelease: ${{ steps.vars.outputs.prerelease }}
-      go_version: "1.17"
+      go_version: 1.18
 
   build_osx:
     runs-on: macos-latest
