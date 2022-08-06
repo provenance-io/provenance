@@ -18,18 +18,18 @@ message EventTxCompleted {
 
 // EventExpirationAdd is an event message indicating an expiration has been created
 message EventExpirationAdd {
-  // expiration_addr is the bech32 address string of the expiration id that was created.
-  string expiration_addr = 1;
+  // module_asset_id is the bech32 address string of the expiration id that was created.
+  string module_asset_id = 1;
 }
 
 // EventExpirationExtend is an event message indicating an expiration has been extended
 message EventExpirationExtend {
-  // expiration_addr is the bech32 address string of the expiration id that was created.
-  string expiration_addr = 1;
+  // module_asset_id is the bech32 address string of the expiration id that was created.
+  string module_asset_id = 1;
 }
 
 // EventExpirationDelete is an event message indicating an expiration has been deleted
 message EventExpirationDelete {
-  // expiration_addr is the bech32 address string of the expiration id that was created.
-  string expiration_addr = 1;
+  // module_asset_id is the bech32 address string of the expiration id that was created.
+  string module_asset_id = 1;
 }

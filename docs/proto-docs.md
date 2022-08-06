@@ -920,7 +920,7 @@ EventExpirationAdd is an event message indicating an expiration has been created
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `expiration_addr` | [string](#string) |  | expiration_addr is the bech32 address string of the expiration id that was created. |
+| `module_asset_id` | [string](#string) |  | module_asset_id is the bech32 address string of the expiration id that was created. |
 
 
 
@@ -935,7 +935,7 @@ EventExpirationDelete is an event message indicating an expiration has been dele
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `expiration_addr` | [string](#string) |  | expiration_addr is the bech32 address string of the expiration id that was created. |
+| `module_asset_id` | [string](#string) |  | module_asset_id is the bech32 address string of the expiration id that was created. |
 
 
 
@@ -950,7 +950,7 @@ EventExpirationExtend is an event message indicating an expiration has been exte
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `expiration_addr` | [string](#string) |  | expiration_addr is the bech32 address string of the expiration id that was created. |
+| `module_asset_id` | [string](#string) |  | module_asset_id is the bech32 address string of the expiration id that was created. |
 
 
 
@@ -993,17 +993,16 @@ Since: provenance 1.12
 <a name="provenance.expiration.v1.Expiration"></a>
 
 ### Expiration
-Expiration holds a typed key/value structure for data associated with an
-expiring module asset
+Expiration holds a typed key/value structure for data associated with an expiring module asset
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `module_asset_id` | [string](#string) |  | the module asset identifier |
 | `owner` | [string](#string) |  | The bech32 address the expiration is bound to |
-| `expiration_height` | [int64](#int64) |  | The block height the module asset expires |
+| `block_height` | [int64](#int64) |  | The block height the module asset expires |
 | `deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The deposit amount held while module asset is in use |
-| `expiration_messages` | [google.protobuf.Any](#google.protobuf.Any) | repeated | Messages relating to the expiring module asset |
+| `messages` | [google.protobuf.Any](#google.protobuf.Any) | repeated | Messages relating to the expiring module asset |
 
 
 
@@ -1197,9 +1196,9 @@ MsgAddExpirationMetadataRequest represents a message to add an expiration
 | ----- | ---- | ----- | ----------- |
 | `module_asset_id` | [string](#string) |  |  |
 | `owner_address` | [string](#string) |  |  |
-| `expiration_height` | [int64](#int64) |  |  |
+| `block_height` | [int64](#int64) |  |  |
 | `deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `expiration_messages` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
+| `messages` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
 
 
 

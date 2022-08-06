@@ -28,14 +28,6 @@ service Query {
   rpc QueryAllExpirations(QueryAllExpirationsRequest) returns (QueryAllExpirationsResponse) {
     option (google.api.http).get = "/provenance/expiration/v1/all";
   }
-
-  //  // CalculateTxFees simulates executing a transaction for estimating gas usage and additional fees.
-  //  rpc CalculateTxFees(CalculateTxFeesRequest) returns (CalculateTxFeesResponse) {
-  //    option (google.api.http) = {
-  //      post: "/provenance/tx/v1/calculate_msg_based_fee"
-  //      body: "*"
-  //    };
-  //  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -69,29 +61,3 @@ message QueryAllExpirationsResponse {
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
-
-// todo: do we need the below because of the `additional deposit` required for an expiration? If not, remove.
-
-//// CalculateTxFeesRequest is the request type for the Query RPC method.
-// message CalculateTxFeesRequest {
-//  // tx_bytes is the transaction to simulate.
-//  bytes tx_bytes = 1;
-//  // default_base_denom is used to set the denom used for gas fees
-//  // if not set it will default to nhash.
-//  string default_base_denom = 2;
-//  // gas_adjustment is the adjustment factor to be multiplied against the estimate returned by the tx simulation
-//  float gas_adjustment = 3;
-//}
-//
-//// CalculateTxFeesResponse is the response type for the Query RPC method.
-// message CalculateTxFeesResponse {
-//  // deposit is the denom amount held for the duration of the module asset on chain
-//  repeated cosmos.base.v1beta1.Coin deposit = 1
-//      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-//  // total_fees are the total amount of fees needed for the transactions (msg fees + gas fee)
-//  // note: the gas fee is calculated with the floor gas price module param.
-//  repeated cosmos.base.v1beta1.Coin total_fees = 2
-//      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-//  // estimated_gas is the amount of gas needed for the transaction
-//  uint64 estimated_gas = 3 [(gogoproto.moretags) = "yaml:\"estimated_gas\""];
-//}

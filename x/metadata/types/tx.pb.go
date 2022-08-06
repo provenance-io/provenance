@@ -816,7 +816,7 @@ func (m *MsgWriteRecordResponse) GetRecordIdInfo() *RecordIdInfo {
 	return nil
 }
 
-// MsgDeleteRecordRequest is the request type for the Msg/DeleteExpiration RPC method.
+// MsgDeleteRecordRequest is the request type for the Msg/DeleteRecord RPC method.
 type MsgDeleteRecordRequest struct {
 	RecordId MetadataAddress `protobuf:"bytes,1,opt,name=record_id,json=recordId,proto3,customtype=MetadataAddress" json:"record_id" yaml:"record_id"`
 	Signers  []string        `protobuf:"bytes,2,rep,name=signers,proto3" json:"signers,omitempty"`
@@ -854,7 +854,7 @@ func (m *MsgDeleteRecordRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDeleteRecordRequest proto.InternalMessageInfo
 
-// MsgDeleteRecordResponse is the response type for the Msg/DeleteExpiration RPC method.
+// MsgDeleteRecordResponse is the response type for the Msg/DeleteRecord RPC method.
 type MsgDeleteRecordResponse struct {
 }
 
@@ -2351,7 +2351,7 @@ func (c *msgClient) WriteRecord(ctx context.Context, in *MsgWriteRecordRequest, 
 
 func (c *msgClient) DeleteRecord(ctx context.Context, in *MsgDeleteRecordRequest, opts ...grpc.CallOption) (*MsgDeleteRecordResponse, error) {
 	out := new(MsgDeleteRecordResponse)
-	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Msg/DeleteExpiration", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.metadata.v1.Msg/DeleteRecord", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2556,7 +2556,7 @@ func (*UnimplementedMsgServer) WriteRecord(ctx context.Context, req *MsgWriteRec
 	return nil, status.Errorf(codes.Unimplemented, "method WriteRecord not implemented")
 }
 func (*UnimplementedMsgServer) DeleteRecord(ctx context.Context, req *MsgDeleteRecordRequest) (*MsgDeleteRecordResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteExpiration not implemented")
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteRecord not implemented")
 }
 func (*UnimplementedMsgServer) WriteScopeSpecification(ctx context.Context, req *MsgWriteScopeSpecificationRequest) (*MsgWriteScopeSpecificationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WriteScopeSpecification not implemented")
@@ -2756,7 +2756,7 @@ func _Msg_DeleteRecord_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.metadata.v1.Msg/DeleteExpiration",
+		FullMethod: "/provenance.metadata.v1.Msg/DeleteRecord",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).DeleteRecord(ctx, req.(*MsgDeleteRecordRequest))
@@ -3035,7 +3035,7 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_WriteRecord_Handler,
 		},
 		{
-			MethodName: "DeleteExpiration",
+			MethodName: "DeleteRecord",
 			Handler:    _Msg_DeleteRecord_Handler,
 		},
 		{

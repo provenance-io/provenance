@@ -23,15 +23,14 @@ service Msg {
 // MsgAddExpirationMetadataRequest represents a message to add an expiration
 message MsgAddExpirationRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  string                   module_asset_id         = 1 [(gogoproto.moretags) = "yaml:\"module_asset_id\""];
-  string                   owner_address           = 2 [(gogoproto.moretags) = "yaml:\"owner_address\""];
-  int64                    expiration_height       = 3 [(gogoproto.moretags) = "yaml:\"expiration_height\""];
-  cosmos.base.v1beta1.Coin deposit                 = 4 [(gogoproto.nullable) = false];
-  repeated google.protobuf.Any expiration_messages = 5 [(gogoproto.moretags) = "yaml:\"expiration_messages\""];
+  string                   module_asset_id = 1 [(gogoproto.moretags) = "yaml:\"module_asset_id\""];
+  string                   owner_address   = 2 [(gogoproto.moretags) = "yaml:\"owner_address\""];
+  int64                    block_height    = 3 [(gogoproto.moretags) = "yaml:\"block_height\""];
+  cosmos.base.v1beta1.Coin deposit         = 4 [(gogoproto.nullable) = false];
+  repeated google.protobuf.Any messages    = 5;
 }
 
 // MsgAddExpirationMetadataResponse defines the MsgAddExpirationMetadataRequest response type
@@ -40,7 +39,6 @@ message MsgAddExpirationResponse {}
 // MsgExtendExpirationMetadataRequest represents a message to extend an expiration
 message MsgExtendExpirationRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
@@ -56,7 +54,6 @@ message MsgExtendExpirationResponse {}
 // MsgDeleteExpirationMetadataResponse represents a message to delete an expiration
 message MsgDeleteExpirationRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 

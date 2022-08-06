@@ -88,8 +88,8 @@ func (m *EventTxCompleted) GetSigners() []string {
 
 // EventExpirationAdd is an event message indicating an expiration has been created
 type EventExpirationAdd struct {
-	// expiration_addr is the bech32 address string of the expiration id that was created.
-	ExpirationAddr string `protobuf:"bytes,1,opt,name=expiration_addr,json=expirationAddr,proto3" json:"expiration_addr,omitempty"`
+	// module_asset_id is the bech32 address string of the expiration id that was created.
+	ModuleAssetId string `protobuf:"bytes,1,opt,name=module_asset_id,json=moduleAssetId,proto3" json:"module_asset_id,omitempty"`
 }
 
 func (m *EventExpirationAdd) Reset()         { *m = EventExpirationAdd{} }
@@ -125,17 +125,17 @@ func (m *EventExpirationAdd) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EventExpirationAdd proto.InternalMessageInfo
 
-func (m *EventExpirationAdd) GetExpirationAddr() string {
+func (m *EventExpirationAdd) GetModuleAssetId() string {
 	if m != nil {
-		return m.ExpirationAddr
+		return m.ModuleAssetId
 	}
 	return ""
 }
 
 // EventExpirationExtend is an event message indicating an expiration has been extended
 type EventExpirationExtend struct {
-	// expiration_addr is the bech32 address string of the expiration id that was created.
-	ExpirationAddr string `protobuf:"bytes,1,opt,name=expiration_addr,json=expirationAddr,proto3" json:"expiration_addr,omitempty"`
+	// module_asset_id is the bech32 address string of the expiration id that was created.
+	ModuleAssetId string `protobuf:"bytes,1,opt,name=module_asset_id,json=moduleAssetId,proto3" json:"module_asset_id,omitempty"`
 }
 
 func (m *EventExpirationExtend) Reset()         { *m = EventExpirationExtend{} }
@@ -171,17 +171,17 @@ func (m *EventExpirationExtend) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EventExpirationExtend proto.InternalMessageInfo
 
-func (m *EventExpirationExtend) GetExpirationAddr() string {
+func (m *EventExpirationExtend) GetModuleAssetId() string {
 	if m != nil {
-		return m.ExpirationAddr
+		return m.ModuleAssetId
 	}
 	return ""
 }
 
 // EventExpirationDelete is an event message indicating an expiration has been deleted
 type EventExpirationDelete struct {
-	// expiration_addr is the bech32 address string of the expiration id that was created.
-	ExpirationAddr string `protobuf:"bytes,1,opt,name=expiration_addr,json=expirationAddr,proto3" json:"expiration_addr,omitempty"`
+	// module_asset_id is the bech32 address string of the expiration id that was created.
+	ModuleAssetId string `protobuf:"bytes,1,opt,name=module_asset_id,json=moduleAssetId,proto3" json:"module_asset_id,omitempty"`
 }
 
 func (m *EventExpirationDelete) Reset()         { *m = EventExpirationDelete{} }
@@ -217,9 +217,9 @@ func (m *EventExpirationDelete) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EventExpirationDelete proto.InternalMessageInfo
 
-func (m *EventExpirationDelete) GetExpirationAddr() string {
+func (m *EventExpirationDelete) GetModuleAssetId() string {
 	if m != nil {
-		return m.ExpirationAddr
+		return m.ModuleAssetId
 	}
 	return ""
 }
@@ -236,7 +236,7 @@ func init() {
 }
 
 var fileDescriptor_db63118c179972b3 = []byte{
-	// 270 bytes of a gzipped FileDescriptorProto
+	// 277 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x2d, 0x28, 0xca, 0x2f,
 	0x4b, 0xcd, 0x4b, 0xcc, 0x4b, 0x4e, 0xd5, 0x4f, 0xad, 0x28, 0xc8, 0x2c, 0x4a, 0x2c, 0xc9, 0xcc,
 	0xcf, 0xd3, 0x2f, 0x33, 0xd4, 0x4f, 0x2d, 0x4b, 0xcd, 0x2b, 0x29, 0xd6, 0x2b, 0x28, 0xca, 0x2f,
@@ -245,15 +245,16 @@ var fileDescriptor_db63118c179972b3 = []byte{
 	0x62, 0xcb, 0xcd, 0x4f, 0x29, 0xcd, 0x49, 0x95, 0x60, 0x54, 0x60, 0xd4, 0xe0, 0x0c, 0x82, 0xf2,
 	0x84, 0xa4, 0xb8, 0x38, 0x52, 0xf3, 0x52, 0x0a, 0xf2, 0x33, 0xf3, 0x4a, 0x24, 0x98, 0xc0, 0x32,
 	0x70, 0xbe, 0x90, 0x04, 0x17, 0x7b, 0x71, 0x66, 0x7a, 0x5e, 0x6a, 0x51, 0xb1, 0x04, 0xb3, 0x02,
-	0xb3, 0x06, 0x67, 0x10, 0x8c, 0xab, 0x64, 0xcb, 0x25, 0x04, 0xb6, 0xc1, 0x15, 0x6e, 0xaf, 0x63,
-	0x4a, 0x8a, 0x90, 0x3a, 0x17, 0x3f, 0xc2, 0x21, 0xf1, 0x89, 0x29, 0x29, 0x45, 0x50, 0xcb, 0xf8,
-	0x52, 0x91, 0xd5, 0x15, 0x29, 0x39, 0x70, 0x89, 0xa2, 0x69, 0x77, 0xad, 0x28, 0x49, 0xcd, 0xa3,
-	0xc8, 0x04, 0x97, 0x54, 0x90, 0x47, 0x89, 0x36, 0xc1, 0x29, 0xff, 0xc4, 0x23, 0x39, 0xc6, 0x0b,
-	0x8f, 0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63, 0x9c, 0xf0, 0x58, 0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86,
-	0x1b, 0x8f, 0xe5, 0x18, 0xb8, 0xa4, 0x33, 0xf3, 0xf5, 0x70, 0x85, 0x6d, 0x00, 0x63, 0x94, 0x59,
-	0x7a, 0x66, 0x49, 0x46, 0x69, 0x92, 0x5e, 0x72, 0x7e, 0xae, 0x3e, 0x42, 0x99, 0x6e, 0x66, 0x3e,
-	0x12, 0x4f, 0xbf, 0x02, 0x39, 0xe6, 0x4a, 0x2a, 0x0b, 0x52, 0x8b, 0x93, 0xd8, 0xc0, 0xd1, 0x66,
-	0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0xbd, 0x5a, 0x05, 0x8b, 0xdf, 0x01, 0x00, 0x00,
+	0xb3, 0x06, 0x67, 0x10, 0x8c, 0xab, 0x64, 0xc3, 0x25, 0x04, 0xb6, 0xc1, 0x15, 0x6e, 0xaf, 0x63,
+	0x4a, 0x8a, 0x90, 0x1a, 0x17, 0x3f, 0xc4, 0xd4, 0xf8, 0xc4, 0xe2, 0xe2, 0xd4, 0x92, 0xf8, 0xcc,
+	0x14, 0xa8, 0x65, 0xbc, 0x10, 0x61, 0x47, 0x90, 0xa8, 0x67, 0x8a, 0x92, 0x3d, 0x97, 0x28, 0x9a,
+	0x6e, 0xd7, 0x8a, 0x92, 0xd4, 0x3c, 0x4a, 0x0c, 0x70, 0x49, 0x05, 0x79, 0x93, 0x58, 0x03, 0x9c,
+	0xf2, 0x4f, 0x3c, 0x92, 0x63, 0xbc, 0xf0, 0x48, 0x8e, 0xf1, 0xc1, 0x23, 0x39, 0xc6, 0x09, 0x8f,
+	0xe5, 0x18, 0x2e, 0x3c, 0x96, 0x63, 0xb8, 0xf1, 0x58, 0x8e, 0x81, 0x4b, 0x3a, 0x33, 0x5f, 0x0f,
+	0x57, 0xc0, 0x06, 0x30, 0x46, 0x99, 0xa5, 0x67, 0x96, 0x64, 0x94, 0x26, 0xe9, 0x25, 0xe7, 0xe7,
+	0xea, 0x23, 0x94, 0xe9, 0x66, 0xe6, 0x23, 0xf1, 0xf4, 0x2b, 0x90, 0xa3, 0xad, 0xa4, 0xb2, 0x20,
+	0xb5, 0x38, 0x89, 0x0d, 0x1c, 0x67, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0xfa, 0x8d, 0x2a,
+	0x68, 0xdc, 0x01, 0x00, 0x00,
 }
 
 func (m *EventTxCompleted) Marshal() (dAtA []byte, err error) {
@@ -322,10 +323,10 @@ func (m *EventExpirationAdd) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.ExpirationAddr) > 0 {
-		i -= len(m.ExpirationAddr)
-		copy(dAtA[i:], m.ExpirationAddr)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.ExpirationAddr)))
+	if len(m.ModuleAssetId) > 0 {
+		i -= len(m.ModuleAssetId)
+		copy(dAtA[i:], m.ModuleAssetId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ModuleAssetId)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -352,10 +353,10 @@ func (m *EventExpirationExtend) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.ExpirationAddr) > 0 {
-		i -= len(m.ExpirationAddr)
-		copy(dAtA[i:], m.ExpirationAddr)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.ExpirationAddr)))
+	if len(m.ModuleAssetId) > 0 {
+		i -= len(m.ModuleAssetId)
+		copy(dAtA[i:], m.ModuleAssetId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ModuleAssetId)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -382,10 +383,10 @@ func (m *EventExpirationDelete) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.ExpirationAddr) > 0 {
-		i -= len(m.ExpirationAddr)
-		copy(dAtA[i:], m.ExpirationAddr)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.ExpirationAddr)))
+	if len(m.ModuleAssetId) > 0 {
+		i -= len(m.ModuleAssetId)
+		copy(dAtA[i:], m.ModuleAssetId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ModuleAssetId)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -432,7 +433,7 @@ func (m *EventExpirationAdd) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ExpirationAddr)
+	l = len(m.ModuleAssetId)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
@@ -445,7 +446,7 @@ func (m *EventExpirationExtend) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ExpirationAddr)
+	l = len(m.ModuleAssetId)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
@@ -458,7 +459,7 @@ func (m *EventExpirationDelete) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ExpirationAddr)
+	l = len(m.ModuleAssetId)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
@@ -648,7 +649,7 @@ func (m *EventExpirationAdd) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ExpirationAddr", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ModuleAssetId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -676,7 +677,7 @@ func (m *EventExpirationAdd) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ExpirationAddr = string(dAtA[iNdEx:postIndex])
+			m.ModuleAssetId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -730,7 +731,7 @@ func (m *EventExpirationExtend) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ExpirationAddr", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ModuleAssetId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -758,7 +759,7 @@ func (m *EventExpirationExtend) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ExpirationAddr = string(dAtA[iNdEx:postIndex])
+			m.ModuleAssetId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -812,7 +813,7 @@ func (m *EventExpirationDelete) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ExpirationAddr", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ModuleAssetId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -840,7 +841,7 @@ func (m *EventExpirationDelete) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ExpirationAddr = string(dAtA[iNdEx:postIndex])
+			m.ModuleAssetId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
