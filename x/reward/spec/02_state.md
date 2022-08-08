@@ -19,7 +19,7 @@ order: 2
 
 A `RewardProgram` is the main data structure used by the Active Participation and Engagement (APE) module. It keeps track of the state, balances, qualifying actions, timers, and counters for a single Reward Program.
 
-+++ https://github.com/provenance-io/provenance/blob/4e354a9fd554a420f7970522d2e8b0b749baad9d/proto/provenance/reward/v1/reward.proto#L15-L91
++++ https://github.com/provenance-io/provenance/blob/cba0b20229234bd655d7aefdb5aa5195e1c01214/proto/provenance/reward/v1/reward.proto#L13-L99
 
 ---
 ## Claim Period Reward Distribution
