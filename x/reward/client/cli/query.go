@@ -84,7 +84,7 @@ func GetRewardProgramCmd() *cobra.Command {
 				context.Background(),
 				&request,
 			); err != nil {
-				return fmt.Errorf("failed to query reward programs: %s", err.Error())
+				return fmt.Errorf("failed to query reward programs: %w", err)
 			}
 
 			return clientCtx.PrintProto(response)
@@ -105,7 +105,7 @@ func outputRewardProgramByID(client client.Context, queryClient types.QueryClien
 		context.Background(),
 		&types.QueryRewardProgramByIDRequest{Id: uint64(programID)},
 	); err != nil {
-		return fmt.Errorf("failed to query reward program %d: %s", programID, err.Error())
+		return fmt.Errorf("failed to query reward program %d: %w", programID, err)
 	}
 
 	if response.GetRewardProgram() == nil {
@@ -187,7 +187,7 @@ func outputClaimPeriodRewardDistributionAll(cmd *cobra.Command) error {
 		context.Background(),
 		&types.QueryClaimPeriodRewardDistributionsRequest{Pagination: pageReq},
 	); err != nil {
-		return fmt.Errorf("failed to query reward programs: %s", err.Error())
+		return fmt.Errorf("failed to query reward programs: %w", err)
 	}
 
 	return clientCtx.PrintProto(response)
@@ -216,7 +216,7 @@ func outputClaimPeriodRewardDistributionByID(cmd *cobra.Command, rewardID, claim
 			ClaimPeriodId: uint64(claimID),
 		},
 	); err != nil {
-		return fmt.Errorf("failed to query reward claim %d: %s", id, err.Error())
+		return fmt.Errorf("failed to query reward claim %d: %w", id, err)
 	}
 
 	if response.GetClaimPeriodRewardDistribution() == nil {
@@ -273,7 +273,7 @@ func queryRewardDistributionByAddress(cmd *cobra.Command, address string, queryT
 			ClaimStatus: claimStatus,
 		},
 	); err != nil {
-		return fmt.Errorf("failed to query reward distributions: %s", err.Error())
+		return fmt.Errorf("failed to query reward distributions: %w", err)
 	}
 
 	return clientCtx.PrintProto(response)

@@ -94,7 +94,7 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 			}
 			startTime, err := time.Parse(time.RFC3339, startTimeStr)
 			if err != nil {
-				return fmt.Errorf("unable to parse time (%v) required format is RFC3339 (%v) , %v", startTimeStr, time.RFC3339, err)
+				return fmt.Errorf("unable to parse time (%v) required format is RFC3339 (%v) , %w", startTimeStr, time.RFC3339, err)
 			}
 			rewardProgramDays, err := cmd.Flags().GetUint64(FlagClaimPeriods)
 			if err != nil {
