@@ -48,7 +48,7 @@ func (k Keeper) SetRewardProgram(ctx sdk.Context, rewardProgram types.RewardProg
 	store.Set(types.GetRewardProgramKey(rewardProgram.Id), bz)
 }
 
-// Removes a reward program in the keeper
+// RemoveRewardProgram Removes a reward program in the keeper
 func (k Keeper) RemoveRewardProgram(ctx sdk.Context, id uint64) bool {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRewardProgramKey(id)
@@ -89,7 +89,7 @@ func (k Keeper) IterateRewardPrograms(ctx sdk.Context, handle func(rewardProgram
 	return nil
 }
 
-// Gets all RewardPrograms that have not expired
+// GetOutstandingRewardPrograms Gets all RewardPrograms that have not expired
 func (k Keeper) GetOutstandingRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
 	return k.getRewardProgramByState(ctx, types.RewardProgram_STATE_PENDING, types.RewardProgram_STATE_STARTED)
 }
@@ -114,7 +114,7 @@ func (k Keeper) GetAllExpiredRewardPrograms(ctx sdk.Context) ([]types.RewardProg
 	return k.getRewardProgramByState(ctx, types.RewardProgram_STATE_EXPIRED)
 }
 
-// GetAllExpiredRewardPrograms gets all RewardPrograms that are not expired
+// GetUnexpiredRewardPrograms gets all RewardPrograms that are not expired
 func (k Keeper) GetUnexpiredRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
 	return k.getRewardProgramByState(ctx, types.RewardProgram_STATE_PENDING, types.RewardProgram_STATE_STARTED, types.RewardProgram_STATE_FINISHED)
 }
@@ -136,7 +136,7 @@ func (k Keeper) getRewardProgramByState(ctx sdk.Context, states ...types.RewardP
 	return rewardPrograms, err
 }
 
-// Gets all the RewardPrograms
+// GetAllRewardPrograms Gets all the RewardPrograms
 func (k Keeper) GetAllRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
 	var rewardPrograms []types.RewardProgram
 	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {

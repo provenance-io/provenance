@@ -146,7 +146,7 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 	return nil
 }
 
-// Iterates through all the ABCIEvents that match the eventCriteria.
+// IterateABCIEvents Iterates through all the ABCIEvents that match the eventCriteria.
 // Nil criteria means to iterate over everything.
 func (k Keeper) IterateABCIEvents(ctx sdk.Context, criteria *types.EventCriteria, action func(string, *map[string][]byte) error) error {
 	for _, event := range ctx.EventManager().GetABCIEventHistory() {

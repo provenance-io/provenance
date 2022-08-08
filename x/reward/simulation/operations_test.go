@@ -28,9 +28,9 @@ type SimTestSuite struct {
 
 func (suite *SimTestSuite) SetupTest() {
 	checkTx := false
-	app := app.Setup(checkTx)
-	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
+	application := app.Setup(checkTx)
+	suite.app = application
+	suite.ctx = application.BaseApp.NewContext(checkTx, tmproto.Header{})
 }
 
 func (suite *SimTestSuite) TestWeightedOperations() {

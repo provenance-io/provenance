@@ -203,8 +203,8 @@ func (rp *RewardProgram) Validate() error {
 	if rp.TotalRewardPool.Denom != rp.RemainingPoolBalance.Denom && rp.RemainingPoolBalance.Denom != rp.MaxRewardByAddress.Denom {
 		return fmt.Errorf("all denoms must be same for total reward pool (%s) remaining reward pool (%s) and max reward by address (%s)", rp.TotalRewardPool.Denom, rp.RemainingPoolBalance.Denom, rp.MaxRewardByAddress.Denom)
 	}
-	if rp.TotalRewardPool.Denom != "nhash" {
-		return fmt.Errorf("reward program denom must be in %s : %s", rp.TotalRewardPool.Denom, "nhash")
+	if rp.TotalRewardPool.Denom != provenanceconfig.DefaultBondDenom {
+		return fmt.Errorf("reward program denom must be in %s : %s", rp.TotalRewardPool.Denom, provenanceconfig.DefaultBondDenom)
 	}
 
 	if len(rp.QualifyingActions) == 0 {
