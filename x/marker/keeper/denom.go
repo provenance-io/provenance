@@ -13,15 +13,15 @@ import (
 
 // ValidateDenomMetadata performs extended validation of the denom metadata fields.
 // It checks that:
-//  - The proposed metadata passes ValidateDenomMetadataBasic.
-//  - The marker status is one that allows the denom metadata to be manipulated.
-//  - All DenomUnit Denom and Aliases strings pass the unrestricted denom regex.
-//    If there is an existing record:
-//     - The Base doesn't change.
-//       If marker status is active or finalized:
-//        - No DenomUnit entries are removed.
-//        - DenomUnit Denom fields aren't changed.
-//        - No aliases are removed from a DenomUnit.
+//   - The proposed metadata passes ValidateDenomMetadataBasic.
+//   - The marker status is one that allows the denom metadata to be manipulated.
+//   - All DenomUnit Denom and Aliases strings pass the unrestricted denom regex.
+//     If there is an existing record:
+//   - The Base doesn't change.
+//     If marker status is active or finalized:
+//   - No DenomUnit entries are removed.
+//   - DenomUnit Denom fields aren't changed.
+//   - No aliases are removed from a DenomUnit.
 func (k Keeper) ValidateDenomMetadata(ctx sdk.Context, proposed banktypes.Metadata, existing *banktypes.Metadata, markerStatus types.MarkerStatus) error {
 	// Run all of the basic validation.
 	if err := types.ValidateDenomMetadataBasic(proposed); err != nil {

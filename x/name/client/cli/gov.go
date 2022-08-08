@@ -53,15 +53,15 @@ $ %s tx gov submit-proposal param-change tx gov submit-proposal \
 
 			proposalTitle, err := cmd.Flags().GetString(cli.FlagTitle)
 			if err != nil {
-				return fmt.Errorf("proposal title: %s", err)
+				return fmt.Errorf("proposal title: %w", err)
 			}
 			proposalDescr, err := cmd.Flags().GetString(cli.FlagDescription)
 			if err != nil {
-				return fmt.Errorf("proposal description: %s", err)
+				return fmt.Errorf("proposal description: %w", err)
 			}
 			proposalOwner, err := cmd.Flags().GetString(flagOwner)
 			if err != nil {
-				return fmt.Errorf("proposal root name owner: %s", err)
+				return fmt.Errorf("proposal root name owner: %w", err)
 			}
 			if len(proposalOwner) < 1 {
 				proposalOwner = clientCtx.GetFromAddress().String()

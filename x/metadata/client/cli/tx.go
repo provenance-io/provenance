@@ -606,7 +606,7 @@ ChFIRUxMTyBQUk9WRU5BTkNFIQ==`, version.AppName),
 			} else {
 				arg0AsUUID, asUUIDerr := uuid.Parse(argsLeft[0])
 				if asUUIDerr != nil {
-					return fmt.Errorf("argument [%s] is neither a bech32 address (%s) nor UUID (%s)", argsLeft[0], asIDErr, asUUIDerr)
+					return fmt.Errorf("argument [%s] is neither a bech32 address (%v) nor UUID (%v)", argsLeft[0], asIDErr, asUUIDerr) //nolint:errorlint // Can't wrap two errors at once.
 				}
 				scopeUUID = arg0AsUUID
 			}

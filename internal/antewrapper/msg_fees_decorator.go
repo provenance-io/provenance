@@ -126,9 +126,9 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 	return next(ctx, tx, simulate)
 }
 
-//   This check for chain-id is exclusively for not breaking all existing sim tests which freak out when denom is anything other than stake.
-//   and some network tests won't work without a chain id being set(but they also setup everything with stake denom) so `simapp-unit-testing` chain id is skipped also.
-//   This only needs to work to pio-testnet and pio-mainnet, so this is safe.
+// This check for chain-id is exclusively for not breaking all existing sim tests which freak out when denom is anything other than stake.
+// and some network tests won't work without a chain id being set(but they also setup everything with stake denom) so `simapp-unit-testing` chain id is skipped also.
+// This only needs to work to pio-testnet and pio-mainnet, so this is safe.
 func isTestContext(ctx sdk.Context) bool {
 	return !(len(ctx.ChainID()) != 0 && ctx.ChainID() != SimAppChainID && ctx.ChainID() != helpers.SimAppChainID)
 }

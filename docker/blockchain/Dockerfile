@@ -1,4 +1,4 @@
-FROM golang:1.17-bullseye as build
+FROM golang:1.18-bullseye as build
 ARG VERSION
 
 WORKDIR /go/src/github.com/provenance-io/provenance

@@ -17,7 +17,7 @@ import (
 )
 
 // NewAttribute creates a new instance of an Attribute
-func NewAttribute(name string, address string, attrType AttributeType, value []byte) Attribute { // nolint:interfacer
+func NewAttribute(name string, address string, attrType AttributeType, value []byte) Attribute { //nolint:interfacer
 	// Ensure string type values are trimmed.
 	if attrType != AttributeType_Bytes && attrType != AttributeType_Proto {
 		trimmed := strings.TrimSpace(string(value))
@@ -91,8 +91,8 @@ func GetAttributeAddressBytes(addr string) []byte {
 
 // ValidateAttributeAddress validates that the provide string is a valid address for an attribute.
 // Failures:
-//  * The provided address is empty
-//  * The provided address is neither an account address nor scope metadata address.
+//   - The provided address is empty
+//   - The provided address is neither an account address nor scope metadata address.
 func ValidateAttributeAddress(addr string) error {
 	if len(strings.TrimSpace(addr)) == 0 {
 		return errors.New("must not be empty")

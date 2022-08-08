@@ -32,7 +32,7 @@ type AccessGrantI interface {
 }
 
 // NewAccessGrant creates a new AccessGrant object
-func NewAccessGrant(address sdk.AccAddress, access AccessList) *AccessGrant { // nolint:interfacer
+func NewAccessGrant(address sdk.AccAddress, access AccessList) *AccessGrant { //nolint:interfacer
 	return &AccessGrant{
 		Permissions: access,
 		Address:     address.String(),
@@ -78,7 +78,7 @@ func ValidateGrants(grants ...AccessGrant) error {
 }
 
 // GrantsForAddress return
-func GrantsForAddress(account sdk.AccAddress, grants ...AccessGrant) AccessGrant { // nolint:interfacer
+func GrantsForAddress(account sdk.AccAddress, grants ...AccessGrant) AccessGrant { //nolint:interfacer
 	for _, grant := range grants {
 		if grant.Address == account.String() {
 			return grant

@@ -397,7 +397,7 @@ func (k Keeper) ValidateScopeAddDataAccess(
 	for _, da := range dataAccessAddrs {
 		_, err := sdk.AccAddressFromBech32(da)
 		if err != nil {
-			return fmt.Errorf("failed to decode data access address %s : %v", da, err.Error())
+			return fmt.Errorf("failed to decode data access address %s : %w", da, err)
 		}
 		for _, pda := range existing.DataAccess {
 			if da == pda {
@@ -427,7 +427,7 @@ func (k Keeper) ValidateScopeDeleteDataAccess(
 	for _, da := range dataAccessAddrs {
 		_, err := sdk.AccAddressFromBech32(da)
 		if err != nil {
-			return fmt.Errorf("failed to decode data access address %s : %v", da, err.Error())
+			return fmt.Errorf("failed to decode data access address %s : %w", da, err)
 		}
 		found := false
 		for _, pda := range existing.DataAccess {

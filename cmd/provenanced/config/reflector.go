@@ -20,16 +20,19 @@ type FieldValueMap map[string]reflect.Value
 // Each segment of a name comes from getFieldName. I.e. pays attention to mapstruct and is all lowercase.
 // Similarly, if mapstruct says to squash the fields, they won't have the parent field name.
 // If fillNilsWithZero is true, nil fields in the obj will be filled in using zero values for that field type.
-//    Fields in structs created this way cannot be set later using the map values.
-//    But the resulting map will contain information about all possible fields in the object.
-//    None of the substructures will not have map entries specifically for the parent field containing the substructure.
-//    E.g. With { Foo: { Bar: "foobar" } }, there won't be an entry for "foo", but there will be one for "foo.bar".
+//
+//	Fields in structs created this way cannot be set later using the map values.
+//	But the resulting map will contain information about all possible fields in the object.
+//	None of the substructures will not have map entries specifically for the parent field containing the substructure.
+//	E.g. With { Foo: { Bar: "foobar" } }, there won't be an entry for "foo", but there will be one for "foo.bar".
+//
 // If fillNilsWithZero is false, nil fields in the obj will have an entry for the field and a value where .IsNil() is true.
-//    If the provided obj is a pointer, then the resulting map values can be used to set values in the obj.
-//    Substructures that are nil will have entries in the resulting map.
-//    E.g. With { Foo: (*Bar)(nil) }, there will be an entry for "foo".
-//    Substructures that are not nill will still not have an entry though; they'll have entries for sub-fields still.
-//    E.g. With { Foo: (*Bar)(nil), Ban: { Ana: "banana" } will have entries for "foo" and "ban.ana", but not "ban" (it isn't nil).
+//
+//	If the provided obj is a pointer, then the resulting map values can be used to set values in the obj.
+//	Substructures that are nil will have entries in the resulting map.
+//	E.g. With { Foo: (*Bar)(nil) }, there will be an entry for "foo".
+//	Substructures that are not nill will still not have an entry though; they'll have entries for sub-fields still.
+//	E.g. With { Foo: (*Bar)(nil), Ban: { Ana: "banana" } will have entries for "foo" and "ban.ana", but not "ban" (it isn't nil).
 func MakeFieldValueMap(obj interface{}, fillNilsWithZero bool) FieldValueMap {
 	if obj == nil {
 		return FieldValueMap{}
@@ -182,7 +185,8 @@ func (m FieldValueMap) GetStringOf(key string) string {
 // For strings, it turns into `"a"`.
 // For anything else, it just uses fmt %v.
 // This wasn't designed with the following kinds in mind:
-//    Invalid, Chan, Func, Interface, Map, Ptr, Struct, or UnsafePointer.
+//
+//	Invalid, Chan, Func, Interface, Map, Ptr, Struct, or UnsafePointer.
 func GetStringFromValue(v reflect.Value) string {
 	switch v.Kind() {
 	case reflect.Slice, reflect.Array:
