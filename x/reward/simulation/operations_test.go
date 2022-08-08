@@ -1,12 +1,14 @@
 package simulation_test
 
 import (
-	simappparams "github.com/provenance-io/provenance/app/params"
+	"math/rand"
+	"testing"
+
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"math/rand"
-	"testing"
+
+	simappparams "github.com/provenance-io/provenance/app/params"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -44,12 +46,16 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	r := rand.New(s)
 	accs := suite.getTestingAccounts(r, 3)
 
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+
 	expected := []struct {
 		weight     int
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simappparams.DefaultWeightSubmitCreateRewards, types.ModuleName, "*types.MsgCreateRewardProgramRequest"},
+		{simappparams.DefaultWeightSubmitCreateRewards, types.ModuleName, "create_reward_program"},
+		{simappparams.DefaultWeightSubmitEndRewards, types.ModuleName, "end_reward_program"},
 	}
 
 	for i, w := range weightedOps {
