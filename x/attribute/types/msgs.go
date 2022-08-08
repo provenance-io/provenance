@@ -24,7 +24,7 @@ var (
 )
 
 // NewMsgAddAttributeRequest creates a new add attribute message
-func NewMsgAddAttributeRequest(account string, owner sdk.AccAddress, name string, attributeType AttributeType, value []byte) *MsgAddAttributeRequest { // nolint:interfacer
+func NewMsgAddAttributeRequest(account string, owner sdk.AccAddress, name string, attributeType AttributeType, value []byte) *MsgAddAttributeRequest { //nolint:interfacer
 	return &MsgAddAttributeRequest{
 		Account:       account,
 		Name:          strings.ToLower(strings.TrimSpace(name)),
@@ -76,7 +76,7 @@ func (msg MsgAddAttributeRequest) String() string {
 }
 
 // NewMsgUpdateAttributeRequest creates a new add attribute message
-func NewMsgUpdateAttributeRequest(account string, owner sdk.AccAddress, name string, originalValue []byte, updateValue []byte, origAttrType AttributeType, updatedAttrType AttributeType) *MsgUpdateAttributeRequest { // nolint:interfacer
+func NewMsgUpdateAttributeRequest(account string, owner sdk.AccAddress, name string, originalValue []byte, updateValue []byte, origAttrType AttributeType, updatedAttrType AttributeType) *MsgUpdateAttributeRequest { //nolint:interfacer
 	return &MsgUpdateAttributeRequest{
 		Account:               account,
 		Name:                  strings.ToLower(strings.TrimSpace(name)),
@@ -130,7 +130,7 @@ func (msg MsgUpdateAttributeRequest) String() string {
 }
 
 // NewMsgDeleteAttributeRequest deletes all attributes with specific name
-func NewMsgDeleteAttributeRequest(account string, owner sdk.AccAddress, name string) *MsgDeleteAttributeRequest { // nolint:interfacer
+func NewMsgDeleteAttributeRequest(account string, owner sdk.AccAddress, name string) *MsgDeleteAttributeRequest { //nolint:interfacer
 	return &MsgDeleteAttributeRequest{
 		Account: account,
 		Name:    strings.ToLower(strings.TrimSpace(name)),
@@ -185,7 +185,7 @@ func (msg MsgDeleteAttributeRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgDeleteDistinctAttributeRequest deletes a attribute with specific value and type
-func NewMsgDeleteDistinctAttributeRequest(account string, owner sdk.AccAddress, name string, value []byte) *MsgDeleteDistinctAttributeRequest { // nolint:interfacer
+func NewMsgDeleteDistinctAttributeRequest(account string, owner sdk.AccAddress, name string, value []byte) *MsgDeleteDistinctAttributeRequest { //nolint:interfacer
 	return &MsgDeleteDistinctAttributeRequest{
 		Account: account,
 		Name:    strings.ToLower(strings.TrimSpace(name)),

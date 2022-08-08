@@ -42,6 +42,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update the swagger files (including third-party changes). [#728](https://github.com/provenance-io/provenance/issues/728)
 * Bump IBC to 2.3.0 and update third-party protos [PR 868](https://github.com/provenance-io/provenance/pull/868)
 * Update docker images from `buster` to b`bullseye` [#963](https://github.com/provenance-io/provenance/issues/963)
+* Add documentation for `gRPCurl` to `docs/grpcurl.md` [#953](https://github.com/provenance-io/provenance/issues/953)
+* Updated to go 1.18 [#996](https://github.com/provenance-io/provenance/issues/996)
 
 ### Features
 

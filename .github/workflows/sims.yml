@@ -42,7 +42,7 @@ jobs:
           echo "::set-output name=db-cache-key-hash::${{ hashFiles('scripts/cleveldb_build_and_install.sh') }}"
           echo "::set-output name=go-cache-key-hash::${{ hashFiles('go.sum') }}"
     outputs:
-      go-version: 1.17
+      go-version: 1.18
       should-run: ${{ env.GIT_DIFF }}
       file-prefix: ${{ steps.def-vars.outputs.file-prefix }}
       db-cache-key-suffix: sims-db3-${{ steps.def-vars.outputs.db-cache-key-hash }}

@@ -127,7 +127,7 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 			callerAddr := clientCtx.GetFromAddress()
 			msg, err := govtypes.NewMsgSubmitProposal(proposal, deposit, callerAddr)
 			if err != nil {
-				return fmt.Errorf("invalid governance proposal. Error: %q", err)
+				return fmt.Errorf("invalid governance proposal. Error: %w", err)
 			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -168,7 +168,7 @@ $ %[1]s tx msgfees npum nhash-per-usd-mil "updating nhash to usd mil" "changes t
 			callerAddr := clientCtx.GetFromAddress()
 			msg, err := govtypes.NewMsgSubmitProposal(proposal, deposit, callerAddr)
 			if err != nil {
-				return fmt.Errorf("invalid governance proposal. Error: %q", err)
+				return fmt.Errorf("invalid governance proposal. Error: %w", err)
 			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

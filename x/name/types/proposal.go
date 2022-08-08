@@ -22,6 +22,7 @@ func init() {
 }
 
 // NewCreateRootNameProposal create a new governance proposal request to create a root name
+//
 //nolint:interfacer
 func NewCreateRootNameProposal(title, description, name string, owner sdk.AccAddress, restricted bool) *CreateRootNameProposal {
 	return &CreateRootNameProposal{

@@ -545,7 +545,7 @@ func loadPackedConfig(cmd *cobra.Command) error {
 		}
 	}
 	if rvErr != nil {
-		return fmt.Errorf("one or more fields in the packed config could not be set\n%s", rvErr)
+		return fmt.Errorf("one or more fields in the packed config could not be set\n%w", rvErr)
 	}
 
 	// Set the config values as defaults in viper.
@@ -649,5 +649,5 @@ func appendError(origErr, newErr error) error {
 	if origErr == nil {
 		return newErr
 	}
-	return fmt.Errorf("%v\n%v", origErr, newErr)
+	return fmt.Errorf("%v\n%v", origErr, newErr) //nolint:errorlint // Can't wrap two errors at once.
 }

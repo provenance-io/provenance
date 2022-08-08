@@ -195,7 +195,7 @@ func (scope *Scope) convertToBaseType() (*types.Scope, error) {
 	for _, addr := range scope.DataAccess {
 		_, err = sdk.AccAddressFromBech32(addr)
 		if err != nil {
-			return nil, fmt.Errorf("wasm: invalid 'data_access' address: %v", err)
+			return nil, fmt.Errorf("wasm: invalid 'data_access' address: %w", err)
 		}
 	}
 	baseType := &types.Scope{
@@ -220,7 +220,7 @@ func (scope *Scope) convertToBaseType() (*types.Scope, error) {
 func (party *Party) convertToBaseType() (*types.Party, error) {
 	_, err := sdk.AccAddressFromBech32(party.Address)
 	if err != nil {
-		return nil, fmt.Errorf("wasm: invalid 'data_access' address: %v", err)
+		return nil, fmt.Errorf("wasm: invalid 'data_access' address: %w", err)
 	}
 	return &types.Party{
 		Address: party.Address,

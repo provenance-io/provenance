@@ -65,7 +65,7 @@ Refer to %s tx name bind --help for more information on how to do this.`, versio
 			valueString := strings.TrimSpace(args[3])
 			value, err := encodeAttributeValue(valueString, attributeType)
 			if err != nil {
-				return fmt.Errorf("error encoding value %s to type %s : %v", valueString, attributeType.String(), err)
+				return fmt.Errorf("error encoding value %s to type %s : %w", valueString, attributeType.String(), err)
 			}
 
 			msg := types.NewMsgAddAttributeRequest(
@@ -84,7 +84,7 @@ Refer to %s tx name bind --help for more information on how to do this.`, versio
 	return cmd
 }
 
-//  NewUpdateAccountAttributeCmd creates a command for adding an account attributes.
+// NewUpdateAccountAttributeCmd creates a command for adding an account attributes.
 func NewUpdateAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "update [name] [address] [original-type] [original-value] [update-type] [update-value]",
@@ -116,12 +116,12 @@ func NewUpdateAccountAttributeCmd() *cobra.Command {
 			origValArg := strings.TrimSpace(args[3])
 			origValue, err := encodeAttributeValue(origValArg, origAttributeType)
 			if err != nil {
-				return fmt.Errorf("error encoding value %s to type %s : %v", origValArg, origAttributeType.String(), err)
+				return fmt.Errorf("error encoding value %s to type %s : %w", origValArg, origAttributeType.String(), err)
 			}
 			updateValArg := strings.TrimSpace(args[5])
 			updateValue, err := encodeAttributeValue(updateValArg, updateAttributeType)
 			if err != nil {
-				return fmt.Errorf("error encoding value %s to type %s : %v", updateValArg, updateAttributeType.String(), err)
+				return fmt.Errorf("error encoding value %s to type %s : %w", updateValArg, updateAttributeType.String(), err)
 			}
 
 			msg := types.NewMsgUpdateAttributeRequest(
@@ -179,7 +179,7 @@ func NewDeleteDistinctAccountAttributeCmd() *cobra.Command {
 			}
 			deleteValue, err := encodeAttributeValue(strings.TrimSpace(args[3]), attributeType)
 			if err != nil {
-				return fmt.Errorf("error encoding value %s to type %s : %v", deleteValue, attributeType.String(), err)
+				return fmt.Errorf("error encoding value %s to type %s : %w", deleteValue, attributeType.String(), err)
 			}
 			msg := types.NewMsgDeleteDistinctAttributeRequest(args[1], clientCtx.GetFromAddress(), args[0], deleteValue)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
