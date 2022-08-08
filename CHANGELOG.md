@@ -44,6 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update docker images from `buster` to b`bullseye` [#963](https://github.com/provenance-io/provenance/issues/963)
 * Add documentation for `gRPCurl` to `docs/grpcurl.md` [#953](https://github.com/provenance-io/provenance/issues/953)
 * Updated to go 1.18 [#996](https://github.com/provenance-io/provenance/issues/996)
+* Bump Cosmos-SDK to Bump cosmos to v0.46.0-pio-1-rc1 (from v0.45.5-pio-1). [#995](https://github.com/provenance-io/provenance/issues/995)
 
 ### Features
 
