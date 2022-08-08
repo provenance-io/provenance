@@ -120,7 +120,7 @@ func (k Keeper) RewardDistributionsByAddress(ctx context.Context, request *types
 	pageRequest := getPageRequest(request)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	var states []types.RewardAccountState
-	getAllRewardAccountStore := prefix.NewStore(sdk.UnwrapSDKContext(ctx).KVStore(k.storeKey), types.GetAllRewardAccountByAddressPartialKey([]byte(address.String())))
+	getAllRewardAccountStore := prefix.NewStore(sdk.UnwrapSDKContext(ctx).KVStore(k.storeKey), types.GetAllRewardAccountByAddressPartialKey(address))
 
 	pageRes, err := query.FilteredPaginate(getAllRewardAccountStore, pageRequest, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		lookupVal, errFromParsingKey := ParseFilterLookUpKey(key, address)

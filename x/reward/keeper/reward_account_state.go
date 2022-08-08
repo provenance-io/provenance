@@ -9,25 +9,9 @@ import (
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
-// RemoveRewardAccountState Removes an account state
-func (k Keeper) RemoveRewardAccountState(ctx sdk.Context, rewardProgramID, rewardClaimPeriodID uint64, addr string) bool {
-	store := ctx.KVStore(k.storeKey)
-	key := types.GetRewardAccountStateKey(rewardProgramID, rewardClaimPeriodID, []byte(addr))
-	if key == nil {
-		return false
-	}
-
-	keyExists := store.Has(key)
-	if keyExists {
-		bz := store.Get(key)
-		store.Delete(bz)
-	}
-	return keyExists
-}
-
 func (k Keeper) GetRewardAccountState(ctx sdk.Context, rewardProgramID, rewardClaimPeriodID uint64, addr string) (state types.RewardAccountState, err error) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetRewardAccountStateKey(rewardProgramID, rewardClaimPeriodID, []byte(addr))
+	key := types.GetRewardAccountStateKey(rewardProgramID, rewardClaimPeriodID, types.MustAccAddressFromBech32(addr))
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return state, nil
@@ -47,11 +31,11 @@ func (k Keeper) GetRewardAccountState(ctx sdk.Context, rewardProgramID, rewardCl
 func (k Keeper) SetRewardAccountState(ctx sdk.Context, state types.RewardAccountState) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&state)
-	key := types.GetRewardAccountStateKey(state.GetRewardProgramId(), state.GetClaimPeriodId(), []byte(state.GetAddress()))
+	key := types.GetRewardAccountStateKey(state.GetRewardProgramId(), state.GetClaimPeriodId(), types.MustAccAddressFromBech32(state.GetAddress()))
 	store.Set(key, bz)
 	// since there is a significant use case of looking up this via address create a secondary index
 	// [0x8] :: [addr-bytes::reward program id bytes]::[claim period id bytes] {}
-	addressLookupKey := types.GetRewardAccountStateAddressLookupKey([]byte(state.GetAddress()), state.GetRewardProgramId(), state.GetClaimPeriodId())
+	addressLookupKey := types.GetRewardAccountStateAddressLookupKey(types.MustAccAddressFromBech32(state.GetAddress()), state.GetRewardProgramId(), state.GetClaimPeriodId())
 	// no need for a value a key can derive all the info needed
 	store.Set(addressLookupKey, []byte{})
 }
@@ -77,14 +61,14 @@ func (k Keeper) IterateRewardAccountStates(ctx sdk.Context, rewardProgramID, rew
 // IterateRewardAccountStatesByAddress Iterates over the account states by address iterator
 func (k Keeper) IterateRewardAccountStatesByAddress(ctx sdk.Context, addr sdk.AccAddress, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetAllRewardAccountByAddressPartialKey([]byte(addr.String())))
+	iterator := sdk.KVStorePrefixIterator(store, types.GetAllRewardAccountByAddressPartialKey(types.MustAccAddressFromBech32(addr.String())))
 	return k.IterateRewardAccountStatesByLookUpIndex(ctx, addr, iterator, handle)
 }
 
 // IterateRewardAccountStatesByAddressAndRewardsID Iterates over the account states by address iterator and reward id
 func (k Keeper) IterateRewardAccountStatesByAddressAndRewardsID(ctx sdk.Context, addr sdk.AccAddress, rewardsID uint64, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetAllRewardAccountByAddressAndRewardsIDPartialKey([]byte(addr.String()), rewardsID))
+	iterator := sdk.KVStorePrefixIterator(store, types.GetAllRewardAccountByAddressAndRewardsIDPartialKey(addr, rewardsID))
 	return k.IterateRewardAccountStatesByLookUpIndex(ctx, addr, iterator, handle)
 }
 
@@ -188,8 +172,8 @@ func (k Keeper) ExpireRewardClaimsForRewardProgram(ctx sdk.Context, rewardProgra
 
 func ParseRewardAccountLookUpKey(accountStateAddressLookupKey []byte, addr sdk.AccAddress) (RewardAccountLookup, error) {
 	lengthOfAddress := int64(accountStateAddressLookupKey[1:2][0])
-	address := accountStateAddressLookupKey[2 : lengthOfAddress+2]
-	if addr.String() != string(address) {
+	address := sdk.AccAddress(accountStateAddressLookupKey[2 : lengthOfAddress+2])
+	if !addr.Equals(address) {
 		return RewardAccountLookup{}, fmt.Errorf("addresses do not match up")
 	}
 	rewardID := binary.BigEndian.Uint64(accountStateAddressLookupKey[lengthOfAddress+2 : lengthOfAddress+2+8])

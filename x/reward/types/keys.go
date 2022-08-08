@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/binary"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
@@ -34,9 +35,6 @@ var (
 	ActionKeyPrefix                    = []byte{0x07}
 	AccountStateAddressLookupKeyPrefix = []byte{0x08}
 	AccountStateKeyPrefix              = []byte{0x09}
-
-	ActionDelegateKey            = []byte("Delegate")
-	ActionTransferDelegationsKey = []byte("TransferDelegations")
 )
 
 // GetRewardProgramKey converts a name into key format.
@@ -47,9 +45,8 @@ func GetRewardProgramKey(id uint64) []byte {
 }
 
 // GetRewardAccountStateKey converts a reward program id, claim period id, and address into an AccountStateKey
-func GetRewardAccountStateKey(rewardID uint64, rewardClaimPeriodID uint64, addr []byte) []byte {
+func GetRewardAccountStateKey(rewardID uint64, rewardClaimPeriodID uint64, addr sdk.AccAddress) []byte {
 	key := AccountStateKeyPrefix
-
 	rewardBytes := make([]byte, 8)
 	claimPeriodBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(rewardBytes, rewardID)
@@ -61,9 +58,8 @@ func GetRewardAccountStateKey(rewardID uint64, rewardClaimPeriodID uint64, addr 
 }
 
 // GetRewardAccountStateAddressLookupKey facilitates lookup of AccountState via address
-func GetRewardAccountStateAddressLookupKey(addr []byte, rewardID uint64, rewardClaimPeriodID uint64) []byte {
+func GetRewardAccountStateAddressLookupKey(addr sdk.AccAddress, rewardID uint64, rewardClaimPeriodID uint64) []byte {
 	key := AccountStateAddressLookupKeyPrefix
-
 	rewardBytes := make([]byte, 8)
 	claimPeriodBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(rewardBytes, rewardID)
@@ -125,18 +121,28 @@ func GetClaimPeriodRewardDistributionKey(claimID uint64, rewardID uint64) []byte
 }
 
 // GetAllRewardAccountByAddressPartialKey returns the key to iterate over all AccountStateAddressLookup by address
-func GetAllRewardAccountByAddressPartialKey(addr []byte) []byte {
+func GetAllRewardAccountByAddressPartialKey(addr sdk.AccAddress) []byte {
 	key := AccountStateAddressLookupKeyPrefix
 	key = append(key, address.MustLengthPrefix(addr)...)
 	return key
 }
 
 // GetAllRewardAccountByAddressAndRewardsIDPartialKey returns the key to iterate over all AccountStateAddressLookup by address and rewards id
-func GetAllRewardAccountByAddressAndRewardsIDPartialKey(addr []byte, rewardID uint64) []byte {
+func GetAllRewardAccountByAddressAndRewardsIDPartialKey(addr sdk.AccAddress, rewardID uint64) []byte {
 	key := AccountStateAddressLookupKeyPrefix
 	rewardBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(rewardBytes, rewardID)
-	key = append(key, address.MustLengthPrefix(addr)...)
+	key = append(key, address.MustLengthPrefix(addr.Bytes())...)
 	key = append(key, rewardBytes...)
 	return key
+}
+
+// MustAccAddressFromBech32 converts a Bech32 address to sdk.AccAddress
+// Panics on error
+func MustAccAddressFromBech32(s string) sdk.AccAddress {
+	accAddress, err := sdk.AccAddressFromBech32(s)
+	if err != nil {
+		panic(err)
+	}
+	return accAddress
 }
