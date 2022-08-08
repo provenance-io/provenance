@@ -3,9 +3,6 @@ package rest
 import (
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/rest"
-	"github.com/gorilla/mux"
-
 	"github.com/provenance-io/provenance/x/name/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -14,14 +11,6 @@ import (
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
-
-// RegisterHandlers registers the rest query and tx handlers
-func RegisterHandlers(clientCtx client.Context, rtr *mux.Router) {
-	r := rest.WithHTTPDeprecationHeaders(rtr)
-
-	registerQueryRoutes(clientCtx, r)
-	registerTxHandlers(clientCtx, r)
-}
 
 // RootNameProposalHandler returns a ProposalRESTHandler that exposes the create root name REST handler with a given sub-route.
 func RootNameProposalHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
