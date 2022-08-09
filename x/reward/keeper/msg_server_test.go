@@ -465,3 +465,104 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsExpiredTransaction() {
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), response.TotalRewardClaim, "should have no nhash")
 	suite.Assert().Equal(0, len(details), "should have no reward program")
 }
+
+func (suite *KeeperTestSuite) TestEndRewardProgramRequest() {
+	suite.SetupTest()
+	testCases := []struct {
+		name         string
+		id           uint64
+		address      string
+		expectErr    bool
+		expectErrMsg string
+	}{
+		{"end reward program request - invalid reward program id",
+			88,
+			suite.accountAddresses[0].String(),
+			true,
+			"reward program not found",
+		},
+		{"end reward program request - invalid executor",
+			1,
+			suite.accountAddresses[1].String(),
+			true,
+			"not authorized to end the reward program",
+		},
+		{"end reward program request - invalid state for reward program",
+			3,
+			suite.accountAddresses[0].String(),
+			true,
+			"unable to end a reward program that is finished or expired",
+		},
+		{"end reward program request - valid request in pending state",
+			1,
+			suite.accountAddresses[0].String(),
+			false,
+			"",
+		},
+		{"end reward program request - valid requested in started state",
+			2,
+			suite.accountAddresses[0].String(),
+			false,
+			"",
+		},
+	}
+
+	time := suite.ctx.BlockTime()
+	for i := 0; i < 3; i++ {
+		rewardProgram := types.NewRewardProgram(
+			"title",
+			"description",
+			uint64(i+1),
+			suite.accountAddresses[0].String(),
+			sdk.NewInt64Coin("nhash", 1000),
+			sdk.NewInt64Coin("nhash", 100),
+			time,
+			10,
+			3,
+			0,
+			uint64(time.Day()),
+			[]types.QualifyingAction{
+				{
+					Type: &types.QualifyingAction_Vote{
+						Vote: &types.ActionVote{
+							MinimumActions:          0,
+							MaximumActions:          1,
+							MinimumDelegationAmount: minDelegation,
+						},
+					},
+				},
+			},
+		)
+		switch i + 1 {
+		case 1:
+			rewardProgram.State = types.RewardProgram_STATE_PENDING
+		case 2:
+			rewardProgram.State = types.RewardProgram_STATE_STARTED
+			rewardProgram.CurrentClaimPeriod = 1
+		case 3:
+			rewardProgram.State = types.RewardProgram_STATE_FINISHED
+			rewardProgram.CurrentClaimPeriod = rewardProgram.GetClaimPeriods()
+		}
+
+		suite.app.RewardKeeper.SetRewardProgram(suite.ctx, rewardProgram)
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			msg := types.NewMsgEndRewardProgramRequest(tc.id, tc.address)
+			suite.ctx = suite.ctx.WithEventManager(sdk.NewEventManager())
+			result, err := suite.handler(suite.ctx, msg)
+			if tc.expectErr {
+				suite.Assert().Error(err)
+				suite.Assert().Equal(tc.expectErrMsg, err.Error())
+			} else {
+				suite.Assert().NoError(err)
+				var response types.MsgEndRewardProgramResponse
+				response.Unmarshal(result.Data)
+			}
+		})
+	}
+
+}
