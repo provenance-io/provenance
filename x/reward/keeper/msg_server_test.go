@@ -560,7 +560,8 @@ func (suite *KeeperTestSuite) TestEndRewardProgramRequest() {
 			} else {
 				suite.Assert().NoError(err)
 				var response types.MsgEndRewardProgramResponse
-				response.Unmarshal(result.Data)
+				err = response.Unmarshal(result.Data)
+				suite.Assert().NoError(err)
 			}
 		})
 	}
