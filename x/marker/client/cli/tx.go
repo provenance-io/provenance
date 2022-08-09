@@ -550,7 +550,7 @@ func GetCmdGrantAuthorization() *cobra.Command {
 				return err
 			}
 
-			exp, err := cmd.Flags().GetInt64(FlagExpiration)
+			expSec, err := cmd.Flags().GetInt64(FlagExpiration)
 			if err != nil {
 				return err
 			}
@@ -577,7 +577,8 @@ func GetCmdGrantAuthorization() *cobra.Command {
 				return fmt.Errorf("invalid authorization type, %s", args[1])
 			}
 
-			msg, err := authz.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, time.Unix(exp, 0))
+			exp := time.Unix(expSec, 0)
+			msg, err := authz.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, &exp)
 			if err != nil {
 				return err
 			}
