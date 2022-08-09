@@ -65,7 +65,7 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	}
 	if feeDist != nil && len(feeDist.TotalAdditionalFees) > 0 {
 		var hasNeg bool
-		_, hasNeg = fee.SafeSub(feeDist.TotalAdditionalFees)
+		_, hasNeg = fee.SafeSub(feeDist.TotalAdditionalFees...)
 		if hasNeg && !simulate {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", fee)
 		}

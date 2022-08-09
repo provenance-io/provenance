@@ -168,7 +168,7 @@ func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Co
 		}
 		sentCoins = sentCoins.Add(coins...)
 	}
-	remainingFee, neg := remainingFees.SafeSub(sentCoins)
+	remainingFee, neg := remainingFees.SafeSub(sentCoins...)
 	if neg {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "negative balance after sending coins to accounts and fee collector")
 	}

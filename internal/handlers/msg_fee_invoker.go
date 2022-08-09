@@ -92,7 +92,7 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins
 
 			var isNeg bool
 			// this sweeps all extra fees too, 1. keeps current behavior 2. accounts for priority mempool
-			chargedFees, isNeg = feeTx.GetFee().SafeSub(baseFeeConsumedAtAnteHandler)
+			chargedFees, isNeg = feeTx.GetFee().SafeSub(baseFeeConsumedAtAnteHandler...)
 
 			if isNeg {
 				return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "This should never happen, because fee charged in ante handlers should never have been more than fee promised without error'ing out.")
