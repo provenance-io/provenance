@@ -398,7 +398,7 @@ jobs:
         run: go version
       - name: Setup Docker
         if: matrix.test == 'kafka'
-        uses: docker-practice/actions-setup-docker@1.0.10
+        uses: docker-practice/actions-setup-docker@1.0.11
       - name: Update provwasm contract
         run: make download-smart-contracts
       - name: Test
