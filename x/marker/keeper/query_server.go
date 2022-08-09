@@ -92,7 +92,7 @@ func (k Keeper) Holding(c context.Context, req *types.QueryHoldingRequest) (*typ
 			return false, nil
 		}
 		if accumulate {
-			address, aerr := banktypes.AddressFromBalancesStore(key)
+			address, _, aerr := banktypes.AddressAndDenomFromBalancesStore(key)
 			if aerr != nil {
 				k.Logger(ctx).With("key", key, "err", aerr).Error("failed to get address from balances store")
 				return true, aerr
