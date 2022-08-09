@@ -85,15 +85,15 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	// IBC
-	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v2/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v2/modules/core"
-	ibcclient "github.com/cosmos/ibc-go/v2/modules/core/02-client"
-	ibcclientclient "github.com/cosmos/ibc-go/v2/modules/core/02-client/client"
-	porttypes "github.com/cosmos/ibc-go/v2/modules/core/05-port/types"
-	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
-	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
+	"github.com/cosmos/ibc-go/v5/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v5/modules/core"
+	ibcclient "github.com/cosmos/ibc-go/v5/modules/core/02-client"
+	ibcclientclient "github.com/cosmos/ibc-go/v5/modules/core/02-client/client"
+	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
+	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
+	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 
 	// PROVENANCE
 	appparams "github.com/provenance-io/provenance/app/params"
