@@ -981,6 +981,15 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 			[]uint64{},
 			0,
 		},
+		{"query reward by invalid address",
+			[]string{"invalid address", "expired", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+			true,
+			"failed to query reward distributions: rpc error: code = InvalidArgument desc = decoding bech32 failed: invalid character in string: ' ': invalid address: invalid request",
+			0,
+			[]uint64{},
+			0,
+		},
 	}
 
 	for _, tc := range testCases {
