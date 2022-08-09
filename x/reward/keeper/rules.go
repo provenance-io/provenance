@@ -13,8 +13,6 @@ import (
 )
 
 func (k Keeper) ProcessTransactions(ctx sdk.Context) {
-	logEvents(ctx)
-
 	// Get all Active Reward Programs
 	rewardPrograms, err := k.GetAllActiveRewardPrograms(ctx)
 	if err != nil {
@@ -241,18 +239,4 @@ func (k Keeper) GetStakingKeeper() types.StakingKeeper {
 
 func (k *Keeper) SetStakingKeeper(newKeeper types.StakingKeeper) {
 	k.stakingKeeper = newKeeper
-}
-
-// logEvents method for testing purposes only
-func logEvents(ctx sdk.Context) {
-	history := ctx.EventManager().GetABCIEventHistory()
-	blockTime := ctx.BlockTime()
-	ctx.Logger().Info(fmt.Sprintf("Block time: %v Size of events is %d", blockTime, len(history)))
-	for _, s := range ctx.EventManager().GetABCIEventHistory() {
-		ctx.Logger().Info(fmt.Sprintf("------- %s -------\n", s.Type))
-		for _, y := range s.Attributes {
-			ctx.Logger().Info(fmt.Sprintf("%s: %s\n", y.Key, y.Value))
-		}
-		ctx.Logger().Info(fmt.Sprintf("------- %s -------\n\n", s.Type))
-	}
 }
