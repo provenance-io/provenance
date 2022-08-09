@@ -155,7 +155,9 @@ require (
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.0-pio-1-rc1
+// replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.0-pio-1-rc1
+// TODO: v0.46: Uncomment the above line and fix the version once a new one is tagged and ready. Then delete the line below.
+replace github.com/cosmos/cosmos-sdk => ../prov-cosmos-sdk
 
 replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 
