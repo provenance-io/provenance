@@ -10,7 +10,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
@@ -46,7 +46,7 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 
 	testCases := []struct {
 		name string
-		prop govtypes.Content
+		prop govtypesv1beta1.Content
 		err  error
 	}{
 		{

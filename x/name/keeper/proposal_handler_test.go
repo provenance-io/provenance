@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
@@ -43,7 +43,7 @@ func (s *IntegrationTestSuite) TestNameProposals() {
 
 	testCases := []struct {
 		name    string
-		prop    govtypes.Content
+		prop    govtypesv1beta1.Content
 		wantErr bool
 		err     error
 	}{
