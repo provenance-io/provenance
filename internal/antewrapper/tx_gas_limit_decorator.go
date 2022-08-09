@@ -3,7 +3,7 @@ package antewrapper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // TxGasLimitDecorator will check if the transaction's gas amount is higher than
@@ -19,10 +19,10 @@ func NewTxGasLimitDecorator() TxGasLimitDecorator {
 
 // Checks whether the given message is related to governance.
 func isGovernanceMessage(msg sdk.Msg) bool {
-	_, isSubmitPropMsg := msg.(*govtypes.MsgSubmitProposal)
-	_, isVoteMsg := msg.(*govtypes.MsgVote)
-	_, isVoteWeightedMsg := msg.(*govtypes.MsgVoteWeighted)
-	_, isDepositMsg := msg.(*govtypes.MsgDeposit)
+	_, isSubmitPropMsg := msg.(*govtypesv1beta1.MsgSubmitProposal)
+	_, isVoteMsg := msg.(*govtypesv1beta1.MsgVote)
+	_, isVoteWeightedMsg := msg.(*govtypesv1beta1.MsgVoteWeighted)
+	_, isDepositMsg := msg.(*govtypesv1beta1.MsgDeposit)
 	return isSubmitPropMsg || isVoteMsg || isVoteWeightedMsg || isDepositMsg
 }
 
