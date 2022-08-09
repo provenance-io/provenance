@@ -596,12 +596,12 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 
 }
 
-func TestRewardsProgramStartPerformQualifyingActions_1(t *testing.T) {
+func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	priv, _, addr := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
 		"title",
@@ -610,7 +610,7 @@ func TestRewardsProgramStartPerformQualifyingActions_1(t *testing.T) {
 		acct1.Address,
 		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
 		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
-		time.Now().Add(100*time.Millisecond),
+		time.Now().Add(50*time.Millisecond),
 		uint64(30),
 		10,
 		10,
@@ -643,7 +643,8 @@ func TestRewardsProgramStartPerformQualifyingActions_1(t *testing.T) {
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
 	ctx.WithBlockTime(time.Now())
-	time.Sleep(200 * time.Millisecond)
+	// get past the reward start time ( test that reward program starts up after 50ms)
+	time.Sleep(55 * time.Millisecond)
 
 	for height := int64(2); height < int64(22); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
@@ -679,6 +680,28 @@ func TestRewardsProgramStartPerformQualifyingActions_1(t *testing.T) {
 	check(err)
 	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
 	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
+
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
+		Address:     acct1.Address,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
+	})
+	check(err)
+	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
+	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
+
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
+		Address:     acct1.Address,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+	})
+
+	assert.Equal(t, 0, len(byAddress.RewardAccountState), "none of the rewards should be in claimable state since claim period has not ended yet.")
+
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
+		Address:     acct1.Address,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMED,
+	})
+
+	assert.Equal(t, 0, len(byAddress.RewardAccountState), "none of the rewards should be in claimed state.")
 }
 
 func TestRewardsProgramStartPerformQualifyingActions_2(t *testing.T) {
