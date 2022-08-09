@@ -14,4 +14,5 @@ var (
 	ErrBlockHeightLteZero = sdkerrors.Register(ModuleName, 7, "block height must be greater than zero")
 	ErrBlockHeightInPast  = sdkerrors.Register(ModuleName, 8, "block height must be higher than current block height")
 	ErrInvalidDeposit     = sdkerrors.Register(ModuleName, 8, "invalid deposit")
+	ErrMissingSigners     = sdkerrors.Register(ModuleName, 9, "at least one signer is required")
 )

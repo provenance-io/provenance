@@ -206,7 +206,7 @@ func (m *QueryExpirationResponse) GetExpiration() *Expiration {
 // QueryAllExpirationsRequest queries all expirations
 type QueryAllExpirationsRequest struct {
 	// pagination defines an optional pagination for the request.
-	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryAllExpirationsRequest) Reset()         { *m = QueryAllExpirationsRequest{} }
@@ -303,6 +303,115 @@ func (m *QueryAllExpirationsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
+// QueryAllExpirationsByOwnerRequest queries all expirations belonging to an owner
+type QueryAllExpirationsByOwnerRequest struct {
+	// the bech32 address the expiration is bound to
+	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
+	// pagination defines an optional pagination for the request
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryAllExpirationsByOwnerRequest) Reset()         { *m = QueryAllExpirationsByOwnerRequest{} }
+func (m *QueryAllExpirationsByOwnerRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAllExpirationsByOwnerRequest) ProtoMessage()    {}
+func (*QueryAllExpirationsByOwnerRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0f2be75c30ba33cb, []int{6}
+}
+func (m *QueryAllExpirationsByOwnerRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllExpirationsByOwnerRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllExpirationsByOwnerRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllExpirationsByOwnerRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllExpirationsByOwnerRequest.Merge(m, src)
+}
+func (m *QueryAllExpirationsByOwnerRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllExpirationsByOwnerRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllExpirationsByOwnerRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllExpirationsByOwnerRequest proto.InternalMessageInfo
+
+func (m *QueryAllExpirationsByOwnerRequest) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
+}
+
+func (m *QueryAllExpirationsByOwnerRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryAllExpirationsByOwnerResponse response for querying all expirations by owner
+type QueryAllExpirationsByOwnerResponse struct {
+	Expirations []*Expiration `protobuf:"bytes,1,rep,name=expirations,proto3" json:"expirations,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryAllExpirationsByOwnerResponse) Reset()         { *m = QueryAllExpirationsByOwnerResponse{} }
+func (m *QueryAllExpirationsByOwnerResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAllExpirationsByOwnerResponse) ProtoMessage()    {}
+func (*QueryAllExpirationsByOwnerResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0f2be75c30ba33cb, []int{7}
+}
+func (m *QueryAllExpirationsByOwnerResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllExpirationsByOwnerResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllExpirationsByOwnerResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllExpirationsByOwnerResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllExpirationsByOwnerResponse.Merge(m, src)
+}
+func (m *QueryAllExpirationsByOwnerResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllExpirationsByOwnerResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllExpirationsByOwnerResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllExpirationsByOwnerResponse proto.InternalMessageInfo
+
+func (m *QueryAllExpirationsByOwnerResponse) GetExpirations() []*Expiration {
+	if m != nil {
+		return m.Expirations
+	}
+	return nil
+}
+
+func (m *QueryAllExpirationsByOwnerResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "provenance.expiration.v1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "provenance.expiration.v1.QueryParamsResponse")
@@ -310,6 +419,8 @@ func init() {
 	proto.RegisterType((*QueryExpirationResponse)(nil), "provenance.expiration.v1.QueryExpirationResponse")
 	proto.RegisterType((*QueryAllExpirationsRequest)(nil), "provenance.expiration.v1.QueryAllExpirationsRequest")
 	proto.RegisterType((*QueryAllExpirationsResponse)(nil), "provenance.expiration.v1.QueryAllExpirationsResponse")
+	proto.RegisterType((*QueryAllExpirationsByOwnerRequest)(nil), "provenance.expiration.v1.QueryAllExpirationsByOwnerRequest")
+	proto.RegisterType((*QueryAllExpirationsByOwnerResponse)(nil), "provenance.expiration.v1.QueryAllExpirationsByOwnerResponse")
 }
 
 func init() {
@@ -317,41 +428,46 @@ func init() {
 }
 
 var fileDescriptor_0f2be75c30ba33cb = []byte{
-	// 541 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x94, 0x4f, 0x6b, 0x13, 0x41,
-	0x18, 0xc6, 0x33, 0xad, 0x16, 0x9c, 0x22, 0x85, 0xb1, 0xd4, 0xb0, 0xd5, 0x4d, 0x18, 0xaa, 0xd6,
-	0x3f, 0x99, 0x71, 0x5b, 0xf5, 0xe0, 0x41, 0x68, 0xd0, 0x8a, 0xb7, 0x18, 0xf0, 0x22, 0x42, 0x98,
-	0x24, 0xc3, 0xba, 0xb0, 0xbb, 0xb3, 0xdd, 0xd9, 0x84, 0x06, 0xf1, 0xe2, 0x17, 0x50, 0xf0, 0x53,
-	0x88, 0xe0, 0xe7, 0xe8, 0xb1, 0xe0, 0xc5, 0x53, 0x91, 0xc4, 0x4f, 0xa0, 0x5f, 0x40, 0x76, 0x66,
-	0x74, 0xa7, 0x49, 0x96, 0xb4, 0xb7, 0xf0, 0xe6, 0x79, 0xde, 0xe7, 0x37, 0xf3, 0xbe, 0xb3, 0x70,
-	0x2b, 0x49, 0xc5, 0x90, 0xc7, 0x2c, 0xee, 0x71, 0xca, 0x0f, 0x93, 0x20, 0x65, 0x59, 0x20, 0x62,
-	0x3a, 0xf4, 0xe8, 0xc1, 0x80, 0xa7, 0x23, 0x92, 0xa4, 0x22, 0x13, 0xa8, 0x5a, 0xa8, 0x48, 0xa1,
-	0x22, 0x43, 0xcf, 0x59, 0xf7, 0x85, 0x2f, 0x94, 0x88, 0xe6, 0xbf, 0xb4, 0xde, 0xb9, 0xe6, 0x0b,
-	0xe1, 0x87, 0x9c, 0xb2, 0x24, 0xa0, 0x2c, 0x8e, 0x45, 0xa6, 0xf4, 0xd2, 0xfc, 0x7b, 0xbb, 0x34,
-	0xd3, 0xea, 0xad, 0xa5, 0x77, 0x7a, 0x42, 0x46, 0x42, 0xd2, 0x2e, 0x93, 0x5c, 0x13, 0xd1, 0xa1,
-	0xd7, 0xe5, 0x19, 0xf3, 0x68, 0xc2, 0xfc, 0x20, 0xb6, 0xb4, 0x78, 0x1d, 0xa2, 0x97, 0xb9, 0xa2,
-	0xc5, 0x52, 0x16, 0xc9, 0x36, 0x3f, 0x18, 0x70, 0x99, 0xe1, 0x57, 0xf0, 0xca, 0xa9, 0xaa, 0x4c,
-	0x44, 0x2c, 0x39, 0x7a, 0x02, 0x57, 0x12, 0x55, 0xa9, 0x82, 0x3a, 0xd8, 0x5e, 0xdd, 0xa9, 0x93,
-	0xb2, 0x23, 0x12, 0xed, 0x6c, 0x5e, 0x38, 0x3a, 0xa9, 0x55, 0xda, 0xc6, 0x85, 0xdf, 0xc0, 0x0d,
-	0xd5, 0xf6, 0xd9, 0x7f, 0xa9, 0x09, 0x44, 0x4d, 0xb8, 0x16, 0x89, 0xfe, 0x20, 0xe4, 0x1d, 0x26,
-	0x25, 0xcf, 0x3a, 0x41, 0x5f, 0x45, 0x5c, 0x6a, 0x3a, 0xbf, 0x4f, 0x6a, 0x1b, 0x23, 0x16, 0x85,
-	0x8f, 0xf1, 0x94, 0x00, 0xb7, 0x2f, 0xeb, 0xca, 0x5e, 0x5e, 0x78, 0xd1, 0xc7, 0x1d, 0x78, 0x75,
-	0xa6, 0xbb, 0x01, 0x7f, 0x0a, 0x61, 0x81, 0x67, 0xe0, 0xb7, 0xca, 0xe1, 0xad, 0x0e, 0x96, 0x0f,
-	0xf7, 0xa1, 0xa3, 0x02, 0xf6, 0xc2, 0xb0, 0x50, 0xfc, 0xbb, 0x33, 0xb4, 0x0f, 0x61, 0x71, 0xbb,
-	0xd5, 0x25, 0x95, 0x71, 0x93, 0xe8, 0x51, 0x90, 0x7c, 0x14, 0x44, 0x2f, 0x87, 0x19, 0x05, 0x69,
-	0x31, 0x9f, 0x1b, 0x6f, 0xdb, 0x72, 0xe2, 0x6f, 0x00, 0x6e, 0xce, 0x8d, 0x31, 0x67, 0xd9, 0x87,
-	0xab, 0x05, 0x53, 0x3e, 0x89, 0xe5, 0x33, 0x1f, 0xc6, 0x36, 0xa2, 0xe7, 0x73, 0x78, 0x6f, 0x2d,
-	0xe4, 0xd5, 0x10, 0x36, 0xf0, 0xce, 0x9f, 0x65, 0x78, 0x51, 0x01, 0xa3, 0x8f, 0x00, 0xae, 0xe8,
-	0xc1, 0xa3, 0x7b, 0xe5, 0x40, 0xb3, 0xfb, 0xe6, 0x34, 0xce, 0xa8, 0xd6, 0xe9, 0x78, 0xfb, 0xc3,
-	0xf7, 0x5f, 0x9f, 0x97, 0x30, 0xaa, 0xd3, 0xd2, 0x47, 0xa1, 0x37, 0x0e, 0x7d, 0x05, 0x70, 0x6d,
-	0x6a, 0x29, 0xd0, 0xfd, 0x05, 0x61, 0x33, 0xdb, 0xe9, 0x78, 0xe7, 0x70, 0x18, 0xc4, 0x5d, 0x85,
-	0xd8, 0x40, 0x77, 0xcb, 0x11, 0xdf, 0x4d, 0x2d, 0xf4, 0x7b, 0xf4, 0x05, 0x98, 0x77, 0x77, 0x7a,
-	0xf4, 0xe8, 0xc1, 0x82, 0xfc, 0xb9, 0x0b, 0xe9, 0x3c, 0x3c, 0xa7, 0xcb, 0x90, 0xdf, 0x50, 0xe4,
-	0x35, 0x74, 0xbd, 0x9c, 0x9c, 0x85, 0x61, 0x53, 0x1c, 0x8d, 0x5d, 0x70, 0x3c, 0x76, 0xc1, 0xcf,
-	0xb1, 0x0b, 0x3e, 0x4d, 0xdc, 0xca, 0xf1, 0xc4, 0xad, 0xfc, 0x98, 0xb8, 0x15, 0xb8, 0x19, 0x88,
-	0xd2, 0xe4, 0x16, 0x78, 0xfd, 0xc8, 0x0f, 0xb2, 0xb7, 0x83, 0x2e, 0xe9, 0x89, 0xc8, 0x4a, 0x68,
-	0x04, 0xc2, 0xce, 0x3b, 0xb4, 0x13, 0xb3, 0x51, 0xc2, 0x65, 0x77, 0x45, 0x7d, 0xb0, 0x76, 0xff,
-	0x06, 0x00, 0x00, 0xff, 0xff, 0xfa, 0x6d, 0x8a, 0x7e, 0x7d, 0x05, 0x00, 0x00,
+	// 620 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x95, 0xcd, 0x6e, 0xd3, 0x4e,
+	0x14, 0xc5, 0x33, 0xfd, 0xff, 0x1b, 0x89, 0x5b, 0x01, 0xd2, 0x10, 0x4a, 0xe5, 0x82, 0x13, 0xac,
+	0x96, 0x96, 0x8f, 0xd8, 0xa4, 0x05, 0x16, 0x80, 0x90, 0x1a, 0x41, 0x11, 0x2b, 0x42, 0x24, 0x36,
+	0x08, 0x29, 0x9a, 0x24, 0x23, 0x63, 0xc9, 0xf1, 0xb8, 0x1e, 0x27, 0x34, 0xaa, 0xba, 0x80, 0x17,
+	0x00, 0x89, 0x57, 0x40, 0xec, 0x60, 0xc7, 0x03, 0xb0, 0xeb, 0xb2, 0x12, 0x1b, 0x56, 0x15, 0x4a,
+	0x78, 0x02, 0x9e, 0x00, 0x79, 0x66, 0x8a, 0x9d, 0x0f, 0x37, 0x4d, 0x57, 0xec, 0xe2, 0xc9, 0x39,
+	0x73, 0x7e, 0x73, 0xaf, 0xef, 0x18, 0x96, 0xfc, 0x80, 0x75, 0xa8, 0x47, 0xbc, 0x06, 0xb5, 0xe8,
+	0xb6, 0xef, 0x04, 0x24, 0x74, 0x98, 0x67, 0x75, 0x4a, 0xd6, 0x56, 0x9b, 0x06, 0x5d, 0xd3, 0x0f,
+	0x58, 0xc8, 0xf0, 0x42, 0xac, 0x32, 0x63, 0x95, 0xd9, 0x29, 0x69, 0x39, 0x9b, 0xd9, 0x4c, 0x88,
+	0xac, 0xe8, 0x97, 0xd4, 0x6b, 0x17, 0x6d, 0xc6, 0x6c, 0x97, 0x5a, 0xc4, 0x77, 0x2c, 0xe2, 0x79,
+	0x2c, 0x14, 0x7a, 0xae, 0xfe, 0xbd, 0x9a, 0x9a, 0x99, 0xd8, 0x5b, 0x4a, 0xaf, 0x35, 0x18, 0x6f,
+	0x31, 0x6e, 0xd5, 0x09, 0xa7, 0x92, 0xc8, 0xea, 0x94, 0xea, 0x34, 0x24, 0x25, 0xcb, 0x27, 0xb6,
+	0xe3, 0x25, 0xb4, 0x46, 0x0e, 0xf0, 0xb3, 0x48, 0x51, 0x21, 0x01, 0x69, 0xf1, 0x2a, 0xdd, 0x6a,
+	0x53, 0x1e, 0x1a, 0xcf, 0xe1, 0xdc, 0xc0, 0x2a, 0xf7, 0x99, 0xc7, 0x29, 0x7e, 0x00, 0x59, 0x5f,
+	0xac, 0x2c, 0xa0, 0x02, 0x5a, 0x9d, 0x5b, 0x2b, 0x98, 0x69, 0x47, 0x34, 0xa5, 0xb3, 0xfc, 0xff,
+	0xde, 0x41, 0x3e, 0x53, 0x55, 0x2e, 0xe3, 0x25, 0xcc, 0x8b, 0x6d, 0x1f, 0xfd, 0x95, 0xaa, 0x40,
+	0x5c, 0x86, 0xb3, 0x2d, 0xd6, 0x6c, 0xbb, 0xb4, 0x46, 0x38, 0xa7, 0x61, 0xcd, 0x69, 0x8a, 0x88,
+	0x53, 0x65, 0xed, 0xf7, 0x41, 0x7e, 0xbe, 0x4b, 0x5a, 0xee, 0x5d, 0x63, 0x48, 0x60, 0x54, 0x4f,
+	0xcb, 0x95, 0x8d, 0x68, 0xe1, 0x49, 0xd3, 0xa8, 0xc1, 0x85, 0x91, 0xdd, 0x15, 0xf8, 0x43, 0x80,
+	0x18, 0x4f, 0xc1, 0x2f, 0xa5, 0xc3, 0x27, 0x76, 0x48, 0xf8, 0x8c, 0x26, 0x68, 0x22, 0x60, 0xc3,
+	0x75, 0x63, 0xc5, 0x61, 0xcd, 0xf0, 0x26, 0x40, 0x5c, 0x5d, 0x95, 0x71, 0xc5, 0x94, 0xad, 0x30,
+	0xa3, 0x56, 0x98, 0xf2, 0xe5, 0x50, 0xad, 0x30, 0x2b, 0xc4, 0xa6, 0xca, 0x5b, 0x4d, 0x38, 0x8d,
+	0x2f, 0x08, 0x16, 0xc7, 0xc6, 0xa8, 0xb3, 0x6c, 0xc2, 0x5c, 0xcc, 0x14, 0x75, 0xe2, 0xbf, 0x63,
+	0x1f, 0x26, 0x69, 0xc4, 0x8f, 0x07, 0x78, 0x67, 0x04, 0xef, 0xca, 0x44, 0x5e, 0x09, 0x31, 0x00,
+	0xfc, 0x06, 0xc1, 0xe5, 0x31, 0xc0, 0xe5, 0xee, 0xd3, 0xd7, 0x1e, 0x0d, 0x0e, 0xcb, 0x93, 0x83,
+	0x59, 0x16, 0x3d, 0xcb, 0xbe, 0x56, 0xe5, 0xc3, 0x50, 0xd1, 0x66, 0x4e, 0x5c, 0xb4, 0xaf, 0x08,
+	0x8c, 0xa3, 0x18, 0xfe, 0xd1, 0xda, 0xad, 0x7d, 0x9e, 0x85, 0x59, 0xc1, 0x8d, 0xdf, 0x21, 0xc8,
+	0xca, 0xa1, 0xc1, 0x37, 0xd2, 0x81, 0x46, 0x67, 0x55, 0x2b, 0x1e, 0x53, 0x2d, 0xd3, 0x8d, 0xd5,
+	0xb7, 0xdf, 0x7f, 0x7d, 0x98, 0x31, 0x70, 0xc1, 0x4a, 0xbd, 0x50, 0xe4, 0xb4, 0xe2, 0x4f, 0x08,
+	0x20, 0x2e, 0x00, 0xbe, 0x39, 0x21, 0x67, 0x64, 0xa8, 0xb5, 0xd2, 0x14, 0x0e, 0x45, 0xb7, 0x2e,
+	0xe8, 0x8a, 0xf8, 0x7a, 0x3a, 0xdd, 0xce, 0xd0, 0x3d, 0xb0, 0x8b, 0x3f, 0x22, 0x38, 0x33, 0xd8,
+	0x77, 0x7c, 0x6b, 0x42, 0xf4, 0xd8, 0x11, 0xd6, 0x6e, 0x4f, 0xe9, 0x52, 0xd0, 0xcb, 0x02, 0x3a,
+	0x8f, 0x2f, 0xa5, 0x43, 0x13, 0xd7, 0xc5, 0xdf, 0x10, 0x9c, 0x1f, 0xfb, 0x7a, 0xe2, 0x7b, 0x53,
+	0xe5, 0x0e, 0x0e, 0x96, 0x76, 0xff, 0x64, 0x66, 0xc5, 0x5e, 0x14, 0xec, 0x2b, 0x78, 0xf9, 0x48,
+	0x76, 0x6b, 0x47, 0x8c, 0xeb, 0x6e, 0x99, 0xed, 0xf5, 0x74, 0xb4, 0xdf, 0xd3, 0xd1, 0xcf, 0x9e,
+	0x8e, 0xde, 0xf7, 0xf5, 0xcc, 0x7e, 0x5f, 0xcf, 0xfc, 0xe8, 0xeb, 0x19, 0x58, 0x74, 0x58, 0x2a,
+	0x48, 0x05, 0xbd, 0xb8, 0x63, 0x3b, 0xe1, 0xab, 0x76, 0xdd, 0x6c, 0xb0, 0x56, 0x22, 0xa9, 0xe8,
+	0xb0, 0x64, 0xee, 0x76, 0x32, 0x39, 0xec, 0xfa, 0x94, 0xd7, 0xb3, 0xe2, 0x33, 0xb5, 0xfe, 0x27,
+	0x00, 0x00, 0xff, 0xff, 0x79, 0x25, 0x6d, 0x7f, 0x73, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -369,9 +485,11 @@ type QueryClient interface {
 	// Params queries the parameters for x/expiration
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Query Expiration
-	QueryExpiration(ctx context.Context, in *QueryExpirationRequest, opts ...grpc.CallOption) (*QueryExpirationResponse, error)
+	Expiration(ctx context.Context, in *QueryExpirationRequest, opts ...grpc.CallOption) (*QueryExpirationResponse, error)
 	// Query all Expirations
-	QueryAllExpirations(ctx context.Context, in *QueryAllExpirationsRequest, opts ...grpc.CallOption) (*QueryAllExpirationsResponse, error)
+	AllExpirations(ctx context.Context, in *QueryAllExpirationsRequest, opts ...grpc.CallOption) (*QueryAllExpirationsResponse, error)
+	// Query all Expirations
+	AllExpirationsByOwner(ctx context.Context, in *QueryAllExpirationsByOwnerRequest, opts ...grpc.CallOption) (*QueryAllExpirationsByOwnerResponse, error)
 }
 
 type queryClient struct {
@@ -391,18 +509,27 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
-func (c *queryClient) QueryExpiration(ctx context.Context, in *QueryExpirationRequest, opts ...grpc.CallOption) (*QueryExpirationResponse, error) {
+func (c *queryClient) Expiration(ctx context.Context, in *QueryExpirationRequest, opts ...grpc.CallOption) (*QueryExpirationResponse, error) {
 	out := new(QueryExpirationResponse)
-	err := c.cc.Invoke(ctx, "/provenance.expiration.v1.Query/QueryExpiration", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.expiration.v1.Query/Expiration", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) QueryAllExpirations(ctx context.Context, in *QueryAllExpirationsRequest, opts ...grpc.CallOption) (*QueryAllExpirationsResponse, error) {
+func (c *queryClient) AllExpirations(ctx context.Context, in *QueryAllExpirationsRequest, opts ...grpc.CallOption) (*QueryAllExpirationsResponse, error) {
 	out := new(QueryAllExpirationsResponse)
-	err := c.cc.Invoke(ctx, "/provenance.expiration.v1.Query/QueryAllExpirations", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.expiration.v1.Query/AllExpirations", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AllExpirationsByOwner(ctx context.Context, in *QueryAllExpirationsByOwnerRequest, opts ...grpc.CallOption) (*QueryAllExpirationsByOwnerResponse, error) {
+	out := new(QueryAllExpirationsByOwnerResponse)
+	err := c.cc.Invoke(ctx, "/provenance.expiration.v1.Query/AllExpirationsByOwner", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -414,9 +541,11 @@ type QueryServer interface {
 	// Params queries the parameters for x/expiration
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Query Expiration
-	QueryExpiration(context.Context, *QueryExpirationRequest) (*QueryExpirationResponse, error)
+	Expiration(context.Context, *QueryExpirationRequest) (*QueryExpirationResponse, error)
 	// Query all Expirations
-	QueryAllExpirations(context.Context, *QueryAllExpirationsRequest) (*QueryAllExpirationsResponse, error)
+	AllExpirations(context.Context, *QueryAllExpirationsRequest) (*QueryAllExpirationsResponse, error)
+	// Query all Expirations
+	AllExpirationsByOwner(context.Context, *QueryAllExpirationsByOwnerRequest) (*QueryAllExpirationsByOwnerResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -426,11 +555,14 @@ type UnimplementedQueryServer struct {
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
 }
-func (*UnimplementedQueryServer) QueryExpiration(ctx context.Context, req *QueryExpirationRequest) (*QueryExpirationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryExpiration not implemented")
+func (*UnimplementedQueryServer) Expiration(ctx context.Context, req *QueryExpirationRequest) (*QueryExpirationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Expiration not implemented")
 }
-func (*UnimplementedQueryServer) QueryAllExpirations(ctx context.Context, req *QueryAllExpirationsRequest) (*QueryAllExpirationsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryAllExpirations not implemented")
+func (*UnimplementedQueryServer) AllExpirations(ctx context.Context, req *QueryAllExpirationsRequest) (*QueryAllExpirationsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllExpirations not implemented")
+}
+func (*UnimplementedQueryServer) AllExpirationsByOwner(ctx context.Context, req *QueryAllExpirationsByOwnerRequest) (*QueryAllExpirationsByOwnerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllExpirationsByOwner not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -455,38 +587,56 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_QueryExpiration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_Expiration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryExpirationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).QueryExpiration(ctx, in)
+		return srv.(QueryServer).Expiration(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.expiration.v1.Query/QueryExpiration",
+		FullMethod: "/provenance.expiration.v1.Query/Expiration",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryExpiration(ctx, req.(*QueryExpirationRequest))
+		return srv.(QueryServer).Expiration(ctx, req.(*QueryExpirationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_QueryAllExpirations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_AllExpirations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryAllExpirationsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).QueryAllExpirations(ctx, in)
+		return srv.(QueryServer).AllExpirations(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.expiration.v1.Query/QueryAllExpirations",
+		FullMethod: "/provenance.expiration.v1.Query/AllExpirations",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryAllExpirations(ctx, req.(*QueryAllExpirationsRequest))
+		return srv.(QueryServer).AllExpirations(ctx, req.(*QueryAllExpirationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AllExpirationsByOwner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllExpirationsByOwnerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllExpirationsByOwner(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.expiration.v1.Query/AllExpirationsByOwner",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllExpirationsByOwner(ctx, req.(*QueryAllExpirationsByOwnerRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -500,12 +650,16 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_Params_Handler,
 		},
 		{
-			MethodName: "QueryExpiration",
-			Handler:    _Query_QueryExpiration_Handler,
+			MethodName: "Expiration",
+			Handler:    _Query_Expiration_Handler,
 		},
 		{
-			MethodName: "QueryAllExpirations",
-			Handler:    _Query_QueryAllExpirations_Handler,
+			MethodName: "AllExpirations",
+			Handler:    _Query_AllExpirations_Handler,
+		},
+		{
+			MethodName: "AllExpirationsByOwner",
+			Handler:    _Query_AllExpirationsByOwner_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -663,7 +817,7 @@ func (m *QueryAllExpirationsRequest) MarshalToSizedBuffer(dAtA []byte) (int, err
 			i = encodeVarintQuery(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -684,6 +838,97 @@ func (m *QueryAllExpirationsResponse) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *QueryAllExpirationsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Expirations) > 0 {
+		for iNdEx := len(m.Expirations) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Expirations[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllExpirationsByOwnerRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllExpirationsByOwnerRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllExpirationsByOwnerRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllExpirationsByOwnerResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllExpirationsByOwnerResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllExpirationsByOwnerResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -788,6 +1033,42 @@ func (m *QueryAllExpirationsRequest) Size() (n int) {
 }
 
 func (m *QueryAllExpirationsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Expirations) > 0 {
+		for _, e := range m.Expirations {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryAllExpirationsByOwnerRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryAllExpirationsByOwnerResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1142,7 +1423,7 @@ func (m *QueryAllExpirationsRequest) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: QueryAllExpirationsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 2:
+		case 1:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
 			}
@@ -1226,6 +1507,244 @@ func (m *QueryAllExpirationsResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: QueryAllExpirationsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Expirations", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Expirations = append(m.Expirations, &Expiration{})
+			if err := m.Expirations[len(m.Expirations)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllExpirationsByOwnerRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllExpirationsByOwnerRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllExpirationsByOwnerRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllExpirationsByOwnerResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllExpirationsByOwnerResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllExpirationsByOwnerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

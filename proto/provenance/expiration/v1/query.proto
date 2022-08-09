@@ -20,13 +20,18 @@ service Query {
   }
 
   // Query Expiration
-  rpc QueryExpiration(QueryExpirationRequest) returns (QueryExpirationResponse) {
+  rpc Expiration(QueryExpirationRequest) returns (QueryExpirationResponse) {
     option (google.api.http).get = "/provenance/expiration/v1/{module_asset_id}";
   }
 
   // Query all Expirations
-  rpc QueryAllExpirations(QueryAllExpirationsRequest) returns (QueryAllExpirationsResponse) {
+  rpc AllExpirations(QueryAllExpirationsRequest) returns (QueryAllExpirationsResponse) {
     option (google.api.http).get = "/provenance/expiration/v1/all";
+  }
+
+  // Query all Expirations
+  rpc AllExpirationsByOwner(QueryAllExpirationsByOwnerRequest) returns (QueryAllExpirationsByOwnerResponse) {
+    option (google.api.http).get = "/provenance/expiration/v1/all/{owner}";
   }
 }
 
@@ -52,11 +57,26 @@ message QueryExpirationResponse {
 // QueryAllExpirationsRequest queries all expirations
 message QueryAllExpirationsRequest {
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
 // QueryAllExpirationsResponse response for querying all expirations
 message QueryAllExpirationsResponse {
+  repeated Expiration expirations = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryAllExpirationsByOwnerRequest queries all expirations belonging to an owner
+message QueryAllExpirationsByOwnerRequest {
+  // the bech32 address the expiration is bound to
+  string owner = 1;
+  // pagination defines an optional pagination for the request
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryAllExpirationsByOwnerResponse response for querying all expirations by owner
+message QueryAllExpirationsByOwnerResponse {
   repeated Expiration expirations = 1;
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;

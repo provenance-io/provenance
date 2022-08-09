@@ -55,6 +55,8 @@
     - [GenesisState](#provenance.expiration.v1.GenesisState)
   
 - [provenance/expiration/v1/query.proto](#provenance/expiration/v1/query.proto)
+    - [QueryAllExpirationsByOwnerRequest](#provenance.expiration.v1.QueryAllExpirationsByOwnerRequest)
+    - [QueryAllExpirationsByOwnerResponse](#provenance.expiration.v1.QueryAllExpirationsByOwnerResponse)
     - [QueryAllExpirationsRequest](#provenance.expiration.v1.QueryAllExpirationsRequest)
     - [QueryAllExpirationsResponse](#provenance.expiration.v1.QueryAllExpirationsResponse)
     - [QueryExpirationRequest](#provenance.expiration.v1.QueryExpirationRequest)
@@ -1072,6 +1074,38 @@ GenesisState defines the name module's genesis state.
 Since: provenance 1.12
 
 
+<a name="provenance.expiration.v1.QueryAllExpirationsByOwnerRequest"></a>
+
+### QueryAllExpirationsByOwnerRequest
+QueryAllExpirationsByOwnerRequest queries all expirations belonging to an owner
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `owner` | [string](#string) |  | the bech32 address the expiration is bound to |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request |
+
+
+
+
+
+
+<a name="provenance.expiration.v1.QueryAllExpirationsByOwnerResponse"></a>
+
+### QueryAllExpirationsByOwnerResponse
+QueryAllExpirationsByOwnerResponse response for querying all expirations by owner
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `expirations` | [Expiration](#provenance.expiration.v1.Expiration) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
 <a name="provenance.expiration.v1.QueryAllExpirationsRequest"></a>
 
 ### QueryAllExpirationsRequest
@@ -1172,8 +1206,9 @@ Query defines the gRPC querier service for expiration module.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [QueryParamsRequest](#provenance.expiration.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.expiration.v1.QueryParamsResponse) | Params queries the parameters for x/expiration | GET|/provenance/expiration/v1/params|
-| `QueryExpiration` | [QueryExpirationRequest](#provenance.expiration.v1.QueryExpirationRequest) | [QueryExpirationResponse](#provenance.expiration.v1.QueryExpirationResponse) | Query Expiration | GET|/provenance/expiration/v1/{module_asset_id}|
-| `QueryAllExpirations` | [QueryAllExpirationsRequest](#provenance.expiration.v1.QueryAllExpirationsRequest) | [QueryAllExpirationsResponse](#provenance.expiration.v1.QueryAllExpirationsResponse) | Query all Expirations | GET|/provenance/expiration/v1/all|
+| `Expiration` | [QueryExpirationRequest](#provenance.expiration.v1.QueryExpirationRequest) | [QueryExpirationResponse](#provenance.expiration.v1.QueryExpirationResponse) | Query Expiration | GET|/provenance/expiration/v1/{module_asset_id}|
+| `AllExpirations` | [QueryAllExpirationsRequest](#provenance.expiration.v1.QueryAllExpirationsRequest) | [QueryAllExpirationsResponse](#provenance.expiration.v1.QueryAllExpirationsResponse) | Query all Expirations | GET|/provenance/expiration/v1/all|
+| `AllExpirationsByOwner` | [QueryAllExpirationsByOwnerRequest](#provenance.expiration.v1.QueryAllExpirationsByOwnerRequest) | [QueryAllExpirationsByOwnerResponse](#provenance.expiration.v1.QueryAllExpirationsByOwnerResponse) | Query all Expirations | GET|/provenance/expiration/v1/all/{owner}|
 
  <!-- end services -->
 
@@ -1194,11 +1229,8 @@ MsgAddExpirationMetadataRequest represents a message to add an expiration
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `module_asset_id` | [string](#string) |  |  |
-| `owner_address` | [string](#string) |  |  |
-| `block_height` | [int64](#int64) |  |  |
-| `deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `messages` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
+| `expiration` | [Expiration](#provenance.expiration.v1.Expiration) |  | expiration is the Expiration you want to add |
+| `signers` | [string](#string) | repeated | signers is the list of addresses of those signing this request. |
 
 
 
@@ -1223,8 +1255,8 @@ MsgDeleteExpirationMetadataResponse represents a message to delete an expiration
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `module_asset_id` | [string](#string) |  |  |
-| `owner` | [string](#string) |  |  |
+| `module_asset_id` | [string](#string) |  | Module asset ID used to delete asset from chain |
+| `signers` | [string](#string) | repeated | signers is the list of addresses of those signing this request. |
 
 
 
@@ -1249,9 +1281,8 @@ MsgExtendExpirationMetadataRequest represents a message to extend an expiration
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `module_asset_id` | [string](#string) |  |  |
-| `new_expiration_height` | [int64](#int64) |  |  |
-| `additional_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `expiration` | [Expiration](#provenance.expiration.v1.Expiration) |  | expiration is the Expiration you want to add |
+| `signers` | [string](#string) | repeated | signers is the list of addresses of those signing this request. |
 
 
 

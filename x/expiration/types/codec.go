@@ -7,8 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
-// ignoring RegisterLegacyAminoCodec since this is a new module
-
+// RegisterInterfaces registers the module 'Msg' types with the registry
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgAddExpirationRequest{},
@@ -23,6 +22,5 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 }
 
 var (
-	// ModuleCdc uses the new ProtoCodec and avoids the amino codec
 	ModuleCdc = codec.NewProtoCodec(types.NewInterfaceRegistry())
 )

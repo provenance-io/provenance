@@ -3,8 +3,7 @@ syntax = "proto3";
 package provenance.expiration.v1;
 
 import "gogoproto/gogo.proto";
-import "google/protobuf/any.proto";
-import "cosmos/base/v1beta1/coin.proto";
+import "provenance/expiration/v1/expiration.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/expiration/types";
 option java_package        = "io.provenance.expiration.v1";
@@ -22,15 +21,14 @@ service Msg {
 
 // MsgAddExpirationMetadataRequest represents a message to add an expiration
 message MsgAddExpirationRequest {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.equal)           = false;
+  option (gogoproto.stringer)        = false;
+  option (gogoproto.goproto_getters) = false;
 
-  string                   module_asset_id = 1 [(gogoproto.moretags) = "yaml:\"module_asset_id\""];
-  string                   owner_address   = 2 [(gogoproto.moretags) = "yaml:\"owner_address\""];
-  int64                    block_height    = 3 [(gogoproto.moretags) = "yaml:\"block_height\""];
-  cosmos.base.v1beta1.Coin deposit         = 4 [(gogoproto.nullable) = false];
-  repeated google.protobuf.Any messages    = 5;
+  // expiration is the Expiration you want to add
+  Expiration expiration = 1 [(gogoproto.nullable) = false];
+  // signers is the list of addresses of those signing this request.
+  repeated string signers = 2;
 }
 
 // MsgAddExpirationMetadataResponse defines the MsgAddExpirationMetadataRequest response type
@@ -38,14 +36,14 @@ message MsgAddExpirationResponse {}
 
 // MsgExtendExpirationMetadataRequest represents a message to extend an expiration
 message MsgExtendExpirationRequest {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.equal)           = false;
+  option (gogoproto.stringer)        = false;
+  option (gogoproto.goproto_getters) = false;
 
-  string                   module_asset_id       = 1 [(gogoproto.moretags) = "yaml:\"module_asset_id\""];
-  int64                    new_expiration_height = 2 [(gogoproto.moretags) = "yaml:\"new_expiration_height\""];
-  cosmos.base.v1beta1.Coin additional_deposit    = 3
-      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"additional_deposit\""];
+  // expiration is the Expiration you want to add
+  Expiration expiration = 1 [(gogoproto.nullable) = false];
+  // signers is the list of addresses of those signing this request.
+  repeated string signers = 2;
 }
 
 // MsgExtendExpirationMetadataResponse defines the MsgExtendExpirationMetadataRequest response type
@@ -53,12 +51,14 @@ message MsgExtendExpirationResponse {}
 
 // MsgDeleteExpirationMetadataResponse represents a message to delete an expiration
 message MsgDeleteExpirationRequest {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.equal)           = false;
+  option (gogoproto.stringer)        = false;
+  option (gogoproto.goproto_getters) = false;
 
+  // Module asset ID used to delete asset from chain
   string module_asset_id = 1 [(gogoproto.moretags) = "yaml:\"module_asset_id\""];
-  string owner           = 2;
+  // signers is the list of addresses of those signing this request.
+  repeated string signers = 2;
 }
 
 // MsgDeleteExpirationMetadataResponse defines the MsgDeleteExpirationMetadataRequest response type

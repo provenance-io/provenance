@@ -1,18 +1,14 @@
 package keeper
 
 import (
-	"github.com/provenance-io/provenance/x/expiration/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/expiration/types"
 )
 
-// InitGenesis creates the initial genesis state for the expiration module.
+// InitGenesis creates the initial genesis state for the expiration module
 func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	k.SetParams(ctx, data.Params)
 
-	if err := data.Validate(); err != nil {
-		panic(err)
-	}
 	for _, expiration := range data.Expirations {
 		err := k.SetExpiration(ctx, expiration)
 		if err != nil {
@@ -21,7 +17,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	}
 }
 
-// ExportGenesis exports the current keeper state of the name module.
+// ExportGenesis exports the current keeper state of the name module
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	params := k.GetParams(ctx)
 	// Genesis state data structure.
@@ -32,7 +28,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		return nil
 	}
 	// Collect and return genesis state.
-	if err := k.IterateExpirations(ctx, types.NameKeyPrefix, expirationHandler); err != nil {
+	if err := k.IterateExpirations(ctx, types.ModuleAssetKeyPrefix, expirationHandler); err != nil {
 		panic(err)
 	}
 	return types.NewGenesisState(params, records)

@@ -71,6 +71,10 @@ func (p *Params) Equal(that interface{}) bool {
 	return true
 }
 
+func (p *Params) Validate() error {
+	return validateDepositParam(p.Deposit)
+}
+
 func validateDepositParam(i interface{}) error {
 	coin, ok := i.(sdk.Coin)
 	if !ok {
