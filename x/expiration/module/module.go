@@ -20,6 +20,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/provenance-io/provenance/x/expiration/keeper"
+	"github.com/provenance-io/provenance/x/expiration/simulation"
 	"github.com/provenance-io/provenance/x/expiration/types"
 
 	"github.com/spf13/cobra"
@@ -158,26 +159,19 @@ func (am AppModule) EndBlock(s sdk.Context, _ abci.RequestEndBlock) []abci.Valid
 // AppModuleSimulation functions
 
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	//TODO implement me
-	panic("implement me")
+	simulation.RandomizedGenState(simState)
 }
 
-func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	//TODO implement me
-	panic("implement me")
+func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
+	return []simtypes.WeightedProposalContent{}
 }
 
-func (am AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	//TODO implement me
-	panic("implement me")
+func (am AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+	return []simtypes.ParamChange{}
 }
 
-func (am AppModule) RegisterStoreDecoder(registry sdk.StoreDecoderRegistry) {
-	//TODO implement me
-	panic("implement me")
-}
+func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	//TODO implement me
-	panic("implement me")
+func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
+	return []simtypes.WeightedOperation{}
 }

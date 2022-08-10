@@ -1,9 +1,10 @@
 package types
 
 import (
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"strings"
 )
 
 func NewExpiration(

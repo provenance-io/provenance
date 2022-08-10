@@ -14,8 +14,11 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	ctx := sdk.UnwrapSDKContext(c)
+func (k Keeper) Params(
+	goCtx context.Context,
+	_ *types.QueryParamsRequest,
+) (*types.QueryParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	var params types.Params
 	k.paramSpace.GetParamSet(ctx, &params)
 
@@ -23,14 +26,14 @@ func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 }
 
 func (k Keeper) Expiration(
-	c context.Context,
+	goCtx context.Context,
 	req *types.QueryExpirationRequest,
 ) (*types.QueryExpirationResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	expiration, err := k.GetExpiration(ctx, req.ModuleAssetId)
 	if err != nil {
 		return nil, err
@@ -40,7 +43,7 @@ func (k Keeper) Expiration(
 }
 
 func (k Keeper) AllExpirations(
-	c context.Context,
+	goCtx context.Context,
 	req *types.QueryAllExpirationsRequest,
 ) (*types.QueryAllExpirationsResponse, error) {
 	if req == nil {
@@ -48,7 +51,7 @@ func (k Keeper) AllExpirations(
 	}
 
 	var expirations []*types.Expiration
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
 	expirationStore := prefix.NewStore(store, types.ModuleAssetKeyPrefix)
 	pageRes, err := query.Paginate(expirationStore, req.Pagination, func(key []byte, value []byte) error {
@@ -68,7 +71,7 @@ func (k Keeper) AllExpirations(
 }
 
 func (k Keeper) AllExpirationsByOwner(
-	c context.Context,
+	goCtx context.Context,
 	req *types.QueryAllExpirationsByOwnerRequest,
 ) (*types.QueryAllExpirationsByOwnerResponse, error) {
 	if req == nil {
@@ -76,7 +79,7 @@ func (k Keeper) AllExpirationsByOwner(
 	}
 
 	var expirations []*types.Expiration
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
 	expirationStore := prefix.NewStore(store, types.ModuleAssetKeyPrefix)
 	pageRes, err := query.FilteredPaginate(expirationStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {

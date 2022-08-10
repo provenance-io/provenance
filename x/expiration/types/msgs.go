@@ -28,7 +28,11 @@ func (m *MsgAddExpirationRequest) ValidateBasic() error {
 
 // GetSigners returns the typed AccAddress of signers that must sign
 func (m *MsgAddExpirationRequest) GetSigners() []sdk.AccAddress {
-	return mustAccAddressFromBech32(m.Signers)
+	return getSigners(m.Signers)
+}
+
+func (m *MsgAddExpirationRequest) MsgTypeURL() string {
+	return sdk.MsgTypeURL(m)
 }
 
 // ------------------  MsgExtendExpirationRequest  ------------------
@@ -48,7 +52,11 @@ func (m *MsgExtendExpirationRequest) ValidateBasic() error {
 
 // GetSigners returns the typed AccAddress of signers that must sign
 func (m *MsgExtendExpirationRequest) GetSigners() []sdk.AccAddress {
-	return mustAccAddressFromBech32(m.Signers)
+	return getSigners(m.Signers)
+}
+
+func (m *MsgExtendExpirationRequest) MsgTypeURL() string {
+	return sdk.MsgTypeURL(m)
 }
 
 // ------------------  MsgDeleteExpirationRequest  ------------------
@@ -75,21 +83,29 @@ func (m *MsgDeleteExpirationRequest) ValidateBasic() error {
 
 // GetSigners returns the typed AccAddress of signers that must sign
 func (m *MsgDeleteExpirationRequest) GetSigners() []sdk.AccAddress {
-	return mustAccAddressFromBech32(m.Signers)
+	return getSigners(m.Signers)
+}
+
+func (m *MsgDeleteExpirationRequest) MsgTypeURL() string {
+	return sdk.MsgTypeURL(m)
+}
+
+func getSigners(signers []string) []sdk.AccAddress {
+	addresses := make([]sdk.AccAddress, len(signers))
+	for _, address := range signers {
+		addresses = append(addresses, MustAccAddressFromBech32(address))
+	}
+	return addresses
 }
 
 // MustAccAddressFromBech32 converts a Bech32 address to sdk.AccAddress
 // Panics on error
-func mustAccAddressFromBech32(s []string) []sdk.AccAddress {
-	addresses := make([]sdk.AccAddress, 0)
-	for _, address := range s {
-		accAddress, err := sdk.AccAddressFromBech32(address)
-		if err != nil {
-			panic(err)
-		}
-		addresses = append(addresses, accAddress)
+func MustAccAddressFromBech32(s string) sdk.AccAddress {
+	accAddress, err := sdk.AccAddressFromBech32(s)
+	if err != nil {
+		panic(err)
 	}
-	return addresses
+	return accAddress
 }
 
 func validateBasic(expiration Expiration, signers []string) error {

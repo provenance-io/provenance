@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -100,27 +101,14 @@ func (k Keeper) GetExpiration(ctx sdk.Context, moduleAssetId string) (*types.Exp
 
 // SetExpiration creates an expiration record for a module asset
 func (k Keeper) SetExpiration(ctx sdk.Context, expiration types.Expiration) error {
-	// Run basic expiration data validation
-	if err := expiration.ValidateBasic(); err != nil {
-		return err
-	}
-
-	// Verify owner account exists for the given owner address
-	if err := k.isValidOwnerAddress(ctx, expiration.Owner); err != nil {
-		k.Logger(ctx).Error("invalid owner address", "err", err, "expiration", expiration.String())
-		return err
-	}
-
 	// get store key prefix
 	store := ctx.KVStore(k.storeKey)
 	key, err := types.GetModuleAssetKeyPrefix(expiration.ModuleAssetId)
 	if err != nil {
 		return err
 	}
-	// Validate module asset exists
-	if err := k.isValidModuleAsset(ctx, expiration.ModuleAssetId); err != nil {
 
-	}
+	// Marshal expiration record and store
 	b, err := k.cdc.Marshal(&expiration)
 	if err != nil {
 		return err
@@ -133,11 +121,6 @@ func (k Keeper) SetExpiration(ctx sdk.Context, expiration types.Expiration) erro
 }
 
 func (k Keeper) UpdateExpiration(ctx sdk.Context, expiration types.Expiration) error {
-	// Run basic expiration data validation
-	if err := expiration.ValidateBasic(); err != nil {
-		return err
-	}
-
 	// get key prefix
 	key, err := types.GetModuleAssetKeyPrefix(expiration.ModuleAssetId)
 	if err != nil {
@@ -145,29 +128,24 @@ func (k Keeper) UpdateExpiration(ctx sdk.Context, expiration types.Expiration) e
 	}
 
 	// lookup old expiration
-	store := ctx.KVStore(k.storeKey)
-
-	if oldBytes := store.Get(key); oldBytes != nil {
-		oldExpiration := &types.Expiration{}
-		if err := k.cdc.Unmarshal(key, oldExpiration); err != nil {
-			k.Logger(ctx).Error("could not unmarshal old expiration", "err", err, "expiration", expiration.String(), "oldExpirationBytes", oldBytes)
-			return types.ErrExtendExpiration
-		}
-		// make sure that the new block height is higher than the old block height
-		if expiration.BlockHeight <= oldExpiration.BlockHeight {
-			k.Logger(ctx).Error("new block height must be higher than old block height", "err", err, "expiration", expiration.String(), "oldExpiration", oldExpiration.String())
-			return types.ErrExtendExpiration
-		}
-
-		// validate owners are the same
-		if expiration.Owner != oldExpiration.Owner {
-			k.Logger(ctx).Error("new owner and old owner do not match", "err", err, "expiration", expiration.String(), "oldExpiration", oldExpiration.String())
-			return types.ErrNewOwnerNoMatch
-		}
-		// todo: will we need to validate through authz?
+	oldExpiration, err := k.GetExpiration(ctx, expiration.ModuleAssetId)
+	if err != nil {
+		return err
 	}
 
-	// marshal expiration record and set
+	// Make sure that the new block height is higher than the old block height
+	if expiration.BlockHeight <= oldExpiration.BlockHeight {
+		k.Logger(ctx).Error("new block height must be higher than old block height", "err", err, "expiration", expiration.String(), "oldExpiration", oldExpiration.String())
+		return types.ErrExtendExpiration
+	}
+	// Validate owners are the same
+	if expiration.Owner != oldExpiration.Owner {
+		k.Logger(ctx).Error("new owner and old owner do not match", "err", err, "expiration", expiration.String(), "oldExpiration", oldExpiration.String())
+		return types.ErrNewOwnerNoMatch
+	}
+
+	// Marshal expiration record and store
+	store := ctx.KVStore(k.storeKey)
 	b, err := k.cdc.Marshal(&expiration)
 	if err != nil {
 		return err
@@ -219,28 +197,122 @@ func getExpiration(ctx sdk.Context, keeper Keeper, key []byte) (*types.Expiratio
 	return record, err
 }
 
+func (k Keeper) ValidateSetExpiration(ctx sdk.Context, expiration types.Expiration, signers []string, msgTypeURL string) error {
+	// validate block height is in the future
+	if expiration.BlockHeight <= ctx.BlockHeight() {
+		return sdkerrors.Wrap(types.ErrInvalidBlockHeight,
+			fmt.Sprintf("block height %d must be greater than current block height %d",
+				expiration.BlockHeight, ctx.BlockHeight()))
+	}
+
+	// validate deposit
+	if err := expiration.Deposit.Validate(); err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, err.Error())
+	}
+	deposit := expiration.Deposit
+	defaultDeposit := types.DefaultDeposit
+	if deposit.IsLT(defaultDeposit) {
+		return sdkerrors.Wrap(types.ErrInvalidDeposit,
+			fmt.Sprintf("deposit %s is less than minimum deposit %s",
+				deposit.Amount.String(), defaultDeposit.Amount.String()))
+	}
+
+	// validate module asset id
+	if _, err := sdk.AccAddressFromBech32(expiration.ModuleAssetId); err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress,
+			fmt.Sprintf("invalid module asset id: %s", err.Error()))
+	}
+
+	// validate signers
+	if err := k.validateSigners(ctx, expiration.Owner, signers, msgTypeURL); err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
+	}
+
+	return nil
+}
+
+func (k Keeper) ValidateDeleteExpiration(ctx sdk.Context, moduleAssetId string, signers []string, msgTypeURL string) error {
+	expiration, err := k.GetExpiration(ctx, moduleAssetId)
+
+	// validate module asset id
+	if _, err := sdk.AccAddressFromBech32(moduleAssetId); err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress,
+			fmt.Sprintf("invalid module asset id: %s", err.Error()))
+	}
+
+	// validate signers
+	if err != nil {
+		return err
+	}
+	if err := k.validateSigners(ctx, expiration.Owner, signers, msgTypeURL); err != nil {
+		return sdkerrors.Wrap(types.ErrInvalidSigners,
+			fmt.Sprintf("missing required signatures: %s", err.Error()))
+	}
+
+	return nil
+}
+
+func (k Keeper) validateSigners(ctx sdk.Context, owner string, signers []string, msgTypeURL string) error {
+	found := false
+	for _, signer := range signers {
+		if signer == owner {
+			found = true
+			break
+		}
+
+		// validate signer with authz
+		var err error
+		found, err = k.checkSignerWithAuthz(ctx, owner, signer, msgTypeURL)
+		if err != nil {
+			return err
+		}
+		if found {
+			break
+		}
+	}
+
+	if !found {
+		return sdkerrors.ErrorInvalidSigner
+	}
+
+	return nil
+}
+
+func (k Keeper) checkSignerWithAuthz(ctx sdk.Context, owner string, signer string, msgTypeURL string) (bool, error) {
+	granter := types.MustAccAddressFromBech32(owner)
+	grantee := types.MustAccAddressFromBech32(signer)
+
+	authorization, exp := k.authzKeeper.GetCleanAuthorization(ctx, grantee, granter, msgTypeURL)
+	if authorization != nil {
+		resp, err := authorization.Accept(ctx, nil)
+		if err != nil {
+			return false, err
+		}
+		if resp.Accept {
+			switch {
+			case resp.Delete:
+				err = k.authzKeeper.DeleteGrant(ctx, grantee, granter, msgTypeURL)
+				if err != nil {
+					return false, err
+				}
+			case resp.Updated != nil:
+				if err = k.authzKeeper.SaveGrant(ctx, grantee, granter, resp.Updated, exp); err != nil {
+					return false, err
+				}
+			}
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 func (k Keeper) emitEvent(ctx sdk.Context, message proto.Message) error {
 	if err := ctx.EventManager().EmitTypedEvent(message); err != nil {
 		ctx.Logger().Error("unable to emit event", "error", err, "event", message)
 		return err
 	}
 	return nil
-}
-
-func (k Keeper) isValidOwnerAddress(ctx sdk.Context, owner string) error {
-	accAddress, err := sdk.AccAddressFromBech32(owner)
-	if err != nil {
-		return sdkerrors.ErrInvalidAddress
-	}
-	if owner := k.authKeeper.GetAccount(ctx, accAddress); owner == nil {
-		return sdkerrors.ErrUnknownAddress
-	}
-	return nil
-}
-
-func (k Keeper) isValidModuleAsset(ctx sdk.Context, moduleAssetId string) error {
-	// todo: we need to know the type of module asset we are dealing with so we can check with its Keeper
-	panic("implement me")
 }
 
 //// GetExpirationByOwner resolves a record by owner.
