@@ -84,7 +84,7 @@ func TestInvalidProposal(t *testing.T) {
 	require.True(t, strings.Contains(err.Error(), "unrecognized marker proposal content type: *types.TextProposal"))
 }
 
-func (s HandlerTestSuite) containsMessage(result *sdk.Result, msg proto.Message) bool {
+func (s *HandlerTestSuite) containsMessage(result *sdk.Result, msg proto.Message) bool {
 	events := result.GetEvents().ToABCIEvents()
 	for _, event := range events {
 		typeEvent, _ := sdk.ParseTypedEvent(event)
@@ -103,7 +103,7 @@ type CommonTest struct {
 	expectedEvent proto.Message
 }
 
-func (s HandlerTestSuite) runTests(cases []CommonTest) {
+func (s *HandlerTestSuite) runTests(cases []CommonTest) {
 	for _, tc := range cases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			response, err := s.handler(s.ctx, tc.msg)
@@ -121,7 +121,7 @@ func (s HandlerTestSuite) runTests(cases []CommonTest) {
 	}
 }
 
-func (s HandlerTestSuite) TestMsgAddMarkerRequest() {
+func (s *HandlerTestSuite) TestMsgAddMarkerRequest() {
 	denom := "hotdog"
 	denomWithDashPeriod := fmt.Sprintf("%s-my.marker", denom)
 	activeStatus := types.NewMsgAddMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true)
@@ -170,7 +170,7 @@ func (s HandlerTestSuite) TestMsgAddMarkerRequest() {
 	s.runTests(cases)
 }
 
-func (s HandlerTestSuite) TestMsgAddAccessRequest() {
+func (s *HandlerTestSuite) TestMsgAddAccessRequest() {
 
 	accessMintGrant := types.AccessGrant{
 		Address:     s.user1,
@@ -217,7 +217,7 @@ func (s HandlerTestSuite) TestMsgAddAccessRequest() {
 	s.runTests(cases)
 }
 
-func (s HandlerTestSuite) TestMsgDeleteAccessMarkerRequest() {
+func (s *HandlerTestSuite) TestMsgDeleteAccessMarkerRequest() {
 
 	hotdogDenom := "hotdog"
 	accessMintGrant := types.AccessGrant{
@@ -251,7 +251,7 @@ func (s HandlerTestSuite) TestMsgDeleteAccessMarkerRequest() {
 	s.runTests(cases)
 }
 
-func (s HandlerTestSuite) TestMsgFinalizeMarkerRequest() {
+func (s *HandlerTestSuite) TestMsgFinalizeMarkerRequest() {
 
 	hotdogDenom := "hotdog"
 
@@ -274,7 +274,7 @@ func (s HandlerTestSuite) TestMsgFinalizeMarkerRequest() {
 	s.runTests(cases)
 }
 
-func (s HandlerTestSuite) TestMsgActivateMarkerRequest() {
+func (s *HandlerTestSuite) TestMsgActivateMarkerRequest() {
 
 	hotdogDenom := "hotdog"
 
@@ -304,7 +304,7 @@ func (s HandlerTestSuite) TestMsgActivateMarkerRequest() {
 	s.runTests(cases)
 }
 
-func (s HandlerTestSuite) TestMsgCancelMarkerRequest() {
+func (s *HandlerTestSuite) TestMsgCancelMarkerRequest() {
 
 	hotdogDenom := "hotdog"
 	accessDeleteGrant := types.AccessGrant{
@@ -338,7 +338,7 @@ func (s HandlerTestSuite) TestMsgCancelMarkerRequest() {
 	s.runTests(cases)
 }
 
-func (s HandlerTestSuite) TestMsgDeleteMarkerRequest() {
+func (s *HandlerTestSuite) TestMsgDeleteMarkerRequest() {
 
 	hotdogDenom := "hotdog"
 	accessDeleteMintGrant := types.AccessGrant{
@@ -379,7 +379,7 @@ func (s HandlerTestSuite) TestMsgDeleteMarkerRequest() {
 	s.runTests(cases)
 }
 
-func (s HandlerTestSuite) TestMsgMintMarkerRequest() {
+func (s *HandlerTestSuite) TestMsgMintMarkerRequest() {
 
 	hotdogDenom := "hotdog"
 	access := types.AccessGrant{
@@ -413,7 +413,7 @@ func (s HandlerTestSuite) TestMsgMintMarkerRequest() {
 	s.runTests(cases)
 }
 
-func (s HandlerTestSuite) TestMsgBurnMarkerRequest() {
+func (s *HandlerTestSuite) TestMsgBurnMarkerRequest() {
 
 	hotdogDenom := "hotdog"
 	access := types.AccessGrant{
@@ -447,7 +447,7 @@ func (s HandlerTestSuite) TestMsgBurnMarkerRequest() {
 	s.runTests(cases)
 }
 
-func (s HandlerTestSuite) TestMsgWithdrawMarkerRequest() {
+func (s *HandlerTestSuite) TestMsgWithdrawMarkerRequest() {
 
 	hotdogDenom := "hotdog"
 	access := types.AccessGrant{
@@ -495,7 +495,7 @@ func (s HandlerTestSuite) TestMsgWithdrawMarkerRequest() {
 	s.runTests(cases)
 }
 
-func (s HandlerTestSuite) TestMsgTransferMarkerRequest() {
+func (s *HandlerTestSuite) TestMsgTransferMarkerRequest() {
 
 	hotdogDenom := "hotdog"
 	access := types.AccessGrant{
@@ -550,7 +550,7 @@ func (s HandlerTestSuite) TestMsgTransferMarkerRequest() {
 	s.runTests(cases)
 }
 
-func (s HandlerTestSuite) TestMsgSetDenomMetadataRequest() {
+func (s *HandlerTestSuite) TestMsgSetDenomMetadataRequest() {
 
 	hotdogDenom := "hotdog"
 	hotdogName := "Jason"
