@@ -210,7 +210,7 @@ func (k Keeper) checkAuthzForMissing(
 			grantee := types.MustAccAddressFromBech32(signer)
 
 			for _, msgType := range msgTypeURLs {
-				authorization, exp := k.authzKeeper.GetCleanAuthorization(ctx, grantee, granter, msgType)
+				authorization, exp := k.authzKeeper.GetAuthorization(ctx, grantee, granter, msgType)
 				if authorization != nil {
 					resp, err := authorization.Accept(ctx, nil)
 					if err == nil && resp.Accept {

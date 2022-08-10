@@ -698,7 +698,7 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 
 func (k Keeper) authzHandler(ctx sdk.Context, admin sdk.AccAddress, from sdk.AccAddress, amount sdk.Coin) error {
 	markerAuth := types.MarkerTransferAuthorization{}
-	authorization, expireTime := k.authzKeeper.GetCleanAuthorization(ctx, admin, from, markerAuth.MsgTypeURL())
+	authorization, expireTime := k.authzKeeper.GetAuthorization(ctx, admin, from, markerAuth.MsgTypeURL())
 	if authorization == nil {
 		return fmt.Errorf("%s account has not been granted authority to withdraw from %s account", admin, from)
 	}
