@@ -41,7 +41,7 @@ func (s *ConfigManagerTestSuite) SetupTest() {
 func (s *ConfigManagerTestSuite) makeDummyCmd() *cobra.Command {
 	encodingConfig := sdksim.MakeTestEncodingConfig()
 	clientCtx := client.Context{}.
-		WithCodec(encodingConfig.Marshaler).
+		WithCodec(encodingConfig.Codec).
 		WithHomeDir(s.Home)
 	clientCtx.Viper = viper.New()
 	serverCtx := server.NewContext(clientCtx.Viper, tmconfig.DefaultConfig(), log.NewNopLogger())
