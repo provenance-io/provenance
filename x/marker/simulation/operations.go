@@ -6,8 +6,6 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
@@ -15,12 +13,12 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
-
-	keeper "github.com/provenance-io/provenance/x/marker/keeper"
-	types "github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/marker/keeper"
+	"github.com/provenance-io/provenance/x/marker/types"
 )
 
 // Simulation operation weights constants
@@ -204,7 +202,7 @@ func Dispatch(
 	}
 	// fund account with nhash for additional fees, if the account exists (100m stake)
 	if sdk.MsgTypeURL(msg) == "/provenance.marker.v1.MsgAddMarkerRequest" && ak.GetAccount(ctx, account.GetAddress()) != nil {
-		err = simapp.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
+		err = testutil.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 			Denom:  "stake",
 			Amount: sdk.NewInt(1_000_000_000_000_000),
 		}))

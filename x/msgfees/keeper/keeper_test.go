@@ -3,13 +3,14 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/stretchr/testify/suite"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
@@ -130,7 +131,7 @@ func (s *TestSuite) TestDeductFeesDistributions() {
 	s.Assert().Equal("0jackthecat is smaller than 10jackthecat: insufficient funds: insufficient funds", err.Error())
 
 	// Account has enough funds to pay account, but not enough to sweep remaining coins
-	simapp.FundAccount(app, ctx, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10)))
+	s.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))), "initial fund")
 	feeDist = make(map[string]sdk.Coins)
 	feeDist[addrs[1].String()] = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))
 	remainingCoins = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 11))
@@ -143,7 +144,7 @@ func (s *TestSuite) TestDeductFeesDistributions() {
 	s.Assert().Equal(balances.String(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10), stakeCoin).String())
 
 	// Account has enough to pay funds to account and to sweep the remaining coins
-	simapp.FundAccount(app, ctx, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 11)))
+	s.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 11))), "followup fund")
 	feeDist = make(map[string]sdk.Coins)
 	feeDist[addrs[1].String()] = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))
 	remainingCoins = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 11))
@@ -155,7 +156,7 @@ func (s *TestSuite) TestDeductFeesDistributions() {
 	s.Assert().Equal(balances.String(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 20), stakeCoin).String())
 
 	// Account has enough to pay funds to account, module, and to sweep the remaining coins
-	simapp.FundAccount(app, ctx, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 21)))
+	s.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 21))), "final fund")
 	feeDist = make(map[string]sdk.Coins)
 	feeDist[""] = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))
 	feeDist[addrs[1].String()] = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))

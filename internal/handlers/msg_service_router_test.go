@@ -6,11 +6,6 @@ import (
 	"testing"
 	"time"
 
-	piosimapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/internal/antewrapper"
-	"github.com/provenance-io/provenance/internal/handlers"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -29,7 +24,13 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	piosimapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/internal/antewrapper"
+	"github.com/provenance-io/provenance/internal/handlers"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 func TestRegisterMsgService(t *testing.T) {
@@ -168,7 +169,7 @@ func TestMsgService(t *testing.T) {
 	msgbasedFee = msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 10))
 	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
 
-	check(simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+	check(testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
 	// tx with a fee associated with msg type, additional cost is in same base as fee
 	msg = banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(50))))
 	fees = sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 190500010))
@@ -198,7 +199,7 @@ func TestMsgService(t *testing.T) {
 	msgbasedFee = msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("atom", 100))
 	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
 
-	check(simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+	check(testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
 	// tx with a fee associated with msg type, additional cost is in diff denom(atom) but using default denom, nhash for base fee.
 	msg = banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(50))))
 	fees = sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 190500010), sdk.NewInt64Coin("atom", 100))

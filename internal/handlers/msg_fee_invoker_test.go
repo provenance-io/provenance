@@ -3,6 +3,10 @@ package handlers_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -15,10 +19,8 @@ import (
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/antewrapper"
@@ -85,13 +87,13 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeCharged() {
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	suite.Require().True(coins.IsZero())
 
-	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(900000)))))
+	check(testutil.FundAccount(suite.app.BankKeeper, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(900000)))))
 	coins, _, err = feeChargeFn(suite.ctx, false)
 	suite.Require().Contains(err.Error(), "900000nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "got wrong message")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	suite.Require().True(coins.IsZero())
 
-	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(100000)))))
+	check(testutil.FundAccount(suite.app.BankKeeper, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(100000)))))
 	coins, _, err = feeChargeFn(suite.ctx, false)
 	suite.Require().Nil(err, "Got error when should not have.")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
@@ -221,7 +223,7 @@ func createTestTxWithFeeGrant(suite *HandlerTestSuite, err error, feeAmount sdk.
 	})
 	suite.txBuilder.SetFeeGranter(acct2.GetAddress())
 
-	check(simapp.FundAccount(suite.app, suite.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)))))
+	check(testutil.FundAccount(suite.app.BankKeeper, suite.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)))))
 
 	testTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
