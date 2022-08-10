@@ -46,7 +46,7 @@ type Wrapper struct {
 func NewWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource keeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper) *Wrapper {
 	return &Wrapper{
 		cdc:  cdc,
-		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource),
+		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource, ak, bk),
 		ak:   ak,
 		bk:   bk,
 		nk:   nk,
