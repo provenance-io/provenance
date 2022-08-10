@@ -461,10 +461,11 @@ owner: %s`,
 
 	s.cfg = cfg
 	cfg.ChainID = antewrapper.SimAppChainID
-	s.testnet = testnet.New(s.T(), cfg)
+	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
+	s.Require().NoError(err, "creating testnet")
 
 	_, err = s.testnet.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "waiting for height 1")
 }
 
 func (s *IntegrationCLITestSuite) TearDownSuite() {

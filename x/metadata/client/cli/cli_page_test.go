@@ -302,7 +302,8 @@ func (s *IntegrationCLIPageTestSuite) SetupSuite() {
 	s.Require().NoError(err, "marshalling json authData")
 	s.cfg.GenesisState[authtypes.ModuleName] = authDataBz
 
-	s.testnet = testnet.New(s.T(), s.cfg)
+	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err, "creating testnet")
 
 	_, err = s.testnet.WaitForHeight(1)
 	s.Require().NoError(err, "calling s.testnet.WaitForHeight(1)")

@@ -135,10 +135,11 @@ func (suite *IntegrationGRPCTestSuite) SetupSuite() {
 
 	suite.cfg = cfg
 
-	suite.testnet = testnet.New(suite.T(), cfg)
+	suite.testnet, err = testnet.New(suite.T(), suite.T().TempDir(), cfg)
+	suite.Require().NoError(err, "creating testnet")
 
 	_, err = suite.testnet.WaitForHeight(1)
-	suite.Require().NoError(err)
+	suite.Require().NoError(err, "waiting for height 1")
 }
 
 func (suite *IntegrationGRPCTestSuite) TearDownSuite() {
