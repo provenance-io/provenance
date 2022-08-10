@@ -53,9 +53,12 @@ func CreateTxFactory(t *testing.T) tx.Factory {
 	acc3, _, err := kr.NewMnemonic(from3, keyring.English, path, "", hd.Secp256k1)
 	requireT.NoError(err)
 
-	pubKey1 := acc1.GetPubKey()
-	pubKey2 := acc2.GetPubKey()
-	pubKey3 := acc3.GetPubKey()
+	pubKey1, err := acc1.GetPubKey()
+	requireT.NotEqual(err, "getting acc1 pub key")
+	pubKey2, err := acc2.GetPubKey()
+	requireT.NotEqual(err, "getting acc2 pub key")
+	pubKey3, err := acc3.GetPubKey()
+	requireT.NotEqual(err, "getting acc3 pub key")
 
 	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pubKey1, pubKey2})
 	kr.SaveMultisig("test_multi1", multi)
@@ -91,7 +94,7 @@ func TestValidateRawSingleSignature(t *testing.T) {
 	require.NoError(t, err, "getting test_key2 address")
 
 	s := *types.NewScope(types.ScopeMetadataAddress(uuid.New()), nil, ownerPartyList(testkey1addr.String()), []string{}, "")
-	txb, err := tx.BuildUnsignedTx(txf, types.NewMsgWriteScopeRequest(s, []string{testkey1addr.String()}))
+	txb, err := txf.BuildUnsignedTx(types.NewMsgWriteScopeRequest(s, []string{testkey1addr.String()}))
 	require.NoError(t, err)
 	require.NotNil(t, txb)
 
