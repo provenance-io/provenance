@@ -85,7 +85,10 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 					return fmt.Errorf("failed to get address from Keybase: %w, could not use address as bech32 string: %s", err, parseErr.Error())
 				}
 
-				addr = info.GetAddress()
+				addr, err = info.GetAddress()
+				if err != nil {
+					return fmt.Errorf("failed to keyring get address: %w", err)
+				}
 			}
 
 			coins, err := sdk.ParseCoinsNormalized(args[1])
@@ -250,7 +253,10 @@ func AddRootDomainAccountCmd(defaultNodeHome string) *cobra.Command {
 					return fmt.Errorf("failed to get address from Keybase: %w, could use use address as bech32 string: %s", err, parseErr.Error())
 				}
 
-				addr = info.GetAddress()
+				addr, err = info.GetAddress()
+				if err != nil {
+					return fmt.Errorf("failed to keyring get address: %w", err)
+				}
 			}
 
 			genFile := config.GenesisFile()
@@ -355,7 +361,10 @@ enforced immediately.  An optional type flag can be provided or the default of C
 						return fmt.Errorf("failed to get address from Keybase: %w", keyErr)
 					}
 
-					managerAddr = info.GetAddress()
+					managerAddr, err = info.GetAddress()
+					if err != nil {
+						return fmt.Errorf("failed to keyring get address: %w", err)
+					}
 				}
 			}
 			acs, err := cmd.Flags().GetString(flagAccess)

@@ -82,12 +82,16 @@ func TestValidateRawSingleSignature(t *testing.T) {
 	txf := CreateTxFactory(t).WithSignMode(signingtypes.SignMode_SIGN_MODE_DIRECT)
 	testkey1, err := txf.Keybase().Key("test_key1")
 	require.NoError(t, err)
+	testkey1addr, err := testkey1.GetAddress()
+	require.NoError(t, err, "getting test_key1 address")
 
 	testkey2, err := txf.Keybase().Key("test_key2")
 	require.NoError(t, err)
+	testkey2addr, err := testkey2.GetAddress()
+	require.NoError(t, err, "getting test_key2 address")
 
-	s := *types.NewScope(types.ScopeMetadataAddress(uuid.New()), nil, ownerPartyList(testkey1.GetAddress().String()), []string{}, "")
-	txb, err := tx.BuildUnsignedTx(txf, types.NewMsgWriteScopeRequest(s, []string{testkey1.GetAddress().String()}))
+	s := *types.NewScope(types.ScopeMetadataAddress(uuid.New()), nil, ownerPartyList(testkey1addr.String()), []string{}, "")
+	txb, err := tx.BuildUnsignedTx(txf, types.NewMsgWriteScopeRequest(s, []string{testkey1addr.String()}))
 	require.NoError(t, err)
 	require.NotNil(t, txb)
 
@@ -113,11 +117,11 @@ func TestValidateRawSingleSignature(t *testing.T) {
 
 	addr, err := app.MetadataKeeper.ValidateRawSignature(*descriptors[0], bytesToSign)
 	require.NoError(t, err)
-	require.EqualValues(t, testkey1.GetAddress(), addr)
+	require.EqualValues(t, testkey1addr, addr)
 
 	addr, err = app.MetadataKeeper.ValidateRawSignature(*descriptors[1], bytesToSign)
 	require.NoError(t, err)
-	require.EqualValues(t, testkey2.GetAddress(), addr)
+	require.EqualValues(t, testkey2addr, addr)
 }
 
 func sigV2ToDescriptors(sigs []signingtypes.SignatureV2) ([]*signingtypes.SignatureDescriptor, error) {

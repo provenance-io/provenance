@@ -62,7 +62,9 @@ func (s *IntegrationTestSuite) GenerateAccountsWithKeyrings(number int) {
 		keyId := fmt.Sprintf("test_key%v", i)
 		info, _, err := kr.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 		s.Require().NoError(err)
-		s.accountAddresses = append(s.accountAddresses, info.GetAddress())
+		addr, err := info.GetAddress()
+		s.Require().NoError(err, "getting keyring address")
+		s.accountAddresses = append(s.accountAddresses, addr)
 	}
 }
 
