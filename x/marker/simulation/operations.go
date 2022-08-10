@@ -218,7 +218,8 @@ func Dispatch(
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenTx(
+	tx, err := helpers.GenSignedMockTx(
+		r,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
