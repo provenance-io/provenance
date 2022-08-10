@@ -1440,3 +1440,13 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1Voting1DelegateQua
 	suite.Assert().NoError(err, "must not error")
 	suite.Assert().Equal(2, len(qualifyingActions), "must find one qualifying actions")
 }
+
+func (suite *KeeperTestSuite) TestGetDistributionKeeper() {
+	suite.SetupTest()
+	suite.Assert().Nil(suite.app.RewardKeeper.GetDistributionKeeper())
+}
+
+func (suite *KeeperTestSuite) TestGetAccountKeeper() {
+	suite.SetupTest()
+	suite.Assert().NotNil(suite.app.RewardKeeper.GetAccountKeeper())
+}
