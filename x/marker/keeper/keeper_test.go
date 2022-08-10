@@ -615,13 +615,14 @@ func TestAccountImplictControl(t *testing.T) {
 	granter := user
 	grantee := user2
 	now := ctx.BlockHeader().Time
-	require.NotNil(t, now)
+	require.NotNil(t, now, "now")
+	exp1Hour := now.Add(time.Hour)
 	a := types.NewMarkerTransferAuthorization(sdk.NewCoins(sdk.NewCoin("testcoin", sdk.NewInt(10))))
 
 	// fails when admin user (grantee without authz permissions) has transfer authority
 	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
 	// succeeds when admin user (grantee with authz permissions) has transfer authority
-	require.NoError(t, app.AuthzKeeper.SaveGrant(ctx, grantee, granter, a, time.Now().Add(time.Hour)))
+	require.NoError(t, app.AuthzKeeper.SaveGrant(ctx, grantee, granter, a, &exp1Hour))
 	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
 	// succeeds when admin user (grantee with authz permissions) has transfer authority (transfer remaining balance)
 	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))

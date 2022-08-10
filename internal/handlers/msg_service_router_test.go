@@ -41,7 +41,8 @@ func TestRegisterMsgService(t *testing.T) {
 	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
 	router := handlers.NewPioMsgServiceRouter(encCfg.TxConfig.TxDecoder())
 	router.SetInterfaceRegistry(encCfg.InterfaceRegistry)
-	app.SetMsgServiceRouter(router)
+	// TODO: v0.46: uncomment this once it's added back into the SDK.
+	// app.SetMsgServiceRouter(router)
 	require.Panics(t, func() {
 		testdata.RegisterMsgServer(
 			app.MsgServiceRouter(),
@@ -66,7 +67,8 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
 	router := handlers.NewPioMsgServiceRouter(encCfg.TxConfig.TxDecoder())
 	router.SetInterfaceRegistry(encCfg.InterfaceRegistry)
-	app.SetMsgServiceRouter(router)
+	// TODO: v0.46: uncomment this once it's added back into the SDK.
+	// app.SetMsgServiceRouter(router)
 	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
 
 	// First time registering service shouldn't panic.
@@ -241,7 +243,10 @@ func TestMsgServiceAuthz(t *testing.T) {
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
 	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)))
 	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
-	app.AuthzKeeper.SaveGrant(ctx, addr2, addr, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("hotdog", 500))), time.Now().Add(time.Hour))
+	now := ctx.BlockHeader().Time
+	require.NotNil(t, now, "now")
+	exp1Hour := now.Add(time.Hour)
+	app.AuthzKeeper.SaveGrant(ctx, addr2, addr, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("hotdog", 500))), &exp1Hour)
 
 	// tx authz send message with correct amount of fees associated
 	msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
@@ -339,7 +344,10 @@ func TestMsgServiceAuthzAdditionalMsgFeeInDefaultDenom(t *testing.T) {
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100))))
 	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("atom", sdk.NewInt(10)))
 	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
-	app.AuthzKeeper.SaveGrant(ctx, addr2, addr, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("atom", 500))), time.Now().Add(time.Hour))
+	now := ctx.BlockHeader().Time
+	require.NotNil(t, now, "now")
+	exp1Hour := now.Add(time.Hour)
+	app.AuthzKeeper.SaveGrant(ctx, addr2, addr, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("atom", 500))), &exp1Hour)
 
 	// tx authz send message with correct amount of fees associated
 	msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
