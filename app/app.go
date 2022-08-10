@@ -130,6 +130,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 const (
@@ -292,6 +293,9 @@ func init() {
 		}
 		DefaultNodeHome = filepath.Join(configDir, "Provenance")
 	}
+
+	// 614,400 = 600 * 1024 = our wasm params maxWasmCodeSize value before it was removed in wasmd v0.27.
+	wasmtypes.MaxWasmSize = 614_400
 }
 
 // New returns a reference to an initialized Provenance Blockchain App.

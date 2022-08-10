@@ -61,8 +61,8 @@ func (pw Wrapper) GenerateGenesisState(input *module.SimulationState) {
 	params := types.Params{
 		CodeUploadAccess:             accessConfig,
 		InstantiateDefaultPermission: accessConfig.Permission,
-		MaxWasmCodeSize:              uint64(600 * 1024),
 	}
+	types.MaxWasmSize = 600 * 1024
 
 	wasmGenesis := types.GenesisState{
 		Params:    params,
