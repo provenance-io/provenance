@@ -802,7 +802,9 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimable(t *test
 }
 
 // Checks to see if delegation are met for a Qualifying action in this case Transfer
-func TestRewardsProgramStartPerformQualifyingActions_3(t *testing.T) {
+// this tests has transfers from an account which DOES NOT have the minimum delegation
+// amount needed to get a share
+func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	priv, _, addr := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
@@ -817,7 +819,7 @@ func TestRewardsProgramStartPerformQualifyingActions_3(t *testing.T) {
 		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
 		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
 		time.Now().Add(100*time.Millisecond),
-		uint64(5),
+		uint64(1),
 		100,
 		10,
 		3,
@@ -851,7 +853,7 @@ func TestRewardsProgramStartPerformQualifyingActions_3(t *testing.T) {
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
 	ctx.WithBlockTime(time.Now())
-	time.Sleep(2000 * time.Millisecond)
+	time.Sleep(110 * time.Millisecond)
 
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(2); height < int64(7); height++ {
@@ -862,7 +864,7 @@ func TestRewardsProgramStartPerformQualifyingActions_3(t *testing.T) {
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		check(errFromDeliverTx)
 		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
-		time.Sleep(6000 * time.Millisecond)
+		time.Sleep(1100 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
@@ -871,7 +873,7 @@ func TestRewardsProgramStartPerformQualifyingActions_3(t *testing.T) {
 	check(err)
 	assert.Equal(t, true, len(claimPeriodDistributions) > 1, "claim period reward distributions should exist")
 	assert.Equal(t, int64(0), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
-	assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
+	assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has ended so shares have to be 0")
 	assert.Equal(t, sdk.Coin{
 		Denom:  "nhash",
 		Amount: sdk.NewInt(10_000_000_000),
@@ -883,10 +885,10 @@ func TestRewardsProgramStartPerformQualifyingActions_3(t *testing.T) {
 	assert.Equal(t, 0, int(accountState.SharesEarned), "account state incorrect")
 }
 
-// Checks to see if delegation are met for a Qualifying action in this case Transfer, create an address with delegations
+// Checks to see if delegation are met for a Qualifying action in this case, Transfer, create an address with delegations
 // transfers which map to QualifyingAction map to the delegated address
 // delegation threshold is met
-func TestRewardsProgramStartPerformQualifyingActions_4(t *testing.T) {
+func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresent(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
 	_, pubKey2, addr2 := testdata.KeyTestPubAddr()
@@ -936,9 +938,10 @@ func TestRewardsProgramStartPerformQualifyingActions_4(t *testing.T) {
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
 	ctx.WithBlockTime(time.Now())
-	time.Sleep(1 * time.Second)
+	// wait for program to start
+	time.Sleep(150 * time.Millisecond)
 
-	//go through 5 blocks, but take a long time to cut blocks.
+	//go through 5 blocks, but take a time to cut blocks > claim period time interval.
 	for height := int64(2); height < int64(7); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
 		check(acct1.SetSequence(seq))
@@ -974,6 +977,8 @@ func TestRewardsProgramStartPerformQualifyingActions_4(t *testing.T) {
 	check(err)
 	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
 	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
+	assert.Equal(t, 5, len(byAddress.RewardAccountState), "claimable and un claimable sum rewards should be 5 for this address.")
+
 }
 
 // Checks to see if delegation are met for a Qualifying action in this case Transfer, create an address with delegations
