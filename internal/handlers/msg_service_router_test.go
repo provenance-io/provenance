@@ -528,7 +528,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 		acct1.Address,
 		sdk.NewInt64Coin("nhash", 1000),
 		sdk.NewInt64Coin("nhash", 100),
-		time.Now().Add(time.Duration(1)*time.Second),
+		time.Now().Add(time.Duration(100)*time.Millisecond),
 		9,
 		3,
 		3,
@@ -554,7 +554,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	app.EndBlock(abci.RequestEndBlock{Height: 2})
 	app.Commit()
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(110 * time.Millisecond)
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
@@ -903,7 +903,7 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
 		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
 		time.Now().Add(100*time.Millisecond),
-		uint64(5),
+		uint64(1),
 		100,
 		10,
 		3,
@@ -950,7 +950,7 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		check(errFromDeliverTx)
 		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
-		time.Sleep(6000 * time.Millisecond)
+		time.Sleep(1100 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
@@ -984,7 +984,7 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 // Checks to see if delegation are met for a Qualifying action in this case Transfer, create an address with delegations
 // transfers which map to QualifyingAction map to the delegated address
 // delegation threshold is *not* met
-func TestRewardsProgramStartPerformQualifyingActions_5(t *testing.T) {
+func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
 	_, pubKey2, addr2 := testdata.KeyTestPubAddr()
@@ -999,7 +999,7 @@ func TestRewardsProgramStartPerformQualifyingActions_5(t *testing.T) {
 		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
 		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
 		time.Now().Add(100*time.Millisecond),
-		uint64(5),
+		uint64(1),
 		100,
 		10,
 		3,
@@ -1045,7 +1045,7 @@ func TestRewardsProgramStartPerformQualifyingActions_5(t *testing.T) {
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		check(errFromDeliverTx)
 		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
-		time.Sleep(6000 * time.Millisecond)
+		time.Sleep(1100 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
@@ -1148,7 +1148,6 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		check(errFromDeliverTx)
 		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
-		time.Sleep(100 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
@@ -1242,7 +1241,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 
 	assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
 
-	for height := int64(3); height < int64(23); height++ {
+	for height := int64(3); height < int64(5); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
 		check(acct1.SetSequence(seq))
 		tx1, err1 := SignTx(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
@@ -1250,7 +1249,6 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		check(errFromDeliverTx)
 		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
-		time.Sleep(100 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
@@ -1351,6 +1349,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 
 	assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
 
+	// threshold will be met after 10 actions
 	for height := int64(3); height < int64(23); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
 		check(acct1.SetSequence(seq))
@@ -1359,7 +1358,6 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		check(errFromDeliverTx)
 		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
-		time.Sleep(100 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
@@ -1440,7 +1438,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
 	ctx.WithBlockTime(time.Now())
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(110 * time.Millisecond)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
 	txGov, err := SignTx(NewTestGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
@@ -1461,7 +1459,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 
 	assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
 
-	for height := int64(3); height < int64(23); height++ {
+	for height := int64(3); height < int64(15); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
 		check(acct1.SetSequence(seq))
 		tx1, err1 := SignTx(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
@@ -1469,7 +1467,6 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		check(errFromDeliverTx)
 		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
-		time.Sleep(100 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
