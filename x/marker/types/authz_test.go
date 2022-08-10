@@ -17,7 +17,7 @@ var (
 )
 
 func TestMarkerTransferAuthorization(t *testing.T) {
-	app := sdksim.Setup(false)
+	app := sdksim.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	authorization := NewMarkerTransferAuthorization(sdk.NewCoins(coin1000))
 
