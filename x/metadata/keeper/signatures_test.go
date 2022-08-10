@@ -37,7 +37,7 @@ var (
 func CreateTxFactory(t *testing.T) tx.Factory {
 	requireT := require.New(t)
 	path := hd.CreateHDPath(118, 0, 0).String()
-	kr, err := keyring.New(t.Name(), "test", t.TempDir(), nil)
+	kr, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encoding.Marshaler)
 	requireT.NoError(err)
 
 	var from1 = "test_key1"

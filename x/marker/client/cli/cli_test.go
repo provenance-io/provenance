@@ -55,7 +55,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) GenerateAccountsWithKeyrings(number int) {
 	path := hd.CreateHDPath(118, 0, 0).String()
 	s.keyringDir = s.T().TempDir()
-	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil)
+	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil, s.cfg.Codec)
 	s.Require().NoError(err)
 	s.keyring = kr
 	for i := 0; i < number; i++ {

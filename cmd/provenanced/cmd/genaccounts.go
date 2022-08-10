@@ -75,7 +75,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 				}
 
 				// attempt to lookup address from Keybase if no address was provided
-				kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf)
+				kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf, cdc)
 				if err != nil {
 					return err
 				}
@@ -240,7 +240,7 @@ func AddRootDomainAccountCmd(defaultNodeHome string) *cobra.Command {
 				}
 
 				// attempt to lookup address from Keybase if no address was provided
-				kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf)
+				kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf, cdc)
 				if err != nil {
 					return err
 				}
@@ -346,7 +346,7 @@ enforced immediately.  An optional type flag can be provided or the default of C
 						return keyFlagError
 					}
 					// attempt to lookup address from Keybase if no address was provided
-					kb, newKeyringError := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf)
+					kb, newKeyringError := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf, cdc)
 					if newKeyringError != nil {
 						return newKeyringError
 					}
