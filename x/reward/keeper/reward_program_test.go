@@ -878,3 +878,18 @@ func (suite *KeeperTestSuite) TestRefundRemainingBalanceEmpty() {
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), rewardProgram.GetRemainingPoolBalance(), "no remaining balance should be left")
 	suite.Assert().Equal(beforeBalance, afterBalance, "balance should remain same because there is no remaining pool balance")
 }
+
+func (suite *KeeperTestSuite) TestGetRewardProgramID() {
+	suite.SetupTest()
+	id, err := suite.app.RewardKeeper.GetRewardProgramID(suite.ctx)
+	suite.Assert().NoError(err, "no error should be thrown")
+	suite.Assert().Equal(uint64(1), id, "id should match")
+
+	next, err := suite.app.RewardKeeper.GetNextRewardProgramID(suite.ctx)
+	suite.Assert().NoError(err, "no error should be thrown")
+	suite.Assert().Equal(uint64(1), next, "id should match")
+
+	id, err = suite.app.RewardKeeper.GetRewardProgramID(suite.ctx)
+	suite.Assert().NoError(err, "no error should be thrown")
+	suite.Assert().Equal(uint64(2), id, "id should match")
+}
