@@ -1922,7 +1922,7 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 			} else {
 				require.NoError(t, err, "%s unexpected error", cmdName)
 
-				umErr := clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType)
+				umErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType)
 				require.NoError(t, umErr, "%s UnmarshalJSON error", cmdName)
 
 				txResp := tc.respType.(*sdk.TxResponse)
@@ -3248,7 +3248,7 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 	)
 	require.NoError(s.T(), err, "adding base scope")
 	scopeResp := sdk.TxResponse{}
-	umErr := ctx.JSONCodec.UnmarshalJSON(out.Bytes(), &scopeResp)
+	umErr := ctx.Codec.UnmarshalJSON(out.Bytes(), &scopeResp)
 	require.NoError(s.T(), umErr, "%s UnmarshalJSON error", writeScopeCmd.Name())
 	if scopeResp.Code != 0 {
 		s.T().Logf("write-scope response code is not 0.\ntx response:\n%v\n", scopeResp)

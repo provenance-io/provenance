@@ -163,7 +163,7 @@ func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
 			}
 		})
 	}
@@ -231,7 +231,7 @@ func (s *IntegrationTestSuite) TestUpdateUsdConversionRateProposal() {
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
 			}
 		})
 	}

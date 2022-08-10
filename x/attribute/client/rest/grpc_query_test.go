@@ -204,7 +204,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 		s.Run(tc.name, func() {
 			resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
-			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType)
 
 			if tc.expErr {
 				s.Require().Error(err)
