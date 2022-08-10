@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"time"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -205,6 +206,26 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsNonAttributeValueMatch() {
 		return nil
 	})
 	suite.Assert().Equal(0, counter, "should not iterate if attribute doesn't match")
+}
+
+func (suite *KeeperTestSuite) TestIterateABCIEventsHandlesError() {
+	suite.SetupTest()
+	setupEventHistory(suite)
+	counter := 0
+	events := []types.ABCIEvent{
+		{
+			Type: "event1",
+			Attributes: map[string][]byte{
+				"key1": []byte("value1"),
+			},
+		},
+	}
+	criteria := types.NewEventCriteria(events)
+	err := suite.app.RewardKeeper.IterateABCIEvents(suite.ctx, criteria, func(name string, attributes *map[string][]byte) error {
+		counter += 1
+		return errors.New("error")
+	})
+	suite.Assert().Error(err, "should throw error when internal function errors")
 }
 
 func (suite *KeeperTestSuite) TestFindQualifyingActionsWithDelegates() {
