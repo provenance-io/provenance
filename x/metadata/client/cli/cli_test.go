@@ -41,7 +41,7 @@ type IntegrationCLITestSuite struct {
 	testnet         *testnet.Network
 	keyring         keyring.Keyring
 	keyringDir      string
-	keyringAccounts []keyring.Info
+	keyringAccounts []keyring.Record
 
 	asJson         string
 	asText         string
@@ -132,20 +132,25 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	genesisState := cfg.GenesisState
 	s.generateAccountsWithKeyrings(4)
 
+	var err error
 	// An account
-	s.accountAddr = s.keyringAccounts[0].GetAddress()
+	s.accountAddr, err = s.keyringAccounts[0].GetAddress()
+	s.Require().NoError(err, "getting keyringAccounts[0] address")
 	s.accountAddrStr = s.accountAddr.String()
 
 	// A user account
-	s.user1Addr = s.keyringAccounts[1].GetAddress()
+	s.user1Addr, err = s.keyringAccounts[1].GetAddress()
+	s.Require().NoError(err, "getting keyringAccounts[1] address")
 	s.user1AddrStr = s.user1Addr.String()
 
 	// A second user account
-	s.user2Addr = s.keyringAccounts[2].GetAddress()
+	s.user2Addr, err = s.keyringAccounts[2].GetAddress()
+	s.Require().NoError(err, "getting keyringAccounts[2] address")
 	s.user2AddrStr = s.user2Addr.String()
 
 	// A third user account
-	s.user3Addr = s.keyringAccounts[3].GetAddress()
+	s.user3Addr, err = s.keyringAccounts[3].GetAddress()
+	s.Require().NoError(err, "getting keyringAccounts[3] address")
 	s.user3AddrStr = s.user3Addr.String()
 
 	// An account that isn't known
@@ -482,7 +487,7 @@ func (s *IntegrationCLITestSuite) generateAccountsWithKeyrings(number int) {
 		keyId := fmt.Sprintf("test_key%v", i)
 		info, _, err := kr.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 		s.Require().NoError(err, "key creation")
-		s.keyringAccounts = append(s.keyringAccounts, info)
+		s.keyringAccounts = append(s.keyringAccounts, *info)
 	}
 }
 
