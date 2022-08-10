@@ -18,7 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
@@ -49,7 +49,7 @@ func (s *ConfigTestSuite) SetupTest() {
 	s.Home = s.T().TempDir()
 	s.T().Logf("%s Home: %s", s.T().Name(), s.Home)
 
-	encodingConfig := simapp.MakeTestEncodingConfig()
+	encodingConfig := sdksim.MakeTestEncodingConfig()
 	clientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
 		WithHomeDir(s.Home)

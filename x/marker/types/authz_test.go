@@ -1,13 +1,13 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	sdksim "github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -17,7 +17,7 @@ var (
 )
 
 func TestMarkerTransferAuthorization(t *testing.T) {
-	app := simapp.Setup(false)
+	app := sdksim.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	authorization := NewMarkerTransferAuthorization(sdk.NewCoins(coin1000))
 

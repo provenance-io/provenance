@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 
 	tmconfig "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/log"
@@ -39,7 +39,7 @@ func (s *ConfigManagerTestSuite) SetupTest() {
 
 // makeDummyCmd creates a dummy command with a context in it that can be used to test all the manager stuff.
 func (s *ConfigManagerTestSuite) makeDummyCmd() *cobra.Command {
-	encodingConfig := simapp.MakeTestEncodingConfig()
+	encodingConfig := sdksim.MakeTestEncodingConfig()
 	clientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
 		WithHomeDir(s.Home)

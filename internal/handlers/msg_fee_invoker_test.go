@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	simappCosmos "github.com/cosmos/cosmos-sdk/simapp"
+	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	sdkgas "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -149,7 +149,7 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
 		BankKeeper:     suite.app.BankKeeper,
 		FeegrantKeeper: suite.app.FeeGrantKeeper,
 		MsgFeesKeeper:  suite.app.MsgFeesKeeper,
-		Decoder:        simappCosmos.MakeTestEncodingConfig().TxConfig.TxDecoder(),
+		Decoder:        sdksim.MakeTestEncodingConfig().TxConfig.TxDecoder(),
 	})
 	suite.Require().NoError(err)
 	suite.Require().Panics(func() { feeChargeFn(suite.ctx, false) }, "Bad decoder while setting up app.")
@@ -236,7 +236,7 @@ func (suite *HandlerTestSuite) SetupTest(isCheckTx bool) params.EncodingConfig {
 	suite.ctx = suite.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
-	encodingConfig := simappCosmos.MakeTestEncodingConfig()
+	encodingConfig := sdksim.MakeTestEncodingConfig()
 	// We're using TestMsg encoding in some tests, so register it here.
 	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
 	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)
