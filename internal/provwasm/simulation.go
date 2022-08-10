@@ -389,7 +389,7 @@ func Dispatch(
 		panic(err)
 	}
 
-	_, sdkResponse, err2 := app.Deliver(txGen.TxEncoder(), tx)
+	_, sdkResponse, err2 := app.SimDeliver(txGen.TxEncoder(), tx)
 	if err2 != nil {
 		panic(err2)
 	}
