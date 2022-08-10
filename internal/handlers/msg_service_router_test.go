@@ -654,7 +654,6 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		check(errFromDeliverTx)
 		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
-		time.Sleep(100 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
@@ -704,7 +703,7 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 	assert.Equal(t, 0, len(byAddress.RewardAccountState), "none of the rewards should be in claimed state.")
 }
 
-func TestRewardsProgramStartPerformQualifyingActions_2(t *testing.T) {
+func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimable(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	priv, _, addr := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
@@ -719,7 +718,7 @@ func TestRewardsProgramStartPerformQualifyingActions_2(t *testing.T) {
 		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
 		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
 		time.Now().Add(100*time.Millisecond),
-		uint64(5),
+		uint64(1),
 		100,
 		10,
 		3,
@@ -751,7 +750,7 @@ func TestRewardsProgramStartPerformQualifyingActions_2(t *testing.T) {
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
 	ctx.WithBlockTime(time.Now())
-	time.Sleep(2000 * time.Millisecond)
+	time.Sleep(150 * time.Millisecond)
 
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(2); height < int64(7); height++ {
@@ -762,11 +761,13 @@ func TestRewardsProgramStartPerformQualifyingActions_2(t *testing.T) {
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		check(errFromDeliverTx)
 		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
-		time.Sleep(6000 * time.Millisecond)
+		// wait for claim period to end (claim period is 1s)
+		time.Sleep(1500 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
 	}
+
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	check(err)
 	assert.Equal(t, true, len(claimPeriodDistributions) > 1, "claim period reward distributions should exist")
@@ -788,6 +789,16 @@ func TestRewardsProgramStartPerformQualifyingActions_2(t *testing.T) {
 	check(err)
 	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
 	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
+	assert.Equal(t, 5, len(byAddress.RewardAccountState), "claimable and un claimable sum rewards should be 5 for this address.")
+
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
+		Address:     acct1.Address,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+	})
+	check(err)
+	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
+	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
+	assert.Equal(t, 4, len(byAddress.RewardAccountState), "claimable rewards should be 4 for this address.")
 }
 
 // Checks to see if delegation are met for a Qualifying action in this case Transfer
