@@ -62,25 +62,25 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.account1Key = secp256k1.GenPrivKeyFromSecret([]byte("acc1"))
-	addr1, err1 := sdk.AccAddressFromHex(s.account1Key.PubKey().Address().String())
+	addr1, err1 := sdk.AccAddressFromHexUnsafe(s.account1Key.PubKey().Address().String())
 	s.Require().NoError(err1)
 	s.account1Addr = addr1
 	s.account1Str = addr1.String()
 
 	s.account2Key = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
-	addr2, err2 := sdk.AccAddressFromHex(s.account2Key.PubKey().Address().String())
+	addr2, err2 := sdk.AccAddressFromHexUnsafe(s.account2Key.PubKey().Address().String())
 	s.Require().NoError(err2)
 	s.account2Addr = addr2
 	s.account2Str = addr2.String()
 
 	s.account3Key = secp256k1.GenPrivKeyFromSecret([]byte("acc3"))
-	addr3, err3 := sdk.AccAddressFromHex(s.account3Key.PubKey().Address().String())
+	addr3, err3 := sdk.AccAddressFromHexUnsafe(s.account3Key.PubKey().Address().String())
 	s.Require().NoError(err3)
 	s.account3Addr = addr3
 	s.account3Str = addr3.String()
 
 	s.account4Key = secp256k1.GenPrivKeyFromSecret([]byte("acc4"))
-	addr4, err4 := sdk.AccAddressFromHex(s.account4Key.PubKey().Address().String())
+	addr4, err4 := sdk.AccAddressFromHexUnsafe(s.account4Key.PubKey().Address().String())
 	s.Require().NoError(err4)
 	s.account4Addr = addr4
 	s.account4Str = addr4.String()

@@ -36,7 +36,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	privKey, _ := secp256r1.GenPrivKey()
 	s.accountKey = privKey
-	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
+	addr, err := sdk.AccAddressFromHexUnsafe(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
 	s.accountAddr = addr
 	s.accountStr = s.accountAddr.String()

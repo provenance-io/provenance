@@ -73,7 +73,7 @@ func ownerPartyList(addresses ...string) []types.Party {
 func (suite *IntegrationGRPCTestSuite) SetupSuite() {
 	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	suite.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
-	addr, err := sdk.AccAddressFromHex(suite.accountKey.PubKey().Address().String())
+	addr, err := sdk.AccAddressFromHexUnsafe(suite.accountKey.PubKey().Address().String())
 	suite.Require().NoError(err)
 	suite.accountAddr = addr
 	suite.T().Log("setting up integration test suite")

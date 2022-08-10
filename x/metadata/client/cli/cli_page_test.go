@@ -72,12 +72,12 @@ func (s *IntegrationCLIPageTestSuite) SetupSuite() {
 	s.cfg.NumValidators = 1
 
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("account"))
-	s.accountAddr, err = sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
+	s.accountAddr, err = sdk.AccAddressFromHexUnsafe(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err, "getting accountAddr from s.accountKey")
 	s.accountAddrStr = s.accountAddr.String()
 
 	s.user1Key = secp256k1.GenPrivKeyFromSecret([]byte("user1"))
-	s.user1Addr, err = sdk.AccAddressFromHex(s.user1Key.PubKey().Address().String())
+	s.user1Addr, err = sdk.AccAddressFromHexUnsafe(s.user1Key.PubKey().Address().String())
 	s.Require().NoError(err, "getting user1Addr from s.user1Key")
 	s.user1AddrStr = s.user1Addr.String()
 

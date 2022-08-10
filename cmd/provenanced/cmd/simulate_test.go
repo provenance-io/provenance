@@ -42,12 +42,12 @@ type SimulateTestSuite struct {
 
 func (s *SimulateTestSuite) SetupTest() {
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
-	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
+	addr, err := sdk.AccAddressFromHexUnsafe(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
 	s.accountAddr = addr
 
 	s.account2Key = secp256k1.GenPrivKeyFromSecret([]byte("acc22"))
-	addr2, err2 := sdk.AccAddressFromHex(s.account2Key.PubKey().Address().String())
+	addr2, err2 := sdk.AccAddressFromHexUnsafe(s.account2Key.PubKey().Address().String())
 	s.Require().NoError(err2)
 	s.account2Addr = addr2
 
