@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -18,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 
@@ -149,16 +146,16 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 				accNums, seqs = []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}
 			}
 
-			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
+			txfg, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
 			suite.Require().NoError(err)
-			_, err = feeAnteHandler(ctx, tx, false) // tests only feegrant ante
+			_, err = feeAnteHandler(ctx, txfg, false) // tests only feegrant ante
 			if tc.valid {
 				suite.Require().NoError(err)
 			} else {
 				suite.Require().Error(err)
 			}
 
-			_, err = anteHandlerStack(ctx, tx, false) // tests while stack
+			_, err = anteHandlerStack(ctx, txfg, false) // tests while stack
 			if tc.valid {
 				suite.Require().NoError(err)
 			} else {
@@ -166,11 +163,6 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			}
 		})
 	}
-}
-
-// don't consume any gas
-func SigGasNoConsumer(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params authtypes.Params) error {
-	return nil
 }
 
 func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums,
@@ -196,19 +188,19 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 		}
 	}
 
-	tx := gen.NewTxBuilder()
-	err := tx.SetMsgs(msgs...)
+	txb := gen.NewTxBuilder()
+	err := txb.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
 	}
-	err = tx.SetSignatures(sigs...)
+	err = txb.SetSignatures(sigs...)
 	if err != nil {
 		return nil, err
 	}
-	tx.SetMemo(memo)
-	tx.SetFeeAmount(feeAmt)
-	tx.SetGasLimit(gas)
-	tx.SetFeeGranter(feeGranter)
+	txb.SetMemo(memo)
+	txb.SetFeeAmount(feeAmt)
+	txb.SetGasLimit(gas)
+	txb.SetFeeGranter(feeGranter)
 
 	// 2nd round: once all signer infos are set, every signer can sign.
 	for i, p := range priv {
@@ -217,7 +209,7 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
 		}
-		signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
+		signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, txb.GetTx())
 		if err != nil {
 			panic(err)
 		}
@@ -226,11 +218,11 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 			panic(err)
 		}
 		sigs[i].Data.(*signing.SingleSignatureData).Signature = sig
-		err = tx.SetSignatures(sigs...)
+		err = txb.SetSignatures(sigs...)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	return tx.GetTx(), nil
+	return txb.GetTx(), nil
 }

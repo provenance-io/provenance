@@ -176,8 +176,8 @@ func (suite *AnteTestSuite) RunTestCase(privs []cryptotypes.PrivKey, msgs []sdk.
 		// Theoretically speaking, ante handler unit tests should only test
 		// ante handlers, but here we sometimes also test the tx creation
 		// process.
-		tx, txErr := suite.CreateTestTx(privs, accNums, accSeqs, chainID)
-		newCtx, anteErr := suite.anteHandler(suite.ctx, tx, tc.simulate)
+		ttx, txErr := suite.CreateTestTx(privs, accNums, accSeqs, chainID)
+		newCtx, anteErr := suite.anteHandler(suite.ctx, ttx, tc.simulate)
 
 		if tc.expPass {
 			suite.Require().NoError(txErr)

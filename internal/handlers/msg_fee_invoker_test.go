@@ -30,11 +30,11 @@ import (
 
 func (suite *HandlerTestSuite) TestMsgFeeHandlerNoFeeCharged() {
 	encodingConfig, err := setUpApp(suite, false, "atom", 100)
-	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
+	ttx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
 
 	// See comment for Check().
 	txEncoder := encodingConfig.TxConfig.TxEncoder()
-	bz, err := txEncoder(tx)
+	bz, err := txEncoder(ttx)
 	if err != nil {
 		panic(err)
 	}
