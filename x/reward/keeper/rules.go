@@ -134,7 +134,7 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 
 		state.SharesEarned += uint64(res.Shares)
 		k.SetRewardAccountState(ctx, state)
-		// we know the rewards it so update the epoch reward
+		// we know the rewards, so update the claim period reward
 		claimPeriodRewardDistribution.TotalShares += res.Shares
 	}
 
@@ -226,14 +226,16 @@ func (k Keeper) GetAccountKeeper() types.AccountKeeper {
 	return k.authkeeper
 }
 
-func (k *Keeper) SetAccountKeeper(newKeeper authkeeper.AccountKeeper) {
-	k.authkeeper = newKeeper
-}
-
 func (k Keeper) GetStakingKeeper() types.StakingKeeper {
 	return k.stakingKeeper
 }
 
+// SetStakingKeeper only used in tests
 func (k *Keeper) SetStakingKeeper(newKeeper types.StakingKeeper) {
 	k.stakingKeeper = newKeeper
+}
+
+// SetAccountKeeper only used in tests
+func (k *Keeper) SetAccountKeeper(newKeeper authkeeper.AccountKeeper) {
+	k.authkeeper = newKeeper
 }
