@@ -216,7 +216,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.network.WaitForNextBlock()
+	s.Require().NoError(s.network.WaitForNextBlock())
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
@@ -748,7 +748,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdRewardProgramAdd(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
 			var response sdk.TxResponse
-			marshalErr := clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response)
+			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if tc.expectErr {
 				s.Assert().Error(err)
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
@@ -806,7 +806,7 @@ func (s *IntegrationTestSuite) TestTxClaimReward() {
 				var response sdk.TxResponse
 				s.Assert().NoError(err)
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
-				marshalErr := clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response)
+				marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 				s.Assert().NoError(marshalErr)
 				s.Assert().Equal(tc.expectedCode, response.Code)
 			}
@@ -890,7 +890,7 @@ func (s *IntegrationTestSuite) TestTxEndRewardProgram() {
 				var response sdk.TxResponse
 				s.Assert().NoError(err)
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
-				marshalErr := clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response)
+				marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 				s.Assert().NoError(marshalErr)
 				s.Assert().Equal(tc.expectedCode, response.Code)
 			}

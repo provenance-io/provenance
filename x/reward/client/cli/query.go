@@ -226,7 +226,7 @@ func outputClaimPeriodRewardDistributionByID(cmd *cobra.Command, rewardID, claim
 	return clientCtx.PrintProto(response)
 }
 
-// sdk ReadPageRequest expects binary but we encoded to base64 in our marshaller
+// sdk ReadPageRequest expects binary, but we encoded to base64 in our marshaller
 func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
 	encoded, err := flagSet.GetString(flags.FlagPageKey)
 	if err != nil {
@@ -240,7 +240,7 @@ func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
 	return flagSet
 }
 
-// Query for all RewardAccountByAddress
+// Query for RewardAccountByAddress depending on claim status
 func queryRewardDistributionByAddress(cmd *cobra.Command, address string, queryType string) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
