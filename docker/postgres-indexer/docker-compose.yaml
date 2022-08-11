@@ -1,0 +1,12 @@
+version: '3.5'
+services:
+  postgres-indexer:
+    image: postgres:13.2
+    container_name: postgres-indexer
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password1
+    ports:
+      - 5432:5432
+    volumes:
+      - ./docker/postgres-indexer/db-init:/docker-entrypoint-initdb.d/
