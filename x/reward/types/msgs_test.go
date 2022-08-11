@@ -35,7 +35,7 @@ func (s *RewardMsgTypesTestSuite) TestMsgCreateRewardProgramRequestValidateBasic
 			Type: &QualifyingAction_Delegate{
 				Delegate: &ActionDelegate{
 					MinimumActions:               0,
-					MaximumActions:               0,
+					MaximumActions:               1,
 					MinimumDelegationAmount:      &minimumDelegation,
 					MaximumDelegationAmount:      &maximumDelegation,
 					MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
@@ -269,6 +269,36 @@ func (s *RewardMsgTypesTestSuite) TestMsgCreateRewardProgramRequestValidateBasic
 				[]QualifyingAction{},
 			),
 			"reward program must contain qualifying actions",
+		},
+		{
+			"invalid - invalid qualifying action validate basic",
+			*NewMsgCreateRewardProgramRequest(
+				"title",
+				"description",
+				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				sdk.NewInt64Coin("jackthecat", 1),
+				sdk.NewInt64Coin("jackthecat", 1),
+				dateTime,
+				4,
+				4,
+				1,
+				1,
+				[]QualifyingAction{
+					{
+						Type: &QualifyingAction_Delegate{
+							Delegate: &ActionDelegate{
+								MinimumActions:               0,
+								MaximumActions:               0,
+								MinimumDelegationAmount:      &minimumDelegation,
+								MaximumDelegationAmount:      &maximumDelegation,
+								MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+								MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+							},
+						},
+					},
+				},
+			),
+			"maximum action must be greater than 0 actions",
 		},
 	}
 	for _, tt := range tests {
