@@ -5967,7 +5967,7 @@ ActionTransfer represents the transfer action and its required eligibility crite
 <a name="provenance.reward.v1.ActionVote"></a>
 
 ### ActionVote
-ActionTransfer represents the voting action and its required eligibility criteria.
+ActionVote represents the voting action and its required eligibility criteria.
 
 
 | Field | Type | Label | Description |
@@ -5984,15 +5984,15 @@ ActionTransfer represents the voting action and its required eligibility criteri
 <a name="provenance.reward.v1.ClaimPeriodRewardDistribution"></a>
 
 ### ClaimPeriodRewardDistribution
-ClaimPeriodRewardDistribution, this will updated at the end of every claim period.
+ClaimPeriodRewardDistribution, this is updated at the end of every claim period.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `claim_period_id` | [uint64](#uint64) |  | The id of the claim period that this reward belongs to. |
+| `claim_period_id` | [uint64](#uint64) |  | The claim period id. |
 | `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this reward belongs to. |
 | `total_rewards_pool_for_claim_period` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The sum of all the granted rewards for this claim period. |
-| `rewards_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The allocated rewards for this claim period. |
+| `rewards_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The final allocated rewards for this claim period. |
 | `total_shares` | [int64](#int64) |  | The total number of granted shares for this claim period. |
 | `claim_period_ended` | [bool](#bool) |  | A flag representing if the claim period for this reward has ended. |
 
@@ -6073,7 +6073,7 @@ RewardAccountState contains state at the claim period level for a specific addre
 | `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this share belongs to. |
 | `claim_period_id` | [uint64](#uint64) |  | The id of the claim period that the share belongs to. |
 | `address` | [string](#string) |  | Owner of the reward account state. |
-| `action_counter` | [RewardAccountState.ActionCounterEntry](#provenance.reward.v1.RewardAccountState.ActionCounterEntry) | repeated | The number of actions done by this account. |
+| `action_counter` | [RewardAccountState.ActionCounterEntry](#provenance.reward.v1.RewardAccountState.ActionCounterEntry) | repeated | The number of actions done by this account, mapped by action type. |
 | `shares_earned` | [uint64](#uint64) |  | The amount of granted shares for the address in the reward program's claim period. |
 | `claim_status` | [RewardAccountState.ClaimStatus](#provenance.reward.v1.RewardAccountState.ClaimStatus) |  | The status of the claim. |
 
@@ -6107,17 +6107,17 @@ RewardProgram
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `id` | [uint64](#uint64) |  | An integer to uniquely identify the reward program. |
-| `title` | [string](#string) |  | Name to help identify the Reward Program. |
-| `description` | [string](#string) |  | Short summary describing the Reward Program. |
-| `distribute_from_address` | [string](#string) |  | Community pool for now (who provides the money). |
+| `title` | [string](#string) |  | Name to help identify the Reward Program.(MaxTitleLength=140) |
+| `description` | [string](#string) |  | Short summary describing the Reward Program.(MaxDescriptionLength=10000) |
+| `distribute_from_address` | [string](#string) |  | address that provides funds for the total reward pool. |
 | `total_reward_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The total amount of funding given to the RewardProgram. |
-| `remaining_pool_balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The remaining funds available to distribute. |
-| `claimed_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The total amount of funds claimed by participants. |
-| `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Maximum reward per claim per address. |
+| `remaining_pool_balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The remaining funds available to distribute after n claim periods have passed. |
+| `claimed_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The total amount of all funds claimed by participants for all past claim periods. |
+| `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Maximum reward per claim period per address. |
 | `minimum_rollover_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Minimum amount of coins for a program to rollover. |
 | `claim_period_seconds` | [uint64](#uint64) |  | Number of seconds that a claim period lasts. |
 | `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that a RewardProgram should start and switch to STARTED state. |
-| `expected_program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that a RewardProgram MUST end. |
+| `expected_program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that a RewardProgram is expected to end, based on data when it was setup. |
 | `program_end_time_max` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that a RewardProgram MUST end. |
 | `claim_period_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Used internally to calculate and track the current claim period's ending time. |
 | `actual_program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time the RewardProgram switched to FINISHED state. Initially set as empty. |
