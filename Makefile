@@ -1,10 +1,7 @@
 #!/usr/bin/make -f
 export GO111MODULE=on
 
-PACKAGES               := $(shell go list ./... 2>/dev/null || true)
-PACKAGES_NOSIMULATION  := $(filter-out %/simulation%,$(PACKAGES))
-PACKAGES_SIMULATION    := $(filter     %/simulation%,$(PACKAGES))
-
+GO ?= go
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 
@@ -30,7 +27,7 @@ endif
 
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
-TM_VERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::') # grab everything after the space in "github.com/tendermint/tendermint v0.34.7"
+TM_VERSION := $(shell $(GO) list -m github.com/tendermint/tendermint 2> /dev/null | sed 's:.* ::') # grab everything after the space in "github.com/tendermint/tendermint v0.34.7"
 COMMIT := $(shell git log -1 --format='%h')
 # don't override user values
 ifeq (,$(VERSION))
@@ -45,8 +42,6 @@ GOLANGCI_LINT=$(shell which golangci-lint)
 ifeq ("$(wildcard $(GOLANGCI_LINT))","")
     GOLANGCI_LINT = $(BINDIR)/golangci-lint
 endif
-
-GO ?= go
 
 HTTPS_GIT := https://github.com/provenance-io/provenance.git
 DOCKER := $(shell which docker)
@@ -331,14 +326,13 @@ $(RELEASE_BIN):
 ##############################
 
 go-mod-cache: go.sum
-	@echo "--> Download go modules to local cache"
-	@go mod download
+	$(GO) mod download
 .PHONY: go-mod-cache
 
 go.sum: go.mod
 	@echo "--> Ensure dependencies have not been modified"
-	@go mod verify
-	@go mod tidy
+	$(GO) mod verify
+	$(GO) mod tidy
 
 # look into .golangci.yml for enabling / disabling linters
 lint:
@@ -417,6 +411,10 @@ include sims.mk
 test: test-unit
 test-all: test-unit test-ledger-mock test-race test-cover
 
+PACKAGES               := $(shell $(GO) list ./... 2>/dev/null || true)
+PACKAGES_NOSIMULATION  := $(filter-out %/simulation%,$(PACKAGES))
+PACKAGES_SIMULATION    := $(filter     %/simulation%,$(PACKAGES))
+
 TEST_PACKAGES=./...
 TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-race test-ledger test-race
 
@@ -456,18 +454,18 @@ check-test-unit-amino: TAGS+=ledger test_ledger_mock test_amino norace
 $(CHECK_TEST_TARGETS): ARGS+=-run=none
 $(CHECK_TEST_TARGETS): run-tests
 
-run-tests:
+run-tests: go.sum
 ifneq (,$(shell which tparse 2>/dev/null))
-	go test -mod=readonly -json $(ARGS) -tags='$(TAGS)'$(TEST_PACKAGES) | tparse
+	$(GO) test -mod=readonly -json $(ARGS) -tags='$(TAGS)'$(TEST_PACKAGES) | tparse
 else
-	go test -mod=readonly $(ARGS) -tags='$(TAGS)' $(TEST_PACKAGES)
+	$(GO) test -mod=readonly $(ARGS) -tags='$(TAGS)' $(TEST_PACKAGES)
 endif
 
 test-cover:
-	@export VERSION=$(VERSION); bash -x contrib/test_cover.sh
+	export VERSION=$(VERSION); bash -x contrib/test_cover.sh
 
 benchmark:
-	go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
+	$(GO) test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
 
 .PHONY: test test-all test-unit test-race test-cover benchmark run-tests  $(TEST_TARGETS)
 
@@ -476,7 +474,7 @@ benchmark:
 ##############################
 .PHONY: vendor
 vendor:
-	go mod vendor -v
+	$(GO) mod vendor -v
 
 # Full build inside a docker container for a clean release build
 docker-build: vendor
@@ -536,8 +534,12 @@ containerProtoFmt=prov-proto-fmt-$(containerProtoVer)
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
-		sh ./scripts/protocgen.sh; fi
+	if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then \
+		docker start -a $(containerProtoGen); \
+	else \
+		docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
+			sh ./scripts/protocgen.sh; \
+	fi
 
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:
@@ -546,21 +548,29 @@ proto-gen-any:
 
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenSwagger}$$"; then docker start -a $(containerProtoGenSwagger); else docker run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
-		sh ./scripts/protoc-swagger-gen.sh; fi
+	if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenSwagger}$$"; then \
+		docker start -a $(containerProtoGenSwagger); \
+	else \
+		docker run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
+			sh ./scripts/protoc-swagger-gen.sh; \
+	fi
 
 proto-format:
 	@echo "Formatting Protobuf files"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then docker start -a $(containerProtoFmt); else docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
-		find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \; ; fi
+	if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then \
+		docker start -a $(containerProtoFmt); \
+	else \
+		docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
+			find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \; ; \
+	fi
 
 proto-lint:
 	@echo "Linting Protobuf files"
-	@$(DOCKER_BUF) lint --error-format=json
+	$(DOCKER_BUF) lint --error-format=json
 
 proto-check-breaking:
 	@echo "Check breaking Protobuf files"
-	@$(DOCKER_BUF) breaking proto --against $(HTTPS_GIT)#branch=main,subdir=proto --error-format=json
+	$(DOCKER_BUF) breaking proto --against $(HTTPS_GIT)#branch=main,subdir=proto --error-format=json
 
 proto-update-check:
 	@echo "Checking for third_party Protobuf updates"
