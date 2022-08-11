@@ -222,9 +222,6 @@ func (k Keeper) FindQualifyingActions(ctx sdk.Context, action types.RewardAction
 	return result, nil
 }
 
-func (k Keeper) GetDistributionKeeper() types.DistributionKeeper {
-	return nil
-}
 func (k Keeper) GetAccountKeeper() types.AccountKeeper {
 	return k.authkeeper
 }

@@ -372,10 +372,6 @@ func (suite *KeeperTestSuite) TestFindQualifyingActionsWithNil() {
 type MockKeeperProvider struct {
 }
 
-func (m MockKeeperProvider) GetDistributionKeeper() types.DistributionKeeper {
-	return nil
-}
-
 func (m MockKeeperProvider) GetStakingKeeper() types.StakingKeeper {
 	return MockStakingKeeper{}
 }
@@ -1439,11 +1435,6 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1Voting1DelegateQua
 	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
 	suite.Assert().NoError(err, "must not error")
 	suite.Assert().Equal(2, len(qualifyingActions), "must find one qualifying actions")
-}
-
-func (suite *KeeperTestSuite) TestGetDistributionKeeper() {
-	suite.SetupTest()
-	suite.Assert().Nil(suite.app.RewardKeeper.GetDistributionKeeper())
 }
 
 func (suite *KeeperTestSuite) TestGetAccountKeeper() {

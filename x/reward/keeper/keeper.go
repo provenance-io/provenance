@@ -7,8 +7,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 
-	"github.com/tendermint/tendermint/libs/log"
-
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
@@ -39,9 +37,4 @@ func NewKeeper(
 		bankKeeper:    bankKeeper,
 		authkeeper:    authKeeper,
 	}
-}
-
-// Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
