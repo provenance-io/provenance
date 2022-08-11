@@ -23,7 +23,7 @@ func (s *RewardTypesTestSuite) SetupSuite() {
 	s.T().Parallel()
 }
 
-func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
+func (s *RewardTypesTestSuite) TestRewardProgramValidate() {
 	now := time.Now().UTC()
 	lTitle := make([]byte, MaxTitleLength+1)
 	longTitle := string(lTitle)
@@ -247,13 +247,13 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidateBasic() {
 			if err != nil {
 				assert.Equal(t, tt.want, err.Error())
 			} else if len(tt.want) > 0 {
-				t.Errorf("RewardProgram ValidateBasic error = nil, expected: %s", tt.want)
+				t.Errorf("RewardProgram Validate error = nil, expected: %s", tt.want)
 			}
 		})
 	}
 }
 
-func (s *RewardTypesTestSuite) TestEpochRewardDistributionValidateBasic() {
+func (s *RewardTypesTestSuite) TestEpochRewardDistributionValidate() {
 	tests := []struct {
 		name          string
 		rewardProgram ClaimPeriodRewardDistribution
@@ -293,13 +293,13 @@ func (s *RewardTypesTestSuite) TestEpochRewardDistributionValidateBasic() {
 			if err != nil {
 				assert.Equal(t, tt.want, err.Error())
 			} else if len(tt.want) > 0 {
-				t.Errorf("EpochRewardDistribution ValidateBasic error = nil, expected: %s", tt.want)
+				t.Errorf("EpochRewardDistribution Validate error = nil, expected: %s", tt.want)
 			}
 		})
 	}
 }
 
-func (s *RewardTypesTestSuite) TesRewardAccountStateValidateBasic() {
+func (s *RewardTypesTestSuite) TesRewardAccountStateValidate() {
 	tests := []struct {
 		name               string
 		RewardAccountState RewardAccountState
@@ -347,7 +347,7 @@ func (s *RewardTypesTestSuite) TesRewardAccountStateValidateBasic() {
 			if err != nil {
 				assert.Equal(t, tt.want, err.Error())
 			} else if len(tt.want) > 0 {
-				t.Errorf("RewardAccountState ValidateBasic error = nil, expected: %s", tt.want)
+				t.Errorf("RewardAccountState Validate error = nil, expected: %s", tt.want)
 			}
 		})
 	}
