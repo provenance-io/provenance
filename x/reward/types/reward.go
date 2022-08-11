@@ -26,7 +26,7 @@ const (
 )
 
 var (
-	_ RewardAction = (*ActionDelegate)(nil)
+	_ RewardAction = &ActionDelegate{}
 	_ RewardAction = &ActionTransfer{}
 	_ RewardAction = &ActionVote{}
 )
@@ -236,7 +236,7 @@ func NewRewardAccountState(rewardProgramID, rewardClaimPeriodID uint64, address 
 	}
 }
 
-func (s *RewardAccountState) ValidateBasic() error {
+func (s *RewardAccountState) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(s.Address); err != nil {
 		return fmt.Errorf("invalid address for share address: %w", err)
 	}
@@ -281,7 +281,7 @@ func NewClaimPeriodRewardDistribution(claimPeriodID uint64, rewardProgramID uint
 	}
 }
 
-func (erd *ClaimPeriodRewardDistribution) ValidateBasic() error {
+func (erd *ClaimPeriodRewardDistribution) Validate() error {
 	if erd.ClaimPeriodId <= 0 {
 		return errors.New("claim reward distribution has invalid claim id")
 	}

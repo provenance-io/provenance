@@ -77,7 +77,7 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 		if err != nil {
 			continue
 		}
-		if state.ValidateBasic() != nil {
+		if state.Validate() != nil {
 			state = types.NewRewardAccountState(program.GetId(), program.GetCurrentClaimPeriod(), action.Address.String(), 0, map[string]uint64{})
 		}
 
@@ -117,13 +117,13 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 		return err
 	}
 
-	if claimPeriodRewardDistribution.ValidateBasic() != nil {
+	if claimPeriodRewardDistribution.Validate() != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "invalid claim period reward distribution.")
 	}
 
 	for _, res := range evaluateRes {
 		state, err := k.GetRewardAccountState(ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), res.Address.String())
-		if state.ValidateBasic() != nil {
+		if state.Validate() != nil {
 			ctx.Logger().Error(fmt.Sprintf("Account state does not exist for RewardProgram: %d, ClaimPeriod: %d, Address: %s. Skipping...",
 				rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), res.Address.String()))
 			continue

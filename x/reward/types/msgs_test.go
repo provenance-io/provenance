@@ -398,3 +398,35 @@ func (s *RewardMsgTypesTestSuite) TestMsgClaimRewardValidateBasic() {
 		})
 	}
 }
+
+func (s *RewardMsgTypesTestSuite) TestMsgClaimAllRewardsRequestValidateBasic() {
+	tests := []struct {
+		name    string
+		request MsgClaimAllRewardsRequest
+		want    string
+	}{
+		{
+			"valid",
+			*NewMsgClaimAllRewardsRequest("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+			"",
+		},
+		{
+			"invalid - address incorrect",
+			*NewMsgClaimAllRewardsRequest(
+				"invalid",
+			),
+			"invalid reward address : decoding bech32 failed: invalid bech32 string length 7",
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		s.T().Run(tt.name, func(t *testing.T) {
+			err := tt.request.ValidateBasic()
+			if err != nil {
+				assert.Equal(t, tt.want, err.Error())
+			} else if len(tt.want) > 0 {
+				t.Errorf("MsgClaimAllRewardsRequest ValidateBasic error = nil, expected: %s", tt.want)
+			}
+		})
+	}
+}

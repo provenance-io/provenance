@@ -39,13 +39,13 @@ func (gs GenesisState) Validate() error {
 	}
 
 	for _, claimPeriodRewardDistributions := range gs.ClaimPeriodRewardDistributions {
-		if err := claimPeriodRewardDistributions.ValidateBasic(); err != nil {
+		if err := claimPeriodRewardDistributions.Validate(); err != nil {
 			return err
 		}
 	}
 
 	for _, rewardsAccountStates := range gs.RewardAccountStates {
-		if err := rewardsAccountStates.ValidateBasic(); err != nil {
+		if err := rewardsAccountStates.Validate(); err != nil {
 			return err
 		}
 	}

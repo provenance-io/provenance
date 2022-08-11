@@ -289,7 +289,7 @@ func (s *RewardTypesTestSuite) TestEpochRewardDistributionValidateBasic() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := tt.rewardProgram.ValidateBasic()
+			err := tt.rewardProgram.Validate()
 			if err != nil {
 				assert.Equal(t, tt.want, err.Error())
 			} else if len(tt.want) > 0 {
@@ -343,7 +343,7 @@ func (s *RewardTypesTestSuite) TesRewardAccountStateValidateBasic() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := tt.RewardAccountState.ValidateBasic()
+			err := tt.RewardAccountState.Validate()
 			if err != nil {
 				assert.Equal(t, tt.want, err.Error())
 			} else if len(tt.want) > 0 {

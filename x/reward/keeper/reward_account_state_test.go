@@ -61,7 +61,7 @@ func (suite *KeeperTestSuite) TestGetInvalidAccountState() {
 		"cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27")
 
 	suite.Assert().Nil(err, "must not have error")
-	suite.Assert().Error(actualState.ValidateBasic(), "account state validate basic must return error")
+	suite.Assert().Error(actualState.Validate(), "account state validate basic must return error")
 }
 
 func (suite *KeeperTestSuite) TestIterateAccountStates() {
