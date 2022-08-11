@@ -8,6 +8,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -26,6 +27,7 @@ type PioMsgServiceRouter struct {
 }
 
 var _ gogogrpc.Server = &PioMsgServiceRouter{}
+var _ baseapp.IMsgServiceRouter = &PioMsgServiceRouter{}
 
 // NewPioMsgServiceRouter creates a new PioMsgServiceRouter.
 func NewPioMsgServiceRouter(decoder sdk.TxDecoder) *PioMsgServiceRouter {

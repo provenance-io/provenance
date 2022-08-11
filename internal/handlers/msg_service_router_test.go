@@ -41,8 +41,7 @@ func TestRegisterMsgService(t *testing.T) {
 	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
 	router := handlers.NewPioMsgServiceRouter(encCfg.TxConfig.TxDecoder())
 	router.SetInterfaceRegistry(encCfg.InterfaceRegistry)
-	// TODO: v0.46: uncomment this once it's added back into the SDK.
-	// app.SetMsgServiceRouter(router)
+	app.SetMsgServiceRouter(router)
 	require.Panics(t, func() {
 		testdata.RegisterMsgServer(
 			app.MsgServiceRouter(),
@@ -67,8 +66,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
 	router := handlers.NewPioMsgServiceRouter(encCfg.TxConfig.TxDecoder())
 	router.SetInterfaceRegistry(encCfg.InterfaceRegistry)
-	// TODO: v0.46: uncomment this once it's added back into the SDK.
-	// app.SetMsgServiceRouter(router)
+	app.SetMsgServiceRouter(router)
 	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
 
 	// First time registering service shouldn't panic.

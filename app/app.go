@@ -309,8 +309,7 @@ func New(
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 
 	bApp := baseapp.NewBaseApp("provenanced", logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
-	// TODO: v0.46: Add SetMsgServiceRouter back into the sdk then uncomment this.
-	// bApp.SetMsgServiceRouter(piohandlers.NewPioMsgServiceRouter(encodingConfig.TxConfig.TxDecoder()))
+	bApp.SetMsgServiceRouter(piohandlers.NewPioMsgServiceRouter(encodingConfig.TxConfig.TxDecoder()))
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
@@ -402,10 +401,8 @@ func New(
 	app.MsgFeesKeeper = msgfeeskeeper.NewKeeper(
 		appCodec, keys[msgfeestypes.StoreKey], app.GetSubspace(msgfeestypes.ModuleName), authtypes.FeeCollectorName, DefaultFeeDenom, app.Simulate, encodingConfig.TxConfig.TxDecoder())
 
-	// TODO: v0.46: Delete this next line and uncomment the two lines after once the MsgServiceRouter stuff is made an interface again.
-	pioMsgFeesRouter := piohandlers.NewPioMsgServiceRouter(encodingConfig.TxConfig.TxDecoder())
-	// pioMsgFeesRouter := app.MsgServiceRouter().(*piohandlers.PioMsgServiceRouter)
-	// pioMsgFeesRouter.SetMsgFeesKeeper(app.MsgFeesKeeper)
+	pioMsgFeesRouter := app.MsgServiceRouter().(*piohandlers.PioMsgServiceRouter)
+	pioMsgFeesRouter.SetMsgFeesKeeper(app.MsgFeesKeeper)
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
