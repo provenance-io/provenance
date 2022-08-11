@@ -79,20 +79,6 @@ endif
 # Build Flags/Tags
 ##############################
 
-build_tags = netgo
-ifeq ($(UNAME_S),darwin)
-	ifeq ($(UNAME_M),arm64)
-		# Needed on M1 macs due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
-		build_tags += dynamic
-	endif
-endif
-ifeq ($(UNAME_S),linux)
-	ifeq ($(UNAME_M),aarch64)
-		# Needed on aarch64 due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
-		build_tags += dynamic
-	endif
-endif
-
 ifeq ($(WITH_CLEVELDB),true)
   ifneq ($(have_gcc),true)
     $(error gcc not installed for cleveldb support, please install or set WITH_CLEVELDB=false)
@@ -368,15 +354,7 @@ rocksdb:
 cleveldb:
 	scripts/cleveldb_build_and_install.sh
 
-# Download and install librdkafka so that it can be used when doing a build.
-librdkafka:
-	@if [ "$(UNAME_S)" = "darwin" ] && [ "$(UNAME_M)" = "arm64" ]; then \
-		scripts/m1_librdkafka_install.sh;\
-	elif [ "$(UNAME_S)" = "linux" ] && [ "$(UNAME_M)" = "aarch64" ]; then \
-		scripts/linux_arm64_librdkafka_install.sh;\
-	fi
-
-.PHONY: go-mod-cache go.sum lint clean format check-built linkify update-tocs rocksdb cleveldb librdkafka
+.PHONY: go-mod-cache go.sum lint clean format check-built linkify update-tocs rocksdb cleveldb
 
 
 validate-go-version: ## Validates the installed version of go against Provenance's minimum requirement.
@@ -420,18 +398,6 @@ TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-
 
 ifeq ($(WITH_CLEVELDB),true)
 	TAGS+= cleveldb
-endif
-ifeq ($(UNAME_S),darwin)
-	ifeq ($(UNAME_M),arm64)
-		# Needed on M1 macs due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
-		TAGS += dynamic
-	endif
-endif
-ifeq ($(UNAME_S),linux)
-	ifeq ($(UNAME_M),aarch64)
-		# Needed on aarch64 due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
-		TAGS += dynamic
-	endif
 endif
 
 # Test runs-specific rules. To add a new test target, just add

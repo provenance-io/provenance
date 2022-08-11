@@ -365,53 +365,6 @@ jobs:
           name: ${{ steps.test-logs.outputs.test-logs }}
           path: ${{ steps.test-logs.outputs.test-logs }}.txt
 
-  state-listening:
-    # These are tests defined in sims-state-listening.mk.
-    needs: [setup, build-linux, build-mac]
-    # They are disabled by default for now because they're giving "panic: stored minter should not have been nil".
-    # They're left here disabled so that it's more noticeable that they're not being run.
-    # TODO: get rid of the && true == false here once they're fixed. https://github.com/provenance-io/provenance/issues/754
-    if: needs.setup.outputs.should-run && true == false
-    strategy:
-      fail-fast: false
-      matrix:
-        # test-sim-nondeterminism-state-listening-file is the nondeterminism test with state listening to a file.
-        # test-sim-nondeterminism-state-listening-trace is the nondeterminism test with state listening to trace.
-        # test-sim-nondeterminism-state-listening-kafka is the nondeterminism test with state listening to kafka.
-        test: ["file", "trace", "kafka"]
-        os: ["ubuntu-latest", "macos-latest"]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        name: Load go cache
-        with:
-          key: ${{ runner.os }}-${{ needs.setup.outputs.go-cache-key-suffix }}
-          path: ${{ needs.setup.outputs.go-cache-path }}
-      - name: Define test-logs
-        id: test-logs
-        run: echo "::set-output name=test-logs::${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.os }}"
-      - uses: actions/setup-go@v3
-        with:
-          go-version: ${{ needs.setup.outputs.go-version }}
-      - name: Display go version
-        run: go version
-      - name: Setup Docker
-        if: matrix.test == 'kafka'
-        uses: docker-practice/actions-setup-docker@1.0.10
-      - name: Update provwasm contract
-        run: make download-smart-contracts
-      - name: Test
-        run: |
-          set -x
-          make test-sim-nondeterminism-state-listening-${{ matrix.test }} | tee "${{ steps.test-logs.outputs.test-logs }}.txt"
-          exit "${PIPESTATUS[0]}"
-      - uses: actions/upload-artifact@v3
-        if: failure()
-        with:
-          name: ${{ steps.test-logs.outputs.test-logs }}
-          path: ${{ steps.test-logs.outputs.test-logs }}.txt
-
 # Sim tests that are not run in here:
 #   test-sim-multi-seed-long: runsim
 #     The short version does 50 blocks and takes 30-40 minutes. The long one does 500 blocks. Way too long.
