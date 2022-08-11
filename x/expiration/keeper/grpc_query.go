@@ -14,6 +14,7 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
+// Params queries params
 func (k Keeper) Params(
 	goCtx context.Context,
 	_ *types.QueryParamsRequest,
@@ -25,6 +26,7 @@ func (k Keeper) Params(
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
+// Expiration queries for an expiration based on request parameters
 func (k Keeper) Expiration(
 	goCtx context.Context,
 	req *types.QueryExpirationRequest,
@@ -42,6 +44,7 @@ func (k Keeper) Expiration(
 	return &types.QueryExpirationResponse{Expiration: expiration}, nil
 }
 
+// AllExpirations queries for all expirations
 func (k Keeper) AllExpirations(
 	goCtx context.Context,
 	req *types.QueryAllExpirationsRequest,
@@ -70,6 +73,7 @@ func (k Keeper) AllExpirations(
 	return &types.QueryAllExpirationsResponse{Expirations: expirations, Pagination: pageRes}, nil
 }
 
+// AllExpirationsByOwner queries all expirations for a particular owner
 func (k Keeper) AllExpirationsByOwner(
 	goCtx context.Context,
 	req *types.QueryAllExpirationsByOwnerRequest,

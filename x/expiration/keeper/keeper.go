@@ -5,7 +5,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/gogo/protobuf/proto"
@@ -27,15 +26,9 @@ type Keeper struct {
 	// The codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
 
-	// Used to ensure accounts exist for addresses
-	authKeeper authkeeper.AccountKeeper
-
 	// To check granter grantee authorization of messages
 	authzKeeper authzkeeper.Keeper
 }
-
-// todo: we'll most likely need authz keeper for granter/grantee stuff
-// 		other module keepers as we?
 
 // NewKeeper returns an expiration keeper. It handles:
 // - managing a hierarchy of expiration
@@ -46,7 +39,6 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	key sdk.StoreKey,
 	paramSpace paramtypes.Subspace,
-	authKeeper authkeeper.AccountKeeper,
 	authzKeeper authzkeeper.Keeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
@@ -58,7 +50,6 @@ func NewKeeper(
 		storeKey:    key,
 		paramSpace:  paramSpace,
 		cdc:         cdc,
-		authKeeper:  authKeeper,
 		authzKeeper: authzKeeper,
 	}
 }
@@ -233,17 +224,10 @@ func (k Keeper) ValidateSetExpiration(ctx sdk.Context, expiration types.Expirati
 
 func (k Keeper) ValidateDeleteExpiration(ctx sdk.Context, moduleAssetId string, signers []string, msgTypeURL string) error {
 	expiration, err := k.GetExpiration(ctx, moduleAssetId)
-
-	// validate module asset id
-	if _, err := sdk.AccAddressFromBech32(moduleAssetId); err != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress,
-			fmt.Sprintf("invalid module asset id: %s", err.Error()))
-	}
-
-	// validate signers
 	if err != nil {
 		return err
 	}
+	// validate signers
 	if err := k.validateSigners(ctx, expiration.Owner, signers, msgTypeURL); err != nil {
 		return sdkerrors.Wrap(types.ErrInvalidSigners,
 			fmt.Sprintf("missing required signatures: %s", err.Error()))
@@ -309,50 +293,23 @@ func (k Keeper) checkSignerWithAuthz(ctx sdk.Context, owner string, signer strin
 
 func (k Keeper) emitEvent(ctx sdk.Context, message proto.Message) error {
 	if err := ctx.EventManager().EmitTypedEvent(message); err != nil {
-		ctx.Logger().Error("unable to emit event", "error", err, "event", message)
+		k.Logger(ctx).Error("unable to emit event", "error", err, "event", message)
 		return err
 	}
 	return nil
 }
-
-//// GetExpirationByOwner resolves a record by owner.
-//func (k Keeper) GetExpirationsByOwner(ctx sdk.Context, owner string) (record *types.Expiration, err error) {
-//	key, err := types.GetOwnerKeyPrefix(owner)
-//	if err != nil {
-//		return nil, err
-//	}
-//	return getExpiration(ctx, k, key)
-//}
-
-//// GetExpirationsByOwner looks up all names bound to an address.
-//func (k Keeper) getExpirationsByOwner(ctx sdk.Context, owner string) ([]types.Expiration, error) {
-//	// Return value data structure.
-//	records := make([]types.Expiration, 0)
-//	// Handler that adds records if owner address matches.
-//	recordsHandler := func(record types.Expiration) error {
-//		if record.Owner == owner {
-//			records = append(records, record)
-//		}
-//		return nil
-//	}
-//	// Calculate owner key prefix
-//	key, err := types.GetOwnerKeyPrefix(owner)
-//	if err != nil {
-//		return nil, err
-//	}
-//	// Collect and return all names that match.
-//	if err := k.IterateExpirations(ctx, key, recordsHandler); err != nil {
-//		return records, err
-//	}
-//	return records, nil
-//}
 
 // IterateExpirations iterates over all the stored name records and passes them to a callback function.
 func (k Keeper) IterateExpirations(ctx sdk.Context, prefix []byte, handle Handler) error {
 	// Init a name record iterator
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
-	defer iterator.Close()
+	defer func(iterator sdk.Iterator) {
+		err := iterator.Close()
+		if err != nil {
+			k.Logger(ctx).Error("failed to close kvStore iterator")
+		}
+	}(iterator)
 	// Iterate over records, processing callbacks.
 	for ; iterator.Valid(); iterator.Next() {
 		record := types.Expiration{}
