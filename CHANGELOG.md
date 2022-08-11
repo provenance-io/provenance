@@ -44,6 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update docker images from `buster` to b`bullseye` [#963](https://github.com/provenance-io/provenance/issues/963)
 * Add documentation for `gRPCurl` to `docs/grpcurl.md` [#953](https://github.com/provenance-io/provenance/issues/953)
 * Updated to go 1.18 [#996](https://github.com/provenance-io/provenance/issues/996)
+* Add docker files for local psql indexing [#997](https://github.com/provenance-io/provenance/issues/997)
 
 ### Features
 
