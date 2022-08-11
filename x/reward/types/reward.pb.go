@@ -113,19 +113,19 @@ func (RewardAccountState_ClaimStatus) EnumDescriptor() ([]byte, []int) {
 type RewardProgram struct {
 	// An integer to uniquely identify the reward program.
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	// Name to help identify the Reward Program.
+	// Name to help identify the Reward Program.(MaxTitleLength=140)
 	Title string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
-	// Short summary describing the Reward Program.
+	// Short summary describing the Reward Program.(MaxDescriptionLength=10000)
 	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	// Community pool for now (who provides the money).
+	// address that provides funds for the total reward pool.
 	DistributeFromAddress string `protobuf:"bytes,4,opt,name=distribute_from_address,json=distributeFromAddress,proto3" json:"distribute_from_address,omitempty"`
 	// The total amount of funding given to the RewardProgram.
 	TotalRewardPool types.Coin `protobuf:"bytes,5,opt,name=total_reward_pool,json=totalRewardPool,proto3" json:"total_reward_pool"`
-	// The remaining funds available to distribute.
+	// The remaining funds available to distribute after n claim periods have passed.
 	RemainingPoolBalance types.Coin `protobuf:"bytes,6,opt,name=remaining_pool_balance,json=remainingPoolBalance,proto3" json:"remaining_pool_balance"`
-	// The total amount of funds claimed by participants.
+	// The total amount of all funds claimed by participants for all past claim periods.
 	ClaimedAmount types.Coin `protobuf:"bytes,7,opt,name=claimed_amount,json=claimedAmount,proto3" json:"claimed_amount"`
-	// Maximum reward per claim per address.
+	// Maximum reward per claim period per address.
 	MaxRewardByAddress types.Coin `protobuf:"bytes,8,opt,name=max_reward_by_address,json=maxRewardByAddress,proto3" json:"max_reward_by_address"`
 	// Minimum amount of coins for a program to rollover.
 	MinimumRolloverAmount types.Coin `protobuf:"bytes,9,opt,name=minimum_rollover_amount,json=minimumRolloverAmount,proto3" json:"minimum_rollover_amount"`
@@ -133,7 +133,7 @@ type RewardProgram struct {
 	ClaimPeriodSeconds uint64 `protobuf:"varint,10,opt,name=claim_period_seconds,json=claimPeriodSeconds,proto3" json:"claim_period_seconds,omitempty"`
 	// Time that a RewardProgram should start and switch to STARTED state.
 	ProgramStartTime time.Time `protobuf:"bytes,11,opt,name=program_start_time,json=programStartTime,proto3,stdtime" json:"program_start_time" yaml:"program_start_time"`
-	// Time that a RewardProgram MUST end.
+	// Time that a RewardProgram is expected to end, based on data when it was setup.
 	ExpectedProgramEndTime time.Time `protobuf:"bytes,12,opt,name=expected_program_end_time,json=expectedProgramEndTime,proto3,stdtime" json:"expected_program_end_time" yaml:"expected_program_end_time"`
 	// Time that a RewardProgram MUST end.
 	ProgramEndTimeMax time.Time `protobuf:"bytes,13,opt,name=program_end_time_max,json=programEndTimeMax,proto3,stdtime" json:"program_end_time_max" yaml:"program_end_time_max"`
@@ -508,15 +508,15 @@ func (m *EventSetRewardProgram) GetQualifyingActions() string {
 	return ""
 }
 
-// ClaimPeriodRewardDistribution, this will updated at the end of every claim period.
+// ClaimPeriodRewardDistribution, this is updated at the end of every claim period.
 type ClaimPeriodRewardDistribution struct {
-	// The id of the claim period that this reward belongs to.
+	// The claim period id.
 	ClaimPeriodId uint64 `protobuf:"varint,1,opt,name=claim_period_id,json=claimPeriodId,proto3" json:"claim_period_id,omitempty"`
 	// The id of the reward program that this reward belongs to.
 	RewardProgramId uint64 `protobuf:"varint,2,opt,name=reward_program_id,json=rewardProgramId,proto3" json:"reward_program_id,omitempty"`
 	// The sum of all the granted rewards for this claim period.
 	TotalRewardsPoolForClaimPeriod types.Coin `protobuf:"bytes,3,opt,name=total_rewards_pool_for_claim_period,json=totalRewardsPoolForClaimPeriod,proto3" json:"total_rewards_pool_for_claim_period" yaml:"total_rewards_pool"`
-	// The allocated rewards for this claim period.
+	// The final allocated rewards for this claim period.
 	RewardsPool types.Coin `protobuf:"bytes,4,opt,name=rewards_pool,json=rewardsPool,proto3" json:"rewards_pool" yaml:"rewards_pool"`
 	// The total number of granted shares for this claim period.
 	TotalShares int64 `protobuf:"varint,5,opt,name=total_shares,json=totalShares,proto3" json:"total_shares,omitempty"`
@@ -606,7 +606,7 @@ type RewardAccountState struct {
 	ClaimPeriodId uint64 `protobuf:"varint,2,opt,name=claim_period_id,json=claimPeriodId,proto3" json:"claim_period_id,omitempty"`
 	// Owner of the reward account state.
 	Address string `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty" yaml:"address"`
-	// The number of actions done by this account.
+	// The number of actions done by this account, mapped by action type.
 	ActionCounter map[string]uint64 `protobuf:"bytes,4,rep,name=action_counter,json=actionCounter,proto3" json:"action_counter,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
 	// The amount of granted shares for the address in the reward program's claim period.
 	SharesEarned uint64 `protobuf:"varint,5,opt,name=shares_earned,json=sharesEarned,proto3" json:"shares_earned,omitempty"`
@@ -975,7 +975,7 @@ func (m *ActionTransfer) GetMinimumDelegationAmount() types.Coin {
 	return types.Coin{}
 }
 
-// ActionTransfer represents the voting action and its required eligibility criteria.
+// ActionVote represents the voting action and its required eligibility criteria.
 type ActionVote struct {
 	// Minimum number of successful delegates.
 	MinimumActions uint64 `protobuf:"varint,1,opt,name=minimum_actions,json=minimumActions,proto3" json:"minimum_actions,omitempty"`

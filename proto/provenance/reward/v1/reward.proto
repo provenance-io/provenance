@@ -29,19 +29,19 @@ message RewardProgram {
 
   // An integer to uniquely identify the reward program.
   uint64 id = 1;
-  // Name to help identify the Reward Program.
+  // Name to help identify the Reward Program.(MaxTitleLength=140)
   string title = 2;
-  // Short summary describing the Reward Program.
+  // Short summary describing the Reward Program.(MaxDescriptionLength=10000)
   string description = 3;
-  // Community pool for now (who provides the money).
+  // address that provides funds for the total reward pool.
   string distribute_from_address = 4;
   // The total amount of funding given to the RewardProgram.
   cosmos.base.v1beta1.Coin total_reward_pool = 5 [(gogoproto.nullable) = false];
-  // The remaining funds available to distribute.
+  // The remaining funds available to distribute after n claim periods have passed.
   cosmos.base.v1beta1.Coin remaining_pool_balance = 6 [(gogoproto.nullable) = false];
-  // The total amount of funds claimed by participants.
+  // The total amount of all funds claimed by participants for all past claim periods.
   cosmos.base.v1beta1.Coin claimed_amount = 7 [(gogoproto.nullable) = false];
-  // Maximum reward per claim per address.
+  // Maximum reward per claim period per address.
   cosmos.base.v1beta1.Coin max_reward_by_address = 8 [(gogoproto.nullable) = false];
   // Minimum amount of coins for a program to rollover.
   cosmos.base.v1beta1.Coin minimum_rollover_amount = 9 [(gogoproto.nullable) = false];
@@ -54,7 +54,7 @@ message RewardProgram {
     (gogoproto.jsontag)  = "program_start_time",
     (gogoproto.moretags) = "yaml:\"program_start_time\""
   ];
-  // Time that a RewardProgram MUST end.
+  // Time that a RewardProgram is expected to end, based on data when it was setup.
   google.protobuf.Timestamp expected_program_end_time = 12 [
     (gogoproto.stdtime)  = true,
     (gogoproto.nullable) = false,
@@ -133,19 +133,19 @@ message EventSetRewardProgram {
   string qualifying_actions = 15;
 }
 
-// ClaimPeriodRewardDistribution, this will updated at the end of every claim period.
+// ClaimPeriodRewardDistribution, this is updated at the end of every claim period.
 message ClaimPeriodRewardDistribution {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  // The id of the claim period that this reward belongs to.
+  // The claim period id.
   uint64 claim_period_id = 1;
   // The id of the reward program that this reward belongs to.
   uint64 reward_program_id = 2;
   // The sum of all the granted rewards for this claim period.
   cosmos.base.v1beta1.Coin total_rewards_pool_for_claim_period = 3
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"total_rewards_pool\""];
-  // The allocated rewards for this claim period.
+  // The final allocated rewards for this claim period.
   cosmos.base.v1beta1.Coin rewards_pool = 4
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"rewards_pool\""];
   // The total number of granted shares for this claim period.
@@ -177,7 +177,7 @@ message RewardAccountState {
   uint64 claim_period_id = 2;
   // Owner of the reward account state.
   string address = 3 [(gogoproto.moretags) = "yaml:\"address\""];
-  // The number of actions done by this account.
+  // The number of actions done by this account, mapped by action type.
   map<string, uint64> action_counter = 4;
   // The amount of granted shares for the address in the reward program's claim period.
   uint64 shares_earned = 5;
@@ -239,7 +239,7 @@ message ActionTransfer {
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"minimum_delegation_amount\""];
 }
 
-// ActionTransfer represents the voting action and its required eligibility criteria.
+// ActionVote represents the voting action and its required eligibility criteria.
 message ActionVote {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
