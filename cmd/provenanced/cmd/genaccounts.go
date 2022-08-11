@@ -13,7 +13,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -58,8 +57,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			depCdc := clientCtx.Codec
-			cdc := depCdc.(codec.Codec)
+			cdc := clientCtx.Codec
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -181,7 +179,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 			appState[authtypes.ModuleName] = authGenStateBz
 
-			bankGenState := banktypes.GetGenesisStateFromAppState(depCdc, appState)
+			bankGenState := banktypes.GetGenesisStateFromAppState(cdc, appState)
 			bankGenState.Balances = append(bankGenState.Balances, balances)
 			bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
 
@@ -226,8 +224,7 @@ func AddRootDomainAccountCmd(defaultNodeHome string) *cobra.Command {
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			depCdc := clientCtx.Codec
-			cdc := depCdc.(codec.Codec)
+			cdc := clientCtx.Codec
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -320,8 +317,7 @@ enforced immediately.  An optional type flag can be provided or the default of C
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			depCdc := clientCtx.Codec
-			cdc := depCdc.(codec.Codec)
+			cdc := clientCtx.Codec
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -448,7 +444,7 @@ enforced immediately.  An optional type flag can be provided or the default of C
 					return fmt.Errorf("failed to parse escrow coins: %w", parseCoinErr)
 				}
 				balances := banktypes.Balance{Address: genAccount.Address, Coins: escrowCoins}
-				bankGenState := banktypes.GetGenesisStateFromAppState(depCdc, appState)
+				bankGenState := banktypes.GetGenesisStateFromAppState(cdc, appState)
 				bankGenState.Balances = append(bankGenState.Balances, balances)
 				bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
 
@@ -523,8 +519,7 @@ func AddGenesisMsgFeeCmd(defaultNodeHome string, interfaceRegistry types.Interfa
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			depCdc := clientCtx.Codec
-			cdc := depCdc.(codec.Codec)
+			cdc := clientCtx.Codec
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
