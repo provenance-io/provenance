@@ -2,7 +2,7 @@
 
 This docker container is for using the postgres indexer.  
 
-To configure postgres indexing change indexer configuration in the `config.toml`
+To configure postgres indexing add indexer configuration in the `config.toml`
 
 ```toml
 [tx_index]
