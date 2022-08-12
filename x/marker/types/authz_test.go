@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"testing"
@@ -10,6 +10,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
+	. "github.com/provenance-io/provenance/x/marker/types"
 )
 
 var (
