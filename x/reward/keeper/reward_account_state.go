@@ -80,7 +80,7 @@ func (k Keeper) IterateRewardAccountStatesByLookUpIndex(ctx sdk.Context, addr sd
 		if err != nil {
 			return err
 		}
-		record, err := k.GetRewardAccountState(ctx, keyParsed.rewardID, keyParsed.claimID, addr.String())
+		record, err := k.GetRewardAccountState(ctx, keyParsed.RewardID, keyParsed.ClaimID, addr.String())
 		if err != nil {
 			return err
 		}
@@ -170,17 +170,19 @@ func (k Keeper) ExpireRewardClaimsForRewardProgram(ctx sdk.Context, rewardProgra
 	return err
 }
 
+// ParseRewardAccountLookUpKey parse key generated like via GetRewardAccountStateAddressLookupKey(address, rewardProgramId, claimPeriodId)
 func ParseRewardAccountLookUpKey(accountStateAddressLookupKey []byte, addr sdk.AccAddress) (RewardAccountLookup, error) {
+	// address length is stored in first byte
 	lengthOfAddress := int64(accountStateAddressLookupKey[1:2][0])
 	address := sdk.AccAddress(accountStateAddressLookupKey[2 : lengthOfAddress+2])
 	if !addr.Equals(address) {
 		return RewardAccountLookup{}, fmt.Errorf("addresses do not match up")
 	}
-	rewardID := binary.BigEndian.Uint64(accountStateAddressLookupKey[lengthOfAddress+2 : lengthOfAddress+2+8])
-	claimID := binary.BigEndian.Uint64(accountStateAddressLookupKey[lengthOfAddress+2+8 : lengthOfAddress+2+16])
+	rewardID := binary.BigEndian.Uint64(accountStateAddressLookupKey[lengthOfAddress+2 : lengthOfAddress+2+types.RewardIDKeyLength])
+	claimID := binary.BigEndian.Uint64(accountStateAddressLookupKey[lengthOfAddress+2+types.RewardIDKeyLength : lengthOfAddress+2+types.RewardIDKeyLength+types.ClaimPeriodIDLength])
 	return RewardAccountLookup{
-		addr:     addr,
-		rewardID: rewardID,
-		claimID:  claimID,
+		Addr:     addr,
+		RewardID: rewardID,
+		ClaimID:  claimID,
 	}, nil
 }

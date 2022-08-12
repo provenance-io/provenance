@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
-	"reflect"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/reward/keeper"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"reflect"
 
 	"github.com/provenance-io/provenance/x/reward/types"
 )
@@ -409,4 +410,17 @@ func (suite *KeeperTestSuite) TestExpireRewardClaimsForRewardProgramHandlesEmpty
 
 	err := suite.app.RewardKeeper.ExpireRewardClaimsForRewardProgram(suite.ctx, 1)
 	suite.Assert().NoError(err, "no error should be thrown when there are no account states.")
+}
+
+func (suite *KeeperTestSuite) TestParseRewardAccountLookUpKey() {
+	suite.SetupTest()
+	addressFromSec256k1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	rewardProgramId := uint64(123456)
+	claimPeriodId := uint64(7891011)
+	accountStateAddressLookupKey := types.GetRewardAccountStateAddressLookupKey(addressFromSec256k1, rewardProgramId, claimPeriodId)
+	lookup, err := keeper.ParseRewardAccountLookUpKey(accountStateAddressLookupKey, addressFromSec256k1)
+	suite.Assert().NoError(err, "no error expected for parsing GetRewardAccountStateAddressLookupKey.")
+	suite.Assert().Equal(addressFromSec256k1, lookup.Addr)
+	suite.Assert().Equal(rewardProgramId, lookup.RewardID)
+	suite.Assert().Equal(claimPeriodId, lookup.ClaimID)
 }

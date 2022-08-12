@@ -127,7 +127,7 @@ func (k Keeper) RewardDistributionsByAddress(ctx context.Context, request *types
 		if errFromParsingKey != nil {
 			return false, err
 		}
-		result, errFromGetRewardAccount := k.GetRewardAccountState(sdkCtx, lookupVal.rewardID, lookupVal.claimID, lookupVal.addr.String())
+		result, errFromGetRewardAccount := k.GetRewardAccountState(sdkCtx, lookupVal.RewardID, lookupVal.ClaimID, lookupVal.Addr.String())
 		// think ignoring the error maybe ok here since it's just another lookup
 		if errFromGetRewardAccount != nil {
 			return false, nil
@@ -213,14 +213,14 @@ func ParseFilterLookUpKey(accountStateAddressLookupKey []byte, addr sdk.AccAddre
 	rewardID := binary.BigEndian.Uint64(accountStateAddressLookupKey[0:8])
 	claimID := binary.BigEndian.Uint64(accountStateAddressLookupKey[8:16])
 	return RewardAccountLookup{
-		addr:     addr,
-		rewardID: rewardID,
-		claimID:  claimID,
+		Addr:     addr,
+		RewardID: rewardID,
+		ClaimID:  claimID,
 	}, nil
 }
 
 type RewardAccountLookup struct {
-	addr     sdk.Address
-	rewardID uint64
-	claimID  uint64
+	Addr     sdk.Address
+	RewardID uint64
+	ClaimID  uint64
 }
