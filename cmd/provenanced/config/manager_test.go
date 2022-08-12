@@ -66,29 +66,9 @@ func (s *ConfigManagerTestSuite) makeDummyCmd() *cobra.Command {
 	return dummyCmd
 }
 
-func (s *ConfigManagerTestSuite) TestConfigIndexEventsWriteReadCanary() {
-	// This test will pass as long as a certain bug still exists in the Cosmos WriteConfigFile function.
-	// Issue: https://github.com/cosmos/cosmos-sdk/issues/10016
-	// If you're looking at it because it is failing, we might need to remove some work-around code.
-	// Use the TestConfigIndexEventsWriteRead test to figure out if it's actually fixed.
-	// If it's actually fixed, you can delete the appConfigIndexEventsWorkAround func, the call to it, and this test.
-
-	confFile := filepath.Join(s.Home, "app.toml")
-	appConfig := serverconfig.DefaultConfig()
-	appConfig.IndexEvents = []string{"key1", "key2"}
-	serverconfig.WriteConfigFile(confFile, appConfig)
-
-	// Read that file into viper.
-	vpr := viper.New()
-	vpr.SetConfigFile(confFile)
-	err := vpr.ReadInConfig()
-	s.Require().EqualError(err, "While parsing config: toml: incomplete number", "reading config file into viper")
-}
-
 func (s *ConfigManagerTestSuite) TestConfigIndexEventsWriteRead() {
-	// This return is here so that the test can stay here, uncommented, but not actually run on its own.
-	// To actually run the test, delete it. If it still passes, WOOO! Keep this test without the premature return.
-	return
+	// The IndexEvents field has some special handling that was broken at one point.
+	// This test exists to make sure it doesn't break again.
 
 	// Create config with two IndexEvents entries, and write it to a file.
 	confFile := filepath.Join(s.Home, "app.toml")
