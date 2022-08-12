@@ -72,65 +72,69 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 		signer     sdk.AccAddress
 		feeAccount sdk.AccAddress
 		fee        int64
-		valid      bool
+		expInErr   []string
 	}{
 		{
+			name:      "insufficient funds",
 			signerKey: priv1,
 			signer:    addr1,
 			fee:       50,
-			valid:     false,
+			expInErr:  []string{"50atom", "insufficient funds"},
 		}, {
 			name:      "paying with good funds",
 			signerKey: priv2,
 			signer:    addr2,
 			fee:       50,
-			valid:     true,
+			expInErr:  nil,
 		}, {
 			name:      "paying with no account",
 			signerKey: priv3,
 			signer:    addr3,
 			fee:       1,
-			valid:     false,
+			expInErr:  []string{"1atom", "insufficient funds"},
 		}, {
 			name:      "no fee with real account",
 			signerKey: priv1,
 			signer:    addr1,
 			fee:       0,
-			valid:     true,
+			expInErr:  nil,
 		}, {
 			name:      "no fee with no account",
 			signerKey: priv5,
 			signer:    addr5,
 			fee:       0,
-			valid:     false,
+			expInErr:  []string{"fee payer address", addr5.String(), "does not exist"},
 		}, {
 			name:       "valid fee grant without account",
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr2,
 			fee:        50,
-			valid:      true,
+			expInErr:   nil,
 		}, {
 			name:       "no fee grant",
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr1,
 			fee:        2,
-			valid:      false,
+			expInErr:   []string{addr3.String(), addr1.String(), "not", "allow", "to pay fees", "fee-grant not found"},
+			// Note: They have a different error than us for this, and I don't think we should change ours.
+			//	Our error has this format:  "<addr> not allowed to pay fees from <addr>"
+			//	But theirs has this format: "<addr> does not not allow to pay fees for <addr>"
 		}, {
 			name:       "allowance smaller than requested fee",
 			signerKey:  priv4,
 			signer:     addr4,
 			feeAccount: addr2,
 			fee:        50,
-			valid:      false,
+			expInErr:   []string{addr4.String(), addr2.String(), "not", "allow", "to pay fees", "basic allowance", "fee limit exceeded"},
 		}, {
 			name:       "granter cannot cover allowed fee grant",
 			signerKey:  priv4,
 			signer:     addr4,
 			feeAccount: addr1,
 			fee:        50,
-			valid:      false,
+			expInErr:   []string{addr4.String(), addr1.String(), "not", "allow", "to pay fees", "fee-grant not found"},
 		},
 	}
 
@@ -149,17 +153,23 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			txfg, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
 			suite.Require().NoError(err)
 			_, err = feeAnteHandler(ctx, txfg, false) // tests only feegrant ante
-			if tc.valid {
-				suite.Require().NoError(err)
+			if len(tc.expInErr) == 0 {
+				suite.Require().NoError(err, "feeAnteHandler")
 			} else {
-				suite.Require().Error(err)
+				suite.Require().Error(err, "feeAnteHandler")
+				for _, exp := range tc.expInErr {
+					suite.Assert().ErrorContains(err, exp, "feeAnteHandler err")
+				}
 			}
 
 			_, err = anteHandlerStack(ctx, txfg, false) // tests while stack
-			if tc.valid {
-				suite.Require().NoError(err)
+			if len(tc.expInErr) == 0 {
+				suite.Require().NoError(err, "anteHandlerStack")
 			} else {
-				suite.Require().Error(err)
+				suite.Require().Error(err, "anteHandlerStack")
+				for _, exp := range tc.expInErr {
+					suite.Assert().ErrorContains(err, exp, "anteHandlerStack err")
+				}
 			}
 		})
 	}

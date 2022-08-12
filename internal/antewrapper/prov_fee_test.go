@@ -1,10 +1,6 @@
 package antewrapper_test
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/suite"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,6 +11,8 @@ import (
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
+// These tests are kicked off by TestAnteTestSuite in testutil_test.go
+
 func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	suite.SetupTest(true) // setup
@@ -23,8 +21,9 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 	mfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper, nil)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
-	// keys and addresses
-	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	testaccs := suite.CreateTestAccounts(1)
+	priv1 := testaccs[0].priv
+	addr1 := testaccs[0].acc.GetAddress()
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
@@ -48,7 +47,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 
 	// antehandler errors with insufficient fees
 	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
+	suite.Require().ErrorContains(err, "insufficient fees", "Decorator should have errored on too low fee for local gasPrice")
 
 	// Set IsCheckTx to false
 	suite.ctx = suite.ctx.WithIsCheckTx(false)
@@ -110,10 +109,6 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	_, err = antehandler(suite.ctx, tx, false)
 
 	suite.Require().Nil(err, "Tx errored after account has been set with sufficient funds")
-}
-
-func TestAnteFeeTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
 }
 
 func (suite *AnteTestSuite) TestEnsureAdditionalFeesPaid() {

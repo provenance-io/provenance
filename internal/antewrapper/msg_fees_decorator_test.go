@@ -1,10 +1,6 @@
 package antewrapper_test
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/suite"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,9 +14,7 @@ import (
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
-func TestAnteFeeDecoratorTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
-}
+// These tests are kicked off by TestAnteTestSuite in testutil_test.go
 
 // checkTx true, high min gas price(high enough so that additional fee in same denom tips it over,
 //and this is what sets it apart from MempoolDecorator which has already been run)
