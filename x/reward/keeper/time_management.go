@@ -39,9 +39,6 @@ func (k Keeper) UpdateUnexpiredRewardsProgram(ctx sdk.Context) {
 	}
 }
 
-func (k Keeper) Cleanup(ctx sdk.Context) {
-}
-
 func (k Keeper) StartRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) error {
 	if rewardProgram == nil {
 		ctx.Logger().Error("Attempting to start nil reward program")
