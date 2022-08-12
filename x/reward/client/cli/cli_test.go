@@ -70,6 +70,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			sdk.NewCoin("nhash", sdk.NewInt(100000000)),
 		).Sort()})
 	}
+	genBalances = append(genBalances, banktypes.Balance{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Coins: sdk.NewCoins(
+		sdk.NewCoin("nhash", sdk.NewInt(100000000))).Sort()})
 	var bankGenState banktypes.GenesisState
 	bankGenState.Params = banktypes.DefaultParams()
 	bankGenState.Balances = genBalances

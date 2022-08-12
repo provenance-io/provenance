@@ -14,9 +14,9 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 
 	rewardPrograms := make([]types.RewardProgram, 0)
-	rewardProgramRecords := func(rewardProgram types.RewardProgram) bool {
+	rewardProgramRecords := func(rewardProgram types.RewardProgram) (bool, error) {
 		rewardPrograms = append(rewardPrograms, rewardProgram)
-		return false
+		return false, nil
 	}
 	if err := k.IterateRewardPrograms(ctx, rewardProgramRecords); err != nil {
 		panic(err)

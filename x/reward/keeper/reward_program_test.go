@@ -209,9 +209,9 @@ func (suite *KeeperTestSuite) TestIterateRewardPrograms() {
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program3)
 
 	counter := 0
-	err := suite.app.RewardKeeper.IterateRewardPrograms(suite.ctx, func(rewardProgram types.RewardProgram) (stop bool) {
+	err := suite.app.RewardKeeper.IterateRewardPrograms(suite.ctx, func(rewardProgram types.RewardProgram) (stop bool, err error) {
 		counter += 1
-		return false
+		return false, nil
 	})
 	suite.Assert().NoError(err, "no error should be returned")
 	suite.Assert().Equal(3, counter, "should iterate through each reward program")
@@ -268,9 +268,9 @@ func (suite *KeeperTestSuite) TestIterateRewardProgramsHalt() {
 	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program3)
 
 	counter := 0
-	err := suite.app.RewardKeeper.IterateRewardPrograms(suite.ctx, func(rewardProgram types.RewardProgram) (stop bool) {
+	err := suite.app.RewardKeeper.IterateRewardPrograms(suite.ctx, func(rewardProgram types.RewardProgram) (stop bool, err error) {
 		counter += 1
-		return true
+		return true, nil
 	})
 	suite.Assert().NoError(err, "no error should be returned")
 	suite.Assert().Equal(1, counter, "should stop when iteration is instructed to stop")
@@ -280,9 +280,9 @@ func (suite *KeeperTestSuite) TestIterateRewardProgramsEmpty() {
 	suite.SetupTest()
 
 	counter := 0
-	err := suite.app.RewardKeeper.IterateRewardPrograms(suite.ctx, func(rewardProgram types.RewardProgram) (stop bool) {
+	err := suite.app.RewardKeeper.IterateRewardPrograms(suite.ctx, func(rewardProgram types.RewardProgram) (stop bool, err error) {
 		counter += 1
-		return true
+		return true, nil
 	})
 
 	suite.Assert().NoError(err, "no error should be returned")

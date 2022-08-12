@@ -388,14 +388,8 @@ func (suite *KeeperTestSuite) TestRewardClaimAllRewardsInvalidAddressTransaction
 	msg := types.NewMsgClaimAllRewardsRequest("invalid address")
 	suite.ctx = suite.ctx.WithEventManager(sdk.NewEventManager())
 	result, err := suite.handler(suite.ctx, msg)
-	suite.Assert().NoError(err, "no error should be returned in a valid call")
-
-	var response types.MsgClaimAllRewardsResponse
-	response.Unmarshal(result.Data)
-	details := response.ClaimDetails
-
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), response.TotalRewardClaim, "should have no nhash")
-	suite.Assert().Equal(0, len(details), "should have no reward program")
+	suite.Assert().Error(err, "error should be returned else state store will commit")
+	suite.Assert().Nil(result)
 }
 
 func (suite *KeeperTestSuite) TestClaimAllRewardsExpiredTransaction() {

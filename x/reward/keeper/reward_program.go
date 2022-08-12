@@ -72,7 +72,7 @@ func (k Keeper) GetRewardProgram(ctx sdk.Context, id uint64) (rewardProgram type
 }
 
 // IterateRewardPrograms iterates all reward programs with the given handler function.
-func (k Keeper) IterateRewardPrograms(ctx sdk.Context, handle func(rewardProgram types.RewardProgram) (stop bool)) error {
+func (k Keeper) IterateRewardPrograms(ctx sdk.Context, handle func(rewardProgram types.RewardProgram) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.RewardProgramKeyPrefix)
 
@@ -82,7 +82,11 @@ func (k Keeper) IterateRewardPrograms(ctx sdk.Context, handle func(rewardProgram
 		if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {
 			return err
 		}
-		if handle(record) {
+		stop, err := handle(record)
+		if err != nil {
+			return err
+		}
+		if stop {
 			break
 		}
 	}
@@ -123,7 +127,7 @@ func (k Keeper) GetUnexpiredRewardPrograms(ctx sdk.Context) ([]types.RewardProgr
 func (k Keeper) getRewardProgramByState(ctx sdk.Context, states ...types.RewardProgram_State) ([]types.RewardProgram, error) {
 	var rewardPrograms []types.RewardProgram
 	// get all the rewards programs by state
-	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
+	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool, err error) {
 		for _, state := range states {
 			if rewardProgram.GetState() == state {
 				rewardPrograms = append(rewardPrograms, rewardProgram)
@@ -131,7 +135,7 @@ func (k Keeper) getRewardProgramByState(ctx sdk.Context, states ...types.RewardP
 			}
 		}
 
-		return false
+		return false, nil
 	})
 	return rewardPrograms, err
 }
@@ -139,9 +143,9 @@ func (k Keeper) getRewardProgramByState(ctx sdk.Context, states ...types.RewardP
 // GetAllRewardPrograms Gets all the RewardPrograms
 func (k Keeper) GetAllRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
 	var rewardPrograms []types.RewardProgram
-	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
+	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool, err error) {
 		rewardPrograms = append(rewardPrograms, rewardProgram)
-		return false
+		return false, nil
 	})
 	if err != nil {
 		return nil, err

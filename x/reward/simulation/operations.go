@@ -184,9 +184,9 @@ func SimulateMsgEndRewardsProgram(k keeper.Keeper, ak authkeeper.AccountKeeperI,
 
 func randomRewardProgram(r *rand.Rand, ctx sdk.Context, k keeper.Keeper) *types.RewardProgram {
 	var rewardPrograms []types.RewardProgram
-	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool) {
+	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool, err error) {
 		rewardPrograms = append(rewardPrograms, rewardProgram)
-		return false
+		return false, nil
 	})
 	if err != nil {
 		// sim tests should fail if iterator errors
