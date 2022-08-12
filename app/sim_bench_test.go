@@ -36,7 +36,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		}
 	}()
 
-	app := New(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, interBlockCacheOpt())
+	app := New(logger, db, nil, true, map[int64]bool{}, b.TempDir(), sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, interBlockCacheOpt())
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -85,7 +85,7 @@ func BenchmarkInvariants(b *testing.B) {
 		}
 	}()
 
-	app := New(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, interBlockCacheOpt())
+	app := New(logger, db, nil, true, map[int64]bool{}, b.TempDir(), sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, interBlockCacheOpt())
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(

@@ -93,7 +93,7 @@ func TestMsgService(t *testing.T) {
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
 	acct1Balance := sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(1000)), sdk.NewCoin("atom", sdk.NewInt(1000)))
-	app := piosimapp.SetupWithGenesisAccounts([]authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisAccounts(t, []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
@@ -234,7 +234,7 @@ func TestMsgServiceAuthz(t *testing.T) {
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
 	acct2 := authtypes.NewBaseAccount(addr2, priv2.PubKey(), 1, 0)
 	initBalance := sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(10000)), sdk.NewCoin("atom", sdk.NewInt(1000)))
-	app := piosimapp.SetupWithGenesisAccounts([]authtypes.GenesisAccount{acct1, acct2}, banktypes.Balance{Address: addr.String(), Coins: initBalance}, banktypes.Balance{Address: addr2.String(), Coins: initBalance})
+	app := piosimapp.SetupWithGenesisAccounts(t, []authtypes.GenesisAccount{acct1, acct2}, banktypes.Balance{Address: addr.String(), Coins: initBalance}, banktypes.Balance{Address: addr2.String(), Coins: initBalance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
@@ -335,7 +335,7 @@ func TestMsgServiceAuthzAdditionalMsgFeeInDefaultDenom(t *testing.T) {
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
 	acct2 := authtypes.NewBaseAccount(addr2, priv2.PubKey(), 1, 0)
 	initBalance := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(1000)))
-	app := piosimapp.SetupWithGenesisAccounts([]authtypes.GenesisAccount{acct1, acct2}, banktypes.Balance{Address: addr.String(), Coins: initBalance}, banktypes.Balance{Address: addr2.String(), Coins: initBalance})
+	app := piosimapp.SetupWithGenesisAccounts(t, []authtypes.GenesisAccount{acct1, acct2}, banktypes.Balance{Address: addr.String(), Coins: initBalance}, banktypes.Balance{Address: addr2.String(), Coins: initBalance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
@@ -380,7 +380,7 @@ func TestMsgServiceAssessMsgFee(t *testing.T) {
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
 	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin("atom", 1000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000))
-	app := piosimapp.SetupWithGenesisAccounts([]authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisAccounts(t, []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 

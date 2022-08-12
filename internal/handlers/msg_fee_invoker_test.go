@@ -29,7 +29,7 @@ import (
 )
 
 func (suite *HandlerTestSuite) TestMsgFeeHandlerNoFeeCharged() {
-	encodingConfig, err := setUpApp(suite, false, "atom", 100)
+	encodingConfig, err := setUpApp(suite, "atom", 100)
 	ttx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
 
 	// See comment for Check().
@@ -56,7 +56,7 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerNoFeeCharged() {
 }
 
 func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeCharged() {
-	encodingConfig, err := setUpApp(suite, false, "atom", 100)
+	encodingConfig, err := setUpApp(suite, "atom", 100)
 	testTx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)))
 
 	// See comment for Check().
@@ -100,7 +100,7 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeCharged() {
 	suite.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000))}))
 }
 func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
-	encodingConfig, err := setUpApp(suite, false, "atom", 100)
+	encodingConfig, err := setUpApp(suite, "atom", 100)
 	testTxWithFeeGrant, _ := createTestTxWithFeeGrant(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)))
 
 	// See comment for Check().
@@ -132,7 +132,7 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 }
 
 func (suite *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
-	encodingConfig, err := setUpApp(suite, false, "atom", 100)
+	encodingConfig, err := setUpApp(suite, "atom", 100)
 	testTx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
 
 	// See comment for Check().
@@ -155,8 +155,8 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
 	suite.Require().Panics(func() { feeChargeFn(suite.ctx, false) }, "Bad decoder while setting up app.")
 }
 
-func setUpApp(suite *HandlerTestSuite, checkTx bool, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) (params.EncodingConfig, error) {
-	encodingConfig := suite.SetupTest(checkTx) // setup
+func setUpApp(suite *HandlerTestSuite, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) (params.EncodingConfig, error) {
+	encodingConfig := suite.SetupTest(suite.T()) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 	// create fee in stake
 	newCoin := sdk.NewInt64Coin(additionalFeeCoinDenom, additionalFeeCoinAmt)
@@ -169,9 +169,9 @@ func setUpApp(suite *HandlerTestSuite, checkTx bool, additionalFeeCoinDenom stri
 }
 
 // returns context and app with params set on account keeper
-func createTestApp(isCheckTx bool) (*simapp.App, sdk.Context) {
-	app := simapp.Setup(isCheckTx)
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
+func createTestApp(t *testing.T) (*simapp.App, sdk.Context) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
 	return app, ctx
@@ -231,8 +231,8 @@ func createTestTxWithFeeGrant(suite *HandlerTestSuite, err error, feeAmount sdk.
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
-func (suite *HandlerTestSuite) SetupTest(isCheckTx bool) params.EncodingConfig {
-	suite.app, suite.ctx = createTestApp(isCheckTx)
+func (suite *HandlerTestSuite) SetupTest(t *testing.T) params.EncodingConfig {
+	suite.app, suite.ctx = createTestApp(t)
 	suite.ctx = suite.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.

@@ -30,7 +30,7 @@ type IntegrationTestSuite struct {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
-	s.app = provenance.Setup(false)
+	s.app = provenance.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.k = msgfeeskeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(msgfeestypes.ModuleName), s.app.GetSubspace(msgfeestypes.ModuleName), "", msgfeestypes.NhashDenom, nil, nil)
 	s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())

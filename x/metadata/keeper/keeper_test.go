@@ -62,7 +62,7 @@ type KeeperTestSuite struct {
 
 func (s *KeeperTestSuite) SetupTest() {
 	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
-	s.app = simapp.Setup(false)
+	s.app = simapp.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.app.MetadataKeeper)

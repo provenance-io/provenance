@@ -80,7 +80,7 @@ func CreateTxFactory(t *testing.T) tx.Factory {
 }
 
 func TestValidateRawSingleSignature(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 
 	txf := CreateTxFactory(t).WithSignMode(signingtypes.SignMode_SIGN_MODE_DIRECT)
 	testkey1, err := txf.Keybase().Key("test_key1")
@@ -146,7 +146,7 @@ func sigV2ToDescriptors(sigs []signingtypes.SignatureV2) ([]*signingtypes.Signat
 }
 
 func TestIsMarkerAndHasAuthority_IsMarker(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	pubkey := secp256k1.GenPrivKey().PubKey()
@@ -185,7 +185,7 @@ func TestIsMarkerAndHasAuthority_IsMarker(t *testing.T) {
 }
 
 func TestIsMarkerAndHasAuthority_HasAuth(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	pubkey := secp256k1.GenPrivKey().PubKey()

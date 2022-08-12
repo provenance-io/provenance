@@ -44,8 +44,13 @@ type AnteTestSuite struct {
 }
 
 // returns context and app with params set on account keeper
-func createTestApp(isCheckTx bool) (*simapp.App, sdk.Context) {
-	app := simapp.Setup(isCheckTx)
+func createTestApp(t *testing.T, isCheckTx bool) (*simapp.App, sdk.Context) {
+	var app *simapp.App
+	if isCheckTx {
+		app = simapp.SetupQuerier(t)
+	} else {
+		app = simapp.Setup(t)
+	}
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
@@ -58,7 +63,7 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 		Denom:  "atom",
 		Amount: sdk.NewInt(1),
 	}
-	suite.app, suite.ctx = createTestApp(isCheckTx)
+	suite.app, suite.ctx = createTestApp(suite.T(), isCheckTx)
 	suite.ctx = suite.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.

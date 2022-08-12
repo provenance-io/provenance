@@ -73,7 +73,7 @@ func TestFullAppSimulation(t *testing.T) {
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
-	app := New(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
+	app := New(logger, db, nil, true, map[int64]bool{}, t.TempDir(), sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, "provenanced", app.Name())
 
 	fmt.Printf("running provenance full app simulation")
@@ -112,7 +112,7 @@ func TestSimple(t *testing.T) {
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
-	app := New(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
+	app := New(logger, db, nil, true, map[int64]bool{}, t.TempDir(), sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, "provenanced", app.Name())
 
 	// run randomized simulation
@@ -150,7 +150,8 @@ func TestAppImportExport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
-	app := New(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
+	home := t.TempDir()
+	app := New(logger, db, nil, true, map[int64]bool{}, home, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
 
 	fmt.Printf("running provenance benchmark full app simulation")
 
@@ -189,7 +190,7 @@ func TestAppImportExport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
-	newApp := New(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, DefaultNodeHome, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
+	newApp := New(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, home, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
 
 	var genesisState sdksim.GenesisState
 	err = json.Unmarshal(exported.AppState, &genesisState)
@@ -251,7 +252,8 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
-	app := New(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
+	home := t.TempDir()
+	app := New(logger, db, nil, true, map[int64]bool{}, home, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
 
 	// Run randomized simulation
 	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
@@ -293,7 +295,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
-	newApp := New(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, DefaultNodeHome, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
+	newApp := New(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, home, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
 
 	newApp.InitChain(abci.RequestInitChain{
 		AppStateBytes: exported.AppState,
@@ -332,6 +334,8 @@ func TestAppStateDeterminism(t *testing.T) {
 	numTimesToRunPerSeed := 5
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
+	home := t.TempDir()
+
 	for i := 0; i < numSeeds; i++ {
 		config.Seed = rand.Int63()
 		PrintConfig(config)
@@ -345,7 +349,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			}
 
 			db := dbm.NewMemDB()
-			app := New(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, interBlockCacheOpt())
+			app := New(logger, db, nil, true, map[int64]bool{}, home, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, interBlockCacheOpt())
 
 			fmt.Printf(
 				"running provenance non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",

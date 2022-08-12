@@ -21,8 +21,7 @@ import (
 )
 
 func TestAccountMapperGetSet(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := types.MustGetMarkerAddress("testcoin")
@@ -69,8 +68,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 }
 
 func TestExistingAccounts(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 
@@ -105,8 +103,7 @@ func TestExistingAccounts(t *testing.T) {
 }
 
 func TestAccountUnrestrictedDenoms(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 
@@ -130,8 +127,7 @@ func TestAccountUnrestrictedDenoms(t *testing.T) {
 }
 
 func TestAccountKeeperReader(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := types.MustGetMarkerAddress("testcoin")
@@ -167,8 +163,7 @@ func TestAccountKeeperReader(t *testing.T) {
 
 // nolint:funlen
 func TestAccountKeeperManageAccess(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := types.MustGetMarkerAddress("testcoin")
@@ -274,8 +269,7 @@ func TestAccountKeeperManageAccess(t *testing.T) {
 }
 
 func TestAccountKeeperCancelProposedByManager(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := types.MustGetMarkerAddress("testcoin")
@@ -318,8 +312,7 @@ func TestAccountKeeperCancelProposedByManager(t *testing.T) {
 
 // nolint:funlen
 func TestAccountKeeperMintBurnCoins(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.MarkerKeeper.SetParams(ctx, types.DefaultParams())
 	addr := types.MustGetMarkerAddress("testcoin")
@@ -437,8 +430,7 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 }
 
 func TestAccountKeeperGetAll(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	user := testUserAddress("test")
@@ -475,8 +467,7 @@ func TestAccountKeeperGetAll(t *testing.T) {
 }
 
 func TestAccountInsufficientExisting(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	pubkey := secp256k1.GenPrivKey().PubKey()
@@ -520,8 +511,7 @@ func TestAccountInsufficientExisting(t *testing.T) {
 }
 
 func TestAccountRemoveDeletesSendEnabled(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	pubkey := secp256k1.GenPrivKey().PubKey()
@@ -570,8 +560,7 @@ func TestAccountRemoveDeletesSendEnabled(t *testing.T) {
 }
 
 func TestAccountImplictControl(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	user := testUserAddress("test")
 	user2 := testUserAddress("test2")
@@ -631,8 +620,7 @@ func TestAccountImplictControl(t *testing.T) {
 }
 
 func TestMarkerFeeGrant(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 

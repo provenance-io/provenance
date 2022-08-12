@@ -52,7 +52,7 @@ type QueryServerTestSuite struct {
 }
 
 func (s *QueryServerTestSuite) SetupTest() {
-	s.app = simapp.Setup(true)
+	s.app = simapp.SetupQuerier(s.T())
 	s.ctx = s.app.BaseApp.NewContext(true, tmproto.Header{})
 	s.app.AccountKeeper.SetParams(s.ctx, authtypes.DefaultParams())
 	s.app.BankKeeper.SetParams(s.ctx, banktypes.DefaultParams())

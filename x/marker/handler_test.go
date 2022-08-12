@@ -43,7 +43,7 @@ type HandlerTestSuite struct {
 }
 
 func (s *HandlerTestSuite) SetupTest() {
-	s.app = app.Setup(false)
+	s.app = app.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.handler = marker.NewHandler(s.app.MarkerKeeper)
 

@@ -4,10 +4,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	sdksim "github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	simapp "github.com/provenance-io/provenance/app"
 )
 
 var (
@@ -17,7 +19,7 @@ var (
 )
 
 func TestMarkerTransferAuthorization(t *testing.T) {
-	app := sdksim.Setup(t, false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	authorization := NewMarkerTransferAuthorization(sdk.NewCoins(coin1000))
 

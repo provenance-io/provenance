@@ -31,7 +31,7 @@ type TestSuite struct {
 var bankSendAuthMsgType = banktypes.SendAuthorization{}.MsgTypeURL()
 
 func (s *TestSuite) SetupTest() {
-	app := simapp.Setup(false)
+	app := simapp.Setup(s.T())
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	now := tmtime.Now()
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})

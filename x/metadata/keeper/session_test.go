@@ -52,7 +52,7 @@ type SessionKeeperTestSuite struct {
 }
 
 func (s *SessionKeeperTestSuite) SetupTest() {
-	s.app = simapp.Setup(false)
+	s.app = simapp.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.app.MetadataKeeper)
