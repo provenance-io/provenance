@@ -79,6 +79,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1
+	s.cfg = cfg
 	s.GenerateAccountsWithKeyrings(4)
 
 	// Configure Genesis auth data for adding test accounts
@@ -240,8 +241,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	genesisState[markertypes.ModuleName] = markerDataBz
 
 	cfg.GenesisState = genesisState
-
-	s.cfg = cfg
 	cfg.ChainID = antewrapper.SimAppChainID
 
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
@@ -1051,7 +1050,14 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 			fmt.Sprintf(`{"title":"test withdraw marker","description":"description","target_address":"%s",
 			"denom":"%s", "amount":[{"denom":"%s","amount":"1"}]}`, s.testnet.Validators[0].Address.String(),
 				s.cfg.BondDenom, s.cfg.BondDenom),
-			false, &sdk.TxResponse{}, 0x5, // request is good, NSF on account though
+			false, &sdk.TxResponse{}, 0x9,
+			// The gov module now has its own set of errors.
+			// This /should/ fail due to insufficient funds, and it does, but then the gov module erroneously wraps it again.
+			// Insufficient funds is 0x5 in the main SDK's set of errors.
+			// However, the governance module erroneously wraps this error in a 0x9, "no handler exists for proposal type"
+			// So we're looking for a 0x9 here.
+			// Here's the expected error (from the rawlog):
+			// 	0stake is smaller than 1stake: insufficient funds: invalid proposal content: no handler exists for proposal type
 		},
 	}
 
@@ -1077,7 +1083,9 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "500000"),
 			}
+			s.T().Logf("args: %q", args)
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, markercli.GetCmdMarkerProposal(), args)
 			if tc.expectErr {
 				s.Require().Error(err)
@@ -1085,7 +1093,7 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, txResp.Logs.String())
+				s.Require().Equal(tc.expectedCode, txResp.Code, txResp.RawLog)
 			}
 
 			s.Require().NoError(os.Remove(tmpFile))
