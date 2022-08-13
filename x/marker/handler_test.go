@@ -2,7 +2,6 @@ package marker_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -80,8 +79,7 @@ func TestInvalidProposal(t *testing.T) {
 	h := marker.NewProposalHandler(k)
 
 	err := h(sdk.NewContext(nil, tmproto.Header{}, false, nil), govtypesv1beta1.NewTextProposal("Test", "description"))
-	require.Error(t, err)
-	require.True(t, strings.Contains(err.Error(), "unrecognized marker proposal content type: *types.TextProposal"))
+	require.ErrorContains(t, err, "unrecognized marker proposal content type: *v1beta1.TextProposal")
 }
 
 func (s *HandlerTestSuite) containsMessage(result *sdk.Result, msg proto.Message) bool {
