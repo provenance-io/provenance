@@ -130,6 +130,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	cfg := testutil.DefaultTestNetworkConfig()
 	cfg.NumValidators = 1
 	genesisState := cfg.GenesisState
+	s.cfg = cfg
 	s.generateAccountsWithKeyrings(4)
 
 	var err error
@@ -464,7 +465,6 @@ owner: %s`,
 	cfg.GenesisState = genesisState
 	msgfeestypes.DefaultFloorGasPrice = sdk.NewCoin("atom", sdk.NewInt(0))
 
-	s.cfg = cfg
 	cfg.ChainID = antewrapper.SimAppChainID
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err, "creating testnet")
@@ -1824,7 +1824,7 @@ func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
 		{
 			"by owner unknown owner",
 			[]string{s.userOtherAddr.String()},
-			"rpc error: code = InvalidArgument desc = no locator bound to address: invalid request",
+			"rpc error: code = Unknown desc = no locator bound to address: unknown request",
 			[]string{""},
 		},
 		{
@@ -1892,7 +1892,7 @@ func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
 		{
 			"by uri unknown uri",
 			[]string{"http://not-an-entry.corn"},
-			"rpc error: code = InvalidArgument desc = No records found.: invalid request",
+			"rpc error: code = Unknown desc = No records found.: unknown request",
 			[]string{},
 		},
 	}
