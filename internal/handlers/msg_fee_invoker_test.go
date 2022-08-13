@@ -50,7 +50,7 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerNoFeeCharged() {
 	})
 	suite.Require().NoError(err)
 	coins, _, err := feeChargeFn(suite.ctx, false)
-	check(err)
+	suite.Require().NoError(err, "feeChargeFn")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	suite.Require().True(coins.IsZero())
 }
@@ -87,13 +87,13 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeCharged() {
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	suite.Require().True(coins.IsZero())
 
-	check(testutil.FundAccount(suite.app.BankKeeper, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(900000)))))
+	suite.Require().NoError(testutil.FundAccount(suite.app.BankKeeper, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(900000)))), "funding account")
 	coins, _, err = feeChargeFn(suite.ctx, false)
 	suite.Require().Contains(err.Error(), "900000nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "got wrong message")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	suite.Require().True(coins.IsZero())
 
-	check(testutil.FundAccount(suite.app.BankKeeper, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(100000)))))
+	suite.Require().NoError(testutil.FundAccount(suite.app.BankKeeper, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(100000)))), "funding account again")
 	coins, _, err = feeChargeFn(suite.ctx, false)
 	suite.Require().Nil(err, "Got error when should not have.")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
@@ -223,10 +223,10 @@ func createTestTxWithFeeGrant(suite *HandlerTestSuite, err error, feeAmount sdk.
 	})
 	suite.txBuilder.SetFeeGranter(acct2.GetAddress())
 
-	check(testutil.FundAccount(suite.app.BankKeeper, suite.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)))))
+	suite.Require().NoError(testutil.FundAccount(suite.app.BankKeeper, suite.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)))), "funding account")
 
 	testTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-	suite.Require().NoError(err)
+	suite.Require().NoError(err, "CreateTestTx")
 	return testTx, acct1
 }
 
@@ -312,12 +312,6 @@ type HandlerTestSuite struct {
 	ctx       sdk.Context
 	clientCtx client.Context
 	txBuilder client.TxBuilder
-}
-
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
 }
 
 func TestAnteTestSuite(t *testing.T) {
