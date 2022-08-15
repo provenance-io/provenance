@@ -12,6 +12,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto"
@@ -315,13 +317,15 @@ func (s *IntegrationCLIPageTestSuite) TearDownSuite() {
 	testutil.CleanUp(s.testnet, s.T())
 }
 
+var titleCaser = cases.Title(language.English)
+
 // Converts an integer to a written version of it. E.g. 1 => one, 83 => eightyThree.
 func toWritten(i int) string {
 	if i > 999999 {
 		panic("cannot convert number larger than 999,999 to written string")
 	}
 	if i < 0 {
-		return "nagative" + strings.Title(toWritten(-1*i))
+		return "negative" + titleCaser.String(toWritten(-i*i))
 	}
 	switch i {
 	case 0:
@@ -397,7 +401,7 @@ func toWritten(i int) string {
 		if r == 0 {
 			return l
 		}
-		return l + strings.Title(toWritten(r))
+		return l + titleCaser.String(toWritten(r))
 	}
 }
 
