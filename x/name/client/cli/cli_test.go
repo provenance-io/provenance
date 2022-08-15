@@ -19,7 +19,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/testutil"
@@ -504,9 +503,9 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 			"should create a root name proposal",
 			namecli.GetRootNameProposalCmd(),
 			[]string{"rootprop",
-				fmt.Sprintf("--%s=%s", cli.FlagTitle, "title"),
-				fmt.Sprintf("--%s=%s", cli.FlagDescription, "description"),
-				fmt.Sprintf("--%s=%s%s", cli.FlagDeposit, "10", s.cfg.BondDenom),
+				fmt.Sprintf("--%s=%s", namecli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s", namecli.FlagDescription, "description"),
+				fmt.Sprintf("--%s=%s%s", namecli.FlagDeposit, "10", s.cfg.BondDenom),
 				fmt.Sprintf("--%s=%s", "owner", s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -519,8 +518,8 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 			"should succeed with missing deposit",
 			namecli.GetRootNameProposalCmd(),
 			[]string{"rootprop",
-				fmt.Sprintf("--%s=%s", cli.FlagTitle, "title"),
-				fmt.Sprintf("--%s=%s", cli.FlagDescription, "description"),
+				fmt.Sprintf("--%s=%s", namecli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s", namecli.FlagDescription, "description"),
 				fmt.Sprintf("--%s=%s", "owner", s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -533,9 +532,9 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 			"should fail for bad deposit",
 			namecli.GetRootNameProposalCmd(),
 			[]string{"rootprop",
-				fmt.Sprintf("--%s=%s", cli.FlagTitle, "title"),
-				fmt.Sprintf("--%s=%s", cli.FlagDescription, "description"),
-				fmt.Sprintf("--%s=%s", cli.FlagDeposit, "10"),
+				fmt.Sprintf("--%s=%s", namecli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s", namecli.FlagDescription, "description"),
+				fmt.Sprintf("--%s=%s", namecli.FlagDeposit, "10"),
 				fmt.Sprintf("--%s=%s", "owner", s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -548,8 +547,8 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 			"should fail for empty title",
 			namecli.GetRootNameProposalCmd(),
 			[]string{"rootprop",
-				fmt.Sprintf("--%s=%s", cli.FlagDescription, "description"),
-				fmt.Sprintf("--%s=%s%s", cli.FlagDeposit, "10", s.cfg.BondDenom),
+				fmt.Sprintf("--%s=%s", namecli.FlagDescription, "description"),
+				fmt.Sprintf("--%s=%s%s", namecli.FlagDeposit, "10", s.cfg.BondDenom),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -561,8 +560,8 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 			"should fail for empty description",
 			namecli.GetRootNameProposalCmd(),
 			[]string{"rootprop",
-				fmt.Sprintf("--%s=%s", cli.FlagTitle, "title"),
-				fmt.Sprintf("--%s=%s%s", cli.FlagDeposit, "10", s.cfg.BondDenom),
+				fmt.Sprintf("--%s=%s", namecli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s%s", namecli.FlagDeposit, "10", s.cfg.BondDenom),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -574,8 +573,8 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 			"should fail for bad owner",
 			namecli.GetRootNameProposalCmd(),
 			[]string{"rootprop",
-				fmt.Sprintf("--%s=%s", cli.FlagTitle, "title"),
-				fmt.Sprintf("--%s=%s%s", cli.FlagDeposit, "10", s.cfg.BondDenom),
+				fmt.Sprintf("--%s=%s", namecli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s%s", namecli.FlagDeposit, "10", s.cfg.BondDenom),
 
 				fmt.Sprintf("--%s=%s", "owner", "asdf"),
 
