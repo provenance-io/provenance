@@ -273,6 +273,8 @@ type App struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
+	// TODO: Required for v1.12.x: Add keepers for new modules and wire them up.
+
 	// the module manager
 	mm *module.Manager
 
