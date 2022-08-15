@@ -484,6 +484,14 @@ devnet-start: devnet-generate devnet-up
 devnet-stop:
 	docker-compose -f networks/dev/docker-compose.yml --project-directory ./ down
 
+# Start postgres indexer instance
+indexer-db-up:
+	docker compose -f docker/postgres-indexer/docker-compose.yaml --project-directory ./ up -d
+
+# Stop postgres indexer instance
+indexer-db-down:
+	docker compose -f docker/postgres-indexer/docker-compose.yaml --project-directory ./ down
+
 .PHONY: docker-build-local localnet-start localnet-stop docker-build-dev devnet-start devnet-stop
 
 
