@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -84,23 +85,22 @@ func (k Keeper) Holding(c context.Context, req *types.QueryHoldingRequest) (*typ
 	balancesStore := prefix.NewStore(ctx.KVStore(k.bankKeeperStoreKey), banktypes.BalancesPrefix)
 	var balances []types.Balance
 	pageRes, perr := query.FilteredPaginate(balancesStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var coin sdk.Coin
-		if cerr := k.cdc.Unmarshal(value, &coin); cerr != nil {
-			return false, cerr
+		fAddress, fDenom, fErr := banktypes.AddressAndDenomFromBalancesStore(key)
+		if fErr != nil {
+			return false, fmt.Errorf("could not parse balance store key %v: %w", key, fErr)
 		}
-		if coin.Denom != denom || coin.Amount.IsZero() {
+		if fDenom != denom {
 			return false, nil
 		}
 		if accumulate {
-			address, _, aerr := banktypes.AddressAndDenomFromBalancesStore(key)
-			if aerr != nil {
-				k.Logger(ctx).With("key", key, "err", aerr).Error("failed to get address from balances store")
-				return true, aerr
+			var fAmount sdk.Int
+			if fErr = fAmount.Unmarshal(value); fErr != nil {
+				return true, fmt.Errorf("could not unmarshal %s %s amount: %w", fAddress, fDenom, fErr)
 			}
 			balances = append(balances,
 				types.Balance{
-					Address: address.String(),
-					Coins:   sdk.NewCoins(coin),
+					Address: fAddress.String(),
+					Coins:   sdk.NewCoins(sdk.NewCoin(fDenom, fAmount)),
 				})
 		}
 		return true, nil
