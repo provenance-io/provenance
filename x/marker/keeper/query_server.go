@@ -2,8 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -82,36 +80,25 @@ func (k Keeper) Holding(c context.Context, req *types.QueryHoldingRequest) (*typ
 	}
 
 	denom := marker.GetDenom()
-	balancesStore := prefix.NewStore(ctx.KVStore(k.bankKeeperStoreKey), banktypes.BalancesPrefix)
-	var balances []types.Balance
-	pageRes, perr := query.FilteredPaginate(balancesStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		fAddress, fDenom, fErr := banktypes.AddressAndDenomFromBalancesStore(key)
-		if fErr != nil {
-			return false, fmt.Errorf("could not parse balance store key %v: %w", key, fErr)
-		}
-		if fDenom != denom {
-			return false, nil
-		}
-		if accumulate {
-			var fAmount sdk.Int
-			if fErr = fAmount.Unmarshal(value); fErr != nil {
-				return true, fmt.Errorf("could not unmarshal %s %s amount: %w", fAddress, fDenom, fErr)
-			}
-			balances = append(balances,
-				types.Balance{
-					Address: fAddress.String(),
-					Coins:   sdk.NewCoins(sdk.NewCoin(fDenom, fAmount)),
-				})
-		}
-		return true, nil
+	denomOwners, err := k.bankKeeper.DenomOwners(c, &banktypes.QueryDenomOwnersRequest{
+		Denom:      denom,
+		Pagination: req.Pagination,
 	})
-	if perr != nil {
-		return nil, perr
+	if err != nil {
+		return nil, err
+	}
+
+	balances := make([]types.Balance, len(denomOwners.DenomOwners))
+	for i, bal := range denomOwners.DenomOwners {
+		balances[i] = types.Balance{
+			Address: bal.Address,
+			Coins:   sdk.NewCoins(bal.Balance),
+		}
 	}
 
 	return &types.QueryHoldingResponse{
 		Balances:   balances,
-		Pagination: pageRes,
+		Pagination: denomOwners.Pagination,
 	}, nil
 }
 
