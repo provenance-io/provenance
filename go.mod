@@ -165,5 +165,5 @@ replace github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.1.1
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
-// TODO: v0.46: Remove this and update the require line above to have the new version once it's out.
-replace github.com/CosmWasm/wasmd => ../wasmd
+// TODO: Required for v1.12.x: Remove this and update the require line above to have the new version once it's out.
+replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.28.0-pio-1-rc1

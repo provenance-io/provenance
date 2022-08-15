@@ -1174,6 +1174,8 @@ github.com/prometheus/procfs v0.7.3/go.mod h1:cz+aTbrPOrUb4q7XlbU9ygM+/jj0fzG6c1
 github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
 github.com/provenance-io/cosmos-sdk v0.46.0-pio-1-rc2 h1:3pfg+teY5ZoH6mwqntMpnl2pXPbd3F2rU2aN6k7D+PE=
 github.com/provenance-io/cosmos-sdk v0.46.0-pio-1-rc2/go.mod h1:u6Ci6+V+srijJhzctEEPYBygUz3O2YXP5ZijPnV6mt0=
+github.com/provenance-io/wasmd v0.28.0-pio-1-rc1 h1:DERjP29HvGFNcKoS/papiZXeLfblLXMwCSouwpKWIkk=
+github.com/provenance-io/wasmd v0.28.0-pio-1-rc1/go.mod h1:5AaHfNWcEjNB61PRwm6bL093ocTVlJrDvOrkQKw3/YI=
 github.com/pseudomuto/protoc-gen-doc v1.3.2/go.mod h1:y5+P6n3iGrbKG+9O04V5ld71in3v/bX88wUwgt+U8EA=
 github.com/pseudomuto/protokit v0.2.0/go.mod h1:2PdH30hxVHsup8KpBTOXTBeMVhJZVio3Q8ViKSAXT0Q=
 github.com/quasilyte/go-ruleguard v0.3.1-0.20210203134552-1b5a410e1cc8/go.mod h1:KsAh3x0e7Fkpgs+Q9pNLS5XpFSvYCEVl5gP9Pp1xp30=
