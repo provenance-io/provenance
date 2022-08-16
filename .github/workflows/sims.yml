@@ -32,7 +32,6 @@ jobs:
             go.sum
             .github/workflows/sims.yml
             sims.mk
-            sims-state-listening.mk
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
       - name: Define Variables
