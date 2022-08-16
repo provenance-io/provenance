@@ -85,7 +85,7 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 	}
 	if !totalAdditionalFees.IsZero() {
 		// ensure enough fees to cover mempool fee for base fee + additional fee
-		// This is exact same logic as NewDeductFeeDecorator except it accounts for additional Fees.
+		// This is exact same logic as NewMempoolFeeDecorator except it accounts for additional Fees.
 		// TODO: Required for v1.12.x: Update this logic to match the DeductFeeDecorator now.
 		if ctx.IsCheckTx() && !simulate {
 			errFromMempoolCalc := EnsureSufficientMempoolFees(ctx, gas, feeCoins, totalAdditionalFees)
