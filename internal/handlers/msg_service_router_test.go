@@ -10,7 +10,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
+	"github.com/golang/protobuf/proto"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 
 	piosimapp "github.com/provenance-io/provenance/app"
@@ -821,6 +821,19 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	require.NoError(t, errClaim)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txClaim})
 	require.Equal(t, true, res.IsOK(), "res=%+v", res)
+	// unmarshal the TxMsgData
+	var protoResult sdk.TxMsgData
+	err3 := proto.Unmarshal(res.Data, &protoResult)
+	require.NoError(t, err3)
+	var claimResponse rewardtypes.MsgClaimAllRewardsResponse
+	err4 := proto.Unmarshal(protoResult.Data[0].Data, &claimResponse)
+	require.NoError(t, err4)
+	require.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(50_000_000_000)), claimResponse.TotalRewardClaim)
+	require.Equal(t, 1, len(claimResponse.ClaimDetails))
+	require.Equal(t, uint64(1), claimResponse.ClaimDetails[0].RewardProgramId)
+	require.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(50_000_000_000)), claimResponse.ClaimDetails[0].TotalRewardClaim)
+	require.Equal(t, 5, len(claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails))
+	require.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)), claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails[0].ClaimPeriodReward)
 	app.EndBlock(abci.RequestEndBlock{Height: 7})
 	app.Commit()
 }
