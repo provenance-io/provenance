@@ -19,8 +19,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/golang/protobuf/proto"
-
 	simappparams "github.com/provenance-io/provenance/app/params"
 	markersim "github.com/provenance-io/provenance/x/marker/simulation"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -301,15 +299,27 @@ func SimulateMsgInstantiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.
 		msg2, ops, sdkResponse, instantiateErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
 
 		// get the contract address for use when executing the contract
-		var protoResult sdk.TxMsgData
-		err3 := proto.Unmarshal(sdkResponse.Data, &protoResult)
-
-		if err3 != nil {
-			panic(err3)
+		if len(sdkResponse.MsgResponses) == 0 {
+			app.Logger().Info("instantiate contract response", "Log", sdkResponse.Log, "Events", sdkResponse.Events)
+			panic("no msg responses from instantiate contract")
+		}
+		var instRespBz []byte
+		for _, resp := range sdkResponse.MsgResponses {
+			if resp.TypeUrl == "/cosmwasm.wasm.v1.MsgInstantiateContractResponse" {
+				if len(instRespBz) != 0 {
+					app.Logger().Info("multiple MsgInstantiateContractResponse entries found", "MsgResponses", sdkResponse.MsgResponses)
+					panic("multiple instantiate contract responses found")
+				}
+				instRespBz = resp.Value
+			}
+		}
+		if len(instRespBz) == 0 {
+			app.Logger().Info("no MsgInstantiateContractResponse found", "MsgResponses", sdkResponse.MsgResponses)
+			panic("no instantiate contract response found")
 		}
 
 		var pInstResp types.MsgInstantiateContractResponse
-		err4 := pInstResp.Unmarshal(protoResult.Data[0].Data)
+		err4 := pInstResp.Unmarshal(instRespBz)
 
 		var contractAddr string
 		if err4 == nil {
