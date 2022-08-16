@@ -2,18 +2,20 @@ package types
 
 import (
 	"fmt"
-	"github.com/provenance-io/provenance/app"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"gopkg.in/yaml.v2"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
+const (
+	NhashDenom = "nhash"
+)
+
 var DefaultDeposit = sdk.Coin{
+	Denom:  NhashDenom,
 	Amount: sdk.NewInt(1905), // todo: set default required amount
-	Denom:  app.DefaultFeeDenom,
 }
 
 var (

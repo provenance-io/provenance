@@ -11,11 +11,8 @@ import (
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgAddExpirationRequest{},
-		&MsgAddExpirationResponse{},
 		&MsgExtendExpirationRequest{},
-		&MsgExtendExpirationResponse{},
 		&MsgDeleteExpirationRequest{},
-		&MsgDeleteExpirationResponse{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

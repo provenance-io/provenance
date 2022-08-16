@@ -107,6 +107,9 @@ import (
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	attributewasm "github.com/provenance-io/provenance/x/attribute/wasm"
+	expirationkeeper "github.com/provenance-io/provenance/x/expiration/keeper"
+	expirationmodule "github.com/provenance-io/provenance/x/expiration/module"
+	expirationtypes "github.com/provenance-io/provenance/x/expiration/types"
 	"github.com/provenance-io/provenance/x/marker"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -189,6 +192,7 @@ var (
 		metadata.AppModuleBasic{},
 		wasm.AppModuleBasic{},
 		msgfeesmodule.AppModuleBasic{},
+		expirationmodule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -261,11 +265,12 @@ type App struct {
 	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	TransferKeeper ibctransferkeeper.Keeper
 
-	MarkerKeeper    markerkeeper.Keeper
-	MetadataKeeper  metadatakeeper.Keeper
-	AttributeKeeper attributekeeper.Keeper
-	NameKeeper      namekeeper.Keeper
-	WasmKeeper      wasm.Keeper
+	MarkerKeeper     markerkeeper.Keeper
+	MetadataKeeper   metadatakeeper.Keeper
+	AttributeKeeper  attributekeeper.Keeper
+	NameKeeper       namekeeper.Keeper
+	ExpirationKeeper expirationkeeper.Keeper
+	WasmKeeper       wasm.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -325,6 +330,7 @@ func New(
 		attributetypes.StoreKey,
 		nametypes.StoreKey,
 		msgfeestypes.StoreKey,
+		expirationtypes.StoreKey,
 		wasm.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -421,6 +427,10 @@ func New(
 		appCodec, keys[attributetypes.StoreKey], app.GetSubspace(attributetypes.ModuleName), app.AccountKeeper, app.NameKeeper,
 	)
 
+	app.ExpirationKeeper = expirationkeeper.NewKeeper(
+		appCodec, keys[expirationtypes.StoreKey], app.GetSubspace(expirationtypes.ModuleName), app.AuthzKeeper,
+	)
+
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
@@ -450,6 +460,8 @@ func New(
 	encoderRegistry.RegisterEncoder(markertypes.RouterKey, markerwasm.Encoder)
 	encoderRegistry.RegisterEncoder(metadatatypes.RouterKey, metadatawasm.Encoder)
 	encoderRegistry.RegisterEncoder(msgfeestypes.RouterKey, msgfeeswasm.Encoder)
+	// TODO add expiration module router key
+	//encoderRegistry.RegisterEncoder(expirationtypes.RouterKey, msgfeeswasm.Encoder)
 
 	// Init CosmWasm query integrations
 	querierRegistry := provwasm.NewQuerierRegistry()
@@ -499,6 +511,7 @@ func New(
 		AddRoute(nametypes.ModuleName, name.NewProposalHandler(app.NameKeeper)).
 		AddRoute(markertypes.ModuleName, marker.NewProposalHandler(app.MarkerKeeper)).
 		AddRoute(msgfeestypes.ModuleName, msgfees.NewProposalHandler(app.MsgFeesKeeper, app.InterfaceRegistry()))
+	// TODO do we need to register a gov proposal for expiration module? If so, we need to add the proposal code
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, govRouter,
@@ -555,6 +568,7 @@ func New(
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
+		expirationmodule.NewAppModule(appCodec, app.ExpirationKeeper, app.AuthzKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper),
 
 		// IBC
@@ -593,6 +607,8 @@ func New(
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
 		vestingtypes.ModuleName,
+		// TODO put in correct order
+		expirationtypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -622,6 +638,8 @@ func New(
 		markertypes.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
+		// TODO put in correct order
+		expirationtypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -649,6 +667,7 @@ func New(
 		attributetypes.ModuleName,
 		metadatatypes.ModuleName,
 		msgfeestypes.ModuleName,
+		expirationtypes.ModuleName,
 
 		ibchost.ModuleName,
 
@@ -688,6 +707,7 @@ func New(
 		msgfeestypes.ModuleName,
 		metadatatypes.ModuleName,
 		nametypes.ModuleName,
+		expirationtypes.ModuleName,
 
 		// required to be last (cosmos-sdk enforces this when migrations are ran)
 		authtypes.ModuleName,
@@ -717,6 +737,7 @@ func New(
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
+		expirationmodule.NewAppModule(appCodec, app.ExpirationKeeper, app.AuthzKeeper),
 		provwasm.NewWrapper(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 
 		ibc.NewAppModule(app.IBCKeeper),
@@ -964,6 +985,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(nametypes.ModuleName)
 	paramsKeeper.Subspace(attributetypes.ModuleName)
 	paramsKeeper.Subspace(msgfeestypes.ModuleName)
+	paramsKeeper.Subspace(expirationtypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
 
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)

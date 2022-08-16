@@ -2,14 +2,18 @@ package keeper
 
 import (
 	"fmt"
+
+	"github.com/gogo/protobuf/proto"
+
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/gogo/protobuf/proto"
+
 	"github.com/provenance-io/provenance/x/expiration/types"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 // Handler is a name record handler function for use with IterateExpirations.
@@ -188,7 +192,12 @@ func getExpiration(ctx sdk.Context, keeper Keeper, key []byte) (*types.Expiratio
 	return record, err
 }
 
-func (k Keeper) ValidateSetExpiration(ctx sdk.Context, expiration types.Expiration, signers []string, msgTypeURL string) error {
+func (k Keeper) ValidateSetExpiration(
+	ctx sdk.Context,
+	expiration types.Expiration,
+	signers []string,
+	msgTypeURL string,
+) error {
 	// validate block height is in the future
 	if expiration.BlockHeight <= ctx.BlockHeight() {
 		return sdkerrors.Wrap(types.ErrInvalidBlockHeight,
@@ -204,7 +213,7 @@ func (k Keeper) ValidateSetExpiration(ctx sdk.Context, expiration types.Expirati
 	defaultDeposit := types.DefaultDeposit
 	if deposit.IsLT(defaultDeposit) {
 		return sdkerrors.Wrap(types.ErrInvalidDeposit,
-			fmt.Sprintf("deposit %s is less than minimum deposit %s",
+			fmt.Sprintf("deposit amount %s is less than minimum deposit amount %s",
 				deposit.Amount.String(), defaultDeposit.Amount.String()))
 	}
 
@@ -216,13 +225,18 @@ func (k Keeper) ValidateSetExpiration(ctx sdk.Context, expiration types.Expirati
 
 	// validate signers
 	if err := k.validateSigners(ctx, expiration.Owner, signers, msgTypeURL); err != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
+		return sdkerrors.Wrap(types.ErrInvalidSigners, err.Error())
 	}
 
 	return nil
 }
 
-func (k Keeper) ValidateDeleteExpiration(ctx sdk.Context, moduleAssetId string, signers []string, msgTypeURL string) error {
+func (k Keeper) ValidateDeleteExpiration(
+	ctx sdk.Context,
+	moduleAssetId string,
+	signers []string,
+	msgTypeURL string,
+) error {
 	expiration, err := k.GetExpiration(ctx, moduleAssetId)
 	if err != nil {
 		return err
@@ -236,7 +250,12 @@ func (k Keeper) ValidateDeleteExpiration(ctx sdk.Context, moduleAssetId string, 
 	return nil
 }
 
-func (k Keeper) validateSigners(ctx sdk.Context, owner string, signers []string, msgTypeURL string) error {
+func (k Keeper) validateSigners(
+	ctx sdk.Context,
+	owner string,
+	signers []string,
+	msgTypeURL string,
+) error {
 	found := false
 	for _, signer := range signers {
 		if signer == owner {
@@ -256,15 +275,26 @@ func (k Keeper) validateSigners(ctx sdk.Context, owner string, signers []string,
 	}
 
 	if !found {
-		return sdkerrors.ErrorInvalidSigner
+		return fmt.Errorf("intended signers %s do not match given signer [%s]", signers, owner)
 	}
 
 	return nil
 }
 
-func (k Keeper) checkSignerWithAuthz(ctx sdk.Context, owner string, signer string, msgTypeURL string) (bool, error) {
-	granter := types.MustAccAddressFromBech32(owner)
-	grantee := types.MustAccAddressFromBech32(signer)
+func (k Keeper) checkSignerWithAuthz(
+	ctx sdk.Context,
+	owner string,
+	signer string,
+	msgTypeURL string,
+) (bool, error) {
+	granter, err := sdk.AccAddressFromBech32(owner)
+	if err != nil {
+		return false, fmt.Errorf("invalid owner: %w", err)
+	}
+	grantee, err := sdk.AccAddressFromBech32(signer)
+	if err != nil {
+		return false, fmt.Errorf("invalid signers: %w", err)
+	}
 
 	authorization, exp := k.authzKeeper.GetCleanAuthorization(ctx, grantee, granter, msgTypeURL)
 	if authorization != nil {
