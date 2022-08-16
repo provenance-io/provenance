@@ -130,10 +130,10 @@ func (s *ExpirationTestSuite) TestMsgAddExpirationRequestValidateBasic() {
 		s.T().Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.wantErr {
-				assert.Error(t, err)
-				assert.Equal(t, tc.expectedErr, err)
+				assert.Error(t, err, "%s expected error", tc.name)
+				assert.Equal(t, tc.expectedErr, err, "%s error", tc.name)
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "%s unexpected error", tc.name)
 			}
 		})
 	}
@@ -190,10 +190,10 @@ func (s *ExpirationTestSuite) TestMsgExtendExpirationRequestValidateBasic() {
 		s.T().Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.wantErr {
-				assert.Error(t, err)
-				assert.Equal(t, tc.expectedErr, err)
+				assert.Error(t, err, "%s expected error", tc.name)
+				assert.Equal(t, tc.expectedErr, err, "%s error", tc.name)
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "%s unexpected error", tc.name)
 			}
 		})
 	}
@@ -230,10 +230,10 @@ func (s *ExpirationTestSuite) TestMsgDeleteExpirationRequestValidateBasic() {
 		s.T().Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.wantErr {
-				assert.Error(t, err)
-				assert.Equal(t, tc.expectedErr, err)
+				assert.Error(t, err, "%s expected error", tc.name)
+				assert.Equal(t, tc.expectedErr, err, "%s error", tc.name)
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "%s unexpected error", tc.name)
 			}
 		})
 	}

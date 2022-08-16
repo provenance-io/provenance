@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
@@ -11,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/expiration/types"
@@ -40,7 +42,6 @@ type KeeperTestSuite struct {
 	user3Addr sdk.AccAddress
 
 	moduleAssetId string
-	owner         string
 	blockHeight   int64
 	deposit       sdk.Coin
 	signers       []string
@@ -81,19 +82,18 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	// expiration tests
 	s.moduleAssetId = "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
-	s.owner = s.user1
 	s.blockHeight = s.ctx.BlockHeight() + 1
 	s.deposit = types.DefaultDeposit
 	s.signers = []string{s.user1}
 
 	s.validExpiration = types.Expiration{
 		ModuleAssetId: s.moduleAssetId,
-		Owner:         s.owner,
+		Owner:         s.user1,
 		BlockHeight:   s.blockHeight,
 		Deposit:       s.deposit,
 	}
 	s.emptyModuleAssetIdExpiration = types.Expiration{
-		Owner:       s.owner,
+		Owner:       s.user1,
 		BlockHeight: s.blockHeight,
 		Deposit:     s.deposit,
 	}
@@ -104,7 +104,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	}
 	s.minDepositNotMetExpiration = types.Expiration{
 		ModuleAssetId: s.moduleAssetId,
-		Owner:         s.owner,
+		Owner:         s.user1,
 		BlockHeight:   s.blockHeight,
 		Deposit:       sdk.NewInt64Coin(simapp.DefaultFeeDenom, 1),
 	}
@@ -129,22 +129,18 @@ func (s *KeeperTestSuite) TestAddExpiration() {
 		expiration  types.Expiration
 		signers     []string
 		msgTypeURL  string
+		granter     sdk.AccAddress
+		grantee     sdk.AccAddress
 		wantErr     bool
 		expectedErr string
 	}{
 		{
-			name:        "should successfully add expiration",
-			expiration:  s.validExpiration,
-			signers:     s.signers,
-			msgTypeURL:  request.MsgTypeURL(),
-			wantErr:     false,
-			expectedErr: "",
-		},
-		{
-			name:        "should fail due to empty module asset id",
+			name:        "should fail to validate due to empty module asset id",
 			expiration:  s.emptyModuleAssetIdExpiration,
 			signers:     s.signers,
 			msgTypeURL:  request.MsgTypeURL(),
+			granter:     nil,
+			grantee:     nil,
 			wantErr:     true,
 			expectedErr: "invalid module asset id: empty address string is not allowed: invalid address",
 		},
@@ -153,6 +149,8 @@ func (s *KeeperTestSuite) TestAddExpiration() {
 			expiration:  s.emptyOwnerAddressExpiration,
 			signers:     s.signers,
 			msgTypeURL:  request.MsgTypeURL(),
+			granter:     nil,
+			grantee:     nil,
 			wantErr:     true,
 			expectedErr: "invalid owner: empty address string is not allowed: invalid signers",
 		},
@@ -161,6 +159,8 @@ func (s *KeeperTestSuite) TestAddExpiration() {
 			expiration:  s.validExpiration,
 			signers:     nil,
 			msgTypeURL:  request.MsgTypeURL(),
+			granter:     nil,
+			grantee:     nil,
 			wantErr:     true,
 			expectedErr: fmt.Sprintf("intended signers [] do not match given signer [%s]: invalid signers", s.validExpiration.Owner),
 		},
@@ -169,22 +169,292 @@ func (s *KeeperTestSuite) TestAddExpiration() {
 			expiration:  s.minDepositNotMetExpiration,
 			signers:     s.signers,
 			msgTypeURL:  request.MsgTypeURL(),
+			granter:     nil,
+			grantee:     nil,
 			wantErr:     true,
 			expectedErr: fmt.Sprintf("deposit amount %s is less than minimum deposit amount %s: invalid deposit amount", s.minDepositNotMetExpiration.Deposit.Amount, s.deposit.Amount),
 		},
+		{
+			name:        "should fail to validate with authz",
+			expiration:  s.validExpiration,
+			signers:     []string{s.user2},
+			msgTypeURL:  request.MsgTypeURL(),
+			granter:     nil,
+			grantee:     nil,
+			wantErr:     true,
+			expectedErr: fmt.Sprintf("intended signers [%s] do not match given signer [%s]: invalid signers", s.user2, s.validExpiration.Owner),
+		},
+		{
+			name:        "should successfully add expiration",
+			expiration:  s.validExpiration,
+			signers:     s.signers,
+			msgTypeURL:  request.MsgTypeURL(),
+			granter:     nil,
+			grantee:     nil,
+			wantErr:     false,
+			expectedErr: "",
+		},
+		{
+			name:        "should successfully add expiration with authz",
+			expiration:  s.validExpiration,
+			signers:     []string{s.user3},
+			msgTypeURL:  request.MsgTypeURL(),
+			granter:     s.user1Addr, // user1 is the owner in s.expiration
+			grantee:     s.user3Addr,
+			wantErr:     false,
+			expectedErr: "",
+		},
 	}
+
+	now := s.ctx.BlockHeader().Time
+	s.Assert().NotNil(now)
 
 	for _, tc := range cases {
 		tc := tc
 
 		s.T().Run(tc.name, func(t *testing.T) {
+			createAuth := tc.grantee != nil && tc.granter != nil
+			if createAuth {
+				a := authz.NewGenericAuthorization(tc.msgTypeURL)
+				err := s.app.AuthzKeeper.SaveGrant(s.ctx, tc.grantee, tc.granter, a, now.Add(time.Hour))
+				s.Assert().NoError(err)
+			}
+
 			err := s.app.ExpirationKeeper.ValidateSetExpiration(s.ctx, tc.expiration, tc.signers, tc.msgTypeURL)
 			if tc.wantErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expectedErr, err.Error())
+				assert.Equal(t, tc.expectedErr, err.Error(), "%s error", tc.name)
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "%s unexpected error", tc.name)
 				if err := s.app.ExpirationKeeper.SetExpiration(s.ctx, tc.expiration); err != nil {
+					assert.Fail(t, err.Error())
+				}
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestExtendExpiration() {
+	request := types.MsgExtendExpirationRequest{}
+	cases := []struct {
+		name        string
+		expiration  types.Expiration
+		signers     []string
+		msgTypeURL  string
+		granter     sdk.AccAddress
+		grantee     sdk.AccAddress
+		wantErr     bool
+		expectedErr string
+	}{
+		{
+			name:        "should fail to validate due to empty module asset id",
+			expiration:  s.emptyModuleAssetIdExpiration,
+			signers:     s.signers,
+			msgTypeURL:  request.MsgTypeURL(),
+			granter:     nil,
+			grantee:     nil,
+			wantErr:     true,
+			expectedErr: "invalid module asset id: empty address string is not allowed: invalid address",
+		},
+		{
+			name:        "should fail to validate signers due to empty owner address",
+			expiration:  s.emptyOwnerAddressExpiration,
+			signers:     s.signers,
+			msgTypeURL:  request.MsgTypeURL(),
+			granter:     nil,
+			grantee:     nil,
+			wantErr:     true,
+			expectedErr: "invalid owner: empty address string is not allowed: invalid signers",
+		},
+		{
+			name:        "should fail to validate signers due to empty signers",
+			expiration:  s.validExpiration,
+			signers:     nil,
+			msgTypeURL:  request.MsgTypeURL(),
+			granter:     nil,
+			grantee:     nil,
+			wantErr:     true,
+			expectedErr: fmt.Sprintf("intended signers [] do not match given signer [%s]: invalid signers", s.validExpiration.Owner),
+		},
+		{
+			name:        "should fail to validate minimum required deposit",
+			expiration:  s.minDepositNotMetExpiration,
+			signers:     s.signers,
+			msgTypeURL:  request.MsgTypeURL(),
+			granter:     nil,
+			grantee:     nil,
+			wantErr:     true,
+			expectedErr: fmt.Sprintf("deposit amount %s is less than minimum deposit amount %s: invalid deposit amount", s.minDepositNotMetExpiration.Deposit.Amount, s.deposit.Amount),
+		},
+		{
+			name:        "should fail to validate with authz",
+			expiration:  s.validExpiration,
+			signers:     []string{s.user2},
+			msgTypeURL:  request.MsgTypeURL(),
+			granter:     nil,
+			grantee:     nil,
+			wantErr:     true,
+			expectedErr: fmt.Sprintf("intended signers [%s] do not match given signer [%s]: invalid signers", s.user2, s.validExpiration.Owner),
+		},
+		{
+			name:        "should successfully extend expiration",
+			expiration:  s.validExpiration,
+			signers:     s.signers,
+			msgTypeURL:  request.MsgTypeURL(),
+			granter:     nil,
+			grantee:     nil,
+			wantErr:     false,
+			expectedErr: "",
+		},
+		{
+			name:        "should successfully extend expiration with authz",
+			expiration:  s.validExpiration,
+			signers:     []string{s.user3},
+			msgTypeURL:  request.MsgTypeURL(),
+			granter:     s.user1Addr, // user1 is the owner in s.expiration
+			grantee:     s.user3Addr,
+			wantErr:     false,
+			expectedErr: "",
+		},
+	}
+
+	now := s.ctx.BlockHeader().Time
+	s.Assert().NotNil(now)
+
+	for _, tc := range cases {
+		tc := tc
+
+		s.T().Run(tc.name, func(t *testing.T) {
+			createAuth := tc.grantee != nil && tc.granter != nil
+			if createAuth {
+				a := authz.NewGenericAuthorization(tc.msgTypeURL)
+				err := s.app.AuthzKeeper.SaveGrant(s.ctx, tc.grantee, tc.granter, a, now.Add(time.Hour))
+				s.Assert().NoError(err)
+			}
+
+			err := s.app.ExpirationKeeper.ValidateSetExpiration(s.ctx, tc.expiration, tc.signers, tc.msgTypeURL)
+			if tc.wantErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expectedErr, err.Error(), "%s error", tc.name)
+			} else {
+				assert.NoError(t, err, "%s unexpected error", tc.name)
+				if err := s.app.ExpirationKeeper.SetExpiration(s.ctx, tc.expiration); err != nil {
+					assert.Fail(t, err.Error())
+				}
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestDeleteExpiration() {
+	request := types.MsgDeleteExpirationRequest{}
+	cases := []struct {
+		name          string
+		moduleAssetId string
+		signers       []string
+		msgTypeURL    string
+		granter       sdk.AccAddress
+		grantee       sdk.AccAddress
+		addExpiration bool
+		isExpired     bool
+		wantErr       bool
+		expectedErr   string
+	}{
+		{
+			name:          "should fail to find and delete expiration",
+			moduleAssetId: s.moduleAssetId,
+			signers:       s.signers,
+			msgTypeURL:    request.MsgTypeURL(),
+			granter:       nil,
+			grantee:       nil,
+			addExpiration: false,
+			isExpired:     false,
+			wantErr:       true,
+			expectedErr:   fmt.Sprintf("expiration for module asset id [%s] does not exist: expiration not found", s.moduleAssetId),
+		},
+		{
+			name:          "should fail to validate due to empty module asset id",
+			moduleAssetId: "",
+			signers:       s.signers,
+			msgTypeURL:    request.MsgTypeURL(),
+			granter:       nil,
+			grantee:       nil,
+			addExpiration: false,
+			isExpired:     false,
+			wantErr:       true,
+			expectedErr:   "empty address string is not allowed: invalid key prefix",
+		},
+		{
+			name:          "should successfully delete expiration",
+			moduleAssetId: s.moduleAssetId,
+			signers:       []string{s.validExpiration.Owner},
+			msgTypeURL:    request.MsgTypeURL(),
+			granter:       nil,
+			grantee:       nil,
+			addExpiration: true,
+			isExpired:     false,
+			wantErr:       false,
+			expectedErr:   "",
+		},
+		{
+			name:          "should successfully delete expiration with authz",
+			moduleAssetId: s.moduleAssetId,
+			signers:       []string{s.user3},
+			msgTypeURL:    request.MsgTypeURL(),
+			granter:       s.user1Addr, // user1 is the owner in s.expiration
+			grantee:       s.user3Addr,
+			addExpiration: true,
+			isExpired:     false,
+			wantErr:       false,
+			expectedErr:   "",
+		},
+		{
+			name:          "should successfully delete expired expiration",
+			moduleAssetId: s.moduleAssetId,
+			signers:       []string{},
+			msgTypeURL:    request.MsgTypeURL(),
+			granter:       nil,
+			grantee:       nil,
+			addExpiration: true,
+			isExpired:     true,
+			wantErr:       false,
+			expectedErr:   "",
+		},
+	}
+
+	now := s.ctx.BlockHeader().Time
+	s.Assert().NotNil(now)
+
+	for _, tc := range cases {
+		tc := tc
+
+		s.T().Run(tc.name, func(t *testing.T) {
+			if tc.addExpiration {
+				if err := s.app.ExpirationKeeper.SetExpiration(s.ctx, s.validExpiration); err != nil {
+					assert.Fail(t, err.Error())
+				}
+			}
+
+			createAuth := tc.grantee != nil && tc.granter != nil
+			if createAuth {
+				a := authz.NewGenericAuthorization(tc.msgTypeURL)
+				err := s.app.AuthzKeeper.SaveGrant(s.ctx, tc.grantee, tc.granter, a, now.Add(time.Hour))
+				s.Assert().NoError(err)
+			}
+
+			ctx := s.ctx
+			if tc.isExpired {
+				// move block height forward to simulate expired expiration
+				ctx = s.ctx.WithBlockHeader(tmproto.Header{Height: 2, Time: now})
+			}
+
+			err := s.app.ExpirationKeeper.ValidateDeleteExpiration(ctx, tc.moduleAssetId, tc.signers, tc.msgTypeURL)
+			if tc.wantErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expectedErr, err.Error(), "%s error", tc.name)
+			} else {
+				assert.NoError(t, err, "%s unexpected error", tc.name)
+				if err := s.app.ExpirationKeeper.DeleteExpiration(ctx, tc.moduleAssetId); err != nil {
 					assert.Fail(t, err.Error())
 				}
 			}

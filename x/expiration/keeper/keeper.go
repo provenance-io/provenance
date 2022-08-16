@@ -76,19 +76,20 @@ func (k Keeper) GetDeposit(ctx sdk.Context) sdk.Coin {
 func (k Keeper) GetExpiration(ctx sdk.Context, moduleAssetId string) (*types.Expiration, error) {
 	key, err := types.GetModuleAssetKeyPrefix(moduleAssetId)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(types.ErrInvalidKeyPrefix, err.Error())
 	}
 
 	store := ctx.KVStore(k.storeKey)
 	if !store.Has(key) {
-		return nil, types.ErrExpirationNotFound
+		return nil, sdkerrors.Wrap(types.ErrExpirationNotFound,
+			fmt.Sprintf("expiration for module asset id [%s] does not exist", moduleAssetId))
 	}
 
 	b := store.Get(key)
 	expiration := &types.Expiration{}
 	err = k.cdc.Unmarshal(b, expiration)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(types.ErrUnmarshal, err.Error())
 	}
 
 	return expiration, nil
@@ -241,10 +242,15 @@ func (k Keeper) ValidateDeleteExpiration(
 	if err != nil {
 		return err
 	}
+
+	// anyone can delete an expired expiration
+	if expiration.BlockHeight < ctx.BlockHeight() {
+		return nil
+	}
+
 	// validate signers
 	if err := k.validateSigners(ctx, expiration.Owner, signers, msgTypeURL); err != nil {
-		return sdkerrors.Wrap(types.ErrInvalidSigners,
-			fmt.Sprintf("missing required signatures: %s", err.Error()))
+		return sdkerrors.Wrap(types.ErrInvalidSigners, err.Error())
 	}
 
 	return nil
