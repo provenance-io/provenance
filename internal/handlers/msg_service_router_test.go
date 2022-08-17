@@ -2,6 +2,7 @@ package handlers_test
 
 import (
 	"fmt"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"os"
 	"testing"
 	"time"
@@ -813,6 +814,9 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
 	assert.Equal(t, 4, len(byAddress.RewardAccountState), "claimable rewards should be 4 for this address.")
 
+	// get the accoutn balances of acct1
+	balance := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
+	println(balance.AmountOf("nhash").String())
 	// claim rewards for the address
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 7, Time: time.Now().UTC()}})
 	msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
@@ -836,6 +840,10 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	require.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)), claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails[0].ClaimPeriodReward)
 	app.EndBlock(abci.RequestEndBlock{Height: 7})
 	app.Commit()
+	balanceLater := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
+	// make sure account balance has the tokens
+	require.Equal(t, sdk.NewInt(50_000_000_000), balanceLater.AmountOf(pioconfig.DefaultBondDenom).Sub(balance.AmountOf(pioconfig.DefaultBondDenom)))
+
 }
 
 func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAccountNotFunded(t *testing.T) {
