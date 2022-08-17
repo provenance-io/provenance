@@ -8,6 +8,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	ica "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts"
+	icacontrollertypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/types"
+	icahosttypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 )
 
 var (
@@ -38,13 +43,13 @@ var handlers = map[string]appUpgrade{
 	"mango-rc4": {}, // upgrade for 1.11.1-rc4
 	"neoncarrot-rc1": {
 		// TODO: Required for v1.12.x: Fill in Added with modules new to 1.12.x
-		Added: nil,
+		Added: []string{icacontrollertypes.StoreKey, icahosttypes.StoreKey},
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+			UpdateIBC(ctx, app, &versionMap)
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
 	}, // upgrade for 1.12.0-rc1
-	// TODO - Add new upgrade definitions here.
 }
 
 func InstallCustomUpgradeHandlers(app *App) {
@@ -110,4 +115,38 @@ func CustomUpgradeStoreLoader(app *App, info upgradetypes.Plan) baseapp.StoreLoa
 
 func isEmptyUpgrade(upgrades storetypes.StoreUpgrades) bool {
 	return len(upgrades.Renamed) == 0 && len(upgrades.Deleted) == 0 && len(upgrades.Added) == 0
+}
+
+func UpdateIBC(ctx sdk.Context, app *App, versionMap *module.VersionMap) {
+	UpdateIBCv3(ctx, app, versionMap)
+}
+
+func UpdateIBCv3(ctx sdk.Context, app *App, versionMap *module.VersionMap) {
+	app.Logger().Info("Upgrading to IBCv3")
+
+	// Set the consensus version so InitGenesis is not ran
+	// We are configuring the module here
+	(*versionMap)[icatypes.ModuleName] = app.mm.Modules[icatypes.ModuleName].ConsensusVersion()
+
+	// create ICS27 Controller submodule params
+	controllerParams := icacontrollertypes.Params{
+		ControllerEnabled: true,
+	}
+
+	// create ICS27 Host submodule params
+	// TODO Verify which messages we want to run on the host/Provenance chain
+	hostParams := icahosttypes.Params{
+		HostEnabled: true,
+		AllowMessages: []string{
+			"*",
+		},
+	}
+
+	// initialize ICS27 module
+	icamodule, correctTypecast := app.mm.Modules[icatypes.ModuleName].(ica.AppModule)
+	if !correctTypecast {
+		panic("mm.Modules[icatypes.ModuleName] is not of type ica.AppModule")
+	}
+	icamodule.InitModule(ctx, controllerParams, hostParams)
+	app.Logger().Info("Finished upgrading to IBCv3")
 }
