@@ -31,15 +31,15 @@ func NewTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 	txCmd.AddCommand(
-		NewAddExpirationCmd(),
-		NewExtendExpirationCmd(),
-		NewDeleteExpirationCmd(),
+		AddExpirationCmd(),
+		ExtendExpirationCmd(),
+		DeleteExpirationCmd(),
 	)
 	return txCmd
 }
 
-// NewAddExpirationCmd creates a command for adding an expiration
-func NewAddExpirationCmd() *cobra.Command {
+// AddExpirationCmd creates a command for adding an expiration
+func AddExpirationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "add [module-asset-id] [owner] [block-height] [deposit] [messages, optional]",
 		Aliases: []string{"a"},
@@ -84,6 +84,8 @@ messages		- comma separated list of messages to add to the expiration (optional)
 				Owner:         strings.TrimSpace(args[1]),
 				BlockHeight:   blockHeight,
 				Deposit:       deposit,
+				// TODO	How do we add message of type 'Any'?
+				//      Should we only support string messages?
 				//Messages:      messages,
 			}
 
@@ -103,8 +105,8 @@ messages		- comma separated list of messages to add to the expiration (optional)
 	return cmd
 }
 
-// NewExtendExpirationCmd creates a command for extending an expiration
-func NewExtendExpirationCmd() *cobra.Command {
+// ExtendExpirationCmd creates a command for extending an expiration
+func ExtendExpirationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "extend [module-asset-id] [owner] [block-height] [deposit] [messages, optional]",
 		Aliases: []string{"e"},
@@ -168,8 +170,8 @@ messages		- comma separated list of messages to add to the expiration (optional)
 	return cmd
 }
 
-// NewDeleteExpirationCmd creates a command for deleting an expiration
-func NewDeleteExpirationCmd() *cobra.Command {
+// DeleteExpirationCmd creates a command for deleting an expiration
+func DeleteExpirationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "delete [module-asset-id]",
 		Aliases: []string{"d"},

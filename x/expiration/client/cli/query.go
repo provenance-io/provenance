@@ -131,6 +131,7 @@ func GetAllExpirationsCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "expirations (all)")
 
 	return cmd
 }
@@ -171,7 +172,8 @@ func GetAllExpirationsByOwnerCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	
+	flags.AddPaginationFlagsToCmd(cmd, "expirations (by owner)")
+
 	return cmd
 }
 

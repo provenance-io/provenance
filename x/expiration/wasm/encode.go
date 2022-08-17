@@ -1,65 +1,63 @@
-//// Package wasm supports smart contract integration with the provenance name module.
-//package wasm
-//
+// Package wasm supports smart contract integration with the provenance expiration module.
+package wasm
+
 //import (
 //	"encoding/json"
 //	"fmt"
 //
+//	sdk "github.com/cosmos/cosmos-sdk/types"
+//
 //	"github.com/provenance-io/provenance/internal/provwasm"
 //	"github.com/provenance-io/provenance/x/expiration/types"
-//
-//	sdk "github.com/cosmos/cosmos-sdk/types"
 //)
 //
 //// Compile time interface check
 //var _ provwasm.Encoder = Encoder
 //
-//// MsgFeesMsgParams are params for encoding []sdk.Msg types from the msgfees module.
-//type MsgFeesMsgParams struct {
-//	// Params for encoding a MsgAddMarkerRequest
-//	AssessCustomFee *AssessCustomFeeParams `json:"assess_custom_fee,omitempty"`
+//// ExpirationMsgParams are params for encoding []sdk.Msg types from the expiration module.
+//// Only one field should be set per request.
+//type ExpirationMsgParams struct {
+//	AddExpiration *AddExpiration `json:"add_expiration,omitempty"`
 //}
 //
-//// AssessCustomFeeParams are params for encoding a MsgAssessCustomMsgFeeRequest.
-//type AssessCustomFeeParams struct {
-//	// The fee amount to assess
-//	Amount sdk.Coin `json:"amount"`
-//	// The signer of the message
-//	From string `json:"from"`
-//	// An optional short name
-//	Name string `json:"name,omitempty"`
-//	// An optional address to receive the fees. if present, fees are split 50/50 between the account and fee module,
-//	// otherwise the fee module receives the full amount
-//	Recipient string `json:"recipient,omitempty"`
+//// AddExpiration are params for encoding a MsgAddExpirationRequest
+//type AddExpiration struct {
+//	Expiration types.Expiration `json:"expiration"`
+//	Signers    []string         `json:"signers"`
 //}
 //
-//// Encoder returns a smart contract message encoder for the name module.
-//func Encoder(contract sdk.AccAddress, msg json.RawMessage, version string) ([]sdk.Msg, error) {
+//// Encoder returns a smart contract message encoder for the expiration module.
+//func Encoder(_ sdk.AccAddress, msg json.RawMessage, _ string) ([]sdk.Msg, error) {
 //	wrapper := struct {
-//		Params *MsgFeesMsgParams `json:"msgfees"`
+//		Params *ExpirationMsgParams `json:"expiration"`
 //	}{}
 //	if err := json.Unmarshal(msg, &wrapper); err != nil {
-//		return nil, fmt.Errorf("wasm: failed to unmarshal name encode params: %w", err)
+//		return nil, fmt.Errorf("wasm: failed to unmarshal %s encode params: %w", types.ModuleName, err)
 //	}
 //	params := wrapper.Params
 //	if params == nil {
-//		return nil, fmt.Errorf("wasm: nil msgfees encode params")
+//		return nil, fmt.Errorf("wasm: nil %s encode params", types.ModuleName)
 //	}
 //	switch {
 //	case params != nil:
-//		return params.AssessCustomFee.Encode(contract)
+//		return params.AddExpiration.Encode()
 //	default:
-//		return nil, fmt.Errorf("wasm: invalid msgfees encode request: %s", string(msg))
+//		return nil, fmt.Errorf("wasm: invalid %s encode request: %s", types.ModuleName, string(msg))
 //	}
 //}
 //
-//// Encode creates a MsgAssessCustomMsgFeeRequest.
-//func (params *AssessCustomFeeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
+//// Encode creates a MsgAddExpirationRequest
+//func (params *AddExpiration) Encode() ([]sdk.Msg, error) {
+//	// verify the signer addresses are valid
+//	for _, addr := range params.Signers {
+//		if _, err := sdk.AccAddressFromBech32(addr); err != nil {
+//			return nil, fmt.Errorf("wasm: signer address must be a Bech32 string: %v", err)
+//		}
+//	}
 //	// Create message request
-//	msg := types.NewMsgAssessCustomMsgFeeRequest(params.Name, params.Amount, params.Recipient, params.From)
-//	err := msg.ValidateBasic()
-//	if err != nil {
+//	msg := types.NewMsgAddExpirationRequest(params.Expiration, params.Signers)
+//	if err := msg.ValidateBasic(); err != nil {
 //		return nil, err
 //	}
-//	return []sdk.Msg{&msg}, nil
+//	return []sdk.Msg{msg}, nil
 //}
