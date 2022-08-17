@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/provenance-io/provenance/x/expiration/types"
@@ -61,22 +62,22 @@ messages		- comma separated list of messages to add to the expiration (optional)
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
-				return err
+				return sdkerrors.Wrap(sdkerrors.ErrInvalidType, err.Error())
 			}
 
 			blockHeight, err := parseBlockHeight(args[2])
 			if err != nil {
-				return err
+				return sdkerrors.Wrap(types.ErrInvalidBlockHeight, err.Error())
 			}
 			deposit, err := sdk.ParseCoinNormalized(args[3])
 			if err != nil {
-				return err
+				return sdkerrors.Wrap(types.ErrInvalidDeposit, err.Error())
 			}
 			//messages := parseMessages(args[4])
 
 			signers, err := parseSigners(cmd, &clientCtx)
 			if err != nil {
-				return err
+				return sdkerrors.Wrap(types.ErrInvalidSigners, err.Error())
 			}
 
 			expiration := types.Expiration{
@@ -92,7 +93,7 @@ messages		- comma separated list of messages to add to the expiration (optional)
 			msg := types.NewMsgAddExpirationRequest(expiration, signers)
 			err = msg.ValidateBasic()
 			if err != nil {
-				return err
+				return sdkerrors.Wrap(types.ErrValidateBasic, err.Error())
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -128,22 +129,22 @@ messages		- comma separated list of messages to add to the expiration (optional)
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
-				return err
+				return sdkerrors.Wrap(sdkerrors.ErrInvalidType, err.Error())
 			}
 
 			blockHeight, err := parseBlockHeight(args[2])
 			if err != nil {
-				return err
+				return sdkerrors.Wrap(types.ErrInvalidBlockHeight, err.Error())
 			}
 			deposit, err := sdk.ParseCoinNormalized(args[3])
 			if err != nil {
-				return err
+				return sdkerrors.Wrap(types.ErrInvalidDeposit, err.Error())
 			}
 			//messages := parseMessages(args[4])
 
 			signers, err := parseSigners(cmd, &clientCtx)
 			if err != nil {
-				return err
+				return sdkerrors.Wrap(types.ErrInvalidSigners, err.Error())
 			}
 
 			expiration := types.Expiration{
@@ -157,7 +158,7 @@ messages		- comma separated list of messages to add to the expiration (optional)
 			msg := types.NewMsgExtendExpirationRequest(expiration, signers)
 			err = msg.ValidateBasic()
 			if err != nil {
-				return err
+				return sdkerrors.Wrap(types.ErrValidateBasic, err.Error())
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -181,19 +182,19 @@ func DeleteExpirationCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
-				return err
+				return sdkerrors.Wrap(sdkerrors.ErrInvalidType, err.Error())
 			}
 
 			signers, err := parseSigners(cmd, &clientCtx)
 			if err != nil {
-				return err
+				return sdkerrors.Wrap(types.ErrInvalidSigners, err.Error())
 			}
 
 			moduleAssetId := args[0]
 			msg := types.NewMsgDeleteExpirationRequest(moduleAssetId, signers)
 			err = msg.ValidateBasic()
 			if err != nil {
-				return err
+				return sdkerrors.Wrap(types.ErrValidateBasic, err.Error())
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
