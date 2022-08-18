@@ -310,12 +310,12 @@ func SimulateMsgInstantiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.
 					app.Logger().Info("instantiate contract", "MsgResponses", sdkResponse.MsgResponses)
 					panic("multiple instantiate contract responses found")
 				}
-				instResp, ok := resp.GetCachedValue().(types.MsgInstantiateContractResponse)
+				instResp, ok := resp.GetCachedValue().(*types.MsgInstantiateContractResponse)
 				if !ok {
 					app.Logger().Error("instantiate contract", "MsgInstantiateContractResponse", resp)
 					panic("could not cast response to MsgInstantiateContractResponse")
 				}
-				pInstResp = &instResp
+				pInstResp = instResp
 			}
 		}
 
