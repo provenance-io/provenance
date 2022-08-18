@@ -88,8 +88,6 @@ import (
 
 	// ICA
 	ica "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
-	icacontrollertypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/types"
 	icahost "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/types"
@@ -271,10 +269,9 @@ type App struct {
 
 	MsgFeesKeeper msgfeeskeeper.Keeper
 
-	IBCKeeper           *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
-	ICAControllerKeeper icacontrollerkeeper.Keeper
-	ICAHostKeeper       icahostkeeper.Keeper
-	TransferKeeper      ibctransferkeeper.Keeper
+	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
+	ICAHostKeeper  icahostkeeper.Keeper
+	TransferKeeper ibctransferkeeper.Keeper
 
 	MarkerKeeper    markerkeeper.Keeper
 	MetadataKeeper  metadatakeeper.Keeper
@@ -283,10 +280,9 @@ type App struct {
 	WasmKeeper      wasm.Keeper
 
 	// make scoped keepers public for test purposes
-	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
-	ScopedTransferKeeper      capabilitykeeper.ScopedKeeper
-	ScopedICAControllerKeeper capabilitykeeper.ScopedKeeper
-	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
+	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
+	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
+	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
 
 	// TODO: Required for v1.12.x: Add keepers for new modules and wire them up.
 
@@ -341,7 +337,6 @@ func New(
 
 		ibchost.StoreKey,
 		ibctransfertypes.StoreKey,
-		icacontrollertypes.StoreKey,
 		icahosttypes.StoreKey,
 
 		metadatatypes.StoreKey,
@@ -380,7 +375,6 @@ func New(
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
-	scopedICAControllerKeeper := app.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 
 	// capability keeper must be sealed after scope to module registrations are completed.
@@ -463,20 +457,13 @@ func New(
 		app.AccountKeeper, app.BankKeeper, scopedTransferKeeper,
 	)
 
-	app.ICAControllerKeeper = icacontrollerkeeper.NewKeeper(
-		appCodec, keys[icacontrollertypes.StoreKey], app.GetSubspace(icacontrollertypes.SubModuleName),
-		app.IBCKeeper.ChannelKeeper, // may be replaced with middleware such as ics29 fee
-		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
-		scopedICAControllerKeeper, app.MsgServiceRouter().(*baseapp.MsgServiceRouter),
-	)
 	app.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec, keys[icahosttypes.StoreKey], app.GetSubspace(icahosttypes.SubModuleName),
 		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
 		app.AccountKeeper, scopedICAHostKeeper, app.MsgServiceRouter().(*baseapp.MsgServiceRouter),
 	)
-	icaModule := ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper)
+	icaModule := ica.NewAppModule(nil, &app.ICAHostKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
-	// The controller is middleware so a ica stack will need to be implemented to support ica controller
 
 	// Init CosmWasm module
 	wasmDir := filepath.Join(homePath, "data", "wasm")
@@ -556,7 +543,6 @@ func New(
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule).
 		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper)).
-		//AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule). Routes need to be added to future modules that use the controller middleware
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
