@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"runtime/debug"
 	"sort"
 	"strings"
 	"testing"
@@ -146,14 +147,14 @@ func TestAppImportExport(t *testing.T) {
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
-		db.Close()
+		require.NoError(t, db.Close())
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
 	home := t.TempDir()
 	app := New(logger, db, nil, true, map[int64]bool{}, home, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
 
-	fmt.Printf("running provenance benchmark full app simulation")
+	fmt.Printf("running provenance test import export")
 
 	// Run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -186,7 +187,7 @@ func TestAppImportExport(t *testing.T) {
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
-		newDB.Close()
+		require.NoError(t, newDB.Close())
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
@@ -195,6 +196,17 @@ func TestAppImportExport(t *testing.T) {
 	var genesisState sdksim.GenesisState
 	err = json.Unmarshal(exported.AppState, &genesisState)
 	require.NoError(t, err)
+
+	defer func() {
+		if r := recover(); r != nil {
+			rstr := fmt.Sprintf("%v", r)
+			if !strings.Contains(rstr, "validator set is empty after InitGenesis") {
+				panic(r)
+			}
+			logger.Info("Skipping simulation as all validators have been unbonded")
+			logger.Info("err", rstr, "stacktrace", string(debug.Stack()))
+		}
+	}()
 
 	ctxA := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
@@ -218,7 +230,7 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[govtypes.StoreKey], newApp.keys[govtypes.StoreKey], [][]byte{}},
 		{app.keys[evidencetypes.StoreKey], newApp.keys[evidencetypes.StoreKey], [][]byte{}},
 		{app.keys[capabilitytypes.StoreKey], newApp.keys[capabilitytypes.StoreKey], [][]byte{}},
-		{app.keys[authzkeeper.StoreKey], newApp.keys[authzkeeper.StoreKey], [][]byte{}},
+		{app.keys[authzkeeper.StoreKey], newApp.keys[authzkeeper.StoreKey], [][]byte{authzkeeper.GrantKey, authzkeeper.GrantQueuePrefix}},
 
 		{app.keys[markertypes.StoreKey], newApp.keys[markertypes.StoreKey], [][]byte{}},
 		{app.keys[msgfeetype.StoreKey], newApp.keys[msgfeetype.StoreKey], [][]byte{}},
