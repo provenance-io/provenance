@@ -48,7 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump Cosmos-SDK to Bump cosmos to v0.46.0-pio-1-rc1 (from v0.45.5-pio-1). [#995](https://github.com/provenance-io/provenance/issues/995)
   See https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0 for more info.
 * Bump IBC to v5.0.0-beta1. [#995](https://github.com/provenance-io/provenance/issues/995)
-* Refactor the `x/marker` module's `Holding` query to utilize the `x/bank` module's new `DenomHolders` query. [#995](https://github.com/provenance-io/provenance/issues/995)
+* Refactor the `x/marker` module's `Holding` query to utilize the `x/bank` module's new `DenomOwners` query. [#995](https://github.com/provenance-io/provenance/issues/995)
   The only real difference between those two queries is that the `Holding` query accepts either a denom or marker address.
 
 ### Features
