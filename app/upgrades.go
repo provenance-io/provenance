@@ -46,7 +46,7 @@ var handlers = map[string]appUpgrade{
 		Added: []string{icacontrollertypes.StoreKey, icahosttypes.StoreKey},
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			UpgradeICA(ctx, app, &versionMap)
+			upgradeICA(ctx, app, &versionMap)
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
 	}, // upgrade for 1.12.0-rc1
@@ -117,8 +117,8 @@ func isEmptyUpgrade(upgrades storetypes.StoreUpgrades) bool {
 	return len(upgrades.Renamed) == 0 && len(upgrades.Deleted) == 0 && len(upgrades.Added) == 0
 }
 
-func UpgradeICA(ctx sdk.Context, app *App, versionMap *module.VersionMap) {
-	app.Logger().Info("Upgrading to IBCv3")
+func upggradeICA(ctx sdk.Context, app *App, versionMap *module.VersionMap) {
+	app.Logger().Info("Initializing ICA")
 
 	// Set the consensus version so InitGenesis is not ran
 	// We are configuring the module here
@@ -144,5 +144,5 @@ func UpgradeICA(ctx sdk.Context, app *App, versionMap *module.VersionMap) {
 		panic("mm.Modules[icatypes.ModuleName] is not of type ica.AppModule")
 	}
 	icamodule.InitModule(ctx, controllerParams, hostParams)
-	app.Logger().Info("Finished upgrading to IBCv3")
+	app.Logger().Info("Finished initializing ICA")
 }
