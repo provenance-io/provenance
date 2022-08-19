@@ -167,3 +167,5 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
 // TODO: Required for v1.12.x: Remove this and update the require line above to have the new version once it's out.
 replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.28.0-pio-1-rc1
+
+replace github.com/cosmos/ibc-go/v5 => github.com/provenance-io/ibc-go/v5 v5.0.3-beta1-provenance

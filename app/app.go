@@ -457,10 +457,13 @@ func New(
 		app.AccountKeeper, app.BankKeeper, scopedTransferKeeper,
 	)
 
+	icaMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
+		return pioMsgFeesRouter.Handler(msg)
+	})
 	app.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec, keys[icahosttypes.StoreKey], app.GetSubspace(icahosttypes.SubModuleName),
 		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
-		app.AccountKeeper, scopedICAHostKeeper, app.MsgServiceRouter().(*baseapp.MsgServiceRouter),
+		app.AccountKeeper, scopedICAHostKeeper, icaMessageRouter,
 	)
 	icaModule := ica.NewAppModule(nil, &app.ICAHostKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
@@ -718,6 +721,7 @@ func New(
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 
+		icatypes.ModuleName,
 		wasm.ModuleName,
 
 		attributetypes.ModuleName,
