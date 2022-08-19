@@ -300,31 +300,31 @@ func SimulateMsgInstantiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.
 
 		// get the contract address for use when executing the contract
 		if len(sdkResponse.MsgResponses) == 0 {
-			app.Logger().Info("instantiate contract response", "Log", sdkResponse.Log, "Events", sdkResponse.Events)
+			app.Logger().Info("instantiate contract", "Log", sdkResponse.Log, "Events", sdkResponse.Events)
 			panic("no msg responses from instantiate contract")
 		}
-		var instRespBz []byte
+		var pInstResp *types.MsgInstantiateContractResponse
 		for _, resp := range sdkResponse.MsgResponses {
 			if resp.TypeUrl == "/cosmwasm.wasm.v1.MsgInstantiateContractResponse" {
-				if len(instRespBz) != 0 {
-					app.Logger().Info("multiple MsgInstantiateContractResponse entries found", "MsgResponses", sdkResponse.MsgResponses)
+				if pInstResp != nil {
+					app.Logger().Info("instantiate contract", "MsgResponses", sdkResponse.MsgResponses)
 					panic("multiple instantiate contract responses found")
 				}
-				instRespBz = resp.Value
+				instResp, ok := resp.GetCachedValue().(*types.MsgInstantiateContractResponse)
+				if !ok {
+					app.Logger().Error("instantiate contract", "MsgInstantiateContractResponse", resp)
+					panic("could not cast response to MsgInstantiateContractResponse")
+				}
+				pInstResp = instResp
 			}
 		}
-		if len(instRespBz) == 0 {
-			app.Logger().Info("no MsgInstantiateContractResponse found", "MsgResponses", sdkResponse.MsgResponses)
+
+		if pInstResp == nil {
+			app.Logger().Error("instantiate contract", "MsgResponses", sdkResponse.MsgResponses)
 			panic("no instantiate contract response found")
 		}
 
-		var pInstResp types.MsgInstantiateContractResponse
-		err4 := pInstResp.Unmarshal(instRespBz)
-
-		var contractAddr string
-		if err4 == nil {
-			contractAddr = pInstResp.Address
-		}
+		contractAddr := pInstResp.Address
 
 		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, node, consumer, contractAddr), BlockHeight: int(ctx.BlockHeight()) + 1})
 

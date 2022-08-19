@@ -23,11 +23,11 @@ BINDIR ?= $(GOPATH)/bin
 SIMAPP = ./app
 DB_BACKEND ?= goleveldb
 ifeq ($(DB_BACKEND),cleveldb)
-  tags = cleveldb
+  db_tag = cleveldb
 else ifeq ($(DB_BACKEND),rocksdb)
-  tags = rocksdb
+  db_tag = rocksdb
 else ifeq ($(DB_BACKEND),badgerdb)
-  tags = badgerdb
+  db_tag = badgerdb
 else ifneq ($(DB_BACKEND),goleveldb)
   $(error unknown DB_BACKEND value [$(DB_BACKEND)]. Must be one of goleveldb, cleveldb, rocksdb, badgerdb)
 endif
@@ -37,8 +37,10 @@ endif
 # With two tags, e.g. -tags 'foo bar', you'd end up with three args, "-tags", "'foo", and "bar'", and it'll get confused.
 # But we CAN provide a single tag in the -SimAppPkg value in order to trick it into including it in the `go test` commands.
 # We need to provide the -DBBackend flag to the runsim tests too, and use the same hack.
-SIM_APP_PKG := $(SIMAPP) -DBBackend=$(DB_BACKEND)
-SIMAPP += -DBBackend=$(DB_BACKEND) -tags '$(tags)'
+SIMAPP += -DBBackend=$(DB_BACKEND)
+ifneq ($(db_tag),)
+  SIMAPP += -tags $(db_tag)
+endif
 
 SIM_GENESIS ?= ${HOME}/.provenanced/config/genesis.json
 
@@ -48,23 +50,23 @@ SIM_GENESIS ?= ${HOME}/.provenanced/config/genesis.json
 
 test-sim-import-export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
-	$(BINDIR)/runsim -Jobs=4 -SimAppPkg='$(SIM_APP_PKG)' -ExitOnFail 30 3 'TestAppImportExport'
+	$(BINDIR)/runsim -Jobs=4 -SimAppPkg='$(SIMAPP)' -ExitOnFail 30 3 'TestAppImportExport'
 
 test-sim-after-import: runsim
 	@echo "Running application simulation-after-import. This may take several minutes..."
-	$(BINDIR)/runsim -Jobs=4 -SimAppPkg='$(SIM_APP_PKG)' -ExitOnFail 30 3 'TestAppSimulationAfterImport'
+	$(BINDIR)/runsim -Jobs=4 -SimAppPkg='$(SIMAPP)' -ExitOnFail 30 3 'TestAppSimulationAfterImport'
 
 test-sim-custom-genesis-multi-seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
-	$(BINDIR)/runsim -Genesis='$(SIM_GENESIS)' -SimAppPkg='$(SIM_APP_PKG)' -ExitOnFail 400 5 'TestFullAppSimulation'
+	$(BINDIR)/runsim -Genesis='$(SIM_GENESIS)' -SimAppPkg='$(SIMAPP)' -ExitOnFail 400 5 'TestFullAppSimulation'
 
 test-sim-multi-seed-long: runsim
 	@echo "Running long multi-seed application simulation. This may take awhile!"
-	$(BINDIR)/runsim -Jobs=4 -SimAppPkg='$(SIM_APP_PKG)' -ExitOnFail 500 50 'TestFullAppSimulation'
+	$(BINDIR)/runsim -Jobs=4 -SimAppPkg='$(SIMAPP)' -ExitOnFail 500 50 'TestFullAppSimulation'
 
 test-sim-multi-seed-short: runsim
 	@echo "Running short multi-seed application simulation. This may take awhile!"
-	$(BINDIR)/runsim -Jobs=4 -SimAppPkg='$(SIM_APP_PKG)' -ExitOnFail 50 10 'TestFullAppSimulation'
+	$(BINDIR)/runsim -Jobs=4 -SimAppPkg='$(SIMAPP)' -ExitOnFail 50 10 'TestFullAppSimulation'
 
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."
