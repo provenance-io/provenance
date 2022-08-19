@@ -65,6 +65,9 @@ messages		- comma separated list of messages to add to the expiration (optional)
 				return sdkerrors.Wrap(sdkerrors.ErrInvalidType, err.Error())
 			}
 
+			moduleAssetId := strings.TrimSpace(args[0])
+			owner := strings.TrimSpace(args[1])
+
 			blockHeight, err := parseBlockHeight(args[2])
 			if err != nil {
 				return sdkerrors.Wrap(types.ErrInvalidBlockHeight, err.Error())
@@ -75,19 +78,19 @@ messages		- comma separated list of messages to add to the expiration (optional)
 			}
 			//messages := parseMessages(args[4])
 
-			signers, err := parseSigners(cmd, &clientCtx)
-			if err != nil {
-				return sdkerrors.Wrap(types.ErrInvalidSigners, err.Error())
-			}
-
 			expiration := types.Expiration{
-				ModuleAssetId: strings.TrimSpace(args[0]),
-				Owner:         strings.TrimSpace(args[1]),
+				ModuleAssetId: moduleAssetId,
+				Owner:         owner,
 				BlockHeight:   blockHeight,
 				Deposit:       deposit,
 				// TODO	How do we add message of type 'Any'?
 				//      Should we only support string messages?
 				//Messages:      messages,
+			}
+
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return sdkerrors.Wrap(types.ErrInvalidSigners, err.Error())
 			}
 
 			msg := types.NewMsgAddExpirationRequest(expiration, signers)
@@ -132,6 +135,9 @@ messages		- comma separated list of messages to add to the expiration (optional)
 				return sdkerrors.Wrap(sdkerrors.ErrInvalidType, err.Error())
 			}
 
+			moduleAssetId := strings.TrimSpace(args[0])
+			owner := strings.TrimSpace(args[1])
+
 			blockHeight, err := parseBlockHeight(args[2])
 			if err != nil {
 				return sdkerrors.Wrap(types.ErrInvalidBlockHeight, err.Error())
@@ -142,17 +148,17 @@ messages		- comma separated list of messages to add to the expiration (optional)
 			}
 			//messages := parseMessages(args[4])
 
-			signers, err := parseSigners(cmd, &clientCtx)
-			if err != nil {
-				return sdkerrors.Wrap(types.ErrInvalidSigners, err.Error())
-			}
-
 			expiration := types.Expiration{
-				ModuleAssetId: strings.TrimSpace(args[0]),
-				Owner:         strings.TrimSpace(args[1]),
+				ModuleAssetId: moduleAssetId,
+				Owner:         owner,
 				BlockHeight:   blockHeight,
 				Deposit:       deposit,
 				//Messages:      messages,
+			}
+
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return sdkerrors.Wrap(types.ErrInvalidSigners, err.Error())
 			}
 
 			msg := types.NewMsgExtendExpirationRequest(expiration, signers)
