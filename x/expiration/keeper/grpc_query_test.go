@@ -104,7 +104,7 @@ func (s *GrpcQueryTestSuite) TestQueryExpiration() {
 }
 
 func (s *GrpcQueryTestSuite) TestQueryAllExpirations() {
-	expectedAll := 3
+	expectedAll := 2
 
 	s.T().Run("add expirations for querying", func(t *testing.T) {
 		expiration1 := *types.NewExpiration(s.moduleAssetId, s.user1, s.blockHeight, s.deposit, nil)
