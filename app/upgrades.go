@@ -46,7 +46,7 @@ var handlers = map[string]appUpgrade{
 		Added: []string{icacontrollertypes.StoreKey, icahosttypes.StoreKey},
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			upgradeICA(ctx, app, &versionMap)
+			UpgradeICA(ctx, app, &versionMap)
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
 	}, // upgrade for 1.12.0-rc1
@@ -117,7 +117,7 @@ func isEmptyUpgrade(upgrades storetypes.StoreUpgrades) bool {
 	return len(upgrades.Renamed) == 0 && len(upgrades.Deleted) == 0 && len(upgrades.Added) == 0
 }
 
-func upgradeICA(ctx sdk.Context, app *App, versionMap *module.VersionMap) {
+func UpgradeICA(ctx sdk.Context, app *App, versionMap *module.VersionMap) {
 	app.Logger().Info("Initializing ICA")
 
 	// Set the consensus version so InitGenesis is not ran
