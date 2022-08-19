@@ -799,7 +799,7 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			expectErr:    true,
-			expectErrMsg: "empty module asset id: failed basic validation",
+			expectErrMsg: "empty module asset id",
 			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},

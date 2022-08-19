@@ -62,7 +62,7 @@ messages		- comma separated list of messages to add to the expiration (optional)
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidType, err.Error())
+				return err
 			}
 
 			moduleAssetId := strings.TrimSpace(args[0])
@@ -70,11 +70,11 @@ messages		- comma separated list of messages to add to the expiration (optional)
 
 			blockHeight, err := parseBlockHeight(args[2])
 			if err != nil {
-				return sdkerrors.Wrap(types.ErrInvalidBlockHeight, err.Error())
+				return err
 			}
 			deposit, err := sdk.ParseCoinNormalized(args[3])
 			if err != nil {
-				return sdkerrors.Wrap(types.ErrInvalidDeposit, err.Error())
+				return err
 			}
 			//messages := parseMessages(args[4])
 
@@ -90,13 +90,13 @@ messages		- comma separated list of messages to add to the expiration (optional)
 
 			signers, err := parseSigners(cmd, &clientCtx)
 			if err != nil {
-				return sdkerrors.Wrap(types.ErrInvalidSigners, err.Error())
+				return err
 			}
 
 			msg := types.NewMsgAddExpirationRequest(expiration, signers)
 			err = msg.ValidateBasic()
 			if err != nil {
-				return sdkerrors.Wrap(types.ErrValidateBasic, err.Error())
+				return err
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -188,19 +188,19 @@ func DeleteExpirationCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidType, err.Error())
+				return err
 			}
 
 			signers, err := parseSigners(cmd, &clientCtx)
 			if err != nil {
-				return sdkerrors.Wrap(types.ErrInvalidSigners, err.Error())
+				return err
 			}
 
 			moduleAssetId := args[0]
 			msg := types.NewMsgDeleteExpirationRequest(moduleAssetId, signers)
 			err = msg.ValidateBasic()
 			if err != nil {
-				return sdkerrors.Wrap(types.ErrValidateBasic, err.Error())
+				return err
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
