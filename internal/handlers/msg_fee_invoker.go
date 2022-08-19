@@ -98,27 +98,21 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins
 				return nil, nil, err
 			}
 		}
-		if feeGasMeter.FeeConsumed().IsAllPositive() {
-			eventsToReturn = sdk.Events{
-				sdk.NewEvent(sdk.EventTypeTx,
-					sdk.NewAttribute(antewrapper.AttributeKeyAdditionalFee, feeGasMeter.FeeConsumed().String()),
-				),
-				sdk.NewEvent(sdk.EventTypeTx,
-					sdk.NewAttribute(antewrapper.AttributeKeyBaseFee, feeGasMeter.BaseFeeConsumed().Add(chargedFees...).Sub(feeGasMeter.FeeConsumed()).String()),
-				)}
+
+		hasAdditionalFees := feeGasMeter.FeeConsumed().IsAllPositive()
+		if hasAdditionalFees {
+			eventsToReturn = append(eventsToReturn, sdk.NewEvent(sdk.EventTypeTx,
+				sdk.NewAttribute(antewrapper.AttributeKeyAdditionalFee, feeGasMeter.FeeConsumed().String())))
+		}
+		eventsToReturn = append(eventsToReturn, sdk.NewEvent(sdk.EventTypeTx, sdk.NewAttribute(antewrapper.AttributeKeyBaseFee, feeGasMeter.BaseFeeConsumed().Add(chargedFees...).Sub(feeGasMeter.FeeConsumed()).String())))
+
+		if hasAdditionalFees {
 			msgFeesSummaryEvent, err := sdk.TypedEventToEvent(feeGasMeter.EventFeeSummary())
 			if err != nil {
 				return nil, nil, err
 			}
 			if len(msgFeesSummaryEvent.Attributes) > 0 {
 				eventsToReturn = append(eventsToReturn, msgFeesSummaryEvent)
-			}
-		}
-		for _, event := range ctx.EventManager().Events() {
-			for _, attr := range event.Attributes {
-				if string(attr.Key) == "fee" {
-					attr.Value = []byte(feeTx.GetFee().String())
-				}
 			}
 		}
 	}

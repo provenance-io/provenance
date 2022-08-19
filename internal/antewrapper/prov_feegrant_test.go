@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -24,6 +25,10 @@ import (
 
 	pioante "github.com/provenance-io/provenance/internal/antewrapper"
 )
+
+func TestProvFeeGrantTestSuite(t *testing.T) {
+	suite.Run(t, new(AnteTestSuite))
+}
 
 func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	suite.SetupTest(false)
@@ -54,12 +59,12 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	suite.Require().NoError(err)
 
 	// Set addr2 with more funds
-	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999))})
+	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999999))})
 	suite.Require().NoError(err)
 
 	// grant fee allowance from `addr2` to `addr3` (plenty to pay)
 	err = app.FeeGrantKeeper.GrantAllowance(ctx, addr2, addr3, &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", helpers.DefaultGenTxGas*5)),
 	})
 	suite.Require().NoError(err)
 
@@ -78,28 +83,23 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 		valid      bool
 	}{
 		{
+			name:      "paying from account with insufficient funds and no grants",
 			signerKey: priv1,
 			signer:    addr1,
-			fee:       50,
+			fee:       helpers.DefaultGenTxGas,
 			valid:     false,
 		}, {
 			name:      "paying with good funds",
 			signerKey: priv2,
 			signer:    addr2,
-			fee:       50,
+			fee:       helpers.DefaultGenTxGas,
 			valid:     true,
 		}, {
 			name:      "paying with no account",
 			signerKey: priv3,
 			signer:    addr3,
-			fee:       1,
+			fee:       helpers.DefaultGenTxGas,
 			valid:     false,
-		}, {
-			name:      "no fee with real account",
-			signerKey: priv1,
-			signer:    addr1,
-			fee:       0,
-			valid:     true,
 		}, {
 			name:      "no fee with no account",
 			signerKey: priv5,
@@ -111,28 +111,28 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr2,
-			fee:        50,
+			fee:        helpers.DefaultGenTxGas,
 			valid:      true,
 		}, {
 			name:       "no fee grant",
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr1,
-			fee:        2,
+			fee:        helpers.DefaultGenTxGas,
 			valid:      false,
 		}, {
 			name:       "allowance smaller than requested fee",
 			signerKey:  priv4,
 			signer:     addr4,
 			feeAccount: addr2,
-			fee:        50,
+			fee:        helpers.DefaultGenTxGas,
 			valid:      false,
 		}, {
 			name:       "granter cannot cover allowed fee grant",
 			signerKey:  priv4,
 			signer:     addr4,
 			feeAccount: addr1,
-			fee:        50,
+			fee:        helpers.DefaultGenTxGas,
 			valid:      false,
 		},
 	}
@@ -153,16 +153,16 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			suite.Require().NoError(err)
 			_, err = feeAnteHandler(ctx, tx, false) // tests only feegrant ante
 			if tc.valid {
-				suite.Require().NoError(err)
+				suite.Assert().NoError(err, tc.name)
 			} else {
-				suite.Require().Error(err)
+				suite.Assert().Error(err, tc.name)
 			}
 
 			_, err = anteHandlerStack(ctx, tx, false) // tests while stack
 			if tc.valid {
-				suite.Require().NoError(err)
+				suite.Assert().NoError(err, tc.name)
 			} else {
-				suite.Require().Error(err)
+				suite.Assert().Error(err, tc.name)
 			}
 		})
 	}
