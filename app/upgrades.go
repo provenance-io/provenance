@@ -117,7 +117,7 @@ func isEmptyUpgrade(upgrades storetypes.StoreUpgrades) bool {
 	return len(upgrades.Renamed) == 0 && len(upgrades.Deleted) == 0 && len(upgrades.Added) == 0
 }
 
-func upggradeICA(ctx sdk.Context, app *App, versionMap *module.VersionMap) {
+func upgradeICA(ctx sdk.Context, app *App, versionMap *module.VersionMap) {
 	app.Logger().Info("Initializing ICA")
 
 	// Set the consensus version so InitGenesis is not ran
