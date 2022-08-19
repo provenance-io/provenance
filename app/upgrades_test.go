@@ -22,10 +22,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TestUpgradeICA() {
+	s.SetupSuite()
 	versionMap := s.app.UpgradeKeeper.GetModuleVersionMap(s.ctx)
 	UpgradeICA(s.ctx, s.app, &versionMap)
 	s.Assert().Equal(s.app.mm.Modules[icatypes.ModuleName].ConsensusVersion(), versionMap[icatypes.ModuleName], "consensus version should be set to skip init genesis")
 	s.Assert().Equal([]string{"*"}, s.app.ICAHostKeeper.GetAllowMessages(s.ctx), "ica host should accept all messages")
 	s.Assert().True(s.app.ICAHostKeeper.IsHostEnabled(s.ctx), "ica host should be enabled")
-	s.Assert().Fail("it failed")
 }
