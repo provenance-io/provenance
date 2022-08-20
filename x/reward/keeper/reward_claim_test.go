@@ -241,7 +241,7 @@ func (suite *KeeperTestSuite) TestClaimAllRewards() {
 	details, reward, err := suite.app.RewardKeeper.ClaimAllRewards(suite.ctx, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
 	suite.Assert().NoError(err, "should throw no error")
 	suite.Assert().Equal(3, len(details), "should have rewards from every program")
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 900), reward, "should total up the rewards from the periods")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 900), reward[0], "should total up the rewards from the periods")
 
 	for i := 0; i < len(details); i++ {
 		suite.Assert().Equal(3, len(details[i].ClaimedRewardPeriodDetails), "should have claims from every period")
@@ -308,7 +308,7 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsExpired() {
 	details, reward, err := suite.app.RewardKeeper.ClaimAllRewards(suite.ctx, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
 	suite.Assert().NoError(err, "should throw no error")
 	suite.Assert().Equal(0, len(details), "should have rewards from every program")
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward, "should total up the rewards from the periods")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward[0], "should total up the rewards from the periods")
 }
 
 func (suite *KeeperTestSuite) TestClaimAllRewardsNoPrograms() {
@@ -317,5 +317,5 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsNoPrograms() {
 	details, reward, err := suite.app.RewardKeeper.ClaimAllRewards(suite.ctx, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
 	suite.Assert().NoError(err, "should throw no error")
 	suite.Assert().Equal(0, len(details), "should have rewards from every program")
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward, "should total up the rewards from the periods")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward[0], "should total up the rewards from the periods")
 }

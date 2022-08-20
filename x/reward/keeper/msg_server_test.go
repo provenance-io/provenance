@@ -305,7 +305,7 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsTransaction() {
 	var response types.MsgClaimAllRewardsResponse
 	response.Unmarshal(result.Data)
 	details := response.ClaimDetails
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 900), response.TotalRewardClaim, "should total up the rewards from the periods")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 900), response.TotalRewardClaim[0], "should total up the rewards from the periods")
 	suite.Assert().Equal(3, len(details), "should have every reward program")
 	for i := 0; i < len(details); i++ {
 		suite.Assert().Equal(3, len(details[i].ClaimedRewardPeriodDetails), "should have claims from every period")
@@ -326,7 +326,7 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsNoProgramsTransaction() {
 	response.Unmarshal(result.Data)
 	details := response.ClaimDetails
 
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), response.TotalRewardClaim, "should have no nhash")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), response.TotalRewardClaim[0], "should have no nhash")
 	suite.Assert().Equal(0, len(details), "should have no reward program")
 }
 
@@ -456,7 +456,7 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsExpiredTransaction() {
 	response.Unmarshal(result.Data)
 	details := response.ClaimDetails
 
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), response.TotalRewardClaim, "should have no nhash")
+	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), response.TotalRewardClaim[0], "should have no nhash")
 	suite.Assert().Equal(0, len(details), "should have no reward program")
 }
 
