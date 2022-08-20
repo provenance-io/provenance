@@ -816,7 +816,6 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 
 	// get the accoutn balances of acct1
 	balance := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
-	println(balance.AmountOf("nhash").String())
 	// claim rewards for the address
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 7, Time: time.Now().UTC()}})
 	msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
@@ -843,6 +842,135 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	balanceLater := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
 	// make sure account balance has the tokens
 	require.Equal(t, sdk.NewInt(50_000_000_000), balanceLater.AmountOf(pioconfig.DefaultBondDenom).Sub(balance.AmountOf(pioconfig.DefaultBondDenom)))
+
+}
+
+func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAccountFundedDifferentDenom(t *testing.T) {
+	encCfg := simapp.MakeTestEncodingConfig()
+	priv, _, addr := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin("hotdog", 1000000_000_000_000))
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("hotdog", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("hotdog", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(1),
+		100,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+					},
+				},
+			},
+		},
+	)
+
+	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
+
+	// fund th =e deterministic rewards account, since genesis won't do that work
+	app := piosimapp.SetupWithGenesisRewardsProgram(uint64(2), rewardProgram, []authtypes.GenesisAccount{acct1}, nil, banktypes.Balance{Address: addr.String(), Coins: acct1Balance}, banktypes.Balance{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Coins: acct1Balance})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx.WithBlockTime(time.Now())
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+
+	// tx with a fee associated with msg type and account has funds
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	ctx.WithBlockTime(time.Now())
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	ctx.WithBlockTime(time.Now())
+	time.Sleep(150 * time.Millisecond)
+
+	//go through 5 blocks, but take a long time to cut blocks.
+	for height := int64(2); height < int64(7); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct1.SetSequence(seq))
+		tx1, err1 := SignTx(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1)
+		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx)
+		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+		// wait for claim period to end (claim period is 1s)
+		time.Sleep(1500 * time.Millisecond)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, true, len(claimPeriodDistributions) > 1, "claim period reward distributions should exist")
+	assert.Equal(t, int64(1), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
+	assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
+	assert.Equal(t, sdk.Coin{
+		Denom:  "hotdog",
+		Amount: sdk.NewInt(10_000_000_000),
+	}, claimPeriodDistributions[0].RewardsPool)
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	require.NoError(t, err)
+	assert.Equal(t, 1, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
+	assert.Equal(t, 1, int(accountState.SharesEarned), "account state incorrect")
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
+		Address:     acct1.Address,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, sdk.NewCoin("hotdog", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
+	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
+	assert.Equal(t, 5, len(byAddress.RewardAccountState), "claimable and un claimable sum rewards should be 5 for this address.")
+
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
+		Address:     acct1.Address,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, sdk.NewCoin("hotdog", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
+	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
+	assert.Equal(t, 4, len(byAddress.RewardAccountState), "claimable rewards should be 4 for this address.")
+
+	// get the accoutn balances of acct1
+	balance := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
+	// claim rewards for the address
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 7, Time: time.Now().UTC()}})
+	msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
+	require.NoError(t, acct1.SetSequence(seq))
+	txClaim, errClaim := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msgClaim)
+	require.NoError(t, errClaim)
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txClaim})
+	require.Equal(t, true, res.IsOK(), "res=%+v", res)
+	// unmarshal the TxMsgData
+	var protoResult sdk.TxMsgData
+	err3 := proto.Unmarshal(res.Data, &protoResult)
+	require.NoError(t, err3)
+	var claimResponse rewardtypes.MsgClaimAllRewardsResponse
+	err4 := proto.Unmarshal(protoResult.Data[0].Data, &claimResponse)
+	require.NoError(t, err4)
+	require.Equal(t, sdk.NewCoin("hotdog", sdk.NewInt(50_000_000_000)), claimResponse.TotalRewardClaim[0])
+	require.Equal(t, 1, len(claimResponse.ClaimDetails))
+	require.Equal(t, uint64(1), claimResponse.ClaimDetails[0].RewardProgramId)
+	require.Equal(t, sdk.NewCoin("hotdog", sdk.NewInt(50_000_000_000)), claimResponse.ClaimDetails[0].TotalRewardClaim)
+	require.Equal(t, 5, len(claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails))
+	require.Equal(t, sdk.NewCoin("hotdog", sdk.NewInt(10_000_000_000)), claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails[0].ClaimPeriodReward)
+	app.EndBlock(abci.RequestEndBlock{Height: 7})
+	app.Commit()
+	balanceLater := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
+	// make sure account balance has the tokens
+	require.Equal(t, sdk.NewInt(50_000_000_000), balanceLater.AmountOf("hotdog").Sub(balance.AmountOf("hotdog")))
 
 }
 

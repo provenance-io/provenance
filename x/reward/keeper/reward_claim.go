@@ -3,8 +3,6 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/provenance-io/provenance/internal/pioconfig"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -25,7 +23,7 @@ func (k Keeper) ClaimRewards(ctx sdk.Context, rewardProgramID uint64, addr strin
 	if err != nil {
 		return nil, sdk.Coin{}, err
 	}
-	sent, err := k.sendRewards(ctx, rewards, addr)
+	sent, err := k.sendRewards(ctx, rewards, addr, rewardProgram.GetTotalRewardPool().Denom)
 	if err != nil {
 		return nil, sdk.Coin{}, err
 	}
@@ -89,8 +87,9 @@ func (k Keeper) claimRewardForPeriod(ctx sdk.Context, rewardProgram types.Reward
 	return reward, true
 }
 
-func (k Keeper) sendRewards(ctx sdk.Context, rewards []*types.ClaimedRewardPeriodDetail, addr string) (sdk.Coin, error) {
-	amount := sdk.NewInt64Coin(pioconfig.DefaultBondDenom, 0)
+// sendRewards internal method called with ClaimedRewardPeriodDetail of a single reward program
+func (k Keeper) sendRewards(ctx sdk.Context, rewards []*types.ClaimedRewardPeriodDetail, addr string, rewardProgramDenom string) (sdk.Coin, error) {
+	amount := sdk.NewInt64Coin(rewardProgramDenom, 0)
 
 	if len(rewards) == 0 {
 		return amount, nil
@@ -129,9 +128,9 @@ func (k Keeper) RefundRewardClaims(ctx sdk.Context, rewardProgram types.RewardPr
 	return err
 }
 
-func (k Keeper) ClaimAllRewards(ctx sdk.Context, addr string) ([]*types.RewardProgramClaimDetail, sdk.Coin, error) {
+func (k Keeper) ClaimAllRewards(ctx sdk.Context, addr string) ([]*types.RewardProgramClaimDetail, sdk.Coins, error) {
 	var allProgramDetails []*types.RewardProgramClaimDetail
-	allRewards := sdk.NewInt64Coin("nhash", 0)
+	allRewards := sdk.Coins{}
 	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool, err error) {
 		// ignore expired reward programs from all claim( i.e do not error on them)
 		if rewardProgram.State != types.RewardProgram_STATE_EXPIRED {
@@ -157,7 +156,7 @@ func (k Keeper) ClaimAllRewards(ctx sdk.Context, addr string) ([]*types.RewardPr
 		return false, nil
 	})
 	if err != nil {
-		return nil, sdk.Coin{}, err
+		return nil, sdk.Coins{}, err
 	}
 
 	return allProgramDetails, allRewards, nil

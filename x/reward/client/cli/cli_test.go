@@ -71,7 +71,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		).Sort()})
 	}
 	genBalances = append(genBalances, banktypes.Balance{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Coins: sdk.NewCoins(
-		sdk.NewCoin("nhash", sdk.NewInt(100000000))).Sort()})
+		sdk.NewCoin("nhash", sdk.NewInt(100000000)), sdk.NewCoin("stake", sdk.NewInt(100000000))).Sort()})
 	var bankGenState banktypes.GenesisState
 	bankGenState.Params = banktypes.DefaultParams()
 	bankGenState.Balances = genBalances
@@ -256,7 +256,7 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 			false,
 			"",
 			0,
-			[]uint64{1, 2, 3, 4},
+			[]uint64{1, 2, 3, 4, 5},
 		},
 		{"query active reward programs",
 			[]string{
@@ -276,7 +276,7 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 			false,
 			"",
 			0,
-			[]uint64{3},
+			[]uint64{3, 5},
 		},
 		{"query completed reward programs",
 			[]string{
@@ -296,7 +296,7 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 			false,
 			"",
 			0,
-			[]uint64{1, 3},
+			[]uint64{1, 3, 5},
 		},
 		{"query by id reward programs",
 			[]string{

@@ -117,7 +117,7 @@ message MsgClaimAllRewardsRequest {
 message MsgClaimAllRewardsResponse {
   option (gogoproto.equal) = true;
   // total rewards claimed for all eligible claim periods in all programs.
-  cosmos.base.v1beta1.Coin total_reward_claim = 1 [(gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin total_reward_claim = 1 [(gogoproto.nullable) = false];
   // details about acquired rewards from a reward program.
   repeated RewardProgramClaimDetail claim_details = 2;
 }

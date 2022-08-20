@@ -914,11 +914,11 @@ func (m *ActionDelegate) GetMaximumDelegationAmount() *types.Coin {
 
 // ActionTransfer represents the transfer action and its required eligibility criteria.
 type ActionTransfer struct {
-	// Minimum number of successful delegates.
+	// Minimum number of successful transfers.
 	MinimumActions uint64 `protobuf:"varint,1,opt,name=minimum_actions,json=minimumActions,proto3" json:"minimum_actions,omitempty"`
-	// Maximum number of successful delegates.
+	// Maximum number of successful transfers.
 	MaximumActions uint64 `protobuf:"varint,2,opt,name=maximum_actions,json=maximumActions,proto3" json:"maximum_actions,omitempty"`
-	// Minimum delegation amount the account must have across all validators.
+	// Minimum delegation amount the account must have across all validators, for the transfer action to be counted.
 	MinimumDelegationAmount types.Coin `protobuf:"bytes,3,opt,name=minimum_delegation_amount,json=minimumDelegationAmount,proto3" json:"minimum_delegation_amount" yaml:"minimum_delegation_amount"`
 }
 
@@ -977,11 +977,11 @@ func (m *ActionTransfer) GetMinimumDelegationAmount() types.Coin {
 
 // ActionVote represents the voting action and its required eligibility criteria.
 type ActionVote struct {
-	// Minimum number of successful delegates.
+	// Minimum number of successful votes.
 	MinimumActions uint64 `protobuf:"varint,1,opt,name=minimum_actions,json=minimumActions,proto3" json:"minimum_actions,omitempty"`
-	// Maximum number of successful delegates.
+	// Maximum number of successful votes.
 	MaximumActions uint64 `protobuf:"varint,2,opt,name=maximum_actions,json=maximumActions,proto3" json:"maximum_actions,omitempty"`
-	// Minimum delegation amount the account must have across all validators.
+	// Minimum delegation amount the account must have across all validators, for the vote action to be counted.
 	MinimumDelegationAmount types.Coin `protobuf:"bytes,3,opt,name=minimum_delegation_amount,json=minimumDelegationAmount,proto3" json:"minimum_delegation_amount" yaml:"minimum_delegation_amount"`
 }
 

@@ -5955,9 +5955,9 @@ ActionTransfer represents the transfer action and its required eligibility crite
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `minimum_actions` | [uint64](#uint64) |  | Minimum number of successful delegates. |
-| `maximum_actions` | [uint64](#uint64) |  | Maximum number of successful delegates. |
-| `minimum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Minimum delegation amount the account must have across all validators. |
+| `minimum_actions` | [uint64](#uint64) |  | Minimum number of successful transfers. |
+| `maximum_actions` | [uint64](#uint64) |  | Maximum number of successful transfers. |
+| `minimum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Minimum delegation amount the account must have across all validators, for the transfer action to be counted. |
 
 
 
@@ -5972,9 +5972,9 @@ ActionVote represents the voting action and its required eligibility criteria.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `minimum_actions` | [uint64](#uint64) |  | Minimum number of successful delegates. |
-| `maximum_actions` | [uint64](#uint64) |  | Maximum number of successful delegates. |
-| `minimum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Minimum delegation amount the account must have across all validators. |
+| `minimum_actions` | [uint64](#uint64) |  | Minimum number of successful votes. |
+| `maximum_actions` | [uint64](#uint64) |  | Maximum number of successful votes. |
+| `minimum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Minimum delegation amount the account must have across all validators, for the vote action to be counted. |
 
 
 
@@ -6473,7 +6473,7 @@ MsgClaimRewardsResponse is the response type for claiming rewards from all rewar
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `total_reward_claim` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | total rewards claimed for all eligible claim periods in all programs. |
+| `total_reward_claim` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | total rewards claimed for all eligible claim periods in all programs. |
 | `claim_details` | [RewardProgramClaimDetail](#provenance.reward.v1.RewardProgramClaimDetail) | repeated | details about acquired rewards from a reward program. |
 
 
@@ -6611,7 +6611,7 @@ Msg
 | `CreateRewardProgram` | [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest) | [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse) | CreateRewardProgram is the RPC endpoint for creating a rewards program | POST|/provenance/reward/v1/reward_programs|
 | `EndRewardProgram` | [MsgEndRewardProgramRequest](#provenance.reward.v1.MsgEndRewardProgramRequest) | [MsgEndRewardProgramResponse](#provenance.reward.v1.MsgEndRewardProgramResponse) | EndRewardProgram is the RPC endpoint for ending a rewards program | PATCH|/provenance/reward/v1/reward_programs/{reward_program_id}|
 | `ClaimRewards` | [MsgClaimRewardsRequest](#provenance.reward.v1.MsgClaimRewardsRequest) | [MsgClaimRewardsResponse](#provenance.reward.v1.MsgClaimRewardsResponse) | ClaimRewards is the RPC endpoint for claiming rewards belonging to completed claim periods of a reward program | PATCH|/provenance/reward/v1/reward_claims/{reward_address}/reward_programs/{reward_program_id}|
-| `ClaimAllRewards` | [MsgClaimAllRewardsRequest](#provenance.reward.v1.MsgClaimAllRewardsRequest) | [MsgClaimAllRewardsResponse](#provenance.reward.v1.MsgClaimAllRewardsResponse) | ClaimRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program for the signer of the tx. | PATCH|/provenance/reward/v1/reward_claims/{reward_address}|
+| `ClaimAllRewards` | [MsgClaimAllRewardsRequest](#provenance.reward.v1.MsgClaimAllRewardsRequest) | [MsgClaimAllRewardsResponse](#provenance.reward.v1.MsgClaimAllRewardsResponse) | ClaimAllRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program for the signer of the tx. | PATCH|/provenance/reward/v1/reward_claims/{reward_address}|
 
  <!-- end services -->
 
