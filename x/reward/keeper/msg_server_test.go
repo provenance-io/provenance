@@ -326,7 +326,7 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsNoProgramsTransaction() {
 	response.Unmarshal(result.Data)
 	details := response.ClaimDetails
 
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), response.TotalRewardClaim[0], "should have no nhash")
+	suite.Assert().Equal(0, len(response.TotalRewardClaim), "should have no nhash")
 	suite.Assert().Equal(0, len(details), "should have no reward program")
 }
 
@@ -456,7 +456,7 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsExpiredTransaction() {
 	response.Unmarshal(result.Data)
 	details := response.ClaimDetails
 
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), response.TotalRewardClaim[0], "should have no nhash")
+	suite.Assert().Equal(0, len(response.TotalRewardClaim), "should have no nhash")
 	suite.Assert().Equal(0, len(details), "should have no reward program")
 }
 
