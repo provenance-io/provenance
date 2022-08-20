@@ -831,7 +831,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	var claimResponse rewardtypes.MsgClaimAllRewardsResponse
 	err4 := proto.Unmarshal(protoResult.Data[0].Data, &claimResponse)
 	require.NoError(t, err4)
-	require.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(50_000_000_000)), claimResponse.TotalRewardClaim)
+	require.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(50_000_000_000)), claimResponse.TotalRewardClaim[0])
 	require.Equal(t, 1, len(claimResponse.ClaimDetails))
 	require.Equal(t, uint64(1), claimResponse.ClaimDetails[0].RewardProgramId)
 	require.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(50_000_000_000)), claimResponse.ClaimDetails[0].TotalRewardClaim)
