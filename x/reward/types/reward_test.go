@@ -576,7 +576,7 @@ func (s *RewardTypesTestSuite) TestIsEnding() {
 		"description",
 		1,
 		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-		sdk.NewInt64Coin("nhash", 1),
+		sdk.NewInt64Coin("nhash", 10_000_000_000),
 		sdk.NewInt64Coin("nhash", 2),
 		now,
 		3600,
@@ -587,17 +587,70 @@ func (s *RewardTypesTestSuite) TestIsEnding() {
 	)
 
 	s.ctx = s.ctx.WithBlockTime(now)
-	s.Assert().False(program.IsEnding(s.ctx, sdk.NewInt64Coin("nhash", 100_000_000_001)))
+	//s.Assert().False(program.IsEnding(s.ctx, sdk.NewInt64Coin("nhash", 100_000_000_001)))
 
 	program.State = RewardProgram_STATE_STARTED
 	program.ProgramEndTimeMax = now.Add(100000)
 	s.Assert().False(program.IsEnding(s.ctx, sdk.NewInt64Coin("nhash", 100_000_000_000)))
 	s.Assert().False(program.IsEnding(s.ctx, sdk.NewInt64Coin("nhash", 100_000_000_001)))
-	s.Assert().True(program.IsEnding(s.ctx, sdk.NewInt64Coin("nhash", 10_000_000_000)))
+	// GetMinimumRolloverAmount is 10% of total rewards program i.e 1 hash
+	s.Assert().True(program.IsEnding(s.ctx, sdk.NewInt64Coin("nhash", 999_000_000)))
 
 	program.ProgramEndTimeMax = now.Add(-100000)
 	s.Assert().True(program.IsEnding(s.ctx, sdk.NewInt64Coin("nhash", 100_000_000_001)))
 
+}
+
+func (s *RewardTypesTestSuite) TestMinimumRolloverAmount() {
+	now := time.Now().UTC()
+	program := NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdk.NewInt64Coin("nhash", 10_000_000_000),
+		sdk.NewInt64Coin("nhash", 2),
+		now,
+		3600,
+		6,
+		1,
+		100,
+		[]QualifyingAction{},
+	)
+
+	s.Assert().Equal(sdk.NewInt64Coin("nhash", 1_66_666_666), program.MinimumRolloverAmount)
+
+	program = NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdk.NewInt64Coin("nhash", 11_000_000_000),
+		sdk.NewInt64Coin("nhash", 2),
+		now,
+		3600,
+		6,
+		1,
+		100,
+		[]QualifyingAction{},
+	)
+	s.Assert().Equal(sdk.NewInt64Coin("nhash", 1_83_333_333), program.MinimumRolloverAmount)
+
+	program = NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdk.NewInt64Coin("nhash", 20_000_000_000),
+		sdk.NewInt64Coin("nhash", 2),
+		now,
+		3600,
+		5,
+		1,
+		100,
+		[]QualifyingAction{},
+	)
+	s.Assert().Equal(sdk.NewInt64Coin("nhash", 4_00_000_000), program.MinimumRolloverAmount)
 }
 
 func (s *RewardTypesTestSuite) TestIsEndingClaimPeriod() {

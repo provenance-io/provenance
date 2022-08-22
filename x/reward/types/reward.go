@@ -121,6 +121,11 @@ func NewRewardProgram(
 ) RewardProgram {
 	expectedProgramEndTime := CalculateExpectedEndTime(programStartTime.UTC(), claimPeriodSeconds, claimPeriods).UTC()
 	programEndTimeMax := CalculateEndTimeMax(programStartTime.UTC(), claimPeriodSeconds, claimPeriods, maxRolloverClaimPeriods).UTC()
+	var minimumRolloverAmount sdk.Coin
+	if claimPeriods >= 1 {
+		minimumRolloverAmount = sdk.NewInt64Coin(totalRewardPool.Denom, Percent(10, totalRewardPool.Amount.Quo(sdk.NewInt(int64(claimPeriods))).Int64()))
+	}
+
 	return RewardProgram{
 		Title:                   title,
 		Description:             description,
@@ -139,7 +144,9 @@ func NewRewardProgram(
 		ExpirationOffset:        rewardClaimExpirationOffset,
 		State:                   RewardProgram_STATE_PENDING,
 		QualifyingActions:       qualifyingActions,
-		MinimumRolloverAmount:   sdk.NewInt64Coin(totalRewardPool.Denom, 100_000_000_000),
+		// Hard coded to 10% of distribution amount by claim period
+		// claim periods cannot be 0, if validate is run in RewardProgram object
+		MinimumRolloverAmount: minimumRolloverAmount,
 	}
 }
 
@@ -168,6 +175,11 @@ func (rp *RewardProgram) IsEnding(ctx sdk.Context, programBalance sdk.Coin) bool
 	isProgramEnding := !rp.GetProgramEndTimeMax().IsZero() && (blockTime.After(rp.ProgramEndTimeMax) || blockTime.Equal(rp.ProgramEndTimeMax))
 	canRollover := programBalance.IsGTE(rp.GetMinimumRolloverAmount())
 	return rp.State == RewardProgram_STATE_STARTED && (isProgramEnding || !canRollover)
+}
+
+// Percent calculate percentage but take off any decimal points
+func Percent(percent int64, all int64) int64 {
+	return (all * percent) / 100
 }
 
 func (rp *RewardProgram) Validate() error {
