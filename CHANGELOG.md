@@ -50,6 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump IBC to v5.0.0-beta1. [#995](https://github.com/provenance-io/provenance/issues/995)
 * Refactor the `x/marker` module's `Holding` query to utilize the `x/bank` module's new `DenomOwners` query. [#995](https://github.com/provenance-io/provenance/issues/995)
   The only real difference between those two queries is that the `Holding` query accepts either a denom or marker address.
+* Update the third-party protos and swagger files after the cosmos v0.46 bump. [#1017](https://github.com/provenance-io/provenance/issues/1017)
 
 ### Features
 
