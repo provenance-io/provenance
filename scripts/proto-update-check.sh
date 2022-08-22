@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -ex
 
 #
 # Check go.mod for any version updates of third-party proto releated libraries.
@@ -9,14 +8,46 @@ set -ex
 # The check of go.mod can be skipped by either providing the --force flag when executing this script,
 # or by setting the FORCE env var to something (other than an empty string).
 #
-# Exit codes:
-#   0 - Everything is good, no updates needed.
-#   anything else - an update is needed.
+
+print_usage () {
+    cat << EOF
+Usage: scripts/proto-update-check.sh [--force] [branch]
+
+[--force] - Download and compare the protos without checking for version changes.
+            A non-empty FORCE environment variable is the same as providing the --force flag.
+[branch]  - Optional branch to compare against for version changes. Default is '..origin/main'.
+            This can also be provided in the BRANCH environment variable.
+            This is ignored if forcing a check.
+
+If this exits with code 0, all is good.
+
+EOF
+
+    return 0
+}
 
 # single brackets because the github runners don't have the enhanced (double-bracket) version.
-if [ "$1" == '--force' ]; then
-    FORCE='1'
-fi
+while [ "$#" -gt '0' ]; do
+    case "$1" in
+        --help)
+            print_usage
+            exit 2
+            ;;
+        --force)
+            FORCE='1'
+            ;;
+        *)
+            if [ -n "$branch" ]; then
+                printf 'Unknown argument: [%s]\n' "$1" >&2
+                exit 2
+            fi
+            branch="$1"
+            ;;
+    esac
+done
+branch="${branch:-${BRANCH:-..origin/main}}"
+
+set -ex
 
 repo_root="$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )"
 update_deps="$repo_root/scripts/proto-update-deps.sh"
@@ -43,7 +74,7 @@ if [ -z "$FORCE" ]; then
         # * '{lib} {version} => {rw lib} {rw version}' becomes '{lib}|{rw lib}' (with periods escaped).
         lib_regexp="$( go list -m "$lib" | sed 's: [^ ]* => :|:;  s: [^ ]*$::;  s:\.:\\.:g;' )"
         if [ -n "$libs_regexp" ]; then
-          libs_regexp="$libs_regexp|"
+            libs_regexp="$libs_regexp|"
         fi
         libs_regexp="$libs_regexp$lib_regexp"
     done
@@ -53,7 +84,7 @@ if [ -z "$FORCE" ]; then
     # And look for the libraries from earlier.
     # If grep finds anything it exits with a 0 so the || exit 0 isn't run.
     # If grep does not find anything, it'll exit 1 (or more) and the || exit 0 will run; there's no changes of interest, so nothing to do.
-    git diff -U0 ..origin/main -- go.mod \
+    git diff -U0 "$branch" -- go.mod \
         | grep -v '^@' \
         | sed 's://.*$::' \
         | grep -E "$libs_regexp" \
@@ -84,11 +115,11 @@ cat << EOF
 Differences were identified in protobuf files between what's in /third_party, and freshly downloaded versions.
 
 Often this can be fixed by running:
-  make proto-update-deps
+    make proto-update-deps
 and committing anything updated.
 
 This check can be run locally using:
-  make proto-update-check
+    make proto-update-check
 
 EOF
 
