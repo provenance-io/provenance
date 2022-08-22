@@ -42,6 +42,8 @@ jobs:
         if: always()
         run: |
           if [ -n "$GITHUB_BASE_REF" ]; then
-            export BRANCH="..origin/$GITHUB_BASE_REF"
+            BRANCH="..origin/$GITHUB_BASE_REF"
+            printf 'BRANCH: [%s]\n' "$BRANCH"
+            export BRANCH
           fi
           make proto-update-check

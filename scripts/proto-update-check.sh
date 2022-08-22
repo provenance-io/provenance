@@ -45,10 +45,10 @@ while [ "$#" -gt '0' ]; do
             ;;
     esac
 done
-branch="${branch:-${BRANCH:-..origin/main}}"
 
 set -ex
 
+branch="${branch:-${BRANCH:-..origin/main}}"
 repo_root="$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )"
 update_deps="$repo_root/scripts/proto-update-deps.sh"
 
