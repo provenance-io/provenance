@@ -73,7 +73,7 @@ Allows a participant to claim all their rewards for all past claim periods on al
 +++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/tx.proto#L89-L91
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/tx.proto#L94-L99
++++ https://github.com/provenance-io/provenance/blob/595a46738008979497cf1898eaf99279f6495f2c/proto/provenance/reward/v1/tx.proto#L104-L109
 
 The message will fail under the following conditions:
 * The Reward Address does not exist
