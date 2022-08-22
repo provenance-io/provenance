@@ -30,8 +30,8 @@ service Msg {
         "/provenance/reward/v1/reward_claims/{reward_address}/reward_programs/{reward_program_id}";
   }
 
-  // ClaimAllRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program for the
-  // signer of the tx.
+  // ClaimAllRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program for
+  // the signer of the tx.
   rpc ClaimAllRewards(MsgClaimAllRewardsRequest) returns (MsgClaimAllRewardsResponse) {
     option (google.api.http).patch = "/provenance/reward/v1/reward_claims/{reward_address}";
   }

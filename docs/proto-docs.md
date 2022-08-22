@@ -394,7 +394,6 @@
     - [ActionTransfer](#provenance.reward.v1.ActionTransfer)
     - [ActionVote](#provenance.reward.v1.ActionVote)
     - [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution)
-    - [EventSetRewardProgram](#provenance.reward.v1.EventSetRewardProgram)
     - [QualifyingAction](#provenance.reward.v1.QualifyingAction)
     - [QualifyingActions](#provenance.reward.v1.QualifyingActions)
     - [RewardAccountState](#provenance.reward.v1.RewardAccountState)
@@ -5995,35 +5994,6 @@ ClaimPeriodRewardDistribution, this is updated at the end of every claim period.
 | `rewards_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The final allocated rewards for this claim period. |
 | `total_shares` | [int64](#int64) |  | The total number of granted shares for this claim period. |
 | `claim_period_ended` | [bool](#bool) |  | A flag representing if the claim period for this reward has ended. |
-
-
-
-
-
-
-<a name="provenance.reward.v1.EventSetRewardProgram"></a>
-
-### EventSetRewardProgram
-EventSetRewardProgram event emitted when a reward program is is updated
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `id` | [string](#string) |  | An integer to uniquely identify the reward program. |
-| `title` | [string](#string) |  | Name to help identify the Reward Program. |
-| `description` | [string](#string) |  | Short summary describing the Reward Program. |
-| `distribute_from_address` | [string](#string) |  | Community pool for now (who provides the money). |
-| `total_reward_pool` | [string](#string) |  | The total amount of funding given to the RewardProgram. |
-| `max_reward_by_address` | [string](#string) |  | Maximum reward per claim per address. |
-| `minimum_rollover_amount` | [string](#string) |  | Minimum amount of coins for a program to rollover. |
-| `claim_period_seconds` | [uint64](#uint64) |  | Number of seconds that a claim period lasts. |
-| `program_start_time` | [string](#string) |  | Time that a RewardProgram should start and switch to STARTED state. |
-| `expected_program_end_time` | [string](#string) |  | Time that a RewardProgram MUST end. |
-| `claim_period_end_time` | [string](#string) |  | Used internally to calculate and track the current claim period's ending time. |
-| `claim_periods` | [string](#string) |  | Number of claim periods this program will run for. |
-| `state` | [string](#string) |  | Current state of the RewardProgram. |
-| `expiration_offset` | [string](#string) |  | Grace period after a RewardProgram FINISHED. It is the number of seconds until a RewardProgram enters the EXPIRED state. |
-| `qualifying_actions` | [string](#string) |  | Actions that count towards the reward |
 
 
 

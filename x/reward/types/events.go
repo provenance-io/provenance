@@ -20,7 +20,3 @@ const (
 	AttributeKeyRewardProgramIDs    string = "reward_program_ids"
 	AttributeKeyRewardsClaimAddress string = "rewards_claim_address"
 )
-
-func NewEventSetRewardProgram(rewardProgram RewardProgram) EventSetRewardProgram {
-	return EventSetRewardProgram{}
-}
