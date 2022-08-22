@@ -946,7 +946,8 @@ type MsgClient interface {
 	EndRewardProgram(ctx context.Context, in *MsgEndRewardProgramRequest, opts ...grpc.CallOption) (*MsgEndRewardProgramResponse, error)
 	// ClaimRewards is the RPC endpoint for claiming rewards belonging to completed claim periods of a reward program
 	ClaimRewards(ctx context.Context, in *MsgClaimRewardsRequest, opts ...grpc.CallOption) (*MsgClaimRewardsResponse, error)
-	// ClaimRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program for the signer of the tx.
+	// ClaimAllRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program for
+	// the signer of the tx.
 	ClaimAllRewards(ctx context.Context, in *MsgClaimAllRewardsRequest, opts ...grpc.CallOption) (*MsgClaimAllRewardsResponse, error)
 }
 
@@ -1002,7 +1003,8 @@ type MsgServer interface {
 	EndRewardProgram(context.Context, *MsgEndRewardProgramRequest) (*MsgEndRewardProgramResponse, error)
 	// ClaimRewards is the RPC endpoint for claiming rewards belonging to completed claim periods of a reward program
 	ClaimRewards(context.Context, *MsgClaimRewardsRequest) (*MsgClaimRewardsResponse, error)
-	// ClaimRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program for the signer of the tx.
+	// ClaimAllRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program for
+	// the signer of the tx.
 	ClaimAllRewards(context.Context, *MsgClaimAllRewardsRequest) (*MsgClaimAllRewardsResponse, error)
 }
 

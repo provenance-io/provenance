@@ -394,7 +394,6 @@
     - [ActionTransfer](#provenance.reward.v1.ActionTransfer)
     - [ActionVote](#provenance.reward.v1.ActionVote)
     - [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution)
-    - [EventSetRewardProgram](#provenance.reward.v1.EventSetRewardProgram)
     - [QualifyingAction](#provenance.reward.v1.QualifyingAction)
     - [QualifyingActions](#provenance.reward.v1.QualifyingActions)
     - [RewardAccountState](#provenance.reward.v1.RewardAccountState)
@@ -5955,9 +5954,9 @@ ActionTransfer represents the transfer action and its required eligibility crite
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `minimum_actions` | [uint64](#uint64) |  | Minimum number of successful delegates. |
-| `maximum_actions` | [uint64](#uint64) |  | Maximum number of successful delegates. |
-| `minimum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Minimum delegation amount the account must have across all validators. |
+| `minimum_actions` | [uint64](#uint64) |  | Minimum number of successful transfers. |
+| `maximum_actions` | [uint64](#uint64) |  | Maximum number of successful transfers. |
+| `minimum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Minimum delegation amount the account must have across all validators, for the transfer action to be counted. |
 
 
 
@@ -5972,9 +5971,9 @@ ActionVote represents the voting action and its required eligibility criteria.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `minimum_actions` | [uint64](#uint64) |  | Minimum number of successful delegates. |
-| `maximum_actions` | [uint64](#uint64) |  | Maximum number of successful delegates. |
-| `minimum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Minimum delegation amount the account must have across all validators. |
+| `minimum_actions` | [uint64](#uint64) |  | Minimum number of successful votes. |
+| `maximum_actions` | [uint64](#uint64) |  | Maximum number of successful votes. |
+| `minimum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Minimum delegation amount the account must have across all validators, for the vote action to be counted. |
 
 
 
@@ -5995,35 +5994,6 @@ ClaimPeriodRewardDistribution, this is updated at the end of every claim period.
 | `rewards_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The final allocated rewards for this claim period. |
 | `total_shares` | [int64](#int64) |  | The total number of granted shares for this claim period. |
 | `claim_period_ended` | [bool](#bool) |  | A flag representing if the claim period for this reward has ended. |
-
-
-
-
-
-
-<a name="provenance.reward.v1.EventSetRewardProgram"></a>
-
-### EventSetRewardProgram
-EventSetRewardProgram event emitted when a reward program is is updated
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `id` | [string](#string) |  | An integer to uniquely identify the reward program. |
-| `title` | [string](#string) |  | Name to help identify the Reward Program. |
-| `description` | [string](#string) |  | Short summary describing the Reward Program. |
-| `distribute_from_address` | [string](#string) |  | Community pool for now (who provides the money). |
-| `total_reward_pool` | [string](#string) |  | The total amount of funding given to the RewardProgram. |
-| `max_reward_by_address` | [string](#string) |  | Maximum reward per claim per address. |
-| `minimum_rollover_amount` | [string](#string) |  | Minimum amount of coins for a program to rollover. |
-| `claim_period_seconds` | [uint64](#uint64) |  | Number of seconds that a claim period lasts. |
-| `program_start_time` | [string](#string) |  | Time that a RewardProgram should start and switch to STARTED state. |
-| `expected_program_end_time` | [string](#string) |  | Time that a RewardProgram MUST end. |
-| `claim_period_end_time` | [string](#string) |  | Used internally to calculate and track the current claim period's ending time. |
-| `claim_periods` | [string](#string) |  | Number of claim periods this program will run for. |
-| `state` | [string](#string) |  | Current state of the RewardProgram. |
-| `expiration_offset` | [string](#string) |  | Grace period after a RewardProgram FINISHED. It is the number of seconds until a RewardProgram enters the EXPIRED state. |
-| `qualifying_actions` | [string](#string) |  | Actions that count towards the reward |
 
 
 
@@ -6611,7 +6581,7 @@ Msg
 | `CreateRewardProgram` | [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest) | [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse) | CreateRewardProgram is the RPC endpoint for creating a rewards program | POST|/provenance/reward/v1/reward_programs|
 | `EndRewardProgram` | [MsgEndRewardProgramRequest](#provenance.reward.v1.MsgEndRewardProgramRequest) | [MsgEndRewardProgramResponse](#provenance.reward.v1.MsgEndRewardProgramResponse) | EndRewardProgram is the RPC endpoint for ending a rewards program | PATCH|/provenance/reward/v1/reward_programs/{reward_program_id}|
 | `ClaimRewards` | [MsgClaimRewardsRequest](#provenance.reward.v1.MsgClaimRewardsRequest) | [MsgClaimRewardsResponse](#provenance.reward.v1.MsgClaimRewardsResponse) | ClaimRewards is the RPC endpoint for claiming rewards belonging to completed claim periods of a reward program | PATCH|/provenance/reward/v1/reward_claims/{reward_address}/reward_programs/{reward_program_id}|
-| `ClaimAllRewards` | [MsgClaimAllRewardsRequest](#provenance.reward.v1.MsgClaimAllRewardsRequest) | [MsgClaimAllRewardsResponse](#provenance.reward.v1.MsgClaimAllRewardsResponse) | ClaimRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program for the signer of the tx. | PATCH|/provenance/reward/v1/reward_claims/{reward_address}|
+| `ClaimAllRewards` | [MsgClaimAllRewardsRequest](#provenance.reward.v1.MsgClaimAllRewardsRequest) | [MsgClaimAllRewardsResponse](#provenance.reward.v1.MsgClaimAllRewardsResponse) | ClaimAllRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program for the signer of the tx. | PATCH|/provenance/reward/v1/reward_claims/{reward_address}|
 
  <!-- end services -->
 

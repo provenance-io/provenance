@@ -98,41 +98,6 @@ message RewardProgram {
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"qualifying_actions"];
 }
 
-// EventSetRewardProgram event emitted when a reward program is is updated
-message EventSetRewardProgram {
-  // An integer to uniquely identify the reward program.
-  string id = 1;
-  // Name to help identify the Reward Program.
-  string title = 2;
-  // Short summary describing the Reward Program.
-  string description = 3;
-  // Community pool for now (who provides the money).
-  string distribute_from_address = 4;
-  // The total amount of funding given to the RewardProgram.
-  string total_reward_pool = 5;
-  // Maximum reward per claim per address.
-  string max_reward_by_address = 6;
-  // Minimum amount of coins for a program to rollover.
-  string minimum_rollover_amount = 7;
-  // Number of seconds that a claim period lasts.
-  uint64 claim_period_seconds = 8;
-  // Time that a RewardProgram should start and switch to STARTED state.
-  string program_start_time = 9;
-  // Time that a RewardProgram MUST end.
-  string expected_program_end_time = 10;
-  // Used internally to calculate and track the current claim period's ending time.
-  string claim_period_end_time = 11;
-  // Number of claim periods this program will run for.
-  string claim_periods = 12;
-  // Current state of the RewardProgram.
-  string state = 13;
-  // Grace period after a RewardProgram FINISHED. It is the number of seconds until a RewardProgram enters the EXPIRED
-  // state.
-  string expiration_offset = 14;
-  // Actions that count towards the reward
-  string qualifying_actions = 15;
-}
-
 // ClaimPeriodRewardDistribution, this is updated at the end of every claim period.
 message ClaimPeriodRewardDistribution {
   option (gogoproto.equal)            = true;
