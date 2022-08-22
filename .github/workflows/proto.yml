@@ -35,7 +35,7 @@ jobs:
           against: 'buf.build/provenance-io/provenance'
       - name: provenance breaking results
         if: always() && steps.breaking-prov.outcome == 'failure'
-        run: echo ${{ steps.breaking-prov.outputs.results }}
+        run: echo "${{ steps.breaking-prov.outputs.results }}"
       - name: third-party breaking
         id: breaking-third
         if: always()
@@ -46,7 +46,7 @@ jobs:
           against: 'buf.build/provenance-io/third-party'
       - name: third-party breaking results
         if: always() && steps.breaking-third.outcome == 'failure'
-        run: echo ${{ steps.breaking-third.outputs.results }}
+        run: echo "${{ steps.breaking-third.outputs.results }}"
       - name: proto-update-check
         if: always()
         run: |
