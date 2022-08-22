@@ -25,19 +25,28 @@ jobs:
         if: always()
         with:
           input: 'proto'
-      - uses: bufbuild/buf-breaking-action@v1
+      - name: provenance breaking
+        id: breaking-prov
         if: always()
+        uses: bufbuild/buf-breaking-action@v1
         with:
           input: 'proto'
           # The 'main' branch of the GitHub repository that defines the module.
           against: 'buf.build/provenance-io/provenance'
-      - name: third_party breaking
+      - name: provenance breaking results
+        if: ${{ steps.breaking-prov.outputs.results }}
+        run: echo ${{ steps.breaking-prov.outputs.results }}
+      - name: third-party breaking
+        id: breaking-third
         if: always()
         uses: bufbuild/buf-breaking-action@v1
         with:
           input: 'third_party/proto'
           # The 'main' branch of the GitHub repository that defines the module.
           against: 'buf.build/provenance-io/third-party'
+      - name: third-party breaking results
+        if: ${{ steps.breaking-third.outputs.results }}
+        run: echo ${{ steps.breaking-third.outputs.results }}
       - name: proto-update-check
         if: always()
         run: |
