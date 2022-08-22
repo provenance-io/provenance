@@ -11,13 +11,13 @@
 
 print_usage () {
     cat << EOF
-Usage: scripts/proto-update-check.sh [--force] [branch]
+Usage: scripts/proto-update-check.sh [--force] [base branch]
 
-[--force] - Download and compare the protos without checking for version changes.
-            A non-empty FORCE environment variable is the same as providing the --force flag.
-[branch]  - Optional branch to compare against for version changes. Default is '..origin/main'.
-            This can also be provided in the BRANCH environment variable.
-            This is ignored if forcing a check.
+[--force]      - Download and compare the protos without checking for version changes.
+                 A non-empty FORCE environment variable is the same as providing the --force flag.
+[base branch]  - Optional branch to compare against for version changes. Default is '..origin/main'.
+                 This can also be provided in the BASE_BRANCH environment variable.
+                 This is ignored if forcing a check.
 
 If this exits with code 0, all is good.
 
@@ -46,9 +46,12 @@ while [ "$#" -gt '0' ]; do
     esac
 done
 
+printf 'branch: [%s]\n' "$branch"
+printf 'BASE_BRANCH: [%s]\n' "$BASE_BRANCH"
+
 set -ex
 
-branch="${branch:-${BRANCH:-..origin/main}}"
+branch="${branch:-${BASE_BRANCH:-..origin/main}}"
 repo_root="$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )"
 update_deps="$repo_root/scripts/proto-update-deps.sh"
 
