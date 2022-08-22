@@ -17,13 +17,16 @@ fi
 if [ "$output" -gt "0" ]; then
   printf 'Downloading latest third_party proto files for comparison...\n'
 
-  # Download third_party proto files in the build/ directory for comparison against $dir /third_party
-  dir="$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )"
-  bash "$dir/scripts/proto-update-deps.sh" build
+  # Download third_party proto files in the build/ directory for comparison against /third_party
+  repo_root="$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )"
+  fresh_dir="$repo_root/build/third_party"
+  existing_dir="$repo_root/third_party"
+
+  bash "$repo_root/scripts/proto-update-deps.sh" "$fresh_dir"
 
   printf '\nChecking Protobuf files for differences...\n'
 
-  DIFF=$( diff -rq -x '*.yaml' --exclude=google "$dir/build/third_party" "$dir/third_party" || true )
+  DIFF=$( diff -rq -x '*.yaml' --exclude=google "$fresh_dir" "$existing_dir" || true )
   if [ -n "$DIFF" ]; then
     cat << EOF >&2
 
