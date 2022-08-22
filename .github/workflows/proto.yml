@@ -37,7 +37,7 @@ jobs:
         if: always() && steps.breaking-prov.outcome == 'failure'
         run: |
           echo "results:"
-          echo "${{ steps.breaking-prov.outputs.results }}"
+          echo "${{ toJSON(steps.breaking-prov.outputs) }}"
       - name: third-party breaking
         id: breaking-third
         if: always()
@@ -50,7 +50,7 @@ jobs:
         if: always() && steps.breaking-third.outcome == 'failure'
         run: |
           echo "results:"
-          echo "${{ toJSON(steps.breaking-third) }}"
+          echo "${{ toJSON(steps.breaking-third.outputs) }}"
       - name: proto-update-check
         if: always()
         run: |
