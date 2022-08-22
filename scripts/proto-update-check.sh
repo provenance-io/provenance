@@ -56,12 +56,12 @@ if [ -z "$FORCE" ]; then
     # The update-deps script uses go list -m to get library rewrites and version info on several libraries.
     # Search that script to get all of the libraries it checks up on.
     # Start by ignoring all commments, then find all go list -m {lib} entries and extract just the library.
-    libs=( $( sed 's:#.*$::' "$update_deps" | grep -Eo 'go list -m [^ ]+' | sed 's:.* ::' ) )
+    libs="$( sed 's:#.*$::' "$update_deps" | grep -Eo 'go list -m [^ ]+' | sed 's:.* ::' )"
     # Do our own go list -m to get both the library and possibly what it's rewritten to.
     # We want to check go.mod for changes in any of those.
     # We'll build a regexp to provide to grep to match any libraries of interest.
     libs_regexp=''
-    for lib in "${libs[@]}"; do
+    for lib in $libs; do
         # go list -m "$lib" will look like one of these:
         # * '{lib} {version}'
         # * '{lib} {version} => {rw lib} {rw version}'
