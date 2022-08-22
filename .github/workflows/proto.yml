@@ -34,7 +34,7 @@ jobs:
           # The 'main' branch of the GitHub repository that defines the module.
           against: 'buf.build/provenance-io/provenance'
       - name: provenance breaking results
-        if: steps.breaking-prov.outcome == 'failure'
+        if: always() && steps.breaking-prov.outcome == 'failure'
         run: echo ${{ steps.breaking-prov.outputs.results }}
       - name: third-party breaking
         id: breaking-third
@@ -45,7 +45,7 @@ jobs:
           # The 'main' branch of the GitHub repository that defines the module.
           against: 'buf.build/provenance-io/third-party'
       - name: third-party breaking results
-        if: steps.breaking-third.outcome == 'failure'
+        if: always() && steps.breaking-third.outcome == 'failure'
         run: echo ${{ steps.breaking-third.outputs.results }}
       - name: proto-update-check
         if: always()
