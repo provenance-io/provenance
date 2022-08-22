@@ -41,5 +41,5 @@ jobs:
       - name: proto-update-check
         if: always()
         run: |
-          printf 'GITHUB_BASE_REF: %s\n' "$GITHUB_BASE_REF"
+          printf 'GITHUB_BASE_REF:  %s\n' "$GITHUB_BASE_REF"
           make proto-update-check
