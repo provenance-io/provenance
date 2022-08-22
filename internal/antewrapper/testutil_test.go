@@ -55,7 +55,7 @@ func createTestApp(isCheckTx bool) (*simapp.App, sdk.Context) {
 // SetupTest setups a new test, with new app, context, and anteHandler.
 func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	msgfeetype.DefaultFloorGasPrice = sdk.Coin{
-		Denom:  "atom",
+		Denom:  sdk.DefaultBondDenom,
 		Amount: sdk.NewInt(1),
 	}
 	suite.app, suite.ctx = createTestApp(isCheckTx)
