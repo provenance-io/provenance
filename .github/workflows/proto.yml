@@ -40,4 +40,6 @@ jobs:
           against: 'buf.build/provenance-io/third-party'
       - name: proto-update-check
         if: always()
-        run: make proto-update-check
+        run: |
+          printf 'GITHUB_BASE_REF: %s\n' "$GITHUB_BASE_REF"
+          make proto-update-check
