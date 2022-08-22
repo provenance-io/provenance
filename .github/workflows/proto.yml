@@ -49,7 +49,7 @@ jobs:
       - name: third-party breaking results
         if: always() && steps.breaking-third.outcome == 'failure'
         run: |
-          echo "results"
+          echo "results:"
           echo "${{ steps.breaking-third.outputs.results }}"
       - name: proto-update-check
         if: always()
