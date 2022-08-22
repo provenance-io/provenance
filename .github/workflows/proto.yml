@@ -28,7 +28,7 @@ jobs:
       - name: provenance breaking
         id: breaking-prov
         if: always()
-        uses: bufbuild/buf-breaking-action@v1
+        uses: bufbuild/buf-breaking-action@v1.1.0
         with:
           input: 'proto'
           # The 'main' branch of the GitHub repository that defines the module.
@@ -39,7 +39,7 @@ jobs:
       - name: third-party breaking
         id: breaking-third
         if: always()
-        uses: bufbuild/buf-breaking-action@v1
+        uses: bufbuild/buf-breaking-action@v1.1.0
         with:
           input: 'third_party/proto'
           # The 'main' branch of the GitHub repository that defines the module.
