@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+---
+
+## [v1.12.0](https://github.com/provenance-io/provenance/releases/tag/v1.12.0) - 2022-08-22
+
 ### Improvements
 
 * Update the swagger files (including third-party changes). [#728](https://github.com/provenance-io/provenance/issues/728)

@@ -36,7 +36,8 @@ var handlers = map[string]appUpgrade{
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
 	}, // upgrade for 1.11.1
-	"mango-rc4": {}, // upgrade for 1.11.1-rc4
+	"mango-rc4":      {}, // upgrade for 1.11.1-rc4
+	"neoncarrot-rc1": {}, // upgrade for 1.12.0-rc1
 	// TODO - Add new upgrade definitions here.
 }
 
