@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -312,7 +313,7 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 }
 
 // Returns the current supply in network according to the bank module for the given marker
-func (k Keeper) CurrentCirculation(ctx sdk.Context, marker types.MarkerAccountI) sdk.Int {
+func (k Keeper) CurrentCirculation(ctx sdk.Context, marker types.MarkerAccountI) sdkmath.Int {
 	return k.bankKeeper.GetSupply(ctx, marker.GetDenom()).Amount
 }
 
