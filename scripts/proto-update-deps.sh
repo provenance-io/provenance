@@ -25,6 +25,7 @@ GOGO_PROTO_URL="https://raw.githubusercontent.com/regen-network/protobuf/$( go l
 COSMOS_PROTO_URL="raw.githubusercontent.com/cosmos/cosmos-proto/$( go list -m github.com/cosmos/cosmos-proto | sed 's:.* ::' )/proto/cosmos_proto/cosmos.proto"
 COSMWASM_V1BETA1_TARBALL_URL='github.com/CosmWasm/wasmd/tarball/v0.17.0'  # Backwards compatibility. Needed to serialize/deserialize older wasmd protos.
 COSMWASM_CUR_TARBALL_URL="$( go list -m github.com/CosmWasm/wasmd | sed 's:.* => ::; s: :/tarball/:;' )"
+IBC_PORT_V1_QUERY_URL='https://raw.githubusercontent.com/cosmos/ibc-go/v2.3.1/proto/ibc/core/port/v1/query.proto' # Backwards compatibility.
 IBC_GO_TARBALL_URL="$( go list -m github.com/cosmos/ibc-go/v5 | sed 's:.* => ::; s: :/tarball/:; s:/v5::;')"
 COSMOS_TARBALL_URL="$( go list -m github.com/cosmos/cosmos-sdk | sed 's:.* => ::; s: :/tarball/:;' )"
 TM_TARBALL_URL="$( go list -m github.com/tendermint/tendermint | sed 's:.* => ::; s: :/tarball/:;' )"
@@ -58,6 +59,10 @@ curl -f -sSL "$COSMWASM_CUR_TARBALL_URL" | $tar --exclude='*/third_party' --excl
 
 rm -rf 'proto/ibc'
 curl -f -sSL "$IBC_GO_TARBALL_URL" | $tar --exclude='*/third_party' "$PROTO_EXPR"
+IBC_PORT_QUERY_FILE='proto/ibc/core/port/v1/query.proto'
+if [ ! -f "$IBC_PORT_QUERY_FILE" ]; then
+    curl -f -sSL "$IBC_PORT_V1_QUERY_URL" -o "$IBC_PORT_QUERY_FILE" --create-dirs
+fi
 
 rm -rf 'proto/cosmos'
 curl -f -sSL "$COSMOS_TARBALL_URL" | $tar --exclude='*/third_party' --exclude='*/testutil' "$PROTO_EXPR"
