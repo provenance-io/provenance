@@ -37,6 +37,14 @@ var handlers = map[string]appUpgrade{
 	}, // upgrade for 1.11.1
 	"mango-rc4":      {}, // upgrade for 1.11.1-rc4
 	"neoncarrot-rc1": {}, // upgrade for 1.12.0-rc1
+	"ochre-rc1": {
+		// TODO: Required for v1.13.x: Fill in Added with modules new to 1.13.x
+		Added: nil,
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
+		},
+	}, // upgrade for 1.13.0-rc1
 	// TODO - Add new upgrade definitions here.
 }
 
