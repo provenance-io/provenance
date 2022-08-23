@@ -1,8 +1,6 @@
 package app
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -11,6 +9,7 @@ const (
 	AccountAddressPrefixTestNet = "tp"
 	CoinTypeMainNet             = 505
 	CoinTypeTestNet             = 1
+	Purpose                     = 44
 )
 
 var (
@@ -40,7 +39,7 @@ func SetConfig(testnet bool) {
 
 	config := sdk.GetConfig()
 	config.SetCoinType(uint32(CoinType))
-	config.SetFullFundraiserPath(fmt.Sprintf("m/44'/%d'/0'/0/0", CoinType))
+	config.SetPurpose(Purpose)
 	config.SetBech32PrefixForAccount(AccountAddressPrefix, AccountPubKeyPrefix)
 	config.SetBech32PrefixForValidator(ValidatorAddressPrefix, ValidatorPubKeyPrefix)
 	config.SetBech32PrefixForConsensusNode(ConsNodeAddressPrefix, ConsNodePubKeyPrefix)
