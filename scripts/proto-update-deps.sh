@@ -40,20 +40,28 @@ cd "$DEST"
 PROTO_EXPR='*/proto/**/*.proto'
 
 # Refresh third_party protos
-CONFIO_FILE='proto/confio/proofs.proto'
-rm -rf 'proto/confio'
+CONFIO_FILE='proto/proofs.proto'
+rm -f "$CONFIO_FILE" "$CONFIO_FILE.orig"
 curl -f -sSL "$CONFIO_PROTO_URL" -o "$CONFIO_FILE.orig" --create-dirs
-rm -rf 'proto/gogoproto'
-curl -f -sSL "$GOGO_PROTO_URL" -o proto/gogoproto/gogo.proto --create-dirs
-rm -rf 'proto/cosmos_proto';
-curl -f -sSL "$COSMOS_PROTO_URL" -o proto/cosmos_proto/cosmos.proto --create-dirs
+
+GOGO_FILE='proto/gogoproto/gogo.proto'
+rm -f "$GOGO_FILE"
+curl -f -sSL "$GOGO_PROTO_URL" -o "$GOGO_FILE" --create-dirs
+
+COSMOS_FILE='proto/cosmos_proto/cosmos.proto'
+rm -f "$COSMOS_FILE"
+curl -f -sSL "$COSMOS_PROTO_URL" -o "$COSMOS_FILE" --create-dirs
+
 rm -rf 'proto/cosmwasm'
 curl -f -sSL "$COSMWASM_V1BETA1_TARBALL_URL" | $tar --exclude='*/third_party' "$PROTO_EXPR"
 curl -f -sSL "$COSMWASM_CUR_TARBALL_URL" | $tar --exclude='*/third_party' --exclude='*/proto/ibc' "$PROTO_EXPR"
+
 rm -rf 'proto/ibc'
 curl -f -sSL "$IBC_GO_TARBALL_URL" | $tar --exclude='*/third_party' "$PROTO_EXPR"
+
 rm -rf 'proto/cosmos'
 curl -f -sSL "$COSMOS_TARBALL_URL" | $tar --exclude='*/third_party' --exclude='*/testutil' "$PROTO_EXPR"
+
 rm -rf 'proto/tendermint'
 curl -f -sSL "$TM_TARBALL_URL" | $tar --exclude='*/third_party' "$PROTO_EXPR"
 
