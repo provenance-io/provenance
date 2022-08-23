@@ -3,6 +3,7 @@ module github.com/provenance-io/provenance
 go 1.18
 
 require (
+	cosmossdk.io/math v1.0.0-beta.2
 	github.com/CosmWasm/wasmd v0.26.0
 	github.com/armon/go-metrics v0.4.0
 	github.com/btcsuite/btcd v0.22.1
@@ -40,7 +41,6 @@ require (
 	cloud.google.com/go/iam v0.3.0 // indirect
 	cloud.google.com/go/storage v1.14.0 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
-	cosmossdk.io/math v1.0.0-beta.2 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
