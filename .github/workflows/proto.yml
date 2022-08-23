@@ -27,6 +27,7 @@ jobs:
           if [ -n "$GITHUB_BASE_REF" ]; then
             branch="$GITHUB_BASE_REF"
           fi
+          echo "base-branch: [$branch]"
           echo "::set-output name=base-branch::$branch"
       - uses: bufbuild/buf-setup-action@v1.7.0
       - uses: bufbuild/buf-lint-action@v1.0.1
@@ -60,4 +61,6 @@ jobs:
       - name: proto-update-check
         if: always()
         run: |
+          BASE_BRANCH="..origin/${{ steps.setup.outputs.base-branch }}"
+          export BASE_BRANCH
           make proto-update-check
