@@ -88,11 +88,10 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins
 
 		baseFeeConsumedAtAnteHandler := feeGasMeter.BaseFeeConsumed()
 
-		var isNeg bool
 		// this sweeps all extra fees too, 1. keeps current behavior 2. accounts for priority mempool
-		chargedFees, isNeg = feeTx.GetFee().SafeSub(baseFeeConsumedAtAnteHandler...)
+		chargedFees, _ = feeTx.GetFee().SafeSub(baseFeeConsumedAtAnteHandler...)
 
-		if !isNeg && len(chargedFees) > 0 && chargedFees.IsAllPositive() {
+		if len(chargedFees) > 0 && chargedFees.IsAllPositive() {
 			// deduct fees from remainingFees and distribute
 			err = afd.msgFeeKeeper.DeductFeesDistributions(afd.bankKeeper, ctx, deductFeesFromAcc, chargedFees, feeGasMeter.FeeConsumedDistributions())
 			if err != nil {
