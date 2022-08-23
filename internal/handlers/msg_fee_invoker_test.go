@@ -28,43 +28,15 @@ import (
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
-func (suite *HandlerTestSuite) TestMsgFeeHandlerNoFeeCharged() {
-	encodingConfig, err := setUpApp(suite, "atom", 100)
-	ttx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
-
-	// See comment for Check().
-	txEncoder := encodingConfig.TxConfig.TxEncoder()
-	bz, err := txEncoder(ttx)
-	if err != nil {
-		panic(err)
-	}
-	suite.ctx = suite.ctx.WithTxBytes(bz)
-	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100), false).(*antewrapper.FeeGasMeter)
-	suite.ctx = suite.ctx.WithGasMeter(feeGasMeter)
-	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
-		AccountKeeper:  suite.app.AccountKeeper,
-		BankKeeper:     suite.app.BankKeeper,
-		FeegrantKeeper: suite.app.FeeGrantKeeper,
-		MsgFeesKeeper:  suite.app.MsgFeesKeeper,
-		Decoder:        encodingConfig.TxConfig.TxDecoder(),
-	})
-	suite.Require().NoError(err)
-	coins, _, err := feeChargeFn(suite.ctx, false)
-	suite.Require().NoError(err, "feeChargeFn")
-	// fee gas meter has nothing to charge, so nothing should have been charged.
-	suite.Require().True(coins.IsZero())
-}
-
-func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeCharged() {
+func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
 	encodingConfig, err := setUpApp(suite, "atom", 100)
 	testTx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)))
 
 	// See comment for Check().
 	txEncoder := encodingConfig.TxConfig.TxEncoder()
 	bz, err := txEncoder(testTx)
-	if err != nil {
-		panic(err)
-	}
+	suite.Require().NoError(err, "txEncoder")
+
 	suite.ctx = suite.ctx.WithTxBytes(bz)
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	suite.Require().NotPanics(func() {
@@ -83,22 +55,63 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeCharged() {
 	suite.Require().NoError(err)
 	coins, _, err := feeChargeFn(suite.ctx, false)
 
-	suite.Require().Contains(err.Error(), "0nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "got wrong message")
+	suite.Require().ErrorContains(err, "0nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "feeChargeFn 1")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	suite.Require().True(coins.IsZero())
+	suite.Require().True(coins.IsZero(), "coins.IsZero() 1")
 
-	suite.Require().NoError(testutil.FundAccount(suite.app.BankKeeper, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(900000)))), "funding account")
+	suite.Require().NoError(testutil.FundAccount(suite.app.BankKeeper, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(900000)))), "fund account")
 	coins, _, err = feeChargeFn(suite.ctx, false)
-	suite.Require().Contains(err.Error(), "900000nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "got wrong message")
+	suite.Require().ErrorContains(err, "900000nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "feeChargeFn 2")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	suite.Require().True(coins.IsZero())
+	suite.Require().True(coins.IsZero(), "coins.IsZero() 2")
 
-	suite.Require().NoError(testutil.FundAccount(suite.app.BankKeeper, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(100000)))), "funding account again")
+	suite.Require().NoError(testutil.FundAccount(suite.app.BankKeeper, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(100000)))), "fund account again")
 	coins, _, err = feeChargeFn(suite.ctx, false)
-	suite.Require().Nil(err, "Got error when should not have.")
+	suite.Require().NoError(err, "feeChargeFn 3")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	suite.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000))}))
+	suite.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000))}), "coins all gt 1000000nhash")
 }
+
+func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
+	encodingConfig, err := setUpApp(suite, "atom", 100)
+	testTx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 120000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)))
+
+	// See comment for Check().
+	txEncoder := encodingConfig.TxConfig.TxEncoder()
+	bz, err := txEncoder(testTx)
+	if err != nil {
+		panic(err)
+	}
+	suite.ctx = suite.ctx.WithTxBytes(bz)
+	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
+	suite.Require().NotPanics(func() {
+		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
+		feeGasMeter.ConsumeFee(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)), msgType, "")
+		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))}) // fee consumed at ante handler
+	}, "panicked on adding fees")
+	suite.ctx = suite.ctx.WithGasMeter(feeGasMeter)
+	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
+		AccountKeeper:  suite.app.AccountKeeper,
+		BankKeeper:     suite.app.BankKeeper,
+		FeegrantKeeper: suite.app.FeeGrantKeeper,
+		MsgFeesKeeper:  suite.app.MsgFeesKeeper,
+		Decoder:        encodingConfig.TxConfig.TxDecoder(),
+	})
+	suite.Require().NoError(err, "NewAdditionalMsgFeeHandler")
+
+	suite.Require().NoError(testutil.FundAccount(suite.app.BankKeeper, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)))), "funding account")
+	coins, _, err := feeChargeFn(suite.ctx, false)
+	suite.Require().ErrorContains(err, "0atom is smaller than 20000atom: insufficient funds: insufficient funds", "feeChargeFn 1")
+	// fee gas meter has nothing to charge, so nothing should have been charged.
+	suite.Require().True(coins.IsZero(), "coins.IsZero() 1")
+
+	suite.Require().NoError(testutil.FundAccount(suite.app.BankKeeper, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000))), "funding account again")
+	coins, _, err = feeChargeFn(suite.ctx, false)
+	suite.Require().NoError(err, "feeChargeFn 2")
+	expected := sdk.Coins{sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)}
+	suite.Require().Equal(expected, coins, "final coins")
+}
+
 func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 	encodingConfig, err := setUpApp(suite, "atom", 100)
 	testTxWithFeeGrant, _ := createTestTxWithFeeGrant(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)))

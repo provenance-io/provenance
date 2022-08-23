@@ -26,6 +26,7 @@ type ProvenanceDeductFeeDecorator struct {
 var (
 	AttributeKeyBaseFee       = "basefee"
 	AttributeKeyAdditionalFee = "additionalfee"
+	AttributeKeyMinFeeCharged = "min_fee_charged"
 )
 
 func NewProvenanceDeductFeeDecorator(ak authante.AccountKeeper, bk bankkeeper.Keeper, fk msgfeestypes.FeegrantKeeper, mbfk msgfeestypes.MsgFeesKeeper) ProvenanceDeductFeeDecorator {
@@ -89,7 +90,8 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	if deductFeesFromAcc == nil {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", payerAccount)
 	}
-	// deduct base fee from account
+
+	// deduct minimum amount from fee, remainder will be swept on success
 	baseFeeToConsume := CalculateBaseFee(ctx, feeTx, dfd.msgFeeKeeper)
 	if !baseFeeToConsume.IsZero() && !simulate {
 		err = DeductBaseFees(dfd.bankKeeper, ctx, deductFeesFromAcc, baseFeeToConsume)
@@ -101,7 +103,11 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 
 	events := sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
 		sdk.NewAttribute(sdk.AttributeKeyFee, feeTx.GetFee().String()),
-	)}
+	),
+		sdk.NewEvent(sdk.EventTypeTx,
+			sdk.NewAttribute(AttributeKeyMinFeeCharged, baseFeeToConsume.String()),
+		),
+	}
 	ctx.EventManager().EmitEvents(events)
 
 	return next(ctx, tx, simulate)

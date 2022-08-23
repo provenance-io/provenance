@@ -63,6 +63,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix the `MarkerTransferAuthorization` Accept function and `TransferCoin` authz handling to prevent problems when other authorization types are used [#903](https://github.com/provenance-io/provenance/issues/903)
 * Bump Cosmos-SDK to `v0.45.5-pio-1` (from `v0.45.4-pio-4`) to remove buggy ADR 038 plugin system. [#983](https://github.com/provenance-io/provenance/issues/983)
 * Remove ADR 038 plugin system implementation due to `AppHash` error [#983](https://github.com/provenance-io/provenance/issues/983)
+* Fix fee charging to sweep remaining fees on successful transaction [#1019](https://github.com/provenance-io/provenance/issues/1019)
 * Remove the workaround for the index-events configuration field (now fixed in the SDK). [#995](https://github.com/provenance-io/provenance/issues/995)
 
 ### Client Breaking
@@ -73,6 +74,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### State Machine Breaking
 
 * Fix the `MarkerTransferAuthorization` Accept function and `TransferCoin` authz handling to prevent problems when other authorization types are used [#903](https://github.com/provenance-io/provenance/issues/903)
+* Fix fee charging to sweep remaining fees on successful transaction [#1019](https://github.com/provenance-io/provenance/issues/1019)
 
 ---
 
