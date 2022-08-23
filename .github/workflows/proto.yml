@@ -31,8 +31,9 @@ jobs:
         uses: bufbuild/buf-breaking-action@v1.1.0
         with:
           input: 'proto'
+          against: "https://github.com/provenance-io/provenance.git#branch=${{ github.base_ref }},subdir=proto"
           # The 'main' branch of the GitHub repository that defines the module.
-          against: 'buf.build/provenance-io/provenance'
+          #against: 'buf.build/provenance-io/provenance'
       - name: provenance breaking results
         if: always() && steps.breaking-prov.outcome == 'failure'
         run: |
@@ -44,8 +45,9 @@ jobs:
         uses: bufbuild/buf-breaking-action@v1.1.0
         with:
           input: 'third_party/proto'
+          against: "https://github.com/provenance-io/provenance.git#branch=${{ github.base_ref }},subdir=third_party/proto"
           # The 'main' branch of the GitHub repository that defines the module.
-          against: 'buf.build/provenance-io/third-party'
+          #against: 'buf.build/provenance-io/third-party'
       - name: third-party breaking results
         if: always() && steps.breaking-third.outcome == 'failure'
         run: |
