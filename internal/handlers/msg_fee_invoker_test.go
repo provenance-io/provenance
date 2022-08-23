@@ -327,6 +327,6 @@ type HandlerTestSuite struct {
 	txBuilder client.TxBuilder
 }
 
-func TestAnteTestSuite(t *testing.T) {
+func TestHandlerTestSuite(t *testing.T) {
 	suite.Run(t, new(HandlerTestSuite))
 }

@@ -25,6 +25,8 @@ import (
 	pioante "github.com/provenance-io/provenance/internal/antewrapper"
 )
 
+// These tests are kicked off by TestAnteTestSuite in testutil_test.go
+
 func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	suite.SetupTest(false)
 	// setup
