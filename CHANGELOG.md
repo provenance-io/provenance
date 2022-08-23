@@ -37,6 +37,23 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+
+* Bump Cosmos-SDK to Bump cosmos to v0.46.0-pio-1-rc4 (from v0.45.5-pio-1). [#995](https://github.com/provenance-io/provenance/issues/995)
+  See https://github.com/provenance-io/cosmos-sdk/blob/v0.46.0-pio-1-rc4/RELEASE_NOTES.md for more info.
+* Bump IBC to v5.0.0-beta1. [#995](https://github.com/provenance-io/provenance/issues/995)
+* Refactor the `x/marker` module's `Holding` query to utilize the `x/bank` module's new `DenomOwners` query. [#995](https://github.com/provenance-io/provenance/issues/995)
+  The only real difference between those two queries is that the `Holding` query accepts either a denom or marker address.
+
+### Bug Fixes
+
+* Remove the workaround for the index-events configuration field (now fixed in the SDK). [#995](https://github.com/provenance-io/provenance/issues/995)
+
+### Client Breaking
+
+* Remove the custom/legacy rest endpoints from the `x/attribute`, `x/marker`, and `x/name` modules. [#995](https://github.com/provenance-io/provenance/issues/995)
+* Remove the state-listening/plugin system (and `librdkafka` dependencies). [#995](https://github.com/provenance-io/provenance/issues/995)
+
 ---
 
 ## [v1.12.0](https://github.com/provenance-io/provenance/releases/tag/v1.12.0) - 2022-08-22
@@ -49,11 +66,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add documentation for `gRPCurl` to `docs/grpcurl.md` [#953](https://github.com/provenance-io/provenance/issues/953)
 * Updated to go 1.18 [#996](https://github.com/provenance-io/provenance/issues/996)
 * Add docker files for local psql indexing [#997](https://github.com/provenance-io/provenance/issues/997)
-* Bump Cosmos-SDK to Bump cosmos to v0.46.0-pio-1-rc1 (from v0.45.5-pio-1). [#995](https://github.com/provenance-io/provenance/issues/995)
-  See https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0 for more info.
-* Bump IBC to v5.0.0-beta1. [#995](https://github.com/provenance-io/provenance/issues/995)
-* Refactor the `x/marker` module's `Holding` query to utilize the `x/bank` module's new `DenomOwners` query. [#995](https://github.com/provenance-io/provenance/issues/995)
-  The only real difference between those two queries is that the `Holding` query accepts either a denom or marker address.
 
 ### Features
 
@@ -68,12 +80,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump Cosmos-SDK to `v0.45.5-pio-1` (from `v0.45.4-pio-4`) to remove buggy ADR 038 plugin system. [#983](https://github.com/provenance-io/provenance/issues/983)
 * Remove ADR 038 plugin system implementation due to `AppHash` error [#983](https://github.com/provenance-io/provenance/issues/983)
 * Fix fee charging to sweep remaining fees on successful transaction [#1019](https://github.com/provenance-io/provenance/issues/1019)
-* Remove the workaround for the index-events configuration field (now fixed in the SDK). [#995](https://github.com/provenance-io/provenance/issues/995)
-
-### Client Breaking
-
-* Remove the custom/legacy rest endpoints from the `x/attribute`, `x/marker`, and `x/name` modules. [#995](https://github.com/provenance-io/provenance/issues/995)
-* Remove the state-listening/plugin system (and `librdkafka` dependencies). [#995](https://github.com/provenance-io/provenance/issues/995)
 
 ### State Machine Breaking
 
