@@ -20,6 +20,14 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.18
+      - name: Setup Job
+        id: setup
+        run: |
+          branch='main'
+          if [ -n "$GITHUB_BASE_REF" ]; then
+            branch="$GITHUB_BASE_REF"
+          fi
+          echo "::set-output name=base-branch::$branch"
       - uses: bufbuild/buf-setup-action@v1.7.0
       - uses: bufbuild/buf-lint-action@v1.0.1
         if: always()
@@ -31,9 +39,7 @@ jobs:
         uses: bufbuild/buf-breaking-action@v1.1.0
         with:
           input: 'proto'
-          against: "https://github.com/provenance-io/provenance.git#branch=${{ github.base_ref }},subdir=proto"
-          # The 'main' branch of the GitHub repository that defines the module.
-          #against: 'buf.build/provenance-io/provenance'
+          against: 'https://github.com/provenance-io/provenance.git#branch=${{ steps.setup.outputs.base-branch }},subdir=proto'
       - name: provenance breaking results
         if: always() && steps.breaking-prov.outcome == 'failure'
         run: |
@@ -45,9 +51,7 @@ jobs:
         uses: bufbuild/buf-breaking-action@v1.1.0
         with:
           input: 'third_party/proto'
-          against: "https://github.com/provenance-io/provenance.git#branch=${{ github.base_ref }},subdir=third_party/proto"
-          # The 'main' branch of the GitHub repository that defines the module.
-          #against: 'buf.build/provenance-io/third-party'
+          against: 'https://github.com/provenance-io/provenance.git#branch=${{ steps.setup.outputs.base-branch }},subdir=third_party/proto'
       - name: third-party breaking results
         if: always() && steps.breaking-third.outcome == 'failure'
         run: |
@@ -56,9 +60,4 @@ jobs:
       - name: proto-update-check
         if: always()
         run: |
-          if [ -n "$GITHUB_BASE_REF" ]; then
-            BASE_BRANCH="..origin/$GITHUB_BASE_REF"
-            printf 'BASE_BRANCH: [%s]\n' "$BASE_BRANCH"
-            export BASE_BRANCH
-          fi
           make proto-update-check
