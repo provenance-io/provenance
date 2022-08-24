@@ -6318,6 +6318,7 @@ QueryRewardProgramsRequest queries for all reward programs matching the query_ty
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `query_type` | [QueryRewardProgramsRequest.QueryType](#provenance.reward.v1.QueryRewardProgramsRequest.QueryType) |  | A filter on the types of reward programs. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
 
 
 
@@ -6333,6 +6334,7 @@ QueryRewardProgramsResponse contains the list of RewardPrograms matching the que
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `reward_programs` | [RewardProgram](#provenance.reward.v1.RewardProgram) | repeated | List of RewardProgram objects matching the query_type. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the response. |
 
 
 

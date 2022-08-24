@@ -24,29 +24,47 @@ func (k Keeper) RewardPrograms(ctx context.Context, req *types.QueryRewardProgra
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
+	pageRequest := getPageRequest(req)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	var rewardPrograms []types.RewardProgram
 	var err error
 
+	rewardProgramStates := []types.RewardProgram_State{}
 	switch req.QueryType {
-	case types.QueryRewardProgramsRequest_QUERY_TYPE_ALL:
-		rewardPrograms, err = k.GetAllRewardPrograms(sdkCtx)
 	case types.QueryRewardProgramsRequest_QUERY_TYPE_PENDING:
-		rewardPrograms, err = k.GetAllPendingRewardPrograms(sdkCtx)
+		rewardProgramStates = []types.RewardProgram_State{types.RewardProgram_STATE_PENDING}
 	case types.QueryRewardProgramsRequest_QUERY_TYPE_ACTIVE:
-		rewardPrograms, err = k.GetAllActiveRewardPrograms(sdkCtx)
+		rewardProgramStates = []types.RewardProgram_State{types.RewardProgram_STATE_STARTED}
 	case types.QueryRewardProgramsRequest_QUERY_TYPE_FINISHED:
-		rewardPrograms, err = k.GetAllCompletedRewardPrograms(sdkCtx)
+		rewardProgramStates = []types.RewardProgram_State{types.RewardProgram_STATE_FINISHED, types.RewardProgram_STATE_EXPIRED}
 	case types.QueryRewardProgramsRequest_QUERY_TYPE_OUTSTANDING:
-		rewardPrograms, err = k.GetOutstandingRewardPrograms(sdkCtx)
+		rewardProgramStates = []types.RewardProgram_State{types.RewardProgram_STATE_PENDING, types.RewardProgram_STATE_STARTED}
 	}
+
+	response := types.QueryRewardProgramsResponse{}
+	kvStore := sdkCtx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(kvStore, types.RewardProgramKeyPrefix)
+	pageResponse, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
+		var rewardProgram types.RewardProgram
+		vErr := rewardProgram.Unmarshal(value)
+		if vErr == nil && len(rewardProgramStates) == 0 {
+			response.RewardPrograms = append(response.RewardPrograms, rewardProgram)
+		} else if vErr == nil {
+			for _, state := range rewardProgramStates {
+				if rewardProgram.GetState() == state {
+					response.RewardPrograms = append(response.RewardPrograms, rewardProgram)
+					break
+				}
+			}
+		}
+		return nil
+	})
 
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to query all reward programs: %v", err))
 	}
-
-	return &types.QueryRewardProgramsResponse{RewardPrograms: rewardPrograms}, nil
+	response.Pagination = pageResponse
+	return &response, nil
 }
 
 func (k Keeper) RewardProgramByID(ctx context.Context, req *types.QueryRewardProgramByIDRequest) (*types.QueryRewardProgramByIDResponse, error) {
