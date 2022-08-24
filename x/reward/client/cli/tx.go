@@ -65,7 +65,7 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 		--max-rollover-periods 4 \
 		--claim-period-days 7 \
 		--expire-days 14 \ 
-		--qualifying-actions %s
+		--qualifying-actions %[2]s
 		`, version.AppName, actionsExampleJSON),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
