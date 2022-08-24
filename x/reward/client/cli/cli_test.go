@@ -337,8 +337,7 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 			clientCtx := s.network.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardProgramCmd(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
 			if tc.expectErr {
-				s.Assert().Error(err)
-				s.Assert().Equal(tc.expectErrMsg, err.Error())
+				s.Assert().EqualError(err, tc.expectErrMsg)
 			} else if tc.byId {
 				var response types.QueryRewardProgramByIDResponse
 				s.Assert().NoError(err)
@@ -507,8 +506,7 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 			clientCtx := s.network.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetClaimPeriodRewardDistributionCmd(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
 			if tc.expectErr {
-				s.Assert().Error(err)
-				s.Assert().Equal(tc.expectErrMsg, err.Error())
+				s.Assert().EqualError(err, tc.expectErrMsg)
 			} else if tc.byId {
 				var response types.QueryClaimPeriodRewardDistributionsByIDResponse
 				s.Assert().NoError(err)
@@ -801,8 +799,7 @@ func (s *IntegrationTestSuite) TestTxClaimReward() {
 			tc.args = append(tc.args, args...)
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdClaimReward(), tc.args)
 			if tc.expectErr {
-				s.Assert().Error(err)
-				s.Assert().Equal(tc.expectErrMsg, err.Error())
+				s.Assert().EqualError(err, tc.expectErrMsg)
 			} else {
 				var response sdk.TxResponse
 				s.Assert().NoError(err)
@@ -885,8 +882,7 @@ func (s *IntegrationTestSuite) TestTxEndRewardProgram() {
 			tc.args = append(tc.args, args...)
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdEndRewardProgram(), tc.args)
 			if tc.expectErr {
-				s.Assert().Error(err)
-				s.Assert().Equal(tc.expectErrMsg, err.Error())
+				s.Assert().EqualError(err, tc.expectErrMsg)
 			} else {
 				var response sdk.TxResponse
 				s.Assert().NoError(err)
@@ -1000,8 +996,7 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 			clientCtx := s.network.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardsByAddressCmd(), tc.args)
 			if tc.expectErr {
-				s.Assert().Error(err)
-				s.Assert().Equal(tc.expectErrMsg, err.Error())
+				s.Assert().EqualError(err, tc.expectErrMsg)
 			} else if tc.byId {
 				var response types.QueryRewardDistributionsByAddressResponse
 				s.Assert().NoError(err)
