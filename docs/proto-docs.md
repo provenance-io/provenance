@@ -1004,7 +1004,7 @@ Expiration holds a typed key/value structure for data associated with an expirin
 | `owner` | [string](#string) |  | The bech32 address the expiration is bound to |
 | `block_height` | [int64](#int64) |  | The block height the module asset expires |
 | `deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The deposit amount held while module asset is in use |
-| `messages` | [google.protobuf.Any](#google.protobuf.Any) | repeated | Messages relating to the expiring module asset |
+| `message` | [google.protobuf.Any](#google.protobuf.Any) |  | Message relating to the expiring module asset |
 
 
 

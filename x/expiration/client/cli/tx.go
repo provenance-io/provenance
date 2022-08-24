@@ -61,13 +61,11 @@ Where expiration.json contains:
   "owner": "cosmos1...",
   "block_height": 1000000,
   "deposit": "10000nhash",
-  "messages": [ // array of proto-JSON-encoded sdk.Msg
-    {
-      "@type": "/provenance.metadata.v1.MsgDeleteScopeRequest",
-      "scope_id": "scope1...",
-      "signers": ["cosmos1..."]
-    }
-  ],
+  "message": { // a proto-JSON-encoded sdk.Msg
+  	"@type": "/provenance.metadata.v1.MsgDeleteScopeRequest",
+  	"scope_id": "scope1...",
+  	"signers": ["cosmos1..."]
+  }
 }
 `,
 				version.AppName,
@@ -90,7 +88,7 @@ Where expiration.json contains:
 				Owner:         owner,
 				BlockHeight:   height,
 				Deposit:       deposit[0],
-				Messages:      msgs,
+				Message:       msgs,
 			}
 
 			signers, err := parseSigners(cmd, &clientCtx)
@@ -134,13 +132,11 @@ Where expiration.json contains:
   "owner": "cosmos1...",
   "block_height": 1000000,
   "deposit": "10000nhash",
-  "messages": [ // array of proto-JSON-encoded sdk.Msg
-    {
-      "@type": "/provenance.metadata.v1.MsgDeleteScopeRequest",
-      "scope_id": "scope1...",
-      "signers": ["cosmos1..."]
-    }
-  ],
+  "messages": { // a proto-JSON-encoded sdk.Msg
+    "@type": "/provenance.metadata.v1.MsgDeleteScopeRequest",
+    "scope_id": "scope1...",
+  	"signers": ["cosmos1..."]
+  }
 }
 `,
 				version.AppName,
@@ -163,7 +159,7 @@ Where expiration.json contains:
 				Owner:         owner,
 				BlockHeight:   height,
 				Deposit:       deposit[0],
-				Messages:      msgs,
+				Message:       msgs,
 			}
 
 			signers, err := parseSigners(cmd, &clientCtx)
@@ -224,17 +220,17 @@ func DeleteExpirationCmd() *cobra.Command {
 }
 
 type expiration struct {
-	ModuleAssetID string            `json:"module_asset_id"`
-	Owner         string            `json:"owner"`
-	BlockHeight   int64             `json:"block_height"`
-	Deposit       string            `json:"deposit"`
-	Messages      []json.RawMessage `json:"messages,omitempty"`
+	ModuleAssetID string          `json:"module_asset_id"`
+	Owner         string          `json:"owner"`
+	BlockHeight   int64           `json:"block_height"`
+	Deposit       string          `json:"deposit"`
+	Message       json.RawMessage `json:"message,omitempty"`
 }
 
 func parseAddExtendRequest(
 	cdc codec.Codec,
 	path string,
-) (string, string, int64, sdk.Coins, []*types2.Any, error) {
+) (string, string, int64, sdk.Coins, *types2.Any, error) {
 	var expiration expiration
 
 	contents, err := os.ReadFile(path)
@@ -251,32 +247,24 @@ func parseAddExtendRequest(
 		return "", "", -1, nil, nil, err
 	}
 
-	messages := make([]sdk.Msg, len(expiration.Messages))
-	for i, anyJSON := range expiration.Messages {
-		var msg sdk.Msg
-		if err := cdc.UnmarshalInterfaceJSON(anyJSON, &msg); err != nil {
-			return "", "", -1, nil, nil, err
-		}
-		if err := msg.ValidateBasic(); err != nil {
-			return "", "", -1, nil, nil, err
-		}
-		messages[i] = msg
+	var msg sdk.Msg
+	if err := cdc.UnmarshalInterfaceJSON(expiration.Message, &msg); err != nil {
+		return "", "", -1, nil, nil, err
+	}
+	if err := msg.ValidateBasic(); err != nil {
+		return "", "", -1, nil, nil, err
 	}
 
-	anys := make([]*types2.Any, len(messages))
-	for i, msg := range messages {
-		var err error
-		anys[i], err = types2.NewAnyWithValue(msg)
-		if err != nil {
-			return "", "", -1, nil, nil, err
-		}
+	anyMsg, err := types2.NewAnyWithValue(msg)
+	if err != nil {
+		return "", "", -1, nil, nil, err
 	}
 
 	return expiration.ModuleAssetID,
 		expiration.Owner,
 		expiration.BlockHeight,
 		deposit,
-		anys, err
+		anyMsg, err
 }
 
 func addSignerFlagCmd(cmd *cobra.Command) {

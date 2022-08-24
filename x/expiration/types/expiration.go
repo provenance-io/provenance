@@ -12,14 +12,14 @@ func NewExpiration(
 	owner string,
 	blockHeight int64,
 	deposit sdk.Coin,
-	messages []*types.Any,
+	message *types.Any,
 ) *Expiration {
 	return &Expiration{
 		ModuleAssetId: moduleAssetID,
 		Owner:         owner,
 		BlockHeight:   blockHeight,
 		Deposit:       deposit,
-		Messages:      messages,
+		Message:       message,
 	}
 }
 

@@ -29,6 +29,6 @@ message Expiration {
   int64 block_height = 3;
   // The deposit amount held while module asset is in use
   cosmos.base.v1beta1.Coin deposit = 4 [(gogoproto.nullable) = false];
-  // Messages relating to the expiring module asset
-  repeated google.protobuf.Any messages = 5;
+  // Message relating to the expiring module asset
+  google.protobuf.Any message = 5;
 }

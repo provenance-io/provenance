@@ -18,7 +18,7 @@ type ExpirationTestSuite struct {
 	owner         string
 	blockHeight   int64
 	deposit       sdk.Coin
-	messages      []types.Any
+	message       types.Any
 
 	signers      []string
 	otherSigners []string

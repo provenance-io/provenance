@@ -15,7 +15,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -213,29 +212,26 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.expiration6 = *expirationtypes.NewExpiration(s.moduleAssetID6, s.user6AddrStr, s.blockHeight, s.deposit, nil)
 
 	// expected expirations as JSON
-	s.expiration1AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"block_height\":\"%d\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"messages\":%v}}",
+	s.expiration1AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"block_height\":\"%d\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":null}}",
 		s.moduleAssetID1,
 		s.sameOwner,
 		s.blockHeight,
 		s.deposit.Denom,
 		s.deposit.Amount,
-		[]types.Any{},
 	)
-	s.expiration2AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"block_height\":\"%d\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"messages\":%v}}",
+	s.expiration2AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"block_height\":\"%d\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":null}}",
 		s.moduleAssetID2,
 		s.sameOwner,
 		s.blockHeight,
 		s.deposit.Denom,
 		s.deposit.Amount,
-		[]types.Any{},
 	)
-	s.expiration3AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"block_height\":\"%d\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"messages\":%v}}",
+	s.expiration3AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"block_height\":\"%d\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":null}}",
 		s.moduleAssetID3,
 		s.diffOwner,
 		s.blockHeight,
 		s.deposit.Denom,
 		s.deposit.Amount,
-		[]types.Any{},
 	)
 
 	// expected expirations as text
@@ -244,13 +240,12 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
   deposit:
     amount: "%v"
     denom: %s
-  messages: %v
+  message: null
   module_asset_id: %s
   owner: %s`,
 		s.blockHeight,
 		s.deposit.Amount,
 		s.deposit.Denom,
-		[]types.Any{},
 		s.moduleAssetID1,
 		s.sameOwner,
 	)
@@ -259,13 +254,12 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
   deposit:
     amount: "%v"
     denom: %s
-  messages: %v
+  message: null
   module_asset_id: %s
   owner: %s`,
 		s.blockHeight,
 		s.deposit.Amount,
 		s.deposit.Denom,
-		[]types.Any{},
 		s.moduleAssetID2,
 		s.sameOwner,
 	)
@@ -274,13 +268,12 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
   deposit:
     amount: "%v"
     denom: %s
-  messages: %v
+  message: null
   module_asset_id: %s
   owner: %s`,
 		s.blockHeight,
 		s.deposit.Amount,
 		s.deposit.Denom,
-		[]types.Any{},
 		s.moduleAssetID3,
 		s.diffOwner,
 	)
@@ -540,13 +533,11 @@ func parseExpirationJsonStr(
   "owner": "%s",
   "block_height": %d,
   "deposit": "%v",
-  "messages": [
-    {
-	  "@type": "/provenance.metadata.v1.MsgDeleteScopeRequest",
-	  "scope_id": "%s",
-	  "signers": ["%s"]
-	}
-  ]
+  "message": {
+	"@type": "/provenance.metadata.v1.MsgDeleteScopeRequest",
+	"scope_id": "%s",
+	"signers": ["%s"]
+  }
 }`, moduleAssetID, owner, blockHeight, deposit, scopeId, owner)
 	return s
 }
