@@ -76,18 +76,18 @@ func (suite *KeeperTestSuite) TestIterateClaimPeriodRewardDistributions() {
 		},
 	}
 
-	for _, tt := range tests {
-		suite.T().Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		suite.T().Run(tc.name, func(t *testing.T) {
 			counter := 0
-			for _, distribution := range tt.distributions {
+			for _, distribution := range tc.distributions {
 				suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, distribution)
 			}
 			err := suite.app.RewardKeeper.IterateClaimPeriodRewardDistributions(suite.ctx, func(ClaimPeriodRewardDistribution types.ClaimPeriodRewardDistribution) (stop bool) {
 				counter += 1
-				return tt.halt
+				return tc.halt
 			})
 			assert.NoError(t, err, "No error is thrown")
-			assert.Equal(t, tt.counter, counter, "iterated the correct number of times")
+			assert.Equal(t, tc.counter, counter, "iterated the correct number of times")
 		})
 	}
 }
@@ -121,14 +121,14 @@ func (suite *KeeperTestSuite) TestGetAllClaimPeriodRewardDistributions() {
 		},
 	}
 
-	for _, tt := range tests {
-		suite.T().Run(tt.name, func(t *testing.T) {
-			for _, distribution := range tt.distributions {
+	for _, tc := range tests {
+		suite.T().Run(tc.name, func(t *testing.T) {
+			for _, distribution := range tc.distributions {
 				suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, distribution)
 			}
 			results, err := suite.app.RewardKeeper.GetAllClaimPeriodRewardDistributions(suite.ctx)
 			assert.NoError(t, err, "No error is thrown")
-			assert.Equal(t, tt.expected, len(results), "returned the correct number of claim period reward distributions")
+			assert.Equal(t, tc.expected, len(results), "returned the correct number of claim period reward distributions")
 		})
 	}
 }
@@ -151,10 +151,10 @@ func (suite *KeeperTestSuite) TestClaimPeriodRewardDistributionIsValid() {
 		},
 	}
 
-	for _, tt := range tests {
-		suite.T().Run(tt.name, func(t *testing.T) {
-			result := suite.app.RewardKeeper.ClaimPeriodRewardDistributionIsValid(&tt.distribution)
-			assert.Equal(t, tt.valid, result, "the output should match the expected valid value")
+	for _, tc := range tests {
+		suite.T().Run(tc.name, func(t *testing.T) {
+			result := suite.app.RewardKeeper.ClaimPeriodRewardDistributionIsValid(&tc.distribution)
+			assert.Equal(t, tc.valid, result, "the output should match the expected valid value")
 		})
 	}
 }
@@ -183,16 +183,16 @@ func (suite *KeeperTestSuite) TestRemoveClaimPeriodRewardDistribution() {
 		},
 	}
 
-	for _, tt := range tests {
-		suite.T().Run(tt.name, func(t *testing.T) {
-			for _, distribution := range tt.distributions {
+	for _, tc := range tests {
+		suite.T().Run(tc.name, func(t *testing.T) {
+			for _, distribution := range tc.distributions {
 				suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, distribution)
 			}
 			removed := suite.app.RewardKeeper.RemoveClaimPeriodRewardDistribution(suite.ctx, 1, 1)
 			results, err := suite.app.RewardKeeper.GetAllClaimPeriodRewardDistributions(suite.ctx)
-			assert.Equal(t, tt.removed, removed, "removal status does not match expectation")
+			assert.Equal(t, tc.removed, removed, "removal status does not match expectation")
 			assert.NoError(t, err, "No error is thrown")
-			assert.Equal(t, tt.expected, len(results), "returned the correct number of claim period reward distributions")
+			assert.Equal(t, tc.expected, len(results), "returned the correct number of claim period reward distributions")
 		})
 	}
 }
