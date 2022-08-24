@@ -102,7 +102,7 @@ func (k Keeper) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *typ
 		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("unable to query claim period reward distributions by ID: %v", err))
 	}
 
-	if k.ClaimPeriodRewardDistributionIsValid(&ClaimPeriodReward) {
+	if ClaimPeriodReward.Validate() == nil {
 		response.ClaimPeriodRewardDistribution = &ClaimPeriodReward
 	}
 

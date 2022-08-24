@@ -56,11 +56,6 @@ func (k Keeper) GetAllClaimPeriodRewardDistributions(sdkCtx sdk.Context) ([]type
 	return rewardDistributions, nil
 }
 
-// ClaimPeriodRewardDistributionIsValid Checks if an Epoch Reward Distribution is valid
-func (k Keeper) ClaimPeriodRewardDistributionIsValid(claimPeriodReward *types.ClaimPeriodRewardDistribution) bool {
-	return claimPeriodReward.RewardProgramId != 0
-}
-
 // RemoveClaimPeriodRewardDistribution Removes an ClaimPeriodRewardDistribution
 func (k Keeper) RemoveClaimPeriodRewardDistribution(ctx sdk.Context, claimPeriodID uint64, rewardID uint64) bool {
 	store := ctx.KVStore(k.storeKey)

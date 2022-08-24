@@ -133,32 +133,6 @@ func (suite *KeeperTestSuite) TestGetAllClaimPeriodRewardDistributions() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestClaimPeriodRewardDistributionIsValid() {
-	tests := []struct {
-		name         string
-		distribution types.ClaimPeriodRewardDistribution
-		valid        bool
-	}{
-		{
-			"valid - claim reward distribution has valid id",
-			types.NewClaimPeriodRewardDistribution(1, 1, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 0, false),
-			true,
-		},
-		{
-			"invalid - claim reward distribution has invalid id",
-			types.NewClaimPeriodRewardDistribution(0, 0, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 0, false),
-			false,
-		},
-	}
-
-	for _, tc := range tests {
-		suite.T().Run(tc.name, func(t *testing.T) {
-			result := suite.app.RewardKeeper.ClaimPeriodRewardDistributionIsValid(&tc.distribution)
-			assert.Equal(t, tc.valid, result, "the output should match the expected valid value")
-		})
-	}
-}
-
 func (suite *KeeperTestSuite) TestRemoveClaimPeriodRewardDistribution() {
 	tests := []struct {
 		name          string
