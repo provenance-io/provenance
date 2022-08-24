@@ -38,7 +38,7 @@ var handlers = map[string]appUpgrade{
 	"mango-rc4":      {}, // upgrade for 1.11.1-rc4
 	"neoncarrot-rc1": {}, // upgrade for 1.12.0-rc1
 	"ochre-rc1": {
-		// TODO: Required for v1.13.x: Fill in Added with modules new to 1.13.x
+		// TODO: Required for v1.13.x: Fill in Added with modules new to 1.13.x https://github.com/provenance-io/provenance/issues/1007
 		Added: nil,
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
