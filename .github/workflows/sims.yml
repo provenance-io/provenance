@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: technote-space/get-diff-action@v6.0.1
+      - uses: technote-space/get-diff-action@v6.1.0
         with:
           PATTERNS: |
             **/**.go
@@ -35,22 +35,34 @@ jobs:
             sims-state-listening.mk
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
-      - name: Define file prefix
-        id: file-prefix
-        run: echo "::set-output name=file-prefix::sim-test-${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
-      - name: Update provwasm contract
+      - name: Define Variables
+        id: def-vars
         run: |
-          make download-smart-contracts
+          echo "::set-output name=file-prefix::sim-test-${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
+          echo "::set-output name=db-cache-key-hash::${{ hashFiles('scripts/cleveldb_build_and_install.sh') }}"
+          echo "::set-output name=go-cache-key-hash::${{ hashFiles('go.sum') }}"
     outputs:
+      go-version: 1.18
       should-run: ${{ env.GIT_DIFF }}
-      file-prefix: ${{ steps.file-prefix.outputs.file-prefix }}
-      cache-key-suffix: sims-t17
-      cache-path: |
+      file-prefix: ${{ steps.def-vars.outputs.file-prefix }}
+      db-cache-key-suffix: sims-db3-${{ steps.def-vars.outputs.db-cache-key-hash }}
+      # In Order:
+      # * The leveldb repo tarball
+      # * The directory extracted from the leveldb tarball
+      db-cache-path: |
         leveldb*.tar.gz
         leveldb-*
-        rocksdb*.tar.gz
-        rocksdb-*
+      go-cache-key-suffix: sims-go3-${{ steps.def-vars.outputs.go-cache-key-hash }}
+      # In Order:
+      # * Go binary directory
+      # * Go module directory
+      # * Go build cache (Linux)
+      # * Go build cache (Mac)
+      go-cache-path: |
         ~/go/bin
+        ~/go/pkg/mod
+        ~/.cache/go-build
+        ~/Library/Caches/go-build
 
   build-linux:
     # Note: Can't use a matrix to combine build-linux and build-mac because they'd both have the same job id and that would cause
@@ -63,15 +75,25 @@ jobs:
       - uses: actions/checkout@v3
       - name: Output setup
         run: |
-          echo "      should-run: [${{ needs.setup.outputs.should-run }}]"
-          echo "     file-prefix: [${{ needs.setup.outputs.file-prefix }}]"
-          echo "cache-key-suffix: [${{ needs.setup.outputs.cache-key-suffix }}]"
-          echo "      cache-path: [${{ needs.setup.outputs.cache-path }}]"
+          echo "         go-version: [${{ needs.setup.outputs.go-version }}]"
+          echo "         should-run: [${{ needs.setup.outputs.should-run }}]"
+          echo "        file-prefix: [${{ needs.setup.outputs.file-prefix }}]"
+          echo "db-cache-key-suffix: [${{ needs.setup.outputs.db-cache-key-suffix }}]"
+          echo "      db-cache-path: [${{ needs.setup.outputs.db-cache-path }}]"
+          echo "go-cache-key-suffix: [${{ needs.setup.outputs.go-cache-key-suffix }}]"
+          echo "      go-cache-path: [${{ needs.setup.outputs.go-cache-path }}]"
       - uses: actions/cache@v3
-        id: cache-setup
+        name: Load db cache
+        id: db-cache-setup
         with:
-          key: ${{ runner.os }}-${{ needs.setup.outputs.cache-key-suffix }}
-          path: ${{ needs.setup.outputs.cache-path }}
+          key: ${{ runner.os }}-${{ needs.setup.outputs.db-cache-key-suffix }}
+          path: ${{ needs.setup.outputs.db-cache-path }}
+      - uses: actions/cache@v3
+        name: Load go cache
+        id: go-cache-setup
+        with:
+          key: ${{ runner.os }}-${{ needs.setup.outputs.go-cache-key-suffix }}
+          path: ${{ needs.setup.outputs.go-cache-path }}
       - name: Setup build environment
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -79,7 +101,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev wget curl build-essential cmake gcc sqlite3
       - name: Build cleveldb
-        if: steps.cache-setup.outputs.cache-hit != 'true'
+        if: steps.db-cache-setup.outputs.cache-hit != 'true'
         run: |
           export CLEVELDB_DO_BUILD='true'
           export CLEVELDB_DO_INSTALL='false'
@@ -92,30 +114,16 @@ jobs:
           export CLEVELDB_SUDO='true'
           export CLEVELDB_DO_CLEANUP='false'
           make cleveldb
-      - name: Build rocksdb
-        if: steps.cache-setup.outputs.cache-hit != 'true'
-        # This takes a while, but is cached (and doesn't change). So if the cache was restored, skip it.
-        run: |
-          export ROCKSDB_DO_BUILD='true'
-          export ROCKSDB_DO_INSTALL='false'
-          export ROCKSDB_DO_CLEANUP='false'
-          make rocksdb
-      - name: Install rocksdb
-        run: |
-          export ROCKSDB_DO_BUILD='false'
-          export ROCKSDB_DO_INSTALL='true'
-          export ROCKSDB_SUDO='true'
-          export ROCKSDB_DO_CLEANUP='false'
-          make rocksdb
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: ${{ needs.setup.outputs.go-version }}
       - name: Display go version
         run: go version
       - name: Install runsim
-        if: steps.cache-setup.outputs.cache-hit != 'true'
-        # Part of the cache, so don't need to redo it if it was restored.
+        if: steps.go-cache-setup.outputs.cache-hit != 'true'
         run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
+      - name: Update provwasm contract
+        run: make download-smart-contracts
       - name: Build provenanced
         run: make build
       - name: Provenanced version
@@ -132,21 +140,35 @@ jobs:
       - uses: actions/checkout@v3
       - name: Output setup
         run: |
-          echo "      should-run: [${{ needs.setup.outputs.should-run }}]"
-          echo "     file-prefix: [${{ needs.setup.outputs.file-prefix }}]"
-          echo "cache-key-suffix: [${{ needs.setup.outputs.cache-key-suffix }}]"
-          echo "      cache-path: [${{ needs.setup.outputs.cache-path }}]"
+          echo "         go-version: [${{ needs.setup.outputs.go-version }}]"
+          echo "         should-run: [${{ needs.setup.outputs.should-run }}]"
+          echo "        file-prefix: [${{ needs.setup.outputs.file-prefix }}]"
+          echo "db-cache-key-suffix: [${{ needs.setup.outputs.db-cache-key-suffix }}]"
+          echo "      db-cache-path: [${{ needs.setup.outputs.db-cache-path }}]"
+          echo "go-cache-key-suffix: [${{ needs.setup.outputs.go-cache-key-suffix }}]"
+          echo "      go-cache-path: [${{ needs.setup.outputs.go-cache-path }}]"
       - uses: actions/cache@v3
-        id: cache-setup
+        name: Load db cache
+        id: db-cache-setup
         with:
-          key: ${{ runner.os }}-${{ needs.setup.outputs.cache-key-suffix }}
-          path: ${{ needs.setup.outputs.cache-path }}
+          key: ${{ runner.os }}-${{ needs.setup.outputs.db-cache-key-suffix }}
+          path: ${{ needs.setup.outputs.db-cache-path }}
+      - uses: actions/cache@v3
+        name: Load go cache
+        id: go-cache-setup
+        with:
+          key: ${{ runner.os }}-${{ needs.setup.outputs.go-cache-key-suffix }}
+          path: ${{ needs.setup.outputs.go-cache-path }}
       - name: Setup build environment
         run: |
           brew install cmake sqlite3
       - name: Build cleveldb
-        if: steps.cache-setup.outputs.cache-hit != 'true'
+        if: steps.db-cache-setup.outputs.cache-hit != 'true'
+        # As of 2022-06-13 (it was a Monday), the macos-latest runners do not have the nproc command.
+        # But have 3 cores according to https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+        # The linux runners have nproc, so we don't need to set the _JOBS in that job.
         run: |
+          export CLEVELDB_JOBS=3
           export CLEVELDB_DO_BUILD='true'
           export CLEVELDB_DO_INSTALL='false'
           export CLEVELDB_DO_CLEANUP='false'
@@ -158,29 +180,16 @@ jobs:
           export CLEVELDB_SUDO='true'
           export CLEVELDB_DO_CLEANUP='false'
           make cleveldb
-      - name: Build rocksdb
-        if: steps.cache-setup.outputs.cache-hit != 'true'
-        # This takes a while, but is cached (and doesn't change). So if the cache was restored, skip it.
-        run: |
-          export ROCKSDB_DO_BUILD='true'
-          export ROCKSDB_DO_INSTALL='false'
-          export ROCKSDB_DO_CLEANUP='false'
-          make rocksdb
-      - name: Install rocksdb
-        run: |
-          export ROCKSDB_DO_BUILD='false'
-          export ROCKSDB_DO_INSTALL='true'
-          export ROCKSDB_SUDO='true'
-          export ROCKSDB_DO_CLEANUP='false'
-          make rocksdb
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: ${{ needs.setup.outputs.go-version }}
       - name: Display go version
         run: go version
       - name: Install runsim
-        if: steps.cache-setup.outputs.cache-hit != 'true'
+        if: steps.go-cache-setup.outputs.cache-hit != 'true'
         run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
+      - name: Update provwasm contract
+        run: make download-smart-contracts
       - name: Build provenanced
         run: make build
       - name: Provenanced version
@@ -198,7 +207,7 @@ jobs:
         # The test-sim-multi-seed-short test should take 30-40 minutes.
         # TODO: Add the "after-import" test once it's fixed: https://github.com/provenance-io/provenance/issues/754
         test: ["import-export", "multi-seed-short"]
-        db-backend: ["goleveldb", "cleveldb", "rocksdb", "badgerdb"]
+        db-backend: ["goleveldb", "cleveldb", "badgerdb"]
         # Not putting "macos-latest" in this because:
         #   a) They take longer than on ubuntu to begin with.
         #   b) We're limited to 5 Mac runners at once so they get queued up, taking even longer to finish all of them.
@@ -208,9 +217,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
+        name: Load db cache
         with:
-          key: ${{ runner.os }}-${{ needs.setup.outputs.cache-key-suffix }}
-          path: ${{ needs.setup.outputs.cache-path }}
+          key: ${{ runner.os }}-${{ needs.setup.outputs.db-cache-key-suffix }}
+          path: ${{ needs.setup.outputs.db-cache-path }}
+      - uses: actions/cache@v3
+        name: Load go cache
+        with:
+          key: ${{ runner.os }}-${{ needs.setup.outputs.go-cache-key-suffix }}
+          path: ${{ needs.setup.outputs.go-cache-path }}
       - name: Define test-logs
         id: test-logs
         run: echo "::set-output name=test-logs::${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
@@ -222,19 +237,13 @@ jobs:
           export CLEVELDB_SUDO='true'
           export CLEVELDB_DO_CLEANUP='false'
           make cleveldb
-      - name: Install rocksdb
-        if: matrix.db-backend == 'rocksdb'
-        run: |
-          export ROCKSDB_DO_BUILD='false'
-          export ROCKSDB_DO_INSTALL='true'
-          export ROCKSDB_SUDO='true'
-          export ROCKSDB_DO_CLEANUP='false'
-          make rocksdb
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: ${{ needs.setup.outputs.go-version }}
       - name: Display go version
         run: go version
+      - name: Update provwasm contract
+        run: make download-smart-contracts
       - name: Test
         run: |
           set -x
@@ -271,15 +280,21 @@ jobs:
         # The test-sim-simple test is pretty quick and should be able to identify glaring problems.
         # The test-sim-benchmark is handy to have for each db type.
         test: ["simple", "benchmark"]
-        db-backend: ["goleveldb", "cleveldb", "rocksdb", "badgerdb"]
+        db-backend: ["goleveldb", "cleveldb", "badgerdb"]
         os: ["ubuntu-latest", "macos-latest"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
+        name: Load db cache
         with:
-          key: ${{ runner.os }}-${{ needs.setup.outputs.cache-key-suffix }}
-          path: ${{ needs.setup.outputs.cache-path }}
+          key: ${{ runner.os }}-${{ needs.setup.outputs.db-cache-key-suffix }}
+          path: ${{ needs.setup.outputs.db-cache-path }}
+      - uses: actions/cache@v3
+        name: Load go cache
+        with:
+          key: ${{ runner.os }}-${{ needs.setup.outputs.go-cache-key-suffix }}
+          path: ${{ needs.setup.outputs.go-cache-path }}
       - name: Define test-logs
         id: test-logs
         run: echo "::set-output name=test-logs::${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
@@ -291,19 +306,13 @@ jobs:
           export CLEVELDB_SUDO='true'
           export CLEVELDB_DO_CLEANUP='false'
           make cleveldb
-      - name: Install rocksdb
-        if: matrix.db-backend == 'rocksdb'
-        run: |
-          export ROCKSDB_DO_BUILD='false'
-          export ROCKSDB_DO_INSTALL='true'
-          export ROCKSDB_SUDO='true'
-          export ROCKSDB_DO_CLEANUP='false'
-          make rocksdb
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: ${{ needs.setup.outputs.go-version }}
       - name: Display go version
         run: go version
+      - name: Update provwasm contract
+        run: make download-smart-contracts
       - name: Test
         run: |
           set -x
@@ -318,7 +327,7 @@ jobs:
 
   go-test-single-db:
     # These are tests that use go test to run (see sims.mk), and that we don't care about testing using different database backends.
-    needs: [setup]
+    needs: [setup, build-linux, build-mac]
     if: needs.setup.outputs.should-run
     strategy:
       fail-fast: false
@@ -330,14 +339,21 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        name: Load go cache
+        with:
+          key: ${{ runner.os }}-${{ needs.setup.outputs.go-cache-key-suffix }}
+          path: ${{ needs.setup.outputs.go-cache-path }}
       - name: Define test-logs
         id: test-logs
         run: echo "::set-output name=test-logs::${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.os }}"
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: ${{ needs.setup.outputs.go-version }}
       - name: Display go version
         run: go version
+      - name: Update provwasm contract
+        run: make download-smart-contracts
       - name: Test
         run: |
           set -x
@@ -367,17 +383,24 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        name: Load go cache
+        with:
+          key: ${{ runner.os }}-${{ needs.setup.outputs.go-cache-key-suffix }}
+          path: ${{ needs.setup.outputs.go-cache-path }}
       - name: Define test-logs
         id: test-logs
         run: echo "::set-output name=test-logs::${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.os }}"
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: ${{ needs.setup.outputs.go-version }}
       - name: Display go version
         run: go version
       - name: Setup Docker
         if: matrix.test == 'kafka'
-        uses: docker-practice/actions-setup-docker@1.0.10
+        uses: docker-practice/actions-setup-docker@1.0.11
+      - name: Update provwasm contract
+        run: make download-smart-contracts
       - name: Test
         run: |
           set -x

@@ -27,21 +27,16 @@ type appUpgrade struct {
 }
 
 var handlers = map[string]appUpgrade{
-	"hazel":  {},
-	"indigo": {}, // upgrade for pio-testnet-1 from v1.8.0-rc7 to v1.8.0-rc8
-	"jasmine": {
+	"lava": {}, // upgrade for 1.10.0
+	"mango": {
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
-			// Ensure consensus params are correct and match mainnet/testnet.  Max Block Sizes: 60M gas, 5MB
-			params := app.GetConsensusParams(ctx)
-			params.Block.MaxBytes = 1024 * 1024 * 5 // 5MB
-			params.Block.MaxGas = 60_000_000        // With ante tx gas limit this will yield 3M gas max per tx.
-			app.StoreConsensusParams(ctx, params)
+			params := app.MsgFeesKeeper.GetParams(ctx)
+			app.MsgFeesKeeper.SetParams(ctx, params)
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			return versionMap, nil
-		}, // upgrade for pio-testnet-1 from v1.8.0-rc8 to v1.8.0-rc9
-	},
-	"kahlua": {}, // upgrade for pio-testnet-1 from v1.8.0-rc9 to v1.8.0
-	"lava":   {}, // upgrade for 1.10.0
+			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
+		},
+	}, // upgrade for 1.11.1
+	"mango-rc4": {}, // upgrade for 1.11.1-rc4
 	// TODO - Add new upgrade definitions here.
 }
 

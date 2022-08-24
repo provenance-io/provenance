@@ -51,7 +51,7 @@ func (params *WriteScope) Encode() ([]sdk.Msg, error) {
 	for _, addr := range params.Signers {
 		_, err := sdk.AccAddressFromBech32(addr)
 		if err != nil {
-			return nil, fmt.Errorf("wasm: signer address must be a Bech32 string: %v", err)
+			return nil, fmt.Errorf("wasm: signer address must be a Bech32 string: %w", err)
 		}
 	}
 	scope, err := params.Scope.convertToBaseType()

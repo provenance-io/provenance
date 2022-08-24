@@ -49,7 +49,6 @@ curl -f -sSL "$CONFIO_PROTO_URL" -o proto/proofs.proto.orig --create-dirs
 curl -f -sSL "$GOGO_PROTO_URL" -o proto/gogoproto/gogo.proto --create-dirs
 curl -f -sSL "$COSMOS_PROTO_URL" -o proto/cosmos_proto/cosmos.proto --create-dirs
 curl -f -sSL "$COSMWASM_TARBALL_URL" | $tar --exclude="*/third_party" "$PROTO_EXPR"
-curl -f -sSL "$COSMWASM_TARBALL_URL" | $tar --exclude="*/third_party" "$PROTO_EXPR"
 curl -f -sSL "$WASMD_TARBALL_URL" | $tar --exclude="*/third_party" --exclude="*/proto/ibc" "$PROTO_EXPR"
 curl -f -sSL "$IBC_GO_TARBALL_URL" | $tar --exclude="*/third_party" "$PROTO_EXPR"
 curl -f -sSL "$COSMOS_TARBALL_URL" | $tar --exclude="*/third_party" --exclude="*/testutil" "$PROTO_EXPR"

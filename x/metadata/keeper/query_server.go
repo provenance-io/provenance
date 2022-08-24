@@ -123,7 +123,7 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 	var err error
 	switch {
 	case sessErr != nil && recErr != nil:
-		err = fmt.Errorf("errors getting sessions and records: %s, %s", sessErr.Error(), recErr.Error())
+		err = fmt.Errorf("errors getting sessions and records: %v, %v", sessErr, recErr) //nolint:errorlint // Can't wrap two errors at once.
 	case sessErr != nil:
 		err = sessErr
 	case recErr != nil:
@@ -1015,8 +1015,8 @@ func ParseScopeID(scopeID string) (types.MetadataAddress, error) {
 	if uidErr == nil {
 		return types.ScopeMetadataAddress(uid), nil
 	}
-	return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into either a scope address (%s) or uuid (%s)",
-		scopeID, addrErr, uidErr)
+	return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into either a scope address (%v) or uuid (%v)",
+		scopeID, addrErr, uidErr) //nolint:errorlint // Can't wrap two errors at once.
 }
 
 // ParseSessionID parses the provided input into a session MetadataAddress.
@@ -1051,8 +1051,8 @@ func ParseSessionID(scopeID string, sessionID string) (types.MetadataAddress, er
 	if sessionUUIDErr == nil {
 		return scopeAddr.AsSessionAddress(sessionUUID)
 	}
-	return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into either a session address (%s) or uuid (%s)",
-		sessionID, sessionAddrErr, sessionUUIDErr)
+	return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into either a session address (%v) or uuid (%v)",
+		sessionID, sessionAddrErr, sessionUUIDErr) //nolint:errorlint // Can't wrap two errors at once.
 }
 
 // ParseSessionAddr parses the provided input into a session MetadataAddress.
@@ -1095,8 +1095,8 @@ func ParseScopeSpecID(scopeSpecID string) (types.MetadataAddress, error) {
 	if uidErr == nil {
 		return types.ScopeSpecMetadataAddress(uid), nil
 	}
-	return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into either a scope spec address (%s) or uuid (%s)",
-		scopeSpecID, addrErr, uidErr)
+	return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into either a scope spec address (%v) or uuid (%v)",
+		scopeSpecID, addrErr, uidErr) //nolint:errorlint // Can't wrap two errors at once.
 }
 
 // ParseContractSpecID parses the provided input into a contract spec MetadataAddress.
@@ -1116,8 +1116,8 @@ func ParseContractSpecID(contractSpecID string) (types.MetadataAddress, error) {
 	if uidErr == nil {
 		return types.ContractSpecMetadataAddress(uid), nil
 	}
-	return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into either a contract spec address (%s) or uuid (%s)",
-		contractSpecID, addrErr, uidErr)
+	return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into either a contract spec address (%v) or uuid (%v)",
+		contractSpecID, addrErr, uidErr) //nolint:errorlint // Can't wrap two errors at once.
 }
 
 // ParseRecordSpecID parses the provided input into a record spec MetadataAddress.
@@ -1139,8 +1139,8 @@ func ParseRecordSpecID(specID string, name string) (types.MetadataAddress, error
 	}
 	uid, uidErr := uuid.Parse(specID)
 	if uidErr != nil {
-		return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into either a record spec address (%s) or uuid (%s)",
-			specID, addrErr, uidErr)
+		return types.MetadataAddress{}, fmt.Errorf("could not parse [%s] into either a record spec address (%v) or uuid (%v)",
+			specID, addrErr, uidErr) //nolint:errorlint // Can't wrap two errors at once.
 	}
 	if len(name) == 0 {
 		return types.MetadataAddress{}, errors.New("a name is required when providing a uuid")

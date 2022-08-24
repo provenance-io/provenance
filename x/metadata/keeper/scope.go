@@ -280,6 +280,8 @@ func (k Keeper) ValidateScopeUpdate(
 		return err
 	}
 
+	var validatedParties []types.Party
+
 	if len(existing.Owners) > 0 {
 		// Existing owners are not required to sign when the ONLY change is from one value owner to another.
 		// If the value owner wasn't previously set, and is being set now, existing owners must sign.
@@ -292,31 +294,39 @@ func (k Keeper) ValidateScopeUpdate(
 			if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msgTypeURL); err != nil {
 				return err
 			}
+			validatedParties = existing.Owners
 		}
 	}
 
-	if err := k.validateScopeUpdateValueOwner(ctx, existing.ValueOwnerAddress, proposed.ValueOwnerAddress, signers, msgTypeURL); err != nil {
+	if err := k.validateScopeUpdateValueOwner(ctx, existing.ValueOwnerAddress, proposed.ValueOwnerAddress, validatedParties, signers, msgTypeURL); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// ValidateScopeRemove checks the current scope and the proposed removal scope to determine if the the proposed remove is valid
+// ValidateScopeRemove checks the current scope and the proposed removal scope to determine if the proposed remove is valid
 // based on the existing state
 func (k Keeper) ValidateScopeRemove(ctx sdk.Context, scope types.Scope, signers []string, msgTypeURL string) error {
 	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, scope.Owners, signers, msgTypeURL); err != nil {
 		return err
 	}
 
-	if err := k.validateScopeUpdateValueOwner(ctx, scope.ValueOwnerAddress, "", signers, msgTypeURL); err != nil {
+	if err := k.validateScopeUpdateValueOwner(ctx, scope.ValueOwnerAddress, "", scope.Owners, signers, msgTypeURL); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (k Keeper) validateScopeUpdateValueOwner(ctx sdk.Context, existing, proposed string, signers []string, msgTypeURL string) error {
+func (k Keeper) validateScopeUpdateValueOwner(
+	ctx sdk.Context,
+	existing,
+	proposed string,
+	validatedParties []types.Party,
+	signers []string,
+	msgTypeURL string,
+) error {
 	// If they're the same, we don't need to do anything.
 	if existing == proposed {
 		return nil
@@ -333,14 +343,25 @@ func (k Keeper) validateScopeUpdateValueOwner(ctx sdk.Context, existing, propose
 			// Not using ValidateAllOwnersAreSignersWithAuthz here because we want a slightly different error message.
 			// Not using ValidateAllPartiesAreSignersWithAuthz here because of the error message and also it wants parties.
 			found := false
-			for _, signer := range signers {
-				if existing == signer {
+			for _, party := range validatedParties {
+				if existing == party.Address {
 					found = true
 					break
 				}
 			}
 			if !found {
-				stillMissing := k.checkAuthzForMissing(ctx, []string{existing}, signers, msgTypeURL)
+				for _, signer := range signers {
+					if existing == signer {
+						found = true
+						break
+					}
+				}
+			}
+			if !found {
+				stillMissing, err := k.checkAuthzForMissing(ctx, []string{existing}, signers, msgTypeURL)
+				if err != nil {
+					return fmt.Errorf("error validating signers: %w", err)
+				}
 				if len(stillMissing) == 0 {
 					found = true
 				}
@@ -376,7 +397,7 @@ func (k Keeper) ValidateScopeAddDataAccess(
 	for _, da := range dataAccessAddrs {
 		_, err := sdk.AccAddressFromBech32(da)
 		if err != nil {
-			return fmt.Errorf("failed to decode data access address %s : %v", da, err.Error())
+			return fmt.Errorf("failed to decode data access address %s : %w", da, err)
 		}
 		for _, pda := range existing.DataAccess {
 			if da == pda {
@@ -406,7 +427,7 @@ func (k Keeper) ValidateScopeDeleteDataAccess(
 	for _, da := range dataAccessAddrs {
 		_, err := sdk.AccAddressFromBech32(da)
 		if err != nil {
-			return fmt.Errorf("failed to decode data access address %s : %v", da, err.Error())
+			return fmt.Errorf("failed to decode data access address %s : %w", da, err)
 		}
 		found := false
 		for _, pda := range existing.DataAccess {

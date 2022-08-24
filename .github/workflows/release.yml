@@ -57,7 +57,7 @@ jobs:
       version: ${{ steps.vars.outputs.version }}
       is_release: ${{ steps.vars.outputs.is_release }}
       prerelease: ${{ steps.vars.outputs.prerelease }}
-      go_version: "1.17"
+      go_version: 1.18
 
   build_osx:
     runs-on: macos-latest
@@ -100,7 +100,7 @@ jobs:
           path: build/*.zip
 
   build_linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs:
       - build_init
     name: Build Linux
@@ -134,6 +134,28 @@ jobs:
         with:
           name: linux-zip
           path: build/*.zip
+
+  buf_push:
+    needs:
+      - build_init
+    if: needs.build_init.outputs.is_release == 'true'
+    runs-on: ubuntu-latest
+    name: Protobuf Push
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Buf setup action
+        uses: bufbuild/buf-setup-action@v1.7.0
+      - name: Buf push 'proto/'
+        uses: bufbuild/buf-push-action@v1
+        with:
+          input: 'proto'
+          buf_token: ${{ secrets.BUF_TOKEN }}
+      - name: Buf push 'third_party/proto'
+        uses: bufbuild/buf-push-action@v1
+        with:
+          input: 'third_party/proto'
+          buf_token: ${{ secrets.BUF_TOKEN }}
 
   create_release:
     needs:

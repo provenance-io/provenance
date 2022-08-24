@@ -46,7 +46,7 @@ type AnteTestSuite struct {
 // returns context and app with params set on account keeper
 func createTestApp(isCheckTx bool) (*simapp.App, sdk.Context) {
 	app := simapp.Setup(isCheckTx)
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{ChainID: "ante-test"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
 	return app, ctx

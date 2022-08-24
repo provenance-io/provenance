@@ -1,7 +1,7 @@
 # This docker file builds a test image using binaries built locally.
 # Use `make docker-build-local` to build or `make localnet-start` to
 # start the test network and `make localnet-stop` to stop it.
-FROM golang:1.17-buster as build
+FROM golang:1.18-bullseye as build
 WORKDIR /go/src/github.com/provenance-io/provenance
 ENV GOPRIVATE=github.com/provenance-io
 RUN apt-get update && apt-get upgrade -y && apt-get install -y libleveldb-dev
@@ -21,7 +21,7 @@ RUN go build -mod vendor \
     -o /go/bin/ ./cmd/...
 
 ###
-FROM debian:buster-slim
+FROM debian:bullseye-slim
 ENV LOCALNET=1
 
 RUN apt-get update && \

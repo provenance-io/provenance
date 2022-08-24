@@ -23,9 +23,12 @@ brew_install "openssl"
 brew_install "pkg-config"
 
 # Check that PKG_CONFIG_PATH is set
-case ":$PKG_CONFIG_PATH:" in
-  *:"$( brew --prefix openssl )/lib/pkgconfig":*) : ;;
-  *) echo ""; echo "openssl is MISSING from PKG_CONFIG_PATH. Set it with the following command:"; echo 'export PKG_CONFIG_PATH="$( brew --prefix openssl )"/lib/pkgconfig"${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"' ;;
-esac
+op="$( brew --prefix openssl )/lib/pkgconfig"
+if ! tr ':' '\n' <<< "$PKG_CONFIG_PATH" | grep -xFq "$op"; then
+    echo "";
+    echo "openssl is MISSING from PKG_CONFIG_PATH. Set it with the following command:";
+    echo 'export PKG_CONFIG_PATH="$( brew --prefix openssl )"/lib/pkgconfig"${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"';
+fi
+
 echo ""
 echo "Installation complete!"

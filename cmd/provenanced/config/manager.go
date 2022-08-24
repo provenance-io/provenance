@@ -30,15 +30,15 @@ func PackConfig(cmd *cobra.Command) error {
 func UnpackConfig(cmd *cobra.Command) error {
 	appConfig, appConfErr := ExtractAppConfig(cmd)
 	if appConfErr != nil {
-		return fmt.Errorf("could not get app config values: %v", appConfErr)
+		return fmt.Errorf("could not get app config values: %w", appConfErr)
 	}
 	tmConfig, tmConfErr := ExtractTmConfig(cmd)
 	if tmConfErr != nil {
-		return fmt.Errorf("could not get tendermint config values: %v", tmConfErr)
+		return fmt.Errorf("could not get tendermint config values: %w", tmConfErr)
 	}
 	clientConfig, clientConfErr := ExtractClientConfig(cmd)
 	if clientConfErr != nil {
-		return fmt.Errorf("could not get client config values: %v", clientConfErr)
+		return fmt.Errorf("could not get client config values: %w", clientConfErr)
 	}
 	writeUnpackedConfig(cmd, appConfig, tmConfig, clientConfig, true)
 	err := deletePackedConfig(cmd, true)
@@ -65,7 +65,7 @@ func ExtractAppConfig(cmd *cobra.Command) (*serverconfig.Config, error) {
 	v := server.GetServerContextFromCmd(cmd).Viper
 	conf := serverconfig.DefaultConfig()
 	if err := v.Unmarshal(conf); err != nil {
-		return nil, fmt.Errorf("error extracting app config: %v", err)
+		return nil, fmt.Errorf("error extracting app config: %w", err)
 	}
 	return conf, nil
 }
@@ -85,7 +85,7 @@ func ExtractTmConfig(cmd *cobra.Command) (*tmconfig.Config, error) {
 	v := server.GetServerContextFromCmd(cmd).Viper
 	conf := tmconfig.DefaultConfig()
 	if err := v.Unmarshal(conf); err != nil {
-		return nil, fmt.Errorf("error extracting tendermint config: %v", err)
+		return nil, fmt.Errorf("error extracting tendermint config: %w", err)
 	}
 	conf.SetRoot(GetHomeDir(cmd))
 	return conf, nil
@@ -126,7 +126,7 @@ func ExtractClientConfig(cmd *cobra.Command) (*ClientConfig, error) {
 	v := client.GetClientContextFromCmd(cmd).Viper
 	conf := DefaultClientConfig()
 	if err := v.Unmarshal(conf); err != nil {
-		return nil, fmt.Errorf("error extracting client config: %v", err)
+		return nil, fmt.Errorf("error extracting client config: %w", err)
 	}
 	return conf, nil
 }
@@ -225,12 +225,12 @@ func appConfigIndexEventsWorkAround(configFilePath string, config *serverconfig.
 	// Manually read in the file, change the index-events line to the correct format and write it again.
 	indexEventsBz, merr := json.Marshal(config.IndexEvents)
 	if merr != nil {
-		panic(fmt.Errorf("marshaling index events to json: %v", merr))
+		panic(fmt.Errorf("marshaling index events to json: %w", merr))
 	}
 
 	bz, rerr := os.ReadFile(configFilePath)
 	if rerr != nil {
-		panic(fmt.Errorf("reading app config file: %v", rerr))
+		panic(fmt.Errorf("reading app config file: %w", rerr))
 	}
 	fixedFileBz := []byte{}
 	for _, line := range strings.Split(string(bz), "\n") {
@@ -246,7 +246,7 @@ func appConfigIndexEventsWorkAround(configFilePath string, config *serverconfig.
 	//nolint:gosec // These are the correct permissions
 	werr := os.WriteFile(configFilePath, fixedFileBz, 0644)
 	if werr != nil {
-		panic(fmt.Errorf("writing fixec app config: %v", werr))
+		panic(fmt.Errorf("writing fixec app config: %w", werr))
 	}
 }
 
@@ -268,7 +268,7 @@ func deleteUnpackedConfig(cmd *cobra.Command, verbose bool) error {
 		}
 	}
 	if rvErr != nil {
-		rvErr = fmt.Errorf("one or more unpacked config files could not be removed\n%v", rvErr)
+		rvErr = fmt.Errorf("one or more unpacked config files could not be removed\n%w", rvErr)
 	}
 	return rvErr
 }
@@ -289,7 +289,7 @@ func generateAndWritePackedConfig(
 		var err error
 		_, appConfMap, err = ExtractAppConfigAndMap(cmd)
 		if err != nil {
-			panic(fmt.Errorf("could not extract app config values: %v", err))
+			panic(fmt.Errorf("could not extract app config values: %w", err))
 		}
 	} else {
 		appConfMap = MakeFieldValueMap(appConfig, false)
@@ -298,7 +298,7 @@ func generateAndWritePackedConfig(
 		var err error
 		_, tmConfMap, err = ExtractTmConfigAndMap(cmd)
 		if err != nil {
-			panic(fmt.Errorf("could not extract tm config values: %v", err))
+			panic(fmt.Errorf("could not extract tm config values: %w", err))
 		}
 	} else {
 		tmConfMap = MakeFieldValueMap(tmConfig, false)
@@ -307,7 +307,7 @@ func generateAndWritePackedConfig(
 		var err error
 		_, clientConfMap, err = ExtractClientConfigAndMap(cmd)
 		if err != nil {
-			panic(fmt.Errorf("could not extract client config values: %v", err))
+			panic(fmt.Errorf("could not extract client config values: %w", err))
 		}
 	} else {
 		clientConfMap = MakeFieldValueMap(clientConfig, false)
@@ -397,10 +397,35 @@ func unquote(str string) string {
 
 // LoadConfigFromFiles loads configurations appropriately.
 func LoadConfigFromFiles(cmd *cobra.Command) error {
+	if err := loadUnmanagedConfig(cmd); err != nil {
+		return err
+	}
 	if IsPacked(cmd) {
 		return loadPackedConfig(cmd)
 	}
 	return loadUnpackedConfig(cmd)
+}
+
+// loadUnmanagedConfig reads the unmanaged config file into viper. It does not apply anything to any contexts though.
+func loadUnmanagedConfig(cmd *cobra.Command) error {
+	unmanagedConfFile := GetFullPathToUnmanagedConf(cmd)
+	// Both the server context and client context should be using the same Viper, so this is good for both.
+	vpr := server.GetServerContextFromCmd(cmd).Viper
+	// Load the unmanaged config if it exists, or else do nothing.
+	switch _, err := os.Stat(unmanagedConfFile); {
+	case os.IsNotExist(err):
+		// It doesn't exist. Nothing to do.
+		return nil
+	case err != nil:
+		return fmt.Errorf("unmanaged config file stat error: %w", err)
+	default:
+		vpr.SetConfigFile(unmanagedConfFile)
+		rerr := vpr.MergeInConfig()
+		if rerr != nil {
+			return fmt.Errorf("unmanaged config file read error: %w", rerr)
+		}
+	}
+	return nil
 }
 
 // loadUnpackedConfig attempts to read the unpacked config files and apply them to the appropriate contexts.
@@ -417,15 +442,15 @@ func loadUnpackedConfig(cmd *cobra.Command) error {
 	case os.IsNotExist(err):
 		lerr := addFieldMapToViper(vpr, MakeFieldValueMap(tmconfig.DefaultConfig(), false))
 		if lerr != nil {
-			return fmt.Errorf("tendermint config file load error: %v", lerr)
+			return fmt.Errorf("tendermint config file load error: %w", lerr)
 		}
 	case err != nil:
-		return fmt.Errorf("tendermint config file stat error: %v", err)
+		return fmt.Errorf("tendermint config file stat error: %w", err)
 	default:
 		vpr.SetConfigFile(tmConfFile)
 		rerr := vpr.MergeInConfig()
 		if rerr != nil {
-			return fmt.Errorf("tendermint config file read error: %v", rerr)
+			return fmt.Errorf("tendermint config file read error: %w", rerr)
 		}
 	}
 
@@ -434,15 +459,15 @@ func loadUnpackedConfig(cmd *cobra.Command) error {
 	case os.IsNotExist(err):
 		lerr := addFieldMapToViper(vpr, MakeFieldValueMap(serverconfig.DefaultConfig(), false))
 		if lerr != nil {
-			return fmt.Errorf("app config load error: %v", lerr)
+			return fmt.Errorf("app config load error: %w", lerr)
 		}
 	case err != nil:
-		return fmt.Errorf("app config file stat error: %v", err)
+		return fmt.Errorf("app config file stat error: %w", err)
 	default:
 		vpr.SetConfigFile(appConfFile)
 		merr := vpr.MergeInConfig()
 		if merr != nil {
-			return fmt.Errorf("app config file merge error: %v", merr)
+			return fmt.Errorf("app config file merge error: %w", merr)
 		}
 	}
 
@@ -451,15 +476,15 @@ func loadUnpackedConfig(cmd *cobra.Command) error {
 	case os.IsNotExist(err):
 		lerr := addFieldMapToViper(vpr, MakeFieldValueMap(DefaultClientConfig(), false))
 		if lerr != nil {
-			return fmt.Errorf("client config file load error: %v", lerr)
+			return fmt.Errorf("client config file load error: %w", lerr)
 		}
 	case err != nil:
-		return fmt.Errorf("client config file stat error: %v", err)
+		return fmt.Errorf("client config file stat error: %w", err)
 	default:
 		vpr.SetConfigFile(clientConfFile)
 		rerr := vpr.MergeInConfig()
 		if rerr != nil {
-			return fmt.Errorf("client config file read error: %v", rerr)
+			return fmt.Errorf("client config file read error: %w", rerr)
 		}
 	}
 
@@ -477,11 +502,11 @@ func loadPackedConfig(cmd *cobra.Command) error {
 	case os.IsNotExist(rerr):
 		// Packed config file doesn't exist. Do nothing. Just let it use the defaults.
 	case rerr != nil:
-		return fmt.Errorf("packed config file read error: %v", rerr)
+		return fmt.Errorf("packed config file read error: %w", rerr)
 	default:
 		jerr := json.Unmarshal(packedJSON, &packedConf)
 		if jerr != nil {
-			return fmt.Errorf("packed config file parse error: %v", jerr)
+			return fmt.Errorf("packed config file parse error: %w", jerr)
 		}
 	}
 
@@ -498,21 +523,21 @@ func loadPackedConfig(cmd *cobra.Command) error {
 			found = true
 			err := appConfigMap.SetFromString(k, v)
 			if err != nil {
-				rvErr = appendError(rvErr, fmt.Errorf("app config key: %s, value: %s, err: %v", k, v, err))
+				rvErr = appendError(rvErr, fmt.Errorf("app config key: %s, value: %s, err: %w", k, v, err))
 			}
 		}
 		if tmConfigMap.Has(k) {
 			found = true
 			err := tmConfigMap.SetFromString(k, v)
 			if err != nil {
-				rvErr = appendError(rvErr, fmt.Errorf("tendermint config key: %s, value: %s, err: %v", k, v, err))
+				rvErr = appendError(rvErr, fmt.Errorf("tendermint config key: %s, value: %s, err: %w", k, v, err))
 			}
 		}
 		if clientConfigMap.Has(k) {
 			found = true
 			err := clientConfigMap.SetFromString(k, v)
 			if err != nil {
-				rvErr = appendError(rvErr, fmt.Errorf("client config key: %s, value: %s, err: %v", k, v, err))
+				rvErr = appendError(rvErr, fmt.Errorf("client config key: %s, value: %s, err: %w", k, v, err))
 			}
 		}
 		if !found {
@@ -520,7 +545,7 @@ func loadPackedConfig(cmd *cobra.Command) error {
 		}
 	}
 	if rvErr != nil {
-		return fmt.Errorf("one or more fields in the packed config could not be set\n%s", rvErr)
+		return fmt.Errorf("one or more fields in the packed config could not be set\n%w", rvErr)
 	}
 
 	// Set the config values as defaults in viper.
@@ -529,13 +554,13 @@ func loadPackedConfig(cmd *cobra.Command) error {
 	// The server and client should both have the same viper, so we only need the one.
 	vpr := server.GetServerContextFromCmd(cmd).Viper
 	if lerr := addFieldMapToViper(vpr, tmConfigMap); lerr != nil {
-		return fmt.Errorf("tendermint packed config load error: %v", lerr)
+		return fmt.Errorf("tendermint packed config load error: %w", lerr)
 	}
 	if lerr := addFieldMapToViper(vpr, appConfigMap); lerr != nil {
-		return fmt.Errorf("app packed config load error: %v", lerr)
+		return fmt.Errorf("app packed config load error: %w", lerr)
 	}
 	if lerr := addFieldMapToViper(vpr, clientConfigMap); lerr != nil {
-		return fmt.Errorf("client packed config load error: %v", lerr)
+		return fmt.Errorf("client packed config load error: %w", lerr)
 	}
 
 	return applyConfigsToContexts(cmd)
@@ -581,10 +606,10 @@ func applyConfigsToContexts(cmd *cobra.Command) error {
 		if IsPacked(cmd) {
 			f = GetFullPathToPackedConf(cmd)
 		}
-		return fmt.Errorf("could not apply client config %s to client context - it may need to be updated manually: %v", f, err)
+		return fmt.Errorf("could not apply client config %s to client context - it may need to be updated manually: %w", f, err)
 	}
 	if err = client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
-		return fmt.Errorf("could not update client context on command: %v", err)
+		return fmt.Errorf("could not update client context on command: %w", err)
 	}
 
 	// Set the server context's config to what Viper has now.
@@ -624,5 +649,5 @@ func appendError(origErr, newErr error) error {
 	if origErr == nil {
 		return newErr
 	}
-	return fmt.Errorf("%v\n%v", origErr, newErr)
+	return fmt.Errorf("%v\n%v", origErr, newErr) //nolint:errorlint // Can't wrap two errors at once.
 }

@@ -3,7 +3,7 @@
 # start the test network and `make localnet-stop` to stop it.
 
 ## Build provenance for x86_64
-FROM golang:1.17-buster as build-x86_64
+FROM golang:1.18-bullseye as build-x86_64
 WORKDIR /go/src/github.com/provenance-io/provenance
 ENV GOPRIVATE=github.com/provenance-io
 RUN apt-get update && apt-get upgrade -y && apt-get install -y libleveldb-dev
@@ -20,8 +20,9 @@ COPY vendor/ ./vendor/
 RUN go build -mod vendor -tags=cleveldb -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/version.Name=Provenance-Blockchain' -o /go/bin/ ./cmd/...
 
 ## Run provenance for x86_64
-FROM debian:buster-slim as provenance-x86_64
+FROM debian:bullseye-slim as provenance-x86_64
 ENV LOCALNET=1
+ENV LD_LIBRARY_PATH="/usr/local/lib"
 
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -51,7 +52,7 @@ CMD ["start"]
 
 
 ## Build provenance for ARM
-FROM golang:1.17-buster as build-arm64
+FROM golang:1.18-bullseye as build-arm64
 WORKDIR /go/src/github.com/provenance-io/provenance
 ENV GOPRIVATE=github.com/provenance-io
 RUN apt-get update && apt-get upgrade -y && apt-get install -y libleveldb-dev
@@ -71,8 +72,11 @@ RUN git clone --depth 1 --branch v1.8.2 https://github.com/edenhill/librdkafka.g
 RUN go build -mod vendor -tags=cleveldb,dynamic -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/version.Name=Provenance-Blockchain' -o /go/bin/ ./cmd/...
 
 ## Run provenance for ARM
-FROM debian:buster-slim as provenance-arm64
+FROM debian:bullseye-slim as provenance-arm64
 ENV LOCALNET=1
+ENV LD_LIBRARY_PATH="/usr/local/lib"
+# This is for M1 to find package config
+ENV PKG_CONFIG_PATH="/usr/local/lib"
 
 RUN apt-get update && \
     apt-get upgrade -y && \

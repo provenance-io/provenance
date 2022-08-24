@@ -800,7 +800,7 @@ func (msg MsgWriteP8EContractSpecRequest) ValidateBasic() error {
 	}
 	_, _, err := ConvertP8eContractSpec(&msg.Contractspec, msg.Signers)
 	if err != nil {
-		return fmt.Errorf("failed to convert p8e ContractSpec %s", err)
+		return fmt.Errorf("failed to convert p8e ContractSpec %w", err)
 	}
 	return nil
 }

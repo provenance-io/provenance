@@ -60,7 +60,7 @@ func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // ResolvesTo to determines whether a name resolves to a given address.
-func (keeper Keeper) ResolvesTo(ctx sdk.Context, name string, addr sdk.AccAddress) bool { // nolint:interfacer
+func (keeper Keeper) ResolvesTo(ctx sdk.Context, name string, addr sdk.AccAddress) bool { //nolint:interfacer
 	stored, err := keeper.GetRecordByName(ctx, name)
 	if err != nil {
 		return false

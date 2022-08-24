@@ -239,15 +239,15 @@ Default values are filled in appropriately.
 func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 	_, appFields, acerr := provconfig.ExtractAppConfigAndMap(cmd)
 	if acerr != nil {
-		return fmt.Errorf("could not get app config fields: %v", acerr)
+		return fmt.Errorf("could not get app config fields: %w", acerr)
 	}
 	_, tmFields, tmcerr := provconfig.ExtractTmConfigAndMap(cmd)
 	if tmcerr != nil {
-		return fmt.Errorf("could not get tendermint config fields: %v", tmcerr)
+		return fmt.Errorf("could not get tendermint config fields: %w", tmcerr)
 	}
 	_, clientFields, ccerr := provconfig.ExtractClientConfigAndMap(cmd)
 	if ccerr != nil {
-		return fmt.Errorf("could not get client config fields: %v", ccerr)
+		return fmt.Errorf("could not get client config fields: %w", ccerr)
 	}
 
 	if len(args) == 0 {
@@ -333,15 +333,15 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 
 	appConfig, appFields, acerr := provconfig.ExtractAppConfigAndMap(cmd)
 	if acerr != nil {
-		return false, fmt.Errorf("couldn't get app config: %v", acerr)
+		return false, fmt.Errorf("couldn't get app config: %w", acerr)
 	}
 	tmConfig, tmFields, tmcerr := provconfig.ExtractTmConfigAndMap(cmd)
 	if tmcerr != nil {
-		return false, fmt.Errorf("couldn't get tendermint config: %v", tmcerr)
+		return false, fmt.Errorf("couldn't get tendermint config: %w", tmcerr)
 	}
 	clientConfig, clientFields, ccerr := provconfig.ExtractClientConfigAndMap(cmd)
 	if ccerr != nil {
-		return false, fmt.Errorf("couldn't get client config: %v", ccerr)
+		return false, fmt.Errorf("couldn't get client config: %w", ccerr)
 	}
 
 	if len(args) == 0 {
@@ -450,15 +450,15 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 	_, appFields, acerr := provconfig.ExtractAppConfigAndMap(cmd)
 	if acerr != nil {
-		return fmt.Errorf("couldn't get app config: %v", acerr)
+		return fmt.Errorf("couldn't get app config: %w", acerr)
 	}
 	_, tmFields, tmcerr := provconfig.ExtractTmConfigAndMap(cmd)
 	if tmcerr != nil {
-		return fmt.Errorf("couldn't get tendermint config: %v", tmcerr)
+		return fmt.Errorf("couldn't get tendermint config: %w", tmcerr)
 	}
 	_, clientFields, ccerr := provconfig.ExtractClientConfigAndMap(cmd)
 	if ccerr != nil {
-		return fmt.Errorf("couldn't get client config: %v", ccerr)
+		return fmt.Errorf("couldn't get client config: %w", ccerr)
 	}
 
 	if len(args) == 0 {

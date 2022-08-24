@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/server"
@@ -11,9 +12,10 @@ import (
 func main() {
 	rootCmd := cmd.NewDBMigrateCmd()
 	if err := cmd.Execute(rootCmd); err != nil {
-		switch e := err.(type) {
-		case server.ErrorCode:
-			os.Exit(e.Code)
+		var srvErr *server.ErrorCode
+		switch {
+		case errors.As(err, &srvErr):
+			os.Exit(srvErr.Code)
 		default:
 			os.Exit(1)
 		}
