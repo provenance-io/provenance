@@ -752,8 +752,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if tc.expectErr {
-				s.Assert().Error(err)
-				s.Assert().Equal(tc.expectErrMsg, err.Error())
+				s.Assert().EqualError(err, tc.expectErrMsg)
 			} else {
 				s.Assert().NoError(err)
 				s.Assert().NoError(marshalErr, out.String())
