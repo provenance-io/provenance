@@ -28,6 +28,8 @@ message MsgFee {
   // additional_fee can pay in any Coin( basically a Denom and Amount, Amount can be zero)
   cosmos.base.v1beta1.Coin additional_fee = 2
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"additional_fee\""];
+  string recipient     = 3; // optional recipient address, the amount is split between recipient and fee module
+  uint64 split_divisor = 4; // optional split of funds between the recipient and fee module defaults to 50:50 split
 }
 
 // EventMsgFee final event property for msg fee on type
