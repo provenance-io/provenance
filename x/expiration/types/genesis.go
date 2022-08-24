@@ -15,7 +15,6 @@ func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
 		Params: DefaultParams(),
 	}
-
 }
 
 // ValidateGenesis ensures the genesis state is valid

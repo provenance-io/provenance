@@ -12,8 +12,6 @@ import (
 func RandomizedGenState(simState *module.SimulationState) {
 	expirationGenesis := types.GenesisState{
 		Params: types.DefaultParams(),
-		// TODO do we need to add expirations?
-		//Expirations: ...,
 	}
 
 	bz, err := json.MarshalIndent(&expirationGenesis, "", " ")

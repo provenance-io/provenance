@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 	"math/rand"
 
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -15,15 +19,10 @@ import (
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/gorilla/mux"
-
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-
+	"github.com/provenance-io/provenance/x/expiration/client/cli"
 	"github.com/provenance-io/provenance/x/expiration/keeper"
 	"github.com/provenance-io/provenance/x/expiration/simulation"
 	"github.com/provenance-io/provenance/x/expiration/types"
-
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -82,15 +81,11 @@ func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, m
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
-	//return cli.NewTxCmd()
-	// TODO: implement me
-	panic("implement me")
+	return cli.NewTxCmd()
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
-	//return cli.GetQueryTxCmd()
-	// TODO: implement me
-	panic("implement me")
+	return cli.GetQueryCmd()
 }
 
 // AppModule implements the sdk.AppModule interface
@@ -100,8 +95,6 @@ type AppModule struct {
 	keeper      keeper.Keeper
 	authzKeeper authzkeeper.Keeper
 	// TODO we will want access to other keepers
-
-	registry cdctypes.InterfaceRegistry
 }
 
 // NewAppModule creates a new AppModule Object

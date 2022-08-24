@@ -2,7 +2,9 @@ package cli_test
 
 import (
 	"fmt"
-	"strconv"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authzcli "github.com/cosmos/cosmos-sdk/x/authz/client/cli"
+	"github.com/google/uuid"
 	"strings"
 	"testing"
 
@@ -17,18 +19,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	authzcli "github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/expiration/client/cli"
 	expirationtypes "github.com/provenance-io/provenance/x/expiration/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 
 	"github.com/stretchr/testify/assert"
@@ -72,12 +74,12 @@ type IntegrationCLITestSuite struct {
 	userOtherAddr sdk.AccAddress
 	userOtherStr  string
 
-	moduleAssetId1 string
-	moduleAssetId2 string
-	moduleAssetId3 string
-	moduleAssetId4 string
-	moduleAssetId5 string
-	moduleAssetId6 string
+	moduleAssetID1 string
+	moduleAssetID2 string
+	moduleAssetID3 string
+	moduleAssetID4 string
+	moduleAssetID5 string
+	moduleAssetID6 string
 
 	sameOwner string
 	diffOwner string
@@ -190,12 +192,12 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.asJson = fmt.Sprintf("--%s=json", tmcli.OutputFlag)
 	s.asText = fmt.Sprintf("--%s=text", tmcli.OutputFlag)
 
-	s.moduleAssetId1 = s.user1AddrStr
-	s.moduleAssetId2 = s.user2AddrStr
-	s.moduleAssetId3 = s.user3AddrStr
-	s.moduleAssetId4 = s.user4AddrStr
-	s.moduleAssetId5 = s.user5AddrStr
-	s.moduleAssetId6 = s.user6AddrStr
+	s.moduleAssetID1 = s.user1AddrStr
+	s.moduleAssetID2 = s.user2AddrStr
+	s.moduleAssetID3 = s.user3AddrStr
+	s.moduleAssetID4 = s.user4AddrStr
+	s.moduleAssetID5 = s.user5AddrStr
+	s.moduleAssetID6 = s.user6AddrStr
 
 	s.sameOwner = s.user1AddrStr
 	s.diffOwner = s.user3AddrStr
@@ -203,16 +205,16 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.blockHeight = 1
 	s.deposit = expirationtypes.DefaultDeposit
 
-	s.expiration1 = *expirationtypes.NewExpiration(s.moduleAssetId1, s.sameOwner, s.blockHeight, s.deposit, nil)
-	s.expiration2 = *expirationtypes.NewExpiration(s.moduleAssetId2, s.sameOwner, s.blockHeight, s.deposit, nil)
-	s.expiration3 = *expirationtypes.NewExpiration(s.moduleAssetId3, s.diffOwner, s.blockHeight, s.deposit, nil)
-	s.expiration4 = *expirationtypes.NewExpiration(s.moduleAssetId4, s.user4AddrStr, s.blockHeight, s.deposit, nil)
-	s.expiration5 = *expirationtypes.NewExpiration(s.moduleAssetId5, s.user5AddrStr, s.blockHeight, s.deposit, nil)
-	s.expiration6 = *expirationtypes.NewExpiration(s.moduleAssetId6, s.user6AddrStr, s.blockHeight, s.deposit, nil)
+	s.expiration1 = *expirationtypes.NewExpiration(s.moduleAssetID1, s.sameOwner, s.blockHeight, s.deposit, nil)
+	s.expiration2 = *expirationtypes.NewExpiration(s.moduleAssetID2, s.sameOwner, s.blockHeight, s.deposit, nil)
+	s.expiration3 = *expirationtypes.NewExpiration(s.moduleAssetID3, s.diffOwner, s.blockHeight, s.deposit, nil)
+	s.expiration4 = *expirationtypes.NewExpiration(s.moduleAssetID4, s.user4AddrStr, s.blockHeight, s.deposit, nil)
+	s.expiration5 = *expirationtypes.NewExpiration(s.moduleAssetID5, s.user5AddrStr, s.blockHeight, s.deposit, nil)
+	s.expiration6 = *expirationtypes.NewExpiration(s.moduleAssetID6, s.user6AddrStr, s.blockHeight, s.deposit, nil)
 
 	// expected expirations as JSON
 	s.expiration1AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"block_height\":\"%d\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"messages\":%v}}",
-		s.moduleAssetId1,
+		s.moduleAssetID1,
 		s.sameOwner,
 		s.blockHeight,
 		s.deposit.Denom,
@@ -220,7 +222,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 		[]types.Any{},
 	)
 	s.expiration2AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"block_height\":\"%d\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"messages\":%v}}",
-		s.moduleAssetId2,
+		s.moduleAssetID2,
 		s.sameOwner,
 		s.blockHeight,
 		s.deposit.Denom,
@@ -228,7 +230,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 		[]types.Any{},
 	)
 	s.expiration3AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"block_height\":\"%d\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"messages\":%v}}",
-		s.moduleAssetId3,
+		s.moduleAssetID3,
 		s.diffOwner,
 		s.blockHeight,
 		s.deposit.Denom,
@@ -249,7 +251,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 		s.deposit.Amount,
 		s.deposit.Denom,
 		[]types.Any{},
-		s.moduleAssetId1,
+		s.moduleAssetID1,
 		s.sameOwner,
 	)
 	s.expiration2AsText = fmt.Sprintf(`expiration:
@@ -264,7 +266,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 		s.deposit.Amount,
 		s.deposit.Denom,
 		[]types.Any{},
-		s.moduleAssetId2,
+		s.moduleAssetID2,
 		s.sameOwner,
 	)
 	s.expiration3AsText = fmt.Sprintf(`expiration:
@@ -279,7 +281,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 		s.deposit.Amount,
 		s.deposit.Denom,
 		[]types.Any{},
-		s.moduleAssetId3,
+		s.moduleAssetID3,
 		s.diffOwner,
 	)
 
@@ -377,13 +379,13 @@ func (s *IntegrationCLITestSuite) TestGetExpirationByModuleAssetIdCmd() {
 	testCases := []queryCmdTestCase{
 		{
 			name:             "get expiration by module asset id - id as json",
-			args:             []string{s.moduleAssetId1, s.asJson},
+			args:             []string{s.moduleAssetID1, s.asJson},
 			expectedError:    "",
 			expectedInOutput: []string{s.expiration1AsJson},
 		},
 		{
 			name:             "get expiration by module asset id - id as text",
-			args:             []string{s.moduleAssetId1, s.asText},
+			args:             []string{s.moduleAssetID1, s.asText},
 			expectedError:    "",
 			expectedInOutput: []string{s.expiration1AsText},
 		},
@@ -407,7 +409,7 @@ func (s *IntegrationCLITestSuite) TestGetExpirationByModuleAssetIdCmd() {
 		},
 		{
 			name:             "get expiration by module asset id - two args",
-			args:             []string{s.moduleAssetId1, s.moduleAssetId2},
+			args:             []string{s.moduleAssetID1, s.moduleAssetID2},
 			expectedError:    "accepts 1 arg(s), received 2",
 			expectedInOutput: []string{},
 		},
@@ -436,8 +438,8 @@ func (s *IntegrationCLITestSuite) TestGetAllExpirationsCmd() {
 		},
 		{
 			name:             "get all expirations - one args",
-			args:             []string{s.moduleAssetId1, pageSizeArg},
-			expectedError:    fmt.Sprintf("unknown command \"%s\" for \"all\"", s.moduleAssetId1),
+			args:             []string{s.moduleAssetID1, pageSizeArg},
+			expectedError:    fmt.Sprintf("unknown command \"%s\" for \"all\"", s.moduleAssetID1),
 			expectedInOutput: []string{},
 		},
 	}
@@ -465,7 +467,7 @@ func (s *IntegrationCLITestSuite) TestGetAllExpirationsByOwnerCmd() {
 		},
 		{
 			name:             "get all expirations - two args",
-			args:             []string{s.sameOwner, s.moduleAssetId1, pageSizeArg},
+			args:             []string{s.sameOwner, s.moduleAssetID1, pageSizeArg},
 			expectedError:    "accepts 1 arg(s), received 2",
 			expectedInOutput: []string{},
 		},
@@ -525,16 +527,56 @@ func getLatestHeight(s *IntegrationCLITestSuite) int64 {
 	return blockHeight
 }
 
+func parseExpirationJsonStr(
+	moduleAssetID string,
+	owner string,
+	blockHeight int64,
+	deposit sdk.Coin,
+) string {
+	scopeId := metadatatypes.ScopeMetadataAddress(uuid.New())
+	s := fmt.Sprintf(`
+{
+  "module_asset_id": "%s",
+  "owner": "%s",
+  "block_height": %d,
+  "deposit": "%v",
+  "messages": [
+    {
+	  "@type": "/provenance.metadata.v1.MsgDeleteScopeRequest",
+	  "scope_id": "%s",
+	  "signers": ["%s"]
+	}
+  ]
+}`, moduleAssetID, owner, blockHeight, deposit, scopeId, owner)
+	return s
+}
+
 func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
+	addExpiration4 := parseExpirationJsonStr(s.expiration4.ModuleAssetId, s.expiration4.Owner, getLatestHeight(s)+1000, s.expiration4.Deposit)
+	addExpiration5 := parseExpirationJsonStr(s.expiration5.ModuleAssetId, s.expiration5.Owner, getLatestHeight(s)+1000, s.expiration5.Deposit)
+	addExpiration6 := parseExpirationJsonStr(s.expiration6.ModuleAssetId, s.expiration6.Owner, getLatestHeight(s)+1000, s.expiration6.Deposit)
+	addExpiration4File := sdktestutil.WriteToNewTempFile(s.T(), addExpiration4)
+	addExpiration5File := sdktestutil.WriteToNewTempFile(s.T(), addExpiration5)
+	addExpiration6File := sdktestutil.WriteToNewTempFile(s.T(), addExpiration6)
+
+	extendExpiration4 := parseExpirationJsonStr(s.expiration4.ModuleAssetId, s.expiration4.Owner, getLatestHeight(s)+2000, s.expiration4.Deposit)
+	extendExpiration5 := parseExpirationJsonStr(s.expiration5.ModuleAssetId, s.expiration5.Owner, getLatestHeight(s)+2000, s.expiration5.Deposit)
+	extendExpiration6 := parseExpirationJsonStr(s.expiration6.ModuleAssetId, s.expiration6.Owner, getLatestHeight(s)+2000, s.expiration6.Deposit)
+	extendExpiration4File := sdktestutil.WriteToNewTempFile(s.T(), extendExpiration4)
+	extendExpiration5File := sdktestutil.WriteToNewTempFile(s.T(), extendExpiration5)
+	extendExpiration6File := sdktestutil.WriteToNewTempFile(s.T(), extendExpiration6)
+
+	emptyModuleAssetIdExp := parseExpirationJsonStr("", s.expiration4.Owner, getLatestHeight(s)+1000, s.expiration4.Deposit)
+	badModuleAssetIdExp := parseExpirationJsonStr("not-an-address", s.expiration4.Owner, getLatestHeight(s)+1000, s.expiration4.Deposit)
+	emptyModuleAssetIdExpFile := sdktestutil.WriteToNewTempFile(s.T(), emptyModuleAssetIdExp)
+	badModuleAssetIdExpFile := sdktestutil.WriteToNewTempFile(s.T(), badModuleAssetIdExp)
+
 	testCases := []txCmdTestCase{
 		{
 			name: "should successfully add expiration",
 			cmd:  cli.AddExpirationCmd(),
 			args: []string{
-				s.expiration4.ModuleAssetId,
-				s.expiration4.Owner,
-				strconv.FormatInt(getLatestHeight(s)+1000, 10),
-				s.expiration4.Deposit.String(),
+				addExpiration4File.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration4.Owner),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -549,10 +591,7 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			name: "should successfully add expiration with signers flag",
 			cmd:  cli.AddExpirationCmd(),
 			args: []string{
-				s.expiration5.ModuleAssetId,
-				s.expiration5.Owner,
-				strconv.FormatInt(getLatestHeight(s)+1000, 10),
-				s.expiration5.Deposit.String(),
+				addExpiration5File.Name(),
 				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.expiration5.Owner),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration5.Owner),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -568,10 +607,7 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			name: "should fail to add expiration without authorization grant",
 			cmd:  cli.AddExpirationCmd(),
 			args: []string{
-				s.expiration6.ModuleAssetId,
-				s.expiration6.Owner,
-				strconv.FormatInt(getLatestHeight(s)+1000, 10),
-				s.expiration6.Deposit.String(),
+				addExpiration6File.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user4AddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -603,10 +639,7 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			name: "should successfully add expiration with authorization grant",
 			cmd:  cli.AddExpirationCmd(),
 			args: []string{
-				s.expiration6.ModuleAssetId,
-				s.expiration6.Owner,
-				strconv.FormatInt(getLatestHeight(s)+1000, 10),
-				s.expiration6.Deposit.String(),
+				addExpiration6File.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user4AddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -621,10 +654,7 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			name: "should successfully extend expiration",
 			cmd:  cli.ExtendExpirationCmd(),
 			args: []string{
-				s.expiration4.ModuleAssetId,
-				s.expiration4.Owner,
-				strconv.FormatInt(getLatestHeight(s)+2000, 10),
-				s.expiration4.Deposit.String(),
+				extendExpiration4File.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration4.Owner),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -639,10 +669,7 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			name: "should successfully extend expiration with signers flag",
 			cmd:  cli.ExtendExpirationCmd(),
 			args: []string{
-				s.expiration5.ModuleAssetId,
-				s.expiration5.Owner,
-				strconv.FormatInt(getLatestHeight(s)+2000, 10),
-				s.expiration5.Deposit.String(),
+				extendExpiration5File.Name(),
 				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.expiration5.Owner),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration5.Owner),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -658,11 +685,8 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			name: "should fail to extend expiration without authorization grant",
 			cmd:  cli.ExtendExpirationCmd(),
 			args: []string{
-				s.expiration5.ModuleAssetId,
-				s.expiration5.Owner,
-				strconv.FormatInt(getLatestHeight(s)+2000, 10),
-				s.expiration5.Deposit.String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration6.Owner),
+				extendExpiration6File.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration4.Owner),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -693,10 +717,7 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			name: "should successfully extend expiration with authorization grant",
 			cmd:  cli.ExtendExpirationCmd(),
 			args: []string{
-				s.expiration6.ModuleAssetId,
-				s.expiration6.Owner,
-				strconv.FormatInt(getLatestHeight(s)+2000, 10),
-				s.expiration6.Deposit.String(),
+				extendExpiration6File.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user4AddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -789,10 +810,7 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			name: "should fail to add expiration, empty module asset id",
 			cmd:  cli.AddExpirationCmd(),
 			args: []string{
-				"",
-				s.expiration4.Owner,
-				strconv.FormatInt(getLatestHeight(s)+1000, 10),
-				s.expiration4.Deposit.String(),
+				emptyModuleAssetIdExpFile.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration4.Owner),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -807,10 +825,7 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			name: "should fail to add expiration, incorrect module asset id",
 			cmd:  cli.AddExpirationCmd(),
 			args: []string{
-				"not-an-address",
-				s.expiration4.Owner,
-				strconv.FormatInt(getLatestHeight(s)+1000, 10),
-				s.expiration4.Deposit.String(),
+				badModuleAssetIdExpFile.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration4.Owner),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -825,10 +840,7 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			name: "should fail to add expiration, invalid signer(s)",
 			cmd:  cli.AddExpirationCmd(),
 			args: []string{
-				s.expiration4.ModuleAssetId,
-				s.expiration4.Owner,
-				strconv.FormatInt(getLatestHeight(s)+1000, 10),
-				s.expiration4.Deposit.String(),
+				addExpiration4File.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration6.Owner),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -843,10 +855,7 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			name: "should fail to extend expiration, not found",
 			cmd:  cli.ExtendExpirationCmd(),
 			args: []string{
-				s.expiration4.ModuleAssetId,
-				s.expiration4.Owner,
-				strconv.FormatInt(getLatestHeight(s)+2000, 10),
-				s.expiration4.Deposit.String(),
+				addExpiration4File.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration4.Owner),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),

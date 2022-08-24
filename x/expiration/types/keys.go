@@ -24,9 +24,9 @@ var (
 )
 
 // GetModuleAssetKeyPrefix returns the key prefix used by encoded objects stored in the kv store.
-func GetModuleAssetKeyPrefix(moduleAssetId string) ([]byte, error) {
+func GetModuleAssetKeyPrefix(moduleAssetID string) ([]byte, error) {
 	key := ModuleAssetKeyPrefix
-	accAddress, err := sdk.AccAddressFromBech32(moduleAssetId)
+	accAddress, err := sdk.AccAddressFromBech32(moduleAssetID)
 	if err != nil {
 		return nil, err
 	}

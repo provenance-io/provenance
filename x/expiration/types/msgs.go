@@ -94,9 +94,9 @@ func (m *MsgExtendExpirationRequest) MsgTypeURL() string {
 
 // ------------------  MsgDeleteExpirationRequest  ------------------
 
-func NewMsgDeleteExpirationRequest(moduleAssetId string, signers []string) *MsgDeleteExpirationRequest {
+func NewMsgDeleteExpirationRequest(moduleAssetID string, signers []string) *MsgDeleteExpirationRequest {
 	return &MsgDeleteExpirationRequest{
-		ModuleAssetId: moduleAssetId,
+		ModuleAssetId: moduleAssetID,
 		Signers:       signers,
 	}
 }
@@ -105,7 +105,7 @@ func NewMsgDeleteExpirationRequest(moduleAssetId string, signers []string) *MsgD
 // doesn't require access to any other information.
 func (m *MsgDeleteExpirationRequest) ValidateBasic() error {
 	if len(m.ModuleAssetId) == 0 {
-		return ErrEmptyModuleAssetId
+		return ErrEmptyModuleAssetID
 	}
 	if len(m.Signers) == 0 {
 		return ErrMissingSigners

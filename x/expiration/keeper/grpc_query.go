@@ -96,7 +96,6 @@ func (k Keeper) AllExpirationsByOwner(
 		}
 		if accumulate {
 			expirations = append(expirations, &expiration)
-
 		}
 		return true, nil
 	})

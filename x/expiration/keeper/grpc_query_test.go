@@ -39,7 +39,7 @@ type GrpcQueryTestSuite struct {
 	user3     string
 	user3Addr sdk.AccAddress
 
-	moduleAssetId string
+	moduleAssetID string
 	blockHeight   int64
 	deposit       sdk.Coin
 	signers       []string
@@ -74,7 +74,7 @@ func (s *GrpcQueryTestSuite) SetupTest() {
 	s.app.ExpirationKeeper.InitGenesis(s.ctx, &expirationData)
 
 	// expiration tests
-	s.moduleAssetId = "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
+	s.moduleAssetID = "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
 	s.blockHeight = s.ctx.BlockHeight() + 1
 	s.deposit = types.DefaultDeposit
 	s.signers = []string{s.user1}
@@ -85,21 +85,21 @@ func TestGrpcQueryTestSuite(t *testing.T) {
 }
 
 func (s *GrpcQueryTestSuite) TestQueryExpiration() {
-	moduleAssetId := s.moduleAssetId
+	moduleAssetID := s.moduleAssetID
 
 	s.T().Run("add expiration for querying", func(t *testing.T) {
-		expiration := *types.NewExpiration(moduleAssetId, s.user1, s.blockHeight, s.deposit, nil)
+		expiration := *types.NewExpiration(moduleAssetID, s.user1, s.blockHeight, s.deposit, nil)
 		assert.NoError(t, expiration.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err := s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")
 	})
 
 	s.T().Run("query expiration", func(t *testing.T) {
-		req := types.QueryExpirationRequest{ModuleAssetId: s.moduleAssetId}
+		req := types.QueryExpirationRequest{ModuleAssetId: s.moduleAssetID}
 		res, err := s.queryClient.Expiration(context.Background(), &req)
 		assert.NoError(t, err, "query: %s", "error")
 		assert.NotNil(t, res, "query: %s", "response")
-		assert.Equal(t, moduleAssetId, res.Expiration.ModuleAssetId, "query: %s", "expiration")
+		assert.Equal(t, moduleAssetID, res.Expiration.ModuleAssetId, "query: %s", "expiration")
 	})
 }
 
@@ -107,7 +107,7 @@ func (s *GrpcQueryTestSuite) TestQueryAllExpirations() {
 	expectedAll := 2
 
 	s.T().Run("add expirations for querying", func(t *testing.T) {
-		expiration1 := *types.NewExpiration(s.moduleAssetId, s.user1, s.blockHeight, s.deposit, nil)
+		expiration1 := *types.NewExpiration(s.moduleAssetID, s.user1, s.blockHeight, s.deposit, nil)
 		assert.NoError(t, expiration1.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err := s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration1)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")
@@ -128,9 +128,9 @@ func (s *GrpcQueryTestSuite) TestQueryAllExpirations() {
 }
 
 func (s *GrpcQueryTestSuite) TestQueryAllExpirationsByOwner() {
-	moduleAssetId1 := s.user1
-	moduleAssetId2 := s.user2
-	moduleAssetId3 := s.user3
+	moduleAssetID1 := s.user1
+	moduleAssetID2 := s.user2
+	moduleAssetID3 := s.user3
 
 	sameOwner := s.user1
 	diffOwner := s.user3
@@ -139,17 +139,17 @@ func (s *GrpcQueryTestSuite) TestQueryAllExpirationsByOwner() {
 	expectedByOwner := 2
 
 	s.T().Run("add expirations for querying", func(t *testing.T) {
-		expiration1 := *types.NewExpiration(moduleAssetId1, sameOwner, s.blockHeight, s.deposit, nil)
+		expiration1 := *types.NewExpiration(moduleAssetID1, sameOwner, s.blockHeight, s.deposit, nil)
 		assert.NoError(t, expiration1.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err := s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration1)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")
 
-		expiration2 := *types.NewExpiration(moduleAssetId2, sameOwner, 2, s.deposit, nil)
+		expiration2 := *types.NewExpiration(moduleAssetID2, sameOwner, 2, s.deposit, nil)
 		assert.NoError(t, expiration2.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err = s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration2)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")
 
-		expiration3 := *types.NewExpiration(moduleAssetId3, diffOwner, 1, s.deposit, nil)
+		expiration3 := *types.NewExpiration(moduleAssetID3, diffOwner, 1, s.deposit, nil)
 		assert.NoError(t, expiration3.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err = s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration3)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")

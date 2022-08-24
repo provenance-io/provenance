@@ -73,8 +73,8 @@ func (k Keeper) GetDeposit(ctx sdk.Context) sdk.Coin {
 }
 
 // GetExpiration returns the expiration with the given module asset id.
-func (k Keeper) GetExpiration(ctx sdk.Context, moduleAssetId string) (*types.Expiration, error) {
-	key, err := types.GetModuleAssetKeyPrefix(moduleAssetId)
+func (k Keeper) GetExpiration(ctx sdk.Context, moduleAssetID string) (*types.Expiration, error) {
+	key, err := types.GetModuleAssetKeyPrefix(moduleAssetID)
 	if err != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalidKeyPrefix, err.Error())
 	}
@@ -82,7 +82,7 @@ func (k Keeper) GetExpiration(ctx sdk.Context, moduleAssetId string) (*types.Exp
 	store := ctx.KVStore(k.storeKey)
 	if !store.Has(key) {
 		return nil, sdkerrors.Wrap(types.ErrExpirationNotFound,
-			fmt.Sprintf("expiration for module asset id [%s] does not exist", moduleAssetId))
+			fmt.Sprintf("expiration for module asset id [%s] does not exist", moduleAssetID))
 	}
 
 	b := store.Get(key)
@@ -154,8 +154,8 @@ func (k Keeper) UpdateExpiration(ctx sdk.Context, expiration types.Expiration) e
 }
 
 // DeleteExpiration removes an expiration record from the kvstore.
-func (k Keeper) DeleteExpiration(ctx sdk.Context, moduleAssetId string) error {
-	key, err := types.GetModuleAssetKeyPrefix(moduleAssetId)
+func (k Keeper) DeleteExpiration(ctx sdk.Context, moduleAssetID string) error {
+	key, err := types.GetModuleAssetKeyPrefix(moduleAssetID)
 	if err != nil {
 		return err
 	}
@@ -166,16 +166,14 @@ func (k Keeper) DeleteExpiration(ctx sdk.Context, moduleAssetId string) error {
 		store.Delete(key)
 	}
 
-	// todo: are we going to delete the asset when the expiration is deleted?
-
 	// emit Delete event
-	deleteEvent := types.NewEventExpirationDelete(moduleAssetId)
+	deleteEvent := types.NewEventExpirationDelete(moduleAssetID)
 	return k.emitEvent(ctx, deleteEvent)
 }
 
 // GetExpirationByModuleAssetId resolves a record by module asset id.
-func (k Keeper) GetExpirationByModuleAssetId(ctx sdk.Context, moduleAssetId string) (*types.Expiration, error) {
-	key, err := types.GetModuleAssetKeyPrefix(moduleAssetId)
+func (k Keeper) GetExpirationByModuleAssetId(ctx sdk.Context, moduleAssetID string) (*types.Expiration, error) {
+	key, err := types.GetModuleAssetKeyPrefix(moduleAssetID)
 	if err != nil {
 		return nil, err
 	}
@@ -234,11 +232,11 @@ func (k Keeper) ValidateSetExpiration(
 
 func (k Keeper) ValidateDeleteExpiration(
 	ctx sdk.Context,
-	moduleAssetId string,
+	moduleAssetID string,
 	signers []string,
 	msgTypeURL string,
 ) error {
-	expiration, err := k.GetExpiration(ctx, moduleAssetId)
+	expiration, err := k.GetExpiration(ctx, moduleAssetID)
 	if err != nil {
 		return err
 	}

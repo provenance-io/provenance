@@ -8,14 +8,14 @@ import (
 )
 
 func NewExpiration(
-	moduleAssetId string,
+	moduleAssetID string,
 	owner string,
 	blockHeight int64,
 	deposit sdk.Coin,
 	messages []*types.Any,
 ) *Expiration {
 	return &Expiration{
-		ModuleAssetId: moduleAssetId,
+		ModuleAssetId: moduleAssetID,
 		Owner:         owner,
 		BlockHeight:   blockHeight,
 		Deposit:       deposit,
@@ -26,7 +26,7 @@ func NewExpiration(
 // ValidateBasic basic format checking of the data
 func (e Expiration) ValidateBasic() error {
 	if strings.TrimSpace(e.ModuleAssetId) == "" {
-		return ErrEmptyModuleAssetId
+		return ErrEmptyModuleAssetID
 	}
 	if strings.TrimSpace(e.Owner) == "" {
 		return ErrEmptyOwnerAddress

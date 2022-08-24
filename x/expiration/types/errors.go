@@ -4,9 +4,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// x/expiration module sentinel errors
 var (
-	ErrEmptyModuleAssetId = sdkerrors.Register(ModuleName, 2, "empty module asset id")
+	ErrEmptyModuleAssetID = sdkerrors.Register(ModuleName, 2, "empty module asset id")
 	ErrEmptyOwnerAddress  = sdkerrors.Register(ModuleName, 3, "empty owner address")
 	ErrExpirationNotFound = sdkerrors.Register(ModuleName, 4, "expiration not found")
 	ErrExtendExpiration   = sdkerrors.Register(ModuleName, 5, "failed to extend expiration")
@@ -18,5 +17,4 @@ var (
 	ErrInvalidBlockHeight = sdkerrors.Register(ModuleName, 11, "invalid block height")
 	ErrUnmarshal          = sdkerrors.Register(ModuleName, 12, "failed to unmarshal bytes")
 	ErrInvalidKeyPrefix   = sdkerrors.Register(ModuleName, 13, "invalid key prefix")
-	ErrValidateBasic      = sdkerrors.Register(ModuleName, 14, "failed basic validation")
 )

@@ -14,7 +14,7 @@ import (
 type ExpirationTestSuite struct {
 	suite.Suite
 
-	moduleAssetId string
+	moduleAssetID string
 	owner         string
 	blockHeight   int64
 	deposit       sdk.Coin
@@ -32,7 +32,7 @@ type ExpirationTestSuite struct {
 }
 
 func (s *ExpirationTestSuite) SetupTest() {
-	s.moduleAssetId = "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
+	s.moduleAssetID = "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
 	s.owner = "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
 	s.blockHeight = 1
 	s.deposit = sdk.NewInt64Coin("testcoin", 1905)
@@ -41,7 +41,7 @@ func (s *ExpirationTestSuite) SetupTest() {
 	s.otherSigners = []string{"cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3"}
 
 	s.validExpiration = Expiration{
-		ModuleAssetId: s.moduleAssetId,
+		ModuleAssetId: s.moduleAssetID,
 		Owner:         s.owner,
 		BlockHeight:   s.blockHeight,
 		Deposit:       s.deposit,
@@ -52,23 +52,23 @@ func (s *ExpirationTestSuite) SetupTest() {
 		Deposit:     s.deposit,
 	}
 	s.emptyOwnerExpiration = Expiration{
-		ModuleAssetId: s.moduleAssetId,
+		ModuleAssetId: s.moduleAssetID,
 		BlockHeight:   s.blockHeight,
 		Deposit:       s.deposit,
 	}
 	s.negativeBlockHeightExpiration = Expiration{
-		ModuleAssetId: s.moduleAssetId,
+		ModuleAssetId: s.moduleAssetID,
 		Owner:         s.owner,
 		BlockHeight:   -1,
 		Deposit:       s.deposit,
 	}
 	s.invalidDepositExpiration = Expiration{
-		ModuleAssetId: s.moduleAssetId,
+		ModuleAssetId: s.moduleAssetID,
 		Owner:         s.owner,
 		BlockHeight:   s.blockHeight,
 	}
 	s.negativeDepositExpiration = Expiration{
-		ModuleAssetId: s.moduleAssetId,
+		ModuleAssetId: s.moduleAssetID,
 		Owner:         s.owner,
 		BlockHeight:   s.blockHeight,
 		Deposit:       sdk.Coin{Denom: "testcoin", Amount: sdk.NewInt(-1)},
@@ -95,7 +95,7 @@ func (s *ExpirationTestSuite) TestMsgAddExpirationRequestValidateBasic() {
 			name:        "should fail to validate basic - missing module asset id",
 			msg:         NewMsgAddExpirationRequest(s.emptyModuleAssetIdExpiration, s.signers),
 			wantErr:     true,
-			expectedErr: ErrEmptyModuleAssetId,
+			expectedErr: ErrEmptyModuleAssetID,
 		}, {
 			name:        "should fail to validate basic - missing owner address",
 			msg:         NewMsgAddExpirationRequest(s.emptyOwnerExpiration, s.signers),
@@ -155,7 +155,7 @@ func (s *ExpirationTestSuite) TestMsgExtendExpirationRequestValidateBasic() {
 			name:        "should fail to validate basic - missing module asset id",
 			msg:         NewMsgExtendExpirationRequest(s.emptyModuleAssetIdExpiration, s.signers),
 			wantErr:     true,
-			expectedErr: ErrEmptyModuleAssetId,
+			expectedErr: ErrEmptyModuleAssetID,
 		}, {
 			name:        "should fail to validate basic - missing owner address",
 			msg:         NewMsgExtendExpirationRequest(s.emptyOwnerExpiration, s.signers),
@@ -208,17 +208,17 @@ func (s *ExpirationTestSuite) TestMsgDeleteExpirationRequestValidateBasic() {
 	}{
 		{
 			name:        "should succeed to validate basic",
-			msg:         NewMsgDeleteExpirationRequest(s.moduleAssetId, s.signers),
+			msg:         NewMsgDeleteExpirationRequest(s.moduleAssetID, s.signers),
 			wantErr:     false,
 			expectedErr: nil,
 		}, {
 			name:        "should fail to validate basic - empty module asset id",
 			msg:         NewMsgDeleteExpirationRequest("", s.signers),
 			wantErr:     true,
-			expectedErr: ErrEmptyModuleAssetId,
+			expectedErr: ErrEmptyModuleAssetID,
 		}, {
 			name:        "should fail to validate basic - missing signers",
-			msg:         NewMsgDeleteExpirationRequest(s.moduleAssetId, []string{}),
+			msg:         NewMsgDeleteExpirationRequest(s.moduleAssetID, []string{}),
 			wantErr:     true,
 			expectedErr: ErrMissingSigners,
 		},

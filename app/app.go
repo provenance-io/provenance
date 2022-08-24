@@ -461,7 +461,6 @@ func New(
 	encoderRegistry.RegisterEncoder(metadatatypes.RouterKey, metadatawasm.Encoder)
 	encoderRegistry.RegisterEncoder(msgfeestypes.RouterKey, msgfeeswasm.Encoder)
 	// TODO add expiration module router key
-	//encoderRegistry.RegisterEncoder(expirationtypes.RouterKey, msgfeeswasm.Encoder)
 
 	// Init CosmWasm query integrations
 	querierRegistry := provwasm.NewQuerierRegistry()
