@@ -500,13 +500,9 @@ func TestRewardsProgramStart(t *testing.T) {
 	app.Commit()
 
 	assert.Len(t, res.Events, 13)
-	lookForRewardCreatedEvent, found := contains(res.Events, "reward_program_created")
-	assert.Equal(t, true, found, "event reward_program_created should exist")
-	assert.Len(t, *lookForRewardCreatedEvent, 1, "event reward_program_created should exist")
-	lookForMessageEvent, foundMessage := contains(res.Events, "message")
-	assert.Equal(t, true, foundMessage, "event message should exist")
-	_, foundAttribute := containsAttribute(*lookForMessageEvent, "create_reward_program")
-	assert.Equal(t, true, foundAttribute, "event attribute create_reward_program should exist")
+	containsEvent(t, res.Events, "reward_program_created", 1)
+	containsEvent(t, res.Events, "message", 3)
+	containsEventWithAttribute(t, res.Events, "message", "create_reward_program", 1)
 }
 
 func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
@@ -2086,38 +2082,51 @@ func createTestValidators(pubKey types.PubKey, pubKey2 types.PubKey, addr sdk.Ac
 	return err, bondedVal1, bondedVal2
 }
 
-// Contains tells if Event type exists in abci.Event.
-func contains(a []abci.Event, x string) (*[]abci.Event, bool) {
-	var eventSlice []abci.Event
-	var found bool
-	for _, n := range a {
-		if x == n.Type {
-			found = true
-			eventSlice = append(eventSlice, n)
+func containsEvent(t *testing.T, haystack []abci.Event, needle string, amount int) {
+	t.Helper()
+
+	counter := 0
+	var types []string
+	for _, n := range haystack {
+		if needle == n.Type {
+			counter += 1
 		}
+		types = append(types, n.Type)
 	}
-	return &eventSlice, found
+
+	if counter != amount {
+		t.Errorf("Found %d %s. Need exactly %d within %v", counter, needle, amount, types)
+	}
 }
 
-// containsAttribute function to return back an attribute based on attribute value, since in tendermit you can have events
-// which can have the same type(classic example is message)
-func containsAttribute(a []abci.Event, x string) (*abci.EventAttribute, bool) {
-	for _, n := range a {
-		temp, found := containsEventAttribute(n, x)
-		if found {
-			return temp, found
-		}
-	}
-	return nil, false
-}
+func containsEventWithAttribute(t *testing.T, haystack []abci.Event, needle, attribute string, amount int) {
+	t.Helper()
 
-func containsEventAttribute(a abci.Event, x string) (*abci.EventAttribute, bool) {
-	for _, n := range a.Attributes {
-		if x == string(n.Value) {
-			return &n, true
-		}
+	type AbciEvent struct {
+		name       string
+		attributes []string
 	}
-	return nil, false
+
+	events := []AbciEvent{}
+	counter := 0
+	for _, n := range haystack {
+		event := AbciEvent{}
+		event.name = n.Type
+
+		for _, a := range n.Attributes {
+			event.attributes = append(event.attributes, string(a.Value))
+			if string(a.Value) == attribute && event.name == needle {
+				counter += 1
+				break
+			}
+		}
+
+		events = append(events, event)
+	}
+
+	if counter != amount {
+		t.Errorf("Found %d %s with attribute %s. Need exactly %d within %v", counter, needle, attribute, amount, events)
+	}
 }
 
 func signAndGenTx(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey types.PubKey, privKey types.PrivKey, acct authtypes.BaseAccount, chainId string, msg []sdk.Msg) (client.TxBuilder, error) {
