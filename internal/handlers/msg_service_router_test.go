@@ -2,10 +2,11 @@ package handlers_test
 
 import (
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/provenance-io/provenance/internal/pioconfig"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -110,7 +111,7 @@ func TestMsgService(t *testing.T) {
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-	assert.Equal(t, 13, len(res.Events))
+	assert.Len(t, res.Events, 13)
 	assert.Equal(t, "tx", res.Events[4].Type)
 	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
 	assert.Equal(t, "150atom", string(res.Events[4].Attributes[0].Value))
@@ -126,7 +127,7 @@ func TestMsgService(t *testing.T) {
 	require.NoError(t, err)
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-	assert.Equal(t, 16, len(res.Events))
+	assert.Len(t, res.Events, 16)
 	assert.Equal(t, "tx", res.Events[4].Type)
 	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
 	assert.Equal(t, "150atom,800hotdog", string(res.Events[4].Attributes[0].Value))
@@ -155,7 +156,7 @@ func TestMsgService(t *testing.T) {
 	require.NoError(t, err)
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-	assert.Equal(t, 16, len(res.Events))
+	assert.Len(t, res.Events, 16)
 	assert.Equal(t, "tx", res.Events[4].Type)
 	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
 	assert.Equal(t, "150atom", string(res.Events[4].Attributes[0].Value))
@@ -185,7 +186,7 @@ func TestMsgService(t *testing.T) {
 	require.NoError(t, err)
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-	assert.Equal(t, 16, len(res.Events))
+	assert.Len(t, res.Events, 16)
 	assert.Equal(t, "tx", res.Events[4].Type)
 	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
 	assert.Equal(t, "190500010nhash", string(res.Events[4].Attributes[0].Value))
@@ -215,7 +216,7 @@ func TestMsgService(t *testing.T) {
 	require.NoError(t, err)
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-	assert.Equal(t, 16, len(res.Events))
+	assert.Len(t, res.Events, 16)
 	assert.Equal(t, "tx", res.Events[4].Type)
 	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
 	assert.Equal(t, "100atom,190500010nhash", string(res.Events[4].Attributes[0].Value))
@@ -258,7 +259,7 @@ func TestMsgServiceAuthz(t *testing.T) {
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-	assert.Equal(t, 16, len(res.Events))
+	assert.Len(t, res.Events, 16)
 	assert.Equal(t, "tx", res.Events[4].Type)
 	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
 	assert.Equal(t, "150atom,800hotdog", string(res.Events[4].Attributes[0].Value))
@@ -284,7 +285,7 @@ func TestMsgServiceAuthz(t *testing.T) {
 	require.NoError(t, err)
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-	assert.Equal(t, 21, len(res.Events))
+	assert.Len(t, res.Events, 21)
 	assert.Equal(t, "tx", res.Events[4].Type)
 	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
 	assert.Equal(t, "300atom,1600hotdog", string(res.Events[4].Attributes[0].Value))
@@ -356,7 +357,7 @@ func TestMsgServiceAuthzAdditionalMsgFeeInDefaultDenom(t *testing.T) {
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-	assert.Equal(t, 16, len(res.Events))
+	assert.Len(t, res.Events, 16)
 	assert.Equal(t, "tx", res.Events[4].Type)
 	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
 	assert.Equal(t, "150atom", string(res.Events[4].Attributes[0].Value))
@@ -390,7 +391,7 @@ func TestMsgServiceAssessMsgFee(t *testing.T) {
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-	assert.Equal(t, 12, len(res.Events))
+	assert.Len(t, res.Events, 12)
 
 	assert.Equal(t, "tx", res.Events[4].Type)
 	assert.Equal(t, "fee", string(res.Events[4].Attributes[0].Key))
@@ -494,14 +495,14 @@ func TestRewardsProgramStart(t *testing.T) {
 	require.NoError(t, err)
 	_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), txReward)
 	require.NoError(t, errFromDeliverTx)
-	assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+	assert.GreaterOrEqual(t, len(res.GetEvents()), 1, "should have emitted an event.")
 	app.EndBlock(abci.RequestEndBlock{Height: 2})
 	app.Commit()
 
-	assert.Equal(t, 13, len(res.Events))
+	assert.Len(t, res.Events, 13)
 	lookForRewardCreatedEvent, found := contains(res.Events, "reward_program_created")
 	assert.Equal(t, true, found, "event reward_program_created should exist")
-	assert.Equal(t, 1, len(*lookForRewardCreatedEvent), "event reward_program_created should exist")
+	assert.Len(t, *lookForRewardCreatedEvent, 1, "event reward_program_created should exist")
 	lookForMessageEvent, foundMessage := contains(res.Events, "message")
 	assert.Equal(t, true, foundMessage, "event message should exist")
 	_, foundAttribute := containsAttribute(*lookForMessageEvent, "create_reward_program")
@@ -547,7 +548,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	require.NoError(t, err)
 	_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), txReward)
 	require.NoError(t, errFromDeliverTx)
-	assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+	assert.GreaterOrEqual(t, len(res.GetEvents()), 1, "should have emitted an event.")
 	app.EndBlock(abci.RequestEndBlock{Height: 2})
 	app.Commit()
 
@@ -564,14 +565,14 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx)
-		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+		assert.GreaterOrEqual(t, len(res.GetEvents()), 1, "should have emitted an event.")
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
 	}
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, true, len(claimPeriodDistributions) == 1, "claim period reward distributions should exist")
+	assert.Len(t, claimPeriodDistributions, 1, "claim period reward distributions should exist")
 	assert.Equal(t, int64(10), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
@@ -590,7 +591,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(100)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
 	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
-	assert.Equal(t, 1, len(byAddress.RewardAccountState), "only one reward account for one claim period.")
+	assert.Len(t, byAddress.RewardAccountState, 1, "only one reward account for one claim period.")
 
 	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
@@ -599,14 +600,14 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(100)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
 	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
-	assert.Equal(t, 1, len(byAddress.RewardAccountState), "only one reward account for one claim period.")
+	assert.Len(t, byAddress.RewardAccountState, 1, "only one reward account for one claim period.")
 
 	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
 		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
 	})
 	require.NoError(t, err)
-	assert.Equal(t, 0, len(byAddress.RewardAccountState), "none of them should be claimable.")
+	assert.Empty(t, byAddress.RewardAccountState, "none of them should be claimable.")
 }
 
 func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t *testing.T) {
@@ -673,7 +674,7 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 	}
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, true, len(claimPeriodDistributions) == 1, "claim period reward distributions should exist")
+	assert.Len(t, claimPeriodDistributions, 1, "claim period reward distributions should exist")
 	assert.Equal(t, int64(10), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
@@ -713,7 +714,7 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMED,
 	})
 
-	assert.Equal(t, 0, len(byAddress.RewardAccountState), "none of the rewards should be in claimed state.")
+	assert.Empty(t, byAddress.RewardAccountState, "none of the rewards should be in claimed state.")
 }
 
 func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAccountFunded(t *testing.T) {
@@ -774,7 +775,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx)
-		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+		assert.GreaterOrEqual(t, len(res.GetEvents()), 1, "should have emitted an event.")
 		// wait for claim period to end (claim period is 1s)
 		time.Sleep(1500 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
@@ -784,7 +785,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, true, len(claimPeriodDistributions) > 1, "claim period reward distributions should exist")
+	assert.Greater(t, len(claimPeriodDistributions), 1, "claim period reward distributions should exist")
 	assert.Equal(t, int64(1), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, sdk.Coin{
@@ -812,7 +813,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	require.NoError(t, err)
 	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
 	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
-	assert.Equal(t, 4, len(byAddress.RewardAccountState), "claimable rewards should be 4 for this address.")
+	assert.Len(t, byAddress.RewardAccountState, 4, "claimable rewards should be 4 for this address.")
 
 	// get the accoutn balances of acct1
 	balance := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
@@ -832,10 +833,10 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	err4 := proto.Unmarshal(protoResult.Data[0].Data, &claimResponse)
 	require.NoError(t, err4)
 	require.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(50_000_000_000)), claimResponse.TotalRewardClaim[0])
-	require.Equal(t, 1, len(claimResponse.ClaimDetails))
+	require.Len(t, claimResponse.ClaimDetails, 1)
 	require.Equal(t, uint64(1), claimResponse.ClaimDetails[0].RewardProgramId)
 	require.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(50_000_000_000)), claimResponse.ClaimDetails[0].TotalRewardClaim)
-	require.Equal(t, 5, len(claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails))
+	require.Len(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, 5)
 	require.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)), claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails[0].ClaimPeriodReward)
 	app.EndBlock(abci.RequestEndBlock{Height: 7})
 	app.Commit()
@@ -903,7 +904,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx)
-		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+		assert.GreaterOrEqual(t, len(res.GetEvents()), 1, "should have emitted an event.")
 		// wait for claim period to end (claim period is 1s)
 		time.Sleep(1500 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
@@ -913,7 +914,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, true, len(claimPeriodDistributions) > 1, "claim period reward distributions should exist")
+	assert.Greater(t, len(claimPeriodDistributions), 1, "claim period reward distributions should exist")
 	assert.Equal(t, int64(1), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, sdk.Coin{
@@ -941,7 +942,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	require.NoError(t, err)
 	assert.Equal(t, sdk.NewCoin("hotdog", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
 	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
-	assert.Equal(t, 4, len(byAddress.RewardAccountState), "claimable rewards should be 4 for this address.")
+	assert.Len(t, byAddress.RewardAccountState, 4, "claimable rewards should be 4 for this address.")
 
 	// get the accoutn balances of acct1
 	balance := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
@@ -961,10 +962,10 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	err4 := proto.Unmarshal(protoResult.Data[0].Data, &claimResponse)
 	require.NoError(t, err4)
 	require.Equal(t, sdk.NewCoin("hotdog", sdk.NewInt(50_000_000_000)), claimResponse.TotalRewardClaim[0])
-	require.Equal(t, 1, len(claimResponse.ClaimDetails))
+	require.Len(t, claimResponse.ClaimDetails, 1)
 	require.Equal(t, uint64(1), claimResponse.ClaimDetails[0].RewardProgramId)
 	require.Equal(t, sdk.NewCoin("hotdog", sdk.NewInt(50_000_000_000)), claimResponse.ClaimDetails[0].TotalRewardClaim)
-	require.Equal(t, 5, len(claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails))
+	require.Len(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, 5)
 	require.Equal(t, sdk.NewCoin("hotdog", sdk.NewInt(10_000_000_000)), claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails[0].ClaimPeriodReward)
 	app.EndBlock(abci.RequestEndBlock{Height: 7})
 	app.Commit()
@@ -1057,7 +1058,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx)
-		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+		assert.GreaterOrEqual(t, len(res.GetEvents()), 1, "should have emitted an event.")
 		// wait for claim period to end (claim period is 1s)
 		time.Sleep(1500 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
@@ -1067,7 +1068,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, true, len(claimPeriodDistributions) > 1, "claim period reward distributions should exist")
+	assert.Greater(t, len(claimPeriodDistributions), 1, "claim period reward distributions should exist")
 	assert.Equal(t, int64(1), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, sdk.Coin{
@@ -1095,7 +1096,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	require.NoError(t, err)
 	assert.Equal(t, sdk.NewCoin("hotdog", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
 	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
-	assert.Equal(t, 8, len(byAddress.RewardAccountState), "claimable rewards should be 8 for this address.")
+	assert.Len(t, byAddress.RewardAccountState, 8, "claimable rewards should be 8 for this address.")
 
 	// get the accoutn balances of acct1
 	balance := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
@@ -1116,14 +1117,14 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	err4 := proto.Unmarshal(protoResult.Data[0].Data, &claimResponse)
 	require.NoError(t, err4)
 	require.Equal(t, sdk.NewCoin("hotdog", sdk.NewInt(50_000_000_000)), claimResponse.TotalRewardClaim[0])
-	require.Equal(t, 2, len(claimResponse.ClaimDetails))
+	require.Len(t, claimResponse.ClaimDetails, 2)
 	require.Equal(t, uint64(1), claimResponse.ClaimDetails[0].RewardProgramId)
 	require.Equal(t, sdk.NewCoin("hotdog", sdk.NewInt(50_000_000_000)), claimResponse.ClaimDetails[0].TotalRewardClaim)
-	require.Equal(t, 5, len(claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails))
+	require.Len(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, 5)
 	require.Equal(t, sdk.NewCoin("hotdog", sdk.NewInt(10_000_000_000)), claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails[0].ClaimPeriodReward)
 
 	require.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(50_000_000_000)), claimResponse.ClaimDetails[1].TotalRewardClaim)
-	require.Equal(t, 5, len(claimResponse.ClaimDetails[1].ClaimedRewardPeriodDetails))
+	require.Len(t, claimResponse.ClaimDetails[1].ClaimedRewardPeriodDetails, 5)
 	require.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)), claimResponse.ClaimDetails[1].ClaimedRewardPeriodDetails[0].ClaimPeriodReward)
 
 	app.EndBlock(abci.RequestEndBlock{Height: 7})
@@ -1196,7 +1197,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx)
-		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+		assert.GreaterOrEqual(t, len(res.GetEvents()), 1, "should have emitted an event.")
 		// wait for claim period to end (claim period is 1s)
 		time.Sleep(1500 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
@@ -1206,7 +1207,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, true, len(claimPeriodDistributions) > 1, "claim period reward distributions should exist")
+	assert.Greater(t, len(claimPeriodDistributions), 1, "claim period reward distributions should exist")
 	assert.Equal(t, int64(1), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, sdk.Coin{
@@ -1234,7 +1235,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	require.NoError(t, err)
 	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
 	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
-	assert.Equal(t, 4, len(byAddress.RewardAccountState), "claimable rewards should be 4 for this address.")
+	assert.Len(t, byAddress.RewardAccountState, 4, "claimable rewards should be 4 for this address.")
 
 	// claim rewards for the address
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 7, Time: time.Now().UTC()}})
@@ -1310,7 +1311,7 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx)
-		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+		assert.GreaterOrEqual(t, len(res.GetEvents()), 1, "should have emitted an event.")
 		time.Sleep(1100 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
@@ -1318,7 +1319,7 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 	}
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, true, len(claimPeriodDistributions) > 1, "claim period reward distributions should exist")
+	assert.Greater(t, len(claimPeriodDistributions), 1, "claim period reward distributions should exist")
 	assert.Equal(t, int64(0), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has ended so shares have to be 0")
 	assert.Equal(t, sdk.Coin{
@@ -1404,7 +1405,7 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 	}
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, true, len(claimPeriodDistributions) > 1, "claim period reward distributions should exist")
+	assert.Greater(t, len(claimPeriodDistributions), 1, "claim period reward distributions should exist")
 	assert.Equal(t, int64(1), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, sdk.Coin{
@@ -1499,7 +1500,7 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 	}
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, true, len(claimPeriodDistributions) > 1, "claim period reward distributions should exist")
+	assert.Greater(t, len(claimPeriodDistributions), 1, "claim period reward distributions should exist")
 	assert.Equal(t, int64(0), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, sdk.Coin{
@@ -1581,11 +1582,11 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 	seq = seq + 1
 	proposal := app.GovKeeper.GetProposals(ctx)
 
-	require.Equal(t, true, len(proposal) > 0, "proposal has to exist")
+	require.NotEmpty(t, proposal, "proposal has to exist")
 	// tx with a fee associated with msg type and account has funds
 	vote1 := govtypes.NewMsgVote(addr, proposal[0].ProposalId, govtypes.OptionYes)
 
-	assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+	assert.GreaterOrEqual(t, len(res.GetEvents()), 1, "should have emitted an event.")
 
 	for height := int64(3); height < int64(23); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
@@ -1594,14 +1595,14 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx)
-		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+		assert.GreaterOrEqual(t, len(res.GetEvents()), 1, "should have emitted an event.")
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
 	}
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, true, len(claimPeriodDistributions) == 1, "claim period reward distributions should exist")
+	assert.Len(t, claimPeriodDistributions, 1, "claim period reward distributions should exist")
 	assert.Equal(t, int64(10), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
@@ -1682,11 +1683,11 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 	seq = seq + 1
 	proposal := app.GovKeeper.GetProposals(ctx)
 
-	require.Equal(t, true, len(proposal) > 0, "proposal has to exist")
+	require.NotEmpty(t, proposal, "proposal has to exist")
 	// tx with a fee associated with msg type and account has funds
 	vote1 := govtypes.NewMsgVote(addr, proposal[0].ProposalId, govtypes.OptionYes)
 
-	assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 
 	for height := int64(3); height < int64(5); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
@@ -1695,14 +1696,14 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx)
-		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
 	}
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, true, len(claimPeriodDistributions) == 1, "claim period reward distributions should exist")
+	assert.Len(t, claimPeriodDistributions, 1, "claim period reward distributions should exist")
 	assert.Equal(t, int64(0), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
@@ -1719,7 +1720,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
 	})
 	require.NoError(t, err)
-	assert.Equal(t, true, len(byAddress.RewardAccountState) == 0, "RewardDistributionsByAddress incorrect")
+	assert.Empty(t, byAddress.RewardAccountState, "RewardDistributionsByAddress incorrect")
 
 }
 
@@ -1790,11 +1791,11 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	seq = seq + 1
 	proposal := app.GovKeeper.GetProposals(ctx)
 
-	require.Equal(t, true, len(proposal) > 0, "proposal has to exist")
+	require.NotEmpty(t, proposal, "proposal has to exist")
 	// tx with a fee associated with msg type and account has funds
 	vote1 := govtypes.NewMsgVote(addr, proposal[0].ProposalId, govtypes.OptionYes)
 
-	assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 
 	// threshold will be met after 10 actions
 	for height := int64(3); height < int64(23); height++ {
@@ -1804,14 +1805,14 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx)
-		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
 	}
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, true, len(claimPeriodDistributions) == 1, "claim period reward distributions should exist")
+	assert.Len(t, claimPeriodDistributions, 1, "claim period reward distributions should exist")
 	assert.Equal(t, int64(10), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
@@ -1900,11 +1901,11 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 	seq = seq + 1
 	proposal := app.GovKeeper.GetProposals(ctx)
 
-	require.Equal(t, true, len(proposal) > 0, "proposal has to exist")
+	require.NotEmpty(t, proposal, "proposal has to exist")
 	// tx with a fee associated with msg type and account has funds
 	vote1 := govtypes.NewMsgVote(addr, proposal[0].ProposalId, govtypes.OptionYes)
 
-	assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 
 	for height := int64(3); height < int64(15); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
@@ -1913,14 +1914,14 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx)
-		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
 	}
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, true, len(claimPeriodDistributions) == 1, "claim period reward distributions should exist")
+	assert.Len(t, claimPeriodDistributions, 1, "claim period reward distributions should exist")
 	assert.Equal(t, int64(0), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
@@ -1938,7 +1939,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
 	})
 	require.NoError(t, err)
-	assert.Equal(t, true, len(byAddress.RewardAccountState) == 0, "RewardDistributionsByAddress incorrect")
+	assert.Empty(t, byAddress.RewardAccountState, "RewardDistributionsByAddress incorrect")
 }
 
 func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsPresent(t *testing.T) {
@@ -2012,12 +2013,12 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	seq = seq + 1
 	proposal := app.GovKeeper.GetProposals(ctx)
 
-	require.Equal(t, true, len(proposal) > 0, "proposal has to exist")
+	require.NotEmpty(t, proposal, "proposal has to exist")
 	// tx with a fee associated with msg type and account has funds
 	delAddr, _ := sdk.ValAddressFromBech32(bondedVal1.OperatorAddress)
 	delegation := stakingtypes.NewMsgDelegate(addr, delAddr, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))
 
-	assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 
 	for height := int64(3); height < int64(23); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
@@ -2026,7 +2027,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx)
-		assert.Equal(t, true, len(res.GetEvents()) >= 1, "should have emitted an event.")
+		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 		time.Sleep(100 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
@@ -2034,7 +2035,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	}
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, true, len(claimPeriodDistributions) == 1, "claim period reward distributions should exist")
+	assert.Len(t, claimPeriodDistributions, 1, "claim period reward distributions should exist")
 	assert.Equal(t, int64(10), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
