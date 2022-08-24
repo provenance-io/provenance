@@ -1,14 +1,17 @@
 package antewrapper_test
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,6 +24,8 @@ import (
 
 	pioante "github.com/provenance-io/provenance/internal/antewrapper"
 )
+
+// These tests are kicked off by TestAnteTestSuite in testutil_test.go
 
 func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	suite.SetupTest(false)
@@ -48,23 +53,25 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 
 	// Set addr1 with insufficient funds
 	err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(10))})
-	suite.Require().NoError(err)
+	suite.Require().NoError(err, "funding account 1")
 
 	// Set addr2 with more funds
-	err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999))})
-	suite.Require().NoError(err)
+	err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99_999_999))})
+	suite.Require().NoError(err, "funding account 2")
 
 	// grant fee allowance from `addr2` to `addr3` (plenty to pay)
 	err = app.FeeGrantKeeper.GrantAllowance(ctx, addr2, addr3, &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", helpers.DefaultGenTxGas*5)),
 	})
-	suite.Require().NoError(err)
+	suite.Require().NoError(err, "grant allowance 2 to 3")
 
 	// grant low fee allowance (20atom), to check the tx requesting more than allowed.
 	err = app.FeeGrantKeeper.GrantAllowance(ctx, addr2, addr4, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 20)),
 	})
-	suite.Require().NoError(err)
+	suite.Require().NoError(err, "grant allowance 2 to 4")
+
+	defaultGasStr := fmt.Sprintf("%datom", helpers.DefaultGenTxGas)
 
 	cases := []struct {
 		name       string
@@ -75,29 +82,23 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 		expInErr   []string
 	}{
 		{
-			name:      "insufficient funds",
+			name:      "paying from account with insufficient funds and no grants",
 			signerKey: priv1,
 			signer:    addr1,
-			fee:       50,
-			expInErr:  []string{"50atom", "insufficient funds"},
+			fee:       helpers.DefaultGenTxGas,
+			expInErr:  []string{"10atom", defaultGasStr, "insufficient funds"},
 		}, {
 			name:      "paying with good funds",
 			signerKey: priv2,
 			signer:    addr2,
-			fee:       50,
+			fee:       helpers.DefaultGenTxGas,
 			expInErr:  nil,
 		}, {
 			name:      "paying with no account",
 			signerKey: priv3,
 			signer:    addr3,
-			fee:       1,
-			expInErr:  []string{"1atom", "insufficient funds"},
-		}, {
-			name:      "no fee with real account",
-			signerKey: priv1,
-			signer:    addr1,
-			fee:       0,
-			expInErr:  nil,
+			fee:       helpers.DefaultGenTxGas,
+			expInErr:  []string{"0atom", defaultGasStr, "insufficient funds"},
 		}, {
 			name:      "no fee with no account",
 			signerKey: priv5,
@@ -109,14 +110,14 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr2,
-			fee:        50,
+			fee:        helpers.DefaultGenTxGas,
 			expInErr:   nil,
 		}, {
 			name:       "no fee grant",
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr1,
-			fee:        2,
+			fee:        helpers.DefaultGenTxGas,
 			expInErr:   []string{addr3.String(), addr1.String(), "not", "allow", "to pay fees", "fee-grant not found"},
 			// Note: They have a different error than us for this, and I don't think we should change ours.
 			//	Our error has this format:  "<addr> not allowed to pay fees from <addr>"
@@ -126,14 +127,14 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			signerKey:  priv4,
 			signer:     addr4,
 			feeAccount: addr2,
-			fee:        50,
+			fee:        helpers.DefaultGenTxGas,
 			expInErr:   []string{addr4.String(), addr2.String(), "not", "allow", "to pay fees", "basic allowance", "fee limit exceeded"},
 		}, {
 			name:       "granter cannot cover allowed fee grant",
 			signerKey:  priv4,
 			signer:     addr4,
 			feeAccount: addr1,
-			fee:        50,
+			fee:        helpers.DefaultGenTxGas,
 			expInErr:   []string{addr4.String(), addr1.String(), "not", "allow", "to pay fees", "fee-grant not found"},
 		},
 	}
@@ -151,24 +152,24 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			}
 
 			txfg, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
-			suite.Require().NoError(err)
+			require.NoError(t, err, "genTxWithFeeGranter")
 			_, err = feeAnteHandler(ctx, txfg, false) // tests only feegrant ante
 			if len(tc.expInErr) == 0 {
-				suite.Require().NoError(err, "feeAnteHandler")
+				require.NoError(t, err, "feeAnteHandler")
 			} else {
-				suite.Require().Error(err, "feeAnteHandler")
+				require.Error(t, err, "feeAnteHandler")
 				for _, exp := range tc.expInErr {
-					suite.Assert().ErrorContains(err, exp, "feeAnteHandler err")
+					assert.ErrorContains(t, err, exp, "feeAnteHandler err")
 				}
 			}
 
 			_, err = anteHandlerStack(ctx, txfg, false) // tests while stack
 			if len(tc.expInErr) == 0 {
-				suite.Require().NoError(err, "anteHandlerStack")
+				require.NoError(t, err, "anteHandlerStack")
 			} else {
-				suite.Require().Error(err, "anteHandlerStack")
+				require.Error(t, err, "anteHandlerStack")
 				for _, exp := range tc.expInErr {
-					suite.Assert().ErrorContains(err, exp, "anteHandlerStack err")
+					assert.ErrorContains(t, err, exp, "anteHandlerStack err")
 				}
 			}
 		})

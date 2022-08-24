@@ -3,6 +3,7 @@ module github.com/provenance-io/provenance
 go 1.18
 
 require (
+	cosmossdk.io/math v1.0.0-beta.2
 	github.com/CosmWasm/wasmd v0.26.0
 	github.com/armon/go-metrics v0.4.0
 	github.com/btcsuite/btcd v0.22.1
@@ -40,7 +41,6 @@ require (
 	cloud.google.com/go/iam v0.3.0 // indirect
 	cloud.google.com/go/storage v1.14.0 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
-	cosmossdk.io/math v1.0.0-beta.2 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
@@ -155,7 +155,7 @@ require (
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.0-pio-1-rc3
+replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.0-pio-1-rc4
 
 replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 
@@ -165,5 +165,5 @@ replace github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.1.1
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
-// TODO: Required for v1.12.x: Remove this and update the require line above to have the new version once it's out.
+// TODO: Required for v1.13.x: Remove this and update the require line above to have the new version once it's out.
 replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.28.0-pio-1-rc1
