@@ -1,11 +1,12 @@
 package handlers_test
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	piohandlers "github.com/provenance-io/provenance/internal/handlers"
 )
 
 func (suite *HandlerTestSuite) TestMsgFeeHandlerSetUp() {
-	encodingConfig, err := setUpApp(suite, false, "atom", 100)
+	encodingConfig, err := setUpApp(suite, false, sdk.DefaultBondDenom, 100)
 
 	_, err = piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
 		AccountKeeper:  suite.app.AccountKeeper,
@@ -19,7 +20,7 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerSetUp() {
 }
 
 func (suite *HandlerTestSuite) TestMsgFeeHandlerSetUpIncorrect() {
-	encodingConfig, err := setUpApp(suite, false, "atom", 100)
+	encodingConfig, err := setUpApp(suite, false, sdk.DefaultBondDenom, 100)
 
 	_, err = piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
 		AccountKeeper:  suite.app.AccountKeeper,

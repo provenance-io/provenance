@@ -25,13 +25,13 @@ func TestAnteFeeDecoratorTestSuite(t *testing.T) {
 // checkTx true, high min gas price(high enough so that additional fee in same denom tips it over,
 //and this is what sets it apart from MempoolDecorator which has already been run)
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees() {
-	err, antehandler := setUpApp(suite, true, "atom", 100)
-	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
+	err, antehandler := setUpApp(suite, true, sdk.DefaultBondDenom, 100)
+	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))
 	suite.Require().NoError(err)
 
-	// Set gas price (1 atom)
-	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(1))
-	highGasPrice := []sdk.DecCoin{atomPrice}
+	// Set gas price (1 stake)
+	stakePrice := sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(1))
+	highGasPrice := []sdk.DecCoin{stakePrice}
 	suite.ctx = suite.ctx.WithMinGasPrices(highGasPrice)
 
 	// Set IsCheckTx to true
@@ -40,7 +40,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees() {
 	// antehandler errors with insufficient fees
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
-	suite.Require().Contains(err.Error(), "Base Fee+additional fee cannot be paid with fee value passed in : \"100000atom\", required: \"100100atom\" = \"100000atom\"(base-fee) +\"100atom\"(additional-fees): insufficient fee", "got wrong message")
+	suite.Require().Contains(err.Error(), "Base Fee+additional fee cannot be paid with fee value passed in : \"100000stake\", required: \"100100stake\" = \"100000stake\"(base-fee) +\"100stake\"(additional-fees): insufficient fee", "got wrong message")
 }
 
 // checkTx true, fees supplied that do not meet floor gas price requirement (floor gas price * gas wanted)
@@ -62,7 +62,7 @@ func (suite *AnteTestSuite) TestEnsureFloorGasPriceNotMet() {
 // checkTx true, fees supplied that do meet floor gas price requirement (floor gas price * gas wanted), and should not error.
 func (suite *AnteTestSuite) TestEnsureFloorGasPriceMet() {
 	err, antehandler := setUpApp(suite, true, msgfeestypes.NhashDenom, 0)
-	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
+	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))
 	suite.Require().NoError(err)
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
@@ -94,13 +94,13 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesNoAdditionalFeesLowGas() 
 
 // checkTx true, high min gas price irrespective of additional fees
 func (suite *AnteTestSuite) TestEnsureMempoolHighMinGasPrice() {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
-	err, antehandler := setUpApp(suite, true, "atom", 100)
-	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
+	err, antehandler := setUpApp(suite, true, sdk.DefaultBondDenom, 100)
+	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))
 	suite.Require().NoError(err)
 	// Set high gas price so standard test fee fails
-	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(20000))
-	highGasPrice := []sdk.DecCoin{atomPrice}
+	stakePrice := sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(20000))
+	highGasPrice := []sdk.DecCoin{stakePrice}
 	suite.ctx = suite.ctx.WithMinGasPrices(highGasPrice)
 
 	// Set IsCheckTx to true
@@ -109,17 +109,17 @@ func (suite *AnteTestSuite) TestEnsureMempoolHighMinGasPrice() {
 	// antehandler errors with insufficient fees
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
-	suite.Require().Contains(err.Error(), "Base Fee+additional fee cannot be paid with fee value passed in : \"100000atom\", required: \"2000000100atom\" = \"2000000000atom\"(base-fee) +\"100atom\"(additional-fees): insufficient fee", "got wrong message")
+	suite.Require().Contains(err.Error(), "Base Fee+additional fee cannot be paid with fee value passed in : \"100000stake\", required: \"2000000100stake\" = \"2000000000stake\"(base-fee) +\"100stake\"(additional-fees): insufficient fee", "got wrong message")
 }
 
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPass() {
-	err, antehandler := setUpApp(suite, true, "atom", 100)
-	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100100)))
+	err, antehandler := setUpApp(suite, true, sdk.DefaultBondDenom, 100)
+	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100100)))
 	suite.Require().NoError(err)
 
-	// Set high gas price so standard test fee fails, gas price (1 atom)
-	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(1))
-	highGasPrice := []sdk.DecCoin{atomPrice}
+	// Set high gas price so standard test fee fails, gas price (1 stake)
+	stakePrice := sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(1))
+	highGasPrice := []sdk.DecCoin{stakePrice}
 	suite.ctx = suite.ctx.WithMinGasPrices(highGasPrice)
 
 	// Set IsCheckTx to true
@@ -128,9 +128,9 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPass() {
 	// antehandler errors with insufficient fees
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should have errored on fee payer account not having enough balance.")
-	suite.Require().Contains(err.Error(), "fee payer account does not have enough balance to pay for \"100100atom\"", "got wrong message")
+	suite.Require().Contains(err.Error(), "fee payer account does not have enough balance to pay for \"100100stake\"", "got wrong message")
 
-	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "Decorator should not have errored.")
 }
@@ -138,31 +138,31 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPass() {
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_AccountBalanceNotEnough() {
 	err, antehandler := setUpApp(suite, true, "hotdog", 100)
 	// fibbing, I don't have hotdog to pay for it right now.
-	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin("hotdog", 100)))
+	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000), sdk.NewInt64Coin("hotdog", 100)))
 	suite.Require().NoError(err)
 
-	// Set no hotdog balance, only atom balance
-	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100000)))))
+	// Set no hotdog balance, only stake balance
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000)))))
 
 	// antehandler errors with insufficient fees
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should have errored on fee payer account not having enough balance.")
-	suite.Require().Contains(err.Error(), "fee payer account does not have enough balance to pay for \"100000atom,100hotdog\"", "got wrong message")
+	suite.Require().Contains(err.Error(), "fee payer account does not have enough balance to pay for \"100hotdog,100000stake\"", "got wrong message")
 
 	// set not enough hotdog balance
 	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(1)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should have errored on fee payer account not having enough balance.")
-	suite.Require().Contains(err.Error(), "fee payer account does not have enough balance to pay for \"100000atom,100hotdog\"", "got wrong message")
+	suite.Require().Contains(err.Error(), "fee payer account does not have enough balance to pay for \"100hotdog,100000stake\"", "got wrong message")
 
-	// set enough hotdog balance, also atom balance should be enough with prev fund
+	// set enough hotdog balance, also stake balance should be enough with prev fund
 	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(99)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "Decorator should have errored on fee payer account not having enough balance.")
 }
 
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant() {
-	err, antehandler := setUpApp(suite, true, "atom", 100)
+	err, antehandler := setUpApp(suite, true, sdk.DefaultBondDenom, 100)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -177,7 +177,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant() {
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
 	//add additional fee
-	feeAmount := sdk.NewCoins(sdk.NewInt64Coin("atom", 100100))
+	feeAmount := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100100))
 	gasLimit := suite.NewTestGasLimit()
 
 	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
@@ -186,30 +186,30 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant() {
 	//set fee grant
 	// grant fee allowance from `addr2` to `addr1` (plenty to pay)
 	err = suite.app.FeeGrantKeeper.GrantAllowance(suite.ctx, addr2, addr1, &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 100100)),
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100100)),
 	})
 	suite.txBuilder.SetFeeGranter(acct2.GetAddress())
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
-	// Set high gas price so standard test fee fails, gas price (1 atom)
-	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(1))
-	highGasPrice := []sdk.DecCoin{atomPrice}
+	// Set high gas price so standard test fee fails, gas price (1 stake)
+	stakePrice := sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(1))
+	highGasPrice := []sdk.DecCoin{stakePrice}
 	suite.ctx = suite.ctx.WithMinGasPrices(highGasPrice)
 
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
 
-	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "Decorator should not have errored.")
 }
 
 // fee grantee incorrect
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant_1() {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
-	err, antehandler := setUpApp(suite, true, "atom", 100)
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
+	err, antehandler := setUpApp(suite, true, sdk.DefaultBondDenom, 100)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -224,7 +224,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant_1() {
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
 	//add additional fee
-	feeAmount := sdk.NewCoins(sdk.NewInt64Coin("atom", 100100))
+	feeAmount := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100100))
 	gasLimit := testdata.NewTestGasLimit()
 
 	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
@@ -233,29 +233,29 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant_1() {
 	//set fee grant
 	// grant fee allowance from `addr1` to `addr2` // wrong grant
 	err = suite.app.FeeGrantKeeper.GrantAllowance(suite.ctx, addr1, addr2, &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 100100)),
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100100)),
 	})
 	suite.txBuilder.SetFeeGranter(acct2.GetAddress())
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
-	// Set high gas price so standard test fee fails, gas price (1 atom)
-	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(1))
-	highGasPrice := []sdk.DecCoin{atomPrice}
+	// Set high gas price so standard test fee fails, gas price (1 stake)
+	stakePrice := sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(1))
+	highGasPrice := []sdk.DecCoin{stakePrice}
 	suite.ctx = suite.ctx.WithMinGasPrices(highGasPrice)
 
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
 
-	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored.")
 }
 
 // no grant
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant_2() {
-	err, antehandler := setUpApp(suite, true, "atom", 100)
+	err, antehandler := setUpApp(suite, true, sdk.DefaultBondDenom, 100)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -270,7 +270,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant_2() {
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
 	//add additional fee
-	feeAmount := sdk.NewCoins(sdk.NewInt64Coin("atom", 100100))
+	feeAmount := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100100))
 	gasLimit := testdata.NewTestGasLimit()
 
 	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
@@ -281,21 +281,21 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant_2() {
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
-	// Set high gas price so standard test fee fails, gas price (1 atom)
-	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(1))
-	highGasPrice := []sdk.DecCoin{atomPrice}
+	// Set high gas price so standard test fee fails, gas price (1 stake)
+	stakePrice := sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(1))
+	highGasPrice := []sdk.DecCoin{stakePrice}
 	suite.ctx = suite.ctx.WithMinGasPrices(highGasPrice)
 
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
 
-	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100100)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored.")
 }
 
 func (suite *AnteTestSuite) TestEnsureNonCheckTxPassesAllChecks() {
-	err, antehandler := setUpApp(suite, true, "atom", 100)
+	err, antehandler := setUpApp(suite, true, sdk.DefaultBondDenom, 100)
 	tx, _ := createTestTx(suite, err, testdata.NewTestFeeAmount())
 	suite.Require().NoError(err)
 
@@ -308,12 +308,12 @@ func (suite *AnteTestSuite) TestEnsureNonCheckTxPassesAllChecks() {
 }
 
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_1() {
-	err, antehandler := setUpApp(suite, true, "atom", 100)
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
+	err, antehandler := setUpApp(suite, true, sdk.DefaultBondDenom, 100)
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
 	tx, acct1 := createTestTx(suite, err, NewTestFeeAmountMultiple())
 
 	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(100)))))
-	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(150)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(150)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "MsgFeesDecorator returned error in DeliverTx")
 }
@@ -321,7 +321,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_1() {
 // wrong denom passed in, errors with insufficient fee
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_2() {
 	err, antehandler := setUpApp(suite, false, msgfeestypes.NhashDenom, 100)
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
 	tx, acct1 := createTestTx(suite, err, testdata.NewTestFeeAmount())
 
 	tx, acct1 = createTestTx(suite, err, NewTestFeeAmountMultiple())
@@ -371,17 +371,17 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_4() {
 
 // additional fee same denom as default base fee denom, fails because of insufficient fee and then passes when enough fee is present.
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_5() {
-	err, antehandler := setUpApp(suite, false, "atom", 100)
+	err, antehandler := setUpApp(suite, false, sdk.DefaultBondDenom, 100)
 	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 190500200)))
 	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(190500100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
-	suite.Require().Contains(err.Error(), "not enough fees; after deducting fees required,got: \"-100atom,190500200nhash\", required additional fee: \"100atom\"", "wrong error message")
+	suite.Require().Contains(err.Error(), "not enough fees; after deducting fees required,got: \"190500200nhash,-100stake\", required additional fee: \"100stake\"", "wrong error message")
 }
 
 // checkTx true, but additional fee not provided
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_6() {
-	err, antehandler := setUpApp(suite, true, "atom", 100)
+	err, antehandler := setUpApp(suite, true, sdk.DefaultBondDenom, 100)
 	tx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 190500200)))
 	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(190500100)))))
 	hashPrice := sdk.NewDecCoinFromDec(msgfeestypes.NhashDenom, sdk.NewDec(1))
@@ -389,12 +389,12 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_6() {
 	suite.ctx = suite.ctx.WithMinGasPrices(highGasPrice)
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
-	suite.Require().Contains(err.Error(), "not enough fees; after deducting fees required,got: \"-100atom,190500200nhash\", required fees: \"100atom,100000nhash\" = \"100000nhash\"(base-fee) +\"100atom\"(additional-fees): insufficient fee", "wrong error message")
+	suite.Require().Contains(err.Error(), "not enough fees; after deducting fees required,got: \"190500200nhash,-100stake\", required fees: \"100000nhash,100stake\" = \"100000nhash\"(base-fee) +\"100stake\"(additional-fees): insufficient fee: insufficient fee", "wrong error message")
 
 }
 
 func (suite *AnteTestSuite) TestCalculateAdditionalFeesToBePaid() {
-	err, _ := setUpApp(suite, false, "atom", 100)
+	err, _ := setUpApp(suite, false, sdk.DefaultBondDenom, 100)
 	suite.Require().NoError(err)
 
 	someAddress := suite.clientCtx.FromAddress
