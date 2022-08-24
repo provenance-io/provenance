@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -100,7 +100,7 @@ func Init(
 
 	// Set a few things in the configs.
 	if len(appConfig.MinGasPrices) == 0 {
-		appConfig.MinGasPrices = provenanceconfig.DefaultMinGasPrices
+		appConfig.MinGasPrices = pioconfig.DefaultMinGasPrices
 	}
 	tmConfig.Moniker = moniker
 	if len(chainID) == 0 {
@@ -179,7 +179,7 @@ func createAndExportGenesisFile(
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &mintGenState)
 		mintGenState.Minter.Inflation = sdk.ZeroDec()
 		mintGenState.Minter.AnnualProvisions = sdk.OneDec()
-		mintGenState.Params.MintDenom = provenanceconfig.DefaultBondDenom
+		mintGenState.Params.MintDenom = pioconfig.DefaultBondDenom
 		mintGenState.Params.InflationMax = sdk.ZeroDec()
 		mintGenState.Params.InflationMin = sdk.ZeroDec()
 		mintGenState.Params.InflationRateChange = sdk.OneDec()
@@ -193,7 +193,7 @@ func createAndExportGenesisFile(
 		moduleName := stakingtypes.ModuleName
 		var stakeGenState stakingtypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &stakeGenState)
-		stakeGenState.Params.BondDenom = provenanceconfig.DefaultBondDenom
+		stakeGenState.Params.BondDenom = pioconfig.DefaultBondDenom
 		appGenState[moduleName] = cdc.MustMarshalJSON(&stakeGenState)
 	}
 
@@ -202,7 +202,7 @@ func createAndExportGenesisFile(
 		moduleName := crisistypes.ModuleName
 		var crisisGenState crisistypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &crisisGenState)
-		crisisGenState.ConstantFee.Denom = provenanceconfig.DefaultBondDenom
+		crisisGenState.ConstantFee.Denom = pioconfig.DefaultBondDenom
 		appGenState[moduleName] = cdc.MustMarshalJSON(&crisisGenState)
 	}
 
@@ -211,7 +211,7 @@ func createAndExportGenesisFile(
 		moduleName := govtypes.ModuleName
 		var govGenState govtypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &govGenState)
-		govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.NewInt(minDeposit)))
+		govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(pioconfig.DefaultBondDenom, sdk.NewInt(minDeposit)))
 		appGenState[moduleName] = cdc.MustMarshalJSON(&govGenState)
 	}
 

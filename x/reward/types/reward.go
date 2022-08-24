@@ -10,7 +10,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"gopkg.in/yaml.v2"
 
-	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -387,7 +387,7 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	}
 	percentile := ad.getValidatorRankPercentile(ctx, provider, validator)
 
-	delegatedHash := sdk.NewInt64Coin(provenanceconfig.DefaultBondDenom, tokens.TruncateInt64())
+	delegatedHash := sdk.NewInt64Coin(pioconfig.DefaultBondDenom, tokens.TruncateInt64())
 	minDelegation := ad.GetMinimumDelegationAmount()
 	maxDelegation := ad.GetMaximumDelegationAmount()
 	minPercentile := ad.GetMinimumActiveStakePercentile()
@@ -467,7 +467,7 @@ func (at *ActionTransfer) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 		return false
 	}
 	// check delegations if and only if mandated by the Action
-	if sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.ZeroInt()).IsLT(at.MinimumDelegationAmount) {
+	if sdk.NewCoin(pioconfig.DefaultBondDenom, sdk.ZeroInt()).IsLT(at.MinimumDelegationAmount) {
 		// now check if it has any delegations
 		totalDelegations, found := getAllDelegations(ctx, provider, addressSender)
 		if !found {
@@ -523,7 +523,7 @@ func (atd *ActionVote) ActionType() string {
 func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
 	// get the address that voted
 	addressVoting := event.Address
-	if !sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.ZeroInt()).IsGTE(atd.MinimumDelegationAmount) {
+	if !sdk.NewCoin(pioconfig.DefaultBondDenom, sdk.ZeroInt()).IsGTE(atd.MinimumDelegationAmount) {
 		// now check if it has any delegations
 		totalDelegations, found := getAllDelegations(ctx, provider, addressVoting)
 		if !found {
@@ -593,17 +593,17 @@ func getAllDelegations(ctx sdk.Context, provider KeeperProvider, delegator sdk.A
 	delegations := stakingKeeper.GetAllDelegatorDelegations(ctx, delegator)
 	// if no delegations then return not found
 	if len(delegations) == 0 {
-		return sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.ZeroInt()), false
+		return sdk.NewCoin(pioconfig.DefaultBondDenom, sdk.ZeroInt()), false
 	}
 
-	sum := sdk.NewCoin(provenanceconfig.DefaultBondDenom, sdk.ZeroInt())
+	sum := sdk.NewCoin(pioconfig.DefaultBondDenom, sdk.ZeroInt())
 
 	for _, delegation := range delegations {
 		val, found := stakingKeeper.GetValidator(ctx, delegation.GetValidatorAddr())
 
 		if found {
 			tokens := val.TokensFromShares(delegation.GetShares()).TruncateInt()
-			sum = sum.Add(sdk.NewCoin(provenanceconfig.DefaultBondDenom, tokens))
+			sum = sum.Add(sdk.NewCoin(pioconfig.DefaultBondDenom, tokens))
 		}
 	}
 

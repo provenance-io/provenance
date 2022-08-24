@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"io/ioutil"
 	"regexp"
 	"strings"
@@ -110,7 +110,7 @@ func (s ConfigTestSuite) ensureConfigFiles() {
 	s.Require().NoError(terr, "extracting tendermint config")
 	clientConfig, cerr := provconfig.ExtractClientConfig(configCmd)
 	s.Require().NoError(cerr, "extracting client config")
-	appConfig.MinGasPrices = provenanceconfig.DefaultMinGasPrices
+	appConfig.MinGasPrices = pioconfig.DefaultMinGasPrices
 	// And then save them.
 	provconfig.SaveConfigs(configCmd, appConfig, tmConfig, clientConfig, false)
 }
@@ -450,7 +450,7 @@ func (s *ConfigTestSuite) TestConfigChanged() {
 	}
 	expectedAppOutLines := []string{
 		s.makeAppDiffHeaderLines(),
-		fmt.Sprintf(`minimum-gas-prices="%s" (default="")`, provenanceconfig.DefaultMinGasPrices),
+		fmt.Sprintf(`minimum-gas-prices="%s" (default="")`, pioconfig.DefaultMinGasPrices),
 		"",
 	}
 	expectedTMOutLines := []string{

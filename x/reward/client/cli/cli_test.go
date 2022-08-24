@@ -7,7 +7,7 @@ import (
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -92,8 +92,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	genesisState[authtypes.ModuleName] = authDataBz
 
 	now := time.Now().UTC()
-	minimumDelegation := sdk.NewInt64Coin(provenanceconfig.DefaultBondDenom, 0)
-	maximumDelegation := sdk.NewInt64Coin(provenanceconfig.DefaultBondDenom, 10)
+	minimumDelegation := sdk.NewInt64Coin(pioconfig.DefaultBondDenom, 0)
+	maximumDelegation := sdk.NewInt64Coin(pioconfig.DefaultBondDenom, 10)
 	s.qualifyingActions = []types.QualifyingAction{
 		{
 			Type: &types.QualifyingAction_Delegate{
