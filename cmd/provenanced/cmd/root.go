@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	provenanceconfig "github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 
@@ -103,7 +103,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        ChainID,
 		flags.FlagKeyringBackend: "test",
-		server.FlagMinGasPrices:  provenanceconfig.DefaultMinGasPrices,
+		server.FlagMinGasPrices:  pioconfig.DefaultMinGasPrices,
 		CoinTypeFlag:             fmt.Sprint(app.CoinTypeMainNet),
 	})
 
@@ -262,19 +262,19 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	if fee, err := sdk.ParseCoinNormalized(cast.ToString(appOpts.Get(server.FlagMinGasPrices))); err == nil {
 		if int(sdk.GetConfig().GetCoinType()) == app.CoinTypeMainNet {
 			// require the fee denom to match the bond denom on mainnet
-			if fee.Denom != provenanceconfig.DefaultBondDenom {
-				panic(fmt.Errorf("invalid min-gas-price fee denom, must be: %s", provenanceconfig.DefaultBondDenom))
+			if fee.Denom != pioconfig.DefaultBondDenom {
+				panic(fmt.Errorf("invalid min-gas-price fee denom, must be: %s", pioconfig.DefaultBondDenom))
 			}
 			// prevent the use of exceptionally small gas amounts that are typical defaults (i.e. 0.0025nhash)
 			if fee.Amount.LTE(sdk.OneInt()) {
-				panic(fmt.Errorf("min-gas-price must be greater than 1%s", provenanceconfig.DefaultBondDenom))
+				panic(fmt.Errorf("min-gas-price must be greater than 1%s", pioconfig.DefaultBondDenom))
 			}
 		}
 	} else {
 		// panic if there was a parse error (for example more than one coin was passed in for required fee).
 		if err != nil {
 			panic(fmt.Errorf("invalid min-gas-price value, expected single decimal coin value such as '%s', got '%s';\n\n %w",
-				provenanceconfig.DefaultMinGasPrices,
+				pioconfig.DefaultMinGasPrices,
 				appOpts.Get(server.FlagMinGasPrices),
 				err))
 		}

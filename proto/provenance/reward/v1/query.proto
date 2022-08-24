@@ -75,12 +75,16 @@ message QueryRewardProgramsRequest {
   }
   // A filter on the types of reward programs.
   QueryType query_type = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
 // QueryRewardProgramsResponse contains the list of RewardPrograms matching the query
 message QueryRewardProgramsResponse {
   // List of RewardProgram objects matching the query_type.
   repeated RewardProgram reward_programs = 1 [(gogoproto.nullable) = false];
+  // pagination defines an optional pagination for the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // QueryClaimPeriodRewardDistributionsRequest queries for all the ClaimPeriodRewardDistributions with pagination.
