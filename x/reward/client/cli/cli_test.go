@@ -806,15 +806,6 @@ func (s *IntegrationTestSuite) TestTxEndRewardProgram() {
 	}
 }
 
-func containsRewardClaimId(rewardAccountResponses []types.RewardAccountResponse, rewardProgramId uint64, claimId uint64) bool {
-	for _, rewardAccountResponse := range rewardAccountResponses {
-		if rewardAccountResponse.RewardProgramId == rewardProgramId && rewardAccountResponse.ClaimId == claimId {
-			return true
-		}
-	}
-	return false
-}
-
 func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 	testCases := []struct {
 		name           string
@@ -910,10 +901,16 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 				s.Assert().NoError(err)
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
 				s.Assert().NoError(err)
-				for _, expectedId := range tc.expectedIds {
-					s.Assert().True(containsRewardClaimId(response.RewardAccountState, 1, expectedId), fmt.Sprintf("missing claim ids %d for reward id 1", expectedId))
-					s.Assert().Equal(int(tc.expectedLength), len(response.RewardAccountState), "length of results does not match")
+				var actualClaimIds []uint64
+				for _, ras := range response.RewardAccountState {
+					if ras.RewardProgramId == 1 {
+						actualClaimIds = append(actualClaimIds, ras.ClaimId)
+					}
 				}
+				for _, eId := range tc.expectedIds {
+					s.Assert().Contains(actualClaimIds, eId, fmt.Sprintf("missing claim id %d for reward id 1", eId))
+				}
+				s.Assert().Equal(int(tc.expectedLength), len(response.RewardAccountState), "length of results does not match")
 			}
 		})
 	}
