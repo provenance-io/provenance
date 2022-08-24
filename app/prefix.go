@@ -25,7 +25,7 @@ var (
 )
 
 // SetConfig sets the configuration for the network using mainnet or testnet
-func SetConfig(testnet bool) {
+func SetConfig(testnet bool, seal bool) {
 	// not the default (mainnet) so reset with testnet config
 	if testnet {
 		AccountAddressPrefix = AccountAddressPrefixTestNet
@@ -43,5 +43,7 @@ func SetConfig(testnet bool) {
 	config.SetBech32PrefixForAccount(AccountAddressPrefix, AccountPubKeyPrefix)
 	config.SetBech32PrefixForValidator(ValidatorAddressPrefix, ValidatorPubKeyPrefix)
 	config.SetBech32PrefixForConsensusNode(ConsNodeAddressPrefix, ConsNodePubKeyPrefix)
-	config.Seal()
+	if seal {
+		config.Seal()
+	}
 }
