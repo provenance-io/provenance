@@ -242,15 +242,12 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 		name         string
 		queryTypeArg string
 		byId         bool
-		expectErr    bool
 		expectErrMsg string
 		expectedCode uint32
 		expectedIds  []uint64
 	}{
 		{"query all reward programs",
 			"all",
-
-			false,
 			false,
 			"",
 			0,
@@ -259,14 +256,12 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 		{"query active reward programs",
 			"active",
 			false,
-			false,
 			"",
 			0,
 			[]uint64{1},
 		},
 		{"query pending reward programs",
 			"pending",
-			false,
 			false,
 			"",
 			0,
@@ -275,14 +270,12 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 		{"query completed reward programs",
 			"completed",
 			false,
-			false,
 			"",
 			0,
 			[]uint64{2, 4},
 		},
 		{"query outstanding reward programs",
 			"outstanding",
-			false,
 			false,
 			"",
 			0,
@@ -291,7 +284,6 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 		{"query by id reward programs",
 			"2",
 			true,
-			false,
 			"",
 			0,
 			[]uint64{2},
@@ -299,14 +291,12 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 		{"query by id reward programs",
 			"99",
 			true,
-			true,
 			"failed to query reward program 99: rpc error: code = Unknown desc = rpc error: code = Internal desc = unable to query for reward program by ID: reward program not found: unknown request",
 			0,
 			[]uint64{2},
 		},
 		{"query invalid query type",
 			"invalid",
-			true,
 			true,
 			"invalid argument arg : invalid",
 			0,
@@ -320,7 +310,7 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardProgramCmd(), []string{tc.queryTypeArg, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-			if tc.expectErr {
+			if len(tc.expectErrMsg) > 0 {
 				s.Assert().EqualError(err, tc.expectErrMsg)
 			} else if tc.byId {
 				var response types.QueryRewardProgramByIDResponse
@@ -333,32 +323,14 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 				s.Assert().NoError(err)
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
 				s.Assert().NoError(err)
-				s.Assert().Equal(len(tc.expectedIds), len(response.RewardPrograms))
-				//s.Assert().Equal(tc.expectedOutput, response)
-				for _, expectedId := range tc.expectedIds {
-					s.Assert().True(containsRewardProgramId(response.RewardPrograms, expectedId))
+				var rewardProgramIds []uint64
+				for _, rp := range response.RewardPrograms {
+					rewardProgramIds = append(rewardProgramIds, rp.Id)
 				}
+				s.Assert().ElementsMatch(tc.expectedIds, rewardProgramIds, "should have all expected reward program ids")
 			}
 		})
 	}
-}
-
-func containsRewardProgramId(rewardPrograms []types.RewardProgram, id uint64) bool {
-	for _, rewardProgram := range rewardPrograms {
-		if rewardProgram.Id == id {
-			return true
-		}
-	}
-	return false
-}
-
-func containsClaimPeriodId(claimPeriodDist []types.ClaimPeriodRewardDistribution, id uint64) bool {
-	for _, dist := range claimPeriodDist {
-		if dist.ClaimPeriodId == id {
-			return true
-		}
-	}
-	return false
 }
 
 func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
@@ -370,7 +342,6 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 		name         string
 		args         []string
 		byId         bool
-		expectErr    bool
 		expectErrMsg string
 		expectedCode uint32
 		expectedIds  []uint64
@@ -379,7 +350,6 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 			[]string{
 				"all",
 			},
-			false,
 			false,
 			"",
 			0,
@@ -392,7 +362,6 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 				"101",
 			},
 			false,
-			false,
 			"",
 			0,
 			defaultMaxQueryIds,
@@ -403,7 +372,6 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 				"--limit",
 				"5",
 			},
-			false,
 			false,
 			"",
 			0,
@@ -418,7 +386,6 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 				"2",
 			},
 			false,
-			false,
 			"",
 			0,
 			[]uint64{6, 7, 8, 9, 10},
@@ -429,7 +396,6 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 				"2",
 			},
 			true,
-			false,
 			"",
 			0,
 			[]uint64{1, 2},
@@ -439,7 +405,6 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 			[]string{
 				"1",
 			},
-			true,
 			true,
 			"a reward_program_id and an claim_period_id are required",
 			0,
@@ -452,7 +417,6 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 				"a",
 			},
 			true,
-			true,
 			"strconv.Atoi: parsing \"a\": invalid syntax",
 			0,
 			[]uint64{},
@@ -464,7 +428,6 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 				"1",
 			},
 			true,
-			true,
 			"strconv.Atoi: parsing \"a\": invalid syntax",
 			0,
 			[]uint64{},
@@ -475,7 +438,6 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 				"100",
 				"100",
 			},
-			true,
 			true,
 			"reward does not exist for reward-id: 100 claim-id 100",
 			0,
@@ -489,7 +451,7 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetClaimPeriodRewardDistributionCmd(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
-			if tc.expectErr {
+			if len(tc.expectErrMsg) > 0 {
 				s.Assert().EqualError(err, tc.expectErrMsg)
 			} else if tc.byId {
 				var response types.QueryClaimPeriodRewardDistributionsByIDResponse
@@ -503,10 +465,11 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 				s.Assert().NoError(err)
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
 				s.Assert().NoError(err)
-				s.Assert().Equal(len(tc.expectedIds), len(response.ClaimPeriodRewardDistributions))
-				for _, expectedId := range tc.expectedIds {
-					s.Assert().True(containsClaimPeriodId(response.ClaimPeriodRewardDistributions, expectedId))
+				var claimPeriodRewardDistIds []uint64
+				for _, cprd := range response.ClaimPeriodRewardDistributions {
+					claimPeriodRewardDistIds = append(claimPeriodRewardDistIds, cprd.ClaimPeriodId)
 				}
+				s.Assert().ElementsMatch(tc.expectedIds, claimPeriodRewardDistIds, "should have all expected claim period ids")
 			}
 		})
 	}
@@ -519,7 +482,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 	testCases := []struct {
 		name         string
 		args         []string
-		expectErr    bool
 		expectErrMsg string
 		expectedCode uint32
 	}{
@@ -535,7 +497,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				"--expire-days=14",
 				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
-			false,
 			"",
 			0,
 		},
@@ -551,7 +512,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				"--expire-days=14",
 				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
-			true,
 			"invalid decimal coin expression: invalid",
 			0,
 		},
@@ -566,7 +526,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				"--expire-days=14",
 				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
-			true,
 			"invalid decimal coin expression: invalid",
 			0,
 		},
@@ -582,7 +541,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				"--expire-days=14",
 				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
-			true,
 			"invalid argument \"-1\" for \"--claim-period-days\" flag: strconv.ParseUint: parsing \"-1\": invalid syntax",
 			0,
 		},
@@ -598,7 +556,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				"--expire-days=-1",
 				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
-			true,
 			"invalid argument \"-1\" for \"--expire-days\" flag: strconv.ParseUint: parsing \"-1\": invalid syntax",
 			0,
 		},
@@ -614,7 +571,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				"--expire-days=1",
 				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
-			true,
 			"invalid argument \"-52\" for \"--claim-periods\" flag: strconv.ParseUint: parsing \"-52\": invalid syntax",
 			0,
 		},
@@ -630,7 +586,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				"--expire-days=14",
 				fmt.Sprintf("--qualifying-actions=%s", actions),
 			},
-			true,
 			"unable to parse time (invalid) required format is RFC3339 (2006-01-02T15:04:05Z07:00) , parsing time \"invalid\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"invalid\" as \"2006\"",
 			0,
 		},
@@ -646,7 +601,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				"--expire-days=14",
 				fmt.Sprintf("--qualifying-actions=%s", "actions"),
 			},
-			true,
 			"invalid character 'a' looking for beginning of value",
 			0,
 		},
@@ -662,7 +616,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				"--expire-days=14",
 				fmt.Sprintf("--qualifying-actions=%s", "actions"),
 			},
-			true,
 			"invalid argument \"abc\" for \"--claim-periods\" flag: strconv.ParseUint: parsing \"abc\": invalid syntax",
 			0,
 		},
@@ -678,7 +631,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				"--expire-days=14",
 				fmt.Sprintf("--qualifying-actions=%s", "actions"),
 			},
-			true,
 			"invalid argument \"abc\" for \"--claim-period-days\" flag: strconv.ParseUint: parsing \"abc\": invalid syntax",
 			0,
 		},
@@ -694,7 +646,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				"--expire-days=abc",
 				fmt.Sprintf("--qualifying-actions=%s", "actions"),
 			},
-			true,
 			"invalid argument \"abc\" for \"--expire-days\" flag: strconv.ParseUint: parsing \"abc\": invalid syntax",
 			0,
 		},
@@ -711,7 +662,6 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 				"--max-rollover-periods=abc",
 				fmt.Sprintf("--qualifying-actions=%s", "actions"),
 			},
-			true,
 			"invalid argument \"abc\" for \"--max-rollover-periods\" flag: strconv.ParseUint: parsing \"abc\": invalid syntax",
 			0,
 		},
@@ -733,7 +683,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdRewardProgramAdd(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
-			if tc.expectErr {
+			if len(tc.expectErrMsg) > 0 {
 				s.Assert().EqualError(err, tc.expectErrMsg)
 			} else {
 				s.Assert().NoError(err)
@@ -747,19 +697,16 @@ func (s *IntegrationTestSuite) TestTxClaimReward() {
 	testCases := []struct {
 		name           string
 		claimRewardArg string
-		expectErr      bool
 		expectErrMsg   string
 		expectedCode   uint32
 	}{
 		{"claim rewards tx - valid",
 			"1",
-			false,
 			"",
 			0,
 		},
 		{"claim rewards tx - all",
 			"all",
-			false,
 			"",
 			0,
 		},
@@ -778,7 +725,7 @@ func (s *IntegrationTestSuite) TestTxClaimReward() {
 			}
 			args = append(args, tc.claimRewardArg)
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdClaimReward(), args)
-			if tc.expectErr {
+			if len(tc.expectErrMsg) > 0 {
 				s.Assert().EqualError(err, tc.expectErrMsg)
 			} else {
 				var response sdk.TxResponse
@@ -796,42 +743,36 @@ func (s *IntegrationTestSuite) TestTxEndRewardProgram() {
 	testCases := []struct {
 		name               string
 		endRewardProgramId string
-		expectErr          bool
 		expectErrMsg       string
 		expectedCode       uint32
 		signer             string
 	}{
 		{"end reward program - valid",
 			"1",
-			false,
 			"",
 			0,
 			s.accountAddresses[0].String(),
 		},
 		{"end reward program - invalid id",
 			"999",
-			false,
 			"",
 			3,
 			s.accountAddresses[0].String(),
 		},
 		{"end reward program - invalid state",
 			"2",
-			false,
 			"",
 			5,
 			s.accountAddresses[0].String(),
 		},
 		{"end reward program - not authorized",
 			"1",
-			false,
 			"",
 			4,
 			s.accountAddresses[1].String(),
 		},
 		{"end reward program - invalid id format",
 			"abc",
-			true,
 			"invalid argument : abc",
 			0,
 			s.accountAddresses[0].String(),
@@ -851,7 +792,7 @@ func (s *IntegrationTestSuite) TestTxEndRewardProgram() {
 			}
 			args = append(args, tc.endRewardProgramId)
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdEndRewardProgram(), args)
-			if tc.expectErr {
+			if len(tc.expectErrMsg) > 0 {
 				s.Assert().EqualError(err, tc.expectErrMsg)
 			} else {
 				var response sdk.TxResponse
@@ -880,7 +821,6 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 		addressArg     string
 		stateArg       string
 		byId           bool
-		expectErr      bool
 		expectErrMsg   string
 		expectedCode   uint32
 		expectedIds    []uint64
@@ -889,7 +829,6 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 		{"query all reward by address",
 			s.accountAddr.String(),
 			"all",
-			false,
 			false,
 			"",
 			0,
@@ -900,7 +839,6 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 			s.accountAddr.String(),
 			"unclaimable",
 			false,
-			false,
 			"",
 			0,
 			[]uint64{1, 5},
@@ -909,7 +847,6 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 		{"query claimable reward by address",
 			s.accountAddr.String(),
 			"claimable",
-			false,
 			false,
 			"",
 			0,
@@ -920,7 +857,6 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 			s.accountAddr.String(),
 			"claimed",
 			false,
-			false,
 			"",
 			0,
 			[]uint64{3, 7},
@@ -929,7 +865,6 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 		{"query expired reward by address",
 			s.accountAddr.String(),
 			"expired",
-			false,
 			false,
 			"",
 			0,
@@ -940,7 +875,6 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 			s.accountAddr.String(),
 			"invalid",
 			false,
-			true,
 			"failed to query reward distributions. invalid is not a valid query param",
 			0,
 			[]uint64{},
@@ -950,7 +884,6 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 			"invalid address",
 			"expired",
 			false,
-			true,
 			"failed to query reward distributions: rpc error: code = InvalidArgument desc = decoding bech32 failed: invalid character in string: ' ': invalid address: invalid request",
 			0,
 			[]uint64{},
@@ -965,7 +898,7 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 			clientCtx := s.network.Validators[0].ClientCtx
 			args := []string{tc.addressArg, tc.stateArg, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardsByAddressCmd(), args)
-			if tc.expectErr {
+			if len(tc.expectErrMsg) > 0 {
 				s.Assert().EqualError(err, tc.expectErrMsg)
 			} else if tc.byId {
 				var response types.QueryRewardDistributionsByAddressResponse
@@ -978,7 +911,7 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
 				s.Assert().NoError(err)
 				for _, expectedId := range tc.expectedIds {
-					s.Assert().True(containsRewardClaimId(response.RewardAccountState, 1, expectedId), fmt.Sprintf("missing id %d", expectedId))
+					s.Assert().True(containsRewardClaimId(response.RewardAccountState, 1, expectedId), fmt.Sprintf("missing claim ids %d for reward id 1", expectedId))
 					s.Assert().Equal(int(tc.expectedLength), len(response.RewardAccountState), "length of results does not match")
 				}
 			}
