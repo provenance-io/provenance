@@ -91,6 +91,7 @@ func GetRewardProgramCmd() *cobra.Command {
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "all")
 	return cmd
 }
 
