@@ -62,7 +62,7 @@ type StoreKeysPrefixes struct {
 }
 
 func TestFullAppSimulation(t *testing.T) {
-	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass.
+	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass. https://github.com/provenance-io/provenance/issues/1006
 	t.Skip("This test is disabled, but must be re-enabled before v1.13 can be ready.")
 
 	config, db, dir, logger, skip, err := sdksim.SetupSimulation("leveldb-app-sim", "Simulation")
@@ -104,7 +104,7 @@ func TestFullAppSimulation(t *testing.T) {
 }
 
 func TestSimple(t *testing.T) {
-	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass.
+	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass. https://github.com/provenance-io/provenance/issues/1006
 	t.Skip("This test is disabled, but must be re-enabled before v1.13 can be ready.")
 
 	config, db, dir, logger, skip, err := sdksim.SetupSimulation("leveldb-app-sim", "Simulation")
@@ -142,7 +142,7 @@ func TestSimple(t *testing.T) {
 // Profile with:
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/provenance-io/provenance -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func TestAppImportExport(t *testing.T) {
-	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass.
+	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass. https://github.com/provenance-io/provenance/issues/1006
 	t.Skip("This test is disabled, but must be re-enabled before v1.13 can be ready.")
 
 	// uncomment to run in ide without flags.
@@ -261,7 +261,7 @@ func TestAppImportExport(t *testing.T) {
 }
 
 func TestAppSimulationAfterImport(t *testing.T) {
-	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass.
+	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass. https://github.com/provenance-io/provenance/issues/1006
 	t.Skip("This test is disabled, but must be re-enabled before v1.13 can be ready.")
 
 	config, db, dir, logger, skip, err := sdksim.SetupSimulation("leveldb-app-sim", "Simulation")
@@ -342,7 +342,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
 // and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
-	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass.
+	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass. https://github.com/provenance-io/provenance/issues/1006
 	t.Skip("This test is disabled, but must be re-enabled before v1.13 can be ready.")
 
 	if !sdksim.FlagEnabledValue {
