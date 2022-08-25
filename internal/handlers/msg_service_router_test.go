@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/provenance-io/provenance/internal/pioconfig"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -18,6 +16,8 @@ import (
 	piosimapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/handlers"
+	"github.com/provenance-io/provenance/internal/pioconfig"
+
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 
 	"github.com/stretchr/testify/assert"

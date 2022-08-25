@@ -49,7 +49,6 @@ func NewTxCmd() *cobra.Command {
 }
 
 func GetCmdRewardProgramAdd() *cobra.Command {
-	actionsExampleJSON := "{\"qualifying_actions\":[{\"delegate\":{\"minimum_actions\":\"0\",\"maximum_actions\":\"0\",\"minimum_delegation_amount\":{\"denom\":\"nhash\",\"amount\":\"0\"},\"maximum_delegation_amount\":{\"denom\":\"nhash\",\"amount\":\"100\"},\"minimum_active_stake_percentile\":\"0.000000000000000000\",\"maximum_active_stake_percentile\":\"1.000000000000000000\"}}]}"
 	cmd := &cobra.Command{
 		Use:     "add-reward-program [title] [description]",
 		Args:    cobra.ExactArgs(2),
@@ -58,15 +57,15 @@ func GetCmdRewardProgramAdd() *cobra.Command {
 		Long:    strings.TrimSpace(`Add a reward program`),
 		Example: fmt.Sprintf(`$ %[1]s tx reward add-reward-program \
 		"Program Title" "A short description" \
-		--total-reward-pool 580nhash \
-		--max-reward-by-address 10nhash \
-    	--start-time 2022-05-10\
-		--claim-periods 52 \
-		--max-rollover-periods 4 \
-		--claim-period-days 7 \
-		--expire-days 14 \ 
-		--qualifying-actions %[2]s
-		`, version.AppName, actionsExampleJSON),
+	--total-reward-pool 580nhash \
+	--max-reward-by-address 10nhash \
+	--start-time 2022-05-10\
+	--claim-periods 52 \
+	--max-rollover-periods 4 \
+	--claim-period-days 7 \
+	--expire-days 14 \ 
+	--qualifying-actions {"qualifying_actions":[{"delegate":{"minimum_actions":"0","maximum_actions":"0","minimum_delegation_amount":{"denom":"nhash","amount":"0"},"maximum_delegation_amount":{"denom":"nhash","amount":"100"},"minimum_active_stake_percentile":"0.000000000000000000","maximum_active_stake_percentile":"1.000000000000000000"}}]}
+		`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
