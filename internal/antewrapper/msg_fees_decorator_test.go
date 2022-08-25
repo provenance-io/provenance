@@ -163,6 +163,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_AccountBalanceNotEnough(
 
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant() {
 	err, antehandler := setUpApp(suite, true, sdk.DefaultBondDenom, 100)
+	suite.Require().NoError(err, "should set up test app")
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -188,6 +189,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant() {
 	err = suite.app.FeeGrantKeeper.GrantAllowance(suite.ctx, addr2, addr1, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100100)),
 	})
+	suite.Require().NoError(err, "should setup free grant allowance for granted account")
 	suite.txBuilder.SetFeeGranter(acct2.GetAddress())
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
@@ -210,6 +212,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant() {
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant_1() {
 	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
 	err, antehandler := setUpApp(suite, true, sdk.DefaultBondDenom, 100)
+	suite.Require().NoError(err, "should set up test app")
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -235,6 +238,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant_1() {
 	err = suite.app.FeeGrantKeeper.GrantAllowance(suite.ctx, addr1, addr2, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100100)),
 	})
+	suite.Require().NoError(err, "should setup free grant allowance for granted account")
 	suite.txBuilder.SetFeeGranter(acct2.GetAddress())
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
@@ -256,6 +260,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant_1() {
 // no grant
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant_2() {
 	err, antehandler := setUpApp(suite, true, sdk.DefaultBondDenom, 100)
+	suite.Require().NoError(err, "should set up test app")
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
