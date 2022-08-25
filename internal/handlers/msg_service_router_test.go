@@ -127,7 +127,7 @@ func TestMsgService(t *testing.T) {
 	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[14].Attributes[0].Key))
 	assert.Equal(t, "100000stake", string(res.Events[14].Attributes[0].Value))
 
-	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)))
+	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)), "", msgfeestypes.DefaultMsgFeeSplit)
 	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
 
 	// tx with a fee associated with msg type and account has funds
@@ -160,7 +160,7 @@ func TestMsgService(t *testing.T) {
 	assert.Equal(t, "msg_fees", string(res.Events[16].Attributes[0].Key))
 	assert.Equal(t, "[{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"800hotdog\",\"recipient\":\"\"}]", string(res.Events[16].Attributes[0].Value))
 
-	msgbasedFee = msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin(sdk.DefaultBondDenom, 10))
+	msgbasedFee = msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin(sdk.DefaultBondDenom, 10), "", msgfeestypes.DefaultMsgFeeSplit)
 	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
 
 	// tx with a fee associated with msg type, additional cost is in same base as fee
@@ -218,7 +218,7 @@ func TestMsgServiceAuthz(t *testing.T) {
 	require.Equal(t, "", addr3beforeBalance, "should have the new balance after funding account")
 
 	msg := banktypes.NewMsgSend(addr1, addr3, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
-	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)))
+	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)), "", msgfeestypes.DefaultMsgFeeSplit)
 	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
 	app.AuthzKeeper.SaveGrant(ctx, addr2, addr1, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("hotdog", 500))), time.Now().Add(time.Hour))
 

@@ -259,7 +259,7 @@ func (suite *HandlerTestSuite) SetupTest(isCheckTx bool) params.EncodingConfig {
 
 func (suite *HandlerTestSuite) CreateMsgFee(fee sdk.Coin, msgs ...sdk.Msg) error {
 	for _, msg := range msgs {
-		msgFeeToCreate := msgfeetype.NewMsgFee(sdk.MsgTypeURL(msg), fee)
+		msgFeeToCreate := msgfeetype.NewMsgFee(sdk.MsgTypeURL(msg), fee, "", msgfeetype.DefaultMsgFeeSplit)
 		err := suite.app.MsgFeesKeeper.SetMsgFee(suite.ctx, msgFeeToCreate)
 		if err != nil {
 			return err

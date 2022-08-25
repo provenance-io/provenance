@@ -53,7 +53,7 @@ func (s *TestSuite) TestKeeper() {
 	s.Require().Nil(msgFee)
 	s.Require().Nil(err)
 	newCoin := sdk.NewInt64Coin("steak", 100)
-	msgFeeToCreate := types.NewMsgFee(bankSendAuthMsgType, newCoin)
+	msgFeeToCreate := types.NewMsgFee(bankSendAuthMsgType, newCoin, "", types.DefaultMsgFeeSplit)
 	app.MsgFeesKeeper.SetMsgFee(ctx, msgFeeToCreate)
 
 	msgFee, err = app.MsgFeesKeeper.GetMsgFee(ctx, bankSendAuthMsgType)
