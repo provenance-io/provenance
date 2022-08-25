@@ -554,7 +554,7 @@ func AddGenesisMsgFeeCmd(defaultNodeHome string, interfaceRegistry types.Interfa
 			}
 
 			if !found {
-				msgFeesGenState.MsgFees = append(msgFeesGenState.MsgFees, msgfeetypes.NewMsgFee(msgType, additionalFee))
+				msgFeesGenState.MsgFees = append(msgFeesGenState.MsgFees, msgfeetypes.NewMsgFee(msgType, additionalFee, "", msgfeetypes.DefaultMsgFeeSplit))
 			}
 
 			msgFeesGenStateBz, err := cdc.MarshalJSON(&msgFeesGenState)

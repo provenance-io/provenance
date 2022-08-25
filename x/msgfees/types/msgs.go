@@ -10,6 +10,8 @@ import (
 
 const (
 	TypeAssessCustomMsgFee = "assess_custom_msg_fee"
+
+	DefaultMsgFeeSplit = uint32(50)
 )
 
 // Compile time interface checks.
@@ -17,12 +19,12 @@ var (
 	_ sdk.Msg = &MsgAssessCustomMsgFeeRequest{}
 )
 
-func NewMsgFee(msgTypeURL string, additionalFee sdk.Coin, recipient string, splitDivisor uint64) MsgFee {
+func NewMsgFee(msgTypeURL string, additionalFee sdk.Coin, recipient string, split uint32) MsgFee {
 	return MsgFee{
 		MsgTypeUrl:    msgTypeURL,
 		AdditionalFee: additionalFee,
 		Recipient:     recipient,
-		SplitDivisor:  splitDivisor,
+		Split:         split,
 	}
 }
 

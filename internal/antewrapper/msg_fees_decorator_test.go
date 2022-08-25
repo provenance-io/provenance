@@ -312,10 +312,10 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_1() {
 	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
 	tx, acct1 := createTestTx(suite, err, NewTestFeeAmountMultiple())
 
-	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(100)))))
-	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(150)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(100)))), "should fund account for test setup")
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(150)))), "should fund account for test setup")
 	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().Nil(err, "MsgFeesDecorator returned error in DeliverTx")
+	suite.Require().NoError(err, "MsgFeesDecorator returned error in DeliverTx")
 }
 
 // wrong denom passed in, errors with insufficient fee
@@ -326,7 +326,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_2() {
 
 	tx, acct1 = createTestTx(suite, err, NewTestFeeAmountMultiple())
 
-	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(10000)))))
+	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(10000)))), "should fund account for test setup")
 
 	tx, acct1 = createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
 	_, err = antehandler(suite.ctx, tx, false)
@@ -337,7 +337,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_2() {
 
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
-	suite.Require().Contains(err.Error(), "not enough fees; after deducting fees required,got: \"-100nhash,10000steak\", required additional fee: \"100nhash\"", "wrong error message")
+	suite.Require().ErrorAs(err, "not enough fees; after deducting fees required,got: \"-100nhash,10000steak\", required additional fee: \"100nhash\"", "wrong error message")
 }
 
 // additional fee denom as default base fee denom, fails because gas passed in * floor gas price (module param) exceeds fees passed in.
@@ -398,63 +398,151 @@ func (suite *AnteTestSuite) TestCalculateAdditionalFeesToBePaid() {
 	suite.Require().NoError(err)
 
 	someAddress := suite.clientCtx.FromAddress
+	recipient1 := "recipient1"
+	recipient2 := "recipient2"
 	sendTypeURL := sdk.MsgTypeURL(&banktypes.MsgSend{})
 	assessFeeTypeURL := sdk.MsgTypeURL(&msgfeestypes.MsgAssessCustomMsgFeeRequest{})
 	oneHash := sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_000_000_000)
 	twoHash := sdk.NewInt64Coin(msgfeestypes.NhashDenom, 2_000_000_000)
 	msgSend := banktypes.NewMsgSend(someAddress, someAddress, sdk.NewCoins(oneHash))
-	suite.app.MsgFeesKeeper.SetMsgFee(suite.ctx, msgfeestypes.NewMsgFee(sendTypeURL, oneHash))
+	assessFeeWithRecipient1 := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("", oneHash, recipient1, someAddress.String())
+	assessFeeWithRecipient2 := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("", oneHash, recipient2, someAddress.String())
+	assessFeeWithoutRecipient := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("", oneHash, "", someAddress.String())
+	suite.app.MsgFeesKeeper.SetMsgFee(suite.ctx, msgfeestypes.NewMsgFee(sendTypeURL, oneHash, "", msgfeestypes.DefaultMsgFeeSplit))
 
-	result, err := antewrapper.CalculateAdditionalFeesToBePaid(suite.ctx, suite.app.MsgFeesKeeper, msgSend)
-	suite.Require().NoError(err)
-	suite.Assert().Equal(sdk.NewCoins(oneHash), result.TotalAdditionalFees)
-	suite.Assert().Equal(sdk.NewCoins(oneHash), result.AdditionalModuleFees)
-	suite.Assert().Equal(0, len(result.RecipientDistributions))
+	type RecipientDistribution struct {
+		recipient string
+		amount    sdk.Coin
+	}
 
-	result, err = antewrapper.CalculateAdditionalFeesToBePaid(suite.ctx, suite.app.MsgFeesKeeper, msgSend, msgSend)
-	suite.Require().NoError(err)
-	suite.Assert().Equal(sdk.NewCoins(twoHash), result.TotalAdditionalFees)
-	suite.Assert().Equal(sdk.NewCoins(twoHash), result.AdditionalModuleFees)
-	suite.Assert().Equal(0, len(result.RecipientDistributions))
+	testCases := []struct {
+		name                         string
+		msgs                         []sdk.Msg
+		expectedTotalAdditionalFees  sdk.Coins
+		expectedAdditionalModuleFees sdk.Coins
+		expectedRecipients           []RecipientDistribution
+		addAdditionalMsgFee          msgfeestypes.MsgFee
+		expectErrMsg                 string
+	}{
+		{
+			"should calculate single msg with fee and no recipients",
+			[]sdk.Msg{msgSend},
+			sdk.NewCoins(oneHash),
+			sdk.NewCoins(oneHash),
+			[]RecipientDistribution{},
+			msgfeestypes.MsgFee{},
+			"",
+		},
+		{
+			"should calculate two msgs with fee and no recipients",
+			[]sdk.Msg{msgSend, msgSend},
+			sdk.NewCoins(twoHash),
+			sdk.NewCoins(twoHash),
+			[]RecipientDistribution{},
+			msgfeestypes.MsgFee{},
+			"",
+		},
+		{
+			"should calculate single msg with fee and an assess msg with no recipients (all fees should go to fee module)",
+			[]sdk.Msg{
+				msgSend,
+				&assessFeeWithoutRecipient,
+			},
+			sdk.NewCoins(twoHash),
+			sdk.NewCoins(twoHash),
+			[]RecipientDistribution{},
+			msgfeestypes.MsgFee{},
+			"",
+		},
+		{
+			"should calculate single msg with fee and single recipient which claims half the fee",
+			[]sdk.Msg{
+				msgSend,
+				&assessFeeWithRecipient1,
+			},
+			sdk.NewCoins(twoHash),
+			sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_500_000_000)),
+			[]RecipientDistribution{
+				{
+					amount:    sdk.NewInt64Coin(msgfeestypes.NhashDenom, 500_000_000),
+					recipient: recipient1,
+				},
+			},
+			msgfeestypes.MsgFee{},
+			"",
+		},
+		{
+			"should calculate single msg with fee and assess fee msgs with two recipients which claims half the fee each",
+			[]sdk.Msg{
+				msgSend,
+				&assessFeeWithRecipient1,
+				&assessFeeWithRecipient2,
+			},
+			sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 3_000_000_000)),
+			sdk.NewCoins(twoHash),
+			[]RecipientDistribution{
+				{
+					amount:    sdk.NewInt64Coin(msgfeestypes.NhashDenom, 500_000_000),
+					recipient: recipient1,
+				},
+				{
+					amount:    sdk.NewInt64Coin(msgfeestypes.NhashDenom, 500_000_000),
+					recipient: recipient2,
+				},
+			},
+			msgfeestypes.MsgFee{},
+			"",
+		},
+		{
+			"should calculate single msg with fee, a assess fee msg that has a msg fee without a recipient",
+			[]sdk.Msg{
+				msgSend,
+				&assessFeeWithoutRecipient,
+			},
+			sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 3_000_000_000)),
+			sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 3_000_000_000)),
+			[]RecipientDistribution{},
+			msgfeestypes.NewMsgFee(assessFeeTypeURL, oneHash, "", msgfeestypes.DefaultMsgFeeSplit),
+			"",
+		},
+		{
+			"should calculate single msg with fee, a assess fee msg that has a msg fee with a recipient which claims half the fee",
+			[]sdk.Msg{
+				msgSend,
+				&assessFeeWithRecipient1,
+			},
+			sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 3_000_000_000)),
+			sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 2_500_000_000)),
+			[]RecipientDistribution{
+				{
+					amount:    sdk.NewInt64Coin(msgfeestypes.NhashDenom, 500_000_000),
+					recipient: recipient1,
+				},
+			},
+			msgfeestypes.NewMsgFee(assessFeeTypeURL, oneHash, "", msgfeestypes.DefaultMsgFeeSplit),
+			"",
+		},
+	}
 
-	assessFee := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("", oneHash, "recipient1", someAddress.String())
-	result, err = antewrapper.CalculateAdditionalFeesToBePaid(suite.ctx, suite.app.MsgFeesKeeper, msgSend, &assessFee)
-	suite.Require().NoError(err)
-	suite.Assert().Equal(sdk.NewCoins(twoHash), result.TotalAdditionalFees)
-	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_500_000_000)), result.AdditionalModuleFees)
-	suite.Assert().Equal(1, len(result.RecipientDistributions))
-	suite.Assert().Equal(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 500_000_000), result.RecipientDistributions["recipient1"])
+	for _, tc := range testCases {
+		tc := tc
 
-	assessFee = msgfeestypes.NewMsgAssessCustomMsgFeeRequest("", oneHash, "", someAddress.String())
-	result, err = antewrapper.CalculateAdditionalFeesToBePaid(suite.ctx, suite.app.MsgFeesKeeper, msgSend, &assessFee)
-	suite.Require().NoError(err)
-	suite.Assert().Equal(sdk.NewCoins(twoHash), result.TotalAdditionalFees)
-	suite.Assert().Equal(sdk.NewCoins(twoHash), result.AdditionalModuleFees)
-	suite.Assert().Equal(0, len(result.RecipientDistributions))
-
-	assessFee1 := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("", oneHash, "recipient1", someAddress.String())
-	assessFee2 := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("", oneHash, "recipient2", someAddress.String())
-	result, err = antewrapper.CalculateAdditionalFeesToBePaid(suite.ctx, suite.app.MsgFeesKeeper, msgSend, &assessFee1, &assessFee2)
-	suite.Require().NoError(err)
-	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 3_000_000_000)), result.TotalAdditionalFees)
-	suite.Assert().Equal(sdk.NewCoins(twoHash), result.AdditionalModuleFees)
-	suite.Assert().Equal(2, len(result.RecipientDistributions))
-	suite.Assert().Equal(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 500_000_000), result.RecipientDistributions["recipient1"])
-	suite.Assert().Equal(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 500_000_000), result.RecipientDistributions["recipient2"])
-
-	suite.app.MsgFeesKeeper.SetMsgFee(suite.ctx, msgfeestypes.NewMsgFee(assessFeeTypeURL, oneHash))
-	result, err = antewrapper.CalculateAdditionalFeesToBePaid(suite.ctx, suite.app.MsgFeesKeeper, msgSend, &assessFee)
-	suite.Require().NoError(err)
-	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 3_000_000_000)), result.TotalAdditionalFees)
-	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 3_000_000_000)), result.AdditionalModuleFees)
-	suite.Assert().Equal(0, len(result.RecipientDistributions))
-
-	result, err = antewrapper.CalculateAdditionalFeesToBePaid(suite.ctx, suite.app.MsgFeesKeeper, msgSend, &assessFee1)
-	suite.Require().NoError(err)
-	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 3_000_000_000)), result.TotalAdditionalFees)
-	suite.Assert().Equal(sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 2_500_000_000)), result.AdditionalModuleFees)
-	suite.Assert().Equal(1, len(result.RecipientDistributions))
-	suite.Assert().Equal(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 500_000_000), result.RecipientDistributions["recipient1"])
+		suite.Run(tc.name, func() {
+			if len(tc.addAdditionalMsgFee.MsgTypeUrl) != 0 {
+				suite.app.MsgFeesKeeper.SetMsgFee(suite.ctx, tc.addAdditionalMsgFee)
+			}
+			result, err := antewrapper.CalculateAdditionalFeesToBePaid(suite.ctx, suite.app.MsgFeesKeeper, tc.msgs...)
+			if len(tc.expectErrMsg) == 0 {
+				suite.Require().NoError(err, "should calculate additional fee charges")
+				suite.Assert().Equal(tc.expectedTotalAdditionalFees, result.TotalAdditionalFees, "should have total additional fee amount equal to sum of msg fees and assess fee")
+				suite.Assert().Equal(tc.expectedAdditionalModuleFees, result.AdditionalModuleFees, "should send total of additional fee amount that is distributed to fee module account")
+				suite.Assert().Equal(len(tc.expectedRecipients), len(result.RecipientDistributions), "should contain all recipients that get a split of fee")
+				for _, rd := range tc.expectedRecipients {
+					suite.Assert().Equal(rd.amount, result.RecipientDistributions[rd.recipient], "should have allocated proper funds to recipient")
+				}
+			}
+		})
+	}
 
 }
 
