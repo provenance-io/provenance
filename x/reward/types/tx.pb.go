@@ -510,8 +510,11 @@ func (m *MsgClaimAllRewardsResponse) GetClaimDetails() []*RewardProgramClaimDeta
 
 // ClaimedRewardPeriodDetail is information regarding an addresses' shares and reward for a claim period.
 type ClaimedRewardPeriodDetail struct {
-	ClaimPeriodId     uint64     `protobuf:"varint,1,opt,name=claim_period_id,json=claimPeriodId,proto3" json:"claim_period_id,omitempty"`
-	TotalShares       uint64     `protobuf:"varint,2,opt,name=total_shares,json=totalShares,proto3" json:"total_shares,omitempty"`
+	// claim period id
+	ClaimPeriodId uint64 `protobuf:"varint,1,opt,name=claim_period_id,json=claimPeriodId,proto3" json:"claim_period_id,omitempty"`
+	// total shares accumulated for claim period
+	TotalShares uint64 `protobuf:"varint,2,opt,name=total_shares,json=totalShares,proto3" json:"total_shares,omitempty"`
+	// total rewards for claim period
 	ClaimPeriodReward types.Coin `protobuf:"bytes,3,opt,name=claim_period_reward,json=claimPeriodReward,proto3" json:"claim_period_reward"`
 }
 

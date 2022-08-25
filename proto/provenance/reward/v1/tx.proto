@@ -124,10 +124,13 @@ message MsgClaimAllRewardsResponse {
 
 // ClaimedRewardPeriodDetail is information regarding an addresses' shares and reward for a claim period.
 message ClaimedRewardPeriodDetail {
-  option (gogoproto.equal)                     = true;
-  uint64                   claim_period_id     = 1; // claim period id
-  uint64                   total_shares        = 2; // total shares accumulated for claim period
-  cosmos.base.v1beta1.Coin claim_period_reward = 3 [(gogoproto.nullable) = false]; // total rewards for claim period
+  option (gogoproto.equal) = true;
+  // claim period id
+  uint64 claim_period_id = 1;
+  // total shares accumulated for claim period
+  uint64 total_shares = 2;
+  // total rewards for claim period
+  cosmos.base.v1beta1.Coin claim_period_reward = 3 [(gogoproto.nullable) = false];
 }
 
 // RewardProgramClaimDetail is the response object regarding an address's shares and reward for a reward program.
