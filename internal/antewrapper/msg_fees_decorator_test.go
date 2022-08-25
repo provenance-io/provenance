@@ -322,14 +322,14 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_1() {
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_2() {
 	err, antehandler := setUpApp(suite, false, msgfeestypes.NhashDenom, 100)
 	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
-	tx, acct1 := createTestTx(suite, err, testdata.NewTestFeeAmount())
 
-	tx, acct1 = createTestTx(suite, err, NewTestFeeAmountMultiple())
+	_, acct1 := createTestTx(suite, err, NewTestFeeAmountMultiple())
 
 	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(10000)))), "should fund account for test setup")
 
-	tx, acct1 = createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
+	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
 	_, err = antehandler(suite.ctx, tx, false)
+	suite.Require().EqualError(err, "not enough fees; after deducting fees required,got: \"-100nhash,10000steak\", required additional fee: \"100nhash\": insufficient fee", "wrong error message")
 
 	hashPrice := sdk.NewDecCoinFromDec(msgfeestypes.NhashDenom, sdk.NewDec(100))
 	lowGasPrice := []sdk.DecCoin{hashPrice}
@@ -337,7 +337,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_2() {
 
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
-	suite.Require().ErrorAs(err, "not enough fees; after deducting fees required,got: \"-100nhash,10000steak\", required additional fee: \"100nhash\"", "wrong error message")
+	suite.Require().EqualError(err, "not enough fees; after deducting fees required,got: \"-100nhash,10000steak\", required additional fee: \"100nhash\": insufficient fee", "wrong error message")
 }
 
 // additional fee denom as default base fee denom, fails because gas passed in * floor gas price (module param) exceeds fees passed in.
