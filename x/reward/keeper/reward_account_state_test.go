@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/provenance-io/provenance/x/reward/keeper"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"reflect"
 
@@ -418,7 +417,7 @@ func (suite *KeeperTestSuite) TestParseRewardAccountLookUpKey() {
 	rewardProgramId := uint64(123456)
 	claimPeriodId := uint64(7891011)
 	accountStateAddressLookupKey := types.GetRewardAccountStateAddressLookupKey(addressFromSec256k1, rewardProgramId, claimPeriodId)
-	lookup, err := keeper.ParseRewardAccountLookUpKey(accountStateAddressLookupKey, addressFromSec256k1)
+	lookup, err := types.ParseRewardAccountLookUpKey(accountStateAddressLookupKey, addressFromSec256k1)
 	suite.Assert().NoError(err, "no error expected for parsing GetRewardAccountStateAddressLookupKey.")
 	suite.Assert().Equal(addressFromSec256k1, lookup.Addr)
 	suite.Assert().Equal(rewardProgramId, lookup.RewardID)

@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/binary"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -140,4 +141,37 @@ func MustAccAddressFromBech32(s string) sdk.AccAddress {
 		panic(err)
 	}
 	return accAddress
+}
+
+func ParseFilterLookUpKey(accountStateAddressLookupKey []byte, addr sdk.AccAddress) (RewardAccountLookup, error) {
+	rewardID := binary.BigEndian.Uint64(accountStateAddressLookupKey[0:8])
+	claimID := binary.BigEndian.Uint64(accountStateAddressLookupKey[8:16])
+	return RewardAccountLookup{
+		Addr:     addr,
+		RewardID: rewardID,
+		ClaimID:  claimID,
+	}, nil
+}
+
+// ParseRewardAccountLookUpKey parse key generated like via GetRewardAccountStateAddressLookupKey(address, rewardProgramId, claimPeriodId)
+func ParseRewardAccountLookUpKey(accountStateAddressLookupKey []byte, addr sdk.AccAddress) (RewardAccountLookup, error) {
+	// address length is stored in first byte
+	lengthOfAddress := int64(accountStateAddressLookupKey[1:2][0])
+	address := sdk.AccAddress(accountStateAddressLookupKey[2 : lengthOfAddress+2])
+	if !addr.Equals(address) {
+		return RewardAccountLookup{}, fmt.Errorf("addresses do not match up")
+	}
+	rewardID := binary.BigEndian.Uint64(accountStateAddressLookupKey[lengthOfAddress+2 : lengthOfAddress+2+RewardIDKeyLength])
+	claimID := binary.BigEndian.Uint64(accountStateAddressLookupKey[lengthOfAddress+2+RewardIDKeyLength : lengthOfAddress+2+RewardIDKeyLength+ClaimPeriodIDLength])
+	return RewardAccountLookup{
+		Addr:     addr,
+		RewardID: rewardID,
+		ClaimID:  claimID,
+	}, nil
+}
+
+type RewardAccountLookup struct {
+	Addr     sdk.Address
+	RewardID uint64
+	ClaimID  uint64
 }
