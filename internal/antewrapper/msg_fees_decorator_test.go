@@ -23,7 +23,7 @@ func TestAnteFeeDecoratorTestSuite(t *testing.T) {
 }
 
 // checkTx true, high min gas price(high enough so that additional fee in same denom tips it over,
-//and this is what sets it apart from MempoolDecorator which has already been run)
+// and this is what sets it apart from MempoolDecorator which has already been run)
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees() {
 	err, antehandler := setUpApp(suite, true, sdk.DefaultBondDenom, 100)
 	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))

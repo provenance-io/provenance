@@ -10,44 +10,12 @@ import (
 
 const (
 	TypeAssessCustomMsgFee = "assess_custom_msg_fee"
-
-	DefaultMsgFeeSplit = uint32(50)
 )
 
 // Compile time interface checks.
 var (
 	_ sdk.Msg = &MsgAssessCustomMsgFeeRequest{}
 )
-
-func NewMsgFee(msgTypeURL string, additionalFee sdk.Coin, recipient string, split uint32) MsgFee {
-	return MsgFee{
-		MsgTypeUrl:    msgTypeURL,
-		AdditionalFee: additionalFee,
-		Recipient:     recipient,
-		Split:         split,
-	}
-}
-
-func (msg *MsgFee) Validate() error {
-	if msg == nil {
-		return ErrEmptyMsgType
-	}
-
-	if msg.AdditionalFee.IsZero() {
-		return ErrInvalidFee
-	}
-	if err := msg.AdditionalFee.Validate(); err == nil {
-		return err
-	}
-	if len(msg.Recipient) != 0 {
-		_, err := sdk.AccAddressFromBech32(msg.Recipient)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
 
 func NewMsgAssessCustomMsgFeeRequest(
 	name string,
