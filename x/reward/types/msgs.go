@@ -7,7 +7,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -117,12 +116,6 @@ func (msg MsgCreateRewardProgramRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// GetSignBytes encodes the message for signing
-func (msg MsgCreateRewardProgramRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
 // NewMsgEndRewardProgramRequest ends a reward program request
 func NewMsgEndRewardProgramRequest(
 	rewardProgramID uint64,
@@ -162,12 +155,6 @@ func (msg MsgEndRewardProgramRequest) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{addr}
-}
-
-// GetSignBytes encodes the message for signing
-func (msg MsgEndRewardProgramRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
 }
 
 // NewMsgClaimRewardsRequest creates a new reward claim request

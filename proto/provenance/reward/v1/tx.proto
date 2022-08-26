@@ -40,7 +40,7 @@ service Msg {
 // MsgCreateRewardProgramRequest is the request type for creating a reward program RPC
 message MsgCreateRewardProgramRequest {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   // title for the reward program.
   string title = 1;
@@ -81,7 +81,7 @@ message MsgCreateRewardProgramResponse {
 // MsgEndRewardProgramRequest is the request type for ending a reward program RPC
 message MsgEndRewardProgramRequest {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   // reward program id to end.
   uint64 reward_program_id = 1;

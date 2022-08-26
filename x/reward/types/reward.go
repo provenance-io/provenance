@@ -8,7 +8,6 @@ import (
 	time "time"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"gopkg.in/yaml.v2"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 
@@ -226,11 +225,6 @@ func (rp *RewardProgram) Validate() error {
 	return nil
 }
 
-func (rp *RewardProgram) String() string {
-	out, _ := yaml.Marshal(rp)
-	return string(out)
-}
-
 // ============ Account State ============
 
 func NewRewardAccountState(rewardProgramID, rewardClaimPeriodID uint64, address string, shares uint64, actionCounter map[string]uint64) RewardAccountState {
@@ -256,11 +250,6 @@ func (s *RewardAccountState) Validate() error {
 	}
 
 	return nil
-}
-
-func (s *RewardAccountState) String() string {
-	out, _ := yaml.Marshal(s)
-	return string(out)
 }
 
 func CalculateExpectedEndTime(programStartTime time.Time, claimPeriodSeconds, numberOfClaimPeriods uint64) time.Time {
@@ -303,11 +292,6 @@ func (erd *ClaimPeriodRewardDistribution) Validate() error {
 		return errors.New("claim reward distribution must have a reward pool which is positive")
 	}
 	return nil
-}
-
-func (erd *ClaimPeriodRewardDistribution) String() string {
-	out, _ := yaml.Marshal(erd)
-	return string(out)
 }
 
 // ============ Action Delegate ============
@@ -399,11 +383,6 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	return hasValidDelegationAmount && hasValidActivePercentile
 }
 
-func (ad *ActionDelegate) String() string {
-	out, _ := yaml.Marshal(ad)
-	return string(out)
-}
-
 func (ad *ActionDelegate) GetMinimumActiveStakePercentile() sdk.Dec {
 	if ad != nil {
 		return ad.MinimumActiveStakePercentile
@@ -446,11 +425,6 @@ func (at *ActionTransfer) Validate() error {
 
 func (at *ActionTransfer) GetBuilder() ActionBuilder {
 	return &TransferActionBuilder{}
-}
-
-func (at *ActionTransfer) String() string {
-	out, _ := yaml.Marshal(at)
-	return string(out)
 }
 
 func (at *ActionTransfer) ActionType() string {
@@ -509,11 +483,6 @@ func (atd *ActionVote) Validate() error {
 
 func (atd *ActionVote) GetBuilder() ActionBuilder {
 	return &VoteActionBuilder{}
-}
-
-func (atd *ActionVote) String() string {
-	out, _ := yaml.Marshal(atd)
-	return string(out)
 }
 
 func (atd *ActionVote) ActionType() string {
