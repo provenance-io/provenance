@@ -25,19 +25,11 @@ const (
 )
 
 var (
-	RewardProgramKeyPrefix        = []byte{0x01}
-	RewardProgramIDKey            = []byte{0x02}
-	RewardProgramBalanceKeyPrefix = []byte{0x03}
-
-	RewardClaimKeyPrefix = []byte{0x04}
-
-	ClaimPeriodRewardDistributionKeyPrefix = []byte{0x05}
-
-	EligibilityCriteriaKeyPrefix = []byte{0x06}
-
-	ActionKeyPrefix                    = []byte{0x07}
-	AccountStateAddressLookupKeyPrefix = []byte{0x08}
-	AccountStateKeyPrefix              = []byte{0x09}
+	RewardProgramKeyPrefix                 = []byte{0x01}
+	RewardProgramIDKey                     = []byte{0x02}
+	ClaimPeriodRewardDistributionKeyPrefix = []byte{0x03}
+	AccountStateAddressLookupKeyPrefix     = []byte{0x04}
+	AccountStateKeyPrefix                  = []byte{0x05}
 )
 
 // GetRewardProgramKey converts a name into key format.
