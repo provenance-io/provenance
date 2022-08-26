@@ -36,16 +36,14 @@ const (
 	ActionTypeVote     = "ActionVote"
 )
 
-type (
-	// RewardAction defines the interface that actions need to implement
-	RewardAction interface {
-		ActionType() string
-		Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool
-		PreEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool
-		PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool
-		GetBuilder() ActionBuilder
-	}
-)
+// RewardAction defines the interface that actions need to implement
+type RewardAction interface {
+	ActionType() string
+	Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool
+	PreEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool
+	PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool
+	GetBuilder() ActionBuilder
+}
 
 // ============ Shared structs ============
 
