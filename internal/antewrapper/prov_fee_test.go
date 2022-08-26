@@ -68,7 +68,6 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 }
 
 func (suite *AnteTestSuite) TestDeductFees() {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	suite.SetupTest(false) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -77,7 +76,7 @@ func (suite *AnteTestSuite) TestDeductFees() {
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
-	feeAmount := testdata.NewTestFeeAmount()
+	feeAmount := sdk.NewCoins(sdk.NewInt64Coin("atom", 200000))
 	gasLimit := testdata.NewTestGasLimit()
 	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
@@ -86,13 +85,13 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
-
 	// Set account with insufficient funds
 	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(10)))
 	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
 	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin("atom", 10)), suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1), "should have the new balance after funding account")
 
 	decorators := []sdk.AnteDecorator{pioante.NewFeeMeterContextDecorator(), pioante.NewProvenanceDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, nil, suite.app.MsgFeesKeeper)}
 	antehandler := sdk.ChainAnteDecorators(decorators...)
@@ -103,12 +102,12 @@ func (suite *AnteTestSuite) TestDeductFees() {
 
 	// Set account with sufficient funds
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200))))
+	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("atom", 200_000)))
+	suite.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin("atom", 200_010)), suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1), "should have the new balance after funding account")
 	suite.Require().NoError(err)
-
 	_, err = antehandler(suite.ctx, tx, false)
-
 	suite.Require().Nil(err, "Tx errored after account has been set with sufficient funds")
+	suite.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin("atom", 10)), suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1), "should have spent fee amount of 200_000 from account")
 }
 
 func TestAnteFeeTestSuite(t *testing.T) {
@@ -116,7 +115,6 @@ func TestAnteFeeTestSuite(t *testing.T) {
 }
 
 func (suite *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 	// given
 	suite.SetupTest(true)
 	newCoin := sdk.NewInt64Coin("steak", 100)
@@ -137,6 +135,7 @@ func (suite *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
 	suite.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	suite.ctx.ChainID()
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
@@ -156,9 +155,9 @@ func (suite *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
 
 	suite.Require().NotNil(err, "Tx did not error when fee payer had insufficient funds")
 
-	// Set account with sufficient funds for base fees and but not additional fess
+	// Set account with sufficient funds for base fees and but not additional fees
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(150))))
+	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200_000))))
 	suite.Require().NoError(err)
 
 	_, err = antehandler(suite.ctx, tx, false)
