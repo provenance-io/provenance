@@ -2,8 +2,6 @@ package types
 
 import (
 	"errors"
-	fmt "fmt"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -66,16 +64,6 @@ func (p AddMsgFeeProposal) ValidateBasic() error {
 
 	return govtypes.ValidateAbstract(&p)
 }
-func (p AddMsgFeeProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Add Msg Fee Proposal:
-Title:         %s
-Description:   %s
-Msg:           %s
-AdditionalFee: %s
-`, p.Title, p.Description, p.MsgTypeUrl, p.AdditionalFee))
-	return b.String()
-}
 
 func NewUpdateMsgFeeProposal(
 	title string,
@@ -106,17 +94,6 @@ func (p UpdateMsgFeeProposal) ValidateBasic() error {
 	return govtypes.ValidateAbstract(&p)
 }
 
-func (p UpdateMsgFeeProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Update Msg Fee Proposal:
-Title:         %s
-Description:   %s
-Msg:           %s
-AdditionalFee: %s
-`, p.Title, p.Description, p.MsgTypeUrl, p.AdditionalFee))
-	return b.String()
-}
-
 func NewRemoveMsgFeeProposal(
 	title string,
 	description string,
@@ -138,16 +115,6 @@ func (p RemoveMsgFeeProposal) ValidateBasic() error {
 		return ErrEmptyMsgType
 	}
 	return govtypes.ValidateAbstract(&p)
-}
-
-func (p RemoveMsgFeeProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Remove Msg Fee Proposal:
-  Title:       %s
-  Description: %s
-  MsgTypeUrl:  %s
-`, p.Title, p.Description, p.MsgTypeUrl))
-	return b.String()
 }
 
 func NewUpdateNhashPerUsdMilProposal(
@@ -173,14 +140,4 @@ func (p UpdateNhashPerUsdMilProposal) ValidateBasic() error {
 		return errors.New("nhash per usd mil must be greater than 0")
 	}
 	return govtypes.ValidateAbstract(&p)
-}
-
-func (p UpdateNhashPerUsdMilProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Update Nhash to Usd Mil Proposal:
-  Title:             %s
-  Description:       %s
-  NhashPerUsdMil:    %v
-`, p.Title, p.Description, p.NhashPerUsdMil))
-	return b.String()
 }

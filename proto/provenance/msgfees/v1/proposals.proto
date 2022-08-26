@@ -13,7 +13,7 @@ option java_multiple_files = true;
 // AddMsgFeeProposal defines a governance proposal to add additional msg based fee
 message AddMsgFeeProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   string title       = 1;
   string description = 2;
@@ -30,7 +30,7 @@ message AddMsgFeeProposal {
 // UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
 message UpdateMsgFeeProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   string title       = 1;
   string description = 2;
@@ -47,7 +47,7 @@ message UpdateMsgFeeProposal {
 // RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
 message RemoveMsgFeeProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   string title       = 1;
   string description = 2;
@@ -58,7 +58,7 @@ message RemoveMsgFeeProposal {
 // UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
 message UpdateNhashPerUsdMilProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   string title       = 1;
   string description = 2;

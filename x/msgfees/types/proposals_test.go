@@ -28,15 +28,6 @@ func (s *MsgFeesProposalTestSuite) TearDownSuite() {
 func (s *MsgFeesProposalTestSuite) TestAddMsgFeeProposalType() {
 	msgType := sdk.MsgTypeURL(&metadatatypes.MsgWriteRecordRequest{})
 
-	m := NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)))
-	s.Assert().Equal(
-		`Add Msg Fee Proposal:
-Title:         title
-Description:   description
-Msg:           /provenance.metadata.v1.MsgWriteRecordRequest
-AdditionalFee: 10hotdog
-`, m.String())
-
 	tests := []struct {
 		name        string
 		proposal    *AddMsgFeeProposal
@@ -70,16 +61,6 @@ AdditionalFee: 10hotdog
 
 func (s *MsgFeesProposalTestSuite) TestUpdateMsgFeeProposalType() {
 	msgType := sdk.MsgTypeURL(&metadatatypes.MsgWriteRecordRequest{})
-
-	m := NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)))
-	s.Assert().Equal(
-		`Update Msg Fee Proposal:
-Title:         title
-Description:   description
-Msg:           /provenance.metadata.v1.MsgWriteRecordRequest
-AdditionalFee: 10hotdog
-`, m.String())
-
 	tests := []struct {
 		name        string
 		proposal    *UpdateMsgFeeProposal
@@ -115,13 +96,6 @@ func (s *MsgFeesProposalTestSuite) TestRemoveMsgFeeProposalType() {
 	msgType := sdk.MsgTypeURL(&metadatatypes.MsgWriteRecordRequest{})
 
 	m := NewRemoveMsgFeeProposal("title", "description", msgType)
-	s.Assert().Equal(
-		`Remove Msg Fee Proposal:
-  Title:       title
-  Description: description
-  MsgTypeUrl:  /provenance.metadata.v1.MsgWriteRecordRequest
-`, m.String())
-
 	err := m.ValidateBasic()
 	s.Assert().NoError(err)
 
@@ -136,14 +110,6 @@ func (s *MsgFeesProposalTestSuite) TestRemoveMsgFeeProposalType() {
 }
 
 func (s *MsgFeesProposalTestSuite) TestUpdateUsdConversionRateProposalValidateBasic() {
-	m := NewUpdateNhashPerUsdMilProposal("title", "description", 70)
-	s.Assert().Equal(
-		`Update Nhash to Usd Mil Proposal:
-  Title:             title
-  Description:       description
-  NhashPerUsdMil:    70
-`, m.String())
-
 	tests := []struct {
 		name        string
 		proposal    *UpdateNhashPerUsdMilProposal

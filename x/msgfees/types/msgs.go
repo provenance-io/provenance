@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	yaml "gopkg.in/yaml.v2"
 )
 
 const (
@@ -62,11 +61,6 @@ func (msg MsgAssessCustomMsgFeeRequest) GetSigners() []sdk.AccAddress {
 func (msg MsgAssessCustomMsgFeeRequest) GetSignerBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
-}
-
-func (msg MsgAssessCustomMsgFeeRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
 }
 
 // Route returns the module route
