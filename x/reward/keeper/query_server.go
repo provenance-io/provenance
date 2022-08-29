@@ -17,13 +17,10 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-const defaultPerPageLimit = 100
-
 func (k Keeper) RewardPrograms(ctx context.Context, req *types.QueryRewardProgramsRequest) (*types.QueryRewardProgramsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	pageRequest := getPageRequest(req)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	var err error
@@ -43,20 +40,25 @@ func (k Keeper) RewardPrograms(ctx context.Context, req *types.QueryRewardProgra
 	response := types.QueryRewardProgramsResponse{}
 	kvStore := sdkCtx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(kvStore, types.RewardProgramKeyPrefix)
-	pageResponse, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
-		var rewardProgram types.RewardProgram
-		vErr := rewardProgram.Unmarshal(value)
-		if vErr == nil && len(rewardProgramStates) == 0 {
-			response.RewardPrograms = append(response.RewardPrograms, rewardProgram)
-		} else if vErr == nil {
-			for _, state := range rewardProgramStates {
-				if rewardProgram.GetState() == state {
-					response.RewardPrograms = append(response.RewardPrograms, rewardProgram)
-					break
+	pageResponse, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		if accumulate {
+			var rewardProgram types.RewardProgram
+			vErr := rewardProgram.Unmarshal(value)
+			switch {
+			case vErr == nil && len(rewardProgramStates) == 0:
+				response.RewardPrograms = append(response.RewardPrograms, rewardProgram)
+			case vErr == nil:
+				for _, state := range rewardProgramStates {
+					if rewardProgram.GetState() == state {
+						response.RewardPrograms = append(response.RewardPrograms, rewardProgram)
+						break
+					}
 				}
+			default:
+				return false, vErr
 			}
 		}
-		return nil
+		return true, nil
 	})
 
 	if err != nil {
@@ -84,19 +86,22 @@ func (k Keeper) ClaimPeriodRewardDistributions(ctx context.Context, req *types.Q
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	pageRequest := getPageRequest(req)
 
 	response := types.QueryClaimPeriodRewardDistributionsResponse{}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	kvStore := sdkCtx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(kvStore, types.ClaimPeriodRewardDistributionKeyPrefix)
-	pageRes, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
+	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var claimPeriodRewardDist types.ClaimPeriodRewardDistribution
 		vErr := claimPeriodRewardDist.Unmarshal(value)
-		if vErr == nil {
-			response.ClaimPeriodRewardDistributions = append(response.ClaimPeriodRewardDistributions, claimPeriodRewardDist)
+		if accumulate {
+			if vErr == nil {
+				response.ClaimPeriodRewardDistributions = append(response.ClaimPeriodRewardDistributions, claimPeriodRewardDist)
+			} else {
+				return false, vErr
+			}
 		}
-		return nil
+		return true, nil
 	})
 	if err != nil {
 		return &response, status.Error(codes.Unavailable, err.Error())
@@ -134,26 +139,25 @@ func (k Keeper) RewardDistributionsByAddress(ctx context.Context, request *types
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
 	}
-	pageRequest := getPageRequest(request)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	var states []types.RewardAccountState
 	getAllRewardAccountStore := prefix.NewStore(sdk.UnwrapSDKContext(ctx).KVStore(k.storeKey), types.GetAllRewardAccountByAddressPartialKey(address))
 
-	pageRes, err := query.FilteredPaginate(getAllRewardAccountStore, pageRequest, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(getAllRewardAccountStore, request.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		lookupVal, errFromParsingKey := types.ParseFilterLookUpKey(key, address)
 		if errFromParsingKey != nil {
 			return false, err
 		}
-		result, errFromGetRewardAccount := k.GetRewardAccountState(sdkCtx, lookupVal.RewardID, lookupVal.ClaimID, lookupVal.Addr.String())
-		// think ignoring the error maybe ok here since it's just another lookup
-		if errFromGetRewardAccount != nil {
-			return false, nil
-		}
-		if result.GetSharesEarned() == 0 || (request.ClaimStatus != result.ClaimStatus && request.ClaimStatus != types.RewardAccountState_CLAIM_STATUS_UNSPECIFIED) {
-			return false, nil
-		}
-
 		if accumulate {
+			result, errFromGetRewardAccount := k.GetRewardAccountState(sdkCtx, lookupVal.RewardID, lookupVal.ClaimID, lookupVal.Addr.String())
+			// think ignoring the error maybe ok here since it's just another lookup
+			if errFromGetRewardAccount != nil {
+				return false, errFromGetRewardAccount
+			}
+			if result.GetSharesEarned() == 0 || (request.ClaimStatus != result.ClaimStatus && request.ClaimStatus != types.RewardAccountState_CLAIM_STATUS_UNSPECIFIED) {
+				return false, nil
+			}
+
 			states = append(states, result)
 		}
 		return true, nil
@@ -196,32 +200,4 @@ func (k Keeper) convertRewardAccountStateToRewardAccountResponse(ctx sdk.Context
 	}
 
 	return rewardAccountResponse
-}
-
-// hasPageRequest is just for use with the getPageRequest func below.
-type hasPageRequest interface {
-	GetPagination() *query.PageRequest
-}
-
-// Gets the query.PageRequest from the provided request if there is one.
-// Also sets the default limit if it's not already set yet.
-func getPageRequest(req hasPageRequest) *query.PageRequest {
-	var pageRequest *query.PageRequest
-	if req.GetPagination() != nil {
-		pageRequest = req.GetPagination()
-		// enforce max/min page limit
-		enforceMaxMinPageLimit(pageRequest)
-		return pageRequest
-	}
-	if pageRequest == nil {
-		pageRequest = &query.PageRequest{}
-	}
-	enforceMaxMinPageLimit(pageRequest)
-	return pageRequest
-}
-
-func enforceMaxMinPageLimit(pageRequest *query.PageRequest) {
-	if pageRequest.Limit == 0 || pageRequest.Limit > defaultPerPageLimit {
-		pageRequest.Limit = defaultPerPageLimit
-	}
 }
