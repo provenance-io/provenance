@@ -17,7 +17,10 @@ order: 2
 ---
 ## Reward Program
 
-A `RewardProgram` is the main data structure used by the Active Participation and Engagement (APE) module. It keeps track of the state, balances, qualifying actions, timers, and counters for a single Reward Program.
+A `RewardProgram` is the main data structure used by the Active Participation and Engagement (APE) module. It keeps track of the state, balances, qualifying actions, timers, and counters for a single Reward Program. Every Reward Program gets its own unique identifier that we track within the store.
+
+* Reward Program: `0x01 | RewardProgram ID (8 bytes) -> ProtocolBuffers(RewardProgram)`
+* Reward Program ID: `0x02 -> uint64(RewardProgramID)`
 
 +++ https://github.com/provenance-io/provenance/blob/cba0b20229234bd655d7aefdb5aa5195e1c01214/proto/provenance/reward/v1/reward.proto#L13-L99
 
@@ -26,12 +29,17 @@ A `RewardProgram` is the main data structure used by the Active Participation an
 
 A `ClaimPeriodRewardDistribution` is created for each claim period of every `RewardProgram`. Its purpose is to track live claim period specific information. Examples of this include the total number of granted shares in the claim period, sum of of all its rewards given out as claims, and the amount of reward allocated to it from the `RewardProgram`.
 
+* Claim Period Reward Distribution: `0x03 | Claim Period ID (8 bytes) | Reward Program ID (8 bytes) -> ProtocolBuffers(ClaimPeriodRewardDistribution)`
+
 +++ https://github.com/provenance-io/provenance/blob/4e354a9fd554a420f7970522d2e8b0b749baad9d/proto/provenance/reward/v1/reward.proto#L114-L130
 
 ---
 ## Reward Account State
 
-The purpose of `RewardAccountState` is to track state at the address level of a claim period. It counts the number of claim period shares the user obtained, the status of their `RewardClaim`, and other stateful information that assists the system in properly granting rewards. 
+The purpose of `RewardAccountState` is to track state at the address level of a claim period. It counts the number of claim period shares the user obtained, the status of their `RewardClaim`, and other stateful information that assists the system in properly granting rewards.
+
+* AccountStateAddressLookupKeyPrefix: `0x04 | Account Address (8 bytes) | Reward Program ID (8 bytes) | Claim Period ID (8 bytes) -> ProtocolBuffers(RewardAccountState)`
+* AccountStateKeyPrefix: `0x05 | Reward Program ID (8 bytes) | Claim Period ID (8 bytes) | Account Address (8 bytes) -> ProtocolBuffers(RewardAccountState)`
 
 +++ https://github.com/provenance-io/provenance/blob/4e354a9fd554a420f7970522d2e8b0b749baad9d/proto/provenance/reward/v1/reward.proto#L132-L148
 
