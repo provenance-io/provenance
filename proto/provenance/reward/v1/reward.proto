@@ -12,7 +12,7 @@ option java_multiple_files = true;
 // RewardProgram
 message RewardProgram {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
   // State is the state of the reward program
   enum State {
     // undefined program state
@@ -75,7 +75,7 @@ message RewardProgram {
 // ClaimPeriodRewardDistribution, this is updated at the end of every claim period.
 message ClaimPeriodRewardDistribution {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   // The claim period id.
   uint64 claim_period_id = 1;
@@ -94,7 +94,7 @@ message ClaimPeriodRewardDistribution {
 // RewardAccountState contains state at the claim period level for a specific address.
 message RewardAccountState {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
   // ClaimStatus is the state a claim is in
   enum ClaimStatus {
     // undefined state
@@ -143,7 +143,7 @@ message QualifyingActions {
 // ActionDelegate represents the delegate action and its required eligibility criteria.
 message ActionDelegate {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   // Minimum number of successful delegates.
   uint64 minimum_actions = 1;
@@ -164,7 +164,7 @@ message ActionDelegate {
 // ActionTransfer represents the transfer action and its required eligibility criteria.
 message ActionTransfer {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   // Minimum number of successful transfers.
   uint64 minimum_actions = 1;
@@ -177,7 +177,7 @@ message ActionTransfer {
 // ActionVote represents the voting action and its required eligibility criteria.
 message ActionVote {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   // Minimum number of successful votes.
   uint64 minimum_actions = 1;

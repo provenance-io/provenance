@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -141,7 +140,7 @@ func (k Keeper) RewardDistributionsByAddress(ctx context.Context, request *types
 	getAllRewardAccountStore := prefix.NewStore(sdk.UnwrapSDKContext(ctx).KVStore(k.storeKey), types.GetAllRewardAccountByAddressPartialKey(address))
 
 	pageRes, err := query.FilteredPaginate(getAllRewardAccountStore, pageRequest, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		lookupVal, errFromParsingKey := ParseFilterLookUpKey(key, address)
+		lookupVal, errFromParsingKey := types.ParseFilterLookUpKey(key, address)
 		if errFromParsingKey != nil {
 			return false, err
 		}
@@ -225,20 +224,4 @@ func enforceMaxMinPageLimit(pageRequest *query.PageRequest) {
 	if pageRequest.Limit == 0 || pageRequest.Limit > defaultPerPageLimit {
 		pageRequest.Limit = defaultPerPageLimit
 	}
-}
-
-func ParseFilterLookUpKey(accountStateAddressLookupKey []byte, addr sdk.AccAddress) (RewardAccountLookup, error) {
-	rewardID := binary.BigEndian.Uint64(accountStateAddressLookupKey[0:8])
-	claimID := binary.BigEndian.Uint64(accountStateAddressLookupKey[8:16])
-	return RewardAccountLookup{
-		Addr:     addr,
-		RewardID: rewardID,
-		ClaimID:  claimID,
-	}, nil
-}
-
-type RewardAccountLookup struct {
-	Addr     sdk.Address
-	RewardID uint64
-	ClaimID  uint64
 }

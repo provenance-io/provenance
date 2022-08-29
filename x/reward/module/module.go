@@ -186,7 +186,8 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	rewardModule.BeginBlocker(ctx, am.keeper)
 }
 
-// EndBlock does nothing
+// EndBlock The `EndBlocker` abci call is ran at the end of each block. The `EventManager` is monitored
+// and `Qualifying Actions` are deduced from newly created events and prior internal state.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	rewardModule.EndBlocker(ctx, am.keeper)
 	return []abci.ValidatorUpdate{}

@@ -15,8 +15,23 @@ import (
 func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
-		case bytes.Equal(kvA.Key[:1], types.RewardProgramIDKey):
+		case bytes.Equal(kvA.Key[:1], types.RewardProgramKeyPrefix):
 			var attribA, attribB types.RewardProgram
+
+			cdc.MustUnmarshal(kvA.Value, &attribA)
+			cdc.MustUnmarshal(kvB.Value, &attribB)
+
+			return fmt.Sprintf("%v\n%v", attribA, attribB)
+
+		case bytes.Equal(kvA.Key[:1], types.ClaimPeriodRewardDistributionKeyPrefix):
+			var attribA, attribB types.ClaimPeriodRewardDistribution
+
+			cdc.MustUnmarshal(kvA.Value, &attribA)
+			cdc.MustUnmarshal(kvB.Value, &attribB)
+
+			return fmt.Sprintf("%v\n%v", attribA, attribB)
+		case bytes.Equal(kvA.Key[:1], types.AccountStateKeyPrefix):
+			var attribA, attribB types.RewardAccountState
 
 			cdc.MustUnmarshal(kvA.Value, &attribA)
 			cdc.MustUnmarshal(kvB.Value, &attribB)
