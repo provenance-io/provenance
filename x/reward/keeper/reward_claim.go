@@ -95,8 +95,7 @@ func (k Keeper) sendRewards(ctx sdk.Context, rewards []*types.ClaimedRewardPerio
 		return amount, nil
 	}
 
-	for i := 0; i < len(rewards); i++ {
-		reward := rewards[i]
+	for _, reward := range rewards {
 		amount.Denom = reward.GetClaimPeriodReward().Denom
 		amount = amount.Add(reward.GetClaimPeriodReward())
 	}
