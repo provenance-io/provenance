@@ -358,7 +358,7 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 			[]string{
 				"all",
 				"--limit",
-				"101",
+				"100",
 			},
 			false,
 			"",

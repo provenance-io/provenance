@@ -111,7 +111,7 @@ func (s *KeeperTestSuite) TestClaimPeriodRewardDistributions() {
 	s.Assert().NoError(err, "query should not error")
 	// 0 since pageRequest.CountTotal = false by default
 	s.Assert().Equal(response.Pagination.Total, uint64(0), "should only return 100")
-	s.Assert().Equal(100, len(response.ClaimPeriodRewardDistributions), "should only return 100 (max allowed per page)")
+	s.Assert().Equal(101, len(response.ClaimPeriodRewardDistributions), "should only return 100 (max allowed per page)")
 
 	response, err = queryClient.ClaimPeriodRewardDistributions(s.ctx.Context(), &types.QueryClaimPeriodRewardDistributionsRequest{Pagination: &query.PageRequest{Limit: 1, Offset: 9}})
 	s.Assert().NoError(err, "query should not error")
