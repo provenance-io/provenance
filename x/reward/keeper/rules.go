@@ -102,7 +102,7 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 	return successfulActions
 }
 
-//RewardShares Sets shares for an account(i.e address) based on EvaluationResult
+// RewardShares Sets shares for an account(i.e address) based on EvaluationResult
 func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram, evaluateRes []types.EvaluationResult) error {
 	ctx.Logger().Info(fmt.Sprintf("Recording shares for for rewardProgramId=%d, claimPeriod=%d",
 		rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod()))
