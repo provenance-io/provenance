@@ -124,7 +124,7 @@ func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *type
 
 	totalClaimPeriodRewards, err := k.CalculateRewardClaimPeriodRewards(ctx, rewardProgram.GetMaxRewardByAddress(), claimPeriodReward)
 	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("Unable to calculate claim period rewards for RewardProgram %d ", rewardProgram.GetId()))
+		ctx.Logger().Error(fmt.Sprintf("Unable to calculate claim period rewards for RewardProgram %d ", rewardProgram.GetId()), "err", err)
 		return err
 	}
 
