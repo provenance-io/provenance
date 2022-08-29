@@ -23,17 +23,20 @@ func (k Keeper) UpdateUnexpiredRewardsProgram(ctx sdk.Context) {
 		case rewardPrograms[index].IsStarting(ctx):
 			err = k.StartRewardProgram(ctx, &rewardPrograms[index])
 			if err != nil {
-				return
+				ctx.Logger().Error(fmt.Sprintf("cannot start program because of error %v ", err))
+				continue
 			}
 		case rewardPrograms[index].IsEndingClaimPeriod(ctx):
 			err = k.EndRewardProgramClaimPeriod(ctx, &rewardPrograms[index])
 			if err != nil {
-				return
+				ctx.Logger().Error(fmt.Sprintf("cannot end reward program claim period because of error %v ", err))
+				continue
 			}
 		case rewardPrograms[index].IsExpiring(ctx):
 			err = k.ExpireRewardProgram(ctx, &rewardPrograms[index])
 			if err != nil {
-				return
+				ctx.Logger().Error(fmt.Sprintf("cannot expire reward program because of error %v ", err))
+				continue
 			}
 		}
 		k.SetRewardProgram(ctx, rewardPrograms[index])
