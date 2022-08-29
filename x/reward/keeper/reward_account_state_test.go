@@ -3,7 +3,6 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"reflect"
 
 	"github.com/provenance-io/provenance/x/reward/types"
 )
@@ -23,7 +22,7 @@ func (suite *KeeperTestSuite) TestNewRewardAccountState() {
 	suite.Assert().Equal(uint64(3), accountState.GetSharesEarned(), "earned shares must match")
 	suite.Assert().Equal("cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", accountState.GetAddress(), "address must match")
 	suite.Assert().Equal(types.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, accountState.GetClaimStatus(), "should be set to unclaimable initially")
-	suite.Assert().True(reflect.DeepEqual(map[string]uint64{}, accountState.GetActionCounter()), "action counter must match")
+	suite.Assert().Equal(map[string]uint64{}, accountState.GetActionCounter(), "action counter must match")
 }
 
 func (suite *KeeperTestSuite) TestGetSetRewardAccountState() {
@@ -49,7 +48,7 @@ func (suite *KeeperTestSuite) TestGetSetRewardAccountState() {
 	suite.Assert().Equal(expectedState.GetAddress(), actualState.GetAddress(), "address must match")
 	suite.Assert().Equal(expectedState.GetSharesEarned(), actualState.GetSharesEarned(), "shares earned must match")
 	suite.Assert().Equal(expectedState.GetClaimStatus(), actualState.GetClaimStatus(), "should be set to unclaimed initially")
-	suite.Assert().True(reflect.DeepEqual(expectedState.GetActionCounter(), expectedState.GetActionCounter()), "action counter must match")
+	suite.Assert().Equal(expectedState.GetActionCounter(), actualState.GetActionCounter(), "action counter must match")
 }
 
 func (suite *KeeperTestSuite) TestGetInvalidAccountState() {
