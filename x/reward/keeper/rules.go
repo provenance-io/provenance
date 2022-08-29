@@ -147,7 +147,6 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 func (k Keeper) IterateABCIEvents(ctx sdk.Context, criteria *types.EventCriteria, action func(string, *map[string][]byte) error) error {
 	for _, event := range ctx.EventManager().GetABCIEventHistory() {
 		event := event
-		ctx.Logger().Info(fmt.Sprintf("events type is %s", event.Type))
 
 		// Event type must match the criteria
 		// nil criteria is considered to match everything
