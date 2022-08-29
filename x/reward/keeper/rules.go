@@ -3,11 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/provenance-io/provenance/x/reward/types"
 )
