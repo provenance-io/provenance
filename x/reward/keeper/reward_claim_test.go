@@ -12,8 +12,6 @@ var (
 )
 
 func (s *KeeperTestSuite) TestClaimRewards() {
-	s.SetupTest()
-
 	time := s.ctx.BlockTime()
 	rewardProgram := types.NewRewardProgram(
 		"title",
@@ -73,7 +71,6 @@ func (s *KeeperTestSuite) TestClaimRewards() {
 }
 
 func (s *KeeperTestSuite) TestClaimRewardsHandlesInvalidProgram() {
-	s.SetupTest()
 	time := s.ctx.BlockTime()
 	rewardProgram := types.NewRewardProgram(
 		"title",
@@ -99,7 +96,6 @@ func (s *KeeperTestSuite) TestClaimRewardsHandlesInvalidProgram() {
 }
 
 func (s *KeeperTestSuite) TestClaimRewardsHandlesExpiredProgram() {
-	s.SetupTest()
 	time := s.ctx.BlockTime()
 	rewardProgram := types.NewRewardProgram(
 		"title",
@@ -126,7 +122,6 @@ func (s *KeeperTestSuite) TestClaimRewardsHandlesExpiredProgram() {
 }
 
 func (s *KeeperTestSuite) TestRefundRewardClaims() {
-	s.SetupTest()
 	time := s.ctx.BlockTime()
 	rewardProgram := types.NewRewardProgram(
 		"title",
@@ -155,7 +150,6 @@ func (s *KeeperTestSuite) TestRefundRewardClaims() {
 }
 
 func (s *KeeperTestSuite) TestRefundRewardClaimsEmpty() {
-	s.SetupTest()
 	time := s.ctx.BlockTime()
 	rewardProgram := types.NewRewardProgram(
 		"title",
@@ -184,8 +178,6 @@ func (s *KeeperTestSuite) TestRefundRewardClaimsEmpty() {
 }
 
 func (s *KeeperTestSuite) TestClaimAllRewards() {
-	s.SetupTest()
-
 	time := s.ctx.BlockTime()
 
 	for i := 0; i < 3; i++ {
@@ -251,8 +243,6 @@ func (s *KeeperTestSuite) TestClaimAllRewards() {
 }
 
 func (s *KeeperTestSuite) TestClaimAllRewardsExpired() {
-	s.SetupTest()
-
 	time := s.ctx.BlockTime()
 
 	for i := 0; i < 3; i++ {
@@ -312,8 +302,6 @@ func (s *KeeperTestSuite) TestClaimAllRewardsExpired() {
 }
 
 func (s *KeeperTestSuite) TestClaimAllRewardsNoPrograms() {
-	s.SetupTest()
-
 	details, reward, err := s.app.RewardKeeper.ClaimAllRewards(s.ctx, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
 	s.Assert().NoError(err, "should throw no error")
 	s.Assert().Equal(0, len(details), "should have rewards from every program")
