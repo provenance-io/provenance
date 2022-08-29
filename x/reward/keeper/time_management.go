@@ -9,6 +9,7 @@ import (
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
+// UpdateUnexpiredRewardsProgram called from begin blocker, starts/ends or expires rewards programs.
 func (k Keeper) UpdateUnexpiredRewardsProgram(ctx sdk.Context) {
 	rewardPrograms, err := k.GetUnexpiredRewardPrograms(ctx)
 	if err != nil {
