@@ -44,16 +44,17 @@ func (k Keeper) RewardPrograms(ctx context.Context, req *types.QueryRewardProgra
 		if accumulate {
 			var rewardProgram types.RewardProgram
 			vErr := rewardProgram.Unmarshal(value)
-			if vErr == nil && len(rewardProgramStates) == 0 {
+			switch {
+			case vErr == nil && len(rewardProgramStates) == 0:
 				response.RewardPrograms = append(response.RewardPrograms, rewardProgram)
-			} else if vErr == nil {
+			case vErr == nil:
 				for _, state := range rewardProgramStates {
 					if rewardProgram.GetState() == state {
 						response.RewardPrograms = append(response.RewardPrograms, rewardProgram)
 						break
 					}
 				}
-			} else {
+			default:
 				return false, vErr
 			}
 		}
