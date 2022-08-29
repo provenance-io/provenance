@@ -39,6 +39,7 @@ func (k Keeper) UpdateUnexpiredRewardsProgram(ctx sdk.Context) {
 	}
 }
 
+// StartRewardProgram transition reward program to STARTED
 func (k Keeper) StartRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) error {
 	if rewardProgram == nil {
 		ctx.Logger().Error("Attempting to start nil reward program")
@@ -67,6 +68,7 @@ func (k Keeper) StartRewardProgram(ctx sdk.Context, rewardProgram *types.RewardP
 	return nil
 }
 
+// StartRewardProgramClaimPeriod Start ClaimPeriod on a given reward program.
 func (k Keeper) StartRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *types.RewardProgram) error {
 	if rewardProgram == nil {
 		ctx.Logger().Error("Attempting to start reward program claim for nil reward program")
@@ -104,6 +106,7 @@ func (k Keeper) StartRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *ty
 	return nil
 }
 
+// EndRewardProgramClaimPeriod end the claim period of a given reward program.
 func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *types.RewardProgram) error {
 	ctx.Logger().Info(fmt.Sprintf("BeginBlocker - Claim period end hit for reward program %v ", rewardProgram))
 
@@ -150,6 +153,7 @@ func (k Keeper) EndRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *type
 	return nil
 }
 
+// EndRewardProgram ActualProgramEndTime is updated and program ENDED
 func (k Keeper) EndRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) error {
 	if rewardProgram == nil {
 		ctx.Logger().Error("Attempting to end reward program for nil reward program")
@@ -171,6 +175,7 @@ func (k Keeper) EndRewardProgram(ctx sdk.Context, rewardProgram *types.RewardPro
 	return nil
 }
 
+// ExpireRewardProgram return unclaimed rewards to reward creator, and expire the reward program.
 func (k Keeper) ExpireRewardProgram(ctx sdk.Context, rewardProgram *types.RewardProgram) error {
 	if rewardProgram == nil {
 		ctx.Logger().Error("Attempting to expire reward program for nil reward program")
@@ -202,6 +207,7 @@ func (k Keeper) ExpireRewardProgram(ctx sdk.Context, rewardProgram *types.Reward
 	return err
 }
 
+// CalculateRewardClaimPeriodRewards calculate reward accrued for a claim period for each participant.
 func (k Keeper) CalculateRewardClaimPeriodRewards(ctx sdk.Context, maxReward sdk.Coin, claimPeriodReward types.ClaimPeriodRewardDistribution) (sum sdk.Coin, err error) {
 	sum = sdk.NewInt64Coin(claimPeriodReward.GetRewardsPool().Denom, 0)
 
@@ -225,6 +231,7 @@ func (k Keeper) CalculateRewardClaimPeriodRewards(ctx sdk.Context, maxReward sdk
 	return sum, nil
 }
 
+// CalculateParticipantReward for each address/participant
 func (k Keeper) CalculateParticipantReward(ctx sdk.Context, shares int64, totalShares int64, claimRewardPool sdk.Coin, maxReward sdk.Coin) sdk.Coin {
 	numerator := sdk.NewDec(shares)
 	denom := sdk.NewDec(totalShares)

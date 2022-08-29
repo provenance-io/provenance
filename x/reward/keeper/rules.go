@@ -10,6 +10,7 @@ import (
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
+// ProcessTransactions in the endblock
 func (k Keeper) ProcessTransactions(ctx sdk.Context) {
 	// Get all Active Reward Programs
 	rewardPrograms, err := k.GetAllActiveRewardPrograms(ctx)
@@ -64,6 +65,7 @@ func (k Keeper) DetectQualifyingActions(ctx sdk.Context, program *types.RewardPr
 	return results, nil
 }
 
+// ProcessQualifyingActions process the detected qualifying actions.
 func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardProgram, processor types.RewardAction, actions []types.EvaluationResult) []types.EvaluationResult {
 	successfulActions := []types.EvaluationResult(nil)
 	if program == nil || processor == nil || actions == nil {
@@ -100,6 +102,7 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 	return successfulActions
 }
 
+//RewardShares Sets shares for an account(i.e address) based on EvaluationResult
 func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram, evaluateRes []types.EvaluationResult) error {
 	ctx.Logger().Info(fmt.Sprintf("Recording shares for for rewardProgramId=%d, claimPeriod=%d",
 		rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod()))
@@ -185,6 +188,7 @@ func (k Keeper) IterateABCIEvents(ctx sdk.Context, criteria *types.EventCriteria
 	return nil
 }
 
+// FindQualifyingActions iterates event history and applies the RewardAction to them, adds them to the result if they qualify.
 func (k Keeper) FindQualifyingActions(ctx sdk.Context, action types.RewardAction) ([]types.EvaluationResult, error) {
 	result := ([]types.EvaluationResult)(nil)
 	builder := action.GetBuilder()
