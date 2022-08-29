@@ -8,6 +8,7 @@ import (
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
+// CreateRewardProgram with the rewards creator funding the creation of the program.
 func (k Keeper) CreateRewardProgram(ctx sdk.Context, rewardProgram types.RewardProgram) (err error) {
 	err = rewardProgram.Validate()
 	if err != nil {
@@ -29,6 +30,7 @@ func (k Keeper) CreateRewardProgram(ctx sdk.Context, rewardProgram types.RewardP
 	return nil
 }
 
+// EndingRewardProgram end reward program preemptively, can only be done by reward program creator.
 func (k Keeper) EndingRewardProgram(ctx sdk.Context, rewardProgram types.RewardProgram) {
 	if rewardProgram.State == types.RewardProgram_STATE_STARTED {
 		rewardProgram.ClaimPeriods = rewardProgram.CurrentClaimPeriod

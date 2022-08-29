@@ -9,6 +9,7 @@ import (
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
+// ClaimRewards for a given address and a given reward program id
 func (k Keeper) ClaimRewards(ctx sdk.Context, rewardProgramID uint64, addr string) ([]*types.ClaimedRewardPeriodDetail, sdk.Coin, error) {
 	rewardProgram, err := k.GetRewardProgram(ctx, rewardProgramID)
 	if err != nil || rewardProgram.Validate() != nil {
@@ -33,6 +34,8 @@ func (k Keeper) ClaimRewards(ctx sdk.Context, rewardProgramID uint64, addr strin
 	return rewards, sent, nil
 }
 
+// claimRewardsForProgram internal method used by ClaimRewards, which iterates over all the reward account states that the
+// address is eligible for, and then claim them.
 func (k Keeper) claimRewardsForProgram(ctx sdk.Context, rewardProgram types.RewardProgram, addr string) ([]*types.ClaimedRewardPeriodDetail, error) {
 	var states []types.RewardAccountState
 	address, err := sdk.AccAddressFromBech32(addr)
@@ -60,6 +63,7 @@ func (k Keeper) claimRewardsForProgram(ctx sdk.Context, rewardProgram types.Rewa
 	return rewards, nil
 }
 
+// claimRewardForPeriod internal method to actually claim rewards for a period.
 func (k Keeper) claimRewardForPeriod(ctx sdk.Context, rewardProgram types.RewardProgram, period uint64, addr string) (reward types.ClaimedRewardPeriodDetail, found bool) {
 	state, err := k.GetRewardAccountState(ctx, rewardProgram.GetId(), period, addr)
 	if err != nil {
@@ -103,6 +107,7 @@ func (k Keeper) sendRewards(ctx sdk.Context, rewards []*types.ClaimedRewardPerio
 	return k.sendCoinsToAccount(ctx, amount, addr)
 }
 
+// sendCoinsToAccount internal wrapper method, to mainly do `SendCoinsFromModuleToAccount`
 func (k Keeper) sendCoinsToAccount(ctx sdk.Context, amount sdk.Coin, addr string) (sdk.Coin, error) {
 	if amount.IsZero() {
 		return sdk.NewInt64Coin(amount.GetDenom(), 0), nil
@@ -121,12 +126,15 @@ func (k Keeper) sendCoinsToAccount(ctx sdk.Context, amount sdk.Coin, addr string
 	return amount, nil
 }
 
+// RefundRewardClaims refund all unclaimed rewards to the reward program creator
 func (k Keeper) RefundRewardClaims(ctx sdk.Context, rewardProgram types.RewardProgram) error {
 	amount := rewardProgram.TotalRewardPool.Sub(rewardProgram.RemainingPoolBalance).Sub(rewardProgram.ClaimedAmount)
 	_, err := k.sendCoinsToAccount(ctx, amount, rewardProgram.GetDistributeFromAddress())
 	return err
 }
 
+// ClaimAllRewards calls ClaimRewards, however differs from ClaimRewards in that it claims all the rewards that the address
+// is eligible for across all reward programs.
 func (k Keeper) ClaimAllRewards(ctx sdk.Context, addr string) ([]*types.RewardProgramClaimDetail, sdk.Coins, error) {
 	var allProgramDetails []*types.RewardProgramClaimDetail
 	allRewards := sdk.Coins{}
