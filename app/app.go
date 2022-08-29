@@ -284,7 +284,7 @@ type App struct {
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
 
-	// TODO: Required for v1.12.x: Add keepers for new modules and wire them up.
+	// TODO: Required for v1.13.x: Add keepers for new modules and wire them up. https://github.com/provenance-io/provenance/issues/1007
 
 	// the module manager
 	mm *module.Manager

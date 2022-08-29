@@ -86,7 +86,7 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 	if !totalAdditionalFees.IsZero() {
 		// ensure enough fees to cover mempool fee for base fee + additional fee
 		// This is exact same logic as NewMempoolFeeDecorator except it accounts for additional Fees.
-		// TODO: Required for v1.12.x: Update this logic to match the DeductFeeDecorator now.
+		// TODO: Required for v1.13.x: Update this logic to match the DeductFeeDecorator now. https://github.com/provenance-io/provenance/issues/1006
 		if ctx.IsCheckTx() && !simulate {
 			errFromMempoolCalc := EnsureSufficientMempoolFees(ctx, gas, feeCoins, totalAdditionalFees)
 			if errFromMempoolCalc != nil {
