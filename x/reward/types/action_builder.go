@@ -10,6 +10,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
+var (
+	_ ActionBuilder = &TransferActionBuilder{}
+	_ ActionBuilder = &DelegateActionBuilder{}
+	_ ActionBuilder = &VoteActionBuilder{}
+)
+
 type ActionBuilder interface {
 	GetEventCriteria() *EventCriteria
 	AddEvent(eventType string, attributes *map[string][]byte) error
