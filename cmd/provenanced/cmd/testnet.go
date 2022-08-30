@@ -51,7 +51,7 @@ const (
 	flagOutputDir         = "output-dir"
 	flagNodeDaemonHome    = "node-daemon-home"
 	flagStartingIPAddress = "starting-ip-address"
-	flagIgnoreMaxGas  		  = "ignore-max-gas"
+	flagIgnoreMaxGas      = "ignore-max-gas"
 )
 
 // get cmd to initialize all files for tendermint testnet and application
@@ -399,7 +399,7 @@ func initGenFiles(
 	}
 
 	maxGas := int64(60_000_000)
-	if shouldIgnoreMaxGas == true {
+	if shouldIgnoreMaxGas {
 		maxGas = int64(-1)
 	}
 
@@ -475,8 +475,6 @@ func collectGenFiles(
 		if err := genutil.ExportGenesisFileWithTime(genFile, chainID, nil, appState, genTime); err != nil {
 			return err
 		}
-
-		print("breakpoint")
 	}
 
 	return nil
