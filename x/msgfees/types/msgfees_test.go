@@ -30,9 +30,14 @@ func TestMsgFeeValidate(t *testing.T) {
 			"decoding bech32 failed: invalid bech32 string length 7",
 		},
 		{
-			"should fail to validate from invalid split amount",
-			NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), validAddress, 101),
-			"split can only be between 0 and 100 : 101",
+			"should fail to validate from invalid bip point amount too small",
+			NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), validAddress, 0),
+			"recipient basis points can only be between 1 and 10,000 : 0",
+		},
+		{
+			"should fail to validate from invalid bip point amount too large",
+			NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), validAddress, 10_001),
+			"recipient basis points can only be between 1 and 10,000 : 10001",
 		},
 		{
 			"should fail to validate from invalid msg type url",

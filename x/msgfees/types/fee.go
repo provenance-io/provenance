@@ -9,11 +9,15 @@ const (
 	NhashDenom string = "nhash"
 )
 
-// SplitAmount returns split of Amount to be used for coin recipient and one for payout of fee, NOTE: this should only be used if a Recipient address exists
-func SplitAmount(coin sdk.Coin) (recipientCoin sdk.Coin, feePayoutCoin sdk.Coin) {
-	addFeeToPay := coin.Amount.Uint64()
-	addFeeToPay /= 2
-	feePayoutCoin = sdk.NewCoin(coin.Denom, sdk.NewIntFromUint64(addFeeToPay))
-	recipientCoin = coin.Sub(feePayoutCoin)
+// SplitCoinByPercentage returns split of Percentage (0 - 100) for recipient and fee collector
+func SplitCoinByPercentage(coin sdk.Coin, split uint32) (recipientCoin sdk.Coin, feePayoutCoin sdk.Coin) {
+	numerator := sdk.NewDec(int64(split))
+	denominator := sdk.NewDec(10_000)
+	amount := sdk.NewDec(coin.Amount.Int64())
+	percentage := numerator.Quo(denominator)
+	splitAmount1 := amount.Mul(percentage).TruncateInt()
+	splitAmount2 := coin.Amount.Sub(splitAmount1)
+	feePayoutCoin = sdk.NewCoin(coin.Denom, splitAmount1)
+	recipientCoin = sdk.NewCoin(coin.Denom, splitAmount2)
 	return recipientCoin, feePayoutCoin
 }

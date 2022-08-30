@@ -152,8 +152,13 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 						return nil, err
 					}
 				}
-
-				feeGasMeter.ConsumeFee(fee.AdditionalFee, msgTypeURL, "")
+				if len(fee.Recipient) != 0 {
+					recipientCoin, feePayoutCoin := msgfeestypes.SplitCoinByPercentage(fee.AdditionalFee, fee.RecipientBasisPoints)
+					feeGasMeter.ConsumeFee(recipientCoin, msgTypeURL, fee.Recipient)
+					feeGasMeter.ConsumeFee(feePayoutCoin, msgTypeURL, "")
+				} else {
+					feeGasMeter.ConsumeFee(fee.AdditionalFee, msgTypeURL, "")
+				}
 			}
 			if isAssessMsgFee {
 				var assessCustomFee *msgfeestypes.MsgAssessCustomMsgFeeRequest
@@ -176,7 +181,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 				}
 				if msgFeeCoin.IsPositive() {
 					if len(assessCustomFee.Recipient) != 0 {
-						recipientCoin, feePayoutCoin := msgfeestypes.SplitAmount(msgFeeCoin)
+						recipientCoin, feePayoutCoin := msgfeestypes.SplitCoinByPercentage(msgFeeCoin, 5_000)
 						feeGasMeter.ConsumeFee(recipientCoin, msgTypeURL, assessCustomFee.Recipient)
 						feeGasMeter.ConsumeFee(feePayoutCoin, msgTypeURL, "")
 					} else {

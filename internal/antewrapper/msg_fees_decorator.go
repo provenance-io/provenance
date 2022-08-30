@@ -254,11 +254,21 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 		typeURL := sdk.MsgTypeURL(msg)
 		msgFees, err := mbfk.GetMsgFee(ctx, typeURL)
 		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 		}
 
 		if msgFees != nil {
 			if msgFees.AdditionalFee.IsPositive() {
+				if len(msgFees.Recipient) != 0 {
+					recipientCoin, feePayoutCoin := msgfeestypes.SplitCoinByPercentage(msgFees.AdditionalFee, msgFees.RecipientBasisPoints)
+					if len(msgFeesDistribution.RecipientDistributions[msgFees.Recipient].Denom) == 0 {
+						msgFeesDistribution.RecipientDistributions[msgFees.Recipient] = recipientCoin
+					} else {
+						msgFeesDistribution.RecipientDistributions[msgFees.Recipient] = msgFeesDistribution.RecipientDistributions[msgFees.Recipient].Add(recipientCoin)
+					}
+					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(feePayoutCoin)
+					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFees.AdditionalFee)
+				}
 				msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFees.AdditionalFee)
 				msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFees.AdditionalFee)
 			}
@@ -274,7 +284,7 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 			}
 			if assessFeeCoin.IsPositive() {
 				if len(assessFee.Recipient) != 0 {
-					recipientCoin, feePayoutCoin := msgfeestypes.SplitAmount(assessFeeCoin)
+					recipientCoin, feePayoutCoin := msgfeestypes.SplitCoinByPercentage(assessFeeCoin, 5_000)
 					if len(msgFeesDistribution.RecipientDistributions[assessFee.Recipient].Denom) == 0 {
 						msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = recipientCoin
 					} else {

@@ -10,12 +10,12 @@ const (
 	DefaultMsgFeeSplit = uint32(50)
 )
 
-func NewMsgFee(msgTypeURL string, additionalFee sdk.Coin, recipient string, split uint32) MsgFee {
+func NewMsgFee(msgTypeURL string, additionalFee sdk.Coin, recipient string, recipientBasisPoints uint32) MsgFee {
 	return MsgFee{
-		MsgTypeUrl:    msgTypeURL,
-		AdditionalFee: additionalFee,
-		Recipient:     recipient,
-		Split:         split,
+		MsgTypeUrl:           msgTypeURL,
+		AdditionalFee:        additionalFee,
+		Recipient:            recipient,
+		RecipientBasisPoints: recipientBasisPoints,
 	}
 }
 
@@ -40,8 +40,8 @@ func (msg *MsgFee) Validate() error {
 			return err
 		}
 	}
-	if msg.Split > 100 {
-		return fmt.Errorf("split can only be between 0 and 100 : %v", msg.Split)
+	if msg.RecipientBasisPoints > 10_000 || msg.RecipientBasisPoints < 1 {
+		return fmt.Errorf("recipient basis points can only be between 1 and 10,000 : %v", msg.RecipientBasisPoints)
 	}
 
 	return nil

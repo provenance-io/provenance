@@ -5214,7 +5214,7 @@ it consists of two parts
 | `msg_type_url` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | additional_fee can pay in any Coin( basically a Denom and Amount, Amount can be zero) |
 | `recipient` | [string](#string) |  | optional recipient address, the amount is split between recipient and fee module |
-| `split` | [uint32](#uint32) |  | optional split of funds between the recipient and fee module defaults to 50:50 split |
+| `recipient_basis_points` | [uint32](#uint32) |  | optional split of funds between the recipient and fee module defaults to 50:50 split |
 
 
 
