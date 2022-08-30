@@ -10,7 +10,7 @@ import (
 )
 
 func (s *KeeperTestSuite) TestCreateRewardProgramTransaction() {
-	s.SetupTest()
+
 	minimumDelegation := sdk.NewInt64Coin("nhash", 100)
 	maximumDelegation := sdk.NewInt64Coin("nhash", 200)
 	simapp.FundAccount(s.app.BankKeeper, s.ctx, s.accountAddresses[0], sdk.NewCoins(sdk.NewInt64Coin("nhash", 100000)))
@@ -57,7 +57,7 @@ func (s *KeeperTestSuite) TestCreateRewardProgramTransaction() {
 }
 
 func (s *KeeperTestSuite) TestCreateRewardProgramFailedTransaction() {
-	s.SetupTest()
+
 	minimumDelegation := sdk.NewInt64Coin("nhash", 100)
 	maximumDelegation := sdk.NewInt64Coin("nhash", 200)
 
@@ -99,7 +99,6 @@ func (s *KeeperTestSuite) TestCreateRewardProgramFailedTransaction() {
 }
 
 func (s *KeeperTestSuite) TestRewardClaimTransaction() {
-	s.SetupTest()
 
 	time := s.ctx.BlockTime()
 	rewardProgram := types.NewRewardProgram(
@@ -166,7 +165,6 @@ func (s *KeeperTestSuite) TestRewardClaimTransaction() {
 }
 
 func (s *KeeperTestSuite) TestRewardClaimInvalidTransaction() {
-	s.SetupTest()
 
 	msg := types.NewMsgClaimRewardsRequest(1, "invalid address")
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
@@ -177,7 +175,6 @@ func (s *KeeperTestSuite) TestRewardClaimInvalidTransaction() {
 }
 
 func (s *KeeperTestSuite) TestRewardClaimTransactionInvalidClaimer() {
-	s.SetupTest()
 
 	time := s.ctx.BlockTime()
 	rewardProgram := types.NewRewardProgram(

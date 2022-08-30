@@ -16,7 +16,6 @@ func TestQueryServerTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) TestQueryRewardPrograms() {
-	s.SetupTest()
 	queryClient := s.queryClient
 
 	response, err := queryClient.RewardPrograms(s.ctx.Context(), &types.QueryRewardProgramsRequest{})
@@ -94,7 +93,7 @@ func (s *KeeperTestSuite) TestQueryRewardPrograms() {
 }
 
 func (s *KeeperTestSuite) TestClaimPeriodRewardDistributions() {
-	s.SetupTest()
+
 	queryClient := s.queryClient
 	for i := 0; i < 101; i++ {
 		s.app.RewardKeeper.SetClaimPeriodRewardDistribution(s.ctx, types.NewClaimPeriodRewardDistribution(uint64(i+1), 1, sdk.NewInt64Coin("jackthecat", 100), sdk.NewInt64Coin("jackthecat", 10), int64(i), false))
@@ -122,7 +121,7 @@ func (s *KeeperTestSuite) TestClaimPeriodRewardDistributions() {
 }
 
 func (s *KeeperTestSuite) TestClaimPeriodRewardDistributionByID() {
-	s.SetupTest()
+
 	queryClient := s.queryClient
 	for i := 0; i < 101; i++ {
 		s.app.RewardKeeper.SetClaimPeriodRewardDistribution(s.ctx, types.NewClaimPeriodRewardDistribution(uint64(i+1), 1, sdk.NewInt64Coin("jackthecat", 100), sdk.NewInt64Coin("jackthecat", 10), int64(i), false))
@@ -138,7 +137,7 @@ func (s *KeeperTestSuite) TestClaimPeriodRewardDistributionByID() {
 }
 
 func (s *KeeperTestSuite) TestRewardDistributionsByAddress() {
-	s.SetupTest()
+
 	rewardProgram := types.NewRewardProgram(
 		"title",
 		"description",
