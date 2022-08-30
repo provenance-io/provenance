@@ -48,19 +48,20 @@ func (k Keeper) RewardPrograms(ctx context.Context, req *types.QueryRewardProgra
 			if accumulate {
 				response.RewardPrograms = append(response.RewardPrograms, rewardProgram)
 			}
+			return true, nil
 		case vErr == nil:
 			for _, state := range rewardProgramStates {
 				if rewardProgram.GetState() == state {
 					if accumulate {
 						response.RewardPrograms = append(response.RewardPrograms, rewardProgram)
 					}
-					break
+					return true, nil
 				}
 			}
 		default:
 			return false, vErr
 		}
-		return true, nil
+		return false, nil
 	})
 
 	if err != nil {
