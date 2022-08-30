@@ -137,7 +137,7 @@ func (k Keeper) RewardDistributionsByAddress(ctx context.Context, request *types
 	}
 	address, err := sdk.AccAddressFromBech32(request.Address)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
+		return nil, sdkerrors.ErrInvalidAddress.Wrap(err.Error())
 	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	var states []types.RewardAccountState
@@ -164,7 +164,7 @@ func (k Keeper) RewardDistributionsByAddress(ctx context.Context, request *types
 	})
 
 	if err != nil {
-		return nil, sdkerrors.Wrap(types.ErrIterateAllRewardAccountStates, err.Error())
+		return nil, types.ErrIterateAllRewardAccountStates.Wrap(err.Error())
 	}
 
 	rewardAccountResponses := k.convertRewardAccountStateToRewardAccountResponse(sdkCtx, states)

@@ -40,7 +40,7 @@ func (k Keeper) claimRewardsForProgram(ctx sdk.Context, rewardProgram types.Rewa
 	var states []types.RewardAccountState
 	address, err := sdk.AccAddressFromBech32(addr)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
+		return nil, sdkerrors.ErrInvalidAddress.Wrap(err.Error())
 	}
 	err = k.IterateRewardAccountStatesByAddressAndRewardsID(ctx, address, rewardProgram.GetId(), func(state types.RewardAccountState) bool {
 		if state.GetSharesEarned() > 0 && state.Address == address.String() {
