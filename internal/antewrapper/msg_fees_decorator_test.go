@@ -17,7 +17,7 @@ import (
 // These tests are kicked off by TestAnteTestSuite in testutil_test.go
 
 // checkTx true, high min gas price(high enough so that additional fee in same denom tips it over,
-//and this is what sets it apart from MempoolDecorator which has already been run)
+// and this is what sets it apart from MempoolDecorator which has already been run)
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees() {
 	err, antehandler := setUpApp(suite, true, "atom", 100)
 	tx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
@@ -70,7 +70,7 @@ func (suite *AnteTestSuite) TestEnsureFloorGasPriceMet() {
 }
 
 // checkTx true, high min gas price(high enough so that additional fee in same denom tips it over,
-//and this is what sets it apart from MempoolDecorator which has already been run)
+// and this is what sets it apart from MempoolDecorator which has already been run)
 func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFeesNoAdditionalFeesLowGas() {
 	err, antehandler := setUpApp(suite, true, msgfeestypes.NhashDenom, 0)
 	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1905)
