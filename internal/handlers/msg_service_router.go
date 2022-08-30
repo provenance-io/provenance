@@ -202,7 +202,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 
 			resMsg, ok := res.(proto.Message)
 			if !ok {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "Expecting proto.Message, got %T", resMsg)
+				return nil, sdkerrors.ErrInvalidType.Wrapf("Expecting proto.Message, got %T", resMsg)
 			}
 
 			return sdk.WrapServiceResult(ctx, resMsg, err)
