@@ -148,16 +148,15 @@ func (k Keeper) RewardDistributionsByAddress(ctx context.Context, request *types
 		if errFromParsingKey != nil {
 			return false, err
 		}
+		result, errFromGetRewardAccount := k.GetRewardAccountState(sdkCtx, lookupVal.RewardID, lookupVal.ClaimID, lookupVal.Addr.String())
+		// think ignoring the error maybe ok here since it's just another lookup
+		if errFromGetRewardAccount != nil {
+			return false, errFromGetRewardAccount
+		}
+		if result.GetSharesEarned() == 0 || (request.ClaimStatus != result.ClaimStatus && request.ClaimStatus != types.RewardAccountState_CLAIM_STATUS_UNSPECIFIED) {
+			return false, nil
+		}
 		if accumulate {
-			result, errFromGetRewardAccount := k.GetRewardAccountState(sdkCtx, lookupVal.RewardID, lookupVal.ClaimID, lookupVal.Addr.String())
-			// think ignoring the error maybe ok here since it's just another lookup
-			if errFromGetRewardAccount != nil {
-				return false, errFromGetRewardAccount
-			}
-			if result.GetSharesEarned() == 0 || (request.ClaimStatus != result.ClaimStatus && request.ClaimStatus != types.RewardAccountState_CLAIM_STATUS_UNSPECIFIED) {
-				return false, nil
-			}
-
 			states = append(states, result)
 		}
 		return true, nil
