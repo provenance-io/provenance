@@ -41,22 +41,24 @@ func (k Keeper) RewardPrograms(ctx context.Context, req *types.QueryRewardProgra
 	kvStore := sdkCtx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(kvStore, types.RewardProgramKeyPrefix)
 	pageResponse, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		if accumulate {
-			var rewardProgram types.RewardProgram
-			vErr := rewardProgram.Unmarshal(value)
-			switch {
-			case vErr == nil && len(rewardProgramStates) == 0:
+		var rewardProgram types.RewardProgram
+		vErr := rewardProgram.Unmarshal(value)
+		switch {
+		case vErr == nil && len(rewardProgramStates) == 0:
+			if accumulate {
 				response.RewardPrograms = append(response.RewardPrograms, rewardProgram)
-			case vErr == nil:
-				for _, state := range rewardProgramStates {
-					if rewardProgram.GetState() == state {
-						response.RewardPrograms = append(response.RewardPrograms, rewardProgram)
-						break
-					}
-				}
-			default:
-				return false, vErr
 			}
+		case vErr == nil:
+			for _, state := range rewardProgramStates {
+				if rewardProgram.GetState() == state {
+					if accumulate {
+						response.RewardPrograms = append(response.RewardPrograms, rewardProgram)
+					}
+					break
+				}
+			}
+		default:
+			return false, vErr
 		}
 		return true, nil
 	})
