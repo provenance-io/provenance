@@ -40,7 +40,7 @@ func Test_TestnetCmd(t *testing.T) {
 	cmd := testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{})
 	cmd.SetArgs([]string{fmt.Sprintf("--%s=test", flags.FlagKeyringBackend),
 		fmt.Sprintf("--output-dir=%s", home),
-		fmt.Sprintf("--%s=%s", flagMaxGas, "999_000_000")})
+		fmt.Sprintf("--%s=%s", flagIgnoreMaxGas, "true")})
 	err = cmd.ExecuteContext(ctx)
 	require.NoError(t, err)
 

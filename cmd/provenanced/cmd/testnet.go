@@ -51,7 +51,7 @@ const (
 	flagOutputDir         = "output-dir"
 	flagNodeDaemonHome    = "node-daemon-home"
 	flagStartingIPAddress = "starting-ip-address"
-	flagMaxGas  		  = "max-gas"
+	flagIgnoreMaxGas  		  = "ignore-max-gas"
 )
 
 // get cmd to initialize all files for tendermint testnet and application
@@ -80,11 +80,11 @@ Note, strict routability for addresses is turned off in the config file.
 			startingIPAddress, _ := cmd.Flags().GetString(flagStartingIPAddress)
 			numValidators, _ := cmd.Flags().GetInt(flagNumValidators)
 			algo, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
-			maxGas, _ := cmd.Flags().GetInt64(flagMaxGas)
+			shouldIgnoreMaxGas, _ := cmd.Flags().GetBool(flagIgnoreMaxGas)
 
 			return InitTestnet(
 				clientCtx, cmd, config, mbm, genBalIterator, outputDir, chainID, minGasPrices,
-				nodeDirPrefix, nodeDaemonHome, startingIPAddress, keyringBackend, algo, numValidators, maxGas,
+				nodeDirPrefix, nodeDaemonHome, startingIPAddress, keyringBackend, algo, numValidators, shouldIgnoreMaxGas,
 			)
 		},
 	}
@@ -98,7 +98,7 @@ Note, strict routability for addresses is turned off in the config file.
 	cmd.Flags().String(server.FlagMinGasPrices, app.DefaultMinGasPrices, fmt.Sprintf("Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. %s,0.001stake)", app.DefaultMinGasPrices))
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
-	cmd.Flags().Int64(flagMaxGas, 60_000_000, "Set max_gas in consensus_params. If left blank, 60_000_000 will be used")
+	cmd.Flags().Bool(flagIgnoreMaxGas, false, "If set to true, it will ignore max_gas value")
 
 	return cmd
 }
@@ -121,7 +121,7 @@ func InitTestnet(
 	keyringBackend,
 	algoStr string,
 	numValidators int,
-	maxGas int64,
+	shouldIgnoreMaxGas bool,
 ) error {
 	if chainID == "" {
 		chainID = "chain-" + tmrand.NewRand().Str(6)
@@ -276,7 +276,7 @@ func InitTestnet(
 
 	genMarkers = append(genMarkers, *markerAcc)
 
-	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genMarkers, genFiles, numValidators, maxGas); err != nil {
+	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genMarkers, genFiles, numValidators, shouldIgnoreMaxGas); err != nil {
 		return err
 	}
 
@@ -295,7 +295,7 @@ func InitTestnet(
 func initGenFiles(
 	clientCtx client.Context, mbm module.BasicManager, chainID string,
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
-	genMarkers []markertypes.MarkerAccount, genFiles []string, numValidators int, maxGas int64,
+	genMarkers []markertypes.MarkerAccount, genFiles []string, numValidators int, shouldIgnoreMaxGas bool,
 ) error {
 	appGenState := mbm.DefaultGenesis(clientCtx.JSONCodec)
 
@@ -396,6 +396,11 @@ func initGenFiles(
 	appGenStateJSON, err := json.MarshalIndent(appGenState, "", "  ")
 	if err != nil {
 		return err
+	}
+
+	maxGas := int64(60_000_000)
+	if shouldIgnoreMaxGas == true {
+		maxGas = int64(-1)
 	}
 
 	genDoc := types.GenesisDoc{
