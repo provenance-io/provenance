@@ -38,7 +38,9 @@ func Test_TestnetCmd(t *testing.T) {
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	cmd := testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{})
-	cmd.SetArgs([]string{fmt.Sprintf("--%s=test", flags.FlagKeyringBackend), fmt.Sprintf("--output-dir=%s", home)})
+	cmd.SetArgs([]string{fmt.Sprintf("--%s=test", flags.FlagKeyringBackend),
+		fmt.Sprintf("--output-dir=%s", home),
+		fmt.Sprintf("--%s=%s", flagMaxGas, "999_000_000")})
 	err = cmd.ExecuteContext(ctx)
 	require.NoError(t, err)
 
