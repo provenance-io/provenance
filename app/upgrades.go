@@ -7,6 +7,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/group"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -17,8 +18,9 @@ var (
 	}
 )
 
-type appUpgradeHandler = func(*App, sdk.Context, upgradetypes.Plan) (module.VersionMap, error)
+type appUpgradeHandler = func(sdk.Context, *App, upgradetypes.Plan) (module.VersionMap, error)
 
+// appUpgrade is an internal structure for defining all things for an upgrade.
 type appUpgrade struct {
 	Added   []string
 	Deleted []string
@@ -27,27 +29,27 @@ type appUpgrade struct {
 }
 
 var handlers = map[string]appUpgrade{
-	"mango": {
-		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+	// TODO - remove upgrade definitions for entries no longer in use.
+	"mango": { // upgrade for 1.11.1
+		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
 			params := app.MsgFeesKeeper.GetParams(ctx)
 			app.MsgFeesKeeper.SetParams(ctx, params)
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
-	}, // upgrade for 1.11.1
-	"mango-rc4":      {}, // upgrade for 1.11.1-rc4
+	},
 	"neoncarrot-rc1": {}, // upgrade for 1.12.0-rc1
-	"ochre-rc1": {
-		// TODO: Required for v1.13.x: Fill in Added with modules new to 1.13.x https://github.com/provenance-io/provenance/issues/1007
-		Added: nil,
-		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+	"ochre-rc1": { // upgrade for 1.13.0-rc1
+		Added: []string{group.ModuleName},
+		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
-	}, // upgrade for 1.13.0-rc1
+	},
 	// TODO - Add new upgrade definitions here.
 }
 
+// InstallCustomUpgradeHandlers sets upgrade handlers for all entries in the handlers map.
 func InstallCustomUpgradeHandlers(app *App) {
 	// Register all explicit appUpgrades
 	for name, upgrade := range handlers {
@@ -58,7 +60,7 @@ func InstallCustomUpgradeHandlers(app *App) {
 		} else {
 			ref := upgrade
 			handler = func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
-				vM, err := ref.Handler(app, ctx, plan)
+				vM, err := ref.Handler(ctx, app, plan)
 				if err != nil {
 					ctx.Logger().Info(fmt.Sprintf("Failed to upgrade to: %s with err: %v", plan.Name, err))
 				} else {
@@ -71,44 +73,33 @@ func InstallCustomUpgradeHandlers(app *App) {
 	}
 }
 
-// CustomUpgradeStoreLoader provides upgrade handlers for store and application module upgrades at specified versions
-func CustomUpgradeStoreLoader(app *App, info upgradetypes.Plan) baseapp.StoreLoader {
-	// Current upgrade info is empty or we are at the wrong height, skip this.
-	if info.Name == "" || info.Height-1 != app.LastBlockHeight() {
+// GetUpgradeStoreLoader creates an StoreLoader for use in an upgrade.
+// Returns nil if no upgrade info is found or the upgrade doesn't need a store loader.
+func GetUpgradeStoreLoader(app *App, info upgradetypes.Plan) baseapp.StoreLoader {
+	upgrade, found := handlers[info.Name]
+	if !found {
 		return nil
 	}
-	// Find the upgrade handler that matches this currently executing upgrade.
-	for name, upgrade := range handlers {
-		// If the plan is executing this block, set the store locator to create any
-		// missing modules, delete unused modules, or rename any keys required in the plan.
-		if info.Name == name && !app.UpgradeKeeper.IsSkipHeight(info.Height) {
-			storeUpgrades := storetypes.StoreUpgrades{
-				Added:   upgrade.Added,
-				Renamed: upgrade.Renamed,
-				Deleted: upgrade.Deleted,
-			}
 
-			if isEmptyUpgrade(storeUpgrades) {
-				app.Logger().Info("No store upgrades required",
-					"plan", name,
-					"height", info.Height,
-				)
-				return nil
-			}
-
-			app.Logger().Info("Store upgrades",
-				"plan", name,
-				"height", info.Height,
-				"upgrade.added", upgrade.Added,
-				"upgrade.deleted", upgrade.Deleted,
-				"upgrade.renamed", upgrade.Renamed,
-			)
-			return upgradetypes.UpgradeStoreLoader(info.Height, &storeUpgrades)
-		}
+	if len(upgrade.Renamed) == 0 && len(upgrade.Deleted) == 0 && len(upgrade.Added) == 0 {
+		app.Logger().Info("No store upgrades required",
+			"plan", info.Name,
+			"height", info.Height,
+		)
+		return nil
 	}
-	return nil
-}
 
-func isEmptyUpgrade(upgrades storetypes.StoreUpgrades) bool {
-	return len(upgrades.Renamed) == 0 && len(upgrades.Deleted) == 0 && len(upgrades.Added) == 0
+	storeUpgrades := storetypes.StoreUpgrades{
+		Added:   upgrade.Added,
+		Renamed: upgrade.Renamed,
+		Deleted: upgrade.Deleted,
+	}
+	app.Logger().Info("Store upgrades",
+		"plan", info.Name,
+		"height", info.Height,
+		"upgrade.added", storeUpgrades.Added,
+		"upgrade.deleted", storeUpgrades.Deleted,
+		"upgrade.renamed", storeUpgrades.Renamed,
+	)
+	return upgradetypes.UpgradeStoreLoader(info.Height, &storeUpgrades)
 }
