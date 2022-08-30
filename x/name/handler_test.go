@@ -46,7 +46,7 @@ func containsMessage(result *sdk.Result, msg proto.Message) bool {
 	return false
 }
 
-//  create name record
+// create name record
 func TestCreateName(t *testing.T) {
 	priv1 := secp256k1.GenPrivKey()
 	addr1 := sdk.AccAddress(priv1.PubKey().Address())
@@ -111,7 +111,7 @@ func TestCreateName(t *testing.T) {
 	}
 }
 
-//  delete name record
+// delete name record
 func TestDeleteName(t *testing.T) {
 	priv1 := secp256k1.GenPrivKey()
 	addr1 := sdk.AccAddress(priv1.PubKey().Address())
