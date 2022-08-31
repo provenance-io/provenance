@@ -45,7 +45,7 @@ func (m msgServer) ExtendExpiration(
 		return nil, err
 	}
 
-	// add expiration
+	// update expiration details from extension payload
 	if err := m.Keeper.UpdateExpiration(ctx, msg.Expiration); err != nil {
 		return nil, err
 	}
@@ -67,4 +67,17 @@ func (m msgServer) DeleteExpiration(goCtx context.Context, msg *types.MsgDeleteE
 	}
 
 	return &types.MsgDeleteExpirationResponse{}, nil
+}
+
+func (m msgServer) InvokeExpiration(goCtx context.Context, msg *types.MsgInvokeExpirationRequest) (*types.MsgInvokeExpirationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// validate invocation request
+	if err := m.Keeper.ValidateInvokeExpiration(ctx, msg.ModuleAssetId, msg.Signers, msg.MsgTypeURL()); err != nil {
+		return nil, err
+	}
+
+	// execute expiration logic
+
+	return &types.MsgInvokeExpirationResponse{}, nil
 }

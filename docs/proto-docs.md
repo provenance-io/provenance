@@ -73,6 +73,8 @@
     - [MsgDeleteExpirationResponse](#provenance.expiration.v1.MsgDeleteExpirationResponse)
     - [MsgExtendExpirationRequest](#provenance.expiration.v1.MsgExtendExpirationRequest)
     - [MsgExtendExpirationResponse](#provenance.expiration.v1.MsgExtendExpirationResponse)
+    - [MsgInvokeExpirationRequest](#provenance.expiration.v1.MsgInvokeExpirationRequest)
+    - [MsgInvokeExpirationResponse](#provenance.expiration.v1.MsgInvokeExpirationResponse)
   
     - [Msg](#provenance.expiration.v1.Msg)
   
@@ -1224,7 +1226,7 @@ Since: provenance 1.12
 <a name="provenance.expiration.v1.MsgAddExpirationRequest"></a>
 
 ### MsgAddExpirationRequest
-MsgAddExpirationMetadataRequest represents a message to add an expiration
+MsgAddExpirationRequest represents a message to add an expiration
 
 
 | Field | Type | Label | Description |
@@ -1240,7 +1242,7 @@ MsgAddExpirationMetadataRequest represents a message to add an expiration
 <a name="provenance.expiration.v1.MsgAddExpirationResponse"></a>
 
 ### MsgAddExpirationResponse
-MsgAddExpirationMetadataResponse defines the MsgAddExpirationMetadataRequest response type
+MsgAddExpirationResponse defines the MsgAddExpirationRequest response type
 
 
 
@@ -1250,7 +1252,7 @@ MsgAddExpirationMetadataResponse defines the MsgAddExpirationMetadataRequest res
 <a name="provenance.expiration.v1.MsgDeleteExpirationRequest"></a>
 
 ### MsgDeleteExpirationRequest
-MsgDeleteExpirationMetadataResponse represents a message to delete an expiration
+MsgDeleteExpirationRequest represents a message to delete an expiration
 
 
 | Field | Type | Label | Description |
@@ -1266,7 +1268,7 @@ MsgDeleteExpirationMetadataResponse represents a message to delete an expiration
 <a name="provenance.expiration.v1.MsgDeleteExpirationResponse"></a>
 
 ### MsgDeleteExpirationResponse
-MsgDeleteExpirationMetadataResponse defines the MsgDeleteExpirationMetadataRequest response type
+MsgDeleteExpirationResponse defines the MsgDeleteExpirationRequest response type
 
 
 
@@ -1276,7 +1278,7 @@ MsgDeleteExpirationMetadataResponse defines the MsgDeleteExpirationMetadataReque
 <a name="provenance.expiration.v1.MsgExtendExpirationRequest"></a>
 
 ### MsgExtendExpirationRequest
-MsgExtendExpirationMetadataRequest represents a message to extend an expiration
+MsgExtendExpirationRequest represents a message to extend an expiration
 
 
 | Field | Type | Label | Description |
@@ -1292,7 +1294,33 @@ MsgExtendExpirationMetadataRequest represents a message to extend an expiration
 <a name="provenance.expiration.v1.MsgExtendExpirationResponse"></a>
 
 ### MsgExtendExpirationResponse
-MsgExtendExpirationMetadataResponse defines the MsgExtendExpirationMetadataRequest response type
+MsgExtendExpirationResponse defines the MsgExtendExpirationRequest response type
+
+
+
+
+
+
+<a name="provenance.expiration.v1.MsgInvokeExpirationRequest"></a>
+
+### MsgInvokeExpirationRequest
+MsgInvokeExpirationRequest represents a message to invoke expiration logic for an asset
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `module_asset_id` | [string](#string) |  | Module asset ID which will have its expiration logic triggered |
+| `signers` | [string](#string) | repeated | signers is the list of addresses of those signing this request. |
+
+
+
+
+
+
+<a name="provenance.expiration.v1.MsgInvokeExpirationResponse"></a>
+
+### MsgInvokeExpirationResponse
+MsgInvokeExpirationResponse defines the MsgInvokeExpirationRequest response type
 
 
 
@@ -1315,6 +1343,7 @@ Msg defines the Expiration Msg service.
 | `AddExpiration` | [MsgAddExpirationRequest](#provenance.expiration.v1.MsgAddExpirationRequest) | [MsgAddExpirationResponse](#provenance.expiration.v1.MsgAddExpirationResponse) | AddExpiration defines a method for adding an expiration of a module asset | |
 | `ExtendExpiration` | [MsgExtendExpirationRequest](#provenance.expiration.v1.MsgExtendExpirationRequest) | [MsgExtendExpirationResponse](#provenance.expiration.v1.MsgExtendExpirationResponse) | ExtendExpiration defines a method for extending an expiration of a module asset | |
 | `DeleteExpiration` | [MsgDeleteExpirationRequest](#provenance.expiration.v1.MsgDeleteExpirationRequest) | [MsgDeleteExpirationResponse](#provenance.expiration.v1.MsgDeleteExpirationResponse) | DeleteExpiration defines a method for deleting an expiration of a module asset | |
+| `InvokeExpiration` | [MsgInvokeExpirationRequest](#provenance.expiration.v1.MsgInvokeExpirationRequest) | [MsgInvokeExpirationResponse](#provenance.expiration.v1.MsgInvokeExpirationResponse) | InvokeExpiration defines a method for invoking expiration logic for a module asset | |
 
  <!-- end services -->
 

@@ -254,6 +254,27 @@ func (k Keeper) ValidateDeleteExpiration(
 	return nil
 }
 
+func (k Keeper) ValidateInvokeExpiration(
+	ctx sdk.Context,
+	moduleAssetID string,
+	signers []string,
+	msgTypeURL string,
+) error {
+	expiration, err := k.GetExpiration(ctx, moduleAssetID)
+	if err != nil {
+		return err
+	}
+
+	// todo: validate whether caller can invoke expiration.
+
+	// validate signers
+	if err := k.validateSigners(ctx, expiration.Owner, signers, msgTypeURL); err != nil {
+		return sdkerrors.Wrap(types.ErrInvalidSigners, err.Error())
+	}
+
+	return nil
+}
+
 func (k Keeper) validateSigners(
 	ctx sdk.Context,
 	owner string,

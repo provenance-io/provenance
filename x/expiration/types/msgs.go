@@ -9,6 +9,7 @@ var (
 	_ sdk.Msg = &MsgAddExpirationRequest{}
 	_ sdk.Msg = &MsgExtendExpirationRequest{}
 	_ sdk.Msg = &MsgDeleteExpirationRequest{}
+	_ sdk.Msg = &MsgInvokeExpirationRequest{}
 )
 
 // MustAccAddressFromBech32 converts a Bech32 address to sdk.AccAddress
@@ -120,5 +121,36 @@ func (m *MsgDeleteExpirationRequest) GetSigners() []sdk.AccAddress {
 
 // MsgTypeURL returns the TypeURL of a `sdk.Msg`
 func (m *MsgDeleteExpirationRequest) MsgTypeURL() string {
+	return sdk.MsgTypeURL(m)
+}
+
+// ------------------  MsgInvokeExpirationRequest  ------------------
+
+func NewMsgInvokeExpirationRequest(moduleAssetID string, signers []string) *MsgInvokeExpirationRequest {
+	return &MsgInvokeExpirationRequest{
+		ModuleAssetId: moduleAssetID,
+		Signers:       signers,
+	}
+}
+
+// ValidateBasic does a simple validation check that
+// doesn't require access to any other information.
+func (m *MsgInvokeExpirationRequest) ValidateBasic() error {
+	if len(m.ModuleAssetId) == 0 {
+		return ErrEmptyModuleAssetID
+	}
+	if len(m.Signers) == 0 {
+		return ErrMissingSigners
+	}
+	return nil
+}
+
+// GetSigners returns the typed AccAddress of signers that must sign
+func (m *MsgInvokeExpirationRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(m.Signers)
+}
+
+// MsgTypeURL returns the TypeURL of a `sdk.Msg`
+func (m *MsgInvokeExpirationRequest) MsgTypeURL() string {
 	return sdk.MsgTypeURL(m)
 }

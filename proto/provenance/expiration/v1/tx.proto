@@ -17,9 +17,11 @@ service Msg {
   rpc ExtendExpiration(MsgExtendExpirationRequest) returns (MsgExtendExpirationResponse);
   // DeleteExpiration defines a method for deleting an expiration of a module asset
   rpc DeleteExpiration(MsgDeleteExpirationRequest) returns (MsgDeleteExpirationResponse);
+  // InvokeExpiration defines a method for invoking expiration logic for a module asset
+  rpc InvokeExpiration(MsgInvokeExpirationRequest) returns (MsgInvokeExpirationResponse);
 }
 
-// MsgAddExpirationMetadataRequest represents a message to add an expiration
+// MsgAddExpirationRequest represents a message to add an expiration
 message MsgAddExpirationRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.stringer)        = false;
@@ -31,10 +33,10 @@ message MsgAddExpirationRequest {
   repeated string signers = 2;
 }
 
-// MsgAddExpirationMetadataResponse defines the MsgAddExpirationMetadataRequest response type
+// MsgAddExpirationResponse defines the MsgAddExpirationRequest response type
 message MsgAddExpirationResponse {}
 
-// MsgExtendExpirationMetadataRequest represents a message to extend an expiration
+// MsgExtendExpirationRequest represents a message to extend an expiration
 message MsgExtendExpirationRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.stringer)        = false;
@@ -46,10 +48,10 @@ message MsgExtendExpirationRequest {
   repeated string signers = 2;
 }
 
-// MsgExtendExpirationMetadataResponse defines the MsgExtendExpirationMetadataRequest response type
+// MsgExtendExpirationResponse defines the MsgExtendExpirationRequest response type
 message MsgExtendExpirationResponse {}
 
-// MsgDeleteExpirationMetadataResponse represents a message to delete an expiration
+// MsgDeleteExpirationRequest represents a message to delete an expiration
 message MsgDeleteExpirationRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.stringer)        = false;
@@ -61,5 +63,20 @@ message MsgDeleteExpirationRequest {
   repeated string signers = 2;
 }
 
-// MsgDeleteExpirationMetadataResponse defines the MsgDeleteExpirationMetadataRequest response type
+// MsgDeleteExpirationResponse defines the MsgDeleteExpirationRequest response type
 message MsgDeleteExpirationResponse {}
+
+// MsgInvokeExpirationRequest represents a message to invoke expiration logic for an asset
+message MsgInvokeExpirationRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.stringer)        = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // Module asset ID which will have its expiration logic triggered
+  string module_asset_id = 1 [(gogoproto.moretags) = "yaml:\"module_asset_id\""];
+  // signers is the list of addresses of those signing this request.
+  repeated string signers = 2;
+}
+
+// MsgInvokeExpirationResponse defines the MsgInvokeExpirationRequest response type
+message MsgInvokeExpirationResponse {}
