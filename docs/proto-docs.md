@@ -1045,7 +1045,7 @@ Since: provenance 1.12
 <a name="provenance.expiration.v1.GenesisState"></a>
 
 ### GenesisState
-GenesisState defines the name module's genesis state.
+GenesisState defines the expiration module's genesis state.
 
 
 | Field | Type | Label | Description |

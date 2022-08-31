@@ -188,7 +188,7 @@ func DeleteExpirationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "delete [module-asset-id]",
 		Aliases: []string{"d"},
-		Short:   "Extend module asset expiration on the provenance blockchain",
+		Short:   "Delete module asset expiration from the provenance blockchain",
 		Example: fmt.Sprintf(`$ %s tx expiration delete pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
