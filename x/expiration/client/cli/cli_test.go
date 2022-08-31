@@ -2,11 +2,12 @@ package cli_test
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authzcli "github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	"github.com/google/uuid"
-	"strings"
-	"testing"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
@@ -179,6 +180,15 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
 	).Sort()})
 	genBalances = append(genBalances, banktypes.Balance{Address: s.user3AddrStr, Coins: sdk.NewCoins(
+		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: s.user4AddrStr, Coins: sdk.NewCoins(
+		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: s.user5AddrStr, Coins: sdk.NewCoins(
+		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: s.user6AddrStr, Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
 	).Sort()})
 	var bankGenState banktypes.GenesisState
@@ -391,7 +401,7 @@ func (s *IntegrationCLITestSuite) TestGetExpirationByModuleAssetIdCmd() {
 		{
 			name:             "get expiration by module asset id - bad prefix",
 			args:             []string{"foo1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
-			expectedError:    fmt.Sprintf("decoding bech32 failed: invalid checksum (expected kzwk8c got xlkwel)"),
+			expectedError:    "decoding bech32 failed: invalid checksum (expected kzwk8c got xlkwel)",
 			expectedInOutput: []string{},
 		},
 		{
