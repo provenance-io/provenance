@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	DefaultMsgFeeSplit = uint32(50)
+	DefaultMsgFeeBips = uint32(5_000)
 )
 
 func NewMsgFee(msgTypeURL string, additionalFee sdk.Coin, recipient string, recipientBasisPoints uint32) MsgFee {

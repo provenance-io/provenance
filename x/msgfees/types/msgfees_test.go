@@ -16,17 +16,17 @@ func TestMsgFeeValidate(t *testing.T) {
 	}{
 		{
 			"should succeed to validate with no recipient",
-			NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), "", DefaultMsgFeeSplit),
+			NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), "", DefaultMsgFeeBips),
 			"",
 		},
 		{
 			"should succeed to validate with a recipient and valid split",
-			NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), validAddress, DefaultMsgFeeSplit),
+			NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), validAddress, DefaultMsgFeeBips),
 			"",
 		},
 		{
 			"should fail to validate from invalid recipient address",
-			NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), "invalid", DefaultMsgFeeSplit),
+			NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), "invalid", DefaultMsgFeeBips),
 			"decoding bech32 failed: invalid bech32 string length 7",
 		},
 		{
@@ -41,12 +41,12 @@ func TestMsgFeeValidate(t *testing.T) {
 		},
 		{
 			"should fail to validate from invalid msg type url",
-			NewMsgFee("", sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), validAddress, DefaultMsgFeeSplit),
+			NewMsgFee("", sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), validAddress, DefaultMsgFeeBips),
 			"invalid msg type url",
 		},
 		{
 			"should succeed to validate with no recipient",
-			NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 0), "", DefaultMsgFeeSplit),
+			NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 0), "", DefaultMsgFeeBips),
 			"invalid fee amount",
 		},
 	}

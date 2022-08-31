@@ -413,7 +413,7 @@ func (suite *AnteTestSuite) TestCalculateAdditionalFeesToBePaid() {
 	assessFeeWithRecipient1 := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("", oneHash, recipient1, someAddress.String())
 	assessFeeWithRecipient2 := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("", oneHash, recipient2, someAddress.String())
 	assessFeeWithoutRecipient := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("", oneHash, "", someAddress.String())
-	suite.app.MsgFeesKeeper.SetMsgFee(suite.ctx, msgfeestypes.NewMsgFee(sendTypeURL, oneHash, "", msgfeestypes.DefaultMsgFeeSplit))
+	suite.app.MsgFeesKeeper.SetMsgFee(suite.ctx, msgfeestypes.NewMsgFee(sendTypeURL, oneHash, "", msgfeestypes.DefaultMsgFeeBips))
 
 	type RecipientDistribution struct {
 		recipient string
@@ -507,7 +507,7 @@ func (suite *AnteTestSuite) TestCalculateAdditionalFeesToBePaid() {
 			sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 3_000_000_000)),
 			sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 3_000_000_000)),
 			[]RecipientDistribution{},
-			msgfeestypes.NewMsgFee(assessFeeTypeURL, oneHash, "", msgfeestypes.DefaultMsgFeeSplit),
+			msgfeestypes.NewMsgFee(assessFeeTypeURL, oneHash, "", msgfeestypes.DefaultMsgFeeBips),
 			"",
 		},
 		{
@@ -524,7 +524,7 @@ func (suite *AnteTestSuite) TestCalculateAdditionalFeesToBePaid() {
 					recipient: recipient1,
 				},
 			},
-			msgfeestypes.NewMsgFee(assessFeeTypeURL, oneHash, "", msgfeestypes.DefaultMsgFeeSplit),
+			msgfeestypes.NewMsgFee(assessFeeTypeURL, oneHash, "", msgfeestypes.DefaultMsgFeeBips),
 			"",
 		},
 	}

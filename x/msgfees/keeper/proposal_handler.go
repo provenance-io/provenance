@@ -28,7 +28,7 @@ func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddMsgFe
 		return types.ErrMsgFeeAlreadyExists
 	}
 
-	msgFees := types.NewMsgFee(proposal.MsgTypeUrl, proposal.AdditionalFee, "", types.DefaultMsgFeeSplit)
+	msgFees := types.NewMsgFee(proposal.MsgTypeUrl, proposal.AdditionalFee, "", types.DefaultMsgFeeBips)
 
 	err = k.SetMsgFee(ctx, msgFees)
 	if err != nil {
@@ -68,7 +68,7 @@ func HandleUpdateMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.Updat
 		return types.ErrMsgFeeDoesNotExist
 	}
 
-	msgFees := types.NewMsgFee(proposal.MsgTypeUrl, proposal.AdditionalFee, "", types.DefaultMsgFeeSplit)
+	msgFees := types.NewMsgFee(proposal.MsgTypeUrl, proposal.AdditionalFee, "", types.DefaultMsgFeeBips)
 
 	err = k.SetMsgFee(ctx, msgFees)
 	if err != nil {

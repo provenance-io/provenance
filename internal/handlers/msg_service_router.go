@@ -152,13 +152,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 						return nil, err
 					}
 				}
-				if len(fee.Recipient) != 0 {
-					recipientCoin, feePayoutCoin := msgfeestypes.SplitCoinByPercentage(fee.AdditionalFee, fee.RecipientBasisPoints)
-					feeGasMeter.ConsumeFee(recipientCoin, msgTypeURL, fee.Recipient)
-					feeGasMeter.ConsumeFee(feePayoutCoin, msgTypeURL, "")
-				} else {
-					feeGasMeter.ConsumeFee(fee.AdditionalFee, msgTypeURL, "")
-				}
+				msr.DistributeFees(feeGasMeter, fee.Recipient, msgTypeURL, fee.AdditionalFee, fee.RecipientBasisPoints)
 			}
 			if isAssessMsgFee {
 				var assessCustomFee *msgfeestypes.MsgAssessCustomMsgFeeRequest
@@ -180,13 +174,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 					}
 				}
 				if msgFeeCoin.IsPositive() {
-					if len(assessCustomFee.Recipient) != 0 {
-						recipientCoin, feePayoutCoin := msgfeestypes.SplitCoinByPercentage(msgFeeCoin, 5_000)
-						feeGasMeter.ConsumeFee(recipientCoin, msgTypeURL, assessCustomFee.Recipient)
-						feeGasMeter.ConsumeFee(feePayoutCoin, msgTypeURL, "")
-					} else {
-						feeGasMeter.ConsumeFee(assessCustomFee.Amount, msgTypeURL, "")
-					}
+					msr.DistributeFees(feeGasMeter, assessCustomFee.Recipient, msgTypeURL, msgFeeCoin, 5_000)
 				}
 			}
 
@@ -210,6 +198,17 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 
 			return sdk.WrapServiceResult(ctx, resMsg, err)
 		}
+	}
+}
+
+// DistributeFees consumes additional fees and their splitting if they have a recipient
+func (msr *PioMsgServiceRouter) DistributeFees(feeGasMeter *antewrapper.FeeGasMeter, recipient string, msgTypeURL string, feeCoin sdk.Coin, bips uint32) {
+	if len(recipient) != 0 {
+		recipientCoin, feePayoutCoin := msgfeestypes.SplitCoinByPercentage(feeCoin, bips)
+		feeGasMeter.ConsumeFee(recipientCoin, msgTypeURL, recipient)
+		feeGasMeter.ConsumeFee(feePayoutCoin, msgTypeURL, "")
+	} else {
+		feeGasMeter.ConsumeFee(feeCoin, msgTypeURL, "")
 	}
 }
 
