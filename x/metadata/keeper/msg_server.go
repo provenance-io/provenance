@@ -254,7 +254,7 @@ func (k msgServer) DeleteRecord(
 	goCtx context.Context,
 	msg *types.MsgDeleteRecordRequest,
 ) (*types.MsgDeleteRecordResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteRecord")
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteExpiration")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, _ := k.GetRecord(ctx, msg.RecordId)

@@ -13,7 +13,7 @@ var (
 	NameAddressLengthLegacy = 20
 )
 
-// GetAddressKeyPrefix returns a store key for a name record address
+// GetOwnerKeyPrefix returns a store key for a name record address
 func GetAddressKeyPrefixLegacy(address sdk.AccAddress) (key []byte, err error) {
 	err = ValidateAddress(address)
 	if err == nil {

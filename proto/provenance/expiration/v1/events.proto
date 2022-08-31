@@ -1,0 +1,35 @@
+// Since: provenance 1.12
+syntax = "proto3";
+package provenance.expiration.v1;
+
+option go_package          = "github.com/provenance-io/provenance/x/expiration/types";
+option java_package        = "io.provenance.expiration.v1";
+option java_multiple_files = true;
+
+// EventTxCompleted is an event message indicating that a TX has completed.
+message EventTxCompleted {
+  // module is the module the TX belongs to.
+  string module = 1;
+  // endpoint is the rpc endpoint that was just completed.
+  string endpoint = 2;
+  // signers are the bech32 address strings of the signers of this TX.
+  repeated string signers = 3;
+}
+
+// EventExpirationAdd is an event message indicating an expiration has been created
+message EventExpirationAdd {
+  // module_asset_id is the bech32 address string of the expiration id that was created.
+  string module_asset_id = 1;
+}
+
+// EventExpirationExtend is an event message indicating an expiration has been extended
+message EventExpirationExtend {
+  // module_asset_id is the bech32 address string of the expiration id that was created.
+  string module_asset_id = 1;
+}
+
+// EventExpirationDelete is an event message indicating an expiration has been deleted
+message EventExpirationDelete {
+  // module_asset_id is the bech32 address string of the expiration id that was created.
+  string module_asset_id = 1;
+}

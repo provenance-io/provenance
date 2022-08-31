@@ -1,0 +1,65 @@
+// Since: provenance 1.12
+syntax = "proto3";
+package provenance.expiration.v1;
+
+import "gogoproto/gogo.proto";
+import "provenance/expiration/v1/expiration.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/expiration/types";
+option java_package        = "io.provenance.expiration.v1";
+option java_multiple_files = true;
+
+// Msg defines the Expiration Msg service.
+service Msg {
+  // AddExpiration defines a method for adding an expiration of a module asset
+  rpc AddExpiration(MsgAddExpirationRequest) returns (MsgAddExpirationResponse);
+  // ExtendExpiration defines a method for extending an expiration of a module asset
+  rpc ExtendExpiration(MsgExtendExpirationRequest) returns (MsgExtendExpirationResponse);
+  // DeleteExpiration defines a method for deleting an expiration of a module asset
+  rpc DeleteExpiration(MsgDeleteExpirationRequest) returns (MsgDeleteExpirationResponse);
+}
+
+// MsgAddExpirationMetadataRequest represents a message to add an expiration
+message MsgAddExpirationRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.stringer)        = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // expiration is the Expiration you want to add
+  Expiration expiration = 1 [(gogoproto.nullable) = false];
+  // signers is the list of addresses of those signing this request.
+  repeated string signers = 2;
+}
+
+// MsgAddExpirationMetadataResponse defines the MsgAddExpirationMetadataRequest response type
+message MsgAddExpirationResponse {}
+
+// MsgExtendExpirationMetadataRequest represents a message to extend an expiration
+message MsgExtendExpirationRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.stringer)        = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // expiration is the Expiration you want to add
+  Expiration expiration = 1 [(gogoproto.nullable) = false];
+  // signers is the list of addresses of those signing this request.
+  repeated string signers = 2;
+}
+
+// MsgExtendExpirationMetadataResponse defines the MsgExtendExpirationMetadataRequest response type
+message MsgExtendExpirationResponse {}
+
+// MsgDeleteExpirationMetadataResponse represents a message to delete an expiration
+message MsgDeleteExpirationRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.stringer)        = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // Module asset ID used to delete asset from chain
+  string module_asset_id = 1 [(gogoproto.moretags) = "yaml:\"module_asset_id\""];
+  // signers is the list of addresses of those signing this request.
+  repeated string signers = 2;
+}
+
+// MsgDeleteExpirationMetadataResponse defines the MsgDeleteExpirationMetadataRequest response type
+message MsgDeleteExpirationResponse {}
