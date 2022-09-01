@@ -11,10 +11,14 @@ import (
 // If gas is too high, decorator returns error and tx is rejected from mempool.
 // If gas is below the limit, then call next AnteHandler
 // CONTRACT: Tx must implement FeeTx to use TxGasLimitDecorator
-type TxGasLimitDecorator struct{}
+type TxGasLimitDecorator struct{
+	txGasLimit uint64
+}
 
-func NewTxGasLimitDecorator() TxGasLimitDecorator {
-	return TxGasLimitDecorator{}
+func NewTxGasLimitDecorator(txGasLimit uint64) TxGasLimitDecorator {
+	return TxGasLimitDecorator{
+		txGasLimit: txGasLimit,
+	}
 }
 
 // Checks whether the given message is related to governance.
@@ -33,7 +37,7 @@ func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 	// Ensure that the requested gas does not exceed the configured block maximum
 	gas := feeTx.GetGas()
-	gasTxLimit := uint64(4_000_000)
+	gasTxLimit := mfd.txGasLimit
 
 	// Skip gas limit check for txs with MsgSubmitProposal
 	hasGovMsg := false
