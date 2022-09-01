@@ -43,25 +43,18 @@ func (k Keeper) RewardPrograms(ctx context.Context, req *types.QueryRewardProgra
 	pageResponse, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var rewardProgram types.RewardProgram
 		vErr := rewardProgram.Unmarshal(value)
-		switch {
-		case vErr == nil && len(rewardProgramStates) == 0:
-			if accumulate {
-				response.RewardPrograms = append(response.RewardPrograms, rewardProgram)
-			}
-			return true, nil
-		case vErr == nil:
-			for _, state := range rewardProgramStates {
-				if rewardProgram.GetState() == state {
-					if accumulate {
-						response.RewardPrograms = append(response.RewardPrograms, rewardProgram)
-					}
-					return true, nil
-				}
-			}
-		default:
+		counted := false
+
+		if vErr != nil {
 			return false, vErr
 		}
-		return false, nil
+
+		if accumulate && rewardProgram.MatchesState(rewardProgramStates) {
+			response.RewardPrograms = append(response.RewardPrograms, rewardProgram)
+			counted = true
+		}
+
+		return counted, nil
 	})
 
 	if err != nil {
@@ -97,13 +90,15 @@ func (k Keeper) ClaimPeriodRewardDistributions(ctx context.Context, req *types.Q
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var claimPeriodRewardDist types.ClaimPeriodRewardDistribution
 		vErr := claimPeriodRewardDist.Unmarshal(value)
-		if accumulate {
-			if vErr == nil {
-				response.ClaimPeriodRewardDistributions = append(response.ClaimPeriodRewardDistributions, claimPeriodRewardDist)
-			} else {
-				return false, vErr
-			}
+
+		if vErr != nil {
+			return false, vErr
 		}
+
+		if accumulate {
+			response.ClaimPeriodRewardDistributions = append(response.ClaimPeriodRewardDistributions, claimPeriodRewardDist)
+		}
+
 		return true, nil
 	})
 	if err != nil {
@@ -148,6 +143,7 @@ func (k Keeper) RewardDistributionsByAddress(ctx context.Context, request *types
 
 	pageRes, err := query.FilteredPaginate(getAllRewardAccountStore, request.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		lookupVal, errFromParsingKey := types.ParseFilterLookUpKey(key, address)
+
 		if errFromParsingKey != nil {
 			return false, err
 		}
@@ -159,9 +155,11 @@ func (k Keeper) RewardDistributionsByAddress(ctx context.Context, request *types
 		if result.GetSharesEarned() == 0 || (request.ClaimStatus != result.ClaimStatus && request.ClaimStatus != types.RewardAccountState_CLAIM_STATUS_UNSPECIFIED) {
 			return false, nil
 		}
+
 		if accumulate {
 			states = append(states, result)
 		}
+
 		return true, nil
 	})
 

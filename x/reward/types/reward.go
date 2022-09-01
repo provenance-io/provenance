@@ -174,6 +174,20 @@ func (rp *RewardProgram) IsEnding(ctx sdk.Context, programBalance sdk.Coin) bool
 	return rp.State == RewardProgram_STATE_STARTED && (isProgramEnding || !canRollover)
 }
 
+// MatchesState returns if a reward program is in one of the passed in states. It will return true if states is empty.
+func (rp *RewardProgram) MatchesState(states []RewardProgram_State) bool {
+	if len(states) == 0 {
+		return true
+	}
+
+	for _, state := range states {
+		if rp.State == state {
+			return true
+		}
+	}
+	return false
+}
+
 // Percent calculate percentage but take off any decimal points
 func Percent(percent int64, all int64) int64 {
 	return (all * percent) / 100

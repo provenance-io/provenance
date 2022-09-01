@@ -598,7 +598,30 @@ func (s *RewardTypesTestSuite) TestIsEnding() {
 
 	program.ProgramEndTimeMax = now.Add(-100000)
 	s.Assert().True(program.IsEnding(s.ctx, sdk.NewInt64Coin("nhash", 100_000_000_001)))
+}
 
+func (s *RewardTypesTestSuite) TestMatchesState() {
+	now := time.Now().UTC()
+	program := NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdk.NewInt64Coin("nhash", 10_000_000_000),
+		sdk.NewInt64Coin("nhash", 2),
+		now,
+		3600,
+		1,
+		1,
+		100,
+		[]QualifyingAction{},
+	)
+	program.State = RewardProgram_STATE_STARTED
+
+	s.Assert().True(program.MatchesState([]RewardProgram_State{}))
+	s.Assert().True(program.MatchesState([]RewardProgram_State{RewardProgram_STATE_STARTED}))
+	s.Assert().True(program.MatchesState([]RewardProgram_State{RewardProgram_STATE_PENDING, RewardProgram_STATE_STARTED}))
+	s.Assert().False(program.MatchesState([]RewardProgram_State{RewardProgram_STATE_PENDING}))
 }
 
 func (s *RewardTypesTestSuite) TestMinimumRolloverAmount() {
