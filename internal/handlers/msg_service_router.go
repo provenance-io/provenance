@@ -152,7 +152,8 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 						return nil, err
 					}
 				}
-				if err := msr.DistributeFees(feeGasMeter, fee.Recipient, msgTypeURL, fee.AdditionalFee, fee.RecipientBasisPoints); err != nil {
+				err = msr.DistributeFees(feeGasMeter, fee.Recipient, msgTypeURL, fee.AdditionalFee, fee.RecipientBasisPoints)
+				if err != nil {
 					return nil, err
 				}
 			}
@@ -176,7 +177,8 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 					}
 				}
 				if msgFeeCoin.IsPositive() {
-					if err := msr.DistributeFees(feeGasMeter, assessCustomFee.Recipient, msgTypeURL, msgFeeCoin, 5_000); err != nil {
+					err = msr.DistributeFees(feeGasMeter, assessCustomFee.Recipient, msgTypeURL, msgFeeCoin, 5_000)
+					if err != nil {
 						return nil, err
 					}
 				}
