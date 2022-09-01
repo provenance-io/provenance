@@ -34,10 +34,10 @@ type MsgFeesDecorator struct {
 
 func NewMsgFeesDecorator(bankKeeper banktypes.Keeper, accountKeeper cosmosante.AccountKeeper, feegrantKeeper msgfeestypes.FeegrantKeeper, keeper msgfeestypes.MsgFeesKeeper) MsgFeesDecorator {
 	return MsgFeesDecorator{
-		keeper,
-		bankKeeper,
-		accountKeeper,
-		feegrantKeeper,
+		msgFeeKeeper:   keeper,
+		bankKeeper:     bankKeeper,
+		accountKeeper:  accountKeeper,
+		feegrantKeeper: feegrantKeeper,
 	}
 }
 
