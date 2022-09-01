@@ -86,9 +86,6 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 }
 
 func TestMsgService(t *testing.T) {
-	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass. https://github.com/provenance-io/provenance/issues/1006
-	t.Skip("This test is disabled, but must be re-enabled before v1.13 can be ready.")
-
 	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 1) // will create a gas fee of 1atom * gas
 	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
@@ -198,9 +195,6 @@ func TestMsgService(t *testing.T) {
 }
 
 func TestMsgServiceAuthz(t *testing.T) {
-	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass. https://github.com/provenance-io/provenance/issues/1006
-	t.Skip("This test is disabled, but must be re-enabled before v1.13 can be ready.")
-
 	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 1)
 	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
@@ -314,9 +308,6 @@ func TestMsgServiceAuthz(t *testing.T) {
 }
 
 func TestMsgServiceAssessMsgFee(t *testing.T) {
-	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass. https://github.com/provenance-io/provenance/issues/1006
-	t.Skip("This test is disabled, but must be re-enabled before v1.13 can be ready.")
-
 	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 1)
 	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
