@@ -82,6 +82,7 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 			FeegrantKeeper:  suite.app.FeeGrantKeeper,
 			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			MsgFeesKeeper:   suite.app.MsgFeesKeeper,
 		},
 	)
 
