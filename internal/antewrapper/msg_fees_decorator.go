@@ -73,7 +73,7 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 	msgFeesDistribution, err := CalculateAdditionalFeesToBePaid(ctx, afd.msgFeeKeeper, msgs...)
 	totalAdditionalFees := msgFeesDistribution.TotalAdditionalFees
 	if err != nil {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, err.Error())
+		return ctx, sdkerrors.ErrInsufficientFee.Wrap(err.Error())
 	}
 	// floor gas price should be checked for all Tx's ( i.e nodes cannot set min-gas-price < floor gas price)
 	// the chain id check is exclusively for not breaking all existing sim tests which freak out when denom is anything other than stake.
@@ -89,7 +89,7 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 		if ctx.IsCheckTx() && !simulate {
 			errFromMempoolCalc := EnsureSufficientMempoolFees(ctx, gas, feeCoins, totalAdditionalFees)
 			if errFromMempoolCalc != nil {
-				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, errFromMempoolCalc.Error())
+				return ctx, sdkerrors.ErrInsufficientFee.Wrap(errFromMempoolCalc.Error())
 			}
 		}
 		feePayer := feeTx.FeePayer()
@@ -104,7 +104,7 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 
 		deductFeesFromAcc := afd.accountKeeper.GetAccount(ctx, deductFeesFrom)
 		if deductFeesFromAcc == nil {
-			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %q does not exist", deductFeesFrom)
+			err = sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %q does not exist", deductFeesFrom)
 			if err != nil {
 				return ctx, err
 			}
@@ -137,7 +137,7 @@ func isTestContext(ctx sdk.Context) bool {
 func getFeeGranterIfExists(ctx sdk.Context, feeGranter sdk.AccAddress, afd MsgFeesDecorator, feePayer sdk.AccAddress, deductFeesFrom sdk.AccAddress) (sdk.AccAddress, error) {
 	if feeGranter != nil {
 		if afd.feegrantKeeper == nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
+			return nil, sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
 		} else if !feeGranter.Equals(feePayer) {
 			grant, err := afd.feegrantKeeper.GetAllowance(ctx, feeGranter, feePayer)
 			if err != nil {
@@ -238,9 +238,9 @@ func checkFloorGasFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins,
 	if _, hasNeg := feeCoins.SafeSub(sdk.Coins{baseFees}); hasNeg {
 		// for tx without additional fees.
 		if additionalFees == nil || additionalFees.IsZero() {
-			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "not enough fees based on floor gas price: %q; required base fees >=%q: Supplied fee was %q", minGasPriceForAdditionalFeeCalc, baseFees, feeCoins)
+			return sdkerrors.ErrInsufficientFee.Wrapf("not enough fees based on floor gas price: %q; required base fees >=%q: Supplied fee was %q", minGasPriceForAdditionalFeeCalc, baseFees, feeCoins)
 		}
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "not enough fees based on floor gas price: %q; after deducting (total fee supplied fees - additional fees(%q)) required base fees >=%q: Supplied fee was %q", minGasPriceForAdditionalFeeCalc, additionalFees, baseFees, feeCoins)
+		return sdkerrors.ErrInsufficientFee.Wrapf("not enough fees based on floor gas price: %q; after deducting (total fee supplied fees - additional fees(%q)) required base fees >=%q: Supplied fee was %q", minGasPriceForAdditionalFeeCalc, additionalFees, baseFees, feeCoins)
 	}
 	return nil
 }
@@ -259,20 +259,24 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 
 		if msgFees != nil {
 			if msgFees.AdditionalFee.IsPositive() {
-				CalculateDistributions(msgFees.Recipient, msgFees.AdditionalFee, msgFees.RecipientBasisPoints, &msgFeesDistribution)
+				if err := CalculateDistributions(msgFees.Recipient, msgFees.AdditionalFee, msgFees.RecipientBasisPoints, &msgFeesDistribution); err != nil {
+					return nil, err
+				}
 			}
 		}
 		if typeURL == sdk.MsgTypeURL(&msgfeestypes.MsgAssessCustomMsgFeeRequest{}) {
 			assessFee, ok := msg.(*msgfeestypes.MsgAssessCustomMsgFeeRequest)
 			if !ok {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "unable to convert msg to MsgAssessCustomMsgFeeRequest")
+				return nil, sdkerrors.ErrInvalidType.Wrap("unable to convert msg to MsgAssessCustomMsgFeeRequest")
 			}
 			assessFeeCoin, err := mbfk.ConvertDenomToHash(ctx, assessFee.Amount)
 			if err != nil {
 				return nil, err
 			}
 			if assessFeeCoin.IsPositive() {
-				CalculateDistributions(assessFee.Recipient, assessFeeCoin, 5_000, &msgFeesDistribution)
+				if err := CalculateDistributions(assessFee.Recipient, assessFeeCoin, 5_000, &msgFeesDistribution); err != nil {
+					return nil, err
+				}
 			}
 		}
 	}
@@ -280,9 +284,12 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 }
 
 // CalculateDistributions hydrates MsgFeesDistribution with additional fee and when recipient is present it splits the fee using the basis points
-func CalculateDistributions(recipient string, additionalFee sdk.Coin, basisPoints uint32, msgFeesDistribution *MsgFeesDistribution) {
+func CalculateDistributions(recipient string, additionalFee sdk.Coin, basisPoints uint32, msgFeesDistribution *MsgFeesDistribution) error {
 	if len(recipient) != 0 {
-		recipientCoin, feePayoutCoin := msgfeestypes.SplitCoinByBips(additionalFee, basisPoints)
+		recipientCoin, feePayoutCoin, err := msgfeestypes.SplitCoinByBips(additionalFee, basisPoints)
+		if err != nil {
+			return err
+		}
 		if len(msgFeesDistribution.RecipientDistributions[recipient].Denom) == 0 {
 			msgFeesDistribution.RecipientDistributions[recipient] = recipientCoin
 		} else {
@@ -294,4 +301,5 @@ func CalculateDistributions(recipient string, additionalFee sdk.Coin, basisPoint
 		msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(additionalFee)
 		msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(additionalFee)
 	}
+	return nil
 }

@@ -152,7 +152,9 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 						return nil, err
 					}
 				}
-				msr.DistributeFees(feeGasMeter, fee.Recipient, msgTypeURL, fee.AdditionalFee, fee.RecipientBasisPoints)
+				if err := msr.DistributeFees(feeGasMeter, fee.Recipient, msgTypeURL, fee.AdditionalFee, fee.RecipientBasisPoints); err != nil {
+					return nil, err
+				}
 			}
 			if isAssessMsgFee {
 				var assessCustomFee *msgfeestypes.MsgAssessCustomMsgFeeRequest
@@ -174,7 +176,9 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 					}
 				}
 				if msgFeeCoin.IsPositive() {
-					msr.DistributeFees(feeGasMeter, assessCustomFee.Recipient, msgTypeURL, msgFeeCoin, 5_000)
+					if err := msr.DistributeFees(feeGasMeter, assessCustomFee.Recipient, msgTypeURL, msgFeeCoin, 5_000); err != nil {
+						return nil, err
+					}
 				}
 			}
 
@@ -202,14 +206,18 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 }
 
 // DistributeFees consumes additional fees and their splitting if they have a recipient
-func (msr *PioMsgServiceRouter) DistributeFees(feeGasMeter *antewrapper.FeeGasMeter, recipient string, msgTypeURL string, feeCoin sdk.Coin, bips uint32) {
+func (msr *PioMsgServiceRouter) DistributeFees(feeGasMeter *antewrapper.FeeGasMeter, recipient string, msgTypeURL string, feeCoin sdk.Coin, bips uint32) error {
 	if len(recipient) != 0 {
-		recipientCoin, feePayoutCoin := msgfeestypes.SplitCoinByBips(feeCoin, bips)
+		recipientCoin, feePayoutCoin, err := msgfeestypes.SplitCoinByBips(feeCoin, bips)
+		if err != nil {
+			return err
+		}
 		feeGasMeter.ConsumeFee(recipientCoin, msgTypeURL, recipient)
 		feeGasMeter.ConsumeFee(feePayoutCoin, msgTypeURL, "")
 	} else {
 		feeGasMeter.ConsumeFee(feeCoin, msgTypeURL, "")
 	}
+	return nil
 }
 
 // SetInterfaceRegistry sets the interface registry for the router.

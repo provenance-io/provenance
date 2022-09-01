@@ -15,6 +15,7 @@ func TestSplitCoinByBips(t *testing.T) {
 		bips                  uint32
 		expectedRecipientCoin sdk.Coin
 		expectedFeePayoutCoin sdk.Coin
+		expectedErrorMsg      string
 	}{
 		{
 			"Should all go to recipient",
@@ -22,6 +23,7 @@ func TestSplitCoinByBips(t *testing.T) {
 			10_000,
 			sdk.NewInt64Coin(NhashDenom, 10),
 			sdk.NewInt64Coin(NhashDenom, 0),
+			"",
 		},
 		{
 			"Should all go to fee payout",
@@ -29,6 +31,15 @@ func TestSplitCoinByBips(t *testing.T) {
 			0,
 			sdk.NewInt64Coin(NhashDenom, 0),
 			sdk.NewInt64Coin(NhashDenom, 10),
+			"",
+		},
+		{
+			"Should error on invalid bips value",
+			sdk.NewInt64Coin(NhashDenom, 10),
+			10_001,
+			sdk.NewInt64Coin(NhashDenom, 0),
+			sdk.NewInt64Coin(NhashDenom, 10),
+			"invalid: 10001: invalid bips amount",
 		},
 		{
 			"Both Recipient and FeePayout should equal on split of even number",
@@ -36,6 +47,7 @@ func TestSplitCoinByBips(t *testing.T) {
 			5_000,
 			sdk.NewInt64Coin(NhashDenom, 5),
 			sdk.NewInt64Coin(NhashDenom, 5),
+			"",
 		},
 		{
 			"Recipient will get floor of calc",
@@ -43,6 +55,7 @@ func TestSplitCoinByBips(t *testing.T) {
 			5_000,
 			sdk.NewInt64Coin(NhashDenom, 4),
 			sdk.NewInt64Coin(NhashDenom, 5),
+			"",
 		},
 		{
 			"FeePayout should get the remaining amount",
@@ -50,6 +63,7 @@ func TestSplitCoinByBips(t *testing.T) {
 			5_000,
 			sdk.NewInt64Coin(NhashDenom, 0),
 			sdk.NewInt64Coin(NhashDenom, 1),
+			"",
 		},
 		{
 			"Recipient should receive bips amount calculated to 25",
@@ -57,6 +71,7 @@ func TestSplitCoinByBips(t *testing.T) {
 			2_500,
 			sdk.NewInt64Coin(NhashDenom, 25),
 			sdk.NewInt64Coin(NhashDenom, 75),
+			"",
 		},
 		{
 			"Recipient should receive bips amount calculated to 25 with truncation remainder going to fee module",
@@ -64,12 +79,18 @@ func TestSplitCoinByBips(t *testing.T) {
 			2_500,
 			sdk.NewInt64Coin(NhashDenom, 25),
 			sdk.NewInt64Coin(NhashDenom, 76),
+			"",
 		},
 	}
 
 	for _, tc := range splitCases {
-		actualRecipientCoin, actualFeePayoutCoin := SplitCoinByBips(tc.splitCoin, tc.bips)
-		assert.True(t, tc.expectedRecipientCoin.Equal(actualRecipientCoin), fmt.Sprintf("RecipientCoin for bips: %v not equal expected: %s actual: %s name: %s", tc.bips, tc.expectedRecipientCoin.String(), actualRecipientCoin, tc.testName))
-		assert.True(t, tc.expectedFeePayoutCoin.Equal(actualFeePayoutCoin), fmt.Sprintf("FeePayoutCoin not equal expected: %s actual: %s name: %s", tc.expectedFeePayoutCoin.String(), actualFeePayoutCoin.String(), tc.testName))
+		actualRecipientCoin, actualFeePayoutCoin, err := SplitCoinByBips(tc.splitCoin, tc.bips)
+		if len(tc.expectedErrorMsg) == 0 {
+			assert.NoError(t, err)
+			assert.True(t, tc.expectedRecipientCoin.Equal(actualRecipientCoin), fmt.Sprintf("RecipientCoin for bips: %v not equal expected: %s actual: %s name: %s", tc.bips, tc.expectedRecipientCoin.String(), actualRecipientCoin, tc.testName))
+			assert.True(t, tc.expectedFeePayoutCoin.Equal(actualFeePayoutCoin), fmt.Sprintf("FeePayoutCoin not equal expected: %s actual: %s name: %s", tc.expectedFeePayoutCoin.String(), actualFeePayoutCoin.String(), tc.testName))
+		} else {
+			assert.EqualError(t, err, tc.expectedErrorMsg, tc.testName)
+		}
 	}
 }

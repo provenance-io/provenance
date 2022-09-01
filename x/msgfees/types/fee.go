@@ -10,7 +10,10 @@ const (
 )
 
 // SplitCoinByBips returns split to recipient and fee module based on basis points for recipient
-func SplitCoinByBips(coin sdk.Coin, bips uint32) (recipientCoin sdk.Coin, feePayoutCoin sdk.Coin) {
+func SplitCoinByBips(coin sdk.Coin, bips uint32) (recipientCoin sdk.Coin, feePayoutCoin sdk.Coin, err error) {
+	if bips > 10_000 {
+		return recipientCoin, feePayoutCoin, ErrInvalidBipsValue.Wrapf("invalid: %v", bips)
+	}
 	numerator := sdk.NewDec(int64(bips))
 	denominator := sdk.NewDec(10_000)
 	decAmount := sdk.NewDec(coin.Amount.Int64())
@@ -20,5 +23,5 @@ func SplitCoinByBips(coin sdk.Coin, bips uint32) (recipientCoin sdk.Coin, feePay
 
 	recipientCoin = sdk.NewCoin(coin.Denom, bipsAmount)
 	feePayoutCoin = sdk.NewCoin(coin.Denom, feePayoutAmount)
-	return recipientCoin, feePayoutCoin
+	return recipientCoin, feePayoutCoin, nil
 }
