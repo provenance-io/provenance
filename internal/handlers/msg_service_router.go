@@ -204,7 +204,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 // DistributeFees consumes additional fees and their splitting if they have a recipient
 func (msr *PioMsgServiceRouter) DistributeFees(feeGasMeter *antewrapper.FeeGasMeter, recipient string, msgTypeURL string, feeCoin sdk.Coin, bips uint32) {
 	if len(recipient) != 0 {
-		recipientCoin, feePayoutCoin := msgfeestypes.SplitCoinByPercentage(feeCoin, bips)
+		recipientCoin, feePayoutCoin := msgfeestypes.SplitCoinByBips(feeCoin, bips)
 		feeGasMeter.ConsumeFee(recipientCoin, msgTypeURL, recipient)
 		feeGasMeter.ConsumeFee(feePayoutCoin, msgTypeURL, "")
 	} else {

@@ -279,9 +279,10 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 	return &msgFeesDistribution, nil
 }
 
+// CalculateDistributions hydrates MsgFeesDistribution with additional fee and when recipient is present it splits the fee using the basis points
 func CalculateDistributions(recipient string, additionalFee sdk.Coin, basisPoints uint32, msgFeesDistribution *MsgFeesDistribution) {
 	if len(recipient) != 0 {
-		recipientCoin, feePayoutCoin := msgfeestypes.SplitCoinByPercentage(additionalFee, basisPoints)
+		recipientCoin, feePayoutCoin := msgfeestypes.SplitCoinByBips(additionalFee, basisPoints)
 		if len(msgFeesDistribution.RecipientDistributions[recipient].Denom) == 0 {
 			msgFeesDistribution.RecipientDistributions[recipient] = recipientCoin
 		} else {
