@@ -57,8 +57,7 @@ type MsgFeesDistribution struct {
 // then z = x + y
 // This Fee Decorator makes sure that z is >= to x + y
 func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	feeTx, err := getFeeTx(tx)
-
+	feeTx, err := GetFeeTx(tx)
 	if err != nil {
 		return ctx, err
 	}
@@ -73,11 +72,11 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 	msgFeesDistribution, err := CalculateAdditionalFeesToBePaid(ctx, afd.msgFeeKeeper, msgs...)
 	totalAdditionalFees := msgFeesDistribution.TotalAdditionalFees
 	if err != nil {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, err.Error())
+		return ctx, sdkerrors.ErrInsufficientFee.Wrap(err.Error())
 	}
 	// floor gas price should be checked for all Tx's ( i.e nodes cannot set min-gas-price < floor gas price)
 	// the chain id check is exclusively for not breaking all existing sim tests which freak out when denom is anything other than stake.
-	if ctx.IsCheckTx() && !simulate && !isTestContext(ctx) && (totalAdditionalFees.IsZero() || totalAdditionalFees == nil) {
+	if ctx.IsCheckTx() && !simulate && !isTestContext(ctx) && totalAdditionalFees.IsZero() {
 		err = checkFloorGasFees(gas, feeCoins, totalAdditionalFees, afd.msgFeeKeeper.GetFloorGasPrice(ctx))
 		if err != nil {
 			return ctx, err
@@ -131,7 +130,7 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 // and some network tests won't work without a chain id being set(but they also setup everything with stake denom) so `simapp-unit-testing` chain id is skipped also.
 // This only needs to work to pio-testnet and pio-mainnet, so this is safe.
 func isTestContext(ctx sdk.Context) bool {
-	return !(len(ctx.ChainID()) != 0 && ctx.ChainID() != SimAppChainID && ctx.ChainID() != helpers.SimAppChainID)
+	return len(ctx.ChainID()) == 0 || ctx.ChainID() == SimAppChainID || ctx.ChainID() == helpers.SimAppChainID
 }
 
 // getFeeGranterIfExists checks if fee granter exists and returns account to deduct fees from
@@ -152,14 +151,6 @@ func getFeeGranterIfExists(ctx sdk.Context, feeGranter sdk.AccAddress, afd MsgFe
 		deductFeesFrom = feeGranter
 	}
 	return deductFeesFrom, nil
-}
-
-func getFeeTx(tx sdk.Tx) (sdk.FeeTx, error) {
-	feeTx, ok := tx.(sdk.FeeTx)
-	if !ok {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
-	}
-	return feeTx, nil
 }
 
 // EnsureSufficientMempoolFees verifies that the given transaction has supplied
