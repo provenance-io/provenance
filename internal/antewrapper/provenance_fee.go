@@ -1,7 +1,8 @@
 package antewrapper
 
 import (
-	cerrs "cosmossdk.io/errors"
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -38,105 +39,89 @@ func NewProvenanceDeductFeeDecorator(ak authante.AccountKeeper, bk bankkeeper.Ke
 }
 
 func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	feeTx, err := GetFeeTx(tx)
-	if err != nil {
-		return ctx, err
-	}
-
-	if !simulate && ctx.BlockHeight() > 0 && feeTx.GetGas() == 0 {
-		return ctx, sdkerrors.ErrInvalidGasLimit.Wrap("must provide positive gas")
-	}
-
-	if err = dfd.checkDeductFee(ctx, tx, simulate); err != nil {
-		return ctx, err
-	}
-
-	return next(ctx, tx, simulate)
-}
-
-func (dfd ProvenanceDeductFeeDecorator) checkDeductFee(ctx sdk.Context, tx sdk.Tx, simulate bool) error {
-	feeTx, err := GetFeeTx(tx)
-	if err != nil {
-		return err
-	}
-	feeGasMeter, ok := ctx.GasMeter().(*FeeGasMeter)
+	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
-		return sdkerrors.ErrTxDecode.Wrap("GasMeter not a FeeGasMeter")
-	}
-	if addr := dfd.ak.GetModuleAddress(types.FeeCollectorName); addr == nil {
-		return sdkerrors.ErrNotFound.Wrapf("%s module account has not been set", types.FeeCollectorName)
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	fee := feeTx.GetFee()
+	if addr := dfd.ak.GetModuleAddress(types.FeeCollectorName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.FeeCollectorName))
+	}
+
 	feePayer := feeTx.FeePayer()
 	feeGranter := feeTx.FeeGranter()
-	deductFeesFrom := feePayer
-
-	// if feegranter set deduct fee from feegranter account.
-	// this works with only when feegrant enabled.
-	if feeGranter != nil && !feeGranter.Equals(feePayer) {
-		if dfd.feegrantKeeper == nil {
-			return sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
-		}
-		err = dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, tx.GetMsgs())
-		if err != nil {
-			return cerrs.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
-		}
-
-		deductFeesFrom = feeGranter
+	feeGasMeter, ok := ctx.GasMeter().(*FeeGasMeter)
+	if !ok {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "GasMeter not a FeeGasMeter")
 	}
 
-	deductFeesFromAcc := dfd.ak.GetAccount(ctx, deductFeesFrom)
-	if deductFeesFromAcc == nil {
-		return sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %s does not exist", deductFeesFrom)
-	}
+	payerAccount := feePayer
 
-	// Make sure there are enough fees provided to cover any msg-based fees.
-	feeDist, errFromCalculateAdditionalFeesToBePaid := CalculateAdditionalFeesToBePaid(ctx, dfd.msgFeeKeeper, feeTx.GetMsgs()...)
+	// deduct the fees
+	fee := feeTx.GetFee()
+	msgs := feeTx.GetMsgs()
+	feeDist, errFromCalculateAdditionalFeesToBePaid := CalculateAdditionalFeesToBePaid(ctx, dfd.msgFeeKeeper, msgs...)
 	if errFromCalculateAdditionalFeesToBePaid != nil {
-		return sdkerrors.ErrInvalidRequest.Wrap(errFromCalculateAdditionalFeesToBePaid.Error())
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, errFromCalculateAdditionalFeesToBePaid.Error())
 	}
 	if feeDist != nil && len(feeDist.TotalAdditionalFees) > 0 {
-		_, hasNeg := fee.SafeSub(feeDist.TotalAdditionalFees...)
+		var hasNeg bool
+		_, hasNeg = fee.SafeSub(feeDist.TotalAdditionalFees...)
 		if hasNeg && !simulate {
-			return sdkerrors.ErrInsufficientFee.Wrapf("invalid fee amount: %s", fee)
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fee)
 		}
 	}
 
-	// deduct minimum fee amount, remainder will be swept on success
-	baseGasFee := CalculateFloorGasFee(ctx, feeTx, dfd.msgFeeKeeper)
-	if !baseGasFee.IsZero() && !simulate {
-		err = DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, baseGasFee)
+	if feeGranter != nil && !simulate {
+		if dfd.feegrantKeeper == nil {
+			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
+		} else if !feeGranter.Equals(feePayer) {
+			err = dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, tx.GetMsgs())
+
+			if err != nil {
+				return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
+			}
+		}
+
+		payerAccount = feeGranter
+	}
+
+	deductFeesFromAcc := dfd.ak.GetAccount(ctx, payerAccount)
+	if deductFeesFromAcc == nil {
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", payerAccount)
+	}
+
+	// deduct minimum amount from fee, remainder will be swept on success
+	baseFeeToConsume := CalculateBaseFee(ctx, feeTx, dfd.msgFeeKeeper)
+	if !baseFeeToConsume.IsZero() && !simulate {
+		err = DeductBaseFees(dfd.bankKeeper, ctx, deductFeesFromAcc, baseFeeToConsume)
 		if err != nil {
-			return err
+			return ctx, err
 		}
-		feeGasMeter.ConsumeBaseFee(baseGasFee)
+		feeGasMeter.ConsumeBaseFee(baseFeeToConsume)
 	}
 
-	events := sdk.Events{
+	events := sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
+		sdk.NewAttribute(sdk.AttributeKeyFee, feeTx.GetFee().String()),
+	),
 		sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeyFee, feeTx.GetFee().String()),
-			sdk.NewAttribute(sdk.AttributeKeyFeePayer, deductFeesFrom.String()),
-		),
-		sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(AttributeKeyMinFeeCharged, baseGasFee.String()),
+			sdk.NewAttribute(AttributeKeyMinFeeCharged, baseFeeToConsume.String()),
 		),
 	}
 	ctx.EventManager().EmitEvents(events)
 
-	return nil
+	return next(ctx, tx, simulate)
 }
 
-// CalculateFloorGasFee gets the minimum gas fee for the provided FeeTx.
-func CalculateFloorGasFee(ctx sdk.Context, feeTx sdk.FeeTx, msgfeekeeper msgfeestypes.MsgFeesKeeper) sdk.Coins {
-	if isTestContext(ctx) {
-		DetermineTestBaseFeeAmount(ctx, feeTx)
+func CalculateBaseFee(ctx sdk.Context, feeTx sdk.FeeTx, msgfeekeeper msgfeestypes.MsgFeesKeeper) sdk.Coins {
+	if !isTestContext(ctx) {
+		gasWanted := feeTx.GetGas()
+		floorPrice := msgfeekeeper.GetFloorGasPrice(ctx)
+		amount := msgfeekeeper.GetFloorGasPrice(ctx).Amount.Mul(sdk.NewIntFromUint64(gasWanted))
+		baseFeeToDeduct := sdk.NewCoins(sdk.NewCoin(floorPrice.Denom, amount))
+		return baseFeeToDeduct
 	}
-	gasWanted := feeTx.GetGas()
-	floorPrice := msgfeekeeper.GetFloorGasPrice(ctx)
-	amount := floorPrice.Amount.Mul(sdk.NewIntFromUint64(gasWanted))
-	baseFeeToDeduct := sdk.NewCoins(sdk.NewCoin(floorPrice.Denom, amount))
-	return baseFeeToDeduct
+	return DetermineTestBaseFeeAmount(ctx, feeTx)
 }
 
 // DetermineTestBaseFeeAmount determines the type of test that is running.  ChainID = "" is a simple unit
@@ -148,8 +133,8 @@ func DetermineTestBaseFeeAmount(ctx sdk.Context, feeTx sdk.FeeTx) sdk.Coins {
 	return sdk.NewCoins()
 }
 
-// DeductFees deducts fees from the given account.
-func DeductFees(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc types.AccountI, fee sdk.Coins) error {
+// DeductBaseFees deducts fees from the given account.
+func DeductBaseFees(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc types.AccountI, fee sdk.Coins) error {
 	if !fee.IsValid() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fee)
 	}
