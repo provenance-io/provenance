@@ -39,7 +39,7 @@ A `ClaimPeriodRewardDistribution` is created for each claim period of every `Rew
 The purpose of `RewardAccountState` is to track state at the address level of a claim period. It counts the number of claim period shares the user obtained, the status of their `RewardClaim`, and other stateful information that assists the system in properly granting rewards.
 
 * AccountStateAddressLookupKeyPrefix: `0x04 | Account Address (n bytes, with the address length being stored in the first byte {int64(address[1:2][0])}) | Reward Program ID (8 bytes) | Claim Period ID (8 bytes) -> ProtocolBuffers(RewardAccountState)`
-* AccountStateKeyPrefix: `0x05 | Reward Program ID (8 bytes) | Claim Period ID (8 bytes) | Account Address (8 bytes) -> ProtocolBuffers(RewardAccountState)`
+* AccountStateKeyPrefix: `0x05 | Reward Program ID (8 bytes) | Claim Period ID (8 bytes) | Account Address (n bytes, with the address length being stored in the first byte {int64(address[1:2][0])}) -> ProtocolBuffers(RewardAccountState)`
 
 +++ https://github.com/provenance-io/provenance/blob/4e354a9fd554a420f7970522d2e8b0b749baad9d/proto/provenance/reward/v1/reward.proto#L132-L148
 
