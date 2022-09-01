@@ -730,6 +730,21 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			expectedCode: 0,
 		},
 		{
+			name: "should successfully invoke expiration logic",
+			cmd:  cli.InvokeExpirationCmd(),
+			args: []string{
+				s.expiration4.ModuleAssetId,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration4.Owner),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    false,
+			expectErrMsg: "",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
 			name: "should successfully delete expiration",
 			cmd:  cli.DeleteExpirationCmd(),
 			args: []string{
