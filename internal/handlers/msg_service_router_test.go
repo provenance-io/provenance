@@ -413,5 +413,5 @@ func SignTxAndGetBytes(gaslimit uint64, fees sdk.Coins, encCfg simappparams.Enco
 // NewTestGasLimit is a test fee gas limit.
 // they keep changing this value and our tests break, hence moving it to test.
 func NewTestGasLimit() uint64 {
-	return 100000
+	return 120000
 }
