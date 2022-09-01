@@ -43,18 +43,17 @@ func (k Keeper) RewardPrograms(ctx context.Context, req *types.QueryRewardProgra
 	pageResponse, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var rewardProgram types.RewardProgram
 		vErr := rewardProgram.Unmarshal(value)
-		counted := false
 
 		if vErr != nil {
 			return false, vErr
 		}
 
-		if accumulate && rewardProgram.MatchesState(rewardProgramStates) {
+		matched := rewardProgram.MatchesState(rewardProgramStates)
+		if accumulate && matched {
 			response.RewardPrograms = append(response.RewardPrograms, rewardProgram)
-			counted = true
 		}
 
-		return counted, nil
+		return matched, nil
 	})
 
 	if err != nil {
