@@ -24,18 +24,32 @@ func TestSplitCoinByPercentage(t *testing.T) {
 			sdk.NewInt64Coin(NhashDenom, 5),
 		},
 		{
-			"FeePayout should have floor go to fee payout on odd number",
+			"Recipient will get floor of calc",
 			sdk.NewInt64Coin(NhashDenom, 9),
 			5_000,
-			sdk.NewInt64Coin(NhashDenom, 5),
 			sdk.NewInt64Coin(NhashDenom, 4),
+			sdk.NewInt64Coin(NhashDenom, 5),
 		},
 		{
-			"FeePayout should have receive 0 on split of 1",
+			"FeePayout should get the remaining amount",
 			sdk.NewInt64Coin(NhashDenom, 1),
 			5_000,
-			sdk.NewInt64Coin(NhashDenom, 1),
 			sdk.NewInt64Coin(NhashDenom, 0),
+			sdk.NewInt64Coin(NhashDenom, 1),
+		},
+		{
+			"Recipient should receive bips amount calculated to 25",
+			sdk.NewInt64Coin(NhashDenom, 100),
+			2_500,
+			sdk.NewInt64Coin(NhashDenom, 25),
+			sdk.NewInt64Coin(NhashDenom, 75),
+		},
+		{
+			"Recipient should receive bips amount calculated to 25 with truncation remainder going to fee module",
+			sdk.NewInt64Coin(NhashDenom, 101),
+			2_500,
+			sdk.NewInt64Coin(NhashDenom, 25),
+			sdk.NewInt64Coin(NhashDenom, 76),
 		},
 	}
 

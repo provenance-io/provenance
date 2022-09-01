@@ -112,9 +112,9 @@ func TestMsgService(t *testing.T) {
 
 	// Check both account balances after transaction
 	addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	require.Equal(t, "900hotdog,300500stake", addr1AfterBalance, "should have the new balance running transaction")
+	require.Equal(t, "900hotdog,300500stake", addr1AfterBalance, "should have the new balance after running transaction")
 	addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "100hotdog", addr2AfterBalance, "should have the new balance running transaction")
+	require.Equal(t, "100hotdog", addr2AfterBalance, "should have the new balance after running transaction")
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
 	assert.Equal(t, 15, len(res.Events))
 	assert.Equal(t, sdk.EventTypeTx, res.Events[4].Type)
@@ -139,9 +139,9 @@ func TestMsgService(t *testing.T) {
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 
 	addr1AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	require.Equal(t, "50hotdog,200400stake", addr1AfterBalance, "should have the new balance running transaction")
+	require.Equal(t, "50hotdog,200400stake", addr1AfterBalance, "should have the new balance after running transaction")
 	addr2AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "150hotdog", addr2AfterBalance, "should have the new balance running transaction")
+	require.Equal(t, "150hotdog", addr2AfterBalance, "should have the new balance after running transaction")
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
 	assert.Equal(t, 17, len(res.Events))
 	assert.Equal(t, sdk.EventTypeTx, res.Events[4].Type)
@@ -172,9 +172,9 @@ func TestMsgService(t *testing.T) {
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 
 	addr1AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	require.Equal(t, "100289stake", addr1AfterBalance, "should have the new balance running transaction")
+	require.Equal(t, "100289stake", addr1AfterBalance, "should have the new balance after running transaction")
 	addr2AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "200hotdog", addr2AfterBalance, "should have the new balance running transaction")
+	require.Equal(t, "200hotdog", addr2AfterBalance, "should have the new balance after running transaction")
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
 	assert.Equal(t, 17, len(res.Events))
 	assert.Equal(t, sdk.EventTypeTx, res.Events[4].Type)
@@ -193,6 +193,57 @@ func TestMsgService(t *testing.T) {
 	assert.Equal(t, "msg_fees", string(res.Events[16].Attributes[0].Key))
 	assert.Equal(t, "[{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"10stake\",\"recipient\":\"\"}]", string(res.Events[16].Attributes[0].Value))
 
+}
+
+func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1) // will create a gas fee of 1stake * gas
+	encCfg := simapp.MakeTestEncodingConfig()
+	priv, _, addr1 := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(1_000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000)))
+	app := piosimapp.SetupWithGenesisAccounts("msgfee-testing", []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr1.String(), Coins: acct1Balance})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+
+	msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
+	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)), addr2.String(), msgfeestypes.DefaultMsgFeeBips)
+	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
+
+	// Check both account balances before transaction
+	addr1beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
+	require.Equal(t, "1000hotdog,100000stake", addr1beforeBalance, "should have the new balance after funding account")
+	addr2beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
+	require.Equal(t, "", addr2beforeBalance, "should have the new balance after funding account")
+
+	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000), sdk.NewInt64Coin("hotdog", 800))
+	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	require.NoError(t, err)
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+
+	// Check both account balances after transaction
+	addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
+	require.Equal(t, "100hotdog", addr1AfterBalance, "should have the new balance after running transaction")
+	addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
+	require.Equal(t, "500hotdog", addr2AfterBalance, "should have the new balance after running transaction")
+	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+	assert.Equal(t, 17, len(res.Events))
+	assert.Equal(t, sdk.EventTypeTx, res.Events[4].Type)
+	assert.Equal(t, sdk.AttributeKeyFee, string(res.Events[4].Attributes[0].Key))
+	assert.Equal(t, "800hotdog,100000stake", string(res.Events[4].Attributes[0].Value))
+	assert.Equal(t, sdk.EventTypeTx, res.Events[5].Type)
+	assert.Equal(t, antewrapper.AttributeKeyMinFeeCharged, string(res.Events[5].Attributes[0].Key))
+	assert.Equal(t, "100000stake", string(res.Events[5].Attributes[0].Value))
+	assert.Equal(t, sdk.EventTypeTx, res.Events[14].Type)
+	assert.Equal(t, antewrapper.AttributeKeyAdditionalFee, string(res.Events[14].Attributes[0].Key))
+	assert.Equal(t, "800hotdog", string(res.Events[14].Attributes[0].Value))
+	assert.Equal(t, sdk.EventTypeTx, res.Events[15].Type)
+	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[15].Attributes[0].Key))
+	assert.Equal(t, "100000stake", string(res.Events[15].Attributes[0].Value))
+	assert.Equal(t, "provenance.msgfees.v1.EventMsgFees", res.Events[16].Type)
+	assert.Equal(t, "msg_fees", string(res.Events[16].Attributes[0].Key))
+	expectedTypedEventJson := fmt.Sprintf("[{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"400hotdog\",\"recipient\":\"\"},{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"400hotdog\",\"recipient\":\"%s\"}]", addr2.String())
+	assert.Equal(t, expectedTypedEventJson, string(res.Events[16].Attributes[0].Value), "typed event should reflect msg fees with recipient and calculated bip amount")
 }
 
 func TestMsgServiceAuthz(t *testing.T) {
@@ -233,11 +284,11 @@ func TestMsgServiceAuthz(t *testing.T) {
 
 	// acct1 sent 100hotdog to acct3 with acct2 paying fees 100000stake in gas, 800hotdog msgfees
 	addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	require.Equal(t, "9900hotdog,401000stake", addr1AfterBalance, "should have the new balance running transaction")
+	require.Equal(t, "9900hotdog,401000stake", addr1AfterBalance, "should have the new balance after running transaction")
 	addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "9200hotdog,301000stake", addr2AfterBalance, "should have the new balance running transaction")
+	require.Equal(t, "9200hotdog,301000stake", addr2AfterBalance, "should have the new balance after running transaction")
 	addr3AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr3).String()
-	require.Equal(t, "100hotdog", addr3AfterBalance, "should have the new balance running transaction")
+	require.Equal(t, "100hotdog", addr3AfterBalance, "should have the new balance after running transaction")
 
 	assert.Equal(t, 17, len(res.Events))
 	assert.Equal(t, sdk.EventTypeTx, res.Events[4].Type)
@@ -267,11 +318,11 @@ func TestMsgServiceAuthz(t *testing.T) {
 
 	// acct1 2x sent 100hotdog to acct3 with acct2 paying fees 200000stake in gas, 1600hotdog msgfees
 	addr1AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	require.Equal(t, "9700hotdog,401000stake", addr1AfterBalance, "should have the new balance running transaction")
+	require.Equal(t, "9700hotdog,401000stake", addr1AfterBalance, "should have the new balance after running transaction")
 	addr2AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "7600hotdog,101000stake", addr2AfterBalance, "should have the new balance running transaction")
+	require.Equal(t, "7600hotdog,101000stake", addr2AfterBalance, "should have the new balance after running transaction")
 	addr3AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr3).String()
-	require.Equal(t, "300hotdog", addr3AfterBalance, "should have the new balance running transaction")
+	require.Equal(t, "300hotdog", addr3AfterBalance, "should have the new balance after running transaction")
 
 	assert.Equal(t, 22, len(res.Events))
 	assert.Equal(t, sdk.EventTypeTx, res.Events[4].Type)
@@ -298,11 +349,11 @@ func TestMsgServiceAuthz(t *testing.T) {
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, uint32(0xd), res.Code, "res=%+v", res)
 	addr1AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	require.Equal(t, "9700hotdog,401000stake", addr1AfterBalance, "should have the new balance running transaction")
+	require.Equal(t, "9700hotdog,401000stake", addr1AfterBalance, "should have the new balance after running transaction")
 	addr2AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "7600hotdog,1000stake", addr2AfterBalance, "should have the new balance running transaction")
+	require.Equal(t, "7600hotdog,1000stake", addr2AfterBalance, "should have the new balance after running transaction")
 	addr3AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr3).String()
-	require.Equal(t, "300hotdog", addr3AfterBalance, "should have the new balance running transaction")
+	require.Equal(t, "300hotdog", addr3AfterBalance, "should have the new balance after running transaction")
 }
 
 func TestMsgServiceAssessMsgFee(t *testing.T) {
@@ -329,9 +380,9 @@ func TestMsgServiceAssessMsgFee(t *testing.T) {
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
 
 	addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	require.Equal(t, "1000hotdog,1000stake", addr1AfterBalance, "should have the new balance running transaction")
+	require.Equal(t, "1000hotdog,1000stake", addr1AfterBalance, "should have the new balance after running transaction")
 	addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "87500000nhash", addr2AfterBalance, "should have the new balance running transaction")
+	require.Equal(t, "87500000nhash", addr2AfterBalance, "should have the new balance after running transaction")
 
 	assert.Equal(t, 13, len(res.Events))
 
