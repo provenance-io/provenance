@@ -259,19 +259,7 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 
 		if msgFees != nil {
 			if msgFees.AdditionalFee.IsPositive() {
-				if len(msgFees.Recipient) != 0 {
-					recipientCoin, feePayoutCoin := msgfeestypes.SplitCoinByPercentage(msgFees.AdditionalFee, msgFees.RecipientBasisPoints)
-					if len(msgFeesDistribution.RecipientDistributions[msgFees.Recipient].Denom) == 0 {
-						msgFeesDistribution.RecipientDistributions[msgFees.Recipient] = recipientCoin
-					} else {
-						msgFeesDistribution.RecipientDistributions[msgFees.Recipient] = msgFeesDistribution.RecipientDistributions[msgFees.Recipient].Add(recipientCoin)
-					}
-					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(feePayoutCoin)
-					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFees.AdditionalFee)
-				} else {
-					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFees.AdditionalFee)
-					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFees.AdditionalFee)
-				}
+				CalculateDistributions(msgFees.Recipient, msgFees.AdditionalFee, msgFees.RecipientBasisPoints, &msgFeesDistribution)
 			}
 		}
 		if typeURL == sdk.MsgTypeURL(&msgfeestypes.MsgAssessCustomMsgFeeRequest{}) {
@@ -284,22 +272,25 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 				return nil, err
 			}
 			if assessFeeCoin.IsPositive() {
-				if len(assessFee.Recipient) != 0 {
-					recipientCoin, feePayoutCoin := msgfeestypes.SplitCoinByPercentage(assessFeeCoin, 5_000)
-					if len(msgFeesDistribution.RecipientDistributions[assessFee.Recipient].Denom) == 0 {
-						msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = recipientCoin
-					} else {
-						msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = msgFeesDistribution.RecipientDistributions[assessFee.Recipient].Add(recipientCoin)
-					}
-					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(feePayoutCoin)
-					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(assessFeeCoin)
-				} else {
-					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(assessFeeCoin)
-					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(assessFeeCoin)
-				}
+				CalculateDistributions(assessFee.Recipient, assessFeeCoin, 5_000, &msgFeesDistribution)
 			}
 		}
 	}
-
 	return &msgFeesDistribution, nil
+}
+
+func CalculateDistributions(recipient string, additionalFee sdk.Coin, basisPoints uint32, msgFeesDistribution *MsgFeesDistribution) {
+	if len(recipient) != 0 {
+		recipientCoin, feePayoutCoin := msgfeestypes.SplitCoinByPercentage(additionalFee, basisPoints)
+		if len(msgFeesDistribution.RecipientDistributions[recipient].Denom) == 0 {
+			msgFeesDistribution.RecipientDistributions[recipient] = recipientCoin
+		} else {
+			msgFeesDistribution.RecipientDistributions[recipient] = msgFeesDistribution.RecipientDistributions[recipient].Add(recipientCoin)
+		}
+		msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(feePayoutCoin)
+		msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(additionalFee)
+	} else {
+		msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(additionalFee)
+		msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(additionalFee)
+	}
 }
