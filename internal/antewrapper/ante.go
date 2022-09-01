@@ -2,6 +2,7 @@ package antewrapper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // FeeMeterContextDecorator is an AnteDecorator that wraps the current
@@ -23,4 +24,13 @@ var _ sdk.AnteDecorator = FeeMeterContextDecorator{}
 func (r FeeMeterContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	newCtx = ctx.WithGasMeter(NewFeeGasMeterWrapper(ctx.Logger(), ctx.GasMeter(), simulate))
 	return next(newCtx, tx, simulate)
+}
+
+// GetFeeTx coverts the provided Tx to a FeeTx if possible.
+func GetFeeTx(tx sdk.Tx) (sdk.FeeTx, error) {
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return nil, sdkerrors.ErrTxDecode.Wrap("Tx must be a FeeTx")
+	}
+	return feeTx, nil
 }
