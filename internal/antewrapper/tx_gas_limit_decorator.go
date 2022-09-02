@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	txgas "github.com/provenance-io/provenance/x/txgas/types"
 )
 
 // TxGasLimitDecorator will check if the transaction's gas amount is higher than
@@ -12,12 +13,12 @@ import (
 // If gas is below the limit, then call next AnteHandler
 // CONTRACT: Tx must implement FeeTx to use TxGasLimitDecorator
 type TxGasLimitDecorator struct{
-	txGasLimit uint64
+	txGasKeeper txgas.TxKeeper
 }
 
-func NewTxGasLimitDecorator(txGasLimit uint64) TxGasLimitDecorator {
+func NewTxGasLimitDecorator(txGasKeeper txgas.TxKeeper) TxGasLimitDecorator {
 	return TxGasLimitDecorator{
-		txGasLimit: txGasLimit,
+		txGasKeeper: txGasKeeper,
 	}
 }
 
@@ -37,7 +38,7 @@ func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 	// Ensure that the requested gas does not exceed the configured block maximum
 	gas := feeTx.GetGas()
-	gasTxLimit := mfd.txGasLimit
+	gasTxLimit := mfd.txGasKeeper.GetGasLimit()
 
 	// Skip gas limit check for txs with MsgSubmitProposal
 	hasGovMsg := false

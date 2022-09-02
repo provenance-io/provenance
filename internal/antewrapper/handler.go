@@ -10,6 +10,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
+	txgas "github.com/provenance-io/provenance/x/txgas/types"
+
 )
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
@@ -20,6 +22,7 @@ type HandlerOptions struct {
 	MsgFeesKeeper   msgfeestypes.MsgFeesKeeper
 	SignModeHandler authsigning.SignModeHandler
 	SigGasConsumer  func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
+	TxKeeper		txgas.TxKeeper
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
@@ -45,7 +48,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		// outermost AnteDecorator. SetUpContext must be called first
 		NewFeeMeterContextDecorator(), // NOTE : fee gas meter also has the functionality of GasTracerContextDecorator in previous versions
 		cosmosante.NewRejectExtensionOptionsDecorator(),
-		NewTxGasLimitDecorator(4_000_000), //TODO: where to move it?
+		NewTxGasLimitDecorator(options.TxKeeper),
 		cosmosante.NewMempoolFeeDecorator(),
 		// Fee Decorator works to augment NewMempoolFeeDecorator and also check that enough fees are paid
 		NewMsgFeesDecorator(options.BankKeeper, options.AccountKeeper, options.FeegrantKeeper, options.MsgFeesKeeper),

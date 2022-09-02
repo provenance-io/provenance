@@ -30,3 +30,8 @@ type FeegrantKeeper interface {
 	GetAllowance(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (feegrant.FeeAllowanceI, error)
 	UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error
 }
+
+// TxKeeper defines max gas allowed per transaction
+type TxKeeper interface {
+	GetGasLimit() uint64
+}
