@@ -13,12 +13,12 @@ import (
 // If gas is below the limit, then call next AnteHandler
 // CONTRACT: Tx must implement FeeTx to use TxGasLimitDecorator
 type TxGasLimitDecorator struct{
-	txGasKeeper txgas.TxKeeper
+	tk txgas.TxKeeper
 }
 
-func NewTxGasLimitDecorator(txGasKeeper txgas.TxKeeper) TxGasLimitDecorator {
+func NewTxGasLimitDecorator(tk txgas.TxKeeper) TxGasLimitDecorator {
 	return TxGasLimitDecorator{
-		txGasKeeper: txGasKeeper,
+		tk: tk,
 	}
 }
 
@@ -38,7 +38,7 @@ func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 	// Ensure that the requested gas does not exceed the configured block maximum
 	gas := feeTx.GetGas()
-	gasTxLimit := mfd.txGasKeeper.GetTxGasLimit()
+	gasTxLimit := mfd.tk.GetParams(ctx).TxGasLimit
 
 	// Skip gas limit check for txs with MsgSubmitProposal
 	hasGovMsg := false

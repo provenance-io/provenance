@@ -5,6 +5,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	"github.com/provenance-io/provenance/x/txgas/types"
 )
 
 // AccountKeeper defines the expected account keeper (noalias)
@@ -33,5 +34,5 @@ type FeegrantKeeper interface {
 
 // TxKeeper defines max gas allowed per transaction
 type TxKeeper interface {
-	GetTxGasLimit() uint64
+	GetParams(ctx sdk.Context) (params types.Params)
 }
