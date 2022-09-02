@@ -195,3 +195,12 @@ func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, er
 		return sdk.Coin{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "denom not supported for conversion %s", coin.Denom)
 	}
 }
+
+// GetDefaultFee returns the current default Fee for any msg.
+func (k Keeper) GetDefaultFee(ctx sdk.Context) sdk.Coin {
+	min := types.DefaultFee
+	if k.paramSpace.Has(ctx, types.ParamStoreDefaultFee) {
+		k.paramSpace.Get(ctx, types.ParamStoreDefaultFee, &min)
+	}
+	return min
+}

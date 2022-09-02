@@ -17,6 +17,11 @@ var DefaultFloorGasPrice = sdk.Coin{
 	Denom:  NhashDenom,
 }
 
+var DefaultFee = sdk.Coin{
+	Amount: sdk.NewInt(1_000_000_000),
+	Denom:  NhashDenom,
+}
+
 var DefaultNhashPerUsdMil = uint64(25_000_000)
 
 var (
@@ -24,6 +29,7 @@ var (
 	// and additional fees.
 	ParamStoreKeyFloorGasPrice  = []byte("FloorGasPrice")
 	ParamStoreKeyNhashPerUsdMil = []byte("NhashPerUsdMil")
+	ParamStoreDefaultFee        = []byte("DefaultFee")
 )
 
 // ParamKeyTable for marker module
@@ -35,10 +41,12 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams(
 	floorGasPrice sdk.Coin,
 	nhashPerUsdMil uint64,
+	defaultFee sdk.Coin,
 ) Params {
 	return Params{
 		FloorGasPrice:  floorGasPrice,
 		NhashPerUsdMil: nhashPerUsdMil,
+		DefaultFee:     defaultFee,
 	}
 }
 
@@ -47,6 +55,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(ParamStoreKeyFloorGasPrice, &p.FloorGasPrice, validateCoinParam),
 		paramtypes.NewParamSetPair(ParamStoreKeyNhashPerUsdMil, &p.NhashPerUsdMil, validateNhashPerUsdMilParam),
+		paramtypes.NewParamSetPair(ParamStoreKeyNhashPerUsdMil, &p.DefaultFee, validateCoinParam),
 	}
 }
 
@@ -55,6 +64,7 @@ func DefaultParams() Params {
 	return NewParams(
 		DefaultFloorGasPrice,
 		DefaultNhashPerUsdMil,
+		DefaultFee,
 	)
 }
 

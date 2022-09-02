@@ -23,6 +23,7 @@ type MsgFeesKeeper interface {
 	GetFloorGasPrice(ctx sdk.Context) sdk.Coin
 	GetNhashPerUsdMil(ctx sdk.Context) uint64
 	ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, error)
+	GetDefaultFee(ctx sdk.Context) sdk.Coin
 }
 
 // FeegrantKeeper defines the expected feegrant keeper.

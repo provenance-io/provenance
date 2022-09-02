@@ -17,6 +17,9 @@ message Params {
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"floor_gas_price\""];
   // total nhash per usd mil for converting usd to nhash
   uint64 nhash_per_usd_mil = 3;
+  // constant used to calculate default fee
+  cosmos.base.v1beta1.Coin default_fee = 4
+  [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"default_fee\""];
 }
 
 // MsgFee is the core of what gets stored on the blockchain
