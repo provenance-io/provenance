@@ -604,7 +604,4 @@ RELAY_PATH?=local_testnet
 relayer-start: relayer-install
 	scripts/start-relayer.sh ${RELAY_PATH}
 
-relayer-stop:
-	pkill rly
-
-.PHONY: relayer-install relayer-start relayer-stop
+.PHONY: relayer-install relayer-start
