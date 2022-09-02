@@ -33,5 +33,5 @@ type FeegrantKeeper interface {
 
 // TxKeeper defines max gas allowed per transaction
 type TxKeeper interface {
-	GetGasLimit() uint64
+	GetTxGasLimit() uint64
 }

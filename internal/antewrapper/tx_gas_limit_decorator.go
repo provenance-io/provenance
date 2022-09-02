@@ -38,7 +38,7 @@ func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 	// Ensure that the requested gas does not exceed the configured block maximum
 	gas := feeTx.GetGas()
-	gasTxLimit := mfd.txGasKeeper.GetGasLimit()
+	gasTxLimit := mfd.txGasKeeper.GetTxGasLimit()
 
 	// Skip gas limit check for txs with MsgSubmitProposal
 	hasGovMsg := false
