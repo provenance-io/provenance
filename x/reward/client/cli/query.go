@@ -47,7 +47,7 @@ func GetRewardProgramCmd() *cobra.Command {
 		Short:   "Query the current reward programs",
 		Long: fmt.Sprintf(`%[1]s reward-program {reward_program_id} - gets the reward program for a given id.
 %[1]s reward-program all - gets all the reward programs
-%[1]s reward-program active - gets all active the reward programs`, cmdStart),
+%[1]s reward-program active - gets all the active reward programs`, cmdStart),
 		Args: cobra.ExactArgs(1),
 		Example: fmt.Sprintf(`%[1]s reward-program 1
 %[1]s reward-program all
