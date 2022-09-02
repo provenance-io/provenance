@@ -177,7 +177,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 					}
 				}
 				if msgFeeCoin.IsPositive() {
-					err = msr.DistributeFees(feeGasMeter, assessCustomFee.Recipient, msgTypeURL, msgFeeCoin, 5_000)
+					err = msr.DistributeFees(feeGasMeter, assessCustomFee.Recipient, msgTypeURL, msgFeeCoin, msgfeestypes.AssessCustomMsgFeeBips)
 					if err != nil {
 						return nil, err
 					}

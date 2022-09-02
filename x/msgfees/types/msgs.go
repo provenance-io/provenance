@@ -8,6 +8,11 @@ import (
 )
 
 const (
+
+	// AssessCustomMsgFeeBips is the hardcoded value for bips the recipient will receive while remainder will go to fee module
+	// 5,000 bips is 50:50 to recipient and fee module
+	AssessCustomMsgFeeBips = 5_000
+
 	TypeAssessCustomMsgFee = "assess_custom_msg_fee"
 )
 
