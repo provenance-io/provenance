@@ -40,8 +40,8 @@ func (msg *MsgFee) Validate() error {
 			return err
 		}
 	}
-	if msg.RecipientBasisPoints > 10_000 || msg.RecipientBasisPoints < 1 {
-		return fmt.Errorf("recipient basis points can only be between 1 and 10,000 : %v", msg.RecipientBasisPoints)
+	if msg.RecipientBasisPoints > 10_000 {
+		return fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", msg.RecipientBasisPoints)
 	}
 
 	return nil

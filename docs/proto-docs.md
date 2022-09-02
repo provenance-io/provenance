@@ -5297,6 +5297,8 @@ AddMsgFeeProposal defines a governance proposal to add additional msg based fee
 | `description` | [string](#string) |  |  |
 | `msg_type_url` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `recipient` | [string](#string) |  |  |
+| `recipient_basis_points` | [uint32](#uint32) |  |  |
 
 
 
@@ -5332,6 +5334,8 @@ UpdateMsgFeeProposal defines a governance proposal to update a current msg based
 | `description` | [string](#string) |  |  |
 | `msg_type_url` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `recipient` | [string](#string) |  |  |
+| `recipient_basis_points` | [uint32](#uint32) |  |  |
 
 
 

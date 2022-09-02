@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -62,6 +63,20 @@ func (p AddMsgFeeProposal) ValidateBasic() error {
 		return ErrInvalidFee
 	}
 
+	if err := p.AdditionalFee.Validate(); err != nil {
+		return err
+	}
+
+	if len(p.Recipient) != 0 {
+		_, err := sdk.AccAddressFromBech32(p.Recipient)
+		if err != nil {
+			return err
+		}
+	}
+	if p.RecipientBasisPoints > 10_000 {
+		return fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", p.RecipientBasisPoints)
+	}
+
 	return govtypes.ValidateAbstract(&p)
 }
 
@@ -89,6 +104,16 @@ func (p UpdateMsgFeeProposal) ValidateBasic() error {
 
 	if !p.AdditionalFee.IsPositive() {
 		return ErrInvalidFee
+	}
+
+	if len(p.Recipient) != 0 {
+		_, err := sdk.AccAddressFromBech32(p.Recipient)
+		if err != nil {
+			return err
+		}
+	}
+	if p.RecipientBasisPoints > 10_000 {
+		return fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", p.RecipientBasisPoints)
 	}
 
 	return govtypes.ValidateAbstract(&p)
