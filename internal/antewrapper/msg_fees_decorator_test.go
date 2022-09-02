@@ -551,6 +551,73 @@ func (suite *AnteTestSuite) TestCalculateAdditionalFeesToBePaid() {
 
 }
 
+func (suite *AnteTestSuite) TestCalculateDistributions() {
+	testCases := []struct {
+		name                                string
+		recipient                           string
+		additionalFee                       sdk.Coin
+		basisPoints                         uint32
+		msgFeesDistribution                 antewrapper.MsgFeesDistribution
+		expectedAdditionalModuleFees        sdk.Coins
+		expectedTotalAdditionalFees         sdk.Coins
+		expectedTotalRecipientDistributions map[string]sdk.Coin
+		expectErrMsg                        string
+	}{
+		{
+			"should calculate distributions without a recipient",
+			"",
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000),
+			5_000,
+			antewrapper.MsgFeesDistribution{},
+			sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000)),
+			sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000)),
+			make(map[string]sdk.Coin),
+			"",
+		},
+		{
+			"should fail to calculate distributions, recipient with invalid bip amount passed in (0 - 10,000 are valid)",
+			"cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27",
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000),
+			10_001,
+			antewrapper.MsgFeesDistribution{},
+			sdk.NewCoins(),
+			sdk.NewCoins(),
+			make(map[string]sdk.Coin),
+			"invalid: 10001: invalid bips amount",
+		},
+		{
+			"should calculate distributions with a recipient and valid bips",
+			"cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27",
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000),
+			5_000,
+			antewrapper.MsgFeesDistribution{
+				RecipientDistributions: make(map[string]sdk.Coin),
+			},
+			sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 500)),
+			sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000)),
+			map[string]sdk.Coin{"cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27": sdk.NewInt64Coin(sdk.DefaultBondDenom, 500)},
+			"",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			err := antewrapper.CalculateDistributions(tc.recipient, tc.additionalFee, tc.basisPoints, &tc.msgFeesDistribution)
+			if len(tc.expectErrMsg) == 0 {
+				suite.Require().NoError(err, "should calculate additional fee charges")
+				suite.Assert().True(tc.expectedAdditionalModuleFees.IsEqual(tc.msgFeesDistribution.AdditionalModuleFees), "Additional Module Fees should be equal %v : %v", tc.expectedAdditionalModuleFees, tc.msgFeesDistribution.AdditionalModuleFees)
+				suite.Assert().True(tc.expectedTotalAdditionalFees.IsEqual(tc.msgFeesDistribution.TotalAdditionalFees), "Total Additional Fees should be equal %v : %v", tc.expectedTotalAdditionalFees, tc.msgFeesDistribution.TotalAdditionalFees)
+				suite.Assert().True(tc.expectedTotalRecipientDistributions[tc.recipient].IsEqual(tc.msgFeesDistribution.RecipientDistributions[tc.recipient]), "Recipient Distributions are not equal %v : %v", tc.expectedTotalRecipientDistributions[tc.recipient], tc.msgFeesDistribution.RecipientDistributions[tc.recipient])
+			} else {
+				suite.Require().EqualError(err, tc.expectErrMsg)
+			}
+		})
+	}
+
+}
+
 func createTestTx(suite *AnteTestSuite, err error, feeAmount sdk.Coins) (signing.Tx, types.AccountI) {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
