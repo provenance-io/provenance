@@ -5204,11 +5204,11 @@ EventMsgFees event emitted with summary of msg fees
 
 ### MsgFee
 MsgFee is the core of what gets stored on the blockchain
-it consists of two parts
+it consists of four parts
 1. the msg type url, i.e. /cosmos.bank.v1beta1.MsgSend
 2. minimum additional fees(can be of any denom)
 3. optional recipient of fee based on `recipient_basis_points`
-4. if recipient is declared they will recieve the basis points of the fee (1-10,000)
+4. if recipient is declared they will recieve the basis points of the fee (0-10,000)
 
 
 | Field | Type | Label | Description |
@@ -5216,7 +5216,7 @@ it consists of two parts
 | `msg_type_url` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | additional_fee can pay in any Coin( basically a Denom and Amount, Amount can be zero) |
 | `recipient` | [string](#string) |  | optional recipient address, the amount is split between recipient and fee module |
-| `recipient_basis_points` | [uint32](#uint32) |  | optional split of funds between the recipient and fee module defaults to 50:50 split |
+| `recipient_basis_points` | [uint32](#uint32) |  | optional split of funds between the recipient and fee module defaults to 50:50, split recipient basis points can only be between 0 and 10,000 |
 
 
 
