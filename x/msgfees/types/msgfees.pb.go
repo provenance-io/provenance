@@ -83,6 +83,8 @@ func (m *Params) GetNhashPerUsdMil() uint64 {
 // it consists of two parts
 // 1. the msg type url, i.e. /cosmos.bank.v1beta1.MsgSend
 // 2. minimum additional fees(can be of any denom)
+// 3. optional recipient of fee based on `recipient_basis_points`
+// 4. if recipient is declared they will recieve the basis points of the fee (1-10,000)
 type MsgFee struct {
 	MsgTypeUrl string `protobuf:"bytes,1,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
 	// additional_fee can pay in any Coin( basically a Denom and Amount, Amount can be zero)
