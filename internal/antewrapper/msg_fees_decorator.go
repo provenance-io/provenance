@@ -274,7 +274,7 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 				return nil, err
 			}
 			if assessFeeCoin.IsPositive() {
-				if err := CalculateDistributions(assessFee.Recipient, assessFeeCoin, 5_000, &msgFeesDistribution); err != nil {
+				if err := CalculateDistributions(assessFee.Recipient, assessFeeCoin, msgfeestypes.AssessCustomMsgFeeBips, &msgFeesDistribution); err != nil {
 					return nil, err
 				}
 			}

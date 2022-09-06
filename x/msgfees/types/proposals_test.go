@@ -35,26 +35,50 @@ func (s *MsgFeesProposalTestSuite) TestAddMsgFeeProposalType() {
 	}{
 		{
 			"Empty type error",
-			NewAddMsgFeeProposal("title", "description", "", sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			NewAddMsgFeeProposal("title", "description", "", sdk.NewCoin("hotdog", sdk.NewInt(10)), "", 0),
 			ErrEmptyMsgType.Error(),
 		},
 		{
 			"Invalid fee amounts",
-			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(0))),
+			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(0)), "", 0),
 			ErrInvalidFee.Error(),
 		},
 		{
 			"Invalid proposal details",
-			NewAddMsgFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			NewAddMsgFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "", 0),
 			"proposal description cannot be blank: invalid proposal content",
+		},
+		{
+			"Invalid proposal recipient address",
+			NewAddMsgFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "invalid", 50),
+			"decoding bech32 failed: invalid bech32 string length 7",
+		},
+		{
+			"Invalid proposal invalid basis points for address",
+			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 10_001),
+			"recipient basis points can only be between 0 and 10,000 : 10001",
+		},
+		{
+			"Valid proposal without recipient",
+			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "", 0),
+			"",
+		},
+		{
+			"Valid proposal with recipient",
+			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 10_000),
+			"",
 		},
 	}
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
 			err := tc.proposal.ValidateBasic()
-			s.Require().NotNil(err)
-			s.Assert().Equal(tc.expectedErr, err.Error())
+			if len(tc.expectedErr) != 0 {
+				s.Require().NotNil(err, "Error should not be nil for test %s", tc.name)
+				s.Assert().Equal(tc.expectedErr, err.Error(), "Error messages do not match for test %s", tc.name)
+			} else {
+				s.Require().Nil(err, "Error should be nil for test %s", tc.name)
+			}
 		})
 	}
 }
@@ -68,25 +92,50 @@ func (s *MsgFeesProposalTestSuite) TestUpdateMsgFeeProposalType() {
 	}{
 		{
 			"Empty type error",
-			NewUpdateMsgFeeProposal("title", "description", "", sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			NewUpdateMsgFeeProposal("title", "description", "", sdk.NewCoin("hotdog", sdk.NewInt(10)), "", 0),
 			ErrEmptyMsgType.Error(),
 		},
 		{
 			"Invalid fee amounts",
-			NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(0))),
+			NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(0)), "", 0),
 			ErrInvalidFee.Error(),
 		},
 		{
 			"Invalid proposal details",
-			NewUpdateMsgFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10))),
+			NewUpdateMsgFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "", 0),
 			"proposal description cannot be blank: invalid proposal content",
+		},
+		{
+			"Invalid proposal recipient address",
+			NewUpdateMsgFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "invalid", 50),
+			"decoding bech32 failed: invalid bech32 string length 7",
+		},
+		{
+			"Invalid proposal invalid basis points for address",
+			NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 10_001),
+			"recipient basis points can only be between 0 and 10,000 : 10001",
+		},
+		{
+			"Valid proposal without recipient",
+			NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "", 0),
+			"",
+		},
+		{
+			"Valid proposal with recipient",
+			NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 10_000),
+			"",
 		},
 	}
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
 			err := tc.proposal.ValidateBasic()
-			s.Assert().Equal(tc.expectedErr, err.Error())
+			if len(tc.expectedErr) != 0 {
+				s.Require().NotNil(err, "Error should not be nil for test %s", tc.name)
+				s.Assert().Equal(tc.expectedErr, err.Error(), "Error messages do not match for test %s", tc.name)
+			} else {
+				s.Require().Nil(err, "Error should be nil for test %s", tc.name)
+			}
 		})
 	}
 

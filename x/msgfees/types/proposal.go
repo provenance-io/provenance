@@ -43,12 +43,17 @@ func NewAddMsgFeeProposal(
 	title string,
 	description string,
 	msg string,
-	additionalFee sdk.Coin) *AddMsgFeeProposal {
+	additionalFee sdk.Coin,
+	recipient string,
+	recipientBasisPoints uint32,
+) *AddMsgFeeProposal {
 	return &AddMsgFeeProposal{
-		Title:         title,
-		Description:   description,
-		MsgTypeUrl:    msg,
-		AdditionalFee: additionalFee,
+		Title:                title,
+		Description:          description,
+		MsgTypeUrl:           msg,
+		AdditionalFee:        additionalFee,
+		Recipient:            recipient,
+		RecipientBasisPoints: recipientBasisPoints,
 	}
 }
 
@@ -84,12 +89,17 @@ func NewUpdateMsgFeeProposal(
 	title string,
 	description string,
 	msg string,
-	additionalFee sdk.Coin) *UpdateMsgFeeProposal {
+	additionalFee sdk.Coin,
+	recipient string,
+	recipientBasisPoints uint32,
+) *UpdateMsgFeeProposal {
 	return &UpdateMsgFeeProposal{
-		Title:         title,
-		Description:   description,
-		MsgTypeUrl:    msg,
-		AdditionalFee: additionalFee,
+		Title:                title,
+		Description:          description,
+		MsgTypeUrl:           msg,
+		AdditionalFee:        additionalFee,
+		Recipient:            recipient,
+		RecipientBasisPoints: recipientBasisPoints,
 	}
 }
 
