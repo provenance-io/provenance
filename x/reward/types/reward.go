@@ -41,7 +41,7 @@ type RewardAction interface {
 	ActionType() string
 	Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool
 	PreEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool
-	PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool
+	PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) (bool, EvaluationResult)
 	GetBuilder() ActionBuilder
 }
 
@@ -413,10 +413,10 @@ func (ad *ActionDelegate) PreEvaluate(ctx sdk.Context, provider KeeperProvider, 
 	return true
 }
 
-func (ad *ActionDelegate) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+func (ad *ActionDelegate) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) (bool, EvaluationResult) {
 	actionCounter := state.ActionCounter[ad.ActionType()]
 	hasValidActionCount := actionCounter >= ad.GetMinimumActions() && actionCounter <= ad.GetMaximumActions()
-	return hasValidActionCount
+	return hasValidActionCount, event
 }
 
 // ============ Action Transfer Delegations ============
@@ -443,13 +443,13 @@ func (at *ActionTransfer) ActionType() string {
 	return ActionTypeTransfer
 }
 
-func (at *ActionTransfer) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
+func (at *ActionTransfer) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) bool {
 	// get the address that is performing the send
-	addressSender := event.Address
+	addressSender := evaluationResult.Address
 	if addressSender == nil {
 		return false
 	}
-	if provider.GetAccountKeeper().GetModuleAddress(authtypes.FeeCollectorName).Equals(event.Recipient) {
+	if provider.GetAccountKeeper().GetModuleAddress(authtypes.FeeCollectorName).Equals(evaluationResult.Recipient) {
 		return false
 	}
 	// check delegations if and only if mandated by the Action
@@ -471,10 +471,10 @@ func (at *ActionTransfer) PreEvaluate(ctx sdk.Context, provider KeeperProvider, 
 	return true
 }
 
-func (at *ActionTransfer) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+func (at *ActionTransfer) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) (bool, EvaluationResult) {
 	actionCounter := state.ActionCounter[at.ActionType()]
 	hasValidActionCount := actionCounter >= at.GetMinimumActions() && actionCounter <= at.GetMaximumActions()
-	return hasValidActionCount
+	return hasValidActionCount, evaluationResult
 }
 
 // ============ Action Vote  ============
@@ -501,9 +501,9 @@ func (atd *ActionVote) ActionType() string {
 	return ActionTypeVote
 }
 
-func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
+func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) bool {
 	// get the address that voted
-	addressVoting := event.Address
+	addressVoting := evaluationResult.Address
 	if !sdk.NewCoin(pioconfig.DefaultBondDenom, sdk.ZeroInt()).IsGTE(atd.MinimumDelegationAmount) {
 		// now check if it has any delegations
 		totalDelegations, found := getAllDelegations(ctx, provider, addressVoting)
@@ -522,10 +522,20 @@ func (atd *ActionVote) PreEvaluate(ctx sdk.Context, provider KeeperProvider, sta
 	return true
 }
 
-func (atd *ActionVote) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+func (atd *ActionVote) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) (bool, EvaluationResult) {
 	actionCounter := state.ActionCounter[atd.ActionType()]
 	hasValidActionCount := actionCounter >= atd.GetMinimumActions() && actionCounter <= atd.GetMaximumActions()
-	return hasValidActionCount
+	// only for action vote do Shares in EvaluationResult need to be changed.
+	// get the address that voted
+	addressVoting := evaluationResult.Address
+	valAddrStr := sdk.ValAddress(addressVoting)
+	_, found := provider.GetStakingKeeper().GetValidator(ctx, valAddrStr)
+	if found && atd.ValidatorMultiplier > 0 {
+		// shares can be negative, as per requirements
+		evaluationResult.Shares = evaluationResult.Shares * int64(atd.ValidatorMultiplier)
+	}
+
+	return hasValidActionCount, evaluationResult
 }
 
 // ============ Qualifying Action ============
