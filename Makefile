@@ -569,3 +569,15 @@ test-rosetta:
 	docker build -t rosetta-ci:latest -f client/rosetta/rosetta-ci/Dockerfile .
 	docker-compose -f client/rosetta/docker-compose.yaml --project-directory ./ up --abort-on-container-exit --exit-code-from test_rosetta --build
 .PHONY: test-rosetta
+
+##############################
+### Relayer
+##############################
+relayer-install:
+	scripts/install-relayer.sh
+
+RELAY_PATH?=local_testnet
+relayer-start: relayer-install
+	scripts/start-relayer.sh ${RELAY_PATH}
+
+.PHONY: relayer-install relayer-start
