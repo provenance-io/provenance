@@ -2,8 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -60,9 +58,9 @@ func (k Keeper) CalculateTxFees(goCtx context.Context, request *types.CalculateT
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	gasMeter, ok := txCtx.GasMeter().(*antewrapper.FeeGasMeter)
-	if !ok {
-		return nil, fmt.Errorf("unable to extract fee gas meter from transaction context")
+	gasMeter, err := antewrapper.GetFeeGasMeter(txCtx)
+	if err != nil {
+		return nil, err
 	}
 	// based on Carlton H's comment this is only for testing, has no real value in practical usage.
 	baseDenom := k.defaultFeeDenom

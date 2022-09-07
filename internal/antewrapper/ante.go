@@ -34,3 +34,12 @@ func GetFeeTx(tx sdk.Tx) (sdk.FeeTx, error) {
 	}
 	return feeTx, nil
 }
+
+// GetFeeGasMeter gets a FeeGasMeter from the provided context.
+func GetFeeGasMeter(ctx sdk.Context) (*FeeGasMeter, error) {
+	feeGasMeter, ok := ctx.GasMeter().(*FeeGasMeter)
+	if !ok {
+		return nil, sdkerrors.ErrLogic.Wrap("gas meter is not a FeeGasMeter")
+	}
+	return feeGasMeter, nil
+}
