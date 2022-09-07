@@ -49,7 +49,7 @@ func isOnlyGovMsgs(msgs []sdk.Msg) bool {
 	return true
 }
 
-func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	feeTx, err := GetFeeTx(tx)
 	if err != nil {
 		return ctx, err
