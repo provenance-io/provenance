@@ -531,8 +531,8 @@ func (atd *ActionVote) PostEvaluate(ctx sdk.Context, provider KeeperProvider, st
 	valAddrStr := sdk.ValAddress(addressVoting)
 	_, found := provider.GetStakingKeeper().GetValidator(ctx, valAddrStr)
 	if found && atd.ValidatorMultiplier > 0 {
-		// shares can be negative, as per requirements
-		evaluationResult.Shares = evaluationResult.Shares * int64(atd.ValidatorMultiplier)
+		// shares can be negative, as per requirements, and this may lead to negative shares with multiplier.
+		evaluationResult.Shares *= int64(atd.ValidatorMultiplier)
 	}
 
 	return hasValidActionCount, evaluationResult

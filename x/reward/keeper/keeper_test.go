@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"testing"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -59,10 +58,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.RewardKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
-}
-
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
 }
 
 // Test no reward programs. Nothing should happen

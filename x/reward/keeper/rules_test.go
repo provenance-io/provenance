@@ -312,8 +312,8 @@ func (m MockAction) PreEvaluate(ctx sdk.Context, provider types.KeeperProvider, 
 	// Any action specific thing that we need to do before evaluation
 }
 
-func (m MockAction) PostEvaluate(ctx sdk.Context, provider types.KeeperProvider, state types.RewardAccountState) bool {
-	return true
+func (m MockAction) PostEvaluate(ctx sdk.Context, provider types.KeeperProvider, state types.RewardAccountState, evaluationResult types.EvaluationResult) (bool, types.EvaluationResult) {
+	return true, evaluationResult
 	// Any action specific thing that we need to do after evaluation
 }
 
@@ -391,19 +391,19 @@ func (m MockAccountKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
 }
 
 func (m MockStakingKeeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []stakingtypes.Delegation {
-	if delegator.String() != "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h" {
+	if delegator.String() == "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h" || delegator.String() == getOperatorBech32AddressForTestValidator().String() {
 		return []stakingtypes.Delegation{
-			{},
+			{
+				DelegatorAddress: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+				ValidatorAddress: "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun",
+				Shares:           sdk.NewDec(3),
+			},
 		}
 	}
-
 	return []stakingtypes.Delegation{
-		{
-			DelegatorAddress: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			ValidatorAddress: "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun",
-			Shares:           sdk.NewDec(3),
-		},
+		{},
 	}
+
 }
 
 func (m MockStakingKeeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation stakingtypes.Delegation, found bool) {
@@ -465,7 +465,7 @@ func (suite *KeeperTestSuite) createTestValidators(amount int) {
 }
 
 func getTestValidators(start, end int) []stakingtypes.Validator {
-	validators := []stakingtypes.Validator{}
+	var validators []stakingtypes.Validator
 	for i := start; i <= end; i++ {
 		validators = append(validators, testValidators[i])
 	}
@@ -1112,8 +1112,7 @@ func SetupEventHistoryWithTransfers(suite *KeeperTestSuite) {
 }
 
 // with vote
-func SetupEventHistoryWithVotes(suite *KeeperTestSuite) {
-	sender := "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
+func SetupEventHistoryWithVotes(suite *KeeperTestSuite, sender string) {
 	attributes1 := []sdk.Attribute{
 		sdk.NewAttribute("action", "/cosmos.gov.v1beta1.MsgVote"),
 	}
@@ -1164,7 +1163,7 @@ func (suite *KeeperTestSuite) TestFindQualifyingActionsWithTransfers() {
 // vote
 func (suite *KeeperTestSuite) TestFindQualifyingActionsWithVotes() {
 	suite.SetupTest()
-	SetupEventHistoryWithVotes(suite)
+	SetupEventHistoryWithVotes(suite, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
 	criteria := types.NewEventCriteria([]types.ABCIEvent{
 		{
 			Type:       sdk.EventTypeMessage,
@@ -1184,7 +1183,7 @@ func (suite *KeeperTestSuite) TestFindQualifyingActionsWithVotes() {
 
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingAction() {
 	suite.SetupTest()
-	SetupEventHistoryWithVotes(suite)
+	SetupEventHistoryWithVotes(suite, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
 	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 3)
 
@@ -1217,9 +1216,96 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingAc
 	suite.Assert().NoError(err, "must not error")
 	suite.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
 }
+
+func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingActionMultiplierPresent() {
+	suite.SetupTest()
+	SetupEventHistoryWithVotes(suite, getOperatorBech32AddressForTestValidator().String())
+	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+	minDelegation := sdk.NewInt64Coin("nhash", 0)
+
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdk.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
+		time.Now(),
+		5,
+		5,
+		0,
+		0,
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Vote{
+					Vote: &types.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          1,
+						MinimumDelegationAmount: minDelegation,
+						ValidatorMultiplier:     10,
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.CurrentClaimPeriod = 1
+	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
+	suite.Assert().NoError(err, "must not error")
+	suite.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
+	suite.Assert().Equal(int64(10), qualifyingActions[0].Shares, "shares should be 10")
+}
+
+func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingActionMultiplierPresentAndDelegationRequired() {
+	suite.SetupTest()
+	SetupEventHistoryWithVotes(suite, getOperatorBech32AddressForTestValidator().String())
+	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+	minDelegation := sdk.NewInt64Coin("nhash", 3)
+
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdk.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
+		time.Now(),
+		5,
+		5,
+		0,
+		0,
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Vote{
+					Vote: &types.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          1,
+						MinimumDelegationAmount: minDelegation,
+						ValidatorMultiplier:     10,
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.CurrentClaimPeriod = 1
+	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
+	suite.Assert().NoError(err, "must not error")
+	suite.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
+	suite.Assert().Equal(int64(10), qualifyingActions[0].Shares, "shares should be 10")
+}
+
+func getOperatorBech32AddressForTestValidator() sdk.AccAddress {
+	validatorAddress, _ := sdk.ValAddressFromBech32(getTestValidators(0, 1)[0].OperatorAddress)
+	bz, err := sdk.GetFromBech32(validatorAddress.String(), sdk.GetConfig().GetBech32ValidatorAddrPrefix())
+	if err != nil {
+		panic(err)
+	}
+	accountAddr := sdk.AccAddress(bz)
+	return accountAddr
+}
+
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingActionDelegationNotMet() {
 	suite.SetupTest()
-	SetupEventHistoryWithVotes(suite)
+	SetupEventHistoryWithVotes(suite, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
 	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 4)
 
@@ -1341,7 +1427,7 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingDelegateQual
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1Voting1DelegateQualifyingAction() {
 	suite.SetupTest()
 	SetupEventHistoryWithDelegates(suite)
-	SetupEventHistoryWithVotes(suite)
+	SetupEventHistoryWithVotes(suite, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
 	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 0)
 	maxDelegation := sdk.NewInt64Coin("nhash", 10)
