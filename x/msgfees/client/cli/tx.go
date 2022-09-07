@@ -75,7 +75,7 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 				return err
 			}
 
-			bips, err := cmd.Flags().GetUint32(FlagBips)
+			bips, err := cmd.Flags().GetString(FlagBips)
 			if err != nil {
 				return err
 			}
@@ -152,7 +152,7 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 	cmd.Flags().String(FlagMsgType, "", "proto type url for msg type")
 	cmd.Flags().String(FlagMinFee, "", "additional fee for msg based fee")
 	cmd.Flags().String(FlagRecipient, "", "optional recipient address for receiving partial fee based on basis points")
-	cmd.Flags().Uint32(FlagBips, types.DefaultMsgFeeBips, "basis fee points to distribute to recipient")
+	cmd.Flags().String(FlagBips, "", "basis fee points to distribute to recipient")
 	return cmd
 }
 

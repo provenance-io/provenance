@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -45,7 +46,7 @@ func NewAddMsgFeeProposal(
 	msg string,
 	additionalFee sdk.Coin,
 	recipient string,
-	recipientBasisPoints uint32,
+	recipientBasisPoints string,
 ) *AddMsgFeeProposal {
 	return &AddMsgFeeProposal{
 		Title:                title,
@@ -78,8 +79,17 @@ func (p AddMsgFeeProposal) ValidateBasic() error {
 			return err
 		}
 	}
-	if p.RecipientBasisPoints > 10_000 {
-		return fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", p.RecipientBasisPoints)
+
+	if len(p.RecipientBasisPoints) > 0 && len(p.Recipient) > 0 {
+		bips, err := strconv.ParseUint(p.RecipientBasisPoints, 0, 64)
+		if err != nil {
+			return err
+		}
+		if bips > 10_000 {
+			return fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", p.RecipientBasisPoints)
+		}
+	} else if len(p.RecipientBasisPoints) > 0 && len(p.Recipient) == 0 {
+		return fmt.Errorf("")
 	}
 
 	return govtypes.ValidateAbstract(&p)
@@ -91,7 +101,7 @@ func NewUpdateMsgFeeProposal(
 	msg string,
 	additionalFee sdk.Coin,
 	recipient string,
-	recipientBasisPoints uint32,
+	recipientBasisPoints string,
 ) *UpdateMsgFeeProposal {
 	return &UpdateMsgFeeProposal{
 		Title:                title,
@@ -122,8 +132,14 @@ func (p UpdateMsgFeeProposal) ValidateBasic() error {
 			return err
 		}
 	}
-	if p.RecipientBasisPoints > 10_000 {
-		return fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", p.RecipientBasisPoints)
+	if len(p.RecipientBasisPoints) > 0 {
+		bips, err := strconv.ParseUint(p.RecipientBasisPoints, 0, 64)
+		if err != nil {
+			return err
+		}
+		if bips > 10_000 {
+			return fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", p.RecipientBasisPoints)
+		}
 	}
 
 	return govtypes.ValidateAbstract(&p)

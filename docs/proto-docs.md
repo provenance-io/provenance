@@ -5216,7 +5216,7 @@ it consists of four parts
 | `msg_type_url` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | additional_fee can pay in any Coin( basically a Denom and Amount, Amount can be zero) |
 | `recipient` | [string](#string) |  | optional recipient address, the amount is split between recipient and fee module |
-| `recipient_basis_points` | [uint32](#uint32) |  | optional split of funds between the recipient and fee module defaults to 50:50, split recipient basis points can only be between 0 and 10,000 |
+| `recipient_basis_points` | [uint32](#uint32) |  | optional split of funds between the recipient and fee module defaults to 50:50, |
 
 
 
@@ -5300,7 +5300,7 @@ AddMsgFeeProposal defines a governance proposal to add additional msg based fee
 | `msg_type_url` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `recipient` | [string](#string) |  |  |
-| `recipient_basis_points` | [uint32](#uint32) |  |  |
+| `recipient_basis_points` | [string](#string) |  |  |
 
 
 
@@ -5337,7 +5337,7 @@ UpdateMsgFeeProposal defines a governance proposal to update a current msg based
 | `msg_type_url` | [string](#string) |  |  |
 | `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `recipient` | [string](#string) |  |  |
-| `recipient_basis_points` | [uint32](#uint32) |  |  |
+| `recipient_basis_points` | [string](#string) |  |  |
 
 
 

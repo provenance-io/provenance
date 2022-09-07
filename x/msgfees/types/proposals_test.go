@@ -35,37 +35,47 @@ func (s *MsgFeesProposalTestSuite) TestAddMsgFeeProposalType() {
 	}{
 		{
 			"Empty type error",
-			NewAddMsgFeeProposal("title", "description", "", sdk.NewCoin("hotdog", sdk.NewInt(10)), "", 0),
+			NewAddMsgFeeProposal("title", "description", "", sdk.NewCoin("hotdog", sdk.NewInt(10)), "", ""),
 			ErrEmptyMsgType.Error(),
 		},
 		{
 			"Invalid fee amounts",
-			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(0)), "", 0),
+			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(0)), "", ""),
 			ErrInvalidFee.Error(),
 		},
 		{
 			"Invalid proposal details",
-			NewAddMsgFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "", 0),
+			NewAddMsgFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "", ""),
 			"proposal description cannot be blank: invalid proposal content",
 		},
 		{
 			"Invalid proposal recipient address",
-			NewAddMsgFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "invalid", 50),
+			NewAddMsgFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "invalid", ""),
 			"decoding bech32 failed: invalid bech32 string length 7",
 		},
 		{
 			"Invalid proposal invalid basis points for address",
-			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 10_001),
+			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10_001"),
 			"recipient basis points can only be between 0 and 10,000 : 10001",
 		},
 		{
 			"Valid proposal without recipient",
-			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "", 0),
+			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "", ""),
 			"",
 		},
 		{
 			"Valid proposal with recipient",
-			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 10_000),
+			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10_000"),
+			"",
+		},
+		{
+			"Valid proposal with recipient without defined bips",
+			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", ""),
+			"",
+		},
+		{
+			"Valid proposal with recipient with defined bips",
+			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10"),
 			"",
 		},
 	}
@@ -92,37 +102,42 @@ func (s *MsgFeesProposalTestSuite) TestUpdateMsgFeeProposalType() {
 	}{
 		{
 			"Empty type error",
-			NewUpdateMsgFeeProposal("title", "description", "", sdk.NewCoin("hotdog", sdk.NewInt(10)), "", 0),
+			NewUpdateMsgFeeProposal("title", "description", "", sdk.NewCoin("hotdog", sdk.NewInt(10)), "", ""),
 			ErrEmptyMsgType.Error(),
 		},
 		{
 			"Invalid fee amounts",
-			NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(0)), "", 0),
+			NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(0)), "", ""),
 			ErrInvalidFee.Error(),
 		},
 		{
 			"Invalid proposal details",
-			NewUpdateMsgFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "", 0),
+			NewUpdateMsgFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "", ""),
 			"proposal description cannot be blank: invalid proposal content",
 		},
 		{
 			"Invalid proposal recipient address",
-			NewUpdateMsgFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "invalid", 50),
+			NewUpdateMsgFeeProposal("title", "", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "invalid", "50"),
 			"decoding bech32 failed: invalid bech32 string length 7",
 		},
 		{
 			"Invalid proposal invalid basis points for address",
-			NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 10_001),
+			NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10_001"),
 			"recipient basis points can only be between 0 and 10,000 : 10001",
 		},
 		{
 			"Valid proposal without recipient",
-			NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "", 0),
+			NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "", ""),
 			"",
 		},
 		{
-			"Valid proposal with recipient",
-			NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 10_000),
+			"Valid proposal with recipient without defined bips",
+			NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", ""),
+			"",
+		},
+		{
+			"Valid proposal with recipient with defined bips",
+			NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10"),
 			"",
 		},
 	}
