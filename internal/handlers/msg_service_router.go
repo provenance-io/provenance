@@ -3,9 +3,11 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/proto"
+	"golang.org/x/exp/constraints"
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -15,7 +17,6 @@ import (
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // PioMsgServiceRouter routes fully-qualified Msg service methods to their handler with additional fee processing of msgs.
@@ -80,7 +81,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 				// We panic here because there is no other alternative and the app cannot be initialized correctly
 				// this should only happen if there is a problem with code generation in which case the app won't
 				// work correctly anyway.
-				panic(fmt.Errorf("can't register request type %T for service method %s", i, fqMethod))
+				panic(fmt.Errorf("unable to register service method %s: %T does not implement sdk.Msg", fqMethod, i))
 			}
 
 			requestTypeName = sdk.MsgTypeURL(msg)
@@ -120,71 +121,11 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 			)
 		}
 
-		// provenance specific modification to msg service router that handles additional fees and assessed fee msgs
 		msr.routes[requestTypeName] = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error) {
-			msgTypeURL := sdk.MsgTypeURL(req)
-
-			feeGasMeter, ok := ctx.GasMeter().(*antewrapper.FeeGasMeter)
-			if !ok {
-				panic("GasMeter is not of type FeeGasMeter")
-			}
-
-			tx, err := msr.decoder(ctx.TxBytes())
-			if err != nil {
-				panic(fmt.Errorf("error msg handling while getting txBytes: %w", err))
-			}
-
-			feeTx, ok := tx.(sdk.FeeTx)
-			if feeTx == nil || !ok {
-				panic("only Fee Tx are supported on provenance.")
-			}
-
-			fee, err := msr.msgFeesKeeper.GetMsgFee(ctx, msgTypeURL)
+			// provenance specific modification to msg service router that handles x/msgfee distribution
+			err := msr.consumeMsgFees(ctx, req)
 			if err != nil {
 				return nil, err
-			}
-			isAssessMsgFee := msgTypeURL == sdk.MsgTypeURL(&msgfeestypes.MsgAssessCustomMsgFeeRequest{})
-
-			if fee != nil && fee.AdditionalFee.IsPositive() {
-				ctx.Logger().Debug(fmt.Sprintf("Tx Msg %v has an additional fee of %v ", msgTypeURL, fee.AdditionalFee))
-				if !feeGasMeter.IsSimulate() && !isAssessMsgFee {
-					err = antewrapper.EnsureSufficientFees(runtimeGasForMsg(ctx), feeTx.GetFee(), feeGasMeter.FeeConsumed().Add(fee.AdditionalFee),
-						msr.msgFeesKeeper.GetFloorGasPrice(ctx))
-					if err != nil {
-						return nil, err
-					}
-				}
-
-				feeGasMeter.ConsumeFee(fee.AdditionalFee, msgTypeURL, "")
-			}
-			if isAssessMsgFee {
-				var assessCustomFee *msgfeestypes.MsgAssessCustomMsgFeeRequest
-				assessCustomFee, ok = req.(*msgfeestypes.MsgAssessCustomMsgFeeRequest)
-				if !ok {
-					panic("could not convert request msg to MsgAssessCustomMsgFeeRequest")
-				}
-				ctx.Logger().Debug(fmt.Sprintf("NOTICE: Tx Msg is an assess custom msg fee of %v ", assessCustomFee))
-				var msgFeeCoin sdk.Coin
-				msgFeeCoin, err = msr.msgFeesKeeper.ConvertDenomToHash(ctx, assessCustomFee.Amount)
-				if err != nil {
-					return nil, err
-				}
-				if !feeGasMeter.IsSimulate() {
-					err = antewrapper.EnsureSufficientFees(runtimeGasForMsg(ctx), feeTx.GetFee(), feeGasMeter.FeeConsumed().Add(msgFeeCoin),
-						msr.msgFeesKeeper.GetFloorGasPrice(ctx))
-					if err != nil {
-						return nil, err
-					}
-				}
-				if msgFeeCoin.IsPositive() {
-					if len(assessCustomFee.Recipient) != 0 {
-						recipientCoin, feePayoutCoin := msgfeestypes.SplitAmount(msgFeeCoin)
-						feeGasMeter.ConsumeFee(recipientCoin, msgTypeURL, assessCustomFee.Recipient)
-						feeGasMeter.ConsumeFee(feePayoutCoin, msgTypeURL, "")
-					} else {
-						feeGasMeter.ConsumeFee(assessCustomFee.Amount, msgTypeURL, "")
-					}
-				}
 			}
 
 			// original sdk implementation of msg service router
@@ -202,7 +143,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 
 			resMsg, ok := res.(proto.Message)
 			if !ok {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "Expecting proto.Message, got %T", resMsg)
+				return nil, sdkerrors.ErrInvalidType.Wrapf("Expecting proto.Message, got %T", resMsg)
 			}
 
 			return sdk.WrapServiceResult(ctx, resMsg, err)
@@ -220,6 +161,57 @@ func noopInterceptor(_ context.Context, _ interface{}, _ *grpc.UnaryServerInfo, 
 	return nil, nil
 }
 
-func runtimeGasForMsg(ctx sdk.Context) uint64 {
-	return ctx.GasMeter().Limit()
+// consumeMsgFees consumes any message based fees for the provided req.
+func (msr *PioMsgServiceRouter) consumeMsgFees(ctx sdk.Context, req sdk.Msg) error {
+	feeGasMeter, err := antewrapper.GetFeeGasMeter(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	tx, err := msr.decoder(ctx.TxBytes())
+	if err != nil {
+		panic(fmt.Errorf("error decoding txBytes: %w", err))
+	}
+
+	feeTx, err := antewrapper.GetFeeTx(tx)
+	if err != nil {
+		panic(err)
+	}
+
+	feeDist, err := msr.msgFeesKeeper.CalculateAdditionalFeesToBePaid(ctx, req)
+	if err != nil {
+		return err
+	}
+
+	if !feeDist.TotalAdditionalFees.IsZero() {
+		if !feeGasMeter.IsSimulate() {
+			err = antewrapper.EnsureSufficientFloorAndMsgFees(ctx,
+				feeTx.GetFee(), msr.msgFeesKeeper.GetFloorGasPrice(ctx),
+				ctx.GasMeter().Limit(), feeGasMeter.FeeConsumed().Add(feeDist.TotalAdditionalFees...))
+			if err != nil {
+				return err
+			}
+		}
+
+		msgTypeURL := sdk.MsgTypeURL(req)
+		feeGasMeter.ConsumeFee(feeDist.AdditionalModuleFees, msgTypeURL, "")
+		for _, recipient := range sortedKeys(feeDist.RecipientDistributions) {
+			coins := feeDist.RecipientDistributions[recipient]
+			feeGasMeter.ConsumeFee(coins, msgTypeURL, recipient)
+		}
+	}
+
+	return nil
+}
+
+// sortedKeys gets the keys of a map, sorts them and returns them as a slice.
+func sortedKeys[K constraints.Ordered, V any](m map[K]V) []K {
+	keys := make([]K, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] < keys[j]
+	})
+	return keys
 }
