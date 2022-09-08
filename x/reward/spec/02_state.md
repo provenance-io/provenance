@@ -4,8 +4,9 @@ order: 2
 
 # State
 
+The rewards module manages the state of every reward program and each of its participants.
+
 <!-- TOC -->
-- [State](#state)
   - [Reward Program](#reward-program)
   - [Claim Period Reward Distribution](#claim-period-reward-distribution)
   - [Reward Account State](#reward-account-state)
