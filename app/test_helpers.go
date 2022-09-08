@@ -219,7 +219,7 @@ func SetupQuerier(t *testing.T) *App {
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
 // of one consensus engine unit in the default token of the app from first genesis
 // account. A Nop logger is set in App.
-func SetupWithGenesisValSet(t *testing.T, chainId string, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
+func SetupWithGenesisValSet(t *testing.T, chainID string, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
 	t.Helper()
 
 	app, genesisState := setup(t, true, 5)
@@ -234,7 +234,7 @@ func SetupWithGenesisValSet(t *testing.T, chainId string, valSet *tmtypes.Valida
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
-			ChainId:         chainId,
+			ChainId:         chainID,
 		},
 	)
 
@@ -245,7 +245,7 @@ func SetupWithGenesisValSet(t *testing.T, chainId string, valSet *tmtypes.Valida
 		AppHash:            app.LastCommitID().Hash,
 		ValidatorsHash:     valSet.Hash(),
 		NextValidatorsHash: valSet.Hash(),
-		ChainID:            chainId,
+		ChainID:            chainID,
 	}})
 
 	return app
@@ -253,7 +253,7 @@ func SetupWithGenesisValSet(t *testing.T, chainId string, valSet *tmtypes.Valida
 
 // SetupWithGenesisAccounts initializes a new App with the provided genesis
 // accounts and possible balances.
-func SetupWithGenesisAccounts(t *testing.T, chainId string, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
+func SetupWithGenesisAccounts(t *testing.T, chainID string, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
 	t.Helper()
 
 	privVal := mock.NewPV()
@@ -264,7 +264,7 @@ func SetupWithGenesisAccounts(t *testing.T, chainId string, genAccs []authtypes.
 	validator := tmtypes.NewValidator(pubKey, 1)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
-	return SetupWithGenesisValSet(t, chainId, valSet, genAccs, balances...)
+	return SetupWithGenesisValSet(t, chainID, valSet, genAccs, balances...)
 }
 
 // GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts

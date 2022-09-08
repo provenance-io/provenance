@@ -20,7 +20,7 @@ func NewTxGasLimitDecorator() TxGasLimitDecorator {
 	return TxGasLimitDecorator{}
 }
 
-var govMsgUrlPrefixes = []string{
+var govMsgURLPrefixes = []string{
 	"/cosmos.gov.v1beta1.",
 	"/cosmos.gov.v1.",
 }
@@ -28,7 +28,7 @@ var govMsgUrlPrefixes = []string{
 // isGovMessage returns true if the provided message is a governance module message.
 func isGovMessage(msg sdk.Msg) bool {
 	url := sdk.MsgTypeURL(msg)
-	for _, pre := range govMsgUrlPrefixes {
+	for _, pre := range govMsgURLPrefixes {
 		if strings.HasPrefix(url, pre) {
 			return true
 		}

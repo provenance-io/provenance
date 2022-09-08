@@ -17,8 +17,8 @@ import (
 // If the first signer does not have the funds to pay for the fees, return with InsufficientFunds error
 // Call next AnteHandler if fees successfully deducted.
 // CONTRACT: In order to use ProvenanceDeductFeeDecorator:
-//	1. Tx must implement FeeTx interface.
-// 	2. GasMeter must be a FeeGasMeter.
+//  1. Tx must implement FeeTx interface.
+//  2. GasMeter must be a FeeGasMeter.
 type ProvenanceDeductFeeDecorator struct {
 	ak             authante.AccountKeeper
 	bankKeeper     bankkeeper.Keeper
@@ -63,9 +63,9 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 }
 
 // checkDeductBaseFee does several things:
-//	1. Checks for a feegrant and uses the base fees on it if it exists.
+//  1. Checks for a feegrant and uses the base fees on it if it exists.
 //  2. Makes sure the payer has enough funds to cover the base fee + additional fees.
-//	3. Deducts the base fee from the payer.
+//  3. Deducts the base fee from the payer.
 //  4. Emits Tx events: 1. with the full fee and payer, 2. with base fee.
 func (dfd ProvenanceDeductFeeDecorator) checkDeductBaseFee(ctx sdk.Context, feeTx sdk.FeeTx, simulate bool) error {
 	if addr := dfd.ak.GetModuleAddress(types.FeeCollectorName); addr == nil {

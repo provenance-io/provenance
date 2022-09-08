@@ -71,7 +71,6 @@ func (mfd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 		if mpErr != nil {
 			return ctx, sdkerrors.ErrInsufficientFee.Wrapf(mpErr.Error())
 		}
-
 	}
 
 	return next(ctx, tx, simulate)
