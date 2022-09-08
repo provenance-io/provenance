@@ -47,7 +47,7 @@ func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddMsgFe
 func DetermineBips(recipient string, recipientBasisPoints string) (uint32, error) {
 	var bips uint32
 	if len(recipientBasisPoints) > 0 && len(recipient) > 0 {
-		bips64, err := strconv.ParseUint(recipientBasisPoints, 0, 64)
+		bips64, err := strconv.ParseUint(recipientBasisPoints, 10, 32)
 		if err != nil {
 			return bips, err
 		}
