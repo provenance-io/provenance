@@ -4,13 +4,22 @@ order: 3
 
 # State Transitions
 
-This document describes the state transition operations pertaining to:
-
-1. [Reward Programs](./03_state_transitions.md#reward-programs)
-2. [Reward Claims](./03_state_transitions.md#reward-claims)
-
-<!-- TOC 2 2 -->
+This document describes the state transition operations involved in the rewards module.
  
+<!-- TOC -->
+  - [Reward Programs](#reward-programs)
+    - [Pending ](#pending)
+    - [Started ](#started)
+    - [Finished ](#finished)
+    - [Expired](#expired)
+  - [Reward Claims](#reward-claims)
+    - [Unclaimable](#unclaimable)
+    - [Claimable](#claimable)
+    - [Claimed](#claimed)
+    - [Expired](#expired)
+
+
+
 ## Reward Programs
 State transition for Reward Programs happen on `BeginBlock` and make use of the `BlockTime` attribute.
 
