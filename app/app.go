@@ -88,6 +88,9 @@ import (
 
 	// ICA
 	ica "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts"
+	icacontroller "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/types"
 	icahost "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/types"
@@ -138,6 +141,10 @@ import (
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
+	intertx "github.com/provenance-io/provenance/x/inter-tx"
+	intertxkeeper "github.com/provenance-io/provenance/x/inter-tx/keeper"
+	intertxtypes "github.com/provenance-io/provenance/x/inter-tx/types"
 )
 
 const (
@@ -192,6 +199,7 @@ var (
 		ibc.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		ica.AppModuleBasic{},
+		intertx.AppModuleBasic{},
 
 		marker.AppModuleBasic{},
 		attribute.AppModuleBasic{},
@@ -269,9 +277,11 @@ type App struct {
 
 	MsgFeesKeeper msgfeeskeeper.Keeper
 
-	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
-	ICAHostKeeper  icahostkeeper.Keeper
-	TransferKeeper ibctransferkeeper.Keeper
+	IBCKeeper           *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
+	ICAHostKeeper       icahostkeeper.Keeper
+	ICAControllerKeeper icacontrollerkeeper.Keeper
+	TransferKeeper      ibctransferkeeper.Keeper
+	InterTxKeeper       intertxkeeper.Keeper
 
 	MarkerKeeper    markerkeeper.Keeper
 	MetadataKeeper  metadatakeeper.Keeper
@@ -280,9 +290,11 @@ type App struct {
 	WasmKeeper      wasm.Keeper
 
 	// make scoped keepers public for test purposes
-	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
-	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
-	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
+	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
+	ScopedTransferKeeper      capabilitykeeper.ScopedKeeper
+	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
+	ScopedICAControllerKeeper capabilitykeeper.ScopedKeeper
+	ScopedInterTxKeeper       capabilitykeeper.ScopedKeeper
 
 	// TODO: Required for v1.13.x: Add keepers for new modules and wire them up. https://github.com/provenance-io/provenance/issues/1007
 
@@ -338,6 +350,7 @@ func New(
 		ibchost.StoreKey,
 		ibctransfertypes.StoreKey,
 		icahosttypes.StoreKey,
+		intertxtypes.StoreKey,
 
 		metadatatypes.StoreKey,
 		markertypes.StoreKey,
@@ -375,7 +388,9 @@ func New(
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
+	scopedICAControllerKeeper := app.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
+	scopedInterTxKeeper := app.CapabilityKeeper.ScopeToModule(intertxtypes.ModuleName)
 
 	// capability keeper must be sealed after scope to module registrations are completed.
 	app.CapabilityKeeper.Seal()
@@ -460,13 +475,25 @@ func New(
 	icaMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
 		return pioMsgFeesRouter.Handler(msg)
 	})
+	app.ICAControllerKeeper = icacontrollerkeeper.NewKeeper(
+		appCodec, keys[icacontrollertypes.StoreKey], app.GetSubspace(icacontrollertypes.SubModuleName),
+		app.IBCKeeper.ChannelKeeper, // may be replaced with middleware such as ics29 fee
+		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
+		scopedICAControllerKeeper, icaMessageRouter,
+	)
 	app.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec, keys[icahosttypes.StoreKey], app.GetSubspace(icahosttypes.SubModuleName),
 		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
 		app.AccountKeeper, scopedICAHostKeeper, icaMessageRouter,
 	)
-	icaModule := ica.NewAppModule(nil, &app.ICAHostKeeper)
+	icaModule := ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
+
+	app.InterTxKeeper = intertxkeeper.NewKeeper(appCodec, keys[intertxtypes.StoreKey], app.ICAControllerKeeper, scopedInterTxKeeper)
+	interTxModule := intertx.NewAppModule(appCodec, app.InterTxKeeper)
+	interTxIBCModule := intertx.NewIBCModule(app.InterTxKeeper)
+
+	icaControllerIBCModule := icacontroller.NewIBCMiddleware(interTxIBCModule, app.ICAControllerKeeper)
 
 	// Init CosmWasm module
 	wasmDir := filepath.Join(homePath, "data", "wasm")
@@ -546,6 +573,8 @@ func New(
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule).
 		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper)).
+		AddRoute(intertxtypes.ModuleName, icaControllerIBCModule).
+		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
@@ -598,6 +627,7 @@ func New(
 		ibc.NewAppModule(app.IBCKeeper),
 		transferModule,
 		icaModule,
+		interTxModule,
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -615,6 +645,7 @@ func New(
 		ibchost.ModuleName,
 		markertypes.ModuleName,
 		icatypes.ModuleName,
+		intertxtypes.ModuleName,
 
 		// no-ops
 		authtypes.ModuleName,
@@ -640,6 +671,7 @@ func New(
 		stakingtypes.ModuleName,
 		authtypes.ModuleName,
 		icatypes.ModuleName,
+		intertxtypes.ModuleName,
 
 		// no-ops
 		vestingtypes.ModuleName,
@@ -693,6 +725,7 @@ func New(
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
+		intertxtypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
 
@@ -722,6 +755,7 @@ func New(
 		vestingtypes.ModuleName,
 
 		icatypes.ModuleName,
+		intertxtypes.ModuleName,
 		wasm.ModuleName,
 
 		attributetypes.ModuleName,
@@ -838,6 +872,9 @@ func New(
 
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
+	app.ScopedInterTxKeeper = scopedInterTxKeeper
+	app.ScopedICAControllerKeeper = scopedICAControllerKeeper
+	app.ScopedICAHostKeeper = scopedICAHostKeeper
 
 	return app
 }
@@ -1005,6 +1042,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
+	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
 
 	return paramsKeeper

@@ -41,6 +41,20 @@
   
     - [Msg](#provenance.attribute.v1.Msg)
   
+- [provenance/intertx/query.proto](#provenance/intertx/query.proto)
+    - [QueryInterchainAccountRequest](#intertx.QueryInterchainAccountRequest)
+    - [QueryInterchainAccountResponse](#intertx.QueryInterchainAccountResponse)
+  
+    - [Query](#intertx.Query)
+  
+- [provenance/intertx/tx.proto](#provenance/intertx/tx.proto)
+    - [MsgRegisterAccount](#intertx.MsgRegisterAccount)
+    - [MsgRegisterAccountResponse](#intertx.MsgRegisterAccountResponse)
+    - [MsgSubmitTx](#intertx.MsgSubmitTx)
+    - [MsgSubmitTxResponse](#intertx.MsgSubmitTxResponse)
+  
+    - [Msg](#intertx.Msg)
+  
 - [provenance/marker/v1/accessgrant.proto](#provenance/marker/v1/accessgrant.proto)
     - [AccessGrant](#provenance.marker.v1.AccessGrant)
   
@@ -867,6 +881,144 @@ Msg defines the attribute module Msg service.
 | `UpdateAttribute` | [MsgUpdateAttributeRequest](#provenance.attribute.v1.MsgUpdateAttributeRequest) | [MsgUpdateAttributeResponse](#provenance.attribute.v1.MsgUpdateAttributeResponse) | UpdateAttribute defines a method to verify a particular invariance. | |
 | `DeleteAttribute` | [MsgDeleteAttributeRequest](#provenance.attribute.v1.MsgDeleteAttributeRequest) | [MsgDeleteAttributeResponse](#provenance.attribute.v1.MsgDeleteAttributeResponse) | DeleteAttribute defines a method to verify a particular invariance. | |
 | `DeleteDistinctAttribute` | [MsgDeleteDistinctAttributeRequest](#provenance.attribute.v1.MsgDeleteDistinctAttributeRequest) | [MsgDeleteDistinctAttributeResponse](#provenance.attribute.v1.MsgDeleteDistinctAttributeResponse) | DeleteDistinctAttribute defines a method to verify a particular invariance. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/intertx/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/intertx/query.proto
+
+
+
+<a name="intertx.QueryInterchainAccountRequest"></a>
+
+### QueryInterchainAccountRequest
+QueryInterchainAccountRequest is the request type for the Query/InterchainAccountAddress RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `owner` | [string](#string) |  |  |
+| `connection_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="intertx.QueryInterchainAccountResponse"></a>
+
+### QueryInterchainAccountResponse
+QueryInterchainAccountResponse the response type for the Query/InterchainAccountAddress RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `interchain_account_address` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="intertx.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `InterchainAccount` | [QueryInterchainAccountRequest](#intertx.QueryInterchainAccountRequest) | [QueryInterchainAccountResponse](#intertx.QueryInterchainAccountResponse) | QueryInterchainAccount returns the interchain account for given owner address on a given connection pair | GET|/inter-tx/interchain_account/owner/{owner}/connection/{connection_id}|
+
+ <!-- end services -->
+
+
+
+<a name="provenance/intertx/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/intertx/tx.proto
+
+
+
+<a name="intertx.MsgRegisterAccount"></a>
+
+### MsgRegisterAccount
+MsgRegisterAccount defines the payload for Msg/RegisterAccount
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `owner` | [string](#string) |  |  |
+| `connection_id` | [string](#string) |  |  |
+| `version` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="intertx.MsgRegisterAccountResponse"></a>
+
+### MsgRegisterAccountResponse
+MsgRegisterAccountResponse defines the response for Msg/RegisterAccount
+
+
+
+
+
+
+<a name="intertx.MsgSubmitTx"></a>
+
+### MsgSubmitTx
+MsgSubmitTx defines the payload for Msg/SubmitTx
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `owner` | [string](#string) |  |  |
+| `connection_id` | [string](#string) |  |  |
+| `msg` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+
+
+
+
+
+
+<a name="intertx.MsgSubmitTxResponse"></a>
+
+### MsgSubmitTxResponse
+MsgSubmitTxResponse defines the response for Msg/SubmitTx
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="intertx.Msg"></a>
+
+### Msg
+Msg defines the intertx Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `RegisterAccount` | [MsgRegisterAccount](#intertx.MsgRegisterAccount) | [MsgRegisterAccountResponse](#intertx.MsgRegisterAccountResponse) | Register defines a rpc handler for MsgRegisterAccount | |
+| `SubmitTx` | [MsgSubmitTx](#intertx.MsgSubmitTx) | [MsgSubmitTxResponse](#intertx.MsgSubmitTxResponse) | SubmitTx defines a rpc handler for MsgSubmitTx | |
 
  <!-- end services -->
 

@@ -202,6 +202,29 @@ run-config: check-built
 run: check-built run-config;
 	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
 
+run2-config: check-built
+	@if [ ! -d "$(BUILDDIR)/run2/provenanced/config" ]; then \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced init --chain-id=testing2 testing2 ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced keys add validator --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-root-name validator pio --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-root-name validator pb --restrict=false --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-root-name validator io --restrict --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-root-name validator provenance --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-account validator 100000000000000000000nhash --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced gentx validator 1000000000000000nhash --keyring-backend test --chain-id=testing2; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-marker 100000000000000000000nhash --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-msg-fee /provenance.name.v1.MsgBindNameRequest 10000000000nhash ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-msg-fee /provenance.marker.v1.MsgAddMarkerRequest 100000000000nhash ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest 10000000000nhash ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest 10000000000nhash ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgP8eMemorializeContractRequest 10000000000nhash ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced collect-gentxs; \
+		cp ./testutil/*.toml $(BUILDDIR)/run2/provenanced/config; \
+	fi ;
+
+run2: check-built run2-config;
+	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced start
+
 .PHONY: install build build-linux run
 
 ##############################

@@ -128,7 +128,7 @@ func UpgradeICA(ctx sdk.Context, app *App, versionMap *module.VersionMap) {
 
 	// create ICS27 Controller submodule params
 	controllerParams := icacontrollertypes.Params{
-		ControllerEnabled: false,
+		ControllerEnabled: true,
 	}
 
 	// create ICS27 Host submodule params
