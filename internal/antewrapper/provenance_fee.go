@@ -125,7 +125,7 @@ func CalculateBaseFee(ctx sdk.Context, feeTx sdk.FeeTx, msgfeekeeper msgfeestype
 }
 
 // DetermineTestBaseFeeAmount determines the type of test that is running.  ChainID = "" is a simple unit
-// We need this because of how tests are setup using atom and we have nhash specific code for msgfees
+// We need this because of how tests are setup using atom and we have vspn specific code for msgfees
 func DetermineTestBaseFeeAmount(ctx sdk.Context, feeTx sdk.FeeTx) sdk.Coins {
 	if len(ctx.ChainID()) == 0 {
 		return feeTx.GetFee()

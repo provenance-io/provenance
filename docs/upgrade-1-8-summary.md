@@ -43,12 +43,12 @@ The `1.8.0` upgrade process will begin with the current 1.7.x binary halting at 
 3:48PM INF Metadata step 6 of 7: Finding empty sessions
 3:55PM INF Done deleting 640843 empty sessions.
 3:55PM INF Finished Migrating Metadata Module from Version 2 to 3
-3:55PM INF Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgBindNameRequest (1/6)
-3:55PM INF Adding a 100 hash (100,000,000,000 nhash) msg fee to MsgAddMarkerRequest (2/6)
-3:55PM INF Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgAddAttributeRequest (3/6)
-3:55PM INF Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgWriteScopeRequest (4/6)
-3:55PM INF Adding a 10 hash (10,000,000,000 nhash) msg fee to MsgP8EMemorializeContractRequest (5/6)
-3:55PM INF Adding a 100 hash (100,000,000,000 nhash) msg fee to MsgSubmitProposal (6/6)
+3:55PM INF Adding a 10 hash (10,000,000,000 vspn) msg fee to MsgBindNameRequest (1/6)
+3:55PM INF Adding a 100 hash (100,000,000,000 vspn) msg fee to MsgAddMarkerRequest (2/6)
+3:55PM INF Adding a 10 hash (10,000,000,000 vspn) msg fee to MsgAddAttributeRequest (3/6)
+3:55PM INF Adding a 10 hash (10,000,000,000 vspn) msg fee to MsgWriteScopeRequest (4/6)
+3:55PM INF Adding a 10 hash (10,000,000,000 vspn) msg fee to MsgP8EMemorializeContractRequest (5/6)
+3:55PM INF Adding a 100 hash (100,000,000,000 vspn) msg fee to MsgSubmitProposal (6/6)
 3:55PM INF Successfully upgraded to: green with version map: map[attribute:2 auth:2 authz:1 bank:2 capability:1 crisis:1 distribution:2 evidence:1 feegrant:1 genutil:1 gov:2 ibc:2 marker:2 metadata:3 mint:1 msgfees:1 name:2 params:1 slashing:2 staking:2 transfer:1 upgrade:1 vesting:1 wasm:1]
 ```
 7. When the upgrade has finished your node will wait for other peers and the validators to complete the upgrade as well.  The active voting power must reach the 2/3 majority threshold for the network to continue.

@@ -8,13 +8,13 @@ import (
 )
 
 func TestMarkerAddressLength(t *testing.T) {
-	addr, err := MarkerAddress("nhash")
+	addr, err := MarkerAddress("vspn")
 	assert.NoError(t, err)
 	assert.Equal(t, 20, len(addr), "marker address should always be length of 20")
 }
 
 func TestSplitMarkerStoreKey(t *testing.T) {
-	addr, err := MarkerAddress("nhash")
+	addr, err := MarkerAddress("vspn")
 	largerLengthAddr := sdk.AccAddress("FFFFFFFFFFFFFFFFFFFFFFFF")
 	assert.NoError(t, err)
 	assert.Equal(t, addr, SplitMarkerStoreKey(MarkerStoreKey(addr)), "should parse a marker of length 20 from key")

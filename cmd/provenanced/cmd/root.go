@@ -256,7 +256,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		panic(err)
 	}
 
-	// Validate min-gas-price is a single coin.  If mainnet then must be "nhash" and have a value greater than one.
+	// Validate min-gas-price is a single coin.  If mainnet then must be "vspn" and have a value greater than one.
 	if fee, err := sdk.ParseCoinNormalized(cast.ToString(appOpts.Get(server.FlagMinGasPrices))); err == nil {
 		if int(sdk.GetConfig().GetCoinType()) == app.CoinTypeMainNet {
 			// require the fee denom to match the bond denom on mainnet

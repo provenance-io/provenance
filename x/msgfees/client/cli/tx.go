@@ -140,25 +140,25 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 
 func GetUpdateNhashPerUsdMilProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "nhash-per-usd-mil <title> <description> <nhash-per-usd-mil> <deposit>",
+		Use:     "vspn-per-usd-mil <title> <description> <vspn-per-usd-mil> <deposit>",
 		Aliases: []string{"npum", "n-p-u-m"},
 		Args:    cobra.ExactArgs(4),
-		Short:   "Submit a nhash per usd mil update proposal along with an initial deposit",
-		Long: strings.TrimSpace(`Submit a nhash per usd mil update proposal along with an initial deposit.
-The nhash per usd mil is the number of nhash that will be multiplied by the usd mil amount.  Example: $1.000 usd where 1 mil equals 2000nhash will equate to 1000 * 2000 = 2000000nhash
+		Short:   "Submit a vspn per usd mil update proposal along with an initial deposit",
+		Long: strings.TrimSpace(`Submit a vspn per usd mil update proposal along with an initial deposit.
+The vspn per usd mil is the number of vspn that will be multiplied by the usd mil amount.  Example: $1.000 usd where 1 mil equals 2000nhash will equate to 1000 * 2000 = 2000000nhash
 `),
-		Example: fmt.Sprintf(`$ %[1]s tx msgfees nhash-per-usd-mil "updating nhash to usd mil" "changes the nhash per mil to 1234nhash"  1234 1000000000nhash
-$ %[1]s tx msgfees npum nhash-per-usd-mil "updating nhash to usd mil" "changes the nhash per mil to 1234nhash"   1234 1000000000nhash
+		Example: fmt.Sprintf(`$ %[1]s tx msgfees vspn-per-usd-mil "updating vspn to usd mil" "changes the vspn per mil to 1234nhash"  1234 1000000000nhash
+$ %[1]s tx msgfees npum vspn-per-usd-mil "updating vspn to usd mil" "changes the vspn per mil to 1234nhash"   1234 1000000000nhash
 `, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			title, description, nhash, depositArg := args[0], args[1], args[2], args[3]
-			rate, err := strconv.ParseUint(nhash, 0, 64)
+			title, description, vspn, depositArg := args[0], args[1], args[2], args[3]
+			rate, err := strconv.ParseUint(vspn, 0, 64)
 			if err != nil {
-				return fmt.Errorf("unable to parse nhash value: %s", nhash)
+				return fmt.Errorf("unable to parse vspn value: %s", vspn)
 			}
 			proposal := types.NewUpdateNhashPerUsdMilProposal(title, description, rate)
 			deposit, err := sdk.ParseCoinsNormalized(depositArg)

@@ -73,7 +73,7 @@ func (k Keeper) GetFloorGasPrice(ctx sdk.Context) sdk.Coin {
 	return min
 }
 
-// GetNhashPerUsdMil returns the current nhash amount per usd mil
+// GetNhashPerUsdMil returns the current vspn amount per usd mil
 func (k Keeper) GetNhashPerUsdMil(ctx sdk.Context) uint64 {
 	rateInMils := types.DefaultParams().NhashPerUsdMil
 	if k.paramSpace.Has(ctx, types.ParamStoreKeyNhashPerUsdMil) {
@@ -180,8 +180,8 @@ func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Co
 	return nil
 }
 
-// ConvertDenomToHash converts usd coin to nhash coin using nhash per usd mil.
-// Currently, usd is only supported with nhash to usd mil coming from params
+// ConvertDenomToHash converts usd coin to vspn coin using vspn per usd mil.
+// Currently, usd is only supported with vspn to usd mil coming from params
 func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, error) {
 	switch coin.Denom {
 	case types.UsdDenom:

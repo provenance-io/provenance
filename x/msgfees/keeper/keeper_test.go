@@ -79,27 +79,27 @@ func (s *TestSuite) TestKeeper() {
 func (s *TestSuite) TestConvertDenomToHash() {
 	app, ctx, _ := s.app, s.ctx, s.addrs
 	usdDollar := sdk.NewCoin(types.UsdDenom, sdk.NewInt(7_000)) // $7.00 == 100hash
-	nhash, err := app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
+	vspn, err := app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
 	s.Assert().NoError(err)
-	s.Assert().Equal(sdk.NewCoin(types.NhashDenom, sdk.NewInt(175_000_000_000)), nhash)
+	s.Assert().Equal(sdk.NewCoin(types.NhashDenom, sdk.NewInt(175_000_000_000)), vspn)
 	usdDollar = sdk.NewCoin(types.UsdDenom, sdk.NewInt(70)) // $7 == 1hash
-	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
+	vspn, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
 	s.Assert().NoError(err)
-	s.Assert().Equal(sdk.NewCoin(types.NhashDenom, sdk.NewInt(1_750_000_000)), nhash)
+	s.Assert().Equal(sdk.NewCoin(types.NhashDenom, sdk.NewInt(1_750_000_000)), vspn)
 	usdDollar = sdk.NewCoin(types.UsdDenom, sdk.NewInt(1_000)) // $1 == 14.2hash
-	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
+	vspn, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
 	s.Assert().NoError(err)
-	s.Assert().Equal(sdk.NewCoin(types.NhashDenom, sdk.NewInt(25_000_000_000)), nhash)
+	s.Assert().Equal(sdk.NewCoin(types.NhashDenom, sdk.NewInt(25_000_000_000)), vspn)
 
 	usdDollar = sdk.NewCoin(types.UsdDenom, sdk.NewInt(10))
-	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
+	vspn, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
 	s.Assert().NoError(err)
-	s.Assert().Equal(sdk.NewCoin(types.NhashDenom, sdk.NewInt(250_000_000)), nhash)
+	s.Assert().Equal(sdk.NewCoin(types.NhashDenom, sdk.NewInt(250_000_000)), vspn)
 
 	jackTheCat := sdk.NewCoin("jackThecat", sdk.NewInt(70))
-	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, jackTheCat)
+	vspn, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, jackTheCat)
 	s.Assert().Equal("denom not supported for conversion jackThecat: invalid type", err.Error())
-	s.Assert().Equal(sdk.Coin{}, nhash)
+	s.Assert().Equal(sdk.Coin{}, vspn)
 }
 
 func (s *TestSuite) TestDeductFeesDistributions() {

@@ -321,7 +321,7 @@ func initGenFiles(
 
 	nhashDenomUnit := banktypes.DenomUnit{
 		Exponent: 0,
-		Denom:    "nhash",
+		Denom:    "vspn",
 		Aliases:  []string{"nanohash"},
 	}
 	hashDenomUnit := banktypes.DenomUnit{
@@ -335,7 +335,7 @@ func initGenFiles(
 	denomMetadata := banktypes.Metadata{
 		Description: "The native staking token of the Provenance Blockchain.",
 		Display:     "hash",
-		Base:        "nhash",
+		Base:        "vspn",
 		DenomUnits:  denomUnits,
 	}
 	bankGenState.DenomMetadata = []banktypes.Metadata{denomMetadata}

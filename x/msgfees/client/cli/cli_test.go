@@ -176,7 +176,7 @@ func (s *IntegrationTestSuite) TestUpdateUsdConversionRateProposal() {
 		expectErrMsg string
 		expectedCode uint32
 	}{
-		{"update nhash to usd mil proposal - valid",
+		{"update vspn to usd mil proposal - valid",
 			[]string{
 				"title",
 				"description",
@@ -187,7 +187,7 @@ func (s *IntegrationTestSuite) TestUpdateUsdConversionRateProposal() {
 			"",
 			0,
 		},
-		{"update nhash to usd mil proposal - invalid - rate param error",
+		{"update vspn to usd mil proposal - invalid - rate param error",
 			[]string{
 				"title",
 				"description",
@@ -195,10 +195,10 @@ func (s *IntegrationTestSuite) TestUpdateUsdConversionRateProposal() {
 				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
 			},
 			true,
-			"unable to parse nhash value: invalid-rate",
+			"unable to parse vspn value: invalid-rate",
 			0,
 		},
-		{"update nhash to usd mil proposal - invalid - deposit param",
+		{"update vspn to usd mil proposal - invalid - deposit param",
 			[]string{
 				"title",
 				"description",

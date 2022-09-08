@@ -170,14 +170,14 @@ func (p UpdateNhashPerUsdMilProposal) ProposalType() string {
 
 func (p UpdateNhashPerUsdMilProposal) ValidateBasic() error {
 	if p.NhashPerUsdMil < 1 {
-		return errors.New("nhash per usd mil must be greater than 0")
+		return errors.New("vspn per usd mil must be greater than 0")
 	}
 	return govtypes.ValidateAbstract(&p)
 }
 
 func (p UpdateNhashPerUsdMilProposal) String() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Update Nhash to Usd Mil Proposal:
+	b.WriteString(fmt.Sprintf(`Update vspn to Usd Mil Proposal:
   Title:             %s
   Description:       %s
   NhashPerUsdMil:    %v

@@ -6,7 +6,7 @@ import (
 
 const (
 	UsdDenom   string = "usd"
-	NhashDenom string = "nhash"
+	NhashDenom string = "vspn"
 )
 
 // SplitAmount returns split of Amount to be used for coin recipient and one for payout of fee, NOTE: this should only be used if a Recipient address exists

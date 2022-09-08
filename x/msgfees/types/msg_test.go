@@ -20,7 +20,7 @@ func TestMsgAssessCustomMsgFeeValidateBasic(t *testing.T) {
 			false,
 			"",
 		},
-		"should succeed to validate basic, nhash coin type": {
+		"should succeed to validate basic, vspn coin type": {
 			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 10), validAddress, validAddress),
 			false,
 			"",
@@ -33,7 +33,7 @@ func TestMsgAssessCustomMsgFeeValidateBasic(t *testing.T) {
 		"should fail to validate basic, invalid coin type": {
 			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin("jackthecat", 10), validAddress, validAddress),
 			true,
-			"denom must be in usd or nhash : jackthecat",
+			"denom must be in usd or vspn : jackthecat",
 		},
 		"should succeed to validate basic, without recipient": {
 			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 10), "", validAddress),

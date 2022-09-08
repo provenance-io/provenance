@@ -127,7 +127,7 @@ grpcurl \
 {
   "balances": [
     {
-      "denom": "nhash",
+      "denom": "vspn",
       "amount": "24999997751000000000"
     }
   ],
@@ -256,7 +256,7 @@ service Query {
 
 #### Query service methods
 
-Lets query for the current `nhash` supply.
+Lets query for the current `vspn` supply.
 
 ```shell
 grpcurl \
@@ -264,7 +264,7 @@ grpcurl \
     -import-path ./proto \
     -import-path ./third_party/proto \
     -proto ./proto/provenance/marker/v1/query.proto \
-    -d '{"id": "nhash"}' \
+    -d '{"id": "vspn"}' \
     localhost:9090 \
     provenance.marker.v1.Query/Supply
 ```
@@ -272,7 +272,7 @@ grpcurl \
 ```shell
 {
   "amount": {
-    "denom": "nhash",
+    "denom": "vspn",
     "amount": "100000000000000000000"
   }
 }

@@ -318,7 +318,7 @@ func TestMsgServiceAssessMsgFee(t *testing.T) {
 
 	// Check both account balances before transaction
 	addr1beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	assert.Equal(t, "101000atom,1000hotdog,1190500001nhash", addr1beforeBalance, "should have the new balance after funding account")
+	assert.Equal(t, "101000atom,1000hotdog,1190500001vspn", addr1beforeBalance, "should have the new balance after funding account")
 	addr2beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
 	require.Equal(t, "", addr2beforeBalance, "should have the new balance after funding account")
 
@@ -331,13 +331,13 @@ func TestMsgServiceAssessMsgFee(t *testing.T) {
 	addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
 	require.Equal(t, "1000atom,1000hotdog", addr1AfterBalance, "should have the new balance running transaction")
 	addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "87500000nhash", addr2AfterBalance, "should have the new balance running transaction")
+	require.Equal(t, "87500000vspn", addr2AfterBalance, "should have the new balance running transaction")
 
 	assert.Equal(t, 13, len(res.Events))
 
 	assert.Equal(t, sdk.EventTypeTx, res.Events[4].Type)
 	assert.Equal(t, sdk.AttributeKeyFee, string(res.Events[4].Attributes[0].Key))
-	assert.Equal(t, "100000atom,1190500001nhash", string(res.Events[4].Attributes[0].Value))
+	assert.Equal(t, "100000atom,1190500001vspn", string(res.Events[4].Attributes[0].Value))
 	assert.Equal(t, sdk.EventTypeTx, res.Events[5].Type)
 	assert.Equal(t, antewrapper.AttributeKeyMinFeeCharged, string(res.Events[5].Attributes[0].Key))
 	assert.Equal(t, "100000atom", string(res.Events[5].Attributes[0].Value))
@@ -350,13 +350,13 @@ func TestMsgServiceAssessMsgFee(t *testing.T) {
 	assert.Equal(t, addr2.String(), string(res.Events[9].Attributes[2].Value))
 	assert.Equal(t, sdk.EventTypeTx, res.Events[10].Type)
 	assert.Equal(t, antewrapper.AttributeKeyAdditionalFee, string(res.Events[10].Attributes[0].Key))
-	assert.Equal(t, "175000000nhash", string(res.Events[10].Attributes[0].Value))
+	assert.Equal(t, "175000000vspn", string(res.Events[10].Attributes[0].Value))
 	assert.Equal(t, sdk.EventTypeTx, res.Events[11].Type)
 	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[11].Attributes[0].Key))
-	assert.Equal(t, "100000atom,1015500001nhash", string(res.Events[11].Attributes[0].Value))
+	assert.Equal(t, "100000atom,1015500001vspn", string(res.Events[11].Attributes[0].Value))
 	assert.Equal(t, "provenance.msgfees.v1.EventMsgFees", res.Events[12].Type)
 	assert.Equal(t, "msg_fees", string(res.Events[12].Attributes[0].Key))
-	assert.Equal(t, fmt.Sprintf("[{\"msg_type\":\"/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest\",\"count\":\"1\",\"total\":\"87500000nhash\",\"recipient\":\"\"},{\"msg_type\":\"/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest\",\"count\":\"1\",\"total\":\"87500000nhash\",\"recipient\":\"%s\"}]", addr2.String()), string(res.Events[12].Attributes[0].Value))
+	assert.Equal(t, fmt.Sprintf("[{\"msg_type\":\"/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest\",\"count\":\"1\",\"total\":\"87500000vspn\",\"recipient\":\"\"},{\"msg_type\":\"/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest\",\"count\":\"1\",\"total\":\"87500000vspn\",\"recipient\":\"%s\"}]", addr2.String()), string(res.Events[12].Attributes[0].Value))
 
 }
 

@@ -218,11 +218,11 @@ NOTE: The second major change in the 1.8.0 release is part of the migration proc
 * Add Protobuf support with buf.build [#614](https://github.com/provenance-io/provenance/issues/614)
 * Limit the maximum attribute value length to 1000 (down from 10,000 currently) in the `green` upgrade [#616](https://github.com/provenance-io/provenance/issues/616)
 * Add additional fees for specified operations in the `green` upgrade [#616](https://github.com/provenance-io/provenance/issues/616)
-  * `provenance.name.v1.MsgBindNameRequest` 10 hash (10,000,000,000 nhash)
-  * `provenance.marker.v1.MsgAddMarkerRequest` 100 hash (100,000,000,000 nhash)
-  * `provenance.attribute.v1.MsgAddAttributeRequest` 10 hash (10,000,000,000 nhash)
-  * `provenance.metadata.v1.MsgWriteScopeRequest`  10 hash (10,000,000,000 nhash)
-  * `provenance.metadata.v1.MsgP8eMemorializeContractRequest` 10 hash (10,000,000,000 nhash)
+  * `provenance.name.v1.MsgBindNameRequest` 10 hash (10,000,000,000 vspn)
+  * `provenance.marker.v1.MsgAddMarkerRequest` 100 hash (100,000,000,000 vspn)
+  * `provenance.attribute.v1.MsgAddAttributeRequest` 10 hash (10,000,000,000 vspn)
+  * `provenance.metadata.v1.MsgWriteScopeRequest`  10 hash (10,000,000,000 vspn)
+  * `provenance.metadata.v1.MsgP8eMemorializeContractRequest` 10 hash (10,000,000,000 vspn)
 * Add integration tests for smart contracts [#392](https://github.com/provenance-io/provenance/issues/392)
 * Use provwasm release artifact for smart contract tests [#731](https://github.com/provenance-io/provenance/issues/731)
 
@@ -244,7 +244,7 @@ NOTE: The second major change in the 1.8.0 release is part of the migration proc
 * Add migration to delete empty sessions [#480](https://github.com/provenance-io/provenance/issues/480)
 * Add Java distribution tag to workflow [#624](https://github.com/provenance-io/provenance/issues/624)
 * Add `msgfees` module to added store upgrades [#640](https://github.com/provenance-io/provenance/issues/640)
-* Use `nhash` for base denom in gov proposal upgrade [#648](https://github.com/provenance-io/provenance/issues/648)
+* Use `vspn` for base denom in gov proposal upgrade [#648](https://github.com/provenance-io/provenance/issues/648)
 * Bump `cosmowasm` from `v1.0.0-beta5` to `v1.0.0-beta6` [#655](https://github.com/provenance-io/provenance/issues/655)
 * Fix maven publish release version number reference [#650](https://github.com/provenance-io/provenance/issues/650)
 * Add `iterator` as feature for wasm [#658](https://github.com/provenance-io/provenance/issues/658)
@@ -461,7 +461,7 @@ NOTE: The second major change in the 1.8.0 release is part of the migration proc
 * Add Kotlin and Javascript examples for Metadata Addresses [#301](https://github.com/provenance-io/provenance/issues/301)
 * Updated swagger docs [PR 313](https://github.com/provenance-io/provenance/pull/313)
 * Fix swagger docs [PR 317](https://github.com/provenance-io/provenance/pull/317)
-* Updated default min-gas-prices to reflect provenance network nhash economics [#310](https://github.com/provenance-io/provenance/pull/310)
+* Updated default min-gas-prices to reflect provenance network vspn economics [#310](https://github.com/provenance-io/provenance/pull/310)
 * Improved marker error message when marker is not found [#325](https://github.com/provenance-io/provenance/issues/325)
 
 
@@ -690,7 +690,7 @@ NOTE: The second major change in the 1.8.0 release is part of the migration proc
 ## [v0.1.3](https://github.com/provenance-io/provenance/releases/tag/v0.1.3) - 2021-02-12
 
 * Add support for Scope objects to Metadata module [#53](https://github.com/provenance-io/provenance/issues/53)
-* Denom Metadata config for nhash in testnet [#42](https://github.com/provenance-io/provenance/issues/42)
+* Denom Metadata config for vspn in testnet [#42](https://github.com/provenance-io/provenance/issues/42)
 * Denom Metadata support for marker module [#47](https://github.com/provenance-io/provenance/issues/47)
 * WASM support for Marker module [#28](https://github.com/provenance-io/provenance/issues/28)
 

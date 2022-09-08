@@ -62,7 +62,7 @@ func GetCmdPioSimulateTx() *cobra.Command {
 			return clientCtx.PrintProto(response)
 		},
 	}
-	cmd.Flags().String(flagDefaultDenom, "nhash", "Denom used for gas costs")
+	cmd.Flags().String(flagDefaultDenom, "vspn", "Denom used for gas costs")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

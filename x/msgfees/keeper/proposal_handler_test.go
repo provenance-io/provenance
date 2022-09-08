@@ -95,12 +95,12 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 			msgfeestypes.ErrEmptyMsgType,
 		},
 		{
-			"update nhash to usd mil - invalid - validate basic fail",
+			"update vspn to usd mil - invalid - validate basic fail",
 			msgfeestypes.NewUpdateNhashPerUsdMilProposal("title update conversion", "", 10),
 			errors.New("proposal description cannot be blank: invalid proposal content"),
 		},
 		{
-			"update nhash to usd mil - valid",
+			"update vspn to usd mil - valid",
 			msgfeestypes.NewUpdateNhashPerUsdMilProposal("title update conversion", "description", 1),
 			nil,
 		},

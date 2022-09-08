@@ -52,7 +52,7 @@ func (s *MigrateTestSuite) SetupTest() {
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
 	s.user2 = s.user2Addr.String()
 	markers := []types.MarkerAccount{
-		{Denom: "nhash", MarkerType: types.MarkerType_Coin, AccessControl: []types.AccessGrant{{Address: s.user1, Permissions: types.AccessListByNames("mint,burn")}}},
+		{Denom: "vspn", MarkerType: types.MarkerType_Coin, AccessControl: []types.AccessGrant{{Address: s.user1, Permissions: types.AccessListByNames("mint,burn")}}},
 		{Denom: "atom", MarkerType: types.MarkerType_Coin, AccessControl: []types.AccessGrant{{Address: s.user1, Permissions: types.AccessListByNames("mint,burn,transfer")}}},
 		{Denom: "security", MarkerType: types.MarkerType_RestrictedCoin, AccessControl: []types.AccessGrant{{Address: s.user1, Permissions: types.AccessListByNames("mint,burn,transfer")}}},
 	}

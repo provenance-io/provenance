@@ -5228,7 +5228,7 @@ Params defines the set of params for the msgfees module.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | constant used to calculate fees when gas fees shares denom with msg fee |
-| `nhash_per_usd_mil` | [uint64](#uint64) |  | total nhash per usd mil for converting usd to nhash |
+| `nhash_per_usd_mil` | [uint64](#uint64) |  | total vspn per usd mil for converting usd to vspn |
 
 
 
@@ -5339,14 +5339,14 @@ UpdateMsgFeeProposal defines a governance proposal to update a current msg based
 <a name="provenance.msgfees.v1.UpdateNhashPerUsdMilProposal"></a>
 
 ### UpdateNhashPerUsdMilProposal
-UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
+UpdateNhashPerUsdMilProposal defines a governance proposal to update the vspn per usd mil param
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
-| `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is number of nhash per usd mil |
+| `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is number of vspn per usd mil |
 
 
 
@@ -5378,7 +5378,7 @@ CalculateTxFeesRequest is the request type for the Query RPC method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the transaction to simulate. |
-| `default_base_denom` | [string](#string) |  | default_base_denom is used to set the denom used for gas fees if not set it will default to nhash. |
+| `default_base_denom` | [string](#string) |  | default_base_denom is used to set the denom used for gas fees if not set it will default to vspn. |
 | `gas_adjustment` | [float](#float) |  | gas_adjustment is the adjustment factor to be multiplied against the estimate returned by the tx simulation |
 
 

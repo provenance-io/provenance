@@ -9,7 +9,7 @@ The msg fees modules manages additional fees that can be applied to tx msgs spec
   - [Additional Msg Fees](#additional-msg-fees)
   - [Base Fee](#base-fee)
   - [Total Fees](#total-fees)
-  - [Additional Fee Assessed in Base Denom i.e nhash](#additional-fee-assessed-in-base-denom-i-e-nhash)
+  - [Additional Fee Assessed in Base Denom i.e vspn](#additional-fee-assessed-in-base-denom-i-e-vspn)
   - [Authz and Wamsd Messages](#authz-and-wamsd-messages)
   - [Simulation and Calculating the Additional Fee to be Paid](#simulation-and-calculating-the-additional-fee-to-be-paid)
 
@@ -41,9 +41,9 @@ e.g usd.example is the denom(assuming there is a marker/coin of type usd.example
 --fees 382199010nhash,99usd.example 
 ```
 
-## Additional Fee Assessed in Base Denom i.e nhash
+## Additional Fee Assessed in Base Denom i.e vspn
 
-To preserve backwards compatibility of all invokes, clients continue accepting fees in sdk.Coins `type Coins []Coin`, and because the code needs to distinguish between base fee and additional fee, the msgfees module introduces an additional param, described in [params documentation](06_params.md), called `DefaultFloorGasPrice` to differentiate between base fee and additional fee when additional fee is in same denom as default base denom i.e nhash.
+To preserve backwards compatibility of all invokes, clients continue accepting fees in sdk.Coins `type Coins []Coin`, and because the code needs to distinguish between base fee and additional fee, the msgfees module introduces an additional param, described in [params documentation](06_params.md), called `DefaultFloorGasPrice` to differentiate between base fee and additional fee when additional fee is in same denom as default base denom i.e vspn.
 
 This fee is charged initially by the antehandler, if any excess fee is left, once additional fee are paid, that's collected
 at the end of the Tx also(same as current behavior)
@@ -54,7 +54,7 @@ Gas = 10000
 Fee passed in = 19070000nhash
 
 In this client passes in an extra 10000nhash (1905 * 10000 +10000 = 19060000nhash).
-Current behavior is maintained and tx passes and charges 19050000 initially and 1000 nhash plus 1000nhash extra fee passed in the deliverTx stage.
+Current behavior is maintained and tx passes and charges 19050000 initially and 1000 vspn plus 1000nhash extra fee passed in the deliverTx stage.
 Thus, this will protect against future changes like priority mempool as well as keep current behavior same as current production. 
 
 ## Authz and Wamsd Messages

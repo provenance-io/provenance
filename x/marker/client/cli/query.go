@@ -119,7 +119,7 @@ func AllHoldersCmd() *cobra.Command {
 		Aliases: []string{"hold", "holder"},
 		Short:   "List all accounts holding the given marker on the Provenance Blockchain",
 		Example: strings.TrimSpace(
-			fmt.Sprintf(`$ %s query marker holding nhash`, version.AppName)),
+			fmt.Sprintf(`$ %s query marker holding vspn`, version.AppName)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -158,7 +158,7 @@ func MarkerCmd() *cobra.Command {
 		Use:     "get [address|denom]",
 		Short:   "Get marker details",
 		Long:    `Note: the address is for the base_account of the denom should you choose to use the address rather than the denom name`,
-		Example: fmt.Sprintf(`$ %s query marker get "nhash"`, version.AppName),
+		Example: fmt.Sprintf(`$ %s query marker get "vspn"`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -188,7 +188,7 @@ func MarkerAccessCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "grants [address|denom]",
 		Short:   "Get access grants defined for marker",
-		Example: fmt.Sprintf(`$ %s query marker grants "nhash"`, version.AppName),
+		Example: fmt.Sprintf(`$ %s query marker grants "vspn"`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -218,7 +218,7 @@ func MarkerEscrowCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "escrow [address|denom]",
 		Short:   "Get coins in escrow by marker",
-		Example: fmt.Sprintf(`$ %s query marker escrow "nhash"`, version.AppName),
+		Example: fmt.Sprintf(`$ %s query marker escrow "vspn"`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -248,7 +248,7 @@ func MarkerSupplyCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "supply [address|denom]",
 		Short:   "Get total supply for marker",
-		Example: fmt.Sprintf(`$ %s query marker supply "nhash"`, version.AppName),
+		Example: fmt.Sprintf(`$ %s query marker supply "vspn"`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

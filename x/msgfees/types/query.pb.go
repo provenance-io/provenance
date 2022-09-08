@@ -221,7 +221,7 @@ type CalculateTxFeesRequest struct {
 	// tx_bytes is the transaction to simulate.
 	TxBytes []byte `protobuf:"bytes,1,opt,name=tx_bytes,json=txBytes,proto3" json:"tx_bytes,omitempty"`
 	// default_base_denom is used to set the denom used for gas fees
-	// if not set it will default to nhash.
+	// if not set it will default to vspn.
 	DefaultBaseDenom string `protobuf:"bytes,2,opt,name=default_base_denom,json=defaultBaseDenom,proto3" json:"default_base_denom,omitempty"`
 	// gas_adjustment is the adjustment factor to be multiplied against the estimate returned by the tx simulation
 	GasAdjustment float32 `protobuf:"fixed32,3,opt,name=gas_adjustment,json=gasAdjustment,proto3" json:"gas_adjustment,omitempty"`

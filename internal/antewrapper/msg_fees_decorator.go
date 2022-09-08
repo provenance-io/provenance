@@ -218,7 +218,7 @@ func EnsureSufficientFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coi
 	if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees); hasNeg {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, DefaultInsufficientFeeMsg+": %q, required additional fee: %q", feeCoins, additionalFees)
 	}
-	// Step 2: check if additional fees in nhash, that base fees and additional fees can be paid
+	// Step 2: check if additional fees in vspn, that base fees and additional fees can be paid
 	// total fees in hash - gas limit * price per gas >= additional fees in hash
 	if !additionalFees.AmountOf(minGasPriceForAdditionalFeeCalc.Denom).IsZero() {
 		// Determine the required fees by multiplying each required minimum gas

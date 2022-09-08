@@ -363,7 +363,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolAndMsgFees_4() {
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
 	suite.Require().Contains(err.Error(), "fee payer account does not have enough balance to pay for \"190500200nhash\"", "wrong error message")
-	// add some nhash
+	// add some vspn
 	suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(100)))))
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "Decorator should not have errored for insufficient additional fee")

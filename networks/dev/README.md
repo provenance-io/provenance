@@ -2,11 +2,11 @@
 
 # Overview
 
-This folder contains the files to create an single node with predefined account stocked with nhash.
+This folder contains the files to create an single node with predefined account stocked with vspn.
 
 # Adding Account
 
-Currently, in the folder `networks/dev/mnemonics` there exists 3 files containing a mnemonic and a single return character.  These are used to generate an account into the genesis file with `100000000000000000000nhash` each.  A new key will be added to the keyring that is the basename of the file.  Therefore, `validator.txt`, `account-1.txt`, and `account-2.txt` will add keys `validator`, `account-1` and `account-2`.  The `validator.txt` is required, because it is used to setup the validator and is nhash marker admin.  Other files can be added and removed as you see fit.
+Currently, in the folder `networks/dev/mnemonics` there exists 3 files containing a mnemonic and a single return character.  These are used to generate an account into the genesis file with `100000000000000000000nhash` each.  A new key will be added to the keyring that is the basename of the file.  Therefore, `validator.txt`, `account-1.txt`, and `account-2.txt` will add keys `validator`, `account-1` and `account-2`.  The `validator.txt` is required, because it is used to setup the validator and is vspn marker admin.  Other files can be added and removed as you see fit.
 
 # Added Account Addresses and Keys 
 

@@ -23,7 +23,7 @@ message MsgAssessCustomMsgFeeRequest {
 }
 ```
 
-The `amount` must be in `usd` or `nhash` else the msg will not pass validation.  If the amount is specified as `usd` this will be converted
-to `nhash` using the `UsdConversionRate` param.  Note: `usd` and `UsdConversionRate` are specified in mils.  Example: 1234 = $1.234
+The `amount` must be in `usd` or `vspn` else the msg will not pass validation.  If the amount is specified as `usd` this will be converted
+to `vspn` using the `UsdConversionRate` param.  Note: `usd` and `UsdConversionRate` are specified in mils.  Example: 1234 = $1.234
 
 The `recipient` is a bech32 address of an account that will receive half of the `amount` specified.  If this entry is left empty the whole amount will go to the fee module.

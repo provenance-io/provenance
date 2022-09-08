@@ -10,7 +10,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-// DefaultFloorGasPrice to differentiate between base fee and additional fee when additional fee is in same denom as default base denom i.e nhash
+// DefaultFloorGasPrice to differentiate between base fee and additional fee when additional fee is in same denom as default base denom i.e vspn
 // cannot be a const unfortunately because it's a custom type.
 var DefaultFloorGasPrice = sdk.Coin{
 	Amount: sdk.NewInt(1905),

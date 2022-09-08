@@ -202,7 +202,7 @@ func Dispatch(
 	if err != nil {
 		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate fees"), nil, err
 	}
-	// fund account with nhash for additional fees, if the account exists (100m stake)
+	// fund account with vspn for additional fees, if the account exists (100m stake)
 	if sdk.MsgTypeURL(msg) == "/provenance.marker.v1.MsgAddMarkerRequest" && ak.GetAccount(ctx, account.GetAddress()) != nil {
 		err = simapp.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 			Denom:  "stake",

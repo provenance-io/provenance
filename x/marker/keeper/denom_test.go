@@ -57,7 +57,7 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: nil},
+					{Denom: "vspn", Exponent: 0, Aliases: nil},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "invalid", Exponent: 9, Aliases: nil},
 				},
@@ -76,11 +76,11 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: nil},
+					{Denom: "vspn", Exponent: 0, Aliases: nil},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 				Name:    "Hash",
 				Symbol:  "HASH",
@@ -95,11 +95,11 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: nil},
+					{Denom: "vspn", Exponent: 0, Aliases: nil},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 				Name:    "Hash",
 				Symbol:  "HASH",
@@ -114,11 +114,11 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: nil},
+					{Denom: "vspn", Exponent: 0, Aliases: nil},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 				Name:    "Hash",
 				Symbol:  "HASH",
@@ -133,11 +133,11 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: nil},
+					{Denom: "vspn", Exponent: 0, Aliases: nil},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 				Name:    "Hash",
 				Symbol:  "HASH",
@@ -152,11 +152,11 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "vspn", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 				Name:    "Hash",
 				Symbol:  "HASH",
@@ -171,11 +171,11 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "vspn", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 				Name:    "Hash",
 				Symbol:  "HASH",
@@ -183,7 +183,7 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			&banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "vspn", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
@@ -199,10 +199,10 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "vspn", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 				Name:    "Hash",
 				Symbol:  "HASH",
@@ -210,11 +210,11 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			&banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "vspn", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 			},
 			types.StatusActive,
@@ -226,10 +226,10 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "vspn", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 				Name:    "Hash",
 				Symbol:  "HASH",
@@ -237,11 +237,11 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			&banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "vspn", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 			},
 			types.StatusFinalized,
@@ -253,10 +253,10 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "vspn", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 				Name:    "Hash",
 				Symbol:  "HASH",
@@ -264,11 +264,11 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			&banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "vspn", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 			},
 			types.StatusProposed,
@@ -280,11 +280,11 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "vspn", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "microhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 				Name:    "Hash",
 				Symbol:  "HASH",
@@ -292,11 +292,11 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			&banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "vspn", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 			},
 			types.StatusActive,
@@ -308,11 +308,11 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "vspn", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "microhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 				Name:    "Hash",
 				Symbol:  "HASH",
@@ -320,11 +320,11 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			&banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "vspn", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 			},
 			types.StatusFinalized,
@@ -336,11 +336,11 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "vspn", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "microhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 				Name:    "Hash",
 				Symbol:  "HASH",
@@ -348,11 +348,11 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			&banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "vspn", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 			},
 			types.StatusProposed,
@@ -364,11 +364,11 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: nil},
+					{Denom: "vspn", Exponent: 0, Aliases: nil},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 				Name:    "Hash",
 				Symbol:  "HASH",
@@ -376,27 +376,27 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			&banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "vspn", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 			},
 			types.StatusActive,
 			types.DefaultUnrestrictedDenomRegex,
-			[]string{"cannot remove alias", "nanohash", "nhash"},
+			[]string{"cannot remove alias", "nanohash", "vspn"},
 		},
 		{
 			"finalized denom unit alias removed",
 			banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: nil},
+					{Denom: "vspn", Exponent: 0, Aliases: nil},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 				Name:    "Hash",
 				Symbol:  "HASH",
@@ -404,27 +404,27 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			&banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "vspn", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 			},
 			types.StatusFinalized,
 			types.DefaultUnrestrictedDenomRegex,
-			[]string{"cannot remove alias", "nanohash", "nhash"},
+			[]string{"cannot remove alias", "nanohash", "vspn"},
 		},
 		{
 			"proposed denom unit alias removed",
 			banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: nil},
+					{Denom: "vspn", Exponent: 0, Aliases: nil},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 				Name:    "Hash",
 				Symbol:  "HASH",
@@ -432,11 +432,11 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 			&banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
+					{Denom: "vspn", Exponent: 0, Aliases: []string{"nanohash"}},
 					{Denom: "uhash", Exponent: 3, Aliases: nil},
 					{Denom: "hash", Exponent: 9, Aliases: nil},
 				},
-				Base:    "nhash",
+				Base:    "vspn",
 				Display: "hash",
 				Name:    "Hash",
 				Symbol:  "HASH",
