@@ -11,7 +11,7 @@ import (
 
 // These tests are kicked off by TestAnteTestSuite in testutil_test.go
 
-func (s *AnteTestSuite) TestDeductFees() {
+func (s *AnteTestSuite) TestProvenanceDeductFeeDecoratorChecksFunds() {
 	s.SetupTest(false) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
@@ -22,7 +22,7 @@ func (s *AnteTestSuite) TestDeductFees() {
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := sdk.NewCoins(sdk.NewInt64Coin("atom", 200000))
 	gasLimit := testdata.NewTestGasLimit()
-	s.Require().NoError(s.txBuilder.SetMsgs(msg))
+	s.Require().NoError(s.txBuilder.SetMsgs(msg), "SetMsgs")
 	s.txBuilder.SetFeeAmount(feeAmount)
 	s.txBuilder.SetGasLimit(gasLimit)
 
@@ -34,27 +34,37 @@ func (s *AnteTestSuite) TestDeductFees() {
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
 	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(10)))
 	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "funding account with %s", coins)
 	s.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin("atom", 10)), s.app.BankKeeper.GetAllBalances(s.ctx, addr1), "should have the new balance after funding account")
 
 	decorators := []sdk.AnteDecorator{pioante.NewFeeMeterContextDecorator(), pioante.NewProvenanceDeductFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.MsgFeesKeeper)}
 	antehandler := sdk.ChainAnteDecorators(decorators...)
 
 	_, err = antehandler(s.ctx, tx, false)
-
-	s.Require().NotNil(err, "Tx did not error when fee payer had insufficient funds")
+	// Example error: account cosmos1llzpsq97pd7z3x4c805cq87j3rd6lgarkp5ky4 does not have enough balance to pay for "200000atom", balance: "10atom": insufficient funds
+	s.Require().Error(err, "antehandler insufficient funds")
+	s.Assert().ErrorContains(err, addr1.String())
+	s.Assert().ErrorContains(err, "does not have enough balance to pay")
+	s.Assert().ErrorContains(err, `"200000atom"`)
+	s.Assert().ErrorContains(err, `balance: "10atom"`)
+	s.Assert().ErrorContains(err, "insufficient funds")
+	if s.T().Failed() {
+		s.T().FailNow()
+	}
 
 	// Set account with sufficient funds
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
-	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200_000))))
-	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin("atom", 200_010)), s.app.BankKeeper.GetAllBalances(s.ctx, addr1), "Balance before tx")
+	plusCoins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200_000)))
+	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, plusCoins)
+	s.Require().NoError(err, "funding account with %s", plusCoins)
+	s.Require().Equal(coins.Add(plusCoins...), s.app.BankKeeper.GetAllBalances(s.ctx, addr1), "Balance before tx")
+
 	_, err = antehandler(s.ctx, tx, false)
-	s.Require().NoError(err, "Tx errored after account has been set with sufficient funds")
+	s.Require().NoError(err, "antehandler sufficient funds")
 	s.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin("atom", 10)), s.app.BankKeeper.GetAllBalances(s.ctx, addr1), "Balance after tx")
 }
 
-func (s *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
+func (s *AnteTestSuite) TestProvenanceDeductFeeDecoratorAdditionalFees() {
 	// given
 	s.SetupTest(true)
 	newCoin := sdk.NewInt64Coin("steak", 100)
