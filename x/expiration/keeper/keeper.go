@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -171,24 +172,23 @@ func (k Keeper) DeleteExpiration(ctx sdk.Context, moduleAssetID string) error {
 	return k.emitEvent(ctx, deleteEvent)
 }
 
-// GetExpirationByModuleAssetId resolves a record by module asset id.
-func (k Keeper) GetExpirationByModuleAssetId(ctx sdk.Context, moduleAssetID string) (*types.Expiration, error) {
-	key, err := types.GetModuleAssetKeyPrefix(moduleAssetID)
-	if err != nil {
+// GetAllExpirationsByOwner resolves a record by module asset id.
+func (k Keeper) GetAllExpirationsByOwner(ctx sdk.Context, owner string) ([]*types.Expiration, error) {
+	var expirations []*types.Expiration
+
+	// Callback func that adds expirations by owner to expirations slice.
+	expirationHandler := func(expiration types.Expiration) error {
+		if strings.TrimSpace(owner) == expiration.Owner {
+			expirations = append(expirations, &expiration)
+		}
+		return nil
+	}
+
+	if err := k.IterateExpirations(ctx, types.ModuleAssetKeyPrefix, expirationHandler); err != nil {
 		return nil, err
 	}
-	return getExpiration(ctx, k, key)
-}
 
-func getExpiration(ctx sdk.Context, keeper Keeper, key []byte) (*types.Expiration, error) {
-	store := ctx.KVStore(keeper.storeKey)
-	if !store.Has(key) {
-		return nil, types.ErrExpirationNotFound
-	}
-	bz := store.Get(key)
-	record := &types.Expiration{}
-	err := keeper.cdc.Unmarshal(bz, record)
-	return record, err
+	return expirations, nil
 }
 
 func (k Keeper) ValidateSetExpiration(
