@@ -79,7 +79,7 @@ func TestCreateName(t *testing.T) {
 		Address: addr2.String(),
 	}
 	accs := authtypes.GenesisAccounts{acc1, acc2}
-	app := simapp.SetupWithGenesisAccounts(t, accs)
+	app := simapp.SetupWithGenesisAccounts(t, "", accs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	var nameData nametypes.GenesisState
@@ -139,7 +139,7 @@ func TestDeleteName(t *testing.T) {
 		Address: addr1.String(),
 	}
 	accs := authtypes.GenesisAccounts{acc1}
-	app := simapp.SetupWithGenesisAccounts(t, accs)
+	app := simapp.SetupWithGenesisAccounts(t, "", accs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	var nameData nametypes.GenesisState
