@@ -1,0 +1,65 @@
+global:
+    api-listen-addr: :5183
+    timeout: 10s
+    memo: ""
+    light-cache-size: 20
+chains:
+    local:
+        type: cosmos
+        value:
+            key: default
+            chain-id: testing
+            rpc-addr: http://localhost:26657
+            account-prefix: tp
+            keyring-backend: test
+            gas-adjustment: 1.5
+            gas-prices: 1905nhash
+            debug: false
+            timeout: 20s
+            output-format: json
+            sign-mode: direct
+    local2:
+        type: cosmos
+        value:
+            key: default
+            chain-id: testing2
+            rpc-addr: http://localhost:36657
+            account-prefix: tp
+            keyring-backend: test
+            gas-adjustment: 1.5
+            gas-prices: 1905nhash
+            debug: false
+            timeout: 20s
+            output-format: json
+            sign-mode: direct
+    testnet:
+        type: cosmos
+        value:
+            key: default
+            chain-id: pio-testnet-1
+            rpc-addr: https://rpc.test.provenance.io:443
+            account-prefix: tp
+            keyring-backend: test
+            gas-adjustment: 1.5
+            gas-prices: 1905nhash
+            debug: false
+            timeout: 20s
+            output-format: json
+            sign-mode: direct
+paths:
+    local_local2:
+        src:
+            chain-id: testing
+        dst:
+            chain-id: testing2
+        src-channel-filter:
+            rule: ""
+            channel-list: []
+    local_testnet:
+        src:
+            chain-id: testing
+        dst:
+            chain-id: pio-testnet-1
+        src-channel-filter:
+            rule: ""
+            channel-list: []
