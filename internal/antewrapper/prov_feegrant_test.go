@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -25,12 +24,14 @@ import (
 	pioante "github.com/provenance-io/provenance/internal/antewrapper"
 )
 
+const defaultGas = 10_000_000
+
 // These tests are kicked off by TestAnteTestSuite in testutil_test.go
 
-func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
-	suite.SetupTest(false)
+func (s *AnteTestSuite) TestDeductFeesNoDelegation() {
+	s.SetupTest(false)
 	// setup
-	app, ctx := suite.app, suite.ctx
+	app, ctx := s.app, s.ctx
 
 	protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(app.InterfaceRegistry()), tx.DefaultSignModes)
 
@@ -42,7 +43,7 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	feeAnteHandler := sdk.ChainAnteDecorators(decorators...)
 
 	// this tests the whole stack
-	anteHandlerStack := suite.anteHandler
+	anteHandlerStack := s.anteHandler
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -52,26 +53,26 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	priv5, _, addr5 := testdata.KeyTestPubAddr()
 
 	// Set addr1 with insufficient funds
-	err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(10))})
-	suite.Require().NoError(err, "funding account 1")
+	err := testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(10))})
+	s.Require().NoError(err, "funding account 1")
 
 	// Set addr2 with more funds
-	err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99_999_999))})
-	suite.Require().NoError(err, "funding account 2")
+	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(defaultGas*10-1))})
+	s.Require().NoError(err, "funding account 2")
 
 	// grant fee allowance from `addr2` to `addr3` (plenty to pay)
 	err = app.FeeGrantKeeper.GrantAllowance(ctx, addr2, addr3, &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", helpers.DefaultGenTxGas*5)),
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", defaultGas*5)),
 	})
-	suite.Require().NoError(err, "grant allowance 2 to 3")
+	s.Require().NoError(err, "grant allowance 2 to 3")
 
 	// grant low fee allowance (20atom), to check the tx requesting more than allowed.
 	err = app.FeeGrantKeeper.GrantAllowance(ctx, addr2, addr4, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 20)),
 	})
-	suite.Require().NoError(err, "grant allowance 2 to 4")
+	s.Require().NoError(err, "grant allowance 2 to 4")
 
-	defaultGasStr := fmt.Sprintf("%datom", helpers.DefaultGenTxGas)
+	defaultGasStr := fmt.Sprintf("%datom", defaultGas)
 
 	cases := []struct {
 		name       string
@@ -85,19 +86,19 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			name:      "paying from account with insufficient funds and no grants",
 			signerKey: priv1,
 			signer:    addr1,
-			fee:       helpers.DefaultGenTxGas,
+			fee:       defaultGas,
 			expInErr:  []string{"10atom", defaultGasStr, "insufficient funds"},
 		}, {
 			name:      "paying with good funds",
 			signerKey: priv2,
 			signer:    addr2,
-			fee:       helpers.DefaultGenTxGas,
+			fee:       defaultGas,
 			expInErr:  nil,
 		}, {
 			name:      "paying with no account",
 			signerKey: priv3,
 			signer:    addr3,
-			fee:       helpers.DefaultGenTxGas,
+			fee:       defaultGas,
 			expInErr:  []string{"0atom", defaultGasStr, "insufficient funds"},
 		}, {
 			name:      "no fee with no account",
@@ -110,38 +111,59 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr2,
-			fee:        helpers.DefaultGenTxGas,
+			fee:        defaultGas,
 			expInErr:   nil,
 		}, {
 			name:       "no fee grant",
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr1,
-			fee:        helpers.DefaultGenTxGas,
-			expInErr:   []string{addr3.String(), addr1.String(), "not", "allow", "to pay fees", "fee-grant not found"},
-			// Note: They have a different error than us for this, and I don't think we should change ours.
-			//	Our error has this format:  "<addr> not allowed to pay fees from <addr>"
-			//	But theirs has this format: "<addr> does not not allow to pay fees for <addr>"
+			fee:        defaultGas,
+			// Example expected error: failed to use fee grant: granter: cosmos1mkrvvfy6g607gfkf305hd3ttgk28azk63vz86r, grantee: cosmos1rmm7ntcxfn0v9uq50ysye24wrva5t5w89hjnlw, fee: \"10000000atom\", msgs: [\"/testdata.TestMsg\"]: fee-grant not found: not found
+			expInErr: []string{
+				"failed to use fee grant",
+				fmt.Sprintf("granter: %s", addr1),
+				fmt.Sprintf("grantee: %s", addr3),
+				fmt.Sprintf(`fee: "%s"`, defaultGasStr),
+				`msgs: ["/testdata.TestMsg"]`,
+				"fee-grant not found",
+			},
 		}, {
 			name:       "allowance smaller than requested fee",
 			signerKey:  priv4,
 			signer:     addr4,
 			feeAccount: addr2,
-			fee:        helpers.DefaultGenTxGas,
-			expInErr:   []string{addr4.String(), addr2.String(), "not", "allow", "to pay fees", "basic allowance", "fee limit exceeded"},
+			fee:        defaultGas,
+			// Example expected error: failed to use fee grant: granter: cosmos1uvgedtdxsx6fdrzsj76gw8lk97n3qv7vderxgr, grantee: cosmos1fchylavxk0d7yu5zfys5g7z3sg7acyd4mquyte, fee: \"10000000atom\", msgs: [\"/testdata.TestMsg\"]: basic allowance: fee limit exceeded
+			expInErr: []string{
+				"failed to use fee grant",
+				fmt.Sprintf("granter: %s", addr2),
+				fmt.Sprintf("grantee: %s", addr4),
+				fmt.Sprintf(`fee: "%s"`, defaultGasStr),
+				`msgs: ["/testdata.TestMsg"]`,
+				"fee limit exceeded",
+			},
 		}, {
 			name:       "granter cannot cover allowed fee grant",
 			signerKey:  priv4,
 			signer:     addr4,
 			feeAccount: addr1,
-			fee:        helpers.DefaultGenTxGas,
-			expInErr:   []string{addr4.String(), addr1.String(), "not", "allow", "to pay fees", "fee-grant not found"},
+			fee:        defaultGas,
+			// Example expected error: failed to use fee grant: granter: cosmos1mkrvvfy6g607gfkf305hd3ttgk28azk63vz86r, grantee: cosmos1fchylavxk0d7yu5zfys5g7z3sg7acyd4mquyte, fee: \"10000000atom\", msgs: [\"/testdata.TestMsg\"]: fee-grant not found: not found
+			expInErr: []string{
+				"failed to use fee grant",
+				fmt.Sprintf("granter: %s", addr1),
+				fmt.Sprintf("grantee: %s", addr4),
+				fmt.Sprintf(`fee: "%s"`, defaultGasStr),
+				`msgs: ["/testdata.TestMsg"]`,
+				"fee-grant not found",
+			},
 		},
 	}
 
 	for _, stc := range cases {
 		tc := stc // to make scopelint happy
-		suite.T().Run(tc.name, func(t *testing.T) {
+		s.T().Run(tc.name, func(t *testing.T) {
 			fee := sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee))
 			msgs := []sdk.Msg{testdata.NewTestMsg(tc.signer)}
 
@@ -151,7 +173,7 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 				accNums, seqs = []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}
 			}
 
-			txfg, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
+			txfg, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, defaultGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
 			require.NoError(t, err, "genTxWithFeeGranter")
 			_, err = feeAnteHandler(ctx, txfg, false) // tests only feegrant ante
 			if len(tc.expInErr) == 0 {
