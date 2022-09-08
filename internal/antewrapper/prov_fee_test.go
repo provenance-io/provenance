@@ -4,68 +4,12 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	pioante "github.com/provenance-io/provenance/internal/antewrapper"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // These tests are kicked off by TestAnteTestSuite in testutil_test.go
-
-func (s *AnteTestSuite) TestEnsureMempoolFees() {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
-	s.SetupTest(true) // setup
-	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
-
-	mfd := ante.NewDeductFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, nil)
-	antehandler := sdk.ChainAnteDecorators(mfd)
-
-	testaccs := s.CreateTestAccounts(1)
-	priv1 := testaccs[0].priv
-	addr1 := testaccs[0].acc.GetAddress()
-
-	// msg and signatures
-	msg := testdata.NewTestMsg(addr1)
-	feeAmount := testdata.NewTestFeeAmount()
-	gasLimit := testdata.NewTestGasLimit()
-	s.Require().NoError(s.txBuilder.SetMsgs(msg))
-	s.txBuilder.SetFeeAmount(feeAmount)
-	s.txBuilder.SetGasLimit(gasLimit)
-
-	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
-	s.Require().NoError(err)
-
-	// Set high gas price so standard test fee fails
-	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(200).Quo(sdk.NewDec(100000)))
-	highGasPrice := []sdk.DecCoin{atomPrice}
-	s.ctx = s.ctx.WithMinGasPrices(highGasPrice)
-
-	// Set IsCheckTx to true
-	s.ctx = s.ctx.WithIsCheckTx(true)
-
-	// antehandler errors with insufficient fees
-	_, err = antehandler(s.ctx, tx, false)
-	s.Require().ErrorContains(err, "insufficient fees", "Decorator should have errored on too low fee for local gasPrice")
-
-	// Set IsCheckTx to false
-	s.ctx = s.ctx.WithIsCheckTx(false)
-
-	// antehandler should not error since we do not check minGasPrice in DeliverTx
-	_, err = antehandler(s.ctx, tx, false)
-	s.Require().Nil(err, "MempoolFeeDecorator returned error in DeliverTx")
-
-	// Set IsCheckTx back to true for testing sufficient mempool fee
-	s.ctx = s.ctx.WithIsCheckTx(true)
-
-	atomPrice = sdk.NewDecCoinFromDec("atom", sdk.NewDec(0).Quo(sdk.NewDec(100000)))
-	lowGasPrice := []sdk.DecCoin{atomPrice}
-	s.ctx = s.ctx.WithMinGasPrices(lowGasPrice)
-
-	_, err = antehandler(s.ctx, tx, false)
-	s.Require().Nil(err, "Decorator should not have errored on fee higher than local gasPrice")
-}
 
 func (s *AnteTestSuite) TestDeductFees() {
 	s.SetupTest(false) // setup
