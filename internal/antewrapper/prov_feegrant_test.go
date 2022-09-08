@@ -28,7 +28,7 @@ const defaultGas = 10_000_000
 
 // These tests are kicked off by TestAnteTestSuite in testutil_test.go
 
-func (s *AnteTestSuite) TestDeductFeesNoDelegation() {
+func (s *AnteTestSuite) TestDeductBaseFees() {
 	s.SetupTest(false)
 	// setup
 	app, ctx := s.app, s.ctx
@@ -185,7 +185,7 @@ func (s *AnteTestSuite) TestDeductFeesNoDelegation() {
 				}
 			}
 
-			_, err = anteHandlerStack(ctx, txfg, false) // tests while stack
+			_, err = anteHandlerStack(ctx, txfg, false) // tests whole stack
 			if len(tc.expInErr) == 0 {
 				require.NoError(t, err, "anteHandlerStack")
 			} else {
