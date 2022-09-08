@@ -97,7 +97,7 @@ func EnsureSufficientFloorAndMsgFees(ctx sdk.Context, feeCoins sdk.Coins, floorG
 
 	var baseFee sdk.Coins
 	if !floorGasPrice.IsZero() {
-		baseFee.Add(sdk.NewCoin(floorGasPrice.Denom, floorGasPrice.Amount.Mul(sdk.NewIntFromUint64(gas))))
+		baseFee = baseFee.Add(sdk.NewCoin(floorGasPrice.Denom, floorGasPrice.Amount.Mul(sdk.NewIntFromUint64(gas))))
 	}
 	reqTotal := baseFee.Add(additionalFees...)
 
