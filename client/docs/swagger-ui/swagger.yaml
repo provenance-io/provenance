@@ -41470,7 +41470,7 @@ paths:
                   nhash_per_usd_mil:
                     type: string
                     format: uint64
-                    title: total vspn per usd mil for converting usd to vspn
+                    title: total nhash per usd mil for converting usd to nhash
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -41597,7 +41597,7 @@ paths:
                 type: string
                 description: |-
                   default_base_denom is used to set the denom used for gas fees
-                  if not set it will default to vspn.
+                  if not set it will default to nhash.
               gas_adjustment:
                 type: number
                 format: float
@@ -71138,7 +71138,7 @@ definitions:
         type: string
         description: |-
           default_base_denom is used to set the denom used for gas fees
-          if not set it will default to vspn.
+          if not set it will default to nhash.
       gas_adjustment:
         type: number
         format: float
@@ -71234,7 +71234,7 @@ definitions:
       nhash_per_usd_mil:
         type: string
         format: uint64
-        title: total vspn per usd mil for converting usd to vspn
+        title: total nhash per usd mil for converting usd to nhash
     description: Params defines the set of params for the msgfees module.
   provenance.msgfees.v1.QueryAllMsgFeesResponse:
     type: object

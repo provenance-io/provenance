@@ -54,7 +54,7 @@ The following functionality has been verified to work:
 1. Starting a local chain and running it to 50000+ blocks
 2. Querying the chain
 3. Adding new keys to the chain
-4. Sending vspn between various keys
+4. Sending nhash between various keys
 5. Creating a name attribute
 6. Creating a new coin
 7. Granting permission, activating, finalizing and withdrawing the new coin
