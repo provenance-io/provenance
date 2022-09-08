@@ -15,7 +15,7 @@ import (
 
 // Expiration holds a typed key/value structure for data associated with an expiring module asset
 type Expiration struct {
-	ModuleAssetId string          `json:"module_asset_id"`
+	ModuleAssetID string          `json:"module_asset_id"`
 	Owner         string          `json:"owner"`
 	BlockHeight   int64           `json:"block_height"`
 	Deposit       sdk.Coin        `json:"deposit"`
@@ -33,7 +33,7 @@ func (expiration *Expiration) convertToBaseType() (*types.Expiration, error) {
 	}
 
 	baseType := &types.Expiration{
-		ModuleAssetId: expiration.ModuleAssetId,
+		ModuleAssetId: expiration.ModuleAssetID,
 		Owner:         expiration.Owner,
 		BlockHeight:   expiration.BlockHeight,
 		Deposit:       expiration.Deposit,
@@ -77,7 +77,7 @@ func createExpiration(baseType *types.Expiration) (*Expiration, error) {
 	}
 
 	expiration := &Expiration{
-		ModuleAssetId: baseType.ModuleAssetId,
+		ModuleAssetID: baseType.ModuleAssetId,
 		Owner:         baseType.Owner,
 		BlockHeight:   baseType.BlockHeight,
 		Deposit:       baseType.Deposit,

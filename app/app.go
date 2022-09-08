@@ -110,6 +110,7 @@ import (
 	expirationkeeper "github.com/provenance-io/provenance/x/expiration/keeper"
 	expirationmodule "github.com/provenance-io/provenance/x/expiration/module"
 	expirationtypes "github.com/provenance-io/provenance/x/expiration/types"
+	expirationwasm "github.com/provenance-io/provenance/x/expiration/wasm"
 	"github.com/provenance-io/provenance/x/marker"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -460,7 +461,7 @@ func New(
 	encoderRegistry.RegisterEncoder(markertypes.RouterKey, markerwasm.Encoder)
 	encoderRegistry.RegisterEncoder(metadatatypes.RouterKey, metadatawasm.Encoder)
 	encoderRegistry.RegisterEncoder(msgfeestypes.RouterKey, msgfeeswasm.Encoder)
-	// TODO add expiration module router key
+	encoderRegistry.RegisterEncoder(expirationtypes.RouterKey, expirationwasm.Encoder)
 
 	// Init CosmWasm query integrations
 	querierRegistry := provwasm.NewQuerierRegistry()
@@ -468,6 +469,7 @@ func New(
 	querierRegistry.RegisterQuerier(attributetypes.RouterKey, attributewasm.Querier(app.AttributeKeeper))
 	querierRegistry.RegisterQuerier(markertypes.RouterKey, markerwasm.Querier(app.MarkerKeeper))
 	querierRegistry.RegisterQuerier(metadatatypes.RouterKey, metadatawasm.Querier(app.MetadataKeeper))
+	querierRegistry.RegisterQuerier(expirationtypes.RouterKey, expirationwasm.Querier(app.ExpirationKeeper))
 
 	// Add the staking feature and indicate that provwasm contracts can be run on this chain.
 	supportedFeatures := "staking,provenance,stargate,iterator"

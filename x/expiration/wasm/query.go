@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	
+
 	"github.com/provenance-io/provenance/internal/provwasm"
 	"github.com/provenance-io/provenance/x/expiration/keeper"
 	"github.com/provenance-io/provenance/x/expiration/types"
@@ -26,7 +26,7 @@ type ExpirationQueryParams struct {
 // GetExpirationParams are the inputs for an expiration query.
 type GetExpirationParams struct {
 	// The bech32 address of the expiration we want to get.
-	ModuleAssetId string `json:"module_asset_id"`
+	ModuleAssetID string `json:"module_asset_id"`
 }
 
 // GetAllExpirationsParams are the inputs for a session query.
@@ -67,9 +67,9 @@ func Querier(keeper keeper.Keeper) provwasm.Querier {
 
 // Run gets a scope by ID.
 func (params *GetExpirationParams) Run(ctx sdk.Context, keeper keeper.Keeper) ([]byte, error) {
-	expiration, err := keeper.GetExpiration(ctx, params.ModuleAssetId)
+	expiration, err := keeper.GetExpiration(ctx, params.ModuleAssetID)
 	if err != nil {
-		return nil, fmt.Errorf("wasm: %s not found: %s", types.ModuleName, params.ModuleAssetId)
+		return nil, fmt.Errorf("wasm: %s not found: %s", types.ModuleName, params.ModuleAssetID)
 	}
 
 	return createExpirationResponse(expiration)

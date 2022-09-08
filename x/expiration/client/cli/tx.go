@@ -231,27 +231,26 @@ func parseAddExtendRequest(
 	cdc codec.Codec,
 	path string,
 ) (string, string, int64, sdk.Coins, *types2.Any, error) {
-	var expiration expiration
-
 	contents, err := os.ReadFile(path)
 	if err != nil {
 		return "", "", -1, nil, nil, err
 	}
 
-	if err := json.Unmarshal(contents, &expiration); err != nil {
+	var exp expiration
+	if err = json.Unmarshal(contents, &exp); err != nil {
 		return "", "", -1, nil, nil, err
 	}
 
-	deposit, err := sdk.ParseCoinsNormalized(expiration.Deposit)
+	deposit, err := sdk.ParseCoinsNormalized(exp.Deposit)
 	if err != nil {
 		return "", "", -1, nil, nil, err
 	}
 
 	var msg sdk.Msg
-	if err := cdc.UnmarshalInterfaceJSON(expiration.Message, &msg); err != nil {
+	if err = cdc.UnmarshalInterfaceJSON(exp.Message, &msg); err != nil {
 		return "", "", -1, nil, nil, err
 	}
-	if err := msg.ValidateBasic(); err != nil {
+	if err = msg.ValidateBasic(); err != nil {
 		return "", "", -1, nil, nil, err
 	}
 
@@ -260,9 +259,9 @@ func parseAddExtendRequest(
 		return "", "", -1, nil, nil, err
 	}
 
-	return expiration.ModuleAssetID,
-		expiration.Owner,
-		expiration.BlockHeight,
+	return exp.ModuleAssetID,
+		exp.Owner,
+		exp.BlockHeight,
 		deposit,
 		anyMsg, err
 }

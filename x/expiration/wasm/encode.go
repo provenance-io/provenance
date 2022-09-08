@@ -51,14 +51,14 @@ func (params *AddExpiration) Encode() ([]sdk.Msg, error) {
 	// verify the signer addresses are valid
 	for _, addr := range params.Signers {
 		if _, err := sdk.AccAddressFromBech32(addr); err != nil {
-			return nil, fmt.Errorf("wasm: signer address must be a Bech32 string: %v", err)
+			return nil, fmt.Errorf("wasm: signer address must be a Bech32 string: %w", err)
 		}
 	}
 
 	// convert to base type
 	expiration, err := params.Expiration.convertToBaseType()
 	if err != nil {
-		return nil, fmt.Errorf("wasm: invalid expiration data: %v", err)
+		return nil, fmt.Errorf("wasm: invalid expiration data: %w", err)
 	}
 
 	// create message request
