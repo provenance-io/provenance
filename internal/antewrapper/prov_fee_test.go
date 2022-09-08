@@ -114,7 +114,7 @@ func (s *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
 	// given
 	s.SetupTest(true)
 	newCoin := sdk.NewInt64Coin("steak", 100)
-	s.CreateMsgFee(newCoin, &testdata.TestMsg{})
+	s.Require().NoError(s.CreateMsgFee(newCoin, &testdata.TestMsg{}), "creating 100steak message fee")
 
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
@@ -126,14 +126,13 @@ func (s *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	s.Require().NoError(s.txBuilder.SetMsgs(msg))
+	s.Require().NoError(s.txBuilder.SetMsgs(msg), "SetMsgs")
 	s.txBuilder.SetFeeAmount(feeAmount)
 	s.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	s.ctx.ChainID()
 	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
-	s.Require().NoError(err)
+	s.Require().NoError(err, "CreateTestTx")
 
 	// then
 	// Set the account with insufficient funds (base fee coin insufficient)
@@ -141,44 +140,50 @@ func (s *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
 	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(10)))
 	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "funding account with 10atom")
 
 	decorators := []sdk.AnteDecorator{pioante.NewFeeMeterContextDecorator(), pioante.NewProvenanceDeductFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.MsgFeesKeeper)}
-
 	antehandler := sdk.ChainAnteDecorators(decorators...)
 
-	_, err = antehandler(s.ctx, tx, false)
-
-	s.Require().NotNil(err, "Tx did not error when fee payer had insufficient funds")
+	s.Run("insufficient funds for both base and additional fees", func() {
+		_, err = antehandler(s.ctx, tx, false)
+		// Example error: account cosmos1flu4xj7c66tdmvdjjas3a62a6jynf93ezrgysj does not have enough balance to pay for "150atom,100steak", balance: "10atom": insufficient funds
+		s.Require().Error(err, "antehandler")
+		s.Assert().ErrorContains(err, addr1.String())
+		s.Assert().ErrorContains(err, "does not have enough balance to pay")
+		s.Assert().ErrorContains(err, `"150atom,100steak"`)
+		s.Assert().ErrorContains(err, `"10atom"`)
+		s.Assert().ErrorContains(err, `insufficient funds`)
+	})
 
 	// Set account with sufficient funds for base fees and but not additional fees
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
 	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200_000))))
-	s.Require().NoError(err)
+	s.Require().NoError(err, "funding account with 200000atom")
 
-	_, err = antehandler(s.ctx, tx, false)
-
-	s.Require().NotNil(err, "Tx did not error when fee payer had insufficient funds")
+	s.Run("insufficient funds for just additional fees", func() {
+		_, err = antehandler(s.ctx, tx, false)
+		s.Require().Error(err, "antehandler")
+		s.Assert().ErrorContains(err, addr1.String())
+		s.Assert().ErrorContains(err, "does not have enough balance to pay")
+		s.Assert().ErrorContains(err, `"150atom,100steak"`)
+		s.Assert().ErrorContains(err, `"200010atom"`)
+		s.Assert().ErrorContains(err, `insufficient funds`)
+	})
 
 	// valid case
 	// set gas fee and msg fees (steak)
 	// Set account with sufficient funds
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
-	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(100))))
-	s.Require().NoError(err)
+	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(200))))
+	s.Require().NoError(err, "funding account with 200steak")
 
-	s.txBuilder.SetFeeAmount(NewTestFeeAmountMultiple())
-	s.txBuilder.SetGasLimit(gasLimit)
+	s.Run("sufficient funds", func() {
+		s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("steak", 100)))
+		tx, err = s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+		s.Require().NoError(err, "CreateTestTx")
 
-	tx, err = s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
-	s.Require().NoError(err)
-
-	_, err = antehandler(s.ctx, tx, false)
-
-	s.Require().Nil(err, "Tx did not error when fee payer had insufficient funds")
-}
-
-// NewTestFeeAmount is a test fee amount with multiple coins.
-func NewTestFeeAmountMultiple() sdk.Coins {
-	return sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("steak", 100))
+		_, err = antehandler(s.ctx, tx, false)
+		s.Require().NoError(err, "antehandler")
+	})
 }
