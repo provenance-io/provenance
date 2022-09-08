@@ -28,11 +28,11 @@ A user may force a Reward Program in this state to end with the `end-reward-prog
 ### Started 
 The Reward Program has started, and users can participate by performing qualifying actions. Participants can claim their rewards at the end of the claim period that the qualifying action was performed in.
 
-### Finished 
-The Reward Program has ended, and participants can no longer make qualifying actions. Participants have a limited amount of time to collect their remaining rewards.
-
 #### Note
 A user may force a Reward Program in this state to end with the `end-reward-program` transaction. The Reward Program will transition to the `Finished` state on the next `BeginBlock`.
+
+### Finished 
+The Reward Program has ended, and participants can no longer make qualifying actions. Participants have a limited amount of time to collect their remaining rewards.
 
 ### Expired
 Reward program has passed its expiration date, and participants can no longer claim rewards. The remaining balance and any unclaimed rewards will be returned to the creator.
