@@ -6,6 +6,8 @@ import (
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
+// GetRewardAccountState gets a RewardAccountState.
+// If the desired RewardAccountState doesn't exist, an empty RewardAccountState is returned (without error).
 func (k Keeper) GetRewardAccountState(ctx sdk.Context, rewardProgramID, rewardClaimPeriodID uint64, addr string) (state types.RewardAccountState, err error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRewardAccountStateKey(rewardProgramID, rewardClaimPeriodID, types.MustAccAddressFromBech32(addr))
@@ -25,6 +27,7 @@ func (k Keeper) GetRewardAccountState(ctx sdk.Context, rewardProgramID, rewardCl
 	return state, err
 }
 
+// SetRewardAccountState stores the provided RewardAccountState in the state store and indexes it.
 func (k Keeper) SetRewardAccountState(ctx sdk.Context, state types.RewardAccountState) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&state)

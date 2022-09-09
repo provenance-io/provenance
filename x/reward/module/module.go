@@ -122,20 +122,24 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
+// ProposalContents returns content functions used to simulate governance proposals.
 func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
 	// currently no gov proposals exist
 	return nil
 }
 
+// RandomizedParams returns randomized module parameters for param change proposals.
 func (am AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	// currently no module params exist
 	return nil
 }
 
+// RegisterStoreDecoder registers a func to decode each module's defined types from their corresponding store key
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	sdr[keeper.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
+// WeightedOperations returns simulation operations (i.e msgs) with their respective weight
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
 		simState.AppParams, simState.Cdc, am.keeper, am.accountKeeper, am.bankKeeper,
@@ -182,6 +186,8 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
+// BeginBlock is the `BeginBlocker` function run at the beginning of each block to
+// process rewards module updates.
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	rewardModule.BeginBlocker(ctx, am.keeper)
 }

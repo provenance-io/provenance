@@ -38,10 +38,15 @@ const (
 
 // RewardAction defines the interface that actions need to implement
 type RewardAction interface {
+	// ActionType returns a string identifying this action type.
 	ActionType() string
+	// Evaluate returns true if this reward action satisfies the provided state and event.
 	Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool
+	// PreEvaluate returns true if this reward action is in a state that's ready for evaluation.
 	PreEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool
+	// PostEvaluate returns true if the state's action counter is within this reward action's min and max (inclusive).
 	PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool
+	// GetBuilder returns a new ActionBuilder for this reward action.
 	GetBuilder() ActionBuilder
 }
 
@@ -70,6 +75,8 @@ func NewEventCriteria(events []ABCIEvent) *EventCriteria {
 	return &criteria
 }
 
+// MatchesEvent returns true if this EventCriteria's events contains the
+// provided event type or if this EventCriteria's doesn't have any events.
 func (ec *EventCriteria) MatchesEvent(eventType string) bool {
 	// If we have no Events then we match everything
 	if ec.Events == nil {
@@ -81,6 +88,8 @@ func (ec *EventCriteria) MatchesEvent(eventType string) bool {
 	return exists
 }
 
+// MatchesAttribute returns true if this ABCIEvent has an attribute that matches the provided key and value.
+// The value is only compared if this ABCIEvent's attribute has a value.
 func (ec *ABCIEvent) MatchesAttribute(name string, value []byte) bool {
 	attribute, exists := ec.Attributes[name]
 	if !exists {
@@ -264,10 +273,14 @@ func (s *RewardAccountState) Validate() error {
 	return nil
 }
 
+// CalculateExpectedEndTime returns the expected end time (in UTC).
+// expected end time = programStartTime + claimPeriodSeconds * numberOfClaimPeriods.
 func CalculateExpectedEndTime(programStartTime time.Time, claimPeriodSeconds, numberOfClaimPeriods uint64) time.Time {
 	return programStartTime.Add(time.Duration(claimPeriodSeconds*numberOfClaimPeriods) * time.Second).UTC()
 }
 
+// CalculateEndTimeMax returns the latest time that a program can end (in UTC).
+// end time max = programStartTime + claimPeriodSeconds * (numberOfClaimPeriods + maxRolloverPeriods).
 func CalculateEndTimeMax(programStartTime time.Time, claimPeriodSeconds, numberOfClaimPeriods uint64, maxRolloverPeriods uint64) time.Time {
 	return programStartTime.Add(time.Duration(claimPeriodSeconds*(numberOfClaimPeriods+maxRolloverPeriods)) * time.Second).UTC()
 }
@@ -395,6 +408,7 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	return hasValidDelegationAmount && hasValidActivePercentile
 }
 
+// GetMinimumActiveStakePercentile returns this action's minimum active stake percentile or zero if not defined.
 func (ad *ActionDelegate) GetMinimumActiveStakePercentile() sdk.Dec {
 	if ad != nil {
 		return ad.MinimumActiveStakePercentile
@@ -402,6 +416,7 @@ func (ad *ActionDelegate) GetMinimumActiveStakePercentile() sdk.Dec {
 	return sdk.NewDec(0)
 }
 
+// GetMaximumActiveStakePercentile returns this action's maximum active stake percentile or zero if not defined.
 func (ad *ActionDelegate) GetMaximumActiveStakePercentile() sdk.Dec {
 	if ad != nil {
 		return ad.MaximumActiveStakePercentile
@@ -546,6 +561,8 @@ func (qa *QualifyingAction) Validate() (isValid error) {
 	return isValid
 }
 
+// GetRewardAction returns the reward action for this qualifying action.
+// An error is returned if the action is of an unexpected type.
 func (qa *QualifyingAction) GetRewardAction(ctx sdk.Context) (RewardAction, error) {
 	var action RewardAction
 

@@ -461,6 +461,8 @@ func FundModuleAccount(app *App, ctx sdk.Context, recipientMod string, amounts s
 	return app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, recipientMod, amounts)
 }
 
+// SetupWithGenesisRewardsProgram initializes a new SimApp with the provided
+// rewards programs, genesis accounts, validators, and balances.
 func SetupWithGenesisRewardsProgram(nextRewardProgramID uint64, genesisRewards []types.RewardProgram, genAccs []authtypes.GenesisAccount, valSet []stakingtypes.Validator, balances ...banktypes.Balance) *App {
 	app, genesisState := setup(true, 0)
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)

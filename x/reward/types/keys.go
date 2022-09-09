@@ -143,6 +143,7 @@ func MustAccAddressFromBech32(s string) sdk.AccAddress {
 	return accAddress
 }
 
+// ParseFilterLookUpKey splits the provided key into a reward id and claim id and returns them in a RewardAccountLookup along with the provided address.
 func ParseFilterLookUpKey(accountStateAddressLookupKey []byte, addr sdk.AccAddress) (RewardAccountLookup, error) {
 	rewardID := binary.BigEndian.Uint64(accountStateAddressLookupKey[0:8])
 	claimID := binary.BigEndian.Uint64(accountStateAddressLookupKey[8:16])
