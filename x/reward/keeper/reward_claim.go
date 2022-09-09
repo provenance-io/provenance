@@ -138,32 +138,31 @@ func (k Keeper) RefundRewardClaims(ctx sdk.Context, rewardProgram types.RewardPr
 func (k Keeper) ClaimAllRewards(ctx sdk.Context, addr string) ([]*types.RewardProgramClaimDetail, sdk.Coins, error) {
 	var allProgramDetails []*types.RewardProgramClaimDetail
 	allRewards := sdk.Coins{}
-	err := k.IterateRewardPrograms(ctx, func(rewardProgram types.RewardProgram) (stop bool, err error) {
-		// ignore expired reward programs from all claim( i.e do not error on them)
-		if rewardProgram.State != types.RewardProgram_STATE_EXPIRED {
-			details, reward, err := k.ClaimRewards(ctx, rewardProgram.GetId(), addr)
-			// err needs to propagated up, else tx will commit
-			if err != nil {
-				ctx.Logger().Error(fmt.Sprintf("Unable to claim reward program %d. Error: %v ", rewardProgram.GetId(), err))
-				return true, err
-			}
-			if reward.IsZero() {
-				ctx.Logger().Info(fmt.Sprintf("Skipping reward program %d. It has no rewards.", rewardProgram.GetId()))
-				return false, nil
-			}
 
-			programDetails := types.RewardProgramClaimDetail{
-				RewardProgramId:            rewardProgram.GetId(),
-				TotalRewardClaim:           reward,
-				ClaimedRewardPeriodDetails: details,
-			}
-			allProgramDetails = append(allProgramDetails, &programDetails)
-			allRewards = allRewards.Add(reward)
-		}
-		return false, nil
-	})
+	programs, err := k.GetUnexpiredRewardPrograms(ctx)
 	if err != nil {
 		return nil, sdk.Coins{}, err
+	}
+
+	for _, rewardProgram := range programs {
+		details, reward, err := k.ClaimRewards(ctx, rewardProgram.GetId(), addr)
+		// err needs to propagated up, else tx will commit
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("Unable to claim reward program %d. Error: %v ", rewardProgram.GetId(), err))
+			return nil, sdk.Coins{}, err
+		}
+		if reward.IsZero() {
+			ctx.Logger().Info(fmt.Sprintf("Skipping reward program %d. It has no rewards.", rewardProgram.GetId()))
+			continue
+		}
+
+		programDetails := types.RewardProgramClaimDetail{
+			RewardProgramId:            rewardProgram.GetId(),
+			TotalRewardClaim:           reward,
+			ClaimedRewardPeriodDetails: details,
+		}
+		allProgramDetails = append(allProgramDetails, &programDetails)
+		allRewards = allRewards.Add(reward)
 	}
 
 	return allProgramDetails, allRewards, nil
