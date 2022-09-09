@@ -55,7 +55,7 @@ func (s *MsgFeesProposalTestSuite) TestAddMsgFeeProposalType() {
 		},
 		{
 			"Invalid proposal invalid basis points for address",
-			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10_001"),
+			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10001"),
 			"recipient basis points can only be between 0 and 10,000 : 10001",
 		},
 		{
@@ -65,7 +65,7 @@ func (s *MsgFeesProposalTestSuite) TestAddMsgFeeProposalType() {
 		},
 		{
 			"Valid proposal with recipient",
-			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10_000"),
+			NewAddMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10000"),
 			"",
 		},
 		{
@@ -122,7 +122,7 @@ func (s *MsgFeesProposalTestSuite) TestUpdateMsgFeeProposalType() {
 		},
 		{
 			"Invalid proposal invalid basis points for address",
-			NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10_001"),
+			NewUpdateMsgFeeProposal("title", "description", msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10001"),
 			"recipient basis points can only be between 0 and 10,000 : 10001",
 		},
 		{
