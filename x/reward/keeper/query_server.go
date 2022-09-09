@@ -17,6 +17,7 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
+// RewardPrograms returns paginated reward programs matching the query type
 func (k Keeper) RewardPrograms(ctx context.Context, req *types.QueryRewardProgramsRequest) (*types.QueryRewardProgramsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -63,6 +64,7 @@ func (k Keeper) RewardPrograms(ctx context.Context, req *types.QueryRewardProgra
 	return &response, nil
 }
 
+// RewardProgramByID returns a reward program by rewardID
 func (k Keeper) RewardProgramByID(ctx context.Context, req *types.QueryRewardProgramByIDRequest) (*types.QueryRewardProgramByIDResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -76,7 +78,7 @@ func (k Keeper) RewardProgramByID(ctx context.Context, req *types.QueryRewardPro
 	return &types.QueryRewardProgramByIDResponse{RewardProgram: &rewardProgram}, nil
 }
 
-// returns paginated ClaimPeriodRewardDistributions
+// ClaimPeriodRewardDistributions returns paginated ClaimPeriodRewardDistributions
 func (k Keeper) ClaimPeriodRewardDistributions(ctx context.Context, req *types.QueryClaimPeriodRewardDistributionsRequest) (*types.QueryClaimPeriodRewardDistributionsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -128,6 +130,7 @@ func (k Keeper) ClaimPeriodRewardDistributionsByID(ctx context.Context, req *typ
 	return &response, nil
 }
 
+// RewardDistributionsByAddress returns a list of all claimable rewards for an address
 func (k Keeper) RewardDistributionsByAddress(ctx context.Context, request *types.QueryRewardDistributionsByAddressRequest) (*types.QueryRewardDistributionsByAddressResponse, error) {
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
