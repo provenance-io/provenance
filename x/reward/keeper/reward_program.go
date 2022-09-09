@@ -95,8 +95,8 @@ func (k Keeper) IterateRewardPrograms(ctx sdk.Context, handle func(rewardProgram
 	return nil
 }
 
-// GetOutstandingRewardPrograms Gets all RewardPrograms that have not expired
-func (k Keeper) GetOutstandingRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
+// GetAllOutstandingRewardPrograms Gets all RewardPrograms that have not expired
+func (k Keeper) GetAllOutstandingRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
 	return k.getRewardProgramByState(ctx, types.RewardProgram_STATE_PENDING, types.RewardProgram_STATE_STARTED)
 }
 

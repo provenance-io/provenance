@@ -276,7 +276,7 @@ func (s *KeeperTestSuite) TestIterateRewardProgramsEmpty() {
 	s.Assert().Equal(0, counter, "should stop when iteration is instructed to stop")
 }
 
-func (s *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
+func (s *KeeperTestSuite) TestGetAllOutstandingRewardPrograms() {
 	time := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
@@ -327,15 +327,15 @@ func (s *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, program2)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, program3)
 
-	programs, err := s.app.RewardKeeper.GetOutstandingRewardPrograms(s.ctx)
+	programs, err := s.app.RewardKeeper.GetAllOutstandingRewardPrograms(s.ctx)
 	s.Assert().NoError(err, "no error should be returned")
 	s.Assert().Equal(2, len(programs), "should have all outstanding programs")
 	s.Assert().Equal(uint64(1), programs[0].GetId(), "should have program 1")
 	s.Assert().Equal(uint64(2), programs[1].GetId(), "should have program 2")
 }
 
-func (s *KeeperTestSuite) TestGetOutstandingRewardProgramsEmpty() {
-	programs, err := s.app.RewardKeeper.GetOutstandingRewardPrograms(s.ctx)
+func (s *KeeperTestSuite) TestGetAllOutstandingRewardProgramsEmpty() {
+	programs, err := s.app.RewardKeeper.GetAllOutstandingRewardPrograms(s.ctx)
 	s.Assert().NoError(err, "no error should be returned")
 	s.Assert().Equal(0, len(programs), "should have no outstanding programs")
 }
