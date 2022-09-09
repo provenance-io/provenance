@@ -30,7 +30,7 @@ A `RewardProgram` is the main data structure used by the Active Participation an
 
 A `ClaimPeriodRewardDistribution` is created for each claim period of every `RewardProgram`. Its purpose is to track live claim period specific information. Examples of this include the total number of granted shares in the claim period, sum of of all its rewards given out as claims, and the amount of reward allocated to it from the `RewardProgram`.
 
-* Claim Period Reward Distribution: `0x03 | Claim Period ID (8 bytes) | Reward Program ID (8 bytes) -> ProtocolBuffers(ClaimPeriodRewardDistribution)`
+* Claim Period Reward Distribution: `0x03 | Reward Program ID (8 bytes) | Claim Period ID (8 bytes) -> ProtocolBuffers(ClaimPeriodRewardDistribution)`
 
 +++ https://github.com/provenance-io/provenance/blob/4e354a9fd554a420f7970522d2e8b0b749baad9d/proto/provenance/reward/v1/reward.proto#L114-L130
 

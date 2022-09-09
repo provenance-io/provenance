@@ -110,8 +110,8 @@ func GetClaimPeriodRewardDistributionKey(claimID uint64, rewardID uint64) []byte
 	claimBytes := make([]byte, 8)
 	rewardBytes := make([]byte, 8)
 	key := ClaimPeriodRewardDistributionKeyPrefix
-	binary.BigEndian.PutUint64(claimBytes, claimID)
 	binary.BigEndian.PutUint64(rewardBytes, rewardID)
+	binary.BigEndian.PutUint64(claimBytes, claimID)
 	key = append(key, claimBytes...)
 	return append(key, rewardBytes...)
 }
