@@ -218,7 +218,30 @@ run-config: check-built
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced collect-gentxs; \
 	fi ;
 
+# Run an instance of the daemon against a local config (create the config if it does not exit.)
+run-config-custom: check-built
+	@if [ ! -d "$(BUILDDIR)/run/provenanced/config" ]; then \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=testing testing ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced keys add validator --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pio --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pb --restrict=false --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator io --restrict --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator provenance --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-account validator 100000000000000000000vspn  --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced gentx validator 1000000000000000vspn  --keyring-backend test --chain-id=testing; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-marker 100000000000000000000vspn  --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.name.v1.MsgBindNameRequest 10000000000vspn  ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.marker.v1.MsgAddMarkerRequest 100000000000vspn  ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest 10000000000vspn  ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest 10000000000vspn  ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgP8eMemorializeContractRequest 10000000000vspn ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced collect-gentxs; \
+	fi ;
+
 run: check-built run-config;
+	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
+
+run-custom: check-built run-config-custom;
 	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
 
 .PHONY: install build build-linux run
@@ -374,15 +397,7 @@ rocksdb:
 cleveldb:
 	scripts/cleveldb_build_and_install.sh
 
-# Download and install librdkafka so that it can be used when doing a build.
-librdkafka:
-	@if [ "$(UNAME_S)" = "darwin" ] && [ "$(UNAME_M)" = "arm64" ]; then \
-		scripts/m1_librdkafka_install.sh;\
-	elif [ "$(UNAME_S)" = "linux" ] && [ "$(UNAME_M)" = "aarch64" ]; then \
-		scripts/linux_arm64_librdkafka_install.sh;\
-	fi
-
-.PHONY: go-mod-cache go.sum lint clean format check-built linkify update-tocs rocksdb cleveldb librdkafka
+.PHONY: go-mod-cache go.sum lint clean format check-built linkify update-tocs rocksdb cleveldb
 
 
 validate-go-version: ## Validates the installed version of go against Provenance's minimum requirement.
@@ -496,6 +511,12 @@ localnet-up:
 
 # Run a 4-node testnet locally (replace docker-build with docker-build local for better speed)
 localnet-start: localnet-generate localnet-up
+
+# Run a 4-node testnet locally but with custom min-gas-price and denom
+localnet-start-custom: localnet-generate-custom localnet-up
+
+localnet-generate-custom: localnet-stop docker-build-local
+	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=chain-local --custom-denom=vspn --minimum-gas-prices=0vspn ; fi
 
 # Stop testnet
 localnet-stop:

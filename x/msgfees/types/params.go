@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"github.com/provenance-io/provenance/app"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -13,8 +14,8 @@ import (
 // DefaultFloorGasPrice to differentiate between base fee and additional fee when additional fee is in same denom as default base denom i.e nhash
 // cannot be a const unfortunately because it's a custom type.
 var DefaultFloorGasPrice = sdk.Coin{
-	Amount: sdk.NewInt(1905),
-	Denom:  NhashDenom,
+	Amount: sdk.NewInt(0),
+	Denom:  app.DefaultFeeDenom,
 }
 
 var DefaultNhashPerUsdMil = uint64(25_000_000)

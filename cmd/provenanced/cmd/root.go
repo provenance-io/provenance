@@ -48,11 +48,15 @@ const (
 	// EnvTypeFlag is a flag for indicating a testnet
 	EnvTypeFlag = "testnet"
 	// Flag used to indicate coin type.
-	CoinTypeFlag = "coin-type"
+	CoinTypeFlag    = "coin-type"
+	CustomDenomFlag = "custom-denom"
 )
 
 // ChainID is the id of the running chain
 var ChainID string
+
+// Denom for fee and stake
+var DefaultDenom string
 
 // NewRootCmd creates a new root command for simd. It is called once in the
 // main function.
@@ -103,6 +107,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		flags.FlagKeyringBackend: "test",
 		server.FlagMinGasPrices:  app.DefaultMinGasPrices,
 		CoinTypeFlag:             fmt.Sprint(app.CoinTypeMainNet),
+		CustomDenomFlag:          app.DefaultFeeDenom,
 	})
 
 	return rootCmd, encodingConfig

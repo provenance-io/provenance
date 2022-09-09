@@ -51,6 +51,7 @@ const (
 	flagOutputDir         = "output-dir"
 	flagNodeDaemonHome    = "node-daemon-home"
 	flagStartingIPAddress = "starting-ip-address"
+	flagCustomDenom       = "custom-denom"
 )
 
 // get cmd to initialize all files for tendermint testnet and application
@@ -79,10 +80,11 @@ Note, strict routability for addresses is turned off in the config file.
 			startingIPAddress, _ := cmd.Flags().GetString(flagStartingIPAddress)
 			numValidators, _ := cmd.Flags().GetInt(flagNumValidators)
 			algo, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
+			customDenom, _ := cmd.Flags().GetString(flagCustomDenom)
 
 			return InitTestnet(
 				clientCtx, cmd, config, mbm, genBalIterator, outputDir, chainID, minGasPrices,
-				nodeDirPrefix, nodeDaemonHome, startingIPAddress, keyringBackend, algo, numValidators,
+				nodeDirPrefix, nodeDaemonHome, startingIPAddress, keyringBackend, algo, numValidators, customDenom,
 			)
 		},
 	}
@@ -96,6 +98,7 @@ Note, strict routability for addresses is turned off in the config file.
 	cmd.Flags().String(server.FlagMinGasPrices, app.DefaultMinGasPrices, fmt.Sprintf("Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. %s,0.001stake)", app.DefaultMinGasPrices))
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
+	cmd.Flags().String(flagCustomDenom, app.DefaultFeeDenom, "Default denom to be used for this chain(both fee and staked)")
 
 	return cmd
 }
@@ -118,6 +121,7 @@ func InitTestnet(
 	keyringBackend,
 	algoStr string,
 	numValidators int,
+	chainDenom string,
 ) error {
 	if chainID == "" {
 		chainID = "chain-" + tmrand.NewRand().Str(6)
@@ -206,7 +210,7 @@ func InitTestnet(
 		convAmt := sdk.NewInt(1_000_000_000)
 		nhashAmt := hashAmt.Mul(convAmt)
 		coins := sdk.Coins{
-			sdk.NewCoin(app.DefaultBondDenom, nhashAmt),
+			sdk.NewCoin(chainDenom, nhashAmt),
 		}
 
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
@@ -216,7 +220,7 @@ func InitTestnet(
 		createValMsg, _ := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
-			sdk.NewCoin(app.DefaultBondDenom, valTokens),
+			sdk.NewCoin(chainDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
 			sdk.OneInt(),
@@ -252,7 +256,7 @@ func InitTestnet(
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), simappConfig)
 	}
 
-	markerAcc := markertypes.NewEmptyMarkerAccount(app.DefaultBondDenom, genAccounts[0].GetAddress().String(),
+	markerAcc := markertypes.NewEmptyMarkerAccount(chainDenom, genAccounts[0].GetAddress().String(),
 		[]markertypes.AccessGrant{
 			*markertypes.NewAccessGrant(genAccounts[0].GetAddress(), []markertypes.Access{
 				markertypes.Access_Admin,
@@ -262,7 +266,7 @@ func InitTestnet(
 			}),
 		})
 
-	if err := markerAcc.SetSupply(sdk.NewCoin(app.DefaultBondDenom, sdk.NewInt(100_000_000_000).Mul(sdk.NewInt(1_000_000_000)))); err != nil {
+	if err := markerAcc.SetSupply(sdk.NewCoin(chainDenom, sdk.NewInt(100_000_000_000).Mul(sdk.NewInt(1_000_000_000)))); err != nil {
 		return err
 	}
 
