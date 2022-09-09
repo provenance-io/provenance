@@ -178,7 +178,7 @@ func (s *IntegrationTestSuite) TestDetermineBipsProposals() {
 			"recipient",
 			"error",
 			0,
-			"strconv.ParseUint: parsing \"error\": invalid syntax",
+			"strconv.ParseUint: parsing \"error\": invalid syntax: invalid bips amount",
 		},
 	}
 

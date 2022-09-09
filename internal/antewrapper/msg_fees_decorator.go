@@ -250,6 +250,7 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 	msgFeesDistribution := MsgFeesDistribution{
 		RecipientDistributions: make(map[string]sdk.Coin),
 	}
+	assessCustomMsgTypeURL := sdk.MsgTypeURL(&msgfeestypes.MsgAssessCustomMsgFeeRequest{})
 	for _, msg := range msgs {
 		typeURL := sdk.MsgTypeURL(msg)
 		msgFees, err := mbfk.GetMsgFee(ctx, typeURL)
@@ -264,7 +265,7 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 				}
 			}
 		}
-		if typeURL == sdk.MsgTypeURL(&msgfeestypes.MsgAssessCustomMsgFeeRequest{}) {
+		if typeURL == assessCustomMsgTypeURL {
 			assessFee, ok := msg.(*msgfeestypes.MsgAssessCustomMsgFeeRequest)
 			if !ok {
 				return nil, sdkerrors.ErrInvalidType.Wrap("unable to convert msg to MsgAssessCustomMsgFeeRequest")

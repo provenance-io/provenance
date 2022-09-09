@@ -49,7 +49,7 @@ func DetermineBips(recipient string, recipientBasisPoints string) (uint32, error
 	if len(recipientBasisPoints) > 0 && len(recipient) > 0 {
 		bips64, err := strconv.ParseUint(recipientBasisPoints, 10, 32)
 		if err != nil {
-			return bips, err
+			return bips, types.ErrInvalidBipsValue.Wrap(err.Error())
 		}
 		bips = uint32(bips64)
 		if bips > 10_000 {
