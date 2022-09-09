@@ -23,7 +23,7 @@ var (
 	testValidators = []stakingtypes.Validator{}
 )
 
-func setupEventHistory(suite *KeeperTestSuite) {
+func setupEventHistory(s *KeeperTestSuite) {
 	attributes1 := []sdk.Attribute{
 		sdk.NewAttribute("key1", "value1"),
 		sdk.NewAttribute("key2", "value2"),
@@ -43,16 +43,16 @@ func setupEventHistory(suite *KeeperTestSuite) {
 		event3,
 	}
 	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
-	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
+	s.ctx = s.ctx.WithEventManager(eventManagerStub)
 }
 
-func SetupEventHistory(suite *KeeperTestSuite, events sdk.Events) {
+func SetupEventHistory(s *KeeperTestSuite, events sdk.Events) {
 	eventManagerStub := sdk.NewEventManagerWithHistory(events.ToABCIEvents())
-	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
+	s.ctx = s.ctx.WithEventManager(eventManagerStub)
 }
 
 // with delegate
-func SetupEventHistoryWithDelegates(suite *KeeperTestSuite) {
+func SetupEventHistoryWithDelegates(s *KeeperTestSuite) {
 	attributes1 := []sdk.Attribute{
 		sdk.NewAttribute("validator", "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun"),
 		sdk.NewAttribute("amount", "1000000000000000nhash"),
@@ -77,23 +77,23 @@ func SetupEventHistoryWithDelegates(suite *KeeperTestSuite) {
 		event4,
 	}
 	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
-	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
+	s.ctx = s.ctx.WithEventManager(eventManagerStub)
 }
 
-func (suite *KeeperTestSuite) TestIterateABCIEventsWildcard() {
-	setupEventHistory(suite)
+func (s *KeeperTestSuite) TestIterateABCIEventsWildcard() {
+	setupEventHistory(s)
 	var events []types.ABCIEvent
 	criteria := types.NewEventCriteria(events)
 	counter := 0
-	suite.app.RewardKeeper.IterateABCIEvents(suite.ctx, criteria, func(name string, attributes *map[string][]byte) error {
+	s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
 		counter += 1
 		return nil
 	})
-	suite.Assert().Equal(3, counter, "should iterate for each event")
+	s.Assert().Equal(3, counter, "should iterate for each event")
 }
 
-func (suite *KeeperTestSuite) TestIterateABCIEventsByEventType() {
-	setupEventHistory(suite)
+func (s *KeeperTestSuite) TestIterateABCIEventsByEventType() {
+	setupEventHistory(s)
 	counter := 0
 	events := []types.ABCIEvent{
 		{
@@ -101,15 +101,15 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsByEventType() {
 		},
 	}
 	criteria := types.NewEventCriteria(events)
-	suite.app.RewardKeeper.IterateABCIEvents(suite.ctx, criteria, func(name string, attributes *map[string][]byte) error {
+	s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
 		counter += 1
 		return nil
 	})
-	suite.Assert().Equal(2, counter, "should iterate only for specified event types")
+	s.Assert().Equal(2, counter, "should iterate only for specified event types")
 }
 
-func (suite *KeeperTestSuite) TestIterateABCIEventsByEventTypeAndAttributeName() {
-	setupEventHistory(suite)
+func (s *KeeperTestSuite) TestIterateABCIEventsByEventTypeAndAttributeName() {
+	setupEventHistory(s)
 	counter := 0
 	events := []types.ABCIEvent{
 		{
@@ -120,15 +120,15 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsByEventTypeAndAttributeName()
 		},
 	}
 	criteria := types.NewEventCriteria(events)
-	suite.app.RewardKeeper.IterateABCIEvents(suite.ctx, criteria, func(name string, attributes *map[string][]byte) error {
+	s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
 		counter += 1
 		return nil
 	})
-	suite.Assert().Equal(2, counter, "should iterate only for specified event types with matching attributes")
+	s.Assert().Equal(2, counter, "should iterate only for specified event types with matching attributes")
 }
 
-func (suite *KeeperTestSuite) TestIterateABCIEventsByEventTypeAndAttributeNameAndValue() {
-	setupEventHistory(suite)
+func (s *KeeperTestSuite) TestIterateABCIEventsByEventTypeAndAttributeNameAndValue() {
+	setupEventHistory(s)
 	counter := 0
 	events := []types.ABCIEvent{
 		{
@@ -139,15 +139,15 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsByEventTypeAndAttributeNameAn
 		},
 	}
 	criteria := types.NewEventCriteria(events)
-	suite.app.RewardKeeper.IterateABCIEvents(suite.ctx, criteria, func(name string, attributes *map[string][]byte) error {
+	s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
 		counter += 1
 		return nil
 	})
-	suite.Assert().Equal(2, counter, "should iterate only for specified event types with matching attributes")
+	s.Assert().Equal(2, counter, "should iterate only for specified event types with matching attributes")
 }
 
-func (suite *KeeperTestSuite) TestIterateABCIEventsNonExistantEventType() {
-	setupEventHistory(suite)
+func (s *KeeperTestSuite) TestIterateABCIEventsNonExistantEventType() {
+	setupEventHistory(s)
 	counter := 0
 	events := []types.ABCIEvent{
 		{
@@ -156,15 +156,15 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsNonExistantEventType() {
 		},
 	}
 	criteria := types.NewEventCriteria(events)
-	suite.app.RewardKeeper.IterateABCIEvents(suite.ctx, criteria, func(name string, attributes *map[string][]byte) error {
+	s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
 		counter += 1
 		return nil
 	})
-	suite.Assert().Equal(0, counter, "should not iterate if event doesn't exist")
+	s.Assert().Equal(0, counter, "should not iterate if event doesn't exist")
 }
 
-func (suite *KeeperTestSuite) TestIterateABCIEventsNonExistantAttributeName() {
-	setupEventHistory(suite)
+func (s *KeeperTestSuite) TestIterateABCIEventsNonExistantAttributeName() {
+	setupEventHistory(s)
 	counter := 0
 	events := []types.ABCIEvent{
 		{
@@ -175,15 +175,15 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsNonExistantAttributeName() {
 		},
 	}
 	criteria := types.NewEventCriteria(events)
-	suite.app.RewardKeeper.IterateABCIEvents(suite.ctx, criteria, func(name string, attributes *map[string][]byte) error {
+	s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
 		counter += 1
 		return nil
 	})
-	suite.Assert().Equal(0, counter, "should not iterate if attribute doesn't match")
+	s.Assert().Equal(0, counter, "should not iterate if attribute doesn't match")
 }
 
-func (suite *KeeperTestSuite) TestIterateABCIEventsNonAttributeValueMatch() {
-	setupEventHistory(suite)
+func (s *KeeperTestSuite) TestIterateABCIEventsNonAttributeValueMatch() {
+	setupEventHistory(s)
 	counter := 0
 	events := []types.ABCIEvent{
 		{
@@ -194,15 +194,15 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsNonAttributeValueMatch() {
 		},
 	}
 	criteria := types.NewEventCriteria(events)
-	suite.app.RewardKeeper.IterateABCIEvents(suite.ctx, criteria, func(name string, attributes *map[string][]byte) error {
+	s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
 		counter += 1
 		return nil
 	})
-	suite.Assert().Equal(0, counter, "should not iterate if attribute doesn't match")
+	s.Assert().Equal(0, counter, "should not iterate if attribute doesn't match")
 }
 
-func (suite *KeeperTestSuite) TestIterateABCIEventsHandlesError() {
-	setupEventHistory(suite)
+func (s *KeeperTestSuite) TestIterateABCIEventsHandlesError() {
+	setupEventHistory(s)
 	counter := 0
 	events := []types.ABCIEvent{
 		{
@@ -213,15 +213,15 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsHandlesError() {
 		},
 	}
 	criteria := types.NewEventCriteria(events)
-	err := suite.app.RewardKeeper.IterateABCIEvents(suite.ctx, criteria, func(name string, attributes *map[string][]byte) error {
+	err := s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
 		counter += 1
 		return errors.New("error")
 	})
-	suite.Assert().Error(err, "should throw error when internal function errors")
+	s.Assert().Error(err, "should throw error when internal function errors")
 }
 
-func (suite *KeeperTestSuite) TestFindQualifyingActionsWithDelegates() {
-	SetupEventHistoryWithDelegates(suite)
+func (s *KeeperTestSuite) TestFindQualifyingActionsWithDelegates() {
+	SetupEventHistoryWithDelegates(s)
 	criteria := types.NewEventCriteria([]types.ABCIEvent{
 		{
 			Type: "message",
@@ -240,17 +240,17 @@ func (suite *KeeperTestSuite) TestFindQualifyingActionsWithDelegates() {
 	})
 
 	action := MockAction{Criteria: criteria, Builder: &types.DelegateActionBuilder{}}
-	events, err := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, action)
-	suite.Assert().NoError(err, "should throw no error when handling no events")
-	suite.Assert().Equal(2, len(events), "should find the two delegate events")
+	events, err := s.app.RewardKeeper.FindQualifyingActions(s.ctx, action)
+	s.Assert().NoError(err, "should throw no error when handling no events")
+	s.Assert().Equal(2, len(events), "should find the two delegate events")
 	for _, event := range events {
-		suite.Assert().Equal(event.Shares, int64(1), "shares must be 1")
-		suite.Assert().Equal(event.Delegator.String(), "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "delegator address must be correct")
-		suite.Assert().Equal(event.Validator.String(), "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun", "validator address must be correct")
+		s.Assert().Equal(event.Shares, int64(1), "shares must be 1")
+		s.Assert().Equal(event.Delegator.String(), "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "delegator address must be correct")
+		s.Assert().Equal(event.Validator.String(), "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun", "validator address must be correct")
 	}
 }
 
-func (suite *KeeperTestSuite) TestFindQualifyingActionsWithoutDelegates() {
+func (s *KeeperTestSuite) TestFindQualifyingActionsWithoutDelegates() {
 	criteria := types.NewEventCriteria([]types.ABCIEvent{
 		{
 			Type: "message",
@@ -268,9 +268,9 @@ func (suite *KeeperTestSuite) TestFindQualifyingActionsWithoutDelegates() {
 		},
 	})
 	action := MockAction{Criteria: criteria, Builder: &types.DelegateActionBuilder{}}
-	events, err := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, action)
-	suite.Assert().NoError(err, "should throw no error when handling no events")
-	suite.Assert().Equal(0, len(events), "should have no events when no delegates are made")
+	events, err := s.app.RewardKeeper.FindQualifyingActions(s.ctx, action)
+	s.Assert().NoError(err, "should throw no error when handling no events")
+	s.Assert().Equal(0, len(events), "should have no events when no delegates are made")
 }
 
 // FindQualifyingActions
@@ -307,49 +307,49 @@ func (m MockAction) PostEvaluate(ctx sdk.Context, provider types.KeeperProvider,
 	// Any action specific thing that we need to do after evaluation
 }
 
-func (suite *KeeperTestSuite) TestProcessQualifyingActionsWithNoAbciEvents() {
+func (s *KeeperTestSuite) TestProcessQualifyingActionsWithNoAbciEvents() {
 	program := types.RewardProgram{Id: 1, CurrentClaimPeriod: 1}
 	action := MockAction{PassEvaluate: false}
-	results := suite.app.RewardKeeper.ProcessQualifyingActions(suite.ctx, &program, action, []types.EvaluationResult{})
-	suite.Assert().Equal(0, len(results), "should have no results for empty list of abci events")
+	results := s.app.RewardKeeper.ProcessQualifyingActions(s.ctx, &program, action, []types.EvaluationResult{})
+	s.Assert().Equal(0, len(results), "should have no results for empty list of abci events")
 }
 
-func (suite *KeeperTestSuite) TestProcessQualifyingActionsCreatesState() {
+func (s *KeeperTestSuite) TestProcessQualifyingActionsCreatesState() {
 	program := types.RewardProgram{Id: 1, CurrentClaimPeriod: 1}
 	action := MockAction{PassEvaluate: true}
 	address1, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
-	suite.app.RewardKeeper.ProcessQualifyingActions(suite.ctx, &program, action, []types.EvaluationResult{
+	s.app.RewardKeeper.ProcessQualifyingActions(s.ctx, &program, action, []types.EvaluationResult{
 		{
 			Address: address1,
 		},
 	})
-	state, _ := suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, program.GetId(), program.GetCurrentClaimPeriod(), address1.String())
-	suite.Assert().Equal(program.GetId(), state.RewardProgramId, "claim period should be created when missing")
+	state, _ := s.app.RewardKeeper.GetRewardAccountState(s.ctx, program.GetId(), program.GetCurrentClaimPeriod(), address1.String())
+	s.Assert().Equal(program.GetId(), state.RewardProgramId, "claim period should be created when missing")
 }
 
-func (suite *KeeperTestSuite) TestProcessQualifyingActionsWithNoMatchingResults() {
+func (s *KeeperTestSuite) TestProcessQualifyingActionsWithNoMatchingResults() {
 	program := types.RewardProgram{Id: 1, CurrentClaimPeriod: 1}
 	action := MockAction{PassEvaluate: false}
-	results := suite.app.RewardKeeper.ProcessQualifyingActions(suite.ctx, &program, action, []types.EvaluationResult{
+	results := s.app.RewardKeeper.ProcessQualifyingActions(s.ctx, &program, action, []types.EvaluationResult{
 		{Address: types.MustAccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")},
 		{Address: types.MustAccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")},
 	})
-	suite.Assert().Equal(0, len(results), "should have empty lists when no results match the evaluation")
+	s.Assert().Equal(0, len(results), "should have empty lists when no results match the evaluation")
 }
 
-func (suite *KeeperTestSuite) TestProcessQualifyingActionsWithMatchingResults() {
+func (s *KeeperTestSuite) TestProcessQualifyingActionsWithMatchingResults() {
 	program := types.RewardProgram{Id: 1, CurrentClaimPeriod: 1}
 	action := MockAction{PassEvaluate: true}
-	results := suite.app.RewardKeeper.ProcessQualifyingActions(suite.ctx, &program, action, []types.EvaluationResult{
+	results := s.app.RewardKeeper.ProcessQualifyingActions(s.ctx, &program, action, []types.EvaluationResult{
 		{Address: types.MustAccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")},
 		{Address: types.MustAccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")},
 	})
-	suite.Assert().Equal(2, len(results), "should have all results that evaluate to true")
+	s.Assert().Equal(2, len(results), "should have all results that evaluate to true")
 }
 
-func (suite *KeeperTestSuite) TestFindQualifyingActionsWithNil() {
-	results := suite.app.RewardKeeper.ProcessQualifyingActions(suite.ctx, nil, nil, nil)
-	suite.Assert().Equal(0, len(results), "should handle nil input")
+func (s *KeeperTestSuite) TestFindQualifyingActionsWithNil() {
+	results := s.app.RewardKeeper.ProcessQualifyingActions(s.ctx, nil, nil, nil)
+	s.Assert().Equal(0, len(results), "should handle nil input")
 }
 
 // Test ActionDelegate Evaluate
@@ -414,37 +414,37 @@ func (m MockStakingKeeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.V
 	return 0
 }
 
-func (suite *KeeperTestSuite) createTestValidators(amount int) {
-	addrDels := simapp.AddTestAddrsIncremental(suite.app, suite.ctx, amount, sdk.NewInt(10000))
+func (s *KeeperTestSuite) createTestValidators(amount int) {
+	addrDels := simapp.AddTestAddrsIncremental(s.app, s.ctx, amount, sdk.NewInt(10000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
 
-	totalSupply := sdk.NewCoins(sdk.NewCoin(suite.app.StakingKeeper.BondDenom(suite.ctx), sdk.NewInt(1000000000)))
-	notBondedPool := suite.app.StakingKeeper.GetNotBondedPool(suite.ctx)
-	suite.app.AccountKeeper.SetModuleAccount(suite.ctx, notBondedPool)
+	totalSupply := sdk.NewCoins(sdk.NewCoin(s.app.StakingKeeper.BondDenom(s.ctx), sdk.NewInt(1000000000)))
+	notBondedPool := s.app.StakingKeeper.GetNotBondedPool(s.ctx)
+	s.app.AccountKeeper.SetModuleAccount(s.ctx, notBondedPool)
 
-	suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, totalSupply)
-	suite.app.BankKeeper.SendCoinsFromModuleToModule(suite.ctx, minttypes.ModuleName, notBondedPool.GetName(), totalSupply)
+	s.app.BankKeeper.MintCoins(s.ctx, minttypes.ModuleName, totalSupply)
+	s.app.BankKeeper.SendCoinsFromModuleToModule(s.ctx, minttypes.ModuleName, notBondedPool.GetName(), totalSupply)
 
 	var validators []stakingtypes.Validator
 	for i := 0; i < amount; i++ {
-		validator := teststaking.NewValidator(suite.T(), valAddrs[i], PKs[i])
-		tokens := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, int64(1+amount-i))
+		validator := teststaking.NewValidator(s.T(), valAddrs[i], PKs[i])
+		tokens := s.app.StakingKeeper.TokensFromConsensusPower(s.ctx, int64(1+amount-i))
 		validator, _ = validator.AddTokensFromDel(tokens)
-		validator = keeper.TestingUpdateValidator(suite.app.StakingKeeper, suite.ctx, validator, true)
+		validator = keeper.TestingUpdateValidator(s.app.StakingKeeper, s.ctx, validator, true)
 		validators = append(validators, validator)
 
 		// Create the delegations
 		bond := stakingtypes.NewDelegation(addrDels[i], valAddrs[i], sdk.NewDec(int64((i+1)*10)))
-		suite.app.StakingKeeper.SetDelegation(suite.ctx, bond)
+		s.app.StakingKeeper.SetDelegation(s.ctx, bond)
 
 		// We want even validators to be bonded
 		if i%2 == 0 {
-			suite.app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(suite.ctx)
-			validator.ABCIValidatorUpdate(suite.app.StakingKeeper.PowerReduction(suite.ctx))
+			s.app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+			validator.ABCIValidatorUpdate(s.app.StakingKeeper.PowerReduction(s.ctx))
 		}
 	}
 
-	staking.EndBlocker(suite.ctx, suite.app.StakingKeeper)
+	staking.EndBlocker(s.ctx, s.app.StakingKeeper)
 
 	testValidators = validators
 }
@@ -483,7 +483,7 @@ func (m MockStakingKeeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (v
 	return stakingtypes.Validator{}, false
 }
 
-func (suite *KeeperTestSuite) TestActionDelegateEvaluatePasses() {
+func (s *KeeperTestSuite) TestActionDelegateEvaluatePasses() {
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
@@ -506,11 +506,11 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluatePasses() {
 		Delegator: delegator,
 	}
 
-	passed := action.Evaluate(suite.ctx, keeperProvider, state, event)
-	suite.Assert().True(passed, "evaluate should pass when criteria are met")
+	passed := action.Evaluate(s.ctx, keeperProvider, state, event)
+	s.Assert().True(passed, "evaluate should pass when criteria are met")
 }
 
-func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActionsNotMet() {
+func (s *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActionsNotMet() {
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
@@ -531,11 +531,11 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActionsN
 		Delegator: delegator,
 	}
 
-	passed := action.Evaluate(suite.ctx, keeperProvider, state, event)
-	suite.Assert().False(passed, "test should fail when minimum actions not met")
+	passed := action.Evaluate(s.ctx, keeperProvider, state, event)
+	s.Assert().False(passed, "test should fail when minimum actions not met")
 }
 
-func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumActionsNotMet() {
+func (s *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumActionsNotMet() {
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
@@ -557,11 +557,11 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumActionsN
 		Delegator: delegator,
 	}
 
-	passed := action.Evaluate(suite.ctx, keeperProvider, state, event)
-	suite.Assert().False(passed, "test should fail when maximum actions not met")
+	passed := action.Evaluate(s.ctx, keeperProvider, state, event)
+	s.Assert().False(passed, "test should fail when maximum actions not met")
 }
 
-func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegationAmountNotMet() {
+func (s *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegationAmountNotMet() {
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
@@ -583,11 +583,11 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegati
 		Delegator: delegator,
 	}
 
-	passed := action.Evaluate(suite.ctx, keeperProvider, state, event)
-	suite.Assert().False(passed, "test should fail when maximum delegation amount not met")
+	passed := action.Evaluate(s.ctx, keeperProvider, state, event)
+	s.Assert().False(passed, "test should fail when maximum delegation amount not met")
 }
 
-func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumDelegationAmountNotMet() {
+func (s *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumDelegationAmountNotMet() {
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
@@ -609,11 +609,11 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumDelegati
 		Delegator: delegator,
 	}
 
-	passed := action.Evaluate(suite.ctx, keeperProvider, state, event)
-	suite.Assert().False(passed, "test should fail when minimum delegation amount not met")
+	passed := action.Evaluate(s.ctx, keeperProvider, state, event)
+	s.Assert().False(passed, "test should fail when minimum delegation amount not met")
 }
 
-func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActiveStakePercentileNotMet() {
+func (s *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActiveStakePercentileNotMet() {
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
@@ -635,11 +635,11 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActiveSt
 		Delegator: delegator,
 	}
 
-	passed := action.Evaluate(suite.ctx, keeperProvider, state, event)
-	suite.Assert().False(passed, "test should fail when minimum delegation percentage not met")
+	passed := action.Evaluate(s.ctx, keeperProvider, state, event)
+	s.Assert().False(passed, "test should fail when minimum delegation percentage not met")
 }
 
-func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegationPercentageNotMet() {
+func (s *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegationPercentageNotMet() {
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
@@ -661,32 +661,32 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegati
 		Delegator: delegator,
 	}
 
-	passed := action.Evaluate(suite.ctx, keeperProvider, state, event)
-	suite.Assert().False(passed, "test should fail when maximum delegation percentage not met")
+	passed := action.Evaluate(s.ctx, keeperProvider, state, event)
+	s.Assert().False(passed, "test should fail when maximum delegation percentage not met")
 }
 
 // Test GetRewardAction
 
-func (suite *KeeperTestSuite) TestGetRewardActionHandlesUnsupportedActions() {
+func (s *KeeperTestSuite) TestGetRewardActionHandlesUnsupportedActions() {
 	qa := types.QualifyingAction{}
-	_, err := qa.GetRewardAction(suite.ctx)
-	suite.Assert().Error(err, "should throw error when an action is not supported")
+	_, err := qa.GetRewardAction(s.ctx)
+	s.Assert().Error(err, "should throw error when an action is not supported")
 }
 
-func (suite *KeeperTestSuite) TestGetRewardActionHandlesActionDelegate() {
+func (s *KeeperTestSuite) TestGetRewardActionHandlesActionDelegate() {
 	delegate := types.QualifyingAction_Delegate{}
 	qa := types.QualifyingAction{
 		Type: &delegate,
 	}
-	action, err := qa.GetRewardAction(suite.ctx)
-	suite.Assert().NoError(err, "should not throw error when action is supported")
-	suite.Assert().Equal(types.ActionTypeDelegate, action.ActionType(), "should return the correct action type")
+	action, err := qa.GetRewardAction(s.ctx)
+	s.Assert().NoError(err, "should not throw error when action is supported")
+	s.Assert().Equal(types.ActionTypeDelegate, action.ActionType(), "should return the correct action type")
 }
 
 // Test DetectQualifyingActions
-func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction() {
-	SetupEventHistoryWithDelegates(suite)
-	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+func (s *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction() {
+	SetupEventHistoryWithDelegates(s)
+	s.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 0)
 	maxDelegation := sdk.NewInt64Coin("nhash", 10)
 
@@ -718,14 +718,14 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction()
 		},
 	)
 	rewardProgram.CurrentClaimPeriod = 1
-	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
-	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
+	qualifyingActions, err := s.app.RewardKeeper.DetectQualifyingActions(s.ctx, &rewardProgram)
+	s.Assert().NoError(err, "must not error")
+	s.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
 }
 
-func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction() {
-	SetupEventHistoryWithDelegates(suite)
-	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+func (s *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction() {
+	SetupEventHistoryWithDelegates(s)
+	s.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 0)
 	maxDelegation := sdk.NewInt64Coin("nhash", 10)
 
@@ -769,14 +769,14 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction()
 		},
 	)
 	rewardProgram.CurrentClaimPeriod = 1
-	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
-	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(4, len(qualifyingActions), "must find four qualifying actions")
+	qualifyingActions, err := s.app.RewardKeeper.DetectQualifyingActions(s.ctx, &rewardProgram)
+	s.Assert().NoError(err, "must not error")
+	s.Assert().Equal(4, len(qualifyingActions), "must find four qualifying actions")
 }
 
-func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoQualifyingAction() {
-	SetupEventHistoryWithDelegates(suite)
-	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+func (s *KeeperTestSuite) TestDetectQualifyingActionsWithNoQualifyingAction() {
+	SetupEventHistoryWithDelegates(s)
+	s.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 
 	rewardProgram := types.NewRewardProgram(
 		"title",
@@ -794,14 +794,14 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoQualifyingAction(
 	)
 	rewardProgram.CurrentClaimPeriod = 1
 
-	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
-	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(0, len(qualifyingActions), "must find no qualifying actions")
+	qualifyingActions, err := s.app.RewardKeeper.DetectQualifyingActions(s.ctx, &rewardProgram)
+	s.Assert().NoError(err, "must not error")
+	s.Assert().Equal(0, len(qualifyingActions), "must find no qualifying actions")
 }
 
-func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoMatchingQualifyingAction() {
-	SetupEventHistoryWithDelegates(suite)
-	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+func (s *KeeperTestSuite) TestDetectQualifyingActionsWithNoMatchingQualifyingAction() {
+	SetupEventHistoryWithDelegates(s)
+	s.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 0)
 	maxDelegation := sdk.NewInt64Coin("nhash", 10)
 
@@ -833,13 +833,13 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoMatchingQualifyin
 		},
 	)
 	rewardProgram.CurrentClaimPeriod = 1
-	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
-	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(0, len(qualifyingActions), "must find no qualifying actions")
+	qualifyingActions, err := s.app.RewardKeeper.DetectQualifyingActions(s.ctx, &rewardProgram)
+	s.Assert().NoError(err, "must not error")
+	s.Assert().Equal(0, len(qualifyingActions), "must find no qualifying actions")
 }
 
 // Test RewardShares
-func (suite *KeeperTestSuite) TestRewardSharesSingle() {
+func (s *KeeperTestSuite) TestRewardSharesSingle() {
 	rewardProgram := types.NewRewardProgram(
 		"title",
 		"description",
@@ -870,7 +870,7 @@ func (suite *KeeperTestSuite) TestRewardSharesSingle() {
 	}
 
 	state := types.NewRewardAccountState(rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String(), 0, map[string]uint64{})
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
+	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state)
 	claimPeriodRewardDistribution := types.NewClaimPeriodRewardDistribution(rewardProgram.GetCurrentClaimPeriod(),
 		rewardProgram.GetId(),
 		sdk.NewInt64Coin("nhash", 100),
@@ -878,21 +878,21 @@ func (suite *KeeperTestSuite) TestRewardSharesSingle() {
 		0,
 		false,
 	)
-	suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, claimPeriodRewardDistribution)
+	s.app.RewardKeeper.SetClaimPeriodRewardDistribution(s.ctx, claimPeriodRewardDistribution)
 
-	err := suite.app.RewardKeeper.RewardShares(suite.ctx, &rewardProgram, results)
+	err := s.app.RewardKeeper.RewardShares(s.ctx, &rewardProgram, results)
 
-	state, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String())
-	claimPeriodRewardDistribution, _ = suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, rewardProgram.GetCurrentClaimPeriod(), rewardProgram.GetId())
-	suite.Assert().NoError(err, "should return no error on success")
-	suite.Assert().Equal(uint64(1), state.GetSharesEarned(), "share amount should increment")
-	suite.Assert().Equal(int64(1), claimPeriodRewardDistribution.GetTotalShares(), "total share amount should increment")
-	suite.Assert().Equal(rewardProgram.GetId(), state.GetRewardProgramId(), "reward program id should match")
-	suite.Assert().Equal(rewardProgram.GetCurrentClaimPeriod(), state.GetClaimPeriodId(), "reward claim period id should match")
-	suite.Assert().Equal(delegator.String(), state.GetAddress(), "address should match delegator")
+	state, _ = s.app.RewardKeeper.GetRewardAccountState(s.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String())
+	claimPeriodRewardDistribution, _ = s.app.RewardKeeper.GetClaimPeriodRewardDistribution(s.ctx, rewardProgram.GetCurrentClaimPeriod(), rewardProgram.GetId())
+	s.Assert().NoError(err, "should return no error on success")
+	s.Assert().Equal(uint64(1), state.GetSharesEarned(), "share amount should increment")
+	s.Assert().Equal(int64(1), claimPeriodRewardDistribution.GetTotalShares(), "total share amount should increment")
+	s.Assert().Equal(rewardProgram.GetId(), state.GetRewardProgramId(), "reward program id should match")
+	s.Assert().Equal(rewardProgram.GetCurrentClaimPeriod(), state.GetClaimPeriodId(), "reward claim period id should match")
+	s.Assert().Equal(delegator.String(), state.GetAddress(), "address should match delegator")
 }
 
-func (suite *KeeperTestSuite) TestRewardSharesInvalidClaimPeriodRewardDistribution() {
+func (s *KeeperTestSuite) TestRewardSharesInvalidClaimPeriodRewardDistribution() {
 	rewardProgram := types.NewRewardProgram(
 		"title",
 		"description",
@@ -923,7 +923,7 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidClaimPeriodRewardDistributi
 	}
 
 	state := types.NewRewardAccountState(rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String(), 0, map[string]uint64{})
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
+	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state)
 	claimPeriodRewardDistribution := types.NewClaimPeriodRewardDistribution(rewardProgram.GetCurrentClaimPeriod(),
 		rewardProgram.GetId(),
 		sdk.NewInt64Coin("nhash", 0),
@@ -931,13 +931,13 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidClaimPeriodRewardDistributi
 		0,
 		false,
 	)
-	suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, claimPeriodRewardDistribution)
+	s.app.RewardKeeper.SetClaimPeriodRewardDistribution(s.ctx, claimPeriodRewardDistribution)
 
-	err := suite.app.RewardKeeper.RewardShares(suite.ctx, &rewardProgram, results)
-	suite.Assert().Error(err, "should return an error on invalid claim period reward distribution")
+	err := s.app.RewardKeeper.RewardShares(s.ctx, &rewardProgram, results)
+	s.Assert().Error(err, "should return an error on invalid claim period reward distribution")
 }
 
-func (suite *KeeperTestSuite) TestRewardSharesMultiple() {
+func (s *KeeperTestSuite) TestRewardSharesMultiple() {
 	rewardProgram := types.NewRewardProgram(
 		"title",
 		"description",
@@ -976,7 +976,7 @@ func (suite *KeeperTestSuite) TestRewardSharesMultiple() {
 	}
 
 	state := types.NewRewardAccountState(rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String(), 0, map[string]uint64{})
-	suite.app.RewardKeeper.SetRewardAccountState(suite.ctx, state)
+	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state)
 	claimPeriodRewardDistribution := types.NewClaimPeriodRewardDistribution(rewardProgram.GetCurrentClaimPeriod(),
 		rewardProgram.GetId(),
 		sdk.NewInt64Coin("nhash", 100),
@@ -984,21 +984,21 @@ func (suite *KeeperTestSuite) TestRewardSharesMultiple() {
 		0,
 		false,
 	)
-	suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, claimPeriodRewardDistribution)
+	s.app.RewardKeeper.SetClaimPeriodRewardDistribution(s.ctx, claimPeriodRewardDistribution)
 
-	err := suite.app.RewardKeeper.RewardShares(suite.ctx, &rewardProgram, results)
+	err := s.app.RewardKeeper.RewardShares(s.ctx, &rewardProgram, results)
 
-	claimPeriodRewardDistribution, _ = suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, rewardProgram.GetCurrentClaimPeriod(), rewardProgram.GetId())
-	state, _ = suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String())
-	suite.Assert().NoError(err, "should return no error on success")
-	suite.Assert().Equal(uint64(2), state.GetSharesEarned(), "share amount should increment")
-	suite.Assert().Equal(int64(2), claimPeriodRewardDistribution.GetTotalShares(), "total share amount should increment")
-	suite.Assert().Equal(rewardProgram.GetId(), state.GetRewardProgramId(), "reward program id should match")
-	suite.Assert().Equal(rewardProgram.GetCurrentClaimPeriod(), state.GetClaimPeriodId(), "reward claim period id should match")
-	suite.Assert().Equal(delegator.String(), state.GetAddress(), "address should match delegator")
+	claimPeriodRewardDistribution, _ = s.app.RewardKeeper.GetClaimPeriodRewardDistribution(s.ctx, rewardProgram.GetCurrentClaimPeriod(), rewardProgram.GetId())
+	state, _ = s.app.RewardKeeper.GetRewardAccountState(s.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String())
+	s.Assert().NoError(err, "should return no error on success")
+	s.Assert().Equal(uint64(2), state.GetSharesEarned(), "share amount should increment")
+	s.Assert().Equal(int64(2), claimPeriodRewardDistribution.GetTotalShares(), "total share amount should increment")
+	s.Assert().Equal(rewardProgram.GetId(), state.GetRewardProgramId(), "reward program id should match")
+	s.Assert().Equal(rewardProgram.GetCurrentClaimPeriod(), state.GetClaimPeriodId(), "reward claim period id should match")
+	s.Assert().Equal(delegator.String(), state.GetAddress(), "address should match delegator")
 }
 
-func (suite *KeeperTestSuite) TestRewardSharesInvalidRewardProgram() {
+func (s *KeeperTestSuite) TestRewardSharesInvalidRewardProgram() {
 	rewardProgram := types.NewRewardProgram(
 		"title",
 		"description",
@@ -1034,17 +1034,17 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidRewardProgram() {
 		0,
 		false,
 	)
-	suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, claimPeriodRewardDistribution)
+	s.app.RewardKeeper.SetClaimPeriodRewardDistribution(s.ctx, claimPeriodRewardDistribution)
 
-	err := suite.app.RewardKeeper.RewardShares(suite.ctx, nil, results)
-	state, _ := suite.app.RewardKeeper.GetRewardAccountState(suite.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String())
+	err := s.app.RewardKeeper.RewardShares(s.ctx, nil, results)
+	state, _ := s.app.RewardKeeper.GetRewardAccountState(s.ctx, rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod(), delegator.String())
 
-	suite.Assert().Error(err, "should return an error on invalid program")
-	suite.Assert().Equal(uint64(0), state.GetSharesEarned(), "share amount should increment")
+	s.Assert().Error(err, "should return an error on invalid program")
+	s.Assert().Equal(uint64(0), state.GetSharesEarned(), "share amount should increment")
 }
 
 // with transfer
-func SetupEventHistoryWithTransfers(suite *KeeperTestSuite) {
+func SetupEventHistoryWithTransfers(s *KeeperTestSuite) {
 	sender := "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
 	recipient := "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3"
 	attributes1 := []sdk.Attribute{
@@ -1065,11 +1065,11 @@ func SetupEventHistoryWithTransfers(suite *KeeperTestSuite) {
 		event2,
 	}
 	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
-	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
+	s.ctx = s.ctx.WithEventManager(eventManagerStub)
 }
 
 // with vote
-func SetupEventHistoryWithVotes(suite *KeeperTestSuite) {
+func SetupEventHistoryWithVotes(s *KeeperTestSuite) {
 	sender := "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
 	attributes1 := []sdk.Attribute{
 		sdk.NewAttribute("action", "/cosmos.gov.v1beta1.MsgVote"),
@@ -1092,14 +1092,14 @@ func SetupEventHistoryWithVotes(suite *KeeperTestSuite) {
 		event3,
 	}
 	newEvents := loggedEvents.ToABCIEvents()
-	newEvents = append(newEvents, suite.ctx.EventManager().GetABCIEventHistory()...)
+	newEvents = append(newEvents, s.ctx.EventManager().GetABCIEventHistory()...)
 	eventManagerStub := sdk.NewEventManagerWithHistory(newEvents)
-	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
+	s.ctx = s.ctx.WithEventManager(eventManagerStub)
 }
 
 // transfer
-func (suite *KeeperTestSuite) TestFindQualifyingActionsWithTransfers() {
-	SetupEventHistoryWithTransfers(suite)
+func (s *KeeperTestSuite) TestFindQualifyingActionsWithTransfers() {
+	SetupEventHistoryWithTransfers(s)
 	criteria := types.NewEventCriteria([]types.ABCIEvent{
 		{
 			Type:       banktypes.EventTypeTransfer,
@@ -1108,18 +1108,18 @@ func (suite *KeeperTestSuite) TestFindQualifyingActionsWithTransfers() {
 	})
 
 	action := MockAction{Criteria: criteria, Builder: &types.TransferActionBuilder{}}
-	events, err := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, action)
-	suite.Assert().NoError(err, "should throw no error when handling no events")
-	suite.Assert().Equal(1, len(events), "should find the one transfer event")
+	events, err := s.app.RewardKeeper.FindQualifyingActions(s.ctx, action)
+	s.Assert().NoError(err, "should throw no error when handling no events")
+	s.Assert().Equal(1, len(events), "should find the one transfer event")
 	for _, event := range events {
-		suite.Assert().Equal(event.Shares, int64(1), "shares must be 1")
-		suite.Assert().Equal(event.Address.String(), "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "address must be correct")
+		s.Assert().Equal(event.Shares, int64(1), "shares must be 1")
+		s.Assert().Equal(event.Address.String(), "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "address must be correct")
 	}
 }
 
 // vote
-func (suite *KeeperTestSuite) TestFindQualifyingActionsWithVotes() {
-	SetupEventHistoryWithVotes(suite)
+func (s *KeeperTestSuite) TestFindQualifyingActionsWithVotes() {
+	SetupEventHistoryWithVotes(s)
 	criteria := types.NewEventCriteria([]types.ABCIEvent{
 		{
 			Type:       sdk.EventTypeMessage,
@@ -1128,18 +1128,18 @@ func (suite *KeeperTestSuite) TestFindQualifyingActionsWithVotes() {
 	})
 
 	action := MockAction{Criteria: criteria, Builder: &types.VoteActionBuilder{}}
-	events, err := suite.app.RewardKeeper.FindQualifyingActions(suite.ctx, action)
-	suite.Assert().NoError(err, "should throw no error when handling no events")
-	suite.Assert().Equal(1, len(events), "should find the one transfer event")
+	events, err := s.app.RewardKeeper.FindQualifyingActions(s.ctx, action)
+	s.Assert().NoError(err, "should throw no error when handling no events")
+	s.Assert().Equal(1, len(events), "should find the one transfer event")
 	for _, event := range events {
-		suite.Assert().Equal(event.Shares, int64(1), "shares must be 1")
-		suite.Assert().Equal(event.Address.String(), "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "address must be correct")
+		s.Assert().Equal(event.Shares, int64(1), "shares must be 1")
+		s.Assert().Equal(event.Address.String(), "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "address must be correct")
 	}
 }
 
-func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingAction() {
-	SetupEventHistoryWithVotes(suite)
-	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+func (s *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingAction() {
+	SetupEventHistoryWithVotes(s)
+	s.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 3)
 
 	rewardProgram := types.NewRewardProgram(
@@ -1167,13 +1167,13 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingAc
 		},
 	)
 	rewardProgram.CurrentClaimPeriod = 1
-	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
-	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
+	qualifyingActions, err := s.app.RewardKeeper.DetectQualifyingActions(s.ctx, &rewardProgram)
+	s.Assert().NoError(err, "must not error")
+	s.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
 }
-func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingActionDelegationNotMet() {
-	SetupEventHistoryWithVotes(suite)
-	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+func (s *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingActionDelegationNotMet() {
+	SetupEventHistoryWithVotes(s)
+	s.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 4)
 
 	rewardProgram := types.NewRewardProgram(
@@ -1201,14 +1201,14 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingAc
 		},
 	)
 	rewardProgram.CurrentClaimPeriod = 1
-	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
-	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(0, len(qualifyingActions), "must find zero qualifying actions")
+	qualifyingActions, err := s.app.RewardKeeper.DetectQualifyingActions(s.ctx, &rewardProgram)
+	s.Assert().NoError(err, "must not error")
+	s.Assert().Equal(0, len(qualifyingActions), "must find zero qualifying actions")
 }
 
-func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingNoQualifyingAction() {
-	SetupEventHistoryWithDelegates(suite)
-	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+func (s *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingNoQualifyingAction() {
+	SetupEventHistoryWithDelegates(s)
+	s.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 0)
 
 	rewardProgram := types.NewRewardProgram(
@@ -1236,63 +1236,14 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingNoQualifying
 		},
 	)
 	rewardProgram.CurrentClaimPeriod = 1
-	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
-	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(0, len(qualifyingActions), "must find one qualifying actions")
+	qualifyingActions, err := s.app.RewardKeeper.DetectQualifyingActions(s.ctx, &rewardProgram)
+	s.Assert().NoError(err, "must not error")
+	s.Assert().Equal(0, len(qualifyingActions), "must find one qualifying actions")
 }
 
-func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingDelegateQualifyingAction() {
-	SetupEventHistoryWithDelegates(suite)
-	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
-	minDelegation := sdk.NewInt64Coin("nhash", 0)
-	maxDelegation := sdk.NewInt64Coin("nhash", 10)
-
-	rewardProgram := types.NewRewardProgram(
-		"title",
-		"description",
-		1,
-		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-		sdk.NewInt64Coin("hotdog", 10000),
-		sdk.NewInt64Coin("hotdog", 10000),
-		time.Now(),
-		5,
-		5,
-		0,
-		0,
-		[]types.QualifyingAction{
-			{
-				Type: &types.QualifyingAction_Vote{
-					Vote: &types.ActionVote{
-						MinimumActions:          0,
-						MaximumActions:          1,
-						MinimumDelegationAmount: minDelegation,
-					},
-				},
-			},
-			{
-				Type: &types.QualifyingAction_Delegate{
-					Delegate: &types.ActionDelegate{
-						MinimumActions:               0,
-						MaximumActions:               1,
-						MinimumDelegationAmount:      &minDelegation,
-						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
-					},
-				},
-			},
-		},
-	)
-	rewardProgram.CurrentClaimPeriod = 1
-	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
-	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
-}
-
-func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1Voting1DelegateQualifyingAction() {
-	SetupEventHistoryWithDelegates(suite)
-	SetupEventHistoryWithVotes(suite)
-	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+func (s *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingDelegateQualifyingAction() {
+	SetupEventHistoryWithDelegates(s)
+	s.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 0)
 	maxDelegation := sdk.NewInt64Coin("nhash", 10)
 
@@ -1333,11 +1284,60 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1Voting1DelegateQua
 		},
 	)
 	rewardProgram.CurrentClaimPeriod = 1
-	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
-	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(2, len(qualifyingActions), "must find one qualifying actions")
+	qualifyingActions, err := s.app.RewardKeeper.DetectQualifyingActions(s.ctx, &rewardProgram)
+	s.Assert().NoError(err, "must not error")
+	s.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
 }
 
-func (suite *KeeperTestSuite) TestGetAccountKeeper() {
-	suite.Assert().NotNil(suite.app.RewardKeeper.GetAccountKeeper())
+func (s *KeeperTestSuite) TestDetectQualifyingActionsWith1Voting1DelegateQualifyingAction() {
+	SetupEventHistoryWithDelegates(s)
+	SetupEventHistoryWithVotes(s)
+	s.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+	minDelegation := sdk.NewInt64Coin("nhash", 0)
+	maxDelegation := sdk.NewInt64Coin("nhash", 10)
+
+	rewardProgram := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+		sdk.NewInt64Coin("hotdog", 10000),
+		sdk.NewInt64Coin("hotdog", 10000),
+		time.Now(),
+		5,
+		5,
+		0,
+		0,
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Vote{
+					Vote: &types.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          1,
+						MinimumDelegationAmount: minDelegation,
+					},
+				},
+			},
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               1,
+						MinimumDelegationAmount:      &minDelegation,
+						MaximumDelegationAmount:      &maxDelegation,
+						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.CurrentClaimPeriod = 1
+	qualifyingActions, err := s.app.RewardKeeper.DetectQualifyingActions(s.ctx, &rewardProgram)
+	s.Assert().NoError(err, "must not error")
+	s.Assert().Equal(2, len(qualifyingActions), "must find one qualifying actions")
+}
+
+func (s *KeeperTestSuite) TestGetAccountKeeper() {
+	s.Assert().NotNil(s.app.RewardKeeper.GetAccountKeeper())
 }
