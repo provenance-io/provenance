@@ -70,128 +70,137 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {
 	testCases := []struct {
-		name         string
-		args         []string
-		expectErr    bool
-		expectErrMsg string
-		expectedCode uint32
+		name          string
+		typeArg       string
+		title         string
+		description   string
+		deposit       string
+		msgType       string
+		additionalFee string
+		recipient     string
+		bips          string
+		expectErr     bool
+		expectErrMsg  string
+		expectedCode  uint32
 	}{
 		{"add msg based fee proposal - valid",
-			[]string{
-				"add",
-				"test add msg based fee",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
-				fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))).String()),
-			},
+			"add",
+			"test add msg based fee",
+			"description",
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+			"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+			fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))).String()),
+			"",
+			"",
 			false,
 			"",
 			0,
 		},
 		{"add msg based fee proposal with recipient - valid",
-			[]string{
-				"add",
-				"test update msg based fee",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
-				fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))).String()),
-			},
+
+			"add",
+			"test update msg based fee",
+			"description",
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+			"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+			fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))).String()),
+			"",
+			"",
 			false,
 			"",
 			0,
 		},
 		{"add msg based fee proposal with recipient and default basis points - valid",
-			[]string{
-				"add",
-				"test update msg based fee",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
-				fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))).String()),
-				fmt.Sprintf("--recipient=%s", s.testnet.Validators[0].Address.String()),
-			},
+
+			"add",
+			"test update msg based fee",
+			"description",
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+			"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+			fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))).String()),
+			fmt.Sprintf("--recipient=%s", s.testnet.Validators[0].Address.String()),
+			"",
 			false,
 			"",
 			0,
 		},
 		{"add msg based fee proposal - invalid msg type url",
-			[]string{
-				"add",
-				"test add msg based fee",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--msg-type=invalid",
-				fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))).String()),
-			},
+
+			"add",
+			"test add msg based fee",
+			"description",
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+			"--msg-type=invalid",
+			fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))).String()),
+			"",
+			"",
 			true,
 			"unable to resolve type URL invalid",
 			0,
 		},
 		{"add msg based fee proposal - invalid additional fee",
-			[]string{
-				"add",
-				"test add msg based fee",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
-				fmt.Sprintf("--additional-fee=%s", "blah"),
-			},
+
+			"add",
+			"test add msg based fee",
+			"description",
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+			"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+			fmt.Sprintf("--additional-fee=%s", "blah"),
+			"",
+			"",
 			true,
 			"invalid decimal coin expression: blah",
 			0,
 		},
 		{"update msg based fee proposal with recipient - valid",
-			[]string{
-				"update",
-				"test update msg based fee",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
-				fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))).String()),
-			},
+			"update",
+			"test update msg based fee",
+			"description",
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+			"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+			fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))).String()),
+			"",
+			"",
 			false,
 			"",
 			0,
 		},
 		{"update msg based fee proposal with recipient and default basis points - valid",
-			[]string{
-				"update",
-				"test update msg based fee",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
-				fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))).String()),
-				fmt.Sprintf("--recipient=%s", s.testnet.Validators[0].Address.String()),
-			},
+			"update",
+			"test update msg based fee",
+			"description",
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+			"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+			fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))).String()),
+			fmt.Sprintf("--recipient=%s", s.testnet.Validators[0].Address.String()),
+			"",
 			false,
 			"",
 			0,
 		},
 		{"update msg based fee proposal with recipient and modified basis points - valid",
-			[]string{
-				"update",
-				"test update msg based fee",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
-				fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))).String()),
-				fmt.Sprintf("--recipient=%s", s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--bips=%s", "5001"),
-			},
+
+			"update",
+			"test update msg based fee",
+			"description",
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+			"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+			fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))).String()),
+			fmt.Sprintf("--recipient=%s", s.testnet.Validators[0].Address.String()),
+			fmt.Sprintf("--bips=%s", "5001"),
 			false,
 			"",
 			0,
 		},
 		{"remove msg based fee proposal - valid",
-			[]string{
-				"remove",
-				"test update msg based fee",
-				"description",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
-			},
+			"remove",
+			"test update msg based fee",
+			"description",
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+			"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+			"",
+			"",
+			"",
 			false,
 			"",
 			0,
@@ -210,9 +219,19 @@ func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			}
-			tc.args = append(tc.args, args...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, msgfeescli.GetCmdMsgFeesProposal(), tc.args)
+			args = append(args, tc.typeArg, tc.title, tc.description, tc.deposit, tc.msgType)
+			if len(tc.additionalFee) != 0 {
+				args = append(args, tc.additionalFee)
+			}
+			if len(tc.recipient) != 0 {
+				args = append(args, tc.recipient)
+			}
+			if len(tc.bips) != 0 {
+				args = append(args, tc.bips)
+			}
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, msgfeescli.GetCmdMsgFeesProposal(), args)
 			if tc.expectErr {
 				s.Require().Error(err)
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
@@ -227,40 +246,37 @@ func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {
 func (s *IntegrationTestSuite) TestUpdateUsdConversionRateProposal() {
 	testCases := []struct {
 		name         string
-		args         []string
+		title        string
+		description  string
+		rate         string
+		deposit      string
 		expectErr    bool
 		expectErrMsg string
 		expectedCode uint32
 	}{
 		{"update nhash to usd mil proposal - valid",
-			[]string{
-				"title",
-				"description",
-				"10",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-			},
+			"title",
+			"description",
+			"10",
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
 			false,
 			"",
 			0,
 		},
 		{"update nhash to usd mil proposal - invalid - rate param error",
-			[]string{
-				"title",
-				"description",
-				"invalid-rate",
-				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-			},
+			"title",
+			"description",
+			"invalid-rate",
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
 			true,
 			"unable to parse nhash value: invalid-rate",
 			0,
 		},
 		{"update nhash to usd mil proposal - invalid - deposit param",
-			[]string{
-				"title",
-				"description",
-				"10",
-				"invalid-deposit",
-			},
+			"title",
+			"description",
+			"10",
+			"invalid-deposit",
 			true,
 			"invalid decimal coin expression: invalid-deposit",
 			0,
@@ -278,9 +294,9 @@ func (s *IntegrationTestSuite) TestUpdateUsdConversionRateProposal() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			}
-			tc.args = append(tc.args, args...)
+			args = append(args, tc.name, tc.description, tc.rate, tc.deposit)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, msgfeescli.GetUpdateNhashPerUsdMilProposal(), tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, msgfeescli.GetUpdateNhashPerUsdMilProposal(), args)
 			if tc.expectErr {
 				s.Require().Error(err)
 				s.Assert().Equal(tc.expectErrMsg, err.Error())

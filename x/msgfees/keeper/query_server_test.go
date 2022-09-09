@@ -19,10 +19,9 @@ import (
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil"
-	"github.com/provenance-io/provenance/x/msgfees/types"
-
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/msgfees/types"
 
 	"github.com/stretchr/testify/suite"
 )
