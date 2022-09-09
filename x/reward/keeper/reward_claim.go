@@ -139,7 +139,7 @@ func (k Keeper) ClaimAllRewards(ctx sdk.Context, addr string) ([]*types.RewardPr
 	allProgramDetails := []*types.RewardProgramClaimDetail{}
 	allRewards := sdk.Coins{}
 
-	programs, err := k.GetUnexpiredRewardPrograms(ctx)
+	programs, err := k.GetAllUnexpiredRewardPrograms(ctx)
 	if err != nil {
 		return nil, sdk.Coins{}, err
 	}

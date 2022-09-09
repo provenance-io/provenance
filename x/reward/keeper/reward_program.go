@@ -120,8 +120,8 @@ func (k Keeper) GetAllExpiredRewardPrograms(ctx sdk.Context) ([]types.RewardProg
 	return k.getRewardProgramByState(ctx, types.RewardProgram_STATE_EXPIRED)
 }
 
-// GetUnexpiredRewardPrograms gets all RewardPrograms that are not expired
-func (k Keeper) GetUnexpiredRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
+// GetAllUnexpiredRewardPrograms gets all RewardPrograms that are not expired
+func (k Keeper) GetAllUnexpiredRewardPrograms(ctx sdk.Context) ([]types.RewardProgram, error) {
 	return k.getRewardProgramByState(ctx, types.RewardProgram_STATE_PENDING, types.RewardProgram_STATE_STARTED, types.RewardProgram_STATE_FINISHED)
 }
 

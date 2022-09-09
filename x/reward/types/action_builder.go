@@ -16,11 +16,19 @@ var (
 	_ ActionBuilder = &VoteActionBuilder{}
 )
 
+// ActionBuilder defines functions used to collect events to check against specific actions.
 type ActionBuilder interface {
+	// GetEventCriteria returns the event criteria for this action.
 	GetEventCriteria() *EventCriteria
+	// AddEvent adds an event to this builder in preparation for checking events against the criteria.
 	AddEvent(eventType string, attributes *map[string][]byte) error
+	// CanBuild returns true if this builder has enough event information for an evaluation result.
 	CanBuild() bool
+	// BuildAction builds the action and returns an EvaluationResult.
+	// This should only be called when CanBuild returns true.
+	// This should return an error if CanBuild is false or some other error is encountered.
 	BuildAction() (EvaluationResult, error)
+	// Reset clears out any previous event data, returning the builder to it's initial state.
 	Reset()
 }
 

@@ -223,10 +223,12 @@ func (k Keeper) FindQualifyingActions(ctx sdk.Context, action types.RewardAction
 	return result, nil
 }
 
+// GetAccountKeeper gets this Keeper's AccountKeeper.
 func (k Keeper) GetAccountKeeper() types.AccountKeeper {
 	return k.authkeeper
 }
 
+// GetStakingKeeper gets this Keeper's StakingKeeper.
 func (k Keeper) GetStakingKeeper() types.StakingKeeper {
 	return k.stakingKeeper
 }

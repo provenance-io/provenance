@@ -61,6 +61,7 @@ func WeightedOperations(
 	}
 }
 
+// SimulateMsgCreateRewardsProgram sends of a MsgCreateRewardProgramRequest.
 func SimulateMsgCreateRewardsProgram(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -158,6 +159,7 @@ func Dispatch(
 	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), futures, nil
 }
 
+// SimulateMsgEndRewardsProgram sends a MsgEndRewardProgramRequest for a random existing reward program.
 func SimulateMsgEndRewardsProgram(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,

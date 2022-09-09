@@ -436,7 +436,7 @@ func (s *KeeperTestSuite) TestGetAllExpiredRewardProgramsEmpty() {
 	s.Assert().Equal(0, len(programs), "should have no expired programs")
 }
 
-func (s *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
+func (s *KeeperTestSuite) TestGetAllUnexpiredRewardPrograms() {
 	time := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
@@ -519,7 +519,7 @@ func (s *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, program4)
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, program5)
 
-	programs, err := s.app.RewardKeeper.GetUnexpiredRewardPrograms(s.ctx)
+	programs, err := s.app.RewardKeeper.GetAllUnexpiredRewardPrograms(s.ctx)
 	s.Assert().NoError(err, "no error should be returned")
 	s.Assert().Equal(3, len(programs), "should have all unexpired programs")
 	s.Assert().Equal(uint64(1), programs[0].GetId(), "should have program 1")
@@ -527,8 +527,8 @@ func (s *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
 	s.Assert().Equal(uint64(3), programs[2].GetId(), "should have program 3")
 }
 
-func (s *KeeperTestSuite) TestGetUnexpiredRewardProgramsEmpty() {
-	programs, err := s.app.RewardKeeper.GetUnexpiredRewardPrograms(s.ctx)
+func (s *KeeperTestSuite) TestGetAllUnexpiredRewardProgramsEmpty() {
+	programs, err := s.app.RewardKeeper.GetAllUnexpiredRewardPrograms(s.ctx)
 	s.Assert().NoError(err, "no error should be returned")
 	s.Assert().Equal(0, len(programs), "should have no expired programs")
 }

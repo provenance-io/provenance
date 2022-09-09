@@ -89,7 +89,7 @@ func (s msgServer) EndRewardProgram(goCtx context.Context, msg *types.MsgEndRewa
 	return &types.MsgEndRewardProgramResponse{}, nil
 }
 
-// ClaimRewards claims a reward for a reward program's participant
+// ClaimRewards claims specific rewards for a user.
 func (s msgServer) ClaimRewards(goCtx context.Context, req *types.MsgClaimRewardsRequest) (*types.MsgClaimRewardsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -117,7 +117,7 @@ func (s msgServer) ClaimRewards(goCtx context.Context, req *types.MsgClaimReward
 	}, nil
 }
 
-// ClaimAllRewards claims every reward that a participant is eligible to claim
+// ClaimAllRewards claims all rewards for a user.
 func (s msgServer) ClaimAllRewards(goCtx context.Context, req *types.MsgClaimAllRewardsRequest) (*types.MsgClaimAllRewardsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
