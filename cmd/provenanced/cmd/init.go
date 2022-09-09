@@ -8,8 +8,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/provenance-io/provenance/internal/pioconfig"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -28,8 +26,8 @@ import (
 	"github.com/cosmos/go-bip39"
 
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"

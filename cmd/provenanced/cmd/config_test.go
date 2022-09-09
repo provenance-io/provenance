@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"io/ioutil"
 	"regexp"
 	"strings"
@@ -23,7 +22,7 @@ import (
 
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
-
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	tmconfig "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/log"
 )
