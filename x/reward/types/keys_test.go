@@ -46,8 +46,8 @@ func TestRewardModuleTypeKeys(t *testing.T) {
 
 	claimPeriodRewardDistributionKey := GetClaimPeriodRewardDistributionKey(claimPeriodId, rewardProgramId)
 	assert.EqualValues(t, ClaimPeriodRewardDistributionKeyPrefix, claimPeriodRewardDistributionKey[0:1])
-	assert.EqualValues(t, claimPeriodId, binary.BigEndian.Uint64(claimPeriodRewardDistributionKey[1:9]))
-	assert.EqualValues(t, rewardProgramId, binary.BigEndian.Uint64(claimPeriodRewardDistributionKey[9:17]))
+	assert.EqualValues(t, rewardProgramId, binary.BigEndian.Uint64(claimPeriodRewardDistributionKey[1:9]))
+	assert.EqualValues(t, claimPeriodId, binary.BigEndian.Uint64(claimPeriodRewardDistributionKey[9:17]))
 
 	accountStateAddressLookupKey := GetRewardAccountStateAddressLookupKey(addressFromSec256k1, rewardProgramId, claimPeriodId)
 	assert.EqualValues(t, AccountStateAddressLookupKeyPrefix, accountStateAddressLookupKey[0:1])

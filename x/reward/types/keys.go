@@ -112,8 +112,8 @@ func GetClaimPeriodRewardDistributionKey(claimID uint64, rewardID uint64) []byte
 	key := ClaimPeriodRewardDistributionKeyPrefix
 	binary.BigEndian.PutUint64(rewardBytes, rewardID)
 	binary.BigEndian.PutUint64(claimBytes, claimID)
-	key = append(key, claimBytes...)
-	return append(key, rewardBytes...)
+	key = append(key, rewardBytes...)
+	return append(key, claimBytes...)
 }
 
 // GetAllRewardAccountByAddressPartialKey returns the key to iterate over all AccountStateAddressLookup by address
