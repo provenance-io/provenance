@@ -53,7 +53,7 @@ func DetermineBips(recipient string, recipientBasisPoints string) (uint32, error
 		}
 		bips = uint32(bips64)
 		if bips > 10_000 {
-			return 0, fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", recipientBasisPoints)
+			return 0, types.ErrInvalidBipsValue.Wrap(fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", recipientBasisPoints).Error())
 		}
 	} else if len(recipientBasisPoints) == 0 && len(recipient) > 0 {
 		bips = types.DefaultMsgFeeBips

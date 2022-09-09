@@ -171,7 +171,7 @@ func (s *IntegrationTestSuite) TestDetermineBipsProposals() {
 			"recipient",
 			"10001",
 			0,
-			"recipient basis points can only be between 0 and 10,000 : 10001",
+			"recipient basis points can only be between 0 and 10,000 : 10001: invalid bips amount",
 		},
 		{
 			"invalid - has recipient and bips string not a number, should error",
