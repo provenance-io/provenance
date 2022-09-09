@@ -95,7 +95,7 @@ func (b *TransferActionBuilder) CanBuild() bool {
 
 func (b *TransferActionBuilder) BuildAction() (EvaluationResult, error) {
 	if !b.CanBuild() {
-		return EvaluationResult{}, nil
+		return EvaluationResult{}, fmt.Errorf("missing sender or recipient or action from transfer action")
 	}
 
 	result := EvaluationResult{
