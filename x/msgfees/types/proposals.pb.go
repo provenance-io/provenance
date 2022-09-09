@@ -26,12 +26,18 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // AddMsgFeeProposal defines a governance proposal to add additional msg based fee
 type AddMsgFeeProposal struct {
-	Title                string     `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description          string     `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	MsgTypeUrl           string     `protobuf:"bytes,3,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
-	AdditionalFee        types.Coin `protobuf:"bytes,4,opt,name=additional_fee,json=additionalFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"additional_fee" yaml:"additional_fee"`
-	Recipient            string     `protobuf:"bytes,5,opt,name=recipient,proto3" json:"recipient,omitempty"`
-	RecipientBasisPoints string     `protobuf:"bytes,6,opt,name=recipient_basis_points,json=recipientBasisPoints,proto3" json:"recipient_basis_points,omitempty"`
+	// propsal title
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// propsal description
+	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	// type url of msg to add fee
+	MsgTypeUrl string `protobuf:"bytes,3,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
+	// additional fee for msg type
+	AdditionalFee types.Coin `protobuf:"bytes,4,opt,name=additional_fee,json=additionalFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"additional_fee" yaml:"additional_fee"`
+	// optional recipient to recieve basis points
+	Recipient string `protobuf:"bytes,5,opt,name=recipient,proto3" json:"recipient,omitempty"`
+	// basis points to use when recipient is present (1 - 10,000)
+	RecipientBasisPoints string `protobuf:"bytes,6,opt,name=recipient_basis_points,json=recipientBasisPoints,proto3" json:"recipient_basis_points,omitempty"`
 }
 
 func (m *AddMsgFeeProposal) Reset()         { *m = AddMsgFeeProposal{} }
@@ -111,12 +117,18 @@ func (m *AddMsgFeeProposal) GetRecipientBasisPoints() string {
 
 // UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
 type UpdateMsgFeeProposal struct {
-	Title                string     `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description          string     `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	MsgTypeUrl           string     `protobuf:"bytes,3,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
-	AdditionalFee        types.Coin `protobuf:"bytes,4,opt,name=additional_fee,json=additionalFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"additional_fee" yaml:"additional_fee"`
-	Recipient            string     `protobuf:"bytes,5,opt,name=recipient,proto3" json:"recipient,omitempty"`
-	RecipientBasisPoints string     `protobuf:"bytes,6,opt,name=recipient_basis_points,json=recipientBasisPoints,proto3" json:"recipient_basis_points,omitempty"`
+	// propsal title
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// propsal description
+	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	// type url of msg to update fee
+	MsgTypeUrl string `protobuf:"bytes,3,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
+	// additional fee for msg type
+	AdditionalFee types.Coin `protobuf:"bytes,4,opt,name=additional_fee,json=additionalFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"additional_fee" yaml:"additional_fee"`
+	// optional recipient to recieve basis points
+	Recipient string `protobuf:"bytes,5,opt,name=recipient,proto3" json:"recipient,omitempty"`
+	// basis points to use when recipient is present (1 - 10,000)
+	RecipientBasisPoints string `protobuf:"bytes,6,opt,name=recipient_basis_points,json=recipientBasisPoints,proto3" json:"recipient_basis_points,omitempty"`
 }
 
 func (m *UpdateMsgFeeProposal) Reset()         { *m = UpdateMsgFeeProposal{} }
@@ -196,9 +208,12 @@ func (m *UpdateMsgFeeProposal) GetRecipientBasisPoints() string {
 
 // RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
 type RemoveMsgFeeProposal struct {
-	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// propsal title
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// propsal description
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	MsgTypeUrl  string `protobuf:"bytes,3,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
+	// type url of msg fee to remove
+	MsgTypeUrl string `protobuf:"bytes,3,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
 }
 
 func (m *RemoveMsgFeeProposal) Reset()         { *m = RemoveMsgFeeProposal{} }

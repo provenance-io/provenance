@@ -5295,12 +5295,12 @@ AddMsgFeeProposal defines a governance proposal to add additional msg based fee
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `msg_type_url` | [string](#string) |  |  |
-| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `recipient` | [string](#string) |  |  |
-| `recipient_basis_points` | [string](#string) |  |  |
+| `title` | [string](#string) |  | propsal title |
+| `description` | [string](#string) |  | propsal description |
+| `msg_type_url` | [string](#string) |  | type url of msg to add fee |
+| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | additional fee for msg type |
+| `recipient` | [string](#string) |  | optional recipient to recieve basis points |
+| `recipient_basis_points` | [string](#string) |  | basis points to use when recipient is present (1 - 10,000) |
 
 
 
@@ -5315,9 +5315,9 @@ RemoveMsgFeeProposal defines a governance proposal to delete a current msg based
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `msg_type_url` | [string](#string) |  |  |
+| `title` | [string](#string) |  | propsal title |
+| `description` | [string](#string) |  | propsal description |
+| `msg_type_url` | [string](#string) |  | type url of msg fee to remove |
 
 
 
@@ -5332,12 +5332,12 @@ UpdateMsgFeeProposal defines a governance proposal to update a current msg based
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `msg_type_url` | [string](#string) |  |  |
-| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `recipient` | [string](#string) |  |  |
-| `recipient_basis_points` | [string](#string) |  |  |
+| `title` | [string](#string) |  | propsal title |
+| `description` | [string](#string) |  | propsal description |
+| `msg_type_url` | [string](#string) |  | type url of msg to update fee |
+| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | additional fee for msg type |
+| `recipient` | [string](#string) |  | optional recipient to recieve basis points |
+| `recipient_basis_points` | [string](#string) |  | basis points to use when recipient is present (1 - 10,000) |
 
 
 
@@ -5352,8 +5352,8 @@ UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash p
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
+| `title` | [string](#string) |  | proposal title |
+| `description` | [string](#string) |  | proposal description |
 | `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is number of nhash per usd mil |
 
 
