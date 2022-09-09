@@ -136,7 +136,7 @@ func (k Keeper) RefundRewardClaims(ctx sdk.Context, rewardProgram types.RewardPr
 // ClaimAllRewards calls ClaimRewards, however differs from ClaimRewards in that it claims all the rewards that the address
 // is eligible for across all reward programs.
 func (k Keeper) ClaimAllRewards(ctx sdk.Context, addr string) ([]*types.RewardProgramClaimDetail, sdk.Coins, error) {
-	var allProgramDetails []*types.RewardProgramClaimDetail
+	allProgramDetails := []*types.RewardProgramClaimDetail{}
 	allRewards := sdk.Coins{}
 
 	programs, err := k.GetUnexpiredRewardPrograms(ctx)
