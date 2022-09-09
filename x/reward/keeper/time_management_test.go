@@ -9,8 +9,6 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestStartRewardProgram() {
-	suite.SetupTest()
-
 	currentTime := time.Now()
 	blockTime := suite.ctx.BlockTime()
 	program := types.NewRewardProgram(
@@ -53,8 +51,6 @@ func (suite *KeeperTestSuite) TestStartRewardProgram() {
 }
 
 func (suite *KeeperTestSuite) TestStartRewardProgramNoBalance() {
-	suite.SetupTest()
-
 	currentTime := time.Now()
 	program := types.NewRewardProgram(
 		"title",
@@ -80,20 +76,16 @@ func (suite *KeeperTestSuite) TestStartRewardProgramNoBalance() {
 }
 
 func (suite *KeeperTestSuite) TestStartNilRewardProgram() {
-	suite.SetupTest()
 	err := suite.app.RewardKeeper.StartRewardProgram(suite.ctx, nil)
 	suite.Assert().Error(err, "must throw error for nil case")
 }
 
 func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriodWithNil() {
-	suite.SetupTest()
-
 	err := suite.app.RewardKeeper.StartRewardProgramClaimPeriod(suite.ctx, nil)
 	suite.Assert().Error(err, "should throw error")
 }
 
 func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriodWithNoPeriods() {
-	suite.SetupTest()
 	currentTime := time.Now()
 	program := types.NewRewardProgram(
 		"title",
@@ -116,8 +108,6 @@ func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriodWithNoPeriods() {
 }
 
 func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriod() {
-	suite.SetupTest()
-
 	currentTime := time.Now()
 	blockTime := suite.ctx.BlockTime()
 	program := types.NewRewardProgram(
@@ -154,8 +144,6 @@ func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriod() {
 }
 
 func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriodUpdatesExpectedEndTime() {
-	suite.SetupTest()
-
 	currentTime := time.Now()
 	blockTime := suite.ctx.BlockTime()
 	program := types.NewRewardProgram(
@@ -193,8 +181,6 @@ func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriodUpdatesExpectedEn
 }
 
 func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriodDoesNotExceedBalance() {
-	suite.SetupTest()
-
 	currentTime := time.Now()
 	blockTime := suite.ctx.BlockTime()
 	program := types.NewRewardProgram(
@@ -227,8 +213,6 @@ func (suite *KeeperTestSuite) TestStartRewardProgramClaimPeriodDoesNotExceedBala
 }
 
 func (suite *KeeperTestSuite) TestEndRewardProgram() {
-	suite.SetupTest()
-
 	currentTime := time.Now()
 	blockTime := suite.ctx.BlockTime()
 	program := types.NewRewardProgram(
@@ -259,14 +243,11 @@ func (suite *KeeperTestSuite) TestEndRewardProgram() {
 }
 
 func (suite *KeeperTestSuite) TestEndRewardProgramNil() {
-	suite.SetupTest()
 	err := suite.app.RewardKeeper.EndRewardProgram(suite.ctx, nil)
 	suite.Assert().Error(err, "should throw an error for nil")
 }
 
 func (suite *KeeperTestSuite) TestExpireRewardProgram() {
-	suite.SetupTest()
-
 	program := types.NewRewardProgram(
 		"title",
 		"description",
@@ -293,14 +274,11 @@ func (suite *KeeperTestSuite) TestExpireRewardProgram() {
 }
 
 func (suite *KeeperTestSuite) TestExpireRewardProgramNil() {
-	suite.SetupTest()
 	err := suite.app.RewardKeeper.ExpireRewardProgram(suite.ctx, nil)
 	suite.Assert().Error(err, "should throw an error for nil")
 }
 
 func (suite *KeeperTestSuite) TestExpireRewardProgramRefunds() {
-	suite.SetupTest()
-
 	program := types.NewRewardProgram(
 		"title",
 		"description",
@@ -331,7 +309,6 @@ func (suite *KeeperTestSuite) TestExpireRewardProgramRefunds() {
 }
 
 func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsNonMatchingDenoms() {
-	suite.SetupTest()
 	notMatching := types.NewClaimPeriodRewardDistribution(
 		1,
 		1,
@@ -346,7 +323,6 @@ func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsNonMatchingDe
 }
 
 func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsNoSharesForPeriod() {
-	suite.SetupTest()
 	matching := types.NewClaimPeriodRewardDistribution(
 		1,
 		1,
@@ -362,7 +338,6 @@ func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsNoSharesForPe
 }
 
 func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsEvenDistributionNoRemainder() {
-	suite.SetupTest()
 	distribution := types.NewClaimPeriodRewardDistribution(
 		1,
 		1,
@@ -383,7 +358,6 @@ func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsEvenDistribut
 }
 
 func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsEvenDistributionWithRemainder() {
-	suite.SetupTest()
 	distribution := types.NewClaimPeriodRewardDistribution(
 		1,
 		1,
@@ -406,7 +380,6 @@ func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsEvenDistribut
 }
 
 func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUnevenDistribution() {
-	suite.SetupTest()
 	distribution := types.NewClaimPeriodRewardDistribution(
 		1,
 		1,
@@ -429,7 +402,6 @@ func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUnevenDistrib
 }
 
 func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUsesMaxReward() {
-	suite.SetupTest()
 	distribution := types.NewClaimPeriodRewardDistribution(
 		1,
 		1,
@@ -450,38 +422,31 @@ func (suite *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUsesMaxReward
 }
 
 func (suite *KeeperTestSuite) TestCalculateParticipantReward() {
-	suite.SetupTest()
 	reward := suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 1, 2, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100))
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 50), reward, "should get correct cut of pool")
 }
 
 func (suite *KeeperTestSuite) TestCalculateParticipantRewardLimitsToMaximum() {
-	suite.SetupTest()
 	reward := suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 1, 2, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 10))
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 10), reward, "should get correct cut of pool")
 }
 
 func (suite *KeeperTestSuite) TestCalculateParticipantRewardCanHandleZeroTotalShares() {
-	suite.SetupTest()
 	reward := suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 1, 0, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100))
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward, "should have no reward")
 }
 
 func (suite *KeeperTestSuite) TestCalculateParticipantRewardCanHandleZeroEarnedShares() {
-	suite.SetupTest()
 	reward := suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 0, 10, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100))
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward, "should have no reward")
 }
 
 func (suite *KeeperTestSuite) TestCalculateParticipantRewardCanHandleZeroRewardPool() {
-	suite.SetupTest()
 	reward := suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 1, 1, sdk.NewInt64Coin("nhash", 0), sdk.NewInt64Coin("nhash", 100))
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), reward, "should have no reward")
 }
 
 func (suite *KeeperTestSuite) TestCalculateParticipantRewardTruncates() {
-	suite.SetupTest()
-
 	reward := suite.app.RewardKeeper.CalculateParticipantReward(suite.ctx, 1, 3, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100))
 	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 33), reward, "reward should truncate when < .5")
 
@@ -490,8 +455,6 @@ func (suite *KeeperTestSuite) TestCalculateParticipantRewardTruncates() {
 }
 
 func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesInvalidLookups() {
-	suite.SetupTest()
-
 	currentTime := time.Now()
 	suite.ctx = suite.ctx.WithBlockTime(currentTime)
 
@@ -557,14 +520,11 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesInvalidLooku
 }
 
 func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesNilRewardProgram() {
-	suite.SetupTest()
 	err := suite.app.RewardKeeper.EndRewardProgramClaimPeriod(suite.ctx, nil)
 	suite.Assert().Error(err, "error should be returned for nil reward program")
 }
 
 func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEnd() {
-	suite.SetupTest()
-
 	currentTime := time.Now()
 	blockTime := suite.ctx.BlockTime()
 	program := types.NewRewardProgram(
@@ -605,8 +565,6 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEnd() {
 }
 
 func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransition() {
-	suite.SetupTest()
-
 	currentTime := time.Now()
 	blockTime := suite.ctx.BlockTime()
 	program := types.NewRewardProgram(
@@ -648,8 +606,6 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransition() {
 }
 
 func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransitionExpired() {
-	suite.SetupTest()
-
 	currentTime := time.Now()
 	suite.ctx = suite.ctx.WithBlockTime(currentTime)
 	blockTime := suite.ctx.BlockTime()
@@ -683,8 +639,6 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransitionExpired()
 }
 
 func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndNoBalance() {
-	suite.SetupTest()
-
 	currentTime := time.Now()
 	suite.ctx = suite.ctx.WithBlockTime(currentTime)
 	blockTime := suite.ctx.BlockTime()
@@ -715,8 +669,6 @@ func (suite *KeeperTestSuite) TestRewardProgramClaimPeriodEndNoBalance() {
 }
 
 func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesClaimStatus() {
-	suite.SetupTest()
-
 	currentTime := time.Now()
 	suite.ctx = suite.ctx.WithBlockTime(currentTime)
 	program := types.NewRewardProgram(
@@ -756,8 +708,6 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesClaimStatus(
 }
 
 func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesBalances() {
-	suite.SetupTest()
-
 	currentTime := time.Now()
 	suite.ctx = suite.ctx.WithBlockTime(currentTime)
 	program := types.NewRewardProgram(
@@ -798,8 +748,6 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesBalances() {
 }
 
 func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRolloverAmount() {
-	suite.SetupTest()
-
 	currentTime := time.Now()
 	suite.ctx = suite.ctx.WithBlockTime(currentTime)
 	blockTime := suite.ctx.BlockTime()
@@ -840,7 +788,6 @@ func (suite *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRollo
 }
 
 func (suite *KeeperTestSuite) TestUpdate() {
-	suite.SetupTest()
 	// Reward Program that has not started
 	currentTime := time.Now()
 	suite.ctx = suite.ctx.WithBlockTime(currentTime)

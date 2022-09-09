@@ -11,8 +11,6 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestNewRewardProgram() {
-	suite.SetupTest()
-
 	time := time.Now().UTC()
 	program := types.NewRewardProgram(
 		"title",
@@ -42,8 +40,6 @@ func (suite *KeeperTestSuite) TestNewRewardProgram() {
 }
 
 func (suite *KeeperTestSuite) TestGetSetRewardProgram() {
-	suite.SetupTest()
-
 	time := time.Now().Local().UTC()
 	program := types.NewRewardProgram(
 		"title",
@@ -78,8 +74,6 @@ func (suite *KeeperTestSuite) TestGetSetRewardProgram() {
 }
 
 func (suite *KeeperTestSuite) TestEndingRewardProgram() {
-	suite.SetupTest()
-
 	time := time.Now()
 	program := types.NewRewardProgram(
 		"title",
@@ -124,8 +118,6 @@ func (suite *KeeperTestSuite) TestEndingRewardProgram() {
 }
 
 func (suite *KeeperTestSuite) TestRemoveValidRewardProgram() {
-	suite.SetupTest()
-
 	time := time.Now()
 	program := types.NewRewardProgram(
 		"title",
@@ -152,14 +144,12 @@ func (suite *KeeperTestSuite) TestRemoveValidRewardProgram() {
 }
 
 func (suite *KeeperTestSuite) TestRemoveInvalidRewardProgram() {
-	suite.SetupTest()
 	invalidProgram, err := suite.app.RewardKeeper.GetRewardProgram(suite.ctx, 1)
 	suite.Assert().Error(err)
 	suite.Assert().Equal(uint64(0), invalidProgram.Id)
 }
 
 func (suite *KeeperTestSuite) TestIterateRewardPrograms() {
-	suite.SetupTest()
 	time := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
@@ -218,7 +208,6 @@ func (suite *KeeperTestSuite) TestIterateRewardPrograms() {
 }
 
 func (suite *KeeperTestSuite) TestIterateRewardProgramsHalt() {
-	suite.SetupTest()
 	time := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
@@ -277,8 +266,6 @@ func (suite *KeeperTestSuite) TestIterateRewardProgramsHalt() {
 }
 
 func (suite *KeeperTestSuite) TestIterateRewardProgramsEmpty() {
-	suite.SetupTest()
-
 	counter := 0
 	err := suite.app.RewardKeeper.IterateRewardPrograms(suite.ctx, func(rewardProgram types.RewardProgram) (stop bool, err error) {
 		counter += 1
@@ -290,7 +277,6 @@ func (suite *KeeperTestSuite) TestIterateRewardProgramsEmpty() {
 }
 
 func (suite *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
-	suite.SetupTest()
 	time := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
@@ -349,14 +335,12 @@ func (suite *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
 }
 
 func (suite *KeeperTestSuite) TestGetOutstandingRewardProgramsEmpty() {
-	suite.SetupTest()
 	programs, err := suite.app.RewardKeeper.GetOutstandingRewardPrograms(suite.ctx)
 	suite.Assert().NoError(err, "no error should be returned")
 	suite.Assert().Equal(0, len(programs), "should have no outstanding programs")
 }
 
 func (suite *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
-	suite.SetupTest()
 	time := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
@@ -447,14 +431,12 @@ func (suite *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
 }
 
 func (suite *KeeperTestSuite) TestGetAllExpiredRewardProgramsEmpty() {
-	suite.SetupTest()
 	programs, err := suite.app.RewardKeeper.GetAllExpiredRewardPrograms(suite.ctx)
 	suite.Assert().NoError(err, "no error should be returned")
 	suite.Assert().Equal(0, len(programs), "should have no expired programs")
 }
 
 func (suite *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
-	suite.SetupTest()
 	time := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
@@ -546,14 +528,12 @@ func (suite *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
 }
 
 func (suite *KeeperTestSuite) TestGetUnexpiredRewardProgramsEmpty() {
-	suite.SetupTest()
 	programs, err := suite.app.RewardKeeper.GetUnexpiredRewardPrograms(suite.ctx)
 	suite.Assert().NoError(err, "no error should be returned")
 	suite.Assert().Equal(0, len(programs), "should have no expired programs")
 }
 
 func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
-	suite.SetupTest()
 	time := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
@@ -611,14 +591,12 @@ func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 }
 
 func (suite *KeeperTestSuite) TestGetAllActiveRewardProgramsEmpty() {
-	suite.SetupTest()
 	programs, err := suite.app.RewardKeeper.GetAllActiveRewardPrograms(suite.ctx)
 	suite.Assert().NoError(err, "no error should be returned")
 	suite.Assert().Equal(0, len(programs), "should have no active programs")
 }
 
 func (suite *KeeperTestSuite) TestGetAllRewardPrograms() {
-	suite.SetupTest()
 	time := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
@@ -678,14 +656,12 @@ func (suite *KeeperTestSuite) TestGetAllRewardPrograms() {
 }
 
 func (suite *KeeperTestSuite) TestGetAllRewardProgramsEmpty() {
-	suite.SetupTest()
 	programs, err := suite.app.RewardKeeper.GetAllRewardPrograms(suite.ctx)
 	suite.Assert().NoError(err, "no error should be returned")
 	suite.Assert().Equal(0, len(programs), "should have no active programs")
 }
 
 func (suite *KeeperTestSuite) TestCreateRewardProgram() {
-	suite.SetupTest()
 	simapp.FundAccount(suite.app.BankKeeper, suite.ctx, suite.accountAddresses[0], sdk.NewCoins(sdk.NewInt64Coin("nhash", 1000000000000)))
 
 	err := suite.app.RewardKeeper.CreateRewardProgram(suite.ctx, types.RewardProgram{})
@@ -819,7 +795,6 @@ func (suite *KeeperTestSuite) TestCreateRewardProgram() {
 }
 
 func (suite *KeeperTestSuite) TestRefundRemainingBalance() {
-	suite.SetupTest()
 	time := suite.ctx.BlockTime()
 	rewardProgram := types.NewRewardProgram(
 		"title",
@@ -850,7 +825,6 @@ func (suite *KeeperTestSuite) TestRefundRemainingBalance() {
 }
 
 func (suite *KeeperTestSuite) TestRefundRemainingBalanceEmpty() {
-	suite.SetupTest()
 	time := suite.ctx.BlockTime()
 	rewardProgram := types.NewRewardProgram(
 		"title",
@@ -880,7 +854,6 @@ func (suite *KeeperTestSuite) TestRefundRemainingBalanceEmpty() {
 }
 
 func (suite *KeeperTestSuite) TestGetRewardProgramID() {
-	suite.SetupTest()
 	id, err := suite.app.RewardKeeper.GetRewardProgramID(suite.ctx)
 	suite.Assert().NoError(err, "no error should be thrown")
 	suite.Assert().Equal(uint64(1), id, "id should match")

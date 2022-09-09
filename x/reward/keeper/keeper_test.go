@@ -67,7 +67,6 @@ func TestKeeperTestSuite(t *testing.T) {
 
 // Test no reward programs. Nothing should happen
 func (suite *KeeperTestSuite) TestDelegateAgainstNoRewardPrograms() {
-	suite.SetupTest()
 	SetupEventHistoryWithDelegates(suite)
 
 	// Advance one day
@@ -90,7 +89,6 @@ func (suite *KeeperTestSuite) TestDelegateAgainstNoRewardPrograms() {
 
 // Test against inactive reward programs. They should not be updated
 func (suite *KeeperTestSuite) TestDelegateAgainstInactiveRewardPrograms() {
-	suite.SetupTest()
 	SetupEventHistoryWithDelegates(suite)
 
 	// Create inactive reward program
@@ -162,7 +160,6 @@ func (suite *KeeperTestSuite) TestDelegateAgainstInactiveRewardPrograms() {
 
 // Test against delegate reward program. No delegate happens.
 func (suite *KeeperTestSuite) TestNonDelegateAgainstRewardProgram() {
-	suite.SetupTest()
 	setupEventHistory(suite)
 
 	// Create inactive reward program
@@ -272,8 +269,6 @@ func (suite *KeeperTestSuite) createValidatorEvent(validator, amount, sender str
 
 // Test against delegate reward program. Grant 1 share
 func (suite *KeeperTestSuite) TestSingleDelegate() {
-	suite.SetupTest()
-
 	// Create inactive reward program
 	action := types.NewActionDelegate()
 	action.MaximumActions = 10
@@ -340,8 +335,6 @@ func (suite *KeeperTestSuite) TestSingleDelegate() {
 
 // Test against delegate reward program. Grant 2 share
 func (suite *KeeperTestSuite) TestMultipleDelegate() {
-	suite.SetupTest()
-
 	// Create inactive reward program
 	action := types.NewActionDelegate()
 	action.MaximumActions = 10
@@ -409,8 +402,6 @@ func (suite *KeeperTestSuite) TestMultipleDelegate() {
 
 // Test against delegate reward program. Not enough actions
 func (suite *KeeperTestSuite) TestDelegateBelowMinimumActions() {
-	suite.SetupTest()
-
 	// Create inactive reward program
 	action := types.NewActionDelegate()
 	action.MaximumActions = 10
@@ -479,7 +470,6 @@ func (suite *KeeperTestSuite) TestDelegateBelowMinimumActions() {
 
 // Test against delegate reward program. Too many actions
 func (suite *KeeperTestSuite) TestDelegateAboveMaximumActions() {
-	suite.SetupTest()
 
 	minimumDelegation := sdk.NewInt64Coin("nhash", 0)
 	maximumDelegation := sdk.NewInt64Coin("nhash", 100)
@@ -540,8 +530,6 @@ func (suite *KeeperTestSuite) TestDelegateAboveMaximumActions() {
 
 // Test against delegate reward program. Below delegation amount
 func (suite *KeeperTestSuite) TestDelegateBelowMinimumDelegation() {
-	suite.SetupTest()
-
 	// Create inactive reward program
 	action := types.NewActionDelegate()
 	action.MaximumActions = 10
@@ -610,8 +598,6 @@ func (suite *KeeperTestSuite) TestDelegateBelowMinimumDelegation() {
 
 // Test against delegate reward program. Above delegation amount
 func (suite *KeeperTestSuite) TestDelegateAboveMaximumDelegation() {
-	suite.SetupTest()
-
 	// Create inactive reward program
 	action := types.NewActionDelegate()
 	action.MaximumActions = 10
@@ -680,8 +666,6 @@ func (suite *KeeperTestSuite) TestDelegateAboveMaximumDelegation() {
 
 // Test against delegate reward program. Below percentile
 func (suite *KeeperTestSuite) TestDelegateBelowMinimumPercentile() {
-	suite.SetupTest()
-
 	// Create inactive reward program
 	action := types.NewActionDelegate()
 	action.MaximumActions = 10
@@ -750,8 +734,6 @@ func (suite *KeeperTestSuite) TestDelegateBelowMinimumPercentile() {
 
 // Test against delegate reward program. Above percentile
 func (suite *KeeperTestSuite) TestDelegateAboveMaximumPercentile() {
-	suite.SetupTest()
-
 	// Create inactive reward program
 	action := types.NewActionDelegate()
 	action.MaximumActions = 10

@@ -81,7 +81,6 @@ func SetupEventHistoryWithDelegates(suite *KeeperTestSuite) {
 }
 
 func (suite *KeeperTestSuite) TestIterateABCIEventsWildcard() {
-	suite.SetupTest()
 	setupEventHistory(suite)
 	var events []types.ABCIEvent
 	criteria := types.NewEventCriteria(events)
@@ -94,7 +93,6 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsWildcard() {
 }
 
 func (suite *KeeperTestSuite) TestIterateABCIEventsByEventType() {
-	suite.SetupTest()
 	setupEventHistory(suite)
 	counter := 0
 	events := []types.ABCIEvent{
@@ -111,7 +109,6 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsByEventType() {
 }
 
 func (suite *KeeperTestSuite) TestIterateABCIEventsByEventTypeAndAttributeName() {
-	suite.SetupTest()
 	setupEventHistory(suite)
 	counter := 0
 	events := []types.ABCIEvent{
@@ -131,7 +128,6 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsByEventTypeAndAttributeName()
 }
 
 func (suite *KeeperTestSuite) TestIterateABCIEventsByEventTypeAndAttributeNameAndValue() {
-	suite.SetupTest()
 	setupEventHistory(suite)
 	counter := 0
 	events := []types.ABCIEvent{
@@ -151,7 +147,6 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsByEventTypeAndAttributeNameAn
 }
 
 func (suite *KeeperTestSuite) TestIterateABCIEventsNonExistantEventType() {
-	suite.SetupTest()
 	setupEventHistory(suite)
 	counter := 0
 	events := []types.ABCIEvent{
@@ -169,7 +164,6 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsNonExistantEventType() {
 }
 
 func (suite *KeeperTestSuite) TestIterateABCIEventsNonExistantAttributeName() {
-	suite.SetupTest()
 	setupEventHistory(suite)
 	counter := 0
 	events := []types.ABCIEvent{
@@ -189,7 +183,6 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsNonExistantAttributeName() {
 }
 
 func (suite *KeeperTestSuite) TestIterateABCIEventsNonAttributeValueMatch() {
-	suite.SetupTest()
 	setupEventHistory(suite)
 	counter := 0
 	events := []types.ABCIEvent{
@@ -209,7 +202,6 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsNonAttributeValueMatch() {
 }
 
 func (suite *KeeperTestSuite) TestIterateABCIEventsHandlesError() {
-	suite.SetupTest()
 	setupEventHistory(suite)
 	counter := 0
 	events := []types.ABCIEvent{
@@ -229,7 +221,6 @@ func (suite *KeeperTestSuite) TestIterateABCIEventsHandlesError() {
 }
 
 func (suite *KeeperTestSuite) TestFindQualifyingActionsWithDelegates() {
-	suite.SetupTest()
 	SetupEventHistoryWithDelegates(suite)
 	criteria := types.NewEventCriteria([]types.ABCIEvent{
 		{
@@ -260,7 +251,6 @@ func (suite *KeeperTestSuite) TestFindQualifyingActionsWithDelegates() {
 }
 
 func (suite *KeeperTestSuite) TestFindQualifyingActionsWithoutDelegates() {
-	suite.SetupTest()
 	criteria := types.NewEventCriteria([]types.ABCIEvent{
 		{
 			Type: "message",
@@ -318,7 +308,6 @@ func (m MockAction) PostEvaluate(ctx sdk.Context, provider types.KeeperProvider,
 }
 
 func (suite *KeeperTestSuite) TestProcessQualifyingActionsWithNoAbciEvents() {
-	suite.SetupTest()
 	program := types.RewardProgram{Id: 1, CurrentClaimPeriod: 1}
 	action := MockAction{PassEvaluate: false}
 	results := suite.app.RewardKeeper.ProcessQualifyingActions(suite.ctx, &program, action, []types.EvaluationResult{})
@@ -326,7 +315,6 @@ func (suite *KeeperTestSuite) TestProcessQualifyingActionsWithNoAbciEvents() {
 }
 
 func (suite *KeeperTestSuite) TestProcessQualifyingActionsCreatesState() {
-	suite.SetupTest()
 	program := types.RewardProgram{Id: 1, CurrentClaimPeriod: 1}
 	action := MockAction{PassEvaluate: true}
 	address1, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
@@ -340,7 +328,6 @@ func (suite *KeeperTestSuite) TestProcessQualifyingActionsCreatesState() {
 }
 
 func (suite *KeeperTestSuite) TestProcessQualifyingActionsWithNoMatchingResults() {
-	suite.SetupTest()
 	program := types.RewardProgram{Id: 1, CurrentClaimPeriod: 1}
 	action := MockAction{PassEvaluate: false}
 	results := suite.app.RewardKeeper.ProcessQualifyingActions(suite.ctx, &program, action, []types.EvaluationResult{
@@ -351,7 +338,6 @@ func (suite *KeeperTestSuite) TestProcessQualifyingActionsWithNoMatchingResults(
 }
 
 func (suite *KeeperTestSuite) TestProcessQualifyingActionsWithMatchingResults() {
-	suite.SetupTest()
 	program := types.RewardProgram{Id: 1, CurrentClaimPeriod: 1}
 	action := MockAction{PassEvaluate: true}
 	results := suite.app.RewardKeeper.ProcessQualifyingActions(suite.ctx, &program, action, []types.EvaluationResult{
@@ -362,7 +348,6 @@ func (suite *KeeperTestSuite) TestProcessQualifyingActionsWithMatchingResults() 
 }
 
 func (suite *KeeperTestSuite) TestFindQualifyingActionsWithNil() {
-	suite.SetupTest()
 	results := suite.app.RewardKeeper.ProcessQualifyingActions(suite.ctx, nil, nil, nil)
 	suite.Assert().Equal(0, len(results), "should handle nil input")
 }
@@ -499,8 +484,6 @@ func (m MockStakingKeeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (v
 }
 
 func (suite *KeeperTestSuite) TestActionDelegateEvaluatePasses() {
-	suite.SetupTest()
-
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
@@ -528,8 +511,6 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluatePasses() {
 }
 
 func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActionsNotMet() {
-	suite.SetupTest()
-
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
@@ -555,8 +536,6 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActionsN
 }
 
 func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumActionsNotMet() {
-	suite.SetupTest()
-
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
@@ -583,8 +562,6 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumActionsN
 }
 
 func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegationAmountNotMet() {
-	suite.SetupTest()
-
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
@@ -611,8 +588,6 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegati
 }
 
 func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumDelegationAmountNotMet() {
-	suite.SetupTest()
-
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
@@ -639,8 +614,6 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumDelegati
 }
 
 func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActiveStakePercentileNotMet() {
-	suite.SetupTest()
-
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
@@ -667,8 +640,6 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActiveSt
 }
 
 func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegationPercentageNotMet() {
-	suite.SetupTest()
-
 	action := types.NewActionDelegate()
 	action.MinimumActions = 1
 	action.MaximumActions = 2
@@ -697,14 +668,12 @@ func (suite *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegati
 // Test GetRewardAction
 
 func (suite *KeeperTestSuite) TestGetRewardActionHandlesUnsupportedActions() {
-	suite.SetupTest()
 	qa := types.QualifyingAction{}
 	_, err := qa.GetRewardAction(suite.ctx)
 	suite.Assert().Error(err, "should throw error when an action is not supported")
 }
 
 func (suite *KeeperTestSuite) TestGetRewardActionHandlesActionDelegate() {
-	suite.SetupTest()
 	delegate := types.QualifyingAction_Delegate{}
 	qa := types.QualifyingAction{
 		Type: &delegate,
@@ -716,7 +685,6 @@ func (suite *KeeperTestSuite) TestGetRewardActionHandlesActionDelegate() {
 
 // Test DetectQualifyingActions
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction() {
-	suite.SetupTest()
 	SetupEventHistoryWithDelegates(suite)
 	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 0)
@@ -756,7 +724,6 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction()
 }
 
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction() {
-	suite.SetupTest()
 	SetupEventHistoryWithDelegates(suite)
 	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 0)
@@ -808,7 +775,6 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction()
 }
 
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoQualifyingAction() {
-	suite.SetupTest()
 	SetupEventHistoryWithDelegates(suite)
 	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 
@@ -834,7 +800,6 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoQualifyingAction(
 }
 
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoMatchingQualifyingAction() {
-	suite.SetupTest()
 	SetupEventHistoryWithDelegates(suite)
 	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 0)
@@ -875,8 +840,6 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWithNoMatchingQualifyin
 
 // Test RewardShares
 func (suite *KeeperTestSuite) TestRewardSharesSingle() {
-	suite.SetupTest()
-
 	rewardProgram := types.NewRewardProgram(
 		"title",
 		"description",
@@ -930,8 +893,6 @@ func (suite *KeeperTestSuite) TestRewardSharesSingle() {
 }
 
 func (suite *KeeperTestSuite) TestRewardSharesInvalidClaimPeriodRewardDistribution() {
-	suite.SetupTest()
-
 	rewardProgram := types.NewRewardProgram(
 		"title",
 		"description",
@@ -977,8 +938,6 @@ func (suite *KeeperTestSuite) TestRewardSharesInvalidClaimPeriodRewardDistributi
 }
 
 func (suite *KeeperTestSuite) TestRewardSharesMultiple() {
-	suite.SetupTest()
-
 	rewardProgram := types.NewRewardProgram(
 		"title",
 		"description",
@@ -1040,8 +999,6 @@ func (suite *KeeperTestSuite) TestRewardSharesMultiple() {
 }
 
 func (suite *KeeperTestSuite) TestRewardSharesInvalidRewardProgram() {
-	suite.SetupTest()
-
 	rewardProgram := types.NewRewardProgram(
 		"title",
 		"description",
@@ -1142,7 +1099,6 @@ func SetupEventHistoryWithVotes(suite *KeeperTestSuite) {
 
 // transfer
 func (suite *KeeperTestSuite) TestFindQualifyingActionsWithTransfers() {
-	suite.SetupTest()
 	SetupEventHistoryWithTransfers(suite)
 	criteria := types.NewEventCriteria([]types.ABCIEvent{
 		{
@@ -1163,7 +1119,6 @@ func (suite *KeeperTestSuite) TestFindQualifyingActionsWithTransfers() {
 
 // vote
 func (suite *KeeperTestSuite) TestFindQualifyingActionsWithVotes() {
-	suite.SetupTest()
 	SetupEventHistoryWithVotes(suite)
 	criteria := types.NewEventCriteria([]types.ABCIEvent{
 		{
@@ -1183,7 +1138,6 @@ func (suite *KeeperTestSuite) TestFindQualifyingActionsWithVotes() {
 }
 
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingAction() {
-	suite.SetupTest()
 	SetupEventHistoryWithVotes(suite)
 	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 3)
@@ -1218,7 +1172,6 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingAc
 	suite.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
 }
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingActionDelegationNotMet() {
-	suite.SetupTest()
 	SetupEventHistoryWithVotes(suite)
 	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 4)
@@ -1254,7 +1207,6 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingAc
 }
 
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingNoQualifyingAction() {
-	suite.SetupTest()
 	SetupEventHistoryWithDelegates(suite)
 	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 0)
@@ -1290,7 +1242,6 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingNoQualifying
 }
 
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingDelegateQualifyingAction() {
-	suite.SetupTest()
 	SetupEventHistoryWithDelegates(suite)
 	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 0)
@@ -1339,7 +1290,6 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingDelegateQual
 }
 
 func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1Voting1DelegateQualifyingAction() {
-	suite.SetupTest()
 	SetupEventHistoryWithDelegates(suite)
 	SetupEventHistoryWithVotes(suite)
 	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
@@ -1389,6 +1339,5 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1Voting1DelegateQua
 }
 
 func (suite *KeeperTestSuite) TestGetAccountKeeper() {
-	suite.SetupTest()
 	suite.Assert().NotNil(suite.app.RewardKeeper.GetAccountKeeper())
 }

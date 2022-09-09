@@ -8,8 +8,6 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestNewRewardAccountState() {
-	suite.SetupTest()
-
 	accountState := types.NewRewardAccountState(
 		1,
 		2,
@@ -26,8 +24,6 @@ func (suite *KeeperTestSuite) TestNewRewardAccountState() {
 }
 
 func (suite *KeeperTestSuite) TestGetSetRewardAccountState() {
-	suite.SetupTest()
-
 	expectedState := types.NewRewardAccountState(
 		1,
 		2,
@@ -52,8 +48,6 @@ func (suite *KeeperTestSuite) TestGetSetRewardAccountState() {
 }
 
 func (suite *KeeperTestSuite) TestGetInvalidAccountState() {
-	suite.SetupTest()
-
 	actualState, err := suite.app.RewardKeeper.GetRewardAccountState(suite.ctx,
 		99,
 		99,
@@ -64,8 +58,6 @@ func (suite *KeeperTestSuite) TestGetInvalidAccountState() {
 }
 
 func (suite *KeeperTestSuite) TestIterateAccountStates() {
-	suite.SetupTest()
-
 	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
@@ -88,8 +80,6 @@ func (suite *KeeperTestSuite) TestIterateAccountStates() {
 }
 
 func (suite *KeeperTestSuite) TestIterateAccountStatesByAddress() {
-	suite.SetupTest()
-
 	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
@@ -114,8 +104,6 @@ func (suite *KeeperTestSuite) TestIterateAccountStatesByAddress() {
 }
 
 func (suite *KeeperTestSuite) TestEmptyIterateAccountStates() {
-	suite.SetupTest()
-
 	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
@@ -138,8 +126,6 @@ func (suite *KeeperTestSuite) TestEmptyIterateAccountStates() {
 }
 
 func (suite *KeeperTestSuite) TestIterateAccountStatesHalt() {
-	suite.SetupTest()
-
 	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
@@ -162,8 +148,6 @@ func (suite *KeeperTestSuite) TestIterateAccountStatesHalt() {
 }
 
 func (suite *KeeperTestSuite) TestIterateAllAccountStates() {
-	suite.SetupTest()
-
 	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
@@ -186,8 +170,6 @@ func (suite *KeeperTestSuite) TestIterateAllAccountStates() {
 }
 
 func (suite *KeeperTestSuite) TestEmptyIterateAllAccountStates() {
-	suite.SetupTest()
-
 	counter := 0
 	suite.app.RewardKeeper.IterateAllRewardAccountStates(suite.ctx, func(state types.RewardAccountState) bool {
 		counter += 1
@@ -198,8 +180,6 @@ func (suite *KeeperTestSuite) TestEmptyIterateAllAccountStates() {
 }
 
 func (suite *KeeperTestSuite) TestIterateAllAccountStatesHalt() {
-	suite.SetupTest()
-
 	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
@@ -222,8 +202,6 @@ func (suite *KeeperTestSuite) TestIterateAllAccountStatesHalt() {
 }
 
 func (suite *KeeperTestSuite) TestIterateRewardAccountStatesForRewardProgram() {
-	suite.SetupTest()
-
 	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
@@ -246,8 +224,6 @@ func (suite *KeeperTestSuite) TestIterateRewardAccountStatesForRewardProgram() {
 }
 
 func (suite *KeeperTestSuite) TestEmptyIterateRewardAccountStatesForRewardProgram() {
-	suite.SetupTest()
-
 	counter := 0
 	suite.app.RewardKeeper.IterateRewardAccountStatesForRewardProgram(suite.ctx, 1, func(state types.RewardAccountState) bool {
 		counter += 1
@@ -258,8 +234,6 @@ func (suite *KeeperTestSuite) TestEmptyIterateRewardAccountStatesForRewardProgra
 }
 
 func (suite *KeeperTestSuite) TestIterateRewardAccountStatesForRewardProgramHalt() {
-	suite.SetupTest()
-
 	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
@@ -282,8 +256,6 @@ func (suite *KeeperTestSuite) TestIterateRewardAccountStatesForRewardProgramHalt
 }
 
 func (suite *KeeperTestSuite) TestGetRewardAccountStatesForClaimPeriod() {
-	suite.SetupTest()
-
 	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
@@ -302,16 +274,12 @@ func (suite *KeeperTestSuite) TestGetRewardAccountStatesForClaimPeriod() {
 }
 
 func (suite *KeeperTestSuite) TestGetRewardAccountStatesForClaimPeriodHandlesEmpty() {
-	suite.SetupTest()
-
 	states, err := suite.app.RewardKeeper.GetRewardAccountStatesForClaimPeriod(suite.ctx, 1, 1)
 	suite.Assert().NoError(err, "no error should be thrown when there are no account states.")
 	suite.Assert().Equal(0, len(states), "should have no account states")
 }
 
 func (suite *KeeperTestSuite) TestGetRewardAccountStatesForRewardProgram() {
-	suite.SetupTest()
-
 	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
 	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
@@ -330,16 +298,12 @@ func (suite *KeeperTestSuite) TestGetRewardAccountStatesForRewardProgram() {
 }
 
 func (suite *KeeperTestSuite) TestGetRewardAccountStatesForRewardProgramHandlesEmpty() {
-	suite.SetupTest()
-
 	states, err := suite.app.RewardKeeper.GetRewardAccountStatesForClaimPeriod(suite.ctx, 1, 1)
 	suite.Assert().NoError(err, "no error should be thrown when there are no account states.")
 	suite.Assert().Equal(0, len(states), "should have no account states")
 }
 
 func (suite *KeeperTestSuite) TestMakeRewardClaimsClaimableForPeriod() {
-	suite.SetupTest()
-
 	state1 := types.NewRewardAccountState(1, 2, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 0, map[string]uint64{})
 	state2 := types.NewRewardAccountState(1, 3, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 0, map[string]uint64{})
 	state3 := types.NewRewardAccountState(2, 1, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 0, map[string]uint64{})
@@ -369,15 +333,11 @@ func (suite *KeeperTestSuite) TestMakeRewardClaimsClaimableForPeriod() {
 }
 
 func (suite *KeeperTestSuite) TestMakeRewardClaimsClaimableForPeriodHandlesEmpty() {
-	suite.SetupTest()
-
 	err := suite.app.RewardKeeper.MakeRewardClaimsClaimableForPeriod(suite.ctx, 1, 1)
 	suite.Assert().NoError(err, "no error should be thrown when there are no account states.")
 }
 
 func (suite *KeeperTestSuite) TestExpireRewardClaimsForRewardProgram() {
-	suite.SetupTest()
-
 	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, map[string]uint64{})
 	state2 := types.NewRewardAccountState(1, 1, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 0, map[string]uint64{})
 	state3 := types.NewRewardAccountState(1, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, map[string]uint64{})
@@ -404,14 +364,11 @@ func (suite *KeeperTestSuite) TestExpireRewardClaimsForRewardProgram() {
 }
 
 func (suite *KeeperTestSuite) TestExpireRewardClaimsForRewardProgramHandlesEmpty() {
-	suite.SetupTest()
-
 	err := suite.app.RewardKeeper.ExpireRewardClaimsForRewardProgram(suite.ctx, 1)
 	suite.Assert().NoError(err, "no error should be thrown when there are no account states.")
 }
 
 func (suite *KeeperTestSuite) TestParseRewardAccountLookUpKey() {
-	suite.SetupTest()
 	addressFromSec256k1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	rewardProgramId := uint64(123456)
 	claimPeriodId := uint64(7891011)

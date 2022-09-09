@@ -239,8 +239,6 @@ func (s *KeeperTestSuite) TestRewardClaimTransactionInvalidClaimer() {
 }
 
 func (suite *KeeperTestSuite) TestClaimAllRewardsTransaction() {
-	suite.SetupTest()
-
 	time := suite.ctx.BlockTime()
 
 	for i := 0; i < 3; i++ {
@@ -312,8 +310,6 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsTransaction() {
 }
 
 func (suite *KeeperTestSuite) TestClaimAllRewardsNoProgramsTransaction() {
-	suite.SetupTest()
-
 	msg := types.NewMsgClaimAllRewardsRequest(suite.accountAddresses[0].String())
 	suite.ctx = suite.ctx.WithEventManager(sdk.NewEventManager())
 	result, err := suite.handler(suite.ctx, msg)
@@ -328,8 +324,6 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsNoProgramsTransaction() {
 }
 
 func (suite *KeeperTestSuite) TestRewardClaimAllRewardsInvalidAddressTransaction() {
-	suite.SetupTest()
-
 	time := suite.ctx.BlockTime()
 
 	for i := 0; i < 3; i++ {
@@ -390,8 +384,6 @@ func (suite *KeeperTestSuite) TestRewardClaimAllRewardsInvalidAddressTransaction
 }
 
 func (suite *KeeperTestSuite) TestClaimAllRewardsExpiredTransaction() {
-	suite.SetupTest()
-
 	time := suite.ctx.BlockTime()
 
 	for i := 0; i < 3; i++ {
@@ -458,7 +450,6 @@ func (suite *KeeperTestSuite) TestClaimAllRewardsExpiredTransaction() {
 }
 
 func (suite *KeeperTestSuite) TestEndRewardProgramRequest() {
-	suite.SetupTest()
 	testCases := []struct {
 		name         string
 		id           uint64
