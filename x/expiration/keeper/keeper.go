@@ -171,8 +171,8 @@ func (k Keeper) DeleteExpiration(ctx sdk.Context, moduleAssetID string) error {
 	return k.emitEvent(ctx, deleteEvent)
 }
 
-// GetExpirationByModuleAssetId resolves a record by module asset id.
-func (k Keeper) GetExpirationByModuleAssetId(ctx sdk.Context, moduleAssetID string) (*types.Expiration, error) {
+// GetExpirationByModuleAssetID resolves a record by module asset id.
+func (k Keeper) GetExpirationByModuleAssetID(ctx sdk.Context, moduleAssetID string) (*types.Expiration, error) {
 	key, err := types.GetModuleAssetKeyPrefix(moduleAssetID)
 	if err != nil {
 		return nil, err
