@@ -2,10 +2,11 @@ package cli_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/google/uuid"
@@ -28,10 +29,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type IntegrationCLITestSuite struct {
@@ -457,7 +458,7 @@ owner: %s`,
 	genesisState[metadatatypes.ModuleName] = metadataDataBz
 
 	cfg.GenesisState = genesisState
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewCoin("atom", sdk.NewInt(0))
+	pioconfig.SetProvenanceConfig("atom", 0)
 
 	s.cfg = cfg
 	cfg.ChainID = antewrapper.SimAppChainID

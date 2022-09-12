@@ -20,9 +20,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/metadata/types"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
@@ -71,7 +71,7 @@ func ownerPartyList(addresses ...string) []types.Party {
 }
 
 func (suite *IntegrationGRPCTestSuite) SetupSuite() {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
+	pioconfig.SetProvenanceConfig("atom", 0)
 	suite.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
 	addr, err := sdk.AccAddressFromHex(suite.accountKey.PubKey().Address().String())
 	suite.Require().NoError(err)

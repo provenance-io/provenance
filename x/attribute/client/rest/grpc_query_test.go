@@ -16,9 +16,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
@@ -85,8 +85,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cfg.GenesisState = genesisState
 
 	s.cfg = cfg
-
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewCoin("atom", sdk.NewInt(0))
+	pioconfig.SetProvenanceConfig("atom", 0)
 	//   TODO -- the following line needs to be patched because we must register our modules into this test node.
 	s.testnet = testnet.New(s.T(), cfg)
 

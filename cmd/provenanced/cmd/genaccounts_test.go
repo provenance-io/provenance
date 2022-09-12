@@ -91,35 +91,35 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 		name         string
 		msgType      string
 		fee          string
-		expectErr    bool
+		coinDenom    string
 		expectErrMsg string
 	}{
 		{
 			name:         "invalid msg type",
 			msgType:      "InvalidMsgType",
 			fee:          "1000jackthecat",
-			expectErr:    true,
+			coinDenom:    "vspn",
 			expectErrMsg: "unable to resolve type URL /InvalidMsgType",
 		},
 		{
 			name:         "invalid fee",
 			msgType:      "/provenance.name.v1.MsgBindNameRequest",
 			fee:          "not-a-fee",
-			expectErr:    true,
+			coinDenom:    "vspn",
 			expectErrMsg: "failed to parse coin: invalid decimal coin expression: not-a-fee",
 		},
 		{
 			name:         "valid msg type and fee",
 			msgType:      "/provenance.name.v1.MsgBindNameRequest",
 			fee:          "1000jackthecat",
-			expectErr:    false,
+			coinDenom:    "vspn",
 			expectErrMsg: "",
 		},
 		{
 			name:         "invalid fee",
 			msgType:      "provenance.name.v1.MsgBindNameRequest",
 			fee:          "1000jackthecat",
-			expectErr:    false,
+			coinDenom:    "vspn",
 			expectErrMsg: "",
 		},
 	}
@@ -147,9 +147,10 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 			cmd.SetArgs([]string{
 				tc.msgType,
 				tc.fee,
+				tc.coinDenom,
 				fmt.Sprintf("--%s=home", flags.FlagHome)})
 
-			if tc.expectErr {
+			if len(tc.expectErrMsg) > 0 {
 				err := cmd.ExecuteContext(ctx)
 				require.Error(t, err)
 				require.Equal(t, tc.expectErrMsg, err.Error())
