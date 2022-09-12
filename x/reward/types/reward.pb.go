@@ -435,7 +435,7 @@ type RewardAccountState struct {
 	ClaimPeriodId uint64 `protobuf:"varint,2,opt,name=claim_period_id,json=claimPeriodId,proto3" json:"claim_period_id,omitempty"`
 	// Owner of the reward account state.
 	Address string `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty"`
-	// The number of actions done by this account, mapped by action type.
+	// The number of actions performed by this account, mapped by action type.
 	ActionCounter []*ActionCounter `protobuf:"bytes,4,rep,name=action_counter,json=actionCounter,proto3" json:"action_counter,omitempty"`
 	// The amount of granted shares for the address in the reward program's claim period.
 	SharesEarned uint64 `protobuf:"varint,5,opt,name=shares_earned,json=sharesEarned,proto3" json:"shares_earned,omitempty"`
@@ -871,9 +871,11 @@ func (m *ActionVote) GetMinimumDelegationAmount() types.Coin {
 	return types.Coin{}
 }
 
-// The number of actions done by this account, key --> action type, value --> actions performed count.
+// ActionCounter is a key-value pair that maps action type to the number of times it was performed.
 type ActionCounter struct {
-	ActionType      string `protobuf:"bytes,1,opt,name=action_type,json=actionType,proto3" json:"action_type,omitempty"`
+	// The type of action performed.
+	ActionType string `protobuf:"bytes,1,opt,name=action_type,json=actionType,proto3" json:"action_type,omitempty"`
+	// The number of times this action has been performed
 	NumberOfActions uint64 `protobuf:"varint,2,opt,name=number_of_actions,json=numberOfActions,proto3" json:"number_of_actions,omitempty"`
 }
 
