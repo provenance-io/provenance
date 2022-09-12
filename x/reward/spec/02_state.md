@@ -10,6 +10,7 @@ The rewards module manages the state of every reward program and each of its par
   - [Reward Program](#reward-program)
   - [Claim Period Reward Distribution](#claim-period-reward-distribution)
   - [Reward Account State](#reward-account-state)
+    - [Action Counter](#action-counter)
   - [Qualifying Actions](#qualifying-actions)
     - [Action Delegate](#action-delegate)
     - [Action Transfer](#action-transfer)
@@ -23,7 +24,7 @@ A `RewardProgram` is the main data structure used by the Active Participation an
 * Reward Program: `0x01 | RewardProgram ID (8 bytes) -> ProtocolBuffers(RewardProgram)`
 * Reward Program ID: `0x02 -> uint64(RewardProgramID)`
 
-+++ https://github.com/provenance-io/provenance/blob/cba0b20229234bd655d7aefdb5aa5195e1c01214/proto/provenance/reward/v1/reward.proto#L13-L99
++++ https://github.com/provenance-io/provenance/blob/9c6c46b65957b841b4edc3a5ac6cb8ee56b97fce/proto/provenance/reward/v1/reward.proto#L12-L73
 
 ---
 ## Claim Period Reward Distribution
@@ -32,7 +33,7 @@ A `ClaimPeriodRewardDistribution` is created for each claim period of every `Rew
 
 * Claim Period Reward Distribution: `0x03 | Reward Program ID (8 bytes) | Claim Period ID (8 bytes) -> ProtocolBuffers(ClaimPeriodRewardDistribution)`
 
-+++ https://github.com/provenance-io/provenance/blob/4e354a9fd554a420f7970522d2e8b0b749baad9d/proto/provenance/reward/v1/reward.proto#L114-L130
++++ https://github.com/provenance-io/provenance/blob/9c6c46b65957b841b4edc3a5ac6cb8ee56b97fce/proto/provenance/reward/v1/reward.proto#L75-L92
 
 ---
 ## Reward Account State
@@ -42,7 +43,13 @@ The purpose of `RewardAccountState` is to track state at the address level of a 
 * AccountStateAddressLookupKeyPrefix: `0x04 | Account Address (n bytes, with the address length being stored in the first byte {int64(address[1:2][0])}) | Reward Program ID (8 bytes) | Claim Period ID (8 bytes) -> ProtocolBuffers(RewardAccountState)`
 * AccountStateKeyPrefix: `0x05 | Reward Program ID (8 bytes) | Claim Period ID (8 bytes) | Account Address (n bytes, with the address length being stored in the first byte {int64(address[1:2][0])}) -> ProtocolBuffers(RewardAccountState)`
 
-+++ https://github.com/provenance-io/provenance/blob/4e354a9fd554a420f7970522d2e8b0b749baad9d/proto/provenance/reward/v1/reward.proto#L132-L148
++++ https://github.com/provenance-io/provenance/blob/9c6c46b65957b841b4edc3a5ac6cb8ee56b97fce/proto/provenance/reward/v1/reward.proto#L94-L123
+
+### Action Counter
+
+`ActionCounter` tracks the number of times an action has been performed.
+
++++ https://github.com/provenance-io/provenance/blob/243a89c76378bb5af8a8017e099ee04ac22e99ce/proto/provenance/reward/v1/reward.proto#L190-L199
 
 ---
 ## Qualifying Actions
