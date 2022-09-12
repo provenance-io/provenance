@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/provenance-io/provenance/internal/pioconfig"
 
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 
@@ -97,7 +98,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			customDenom := server.GetServerContextFromCmd(cmd).Viper.GetString(CustomDenomFlag)
 			app.SetConfig(testnet)
 			println("denom" + customDenom)
-			pioconfig.SetProvenanceConfig(customDenom)
+			pioconfig.SetProvenanceConfig(customDenom, 0)
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
 				CoinTypeFlag: fmt.Sprint(app.CoinType),

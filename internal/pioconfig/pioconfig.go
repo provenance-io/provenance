@@ -29,24 +29,24 @@ type ProvenanceConfig struct {
 	set       bool
 }
 
-var ProvConfig *ProvenanceConfig
+var provConfig *ProvenanceConfig
 
-func SetProvenanceConfig(customDenom string) {
+func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
 	lock.Lock()
 	defer lock.Unlock()
 	if len(customDenom) > 0 {
-		ProvConfig = &ProvenanceConfig{
+		provConfig = &ProvenanceConfig{
 			FeeDenom:            customDenom,
-			MinGasPrices:        "0" + customDenom,
-			MsgFeeFloorGasPrice: 0,
+			MinGasPrices:        fmt.Sprintf("%v", msgFeeFloorGasPrice) + customDenom,
+			MsgFeeFloorGasPrice: msgFeeFloorGasPrice,
 			BondDenom:           customDenom,
 			set:                 true,
 		}
 	} else {
-		ProvConfig = &ProvenanceConfig{
+		provConfig = &ProvenanceConfig{
 			FeeDenom:            defaultFeeDenom,
 			MinGasPrices:        fmt.Sprintf("%v", DefaultMinGasPrices) + defaultFeeDenom,
-			MsgFeeFloorGasPrice: 1905,
+			MsgFeeFloorGasPrice: DefaultMinGasPrices,
 			BondDenom:           defaultBondDenom,
 			set:                 true,
 		}
@@ -54,11 +54,11 @@ func SetProvenanceConfig(customDenom string) {
 }
 
 func GetProvenanceConfig() ProvenanceConfig {
-	if ProvConfig == nil {
-		SetProvenanceConfig("")
+	if provConfig == nil {
+		SetProvenanceConfig("", DefaultMinGasPrices)
 	}
-	if !ProvConfig.set {
+	if !provConfig.set {
 		panic("Accessing Provenance config before it is set is not allowed")
 	}
-	return *ProvConfig
+	return *provConfig
 }

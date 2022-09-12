@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"strings"
+
+	"github.com/provenance-io/provenance/internal/pioconfig"
 
 	"github.com/spf13/cobra"
 
@@ -538,7 +539,7 @@ func AddGenesisMsgFeeCmd(defaultNodeHome string, interfaceRegistry types.Interfa
 			}
 
 			floorPriceDenom := args[2]
-			pioconfig.SetProvenanceConfig(floorPriceDenom)
+			pioconfig.SetProvenanceConfig(floorPriceDenom, 0)
 
 			genFile := config.GenesisFile()
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
