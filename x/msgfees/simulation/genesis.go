@@ -40,7 +40,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		MsgFees: []types.MsgFee{
 			// Adding fees for create marker with asking for a large number of stake to make sure that
 			// the call is failed without the additional fee provided.
-			types.NewMsgFee(sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}), sdk.NewCoin("stake", sdk.NewInt(100000000000000))),
+			types.NewMsgFee(sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}), sdk.NewCoin("stake", sdk.NewInt(100000000000000)), "", types.DefaultMsgFeeBips),
 		},
 	}
 

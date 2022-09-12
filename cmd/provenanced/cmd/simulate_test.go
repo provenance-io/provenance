@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -13,8 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
-
-	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/provenance-io/provenance/internal/antewrapper"
@@ -67,7 +67,7 @@ func (s *SimulateTestSuite) SetupTest() {
 	genesisState := cfg.GenesisState
 	var msgfeesData msgfeestypes.GenesisState
 	msgfeesData.Params.FloorGasPrice = s.floorGasPrice
-	msgfeesData.MsgFees = append(msgfeesData.MsgFees, msgfeestypes.NewMsgFee(s.sendMsgTypeUrl, s.sendMsgAdditionalFee))
+	msgfeesData.MsgFees = append(msgfeesData.MsgFees, msgfeestypes.NewMsgFee(s.sendMsgTypeUrl, s.sendMsgAdditionalFee, "", msgfeestypes.DefaultMsgFeeBips))
 	msgFeesDataBz, err := cfg.Codec.MarshalJSON(&msgfeesData)
 	s.Require().NoError(err)
 	genesisState[msgfeestypes.ModuleName] = msgFeesDataBz

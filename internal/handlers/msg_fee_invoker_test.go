@@ -3,6 +3,8 @@ package handlers_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -16,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	"github.com/stretchr/testify/suite"
+
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -26,9 +28,9 @@ import (
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
-func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
-	encodingConfig, err := setUpApp(suite, false, "atom", 100)
-	testTx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)))
+func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
+	encodingConfig, err := setUpApp(s, false, "atom", 100)
+	testTx, acct1 := createTestTx(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)))
 
 	// See comment for Check().
 	txEncoder := encodingConfig.TxConfig.TxEncoder()
@@ -36,44 +38,44 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
 	if err != nil {
 		panic(err)
 	}
-	suite.ctx = suite.ctx.WithTxBytes(bz)
+	s.ctx = s.ctx.WithTxBytes(bz)
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
-	suite.Require().NotPanics(func() {
+	s.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
 		feeGasMeter.ConsumeFee(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)), msgType, "")
 		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))})
 	}, "panicked on adding fees")
-	suite.ctx = suite.ctx.WithGasMeter(feeGasMeter)
+	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
-		AccountKeeper:  suite.app.AccountKeeper,
-		BankKeeper:     suite.app.BankKeeper,
-		FeegrantKeeper: suite.app.FeeGrantKeeper,
-		MsgFeesKeeper:  suite.app.MsgFeesKeeper,
+		AccountKeeper:  s.app.AccountKeeper,
+		BankKeeper:     s.app.BankKeeper,
+		FeegrantKeeper: s.app.FeeGrantKeeper,
+		MsgFeesKeeper:  s.app.MsgFeesKeeper,
 		Decoder:        encodingConfig.TxConfig.TxDecoder(),
 	})
-	suite.Require().NoError(err)
-	coins, _, err := feeChargeFn(suite.ctx, false)
+	s.Require().NoError(err)
+	coins, _, err := feeChargeFn(s.ctx, false)
 
-	suite.Require().Contains(err.Error(), "0nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "got wrong message")
+	s.Require().Contains(err.Error(), "0nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "got wrong message")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	suite.Require().True(coins.IsZero())
+	s.Require().True(coins.IsZero())
 
-	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(900000)))))
-	coins, _, err = feeChargeFn(suite.ctx, false)
-	suite.Require().Contains(err.Error(), "900000nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "got wrong message")
+	check(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(900000)))))
+	coins, _, err = feeChargeFn(s.ctx, false)
+	s.Require().Contains(err.Error(), "900000nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "got wrong message")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	suite.Require().True(coins.IsZero())
+	s.Require().True(coins.IsZero())
 
-	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(100000)))))
-	coins, _, err = feeChargeFn(suite.ctx, false)
-	suite.Require().Nil(err, "Got error when should not have.")
+	check(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(100000)))))
+	coins, _, err = feeChargeFn(s.ctx, false)
+	s.Require().Nil(err, "Got error when should not have.")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	suite.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000))}))
+	s.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000))}))
 }
 
-func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
-	encodingConfig, err := setUpApp(suite, false, "atom", 100)
-	testTx, acct1 := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 120000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)))
+func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
+	encodingConfig, err := setUpApp(s, false, "atom", 100)
+	testTx, acct1 := createTestTx(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 120000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)))
 
 	// See comment for Check().
 	txEncoder := encodingConfig.TxConfig.TxEncoder()
@@ -81,38 +83,38 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee()
 	if err != nil {
 		panic(err)
 	}
-	suite.ctx = suite.ctx.WithTxBytes(bz)
+	s.ctx = s.ctx.WithTxBytes(bz)
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
-	suite.Require().NotPanics(func() {
+	s.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
 		feeGasMeter.ConsumeFee(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)), msgType, "")
 		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))}) // fee consumed at ante handler
 	}, "panicked on adding fees")
-	suite.ctx = suite.ctx.WithGasMeter(feeGasMeter)
+	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
-		AccountKeeper:  suite.app.AccountKeeper,
-		BankKeeper:     suite.app.BankKeeper,
-		FeegrantKeeper: suite.app.FeeGrantKeeper,
-		MsgFeesKeeper:  suite.app.MsgFeesKeeper,
+		AccountKeeper:  s.app.AccountKeeper,
+		BankKeeper:     s.app.BankKeeper,
+		FeegrantKeeper: s.app.FeeGrantKeeper,
+		MsgFeesKeeper:  s.app.MsgFeesKeeper,
 		Decoder:        encodingConfig.TxConfig.TxDecoder(),
 	})
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
-	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)))))
-	coins, _, err := feeChargeFn(suite.ctx, false)
-	suite.Require().Contains(err.Error(), "0atom is smaller than 20000atom: insufficient funds: insufficient funds", "should have enough to pay msg fees, but not enough to sweep remaining base fees of 20000atom")
+	check(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)))))
+	coins, _, err := feeChargeFn(s.ctx, false)
+	s.Require().Contains(err.Error(), "0atom is smaller than 20000atom: insufficient funds: insufficient funds", "should have enough to pay msg fees, but not enough to sweep remaining base fees of 20000atom")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	suite.Require().True(coins.IsZero())
+	s.Require().True(coins.IsZero())
 
-	check(simapp.FundAccount(suite.app, suite.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000))))
-	coins, _, err = feeChargeFn(suite.ctx, false)
-	suite.Require().Nil(err, "Got error when should have successfully paid all msg fees and swept remaining base fees")
-	suite.Require().True(coins.IsEqual(sdk.Coins{sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000), sdk.NewInt64Coin("atom", 20000)}))
+	check(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000))))
+	coins, _, err = feeChargeFn(s.ctx, false)
+	s.Require().Nil(err, "Got error when should have successfully paid all msg fees and swept remaining base fees")
+	s.Require().True(coins.IsEqual(sdk.Coins{sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000), sdk.NewInt64Coin("atom", 20000)}))
 }
 
-func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
-	encodingConfig, err := setUpApp(suite, false, "atom", 100)
-	testTxWithFeeGrant, _ := createTestTxWithFeeGrant(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)))
+func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
+	encodingConfig, err := setUpApp(s, false, "atom", 100)
+	testTxWithFeeGrant, _ := createTestTxWithFeeGrant(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)))
 
 	// See comment for Check().
 	txEncoder := encodingConfig.TxConfig.TxEncoder()
@@ -120,31 +122,31 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 	if err != nil {
 		panic(err)
 	}
-	suite.ctx = suite.ctx.WithTxBytes(bz)
+	s.ctx = s.ctx.WithTxBytes(bz)
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
-	suite.Require().NotPanics(func() {
+	s.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
 		feeGasMeter.ConsumeFee(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)), msgType, "")
 		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))})
 	}, "panicked on adding fees")
-	suite.ctx = suite.ctx.WithGasMeter(feeGasMeter)
+	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
-		AccountKeeper:  suite.app.AccountKeeper,
-		BankKeeper:     suite.app.BankKeeper,
-		FeegrantKeeper: suite.app.FeeGrantKeeper,
-		MsgFeesKeeper:  suite.app.MsgFeesKeeper,
+		AccountKeeper:  s.app.AccountKeeper,
+		BankKeeper:     s.app.BankKeeper,
+		FeegrantKeeper: s.app.FeeGrantKeeper,
+		MsgFeesKeeper:  s.app.MsgFeesKeeper,
 		Decoder:        encodingConfig.TxConfig.TxDecoder(),
 	})
 
-	coins, _, err := feeChargeFn(suite.ctx, false)
-	suite.Require().Nil(err, "Got error when should not have.")
+	coins, _, err := feeChargeFn(s.ctx, false)
+	s.Require().Nil(err, "Got error when should not have.")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	suite.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000))}))
+	s.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000))}))
 }
 
-func (suite *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
-	encodingConfig, err := setUpApp(suite, false, "atom", 100)
-	testTx, _ := createTestTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
+func (s *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
+	encodingConfig, err := setUpApp(s, false, "atom", 100)
+	testTx, _ := createTestTx(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
 
 	// See comment for Check().
 	txEncoder := encodingConfig.TxConfig.TxEncoder()
@@ -152,26 +154,26 @@ func (suite *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
 	if err != nil {
 		panic(err)
 	}
-	suite.ctx = suite.ctx.WithTxBytes(bz)
+	s.ctx = s.ctx.WithTxBytes(bz)
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100), false).(*antewrapper.FeeGasMeter)
-	suite.ctx = suite.ctx.WithGasMeter(feeGasMeter)
+	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
-		AccountKeeper:  suite.app.AccountKeeper,
-		BankKeeper:     suite.app.BankKeeper,
-		FeegrantKeeper: suite.app.FeeGrantKeeper,
-		MsgFeesKeeper:  suite.app.MsgFeesKeeper,
+		AccountKeeper:  s.app.AccountKeeper,
+		BankKeeper:     s.app.BankKeeper,
+		FeegrantKeeper: s.app.FeeGrantKeeper,
+		MsgFeesKeeper:  s.app.MsgFeesKeeper,
 		Decoder:        simappCosmos.MakeTestEncodingConfig().TxConfig.TxDecoder(),
 	})
-	suite.Require().NoError(err)
-	suite.Require().Panics(func() { feeChargeFn(suite.ctx, false) }, "Bad decoder while setting up app.")
+	s.Require().NoError(err)
+	s.Require().Panics(func() { feeChargeFn(s.ctx, false) }, "Bad decoder while setting up app.")
 }
 
-func setUpApp(suite *HandlerTestSuite, checkTx bool, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) (params.EncodingConfig, error) {
-	encodingConfig := suite.SetupTest(checkTx) // setup
-	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+func setUpApp(s *HandlerTestSuite, checkTx bool, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) (params.EncodingConfig, error) {
+	encodingConfig := s.SetupTest(checkTx) // setup
+	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 	// create fee in stake
 	newCoin := sdk.NewInt64Coin(additionalFeeCoinDenom, additionalFeeCoinAmt)
-	err := suite.CreateMsgFee(newCoin, &testdata.TestMsg{})
+	err := s.CreateMsgFee(newCoin, &testdata.TestMsg{})
 	if err != nil {
 		panic(err)
 	}
@@ -188,63 +190,63 @@ func createTestApp(isCheckTx bool) (*simapp.App, sdk.Context) {
 	return app, ctx
 }
 
-func createTestTx(suite *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsigning.Tx, types.AccountI) {
+func createTestTx(s *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsigning.Tx, types.AccountI) {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	acct1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acct1)
+	acct1 := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
+	s.app.AccountKeeper.SetAccount(s.ctx, acct1)
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
 	gasLimit := testdata.NewTestGasLimit()
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
-	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(gasLimit)
+	s.Require().NoError(s.txBuilder.SetMsgs(msg))
+	s.txBuilder.SetFeeAmount(feeAmount)
+	s.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 
-	testTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-	suite.Require().NoError(err)
+	testTx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+	s.Require().NoError(err)
 	return testTx, acct1
 }
 
-func createTestTxWithFeeGrant(suite *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsigning.Tx, types.AccountI) {
+func createTestTxWithFeeGrant(s *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsigning.Tx, types.AccountI) {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	acct1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acct1)
+	acct1 := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
+	s.app.AccountKeeper.SetAccount(s.ctx, acct1)
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
 	gasLimit := testdata.NewTestGasLimit()
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
-	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(gasLimit)
+	s.Require().NoError(s.txBuilder.SetMsgs(msg))
+	s.txBuilder.SetFeeAmount(feeAmount)
+	s.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 
 	// fee granter account
 	_, _, addr2 := testdata.KeyTestPubAddr()
-	acct2 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr2)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acct2)
+	acct2 := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr2)
+	s.app.AccountKeeper.SetAccount(s.ctx, acct2)
 
 	// grant fee allowance from `addr2` to `addr1` (plenty to pay)
-	err = suite.app.FeeGrantKeeper.GrantAllowance(suite.ctx, addr2, addr1, &feegrant.BasicAllowance{
+	err = s.app.FeeGrantKeeper.GrantAllowance(s.ctx, addr2, addr1, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)),
 	})
-	suite.txBuilder.SetFeeGranter(acct2.GetAddress())
+	s.txBuilder.SetFeeGranter(acct2.GetAddress())
 
-	check(simapp.FundAccount(suite.app, suite.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)))))
+	check(simapp.FundAccount(s.app, s.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)))))
 
-	testTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-	suite.Require().NoError(err)
+	testTx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+	s.Require().NoError(err)
 	return testTx, acct1
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
-func (suite *HandlerTestSuite) SetupTest(isCheckTx bool) params.EncodingConfig {
-	suite.app, suite.ctx = createTestApp(isCheckTx)
-	suite.ctx = suite.ctx.WithBlockHeight(1)
+func (s *HandlerTestSuite) SetupTest(isCheckTx bool) params.EncodingConfig {
+	s.app, s.ctx = createTestApp(isCheckTx)
+	s.ctx = s.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
 	encodingConfig := simappCosmos.MakeTestEncodingConfig()
@@ -252,15 +254,15 @@ func (suite *HandlerTestSuite) SetupTest(isCheckTx bool) params.EncodingConfig {
 	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
 	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 
-	suite.clientCtx = client.Context{}.
+	s.clientCtx = client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig)
 	return encodingConfig
 }
 
-func (suite *HandlerTestSuite) CreateMsgFee(fee sdk.Coin, msgs ...sdk.Msg) error {
+func (s *HandlerTestSuite) CreateMsgFee(fee sdk.Coin, msgs ...sdk.Msg) error {
 	for _, msg := range msgs {
-		msgFeeToCreate := msgfeetype.NewMsgFee(sdk.MsgTypeURL(msg), fee)
-		err := suite.app.MsgFeesKeeper.SetMsgFee(suite.ctx, msgFeeToCreate)
+		msgFeeToCreate := msgfeetype.NewMsgFee(sdk.MsgTypeURL(msg), fee, "", msgfeetype.DefaultMsgFeeBips)
+		err := s.app.MsgFeesKeeper.SetMsgFee(s.ctx, msgFeeToCreate)
 		if err != nil {
 			return err
 		}
@@ -269,7 +271,7 @@ func (suite *HandlerTestSuite) CreateMsgFee(fee sdk.Coin, msgs ...sdk.Msg) error
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
-func (suite *HandlerTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.Tx, error) {
+func (s *HandlerTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.Tx, error) {
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
 	var sigsV2 []signing.SignatureV2
@@ -277,7 +279,7 @@ func (suite *HandlerTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums
 		sigV2 := signing.SignatureV2{
 			PubKey: priv.PubKey(),
 			Data: &signing.SingleSignatureData{
-				SignMode:  suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
+				SignMode:  s.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
 				Signature: nil,
 			},
 			Sequence: accSeqs[i],
@@ -285,7 +287,7 @@ func (suite *HandlerTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums
 
 		sigsV2 = append(sigsV2, sigV2)
 	}
-	err := suite.txBuilder.SetSignatures(sigsV2...)
+	err := s.txBuilder.SetSignatures(sigsV2...)
 	if err != nil {
 		return nil, err
 	}
@@ -299,23 +301,23 @@ func (suite *HandlerTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums
 			Sequence:      accSeqs[i],
 		}
 		sigV2, err := tx.SignWithPrivKey(
-			suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
-			suite.txBuilder, priv, suite.clientCtx.TxConfig, accSeqs[i])
+			s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
+			s.txBuilder, priv, s.clientCtx.TxConfig, accSeqs[i])
 		if err != nil {
 			return nil, err
 		}
 
 		sigsV2 = append(sigsV2, sigV2)
 	}
-	err = suite.txBuilder.SetSignatures(sigsV2...)
+	err = s.txBuilder.SetSignatures(sigsV2...)
 	if err != nil {
 		return nil, err
 	}
 
-	return suite.txBuilder.GetTx(), nil
+	return s.txBuilder.GetTx(), nil
 }
 
-// AnteTestSuite is a test suite to be used with ante handler tests.
+// AnteTestSuite is a test s to be used with ante handler tests.
 type HandlerTestSuite struct {
 	suite.Suite
 
