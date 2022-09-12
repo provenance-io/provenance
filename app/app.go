@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"io"
 	"net/http"
 	"os"
@@ -131,17 +132,6 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 )
 
-const (
-	// DefaultBondDenom is the denomination of coin to use for bond/staking
-	DefaultBondDenom = "vspn" // nano-hash
-	// DefaultFeeDenom is the denomination of coin to use for fees
-	DefaultFeeDenom = "vspn" // nano-hash
-	// DefaultMinGasPrices is the minimum gas prices coin value.
-	DefaultMinGasPrices = "0" + DefaultFeeDenom
-	// DefaultReDnmString is the allowed denom regex expression
-	DefaultReDnmString = `[a-zA-Z][a-zA-Z0-9/\-\.]{2,127}`
-)
-
 var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
@@ -220,7 +210,7 @@ type WasmWrapper struct {
 
 // SdkCoinDenomRegex returns a new sdk base denom regex string
 func SdkCoinDenomRegex() string {
-	return DefaultReDnmString
+	return pioconfig.DefaultReDnmString
 }
 
 // App extends an ABCI application, but with most of its parameters exported.
@@ -390,7 +380,7 @@ func New(
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp)
 
 	app.MsgFeesKeeper = msgfeeskeeper.NewKeeper(
-		appCodec, keys[msgfeestypes.StoreKey], app.GetSubspace(msgfeestypes.ModuleName), authtypes.FeeCollectorName, DefaultFeeDenom, app.Simulate, encodingConfig.TxConfig.TxDecoder())
+		appCodec, keys[msgfeestypes.StoreKey], app.GetSubspace(msgfeestypes.ModuleName), authtypes.FeeCollectorName, pioconfig.GetProvenanceConfig().FeeDenom, app.Simulate, encodingConfig.TxConfig.TxDecoder())
 
 	pioMsgFeesRouter := app.MsgServiceRouter().(*piohandlers.PioMsgServiceRouter)
 	pioMsgFeesRouter.SetMsgFeesKeeper(app.MsgFeesKeeper)

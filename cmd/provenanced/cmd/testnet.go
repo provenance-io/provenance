@@ -95,10 +95,12 @@ Note, strict routability for addresses is turned off in the config file.
 	cmd.Flags().String(flagNodeDaemonHome, "", "Home directory of the node's daemon configuration")
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().String(server.FlagMinGasPrices, app.DefaultMinGasPrices, fmt.Sprintf("Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. %s,0.001stake)", app.DefaultMinGasPrices))
+	//testnet only so should get passed in by the make command
+	cmd.Flags().String(server.FlagMinGasPrices, "", fmt.Sprintf("Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.001stake)"))
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
-	cmd.Flags().String(flagCustomDenom, app.DefaultFeeDenom, "Default denom to be used for this chain(both fee and staked)")
+	//testnet only so should get passed in by the commmand
+	cmd.Flags().String(flagCustomDenom, "", "Default denom to be used for this chain(both fee and staked)")
 
 	return cmd
 }
@@ -276,7 +278,7 @@ func InitTestnet(
 
 	genMarkers = append(genMarkers, *markerAcc)
 
-	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genMarkers, genFiles, numValidators); err != nil {
+	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genMarkers, genFiles, numValidators, chainDenom); err != nil {
 		return err
 	}
 
@@ -296,6 +298,7 @@ func initGenFiles(
 	clientCtx client.Context, mbm module.BasicManager, chainID string,
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
 	genMarkers []markertypes.MarkerAccount, genFiles []string, numValidators int,
+	chainDenom string,
 ) error {
 	appGenState := mbm.DefaultGenesis(clientCtx.JSONCodec)
 
@@ -348,26 +351,26 @@ func initGenFiles(
 	// Set the staking denom
 	var stakeGenState stakingtypes.GenesisState
 	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[stakingtypes.ModuleName], &stakeGenState)
-	stakeGenState.Params.BondDenom = app.DefaultBondDenom
+	stakeGenState.Params.BondDenom = chainDenom
 	appGenState[stakingtypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&stakeGenState)
 
 	// Set the crisis denom
 	var crisisGenState crisistypes.GenesisState
 	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[crisistypes.ModuleName], &crisisGenState)
-	crisisGenState.ConstantFee.Denom = app.DefaultBondDenom
+	crisisGenState.ConstantFee.Denom = chainDenom
 	appGenState[crisistypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&crisisGenState)
 
 	// Set the gov depost denom
 	var govGenState govtypes.GenesisState
 	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState)
-	govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(app.DefaultBondDenom, sdk.NewInt(10000000)))
+	govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(chainDenom, sdk.NewInt(10000000)))
 	govGenState.VotingParams.VotingPeriod, _ = time.ParseDuration("360s")
 	appGenState[govtypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&govGenState)
 
 	// Set the mint module parameters to stop inflation on the BondDenom.
 	var mintGenState minttypes.GenesisState
 	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState)
-	mintGenState.Params.MintDenom = app.DefaultBondDenom
+	mintGenState.Params.MintDenom = chainDenom
 	mintGenState.Minter.AnnualProvisions = sdk.ZeroDec()
 	mintGenState.Minter.Inflation = sdk.ZeroDec()
 	mintGenState.Params.InflationMax = sdk.ZeroDec()

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/version"
@@ -505,13 +506,13 @@ enforced immediately.  An optional type flag can be provided or the default of C
 // AddGenesisMsgFeeCmd returns add-genesis-msg-fee cobra command.
 func AddGenesisMsgFeeCmd(defaultNodeHome string, interfaceRegistry types.InterfaceRegistry) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-genesis-msg-fee [msg-url] [additional-fee]",
+		Use:   "add-genesis-msg-fee [msg-url] [additional-fee] [floor-price-denom]",
 		Short: "Add a msg fee to genesis.json",
 		Long: `Add a msg fee to to genesis.json. This will create a msg based fee for an sdk msg type.  The command will validate
 		that the msg-url is a valid sdk.msg and that the fee is a valid amount and coin.
 	`,
 		Example: fmt.Sprintf(`$ %[1]s add-genesis-msg-fee /cosmos.bank.v1beta1.MsgSend 10000000000nhash`, version.AppName),
-		Args:    cobra.ExactArgs(2),
+		Args:    cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			depCdc := clientCtx.JSONCodec
@@ -536,6 +537,9 @@ func AddGenesisMsgFeeCmd(defaultNodeHome string, interfaceRegistry types.Interfa
 			if err != nil {
 				return fmt.Errorf("failed to parse coin: %w", err)
 			}
+
+			floorPriceDenom := args[2]
+			pioconfig.SetProvenanceConfig(floorPriceDenom)
 
 			genFile := config.GenesisFile()
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)

@@ -2,7 +2,7 @@ package types
 
 import (
 	"fmt"
-	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -13,9 +13,11 @@ import (
 
 // DefaultFloorGasPrice to differentiate between base fee and additional fee when additional fee is in same denom as default base denom i.e nhash
 // cannot be a const unfortunately because it's a custom type.
-var DefaultFloorGasPrice = sdk.Coin{
-	Amount: sdk.NewInt(0),
-	Denom:  app.DefaultFeeDenom,
+func DefaultFloorGasPrice() sdk.Coin {
+	return sdk.Coin{
+		Amount: sdk.NewInt(pioconfig.GetProvenanceConfig().MsgFeeFloorGasPrice),
+		Denom:  pioconfig.GetProvenanceConfig().FeeDenom,
+	}
 }
 
 var DefaultNhashPerUsdMil = uint64(25_000_000)
@@ -54,7 +56,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 // DefaultParams is the default parameter configuration for the bank module
 func DefaultParams() Params {
 	return NewParams(
-		DefaultFloorGasPrice,
+		DefaultFloorGasPrice(),
 		DefaultNhashPerUsdMil,
 	)
 }

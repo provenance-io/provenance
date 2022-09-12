@@ -5,7 +5,9 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
@@ -25,7 +27,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/go-bip39"
 
-	"github.com/provenance-io/provenance/app"
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
@@ -59,6 +60,7 @@ func InitCmd(mbm module.BasicManager) *cobra.Command {
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().BoolP(FlagRecover, "r", false, "interactive key recovery from mnemonic")
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
+	cmd.Flags().String(CustomDenomFlag, "nhash", "custom denom, optional")
 	return cmd
 }
 
@@ -72,6 +74,8 @@ func Init(
 	isTestnet, _ := cmd.Flags().GetBool(EnvTypeFlag)
 	doRecover, _ := cmd.Flags().GetBool(FlagRecover)
 	doOverwrite, _ := cmd.Flags().GetBool(FlagOverwrite)
+
+	customDenom, _ := cmd.Flags().GetString(CustomDenomFlag)
 
 	if err := provconfig.EnsureConfigDir(cmd); err != nil {
 		return err
@@ -98,8 +102,8 @@ func Init(
 	}
 
 	// Set a few things in the configs.
-	if len(appConfig.MinGasPrices) == 0 {
-		appConfig.MinGasPrices = app.DefaultMinGasPrices
+	if (len(appConfig.MinGasPrices) == 0) && customDenom == "nhash" {
+		appConfig.MinGasPrices = strconv.Itoa(pioconfig.DefaultMinGasPrices) + customDenom
 	}
 	tmConfig.Moniker = moniker
 	if len(chainID) == 0 {
@@ -131,9 +135,10 @@ func Init(
 	clientConfig.Node = tmConfig.RPC.ListenAddress
 
 	// Create and write the genenis file.
-	if err = createAndExportGenesisFile(cmd, client.GetClientContextFromCmd(cmd).Codec, mbm, isTestnet, chainID, genFile); err != nil {
+	if err = createAndExportGenesisFile(cmd, client.GetClientContextFromCmd(cmd).Codec, mbm, isTestnet, chainID, genFile, customDenom); err != nil {
 		return err
 	}
+	cmd.Printf("Min gas price value = : %s\n", appConfig.MinGasPrices)
 	// Save the configs.
 	provconfig.SaveConfigs(cmd, appConfig, tmConfig, clientConfig, true)
 
@@ -147,6 +152,7 @@ func createAndExportGenesisFile(
 	mbm module.BasicManager,
 	isTestnet bool,
 	chainID, genFile string,
+	customDenom string,
 ) error {
 	minDeposit := int64(1000000000000)  // 1,000,000,000,000
 	downtimeJailDurationStr := "86400s" // 1 day
@@ -178,7 +184,7 @@ func createAndExportGenesisFile(
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &mintGenState)
 		mintGenState.Minter.Inflation = sdk.ZeroDec()
 		mintGenState.Minter.AnnualProvisions = sdk.OneDec()
-		mintGenState.Params.MintDenom = app.DefaultBondDenom
+		mintGenState.Params.MintDenom = customDenom
 		mintGenState.Params.InflationMax = sdk.ZeroDec()
 		mintGenState.Params.InflationMin = sdk.ZeroDec()
 		mintGenState.Params.InflationRateChange = sdk.OneDec()
@@ -192,7 +198,7 @@ func createAndExportGenesisFile(
 		moduleName := stakingtypes.ModuleName
 		var stakeGenState stakingtypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &stakeGenState)
-		stakeGenState.Params.BondDenom = app.DefaultBondDenom
+		stakeGenState.Params.BondDenom = customDenom
 		appGenState[moduleName] = cdc.MustMarshalJSON(&stakeGenState)
 	}
 
@@ -201,7 +207,7 @@ func createAndExportGenesisFile(
 		moduleName := crisistypes.ModuleName
 		var crisisGenState crisistypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &crisisGenState)
-		crisisGenState.ConstantFee.Denom = app.DefaultBondDenom
+		crisisGenState.ConstantFee.Denom = customDenom
 		appGenState[moduleName] = cdc.MustMarshalJSON(&crisisGenState)
 	}
 
@@ -210,7 +216,7 @@ func createAndExportGenesisFile(
 		moduleName := govtypes.ModuleName
 		var govGenState govtypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &govGenState)
-		govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(app.DefaultBondDenom, sdk.NewInt(minDeposit)))
+		govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(customDenom, sdk.NewInt(minDeposit)))
 		appGenState[moduleName] = cdc.MustMarshalJSON(&govGenState)
 	}
 

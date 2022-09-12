@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"io"
 	"os"
 	"path/filepath"
@@ -93,7 +94,10 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 			// set app context based on initialized EnvTypeFlag
 			testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
+			customDenom := server.GetServerContextFromCmd(cmd).Viper.GetString(CustomDenomFlag)
 			app.SetConfig(testnet)
+			println("denom" + customDenom)
+			pioconfig.SetProvenanceConfig(customDenom)
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
 				CoinTypeFlag: fmt.Sprint(app.CoinType),
@@ -105,9 +109,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        ChainID,
 		flags.FlagKeyringBackend: "test",
-		server.FlagMinGasPrices:  app.DefaultMinGasPrices,
 		CoinTypeFlag:             fmt.Sprint(app.CoinTypeMainNet),
-		CustomDenomFlag:          app.DefaultFeeDenom,
 	})
 
 	return rootCmd, encodingConfig
@@ -128,6 +130,8 @@ func Execute(rootCmd *cobra.Command) error {
 	rootCmd.PersistentFlags().BoolP(EnvTypeFlag, "t", false, "Indicates this command should use the testnet configuration (default: false [mainnet])")
 	rootCmd.PersistentFlags().String(flags.FlagLogLevel, zerolog.InfoLevel.String(), "The logging level (trace|debug|info|warn|error|fatal|panic)")
 	rootCmd.PersistentFlags().String(flags.FlagLogFormat, tmcfg.LogFormatPlain, "The logging format (json|plain)")
+	// Custom denom flag added to root command
+	rootCmd.PersistentFlags().BoolP(CustomDenomFlag, "d", false, "Indicates if a custom denom is to be used.")
 
 	executor := tmcli.PrepareBaseCmd(rootCmd, "", app.DefaultNodeHome)
 	return executor.ExecuteContext(ctx)
@@ -265,23 +269,21 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	if fee, err := sdk.ParseCoinNormalized(cast.ToString(appOpts.Get(server.FlagMinGasPrices))); err == nil {
 		if int(sdk.GetConfig().GetCoinType()) == app.CoinTypeMainNet {
 			// require the fee denom to match the bond denom on mainnet
-			if fee.Denom != app.DefaultBondDenom {
-				panic(fmt.Errorf("invalid min-gas-price fee denom, must be: %s", app.DefaultBondDenom))
-			}
-			// prevent the use of exceptionally small gas amounts that are typical defaults (i.e. 0.0025nhash)
-			if fee.Amount.LTE(sdk.OneInt()) {
-				panic(fmt.Errorf("min-gas-price must be greater than 1%s", app.DefaultBondDenom))
+			if fee.Denom != pioconfig.GetProvenanceConfig().FeeDenom {
+				panic(fmt.Errorf("invalid min-gas-price fee denom, must be: %s", pioconfig.GetProvenanceConfig().FeeDenom))
 			}
 		}
 	} else {
 		// panic if there was a parse error (for example more than one coin was passed in for required fee).
 		if err != nil {
 			panic(fmt.Errorf("invalid min-gas-price value, expected single decimal coin value such as '%s', got '%s';\n\n %w",
-				app.DefaultMinGasPrices,
+				pioconfig.GetProvenanceConfig().MinGasPrices,
 				appOpts.Get(server.FlagMinGasPrices),
 				err))
 		}
 	}
+
+	getCustomDenom(appOpts)
 
 	return app.New(
 		logger, db, traceStore, true, skipUpgradeHeights,
@@ -365,4 +367,10 @@ func getIAVLCacheSize(options servertypes.AppOptions) int {
 		return cast.ToInt(serverconfig.DefaultConfig().IAVLCacheSize)
 	}
 	return iavlCacheSize
+}
+
+func getCustomDenom(options servertypes.AppOptions) string {
+	customDenom := cast.ToString(options.Get("custom-denom"))
+	println(customDenom)
+	return customDenom
 }
