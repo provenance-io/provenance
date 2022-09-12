@@ -2,11 +2,12 @@ package cli_test
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authzcli "github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	"github.com/google/uuid"
-	"strings"
-	"testing"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
@@ -179,6 +180,15 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
 	).Sort()})
 	genBalances = append(genBalances, banktypes.Balance{Address: s.user3AddrStr, Coins: sdk.NewCoins(
+		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: s.user4AddrStr, Coins: sdk.NewCoins(
+		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: s.user5AddrStr, Coins: sdk.NewCoins(
+		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: s.user6AddrStr, Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
 	).Sort()})
 	var bankGenState banktypes.GenesisState
@@ -391,7 +401,7 @@ func (s *IntegrationCLITestSuite) TestGetExpirationByModuleAssetIdCmd() {
 		{
 			name:             "get expiration by module asset id - bad prefix",
 			args:             []string{"foo1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
-			expectedError:    fmt.Sprintf("decoding bech32 failed: invalid checksum (expected kzwk8c got xlkwel)"),
+			expectedError:    "decoding bech32 failed: invalid checksum (expected kzwk8c got xlkwel)",
 			expectedInOutput: []string{},
 		},
 		{
@@ -710,6 +720,21 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			args: []string{
 				extendExpiration6File.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user4AddrStr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    false,
+			expectErrMsg: "",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
+			name: "should successfully invoke expiration logic",
+			cmd:  cli.InvokeExpirationCmd(),
+			args: []string{
+				s.expiration4.ModuleAssetId,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration4.Owner),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),

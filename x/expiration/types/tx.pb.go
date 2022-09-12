@@ -28,7 +28,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgAddExpirationMetadataRequest represents a message to add an expiration
+// MsgAddExpirationRequest represents a message to add an expiration
 type MsgAddExpirationRequest struct {
 	// expiration is the Expiration you want to add
 	Expiration Expiration `protobuf:"bytes,1,opt,name=expiration,proto3" json:"expiration"`
@@ -69,7 +69,7 @@ func (m *MsgAddExpirationRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddExpirationRequest proto.InternalMessageInfo
 
-// MsgAddExpirationMetadataResponse defines the MsgAddExpirationMetadataRequest response type
+// MsgAddExpirationResponse defines the MsgAddExpirationRequest response type
 type MsgAddExpirationResponse struct {
 }
 
@@ -106,7 +106,7 @@ func (m *MsgAddExpirationResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddExpirationResponse proto.InternalMessageInfo
 
-// MsgExtendExpirationMetadataRequest represents a message to extend an expiration
+// MsgExtendExpirationRequest represents a message to extend an expiration
 type MsgExtendExpirationRequest struct {
 	// expiration is the Expiration you want to add
 	Expiration Expiration `protobuf:"bytes,1,opt,name=expiration,proto3" json:"expiration"`
@@ -147,7 +147,7 @@ func (m *MsgExtendExpirationRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgExtendExpirationRequest proto.InternalMessageInfo
 
-// MsgExtendExpirationMetadataResponse defines the MsgExtendExpirationMetadataRequest response type
+// MsgExtendExpirationResponse defines the MsgExtendExpirationRequest response type
 type MsgExtendExpirationResponse struct {
 }
 
@@ -184,7 +184,7 @@ func (m *MsgExtendExpirationResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgExtendExpirationResponse proto.InternalMessageInfo
 
-// MsgDeleteExpirationMetadataResponse represents a message to delete an expiration
+// MsgDeleteExpirationRequest represents a message to delete an expiration
 type MsgDeleteExpirationRequest struct {
 	// Module asset ID used to delete asset from chain
 	ModuleAssetId string `protobuf:"bytes,1,opt,name=module_asset_id,json=moduleAssetId,proto3" json:"module_asset_id,omitempty" yaml:"module_asset_id"`
@@ -225,7 +225,7 @@ func (m *MsgDeleteExpirationRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDeleteExpirationRequest proto.InternalMessageInfo
 
-// MsgDeleteExpirationMetadataResponse defines the MsgDeleteExpirationMetadataRequest response type
+// MsgDeleteExpirationResponse defines the MsgDeleteExpirationRequest response type
 type MsgDeleteExpirationResponse struct {
 }
 
@@ -262,6 +262,84 @@ func (m *MsgDeleteExpirationResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDeleteExpirationResponse proto.InternalMessageInfo
 
+// MsgInvokeExpirationRequest represents a message to invoke expiration logic for an asset
+type MsgInvokeExpirationRequest struct {
+	// Module asset ID which will have its expiration logic triggered
+	ModuleAssetId string `protobuf:"bytes,1,opt,name=module_asset_id,json=moduleAssetId,proto3" json:"module_asset_id,omitempty" yaml:"module_asset_id"`
+	// signers is the list of addresses of those signing this request.
+	Signers []string `protobuf:"bytes,2,rep,name=signers,proto3" json:"signers,omitempty"`
+}
+
+func (m *MsgInvokeExpirationRequest) Reset()         { *m = MsgInvokeExpirationRequest{} }
+func (m *MsgInvokeExpirationRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgInvokeExpirationRequest) ProtoMessage()    {}
+func (*MsgInvokeExpirationRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1c3e56ab64fff57f, []int{6}
+}
+func (m *MsgInvokeExpirationRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgInvokeExpirationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgInvokeExpirationRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgInvokeExpirationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgInvokeExpirationRequest.Merge(m, src)
+}
+func (m *MsgInvokeExpirationRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgInvokeExpirationRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgInvokeExpirationRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgInvokeExpirationRequest proto.InternalMessageInfo
+
+// MsgInvokeExpirationResponse defines the MsgInvokeExpirationRequest response type
+type MsgInvokeExpirationResponse struct {
+}
+
+func (m *MsgInvokeExpirationResponse) Reset()         { *m = MsgInvokeExpirationResponse{} }
+func (m *MsgInvokeExpirationResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgInvokeExpirationResponse) ProtoMessage()    {}
+func (*MsgInvokeExpirationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1c3e56ab64fff57f, []int{7}
+}
+func (m *MsgInvokeExpirationResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgInvokeExpirationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgInvokeExpirationResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgInvokeExpirationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgInvokeExpirationResponse.Merge(m, src)
+}
+func (m *MsgInvokeExpirationResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgInvokeExpirationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgInvokeExpirationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgInvokeExpirationResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgAddExpirationRequest)(nil), "provenance.expiration.v1.MsgAddExpirationRequest")
 	proto.RegisterType((*MsgAddExpirationResponse)(nil), "provenance.expiration.v1.MsgAddExpirationResponse")
@@ -269,12 +347,14 @@ func init() {
 	proto.RegisterType((*MsgExtendExpirationResponse)(nil), "provenance.expiration.v1.MsgExtendExpirationResponse")
 	proto.RegisterType((*MsgDeleteExpirationRequest)(nil), "provenance.expiration.v1.MsgDeleteExpirationRequest")
 	proto.RegisterType((*MsgDeleteExpirationResponse)(nil), "provenance.expiration.v1.MsgDeleteExpirationResponse")
+	proto.RegisterType((*MsgInvokeExpirationRequest)(nil), "provenance.expiration.v1.MsgInvokeExpirationRequest")
+	proto.RegisterType((*MsgInvokeExpirationResponse)(nil), "provenance.expiration.v1.MsgInvokeExpirationResponse")
 }
 
 func init() { proto.RegisterFile("provenance/expiration/v1/tx.proto", fileDescriptor_1c3e56ab64fff57f) }
 
 var fileDescriptor_1c3e56ab64fff57f = []byte{
-	// 409 bytes of a gzipped FileDescriptorProto
+	// 437 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x2c, 0x28, 0xca, 0x2f,
 	0x4b, 0xcd, 0x4b, 0xcc, 0x4b, 0x4e, 0xd5, 0x4f, 0xad, 0x28, 0xc8, 0x2c, 0x4a, 0x2c, 0xc9, 0xcc,
 	0xcf, 0xd3, 0x2f, 0x33, 0xd4, 0x2f, 0xa9, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x92, 0x40,
@@ -291,16 +371,18 @@ var fileDescriptor_1c3e56ab64fff57f = []byte{
 	0xba, 0xd8, 0x89, 0x8b, 0x3f, 0x37, 0x3f, 0xa5, 0x34, 0x27, 0x35, 0x3e, 0xb1, 0xb8, 0x38, 0xb5,
 	0x24, 0x3e, 0x33, 0x05, 0xec, 0x6c, 0x4e, 0x27, 0xa9, 0x4f, 0xf7, 0xe4, 0xc5, 0x2a, 0x13, 0x73,
 	0x73, 0xac, 0x94, 0xd0, 0x14, 0x28, 0x05, 0xf1, 0x42, 0x44, 0x1c, 0x41, 0x02, 0x9e, 0x29, 0x24,
-	0xba, 0x14, 0xd3, 0x25, 0x10, 0x97, 0x1a, 0xfd, 0x67, 0xe2, 0x62, 0xf6, 0x2d, 0x4e, 0x17, 0x2a,
-	0xe3, 0xe2, 0x45, 0x09, 0x7c, 0x21, 0x43, 0xdc, 0x21, 0x88, 0x23, 0xdd, 0x48, 0x19, 0x91, 0xa2,
-	0x05, 0x62, 0xbf, 0x50, 0x3d, 0x97, 0x00, 0x7a, 0x28, 0x0a, 0x99, 0xe0, 0x35, 0x07, 0x47, 0x32,
-	0x90, 0x32, 0x25, 0x51, 0x17, 0xc2, 0x01, 0xe8, 0x81, 0x43, 0xc0, 0x01, 0x38, 0x62, 0x95, 0x80,
-	0x03, 0x70, 0xc5, 0x80, 0x53, 0xfe, 0x89, 0x47, 0x72, 0x8c, 0x17, 0x1e, 0xc9, 0x31, 0x3e, 0x78,
-	0x24, 0xc7, 0x38, 0xe1, 0xb1, 0x1c, 0xc3, 0x85, 0xc7, 0x72, 0x0c, 0x37, 0x1e, 0xcb, 0x31, 0x70,
-	0x49, 0x67, 0xe6, 0xe3, 0x34, 0x32, 0x80, 0x31, 0xca, 0x2c, 0x3d, 0xb3, 0x24, 0xa3, 0x34, 0x49,
-	0x2f, 0x39, 0x3f, 0x57, 0x1f, 0xa1, 0x4c, 0x37, 0x33, 0x1f, 0x89, 0xa7, 0x5f, 0x81, 0x5c, 0x10,
-	0x94, 0x54, 0x16, 0xa4, 0x16, 0x27, 0xb1, 0x81, 0x4b, 0x00, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff,
-	0xff, 0x60, 0xcf, 0x87, 0xad, 0x81, 0x04, 0x00, 0x00,
+	0xba, 0x14, 0xd3, 0x25, 0xa8, 0x2e, 0xf5, 0xcc, 0x2b, 0xcb, 0xcf, 0x1e, 0x14, 0x2e, 0xc5, 0x74,
+	0x09, 0xc4, 0xa5, 0x46, 0x0d, 0x2c, 0x5c, 0xcc, 0xbe, 0xc5, 0xe9, 0x42, 0x65, 0x5c, 0xbc, 0x28,
+	0xc9, 0x44, 0xc8, 0x10, 0x77, 0x5c, 0xe3, 0x48, 0xe1, 0x52, 0x46, 0xa4, 0x68, 0x81, 0xd8, 0x2f,
+	0x54, 0xcf, 0x25, 0x80, 0x1e, 0xdf, 0x42, 0x26, 0x78, 0xcd, 0xc1, 0x91, 0x60, 0xa5, 0x4c, 0x49,
+	0xd4, 0x85, 0x70, 0x00, 0x7a, 0x34, 0x12, 0x70, 0x00, 0x8e, 0xf4, 0x47, 0xc0, 0x01, 0xb8, 0xd2,
+	0x0a, 0xc8, 0x01, 0xe8, 0xb1, 0x43, 0xc0, 0x01, 0x38, 0x92, 0x15, 0x01, 0x07, 0xe0, 0x4a, 0x02,
+	0x4e, 0xf9, 0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78, 0x24, 0xc7, 0xf8, 0xe0, 0x91, 0x1c, 0xe3, 0x84,
+	0xc7, 0x72, 0x0c, 0x17, 0x1e, 0xcb, 0x31, 0xdc, 0x78, 0x2c, 0xc7, 0xc0, 0x25, 0x9d, 0x99, 0x8f,
+	0xd3, 0xc8, 0x00, 0xc6, 0x28, 0xb3, 0xf4, 0xcc, 0x92, 0x8c, 0xd2, 0x24, 0xbd, 0xe4, 0xfc, 0x5c,
+	0x7d, 0x84, 0x32, 0xdd, 0xcc, 0x7c, 0x24, 0x9e, 0x7e, 0x05, 0x72, 0x99, 0x59, 0x52, 0x59, 0x90,
+	0x5a, 0x9c, 0xc4, 0x06, 0x2e, 0x2c, 0x8d, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0x06, 0x6b, 0x07,
+	0x06, 0xac, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -321,6 +403,8 @@ type MsgClient interface {
 	ExtendExpiration(ctx context.Context, in *MsgExtendExpirationRequest, opts ...grpc.CallOption) (*MsgExtendExpirationResponse, error)
 	// DeleteExpiration defines a method for deleting an expiration of a module asset
 	DeleteExpiration(ctx context.Context, in *MsgDeleteExpirationRequest, opts ...grpc.CallOption) (*MsgDeleteExpirationResponse, error)
+	// InvokeExpiration defines a method for invoking expiration logic for a module asset
+	InvokeExpiration(ctx context.Context, in *MsgInvokeExpirationRequest, opts ...grpc.CallOption) (*MsgInvokeExpirationResponse, error)
 }
 
 type msgClient struct {
@@ -358,6 +442,15 @@ func (c *msgClient) DeleteExpiration(ctx context.Context, in *MsgDeleteExpiratio
 	return out, nil
 }
 
+func (c *msgClient) InvokeExpiration(ctx context.Context, in *MsgInvokeExpirationRequest, opts ...grpc.CallOption) (*MsgInvokeExpirationResponse, error) {
+	out := new(MsgInvokeExpirationResponse)
+	err := c.cc.Invoke(ctx, "/provenance.expiration.v1.Msg/InvokeExpiration", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// AddExpiration defines a method for adding an expiration of a module asset
@@ -366,6 +459,8 @@ type MsgServer interface {
 	ExtendExpiration(context.Context, *MsgExtendExpirationRequest) (*MsgExtendExpirationResponse, error)
 	// DeleteExpiration defines a method for deleting an expiration of a module asset
 	DeleteExpiration(context.Context, *MsgDeleteExpirationRequest) (*MsgDeleteExpirationResponse, error)
+	// InvokeExpiration defines a method for invoking expiration logic for a module asset
+	InvokeExpiration(context.Context, *MsgInvokeExpirationRequest) (*MsgInvokeExpirationResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -380,6 +475,9 @@ func (*UnimplementedMsgServer) ExtendExpiration(ctx context.Context, req *MsgExt
 }
 func (*UnimplementedMsgServer) DeleteExpiration(ctx context.Context, req *MsgDeleteExpirationRequest) (*MsgDeleteExpirationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteExpiration not implemented")
+}
+func (*UnimplementedMsgServer) InvokeExpiration(ctx context.Context, req *MsgInvokeExpirationRequest) (*MsgInvokeExpirationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InvokeExpiration not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -440,6 +538,24 @@ func _Msg_DeleteExpiration_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_InvokeExpiration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgInvokeExpirationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).InvokeExpiration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.expiration.v1.Msg/InvokeExpiration",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).InvokeExpiration(ctx, req.(*MsgInvokeExpirationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "provenance.expiration.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -455,6 +571,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteExpiration",
 			Handler:    _Msg_DeleteExpiration_Handler,
+		},
+		{
+			MethodName: "InvokeExpiration",
+			Handler:    _Msg_InvokeExpiration_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -653,6 +773,68 @@ func (m *MsgDeleteExpirationResponse) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgInvokeExpirationRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgInvokeExpirationRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgInvokeExpirationRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Signers) > 0 {
+		for iNdEx := len(m.Signers) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Signers[iNdEx])
+			copy(dAtA[i:], m.Signers[iNdEx])
+			i = encodeVarintTx(dAtA, i, uint64(len(m.Signers[iNdEx])))
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.ModuleAssetId) > 0 {
+		i -= len(m.ModuleAssetId)
+		copy(dAtA[i:], m.ModuleAssetId)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ModuleAssetId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgInvokeExpirationResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgInvokeExpirationResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgInvokeExpirationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -736,6 +918,34 @@ func (m *MsgDeleteExpirationRequest) Size() (n int) {
 }
 
 func (m *MsgDeleteExpirationResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgInvokeExpirationRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ModuleAssetId)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.Signers) > 0 {
+		for _, s := range m.Signers {
+			l = len(s)
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgInvokeExpirationResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1221,6 +1431,170 @@ func (m *MsgDeleteExpirationResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgDeleteExpirationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgInvokeExpirationRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgInvokeExpirationRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgInvokeExpirationRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ModuleAssetId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ModuleAssetId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signers", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signers = append(m.Signers, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgInvokeExpirationResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgInvokeExpirationResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgInvokeExpirationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
