@@ -102,7 +102,9 @@ func Init(
 	}
 
 	// Set a few things in the configs.
-	if (len(appConfig.MinGasPrices) == 0) && customDenom == "nhash" {
+	if len(appConfig.MinGasPrices) == 0 && len(customDenom) > 0 { // custom denom passed in, for now assume all custom denom are charged 0 fees, if required take in another flag for default min price
+		appConfig.MinGasPrices = strconv.Itoa(0) + customDenom
+	} else if len(appConfig.MinGasPrices) == 0 && len(customDenom) == 0 { //no custom denom passed in so nhash
 		appConfig.MinGasPrices = strconv.Itoa(pioconfig.DefaultMinGasPrices) + customDenom
 	}
 	tmConfig.Moniker = moniker

@@ -57,7 +57,7 @@ const (
 // ChainID is the id of the running chain
 var ChainID string
 
-// Denom for fee and stake
+// Denom for fee and staking
 var DefaultDenom string
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -97,7 +97,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
 			customDenom := server.GetServerContextFromCmd(cmd).Viper.GetString(CustomDenomFlag)
 			app.SetConfig(testnet)
-			println("denom" + customDenom)
 			pioconfig.SetProvenanceConfig(customDenom, 0)
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
@@ -132,7 +131,7 @@ func Execute(rootCmd *cobra.Command) error {
 	rootCmd.PersistentFlags().String(flags.FlagLogLevel, zerolog.InfoLevel.String(), "The logging level (trace|debug|info|warn|error|fatal|panic)")
 	rootCmd.PersistentFlags().String(flags.FlagLogFormat, tmcfg.LogFormatPlain, "The logging format (json|plain)")
 	// Custom denom flag added to root command
-	rootCmd.PersistentFlags().BoolP(CustomDenomFlag, "d", false, "Indicates if a custom denom is to be used.")
+	rootCmd.PersistentFlags().String(CustomDenomFlag, "nhash", "Indicates if a custom denom is to be used, and the name of it.")
 
 	executor := tmcli.PrepareBaseCmd(rootCmd, "", app.DefaultNodeHome)
 	return executor.ExecuteContext(ctx)

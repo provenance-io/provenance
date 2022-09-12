@@ -242,7 +242,7 @@ run: check-built run-config;
 	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
 
 run-custom: check-built run-config-custom;
-
+	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start --custom-denom vspn
 
 .PHONY: install build build-linux run
 
