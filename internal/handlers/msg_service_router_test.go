@@ -12,6 +12,7 @@ import (
 	piosimapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/handlers"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -87,7 +88,8 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 }
 
 func TestMsgService(t *testing.T) {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1) // will create a gas fee of 1stake * gas
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom)
+	pioconfig.ProvConfig.MsgFeeFloorGasPrice = 1
 	encCfg := simapp.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
@@ -197,7 +199,8 @@ func TestMsgService(t *testing.T) {
 }
 
 func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1) // will create a gas fee of 1stake * gas
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom)
+	pioconfig.ProvConfig.MsgFeeFloorGasPrice = 1
 	encCfg := simapp.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
@@ -248,7 +251,8 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 }
 
 func TestMsgServiceAuthz(t *testing.T) {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom)
+	pioconfig.ProvConfig.MsgFeeFloorGasPrice = 1
 	encCfg := simapp.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	priv2, _, addr2 := testdata.KeyTestPubAddr()
@@ -358,7 +362,8 @@ func TestMsgServiceAuthz(t *testing.T) {
 }
 
 func TestMsgServiceAssessMsgFee(t *testing.T) {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom)
+	pioconfig.ProvConfig.MsgFeeFloorGasPrice = 1
 	encCfg := simapp.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()

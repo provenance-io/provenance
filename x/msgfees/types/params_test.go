@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -54,7 +55,7 @@ func TestMsgFeeParamKeyTable(t *testing.T) {
 }
 
 func TestDefault(t *testing.T) {
-	metadataData := DefaultParams()
-	require.Equal(t, DefaultFloorGasPrice, metadataData.FloorGasPrice)
-	require.Equal(t, DefaultNhashPerUsdMil, metadataData.NhashPerUsdMil)
+	msgFeeData := DefaultParams()
+	assert.Equal(t, DefaultFloorGasPrice(), msgFeeData.FloorGasPrice)
+	assert.Equal(t, DefaultNhashPerUsdMil, msgFeeData.NhashPerUsdMil)
 }

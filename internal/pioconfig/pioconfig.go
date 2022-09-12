@@ -1,6 +1,7 @@
 package pioconfig
 
 import (
+	"fmt"
 	"sync"
 )
 
@@ -28,13 +29,13 @@ type ProvenanceConfig struct {
 	set       bool
 }
 
-var provConfig *ProvenanceConfig
+var ProvConfig *ProvenanceConfig
 
 func SetProvenanceConfig(customDenom string) {
 	lock.Lock()
 	defer lock.Unlock()
 	if len(customDenom) > 0 {
-		provConfig = &ProvenanceConfig{
+		ProvConfig = &ProvenanceConfig{
 			FeeDenom:            customDenom,
 			MinGasPrices:        "0" + customDenom,
 			MsgFeeFloorGasPrice: 0,
@@ -42,9 +43,9 @@ func SetProvenanceConfig(customDenom string) {
 			set:                 true,
 		}
 	} else {
-		provConfig = &ProvenanceConfig{
+		ProvConfig = &ProvenanceConfig{
 			FeeDenom:            defaultFeeDenom,
-			MinGasPrices:        string(DefaultMinGasPrices) + defaultFeeDenom,
+			MinGasPrices:        fmt.Sprintf("%v", DefaultMinGasPrices) + defaultFeeDenom,
 			MsgFeeFloorGasPrice: 1905,
 			BondDenom:           defaultBondDenom,
 			set:                 true,
@@ -53,8 +54,11 @@ func SetProvenanceConfig(customDenom string) {
 }
 
 func GetProvenanceConfig() ProvenanceConfig {
-	if !provConfig.set {
+	if ProvConfig == nil {
+		SetProvenanceConfig("")
+	}
+	if !ProvConfig.set {
 		panic("Accessing Provenance config before it is set is not allowed")
 	}
-	return *provConfig
+	return *ProvConfig
 }
