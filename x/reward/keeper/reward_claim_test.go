@@ -54,7 +54,7 @@ func (s *KeeperTestSuite) TestClaimRewards() {
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	for i := 1; i <= int(rewardProgram.GetClaimPeriods()); i++ {
-		state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(i), "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1, map[string]uint64{})
+		state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(i), "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1, []*types.ActionCounter{})
 		state.ClaimStatus = types.RewardAccountState_CLAIM_STATUS_CLAIMABLE
 		s.app.RewardKeeper.SetRewardAccountState(s.ctx, state)
 		distribution := types.NewClaimPeriodRewardDistribution(uint64(i), rewardProgram.GetId(), sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 1, true)
@@ -222,7 +222,7 @@ func (s *KeeperTestSuite) TestClaimAllRewards() {
 		s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 		for j := 1; j <= int(rewardProgram.GetClaimPeriods()); j++ {
-			state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(j), "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1, map[string]uint64{})
+			state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(j), "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1, []*types.ActionCounter{})
 			state.ClaimStatus = types.RewardAccountState_CLAIM_STATUS_CLAIMABLE
 			s.app.RewardKeeper.SetRewardAccountState(s.ctx, state)
 			distribution := types.NewClaimPeriodRewardDistribution(uint64(j), rewardProgram.GetId(), sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 1, true)
@@ -287,7 +287,7 @@ func (s *KeeperTestSuite) TestClaimAllRewardsExpired() {
 		s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 		for j := 1; j <= int(rewardProgram.GetClaimPeriods()); j++ {
-			state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(j), "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1, map[string]uint64{})
+			state := types.NewRewardAccountState(rewardProgram.GetId(), uint64(j), "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1, []*types.ActionCounter{})
 			state.ClaimStatus = types.RewardAccountState_CLAIM_STATUS_EXPIRED
 			s.app.RewardKeeper.SetRewardAccountState(s.ctx, state)
 			distribution := types.NewClaimPeriodRewardDistribution(uint64(j), rewardProgram.GetId(), sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 1, true)

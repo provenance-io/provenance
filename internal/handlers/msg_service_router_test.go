@@ -529,7 +529,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	}), "claim period has not ended so shares have to be 0")
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
-	assert.Equal(t, 98, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
+	assert.Equal(t, uint64(98), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionTransfer"), "account state incorrect")
 	assert.Equal(t, 10, int(accountState.SharesEarned), "account state incorrect")
 
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
@@ -632,7 +632,7 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
 	require.NoError(t, err)
-	assert.Equal(t, 20, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
+	assert.Equal(t, uint64(20), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionTransfer"), "account state incorrect")
 	assert.Equal(t, 10, int(accountState.SharesEarned), "account state incorrect")
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
@@ -743,7 +743,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
 	require.NoError(t, err)
-	assert.Equal(t, 1, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
+	assert.Equal(t, uint64(1), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionTransfer"), "account state incorrect")
 	assert.Equal(t, 1, int(accountState.SharesEarned), "account state incorrect")
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
@@ -872,7 +872,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
 	require.NoError(t, err)
-	assert.Equal(t, 1, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
+	assert.Equal(t, uint64(1), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionTransfer"), "account state incorrect")
 	assert.Equal(t, 1, int(accountState.SharesEarned), "account state incorrect")
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
@@ -1026,7 +1026,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
 	require.NoError(t, err)
-	assert.Equal(t, 1, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
+	assert.Equal(t, uint64(1), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionTransfer"), "account state incorrect")
 	assert.Equal(t, 1, int(accountState.SharesEarned), "account state incorrect")
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
@@ -1165,7 +1165,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
 	require.NoError(t, err)
-	assert.Equal(t, 1, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
+	assert.Equal(t, uint64(1), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionTransfer"), "account state incorrect")
 	assert.Equal(t, 1, int(accountState.SharesEarned), "account state incorrect")
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
@@ -1277,7 +1277,7 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
 	require.NoError(t, err)
-	assert.Equal(t, 0, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
+	assert.Equal(t, uint64(0), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionTransfer"), "account state incorrect")
 	assert.Equal(t, 0, int(accountState.SharesEarned), "account state incorrect")
 }
 
@@ -1363,7 +1363,7 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
 	require.NoError(t, err)
-	assert.Equal(t, 1, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
+	assert.Equal(t, uint64(1), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionTransfer"), "account state incorrect")
 	assert.Equal(t, 1, int(accountState.SharesEarned), "account state incorrect")
 
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
@@ -1458,7 +1458,7 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
 	require.NoError(t, err)
-	assert.Equal(t, 0, int(accountState.ActionCounter["ActionTransfer"]), "account state incorrect")
+	assert.Equal(t, uint64(0), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionTransfer"), "account state incorrect")
 	assert.Equal(t, 0, int(accountState.SharesEarned), "account state incorrect")
 
 }
@@ -1560,7 +1560,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
 	require.NoError(t, err)
-	assert.Equal(t, 20, int(accountState.ActionCounter["ActionVote"]), "account state incorrect")
+	assert.Equal(t, uint64(20), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionVote"), "account state incorrect")
 	assert.Equal(t, 10, int(accountState.SharesEarned), "account state incorrect")
 }
 
@@ -1661,7 +1661,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
 	require.NoError(t, err)
-	assert.Equal(t, 0, int(accountState.ActionCounter["ActionVote"]), "account state incorrect")
+	assert.Equal(t, uint64(0), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionVote"), "account state incorrect")
 	assert.Equal(t, 0, int(accountState.SharesEarned), "account state incorrect")
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
@@ -1770,7 +1770,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
 	require.NoError(t, err)
-	assert.Equal(t, 20, int(accountState.ActionCounter["ActionVote"]), "account state incorrect")
+	assert.Equal(t, uint64(20), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionVote"), "account state incorrect")
 	assert.Equal(t, 10, int(accountState.SharesEarned), "account state incorrect")
 
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
@@ -1879,7 +1879,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
 	require.NoError(t, err)
-	assert.Equal(t, 0, int(accountState.ActionCounter["ActionVote"]), "account state incorrect")
+	assert.Equal(t, uint64(0), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionVote"), "account state incorrect")
 	assert.Equal(t, 0, int(accountState.SharesEarned), "account state incorrect")
 
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
@@ -1993,7 +1993,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
 	require.NoError(t, err)
-	assert.Equal(t, 20, int(accountState.ActionCounter["ActionDelegate"]), "account state incorrect")
+	assert.Equal(t, uint64(20), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionDelegate"), "account state incorrect")
 	assert.Equal(t, 10, int(accountState.SharesEarned), "account state incorrect")
 
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{

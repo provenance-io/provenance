@@ -180,7 +180,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	rewardAccountState := make([]rewardtypes.RewardAccountState, 101)
 	for i := 0; i < 101; i++ {
-		rewardAccountState[i] = rewardtypes.NewRewardAccountState(1, uint64(i+1), s.accountAddr.String(), 10, map[string]uint64{})
+		rewardAccountState[i] = rewardtypes.NewRewardAccountState(1, uint64(i+1), s.accountAddr.String(), 10, []*types.ActionCounter{})
 		switch i % 4 {
 		case 0:
 			rewardAccountState[i].ClaimStatus = rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE

@@ -312,7 +312,7 @@ func (s *RewardTypesTestSuite) TesRewardAccountStateValidate() {
 				2,
 				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 				0,
-				map[string]uint64{},
+				[]*ActionCounter{},
 			),
 			"",
 		},
@@ -323,7 +323,7 @@ func (s *RewardTypesTestSuite) TesRewardAccountStateValidate() {
 				2,
 				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 				0,
-				map[string]uint64{},
+				[]*ActionCounter{},
 			),
 			"reward program id must be greater than 0",
 		},
@@ -334,7 +334,7 @@ func (s *RewardTypesTestSuite) TesRewardAccountStateValidate() {
 				2,
 				"test",
 				0,
-				map[string]uint64{},
+				[]*ActionCounter{},
 			),
 			"invalid address for reward program balance: decoding bech32 failed: invalid bech32 string length 7",
 		},
@@ -711,4 +711,38 @@ func (s *RewardTypesTestSuite) TestIsEndingClaimPeriod() {
 	program.State = RewardProgram_STATE_EXPIRED
 	s.Assert().False(program.IsEndingClaimPeriod(s.ctx))
 
+}
+
+func (s *RewardTypesTestSuite) TestActionCounterIncrement() {
+	var actionCounterArray []*ActionCounter
+	actionCounter := ActionCounter{ActionType: ActionTypeDelegate, NumberOfActions: 10}
+	actionCounterArray = append(actionCounterArray, &actionCounter)
+	res := IncrementActionCount(actionCounterArray, ActionTypeTransfer)
+
+	s.Assert().NotNil(res, "Incrementing ActionCounter should result in not nil object")
+	s.Assert().Equal(uint64(10), GetActionCount(res, ActionTypeDelegate), "Delegate Action types should not have changed.")
+	s.Assert().Equal(uint64(1), GetActionCount(res, ActionTypeTransfer), "Transfer Action types should have changed, to 1.")
+}
+
+func (s *RewardTypesTestSuite) TestActionCounterIncrementTypeAlreadyPresent() {
+	var actionCounterArray []*ActionCounter
+	actionCounter := ActionCounter{ActionType: ActionTypeDelegate, NumberOfActions: 10}
+	actionCounterArray = append(actionCounterArray, &actionCounter)
+	actionCount := IncrementActionCount(actionCounterArray, ActionTypeDelegate)
+
+	s.Assert().NotNil(actionCount, "Incrementing ActionCounter should result in not nil object")
+	s.Assert().Equal(uint64(11), GetActionCount(actionCount, ActionTypeDelegate), "Delegate Action types should not have changed.")
+	s.Assert().Equal(uint64(0), GetActionCount(actionCount, ActionTypeTransfer), "Transfer Action types should not be found.")
+}
+
+func (s *RewardTypesTestSuite) TestActionCounterSearchNilArray() {
+	var actionCounterArray []*ActionCounter
+	s.Assert().Equal(uint64(0), GetActionCount(actionCounterArray, ActionTypeDelegate), "Delegate Action types should not be found.")
+	s.Assert().Equal(uint64(0), GetActionCount(actionCounterArray, ActionTypeTransfer), "Transfer Action types should not be found.")
+}
+
+func (s *RewardTypesTestSuite) TestActionCounterIncrementNilArray() {
+	var actionCounterArray []*ActionCounter = nil
+	actionCount := IncrementActionCount(actionCounterArray, ActionTypeDelegate)
+	s.Assert().Equal(uint64(1), GetActionCount(actionCount, ActionTypeDelegate), "Delegate Action types should not have changed.")
 }

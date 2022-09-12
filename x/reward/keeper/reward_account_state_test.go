@@ -13,14 +13,14 @@ func (s *KeeperTestSuite) TestNewRewardAccountState() {
 		2,
 		"cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv",
 		3,
-		map[string]uint64{})
+		[]*types.ActionCounter{})
 
 	s.Assert().Equal(uint64(1), accountState.GetRewardProgramId(), "reward program id must match")
 	s.Assert().Equal(uint64(2), accountState.GetClaimPeriodId(), "reward claim period id must match")
 	s.Assert().Equal(uint64(3), accountState.GetSharesEarned(), "earned shares must match")
 	s.Assert().Equal("cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", accountState.GetAddress(), "address must match")
 	s.Assert().Equal(types.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, accountState.GetClaimStatus(), "should be set to unclaimable initially")
-	s.Assert().Equal(map[string]uint64{}, accountState.GetActionCounter(), "action counter must match")
+	s.Assert().Equal([]*types.ActionCounter{}, accountState.GetActionCounter(), "action counter must match")
 }
 
 func (s *KeeperTestSuite) TestGetSetRewardAccountState() {
@@ -29,7 +29,7 @@ func (s *KeeperTestSuite) TestGetSetRewardAccountState() {
 		2,
 		"cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27",
 		3,
-		map[string]uint64{},
+		nil,
 	)
 
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, expectedState)
@@ -58,11 +58,11 @@ func (s *KeeperTestSuite) TestGetInvalidAccountState() {
 }
 
 func (s *KeeperTestSuite) TestIterateAccountStates() {
-	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, []*types.ActionCounter{})
 
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state2)
@@ -71,20 +71,20 @@ func (s *KeeperTestSuite) TestIterateAccountStates() {
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state5)
 
 	counter := 0
-	s.app.RewardKeeper.IterateRewardAccountStates(s.ctx, 2, 2, func(state types.RewardAccountState) bool {
+	s.Assert().NoError(s.app.RewardKeeper.IterateRewardAccountStates(s.ctx, 2, 2, func(state types.RewardAccountState) bool {
 		counter += 1
 		return false
-	})
+	}))
 
 	s.Assert().Equal(2, counter, "should have correct number of iterations")
 }
 
 func (s *KeeperTestSuite) TestIterateAccountStatesByAddress() {
-	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, []*types.ActionCounter{})
 
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state2)
@@ -95,20 +95,20 @@ func (s *KeeperTestSuite) TestIterateAccountStatesByAddress() {
 	counter := 0
 	addr, err := sdk.AccAddressFromBech32("cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
 	s.Assert().NoError(err, "no error should be thrown")
-	s.app.RewardKeeper.IterateRewardAccountStatesByAddress(s.ctx, addr, func(state types.RewardAccountState) bool {
+	s.Assert().NoError(s.app.RewardKeeper.IterateRewardAccountStatesByAddress(s.ctx, addr, func(state types.RewardAccountState) bool {
 		counter += 1
 		return false
-	})
+	}))
 
 	s.Assert().Equal(4, counter, "should have correct number of iterations")
 }
 
 func (s *KeeperTestSuite) TestEmptyIterateAccountStates() {
-	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, []*types.ActionCounter{})
 
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state2)
@@ -117,20 +117,20 @@ func (s *KeeperTestSuite) TestEmptyIterateAccountStates() {
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state5)
 
 	counter := 0
-	s.app.RewardKeeper.IterateRewardAccountStates(s.ctx, 1, 4, func(state types.RewardAccountState) bool {
+	s.Assert().NoError(s.app.RewardKeeper.IterateRewardAccountStates(s.ctx, 1, 4, func(state types.RewardAccountState) bool {
 		counter += 1
 		return false
-	})
+	}))
 
 	s.Assert().Equal(0, counter, "should have correct number of iterations")
 }
 
 func (s *KeeperTestSuite) TestIterateAccountStatesHalt() {
-	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, []*types.ActionCounter{})
 
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state2)
@@ -139,20 +139,20 @@ func (s *KeeperTestSuite) TestIterateAccountStatesHalt() {
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state5)
 
 	counter := 0
-	s.app.RewardKeeper.IterateRewardAccountStates(s.ctx, 1, 2, func(state types.RewardAccountState) bool {
+	s.Assert().NoError(s.app.RewardKeeper.IterateRewardAccountStates(s.ctx, 1, 2, func(state types.RewardAccountState) bool {
 		counter += 1
 		return counter == 1
-	})
+	}))
 
 	s.Assert().Equal(1, counter, "should have correct number of iterations")
 }
 
 func (s *KeeperTestSuite) TestIterateAllAccountStates() {
-	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, []*types.ActionCounter{})
 
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state2)
@@ -161,30 +161,30 @@ func (s *KeeperTestSuite) TestIterateAllAccountStates() {
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state5)
 
 	counter := 0
-	s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+	s.Assert().NoError(s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
 		counter += 1
 		return false
-	})
+	}))
 
 	s.Assert().Equal(5, counter, "should have correct number of iterations")
 }
 
 func (s *KeeperTestSuite) TestEmptyIterateAllAccountStates() {
 	counter := 0
-	s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+	s.Assert().NoError(s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
 		counter += 1
 		return false
-	})
+	}))
 
 	s.Assert().Equal(0, counter, "should have correct number of iterations")
 }
 
 func (s *KeeperTestSuite) TestIterateAllAccountStatesHalt() {
-	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, []*types.ActionCounter{})
 
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state2)
@@ -193,20 +193,20 @@ func (s *KeeperTestSuite) TestIterateAllAccountStatesHalt() {
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state5)
 
 	counter := 0
-	s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
+	s.Assert().NoError(s.app.RewardKeeper.IterateAllRewardAccountStates(s.ctx, func(state types.RewardAccountState) bool {
 		counter += 1
 		return counter == 1
-	})
+	}))
 
 	s.Assert().Equal(1, counter, "should have correct number of iterations")
 }
 
 func (s *KeeperTestSuite) TestIterateRewardAccountStatesForRewardProgram() {
-	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, []*types.ActionCounter{})
 
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state2)
@@ -215,30 +215,30 @@ func (s *KeeperTestSuite) TestIterateRewardAccountStatesForRewardProgram() {
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state5)
 
 	counter := 0
-	s.app.RewardKeeper.IterateRewardAccountStatesForRewardProgram(s.ctx, 2, func(state types.RewardAccountState) bool {
+	s.Assert().NoError(s.app.RewardKeeper.IterateRewardAccountStatesForRewardProgram(s.ctx, 2, func(state types.RewardAccountState) bool {
 		counter += 1
 		return false
-	})
+	}))
 
 	s.Assert().Equal(3, counter, "should have correct number of iterations")
 }
 
 func (s *KeeperTestSuite) TestEmptyIterateRewardAccountStatesForRewardProgram() {
 	counter := 0
-	s.app.RewardKeeper.IterateRewardAccountStatesForRewardProgram(s.ctx, 1, func(state types.RewardAccountState) bool {
+	s.Assert().NoError(s.app.RewardKeeper.IterateRewardAccountStatesForRewardProgram(s.ctx, 1, func(state types.RewardAccountState) bool {
 		counter += 1
 		return false
-	})
+	}))
 
 	s.Assert().Equal(0, counter, "should have correct number of iterations")
 }
 
 func (s *KeeperTestSuite) TestIterateRewardAccountStatesForRewardProgramHalt() {
-	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, []*types.ActionCounter{})
 
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state2)
@@ -247,20 +247,20 @@ func (s *KeeperTestSuite) TestIterateRewardAccountStatesForRewardProgramHalt() {
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state5)
 
 	counter := 0
-	s.app.RewardKeeper.IterateRewardAccountStatesForRewardProgram(s.ctx, 2, func(state types.RewardAccountState) bool {
+	s.Assert().NoError(s.app.RewardKeeper.IterateRewardAccountStatesForRewardProgram(s.ctx, 2, func(state types.RewardAccountState) bool {
 		counter += 1
 		return counter == 1
-	})
+	}))
 
 	s.Assert().Equal(1, counter, "should have correct number of iterations")
 }
 
 func (s *KeeperTestSuite) TestGetRewardAccountStatesForClaimPeriod() {
-	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, []*types.ActionCounter{})
 
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state2)
@@ -280,11 +280,11 @@ func (s *KeeperTestSuite) TestGetRewardAccountStatesForClaimPeriodHandlesEmpty()
 }
 
 func (s *KeeperTestSuite) TestGetRewardAccountStatesForRewardProgram() {
-	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, map[string]uint64{})
-	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state2 := types.NewRewardAccountState(1, 3, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state3 := types.NewRewardAccountState(2, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state4 := types.NewRewardAccountState(2, 2, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 0, []*types.ActionCounter{})
+	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, []*types.ActionCounter{})
 
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state2)
@@ -304,11 +304,11 @@ func (s *KeeperTestSuite) TestGetRewardAccountStatesForRewardProgramHandlesEmpty
 }
 
 func (s *KeeperTestSuite) TestMakeRewardClaimsClaimableForPeriod() {
-	state1 := types.NewRewardAccountState(1, 2, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 0, map[string]uint64{})
-	state2 := types.NewRewardAccountState(1, 3, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 0, map[string]uint64{})
-	state3 := types.NewRewardAccountState(2, 1, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 0, map[string]uint64{})
-	state4 := types.NewRewardAccountState(2, 2, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 0, map[string]uint64{})
-	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 2, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 0, []*types.ActionCounter{})
+	state2 := types.NewRewardAccountState(1, 3, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 0, []*types.ActionCounter{})
+	state3 := types.NewRewardAccountState(2, 1, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 0, []*types.ActionCounter{})
+	state4 := types.NewRewardAccountState(2, 2, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 0, []*types.ActionCounter{})
+	state5 := types.NewRewardAccountState(2, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, []*types.ActionCounter{})
 
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state2)
@@ -338,10 +338,10 @@ func (s *KeeperTestSuite) TestMakeRewardClaimsClaimableForPeriodHandlesEmpty() {
 }
 
 func (s *KeeperTestSuite) TestExpireRewardClaimsForRewardProgram() {
-	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, map[string]uint64{})
-	state2 := types.NewRewardAccountState(1, 1, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 0, map[string]uint64{})
-	state3 := types.NewRewardAccountState(1, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, map[string]uint64{})
-	state4 := types.NewRewardAccountState(1, 2, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 0, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, []*types.ActionCounter{})
+	state2 := types.NewRewardAccountState(1, 1, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 0, []*types.ActionCounter{})
+	state3 := types.NewRewardAccountState(1, 2, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 0, []*types.ActionCounter{})
+	state4 := types.NewRewardAccountState(1, 2, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 0, []*types.ActionCounter{})
 	state4.ClaimStatus = types.RewardAccountState_CLAIM_STATUS_CLAIMED
 
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)

@@ -390,6 +390,7 @@
     - [Msg](#provenance.name.v1.Msg)
   
 - [provenance/reward/v1/reward.proto](#provenance/reward/v1/reward.proto)
+    - [ActionCounter](#provenance.reward.v1.ActionCounter)
     - [ActionDelegate](#provenance.reward.v1.ActionDelegate)
     - [ActionTransfer](#provenance.reward.v1.ActionTransfer)
     - [ActionVote](#provenance.reward.v1.ActionVote)
@@ -397,7 +398,6 @@
     - [QualifyingAction](#provenance.reward.v1.QualifyingAction)
     - [QualifyingActions](#provenance.reward.v1.QualifyingActions)
     - [RewardAccountState](#provenance.reward.v1.RewardAccountState)
-    - [RewardAccountState.ActionCounterEntry](#provenance.reward.v1.RewardAccountState.ActionCounterEntry)
     - [RewardProgram](#provenance.reward.v1.RewardProgram)
   
     - [RewardAccountState.ClaimStatus](#provenance.reward.v1.RewardAccountState.ClaimStatus)
@@ -5926,6 +5926,22 @@ Msg defines the bank Msg service.
 
 
 
+<a name="provenance.reward.v1.ActionCounter"></a>
+
+### ActionCounter
+The number of actions done by this account, key --> action type, value --> actions performed count.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `action_type` | [string](#string) |  |  |
+| `number_of_actions` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
 <a name="provenance.reward.v1.ActionDelegate"></a>
 
 ### ActionDelegate
@@ -6043,25 +6059,9 @@ RewardAccountState contains state at the claim period level for a specific addre
 | `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this share belongs to. |
 | `claim_period_id` | [uint64](#uint64) |  | The id of the claim period that the share belongs to. |
 | `address` | [string](#string) |  | Owner of the reward account state. |
-| `action_counter` | [RewardAccountState.ActionCounterEntry](#provenance.reward.v1.RewardAccountState.ActionCounterEntry) | repeated | The number of actions done by this account, mapped by action type. |
+| `action_counter` | [ActionCounter](#provenance.reward.v1.ActionCounter) | repeated | The number of actions done by this account, mapped by action type. |
 | `shares_earned` | [uint64](#uint64) |  | The amount of granted shares for the address in the reward program's claim period. |
 | `claim_status` | [RewardAccountState.ClaimStatus](#provenance.reward.v1.RewardAccountState.ClaimStatus) |  | The status of the claim. |
-
-
-
-
-
-
-<a name="provenance.reward.v1.RewardAccountState.ActionCounterEntry"></a>
-
-### RewardAccountState.ActionCounterEntry
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [string](#string) |  |  |
-| `value` | [uint64](#uint64) |  |  |
 
 
 

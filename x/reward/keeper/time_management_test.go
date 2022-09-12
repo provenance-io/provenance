@@ -347,8 +347,8 @@ func (s *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsEvenDistributionN
 		false,
 	)
 
-	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 1, map[string]uint64{})
-	state2 := types.NewRewardAccountState(1, 1, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 1, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 1, []*types.ActionCounter{})
+	state2 := types.NewRewardAccountState(1, 1, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 1, []*types.ActionCounter{})
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state2)
 
@@ -367,9 +367,9 @@ func (s *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsEvenDistributionW
 		false,
 	)
 
-	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 1, map[string]uint64{})
-	state2 := types.NewRewardAccountState(1, 1, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 1, map[string]uint64{})
-	state3 := types.NewRewardAccountState(1, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 1, []*types.ActionCounter{})
+	state2 := types.NewRewardAccountState(1, 1, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 1, []*types.ActionCounter{})
+	state3 := types.NewRewardAccountState(1, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1, []*types.ActionCounter{})
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state2)
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state3)
@@ -389,9 +389,9 @@ func (s *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUnevenDistributio
 		false,
 	)
 
-	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 2, map[string]uint64{})
-	state2 := types.NewRewardAccountState(1, 1, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 1, map[string]uint64{})
-	state3 := types.NewRewardAccountState(1, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 2, []*types.ActionCounter{})
+	state2 := types.NewRewardAccountState(1, 1, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 1, []*types.ActionCounter{})
+	state3 := types.NewRewardAccountState(1, 1, "cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv", 1, []*types.ActionCounter{})
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state2)
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state3)
@@ -411,8 +411,8 @@ func (s *KeeperTestSuite) TestCalculateRewardClaimPeriodRewardsUsesMaxReward() {
 		false,
 	)
 
-	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 1, map[string]uint64{})
-	state2 := types.NewRewardAccountState(1, 1, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 1, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 1, []*types.ActionCounter{})
+	state2 := types.NewRewardAccountState(1, 1, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 1, []*types.ActionCounter{})
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state2)
 
@@ -542,7 +542,7 @@ func (s *KeeperTestSuite) TestRewardProgramClaimPeriodEnd() {
 		[]types.QualifyingAction{},
 	)
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
-	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 1, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 1, []*types.ActionCounter{})
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	program.RemainingPoolBalance = program.GetTotalRewardPool()
 
@@ -584,8 +584,8 @@ func (s *KeeperTestSuite) TestRewardProgramClaimPeriodEndTransition() {
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
 	program.RemainingPoolBalance = program.GetTotalRewardPool()
 
-	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 1, map[string]uint64{})
-	state2 := types.NewRewardAccountState(1, 2, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 1, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 1, []*types.ActionCounter{})
+	state2 := types.NewRewardAccountState(1, 2, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 1, []*types.ActionCounter{})
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state2)
 
@@ -688,9 +688,9 @@ func (s *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesClaimStatus() {
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
 	program.RemainingPoolBalance = program.GetTotalRewardPool()
 
-	state1 := types.NewRewardAccountState(1, 1, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 1, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 1, "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", 1, []*types.ActionCounter{})
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
-	state2 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 1, map[string]uint64{})
+	state2 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 1, []*types.ActionCounter{})
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state2)
 
 	s.app.RewardKeeper.StartRewardProgram(s.ctx, &program)
@@ -727,7 +727,7 @@ func (s *KeeperTestSuite) TestEndRewardProgramClaimPeriodUpdatesBalances() {
 	program.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
 	program.RemainingPoolBalance = program.GetTotalRewardPool()
 
-	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 1, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 1, []*types.ActionCounter{})
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 
 	s.app.RewardKeeper.StartRewardProgram(s.ctx, &program)
@@ -771,7 +771,7 @@ func (s *KeeperTestSuite) TestEndRewardProgramClaimPeriodHandlesMinimumRolloverA
 	s.app.RewardKeeper.StartRewardProgram(s.ctx, &program)
 
 	// Create the shares
-	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 1, map[string]uint64{})
+	state1 := types.NewRewardAccountState(1, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 1, []*types.ActionCounter{})
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	reward, _ := s.app.RewardKeeper.GetClaimPeriodRewardDistribution(s.ctx, 1, 1)
 	reward.TotalShares = 1
@@ -865,7 +865,7 @@ func (s *KeeperTestSuite) TestUpdate() {
 	)
 	ending.MinimumRolloverAmount = sdk.NewInt64Coin("nhash", 1)
 	ending.RemainingPoolBalance = sdk.NewInt64Coin("nhash", 0)
-	state1 := types.NewRewardAccountState(4, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 1, map[string]uint64{})
+	state1 := types.NewRewardAccountState(4, 1, "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", 1, []*types.ActionCounter{})
 	s.app.RewardKeeper.SetRewardAccountState(s.ctx, state1)
 	s.app.RewardKeeper.StartRewardProgram(s.ctx, &ending)
 	ending.ClaimPeriodEndTime = blockTime

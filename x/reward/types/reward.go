@@ -248,7 +248,7 @@ func (rp *RewardProgram) Validate() error {
 
 // ============ Account State ============
 
-func NewRewardAccountState(rewardProgramID, rewardClaimPeriodID uint64, address string, shares uint64, actionCounter map[string]uint64) RewardAccountState {
+func NewRewardAccountState(rewardProgramID, rewardClaimPeriodID uint64, address string, shares uint64, actionCounter []*ActionCounter) RewardAccountState {
 	return RewardAccountState{
 		RewardProgramId: rewardProgramID,
 		ClaimPeriodId:   rewardClaimPeriodID,
@@ -429,7 +429,7 @@ func (ad *ActionDelegate) PreEvaluate(ctx sdk.Context, provider KeeperProvider, 
 }
 
 func (ad *ActionDelegate) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
-	actionCounter := state.ActionCounter[ad.ActionType()]
+	actionCounter := GetActionCount(state.ActionCounter, ad.ActionType())
 	hasValidActionCount := actionCounter >= ad.GetMinimumActions() && actionCounter <= ad.GetMaximumActions()
 	return hasValidActionCount
 }
@@ -487,7 +487,7 @@ func (at *ActionTransfer) PreEvaluate(ctx sdk.Context, provider KeeperProvider, 
 }
 
 func (at *ActionTransfer) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
-	actionCounter := state.ActionCounter[at.ActionType()]
+	actionCounter := GetActionCount(state.ActionCounter, at.ActionType())
 	hasValidActionCount := actionCounter >= at.GetMinimumActions() && actionCounter <= at.GetMaximumActions()
 	return hasValidActionCount
 }
@@ -538,7 +538,7 @@ func (atd *ActionVote) PreEvaluate(ctx sdk.Context, provider KeeperProvider, sta
 }
 
 func (atd *ActionVote) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
-	actionCounter := state.ActionCounter[atd.ActionType()]
+	actionCounter := GetActionCount(state.ActionCounter, atd.ActionType())
 	hasValidActionCount := actionCounter >= atd.GetMinimumActions() && actionCounter <= atd.GetMaximumActions()
 	return hasValidActionCount
 }
@@ -609,4 +609,36 @@ func getAllDelegations(ctx sdk.Context, provider KeeperProvider, delegator sdk.A
 		return sum, false
 	}
 	return sum, true
+}
+
+// GetActionCount convenience method to find NumberOfActions for a given action type from a ActionCounter Slice
+func GetActionCount(actionCounter []*ActionCounter, actionType string) uint64 {
+	// nil slices are automatically checked for by golang range, so no need to check for nil explicitly https://go.dev/play/p/BwaVSIHclPm
+	for i := range actionCounter {
+		if actionCounter[i].ActionType == actionType {
+			// Found return counter
+			return actionCounter[i].GetNumberOfActions()
+		}
+	}
+	return 0
+}
+
+// IncrementActionCount convenience method to increment NumberOfActions for a given action type by 1(for now) and return an ActionCounter Slice
+// if action type not found will create one and append to slice and return slice.
+func IncrementActionCount(actionCounter []*ActionCounter, actionType string) []*ActionCounter {
+	// nil slices are automatically checked for by golang range, so no need to check for nil explicitly https://go.dev/play/p/BwaVSIHclPm
+	for i := range actionCounter {
+		// if found increment counter
+		if actionCounter[i].ActionType == actionType {
+			// Found return counter
+			actionCounter[i].NumberOfActions = actionCounter[i].GetNumberOfActions() + 1
+			return actionCounter
+		}
+	}
+	// if not found create one and add
+	actionCounter = append(actionCounter, &ActionCounter{
+		ActionType:      actionType,
+		NumberOfActions: 1,
+	})
+	return actionCounter
 }

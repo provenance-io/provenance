@@ -41612,8 +41612,10 @@ paths:
   '/provenance/reward/v1/reward_claims/{reward_address}':
     patch:
       summary: >-
-        ClaimRewards is the RPC endpoint for claiming rewards for completed
-        claim periods of every reward program
+        ClaimAllRewards is the RPC endpoint for claiming rewards for completed
+        claim periods of every reward program for
+
+        the signer of the tx.
       operationId: ClaimAllRewards
       responses:
         '200':
@@ -41622,15 +41624,25 @@ paths:
             type: object
             properties:
               total_reward_claim:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom
+                    method
+
+                    signatures required by gogoproto.
                 description: >-
                   total rewards claimed for all eligible claim periods in all
                   programs.
-                type: object
-                properties:
-                  denom:
-                    type: string
-                  amount:
-                    type: string
               claim_details:
                 type: array
                 items:
@@ -41641,15 +41653,20 @@ paths:
                       format: uint64
                       description: reward program id.
                     total_reward_claim:
-                      description: >-
-                        total rewards claimed for all eligible claim periods in
-                        program.
                       type: object
                       properties:
                         denom:
                           type: string
                         amount:
                           type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
                     claimed_reward_period_details:
                       type: array
                       items:
@@ -41658,9 +41675,11 @@ paths:
                           claim_period_id:
                             type: string
                             format: uint64
+                            title: claim period id
                           total_shares:
                             type: string
                             format: uint64
+                            title: total shares accumulated for claim period
                           claim_period_reward:
                             type: object
                             properties:
@@ -41677,16 +41696,17 @@ paths:
                               the custom method
 
                               signatures required by gogoproto.
+                            title: total rewards for claim period
                         description: >-
                           ClaimedRewardPeriodDetail is information regarding an
                           addresses' shares and reward for a claim period.
                       description: claim period details.
                   description: >-
-                    RewardProgramClaimDetail is information regarding an
-                    addresses' shares and reward for a reward program.
+                    RewardProgramClaimDetail is the response object regarding an
+                    address's shares and reward for a reward program.
                 description: details about acquired rewards from a reward program.
             title: >-
-              MsgClaimRewardResponse is the response type for claiming rewards
+              MsgClaimRewardsResponse is the response type for claiming rewards
               from all reward programs RPC
         default:
           description: An unexpected error response
@@ -41707,176 +41727,9 @@ paths:
                   properties:
                     type_url:
                       type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at
-                        least
-
-                        one "/" character. The last segment of the URL's path
-                        must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary
-                        all types that they
-
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
-
-                        used with implementation specific semantics.
                     value:
                       type: string
                       format: byte
-                      description: >-
-                        Must be a valid serialized protocol buffer of the above
-                        specified type.
-                  description: >-
-                    `Any` contains an arbitrary serialized protocol buffer
-                    message along with a
-
-                    URL that describes the type of the serialized message.
-
-
-                    Protobuf library provides support to pack/unpack Any values
-                    in the form
-
-                    of utility functions or additional generated methods of the
-                    Any type.
-
-
-                    Example 1: Pack and unpack a message in C++.
-
-                        Foo foo = ...;
-                        Any any;
-                        any.PackFrom(foo);
-                        ...
-                        if (any.UnpackTo(&foo)) {
-                          ...
-                        }
-
-                    Example 2: Pack and unpack a message in Java.
-
-                        Foo foo = ...;
-                        Any any = Any.pack(foo);
-                        ...
-                        if (any.is(Foo.class)) {
-                          foo = any.unpack(Foo.class);
-                        }
-
-                     Example 3: Pack and unpack a message in Python.
-
-                        foo = Foo(...)
-                        any = Any()
-                        any.Pack(foo)
-                        ...
-                        if any.Is(Foo.DESCRIPTOR):
-                          any.Unpack(foo)
-                          ...
-
-                     Example 4: Pack and unpack a message in Go
-
-                         foo := &pb.Foo{...}
-                         any, err := ptypes.MarshalAny(foo)
-                         ...
-                         foo := &pb.Foo{}
-                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
-                           ...
-                         }
-
-                    The pack methods provided by protobuf library will by
-                    default use
-
-                    'type.googleapis.com/full.type.name' as the type URL and the
-                    unpack
-
-                    methods only use the fully qualified type name after the
-                    last '/'
-
-                    in the type URL, for example "foo.bar.com/x/y.z" will yield
-                    type
-
-                    name "y.z".
-
-
-
-                    JSON
-
-                    ====
-
-                    The JSON representation of an `Any` value uses the regular
-
-                    representation of the deserialized, embedded message, with
-                    an
-
-                    additional field `@type` which contains the type URL.
-                    Example:
-
-                        package google.profile;
-                        message Person {
-                          string first_name = 1;
-                          string last_name = 2;
-                        }
-
-                        {
-                          "@type": "type.googleapis.com/google.profile.Person",
-                          "firstName": <string>,
-                          "lastName": <string>
-                        }
-
-                    If the embedded message type is well-known and has a custom
-                    JSON
-
-                    representation, that representation will be embedded adding
-                    a field
-
-                    `value` which holds the custom JSON in addition to the
-                    `@type`
-
-                    field. Example (for message [google.protobuf.Duration][]):
-
-                        {
-                          "@type": "type.googleapis.com/google.protobuf.Duration",
-                          "value": "1.212s"
-                        }
       parameters:
         - name: reward_address
           description: reward address and signer of msg to send claimed rewards to.
@@ -41905,15 +41758,20 @@ paths:
                     format: uint64
                     description: reward program id.
                   total_reward_claim:
-                    description: >-
-                      total rewards claimed for all eligible claim periods in
-                      program.
                     type: object
                     properties:
                       denom:
                         type: string
                       amount:
                         type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
                   claimed_reward_period_details:
                     type: array
                     items:
@@ -41922,9 +41780,11 @@ paths:
                         claim_period_id:
                           type: string
                           format: uint64
+                          title: claim period id
                         total_shares:
                           type: string
                           format: uint64
+                          title: total shares accumulated for claim period
                         claim_period_reward:
                           type: object
                           properties:
@@ -41941,15 +41801,16 @@ paths:
                             the custom method
 
                             signatures required by gogoproto.
+                          title: total rewards for claim period
                       description: >-
                         ClaimedRewardPeriodDetail is information regarding an
                         addresses' shares and reward for a claim period.
                     description: claim period details.
                 description: >-
-                  RewardProgramClaimDetail is information regarding an
-                  addresses' shares and reward for a reward program.
+                  RewardProgramClaimDetail is the response object regarding an
+                  address's shares and reward for a reward program.
             title: >-
-              MsgClaimRewardResponse is the response type for claiming reward
+              MsgClaimRewardsResponse is the response type for claiming reward
               from reward program RPC
         default:
           description: An unexpected error response
@@ -41970,176 +41831,9 @@ paths:
                   properties:
                     type_url:
                       type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at
-                        least
-
-                        one "/" character. The last segment of the URL's path
-                        must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary
-                        all types that they
-
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
-
-                        used with implementation specific semantics.
                     value:
                       type: string
                       format: byte
-                      description: >-
-                        Must be a valid serialized protocol buffer of the above
-                        specified type.
-                  description: >-
-                    `Any` contains an arbitrary serialized protocol buffer
-                    message along with a
-
-                    URL that describes the type of the serialized message.
-
-
-                    Protobuf library provides support to pack/unpack Any values
-                    in the form
-
-                    of utility functions or additional generated methods of the
-                    Any type.
-
-
-                    Example 1: Pack and unpack a message in C++.
-
-                        Foo foo = ...;
-                        Any any;
-                        any.PackFrom(foo);
-                        ...
-                        if (any.UnpackTo(&foo)) {
-                          ...
-                        }
-
-                    Example 2: Pack and unpack a message in Java.
-
-                        Foo foo = ...;
-                        Any any = Any.pack(foo);
-                        ...
-                        if (any.is(Foo.class)) {
-                          foo = any.unpack(Foo.class);
-                        }
-
-                     Example 3: Pack and unpack a message in Python.
-
-                        foo = Foo(...)
-                        any = Any()
-                        any.Pack(foo)
-                        ...
-                        if any.Is(Foo.DESCRIPTOR):
-                          any.Unpack(foo)
-                          ...
-
-                     Example 4: Pack and unpack a message in Go
-
-                         foo := &pb.Foo{...}
-                         any, err := ptypes.MarshalAny(foo)
-                         ...
-                         foo := &pb.Foo{}
-                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
-                           ...
-                         }
-
-                    The pack methods provided by protobuf library will by
-                    default use
-
-                    'type.googleapis.com/full.type.name' as the type URL and the
-                    unpack
-
-                    methods only use the fully qualified type name after the
-                    last '/'
-
-                    in the type URL, for example "foo.bar.com/x/y.z" will yield
-                    type
-
-                    name "y.z".
-
-
-
-                    JSON
-
-                    ====
-
-                    The JSON representation of an `Any` value uses the regular
-
-                    representation of the deserialized, embedded message, with
-                    an
-
-                    additional field `@type` which contains the type URL.
-                    Example:
-
-                        package google.profile;
-                        message Person {
-                          string first_name = 1;
-                          string last_name = 2;
-                        }
-
-                        {
-                          "@type": "type.googleapis.com/google.profile.Person",
-                          "firstName": <string>,
-                          "lastName": <string>
-                        }
-
-                    If the embedded message type is well-known and has a custom
-                    JSON
-
-                    representation, that representation will be embedded adding
-                    a field
-
-                    `value` which holds the custom JSON in addition to the
-                    `@type`
-
-                    field. Example (for message [google.protobuf.Duration][]):
-
-                        {
-                          "@type": "type.googleapis.com/google.protobuf.Duration",
-                          "value": "1.212s"
-                        }
       parameters:
         - name: reward_address
           description: reward address and signer of msg to send claimed rewards to.
@@ -42190,176 +41884,9 @@ paths:
                   properties:
                     type_url:
                       type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at
-                        least
-
-                        one "/" character. The last segment of the URL's path
-                        must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary
-                        all types that they
-
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
-
-                        used with implementation specific semantics.
                     value:
                       type: string
                       format: byte
-                      description: >-
-                        Must be a valid serialized protocol buffer of the above
-                        specified type.
-                  description: >-
-                    `Any` contains an arbitrary serialized protocol buffer
-                    message along with a
-
-                    URL that describes the type of the serialized message.
-
-
-                    Protobuf library provides support to pack/unpack Any values
-                    in the form
-
-                    of utility functions or additional generated methods of the
-                    Any type.
-
-
-                    Example 1: Pack and unpack a message in C++.
-
-                        Foo foo = ...;
-                        Any any;
-                        any.PackFrom(foo);
-                        ...
-                        if (any.UnpackTo(&foo)) {
-                          ...
-                        }
-
-                    Example 2: Pack and unpack a message in Java.
-
-                        Foo foo = ...;
-                        Any any = Any.pack(foo);
-                        ...
-                        if (any.is(Foo.class)) {
-                          foo = any.unpack(Foo.class);
-                        }
-
-                     Example 3: Pack and unpack a message in Python.
-
-                        foo = Foo(...)
-                        any = Any()
-                        any.Pack(foo)
-                        ...
-                        if any.Is(Foo.DESCRIPTOR):
-                          any.Unpack(foo)
-                          ...
-
-                     Example 4: Pack and unpack a message in Go
-
-                         foo := &pb.Foo{...}
-                         any, err := ptypes.MarshalAny(foo)
-                         ...
-                         foo := &pb.Foo{}
-                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
-                           ...
-                         }
-
-                    The pack methods provided by protobuf library will by
-                    default use
-
-                    'type.googleapis.com/full.type.name' as the type URL and the
-                    unpack
-
-                    methods only use the fully qualified type name after the
-                    last '/'
-
-                    in the type URL, for example "foo.bar.com/x/y.z" will yield
-                    type
-
-                    name "y.z".
-
-
-
-                    JSON
-
-                    ====
-
-                    The JSON representation of an `Any` value uses the regular
-
-                    representation of the deserialized, embedded message, with
-                    an
-
-                    additional field `@type` which contains the type URL.
-                    Example:
-
-                        package google.profile;
-                        message Person {
-                          string first_name = 1;
-                          string last_name = 2;
-                        }
-
-                        {
-                          "@type": "type.googleapis.com/google.profile.Person",
-                          "firstName": <string>,
-                          "lastName": <string>
-                        }
-
-                    If the embedded message type is well-known and has a custom
-                    JSON
-
-                    representation, that representation will be embedded adding
-                    a field
-
-                    `value` which holds the custom JSON in addition to the
-                    `@type`
-
-                    field. Example (for message [google.protobuf.Duration][]):
-
-                        {
-                          "@type": "type.googleapis.com/google.protobuf.Duration",
-                          "value": "1.212s"
-                        }
       tags:
         - Msg
   '/provenance/reward/v1/reward_programs/{reward_program_id}':
@@ -42393,176 +41920,9 @@ paths:
                   properties:
                     type_url:
                       type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at
-                        least
-
-                        one "/" character. The last segment of the URL's path
-                        must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary
-                        all types that they
-
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
-
-                        used with implementation specific semantics.
                     value:
                       type: string
                       format: byte
-                      description: >-
-                        Must be a valid serialized protocol buffer of the above
-                        specified type.
-                  description: >-
-                    `Any` contains an arbitrary serialized protocol buffer
-                    message along with a
-
-                    URL that describes the type of the serialized message.
-
-
-                    Protobuf library provides support to pack/unpack Any values
-                    in the form
-
-                    of utility functions or additional generated methods of the
-                    Any type.
-
-
-                    Example 1: Pack and unpack a message in C++.
-
-                        Foo foo = ...;
-                        Any any;
-                        any.PackFrom(foo);
-                        ...
-                        if (any.UnpackTo(&foo)) {
-                          ...
-                        }
-
-                    Example 2: Pack and unpack a message in Java.
-
-                        Foo foo = ...;
-                        Any any = Any.pack(foo);
-                        ...
-                        if (any.is(Foo.class)) {
-                          foo = any.unpack(Foo.class);
-                        }
-
-                     Example 3: Pack and unpack a message in Python.
-
-                        foo = Foo(...)
-                        any = Any()
-                        any.Pack(foo)
-                        ...
-                        if any.Is(Foo.DESCRIPTOR):
-                          any.Unpack(foo)
-                          ...
-
-                     Example 4: Pack and unpack a message in Go
-
-                         foo := &pb.Foo{...}
-                         any, err := ptypes.MarshalAny(foo)
-                         ...
-                         foo := &pb.Foo{}
-                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
-                           ...
-                         }
-
-                    The pack methods provided by protobuf library will by
-                    default use
-
-                    'type.googleapis.com/full.type.name' as the type URL and the
-                    unpack
-
-                    methods only use the fully qualified type name after the
-                    last '/'
-
-                    in the type URL, for example "foo.bar.com/x/y.z" will yield
-                    type
-
-                    name "y.z".
-
-
-
-                    JSON
-
-                    ====
-
-                    The JSON representation of an `Any` value uses the regular
-
-                    representation of the deserialized, embedded message, with
-                    an
-
-                    additional field `@type` which contains the type URL.
-                    Example:
-
-                        package google.profile;
-                        message Person {
-                          string first_name = 1;
-                          string last_name = 2;
-                        }
-
-                        {
-                          "@type": "type.googleapis.com/google.profile.Person",
-                          "firstName": <string>,
-                          "lastName": <string>
-                        }
-
-                    If the embedded message type is well-known and has a custom
-                    JSON
-
-                    representation, that representation will be embedded adding
-                    a field
-
-                    `value` which holds the custom JSON in addition to the
-                    `@type`
-
-                    field. Example (for message [google.protobuf.Duration][]):
-
-                        {
-                          "@type": "type.googleapis.com/google.protobuf.Duration",
-                          "value": "1.212s"
-                        }
       parameters:
         - name: reward_program_id
           description: reward program id to end.
@@ -42592,7 +41952,7 @@ paths:
                     claim_period_id:
                       type: string
                       format: uint64
-                      description: The id of the claim period that this reward belongs to.
+                      description: The claim period id.
                     reward_program_id:
                       type: string
                       format: uint64
@@ -42610,7 +41970,7 @@ paths:
                         amount:
                           type: string
                     rewards_pool:
-                      description: The allocated rewards for this claim period.
+                      description: The final allocated rewards for this claim period.
                       type: object
                       properties:
                         denom:
@@ -42630,8 +41990,8 @@ paths:
                         A flag representing if the claim period for this reward
                         has ended.
                   description: >-
-                    ClaimPeriodRewardDistribution, this will updated at the end
-                    of every claim period.
+                    ClaimPeriodRewardDistribution, this is updated at the end of
+                    every claim period.
                 description: List of all ClaimPeriodRewardDistribution objects queried for.
               pagination:
                 description: pagination defines an optional pagination for the response.
@@ -42673,176 +42033,9 @@ paths:
                   properties:
                     type_url:
                       type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at
-                        least
-
-                        one "/" character. The last segment of the URL's path
-                        must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary
-                        all types that they
-
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
-
-                        used with implementation specific semantics.
                     value:
                       type: string
                       format: byte
-                      description: >-
-                        Must be a valid serialized protocol buffer of the above
-                        specified type.
-                  description: >-
-                    `Any` contains an arbitrary serialized protocol buffer
-                    message along with a
-
-                    URL that describes the type of the serialized message.
-
-
-                    Protobuf library provides support to pack/unpack Any values
-                    in the form
-
-                    of utility functions or additional generated methods of the
-                    Any type.
-
-
-                    Example 1: Pack and unpack a message in C++.
-
-                        Foo foo = ...;
-                        Any any;
-                        any.PackFrom(foo);
-                        ...
-                        if (any.UnpackTo(&foo)) {
-                          ...
-                        }
-
-                    Example 2: Pack and unpack a message in Java.
-
-                        Foo foo = ...;
-                        Any any = Any.pack(foo);
-                        ...
-                        if (any.is(Foo.class)) {
-                          foo = any.unpack(Foo.class);
-                        }
-
-                     Example 3: Pack and unpack a message in Python.
-
-                        foo = Foo(...)
-                        any = Any()
-                        any.Pack(foo)
-                        ...
-                        if any.Is(Foo.DESCRIPTOR):
-                          any.Unpack(foo)
-                          ...
-
-                     Example 4: Pack and unpack a message in Go
-
-                         foo := &pb.Foo{...}
-                         any, err := ptypes.MarshalAny(foo)
-                         ...
-                         foo := &pb.Foo{}
-                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
-                           ...
-                         }
-
-                    The pack methods provided by protobuf library will by
-                    default use
-
-                    'type.googleapis.com/full.type.name' as the type URL and the
-                    unpack
-
-                    methods only use the fully qualified type name after the
-                    last '/'
-
-                    in the type URL, for example "foo.bar.com/x/y.z" will yield
-                    type
-
-                    name "y.z".
-
-
-
-                    JSON
-
-                    ====
-
-                    The JSON representation of an `Any` value uses the regular
-
-                    representation of the deserialized, embedded message, with
-                    an
-
-                    additional field `@type` which contains the type URL.
-                    Example:
-
-                        package google.profile;
-                        message Person {
-                          string first_name = 1;
-                          string last_name = 2;
-                        }
-
-                        {
-                          "@type": "type.googleapis.com/google.profile.Person",
-                          "firstName": <string>,
-                          "lastName": <string>
-                        }
-
-                    If the embedded message type is well-known and has a custom
-                    JSON
-
-                    representation, that representation will be embedded adding
-                    a field
-
-                    `value` which holds the custom JSON in addition to the
-                    `@type`
-
-                    field. Example (for message [google.protobuf.Duration][]):
-
-                        {
-                          "@type": "type.googleapis.com/google.protobuf.Duration",
-                          "value": "1.212s"
-                        }
       parameters:
         - name: pagination.key
           description: |-
@@ -42922,7 +42115,7 @@ paths:
                   claim_period_id:
                     type: string
                     format: uint64
-                    description: The id of the claim period that this reward belongs to.
+                    description: The claim period id.
                   reward_program_id:
                     type: string
                     format: uint64
@@ -42936,7 +42129,7 @@ paths:
                       amount:
                         type: string
                   rewards_pool:
-                    description: The allocated rewards for this claim period.
+                    description: The final allocated rewards for this claim period.
                     type: object
                     properties:
                       denom:
@@ -42954,7 +42147,7 @@ paths:
                       A flag representing if the claim period for this reward
                       has ended.
                 description: >-
-                  ClaimPeriodRewardDistribution, this will updated at the end of
+                  ClaimPeriodRewardDistribution, this is updated at the end of
                   every claim period.
             title: >-
               QueryClaimPeriodRewardDistributionsByIDResponse returns the
@@ -42978,176 +42171,9 @@ paths:
                   properties:
                     type_url:
                       type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at
-                        least
-
-                        one "/" character. The last segment of the URL's path
-                        must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary
-                        all types that they
-
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
-
-                        used with implementation specific semantics.
                     value:
                       type: string
                       format: byte
-                      description: >-
-                        Must be a valid serialized protocol buffer of the above
-                        specified type.
-                  description: >-
-                    `Any` contains an arbitrary serialized protocol buffer
-                    message along with a
-
-                    URL that describes the type of the serialized message.
-
-
-                    Protobuf library provides support to pack/unpack Any values
-                    in the form
-
-                    of utility functions or additional generated methods of the
-                    Any type.
-
-
-                    Example 1: Pack and unpack a message in C++.
-
-                        Foo foo = ...;
-                        Any any;
-                        any.PackFrom(foo);
-                        ...
-                        if (any.UnpackTo(&foo)) {
-                          ...
-                        }
-
-                    Example 2: Pack and unpack a message in Java.
-
-                        Foo foo = ...;
-                        Any any = Any.pack(foo);
-                        ...
-                        if (any.is(Foo.class)) {
-                          foo = any.unpack(Foo.class);
-                        }
-
-                     Example 3: Pack and unpack a message in Python.
-
-                        foo = Foo(...)
-                        any = Any()
-                        any.Pack(foo)
-                        ...
-                        if any.Is(Foo.DESCRIPTOR):
-                          any.Unpack(foo)
-                          ...
-
-                     Example 4: Pack and unpack a message in Go
-
-                         foo := &pb.Foo{...}
-                         any, err := ptypes.MarshalAny(foo)
-                         ...
-                         foo := &pb.Foo{}
-                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
-                           ...
-                         }
-
-                    The pack methods provided by protobuf library will by
-                    default use
-
-                    'type.googleapis.com/full.type.name' as the type URL and the
-                    unpack
-
-                    methods only use the fully qualified type name after the
-                    last '/'
-
-                    in the type URL, for example "foo.bar.com/x/y.z" will yield
-                    type
-
-                    name "y.z".
-
-
-
-                    JSON
-
-                    ====
-
-                    The JSON representation of an `Any` value uses the regular
-
-                    representation of the deserialized, embedded message, with
-                    an
-
-                    additional field `@type` which contains the type URL.
-                    Example:
-
-                        package google.profile;
-                        message Person {
-                          string first_name = 1;
-                          string last_name = 2;
-                        }
-
-                        {
-                          "@type": "type.googleapis.com/google.profile.Person",
-                          "firstName": <string>,
-                          "lastName": <string>
-                        }
-
-                    If the embedded message type is well-known and has a custom
-                    JSON
-
-                    representation, that representation will be embedded adding
-                    a field
-
-                    `value` which holds the custom JSON in addition to the
-                    `@type`
-
-                    field. Example (for message [google.protobuf.Duration][]):
-
-                        {
-                          "@type": "type.googleapis.com/google.protobuf.Duration",
-                          "value": "1.212s"
-                        }
       parameters:
         - name: reward_id
           description: >-
@@ -43170,8 +42196,8 @@ paths:
   '/provenance/rewards/v1/reward_claims/{address}':
     get:
       summary: >-
-        RewardDistributionsByAddress returns a list of reward claims
-        belonging to the account and matching the claim
+        RewardDistributionsByAddress returns a list of reward claims belonging
+        to the account and matching the claim
 
         status.
       operationId: RewardDistributionsByAddress
@@ -43207,11 +42233,13 @@ paths:
                       description: The status of the claim.
                       type: string
                       enum:
-                        - UNCLAIMABLE
-                        - CLAIMABLE
-                        - CLAIMED
-                        - EXPIRED
-                      default: UNCLAIMABLE
+                        - CLAIM_STATUS_UNSPECIFIED
+                        - CLAIM_STATUS_UNCLAIMABLE
+                        - CLAIM_STATUS_CLAIMABLE
+                        - CLAIM_STATUS_CLAIMED
+                        - CLAIM_STATUS_EXPIRED
+                      default: CLAIM_STATUS_UNSPECIFIED
+                      title: ClaimStatus is the state a claim is in
                     claim_id:
                       type: string
                       format: uint64
@@ -43239,8 +42267,8 @@ paths:
 
                       was set, its value is undefined otherwise
             description: >-
-              QueryRewardDistributionsByAddressResponse returns the reward claims for an
-              address that match the claim_status.
+              QueryRewardDistributionsByAddressResponse returns the reward
+              claims for an address that match the claim_status.
         default:
           description: An unexpected error response
           schema:
@@ -43260,176 +42288,9 @@ paths:
                   properties:
                     type_url:
                       type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at
-                        least
-
-                        one "/" character. The last segment of the URL's path
-                        must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary
-                        all types that they
-
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
-
-                        used with implementation specific semantics.
                     value:
                       type: string
                       format: byte
-                      description: >-
-                        Must be a valid serialized protocol buffer of the above
-                        specified type.
-                  description: >-
-                    `Any` contains an arbitrary serialized protocol buffer
-                    message along with a
-
-                    URL that describes the type of the serialized message.
-
-
-                    Protobuf library provides support to pack/unpack Any values
-                    in the form
-
-                    of utility functions or additional generated methods of the
-                    Any type.
-
-
-                    Example 1: Pack and unpack a message in C++.
-
-                        Foo foo = ...;
-                        Any any;
-                        any.PackFrom(foo);
-                        ...
-                        if (any.UnpackTo(&foo)) {
-                          ...
-                        }
-
-                    Example 2: Pack and unpack a message in Java.
-
-                        Foo foo = ...;
-                        Any any = Any.pack(foo);
-                        ...
-                        if (any.is(Foo.class)) {
-                          foo = any.unpack(Foo.class);
-                        }
-
-                     Example 3: Pack and unpack a message in Python.
-
-                        foo = Foo(...)
-                        any = Any()
-                        any.Pack(foo)
-                        ...
-                        if any.Is(Foo.DESCRIPTOR):
-                          any.Unpack(foo)
-                          ...
-
-                     Example 4: Pack and unpack a message in Go
-
-                         foo := &pb.Foo{...}
-                         any, err := ptypes.MarshalAny(foo)
-                         ...
-                         foo := &pb.Foo{}
-                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
-                           ...
-                         }
-
-                    The pack methods provided by protobuf library will by
-                    default use
-
-                    'type.googleapis.com/full.type.name' as the type URL and the
-                    unpack
-
-                    methods only use the fully qualified type name after the
-                    last '/'
-
-                    in the type URL, for example "foo.bar.com/x/y.z" will yield
-                    type
-
-                    name "y.z".
-
-
-
-                    JSON
-
-                    ====
-
-                    The JSON representation of an `Any` value uses the regular
-
-                    representation of the deserialized, embedded message, with
-                    an
-
-                    additional field `@type` which contains the type URL.
-                    Example:
-
-                        package google.profile;
-                        message Person {
-                          string first_name = 1;
-                          string last_name = 2;
-                        }
-
-                        {
-                          "@type": "type.googleapis.com/google.profile.Person",
-                          "firstName": <string>,
-                          "lastName": <string>
-                        }
-
-                    If the embedded message type is well-known and has a custom
-                    JSON
-
-                    representation, that representation will be embedded adding
-                    a field
-
-                    `value` which holds the custom JSON in addition to the
-                    `@type`
-
-                    field. Example (for message [google.protobuf.Duration][]):
-
-                        {
-                          "@type": "type.googleapis.com/google.protobuf.Duration",
-                          "value": "1.212s"
-                        }
       parameters:
         - name: address
           description: The address that the claim belongs to.
@@ -43437,17 +42298,24 @@ paths:
           required: true
           type: string
         - name: claim_status
-          description: The status that the reward account must have.
+          description: |-
+            The status that the reward account must have.
+
+             - CLAIM_STATUS_UNSPECIFIED: undefined state
+             - CLAIM_STATUS_UNCLAIMABLE: unclaimable status
+             - CLAIM_STATUS_CLAIMABLE: unclaimable claimable
+             - CLAIM_STATUS_CLAIMED: unclaimable claimed
+             - CLAIM_STATUS_EXPIRED: unclaimable expired
           in: query
           required: false
           type: string
           enum:
-            - ALL
-            - UNCLAIMABLE
-            - CLAIMABLE
-            - CLAIMED
-            - EXPIRED
-          default: ALL
+            - CLAIM_STATUS_UNSPECIFIED
+            - CLAIM_STATUS_UNCLAIMABLE
+            - CLAIM_STATUS_CLAIMABLE
+            - CLAIM_STATUS_CLAIMED
+            - CLAIM_STATUS_EXPIRED
+          default: CLAIM_STATUS_UNSPECIFIED
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -43531,13 +42399,17 @@ paths:
                       description: An integer to uniquely identify the reward program.
                     title:
                       type: string
-                      description: Name to help identify the Reward Program.
+                      title: >-
+                        Name to help identify the Reward
+                        Program.(MaxTitleLength=140)
                     description:
                       type: string
-                      description: Short summary describing the Reward Program.
+                      title: >-
+                        Short summary describing the Reward
+                        Program.(MaxDescriptionLength=10000)
                     distribute_from_address:
                       type: string
-                      description: Community pool for now (who provides the money).
+                      description: address that provides funds for the total reward pool.
                     total_reward_pool:
                       description: The total amount of funding given to the RewardProgram.
                       type: object
@@ -43547,7 +42419,9 @@ paths:
                         amount:
                           type: string
                     remaining_pool_balance:
-                      description: The remaining funds available to distribute.
+                      description: >-
+                        The remaining funds available to distribute after n
+                        claim periods have passed.
                       type: object
                       properties:
                         denom:
@@ -43555,7 +42429,9 @@ paths:
                         amount:
                           type: string
                     claimed_amount:
-                      description: The total amount of funds claimed by participants.
+                      description: >-
+                        The total amount of all funds claimed by participants
+                        for all past claim periods.
                       type: object
                       properties:
                         denom:
@@ -43563,7 +42439,7 @@ paths:
                         amount:
                           type: string
                     max_reward_by_address:
-                      description: Maximum reward per claim per address.
+                      description: Maximum reward per claim period per address.
                       type: object
                       properties:
                         denom:
@@ -43591,7 +42467,9 @@ paths:
                     expected_program_end_time:
                       type: string
                       format: date-time
-                      description: Time that a RewardProgram MUST end.
+                      description: >-
+                        Time that a RewardProgram is expected to end, based on
+                        data when it was setup.
                     program_end_time_max:
                       type: string
                       format: date-time
@@ -43628,11 +42506,13 @@ paths:
                       description: Current state of the RewardProgram.
                       type: string
                       enum:
-                        - PENDING
-                        - STARTED
-                        - FINISHED
-                        - EXPIRED
-                      default: PENDING
+                        - STATE_UNSPECIFIED
+                        - STATE_PENDING
+                        - STATE_STARTED
+                        - STATE_FINISHED
+                        - STATE_EXPIRED
+                      default: STATE_UNSPECIFIED
+                      title: State is the state of the reward program
                     expiration_offset:
                       type: string
                       format: uint64
@@ -43697,15 +42577,16 @@ paths:
                               minimum_actions:
                                 type: string
                                 format: uint64
-                                description: Minimum number of successful delegates.
+                                description: Minimum number of successful transfers.
                               maximum_actions:
                                 type: string
                                 format: uint64
-                                description: Maximum number of successful delegates.
+                                description: Maximum number of successful transfers.
                               minimum_delegation_amount:
                                 description: >-
                                   Minimum delegation amount the account must
-                                  have across all validators.
+                                  have across all validators, for the transfer
+                                  action to be counted.
                                 type: object
                                 properties:
                                   denom:
@@ -43721,15 +42602,16 @@ paths:
                               minimum_actions:
                                 type: string
                                 format: uint64
-                                description: Minimum number of successful delegates.
+                                description: Minimum number of successful votes.
                               maximum_actions:
                                 type: string
                                 format: uint64
-                                description: Maximum number of successful delegates.
+                                description: Maximum number of successful votes.
                               minimum_delegation_amount:
                                 description: >-
                                   Minimum delegation amount the account must
-                                  have across all validators.
+                                  have across all validators, for the vote
+                                  action to be counted.
                                 type: object
                                 properties:
                                   denom:
@@ -43737,12 +42619,30 @@ paths:
                                   amount:
                                     type: string
                             description: >-
-                              ActionTransfer represents the voting action and
-                              its required eligibility criteria.
+                              ActionVote represents the voting action and its
+                              required eligibility criteria.
                         description: QualifyingAction can be one of many action types.
                       description: Actions that count towards the reward.
                   title: RewardProgram
                 description: List of RewardProgram objects matching the query_type.
+              pagination:
+                description: pagination defines an optional pagination for the response.
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
             title: >-
               QueryRewardProgramsResponse contains the list of RewardPrograms
               matching the query
@@ -43765,189 +42665,89 @@ paths:
                   properties:
                     type_url:
                       type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at
-                        least
-
-                        one "/" character. The last segment of the URL's path
-                        must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary
-                        all types that they
-
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
-
-                        used with implementation specific semantics.
                     value:
                       type: string
                       format: byte
-                      description: >-
-                        Must be a valid serialized protocol buffer of the above
-                        specified type.
-                  description: >-
-                    `Any` contains an arbitrary serialized protocol buffer
-                    message along with a
-
-                    URL that describes the type of the serialized message.
-
-
-                    Protobuf library provides support to pack/unpack Any values
-                    in the form
-
-                    of utility functions or additional generated methods of the
-                    Any type.
-
-
-                    Example 1: Pack and unpack a message in C++.
-
-                        Foo foo = ...;
-                        Any any;
-                        any.PackFrom(foo);
-                        ...
-                        if (any.UnpackTo(&foo)) {
-                          ...
-                        }
-
-                    Example 2: Pack and unpack a message in Java.
-
-                        Foo foo = ...;
-                        Any any = Any.pack(foo);
-                        ...
-                        if (any.is(Foo.class)) {
-                          foo = any.unpack(Foo.class);
-                        }
-
-                     Example 3: Pack and unpack a message in Python.
-
-                        foo = Foo(...)
-                        any = Any()
-                        any.Pack(foo)
-                        ...
-                        if any.Is(Foo.DESCRIPTOR):
-                          any.Unpack(foo)
-                          ...
-
-                     Example 4: Pack and unpack a message in Go
-
-                         foo := &pb.Foo{...}
-                         any, err := ptypes.MarshalAny(foo)
-                         ...
-                         foo := &pb.Foo{}
-                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
-                           ...
-                         }
-
-                    The pack methods provided by protobuf library will by
-                    default use
-
-                    'type.googleapis.com/full.type.name' as the type URL and the
-                    unpack
-
-                    methods only use the fully qualified type name after the
-                    last '/'
-
-                    in the type URL, for example "foo.bar.com/x/y.z" will yield
-                    type
-
-                    name "y.z".
-
-
-
-                    JSON
-
-                    ====
-
-                    The JSON representation of an `Any` value uses the regular
-
-                    representation of the deserialized, embedded message, with
-                    an
-
-                    additional field `@type` which contains the type URL.
-                    Example:
-
-                        package google.profile;
-                        message Person {
-                          string first_name = 1;
-                          string last_name = 2;
-                        }
-
-                        {
-                          "@type": "type.googleapis.com/google.profile.Person",
-                          "firstName": <string>,
-                          "lastName": <string>
-                        }
-
-                    If the embedded message type is well-known and has a custom
-                    JSON
-
-                    representation, that representation will be embedded adding
-                    a field
-
-                    `value` which holds the custom JSON in addition to the
-                    `@type`
-
-                    field. Example (for message [google.protobuf.Duration][]):
-
-                        {
-                          "@type": "type.googleapis.com/google.protobuf.Duration",
-                          "value": "1.212s"
-                        }
       parameters:
         - name: query_type
-          description: A filter on the types of reward programs.
+          description: |-
+            A filter on the types of reward programs.
+
+             - QUERY_TYPE_UNSPECIFIED: unspecified type
+             - QUERY_TYPE_ALL: all reward programs states
+             - QUERY_TYPE_PENDING: pending reward program state=
+             - QUERY_TYPE_ACTIVE: active reward program state
+             - QUERY_TYPE_OUTSTANDING: pending and active reward program states
+             - QUERY_TYPE_FINISHED: finished reward program state
           in: query
           required: false
           type: string
           enum:
-            - ALL
-            - PENDING
-            - ACTIVE
-            - OUTSTANDING
-            - FINISHED
-          default: ALL
+            - QUERY_TYPE_UNSPECIFIED
+            - QUERY_TYPE_ALL
+            - QUERY_TYPE_PENDING
+            - QUERY_TYPE_ACTIVE
+            - QUERY_TYPE_OUTSTANDING
+            - QUERY_TYPE_FINISHED
+          default: QUERY_TYPE_UNSPECIFIED
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/rewards/v1/reward_programs/{id}':
@@ -43969,13 +42769,17 @@ paths:
                     description: An integer to uniquely identify the reward program.
                   title:
                     type: string
-                    description: Name to help identify the Reward Program.
+                    title: >-
+                      Name to help identify the Reward
+                      Program.(MaxTitleLength=140)
                   description:
                     type: string
-                    description: Short summary describing the Reward Program.
+                    title: >-
+                      Short summary describing the Reward
+                      Program.(MaxDescriptionLength=10000)
                   distribute_from_address:
                     type: string
-                    description: Community pool for now (who provides the money).
+                    description: address that provides funds for the total reward pool.
                   total_reward_pool:
                     description: The total amount of funding given to the RewardProgram.
                     type: object
@@ -43985,7 +42789,9 @@ paths:
                       amount:
                         type: string
                   remaining_pool_balance:
-                    description: The remaining funds available to distribute.
+                    description: >-
+                      The remaining funds available to distribute after n claim
+                      periods have passed.
                     type: object
                     properties:
                       denom:
@@ -43993,7 +42799,9 @@ paths:
                       amount:
                         type: string
                   claimed_amount:
-                    description: The total amount of funds claimed by participants.
+                    description: >-
+                      The total amount of all funds claimed by participants for
+                      all past claim periods.
                     type: object
                     properties:
                       denom:
@@ -44001,7 +42809,7 @@ paths:
                       amount:
                         type: string
                   max_reward_by_address:
-                    description: Maximum reward per claim per address.
+                    description: Maximum reward per claim period per address.
                     type: object
                     properties:
                       denom:
@@ -44029,7 +42837,9 @@ paths:
                   expected_program_end_time:
                     type: string
                     format: date-time
-                    description: Time that a RewardProgram MUST end.
+                    description: >-
+                      Time that a RewardProgram is expected to end, based on
+                      data when it was setup.
                   program_end_time_max:
                     type: string
                     format: date-time
@@ -44066,11 +42876,13 @@ paths:
                     description: Current state of the RewardProgram.
                     type: string
                     enum:
-                      - PENDING
-                      - STARTED
-                      - FINISHED
-                      - EXPIRED
-                    default: PENDING
+                      - STATE_UNSPECIFIED
+                      - STATE_PENDING
+                      - STATE_STARTED
+                      - STATE_FINISHED
+                      - STATE_EXPIRED
+                    default: STATE_UNSPECIFIED
+                    title: State is the state of the reward program
                   expiration_offset:
                     type: string
                     format: uint64
@@ -44134,15 +42946,16 @@ paths:
                             minimum_actions:
                               type: string
                               format: uint64
-                              description: Minimum number of successful delegates.
+                              description: Minimum number of successful transfers.
                             maximum_actions:
                               type: string
                               format: uint64
-                              description: Maximum number of successful delegates.
+                              description: Maximum number of successful transfers.
                             minimum_delegation_amount:
                               description: >-
                                 Minimum delegation amount the account must have
-                                across all validators.
+                                across all validators, for the transfer action
+                                to be counted.
                               type: object
                               properties:
                                 denom:
@@ -44158,15 +42971,16 @@ paths:
                             minimum_actions:
                               type: string
                               format: uint64
-                              description: Minimum number of successful delegates.
+                              description: Minimum number of successful votes.
                             maximum_actions:
                               type: string
                               format: uint64
-                              description: Maximum number of successful delegates.
+                              description: Maximum number of successful votes.
                             minimum_delegation_amount:
                               description: >-
                                 Minimum delegation amount the account must have
-                                across all validators.
+                                across all validators, for the vote action to be
+                                counted.
                               type: object
                               properties:
                                 denom:
@@ -44174,7 +42988,7 @@ paths:
                                 amount:
                                   type: string
                           description: >-
-                            ActionTransfer represents the voting action and its
+                            ActionVote represents the voting action and its
                             required eligibility criteria.
                       description: QualifyingAction can be one of many action types.
                     description: Actions that count towards the reward.
@@ -44202,176 +43016,9 @@ paths:
                   properties:
                     type_url:
                       type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at
-                        least
-
-                        one "/" character. The last segment of the URL's path
-                        must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary
-                        all types that they
-
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
-
-                        used with implementation specific semantics.
                     value:
                       type: string
                       format: byte
-                      description: >-
-                        Must be a valid serialized protocol buffer of the above
-                        specified type.
-                  description: >-
-                    `Any` contains an arbitrary serialized protocol buffer
-                    message along with a
-
-                    URL that describes the type of the serialized message.
-
-
-                    Protobuf library provides support to pack/unpack Any values
-                    in the form
-
-                    of utility functions or additional generated methods of the
-                    Any type.
-
-
-                    Example 1: Pack and unpack a message in C++.
-
-                        Foo foo = ...;
-                        Any any;
-                        any.PackFrom(foo);
-                        ...
-                        if (any.UnpackTo(&foo)) {
-                          ...
-                        }
-
-                    Example 2: Pack and unpack a message in Java.
-
-                        Foo foo = ...;
-                        Any any = Any.pack(foo);
-                        ...
-                        if (any.is(Foo.class)) {
-                          foo = any.unpack(Foo.class);
-                        }
-
-                     Example 3: Pack and unpack a message in Python.
-
-                        foo = Foo(...)
-                        any = Any()
-                        any.Pack(foo)
-                        ...
-                        if any.Is(Foo.DESCRIPTOR):
-                          any.Unpack(foo)
-                          ...
-
-                     Example 4: Pack and unpack a message in Go
-
-                         foo := &pb.Foo{...}
-                         any, err := ptypes.MarshalAny(foo)
-                         ...
-                         foo := &pb.Foo{}
-                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
-                           ...
-                         }
-
-                    The pack methods provided by protobuf library will by
-                    default use
-
-                    'type.googleapis.com/full.type.name' as the type URL and the
-                    unpack
-
-                    methods only use the fully qualified type name after the
-                    last '/'
-
-                    in the type URL, for example "foo.bar.com/x/y.z" will yield
-                    type
-
-                    name "y.z".
-
-
-
-                    JSON
-
-                    ====
-
-                    The JSON representation of an `Any` value uses the regular
-
-                    representation of the deserialized, embedded message, with
-                    an
-
-                    additional field `@type` which contains the type URL.
-                    Example:
-
-                        package google.profile;
-                        message Person {
-                          string first_name = 1;
-                          string last_name = 2;
-                        }
-
-                        {
-                          "@type": "type.googleapis.com/google.profile.Person",
-                          "firstName": <string>,
-                          "lastName": <string>
-                        }
-
-                    If the embedded message type is well-known and has a custom
-                    JSON
-
-                    representation, that representation will be embedded adding
-                    a field
-
-                    `value` which holds the custom JSON in addition to the
-                    `@type`
-
-                    field. Example (for message [google.protobuf.Duration][]):
-
-                        {
-                          "@type": "type.googleapis.com/google.protobuf.Duration",
-                          "value": "1.212s"
-                        }
       parameters:
         - name: id
           description: The id of the reward program to query.
@@ -74140,11 +72787,11 @@ definitions:
       minimum_actions:
         type: string
         format: uint64
-        description: Minimum number of successful delegates.
+        description: Minimum number of successful transfers.
       maximum_actions:
         type: string
         format: uint64
-        description: Maximum number of successful delegates.
+        description: Maximum number of successful transfers.
       minimum_delegation_amount:
         type: object
         properties:
@@ -74166,11 +72813,11 @@ definitions:
       minimum_actions:
         type: string
         format: uint64
-        description: Minimum number of successful delegates.
+        description: Minimum number of successful votes.
       maximum_actions:
         type: string
         format: uint64
-        description: Maximum number of successful delegates.
+        description: Maximum number of successful votes.
       minimum_delegation_amount:
         type: object
         properties:
@@ -74184,7 +72831,7 @@ definitions:
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
     description: >-
-      ActionTransfer represents the voting action and its required eligibility
+      ActionVote represents the voting action and its required eligibility
       criteria.
   provenance.reward.v1.ClaimedRewardPeriodDetail:
     type: object
@@ -74192,9 +72839,11 @@ definitions:
       claim_period_id:
         type: string
         format: uint64
+        title: claim period id
       total_shares:
         type: string
         format: uint64
+        title: total shares accumulated for claim period
       claim_period_reward:
         type: object
         properties:
@@ -74207,6 +72856,7 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
+        title: total rewards for claim period
     description: >-
       ClaimedRewardPeriodDetail is information regarding an addresses' shares
       and reward for a claim period.
@@ -74214,13 +72864,20 @@ definitions:
     type: object
     properties:
       total_reward_claim:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
         description: total rewards claimed for all eligible claim periods in all programs.
-        type: object
-        properties:
-          denom:
-            type: string
-          amount:
-            type: string
       claim_details:
         type: array
         items:
@@ -74231,13 +72888,20 @@ definitions:
               format: uint64
               description: reward program id.
             total_reward_claim:
-              description: total rewards claimed for all eligible claim periods in program.
               type: object
               properties:
                 denom:
                   type: string
                 amount:
                   type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
             claimed_reward_period_details:
               type: array
               items:
@@ -74246,9 +72910,11 @@ definitions:
                   claim_period_id:
                     type: string
                     format: uint64
+                    title: claim period id
                   total_shares:
                     type: string
                     format: uint64
+                    title: total shares accumulated for claim period
                   claim_period_reward:
                     type: object
                     properties:
@@ -74264,18 +72930,19 @@ definitions:
                       custom method
 
                       signatures required by gogoproto.
+                    title: total rewards for claim period
                 description: >-
                   ClaimedRewardPeriodDetail is information regarding an
                   addresses' shares and reward for a claim period.
               description: claim period details.
           description: >-
-            RewardProgramClaimDetail is information regarding an addresses'
-            shares and reward for a reward program.
+            RewardProgramClaimDetail is the response object regarding an
+            address's shares and reward for a reward program.
         description: details about acquired rewards from a reward program.
     title: >-
-      MsgClaimRewardResponse is the response type for claiming rewards from all
+      MsgClaimRewardsResponse is the response type for claiming rewards from all
       reward programs RPC
-  provenance.reward.v1.MsgClaimRewardResponse:
+  provenance.reward.v1.MsgClaimRewardsResponse:
     type: object
     properties:
       claim_details:
@@ -74286,13 +72953,20 @@ definitions:
             format: uint64
             description: reward program id.
           total_reward_claim:
-            description: total rewards claimed for all eligible claim periods in program.
             type: object
             properties:
               denom:
                 type: string
               amount:
                 type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
           claimed_reward_period_details:
             type: array
             items:
@@ -74301,9 +72975,11 @@ definitions:
                 claim_period_id:
                   type: string
                   format: uint64
+                  title: claim period id
                 total_shares:
                   type: string
                   format: uint64
+                  title: total shares accumulated for claim period
                 claim_period_reward:
                   type: object
                   properties:
@@ -74319,15 +72995,16 @@ definitions:
                     method
 
                     signatures required by gogoproto.
+                  title: total rewards for claim period
               description: >-
                 ClaimedRewardPeriodDetail is information regarding an addresses'
                 shares and reward for a claim period.
             description: claim period details.
         description: >-
-          RewardProgramClaimDetail is information regarding an addresses' shares
-          and reward for a reward program.
+          RewardProgramClaimDetail is the response object regarding an address's
+          shares and reward for a reward program.
     title: >-
-      MsgClaimRewardResponse is the response type for claiming reward from
+      MsgClaimRewardsResponse is the response type for claiming reward from
       reward program RPC
   provenance.reward.v1.MsgCreateRewardProgramResponse:
     type: object
@@ -74407,11 +73084,11 @@ definitions:
           minimum_actions:
             type: string
             format: uint64
-            description: Minimum number of successful delegates.
+            description: Minimum number of successful transfers.
           maximum_actions:
             type: string
             format: uint64
-            description: Maximum number of successful delegates.
+            description: Maximum number of successful transfers.
           minimum_delegation_amount:
             type: object
             properties:
@@ -74436,11 +73113,11 @@ definitions:
           minimum_actions:
             type: string
             format: uint64
-            description: Minimum number of successful delegates.
+            description: Minimum number of successful votes.
           maximum_actions:
             type: string
             format: uint64
-            description: Maximum number of successful delegates.
+            description: Maximum number of successful votes.
           minimum_delegation_amount:
             type: object
             properties:
@@ -74457,8 +73134,8 @@ definitions:
 
               signatures required by gogoproto.
         description: >-
-          ActionTransfer represents the voting action and its required
-          eligibility criteria.
+          ActionVote represents the voting action and its required eligibility
+          criteria.
     description: QualifyingAction can be one of many action types.
   provenance.reward.v1.RewardProgramClaimDetail:
     type: object
@@ -74468,13 +73145,17 @@ definitions:
         format: uint64
         description: reward program id.
       total_reward_claim:
-        description: total rewards claimed for all eligible claim periods in program.
         type: object
         properties:
           denom:
             type: string
           amount:
             type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
       claimed_reward_period_details:
         type: array
         items:
@@ -74483,9 +73164,11 @@ definitions:
             claim_period_id:
               type: string
               format: uint64
+              title: claim period id
             total_shares:
               type: string
               format: uint64
+              title: total shares accumulated for claim period
             claim_period_reward:
               type: object
               properties:
@@ -74501,20 +73184,21 @@ definitions:
                 method
 
                 signatures required by gogoproto.
+              title: total rewards for claim period
           description: >-
             ClaimedRewardPeriodDetail is information regarding an addresses'
             shares and reward for a claim period.
         description: claim period details.
     description: >-
-      RewardProgramClaimDetail is information regarding an addresses' shares and
-      reward for a reward program.
+      RewardProgramClaimDetail is the response object regarding an address's
+      shares and reward for a reward program.
   provenance.reward.v1.ClaimPeriodRewardDistribution:
     type: object
     properties:
       claim_period_id:
         type: string
         format: uint64
-        description: The id of the claim period that this reward belongs to.
+        description: The claim period id.
       reward_program_id:
         type: string
         format: uint64
@@ -74528,7 +73212,7 @@ definitions:
           amount:
             type: string
       rewards_pool:
-        description: The allocated rewards for this claim period.
+        description: The final allocated rewards for this claim period.
         type: object
         properties:
           denom:
@@ -74544,8 +73228,119 @@ definitions:
         format: boolean
         description: A flag representing if the claim period for this reward has ended.
     description: >-
-      ClaimPeriodRewardDistribution, this will updated at the end of every claim
+      ClaimPeriodRewardDistribution, this is updated at the end of every claim
       period.
+  provenance.reward.v1.QueryClaimPeriodRewardDistributionsByIDResponse:
+    type: object
+    properties:
+      claim_period_reward_distribution:
+        type: object
+        properties:
+          claim_period_id:
+            type: string
+            format: uint64
+            description: The claim period id.
+          reward_program_id:
+            type: string
+            format: uint64
+            description: The id of the reward program that this reward belongs to.
+          total_rewards_pool_for_claim_period:
+            description: The sum of all the granted rewards for this claim period.
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+          rewards_pool:
+            description: The final allocated rewards for this claim period.
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+          total_shares:
+            type: string
+            format: int64
+            description: The total number of granted shares for this claim period.
+          claim_period_ended:
+            type: boolean
+            format: boolean
+            description: A flag representing if the claim period for this reward has ended.
+        description: >-
+          ClaimPeriodRewardDistribution, this is updated at the end of every
+          claim period.
+    title: >-
+      QueryClaimPeriodRewardDistributionsByIDResponse returns the requested
+      ClaimPeriodRewardDistribution
+  provenance.reward.v1.QueryClaimPeriodRewardDistributionsResponse:
+    type: object
+    properties:
+      claim_period_reward_distributions:
+        type: array
+        items:
+          type: object
+          properties:
+            claim_period_id:
+              type: string
+              format: uint64
+              description: The claim period id.
+            reward_program_id:
+              type: string
+              format: uint64
+              description: The id of the reward program that this reward belongs to.
+            total_rewards_pool_for_claim_period:
+              description: The sum of all the granted rewards for this claim period.
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+            rewards_pool:
+              description: The final allocated rewards for this claim period.
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+            total_shares:
+              type: string
+              format: int64
+              description: The total number of granted shares for this claim period.
+            claim_period_ended:
+              type: boolean
+              format: boolean
+              description: >-
+                A flag representing if the claim period for this reward has
+                ended.
+          description: >-
+            ClaimPeriodRewardDistribution, this is updated at the end of every
+            claim period.
+        description: List of all ClaimPeriodRewardDistribution objects queried for.
+      pagination:
+        description: pagination defines an optional pagination for the response.
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+    title: >-
+      QueryClaimPeriodRewardDistributionsResponse returns the list of paginated
+      ClaimPeriodRewardDistributions
   provenance.reward.v1.QueryRewardDistributionsByAddressResponse:
     type: object
     properties:
@@ -74573,11 +73368,13 @@ definitions:
               description: The status of the claim.
               type: string
               enum:
-                - UNCLAIMABLE
-                - CLAIMABLE
-                - CLAIMED
-                - EXPIRED
-              default: UNCLAIMABLE
+                - CLAIM_STATUS_UNSPECIFIED
+                - CLAIM_STATUS_UNCLAIMABLE
+                - CLAIM_STATUS_CLAIMABLE
+                - CLAIM_STATUS_CLAIMED
+                - CLAIM_STATUS_EXPIRED
+              default: CLAIM_STATUS_UNSPECIFIED
+              title: ClaimStatus is the state a claim is in
             claim_id:
               type: string
               format: uint64
@@ -74605,119 +73402,8 @@ definitions:
 
               was set, its value is undefined otherwise
     description: >-
-      QueryRewardDistributionsByAddressResponse returns the reward claims for an address
-      that match the claim_status.
-  provenance.reward.v1.QueryClaimPeriodRewardDistributionsByIDResponse:
-    type: object
-    properties:
-      claim_period_reward_distribution:
-        type: object
-        properties:
-          claim_period_id:
-            type: string
-            format: uint64
-            description: The id of the claim period that this reward belongs to.
-          reward_program_id:
-            type: string
-            format: uint64
-            description: The id of the reward program that this reward belongs to.
-          total_rewards_pool_for_claim_period:
-            description: The sum of all the granted rewards for this claim period.
-            type: object
-            properties:
-              denom:
-                type: string
-              amount:
-                type: string
-          rewards_pool:
-            description: The allocated rewards for this claim period.
-            type: object
-            properties:
-              denom:
-                type: string
-              amount:
-                type: string
-          total_shares:
-            type: string
-            format: int64
-            description: The total number of granted shares for this claim period.
-          claim_period_ended:
-            type: boolean
-            format: boolean
-            description: A flag representing if the claim period for this reward has ended.
-        description: >-
-          ClaimPeriodRewardDistribution, this will updated at the end of every
-          claim period.
-    title: >-
-      QueryClaimPeriodRewardDistributionsByIDResponse returns the requested
-      ClaimPeriodRewardDistribution
-  provenance.reward.v1.QueryClaimPeriodRewardDistributionsResponse:
-    type: object
-    properties:
-      claim_period_reward_distributions:
-        type: array
-        items:
-          type: object
-          properties:
-            claim_period_id:
-              type: string
-              format: uint64
-              description: The id of the claim period that this reward belongs to.
-            reward_program_id:
-              type: string
-              format: uint64
-              description: The id of the reward program that this reward belongs to.
-            total_rewards_pool_for_claim_period:
-              description: The sum of all the granted rewards for this claim period.
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-            rewards_pool:
-              description: The allocated rewards for this claim period.
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-            total_shares:
-              type: string
-              format: int64
-              description: The total number of granted shares for this claim period.
-            claim_period_ended:
-              type: boolean
-              format: boolean
-              description: >-
-                A flag representing if the claim period for this reward has
-                ended.
-          description: >-
-            ClaimPeriodRewardDistribution, this will updated at the end of every
-            claim period.
-        description: List of all ClaimPeriodRewardDistribution objects queried for.
-      pagination:
-        description: pagination defines an optional pagination for the response.
-        type: object
-        properties:
-          next_key:
-            type: string
-            format: byte
-            title: |-
-              next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently
-          total:
-            type: string
-            format: uint64
-            title: >-
-              total is total number of results available if
-              PageRequest.count_total
-
-              was set, its value is undefined otherwise
-    title: >-
-      QueryClaimPeriodRewardDistributionsResponse returns the list of paginated
-      ClaimPeriodRewardDistributions
+      QueryRewardDistributionsByAddressResponse returns the reward claims for an
+      address that match the claim_status.
   provenance.reward.v1.QueryRewardProgramByIDResponse:
     type: object
     properties:
@@ -74730,13 +73416,15 @@ definitions:
             description: An integer to uniquely identify the reward program.
           title:
             type: string
-            description: Name to help identify the Reward Program.
+            title: Name to help identify the Reward Program.(MaxTitleLength=140)
           description:
             type: string
-            description: Short summary describing the Reward Program.
+            title: >-
+              Short summary describing the Reward
+              Program.(MaxDescriptionLength=10000)
           distribute_from_address:
             type: string
-            description: Community pool for now (who provides the money).
+            description: address that provides funds for the total reward pool.
           total_reward_pool:
             description: The total amount of funding given to the RewardProgram.
             type: object
@@ -74746,7 +73434,9 @@ definitions:
               amount:
                 type: string
           remaining_pool_balance:
-            description: The remaining funds available to distribute.
+            description: >-
+              The remaining funds available to distribute after n claim periods
+              have passed.
             type: object
             properties:
               denom:
@@ -74754,7 +73444,9 @@ definitions:
               amount:
                 type: string
           claimed_amount:
-            description: The total amount of funds claimed by participants.
+            description: >-
+              The total amount of all funds claimed by participants for all past
+              claim periods.
             type: object
             properties:
               denom:
@@ -74762,7 +73454,7 @@ definitions:
               amount:
                 type: string
           max_reward_by_address:
-            description: Maximum reward per claim per address.
+            description: Maximum reward per claim period per address.
             type: object
             properties:
               denom:
@@ -74790,7 +73482,9 @@ definitions:
           expected_program_end_time:
             type: string
             format: date-time
-            description: Time that a RewardProgram MUST end.
+            description: >-
+              Time that a RewardProgram is expected to end, based on data when
+              it was setup.
           program_end_time_max:
             type: string
             format: date-time
@@ -74823,11 +73517,13 @@ definitions:
             description: Current state of the RewardProgram.
             type: string
             enum:
-              - PENDING
-              - STARTED
-              - FINISHED
-              - EXPIRED
-            default: PENDING
+              - STATE_UNSPECIFIED
+              - STATE_PENDING
+              - STATE_STARTED
+              - STATE_FINISHED
+              - STATE_EXPIRED
+            default: STATE_UNSPECIFIED
+            title: State is the state of the reward program
           expiration_offset:
             type: string
             format: uint64
@@ -74891,15 +73587,15 @@ definitions:
                     minimum_actions:
                       type: string
                       format: uint64
-                      description: Minimum number of successful delegates.
+                      description: Minimum number of successful transfers.
                     maximum_actions:
                       type: string
                       format: uint64
-                      description: Maximum number of successful delegates.
+                      description: Maximum number of successful transfers.
                     minimum_delegation_amount:
                       description: >-
                         Minimum delegation amount the account must have across
-                        all validators.
+                        all validators, for the transfer action to be counted.
                       type: object
                       properties:
                         denom:
@@ -74915,15 +73611,15 @@ definitions:
                     minimum_actions:
                       type: string
                       format: uint64
-                      description: Minimum number of successful delegates.
+                      description: Minimum number of successful votes.
                     maximum_actions:
                       type: string
                       format: uint64
-                      description: Maximum number of successful delegates.
+                      description: Maximum number of successful votes.
                     minimum_delegation_amount:
                       description: >-
                         Minimum delegation amount the account must have across
-                        all validators.
+                        all validators, for the vote action to be counted.
                       type: object
                       properties:
                         denom:
@@ -74931,7 +73627,7 @@ definitions:
                         amount:
                           type: string
                   description: >-
-                    ActionTransfer represents the voting action and its required
+                    ActionVote represents the voting action and its required
                     eligibility criteria.
               description: QualifyingAction can be one of many action types.
             description: Actions that count towards the reward.
@@ -74941,12 +73637,21 @@ definitions:
   provenance.reward.v1.QueryRewardProgramsRequest.QueryType:
     type: string
     enum:
-      - ALL
-      - PENDING
-      - ACTIVE
-      - OUTSTANDING
-      - FINISHED
-    default: ALL
+      - QUERY_TYPE_UNSPECIFIED
+      - QUERY_TYPE_ALL
+      - QUERY_TYPE_PENDING
+      - QUERY_TYPE_ACTIVE
+      - QUERY_TYPE_OUTSTANDING
+      - QUERY_TYPE_FINISHED
+    default: QUERY_TYPE_UNSPECIFIED
+    description: |-
+      - QUERY_TYPE_UNSPECIFIED: unspecified type
+       - QUERY_TYPE_ALL: all reward programs states
+       - QUERY_TYPE_PENDING: pending reward program state=
+       - QUERY_TYPE_ACTIVE: active reward program state
+       - QUERY_TYPE_OUTSTANDING: pending and active reward program states
+       - QUERY_TYPE_FINISHED: finished reward program state
+    title: QueryType is the state of reward program to query
   provenance.reward.v1.QueryRewardProgramsResponse:
     type: object
     properties:
@@ -74961,13 +73666,15 @@ definitions:
               description: An integer to uniquely identify the reward program.
             title:
               type: string
-              description: Name to help identify the Reward Program.
+              title: Name to help identify the Reward Program.(MaxTitleLength=140)
             description:
               type: string
-              description: Short summary describing the Reward Program.
+              title: >-
+                Short summary describing the Reward
+                Program.(MaxDescriptionLength=10000)
             distribute_from_address:
               type: string
-              description: Community pool for now (who provides the money).
+              description: address that provides funds for the total reward pool.
             total_reward_pool:
               description: The total amount of funding given to the RewardProgram.
               type: object
@@ -74977,7 +73684,9 @@ definitions:
                 amount:
                   type: string
             remaining_pool_balance:
-              description: The remaining funds available to distribute.
+              description: >-
+                The remaining funds available to distribute after n claim
+                periods have passed.
               type: object
               properties:
                 denom:
@@ -74985,7 +73694,9 @@ definitions:
                 amount:
                   type: string
             claimed_amount:
-              description: The total amount of funds claimed by participants.
+              description: >-
+                The total amount of all funds claimed by participants for all
+                past claim periods.
               type: object
               properties:
                 denom:
@@ -74993,7 +73704,7 @@ definitions:
                 amount:
                   type: string
             max_reward_by_address:
-              description: Maximum reward per claim per address.
+              description: Maximum reward per claim period per address.
               type: object
               properties:
                 denom:
@@ -75021,7 +73732,9 @@ definitions:
             expected_program_end_time:
               type: string
               format: date-time
-              description: Time that a RewardProgram MUST end.
+              description: >-
+                Time that a RewardProgram is expected to end, based on data when
+                it was setup.
             program_end_time_max:
               type: string
               format: date-time
@@ -75056,11 +73769,13 @@ definitions:
               description: Current state of the RewardProgram.
               type: string
               enum:
-                - PENDING
-                - STARTED
-                - FINISHED
-                - EXPIRED
-              default: PENDING
+                - STATE_UNSPECIFIED
+                - STATE_PENDING
+                - STATE_STARTED
+                - STATE_FINISHED
+                - STATE_EXPIRED
+              default: STATE_UNSPECIFIED
+              title: State is the state of the reward program
             expiration_offset:
               type: string
               format: uint64
@@ -75124,15 +73839,15 @@ definitions:
                       minimum_actions:
                         type: string
                         format: uint64
-                        description: Minimum number of successful delegates.
+                        description: Minimum number of successful transfers.
                       maximum_actions:
                         type: string
                         format: uint64
-                        description: Maximum number of successful delegates.
+                        description: Maximum number of successful transfers.
                       minimum_delegation_amount:
                         description: >-
                           Minimum delegation amount the account must have across
-                          all validators.
+                          all validators, for the transfer action to be counted.
                         type: object
                         properties:
                           denom:
@@ -75148,15 +73863,15 @@ definitions:
                       minimum_actions:
                         type: string
                         format: uint64
-                        description: Minimum number of successful delegates.
+                        description: Minimum number of successful votes.
                       maximum_actions:
                         type: string
                         format: uint64
-                        description: Maximum number of successful delegates.
+                        description: Maximum number of successful votes.
                       minimum_delegation_amount:
                         description: >-
                           Minimum delegation amount the account must have across
-                          all validators.
+                          all validators, for the vote action to be counted.
                         type: object
                         properties:
                           denom:
@@ -75164,24 +73879,33 @@ definitions:
                           amount:
                             type: string
                     description: >-
-                      ActionTransfer represents the voting action and its
-                      required eligibility criteria.
+                      ActionVote represents the voting action and its required
+                      eligibility criteria.
                 description: QualifyingAction can be one of many action types.
               description: Actions that count towards the reward.
           title: RewardProgram
         description: List of RewardProgram objects matching the query_type.
+      pagination:
+        description: pagination defines an optional pagination for the response.
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
     title: >-
       QueryRewardProgramsResponse contains the list of RewardPrograms matching
       the query
-  provenance.reward.v1.QueryRewardDistributionsByAddressRequest.RewardAccountQueryParam:
-    type: string
-    enum:
-      - ALL
-      - UNCLAIMABLE
-      - CLAIMABLE
-      - CLAIMED
-      - EXPIRED
-    default: ALL
   provenance.reward.v1.RewardAccountResponse:
     type: object
     properties:
@@ -75201,11 +73925,13 @@ definitions:
         description: The status of the claim.
         type: string
         enum:
-          - UNCLAIMABLE
-          - CLAIMABLE
-          - CLAIMED
-          - EXPIRED
-        default: UNCLAIMABLE
+          - CLAIM_STATUS_UNSPECIFIED
+          - CLAIM_STATUS_UNCLAIMABLE
+          - CLAIM_STATUS_CLAIMABLE
+          - CLAIM_STATUS_CLAIMED
+          - CLAIM_STATUS_EXPIRED
+        default: CLAIM_STATUS_UNSPECIFIED
+        title: ClaimStatus is the state a claim is in
       claim_id:
         type: string
         format: uint64
@@ -75216,11 +73942,19 @@ definitions:
   provenance.reward.v1.RewardAccountState.ClaimStatus:
     type: string
     enum:
-      - UNCLAIMABLE
-      - CLAIMABLE
-      - CLAIMED
-      - EXPIRED
-    default: UNCLAIMABLE
+      - CLAIM_STATUS_UNSPECIFIED
+      - CLAIM_STATUS_UNCLAIMABLE
+      - CLAIM_STATUS_CLAIMABLE
+      - CLAIM_STATUS_CLAIMED
+      - CLAIM_STATUS_EXPIRED
+    default: CLAIM_STATUS_UNSPECIFIED
+    description: |-
+      - CLAIM_STATUS_UNSPECIFIED: undefined state
+       - CLAIM_STATUS_UNCLAIMABLE: unclaimable status
+       - CLAIM_STATUS_CLAIMABLE: unclaimable claimable
+       - CLAIM_STATUS_CLAIMED: unclaimable claimed
+       - CLAIM_STATUS_EXPIRED: unclaimable expired
+    title: ClaimStatus is the state a claim is in
   provenance.reward.v1.RewardProgram:
     type: object
     properties:
@@ -75230,13 +73964,15 @@ definitions:
         description: An integer to uniquely identify the reward program.
       title:
         type: string
-        description: Name to help identify the Reward Program.
+        title: Name to help identify the Reward Program.(MaxTitleLength=140)
       description:
         type: string
-        description: Short summary describing the Reward Program.
+        title: >-
+          Short summary describing the Reward
+          Program.(MaxDescriptionLength=10000)
       distribute_from_address:
         type: string
-        description: Community pool for now (who provides the money).
+        description: address that provides funds for the total reward pool.
       total_reward_pool:
         description: The total amount of funding given to the RewardProgram.
         type: object
@@ -75246,7 +73982,9 @@ definitions:
           amount:
             type: string
       remaining_pool_balance:
-        description: The remaining funds available to distribute.
+        description: >-
+          The remaining funds available to distribute after n claim periods have
+          passed.
         type: object
         properties:
           denom:
@@ -75254,7 +73992,9 @@ definitions:
           amount:
             type: string
       claimed_amount:
-        description: The total amount of funds claimed by participants.
+        description: >-
+          The total amount of all funds claimed by participants for all past
+          claim periods.
         type: object
         properties:
           denom:
@@ -75262,7 +74002,7 @@ definitions:
           amount:
             type: string
       max_reward_by_address:
-        description: Maximum reward per claim per address.
+        description: Maximum reward per claim period per address.
         type: object
         properties:
           denom:
@@ -75288,7 +74028,9 @@ definitions:
       expected_program_end_time:
         type: string
         format: date-time
-        description: Time that a RewardProgram MUST end.
+        description: >-
+          Time that a RewardProgram is expected to end, based on data when it
+          was setup.
       program_end_time_max:
         type: string
         format: date-time
@@ -75321,11 +74063,13 @@ definitions:
         description: Current state of the RewardProgram.
         type: string
         enum:
-          - PENDING
-          - STARTED
-          - FINISHED
-          - EXPIRED
-        default: PENDING
+          - STATE_UNSPECIFIED
+          - STATE_PENDING
+          - STATE_STARTED
+          - STATE_FINISHED
+          - STATE_EXPIRED
+        default: STATE_UNSPECIFIED
+        title: State is the state of the reward program
       expiration_offset:
         type: string
         format: uint64
@@ -75389,15 +74133,15 @@ definitions:
                 minimum_actions:
                   type: string
                   format: uint64
-                  description: Minimum number of successful delegates.
+                  description: Minimum number of successful transfers.
                 maximum_actions:
                   type: string
                   format: uint64
-                  description: Maximum number of successful delegates.
+                  description: Maximum number of successful transfers.
                 minimum_delegation_amount:
                   description: >-
                     Minimum delegation amount the account must have across all
-                    validators.
+                    validators, for the transfer action to be counted.
                   type: object
                   properties:
                     denom:
@@ -75413,15 +74157,15 @@ definitions:
                 minimum_actions:
                   type: string
                   format: uint64
-                  description: Minimum number of successful delegates.
+                  description: Minimum number of successful votes.
                 maximum_actions:
                   type: string
                   format: uint64
-                  description: Maximum number of successful delegates.
+                  description: Maximum number of successful votes.
                 minimum_delegation_amount:
                   description: >-
                     Minimum delegation amount the account must have across all
-                    validators.
+                    validators, for the vote action to be counted.
                   type: object
                   properties:
                     denom:
@@ -75429,7 +74173,7 @@ definitions:
                     amount:
                       type: string
               description: >-
-                ActionTransfer represents the voting action and its required
+                ActionVote represents the voting action and its required
                 eligibility criteria.
           description: QualifyingAction can be one of many action types.
         description: Actions that count towards the reward.
@@ -75437,8 +74181,16 @@ definitions:
   provenance.reward.v1.RewardProgram.State:
     type: string
     enum:
-      - PENDING
-      - STARTED
-      - FINISHED
-      - EXPIRED
-    default: PENDING
+      - STATE_UNSPECIFIED
+      - STATE_PENDING
+      - STATE_STARTED
+      - STATE_FINISHED
+      - STATE_EXPIRED
+    default: STATE_UNSPECIFIED
+    description: |-
+      - STATE_UNSPECIFIED: undefined program state
+       - STATE_PENDING: pending state of reward program
+       - STATE_STARTED: started state of reward program
+       - STATE_FINISHED: finished state of reward program
+       - STATE_EXPIRED: expired state of reward program
+    title: State is the state of the reward program
