@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	pioante "github.com/provenance-io/provenance/internal/antewrapper"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
 func (s *AnteTestSuite) TestEnsureMempoolFees() {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 

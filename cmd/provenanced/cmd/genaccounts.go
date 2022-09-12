@@ -539,6 +539,7 @@ func AddGenesisMsgFeeCmd(defaultNodeHome string, interfaceRegistry types.Interfa
 			}
 
 			floorPriceDenom := args[2]
+
 			pioconfig.SetProvenanceConfig(floorPriceDenom, 0)
 
 			genFile := config.GenesisFile()

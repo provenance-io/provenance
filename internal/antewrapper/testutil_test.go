@@ -23,6 +23,7 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -54,10 +55,7 @@ func createTestApp(isCheckTx bool) (*simapp.App, sdk.Context) {
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
 func (s *AnteTestSuite) SetupTest(isCheckTx bool) {
-	msgfeetype.DefaultFloorGasPrice = sdk.Coin{
-		Denom:  sdk.DefaultBondDenom,
-		Amount: sdk.NewInt(1),
-	}
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1)
 	s.app, s.ctx = createTestApp(isCheckTx)
 	s.ctx = s.ctx.WithBlockHeight(1)
 

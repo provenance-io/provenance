@@ -15,6 +15,7 @@ import (
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/antewrapper"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -46,7 +47,7 @@ func (s *AnteTestSuite) TestEnsureMempoolAndMsgFees() {
 // checkTx true, fees supplied that do not meet floor gas price requirement (floor gas price * gas wanted)
 func (s *AnteTestSuite) TestEnsureFloorGasPriceNotMet() {
 	err, antehandler := setUpApp(s, true, msgfeestypes.NhashDenom, 0)
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1905)
+	pioconfig.SetProvenanceConfig(msgfeestypes.NhashDenom, 1905)
 	tx, _ := createTestTx(s, err, sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 100000)))
 	s.Require().NoError(err)
 	// Set IsCheckTx to true
@@ -79,7 +80,7 @@ func (s *AnteTestSuite) TestEnsureFloorGasPriceMet() {
 // and this is what sets it apart from MempoolDecorator which has already been run)
 func (s *AnteTestSuite) TestEnsureMempoolAndMsgFeesNoAdditionalFeesLowGas() {
 	err, antehandler := setUpApp(s, true, msgfeestypes.NhashDenom, 0)
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1905)
+	pioconfig.SetProvenanceConfig(msgfeestypes.NhashDenom, 1905)
 	tx, _ := createTestTx(s, err, sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 100000)))
 	s.Require().NoError(err)
 	// Set IsCheckTx to true
@@ -94,7 +95,7 @@ func (s *AnteTestSuite) TestEnsureMempoolAndMsgFeesNoAdditionalFeesLowGas() {
 
 // checkTx true, high min gas price irrespective of additional fees
 func (s *AnteTestSuite) TestEnsureMempoolHighMinGasPrice() {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
 	err, antehandler := setUpApp(s, true, sdk.DefaultBondDenom, 100)
 	tx, _ := createTestTx(s, err, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))
 	s.Require().NoError(err)
@@ -210,7 +211,7 @@ func (s *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant() {
 
 // fee grantee incorrect
 func (s *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant_1() {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
 	err, antehandler := setUpApp(s, true, sdk.DefaultBondDenom, 100)
 	s.Require().NoError(err, "should set up test app")
 
@@ -314,7 +315,7 @@ func (s *AnteTestSuite) TestEnsureNonCheckTxPassesAllChecks() {
 
 func (s *AnteTestSuite) TestEnsureMempoolAndMsgFees_1() {
 	err, antehandler := setUpApp(s, true, sdk.DefaultBondDenom, 100)
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
 	tx, acct1 := createTestTx(s, err, NewTestFeeAmountMultiple())
 
 	s.Require().NoError(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(100)))), "should fund account for test setup")
@@ -325,8 +326,8 @@ func (s *AnteTestSuite) TestEnsureMempoolAndMsgFees_1() {
 
 // wrong denom passed in, errors with insufficient fee
 func (s *AnteTestSuite) TestEnsureMempoolAndMsgFees_2() {
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
 	err, antehandler := setUpApp(s, false, msgfeestypes.NhashDenom, 100)
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
 
 	_, acct1 := createTestTx(s, err, NewTestFeeAmountMultiple())
 

@@ -88,8 +88,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 }
 
 func TestMsgService(t *testing.T) {
-	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom)
-	pioconfig.ProvConfig.MsgFeeFloorGasPrice = 1
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1)
 	encCfg := simapp.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
@@ -199,8 +198,7 @@ func TestMsgService(t *testing.T) {
 }
 
 func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
-	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom)
-	pioconfig.ProvConfig.MsgFeeFloorGasPrice = 1
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1)
 	encCfg := simapp.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
@@ -251,8 +249,7 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 }
 
 func TestMsgServiceAuthz(t *testing.T) {
-	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom)
-	pioconfig.ProvConfig.MsgFeeFloorGasPrice = 1
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1)
 	encCfg := simapp.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	priv2, _, addr2 := testdata.KeyTestPubAddr()
@@ -362,8 +359,7 @@ func TestMsgServiceAuthz(t *testing.T) {
 }
 
 func TestMsgServiceAssessMsgFee(t *testing.T) {
-	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom)
-	pioconfig.ProvConfig.MsgFeeFloorGasPrice = 1
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1)
 	encCfg := simapp.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
