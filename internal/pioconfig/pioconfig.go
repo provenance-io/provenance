@@ -21,10 +21,10 @@ const (
 
 type ProvenanceConfig struct {
 	FeeDenom string
-	// Min gas price as a node level config, i.e each node before could set it's gas price in app.toml
+	// Min gas price as a node level config, i.e. each node before could set its gas price in app.toml
 	MinGasPrices        string
-	MsgFeeFloorGasPrice int64 // Msg fee antehandlers and code use this for their calc's, this only sets the default param
-	// for that module, if the param is changed then the code will(should pick that up from module param)
+	MsgFeeFloorGasPrice int64 // Msg fee ante handlers and code use this for their calculations, this only sets the default param
+	// for that module, if the param is changed via governance then the code will pick the new value.(should pick that up from module param)
 	BondDenom string
 	set       bool
 }

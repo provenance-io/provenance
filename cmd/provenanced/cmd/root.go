@@ -266,10 +266,10 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		panic(err)
 	}
 
-	// Validate min-gas-price is a single coin.  If mainnet then must be "nhash" and have a value greater than one.
+	// Validate min-gas-price is a single coin.
 	if fee, err := sdk.ParseCoinNormalized(cast.ToString(appOpts.Get(server.FlagMinGasPrices))); err == nil {
 		if int(sdk.GetConfig().GetCoinType()) == app.CoinTypeMainNet {
-			// require the fee denom to match the bond denom on mainnet
+			// require the fee denom to match the bond denom on mainnet(still applies)
 			if fee.Denom != pioconfig.GetProvenanceConfig().FeeDenom {
 				panic(fmt.Errorf("invalid min-gas-price fee denom, must be: %s", pioconfig.GetProvenanceConfig().FeeDenom))
 			}
