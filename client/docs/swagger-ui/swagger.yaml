@@ -41328,11 +41328,25 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
-                  title: |-
+                    recipient:
+                      type: string
+                    recipient_basis_points:
+                      type: integer
+                      format: int64
+                  title: >-
                     MsgFee is the core of what gets stored on the blockchain
-                    it consists of two parts
+
+                    it consists of four parts
+
                     1. the msg type url, i.e. /cosmos.bank.v1beta1.MsgSend
+
                     2. minimum additional fees(can be of any denom)
+
+                    3. optional recipient of fee based on
+                    `recipient_basis_points`
+
+                    4. if recipient is declared they will recieve the basis
+                    points of the fee (0-10,000)
               pagination:
                 description: pagination defines an optional pagination for the request.
                 type: object
@@ -72627,11 +72641,24 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-    title: |-
+      recipient:
+        type: string
+      recipient_basis_points:
+        type: integer
+        format: int64
+    title: >-
       MsgFee is the core of what gets stored on the blockchain
-      it consists of two parts
+
+      it consists of four parts
+
       1. the msg type url, i.e. /cosmos.bank.v1beta1.MsgSend
+
       2. minimum additional fees(can be of any denom)
+
+      3. optional recipient of fee based on `recipient_basis_points`
+
+      4. if recipient is declared they will recieve the basis points of the fee
+      (0-10,000)
   provenance.msgfees.v1.Params:
     type: object
     properties:
@@ -72683,11 +72710,24 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-          title: |-
+            recipient:
+              type: string
+            recipient_basis_points:
+              type: integer
+              format: int64
+          title: >-
             MsgFee is the core of what gets stored on the blockchain
-            it consists of two parts
+
+            it consists of four parts
+
             1. the msg type url, i.e. /cosmos.bank.v1beta1.MsgSend
+
             2. minimum additional fees(can be of any denom)
+
+            3. optional recipient of fee based on `recipient_basis_points`
+
+            4. if recipient is declared they will recieve the basis points of
+            the fee (0-10,000)
       pagination:
         description: pagination defines an optional pagination for the request.
         type: object
