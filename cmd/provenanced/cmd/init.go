@@ -5,10 +5,11 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/provenance-io/provenance/internal/pioconfig"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -60,7 +61,7 @@ func InitCmd(mbm module.BasicManager) *cobra.Command {
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().BoolP(FlagRecover, "r", false, "interactive key recovery from mnemonic")
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
-	cmd.Flags().String(CustomDenomFlag, "nhash", "custom denom, optional")
+	cmd.Flags().String(CustomDenomFlag, "", "custom denom, optional")
 	return cmd
 }
 
@@ -218,7 +219,7 @@ func createAndExportGenesisFile(
 		moduleName := govtypes.ModuleName
 		var govGenState govtypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &govGenState)
-		govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(customDenom, sdk.NewInt(minDeposit)))
+		govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().BondDenom, sdk.NewInt(minDeposit)))
 		appGenState[moduleName] = cdc.MustMarshalJSON(&govGenState)
 	}
 

@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/provenance-io/provenance/internal/pioconfig"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -515,6 +513,8 @@ Currently, the denom and price defaults to 1905nhash
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
+			depCdc := clientCtx.JSONCodec
+			cdc := depCdc.(codec.Codec)
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -526,10 +526,23 @@ Currently, the denom and price defaults to 1905nhash
 				return fmt.Errorf("failed to parse coin: %w", err)
 			}
 
-			pioconfig.SetProvenanceConfig(coin.Denom, coin.Amount.Int64())
-
 			genFile := config.GenesisFile()
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
+			if err != nil {
+				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
+			}
+
+			msgFeesGenState := msgfeetypes.GetGenesisStateFromAppState(cdc, appState)
+
+			msgFeesGenState.Params.FloorGasPrice = coin
+
+			msgFeesGenStateBz, err := cdc.MarshalJSON(&msgFeesGenState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal msgfees genesis state: %w", err)
+			}
+
+			appState[msgfeetypes.ModuleName] = msgFeesGenStateBz
+
 			appStateJSON, err := json.Marshal(appState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal application genesis state: %w", err)
