@@ -57,7 +57,7 @@ const (
 // ChainID is the id of the running chain
 var ChainID string
 
-// Denom for fee and staking
+// DefaultDenom for fee and staking
 var DefaultDenom string
 
 // NewRootCmd creates a new root command for simd. It is called once in the
