@@ -600,8 +600,7 @@ test-rosetta:
 relayer-install:
 	scripts/install-relayer.sh
 
-RELAY_PATH?=local_testnet
 relayer-start: relayer-install
-	scripts/start-relayer.sh ${RELAY_PATH}
+	scripts/start-relayer.sh
 
 .PHONY: relayer-install relayer-start
