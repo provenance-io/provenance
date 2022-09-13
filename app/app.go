@@ -350,6 +350,7 @@ func New(
 		ibchost.StoreKey,
 		ibctransfertypes.StoreKey,
 		icahosttypes.StoreKey,
+		icacontrollertypes.StoreKey,
 		intertxtypes.StoreKey,
 
 		metadatatypes.StoreKey,
