@@ -521,7 +521,7 @@ Currently, the denom and price defaults to 1905nhash
 
 			config.SetRoot(clientCtx.HomeDir)
 
-			coin, err := sdk.ParseCoinNormalized(args[1])
+			coin, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
 				return fmt.Errorf("failed to parse coin: %w", err)
 			}

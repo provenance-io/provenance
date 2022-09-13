@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"net"
 	"os"
 	"path/filepath"
@@ -123,7 +124,7 @@ func InitTestnet(
 	keyringBackend,
 	algoStr string,
 	numValidators int,
-	chainDenom string,
+	customDenom string,
 ) error {
 	if chainID == "" {
 		chainID = "chain-" + tmrand.NewRand().Str(6)
@@ -211,8 +212,9 @@ func InitTestnet(
 		hashAmt := sdk.NewInt(100_000_000_000 / int64(numValidators))
 		convAmt := sdk.NewInt(1_000_000_000)
 		nhashAmt := hashAmt.Mul(convAmt)
+
 		coins := sdk.Coins{
-			sdk.NewCoin(chainDenom, nhashAmt),
+			sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, nhashAmt),
 		}
 
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
@@ -222,7 +224,7 @@ func InitTestnet(
 		createValMsg, _ := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
-			sdk.NewCoin(chainDenom, valTokens),
+			sdk.NewCoin(pioconfig.GetProvenanceConfig().BondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
 			sdk.OneInt(),
@@ -258,7 +260,7 @@ func InitTestnet(
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), simappConfig)
 	}
 
-	markerAcc := markertypes.NewEmptyMarkerAccount(chainDenom, genAccounts[0].GetAddress().String(),
+	markerAcc := markertypes.NewEmptyMarkerAccount(pioconfig.GetProvenanceConfig().FeeDenom, genAccounts[0].GetAddress().String(),
 		[]markertypes.AccessGrant{
 			*markertypes.NewAccessGrant(genAccounts[0].GetAddress(), []markertypes.Access{
 				markertypes.Access_Admin,
@@ -268,7 +270,7 @@ func InitTestnet(
 			}),
 		})
 
-	if err := markerAcc.SetSupply(sdk.NewCoin(chainDenom, sdk.NewInt(100_000_000_000).Mul(sdk.NewInt(1_000_000_000)))); err != nil {
+	if err := markerAcc.SetSupply(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(100_000_000_000).Mul(sdk.NewInt(1_000_000_000)))); err != nil {
 		return err
 	}
 
@@ -278,7 +280,7 @@ func InitTestnet(
 
 	genMarkers = append(genMarkers, *markerAcc)
 
-	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genMarkers, genFiles, numValidators, chainDenom); err != nil {
+	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genMarkers, genFiles, numValidators, pioconfig.GetProvenanceConfig().BondDenom); err != nil {
 		return err
 	}
 

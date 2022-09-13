@@ -3,6 +3,7 @@ package cmd_test
 import (
 	"context"
 	"fmt"
+	"github.com/provenance-io/provenance/app"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -18,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 
-	"github.com/provenance-io/provenance/app"
 	provenancecmd "github.com/provenance-io/provenance/cmd/provenanced/cmd"
 )
 
@@ -98,28 +98,28 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 			name:         "invalid msg type",
 			msgType:      "InvalidMsgType",
 			fee:          "1000jackthecat",
-			coinDenom:    "vspn",
+			coinDenom:    "0vspn",
 			expectErrMsg: "unable to resolve type URL /InvalidMsgType",
 		},
 		{
 			name:         "invalid fee",
 			msgType:      "/provenance.name.v1.MsgBindNameRequest",
 			fee:          "not-a-fee",
-			coinDenom:    "vspn",
+			coinDenom:    "0vspn",
 			expectErrMsg: "failed to parse coin: invalid decimal coin expression: not-a-fee",
 		},
 		{
 			name:         "valid msg type and fee",
 			msgType:      "/provenance.name.v1.MsgBindNameRequest",
 			fee:          "1000jackthecat",
-			coinDenom:    "vspn",
+			coinDenom:    "0vspn",
 			expectErrMsg: "",
 		},
 		{
 			name:         "invalid fee",
 			msgType:      "provenance.name.v1.MsgBindNameRequest",
 			fee:          "1000jackthecat",
-			coinDenom:    "vspn",
+			coinDenom:    "0vspn",
 			expectErrMsg: "",
 		},
 	}
@@ -143,19 +143,23 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-			cmd := provenancecmd.AddGenesisCustomFloorPriceDenom(home, app.MakeEncodingConfig().InterfaceRegistry)
+			cmd := provenancecmd.AddGenesisCustomFloorPriceDenom(home)
+			cmdFee := provenancecmd.AddGenesisMsgFeeCmd(home, app.MakeEncodingConfig().InterfaceRegistry)
 			cmd.SetArgs([]string{
+				tc.coinDenom,
+				fmt.Sprintf("--%s=home", flags.FlagHome)})
+			cmdFee.SetArgs([]string{
 				tc.msgType,
 				tc.fee,
-				tc.coinDenom,
 				fmt.Sprintf("--%s=home", flags.FlagHome)})
 
 			if len(tc.expectErrMsg) > 0 {
-				err := cmd.ExecuteContext(ctx)
+				err = cmdFee.ExecuteContext(ctx)
 				require.Error(t, err)
 				require.Equal(t, tc.expectErrMsg, err.Error())
 			} else {
 				require.NoError(t, cmd.ExecuteContext(ctx))
+				require.NoError(t, cmdFee.ExecuteContext(ctx))
 			}
 		})
 	}
