@@ -11,11 +11,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	pioante "github.com/provenance-io/provenance/internal/antewrapper"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
 func (s *AnteTestSuite) TestEnsureMempoolFees() {
-	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
