@@ -26,7 +26,7 @@ type ProvenanceConfig struct {
 	MsgFeeFloorGasPrice int64 // Msg fee ante handlers and code use this for their calculations, this only sets the default param
 	// for that module, if the param is changed via governance then the code will pick the new value.(should pick that up from module param)
 	BondDenom string
-	set       bool
+	set       bool // bool to check if config has been set
 }
 
 var provConfig *ProvenanceConfig
@@ -56,9 +56,6 @@ func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
 func GetProvenanceConfig() ProvenanceConfig {
 	if provConfig == nil {
 		SetProvenanceConfig("", DefaultMinGasPrices)
-	}
-	if !provConfig.set {
-		panic("Accessing Provenance config before it is set is not allowed")
 	}
 	return *provConfig
 }
