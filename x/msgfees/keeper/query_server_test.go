@@ -18,6 +18,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -65,7 +66,7 @@ func (s *QueryServerTestSuite) SetupTest() {
 		Amount: sdk.NewInt(10),
 	}
 	s.usdConversionRate = 7
-	s.app.MsgFeesKeeper.SetParams(s.ctx, types.NewParams(s.minGasPrice, s.usdConversionRate))
+	s.app.MsgFeesKeeper.SetParams(s.ctx, types.NewParams(s.minGasPrice, s.usdConversionRate, pioconfig.GetProvenanceConfig().FeeDenom))
 
 	s.privkey1 = secp256k1.GenPrivKey()
 	s.pubkey1 = s.privkey1.PubKey()
@@ -163,7 +164,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFeesAuthz() {
 }
 
 func (s *QueryServerTestSuite) TestCalculateTxFeesWithAssessCustomFees() {
-	additionalAccessedFeesCoin := sdk.NewInt64Coin(types.NhashDenom, 100)
+	additionalAccessedFeesCoin := sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 100)
 	assessCustomFeeMsg := types.NewMsgAssessCustomMsgFeeRequest("name", additionalAccessedFeesCoin, s.user2, s.user1)
 	simulateReq := s.createTxFeesRequest(s.pubkey1, s.privkey1, s.acct1, &assessCustomFeeMsg)
 
@@ -176,12 +177,12 @@ func (s *QueryServerTestSuite) TestCalculateTxFeesWithAssessCustomFees() {
 	s.Assert().Equal(fmt.Sprintf("%s,%s", additionalAccessedFeesCoin.String(), expectedGasFees.String()), response.TotalFees.String())
 
 	// do assessCustomFee where custom fee has a message fee associated with it
-	additionalAccessedFeesCoin = sdk.NewInt64Coin(types.NhashDenom, 100)
+	additionalAccessedFeesCoin = sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 100)
 	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee(sdk.MsgTypeURL(&assessCustomFeeMsg), additionalAccessedFeesCoin, "", types.DefaultMsgFeeBips)))
 	response, err = s.queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
 	s.Assert().NoError(err)
 	s.Assert().NotNil(response)
-	additionalAccessedFeesCoin = sdk.NewInt64Coin(types.NhashDenom, 200)
+	additionalAccessedFeesCoin = sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 200)
 	s.Assert().Equal(sdk.NewCoins(additionalAccessedFeesCoin), response.AdditionalFees)
 	expectedGasFees = sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*s.minGasPrice.Amount.Int64())))
 	s.Assert().Equal(fmt.Sprintf("%s,%s", additionalAccessedFeesCoin.String(), expectedGasFees.String()), response.TotalFees.String())

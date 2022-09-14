@@ -5,8 +5,7 @@ import (
 )
 
 const (
-	UsdDenom   string = "usd"
-	NhashDenom string = "nhash"
+	UsdDenom string = "usd"
 )
 
 // SplitCoinByBips returns split to recipient and fee module based on basis points for recipient

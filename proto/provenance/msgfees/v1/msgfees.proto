@@ -17,6 +17,8 @@ message Params {
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"floor_gas_price\""];
   // total nhash per usd mil for converting usd to nhash
   uint64 nhash_per_usd_mil = 3;
+  // conversion fee denom is the denom usd is converted to
+  string conversion_fee_denom = 4;
 }
 
 // MsgFee is the core of what gets stored on the blockchain

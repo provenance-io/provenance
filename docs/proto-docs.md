@@ -342,6 +342,7 @@
 - [provenance/msgfees/v1/proposals.proto](#provenance/msgfees/v1/proposals.proto)
     - [AddMsgFeeProposal](#provenance.msgfees.v1.AddMsgFeeProposal)
     - [RemoveMsgFeeProposal](#provenance.msgfees.v1.RemoveMsgFeeProposal)
+    - [UpdateConversionFeeDenomProposal](#provenance.msgfees.v1.UpdateConversionFeeDenomProposal)
     - [UpdateMsgFeeProposal](#provenance.msgfees.v1.UpdateMsgFeeProposal)
     - [UpdateNhashPerUsdMilProposal](#provenance.msgfees.v1.UpdateNhashPerUsdMilProposal)
   
@@ -5233,6 +5234,7 @@ Params defines the set of params for the msgfees module.
 | ----- | ---- | ----- | ----------- |
 | `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | constant used to calculate fees when gas fees shares denom with msg fee |
 | `nhash_per_usd_mil` | [uint64](#uint64) |  | total nhash per usd mil for converting usd to nhash |
+| `conversion_fee_denom` | [string](#string) |  | conversion fee denom is the denom usd is converted to |
 
 
 
@@ -5318,6 +5320,23 @@ RemoveMsgFeeProposal defines a governance proposal to delete a current msg based
 | `title` | [string](#string) |  | propsal title |
 | `description` | [string](#string) |  | propsal description |
 | `msg_type_url` | [string](#string) |  | type url of msg fee to remove |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.UpdateConversionFeeDenomProposal"></a>
+
+### UpdateConversionFeeDenomProposal
+UpdateMsgFeeDenomProposal defines a governance proposal to update the msg fee denom
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  | proposal title |
+| `description` | [string](#string) |  | proposal description |
+| `conversion_fee_denom` | [string](#string) |  | conversion_fee_denom is denom usd will be converted to |
 
 
 

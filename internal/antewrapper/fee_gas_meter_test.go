@@ -6,11 +6,10 @@ import (
 
 	sdkgas "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
-
-	msgfeestype "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 func TestFeeGasMeter(t *testing.T) {
@@ -20,9 +19,9 @@ func TestFeeGasMeter(t *testing.T) {
 		fees  map[string]sdk.Coin
 	}{
 		{10, []sdkgas.Gas{1, 2, 3, 4}, nil},
-		{1000, []sdkgas.Gas{40, 30, 20, 10, 900}, map[string]sdk.Coin{"/cosmos.bank.v1beta1.MsgSend": sdk.NewCoin(msgfeestype.NhashDenom, sdk.NewInt(1000000)), "/provenance.marker.v1.MsgAddMarkerRequest": sdk.NewCoin("doge", sdk.NewInt(1000000))}},
-		{100000, []sdkgas.Gas{99999, 1}, map[string]sdk.Coin{"/cosmos.bank.v1beta1.MsgSend": sdk.NewCoin(msgfeestype.NhashDenom, sdk.NewInt(1000000))}},
-		{100000000, []sdkgas.Gas{50000000, 40000000, 10000000}, map[string]sdk.Coin{"/cosmos.bank.v1beta1.MsgSend": sdk.NewCoin(msgfeestype.NhashDenom, sdk.NewInt(5555))}},
+		{1000, []sdkgas.Gas{40, 30, 20, 10, 900}, map[string]sdk.Coin{"/cosmos.bank.v1beta1.MsgSend": sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(1000000)), "/provenance.marker.v1.MsgAddMarkerRequest": sdk.NewCoin("doge", sdk.NewInt(1000000))}},
+		{100000, []sdkgas.Gas{99999, 1}, map[string]sdk.Coin{"/cosmos.bank.v1beta1.MsgSend": sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(1000000))}},
+		{100000000, []sdkgas.Gas{50000000, 40000000, 10000000}, map[string]sdk.Coin{"/cosmos.bank.v1beta1.MsgSend": sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(5555))}},
 		{65535, []sdkgas.Gas{32768, 32767}, nil},
 		{65536, []sdkgas.Gas{32768, 32767, 1}, nil},
 	}
@@ -62,13 +61,13 @@ func TestFeeGasMeter(t *testing.T) {
 		assert.Equal(t, meter.FeeConsumed().Sort(), usedFee.Sort(), "FeeConsumed does not match all Fees")
 		meter2 := NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100), false).(*FeeGasMeter)
 		meter2.ConsumeGas(sdkgas.Gas(50), "consume half max")
-		meter2.ConsumeFee(sdk.NewCoin(msgfeestype.NhashDenom, sdk.NewInt(1000000)), "/cosmos.bank.v1beta1.MsgSend", "")
+		meter2.ConsumeFee(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(1000000)), "/cosmos.bank.v1beta1.MsgSend", "")
 		require.Equalf(t, "feeGasMeter:\n  limit: 100\n  consumed: 50 fee consumed: 1000000nhash", meter2.String(), "expect string output to match")
 		meter2.RefundGas(uint64(20), "refund")
 		require.Equalf(t, "feeGasMeter:\n  limit: 100\n  consumed: 30 fee consumed: 1000000nhash", meter2.String(), "expect string output to match")
 		require.Equalf(t, "1000000nhash", meter2.FeeConsumed().String(), "expect string output to match")
 		require.Panics(t, func() { meter2.ConsumeGas(sdkgas.Gas(70)+2, "panic") })
-		meter2.ConsumeFee(sdk.NewCoin(msgfeestype.NhashDenom, sdk.NewInt(2000000)), "/cosmos.bank.v1beta1.MsgSend", "")
+		meter2.ConsumeFee(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(2000000)), "/cosmos.bank.v1beta1.MsgSend", "")
 		require.Equalf(t, "feeGasMeter:\n  limit: 100\n  consumed: 102 fee consumed: 3000000nhash", meter2.String(), "expect string output to match")
 		meter2.RefundGas(uint64(20), "refund")
 		require.Equalf(t, "feeGasMeter:\n  limit: 100\n  consumed: 82 fee consumed: 3000000nhash", meter2.String(), "expect string output to match")

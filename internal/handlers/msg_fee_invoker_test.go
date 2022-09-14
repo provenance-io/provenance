@@ -30,7 +30,7 @@ import (
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
 	encodingConfig, err := setUpApp(s, false, "atom", 100)
-	testTx, acct1 := createTestTx(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)))
+	testTx, acct1 := createTestTx(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin("nhash", 1000000)))
 
 	// See comment for Check().
 	txEncoder := encodingConfig.TxConfig.TxEncoder()
@@ -42,7 +42,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	s.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
-		feeGasMeter.ConsumeFee(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)), msgType, "")
+		feeGasMeter.ConsumeFee(sdk.NewCoin("nhash", sdk.NewInt(1000000)), msgType, "")
 		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))})
 	}, "panicked on adding fees")
 	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
@@ -60,22 +60,22 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	s.Require().True(coins.IsZero())
 
-	check(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(900000)))))
+	check(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(900000)))))
 	coins, _, err = feeChargeFn(s.ctx, false)
 	s.Require().Contains(err.Error(), "900000nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "got wrong message")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	s.Require().True(coins.IsZero())
 
-	check(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(100000)))))
+	check(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(100000)))))
 	coins, _, err = feeChargeFn(s.ctx, false)
 	s.Require().Nil(err, "Got error when should not have.")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	s.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000))}))
+	s.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin("nhash", sdk.NewInt(1000000))}))
 }
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
 	encodingConfig, err := setUpApp(s, false, "atom", 100)
-	testTx, acct1 := createTestTx(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 120000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)))
+	testTx, acct1 := createTestTx(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 120000), sdk.NewInt64Coin("nhash", 1000000)))
 
 	// See comment for Check().
 	txEncoder := encodingConfig.TxConfig.TxEncoder()
@@ -87,7 +87,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	s.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
-		feeGasMeter.ConsumeFee(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)), msgType, "")
+		feeGasMeter.ConsumeFee(sdk.NewCoin("nhash", sdk.NewInt(1000000)), msgType, "")
 		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))}) // fee consumed at ante handler
 	}, "panicked on adding fees")
 	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
@@ -100,21 +100,21 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
 	})
 	s.Require().NoError(err)
 
-	check(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)))))
+	check(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(1000000)))))
 	coins, _, err := feeChargeFn(s.ctx, false)
 	s.Require().Contains(err.Error(), "0atom is smaller than 20000atom: insufficient funds: insufficient funds", "should have enough to pay msg fees, but not enough to sweep remaining base fees of 20000atom")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	s.Require().True(coins.IsZero())
 
-	check(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000))))
+	check(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin("nhash", 1000000))))
 	coins, _, err = feeChargeFn(s.ctx, false)
 	s.Require().Nil(err, "Got error when should have successfully paid all msg fees and swept remaining base fees")
-	s.Require().True(coins.IsEqual(sdk.Coins{sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000), sdk.NewInt64Coin("atom", 20000)}))
+	s.Require().True(coins.IsEqual(sdk.Coins{sdk.NewInt64Coin("nhash", 1000000), sdk.NewInt64Coin("atom", 20000)}))
 }
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 	encodingConfig, err := setUpApp(s, false, "atom", 100)
-	testTxWithFeeGrant, _ := createTestTxWithFeeGrant(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)))
+	testTxWithFeeGrant, _ := createTestTxWithFeeGrant(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin("nhash", 1000000)))
 
 	// See comment for Check().
 	txEncoder := encodingConfig.TxConfig.TxEncoder()
@@ -126,7 +126,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	s.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
-		feeGasMeter.ConsumeFee(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)), msgType, "")
+		feeGasMeter.ConsumeFee(sdk.NewCoin("nhash", sdk.NewInt(1000000)), msgType, "")
 		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))})
 	}, "panicked on adding fees")
 	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
@@ -141,7 +141,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 	coins, _, err := feeChargeFn(s.ctx, false)
 	s.Require().Nil(err, "Got error when should not have.")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	s.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000))}))
+	s.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin("nhash", sdk.NewInt(1000000))}))
 }
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
@@ -232,11 +232,11 @@ func createTestTxWithFeeGrant(s *HandlerTestSuite, err error, feeAmount sdk.Coin
 
 	// grant fee allowance from `addr2` to `addr1` (plenty to pay)
 	err = s.app.FeeGrantKeeper.GrantAllowance(s.ctx, addr2, addr1, &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)),
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("nhash", 1000000)),
 	})
 	s.txBuilder.SetFeeGranter(acct2.GetAddress())
 
-	check(simapp.FundAccount(s.app, s.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)))))
+	check(simapp.FundAccount(s.app, s.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(1000000)))))
 
 	testTx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	s.Require().NoError(err)

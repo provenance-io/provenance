@@ -83,3 +83,14 @@ message UpdateNhashPerUsdMilProposal {
   // nhash_per_usd_mil is number of nhash per usd mil
   uint64 nhash_per_usd_mil = 3;
 }
+
+// UpdateMsgFeeDenomProposal defines a governance proposal to update the msg fee denom
+message UpdateConversionFeeDenomProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  string title       = 1; // proposal title
+  string description = 2; // proposal description
+  // conversion_fee_denom is denom usd will be converted to
+  string conversion_fee_denom = 4;
+}
