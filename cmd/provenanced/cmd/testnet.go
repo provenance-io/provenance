@@ -6,11 +6,12 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"net"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/provenance-io/provenance/internal/pioconfig"
 
 	"github.com/cosmos/cosmos-sdk/version"
 
@@ -96,11 +97,11 @@ Note, strict routability for addresses is turned off in the config file.
 	cmd.Flags().String(flagNodeDaemonHome, "", "Home directory of the node's daemon configuration")
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	//testnet only so should get passed in by the make command, moving this to a default value if not provided, since this is only for testnet. custom chain will pass in the flag for minimum-gas-prices. e.g. minimum-gas-prices = 0vspn
+	// testnet only so should get passed in by the make command, moving this to a default value if not provided, since this is only for testnet. custom chain will pass in the flag for minimum-gas-prices. e.g. minimum-gas-prices = 0vspn
 	cmd.Flags().String(server.FlagMinGasPrices, "1905nhash", "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 1905nhash)")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
-	//testnet only so should get passed in by the commmand
+	// testnet only so should get passed in by the command
 	cmd.Flags().String(flagCustomDenom, "", "Default denom to be used for this chain(both fee and staked)")
 
 	return cmd

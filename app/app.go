@@ -2,12 +2,13 @@ package app
 
 import (
 	"encoding/json"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/provenance-io/provenance/internal/pioconfig"
 
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
