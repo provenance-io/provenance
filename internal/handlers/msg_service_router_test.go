@@ -364,7 +364,7 @@ func TestMsgServiceAssessMsgFee(t *testing.T) {
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 101000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_001))
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 101000), sdk.NewInt64Coin("nhash", 1_190_500_001))
 	app := piosimapp.SetupWithGenesisAccounts("msgfee-testing", []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr1.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
@@ -375,8 +375,12 @@ func TestMsgServiceAssessMsgFee(t *testing.T) {
 	addr2beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
 	require.Equal(t, "", addr2beforeBalance, "should have the new balance after funding account")
 
+	// add nhash as usd conversion
+	params := app.MsgFeesKeeper.GetParams(ctx)
+	params.ConversionFeeDenom = "nhash"
+	app.MsgFeesKeeper.SetParams(ctx, params)
 	msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", sdk.NewInt64Coin(msgfeestypes.UsdDenom, 7), addr2.String(), addr1.String())
-	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_001)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &msg)
+	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000), sdk.NewInt64Coin("nhash", 1_190_500_001)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &msg)
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
