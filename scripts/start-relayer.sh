@@ -41,14 +41,9 @@ fi
 
 check_links ${RELAY_PATH}
 if [ $? != 0 ]; then
-    echo "${RELAY_PATH} is not fully functional. Do you wish to generate a new client, channel, and connection?" >&2
-    read -p "Do you wish to generate a new client, channel, and connection? (Y/n) " yn
-
-    case $yn in
-        [Yy]* ) rly tx link ${RELAY_PATH};;
-        [Nn]* ) exit 0;;
-        * ) rly tx link ${RELAY_PATH};;
-    esac
+    echo "${RELAY_PATH} is not fully functional. Consider checking the status of the path and trying again." >&2
+    echo "Alternatively, if the path has not been setup yet, then you can create one with 'rly tx link ${RELAY_PATH}'" >&2
+    exit 1
 fi
 
 rly start ${RELAY_PATH} -p events
