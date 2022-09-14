@@ -79,7 +79,7 @@ Where expiration.json contains:
 				return err
 			}
 
-			moduleAssetID, owner, height, deposit, msgs, err := parseAddExtendRequest(clientCtx.Codec, args[0])
+			moduleAssetID, owner, height, deposit, anyMsg, err := parseAddExtendRequest(clientCtx.Codec, args[0])
 			if err != nil {
 				return err
 			}
@@ -89,7 +89,7 @@ Where expiration.json contains:
 				Owner:         owner,
 				BlockHeight:   height,
 				Deposit:       deposit[0],
-				Message:       msgs,
+				Message:       anyMsg,
 			}
 
 			signers, err := parseSigners(cmd, &clientCtx)
@@ -98,10 +98,10 @@ Where expiration.json contains:
 			}
 
 			msg := types.NewMsgAddExpirationRequest(expiration, signers)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
+			//err = msg.ValidateBasic()
+			//if err != nil {
+			//	return err
+			//}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -267,41 +267,41 @@ type expiration struct {
 func parseAddExtendRequest(
 	cdc codec.Codec,
 	path string,
-) (string, string, int64, sdk.Coins, *types2.Any, error) {
+) (string, string, int64, sdk.Coins, types2.Any, error) {
 	var expiration expiration
 
 	contents, err := os.ReadFile(path)
 	if err != nil {
-		return "", "", -1, nil, nil, err
+		return "", "", -1, nil, types2.Any{}, err
 	}
 
 	if err := json.Unmarshal(contents, &expiration); err != nil {
-		return "", "", -1, nil, nil, err
+		return "", "", -1, nil, types2.Any{}, err
 	}
 
 	deposit, err := sdk.ParseCoinsNormalized(expiration.Deposit)
 	if err != nil {
-		return "", "", -1, nil, nil, err
+		return "", "", -1, nil, types2.Any{}, err
 	}
 
 	var msg sdk.Msg
 	if err := cdc.UnmarshalInterfaceJSON(expiration.Message, &msg); err != nil {
-		return "", "", -1, nil, nil, err
+		return "", "", -1, nil, types2.Any{}, err
 	}
 	if err := msg.ValidateBasic(); err != nil {
-		return "", "", -1, nil, nil, err
+		return "", "", -1, nil, types2.Any{}, err
 	}
 
 	anyMsg, err := types2.NewAnyWithValue(msg)
 	if err != nil {
-		return "", "", -1, nil, nil, err
+		return "", "", -1, nil, types2.Any{}, err
 	}
 
 	return expiration.ModuleAssetID,
 		expiration.Owner,
 		expiration.BlockHeight,
 		deposit,
-		anyMsg, err
+		*anyMsg, err
 }
 
 func addSignerFlagCmd(cmd *cobra.Command) {

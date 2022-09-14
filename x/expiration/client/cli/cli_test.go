@@ -2,11 +2,12 @@ package cli_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authzcli "github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	"strings"
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authzcli "github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	"github.com/google/uuid"
 
 	"github.com/gogo/protobuf/proto"
@@ -87,6 +88,8 @@ type IntegrationCLITestSuite struct {
 	blockHeight int64
 	deposit     sdk.Coin
 	signers     []string
+
+	scopeID metadatatypes.MetadataAddress
 
 	expiration1 expirationtypes.Expiration
 	expiration2 expirationtypes.Expiration
@@ -214,34 +217,42 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.blockHeight = 1
 	s.deposit = expirationtypes.DefaultDeposit
 
-	s.expiration1 = *expirationtypes.NewExpiration(s.moduleAssetID1, s.sameOwner, s.blockHeight, s.deposit, nil)
-	s.expiration2 = *expirationtypes.NewExpiration(s.moduleAssetID2, s.sameOwner, s.blockHeight, s.deposit, nil)
-	s.expiration3 = *expirationtypes.NewExpiration(s.moduleAssetID3, s.diffOwner, s.blockHeight, s.deposit, nil)
-	s.expiration4 = *expirationtypes.NewExpiration(s.moduleAssetID4, s.user4AddrStr, s.blockHeight, s.deposit, nil)
-	s.expiration5 = *expirationtypes.NewExpiration(s.moduleAssetID5, s.user5AddrStr, s.blockHeight, s.deposit, nil)
-	s.expiration6 = *expirationtypes.NewExpiration(s.moduleAssetID6, s.user6AddrStr, s.blockHeight, s.deposit, nil)
+	s.scopeID = metadatatypes.ScopeMetadataAddress(uuid.New())
+
+	s.expiration1 = *expirationtypes.NewExpiration(s.moduleAssetID1, s.sameOwner, s.blockHeight, s.deposit, s.anyMsg(s.sameOwner))
+	s.expiration2 = *expirationtypes.NewExpiration(s.moduleAssetID2, s.sameOwner, s.blockHeight, s.deposit, s.anyMsg(s.sameOwner))
+	s.expiration3 = *expirationtypes.NewExpiration(s.moduleAssetID3, s.diffOwner, s.blockHeight, s.deposit, s.anyMsg(s.diffOwner))
+	s.expiration4 = *expirationtypes.NewExpiration(s.moduleAssetID4, s.user4AddrStr, s.blockHeight, s.deposit, s.anyMsg(s.user4AddrStr))
+	s.expiration5 = *expirationtypes.NewExpiration(s.moduleAssetID5, s.user5AddrStr, s.blockHeight, s.deposit, s.anyMsg(s.user5AddrStr))
+	s.expiration6 = *expirationtypes.NewExpiration(s.moduleAssetID6, s.user6AddrStr, s.blockHeight, s.deposit, s.anyMsg(s.user6AddrStr))
 
 	// expected expirations as JSON
-	s.expiration1AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"block_height\":\"%d\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":null}}",
+	s.expiration1AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"block_height\":\"%d\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":{\"@type\":\"/provenance.metadata.v1.MsgDeleteScopeRequest\",\"scope_id\":\"%s\",\"signers\":[\"%s\"]}}}",
 		s.moduleAssetID1,
 		s.sameOwner,
 		s.blockHeight,
 		s.deposit.Denom,
 		s.deposit.Amount,
+		s.scopeID.String(),
+		s.sameOwner,
 	)
-	s.expiration2AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"block_height\":\"%d\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":null}}",
+	s.expiration2AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"block_height\":\"%d\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":{\"@type\":\"/provenance.metadata.v1.MsgDeleteScopeRequest\",\"scope_id\":\"%s\",\"signers\":[\"%s\"]}}}",
 		s.moduleAssetID2,
 		s.sameOwner,
 		s.blockHeight,
 		s.deposit.Denom,
 		s.deposit.Amount,
+		s.scopeID.String(),
+		s.sameOwner,
 	)
-	s.expiration3AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"block_height\":\"%d\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":null}}",
+	s.expiration3AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"block_height\":\"%d\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":{\"@type\":\"/provenance.metadata.v1.MsgDeleteScopeRequest\",\"scope_id\":\"%s\",\"signers\":[\"%s\"]}}}",
 		s.moduleAssetID3,
 		s.diffOwner,
 		s.blockHeight,
 		s.deposit.Denom,
 		s.deposit.Amount,
+		s.scopeID.String(),
+		s.diffOwner,
 	)
 
 	// expected expirations as text
@@ -250,12 +261,18 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
   deposit:
     amount: "%v"
     denom: %s
-  message: null
+  message:
+    '@type': /provenance.metadata.v1.MsgDeleteScopeRequest
+    scope_id: %s
+    signers:
+    - %s
   module_asset_id: %s
   owner: %s`,
 		s.blockHeight,
 		s.deposit.Amount,
 		s.deposit.Denom,
+		s.scopeID.String(),
+		s.sameOwner,
 		s.moduleAssetID1,
 		s.sameOwner,
 	)
@@ -264,12 +281,18 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
   deposit:
     amount: "%v"
     denom: %s
-  message: null
+  message:
+    '@type': /provenance.metadata.v1.MsgDeleteScopeRequest
+    scope_id: %s
+    signers:
+    - %s
   module_asset_id: %s
   owner: %s`,
 		s.blockHeight,
 		s.deposit.Amount,
 		s.deposit.Denom,
+		s.scopeID.String(),
+		s.sameOwner,
 		s.moduleAssetID2,
 		s.sameOwner,
 	)
@@ -278,12 +301,18 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
   deposit:
     amount: "%v"
     denom: %s
-  message: null
+  message:
+    '@type': /provenance.metadata.v1.MsgDeleteScopeRequest
+    scope_id: %s
+    signers:
+    - %s
   module_asset_id: %s
   owner: %s`,
 		s.blockHeight,
 		s.deposit.Amount,
 		s.deposit.Denom,
+		s.scopeID.String(),
+		s.diffOwner,
 		s.moduleAssetID3,
 		s.diffOwner,
 	)
@@ -332,6 +361,18 @@ func (s *IntegrationCLITestSuite) getClientCtx() client.Context {
 
 func (s *IntegrationCLITestSuite) getClientCtxWithoutKeyring() client.Context {
 	return s.testnet.Validators[0].ClientCtx
+}
+
+func (s *IntegrationCLITestSuite) anyMsg(owner string) types.Any {
+	msg := &metadatatypes.MsgDeleteScopeRequest{
+		ScopeId: s.scopeID,
+		Signers: []string{owner},
+	}
+	anyMsg, err := types.NewAnyWithValue(msg)
+	if err != nil {
+		panic(err)
+	}
+	return *anyMsg
 }
 
 // ---------- query cmd tests ----------
@@ -536,7 +577,7 @@ func parseExpirationJsonStr(
 	blockHeight int64,
 	deposit sdk.Coin,
 ) string {
-	scopeId := metadatatypes.ScopeMetadataAddress(uuid.New())
+	scopeID := metadatatypes.ScopeMetadataAddress(uuid.New())
 	s := fmt.Sprintf(`
 {
   "module_asset_id": "%s",
@@ -548,7 +589,7 @@ func parseExpirationJsonStr(
 	"scope_id": "%s",
 	"signers": ["%s"]
   }
-}`, moduleAssetID, owner, blockHeight, deposit, scopeId, owner)
+}`, moduleAssetID, owner, blockHeight, deposit, scopeID, owner)
 	return s
 }
 

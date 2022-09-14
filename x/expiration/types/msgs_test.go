@@ -3,11 +3,16 @@ package types
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -23,12 +28,15 @@ type ExpirationTestSuite struct {
 	signers      []string
 	otherSigners []string
 
+	scopeID metadatatypes.MetadataAddress
+
 	validExpiration               Expiration
 	emptyModuleAssetIdExpiration  Expiration
 	emptyOwnerExpiration          Expiration
 	negativeBlockHeightExpiration Expiration
 	invalidDepositExpiration      Expiration
 	negativeDepositExpiration     Expiration
+	invalidMessageExpiration      Expiration
 }
 
 func (s *ExpirationTestSuite) SetupTest() {
@@ -40,43 +48,70 @@ func (s *ExpirationTestSuite) SetupTest() {
 	s.signers = []string{s.owner}
 	s.otherSigners = []string{"cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3"}
 
+	s.scopeID = metadatatypes.ScopeMetadataAddress(uuid.New())
+
 	s.validExpiration = Expiration{
 		ModuleAssetId: s.moduleAssetID,
 		Owner:         s.owner,
 		BlockHeight:   s.blockHeight,
 		Deposit:       s.deposit,
+		Message:       s.anyMsg(s.owner),
 	}
 	s.emptyModuleAssetIdExpiration = Expiration{
 		Owner:       s.owner,
 		BlockHeight: s.blockHeight,
 		Deposit:     s.deposit,
+		Message:     s.anyMsg(s.owner),
 	}
 	s.emptyOwnerExpiration = Expiration{
 		ModuleAssetId: s.moduleAssetID,
 		BlockHeight:   s.blockHeight,
 		Deposit:       s.deposit,
+		Message:       s.anyMsg(s.owner),
 	}
 	s.negativeBlockHeightExpiration = Expiration{
 		ModuleAssetId: s.moduleAssetID,
 		Owner:         s.owner,
 		BlockHeight:   -1,
 		Deposit:       s.deposit,
+		Message:       s.anyMsg(s.owner),
 	}
 	s.invalidDepositExpiration = Expiration{
 		ModuleAssetId: s.moduleAssetID,
 		Owner:         s.owner,
 		BlockHeight:   s.blockHeight,
+		Message:       s.anyMsg(s.owner),
 	}
 	s.negativeDepositExpiration = Expiration{
 		ModuleAssetId: s.moduleAssetID,
 		Owner:         s.owner,
 		BlockHeight:   s.blockHeight,
 		Deposit:       sdk.Coin{Denom: "testcoin", Amount: sdk.NewInt(-1)},
+		Message:       s.anyMsg(s.owner),
+	}
+	s.invalidMessageExpiration = Expiration{
+		ModuleAssetId: s.moduleAssetID,
+		Owner:         s.owner,
+		BlockHeight:   s.blockHeight,
+		Deposit:       s.deposit,
+		Message:       types.Any{}, // will fail validation
 	}
 }
 
 func TestExpirationTestSuite(t *testing.T) {
 	suite.Run(t, new(ExpirationTestSuite))
+}
+
+func (s *ExpirationTestSuite) anyMsg(owner string) types.Any {
+	msg := &metadatatypes.MsgDeleteScopeRequest{
+		ScopeId: s.scopeID,
+		Signers: []string{owner},
+	}
+	anyMsg, err := types.NewAnyWithValue(msg)
+	if err != nil {
+		panic(err)
+	}
+	return *anyMsg
 }
 
 func (s *ExpirationTestSuite) TestMsgAddExpirationRequestValidateBasic() {
@@ -117,6 +152,11 @@ func (s *ExpirationTestSuite) TestMsgAddExpirationRequestValidateBasic() {
 			wantErr:     true,
 			expectedErr: ErrInvalidDeposit,
 		}, {
+			name:        "should fail to validate basic - invalid message",
+			msg:         NewMsgAddExpirationRequest(s.invalidMessageExpiration, []string{}),
+			wantErr:     true,
+			expectedErr: ErrInvalidMessage,
+		}, {
 			name:        "should fail to validate basic - missing signers",
 			msg:         NewMsgAddExpirationRequest(s.validExpiration, []string{}),
 			wantErr:     true,
@@ -130,8 +170,10 @@ func (s *ExpirationTestSuite) TestMsgAddExpirationRequestValidateBasic() {
 		s.T().Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.wantErr {
+				e, ok := err.(*errors.Error)
+				require.True(t, ok, "%s failed error type check", tc.name)
 				assert.Error(t, err, "%s expected error", tc.name)
-				assert.Equal(t, tc.expectedErr, err, "%s error", tc.name)
+				assert.Equal(t, tc.expectedErr.ABCICode(), e.ABCICode(), "%s error", tc.name)
 			} else {
 				assert.NoError(t, err, "%s unexpected error", tc.name)
 			}

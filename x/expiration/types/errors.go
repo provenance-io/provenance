@@ -17,4 +17,5 @@ var (
 	ErrInvalidBlockHeight = sdkerrors.Register(ModuleName, 11, "invalid block height")
 	ErrUnmarshal          = sdkerrors.Register(ModuleName, 12, "failed to unmarshal bytes")
 	ErrInvalidKeyPrefix   = sdkerrors.Register(ModuleName, 13, "invalid key prefix")
+	ErrInvalidMessage     = sdkerrors.Register(ModuleName, 14, "invalid expiration message")
 )

@@ -4,16 +4,20 @@ import (
 	"context"
 	"testing"
 
+	"github.com/google/uuid"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	types2 "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/expiration/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 
 	"github.com/stretchr/testify/assert"
@@ -84,11 +88,24 @@ func TestGrpcQueryTestSuite(t *testing.T) {
 	suite.Run(t, new(GrpcQueryTestSuite))
 }
 
+func anyMsg(owner string) types2.Any {
+	scopeID := metadatatypes.ScopeMetadataAddress(uuid.New())
+	msg := &metadatatypes.MsgDeleteScopeRequest{
+		ScopeId: scopeID,
+		Signers: []string{owner},
+	}
+	anyMsg, err := types2.NewAnyWithValue(msg)
+	if err != nil {
+		panic(err)
+	}
+	return *anyMsg
+}
+
 func (s *GrpcQueryTestSuite) TestQueryExpiration() {
 	moduleAssetID := s.moduleAssetID
 
 	s.T().Run("add expiration for querying", func(t *testing.T) {
-		expiration := *types.NewExpiration(moduleAssetID, s.user1, s.blockHeight, s.deposit, nil)
+		expiration := *types.NewExpiration(moduleAssetID, s.user1, s.blockHeight, s.deposit, anyMsg(s.user1))
 		assert.NoError(t, expiration.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err := s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")
@@ -107,12 +124,12 @@ func (s *GrpcQueryTestSuite) TestQueryAllExpirations() {
 	expectedAll := 2
 
 	s.T().Run("add expirations for querying", func(t *testing.T) {
-		expiration1 := *types.NewExpiration(s.moduleAssetID, s.user1, s.blockHeight, s.deposit, nil)
+		expiration1 := *types.NewExpiration(s.moduleAssetID, s.user1, s.blockHeight, s.deposit, anyMsg(s.user1))
 		assert.NoError(t, expiration1.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err := s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration1)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")
 
-		expiration2 := *types.NewExpiration(s.user2, s.user3, 2, s.deposit, nil)
+		expiration2 := *types.NewExpiration(s.user2, s.user3, 2, s.deposit, anyMsg(s.user3))
 		assert.NoError(t, expiration2.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err = s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration2)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")
@@ -139,17 +156,17 @@ func (s *GrpcQueryTestSuite) TestQueryAllExpirationsByOwner() {
 	expectedByOwner := 2
 
 	s.T().Run("add expirations for querying", func(t *testing.T) {
-		expiration1 := *types.NewExpiration(moduleAssetID1, sameOwner, s.blockHeight, s.deposit, nil)
+		expiration1 := *types.NewExpiration(moduleAssetID1, sameOwner, s.blockHeight, s.deposit, anyMsg(sameOwner))
 		assert.NoError(t, expiration1.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err := s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration1)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")
 
-		expiration2 := *types.NewExpiration(moduleAssetID2, sameOwner, 2, s.deposit, nil)
+		expiration2 := *types.NewExpiration(moduleAssetID2, sameOwner, 2, s.deposit, anyMsg(sameOwner))
 		assert.NoError(t, expiration2.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err = s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration2)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")
 
-		expiration3 := *types.NewExpiration(moduleAssetID3, diffOwner, 1, s.deposit, nil)
+		expiration3 := *types.NewExpiration(moduleAssetID3, diffOwner, 1, s.deposit, anyMsg(diffOwner))
 		assert.NoError(t, expiration3.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err = s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration3)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")
