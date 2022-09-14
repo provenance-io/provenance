@@ -19,10 +19,9 @@ import (
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil"
-	"github.com/provenance-io/provenance/x/msgfees/types"
-
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/msgfees/types"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -104,7 +103,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFees() {
 
 	// do send with an additional fee
 	sendAddFee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))
-	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee("/cosmos.bank.v1beta1.MsgSend", sendAddFee)))
+	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee("/cosmos.bank.v1beta1.MsgSend", sendAddFee, "", types.DefaultMsgFeeBips)))
 	response, err = s.queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
 	s.Assert().NoError(err)
 	s.Assert().NotNil(response)
@@ -178,7 +177,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFeesWithAssessCustomFees() {
 
 	// do assessCustomFee where custom fee has a message fee associated with it
 	additionalAccessedFeesCoin = sdk.NewInt64Coin(types.NhashDenom, 100)
-	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee(sdk.MsgTypeURL(&assessCustomFeeMsg), additionalAccessedFeesCoin)))
+	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee(sdk.MsgTypeURL(&assessCustomFeeMsg), additionalAccessedFeesCoin, "", types.DefaultMsgFeeBips)))
 	response, err = s.queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
 	s.Assert().NoError(err)
 	s.Assert().NotNil(response)
