@@ -3,6 +3,8 @@ package types
 import (
 	"errors"
 	"fmt"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/provenance-io/provenance/x/marker/types"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -191,4 +193,16 @@ func (p UpdateNhashPerUsdMilProposal) ValidateBasic() error {
 		return errors.New("nhash per usd mil must be greater than 0")
 	}
 	return govtypes.ValidateAbstract(&p)
+}
+
+func NewSetDenomMetadataProposal(
+	title string,
+	description string,
+	metadata banktypes.Metadata,
+) *types.SetDenomMetadataProposal { //TODO: Is it ok to reference types from another module?
+	return &types.SetDenomMetadataProposal{
+		Title: title,
+		Description: description,
+		Metadata: metadata,
+	}
 }

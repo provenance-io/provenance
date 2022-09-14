@@ -39,6 +39,7 @@ func NewTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		GetCmdMsgFeesProposal(),
 		GetUpdateNhashPerUsdMilProposal(),
+		GetUpdateDenomMetadataProposal()
 	)
 
 	return txCmd
@@ -178,6 +179,42 @@ $ %[1]s tx msgfees npum nhash-per-usd-mil "updating nhash to usd mil" "changes t
 			if err != nil {
 				return fmt.Errorf("unable to parse nhash value: %s", nhash)
 			}
+			proposal := types.NewUpdateNhashPerUsdMilProposal(title, description, rate)
+			deposit, err := sdk.ParseCoinsNormalized(depositArg)
+			if err != nil {
+				return err
+			}
+			callerAddr := clientCtx.GetFromAddress()
+			msg, err := govtypes.NewMsgSubmitProposal(proposal, deposit, callerAddr)
+			if err != nil {
+				return fmt.Errorf("invalid governance proposal. Error: %w", err)
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func GetUpdateDenomMetadataProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "nhash-per-usd-mil <title> <description> <nhash-per-usd-mil> <deposit>",
+		Aliases: []string{"npum", "n-p-u-m"},
+		Args:    cobra.ExactArgs(4),
+		Short:   "Submit a proposal to update fee denom",
+		Long: strings.TrimSpace(`TODO`),
+		Example: fmt.Sprintf(`$ %[1]s`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			title, description, metadata := args[0], args[1], args[2]
+			if err != nil {
+				return fmt.Errorf("unable to parse nhash value: %s", nhash)
+			}
+
+
 			proposal := types.NewUpdateNhashPerUsdMilProposal(title, description, rate)
 			deposit, err := sdk.ParseCoinsNormalized(depositArg)
 			if err != nil {
