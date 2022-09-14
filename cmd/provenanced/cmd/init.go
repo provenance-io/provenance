@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -78,6 +77,7 @@ func Init(
 
 	customDenom, _ := cmd.Flags().GetString(CustomDenomFlag)
 
+	pioconfig.SetProvenanceConfig(customDenom, 0)
 	if err := provconfig.EnsureConfigDir(cmd); err != nil {
 		return err
 	}
@@ -101,13 +101,11 @@ func Init(
 	if !doOverwrite && tmos.FileExists(genFile) {
 		return fmt.Errorf("genesis file already exists: %v", genFile)
 	}
-
+	cmd.Printf("custom denom = : %s\n", customDenom)
+	cmd.Printf("min gas price = : %s\n", pioconfig.GetProvenanceConfig().MinGasPrices)
 	// Set a few things in the configs.
-	if len(appConfig.MinGasPrices) == 0 && len(customDenom) > 0 { // custom denom passed in, for now assume all custom denom are charged 0 fees, if required take in another flag for default min price
-		appConfig.MinGasPrices = strconv.Itoa(0) + customDenom
-	} else if len(appConfig.MinGasPrices) == 0 && len(customDenom) == 0 { //no custom denom passed in so nhash
-		appConfig.MinGasPrices = strconv.Itoa(pioconfig.DefaultMinGasPrices) + customDenom
-	}
+	appConfig.MinGasPrices = pioconfig.GetProvenanceConfig().MinGasPrices
+
 	tmConfig.Moniker = moniker
 	if len(chainID) == 0 {
 		chainID = "provenance-chain-" + tmrand.NewRand().Str(6)
@@ -138,7 +136,7 @@ func Init(
 	clientConfig.Node = tmConfig.RPC.ListenAddress
 
 	// Create and write the genenis file.
-	if err = createAndExportGenesisFile(cmd, client.GetClientContextFromCmd(cmd).Codec, mbm, isTestnet, chainID, genFile, customDenom); err != nil {
+	if err = createAndExportGenesisFile(cmd, client.GetClientContextFromCmd(cmd).Codec, mbm, isTestnet, chainID, genFile); err != nil {
 		return err
 	}
 	cmd.Printf("Min gas price value = : %s\n", appConfig.MinGasPrices)
@@ -155,7 +153,6 @@ func createAndExportGenesisFile(
 	mbm module.BasicManager,
 	isTestnet bool,
 	chainID, genFile string,
-	customDenom string,
 ) error {
 	minDeposit := int64(1000000000000)  // 1,000,000,000,000
 	downtimeJailDurationStr := "86400s" // 1 day
@@ -187,7 +184,7 @@ func createAndExportGenesisFile(
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &mintGenState)
 		mintGenState.Minter.Inflation = sdk.ZeroDec()
 		mintGenState.Minter.AnnualProvisions = sdk.OneDec()
-		mintGenState.Params.MintDenom = customDenom
+		mintGenState.Params.MintDenom = pioconfig.GetProvenanceConfig().BondDenom
 		mintGenState.Params.InflationMax = sdk.ZeroDec()
 		mintGenState.Params.InflationMin = sdk.ZeroDec()
 		mintGenState.Params.InflationRateChange = sdk.OneDec()
@@ -201,7 +198,7 @@ func createAndExportGenesisFile(
 		moduleName := stakingtypes.ModuleName
 		var stakeGenState stakingtypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &stakeGenState)
-		stakeGenState.Params.BondDenom = customDenom
+		stakeGenState.Params.BondDenom = pioconfig.GetProvenanceConfig().BondDenom
 		appGenState[moduleName] = cdc.MustMarshalJSON(&stakeGenState)
 	}
 
@@ -210,7 +207,7 @@ func createAndExportGenesisFile(
 		moduleName := crisistypes.ModuleName
 		var crisisGenState crisistypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &crisisGenState)
-		crisisGenState.ConstantFee.Denom = customDenom
+		crisisGenState.ConstantFee.Denom = pioconfig.GetProvenanceConfig().FeeDenom
 		appGenState[moduleName] = cdc.MustMarshalJSON(&crisisGenState)
 	}
 

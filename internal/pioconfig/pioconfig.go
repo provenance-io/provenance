@@ -14,7 +14,7 @@ const (
 	// DefaultFeeDenom is the denomination of coin to use for fees
 	defaultFeeDenom = "nhash" // nano-hash
 	// DefaultMinGasPrices is the minimum gas prices integer value only.
-	DefaultMinGasPrices = 1905
+	defaultMinGasPrices = 1905
 	// DefaultReDnmString is the allowed denom regex expression
 	DefaultReDnmString = `[a-zA-Z][a-zA-Z0-9/\-\.]{2,127}`
 )
@@ -43,8 +43,8 @@ func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
 	} else {
 		provConfig = &ProvenanceConfig{
 			FeeDenom:            defaultFeeDenom,
-			MinGasPrices:        fmt.Sprintf("%v", DefaultMinGasPrices) + defaultFeeDenom,
-			MsgFeeFloorGasPrice: DefaultMinGasPrices,
+			MinGasPrices:        fmt.Sprintf("%v", defaultMinGasPrices) + defaultFeeDenom,
+			MsgFeeFloorGasPrice: defaultMinGasPrices,
 			BondDenom:           defaultBondDenom,
 		}
 	}
@@ -52,7 +52,7 @@ func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
 
 func GetProvenanceConfig() ProvenanceConfig {
 	if provConfig == nil {
-		SetProvenanceConfig("", DefaultMinGasPrices)
+		SetProvenanceConfig("", defaultMinGasPrices)
 	}
 	return *provConfig
 }
