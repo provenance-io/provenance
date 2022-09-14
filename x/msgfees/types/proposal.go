@@ -18,6 +18,8 @@ const (
 	ProposalTypeRemoveMsgFee string = "RemoveMsgFee"
 	// ProposalTypeUpdateUsdConversionRate to update the usd conversion rate param
 	ProposalTypeUpdateUsdConversionRate string = "UpdateUsdConversionRate"
+	// ProposalTypeUpdateConversionFeeDenom to update the conversion rate denom
+	ProposalTypeUpdateConversionFeeDenom string = "UpdateConversionFeeDenom"
 )
 
 var (
@@ -25,6 +27,7 @@ var (
 	_ govtypes.Content = &UpdateMsgFeeProposal{}
 	_ govtypes.Content = &RemoveMsgFeeProposal{}
 	_ govtypes.Content = &UpdateNhashPerUsdMilProposal{}
+	_ govtypes.Content = &UpdateConversionFeeDenomProposal{}
 )
 
 func init() {
@@ -36,8 +39,12 @@ func init() {
 
 	govtypes.RegisterProposalType(ProposalTypeRemoveMsgFee)
 	govtypes.RegisterProposalTypeCodec(RemoveMsgFeeProposal{}, "provenance/msgfees/RemoveMsgFeeProposal")
+
 	govtypes.RegisterProposalType(ProposalTypeUpdateUsdConversionRate)
 	govtypes.RegisterProposalTypeCodec(UpdateNhashPerUsdMilProposal{}, "provenance/msgfees/UpdateNhashPerUsdMilProposal")
+
+	govtypes.RegisterProposalType(ProposalTypeUpdateConversionFeeDenom)
+	govtypes.RegisterProposalTypeCodec(UpdateConversionFeeDenomProposal{}, "provenance/msgfees/UpdateConversionFeeDenomProposal")
 }
 
 func NewAddMsgFeeProposal(
@@ -189,6 +196,31 @@ func (p UpdateNhashPerUsdMilProposal) ProposalType() string {
 func (p UpdateNhashPerUsdMilProposal) ValidateBasic() error {
 	if p.NhashPerUsdMil < 1 {
 		return errors.New("nhash per usd mil must be greater than 0")
+	}
+	return govtypes.ValidateAbstract(&p)
+}
+
+func NewUpdateConversionFeeDenomProposal(
+	title string,
+	description string,
+	converstionFeeDenom string,
+) *UpdateConversionFeeDenomProposal {
+	return &UpdateConversionFeeDenomProposal{
+		Title:              title,
+		Description:        description,
+		ConversionFeeDenom: converstionFeeDenom,
+	}
+}
+
+func (p UpdateConversionFeeDenomProposal) ProposalRoute() string { return RouterKey }
+
+func (p UpdateConversionFeeDenomProposal) ProposalType() string {
+	return ProposalTypeUpdateConversionFeeDenom
+}
+
+func (p UpdateConversionFeeDenomProposal) ValidateBasic() error {
+	if err := sdk.ValidateDenom(p.ConversionFeeDenom); err != nil {
+		return err
 	}
 	return govtypes.ValidateAbstract(&p)
 }

@@ -107,6 +107,21 @@ func (s *IntegrationTestSuite) TestMsgFeeProposals() {
 			msgfeestypes.NewUpdateNhashPerUsdMilProposal("title update conversion", "description", 1),
 			nil,
 		},
+		{
+			"update conversion fee denom - invalid - validate basic fail",
+			msgfeestypes.NewUpdateConversionFeeDenomProposal("title update conversion fee denom", "description", ""),
+			errors.New("invalid denom: "),
+		},
+		{
+			"update conversion fee denom - invalid - validate basic fail regex failure on denom",
+			msgfeestypes.NewUpdateConversionFeeDenomProposal("title update conversion fee denom", "description", "??"),
+			errors.New("invalid denom: ??"),
+		},
+		{
+			"update conversion fee denom - valid",
+			msgfeestypes.NewUpdateConversionFeeDenomProposal("title update conversion", "description", "hotdog"),
+			nil,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -123,6 +138,8 @@ func (s *IntegrationTestSuite) TestMsgFeeProposals() {
 				err = msgfeeskeeper.HandleRemoveMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
 			case *msgfeestypes.UpdateNhashPerUsdMilProposal:
 				err = msgfeeskeeper.HandleUpdateNhashPerUsdMilProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
+			case *msgfeestypes.UpdateConversionFeeDenomProposal:
+				err = msgfeeskeeper.HandleUpdateConversionFeeDenomProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
 			default:
 				panic("invalid proposal type")
 			}
