@@ -2,12 +2,13 @@
 
 RESET_CONFIG="${RESET_CONFIG:-0}"
 VERSION="${VERSION:-v2.0.0}"
-RELAYER_PATH=$HOME/.relayer
-RELAYER_CONFIG=$RELAYER_PATH/config/config.yaml
+RELAYER_HOME="${RELAYER_HOME:-$HOME/.relayer}"
+RELAY_CMD="${RELAY_CMD:-rly}"
+RELAYER_CONFIG=${RELAYER_HOME}/config/config.yaml
 PROVENANCE_CONFIG=scripts/relayer-config.yaml
 
 # Install relayer if it doesn't exist
-if ! [ -x "$(command -v rly)" ]; then
+if ! [ -x "$(command -v ${RELAY_CMD})" ]; then
     echo "relayer not installed. Installing..."
     # Install relayer
     DIR=$(pwd)
@@ -32,7 +33,7 @@ fi
 
 # Setup configuration
 echo "Creating new provenance relayer config"
-rly config init
+${RELAY_CMD} config init --home $RELAYER_PATH
 cp $PROVENANCE_CONFIG $RELAYER_CONFIG
 
 echo "Setup complete"
