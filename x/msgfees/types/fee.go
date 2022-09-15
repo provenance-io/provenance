@@ -17,3 +17,13 @@ func SplitAmount(coin sdk.Coin) (recipientCoin sdk.Coin, feePayoutCoin sdk.Coin)
 	recipientCoin = coin.Sub(feePayoutCoin)
 	return recipientCoin, feePayoutCoin
 }
+
+// MsgFeesDistribution holds information on message based fees that should be collected.
+type MsgFeesDistribution struct {
+	// TotalAdditionalFees is the total of all additional fees.
+	TotalAdditionalFees sdk.Coins
+	// AdditionalModuleFees is just the additional fees to send to the module.
+	AdditionalModuleFees sdk.Coins
+	// RecipientDistributions is just the additional specific distribution fees.
+	RecipientDistributions map[string]sdk.Coins
+}

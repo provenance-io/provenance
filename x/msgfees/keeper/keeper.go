@@ -196,3 +196,53 @@ func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, er
 		return sdk.Coin{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "denom not supported for conversion %s", coin.Denom)
 	}
 }
+
+// CalculateAdditionalFeesToBePaid computes the additional fees to be paid for the provided messages.
+func (k Keeper) CalculateAdditionalFeesToBePaid(ctx sdk.Context, msgs ...sdk.Msg) (types.MsgFeesDistribution, error) {
+	msgFeesDistribution := types.MsgFeesDistribution{
+		RecipientDistributions: make(map[string]sdk.Coins),
+	}
+	assessCustomMsgTypeURL := sdk.MsgTypeURL(&types.MsgAssessCustomMsgFeeRequest{})
+	for _, msg := range msgs {
+		typeURL := sdk.MsgTypeURL(msg)
+		msgFees, err := k.GetMsgFee(ctx, typeURL)
+		if err != nil {
+			return msgFeesDistribution, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		}
+
+		if msgFees != nil {
+			if msgFees.AdditionalFee.IsPositive() {
+				msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFees.AdditionalFee)
+				msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFees.AdditionalFee)
+			}
+		}
+
+		if typeURL == assessCustomMsgTypeURL {
+			assessFee, ok := msg.(*types.MsgAssessCustomMsgFeeRequest)
+			if !ok {
+				return msgFeesDistribution, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "unable to convert msg to MsgAssessCustomMsgFeeRequest")
+			}
+			msgFeeCoin, err := k.ConvertDenomToHash(ctx, assessFee.Amount)
+			if err != nil {
+				return msgFeesDistribution, err
+			}
+			if msgFeeCoin.IsPositive() {
+				if len(assessFee.Recipient) != 0 {
+					recipientCoin, feePayoutCoin := types.SplitAmount(msgFeeCoin)
+					cur, exists := msgFeesDistribution.RecipientDistributions[assessFee.Recipient]
+					if !exists {
+						msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = sdk.NewCoins()
+					}
+					msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = cur.Add(recipientCoin)
+					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(feePayoutCoin)
+					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFeeCoin)
+				} else {
+					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFeeCoin)
+					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFeeCoin)
+				}
+			}
+		}
+	}
+
+	return msgFeesDistribution, nil
+}

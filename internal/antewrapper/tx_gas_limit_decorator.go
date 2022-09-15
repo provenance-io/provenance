@@ -1,10 +1,13 @@
 package antewrapper
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
+
+const gasTxLimit uint64 = 4_000_000
 
 // TxGasLimitDecorator will check if the transaction's gas amount is higher than
 // 5% of the maximum gas allowed per block.
@@ -17,37 +20,49 @@ func NewTxGasLimitDecorator() TxGasLimitDecorator {
 	return TxGasLimitDecorator{}
 }
 
-// Checks whether the given message is related to governance.
-func isGovernanceMessage(msg sdk.Msg) bool {
-	_, isSubmitPropMsg := msg.(*govtypesv1beta1.MsgSubmitProposal)
-	_, isVoteMsg := msg.(*govtypesv1beta1.MsgVote)
-	_, isVoteWeightedMsg := msg.(*govtypesv1beta1.MsgVoteWeighted)
-	_, isDepositMsg := msg.(*govtypesv1beta1.MsgDeposit)
-	return isSubmitPropMsg || isVoteMsg || isVoteWeightedMsg || isDepositMsg
+var govMsgURLPrefixes = []string{
+	"/cosmos.gov.v1beta1.",
+	"/cosmos.gov.v1.",
 }
 
-func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	feeTx, ok := tx.(sdk.FeeTx)
-	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+// isGovMessage returns true if the provided message is a governance module message.
+func isGovMessage(msg sdk.Msg) bool {
+	url := sdk.MsgTypeURL(msg)
+	for _, pre := range govMsgURLPrefixes {
+		if strings.HasPrefix(url, pre) {
+			return true
+		}
 	}
-	// Ensure that the requested gas does not exceed the configured block maximum
-	gas := feeTx.GetGas()
-	gasTxLimit := uint64(4_000_000)
+	return false
+}
 
-	// Skip gas limit check for txs with MsgSubmitProposal
-	hasGovMsg := false
-	for _, msg := range tx.GetMsgs() {
-		isGovMsg := isGovernanceMessage(msg)
-		if isGovMsg {
-			hasGovMsg = true
-			break
+func isOnlyGovMsgs(msgs []sdk.Msg) bool {
+	// If there are no messages, there are no gov messages, so return false.
+	if len(msgs) == 0 {
+		return false
+	}
+	for _, msg := range msgs {
+		if !isGovMessage(msg) {
+			return false
+		}
+	}
+	return true
+}
+
+func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+	feeTx, err := GetFeeTx(tx)
+	if err != nil {
+		return ctx, err
+	}
+	// Skip gas limit check for test contexts.
+	// Skip gas limit check for txs with only gov msgs.
+	if !isTestContext(ctx) && !isOnlyGovMsgs(tx.GetMsgs()) {
+		// Ensure that the requested gas does not exceed the configured block maximum
+		gas := feeTx.GetGas()
+		if gas > gasTxLimit {
+			return ctx, sdkerrors.ErrTxTooLarge.Wrapf("transaction gas exceeds maximum allowed; got: %d max allowed: %d", gas, gasTxLimit)
 		}
 	}
 
-	// TODO - remove "gasTxLimit > 0" with SDK 0.46 which fixes the infinite gas meter to use max int vs zero for the limit.
-	if !isTestContext(ctx) && gasTxLimit > 0 && gas > gasTxLimit && !hasGovMsg {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrTxTooLarge, "transaction gas exceeds maximum allowed; got: %d max allowed: %d", gas, gasTxLimit)
-	}
 	return next(ctx, tx, simulate)
 }
