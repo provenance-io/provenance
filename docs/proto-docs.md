@@ -342,6 +342,7 @@
 - [provenance/msgfees/v1/proposals.proto](#provenance/msgfees/v1/proposals.proto)
     - [AddMsgFeeProposal](#provenance.msgfees.v1.AddMsgFeeProposal)
     - [RemoveMsgFeeProposal](#provenance.msgfees.v1.RemoveMsgFeeProposal)
+    - [UpdateDenomMetadataProposal](#provenance.msgfees.v1.UpdateDenomMetadataProposal)
     - [UpdateMsgFeeProposal](#provenance.msgfees.v1.UpdateMsgFeeProposal)
     - [UpdateNhashPerUsdMilProposal](#provenance.msgfees.v1.UpdateNhashPerUsdMilProposal)
   
@@ -5318,6 +5319,23 @@ RemoveMsgFeeProposal defines a governance proposal to delete a current msg based
 | `title` | [string](#string) |  | propsal title |
 | `description` | [string](#string) |  | propsal description |
 | `msg_type_url` | [string](#string) |  | type url of msg fee to remove |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.UpdateDenomMetadataProposal"></a>
+
+### UpdateDenomMetadataProposal
+UpdateDenomMetadataProposal defines a governance proposal to update the fee denom metadata
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  | proposal title |
+| `description` | [string](#string) |  | proposal description |
+| `metadata` | [cosmos.bank.v1beta1.Metadata](#cosmos.bank.v1beta1.Metadata) |  |  |
 
 
 

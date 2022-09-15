@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/provenance-io/provenance/x/marker/types"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -199,8 +198,8 @@ func NewSetDenomMetadataProposal(
 	title string,
 	description string,
 	metadata banktypes.Metadata,
-) *types.SetDenomMetadataProposal { //TODO: Is it ok to reference types from another module?
-	return &types.SetDenomMetadataProposal{
+) *UpdateDenomMetadataProposal { //TODO: Is it ok to reference types from another module?
+	return &UpdateDenomMetadataProposal{
 		Title: title,
 		Description: description,
 		Metadata: metadata,

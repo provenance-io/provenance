@@ -22,6 +22,7 @@ func NewProposalHandler(k keeper.Keeper, registry cdctypes.InterfaceRegistry) go
 			return keeper.HandleRemoveMsgFeeProposal(ctx, k, c, registry)
 		case *types.UpdateNhashPerUsdMilProposal:
 			return keeper.HandleUpdateNhashPerUsdMilProposal(ctx, k, c, registry)
+		//case  *types.Upda
 		default:
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized marker proposal content type: %T", c)
 		}

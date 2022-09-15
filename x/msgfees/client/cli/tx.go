@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"strconv"
 	"strings"
 
@@ -39,7 +40,7 @@ func NewTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		GetCmdMsgFeesProposal(),
 		GetUpdateNhashPerUsdMilProposal(),
-		GetUpdateDenomMetadataProposal()
+		GetUpdateDenomMetadataProposal(),
 	)
 
 	return txCmd
@@ -198,8 +199,8 @@ $ %[1]s tx msgfees npum nhash-per-usd-mil "updating nhash to usd mil" "changes t
 
 func GetUpdateDenomMetadataProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "nhash-per-usd-mil <title> <description> <nhash-per-usd-mil> <deposit>",
-		Aliases: []string{"npum", "n-p-u-m"},
+		Use:     "update-denom-metadata-proposal",
+		Aliases: []string{"udmp", "u-d-m-p"},
 		Args:    cobra.ExactArgs(4),
 		Short:   "Submit a proposal to update fee denom",
 		Long: strings.TrimSpace(`TODO`),
@@ -209,13 +210,25 @@ func GetUpdateDenomMetadataProposal() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			title, description, metadata := args[0], args[1], args[2]
-			if err != nil {
-				return fmt.Errorf("unable to parse nhash value: %s", nhash)
+			title, description, depositArg := args[0], args[1], args[2]
+
+			//TODO
+			metadata := banktypes.Metadata{
+				Description: "the best denom description",
+				Base:        "test1",
+				Display:     "test1",
+				Name:        "Test One",
+				Symbol:      "TONE",
+				DenomUnits: []*banktypes.DenomUnit{
+					{
+						Denom:    "test1",
+						Exponent: 0,
+						Aliases:  []string{"tone"},
+					},
+				},
 			}
 
-
-			proposal := types.NewUpdateNhashPerUsdMilProposal(title, description, rate)
+			proposal := types.NewSetDenomMetadataProposal(title, description, metadata)
 			deposit, err := sdk.ParseCoinsNormalized(depositArg)
 			if err != nil {
 				return err
@@ -225,9 +238,11 @@ func GetUpdateDenomMetadataProposal() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("invalid governance proposal. Error: %w", err)
 			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
+

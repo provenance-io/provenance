@@ -4,6 +4,7 @@ package provenance.msgfees.v1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/bank/v1beta1/bank.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/msgfees/types";
 
@@ -82,4 +83,15 @@ message UpdateNhashPerUsdMilProposal {
   string description = 2; // proposal description
   // nhash_per_usd_mil is number of nhash per usd mil
   uint64 nhash_per_usd_mil = 3;
+}
+
+// UpdateDenomMetadataProposal defines a governance proposal to update the fee denom metadata
+message UpdateDenomMetadataProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  string title       = 1; // proposal title
+  string description = 2; // proposal description
+  cosmos.bank.v1beta1.Metadata metadata    = 3
+  [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/x/bank/types.Metadata"];
 }
