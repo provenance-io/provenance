@@ -37,6 +37,7 @@ var handlers = map[string]appUpgrade{
 	}, // upgrade for 1.11.1
 	"mango-rc4":      {}, // upgrade for 1.11.1-rc4
 	"neoncarrot-rc1": {}, // upgrade for 1.12.0-rc1
+	"neoncarrot":     {}, // upgrade for 1.12.0
 	"ochre-rc1": {
 		// TODO: Required for v1.13.x: Fill in Added with modules new to 1.13.x https://github.com/provenance-io/provenance/issues/1007
 		Added: nil,

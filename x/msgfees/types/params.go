@@ -5,8 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	yaml "gopkg.in/yaml.v2"
-
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -56,12 +54,6 @@ func DefaultParams() Params {
 		DefaultFloorGasPrice,
 		DefaultNhashPerUsdMil,
 	)
-}
-
-// String implements the Stringer interface.
-func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
 }
 
 // Equal returns true if the given value is equivalent to the current instance of params
