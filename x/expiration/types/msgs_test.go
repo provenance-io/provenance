@@ -241,26 +241,66 @@ func (s *ExpirationTestSuite) TestMsgExtendExpirationRequestValidateBasic() {
 	}
 }
 
-func (s *ExpirationTestSuite) TestMsgDeleteExpirationRequestValidateBasic() {
+//func (s *ExpirationTestSuite) TestMsgDeleteExpirationRequestValidateBasic() {
+//	cases := []struct {
+//		name        string
+//		msg         *MsgDeleteExpirationRequest
+//		wantErr     bool
+//		expectedErr *errors.Error
+//	}{
+//		{
+//			name:        "should succeed to validate basic",
+//			msg:         NewMsgDeleteExpirationRequest(s.moduleAssetID, s.signers),
+//			wantErr:     false,
+//			expectedErr: nil,
+//		}, {
+//			name:        "should fail to validate basic - empty module asset id",
+//			msg:         NewMsgDeleteExpirationRequest("", s.signers),
+//			wantErr:     true,
+//			expectedErr: ErrEmptyModuleAssetID,
+//		}, {
+//			name:        "should fail to validate basic - missing signers",
+//			msg:         NewMsgDeleteExpirationRequest(s.moduleAssetID, []string{}),
+//			wantErr:     true,
+//			expectedErr: ErrMissingSigners,
+//		},
+//	}
+//
+//	for _, tc := range cases {
+//		tc := tc
+//
+//		s.T().Run(tc.name, func(t *testing.T) {
+//			err := tc.msg.ValidateBasic()
+//			if tc.wantErr {
+//				assert.Error(t, err, "%s expected error", tc.name)
+//				assert.Equal(t, tc.expectedErr, err, "%s error", tc.name)
+//			} else {
+//				assert.NoError(t, err, "%s unexpected error", tc.name)
+//			}
+//		})
+//	}
+//}
+
+func (s *ExpirationTestSuite) TestMsgInvokeExpirationRequestValidateBasic() {
 	cases := []struct {
 		name        string
-		msg         *MsgDeleteExpirationRequest
+		msg         *MsgInvokeExpirationRequest
 		wantErr     bool
 		expectedErr *errors.Error
 	}{
 		{
 			name:        "should succeed to validate basic",
-			msg:         NewMsgDeleteExpirationRequest(s.moduleAssetID, s.signers),
+			msg:         NewMsgInvokeExpirationRequest(s.moduleAssetID, s.signers),
 			wantErr:     false,
 			expectedErr: nil,
 		}, {
 			name:        "should fail to validate basic - empty module asset id",
-			msg:         NewMsgDeleteExpirationRequest("", s.signers),
+			msg:         NewMsgInvokeExpirationRequest("", s.signers),
 			wantErr:     true,
 			expectedErr: ErrEmptyModuleAssetID,
 		}, {
 			name:        "should fail to validate basic - missing signers",
-			msg:         NewMsgDeleteExpirationRequest(s.moduleAssetID, []string{}),
+			msg:         NewMsgInvokeExpirationRequest(s.moduleAssetID, []string{}),
 			wantErr:     true,
 			expectedErr: ErrMissingSigners,
 		},

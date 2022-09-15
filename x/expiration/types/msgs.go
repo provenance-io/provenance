@@ -8,7 +8,7 @@ import (
 var (
 	_ sdk.Msg = &MsgAddExpirationRequest{}
 	_ sdk.Msg = &MsgExtendExpirationRequest{}
-	_ sdk.Msg = &MsgDeleteExpirationRequest{}
+	//_ sdk.Msg = &MsgDeleteExpirationRequest{}
 	_ sdk.Msg = &MsgInvokeExpirationRequest{}
 )
 
@@ -95,34 +95,34 @@ func (m *MsgExtendExpirationRequest) MsgTypeURL() string {
 
 // ------------------  MsgDeleteExpirationRequest  ------------------
 
-func NewMsgDeleteExpirationRequest(moduleAssetID string, signers []string) *MsgDeleteExpirationRequest {
-	return &MsgDeleteExpirationRequest{
-		ModuleAssetId: moduleAssetID,
-		Signers:       signers,
-	}
-}
-
-// ValidateBasic does a simple validation check that
-// doesn't require access to any other information.
-func (m *MsgDeleteExpirationRequest) ValidateBasic() error {
-	if len(m.ModuleAssetId) == 0 {
-		return ErrEmptyModuleAssetID
-	}
-	if len(m.Signers) == 0 {
-		return ErrMissingSigners
-	}
-	return nil
-}
-
-// GetSigners returns the typed AccAddress of signers that must sign
-func (m *MsgDeleteExpirationRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(m.Signers)
-}
-
-// MsgTypeURL returns the TypeURL of a `sdk.Msg`
-func (m *MsgDeleteExpirationRequest) MsgTypeURL() string {
-	return sdk.MsgTypeURL(m)
-}
+//func NewMsgDeleteExpirationRequest(moduleAssetID string, signers []string) *MsgDeleteExpirationRequest {
+//	return &MsgDeleteExpirationRequest{
+//		ModuleAssetId: moduleAssetID,
+//		Signers:       signers,
+//	}
+//}
+//
+//// ValidateBasic does a simple validation check that
+//// doesn't require access to any other information.
+//func (m *MsgDeleteExpirationRequest) ValidateBasic() error {
+//	if len(m.ModuleAssetId) == 0 {
+//		return ErrEmptyModuleAssetID
+//	}
+//	if len(m.Signers) == 0 {
+//		return ErrMissingSigners
+//	}
+//	return nil
+//}
+//
+//// GetSigners returns the typed AccAddress of signers that must sign
+//func (m *MsgDeleteExpirationRequest) GetSigners() []sdk.AccAddress {
+//	return stringsToAccAddresses(m.Signers)
+//}
+//
+//// MsgTypeURL returns the TypeURL of a `sdk.Msg`
+//func (m *MsgDeleteExpirationRequest) MsgTypeURL() string {
+//	return sdk.MsgTypeURL(m)
+//}
 
 // ------------------  MsgInvokeExpirationRequest  ------------------
 

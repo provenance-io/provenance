@@ -2,8 +2,11 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/provenance-io/provenance/x/expiration/types"
 )
 
@@ -28,7 +31,7 @@ func (m msgServer) AddExpiration(
 
 	// add expiration
 	if err := m.Keeper.SetExpiration(ctx, msg.Expiration); err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "failed to set expiration")
 	}
 
 	return &types.MsgAddExpirationResponse{}, nil
@@ -46,28 +49,28 @@ func (m msgServer) ExtendExpiration(
 	}
 
 	// update expiration details from extension payload
-	if err := m.Keeper.UpdateExpiration(ctx, msg.Expiration); err != nil {
-		return nil, err
+	if err := m.Keeper.ExtendExpiration(ctx, msg.Expiration); err != nil {
+		return nil, sdkerrors.Wrap(err, "failed to extend validation")
 	}
 
 	return &types.MsgExtendExpirationResponse{}, nil
 }
 
-func (m msgServer) DeleteExpiration(goCtx context.Context, msg *types.MsgDeleteExpirationRequest) (*types.MsgDeleteExpirationResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	// validate message
-	if err := m.Keeper.ValidateDeleteExpiration(ctx, msg.ModuleAssetId, msg.Signers, msg.MsgTypeURL()); err != nil {
-		return nil, err
-	}
-
-	// delete message
-	if err := m.Keeper.DeleteExpiration(ctx, msg.ModuleAssetId); err != nil {
-		return nil, err
-	}
-
-	return &types.MsgDeleteExpirationResponse{}, nil
-}
+//func (m msgServer) DeleteExpiration(goCtx context.Context, msg *types.MsgDeleteExpirationRequest) (*types.MsgDeleteExpirationResponse, error) {
+//	ctx := sdk.UnwrapSDKContext(goCtx)
+//
+//	// validate message
+//	if err := m.Keeper.ValidateDeleteExpiration(ctx, msg.ModuleAssetId, msg.Signers, msg.MsgTypeURL()); err != nil {
+//		return nil, err
+//	}
+//
+//	// delete message
+//	if err := m.Keeper.DeleteExpiration(ctx, msg.ModuleAssetId); err != nil {
+//		return nil, err
+//	}
+//
+//	return &types.MsgDeleteExpirationResponse{}, nil
+//}
 
 func (m msgServer) InvokeExpiration(goCtx context.Context, msg *types.MsgInvokeExpirationRequest) (*types.MsgInvokeExpirationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -78,6 +81,9 @@ func (m msgServer) InvokeExpiration(goCtx context.Context, msg *types.MsgInvokeE
 	}
 
 	// execute expiration logic
+	if err := m.Keeper.InvokeExpiration(ctx, msg.ModuleAssetId); err != nil {
+		return nil, sdkerrors.Wrapf(types.ErrInvoke, fmt.Sprintf(": %v", err))
+	}
 
 	return &types.MsgInvokeExpirationResponse{}, nil
 }

@@ -14,7 +14,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgAddExpirationRequest{},
 		&MsgExtendExpirationRequest{},
-		&MsgDeleteExpirationRequest{},
+		//&MsgDeleteExpirationRequest{},
+		&MsgInvokeExpirationRequest{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
@@ -27,6 +28,7 @@ func whiteListedInterfaceRegistry() types.InterfaceRegistry {
 	ir.RegisterImplementations((*sdk.Msg)(nil),
 		&metadatatypes.MsgDeleteScopeRequest{},
 		&metadatatypes.MsgDeleteRecordRequest{},
+		// todo: what other messages do we need to whitelist?
 	)
 	return ir
 }

@@ -28,8 +28,8 @@ message EventExpirationExtend {
   string module_asset_id = 1;
 }
 
-// EventExpirationDelete is an event message indicating an expiration has been deleted
-message EventExpirationDelete {
+// EventExpirationInvoke is an event message indicating an expiration has been invoked
+message EventExpirationInvoke {
   // module_asset_id is the bech32 address string of the expiration id that was created.
   string module_asset_id = 1;
 }

@@ -36,7 +36,7 @@ func NewTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		AddExpirationCmd(),
 		ExtendExpirationCmd(),
-		DeleteExpirationCmd(),
+		//DeleteExpirationCmd(),
 		InvokeExpirationCmd(),
 	)
 	return txCmd
@@ -98,10 +98,9 @@ Where expiration.json contains:
 			}
 
 			msg := types.NewMsgAddExpirationRequest(expiration, signers)
-			//err = msg.ValidateBasic()
-			//if err != nil {
-			//	return err
-			//}
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -169,8 +168,7 @@ Where expiration.json contains:
 			}
 
 			msg := types.NewMsgExtendExpirationRequest(expiration, signers)
-			err = msg.ValidateBasic()
-			if err != nil {
+			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
 
@@ -185,40 +183,39 @@ Where expiration.json contains:
 }
 
 // DeleteExpirationCmd creates a command for deleting an expiration
-func DeleteExpirationCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "delete [module-asset-id]",
-		Aliases: []string{"d"},
-		Short:   "Delete expiration metadata for an asset on the provenance blockchain",
-		Example: fmt.Sprintf(`$ %s tx expiration delete pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk`, version.AppName),
-		Args:    cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			signers, err := parseSigners(cmd, &clientCtx)
-			if err != nil {
-				return err
-			}
-
-			moduleAssetID := args[0]
-			msg := types.NewMsgDeleteExpirationRequest(moduleAssetID, signers)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	addSignerFlagCmd(cmd)
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
-}
+//func DeleteExpirationCmd() *cobra.Command {
+//	cmd := &cobra.Command{
+//		Use:     "delete [module-asset-id]",
+//		Aliases: []string{"d"},
+//		Short:   "Delete expiration metadata for an asset on the provenance blockchain",
+//		Example: fmt.Sprintf(`$ %s tx expiration delete pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk`, version.AppName),
+//		Args:    cobra.ExactArgs(1),
+//		RunE: func(cmd *cobra.Command, args []string) error {
+//			clientCtx, err := client.GetClientTxContext(cmd)
+//			if err != nil {
+//				return err
+//			}
+//
+//			signers, err := parseSigners(cmd, &clientCtx)
+//			if err != nil {
+//				return err
+//			}
+//
+//			moduleAssetID := args[0]
+//			msg := types.NewMsgDeleteExpirationRequest(moduleAssetID, signers)
+//			if err = msg.ValidateBasic(); err != nil {
+//				return err
+//			}
+//
+//			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+//		},
+//	}
+//
+//	addSignerFlagCmd(cmd)
+//	flags.AddTxFlagsToCmd(cmd)
+//
+//	return cmd
+//}
 
 // InvokeExpirationCmd creates a command for invoking expiration logic on an asset
 func InvokeExpirationCmd() *cobra.Command {
@@ -241,8 +238,7 @@ func InvokeExpirationCmd() *cobra.Command {
 
 			moduleAssetID := args[0]
 			msg := types.NewMsgInvokeExpirationRequest(moduleAssetID, signers)
-			err = msg.ValidateBasic()
-			if err != nil {
+			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
 

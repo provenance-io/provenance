@@ -125,14 +125,17 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
+// Deprecated: use RegisterServices
 func (am AppModule) Route() sdk.Route {
 	return sdk.Route{}
 }
 
+// Deprecated: use RegisterServices
 func (am AppModule) QuerierRoute() string {
 	return ""
 }
 
+// Deprecated: use RegisterServices
 func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 	return nil
 }

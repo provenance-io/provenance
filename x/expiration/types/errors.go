@@ -18,4 +18,5 @@ var (
 	ErrUnmarshal          = sdkerrors.Register(ModuleName, 12, "failed to unmarshal bytes")
 	ErrInvalidKeyPrefix   = sdkerrors.Register(ModuleName, 13, "invalid key prefix")
 	ErrInvalidMessage     = sdkerrors.Register(ModuleName, 14, "invalid expiration message")
+	ErrInvoke             = sdkerrors.Register(ModuleName, 15, "failed to invoke expiration")
 )

@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 const (
@@ -28,7 +29,10 @@ func GetModuleAssetKeyPrefix(moduleAssetID string) ([]byte, error) {
 	key := ModuleAssetKeyPrefix
 	accAddress, err := sdk.AccAddressFromBech32(moduleAssetID)
 	if err != nil {
-		return nil, err
+		// check if module asset ID is a MetadataAddress
+		if _, err2 := metadatatypes.MetadataAddressFromBech32(moduleAssetID); err2 != nil {
+			return nil, err
+		}
 	}
 	key = append(key, accAddress.Bytes()...)
 	return key, nil
