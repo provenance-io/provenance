@@ -13,7 +13,6 @@ import (
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
-// StoreKey is the store key string for authz
 const StoreKey = types.ModuleName
 
 type baseAppSimulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, sdk.Context, error)

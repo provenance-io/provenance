@@ -25,10 +25,9 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/go-bip39"
 
-	"github.com/provenance-io/provenance/app"
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
@@ -99,7 +98,7 @@ func Init(
 
 	// Set a few things in the configs.
 	if len(appConfig.MinGasPrices) == 0 {
-		appConfig.MinGasPrices = app.DefaultMinGasPrices
+		appConfig.MinGasPrices = pioconfig.DefaultMinGasPrices
 	}
 	tmConfig.Moniker = moniker
 	if len(chainID) == 0 {
@@ -178,7 +177,7 @@ func createAndExportGenesisFile(
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &mintGenState)
 		mintGenState.Minter.Inflation = sdk.ZeroDec()
 		mintGenState.Minter.AnnualProvisions = sdk.OneDec()
-		mintGenState.Params.MintDenom = app.DefaultBondDenom
+		mintGenState.Params.MintDenom = pioconfig.DefaultBondDenom
 		mintGenState.Params.InflationMax = sdk.ZeroDec()
 		mintGenState.Params.InflationMin = sdk.ZeroDec()
 		mintGenState.Params.InflationRateChange = sdk.OneDec()
@@ -192,7 +191,7 @@ func createAndExportGenesisFile(
 		moduleName := stakingtypes.ModuleName
 		var stakeGenState stakingtypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &stakeGenState)
-		stakeGenState.Params.BondDenom = app.DefaultBondDenom
+		stakeGenState.Params.BondDenom = pioconfig.DefaultBondDenom
 		appGenState[moduleName] = cdc.MustMarshalJSON(&stakeGenState)
 	}
 
@@ -201,7 +200,7 @@ func createAndExportGenesisFile(
 		moduleName := crisistypes.ModuleName
 		var crisisGenState crisistypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &crisisGenState)
-		crisisGenState.ConstantFee.Denom = app.DefaultBondDenom
+		crisisGenState.ConstantFee.Denom = pioconfig.DefaultBondDenom
 		appGenState[moduleName] = cdc.MustMarshalJSON(&crisisGenState)
 	}
 
@@ -210,7 +209,7 @@ func createAndExportGenesisFile(
 		moduleName := govtypes.ModuleName
 		var govGenState govtypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &govGenState)
-		govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(app.DefaultBondDenom, sdk.NewInt(minDeposit)))
+		govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(pioconfig.DefaultBondDenom, sdk.NewInt(minDeposit)))
 		appGenState[moduleName] = cdc.MustMarshalJSON(&govGenState)
 	}
 
