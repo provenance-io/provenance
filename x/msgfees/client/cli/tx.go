@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"io/ioutil"
 	"strconv"
 	"strings"
 
@@ -201,7 +203,7 @@ func GetUpdateDenomMetadataProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "update-denom-metadata-proposal",
 		Aliases: []string{"udmp", "u-d-m-p"},
-		Args:    cobra.ExactArgs(4),
+		Args:    cobra.ExactArgs(2),
 		Short:   "Submit a proposal to update fee denom metadata",
 		Long: strings.TrimSpace(`Submit a proposal to update fee denom metadata`),
 		Example: fmt.Sprintf(`$ %[1]s`, version.AppName),
@@ -211,6 +213,16 @@ func GetUpdateDenomMetadataProposal() *cobra.Command {
 				return err
 			}
 			title, description, depositArg := args[0], args[1], args[2]
+
+			contents, err := ioutil.ReadFile(args[3])
+			if err != nil {
+				return err
+			}
+
+			err = json.Unmarshal(contents, proposal)
+			if err != nil {
+				return err
+			}
 
 			//TODO: how to construct this
 			metadata := banktypes.Metadata{
