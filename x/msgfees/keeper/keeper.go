@@ -27,6 +27,7 @@ type Keeper struct {
 	defaultFeeDenom  string
 	simulateFunc     baseAppSimulateFunc
 	txDecoder        sdk.TxDecoder
+	bankKeeper 		 bankkeeper.Keeper
 }
 
 // NewKeeper returns a AdditionalFeeKeeper. It handles:
