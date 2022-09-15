@@ -14,8 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
@@ -40,8 +42,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-
-	"github.com/provenance-io/provenance/app"
 )
 
 const (
@@ -101,7 +101,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        ChainID,
 		flags.FlagKeyringBackend: "test",
-		server.FlagMinGasPrices:  app.DefaultMinGasPrices,
+		server.FlagMinGasPrices:  pioconfig.DefaultMinGasPrices,
 		CoinTypeFlag:             fmt.Sprint(app.CoinTypeMainNet),
 	})
 
@@ -260,19 +260,19 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	if fee, err := sdk.ParseCoinNormalized(cast.ToString(appOpts.Get(server.FlagMinGasPrices))); err == nil {
 		if int(sdk.GetConfig().GetCoinType()) == app.CoinTypeMainNet {
 			// require the fee denom to match the bond denom on mainnet
-			if fee.Denom != app.DefaultBondDenom {
-				panic(fmt.Errorf("invalid min-gas-price fee denom, must be: %s", app.DefaultBondDenom))
+			if fee.Denom != pioconfig.DefaultBondDenom {
+				panic(fmt.Errorf("invalid min-gas-price fee denom, must be: %s", pioconfig.DefaultBondDenom))
 			}
 			// prevent the use of exceptionally small gas amounts that are typical defaults (i.e. 0.0025nhash)
 			if fee.Amount.LTE(sdk.OneInt()) {
-				panic(fmt.Errorf("min-gas-price must be greater than 1%s", app.DefaultBondDenom))
+				panic(fmt.Errorf("min-gas-price must be greater than 1%s", pioconfig.DefaultBondDenom))
 			}
 		}
 	} else {
 		// panic if there was a parse error (for example more than one coin was passed in for required fee).
 		if err != nil {
 			panic(fmt.Errorf("invalid min-gas-price value, expected single decimal coin value such as '%s', got '%s';\n\n %w",
-				app.DefaultMinGasPrices,
+				pioconfig.DefaultMinGasPrices,
 				appOpts.Get(server.FlagMinGasPrices),
 				err))
 		}
