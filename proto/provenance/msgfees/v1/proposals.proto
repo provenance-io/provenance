@@ -87,7 +87,6 @@ message UpdateNhashPerUsdMilProposal {
 
 // UpdateDenomMetadataProposal defines a governance proposal to update the fee denom metadata
 message UpdateDenomMetadataProposal {
-  option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;
 
   string title       = 1; // proposal title
