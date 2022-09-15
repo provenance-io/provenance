@@ -39,6 +39,7 @@ var handlers = map[string]appUpgrade{
 	}, // upgrade for 1.11.1
 	"mango-rc4":      {}, // upgrade for 1.11.1-rc4
 	"neoncarrot-rc1": {}, // upgrade for 1.12.0-rc1
+	"neoncarrot":     {}, // upgrade for 1.12.0
 	// TODO - Add new upgrade definitions here.
 	// TODO - CHECK UPGRADE HANDLER
 	"nickel": {
