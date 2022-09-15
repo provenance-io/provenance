@@ -300,3 +300,58 @@ func (s *IntegrationTestSuite) TestUpdateUsdConversionRateProposal() {
 		})
 	}
 }
+
+func (s *IntegrationTestSuite) TestUpdateConversionFeeDenomProposal() {
+	testCases := []struct {
+		name               string
+		title              string
+		description        string
+		conversionFeeDenom string
+		deposit            string
+		expectErrMsg       string
+		expectedCode       uint32
+	}{
+		{
+			name:               "update nhash to usd mil proposal - valid",
+			title:              "title",
+			description:        "description",
+			conversionFeeDenom: "jackthecat",
+			deposit:            sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+			expectErrMsg:       "",
+			expectedCode:       0,
+		},
+		{
+			name:               "update nhash to usd mil proposal - invalid - deposit param",
+			title:              "title",
+			description:        "description",
+			conversionFeeDenom: "jackthecat",
+			deposit:            "invalid-deposit",
+			expectErrMsg:       "invalid decimal coin expression: invalid-deposit",
+			expectedCode:       0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			args := []string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			}
+			args = append(args, tc.name, tc.description, tc.conversionFeeDenom, tc.deposit)
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, msgfeescli.GetUpdateConversionFeeDenomProposal(), args)
+			if len(tc.expectErrMsg) != 0 {
+				s.Require().Error(err)
+				s.Assert().Equal(tc.expectErrMsg, err.Error())
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
+			}
+		})
+	}
+}

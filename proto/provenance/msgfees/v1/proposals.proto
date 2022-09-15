@@ -51,9 +51,8 @@ message UpdateMsgFeeProposal {
   // additional fee for msg type
   cosmos.base.v1beta1.Coin additional_fee = 4 [
     (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags)     = "yaml:\"additional_fee\""
-  ];
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+    ];
   // optional recipient to recieve basis points
   string recipient = 5;
   // basis points to use when recipient is present (1 - 10,000)
