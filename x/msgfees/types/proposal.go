@@ -19,6 +19,8 @@ const (
 	ProposalTypeRemoveMsgFee string = "RemoveMsgFee"
 	// ProposalTypeUpdateUsdConversionRate to update the usd conversion rate param
 	ProposalTypeUpdateUsdConversionRate string = "UpdateUsdConversionRate"
+	// ProposalTypeUpdateDenomMetadata to update denom metadata
+	ProposalTypeUpdateDenomMetadata string = "UpdateDenomMetadata"
 )
 
 var (
@@ -26,6 +28,7 @@ var (
 	_ govtypes.Content = &UpdateMsgFeeProposal{}
 	_ govtypes.Content = &RemoveMsgFeeProposal{}
 	_ govtypes.Content = &UpdateNhashPerUsdMilProposal{}
+	_ govtypes.Content = &UpdateDenomMetadataProposal{}
 )
 
 func init() {
@@ -39,6 +42,8 @@ func init() {
 	govtypes.RegisterProposalTypeCodec(RemoveMsgFeeProposal{}, "provenance/msgfees/RemoveMsgFeeProposal")
 	govtypes.RegisterProposalType(ProposalTypeUpdateUsdConversionRate)
 	govtypes.RegisterProposalTypeCodec(UpdateNhashPerUsdMilProposal{}, "provenance/msgfees/UpdateNhashPerUsdMilProposal")
+
+	govtypes.RegisterProposalTypeCodec(UpdateDenomMetadataProposal{}, "provenance/msgfees/UpdateDenomMetadataProposal")
 }
 
 func NewAddMsgFeeProposal(
@@ -194,14 +199,24 @@ func (p UpdateNhashPerUsdMilProposal) ValidateBasic() error {
 	return govtypes.ValidateAbstract(&p)
 }
 
-func NewSetDenomMetadataProposal(
+func NewUpdateDenomMetadataProposal(
 	title string,
 	description string,
 	metadata banktypes.Metadata,
-) *UpdateDenomMetadataProposal { //TODO: Is it ok to reference types from another module?
+) *UpdateDenomMetadataProposal {
 	return &UpdateDenomMetadataProposal{
 		Title: title,
 		Description: description,
 		Metadata: metadata,
 	}
+}
+
+func (p UpdateDenomMetadataProposal) ProposalRoute() string { return RouterKey }
+
+func (p UpdateDenomMetadataProposal) ProposalType() string {
+	return ProposalTypeUpdateDenomMetadata
+}
+
+func (p UpdateDenomMetadataProposal) ValidateBasic() error {
+	return govtypes.ValidateAbstract(&p)
 }

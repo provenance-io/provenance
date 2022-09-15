@@ -202,8 +202,8 @@ func GetUpdateDenomMetadataProposal() *cobra.Command {
 		Use:     "update-denom-metadata-proposal",
 		Aliases: []string{"udmp", "u-d-m-p"},
 		Args:    cobra.ExactArgs(4),
-		Short:   "Submit a proposal to update fee denom",
-		Long: strings.TrimSpace(`TODO`),
+		Short:   "Submit a proposal to update fee denom metadata",
+		Long: strings.TrimSpace(`Submit a proposal to update fee denom metadata`),
 		Example: fmt.Sprintf(`$ %[1]s`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -212,7 +212,7 @@ func GetUpdateDenomMetadataProposal() *cobra.Command {
 			}
 			title, description, depositArg := args[0], args[1], args[2]
 
-			//TODO
+			//TODO: how to construct this
 			metadata := banktypes.Metadata{
 				Description: "the best denom description",
 				Base:        "test1",
@@ -228,7 +228,7 @@ func GetUpdateDenomMetadataProposal() *cobra.Command {
 				},
 			}
 
-			proposal := types.NewSetDenomMetadataProposal(title, description, metadata)
+			proposal := types.NewUpdateDenomMetadataProposal(title, description, metadata)
 			deposit, err := sdk.ParseCoinsNormalized(depositArg)
 			if err != nil {
 				return err
