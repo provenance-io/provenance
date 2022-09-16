@@ -5,7 +5,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-
 	pioante "github.com/provenance-io/provenance/internal/antewrapper"
 )
 
@@ -41,12 +40,12 @@ func (s *AnteTestSuite) TestProvenanceDeductFeeDecoratorChecksFunds() {
 	antehandler := sdk.ChainAnteDecorators(decorators...)
 
 	_, err = antehandler(s.ctx, tx, false)
-	// Example error: account cosmos1llzpsq97pd7z3x4c805cq87j3rd6lgarkp5ky4 does not have enough balance to pay for "200000atom", balance: "10atom": insufficient funds
+	// Example error: account cosmos1llzpsq97pd7z3x4c805cq87j3rd6lgarkp5ky4 does not have enough balance to pay for "200000stake", balance: "10stake": insufficient funds
 	s.Require().Error(err, "antehandler insufficient funds")
 	s.Assert().ErrorContains(err, addr1.String())
 	s.Assert().ErrorContains(err, "does not have enough balance to pay")
-	s.Assert().ErrorContains(err, `"200000atom"`)
-	s.Assert().ErrorContains(err, `balance: "10atom"`)
+	s.Assert().ErrorContains(err, `"200000stake"`)
+	s.Assert().ErrorContains(err, `balance: "10stake"`)
 	s.Assert().ErrorContains(err, "insufficient funds")
 	if s.T().Failed() {
 		s.T().FailNow()
@@ -77,7 +76,8 @@ func (s *AnteTestSuite) TestProvenanceDeductFeeDecoratorAdditionalFees() {
 	// when
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
-	feeAmount := testdata.NewTestFeeAmount()
+	feeAmount := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
+
 	gasLimit := testdata.NewTestGasLimit()
 	s.Require().NoError(s.txBuilder.SetMsgs(msg), "SetMsgs")
 	s.txBuilder.SetFeeAmount(feeAmount)
@@ -93,34 +93,34 @@ func (s *AnteTestSuite) TestProvenanceDeductFeeDecoratorAdditionalFees() {
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)))
 	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
-	s.Require().NoError(err, "funding account with 10atom")
+	s.Require().NoError(err, "funding account with 10stake")
 
 	decorators := []sdk.AnteDecorator{pioante.NewFeeMeterContextDecorator(), pioante.NewProvenanceDeductFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.MsgFeesKeeper)}
 	antehandler := sdk.ChainAnteDecorators(decorators...)
 
 	s.Run("insufficient funds for both base and additional fees", func() {
 		_, err = antehandler(s.ctx, tx, false)
-		// Example error: account cosmos1flu4xj7c66tdmvdjjas3a62a6jynf93ezrgysj does not have enough balance to pay for "150atom,100steak", balance: "10atom": insufficient funds
+		// Example error: account cosmos1flu4xj7c66tdmvdjjas3a62a6jynf93ezrgysj does not have enough balance to pay for "150stake,100steak", balance: "10stake": insufficient funds
 		s.Require().Error(err, "antehandler")
 		s.Assert().ErrorContains(err, addr1.String())
 		s.Assert().ErrorContains(err, "does not have enough balance to pay")
-		s.Assert().ErrorContains(err, `"150atom,100steak"`)
-		s.Assert().ErrorContains(err, `"10atom"`)
+		s.Assert().ErrorContains(err, `"150stake,100steak"`)
+		s.Assert().ErrorContains(err, `"10stake"`)
 		s.Assert().ErrorContains(err, `insufficient funds`)
 	})
 
 	// Set account with sufficient funds for base fees and but not additional fees
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
 	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200_000))))
-	s.Require().NoError(err, "funding account with 200000atom")
+	s.Require().NoError(err, "funding account with 200000stake")
 
 	s.Run("insufficient funds for just additional fees", func() {
 		_, err = antehandler(s.ctx, tx, false)
 		s.Require().Error(err, "antehandler")
 		s.Assert().ErrorContains(err, addr1.String())
 		s.Assert().ErrorContains(err, "does not have enough balance to pay")
-		s.Assert().ErrorContains(err, `"150atom,100steak"`)
-		s.Assert().ErrorContains(err, `"200010atom"`)
+		s.Assert().ErrorContains(err, `"150stake,100steak"`)
+		s.Assert().ErrorContains(err, `"200010stake"`)
 		s.Assert().ErrorContains(err, `insufficient funds`)
 	})
 
@@ -132,7 +132,7 @@ func (s *AnteTestSuite) TestProvenanceDeductFeeDecoratorAdditionalFees() {
 	s.Require().NoError(err, "funding account with 200steak")
 
 	s.Run("sufficient funds", func() {
-		s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("steak", 100)))
+		s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150), sdk.NewInt64Coin("steak", 100)))
 		tx, err = s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 		s.Require().NoError(err, "CreateTestTx")
 

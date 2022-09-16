@@ -69,7 +69,7 @@ func (s *AnteTestSuite) TestMsgFeesDecoratorFloorGasPriceMet() {
 
 func (s *AnteTestSuite) TestMsgFeesDecoratorNonCheckTxPassesAllChecks() {
 	antehandler := setUpApp(s, false, "bananas", 100)
-	tx, _ := createTestTx(s, testdata.NewTestFeeAmount())
+	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 88)))
 
 	// antehandler should not error since we do not check anything in DeliverTx
 	_, err := antehandler(s.ctx, tx, false)
@@ -78,7 +78,7 @@ func (s *AnteTestSuite) TestMsgFeesDecoratorNonCheckTxPassesAllChecks() {
 
 func (s *AnteTestSuite) TestMsgFeesDecoratorSimulatingPassesAllChecks() {
 	antehandler := setUpApp(s, true, "bananas", 100)
-	tx, _ := createTestTx(s, testdata.NewTestFeeAmount())
+	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 88)))
 
 	// antehandler should not error since we do not check anything in Simulate
 	_, err := antehandler(s.ctx, tx, true)
