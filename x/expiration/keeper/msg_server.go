@@ -43,34 +43,30 @@ func (m msgServer) ExtendExpiration(
 ) (*types.MsgExtendExpirationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	// retrieve expiration
+	expiration, err := m.Keeper.GetExpiration(ctx, msg.ModuleAssetId)
+	if err != nil {
+		return nil, err
+	}
+
+	duration, err := types.ParseDuration(msg.Duration)
+	if err != nil {
+		return nil, err
+	}
+	expiration.Time = ctx.BlockTime().Add(*duration)
+
 	// validate message
-	if err := m.ValidateSetExpiration(ctx, msg.Expiration, msg.Signers, msg.MsgTypeURL()); err != nil {
+	if err := m.ValidateSetExpiration(ctx, *expiration, msg.Signers, msg.MsgTypeURL()); err != nil {
 		return nil, err
 	}
 
 	// update expiration details from extension payload
-	if err := m.Keeper.ExtendExpiration(ctx, msg.Expiration); err != nil {
+	if err := m.Keeper.ExtendExpiration(ctx, *expiration); err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to extend validation")
 	}
 
 	return &types.MsgExtendExpirationResponse{}, nil
 }
-
-//func (m msgServer) DeleteExpiration(goCtx context.Context, msg *types.MsgDeleteExpirationRequest) (*types.MsgDeleteExpirationResponse, error) {
-//	ctx := sdk.UnwrapSDKContext(goCtx)
-//
-//	// validate message
-//	if err := m.Keeper.ValidateDeleteExpiration(ctx, msg.ModuleAssetId, msg.Signers, msg.MsgTypeURL()); err != nil {
-//		return nil, err
-//	}
-//
-//	// delete message
-//	if err := m.Keeper.DeleteExpiration(ctx, msg.ModuleAssetId); err != nil {
-//		return nil, err
-//	}
-//
-//	return &types.MsgDeleteExpirationResponse{}, nil
-//}
 
 func (m msgServer) InvokeExpiration(goCtx context.Context, msg *types.MsgInvokeExpirationRequest) (*types.MsgInvokeExpirationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

@@ -2,8 +2,8 @@ package types
 
 import (
 	"fmt"
-
 	"gopkg.in/yaml.v2"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -12,6 +12,10 @@ import (
 const (
 	NhashDenom = "nhash"
 )
+
+// DefaultDuration is the default duration a module asset
+// will live on chain before expiring. Defaults to 1 year
+var DefaultDuration = 24 * 365 * time.Hour
 
 var DefaultDeposit = sdk.Coin{
 	Denom:  NhashDenom,

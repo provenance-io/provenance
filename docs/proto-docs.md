@@ -1002,7 +1002,7 @@ Expiration holds a typed key/value structure for data associated with an expirin
 | ----- | ---- | ----- | ----------- |
 | `module_asset_id` | [string](#string) |  | the module asset identifier |
 | `owner` | [string](#string) |  | The bech32 address the expiration is bound to |
-| `block_height` | [int64](#int64) |  | The block height the module asset expires |
+| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | The time the module asset expires |
 | `deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The deposit amount held while module asset is in use |
 | `message` | [google.protobuf.Any](#google.protobuf.Any) |  | Message relating to the expiring module asset |
 
@@ -1255,7 +1255,8 @@ MsgExtendExpirationRequest represents a message to extend an expiration
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `expiration` | [Expiration](#provenance.expiration.v1.Expiration) |  | expiration is the Expiration you want to add |
+| `module_asset_id` | [string](#string) |  | the module asset identifier |
+| `duration` | [string](#string) |  | the duration period for which to extend the asset to remain on chain |
 | `signers` | [string](#string) | repeated | signers is the list of addresses of those signing this request. |
 
 

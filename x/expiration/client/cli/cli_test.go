@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/google/uuid"
@@ -17,11 +18,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzcli "github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -85,9 +84,9 @@ type IntegrationCLITestSuite struct {
 	sameOwner string
 	diffOwner string
 
-	blockHeight int64
-	deposit     sdk.Coin
-	signers     []string
+	time    time.Time
+	deposit sdk.Coin
+	signers []string
 
 	scopeID metadatatypes.MetadataAddress
 
@@ -216,42 +215,43 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.sameOwner = s.user1AddrStr
 	s.diffOwner = s.user3AddrStr
 
-	s.blockHeight = 1
+	s.time = time.Now().AddDate(0, 0, 5)
 	s.deposit = expirationtypes.DefaultDeposit
 
 	s.scopeID = metadatatypes.ScopeMetadataAddress(uuid.New())
 
-	s.expiration1 = *expirationtypes.NewExpiration(s.moduleAssetID1, s.sameOwner, s.blockHeight, s.deposit, s.anyMsg(s.sameOwner))
-	s.expiration2 = *expirationtypes.NewExpiration(s.moduleAssetID2, s.sameOwner, s.blockHeight, s.deposit, s.anyMsg(s.sameOwner))
-	s.expiration3 = *expirationtypes.NewExpiration(s.moduleAssetID3, s.diffOwner, s.blockHeight, s.deposit, s.anyMsg(s.diffOwner))
-	s.expiration4 = *expirationtypes.NewExpiration(s.moduleAssetID4, s.user4AddrStr, s.blockHeight, s.deposit, s.anyMsg(s.user4AddrStr))
-	s.expiration5 = *expirationtypes.NewExpiration(s.moduleAssetID5, s.user5AddrStr, s.blockHeight, s.deposit, s.anyMsg(s.user5AddrStr))
-	s.expiration6 = *expirationtypes.NewExpiration(s.moduleAssetID6, s.user6AddrStr, s.blockHeight, s.deposit, s.anyMsg(s.user6AddrStr))
-	s.expirationMetadataScope = *expirationtypes.NewExpiration(s.scopeID.String(), s.accountAddrStr, s.blockHeight, s.deposit, s.anyMsg(s.accountAddrStr))
+	s.expiration1 = *expirationtypes.NewExpiration(s.moduleAssetID1, s.sameOwner, s.time, s.deposit, s.anyMsg(s.sameOwner))
+	s.expiration2 = *expirationtypes.NewExpiration(s.moduleAssetID2, s.sameOwner, s.time, s.deposit, s.anyMsg(s.sameOwner))
+	s.expiration3 = *expirationtypes.NewExpiration(s.moduleAssetID3, s.diffOwner, s.time, s.deposit, s.anyMsg(s.diffOwner))
+	s.expiration4 = *expirationtypes.NewExpiration(s.moduleAssetID4, s.user4AddrStr, s.time, s.deposit, s.anyMsg(s.user4AddrStr))
+	s.expiration5 = *expirationtypes.NewExpiration(s.moduleAssetID5, s.user5AddrStr, s.time, s.deposit, s.anyMsg(s.user5AddrStr))
+	s.expiration6 = *expirationtypes.NewExpiration(s.moduleAssetID6, s.user6AddrStr, s.time, s.deposit, s.anyMsg(s.user6AddrStr))
+	s.expirationMetadataScope = *expirationtypes.NewExpiration(s.scopeID.String(), s.accountAddrStr, s.time, s.deposit, s.anyMsg(s.accountAddrStr))
 
+	utcFormat := "2006-01-02T15:04:05.999999Z"
 	// expected expirations as JSON
-	s.expiration1AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"block_height\":\"%d\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":{\"@type\":\"/provenance.metadata.v1.MsgDeleteScopeRequest\",\"scope_id\":\"%s\",\"signers\":[\"%s\"]}}}",
+	s.expiration1AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"time\":\"%v\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":{\"@type\":\"/provenance.metadata.v1.MsgDeleteScopeRequest\",\"scope_id\":\"%s\",\"signers\":[\"%s\"]}}}",
 		s.moduleAssetID1,
 		s.sameOwner,
-		s.blockHeight,
+		s.time.UTC().Format(utcFormat),
 		s.deposit.Denom,
 		s.deposit.Amount,
 		s.scopeID.String(),
 		s.sameOwner,
 	)
-	s.expiration2AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"block_height\":\"%d\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":{\"@type\":\"/provenance.metadata.v1.MsgDeleteScopeRequest\",\"scope_id\":\"%s\",\"signers\":[\"%s\"]}}}",
+	s.expiration2AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"time\":\"%v\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":{\"@type\":\"/provenance.metadata.v1.MsgDeleteScopeRequest\",\"scope_id\":\"%s\",\"signers\":[\"%s\"]}}}",
 		s.moduleAssetID2,
 		s.sameOwner,
-		s.blockHeight,
+		s.time.UTC().Format(utcFormat),
 		s.deposit.Denom,
 		s.deposit.Amount,
 		s.scopeID.String(),
 		s.sameOwner,
 	)
-	s.expiration3AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"block_height\":\"%d\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":{\"@type\":\"/provenance.metadata.v1.MsgDeleteScopeRequest\",\"scope_id\":\"%s\",\"signers\":[\"%s\"]}}}",
+	s.expiration3AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"time\":\"%v\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":{\"@type\":\"/provenance.metadata.v1.MsgDeleteScopeRequest\",\"scope_id\":\"%s\",\"signers\":[\"%s\"]}}}",
 		s.moduleAssetID3,
 		s.diffOwner,
-		s.blockHeight,
+		s.time.UTC().Format(utcFormat),
 		s.deposit.Denom,
 		s.deposit.Amount,
 		s.scopeID.String(),
@@ -260,7 +260,6 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 
 	// expected expirations as text
 	s.expiration1AsText = fmt.Sprintf(`expiration:
-  block_height: "%d"
   deposit:
     amount: "%v"
     denom: %s
@@ -270,17 +269,17 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
     signers:
     - %s
   module_asset_id: %s
-  owner: %s`,
-		s.blockHeight,
+  owner: %s
+  time: "%v"`,
 		s.deposit.Amount,
 		s.deposit.Denom,
 		s.scopeID.String(),
 		s.sameOwner,
 		s.moduleAssetID1,
 		s.sameOwner,
+		s.time.UTC().Format(utcFormat),
 	)
 	s.expiration2AsText = fmt.Sprintf(`expiration:
-  block_height: "%d"
   deposit:
     amount: "%v"
     denom: %s
@@ -290,17 +289,17 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
     signers:
     - %s
   module_asset_id: %s
-  owner: %s`,
-		s.blockHeight,
+  owner: %s
+  time: "%v"`,
 		s.deposit.Amount,
 		s.deposit.Denom,
 		s.scopeID.String(),
 		s.sameOwner,
 		s.moduleAssetID2,
 		s.sameOwner,
+		s.time.UTC().Format(utcFormat),
 	)
 	s.expiration3AsText = fmt.Sprintf(`expiration:
-  block_height: "%d"
   deposit:
     amount: "%v"
     denom: %s
@@ -310,8 +309,9 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
     signers:
     - %s
   module_asset_id: %s
-  owner: %s`,
-		s.blockHeight,
+  owner: %s
+  time: "%v"`,
+		s.time.UTC().Format(utcFormat),
 		s.deposit.Amount,
 		s.deposit.Denom,
 		s.scopeID.String(),
@@ -325,6 +325,10 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	expirationData.Expirations = append(expirationData.Expirations, s.expiration1)
 	expirationData.Expirations = append(expirationData.Expirations, s.expiration2)
 	expirationData.Expirations = append(expirationData.Expirations, s.expiration3)
+	expirationData.Expirations = append(expirationData.Expirations, s.expiration4)
+	expirationData.Expirations = append(expirationData.Expirations, s.expiration5)
+	expirationData.Expirations = append(expirationData.Expirations, s.expiration6)
+	expirationData.Expirations = append(expirationData.Expirations, s.expirationMetadataScope)
 	expirationDataBz, err := cfg.Codec.MarshalJSON(&expirationData)
 	s.Require().NoError(err)
 	genesisState[expirationtypes.ModuleName] = expirationDataBz
@@ -468,7 +472,7 @@ func (s *IntegrationCLITestSuite) TestGetExpirationByModuleAssetIdCmd() {
 func (s *IntegrationCLITestSuite) TestGetAllExpirationsCmd() {
 	cmd := func() *cobra.Command { return cli.GetAllExpirationsCmd() }
 
-	pageSizeArg := fmt.Sprintf("--%s=%d", flags.FlagLimit, 3)
+	pageSizeArg := fmt.Sprintf("--%s=%d", flags.FlagLimit, 7)
 
 	testCases := []queryCmdTestCase{
 		{
@@ -566,149 +570,17 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 	}
 }
 
-func getLatestHeight(s *IntegrationCLITestSuite) int64 {
-	blockHeight, err := s.testnet.LatestHeight()
-	if err != nil {
-		s.Fail("failed to retrieve current block height for test")
-	}
-	return blockHeight
-}
-
-func parseExpirationJsonStr(
-	moduleAssetID string,
-	owner string,
-	blockHeight int64,
-	deposit sdk.Coin,
-	scopeID string,
-) string {
-	if scopeID == "" {
-		scopeID = metadatatypes.ScopeMetadataAddress(uuid.New()).String()
-	}
-	s := fmt.Sprintf(`
-{
-  "module_asset_id": "%s",
-  "owner": "%s",
-  "block_height": %d,
-  "deposit": "%v",
-  "message": {
-	"@type": "/provenance.metadata.v1.MsgDeleteScopeRequest",
-	"scope_id": "%s",
-	"signers": ["%s"]
-  }
-}`, moduleAssetID, owner, blockHeight, deposit, scopeID, owner)
-	return s
-}
-
 func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 	scopeSpecID := metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String()
 	contractSpecID := metadatatypes.ContractSpecMetadataAddress(uuid.New()).String()
 
-	addExpiration4 := parseExpirationJsonStr(s.expiration4.ModuleAssetId, s.expiration4.Owner, getLatestHeight(s)+1000, s.expiration4.Deposit, "")
-	addExpiration5 := parseExpirationJsonStr(s.expiration5.ModuleAssetId, s.expiration5.Owner, getLatestHeight(s)+1000, s.expiration5.Deposit, "")
-	addExpiration6 := parseExpirationJsonStr(s.expiration6.ModuleAssetId, s.expiration6.Owner, getLatestHeight(s)+1000, s.expiration6.Deposit, "")
-	addExpiration4File := sdktestutil.WriteToNewTempFile(s.T(), addExpiration4)
-	addExpiration5File := sdktestutil.WriteToNewTempFile(s.T(), addExpiration5)
-	addExpiration6File := sdktestutil.WriteToNewTempFile(s.T(), addExpiration6)
-
-	addExpirationMetadataScope := parseExpirationJsonStr(s.expirationMetadataScope.ModuleAssetId, s.expirationMetadataScope.Owner, getLatestHeight(s)+1000, s.expirationMetadataScope.Deposit, s.scopeID.String())
-	addExpirationMetadataScopeFile := sdktestutil.WriteToNewTempFile(s.T(), addExpirationMetadataScope)
-
-	extendExpiration4 := parseExpirationJsonStr(s.expiration4.ModuleAssetId, s.expiration4.Owner, getLatestHeight(s)+2000, s.expiration4.Deposit, "")
-	extendExpiration5 := parseExpirationJsonStr(s.expiration5.ModuleAssetId, s.expiration5.Owner, getLatestHeight(s)+2000, s.expiration5.Deposit, "")
-	extendExpiration6 := parseExpirationJsonStr(s.expiration6.ModuleAssetId, s.expiration6.Owner, getLatestHeight(s)+2000, s.expiration6.Deposit, "")
-	extendExpiration4File := sdktestutil.WriteToNewTempFile(s.T(), extendExpiration4)
-	extendExpiration5File := sdktestutil.WriteToNewTempFile(s.T(), extendExpiration5)
-	extendExpiration6File := sdktestutil.WriteToNewTempFile(s.T(), extendExpiration6)
-
-	emptyModuleAssetIdExp := parseExpirationJsonStr("", s.expiration4.Owner, getLatestHeight(s)+1000, s.expiration4.Deposit, "")
-	badModuleAssetIdExp := parseExpirationJsonStr("not-an-address", s.expiration4.Owner, getLatestHeight(s)+1000, s.expiration4.Deposit, "")
-	emptyModuleAssetIdExpFile := sdktestutil.WriteToNewTempFile(s.T(), emptyModuleAssetIdExp)
-	badModuleAssetIdExpFile := sdktestutil.WriteToNewTempFile(s.T(), badModuleAssetIdExp)
-
 	testCases := []txCmdTestCase{
-		{
-			name: "should successfully add expiration",
-			cmd:  cli.AddExpirationCmd(),
-			args: []string{
-				addExpiration4File.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration4.Owner),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
-		},
-		{
-			name: "should successfully add expiration with signers flag",
-			cmd:  cli.AddExpirationCmd(),
-			args: []string{
-				addExpiration5File.Name(),
-				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.expiration5.Owner),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration5.Owner),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
-		},
-		{
-			name: "should fail to add expiration without authorization grant",
-			cmd:  cli.AddExpirationCmd(),
-			args: []string{
-				addExpiration6File.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user4AddrStr),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
-			expectedCode: expirationtypes.ErrInvalidSigners.ABCICode(),
-		},
-		{
-			name: "should successfully grant add authorization from owner 6 to signer 4",
-			cmd:  authzcli.NewCmdGrantAuthorization(),
-			args: []string{
-				s.user4AddrStr,
-				"generic",
-				fmt.Sprintf("--%s=%s", authzcli.FlagMsgType, sdk.MsgTypeURL(&expirationtypes.MsgAddExpirationRequest{})),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration6.Owner),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
-		},
-		{
-			name: "should successfully add expiration with authorization grant",
-			cmd:  cli.AddExpirationCmd(),
-			args: []string{
-				addExpiration6File.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user4AddrStr),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
-		},
 		{
 			name: "should successfully extend expiration",
 			cmd:  cli.ExtendExpirationCmd(),
 			args: []string{
-				extendExpiration4File.Name(),
+				s.expiration4.ModuleAssetId,
+				"100d",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration4.Owner),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -723,7 +595,8 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			name: "should successfully extend expiration with signers flag",
 			cmd:  cli.ExtendExpirationCmd(),
 			args: []string{
-				extendExpiration5File.Name(),
+				s.expiration5.ModuleAssetId,
+				"100d",
 				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.expiration5.Owner),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration5.Owner),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -739,7 +612,8 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			name: "should fail to extend expiration without authorization grant",
 			cmd:  cli.ExtendExpirationCmd(),
 			args: []string{
-				extendExpiration6File.Name(),
+				s.expiration6.ModuleAssetId,
+				"100d",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration4.Owner),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -771,7 +645,8 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			name: "should successfully extend expiration with authorization grant",
 			cmd:  cli.ExtendExpirationCmd(),
 			args: []string{
-				extendExpiration6File.Name(),
+				s.expiration6.ModuleAssetId,
+				"100d",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user4AddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -833,21 +708,6 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			false, "", &sdk.TxResponse{}, 0,
 		},
 		{
-			name: "should successfully add metadata scope expiration",
-			cmd:  cli.AddExpirationCmd(),
-			args: []string{
-				addExpirationMetadataScopeFile.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
-		},
-		{
 			name: "should successfully invoke metadata scope expiration",
 			cmd:  cli.InvokeExpirationCmd(),
 			args: []string{
@@ -862,134 +722,12 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
-		//{
-		//	name: "should successfully delete expiration",
-		//	cmd:  cli.DeleteExpirationCmd(),
-		//	args: []string{
-		//		s.expiration4.ModuleAssetId,
-		//		fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration4.Owner),
-		//		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		//		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		//		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		//	},
-		//	expectErr:    false,
-		//	expectErrMsg: "",
-		//	respType:     &sdk.TxResponse{},
-		//	expectedCode: 0,
-		//},
-		//{
-		//	name: "should successfully delete expiration with signers flag",
-		//	cmd:  cli.DeleteExpirationCmd(),
-		//	args: []string{
-		//		s.expiration5.ModuleAssetId,
-		//		fmt.Sprintf("--%s=%s", cli.FlagSigners, s.expiration5.Owner),
-		//		fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration5.Owner),
-		//		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		//		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		//		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		//	},
-		//	expectErr:    false,
-		//	expectErrMsg: "",
-		//	respType:     &sdk.TxResponse{},
-		//	expectedCode: 0,
-		//},
-		//{
-		//	name: "should fail to delete expiration without authorization grant",
-		//	cmd:  cli.DeleteExpirationCmd(),
-		//	args: []string{
-		//		s.expiration6.ModuleAssetId,
-		//		fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration4.Owner),
-		//		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		//		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		//		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		//	},
-		//	expectErr:    false,
-		//	expectErrMsg: "",
-		//	respType:     &sdk.TxResponse{},
-		//	expectedCode: expirationtypes.ErrInvalidSigners.ABCICode(),
-		//},
-		//{
-		//	name: "should successfully grant delete authorization from owner 6 to signer 4",
-		//	cmd:  authzcli.NewCmdGrantAuthorization(),
-		//	args: []string{
-		//		s.user4AddrStr,
-		//		"generic",
-		//		fmt.Sprintf("--%s=%s", authzcli.FlagMsgType, sdk.MsgTypeURL(&expirationtypes.MsgDeleteExpirationRequest{})),
-		//		fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration6.Owner),
-		//		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		//		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		//		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		//	},
-		//	expectErr:    false,
-		//	expectErrMsg: "",
-		//	respType:     &sdk.TxResponse{},
-		//	expectedCode: 0,
-		//},
-		//{
-		//	name: "should successfully delete expiration with authorization grant",
-		//	cmd:  cli.DeleteExpirationCmd(),
-		//	args: []string{
-		//		s.expiration6.ModuleAssetId,
-		//		fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user4AddrStr),
-		//		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		//		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		//		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		//	},
-		//	expectErr:    false,
-		//	expectErrMsg: "",
-		//	respType:     &sdk.TxResponse{},
-		//	expectedCode: 0,
-		//},
-		{
-			name: "should fail to add expiration, empty module asset id",
-			cmd:  cli.AddExpirationCmd(),
-			args: []string{
-				emptyModuleAssetIdExpFile.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration4.Owner),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			expectErr:    true,
-			expectErrMsg: "empty module asset id",
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
-		},
-		{
-			name: "should fail to add expiration, incorrect module asset id",
-			cmd:  cli.AddExpirationCmd(),
-			args: []string{
-				badModuleAssetIdExpFile.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration4.Owner),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
-			expectedCode: sdkerrors.ErrInvalidAddress.ABCICode(),
-		},
-		{
-			name: "should fail to add expiration, invalid signer(s)",
-			cmd:  cli.AddExpirationCmd(),
-			args: []string{
-				addExpiration4File.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration6.Owner),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
-			expectedCode: expirationtypes.ErrInvalidSigners.ABCICode(),
-		},
 		{
 			name: "should fail to extend expiration, not found",
 			cmd:  cli.ExtendExpirationCmd(),
 			args: []string{
-				addExpirationMetadataScopeFile.Name(),
+				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
+				"100d",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -998,13 +736,13 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			expectErr:    false,
 			expectErrMsg: "",
 			respType:     &sdk.TxResponse{},
-			expectedCode: expirationtypes.ErrExpirationNotFound.ABCICode(),
+			expectedCode: expirationtypes.ErrNotFound.ABCICode(),
 		},
 		{
 			name: "should fail to invoke expiration, not found",
 			cmd:  cli.InvokeExpirationCmd(),
 			args: []string{
-				s.expiration4.ModuleAssetId,
+				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expiration4.Owner),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -1013,7 +751,7 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			expectErr:    false,
 			expectErrMsg: "",
 			respType:     &sdk.TxResponse{},
-			expectedCode: expirationtypes.ErrInvoke.ABCICode(),
+			expectedCode: expirationtypes.ErrNotFound.ABCICode(),
 		},
 	}
 

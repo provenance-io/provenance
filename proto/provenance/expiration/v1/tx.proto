@@ -40,10 +40,12 @@ message MsgExtendExpirationRequest {
   option (gogoproto.stringer)        = false;
   option (gogoproto.goproto_getters) = false;
 
-  // expiration is the Expiration you want to add
-  Expiration expiration = 1 [(gogoproto.nullable) = false];
+  // the module asset identifier
+  string module_asset_id = 1;
+  // the duration period for which to extend the asset to remain on chain
+  string duration = 2;
   // signers is the list of addresses of those signing this request.
-  repeated string signers = 2;
+  repeated string signers = 3;
 }
 
 // MsgExtendExpirationResponse defines the MsgExtendExpirationRequest response type
