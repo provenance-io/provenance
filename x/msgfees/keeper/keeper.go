@@ -14,7 +14,6 @@ import (
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
-// StoreKey is the store key string for authz
 const StoreKey = types.ModuleName
 
 type baseAppSimulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, sdk.Context, error)
@@ -207,39 +206,26 @@ func (k Keeper) CalculateAdditionalFeesToBePaid(ctx sdk.Context, msgs ...sdk.Msg
 		typeURL := sdk.MsgTypeURL(msg)
 		msgFees, err := k.GetMsgFee(ctx, typeURL)
 		if err != nil {
-			return msgFeesDistribution, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			return msgFeesDistribution, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 		}
 
 		if msgFees != nil {
-			if msgFees.AdditionalFee.IsPositive() {
-				msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFees.AdditionalFee)
-				msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFees.AdditionalFee)
+			if err := msgFeesDistribution.Increase(msgFees.AdditionalFee, msgFees.RecipientBasisPoints, msgFees.Recipient); err != nil {
+				return msgFeesDistribution, err
 			}
 		}
 
 		if typeURL == assessCustomMsgTypeURL {
 			assessFee, ok := msg.(*types.MsgAssessCustomMsgFeeRequest)
 			if !ok {
-				return msgFeesDistribution, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "unable to convert msg to MsgAssessCustomMsgFeeRequest")
+				return msgFeesDistribution, sdkerrors.ErrInvalidType.Wrap("unable to convert msg to MsgAssessCustomMsgFeeRequest")
 			}
 			msgFeeCoin, err := k.ConvertDenomToHash(ctx, assessFee.Amount)
 			if err != nil {
 				return msgFeesDistribution, err
 			}
-			if msgFeeCoin.IsPositive() {
-				if len(assessFee.Recipient) != 0 {
-					recipientCoin, feePayoutCoin := types.SplitAmount(msgFeeCoin)
-					cur, exists := msgFeesDistribution.RecipientDistributions[assessFee.Recipient]
-					if !exists {
-						msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = sdk.NewCoins()
-					}
-					msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = cur.Add(recipientCoin)
-					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(feePayoutCoin)
-					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFeeCoin)
-				} else {
-					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFeeCoin)
-					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFeeCoin)
-				}
+			if err := msgFeesDistribution.Increase(msgFeeCoin, types.AssessCustomMsgFeeBips, assessFee.Recipient); err != nil {
+				return msgFeesDistribution, err
 			}
 		}
 	}

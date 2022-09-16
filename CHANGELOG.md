@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* Ignore hardcoded tx gas limit when `consensus_params.block.max_gas` is set to -1 for local nodes
 * Bump Cosmos-SDK to Bump cosmos to v0.46.0-pio-1-rc4 (from v0.45.5-pio-1). [#995](https://github.com/provenance-io/provenance/issues/995)
   See https://github.com/provenance-io/cosmos-sdk/blob/v0.46.0-pio-1-rc4/RELEASE_NOTES.md for more info.
 * Bump IBC to v5.0.0-beta1. [#995](https://github.com/provenance-io/provenance/issues/995)
@@ -72,6 +73,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump Cosmos-SDK to `v0.45.4-pio-4` (from `v0.45.4-pio-2`) to utilize the new `CountAuthorization` authz grant type. [#807](https://github.com/provenance-io/provenance/issues/807)
 * Update metadata module authz handling to properly call `Accept` and delete/update authorizations as they're used [#905](https://github.com/provenance-io/provenance/issues/905)
 * Read the `custom.toml` config file if it exists. This is read before the other config files, and isn't managed by the `config` commands [#989](https://github.com/provenance-io/provenance/issues/989)
+* Allow a msg fee to be paid to a specific address with basis points [#690](https://github.com/provenance-io/provenance/issues/690)
 
 ### Bug Fixes
 
@@ -85,6 +87,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Fix the `MarkerTransferAuthorization` Accept function and `TransferCoin` authz handling to prevent problems when other authorization types are used [#903](https://github.com/provenance-io/provenance/issues/903)
 * Fix fee charging to sweep remaining fees on successful transaction [#1019](https://github.com/provenance-io/provenance/issues/1019)
+* Allow a msg fee to be paid to a specific address with basis points [#690](https://github.com/provenance-io/provenance/issues/690)
 
 ---
 

@@ -58,8 +58,11 @@ func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// Skip gas limit check for txs with only gov msgs.
 	if !isTestContext(ctx) && !isOnlyGovMsgs(tx.GetMsgs()) {
 		// Ensure that the requested gas does not exceed the configured block maximum
+		// If consensus_params.block.max_gas is set to -1, ignore gasTxLimit. This is to allow for testing on local nodes
+		// since mainnet and testnet have block level limit set.
+		maxGasLimit := ctx.ConsensusParams().Block.GetMaxGas()
 		gas := feeTx.GetGas()
-		if gas > gasTxLimit {
+		if maxGasLimit > -1 && gas > gasTxLimit {
 			return ctx, sdkerrors.ErrTxTooLarge.Wrapf("transaction gas exceeds maximum allowed; got: %d max allowed: %d", gas, gasTxLimit)
 		}
 	}

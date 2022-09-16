@@ -2,6 +2,7 @@ package antewrapper_test
 
 import (
 	"fmt"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,26 +15,26 @@ import (
 // These tests are kicked off by TestAnteTestSuite in testutil_test.go
 
 func (s *AnteTestSuite) TestMsgFeesDecoratorNotEnoughForMsgFee() {
-	antehandler := setUpApp(s, true, "atom", 100)
-	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
+	antehandler := setUpApp(s, true, sdk.DefaultBondDenom, 100)
+	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))
 	ctx := s.ctx.WithChainID("test-chain")
 
 	_, err := antehandler(ctx, tx, false)
 	// Example error: base fee + additional fee cannot be paid with provided fees: \"1nhash\", required: \"190500000nhash\" = \"190500000nhash\"(base-fee) + \"\"(additional-fees): insufficient fee: insufficient fee
 	s.Require().Error(err, "antehandler")
-	s.Assert().ErrorContains(err, `base fee + additional fee cannot be paid with provided fees: "100000atom"`)
-	s.Assert().ErrorContains(err, `required: "100100atom"`)
-	s.Assert().ErrorContains(err, `= "100000atom"(base-fee) + "100atom"(additional-fees)`)
+	s.Assert().ErrorContains(err, `base fee + additional fee cannot be paid with provided fees: "100000stake"`)
+	s.Assert().ErrorContains(err, `required: "100100stake"`)
+	s.Assert().ErrorContains(err, `= "100000stake"(base-fee) + "100stake"(additional-fees)`)
 	s.Assert().ErrorContains(err, "insufficient fee")
 }
 
 func (s *AnteTestSuite) TestMsgFeesDecoratorIgnoresMinGasPrice() {
-	antehandler := setUpApp(s, true, "atom", 0)
-	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
+	antehandler := setUpApp(s, true, sdk.DefaultBondDenom, 0)
+	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))
 
-	// Set gas price to 1,000,000 atom to make sure it's not being used in the handler.
-	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(1_000_000))
-	highGasPrice := []sdk.DecCoin{atomPrice}
+	// Set gas price to 1,000,000 stake to make sure it's not being used in the handler.
+	stakePrice := sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(1_000_000))
+	highGasPrice := []sdk.DecCoin{stakePrice}
 	ctx := s.ctx.WithMinGasPrices(highGasPrice).WithChainID("test-chain")
 
 	_, err := antehandler(ctx, tx, false)
@@ -59,7 +60,7 @@ func (s *AnteTestSuite) TestMsgFeesDecoratorFloorGasPriceNotMet() {
 
 func (s *AnteTestSuite) TestMsgFeesDecoratorFloorGasPriceMet() {
 	antehandler := setUpApp(s, true, msgfeestypes.NhashDenom, 0)
-	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
+	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))
 	ctx := s.ctx.WithChainID("test-chain")
 
 	_, err := antehandler(ctx, tx, false)
@@ -76,17 +77,17 @@ func (s *AnteTestSuite) TestMsgFeesDecoratorNonCheckTxPassesAllChecks() {
 }
 
 func (s *AnteTestSuite) TestMsgFeesDecoratorSimulatingPassesAllChecks() {
-	antehandler := setUpApp(s, false, "bananas", 100)
+	antehandler := setUpApp(s, true, "bananas", 100)
 	tx, _ := createTestTx(s, testdata.NewTestFeeAmount())
 
-	// antehandler should not error since we do not check anything in DeliverTx
+	// antehandler should not error since we do not check anything in Simulate
 	_, err := antehandler(s.ctx, tx, true)
 	s.Require().NoError(err, "antehandler")
 }
 
 func (s *AnteTestSuite) TestMsgFeesDecoratorWrongDenomOnlyMsg() {
 	antehandler := setUpApp(s, true, msgfeestypes.NhashDenom, 100)
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
 	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
 	ctx := s.ctx.WithChainID("test-chain")
 
@@ -117,50 +118,50 @@ func (s *AnteTestSuite) TestMsgFeesDecoratorFloorFromParams() {
 }
 
 func (s *AnteTestSuite) TestMsgFeesDecoratorWrongDenom() {
-	antehandler := setUpApp(s, true, "atom", 100)
+	antehandler := setUpApp(s, true, sdk.DefaultBondDenom, 100)
 	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 190500200)))
 	ctx := s.ctx.WithChainID("test-chain")
 
 	_, err := antehandler(ctx, tx, false)
-	// Example error: base fee + additional fee cannot be paid with provided fees: "190500200nhash", required: "100100atom" = "100000atom"(base-fee) + "100atom"(additional-fees): insufficient fee: insufficient fee
+	// Example error: base fee + additional fee cannot be paid with provided fees: "190500200nhash", required: "100100stake" = "100000stake"(base-fee) + "100stake"(additional-fees): insufficient fee: insufficient fee
 	s.Require().Error(err, "antehandler")
 	s.Assert().ErrorContains(err, `base fee + additional fee cannot be paid with provided fees: "190500200nhash"`)
-	s.Assert().ErrorContains(err, `required: "100100atom"`)
-	s.Assert().ErrorContains(err, `= "100000atom"(base-fee) + "100atom"(additional-fees)`)
+	s.Assert().ErrorContains(err, `required: "100100stake"`)
+	s.Assert().ErrorContains(err, `= "100000stake"(base-fee) + "100stake"(additional-fees)`)
 	s.Assert().ErrorContains(err, `insufficient fee`)
 }
 
-func createTestTx(suite *AnteTestSuite, feeAmount sdk.Coins) (signing.Tx, types.AccountI) {
+func createTestTx(s *AnteTestSuite, feeAmount sdk.Coins) (signing.Tx, types.AccountI) {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	acct1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acct1)
+	acct1 := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
+	s.app.AccountKeeper.SetAccount(s.ctx, acct1)
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
-	gasLimit := suite.NewTestGasLimit()
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
-	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(gasLimit)
+	gasLimit := s.NewTestGasLimit()
+	s.Require().NoError(s.txBuilder.SetMsgs(msg))
+	s.txBuilder.SetFeeAmount(feeAmount)
+	s.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 
-	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-	suite.Require().NoError(err, "CreateTestTx")
+	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+	s.Require().NoError(err, "CreateTestTx")
 	return tx, acct1
 }
 
-func setUpApp(suite *AnteTestSuite, checkTx bool, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) sdk.AnteHandler {
-	suite.SetupTest(checkTx) // setup
-	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+func setUpApp(s *AnteTestSuite, checkTx bool, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) sdk.AnteHandler {
+	s.SetupTest(checkTx) // setup
+	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 	// create fee in stake
-	newCoin := sdk.NewInt64Coin(additionalFeeCoinDenom, additionalFeeCoinAmt)
 	if additionalFeeCoinAmt != 0 {
-		err := suite.CreateMsgFee(newCoin, &testdata.TestMsg{})
-		suite.Require().NoError(err, "CreateMsgFee")
+		newCoin := sdk.NewInt64Coin(additionalFeeCoinDenom, additionalFeeCoinAmt)
+		err := s.CreateMsgFee(newCoin, &testdata.TestMsg{})
+		s.Require().NoError(err, "CreateMsgFee")
 	}
 	// setup NewMsgFeesDecorator
-	mfd := antewrapper.NewMsgFeesDecorator(suite.app.MsgFeesKeeper)
+	mfd := antewrapper.NewMsgFeesDecorator(s.app.MsgFeesKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 	return antehandler
 }

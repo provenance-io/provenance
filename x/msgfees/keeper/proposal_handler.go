@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,7 +18,7 @@ func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddMsgFe
 
 	err := checkMsgTypeValid(registry, proposal.MsgTypeUrl)
 	if err != nil {
-		return fmt.Errorf("message type is not a sdk message: %v", proposal.MsgTypeUrl)
+		return err
 	}
 
 	existing, err := k.GetMsgFee(ctx, proposal.MsgTypeUrl)
@@ -27,8 +28,12 @@ func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddMsgFe
 	if existing != nil {
 		return types.ErrMsgFeeAlreadyExists
 	}
+	bips, err := DetermineBips(proposal.Recipient, proposal.RecipientBasisPoints)
+	if err != nil {
+		return err
+	}
 
-	msgFees := types.NewMsgFee(proposal.MsgTypeUrl, proposal.AdditionalFee)
+	msgFees := types.NewMsgFee(proposal.MsgTypeUrl, proposal.AdditionalFee, proposal.Recipient, bips)
 
 	err = k.SetMsgFee(ctx, msgFees)
 	if err != nil {
@@ -36,6 +41,24 @@ func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddMsgFe
 	}
 
 	return nil
+}
+
+// DetermineBips converts basis point string to uint32
+func DetermineBips(recipient string, recipientBasisPoints string) (uint32, error) {
+	var bips uint32
+	if len(recipientBasisPoints) > 0 && len(recipient) > 0 {
+		bips64, err := strconv.ParseUint(recipientBasisPoints, 10, 32)
+		if err != nil {
+			return bips, types.ErrInvalidBipsValue.Wrap(err.Error())
+		}
+		bips = uint32(bips64)
+		if bips > 10_000 {
+			return 0, types.ErrInvalidBipsValue.Wrap(fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", recipientBasisPoints).Error())
+		}
+	} else if len(recipientBasisPoints) == 0 && len(recipient) > 0 {
+		bips = types.DefaultMsgFeeBips
+	}
+	return bips, nil
 }
 
 func checkMsgTypeValid(registry codectypes.InterfaceRegistry, msgTypeURL string) error {
@@ -58,7 +81,7 @@ func HandleUpdateMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.Updat
 	}
 	err := checkMsgTypeValid(registry, proposal.MsgTypeUrl)
 	if err != nil {
-		return fmt.Errorf("message type is not a sdk message: %v", proposal.MsgTypeUrl)
+		return err
 	}
 	existing, err := k.GetMsgFee(ctx, proposal.MsgTypeUrl)
 	if err != nil {
@@ -67,8 +90,12 @@ func HandleUpdateMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.Updat
 	if existing == nil {
 		return types.ErrMsgFeeDoesNotExist
 	}
+	bips, err := DetermineBips(proposal.Recipient, proposal.RecipientBasisPoints)
+	if err != nil {
+		return err
+	}
 
-	msgFees := types.NewMsgFee(proposal.MsgTypeUrl, proposal.AdditionalFee)
+	msgFees := types.NewMsgFee(proposal.MsgTypeUrl, proposal.AdditionalFee, proposal.Recipient, bips)
 
 	err = k.SetMsgFee(ctx, msgFees)
 	if err != nil {
