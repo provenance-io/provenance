@@ -110,20 +110,20 @@ func TestIsOnlyGovMsgs(t *testing.T) {
 
 // These tests are kicked off by TestAnteTestSuite in testutil_test.go
 
-func (suite *AnteTestSuite) TestNoErrorWhenMaxGasIsUnlimited() {
-	err, antehandler := setUpTxGasLimitDecorator(suite, true)
-	tx, _ := createTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
-	suite.Require().NoError(err)
+func (s *AnteTestSuite) TestNoErrorWhenMaxGasIsUnlimited() {
+	err, antehandler := setUpTxGasLimitDecorator(s, true)
+	tx, _ := createTx(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
+	s.Require().NoError(err)
 
 	// Set gas price (1 atom)
 	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(1))
 	highGasPrice := []sdk.DecCoin{atomPrice}
-	suite.ctx = suite.ctx.WithMinGasPrices(highGasPrice)
+	s.ctx = s.ctx.WithMinGasPrices(highGasPrice)
 
-	suite.ctx = suite.ctx.WithIsCheckTx(true)
+	s.ctx = s.ctx.WithIsCheckTx(true)
 
 	//Force the !isTestContext(ctx) to be true
-	suite.ctx = suite.ctx.WithChainID("mainnet")
+	s.ctx = s.ctx.WithChainID("mainnet")
 
 	params := &abci.ConsensusParams{
 		Block: &abci.BlockParams{
@@ -131,23 +131,23 @@ func (suite *AnteTestSuite) TestNoErrorWhenMaxGasIsUnlimited() {
 		},
 	}
 
-	suite.ctx = suite.ctx.WithConsensusParams(params)
+	s.ctx = s.ctx.WithConsensusParams(params)
 
-	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().NoError(err)
+	_, err = antehandler(s.ctx, tx, false)
+	s.Require().NoError(err)
 }
 
-func (suite *AnteTestSuite) TestErrorOutWhenMaxGasIsLimited() {
-	err, antehandler := setUpTxGasLimitDecorator(suite, true)
-	tx, _ := createTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
-	suite.Require().NoError(err)
+func (s *AnteTestSuite) TestErrorOutWhenMaxGasIsLimited() {
+	err, antehandler := setUpTxGasLimitDecorator(s, true)
+	tx, _ := createTx(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
+	s.Require().NoError(err)
 
 	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(1))
 	highGasPrice := []sdk.DecCoin{atomPrice}
-	suite.ctx = suite.ctx.WithMinGasPrices(highGasPrice)
+	s.ctx = s.ctx.WithMinGasPrices(highGasPrice)
 
-	suite.ctx = suite.ctx.WithIsCheckTx(true)
-	suite.ctx = suite.ctx.WithChainID("mainnet")
+	s.ctx = s.ctx.WithIsCheckTx(true)
+	s.ctx = s.ctx.WithChainID("mainnet")
 
 	params := &abci.ConsensusParams{
 		Block: &abci.BlockParams{
@@ -155,33 +155,33 @@ func (suite *AnteTestSuite) TestErrorOutWhenMaxGasIsLimited() {
 		},
 	}
 
-	suite.ctx = suite.ctx.WithConsensusParams(params)
+	s.ctx = s.ctx.WithConsensusParams(params)
 
-	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().ErrorContains(err, "transaction gas exceeds maximum allowed")
+	_, err = antehandler(s.ctx, tx, false)
+	s.Require().ErrorContains(err, "transaction gas exceeds maximum allowed")
 }
 
-func createTx(suite *AnteTestSuite, err error, feeAmount sdk.Coins) (signing.Tx, authtypes.AccountI) {
+func createTx(s *AnteTestSuite, err error, feeAmount sdk.Coins) (signing.Tx, authtypes.AccountI) {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	acct1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acct1)
+	acct1 := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
+	s.app.AccountKeeper.SetAccount(s.ctx, acct1)
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
-	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(5_000_000)
+	s.Require().NoError(s.txBuilder.SetMsgs(msg))
+	s.txBuilder.SetFeeAmount(feeAmount)
+	s.txBuilder.SetGasLimit(5_000_000)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 
-	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	return tx, acct1
 }
 
-func setUpTxGasLimitDecorator(suite *AnteTestSuite, checkTx bool) (error, sdk.AnteHandler) {
-	suite.SetupTest(checkTx) // setup
-	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+func setUpTxGasLimitDecorator(s *AnteTestSuite, checkTx bool) (error, sdk.AnteHandler) {
+	s.SetupTest(checkTx) // setup
+	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
 	// setup NewTxGasLimitDecorator
 	mfd := antewrapper.NewTxGasLimitDecorator()
