@@ -55,11 +55,7 @@ func (d *MsgFeesDistribution) Increase(coin sdk.Coin, bips uint32, recipient str
 		return err
 	}
 
-	if _, exists := d.RecipientDistributions[recipient]; exists {
-		d.RecipientDistributions[recipient] = sdk.NewCoins(recipientCoin)
-	} else {
-		d.RecipientDistributions[recipient] = d.RecipientDistributions[recipient].Add(recipientCoin)
-	}
+	d.RecipientDistributions[recipient] = d.RecipientDistributions[recipient].Add(recipientCoin)
 	d.AdditionalModuleFees = d.AdditionalModuleFees.Add(feePayoutCoin)
 
 	return nil
