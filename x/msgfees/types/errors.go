@@ -11,4 +11,5 @@ var (
 	ErrMsgFeeAlreadyExists = cerrs.Register(ModuleName, 4, "fee for type already exists.")
 	ErrMsgFeeDoesNotExist  = cerrs.Register(ModuleName, 5, "fee for type does not exist.")
 	ErrInvalidFeeProposal  = cerrs.Register(ModuleName, 6, "invalid fee proposal")
+	ErrInvalidBipsValue    = cerrs.Register(ModuleName, 7, "invalid bips amount")
 )

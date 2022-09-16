@@ -246,9 +246,8 @@ func checkFloorGasFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins,
 	return nil
 }
 
-// CalculateAdditionalFeesToBePaid computes the stability tax on MsgSend and MsgMultiSend.
+// CalculateAdditionalFeesToBePaid computes the additional fees to be paid and the distributions to recipients
 func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesKeeper, msgs ...sdk.Msg) (*MsgFeesDistribution, error) {
-	// get the msg fee
 	msgFeesDistribution := MsgFeesDistribution{
 		RecipientDistributions: make(map[string]sdk.Coin),
 	}
@@ -262,8 +261,9 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 
 		if msgFees != nil {
 			if msgFees.AdditionalFee.IsPositive() {
-				msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFees.AdditionalFee)
-				msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFees.AdditionalFee)
+				if err := CalculateDistributions(msgFees.Recipient, msgFees.AdditionalFee, msgFees.RecipientBasisPoints, &msgFeesDistribution); err != nil {
+					return nil, err
+				}
 			}
 		}
 		if typeURL == assessCustomMsgTypeURL {
@@ -271,27 +271,37 @@ func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesK
 			if !ok {
 				return nil, sdkerrors.ErrInvalidType.Wrap("unable to convert msg to MsgAssessCustomMsgFeeRequest")
 			}
-			msgFeeCoin, err := mbfk.ConvertDenomToHash(ctx, assessFee.Amount)
+			assessFeeCoin, err := mbfk.ConvertDenomToHash(ctx, assessFee.Amount)
 			if err != nil {
 				return nil, err
 			}
-			if msgFeeCoin.IsPositive() {
-				if len(assessFee.Recipient) != 0 {
-					recipientCoin, feePayoutCoin := msgfeestypes.SplitAmount(msgFeeCoin)
-					if len(msgFeesDistribution.RecipientDistributions[assessFee.Recipient].Denom) == 0 {
-						msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = recipientCoin
-					} else {
-						msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = msgFeesDistribution.RecipientDistributions[assessFee.Recipient].Add(recipientCoin)
-					}
-					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(feePayoutCoin)
-					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFeeCoin)
-				} else {
-					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFeeCoin)
-					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFeeCoin)
+			if assessFeeCoin.IsPositive() {
+				if err := CalculateDistributions(assessFee.Recipient, assessFeeCoin, msgfeestypes.AssessCustomMsgFeeBips, &msgFeesDistribution); err != nil {
+					return nil, err
 				}
 			}
 		}
 	}
-
 	return &msgFeesDistribution, nil
+}
+
+// CalculateDistributions hydrates MsgFeesDistribution with additional fee and when recipient is present it splits the fee using the basis points
+func CalculateDistributions(recipient string, additionalFee sdk.Coin, basisPoints uint32, msgFeesDistribution *MsgFeesDistribution) error {
+	if len(recipient) != 0 {
+		recipientCoin, feePayoutCoin, err := msgfeestypes.SplitCoinByBips(additionalFee, basisPoints)
+		if err != nil {
+			return err
+		}
+		if len(msgFeesDistribution.RecipientDistributions[recipient].Denom) == 0 {
+			msgFeesDistribution.RecipientDistributions[recipient] = recipientCoin
+		} else {
+			msgFeesDistribution.RecipientDistributions[recipient] = msgFeesDistribution.RecipientDistributions[recipient].Add(recipientCoin)
+		}
+		msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(feePayoutCoin)
+		msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(additionalFee)
+	} else {
+		msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(additionalFee)
+		msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(additionalFee)
+	}
+	return nil
 }
