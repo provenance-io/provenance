@@ -2,8 +2,9 @@ package cli
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"strings"
+
+	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -38,7 +39,7 @@ func NewTxCmd() *cobra.Command {
 // ExtendExpirationCmd creates a command for extending an expiration
 func ExtendExpirationCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "extend [module-asset-id] [duration n{y|M|d|h}]",
+		Use:     "extend [module-asset-id] [duration n{y|w|d|h}]",
 		Aliases: []string{"e"},
 		Short:   "Extend expiration metadata for an asset on the provenance blockchain",
 		Long: `Extend expiration metadata for an asset on the provenance blockchain
@@ -48,7 +49,7 @@ $ %s tx expiration extend pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk duration 1y
 
 module-asset-id   - module asset address
 duration          - the duration period for which the module asset will continue to remain on chain.
-					Valid time units are "y", "M" (month), "d", "h"`,
+					Valid time units are "y", "w", "d", "h"`,
 		Example: fmt.Sprintf(`$ %s tx expiration extend pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk duration 1y`, version.AppName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

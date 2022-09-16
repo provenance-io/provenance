@@ -2,8 +2,9 @@ package types
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"time"
+
+	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -18,8 +19,9 @@ const (
 var DefaultDuration = 24 * 365 * time.Hour
 
 var DefaultDeposit = sdk.Coin{
-	Denom:  NhashDenom,
-	Amount: sdk.NewInt(1905), // todo: set default required amount
+	Denom: NhashDenom,
+	// todo: what should this be? should this be a configurable property in app.toml?
+	Amount: sdk.NewInt(1905),
 }
 
 var (

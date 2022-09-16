@@ -155,6 +155,7 @@ func (s *GrpcQueryTestSuite) TestQueryAllExpirationsByOwner() {
 
 	expectedAll := 3
 	expectedByOwner := 2
+	expectedExpired := 0
 
 	s.T().Run("add expirations for querying", func(t *testing.T) {
 		expiration1 := *types.NewExpiration(moduleAssetID1, sameOwner, s.time, s.deposit, anyMsg(sameOwner))
@@ -182,11 +183,20 @@ func (s *GrpcQueryTestSuite) TestQueryAllExpirationsByOwner() {
 	})
 
 	// Query expirations by owner
-	s.T().Run("query expirations by owner", func(t *testing.T) {
+	s.T().Run("query all expirations by owner", func(t *testing.T) {
 		req := types.QueryAllExpirationsByOwnerRequest{Owner: sameOwner}
 		res, err := s.queryClient.AllExpirationsByOwner(context.Background(), &req)
 		assert.NoError(t, err, "query by owner: %s", "error")
 		assert.NotNil(t, res, "query by owner: %s", "response")
 		assert.Equal(t, expectedByOwner, len(res.Expirations), "query by owner: %s", "expirations")
+	})
+
+	// Query expired expirations
+	s.T().Run("query all expired expirations", func(t *testing.T) {
+		req := types.QueryAllExpiredExpirationsRequest{}
+		res, err := s.queryClient.AllExpiredExpirations(context.Background(), &req)
+		assert.NoError(t, err, "query expired: %s", "error")
+		assert.NotNil(t, res, "query expired: %s", "response")
+		assert.Equal(t, expectedExpired, len(res.Expirations), "query expired: %s", "expirations")
 	})
 }

@@ -527,6 +527,35 @@ func (s *IntegrationCLITestSuite) TestGetAllExpirationsByOwnerCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
+func (s *IntegrationCLITestSuite) TestGetAllExpiredExpirationsCmd() {
+	cmd := func() *cobra.Command { return cli.GetAllExpiredExpirationsCmd() }
+
+	pageSizeArg := fmt.Sprintf("--%s=%d", flags.FlagLimit, 7)
+
+	testCases := []queryCmdTestCase{
+		{
+			name:             "get expired expirations - as json",
+			args:             []string{s.asJson, pageSizeArg},
+			expectedError:    "",
+			expectedInOutput: []string{},
+		},
+		{
+			name:             "get expired expirations - as text",
+			args:             []string{s.asText, pageSizeArg},
+			expectedError:    "",
+			expectedInOutput: []string{},
+		},
+		{
+			name:             "get expired expirations - no args",
+			args:             []string{"dd", pageSizeArg},
+			expectedError:    fmt.Sprintf("unknown command \"%s\" for \"expired\"", "dd"),
+			expectedInOutput: []string{},
+		},
+	}
+
+	runQueryCmdTestCases(s, cmd, testCases)
+}
+
 // ---------- tx cmd tests ----------
 
 type txCmdTestCase struct {

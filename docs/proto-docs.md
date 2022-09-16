@@ -59,6 +59,8 @@
     - [QueryAllExpirationsByOwnerResponse](#provenance.expiration.v1.QueryAllExpirationsByOwnerResponse)
     - [QueryAllExpirationsRequest](#provenance.expiration.v1.QueryAllExpirationsRequest)
     - [QueryAllExpirationsResponse](#provenance.expiration.v1.QueryAllExpirationsResponse)
+    - [QueryAllExpiredExpirationsRequest](#provenance.expiration.v1.QueryAllExpiredExpirationsRequest)
+    - [QueryAllExpiredExpirationsResponse](#provenance.expiration.v1.QueryAllExpiredExpirationsResponse)
     - [QueryExpirationRequest](#provenance.expiration.v1.QueryExpirationRequest)
     - [QueryExpirationResponse](#provenance.expiration.v1.QueryExpirationResponse)
     - [QueryParamsRequest](#provenance.expiration.v1.QueryParamsRequest)
@@ -1137,6 +1139,37 @@ QueryAllExpirationsResponse response for querying all expirations
 
 
 
+<a name="provenance.expiration.v1.QueryAllExpiredExpirationsRequest"></a>
+
+### QueryAllExpiredExpirationsRequest
+QueryAllExpiredExpirationsRequest queries all expired expirations
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request |
+
+
+
+
+
+
+<a name="provenance.expiration.v1.QueryAllExpiredExpirationsResponse"></a>
+
+### QueryAllExpiredExpirationsResponse
+QueryAllExpiredExpirationsResponse response for querying all expired expirations
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `expirations` | [Expiration](#provenance.expiration.v1.Expiration) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
 <a name="provenance.expiration.v1.QueryExpirationRequest"></a>
 
 ### QueryExpirationRequest
@@ -1208,7 +1241,8 @@ Query defines the gRPC querier service for expiration module.
 | `Params` | [QueryParamsRequest](#provenance.expiration.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.expiration.v1.QueryParamsResponse) | Params queries the parameters for x/expiration | GET|/provenance/expiration/v1/params|
 | `Expiration` | [QueryExpirationRequest](#provenance.expiration.v1.QueryExpirationRequest) | [QueryExpirationResponse](#provenance.expiration.v1.QueryExpirationResponse) | Query Expiration | GET|/provenance/expiration/v1/{module_asset_id}|
 | `AllExpirations` | [QueryAllExpirationsRequest](#provenance.expiration.v1.QueryAllExpirationsRequest) | [QueryAllExpirationsResponse](#provenance.expiration.v1.QueryAllExpirationsResponse) | Query all Expirations | GET|/provenance/expiration/v1/all|
-| `AllExpirationsByOwner` | [QueryAllExpirationsByOwnerRequest](#provenance.expiration.v1.QueryAllExpirationsByOwnerRequest) | [QueryAllExpirationsByOwnerResponse](#provenance.expiration.v1.QueryAllExpirationsByOwnerResponse) | Query all Expirations | GET|/provenance/expiration/v1/all/{owner}|
+| `AllExpirationsByOwner` | [QueryAllExpirationsByOwnerRequest](#provenance.expiration.v1.QueryAllExpirationsByOwnerRequest) | [QueryAllExpirationsByOwnerResponse](#provenance.expiration.v1.QueryAllExpirationsByOwnerResponse) | Query Expirations by owner | GET|/provenance/expiration/v1/all/{owner}|
+| `AllExpiredExpirations` | [QueryAllExpiredExpirationsRequest](#provenance.expiration.v1.QueryAllExpiredExpirationsRequest) | [QueryAllExpiredExpirationsResponse](#provenance.expiration.v1.QueryAllExpiredExpirationsResponse) | Query all expired Expirations | GET|/provenance/expiration/v1/all/expired|
 
  <!-- end services -->
 

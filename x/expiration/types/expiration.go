@@ -76,9 +76,9 @@ func (e *Expiration) validateMessage() error {
 	return msg.ValidateBasic()
 }
 
-var reDuration = regexp.MustCompile("(^[1-9]\\d{0,11})([yMdh])$")
+var reDuration = regexp.MustCompile("(^[1-9]\\d{0,11})([ywdh])$")
 
-// ParseDuration parses a duration string into a time.Time
+// ParseDuration parses a duration string
 func ParseDuration(s string) (*time.Duration, error) {
 	// FindStringSubmatch returns a slice of strings holding the text of the
 	// leftmost match of the regular expression in s and the matches, if any.
@@ -98,8 +98,8 @@ func ParseDuration(s string) (*time.Duration, error) {
 	switch period {
 	case "y":
 		duration = time.Duration(digit) * 24 * 365 * time.Hour
-	case "m":
-		duration = time.Duration(digit) * 24 * 31 * time.Hour
+	case "w":
+		duration = time.Duration(digit) * 24 * 7 * time.Hour
 	case "d":
 		duration = time.Duration(digit) * 24 * time.Hour
 	case "h":
