@@ -4,7 +4,6 @@ package simulation
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"math/rand"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
