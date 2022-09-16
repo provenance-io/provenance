@@ -73,7 +73,7 @@ func SimulateMsgCreateRewardsProgram(k keeper.Keeper, ak authkeeper.AccountKeepe
 
 		var minActions = MinActionsFn(r)
 
-		minDelegation := sdk.NewInt64Coin(pioconfig.DefaultBondDenom, int64(minActions))
+		minDelegation := sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, int64(minActions))
 
 		now := time.Now()
 		claimPeriods := uint64(r.Intn(100))
@@ -130,7 +130,7 @@ func Dispatch(
 		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate fees"), nil, err
 	}
 	err = simapp.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
-		Denom:  pioconfig.DefaultBondDenom,
+		Denom:  pioconfig.GetProvenanceConfig().BondDenom,
 		Amount: sdk.NewInt(1_000_000_000_000_000),
 	}))
 	if err != nil {
