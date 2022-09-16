@@ -1718,6 +1718,18 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 		app.Commit()
 		seq = seq + 1
 	}
+
+	// TODO: Delete these ones this test is fixed (they're just here for extra debug information).
+	allRewardPrograms, err := app.RewardKeeper.GetAllRewardPrograms(ctx)
+	require.NoError(t, err, "GetAllRewardPrograms")
+	_ = allRewardPrograms
+	program, err := app.RewardKeeper.GetRewardProgram(ctx, rewardProgram.Id)
+	require.NoError(t, err, "GetRewardProgram")
+	_ = program
+	rewardAcctStates, err := app.RewardKeeper.GetRewardAccountStatesForRewardProgram(ctx, rewardProgram.Id)
+	require.NoError(t, err, "GetRewardAccountStatesForRewardProgram")
+	_ = rewardAcctStates
+
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	require.NoError(t, err)
 	assert.Len(t, claimPeriodDistributions, 1, "claim period reward distributions should exist")
