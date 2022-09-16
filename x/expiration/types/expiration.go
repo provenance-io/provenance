@@ -76,7 +76,7 @@ func (e *Expiration) validateMessage() error {
 	return msg.ValidateBasic()
 }
 
-var reDuration = regexp.MustCompile("(^[1-9]\\d{0,11})([ywdh])$")
+var reDuration = regexp.MustCompile(`(^[1-9]\d{0,11})([ywdh])$`)
 
 // ParseDuration parses a duration string
 func ParseDuration(s string) (*time.Duration, error) {

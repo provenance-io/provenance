@@ -161,7 +161,7 @@ func (k Keeper) ExtendExpiration(ctx sdk.Context, expiration types.Expiration) e
 	return k.emitEvent(ctx, extendEvent)
 }
 
-// DeleteExpiration removes an expiration record from the kvstore.
+// deleteExpiration removes an expiration record from the kvstore.
 func (k Keeper) deleteExpiration(ctx sdk.Context, moduleAssetID string) error {
 	key, err := types.GetModuleAssetKeyPrefix(moduleAssetID)
 	if err != nil {

@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
@@ -11,7 +12,6 @@ import (
 var (
 	_ sdk.Msg = &MsgAddExpirationRequest{}
 	_ sdk.Msg = &MsgExtendExpirationRequest{}
-	//_ sdk.Msg = &MsgDeleteExpirationRequest{}
 	_ sdk.Msg = &MsgInvokeExpirationRequest{}
 )
 
