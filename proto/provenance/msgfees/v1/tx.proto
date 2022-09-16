@@ -22,7 +22,7 @@ service Msg {
 message MsgAssessCustomMsgFeeRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   string name = 1; // optional short name for custom msg fee, this will be emitted as a property of the event
   cosmos.base.v1beta1.Coin amount = 2 [

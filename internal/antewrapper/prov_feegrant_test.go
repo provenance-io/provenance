@@ -27,10 +27,10 @@ import (
 
 // These tests are kicked off by TestAnteTestSuite in testutil_test.go
 
-func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
-	suite.SetupTest(false)
+func (s *AnteTestSuite) TestDeductFeesNoDelegation() {
+	s.SetupTest(false)
 	// setup
-	app, ctx := suite.app, suite.ctx
+	app, ctx := s.app, s.ctx
 
 	protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(app.InterfaceRegistry()), tx.DefaultSignModes)
 
@@ -42,7 +42,7 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	feeAnteHandler := sdk.ChainAnteDecorators(decorators...)
 
 	// this tests the whole stack
-	anteHandlerStack := suite.anteHandler
+	anteHandlerStack := s.anteHandler
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -52,26 +52,26 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	priv5, _, addr5 := testdata.KeyTestPubAddr()
 
 	// Set addr1 with insufficient funds
-	err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(10))})
-	suite.Require().NoError(err, "funding account 1")
+	err := testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, []sdk.Coin{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))})
+	s.Require().NoError(err, "funding account 1")
 
 	// Set addr2 with more funds
-	err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99_999_999))})
-	suite.Require().NoError(err, "funding account 2")
+	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr2, []sdk.Coin{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(99_999_999))})
+	s.Require().NoError(err, "funding account 2")
 
 	// grant fee allowance from `addr2` to `addr3` (plenty to pay)
 	err = app.FeeGrantKeeper.GrantAllowance(ctx, addr2, addr3, &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", helpers.DefaultGenTxGas*5)),
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, helpers.DefaultGenTxGas*5)),
 	})
-	suite.Require().NoError(err, "grant allowance 2 to 3")
+	s.Require().NoError(err, "grant allowance 2 to 3")
 
-	// grant low fee allowance (20atom), to check the tx requesting more than allowed.
+	// grant low fee allowance (20stake), to check the tx requesting more than allowed.
 	err = app.FeeGrantKeeper.GrantAllowance(ctx, addr2, addr4, &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 20)),
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 20)),
 	})
-	suite.Require().NoError(err, "grant allowance 2 to 4")
+	s.Require().NoError(err, "grant allowance 2 to 4")
 
-	defaultGasStr := fmt.Sprintf("%datom", helpers.DefaultGenTxGas)
+	defaultGasStr := fmt.Sprintf("%d%s", helpers.DefaultGenTxGas, sdk.DefaultBondDenom)
 
 	cases := []struct {
 		name       string
@@ -86,7 +86,7 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			signerKey: priv1,
 			signer:    addr1,
 			fee:       helpers.DefaultGenTxGas,
-			expInErr:  []string{"10atom", defaultGasStr, "insufficient funds"},
+			expInErr:  []string{"10stake", defaultGasStr, "insufficient funds"},
 		}, {
 			name:      "paying with good funds",
 			signerKey: priv2,
@@ -98,7 +98,7 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			signerKey: priv3,
 			signer:    addr3,
 			fee:       helpers.DefaultGenTxGas,
-			expInErr:  []string{"0atom", defaultGasStr, "insufficient funds"},
+			expInErr:  []string{"0stake", defaultGasStr, "insufficient funds"},
 		}, {
 			name:      "no fee with no account",
 			signerKey: priv5,
@@ -141,8 +141,8 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 
 	for _, stc := range cases {
 		tc := stc // to make scopelint happy
-		suite.T().Run(tc.name, func(t *testing.T) {
-			fee := sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee))
+		s.T().Run(tc.name, func(t *testing.T) {
+			fee := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, tc.fee))
 			msgs := []sdk.Msg{testdata.NewTestMsg(tc.signer)}
 
 			acc := app.AccountKeeper.GetAccount(ctx, tc.signer)

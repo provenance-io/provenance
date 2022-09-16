@@ -64,6 +64,17 @@
           "Params": "MsgFeeParams"
         }
       }
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/reward/v1/tx.swagger.json"
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/reward/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "MsgFeeParams"
+        }
+      }
     }
   ]
 }

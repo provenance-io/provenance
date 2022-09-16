@@ -1,0 +1,199 @@
+syntax = "proto3";
+package provenance.reward.v1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/reward/types";
+option java_package        = "io.provenance.reward.v1";
+option java_multiple_files = true;
+
+// RewardProgram
+message RewardProgram {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+  // State is the state of the reward program
+  enum State {
+    // undefined program state
+    STATE_UNSPECIFIED = 0;
+    // pending state of reward program
+    STATE_PENDING = 1;
+    // started state of reward program
+    STATE_STARTED = 2;
+    // finished state of reward program
+    STATE_FINISHED = 3;
+    // expired state of reward program
+    STATE_EXPIRED = 4;
+  }
+
+  // An integer to uniquely identify the reward program.
+  uint64 id = 1;
+  // Name to help identify the Reward Program.(MaxTitleLength=140)
+  string title = 2;
+  // Short summary describing the Reward Program.(MaxDescriptionLength=10000)
+  string description = 3;
+  // address that provides funds for the total reward pool.
+  string distribute_from_address = 4;
+  // The total amount of funding given to the RewardProgram.
+  cosmos.base.v1beta1.Coin total_reward_pool = 5 [(gogoproto.nullable) = false];
+  // The remaining funds available to distribute after n claim periods have passed.
+  cosmos.base.v1beta1.Coin remaining_pool_balance = 6 [(gogoproto.nullable) = false];
+  // The total amount of all funds claimed by participants for all past claim periods.
+  cosmos.base.v1beta1.Coin claimed_amount = 7 [(gogoproto.nullable) = false];
+  // Maximum reward per claim period per address.
+  cosmos.base.v1beta1.Coin max_reward_by_address = 8 [(gogoproto.nullable) = false];
+  // Minimum amount of coins for a program to rollover.
+  cosmos.base.v1beta1.Coin minimum_rollover_amount = 9 [(gogoproto.nullable) = false];
+  // Number of seconds that a claim period lasts.
+  uint64 claim_period_seconds = 10;
+  // Time that a RewardProgram should start and switch to STARTED state.
+  google.protobuf.Timestamp program_start_time = 11 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  // Time that a RewardProgram is expected to end, based on data when it was setup.
+  google.protobuf.Timestamp expected_program_end_time = 12 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  // Time that a RewardProgram MUST end.
+  google.protobuf.Timestamp program_end_time_max = 13 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  // Used internally to calculate and track the current claim period's ending time.
+  google.protobuf.Timestamp claim_period_end_time = 14 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  // Time the RewardProgram switched to FINISHED state. Initially set as empty.
+  google.protobuf.Timestamp actual_program_end_time = 15 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  // Number of claim periods this program will run for.
+  uint64 claim_periods = 16;
+  // Current claim period of the RewardProgram. Uses 1-based indexing.
+  uint64 current_claim_period = 17;
+  // maximum number of claim periods a reward program can rollover.
+  uint64 max_rollover_claim_periods = 18;
+  // Current state of the RewardProgram.
+  State state = 19;
+  // Grace period after a RewardProgram FINISHED. It is the number of seconds until a RewardProgram enters the EXPIRED
+  // state.
+  uint64 expiration_offset = 20;
+  // Actions that count towards the reward.
+  repeated QualifyingAction qualifying_actions = 21 [(gogoproto.nullable) = false];
+}
+
+// ClaimPeriodRewardDistribution, this is updated at the end of every claim period.
+message ClaimPeriodRewardDistribution {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  // The claim period id.
+  uint64 claim_period_id = 1;
+  // The id of the reward program that this reward belongs to.
+  uint64 reward_program_id = 2;
+  // The sum of all the granted rewards for this claim period.
+  cosmos.base.v1beta1.Coin total_rewards_pool_for_claim_period = 3 [(gogoproto.nullable) = false];
+  // The final allocated rewards for this claim period.
+  cosmos.base.v1beta1.Coin rewards_pool = 4 [(gogoproto.nullable) = false];
+  // The total number of granted shares for this claim period.
+  int64 total_shares = 5;
+  // A flag representing if the claim period for this reward has ended.
+  bool claim_period_ended = 6;
+}
+
+// RewardAccountState contains state at the claim period level for a specific address.
+message RewardAccountState {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+  // ClaimStatus is the state a claim is in
+  enum ClaimStatus {
+    // undefined state
+    CLAIM_STATUS_UNSPECIFIED = 0;
+    // unclaimable status
+    CLAIM_STATUS_UNCLAIMABLE = 1;
+    // unclaimable claimable
+    CLAIM_STATUS_CLAIMABLE = 2;
+    // unclaimable claimed
+    CLAIM_STATUS_CLAIMED = 3;
+    // unclaimable expired
+    CLAIM_STATUS_EXPIRED = 4;
+  }
+  // The id of the reward program that this share belongs to.
+  uint64 reward_program_id = 1;
+  // The id of the claim period that the share belongs to.
+  uint64 claim_period_id = 2;
+  // Owner of the reward account state.
+  string address = 3;
+  // The number of actions performed by this account, mapped by action type.
+  repeated ActionCounter action_counter = 4;
+  // The amount of granted shares for the address in the reward program's claim period.
+  uint64 shares_earned = 5;
+  // The status of the claim.
+  ClaimStatus claim_status = 6;
+}
+
+// QualifyingAction can be one of many action types.
+message QualifyingAction {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+  // type of action to process
+  oneof type {
+    ActionDelegate delegate = 1;
+    ActionTransfer transfer = 2;
+    ActionVote     vote     = 3;
+  }
+}
+
+// QualifyingActions contains a list of QualifyingActions.
+message QualifyingActions {
+  // The actions that count towards the reward.
+  repeated QualifyingAction qualifying_actions = 1 [(gogoproto.nullable) = false];
+}
+
+// ActionDelegate represents the delegate action and its required eligibility criteria.
+message ActionDelegate {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  // Minimum number of successful delegates.
+  uint64 minimum_actions = 1;
+  // Maximum number of successful delegates.
+  uint64 maximum_actions = 2;
+  // Minimum amount that the user must have currently delegated on the validator.
+  cosmos.base.v1beta1.Coin minimum_delegation_amount = 3;
+  // Maximum amount that the user must have currently delegated on the validator.
+  cosmos.base.v1beta1.Coin maximum_delegation_amount = 4;
+  // Minimum percentile that can be below the validator's power ranking.
+  string minimum_active_stake_percentile = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  // Maximum percentile that can be below the validator's power ranking.
+  string maximum_active_stake_percentile = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+}
+
+// ActionTransfer represents the transfer action and its required eligibility criteria.
+message ActionTransfer {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  // Minimum number of successful transfers.
+  uint64 minimum_actions = 1;
+  // Maximum number of successful transfers.
+  uint64 maximum_actions = 2;
+  // Minimum delegation amount the account must have across all validators, for the transfer action to be counted.
+  cosmos.base.v1beta1.Coin minimum_delegation_amount = 3 [(gogoproto.nullable) = false];
+}
+
+// ActionVote represents the voting action and its required eligibility criteria.
+message ActionVote {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  // Minimum number of successful votes.
+  uint64 minimum_actions = 1;
+  // Maximum number of successful votes.
+  uint64 maximum_actions = 2;
+  // Minimum delegation amount the account must have across all validators, for the vote action to be counted.
+  cosmos.base.v1beta1.Coin minimum_delegation_amount = 3 [(gogoproto.nullable) = false];
+}
+
+// ActionCounter is a key-value pair that maps action type to the number of times it was performed.
+message ActionCounter {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  // The type of action performed.
+  string action_type = 1;
+  // The number of times this action has been performed
+  uint64 number_of_actions = 2;
+}
