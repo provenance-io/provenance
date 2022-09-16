@@ -8,16 +8,16 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/provenance-io/provenance/internal/pioconfig"
-
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
@@ -42,8 +42,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-
-	"github.com/provenance-io/provenance/app"
 )
 
 const (
@@ -109,6 +107,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        ChainID,
 		flags.FlagKeyringBackend: "test",
+		server.FlagMinGasPrices:  pioconfig.GetProvenanceConfig().MinGasPrices,
 		CoinTypeFlag:             fmt.Sprint(app.CoinTypeMainNet),
 	})
 
@@ -284,8 +283,6 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		}
 	}
 
-	getCustomDenom(appOpts)
-
 	return app.New(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
@@ -368,10 +365,4 @@ func getIAVLCacheSize(options servertypes.AppOptions) int {
 		return cast.ToInt(serverconfig.DefaultConfig().IAVLCacheSize)
 	}
 	return iavlCacheSize
-}
-
-func getCustomDenom(options servertypes.AppOptions) string {
-	customDenom := cast.ToString(options.Get("custom-denom"))
-	println(customDenom)
-	return customDenom
 }

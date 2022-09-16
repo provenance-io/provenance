@@ -37,6 +37,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+* Ignore hardcoded tx gas limit when `consensus_params.block.max_gas` is set to -1 for local nodes
+
 ---
 
 ## [v1.12.0](https://github.com/provenance-io/provenance/releases/tag/v1.12.0) - 2022-08-22

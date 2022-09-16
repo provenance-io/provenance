@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/simapp"
 
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"

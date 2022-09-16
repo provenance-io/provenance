@@ -11,8 +11,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/provenance-io/provenance/internal/pioconfig"
-
 	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/spf13/cobra"
@@ -43,6 +41,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )

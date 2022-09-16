@@ -8,8 +8,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/provenance-io/provenance/internal/pioconfig"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -28,8 +26,8 @@ import (
 	"github.com/cosmos/go-bip39"
 
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
@@ -101,8 +99,7 @@ func Init(
 	if !doOverwrite && tmos.FileExists(genFile) {
 		return fmt.Errorf("genesis file already exists: %v", genFile)
 	}
-	cmd.Printf("custom denom = : %s\n", customDenom)
-	cmd.Printf("min gas price = : %s\n", pioconfig.GetProvenanceConfig().MinGasPrices)
+
 	// Set a few things in the configs.
 	appConfig.MinGasPrices = pioconfig.GetProvenanceConfig().MinGasPrices
 
@@ -139,7 +136,6 @@ func Init(
 	if err = createAndExportGenesisFile(cmd, client.GetClientContextFromCmd(cmd).Codec, mbm, isTestnet, chainID, genFile); err != nil {
 		return err
 	}
-	cmd.Printf("Min gas price value = : %s\n", appConfig.MinGasPrices)
 	// Save the configs.
 	provconfig.SaveConfigs(cmd, appConfig, tmConfig, clientConfig, true)
 
