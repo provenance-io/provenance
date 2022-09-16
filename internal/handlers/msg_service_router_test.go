@@ -53,7 +53,7 @@ func stopIfFailed(t *testing.T) {
 
 func assertEventsContains(t *testing.T, events, contains []abci.Event, msgAndArgs ...interface{}) bool {
 	t.Helper()
-	missingEvents := []abci.Event{}
+	var missingEvents []abci.Event
 LookingForLoop:
 	for _, lookingFor := range contains {
 		for _, event := range events {
@@ -333,7 +333,7 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
 	acct1Balance := sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(1_000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000)))
-	app := piosimapp.SetupWithGenesisAccounts(t, []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr1.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisAccounts(t, "", []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr1.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
@@ -362,9 +362,6 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 	assert.Equal(t, sdk.EventTypeTx, res.Events[4].Type)
 	assert.Equal(t, sdk.AttributeKeyFee, string(res.Events[4].Attributes[0].Key))
 	assert.Equal(t, "800hotdog,100000stake", string(res.Events[4].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[5].Type)
-	assert.Equal(t, antewrapper.AttributeKeyMinFeeCharged, string(res.Events[5].Attributes[0].Key))
-	assert.Equal(t, "100000stake", string(res.Events[5].Attributes[0].Value))
 	assert.Equal(t, sdk.EventTypeTx, res.Events[14].Type)
 	assert.Equal(t, antewrapper.AttributeKeyAdditionalFee, string(res.Events[14].Attributes[0].Key))
 	assert.Equal(t, "800hotdog", string(res.Events[14].Attributes[0].Value))
@@ -397,7 +394,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 	exp1Hour := now.Add(time.Hour)
 	require.NoError(tt, app.AuthzKeeper.SaveGrant(ctx, addr2, addr1, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("hotdog", 500))), &exp1Hour), "Save Grant addr2 addr1 500hotdog")
 	// Set a MsgSend msg-based fee of 800hotdog.
-	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&banktypes.MsgSend{}), sdk.NewCoin("hotdog", sdk.NewInt(800)))
+	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&banktypes.MsgSend{}), sdk.NewCoin("hotdog", sdk.NewInt(800)), "", 0)
 	require.NoError(tt, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 800hotdog")
 
 	// Check all account balances before we start.
@@ -556,7 +553,7 @@ func TestRewardsProgramStartError(t *testing.T) {
 	//_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
 	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin("atom", 1000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000))
-	app := piosimapp.SetupWithGenesisAccounts(t, []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisAccounts(t, "", []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	blockTime := ctx.BlockTime()
@@ -600,7 +597,7 @@ func TestRewardsProgramStart(t *testing.T) {
 	priv, _, addr := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
 	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin("atom", 1000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000))
-	app := piosimapp.SetupWithGenesisAccounts(t, []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisAccounts(t, "", []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
@@ -652,7 +649,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
 	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000))
-	app := piosimapp.SetupWithGenesisAccounts(t, []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisAccounts(t, "", []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
