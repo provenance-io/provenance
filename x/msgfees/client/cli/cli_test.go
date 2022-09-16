@@ -1,7 +1,11 @@
 package cli_test
 
 import (
+	"encoding/json"
 	"fmt"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -299,4 +303,84 @@ func (s *IntegrationTestSuite) TestUpdateUsdConversionRateProposal() {
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestUpdateDenomMetadataProposalProposal() {
+	p, _ := ioutil.TempFile("", "proposal.json")
+	tmpFile := p.Name()
+	proposal := &msgfeetypes.UpdateDenomMetadataProposal{
+		Title:       "",
+		Description: "description",
+		Metadata: banktypes.Metadata{
+			Description: "",
+			Base:        "",
+			Display:     "",
+			Name:        "",
+			Symbol:      "",
+			DenomUnits: []*banktypes.DenomUnit{
+				{Denom: "nhash", Exponent: 0, Aliases: nil},
+			},
+		},
+	}
+
+	content, _ := json.Marshal(proposal)
+
+	p.WriteString(string(content))
+
+	testCases := []struct {
+		name         string
+		proposal     string
+		deposit      string
+		expectErrMsg string
+		expectedCode uint32
+	}{
+		{
+			name:         "update fee denom proposal - valid",
+			proposal:     tmpFile,
+			deposit:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+			expectErrMsg: "",
+			expectedCode: 0,
+		},
+		{
+			name:         "update fee denom proposal - invalid - rate param error",
+			proposal:     tmpFile,
+			deposit:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+			expectErrMsg: "unable to parse nhash value: invalid-rate",
+			expectedCode: 0,
+		},
+		{
+			name:         "update nhash to usd mil proposal - invalid - deposit param",
+			proposal:     tmpFile,
+			deposit:      "invalid-deposit",
+			expectErrMsg: "invalid decimal coin expression: invalid-deposit",
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.proposal, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			args := []string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			}
+			args = append(args, tc.proposal, tc.deposit)
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, msgfeescli.GetUpdateDenomMetadataProposal(), args)
+			if len(tc.expectErrMsg) != 0 {
+				s.Require().Error(err)
+				s.Assert().Equal(tc.expectErrMsg, err.Error())
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
+			}
+		})
+	}
+
+	s.Require().NoError(os.Remove(tmpFile))
+
 }
