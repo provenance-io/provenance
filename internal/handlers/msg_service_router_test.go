@@ -487,11 +487,12 @@ func TestMsgServiceAuthz(tt *testing.T) {
 		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 		require.Equal(t, uint32(13), res.Code, "res=%+v", res)
 
+		// addr2 pays the base fee, but nothing else is changes.
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
 		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
 		addr3AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr3).String()
 		assert.Equal(t, "9740hotdog,401000stake", addr1AfterBalance, "addr1AfterBalance")
-		assert.Equal(t, "7600hotdog,101000stake", addr2AfterBalance, "addr2AfterBalance")
+		assert.Equal(t, "7600hotdog,1000stake", addr2AfterBalance, "addr2AfterBalance")
 		assert.Equal(t, "260hotdog", addr3AfterBalance, "addr3AfterBalance")
 	})
 }
