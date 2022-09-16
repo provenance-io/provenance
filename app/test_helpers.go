@@ -448,7 +448,7 @@ func SetupWithGenesisRewardsProgram(t *testing.T, nextRewardProgramID uint64, ge
 	genesisState = genesisStateWithRewards(t, app, genesisState, nextRewardProgramID, genesisRewards)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-	require.NoError(t, err, "marshalling genesis state to json")
+	require.NoError(t, err, "marshaling genesis state to json")
 
 	app.InitChain(
 		abci.RequestInitChain{
@@ -474,7 +474,8 @@ func genesisStateWithRewards(t *testing.T,
 		[]rewardtypes.ClaimPeriodRewardDistribution{},
 		[]rewardtypes.RewardAccountState{},
 	)
-	genesisState[rewardtypes.ModuleName] = app.AppCodec().MustMarshalJSON(rewardGenesisState)
-
+	var err error
+	genesisState[rewardtypes.ModuleName], err = app.AppCodec().MarshalJSON(rewardGenesisState)
+	require.NoError(t, err, "marshaling reward genesis state JSON")
 	return genesisState
 }
