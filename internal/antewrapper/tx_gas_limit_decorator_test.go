@@ -12,6 +12,8 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 )
 
+// These tests are kicked off by TestAnteTestSuite in testutil_test.go
+
 func (suite *AnteTestSuite) TestNoErrorWhenMaxGasIsUnlimited() {
 	err, antehandler := setUpTxGasLimitDecorator(suite, true)
 	tx, _ := createTx(suite, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
