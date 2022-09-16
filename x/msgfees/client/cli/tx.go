@@ -3,7 +3,6 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"io/ioutil"
 	"strconv"
 	"strings"
@@ -212,35 +211,20 @@ func GetUpdateDenomMetadataProposal() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			title, description, depositArg := args[0], args[1], args[2]
+			depositArg := args[1]
 
-			contents, err := ioutil.ReadFile(args[3])
+			contents, err := ioutil.ReadFile(args[0])
 			if err != nil {
 				return err
 			}
+
+			proposal := &types.UpdateDenomMetadataProposal{}
 
 			err = json.Unmarshal(contents, proposal)
 			if err != nil {
 				return err
 			}
 
-			//TODO: how to construct this
-			metadata := banktypes.Metadata{
-				Description: "the best denom description",
-				Base:        "test1",
-				Display:     "test1",
-				Name:        "Test One",
-				Symbol:      "TONE",
-				DenomUnits: []*banktypes.DenomUnit{
-					{
-						Denom:    "test1",
-						Exponent: 0,
-						Aliases:  []string{"tone"},
-					},
-				},
-			}
-
-			proposal := types.NewUpdateDenomMetadataProposal(title, description, metadata)
 			deposit, err := sdk.ParseCoinsNormalized(depositArg)
 			if err != nil {
 				return err
