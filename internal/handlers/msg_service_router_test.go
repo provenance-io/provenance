@@ -1635,10 +1635,11 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 
 func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *testing.T) {
 	encCfg := sdksim.MakeTestEncodingConfig()
-	priv, _, addr := testdata.KeyTestPubAddr()
-	//_, _, addr2 := testdata.KeyTestPubAddr()
-	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+	priv1, pubKey1, addr1 := testdata.KeyTestPubAddr()
+	priv2, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr1, priv1.PubKey(), 0, 0)
+	acct2 := authtypes.NewBaseAccount(addr2, priv2.PubKey(), 1, 0)
+	acctBalance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
 		"title",
@@ -1667,49 +1668,49 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 
 	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
 
-	app := piosimapp.SetupWithGenesisRewardsProgram(t, uint64(2), []rewardtypes.RewardProgram{rewardProgram}, []authtypes.GenesisAccount{acct1}, nil, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisRewardsProgram(t,
+		uint64(2), []rewardtypes.RewardProgram{rewardProgram},
+		[]authtypes.GenesisAccount{acct1, acct2}, createValSet(t, pubKey1),
+		banktypes.Balance{Address: addr1.String(), Coins: acctBalance},
+		banktypes.Balance{Address: addr2.String(), Coins: acctBalance},
+	)
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
 	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
 		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
 		coinsPos,
-		addr,
+		addr1,
 	)
 
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
-	ctx.WithBlockTime(time.Now())
-	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
-	seq := acct1.Sequence
-	ctx.WithBlockTime(time.Now())
 	time.Sleep(200 * time.Millisecond)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
-	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv1.PubKey(), priv1, *acct1, ctx.ChainID(), msg)
 	require.NoError(t, err)
 
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
 	require.NoError(t, errFromDeliverTx)
+	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 
 	app.EndBlock(abci.RequestEndBlock{Height: 2})
 	app.Commit()
 
-	seq = seq + 1
 	proposal := app.GovKeeper.GetProposals(ctx)
-
 	require.NotEmpty(t, proposal, "proposal has to exist")
-	// tx with a fee associated with msg type and account has funds
-	vote1 := govtypesv1beta1.NewMsgVote(addr, proposal[0].Id, govtypesv1beta1.OptionYes)
 
-	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+	// tx with a fee associated with msg type and account has funds
+	vote2 := govtypesv1beta1.NewMsgVote(addr2, proposal[0].Id, govtypesv1beta1.OptionYes)
+	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct2.Sequence
 
 	for height := int64(3); height < int64(5); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
-		require.NoError(t, acct1.SetSequence(seq))
-		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
+		require.NoError(t, acct2.SetSequence(seq))
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), vote2)
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx)
@@ -1719,38 +1720,31 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 		seq = seq + 1
 	}
 
-	// TODO: Delete these ones this test is fixed (they're just here for extra debug information).
-	allRewardPrograms, err := app.RewardKeeper.GetAllRewardPrograms(ctx)
-	require.NoError(t, err, "GetAllRewardPrograms")
-	_ = allRewardPrograms
-	program, err := app.RewardKeeper.GetRewardProgram(ctx, rewardProgram.Id)
-	require.NoError(t, err, "GetRewardProgram")
-	_ = program
-	rewardAcctStates, err := app.RewardKeeper.GetRewardAccountStatesForRewardProgram(ctx, rewardProgram.Id)
-	require.NoError(t, err, "GetRewardAccountStatesForRewardProgram")
-	_ = rewardAcctStates
-
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
-	require.NoError(t, err)
+	require.NoError(t, err, "GetAllClaimPeriodRewardDistributions")
 	assert.Len(t, claimPeriodDistributions, 1, "claim period reward distributions should exist")
 	assert.Equal(t, int64(0), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
 	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
-	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
-		Denom:  "nhash",
-		Amount: sdk.ZeroInt(),
-	}), "claim period has not ended so shares have to be 0")
+	assert.Equal(t, "100000000000nhash", claimPeriodDistributions[0].RewardsPool.String(), "claim period has not ended so shares have to be 0")
 
-	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
-	require.NoError(t, err)
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct2.Address)
+	require.NoError(t, err, "GetRewardAccountState")
 	assert.Equal(t, uint64(0), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionVote"), "account state incorrect")
 	assert.Equal(t, 0, int(accountState.SharesEarned), "account state incorrect")
-	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
+
+	byAddress1, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
 		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
 	})
-	require.NoError(t, err)
-	assert.Empty(t, byAddress.RewardAccountState, "RewardDistributionsByAddress incorrect")
+	require.NoError(t, err, "RewardDistributionsByAddress acct1")
+	assert.Empty(t, byAddress1.RewardAccountState, "RewardDistributionsByAddress incorrect acct1")
 
+	byAddress2, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
+		Address:     acct2.Address,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+	})
+	require.NoError(t, err, "RewardDistributionsByAddress acct2")
+	assert.Empty(t, byAddress2.RewardAccountState, "RewardDistributionsByAddress incorrect acct2")
 }
 
 func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *testing.T) {
