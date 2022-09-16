@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 )
 
 var (
@@ -29,7 +30,6 @@ type appUpgrade struct {
 }
 
 var handlers = map[string]appUpgrade{
-	// TODO - remove upgrade definitions for entries no longer in use.
 	"mango": { // upgrade for 1.11.1
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
 			params := app.MsgFeesKeeper.GetParams(ctx)
@@ -39,10 +39,12 @@ var handlers = map[string]appUpgrade{
 		},
 	},
 	"neoncarrot-rc1": {}, // upgrade for 1.12.0-rc1
+	"neoncarrot":     {}, // upgrade for 1.12.0
 	"ochre-rc1": { // upgrade for 1.13.0-rc1
-		Added: []string{group.ModuleName},
+		Added: []string{group.ModuleName, rewardtypes.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
 	},

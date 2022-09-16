@@ -20,10 +20,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 
-	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
-
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	tmconfig "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -110,7 +109,7 @@ func (s ConfigTestSuite) ensureConfigFiles() {
 	s.Require().NoError(terr, "extracting tendermint config")
 	clientConfig, cerr := provconfig.ExtractClientConfig(configCmd)
 	s.Require().NoError(cerr, "extracting client config")
-	appConfig.MinGasPrices = app.DefaultMinGasPrices
+	appConfig.MinGasPrices = pioconfig.DefaultMinGasPrices
 	// And then save them.
 	provconfig.SaveConfigs(configCmd, appConfig, tmConfig, clientConfig, false)
 }
@@ -450,7 +449,7 @@ func (s *ConfigTestSuite) TestConfigChanged() {
 	}
 	expectedAppOutLines := []string{
 		s.makeAppDiffHeaderLines(),
-		fmt.Sprintf(`minimum-gas-prices="%s" (default="")`, app.DefaultMinGasPrices),
+		fmt.Sprintf(`minimum-gas-prices="%s" (default="")`, pioconfig.DefaultMinGasPrices),
 		"",
 	}
 	expectedTMOutLines := []string{

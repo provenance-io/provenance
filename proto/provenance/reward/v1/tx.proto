@@ -1,0 +1,144 @@
+syntax = "proto3";
+package provenance.reward.v1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "provenance/reward/v1/reward.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/reward/types";
+option java_package        = "io.provenance.reward.v1";
+option java_multiple_files = true;
+
+// Msg
+service Msg {
+
+  // CreateRewardProgram is the RPC endpoint for creating a rewards program
+  rpc CreateRewardProgram(MsgCreateRewardProgramRequest) returns (MsgCreateRewardProgramResponse) {
+    option (google.api.http).post = "/provenance/reward/v1/reward_programs";
+  }
+
+  // EndRewardProgram is the RPC endpoint for ending a rewards program
+  rpc EndRewardProgram(MsgEndRewardProgramRequest) returns (MsgEndRewardProgramResponse) {
+    option (google.api.http).patch = "/provenance/reward/v1/reward_programs/{reward_program_id}";
+  }
+
+  // ClaimRewards is the RPC endpoint for claiming rewards belonging to completed claim periods of a reward program
+  rpc ClaimRewards(MsgClaimRewardsRequest) returns (MsgClaimRewardsResponse) {
+    option (google.api.http).patch =
+        "/provenance/reward/v1/reward_claims/{reward_address}/reward_programs/{reward_program_id}";
+  }
+
+  // ClaimAllRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program for
+  // the signer of the tx.
+  rpc ClaimAllRewards(MsgClaimAllRewardsRequest) returns (MsgClaimAllRewardsResponse) {
+    option (google.api.http).patch = "/provenance/reward/v1/reward_claims/{reward_address}";
+  }
+}
+
+// MsgCreateRewardProgramRequest is the request type for creating a reward program RPC
+message MsgCreateRewardProgramRequest {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  // title for the reward program.
+  string title = 1;
+  // description for the reward program.
+  string description = 2;
+  // provider address for the reward program funds and signer of message.
+  string distribute_from_address = 3;
+  // total reward pool for the reward program.
+  cosmos.base.v1beta1.Coin total_reward_pool = 4 [(gogoproto.nullable) = false];
+  // maximum amount of funds an address can be rewarded per claim period.
+  cosmos.base.v1beta1.Coin max_reward_per_claim_address = 5 [(gogoproto.nullable) = false];
+  // start time of the reward program.
+  google.protobuf.Timestamp program_start_time = 6 [
+    (gogoproto.stdtime)  = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "program_start_time,omitempty",
+    (gogoproto.moretags) = "yaml:\"program_start_time,omitempty\""
+  ];
+  // number of claim periods the reward program runs for.
+  uint64 claim_periods = 7;
+  // number of days a claim period will exist.
+  uint64 claim_period_days = 8;
+  // maximum number of claim periods a reward program can rollover.
+  uint64 max_rollover_claim_periods = 9;
+  // number of days before a reward program will expire after it has ended.
+  uint64 expire_days = 10;
+  // actions that count towards the reward.
+  repeated QualifyingAction qualifying_actions = 11 [(gogoproto.nullable) = false];
+}
+
+// MsgCreateRewardProgramResponse is the response type for creating a reward program RPC
+message MsgCreateRewardProgramResponse {
+  // reward program id that is generated on creation.
+  uint64 id = 1;
+}
+
+// MsgEndRewardProgramRequest is the request type for ending a reward program RPC
+message MsgEndRewardProgramRequest {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  // reward program id to end.
+  uint64 reward_program_id = 1;
+  // owner of the reward program that funds were distributed from.
+  string program_owner_address = 2;
+}
+
+// MsgEndRewardProgramResponse is the response type for ending a reward program RPC
+message MsgEndRewardProgramResponse {}
+
+// MsgClaimRewardsRequest is the request type for claiming reward from reward program RPC
+message MsgClaimRewardsRequest {
+  // reward program id to claim rewards.
+  uint64 reward_program_id = 1;
+  // reward address and signer of msg to send claimed rewards to.
+  string reward_address = 2;
+}
+
+// MsgClaimRewardsResponse is the response type for claiming reward from reward program RPC
+message MsgClaimRewardsResponse {
+  option (gogoproto.equal) = true;
+  // details about acquired rewards from reward program.
+  RewardProgramClaimDetail claim_details = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgClaimRewardsResponse is the request type for claiming rewards from all reward programs RPC
+message MsgClaimAllRewardsRequest {
+  // reward address and signer of msg to send claimed rewards to.
+  string reward_address = 1;
+}
+
+// MsgClaimRewardsResponse is the response type for claiming rewards from all reward programs RPC
+message MsgClaimAllRewardsResponse {
+  option (gogoproto.equal) = true;
+  // total rewards claimed for all eligible claim periods in all programs.
+  repeated cosmos.base.v1beta1.Coin total_reward_claim = 1 [(gogoproto.nullable) = false];
+  // details about acquired rewards from a reward program.
+  repeated RewardProgramClaimDetail claim_details = 2;
+}
+
+// ClaimedRewardPeriodDetail is information regarding an addresses' shares and reward for a claim period.
+message ClaimedRewardPeriodDetail {
+  option (gogoproto.equal) = true;
+  // claim period id
+  uint64 claim_period_id = 1;
+  // total shares accumulated for claim period
+  uint64 total_shares = 2;
+  // total rewards for claim period
+  cosmos.base.v1beta1.Coin claim_period_reward = 3 [(gogoproto.nullable) = false];
+}
+
+// RewardProgramClaimDetail is the response object regarding an address's shares and reward for a reward program.
+message RewardProgramClaimDetail {
+  option (gogoproto.equal) = true;
+  // reward program id.
+  uint64 reward_program_id = 1;
+  // total rewards claimed for all eligible claim periods in program.
+  cosmos.base.v1beta1.Coin total_reward_claim = 2 [(gogoproto.nullable) = false];
+  // claim period details.
+  repeated ClaimedRewardPeriodDetail claimed_reward_period_details = 3;
+}

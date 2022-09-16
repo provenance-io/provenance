@@ -11,4 +11,5 @@ var (
 	ErrMsgFeeAlreadyExists = sdkerrors.Register(ModuleName, 4, "fee for type already exists.")
 	ErrMsgFeeDoesNotExist  = sdkerrors.Register(ModuleName, 5, "fee for type does not exist.")
 	ErrInvalidFeeProposal  = sdkerrors.Register(ModuleName, 6, "invalid fee proposal")
+	ErrInvalidBipsValue    = sdkerrors.Register(ModuleName, 7, "invalid bips amount")
 )

@@ -1,0 +1,21 @@
+@startuml RewardProgram
+<style>
+    arrow {
+        FontSize 10
+    }
+</style>
+skinparam linetype ortho
+skinparam SequenceMessageAlign center
+hide empty description
+
+state Pending
+state Started
+state Finished
+state Expired
+
+[*] -down-> Pending
+Finished -down-> Expired : [End Time + Offset time <= Block Time]
+Pending -down-> Started : [Start Time <= Block Time]
+Started -down-> Finished : [End Time <= Block Time OR\nRemaining Balance <= Minimum Rollover]
+
+@enduml
