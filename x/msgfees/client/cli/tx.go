@@ -39,6 +39,7 @@ func NewTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		GetCmdMsgFeesProposal(),
 		GetUpdateNhashPerUsdMilProposal(),
+		GetUpdateConversionFeeDenomProposal(),
 	)
 
 	return txCmd
