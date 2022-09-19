@@ -35,6 +35,10 @@ func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	gas := feeTx.GetGas()
 	gasTxLimit := uint64(4_000_000)
 
+	// If consensus_params.block.max_gas is set to -1, ignore gasTxLimit. This is to allow for testing on local nodes
+	// since mainnet and testnet have block level limit set.
+	maxGasLimit := ctx.ConsensusParams().Block.GetMaxGas()
+
 	// Skip gas limit check for txs with MsgSubmitProposal
 	hasGovMsg := false
 	for _, msg := range tx.GetMsgs() {
@@ -46,7 +50,7 @@ func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 
 	// TODO - remove "gasTxLimit > 0" with SDK 0.46 which fixes the infinite gas meter to use max int vs zero for the limit.
-	if !isTestContext(ctx) && gasTxLimit > 0 && gas > gasTxLimit && !hasGovMsg {
+	if !isTestContext(ctx) && maxGasLimit > -1 && gasTxLimit > 0 && gas > gasTxLimit && !hasGovMsg {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrTxTooLarge, "transaction gas exceeds maximum allowed; got: %d max allowed: %d", gas, gasTxLimit)
 	}
 	return next(ctx, tx, simulate)

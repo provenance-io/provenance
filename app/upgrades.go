@@ -13,6 +13,7 @@ import (
 	icacontrollertypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 )
 
 var (
@@ -32,25 +33,27 @@ type appUpgrade struct {
 }
 
 var handlers = map[string]appUpgrade{
-	"mango": {
+	"mango": { // upgrade for 1.11.1
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
 			params := app.MsgFeesKeeper.GetParams(ctx)
 			app.MsgFeesKeeper.SetParams(ctx, params)
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
-	}, // upgrade for 1.11.1
+	},
 	"mango-rc4":      {}, // upgrade for 1.11.1-rc4
 	"neoncarrot-rc1": {}, // upgrade for 1.12.0-rc1
-	"ochre-rc1": {
+	"neoncarrot":     {}, // upgrade for 1.12.0
+	"ochre-rc1": { // upgrade for 1.13.0-rc1
 		// TODO: Required for v1.13.x: Fill in Added with modules new to 1.13.x https://github.com/provenance-io/provenance/issues/1007
-		Added: []string{icacontrollertypes.StoreKey, icahosttypes.StoreKey},
+		Added: []string{rewardtypes.ModuleName, icacontrollertypes.StoreKey, icahosttypes.StoreKey},
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			UpgradeICA(ctx, app, &versionMap)
+			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
-	}, // upgrade for 1.13.0-rc1
+	},
 	// TODO - Add new upgrade definitions here.
 }
 

@@ -9,11 +9,19 @@ const (
 	NhashDenom string = "nhash"
 )
 
-// SplitAmount returns split of Amount to be used for coin recipient and one for payout of fee, NOTE: this should only be used if a Recipient address exists
-func SplitAmount(coin sdk.Coin) (recipientCoin sdk.Coin, feePayoutCoin sdk.Coin) {
-	addFeeToPay := coin.Amount.Uint64()
-	addFeeToPay /= 2
-	feePayoutCoin = sdk.NewCoin(coin.Denom, sdk.NewIntFromUint64(addFeeToPay))
-	recipientCoin = coin.Sub(feePayoutCoin)
-	return recipientCoin, feePayoutCoin
+// SplitCoinByBips returns split to recipient and fee module based on basis points for recipient
+func SplitCoinByBips(coin sdk.Coin, bips uint32) (recipientCoin sdk.Coin, feePayoutCoin sdk.Coin, err error) {
+	if bips > 10_000 {
+		return recipientCoin, feePayoutCoin, ErrInvalidBipsValue.Wrapf("invalid: %v", bips)
+	}
+	numerator := sdk.NewDec(int64(bips))
+	denominator := sdk.NewDec(10_000)
+	decAmount := sdk.NewDec(coin.Amount.Int64())
+	percentage := numerator.Quo(denominator)
+	bipsAmount := decAmount.Mul(percentage).TruncateInt()
+	feePayoutAmount := coin.Amount.Sub(bipsAmount)
+
+	recipientCoin = sdk.NewCoin(coin.Denom, bipsAmount)
+	feePayoutCoin = sdk.NewCoin(coin.Denom, feePayoutAmount)
+	return recipientCoin, feePayoutCoin, nil
 }
