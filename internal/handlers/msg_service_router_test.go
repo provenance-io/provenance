@@ -694,7 +694,7 @@ func TestRewardsProgramStart(t *testing.T) {
 	require.NoError(t, err, "SignTx")
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txReward)
 	require.NoError(t, errFromDeliverTx, "SimDeliver")
-	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
 	app.EndBlock(abci.RequestEndBlock{Height: 2})
 	app.Commit()
 
@@ -760,7 +760,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	require.NoError(t, err, "SignTx")
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txReward)
 	require.NoError(t, errFromDeliverTx, "SimDeliver")
-	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
 	app.EndBlock(abci.RequestEndBlock{Height: 2})
 	app.Commit()
 
@@ -772,12 +772,12 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	seq := acct1.Sequence
 	for height := int64(3); height <= int64(100); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
-		require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err1, "SignTx")
+		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "SimDeliver")
-		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
@@ -897,12 +897,12 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 
 	for height := int64(2); height < int64(22); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
-		require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err1, "SignTx")
+		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "SimDeliver")
-		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
@@ -1038,12 +1038,12 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(2); height < int64(7); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
-		require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err1, "SignTx")
+		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "SimDeliver")
-		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
 		// wait for claim period to end (claim period is 1s)
 		time.Sleep(1500 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
@@ -1200,12 +1200,12 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(2); height < int64(7); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
-		require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err1, "SignTx")
+		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "SimDeliver")
-		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
 		// wait for claim period to end (claim period is 1s)
 		time.Sleep(1500 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
@@ -1396,12 +1396,12 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(2); height < int64(7); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
-		require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err1, "SignTx")
+		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "SimDeliver")
-		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
 		// wait for claim period to end (claim period is 1s)
 		time.Sleep(1500 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
@@ -1572,12 +1572,12 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(2); height < int64(7); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
-		require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err1, "SignTx")
+		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "SimDeliver")
-		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
 		// wait for claim period to end (claim period is 1s)
 		time.Sleep(1500 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
@@ -1713,12 +1713,12 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(2); height < int64(7); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
-		require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err1, "SignTx")
+		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "SimDeliver")
-		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
 		time.Sleep(1100 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
@@ -1804,12 +1804,12 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 	//go through 5 blocks, but take a time to cut blocks > claim period time interval.
 	for height := int64(2); height < int64(7); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
-		require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err1, "SignTx")
+		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "SimDeliver")
-		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
 		time.Sleep(1100 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
@@ -1911,12 +1911,12 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(2); height < int64(7); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
-		require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err1, "SignTx")
+		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "SimDeliver")
-		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
 		time.Sleep(1100 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
@@ -2012,7 +2012,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
 	require.NoError(t, errFromDeliverTx, "SimDeliver")
-	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
 
 	app.EndBlock(abci.RequestEndBlock{Height: 2})
 	app.Commit()
@@ -2026,12 +2026,12 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 
 	for height := int64(3); height < int64(23); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
-		require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
-		require.NoError(t, err1, "SignTx")
+		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "SimDeliver")
-		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
@@ -2123,7 +2123,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
 	require.NoError(t, errFromDeliverTx, "SimDeliver")
-	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
 
 	app.EndBlock(abci.RequestEndBlock{Height: 2})
 	app.Commit()
@@ -2138,12 +2138,12 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 
 	for height := int64(3); height < int64(5); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
-		require.NoError(t, acct2.SetSequence(seq), "SetSequence(%d)", seq)
+		require.NoError(t, acct2.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), vote2)
-		require.NoError(t, err1, "SignTx")
+		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "SimDeliver")
-		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
@@ -2256,7 +2256,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
 	require.NoError(t, errFromDeliverTx, "SimDeliver")
-	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
 
 	app.EndBlock(abci.RequestEndBlock{Height: 2})
 	app.Commit()
@@ -2271,12 +2271,12 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	// threshold will be met after 10 actions
 	for height := int64(3); height < int64(23); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
-		require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
-		require.NoError(t, err1, "SignTx")
+		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "SimDeliver")
-		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
@@ -2386,7 +2386,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
 	require.NoError(t, errFromDeliverTx, "SimDeliver")
-	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
 
 	app.EndBlock(abci.RequestEndBlock{Height: 2})
 	app.Commit()
@@ -2400,12 +2400,12 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 
 	for height := int64(3); height < int64(15); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
-		require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
-		require.NoError(t, err1, "SignTx")
+		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "SimDeliver")
-		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
@@ -2517,7 +2517,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
 	require.NoError(t, errFromDeliverTx, "SimDeliver")
-	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
 
 	app.EndBlock(abci.RequestEndBlock{Height: 2})
 	app.Commit()
@@ -2532,12 +2532,12 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 
 	for height := int64(3); height < int64(23); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
-		require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), delegation)
-		require.NoError(t, err1, "SignTx")
+		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "SimDeliver")
-		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
 		time.Sleep(100 * time.Millisecond)
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
