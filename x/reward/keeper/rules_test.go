@@ -4,13 +4,11 @@ import (
 	"errors"
 	"time"
 
+	sdksim "github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	sdksim "github.com/cosmos/cosmos-sdk/simapp"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
@@ -430,8 +428,8 @@ func (s *KeeperTestSuite) createTestValidators(amount int) {
 	notBondedPool := s.app.StakingKeeper.GetNotBondedPool(s.ctx)
 	s.app.AccountKeeper.SetModuleAccount(s.ctx, notBondedPool)
 
-	s.Require().NoError(s.app.BankKeeper.MintCoins(s.ctx, minttypes.ModuleName, totalSupply), "minting %s", totalSupply)
-	s.Require().NoError(s.app.BankKeeper.SendCoinsFromModuleToModule(s.ctx, minttypes.ModuleName, notBondedPool.GetName(), totalSupply), "sending %s coins to %s", totalSupply, notBondedPool.GetName())
+	s.Require().NoError(testutil.FundModuleAccount(s.app.BankKeeper, s.ctx, notBondedPool.GetName(), totalSupply),
+		"funding %s with %s", notBondedPool.GetName(), totalSupply)
 
 	var validators []stakingtypes.Validator
 	for i := 0; i < amount; i++ {
