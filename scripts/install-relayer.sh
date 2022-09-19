@@ -34,7 +34,7 @@ fi
 
 # Setup configuration
 echo "Creating new provenance relayer config"
-"${RELAY_CMD}" config init --home "$RELAYER_HOME"
+"$RELAY_CMD" config init --home "$RELAYER_HOME"
 cp "$PROVENANCE_CONFIG" "$RELAYER_CONFIG"
 
 echo "Setup complete"
