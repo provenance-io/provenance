@@ -879,7 +879,6 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -888,10 +887,8 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
-	ctx.WithBlockTime(time.Now())
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
-	ctx.WithBlockTime(time.Now())
 	// get past the reward start time ( test that reward program starts up after 50ms)
 	time.Sleep(55 * time.Millisecond)
 
@@ -1020,7 +1017,6 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		banktypes.Balance{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Coins: acct1Balance},
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -1029,10 +1025,8 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
-	ctx.WithBlockTime(time.Now())
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
-	ctx.WithBlockTime(time.Now())
 	time.Sleep(150 * time.Millisecond)
 
 	//go through 5 blocks, but take a long time to cut blocks.
@@ -1182,7 +1176,6 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		banktypes.Balance{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Coins: acct1Balance},
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -1191,10 +1184,8 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
-	ctx.WithBlockTime(time.Now())
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
-	ctx.WithBlockTime(time.Now())
 	time.Sleep(150 * time.Millisecond)
 
 	//go through 5 blocks, but take a long time to cut blocks.
@@ -1378,7 +1369,6 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		banktypes.Balance{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Coins: acct1Balance},
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -1387,10 +1377,8 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
-	ctx.WithBlockTime(time.Now())
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
-	ctx.WithBlockTime(time.Now())
 	time.Sleep(150 * time.Millisecond)
 
 	//go through 5 blocks, but take a long time to cut blocks.
@@ -1554,7 +1542,6 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -1563,10 +1550,8 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
-	ctx.WithBlockTime(time.Now())
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
-	ctx.WithBlockTime(time.Now())
 	time.Sleep(150 * time.Millisecond)
 
 	//go through 5 blocks, but take a long time to cut blocks.
@@ -1695,7 +1680,6 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -1704,10 +1688,8 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
-	ctx.WithBlockTime(time.Now())
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
-	ctx.WithBlockTime(time.Now())
 	time.Sleep(110 * time.Millisecond)
 
 	//go through 5 blocks, but take a long time to cut blocks.
@@ -1785,7 +1767,6 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -1794,10 +1775,8 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
-	ctx.WithBlockTime(time.Now())
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
-	ctx.WithBlockTime(time.Now())
 	// wait for program to start
 	time.Sleep(150 * time.Millisecond)
 
@@ -1893,7 +1872,6 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -1902,10 +1880,8 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
-	ctx.WithBlockTime(time.Now())
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
-	ctx.WithBlockTime(time.Now())
 	time.Sleep(1 * time.Second)
 
 	//go through 5 blocks, but take a long time to cut blocks.
@@ -1982,7 +1958,6 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -1995,10 +1970,8 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 	)
 
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
-	ctx.WithBlockTime(time.Now())
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
-	ctx.WithBlockTime(time.Now())
 	time.Sleep(200 * time.Millisecond)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
@@ -2226,7 +2199,6 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -2239,10 +2211,8 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	)
 
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
-	ctx.WithBlockTime(time.Now())
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
-	ctx.WithBlockTime(time.Now())
 	time.Sleep(200 * time.Millisecond)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
@@ -2356,7 +2326,6 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 	)
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -2369,10 +2338,8 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 	)
 
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
-	ctx.WithBlockTime(time.Now())
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
-	ctx.WithBlockTime(time.Now())
 	time.Sleep(110 * time.Millisecond)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
@@ -2487,7 +2454,6 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	)
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -2500,10 +2466,8 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	)
 
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
-	ctx.WithBlockTime(time.Now())
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
-	ctx.WithBlockTime(time.Now())
 	time.Sleep(200 * time.Millisecond)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
