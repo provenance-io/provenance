@@ -24,7 +24,7 @@ var govMsgUrls []string
 
 // getGovMsgUrls returns govVoteMsgUrls, but first sets it if it hasn't yet been set.
 func getGovMsgUrls() []string {
-	if len(govMsgUrls) != 4 {
+	if len(govMsgUrls) != 8 {
 		// sdk.MsgTypeURL sometimes uses reflection and/or proto registration.
 		// So govMsgUrls is only set when it's finally needed in the hopes
 		// that everything's wired up as needed by then.
