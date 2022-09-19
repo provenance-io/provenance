@@ -591,9 +591,6 @@ func TestRewardsProgramStartError(t *testing.T) {
 }
 
 func TestRewardsProgramStart(t *testing.T) {
-	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass. https://github.com/provenance-io/provenance/issues/1006
-	t.Skip("This test is disabled, but must be re-enabled before v1.13 can be ready.")
-
 	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, _, addr := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
@@ -631,14 +628,17 @@ func TestRewardsProgramStart(t *testing.T) {
 	require.NoError(t, err)
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txReward)
 	require.NoError(t, errFromDeliverTx)
-	assert.GreaterOrEqual(t, len(res.GetEvents()), 1, "should have emitted an event.")
+	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 	app.EndBlock(abci.RequestEndBlock{Height: 2})
 	app.Commit()
 
-	assert.Len(t, res.Events, 15)
-	containsEvent(t, res.Events, "reward_program_created", 1)
-	containsEvent(t, res.Events, "message", 3)
-	containsEventWithAttribute(t, res.Events, "message", "create_reward_program", 1)
+	expEvents := []abci.Event{
+		NewEvent(rewardtypes.EventTypeRewardProgramCreated,
+			NewAttribute(rewardtypes.AttributeKeyRewardProgramID, "1")),
+		NewEvent(sdk.EventTypeMessage,
+			NewAttribute(sdk.AttributeKeyAction, rewardtypes.TypeMsgCreateRewardProgramRequest)),
+	}
+	assertEventsContains(t, res.Events, expEvents)
 }
 
 func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
@@ -2211,53 +2211,6 @@ func createValSet(t *testing.T, pubKeys ...cryptotypes.PubKey) *tmtypes.Validato
 		validators[i] = tmtypes.NewValidator(pk, 1)
 	}
 	return tmtypes.NewValidatorSet(validators)
-}
-
-func containsEvent(t *testing.T, haystack []abci.Event, needle string, amount int) {
-	t.Helper()
-
-	counter := 0
-	var eTypes []string
-	for _, n := range haystack {
-		if needle == n.Type {
-			counter += 1
-		}
-		eTypes = append(eTypes, n.Type)
-	}
-
-	if counter != amount {
-		t.Errorf("Found %d %s. Need exactly %d within %v", counter, needle, amount, eTypes)
-	}
-}
-
-func containsEventWithAttribute(t *testing.T, haystack []abci.Event, needle, attribute string, amount int) {
-	t.Helper()
-
-	type AbciEvent struct {
-		name       string
-		attributes []string
-	}
-
-	var events []AbciEvent
-	counter := 0
-	for _, n := range haystack {
-		event := AbciEvent{}
-		event.name = n.Type
-
-		for _, a := range n.Attributes {
-			event.attributes = append(event.attributes, string(a.Value))
-			if string(a.Value) == attribute && event.name == needle {
-				counter += 1
-				break
-			}
-		}
-
-		events = append(events, event)
-	}
-
-	if counter != amount {
-		t.Errorf("Found %d %s with attribute %s. Need exactly %d within %v", counter, needle, attribute, amount, events)
-	}
 }
 
 func signAndGenTx(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey cryptotypes.PubKey, privKey cryptotypes.PrivKey, acct authtypes.BaseAccount, chainId string, msg []sdk.Msg) (client.TxBuilder, error) {
