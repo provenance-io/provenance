@@ -30,14 +30,6 @@ type appUpgrade struct {
 }
 
 var handlers = map[string]appUpgrade{
-	"mango": { // upgrade for 1.11.1
-		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
-			params := app.MsgFeesKeeper.GetParams(ctx)
-			app.MsgFeesKeeper.SetParams(ctx, params)
-			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
-		},
-	},
 	"neoncarrot-rc1": {}, // upgrade for 1.12.0-rc1
 	"neoncarrot":     {}, // upgrade for 1.12.0
 	"ochre-rc1": { // upgrade for 1.13.0-rc1
