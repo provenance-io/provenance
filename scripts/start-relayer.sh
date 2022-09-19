@@ -29,20 +29,17 @@ check_links() {
     return 1
 }
 
-check_keys "$CHAIN_1"
-if [ $? != 0 ]; then
+if ! check_keys "$CHAIN_1"; then
     echo "Cannot start relayer until $CHAIN_1 has a key"
     exit 1
 fi
 
-check_keys "$CHAIN_2"
-if [ $? != 0 ]; then
+if ! check_keys "$CHAIN_2"; then
     echo "Cannot start relayer until $CHAIN_2 has a key"
     exit 1
 fi
 
-check_links "$RELAY_PATH"
-if [ $? != 0 ]; then
+if ! check_links "$RELAY_PATH"; then
     echo "$RELAY_PATH is not fully functional. Consider checking the status of the path and trying again." >&2
     echo "Alternatively, if the path has not been setup yet, then you can create one with '$RELAY_CMD tx link $RELAY_PATH --home $RELAYER_HOME'" >&2
     exit 1
