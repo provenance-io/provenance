@@ -14,12 +14,12 @@ if ! [ -x "$RELAYER_EXISTS" ]; then
     # Install relayer
     DIR=$(pwd)
     git clone https://github.com/cosmos/relayer.git /tmp/relayer
-    cd /tmp/relayer
+    cd /tmp/relayer || exit 1 
     git checkout "$VERSION"
     make install
 
     # Cleanup installer
-    cd "$DIR"
+    cd "$DIR" || exit 1 
     rm -rf /tmp/relayer
 fi
 
