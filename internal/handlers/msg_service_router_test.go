@@ -152,9 +152,13 @@ func NewAttribute(key, value string) abci.EventAttribute {
 	}
 }
 
-func msgFeesEventJSON(count int, amount int, denom string, recipient string) string {
-	return fmt.Sprintf(`{"msg_type":"/cosmos.bank.v1beta1.MsgSend","count":"%d","total":"%d%s","recipient":"%s"}`,
-		count, amount, denom, recipient)
+func msgFeesMsgSendEventJSON(count int, amount int, denom string, recipient string) string {
+	return msgFeesEventJSON("/cosmos.bank.v1beta1.MsgSend", count, amount, denom, recipient)
+}
+
+func msgFeesEventJSON(msg_type string, count int, amount int, denom string, recipient string) string {
+	return fmt.Sprintf(`{"msg_type":"%s","count":"%d","total":"%d%s","recipient":"%s"}`,
+		msg_type, count, amount, denom, recipient)
 }
 
 func jsonArrayJoin(entries ...string) string {
@@ -296,7 +300,7 @@ func TestMsgService(tt *testing.T) {
 				NewAttribute(antewrapper.AttributeKeyAdditionalFee, "800hotdog"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 			NewEvent("provenance.msgfees.v1.EventMsgFees",
-				NewAttribute("msg_fees", jsonArrayJoin(msgFeesEventJSON(1, 800, "hotdog", "")))),
+				NewAttribute("msg_fees", jsonArrayJoin(msgFeesMsgSendEventJSON(1, 800, "hotdog", "")))),
 		}
 		assertEventsContains(t, res.Events, expEvents)
 	})
@@ -329,7 +333,7 @@ func TestMsgService(tt *testing.T) {
 				NewAttribute(antewrapper.AttributeKeyAdditionalFee, "10stake"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 			NewEvent("provenance.msgfees.v1.EventMsgFees",
-				NewAttribute("msg_fees", jsonArrayJoin(msgFeesEventJSON(1, 10, "stake", "")))),
+				NewAttribute("msg_fees", jsonArrayJoin(msgFeesMsgSendEventJSON(1, 10, "stake", "")))),
 		}
 		assertEventsContains(t, res.Events, expEvents)
 	})
@@ -386,7 +390,7 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 			NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 		NewEvent("provenance.msgfees.v1.EventMsgFees",
 			NewAttribute("msg_fees",
-				jsonArrayJoin(msgFeesEventJSON(1, 200, "hotdog", ""), msgFeesEventJSON(1, 600, "hotdog", addr2.String())))),
+				jsonArrayJoin(msgFeesMsgSendEventJSON(1, 200, "hotdog", ""), msgFeesMsgSendEventJSON(1, 600, "hotdog", addr2.String())))),
 	}
 	assertEventsContains(t, res.Events, expEvents)
 }
@@ -412,7 +416,8 @@ func TestMsgServiceAuthz(tt *testing.T) {
 	// Create an authz grant from addr1 to addr2 for 500hotdog.
 	now := ctx.BlockHeader().Time
 	exp1Hour := now.Add(time.Hour)
-	require.NoError(tt, app.AuthzKeeper.SaveGrant(ctx, addr2, addr1, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("hotdog", 500))), &exp1Hour), "Save Grant addr2 addr1 500hotdog")
+	sendAuth := banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("hotdog", 500)))
+	require.NoError(tt, app.AuthzKeeper.SaveGrant(ctx, addr2, addr1, sendAuth, &exp1Hour), "Save Grant addr2 addr1 500hotdog")
 	// Set a MsgSend msg-based fee of 800hotdog.
 	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&banktypes.MsgSend{}), sdk.NewCoin("hotdog", sdk.NewInt(800)), "", 0)
 	require.NoError(tt, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 800hotdog")
@@ -457,7 +462,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 				NewAttribute(antewrapper.AttributeKeyAdditionalFee, "800hotdog"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr2.String())),
 			NewEvent("provenance.msgfees.v1.EventMsgFees",
-				NewAttribute("msg_fees", jsonArrayJoin(msgFeesEventJSON(1, 800, "hotdog", "")))),
+				NewAttribute("msg_fees", jsonArrayJoin(msgFeesMsgSendEventJSON(1, 800, "hotdog", "")))),
 		}
 		assertEventsContains(t, res.Events, expEvents)
 	})
@@ -492,7 +497,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 				NewAttribute(antewrapper.AttributeKeyAdditionalFee, "1600hotdog"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr2.String())),
 			NewEvent("provenance.msgfees.v1.EventMsgFees",
-				NewAttribute("msg_fees", jsonArrayJoin(msgFeesEventJSON(2, 1600, "hotdog", "")))),
+				NewAttribute("msg_fees", jsonArrayJoin(msgFeesMsgSendEventJSON(2, 1600, "hotdog", "")))),
 		}
 		assertEventsContains(t, res.Events, expEvents)
 	})
@@ -523,7 +528,11 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 101000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_001))
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin("hotdog", 1000),
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 101000),
+		sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_001),
+	)
 	app := piosimapp.SetupWithGenesisAccounts(tt, "msgfee-testing",
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
@@ -539,8 +548,13 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 	stopIfFailed(tt)
 
 	tt.Run("assess custom msg fee", func(t *testing.T) {
-		msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", sdk.NewInt64Coin(msgfeestypes.UsdDenom, 7), addr2.String(), addr1.String())
-		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_001)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &msg)
+		msgFeeCoin := sdk.NewInt64Coin(msgfeestypes.UsdDenom, 7)
+		msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", msgFeeCoin, addr2.String(), addr1.String())
+		fees := sdk.NewCoins(
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000),
+			sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_001),
+		)
+		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &msg)
 		require.NoError(t, err, "SignTxAndGetBytes")
 		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 		require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
@@ -565,7 +579,9 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 				NewAttribute(antewrapper.AttributeKeyAdditionalFee, "175000000nhash"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 			NewEvent("provenance.msgfees.v1.EventMsgFees",
-				NewAttribute("msg_fees", fmt.Sprintf(`[{"msg_type":"/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest","count":"1","total":"87500000nhash","recipient":""},{"msg_type":"/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest","count":"1","total":"87500000nhash","recipient":"%s"}]`, addr2.String()))),
+				NewAttribute("msg_fees", jsonArrayJoin(
+					msgFeesEventJSON("/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest", 1, 87500000, "nhash", ""),
+					msgFeesEventJSON("/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest", 1, 87500000, "nhash", addr2.String())))),
 		}
 		assertEventsContains(t, res.Events, expEvents)
 	})
@@ -576,7 +592,10 @@ func TestRewardsProgramStartError(t *testing.T) {
 	priv, _, addr := testdata.KeyTestPubAddr()
 	//_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin("atom", 1000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000))
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin("atom", 1000),
+		sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000),
+	)
 	app := piosimapp.SetupWithGenesisAccounts(t, "",
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
@@ -584,7 +603,9 @@ func TestRewardsProgramStartError(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	blockTime := ctx.BlockTime()
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))), "funding acct1 with 290500010nhash")
+	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
 
 	rewardProgram := *rewardtypes.NewMsgCreateRewardProgramRequest(
 		"title",
@@ -610,7 +631,12 @@ func TestRewardsProgramStartError(t *testing.T) {
 		},
 	)
 
-	txBytes, err := SignTxAndGetBytes(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &rewardProgram)
+	txBytes, err := SignTxAndGetBytes(
+		NewTestRewardsGasLimit(),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)),
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		&rewardProgram,
+	)
 	require.NoError(t, err, "SignTxAndGetBytes")
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.True(t, res.IsErr(), "Should return an error: res=%+v", res)
@@ -620,14 +646,20 @@ func TestRewardsProgramStart(t *testing.T) {
 	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, _, addr := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin("atom", 1000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000))
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin("hotdog", 1000),
+		sdk.NewInt64Coin("atom", 1000),
+		sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000),
+	)
 	app := piosimapp.SetupWithGenesisAccounts(t, "",
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))), "funding acct1 with 290500010nhash")
+	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
 
 	rewardProgram := *rewardtypes.NewMsgCreateRewardProgramRequest(
 		"title",
@@ -653,7 +685,12 @@ func TestRewardsProgramStart(t *testing.T) {
 		},
 	)
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
-	txReward, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &rewardProgram)
+	txReward, err := SignTx(
+		NewTestRewardsGasLimit(),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)),
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		&rewardProgram,
+	)
 	require.NoError(t, err, "SignTx")
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txReward)
 	require.NoError(t, errFromDeliverTx, "SimDeliver")
@@ -675,14 +712,20 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	priv, _, addr := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000))
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin("hotdog", 10000000000),
+		sdk.NewInt64Coin("atom", 10000000),
+		sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000),
+	)
 	app := piosimapp.SetupWithGenesisAccounts(t, "",
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))), "funding acct1 with 290500010nhash")
+	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
 
 	rewardProgram := *rewardtypes.NewMsgCreateRewardProgramRequest(
 		"title",
@@ -708,7 +751,12 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 		},
 	)
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
-	txReward, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &rewardProgram)
+	txReward, err := SignTx(
+		NewTestRewardsGasLimit(),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)),
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		&rewardProgram,
+	)
 	require.NoError(t, err, "SignTx")
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txReward)
 	require.NoError(t, errFromDeliverTx, "SimDeliver")
@@ -750,32 +798,44 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	assert.Equal(t, 98, int(actionCounter), "ActionCounter transfer")
 	assert.Equal(t, 10, int(accountState.SharesEarned), "SharesEarned")
 
-	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
-	})
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress unspecified")
-	if assert.NotNil(t, byAddress, "byAddress unspecified") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified") {
+	canCheck := assert.NotNil(t, byAddress, "byAddress unspecified")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified")
+	if canCheck {
 		assert.Len(t, byAddress.RewardAccountState, 1, "RewardAccountState unspecified")
 		assert.Equal(t, "100nhash", byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unspecified")
-		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unspecified")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unspecified")
 	}
 
-	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
-	})
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress unclaimable")
-	if assert.NotNil(t, byAddress, "byAddress unclaimable") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unclaimable") {
+	canCheck = assert.NotNil(t, byAddress, "byAddress unclaimable")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unclaimable")
+	if canCheck {
 		assert.Len(t, byAddress.RewardAccountState, 1, "RewardAccountState unclaimable")
 		assert.Equal(t, "100nhash", byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unclaimable")
-		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unclaimable")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unclaimable")
 	}
 
-	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
-	})
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress claimable")
 	assert.Empty(t, byAddress.RewardAccountState, "RewardAccountState claimable")
 }
@@ -821,7 +881,9 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))), "funding acct1 with 290500010nhash")
+	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
@@ -862,43 +924,55 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 	assert.Equal(t, 20, int(actionCounter), "ActionCounter transfer")
 	assert.Equal(t, 10, int(accountState.SharesEarned), "SharesEarned")
 
-	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
-	})
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress unspecified")
-	if assert.NotNil(t, byAddress, "byAddress unspecified") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified") {
+	canCheck := assert.NotNil(t, byAddress, "byAddress unspecified")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified")
+	if canCheck {
 		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
 			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unspecified")
 		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
 			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unspecified")
 	}
 
-	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
-	})
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress unclaimable")
-	if assert.NotNil(t, byAddress, "byAddress unclaimable") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unclaimable") {
+	canCheck = assert.NotNil(t, byAddress, "byAddress unclaimable")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unclaimable")
+	if canCheck {
 		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
 			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unclaimable")
 		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
 			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unclaimable")
 	}
 
-	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
-	})
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress claimable")
 	if assert.NotNil(t, byAddress, "byAddress claimable") {
 		assert.Empty(t, byAddress.RewardAccountState, "RewardAccountState claimable")
 	}
 
-	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMED,
-	})
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMED,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress claimed")
 	if assert.NotNil(t, byAddress, "byAddress claimed") {
 		assert.Empty(t, byAddress.RewardAccountState, "RewardAccountState claimed")
@@ -948,7 +1022,9 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))), "funding acct1 with 290500010nhash")
+	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
@@ -989,26 +1065,38 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	assert.Equal(t, 1, int(actionCounter), "ActionCounter transfer")
 	assert.Equal(t, 1, int(accountState.SharesEarned), "SharesEarned")
 
-	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
-	})
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress unspecified")
-	if assert.NotNil(t, byAddress, "byAddress unspecified") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified") {
+	canCheck := assert.NotNil(t, byAddress, "byAddress unspecified")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified")
+	if canCheck {
 		assert.Len(t, byAddress.RewardAccountState, 5, "RewardAccountState unspecified")
-		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unspecified")
-		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unspecified")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unspecified")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unspecified")
 	}
 
-	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
-	})
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress claimable")
-	if assert.NotNil(t, byAddress, "byAddress claimable") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState claimable") {
+	canCheck = assert.NotNil(t, byAddress, "byAddress claimable")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState claimable")
+	if canCheck {
 		assert.Len(t, byAddress.RewardAccountState, 4, "RewardAccountState claimable")
-		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim claimable")
-		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus claimable")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim claimable")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus claimable")
 	}
 
 	// get the accoutn balances of acct1
@@ -1017,7 +1105,12 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 7, Time: time.Now().UTC()}})
 	msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
 	require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
-	txClaim, errClaim := SignTxAndGetBytes(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msgClaim)
+	txClaim, errClaim := SignTxAndGetBytes(
+		NewTestRewardsGasLimit(),
+		fees,
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		msgClaim,
+	)
 	require.NoError(t, errClaim, "SignTxAndGetBytes")
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txClaim})
 	require.Equal(t, true, res.IsOK(), "res=%+v", res)
@@ -1025,15 +1118,19 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	var protoResult sdk.TxMsgData
 	require.NoError(t, proto.Unmarshal(res.Data, &protoResult), "unmarshalling protoResult")
 	require.Len(t, protoResult.MsgResponses, 1, "protoResult.MsgResponses")
-	require.Equal(t, protoResult.MsgResponses[0].GetTypeUrl(), "/provenance.reward.v1.MsgClaimAllRewardsResponse", "protoResult.MsgResponses[0].GetTypeUrl()")
+	require.Equal(t, protoResult.MsgResponses[0].GetTypeUrl(), "/provenance.reward.v1.MsgClaimAllRewardsResponse",
+		"protoResult.MsgResponses[0].GetTypeUrl()")
 	claimResponse := rewardtypes.MsgClaimAllRewardsResponse{}
 	require.NoError(t, claimResponse.Unmarshal(protoResult.MsgResponses[0].Value), "unmarshalling claimResponse")
-	assert.Equal(t, sdk.NewInt64Coin("nhash", 50_000_000_000).String(), claimResponse.TotalRewardClaim[0].String(), "TotalRewardClaim")
+	assert.Equal(t, sdk.NewInt64Coin("nhash", 50_000_000_000).String(), claimResponse.TotalRewardClaim[0].String(),
+		"TotalRewardClaim")
 	if assert.Len(t, claimResponse.ClaimDetails, 1, "ClaimDetails") {
 		assert.Equal(t, 1, int(claimResponse.ClaimDetails[0].RewardProgramId), "RewardProgramId")
-		assert.Equal(t, sdk.NewInt64Coin("nhash", 50_000_000_000).String(), claimResponse.ClaimDetails[0].TotalRewardClaim.String(), "ClaimDetails TotalRewardClaim")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 50_000_000_000).String(),
+			claimResponse.ClaimDetails[0].TotalRewardClaim.String(), "ClaimDetails TotalRewardClaim")
 		if assert.Len(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, 5, "ClaimedRewardPeriodDetails") {
-			assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(), claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails[0].ClaimPeriodReward.String(), "ClaimPeriodReward")
+			assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+				claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails[0].ClaimPeriodReward.String(), "ClaimPeriodReward")
 		}
 	}
 	app.EndBlock(abci.RequestEndBlock{Height: 7})
@@ -1087,7 +1184,9 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))), "funding acct1 with 290500010nhash")
+	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
@@ -1119,7 +1218,8 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	if assert.NotEmpty(t, claimPeriodDistributions, "claimPeriodDistributions") {
 		assert.Equal(t, 1, int(claimPeriodDistributions[0].TotalShares), "TotalShares")
 		assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "ClaimPeriodEnded")
-		assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(), claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
+		assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(),
+			claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
 	}
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
@@ -1128,26 +1228,38 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	assert.Equal(t, 1, actionCount, "ActionCounter transfer")
 	assert.Equal(t, 1, int(accountState.SharesEarned), "SharesEarned")
 
-	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
-	})
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress unspecified")
-	if assert.NotNil(t, byAddress, "byAddress unspecified") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified") {
+	canCheck := assert.NotNil(t, byAddress, "byAddress unspecified")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified")
+	if canCheck {
 		assert.Len(t, byAddress.RewardAccountState, 5, "RewardAccountState unspecified")
-		assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unspecified")
-		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unspecified")
+		assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unspecified")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unspecified")
 	}
 
-	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
-	})
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress claimable")
-	if assert.NotNil(t, byAddress, "byAddress claimable") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState claimable") {
+	canCheck = assert.NotNil(t, byAddress, "byAddress claimable")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState claimable")
+	if canCheck {
 		assert.Len(t, byAddress.RewardAccountState, 4, "claimable rewards should be 4 for this address.")
-		assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim claimable")
-		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus claimable")
+		assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim claimable")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus claimable")
 	}
 
 	// get the accoutn balances of acct1
@@ -1156,7 +1268,12 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 7, Time: time.Now().UTC()}})
 	msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
 	require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
-	txClaim, errClaim := SignTxAndGetBytes(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msgClaim)
+	txClaim, errClaim := SignTxAndGetBytes(
+		NewTestRewardsGasLimit(),
+		fees,
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		msgClaim,
+	)
 	require.NoError(t, errClaim, "SignTxAndGetBytes")
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txClaim})
 	require.Equal(t, true, res.IsOK(), "res=%+v", res)
@@ -1164,7 +1281,8 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	var protoResult sdk.TxMsgData
 	require.NoError(t, proto.Unmarshal(res.Data, &protoResult), "unmarshalling protoResult")
 	require.Len(t, protoResult.MsgResponses, 1, "protoResult.MsgResponses")
-	require.Equal(t, protoResult.MsgResponses[0].GetTypeUrl(), "/provenance.reward.v1.MsgClaimAllRewardsResponse", "protoResult.MsgResponses[0].GetTypeUrl()")
+	require.Equal(t, protoResult.MsgResponses[0].GetTypeUrl(), "/provenance.reward.v1.MsgClaimAllRewardsResponse",
+		"protoResult.MsgResponses[0].GetTypeUrl()")
 	claimResponse := rewardtypes.MsgClaimAllRewardsResponse{}
 	require.NoError(t, claimResponse.Unmarshal(protoResult.MsgResponses[0].Value), "unmarshalling claimResponse")
 	if assert.NotEmpty(t, claimResponse.TotalRewardClaim, "TotalRewardClaim") {
@@ -1195,7 +1313,11 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	priv, _, addr := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin("hotdog", 1000000_000_000_000), sdk.NewInt64Coin("nhash", 1000000_000_000_000))
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin("atom", 10000000),
+		sdk.NewInt64Coin("hotdog", 1000000_000_000_000),
+		sdk.NewInt64Coin("nhash", 1000000_000_000_000),
+	)
 
 	rewardProgram := rewardtypes.NewRewardProgram(
 		"title",
@@ -1258,7 +1380,9 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))), "funding acct1 with 290500010nhash")
+	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
@@ -1290,7 +1414,8 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	if assert.NotEmpty(t, claimPeriodDistributions, "claimPeriodDistributions") {
 		assert.Equal(t, 1, int(claimPeriodDistributions[0].TotalShares), "TotalShares")
 		assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "ClaimPeriodEnded")
-		assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(), claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
+		assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(),
+			claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
 	}
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
@@ -1299,26 +1424,38 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	assert.Equal(t, 1, int(actionCounter), "ActionCounter transfer")
 	assert.Equal(t, 1, int(accountState.SharesEarned), "SharesEarned")
 
-	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
-	})
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress unspecified")
-	if assert.NotNil(t, byAddress, "byAddress unspecified") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified") {
+	canCheck := assert.NotNil(t, byAddress, "byAddress unspecified")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified")
+	if canCheck {
 		assert.Len(t, byAddress.RewardAccountState, 10, "RewardAccountState unspecified")
-		assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unspecified")
-		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unspecified")
+		assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unspecified")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unspecified")
 	}
 
-	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
-	})
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress claimable")
-	if assert.NotNil(t, byAddress, "byAddress claimable") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState claimable") {
+	canCheck = assert.NotNil(t, byAddress, "byAddress claimable")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState claimable")
+	if canCheck {
 		assert.Len(t, byAddress.RewardAccountState, 8, "RewardAccountState claimable")
-		assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim claimable")
-		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus claimable")
+		assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim claimable")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus claimable")
 	}
 
 	// get the accoutn balances of acct1
@@ -1336,7 +1473,8 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	var protoResult sdk.TxMsgData
 	require.NoError(t, proto.Unmarshal(res.Data, &protoResult), "unmarshalling protoResult")
 	require.Len(t, protoResult.MsgResponses, 1, "protoResult.MsgResponses")
-	require.Equal(t, protoResult.MsgResponses[0].GetTypeUrl(), "/provenance.reward.v1.MsgClaimAllRewardsResponse", "protoResult.MsgResponses[0].GetTypeUrl()")
+	require.Equal(t, protoResult.MsgResponses[0].GetTypeUrl(), "/provenance.reward.v1.MsgClaimAllRewardsResponse",
+		"protoResult.MsgResponses[0].GetTypeUrl()")
 	claimResponse := rewardtypes.MsgClaimAllRewardsResponse{}
 	require.NoError(t, claimResponse.Unmarshal(protoResult.MsgResponses[0].Value), "unmarshalling claimResponse")
 	assert.Equal(t, sdk.NewInt64Coin("hotdog", 50_000_000_000).String(),
@@ -1418,7 +1556,9 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))), "funding acct1 with 290500010nhash")
+	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
@@ -1450,7 +1590,8 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	if assert.NotEmpty(t, claimPeriodDistributions, "claimPeriodDistributions") {
 		assert.Equal(t, 1, int(claimPeriodDistributions[0].TotalShares), "TotalShares")
 		assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "ClaimPeriodEnded")
-		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(), claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+			claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
 	}
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
@@ -1459,35 +1600,50 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	assert.Equal(t, 1, int(actionCounter), "ActionCounter transfer")
 	assert.Equal(t, 1, int(accountState.SharesEarned), "SharesEarned")
 
-	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
-	})
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress unspecified")
-	if assert.NotNil(t, byAddress, "byAddress unspecified") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified") {
+	canCheck := assert.NotNil(t, byAddress, "byAddress unspecified")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified")
+	if canCheck {
 		assert.Len(t, byAddress.RewardAccountState, 5, "RewardAccountState unspecified")
 		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
 			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unspecified")
-		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unspecified")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unspecified")
 	}
 
-	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
-	})
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress claimable")
-	if assert.NotNil(t, byAddress, "byAddress claimable") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState claimable") {
+	canCheck = assert.NotNil(t, byAddress, "byAddress claimable")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState claimable")
+	if canCheck {
 		assert.Len(t, byAddress.RewardAccountState, 4, "RewardAccountState claimable")
 		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
 			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim claimable")
-		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus claimable")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus claimable")
 	}
 
 	// claim rewards for the address
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 7, Time: time.Now().UTC()}})
 	msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
 	require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
-	txClaim, errClaim := SignTxAndGetBytes(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msgClaim)
+	txClaim, errClaim := SignTxAndGetBytes(
+		NewTestRewardsGasLimit(),
+		fees,
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		msgClaim,
+	)
 	require.NoError(t, errClaim, "SignTxAndGetBytes")
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txClaim})
 	require.Equal(t, true, res.IsErr(), "res=%+v", res)
@@ -1541,7 +1697,9 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))), "funding acct1 with 290500010nhash")
+	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
@@ -1629,7 +1787,9 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))), "funding acct1 with 290500010nhash")
+	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
@@ -1671,12 +1831,16 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 	assert.Equal(t, 1, int(actionCounter), "ActionCounter transfer")
 	assert.Equal(t, 1, int(accountState.SharesEarned), "account state incorrect")
 
-	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
-	})
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress")
-	if assert.NotNil(t, byAddress, "byAddress unspecified") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState") {
+	canCheck := assert.NotNil(t, byAddress, "byAddress unspecified")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState")
+	if canCheck {
 		assert.Len(t, byAddress.RewardAccountState, 5, "RewardAccountState")
 		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
 			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim")
@@ -1731,7 +1895,9 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))), "funding acct1 with 290500010nhash")
+	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
@@ -1778,7 +1944,11 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 	priv, _, addr := testdata.KeyTestPubAddr()
 	//_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
+		sdk.NewInt64Coin("atom", 10000000),
+		sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000),
+	)
 
 	rewardProgram := rewardtypes.NewRewardProgram(
 		"title",
@@ -1814,7 +1984,9 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))), "funding acct1 with 290500010nhash")
+	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
 	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
 		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
@@ -1830,7 +2002,12 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
-	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	txGov, err := SignTx(
+		NewTestRewardsGasLimit(),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)),
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		msg,
+	)
 	require.NoError(t, err, "SignTx")
 
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
@@ -1882,7 +2059,11 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 	priv2, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv1.PubKey(), 0, 0)
 	acct2 := authtypes.NewBaseAccount(addr2, priv2.PubKey(), 1, 0)
-	acctBalance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+	acctBalance := sdk.NewCoins(
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
+		sdk.NewInt64Coin("atom", 10000000),
+		sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000),
+	)
 
 	rewardProgram := rewardtypes.NewRewardProgram(
 		"title",
@@ -1918,7 +2099,9 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))), "funding acct2 with 290500010nhash")
+	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct2.GetAddress(), fundCoins),
+		"funding acct2 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
 	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
 		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
@@ -1930,7 +2113,12 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 	time.Sleep(200 * time.Millisecond)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
-	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv1.PubKey(), priv1, *acct1, ctx.ChainID(), msg)
+	txGov, err := SignTx(
+		NewTestRewardsGasLimit(),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)),
+		encCfg, priv1.PubKey(), priv1, *acct1, ctx.ChainID(),
+		msg,
+	)
 	require.NoError(t, err, "SignTx")
 
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
@@ -1976,17 +2164,21 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 	assert.Equal(t, 0, int(actionCounter), "ActionCounter vote")
 	assert.Equal(t, 0, int(accountState.SharesEarned), "SharesEarned")
 
-	byAddress1, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
-	})
+	byAddress1, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress acct1")
 	assert.Empty(t, byAddress1.RewardAccountState, "RewardAccountState acct1")
 
-	byAddress2, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct2.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
-	})
+	byAddress2, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct2.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress acct2")
 	assert.Empty(t, byAddress2.RewardAccountState, "RewardAccountState acct2")
 }
@@ -1996,7 +2188,11 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
 	_, pubKey2, _ := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
+		sdk.NewInt64Coin("atom", 10000000),
+		sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000),
+	)
 
 	rewardProgram := rewardtypes.NewRewardProgram(
 		"title",
@@ -2032,7 +2228,9 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))), "funding acct1 with 290500010nhash")
+	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
 	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
 		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
@@ -2048,7 +2246,12 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	time.Sleep(200 * time.Millisecond)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
-	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	txGov, err := SignTx(
+		NewTestRewardsGasLimit(),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)),
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		msg,
+	)
 	require.NoError(t, err, "SignTx")
 
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
@@ -2094,10 +2297,12 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	assert.Equal(t, 20, int(actionCounter), "ActionCounter vote")
 	assert.Equal(t, 10, int(accountState.SharesEarned), "SharesEarned")
 
-	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
-	})
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress")
 	if assert.NotNil(t, byAddress, "byAddress") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState") {
 		assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(),
@@ -2112,7 +2317,11 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
 	_, pubKey2, _ := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
+		sdk.NewInt64Coin("atom", 10000000),
+		sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000),
+	)
 
 	rewardProgram := rewardtypes.NewRewardProgram(
 		"title",
@@ -2149,7 +2358,9 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))), "funding acct1 with 290500010nhash")
+	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
 	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
 		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
@@ -2165,7 +2376,12 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 	time.Sleep(110 * time.Millisecond)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
-	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	txGov, err := SignTx(
+		NewTestRewardsGasLimit(),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)),
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		msg,
+	)
 	require.NoError(t, err, "SignTx")
 
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
@@ -2210,10 +2426,12 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 	assert.Equal(t, 0, int(actionCounter), "ActionCounter vote")
 	assert.Equal(t, 0, int(accountState.SharesEarned), "SharesEarned")
 
-	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
-	})
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress")
 	if assert.NotNil(t, byAddress, "byAddress") {
 		assert.Empty(t, byAddress.RewardAccountState, "RewardAccountState")
@@ -2225,7 +2443,11 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
 	_, pubKey2, _ := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
+		sdk.NewInt64Coin("atom", 10000000),
+		sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000),
+	)
 	minDelegation := sdk.NewInt64Coin("nhash", 4)
 	maxDelegation := sdk.NewInt64Coin("nhash", 2001000)
 	rewardProgram := rewardtypes.NewRewardProgram(
@@ -2267,7 +2489,9 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))), "funding acct1 with 290500010nhash")
+	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
 	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
 		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
@@ -2283,7 +2507,12 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	time.Sleep(200 * time.Millisecond)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
-	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	txGov, err := SignTx(
+		NewTestRewardsGasLimit(),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)),
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		msg,
+	)
 	require.NoError(t, err, "SignTx")
 
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
@@ -2330,10 +2559,12 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	assert.Equal(t, 20, int(actionCounter), "ActionCounter delegate")
 	assert.Equal(t, 10, int(accountState.SharesEarned), "SharesEarned")
 
-	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
-		Address:     acct1.Address,
-		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
-	})
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
 	require.NoError(t, err, "RewardDistributionsByAddress")
 	if assert.NotNil(t, byAddress, "byAddress") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState") {
 		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
@@ -2364,7 +2595,16 @@ func createValSet(t *testing.T, pubKeys ...cryptotypes.PubKey) *tmtypes.Validato
 	return tmtypes.NewValidatorSet(validators)
 }
 
-func signAndGenTx(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey cryptotypes.PubKey, privKey cryptotypes.PrivKey, acct authtypes.BaseAccount, chainId string, msg []sdk.Msg) (client.TxBuilder, error) {
+func signAndGenTx(
+	gaslimit uint64,
+	fees sdk.Coins,
+	encCfg simappparams.EncodingConfig,
+	pubKey cryptotypes.PubKey,
+	privKey cryptotypes.PrivKey,
+	acct authtypes.BaseAccount,
+	chainId string,
+	msg []sdk.Msg,
+) (client.TxBuilder, error) {
 	txBuilder := encCfg.TxConfig.NewTxBuilder()
 	txBuilder.SetFeeAmount(fees)
 	txBuilder.SetGasLimit(gaslimit)
@@ -2408,7 +2648,16 @@ func signAndGenTx(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingC
 	return txBuilder, nil
 }
 
-func SignTxAndGetBytes(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey cryptotypes.PubKey, privKey cryptotypes.PrivKey, acct authtypes.BaseAccount, chainId string, msg ...sdk.Msg) ([]byte, error) {
+func SignTxAndGetBytes(
+	gaslimit uint64,
+	fees sdk.Coins,
+	encCfg simappparams.EncodingConfig,
+	pubKey cryptotypes.PubKey,
+	privKey cryptotypes.PrivKey,
+	acct authtypes.BaseAccount,
+	chainId string,
+	msg ...sdk.Msg,
+) ([]byte, error) {
 	txBuilder, err := signAndGenTx(gaslimit, fees, encCfg, pubKey, privKey, acct, chainId, msg)
 	if err != nil {
 		return nil, err
@@ -2421,7 +2670,16 @@ func SignTxAndGetBytes(gaslimit uint64, fees sdk.Coins, encCfg simappparams.Enco
 	return txBytes, nil
 }
 
-func SignTx(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey cryptotypes.PubKey, privKey cryptotypes.PrivKey, acct authtypes.BaseAccount, chainId string, msg ...sdk.Msg) (sdk.Tx, error) {
+func SignTx(
+	gaslimit uint64,
+	fees sdk.Coins,
+	encCfg simappparams.EncodingConfig,
+	pubKey cryptotypes.PubKey,
+	privKey cryptotypes.PrivKey,
+	acct authtypes.BaseAccount,
+	chainId string,
+	msg ...sdk.Msg,
+) (sdk.Tx, error) {
 	txBuilder, err := signAndGenTx(gaslimit, fees, encCfg, pubKey, privKey, acct, chainId, msg)
 	if err != nil {
 		return nil, err
