@@ -653,9 +653,6 @@ func TestRewardsProgramStart(t *testing.T) {
 }
 
 func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
-	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass. https://github.com/provenance-io/provenance/issues/1006
-	t.Skip("This test is disabled, but must be re-enabled before v1.13 can be ready.")
-
 	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, _, addr := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
@@ -694,7 +691,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	require.NoError(t, err)
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txReward)
 	require.NoError(t, errFromDeliverTx)
-	assert.GreaterOrEqual(t, len(res.GetEvents()), 1, "should have emitted an event.")
+	require.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 	app.EndBlock(abci.RequestEndBlock{Height: 2})
 	app.Commit()
 
@@ -711,49 +708,53 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx)
-		assert.GreaterOrEqual(t, len(res.GetEvents()), 1, "should have emitted an event.")
+		require.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 		seq = seq + 1
 	}
+
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	require.NoError(t, err)
-	assert.Len(t, claimPeriodDistributions, 1, "claim period reward distributions should exist")
-	assert.Equal(t, int64(10), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
-	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
-	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
-		Denom:  "nhash",
-		Amount: sdk.ZeroInt(),
-	}), "claim period has not ended so shares have to be 0")
+	if assert.NotEmpty(t, claimPeriodDistributions, "claimPeriodDistributions") {
+		assert.Len(t, claimPeriodDistributions, 1, "claimPeriodDistributions")
+		assert.Equal(t, 10, int(claimPeriodDistributions[0].TotalShares), "TotalShares")
+		assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "ClaimPeriodEnded")
+		assert.Equal(t, "111nhash", claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
+	}
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
-	assert.Equal(t, uint64(98), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionTransfer"), "account state incorrect")
-	assert.Equal(t, 10, int(accountState.SharesEarned), "account state incorrect")
+	assert.Equal(t, 98, int(rewardtypes.GetActionCount(accountState.ActionCounter, "ActionTransfer")), "ActionCounter")
+	assert.Equal(t, 10, int(accountState.SharesEarned), "SharesEarned")
 
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
 		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
 	})
-	require.NoError(t, err)
-	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(100)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
-	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
-	assert.Len(t, byAddress.RewardAccountState, 1, "only one reward account for one claim period.")
+	require.NoError(t, err, "RewardDistributionsByAddress unspecified")
+	if assert.NotNil(t, byAddress, "byAddress unspecified") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified") {
+		assert.Len(t, byAddress.RewardAccountState, 1, "RewardAccountState unspecified")
+		assert.Equal(t, "100nhash", byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unspecified")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unspecified")
+	}
 
 	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
 		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
 	})
-	require.NoError(t, err)
-	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(100)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
-	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
-	assert.Len(t, byAddress.RewardAccountState, 1, "only one reward account for one claim period.")
+	require.NoError(t, err, "RewardDistributionsByAddress unclaimable")
+	if assert.NotNil(t, byAddress, "byAddress unclaimable") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unclaimable") {
+		assert.Len(t, byAddress.RewardAccountState, 1, "RewardAccountState unclaimable")
+		assert.Equal(t, "100nhash", byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unclaimable")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unclaimable")
+	}
 
 	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
 		Address:     acct1.Address,
 		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
 	})
-	require.NoError(t, err)
-	assert.Empty(t, byAddress.RewardAccountState, "none of them should be claimable.")
+	require.NoError(t, err, "RewardDistributionsByAddress claimable")
+	assert.Empty(t, byAddress.RewardAccountState, "RewardAccountState claimable")
 }
 
 func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t *testing.T) {
