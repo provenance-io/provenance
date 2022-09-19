@@ -152,6 +152,15 @@ func NewAttribute(key, value string) abci.EventAttribute {
 	}
 }
 
+func msgFeesEventJSON(count int, amount int, denom string, recipient string) string {
+	return fmt.Sprintf(`{"msg_type":"/cosmos.bank.v1beta1.MsgSend","count":"%d","total":"%d%s","recipient":"%s"}`,
+		count, amount, denom, recipient)
+}
+
+func jsonArrayJoin(entries ...string) string {
+	return "[" + strings.Join(entries, ",") + "]"
+}
+
 func TestRegisterMsgService(t *testing.T) {
 	db := dbm.NewMemDB()
 
@@ -284,7 +293,7 @@ func TestMsgService(tt *testing.T) {
 				NewAttribute(antewrapper.AttributeKeyAdditionalFee, "800hotdog"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 			NewEvent("provenance.msgfees.v1.EventMsgFees",
-				NewAttribute("msg_fees", `[{"msg_type":"/cosmos.bank.v1beta1.MsgSend","count":"1","total":"800hotdog","recipient":""}]`)),
+				NewAttribute("msg_fees", jsonArrayJoin(msgFeesEventJSON(1, 800, "hotdog", "")))),
 		}
 		assertEventsContains(t, res.Events, expEvents)
 	})
@@ -317,61 +326,63 @@ func TestMsgService(tt *testing.T) {
 				NewAttribute(antewrapper.AttributeKeyAdditionalFee, "10stake"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 			NewEvent("provenance.msgfees.v1.EventMsgFees",
-				NewAttribute("msg_fees", `[{"msg_type":"/cosmos.bank.v1beta1.MsgSend","count":"1","total":"10stake","recipient":""}]`)),
+				NewAttribute("msg_fees", jsonArrayJoin(msgFeesEventJSON(1, 10, "stake", "")))),
 		}
 		assertEventsContains(t, res.Events, expEvents)
 	})
 }
 
 func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
-	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass. https://github.com/provenance-io/provenance/issues/1006
-	t.Skip("This test is disabled, but must be re-enabled before v1.13 can be ready.")
-
 	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1) // will create a gas fee of 1stake * gas
 	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
 	acct1Balance := sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(1_000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000)))
-	app := piosimapp.SetupWithGenesisAccounts(t, "", []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr1.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisAccounts(t, "msgfee-testing", []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr1.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
-	msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
-	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)), addr2.String(), msgfeestypes.DefaultMsgFeeBips)
-	require.NoError(t, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 800hotdog")
-
 	// Check both account balances before transaction
 	addr1beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	require.Equal(t, "1000hotdog,100000stake", addr1beforeBalance, "should have the new balance after funding account")
 	addr2beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "", addr2beforeBalance, "should have the new balance after funding account")
+	assert.Equal(t, "1000hotdog,100000stake", addr1beforeBalance, "addr1beforeBalance")
+	assert.Equal(t, "", addr2beforeBalance, "addr2beforeBalance")
+	stopIfFailed(t)
 
+	// Sending 100hotdog coin from 1 to 2.
+	// Will have a msg fee of 800hotdog, 600 will go to 2, 200 to module.
+	msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
 	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000), sdk.NewInt64Coin("hotdog", 800))
+	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)), addr2.String(), 7_500)
+	require.NoError(t, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 800hotdog addr2 75%")
+
 	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
 
 	// Check both account balances after transaction
 	addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	require.Equal(t, "100hotdog", addr1AfterBalance, "should have the new balance after running transaction")
 	addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "500hotdog", addr2AfterBalance, "should have the new balance after running transaction")
-	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-	assert.Equal(t, 17, len(res.Events))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[4].Type)
-	assert.Equal(t, sdk.AttributeKeyFee, string(res.Events[4].Attributes[0].Key))
-	assert.Equal(t, "800hotdog,100000stake", string(res.Events[4].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[14].Type)
-	assert.Equal(t, antewrapper.AttributeKeyAdditionalFee, string(res.Events[14].Attributes[0].Key))
-	assert.Equal(t, "800hotdog", string(res.Events[14].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[15].Type)
-	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[15].Attributes[0].Key))
-	assert.Equal(t, "100000stake", string(res.Events[15].Attributes[0].Value))
-	assert.Equal(t, "provenance.msgfees.v1.EventMsgFees", res.Events[16].Type)
-	assert.Equal(t, "msg_fees", string(res.Events[16].Attributes[0].Key))
-	expectedTypedEventJson := fmt.Sprintf("[{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"400hotdog\",\"recipient\":\"\"},{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"400hotdog\",\"recipient\":\"%s\"}]", addr2.String())
-	assert.Equal(t, expectedTypedEventJson, string(res.Events[16].Attributes[0].Value), "typed event should reflect msg fees with recipient and calculated bip amount")
+	assert.Equal(t, "100hotdog", addr1AfterBalance, "addr1AfterBalance")
+	assert.Equal(t, "700hotdog", addr2AfterBalance, "addr2AfterBalance")
+
+	expEvents := []abci.Event{
+		NewEvent(sdk.EventTypeTx,
+			NewAttribute(sdk.AttributeKeyFee, "800hotdog,100000stake"),
+			NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+		NewEvent(sdk.EventTypeTx,
+			NewAttribute(antewrapper.AttributeKeyAdditionalFee, "800hotdog"),
+			NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+		NewEvent(sdk.EventTypeTx,
+			NewAttribute(antewrapper.AttributeKeyBaseFee, "100000stake"),
+			NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+		NewEvent("provenance.msgfees.v1.EventMsgFees",
+			NewAttribute("msg_fees",
+				jsonArrayJoin(msgFeesEventJSON(1, 200, "hotdog", ""), msgFeesEventJSON(1, 600, "hotdog", addr2.String())))),
+	}
+	assertEventsContains(t, res.Events, expEvents)
 }
 
 func TestMsgServiceAuthz(tt *testing.T) {
@@ -437,7 +448,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 				NewAttribute(antewrapper.AttributeKeyAdditionalFee, "800hotdog"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr2.String())),
 			NewEvent("provenance.msgfees.v1.EventMsgFees",
-				NewAttribute("msg_fees", `[{"msg_type":"/cosmos.bank.v1beta1.MsgSend","count":"1","total":"800hotdog","recipient":""}]`)),
+				NewAttribute("msg_fees", jsonArrayJoin(msgFeesEventJSON(1, 800, "hotdog", "")))),
 		}
 		assertEventsContains(t, res.Events, expEvents)
 	})
@@ -472,7 +483,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 				NewAttribute(antewrapper.AttributeKeyAdditionalFee, "1600hotdog"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr2.String())),
 			NewEvent("provenance.msgfees.v1.EventMsgFees",
-				NewAttribute("msg_fees", `[{"msg_type":"/cosmos.bank.v1beta1.MsgSend","count":"2","total":"1600hotdog","recipient":""}]`)),
+				NewAttribute("msg_fees", jsonArrayJoin(msgFeesEventJSON(2, 1600, "hotdog", "")))),
 		}
 		assertEventsContains(t, res.Events, expEvents)
 	})
