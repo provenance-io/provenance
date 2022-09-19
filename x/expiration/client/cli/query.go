@@ -177,6 +177,47 @@ func GetAllExpirationsByOwnerCmd() *cobra.Command {
 	return cmd
 }
 
+// GetAllExpiredExpirationsCmd is the CLI command for listing all expired expirations
+func GetAllExpiredExpirationsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "expired",
+		Aliases: []string{"e"},
+		Short:   "Query all expired expirations",
+		Args:    cobra.NoArgs,
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`
+				$ %[1]s query expiration expired
+				$ %[1]s query expiration expired --page=2 --limit=100
+				`,
+				version.AppName,
+			)),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			req := &types.QueryAllExpiredExpirationsRequest{Pagination: pageReq}
+			res, err := queryClient.AllExpiredExpirations(context.Background(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "expirations (expired)")
+
+	return cmd
+}
+
 // sdk ReadPageRequest expects binary, but we encoded to base64 in our marshaller
 func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
 	encoded, err := flagSet.GetString(flags.FlagPageKey)

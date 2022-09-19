@@ -4,9 +4,11 @@ import (
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/pkg/errors"
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -14,6 +16,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/provenance-io/provenance/x/expiration/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // Handler is a name record handler function for use with IterateExpirations.
@@ -32,6 +35,9 @@ type Keeper struct {
 
 	// To check granter grantee authorization of messages
 	authzKeeper authzkeeper.Keeper
+
+	// Message service router
+	router baseapp.IMsgServiceRouter
 }
 
 // NewKeeper returns an expiration keeper. It handles:
@@ -44,6 +50,7 @@ func NewKeeper(
 	key sdk.StoreKey,
 	paramSpace paramtypes.Subspace,
 	authzKeeper authzkeeper.Keeper,
+	router baseapp.IMsgServiceRouter,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
@@ -55,6 +62,7 @@ func NewKeeper(
 		paramSpace:  paramSpace,
 		cdc:         cdc,
 		authzKeeper: authzKeeper,
+		router:      router,
 	}
 }
 
@@ -81,7 +89,7 @@ func (k Keeper) GetExpiration(ctx sdk.Context, moduleAssetID string) (*types.Exp
 
 	store := ctx.KVStore(k.storeKey)
 	if !store.Has(key) {
-		return nil, sdkerrors.Wrap(types.ErrExpirationNotFound,
+		return nil, sdkerrors.Wrap(types.ErrNotFound,
 			fmt.Sprintf("expiration for module asset id [%s] does not exist", moduleAssetID))
 	}
 
@@ -116,7 +124,7 @@ func (k Keeper) SetExpiration(ctx sdk.Context, expiration types.Expiration) erro
 	return k.emitEvent(ctx, addEvent)
 }
 
-func (k Keeper) UpdateExpiration(ctx sdk.Context, expiration types.Expiration) error {
+func (k Keeper) ExtendExpiration(ctx sdk.Context, expiration types.Expiration) error {
 	// get key prefix
 	key, err := types.GetModuleAssetKeyPrefix(expiration.ModuleAssetId)
 	if err != nil {
@@ -130,8 +138,8 @@ func (k Keeper) UpdateExpiration(ctx sdk.Context, expiration types.Expiration) e
 	}
 
 	// Make sure that the new block height is higher than the old block height
-	if expiration.BlockHeight <= oldExpiration.BlockHeight {
-		k.Logger(ctx).Error("new block height must be higher than old block height", "err", err, "expiration", expiration.String(), "oldExpiration", oldExpiration.String())
+	if oldExpiration.Time.After(expiration.Time) {
+		k.Logger(ctx).Error("new expiration time must be after old expiration time", "err", err, "expiration", expiration.String(), "oldExpiration", oldExpiration.String())
 		return types.ErrExtendExpiration
 	}
 	// Validate owners are the same
@@ -153,8 +161,8 @@ func (k Keeper) UpdateExpiration(ctx sdk.Context, expiration types.Expiration) e
 	return k.emitEvent(ctx, extendEvent)
 }
 
-// DeleteExpiration removes an expiration record from the kvstore.
-func (k Keeper) DeleteExpiration(ctx sdk.Context, moduleAssetID string) error {
+// deleteExpiration removes an expiration record from the kvstore.
+func (k Keeper) deleteExpiration(ctx sdk.Context, moduleAssetID string) error {
 	key, err := types.GetModuleAssetKeyPrefix(moduleAssetID)
 	if err != nil {
 		return err
@@ -166,29 +174,44 @@ func (k Keeper) DeleteExpiration(ctx sdk.Context, moduleAssetID string) error {
 		store.Delete(key)
 	}
 
-	// emit Delete event
-	deleteEvent := types.NewEventExpirationDelete(moduleAssetID)
-	return k.emitEvent(ctx, deleteEvent)
+	return nil
 }
 
-// GetExpirationByModuleAssetId resolves a record by module asset id.
-func (k Keeper) GetExpirationByModuleAssetId(ctx sdk.Context, moduleAssetID string) (*types.Expiration, error) {
-	key, err := types.GetModuleAssetKeyPrefix(moduleAssetID)
+func (k Keeper) InvokeExpiration(ctx sdk.Context, moduleAssetID string) error {
+	// lookup expiration
+	expiration, err := k.GetExpiration(ctx, moduleAssetID)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return getExpiration(ctx, k, key)
-}
 
-func getExpiration(ctx sdk.Context, keeper Keeper, key []byte) (*types.Expiration, error) {
-	store := ctx.KVStore(keeper.storeKey)
-	if !store.Has(key) {
-		return nil, types.ErrExpirationNotFound
+	// unpack expiration message
+	var msg sdk.Msg
+	if err := k.cdc.UnpackAny(&expiration.Message, &msg); err != nil {
+		return err
 	}
-	bz := store.Get(key)
-	record := &types.Expiration{}
-	err := keeper.cdc.Unmarshal(bz, record)
-	return record, err
+
+	// route message to module
+	handler := k.router.Handler(msg)
+	if handler == nil {
+		return errors.Errorf("no message handler found for %q", sdk.MsgTypeURL(msg))
+	}
+	r, err := handler(ctx, msg)
+	if err != nil {
+		return errors.Wrapf(err, "message %s", sdk.MsgTypeURL(msg))
+	}
+	// Handler should always return non-nil sdk.Result.
+	if r == nil {
+		return fmt.Errorf("got nil sdk.Result for message %q", msg)
+	}
+
+	// clean up
+	if err := k.deleteExpiration(ctx, moduleAssetID); err != nil {
+		return err
+	}
+
+	// emit Invoke event
+	invokeEvent := types.NewEventExpirationInvoke(moduleAssetID)
+	return k.emitEvent(ctx, invokeEvent)
 }
 
 func (k Keeper) ValidateSetExpiration(
@@ -198,10 +221,10 @@ func (k Keeper) ValidateSetExpiration(
 	msgTypeURL string,
 ) error {
 	// validate block height is in the future
-	if expiration.BlockHeight <= ctx.BlockHeight() {
-		return sdkerrors.Wrap(types.ErrInvalidBlockHeight,
-			fmt.Sprintf("block height %d must be greater than current block height %d",
-				expiration.BlockHeight, ctx.BlockHeight()))
+	if expiration.Time.Before(ctx.BlockTime()) {
+		return sdkerrors.Wrap(types.ErrTimeInPast,
+			fmt.Sprintf("expiration time %s must be in the future",
+				expiration.Time))
 	}
 
 	// validate deposit
@@ -218,32 +241,11 @@ func (k Keeper) ValidateSetExpiration(
 
 	// validate module asset id
 	if _, err := sdk.AccAddressFromBech32(expiration.ModuleAssetId); err != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress,
-			fmt.Sprintf("invalid module asset id: %s", err.Error()))
-	}
-
-	// validate signers
-	if err := k.validateSigners(ctx, expiration.Owner, signers, msgTypeURL); err != nil {
-		return sdkerrors.Wrap(types.ErrInvalidSigners, err.Error())
-	}
-
-	return nil
-}
-
-func (k Keeper) ValidateDeleteExpiration(
-	ctx sdk.Context,
-	moduleAssetID string,
-	signers []string,
-	msgTypeURL string,
-) error {
-	expiration, err := k.GetExpiration(ctx, moduleAssetID)
-	if err != nil {
-		return err
-	}
-
-	// anyone can delete an expired expiration
-	if expiration.BlockHeight < ctx.BlockHeight() {
-		return nil
+		// check if we're dealing with a MetadataAddress
+		if _, err2 := metadatatypes.MetadataAddressFromBech32(expiration.ModuleAssetId); err2 != nil {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress,
+				fmt.Sprintf("invalid module asset id: %s", err.Error()))
+		}
 	}
 
 	// validate signers
@@ -265,7 +267,10 @@ func (k Keeper) ValidateInvokeExpiration(
 		return err
 	}
 
-	// todo: validate whether caller can invoke expiration.
+	// anyone can delete an expired expiration
+	if ctx.BlockTime().After(expiration.Time) {
+		return nil
+	}
 
 	// validate signers
 	if err := k.validateSigners(ctx, expiration.Owner, signers, msgTypeURL); err != nil {

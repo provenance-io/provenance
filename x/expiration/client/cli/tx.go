@@ -1,9 +1,7 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -11,8 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
-	types2 "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
@@ -34,164 +30,28 @@ func NewTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 	txCmd.AddCommand(
-		AddExpirationCmd(),
 		ExtendExpirationCmd(),
-		DeleteExpirationCmd(),
 		InvokeExpirationCmd(),
 	)
 	return txCmd
 }
 
-// AddExpirationCmd creates a command for adding an expiration
-func AddExpirationCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "add [path/to/expiration.json]",
-		Aliases: []string{"a"},
-		Short:   "Create expiration metadata for an asset on the provenance blockchain",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Add module asset expiration on the provenance blockchain.
-They should be defined in a JSON file.
-
-Example:
-$ %s tx expiration add path/to/expiration.json
-
-Where expiration.json contains:
-
-{
-  "module_asset_id": "cosmos1...",
-  "owner": "cosmos1...",
-  "block_height": 1000000,
-  "deposit": "10000nhash",
-  "message": { // a proto-JSON-encoded sdk.Msg
-  	"@type": "/provenance.metadata.v1.MsgDeleteScopeRequest",
-  	"scope_id": "scope1...",
-  	"signers": ["cosmos1..."]
-  }
-}
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			moduleAssetID, owner, height, deposit, msgs, err := parseAddExtendRequest(clientCtx.Codec, args[0])
-			if err != nil {
-				return err
-			}
-
-			expiration := types.Expiration{
-				ModuleAssetId: moduleAssetID,
-				Owner:         owner,
-				BlockHeight:   height,
-				Deposit:       deposit[0],
-				Message:       msgs,
-			}
-
-			signers, err := parseSigners(cmd, &clientCtx)
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgAddExpirationRequest(expiration, signers)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	addSignerFlagCmd(cmd)
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
-}
-
 // ExtendExpirationCmd creates a command for extending an expiration
 func ExtendExpirationCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "extend [path/to/expiration.json]",
+		Use:     "extend [module-asset-id] [duration n{y|w|d|h}]",
 		Aliases: []string{"e"},
-		Short:   "Extend/update expiration metadata for an asset on the provenance blockchain",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Extend module asset expiration on the provenance blockchain.
-They should be defined in a JSON file.
+		Short:   "Extend expiration metadata for an asset on the provenance blockchain",
+		Long: `Extend expiration metadata for an asset on the provenance blockchain
 
 Example:
-$ %s tx expiration extend path/to/expiration.json
+$ %s tx expiration extend pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk duration 1y
 
-Where expiration.json contains:
-
-{
-  "module_asset_id": "cosmos1...",
-  "owner": "cosmos1...",
-  "block_height": 1000000,
-  "deposit": "10000nhash",
-  "messages": { // a proto-JSON-encoded sdk.Msg
-    "@type": "/provenance.metadata.v1.MsgDeleteScopeRequest",
-    "scope_id": "scope1...",
-  	"signers": ["cosmos1..."]
-  }
-}
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			moduleAssetID, owner, height, deposit, msgs, err := parseAddExtendRequest(clientCtx.Codec, args[0])
-			if err != nil {
-				return err
-			}
-
-			expiration := types.Expiration{
-				ModuleAssetId: moduleAssetID,
-				Owner:         owner,
-				BlockHeight:   height,
-				Deposit:       deposit[0],
-				Message:       msgs,
-			}
-
-			signers, err := parseSigners(cmd, &clientCtx)
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgExtendExpirationRequest(expiration, signers)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	addSignerFlagCmd(cmd)
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// DeleteExpirationCmd creates a command for deleting an expiration
-func DeleteExpirationCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "delete [module-asset-id]",
-		Aliases: []string{"d"},
-		Short:   "Delete expiration metadata for an asset on the provenance blockchain",
-		Example: fmt.Sprintf(`$ %s tx expiration delete pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk`, version.AppName),
-		Args:    cobra.ExactArgs(1),
+module-asset-id   - module asset address
+duration          - the duration period for which the module asset will continue to remain on chain.
+					Valid time units are "y", "w", "d", "h"`,
+		Example: fmt.Sprintf(`$ %s tx expiration extend pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk duration 1y`, version.AppName),
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -204,9 +64,9 @@ func DeleteExpirationCmd() *cobra.Command {
 			}
 
 			moduleAssetID := args[0]
-			msg := types.NewMsgDeleteExpirationRequest(moduleAssetID, signers)
-			err = msg.ValidateBasic()
-			if err != nil {
+			duration := args[1]
+			msg := types.NewMsgExtendExpirationRequest(moduleAssetID, duration, signers)
+			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
 
@@ -241,8 +101,7 @@ func InvokeExpirationCmd() *cobra.Command {
 
 			moduleAssetID := args[0]
 			msg := types.NewMsgInvokeExpirationRequest(moduleAssetID, signers)
-			err = msg.ValidateBasic()
-			if err != nil {
+			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
 
@@ -254,54 +113,6 @@ func InvokeExpirationCmd() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
-}
-
-type expiration struct {
-	ModuleAssetID string          `json:"module_asset_id"`
-	Owner         string          `json:"owner"`
-	BlockHeight   int64           `json:"block_height"`
-	Deposit       string          `json:"deposit"`
-	Message       json.RawMessage `json:"message,omitempty"`
-}
-
-func parseAddExtendRequest(
-	cdc codec.Codec,
-	path string,
-) (string, string, int64, sdk.Coins, *types2.Any, error) {
-	var expiration expiration
-
-	contents, err := os.ReadFile(path)
-	if err != nil {
-		return "", "", -1, nil, nil, err
-	}
-
-	if err := json.Unmarshal(contents, &expiration); err != nil {
-		return "", "", -1, nil, nil, err
-	}
-
-	deposit, err := sdk.ParseCoinsNormalized(expiration.Deposit)
-	if err != nil {
-		return "", "", -1, nil, nil, err
-	}
-
-	var msg sdk.Msg
-	if err := cdc.UnmarshalInterfaceJSON(expiration.Message, &msg); err != nil {
-		return "", "", -1, nil, nil, err
-	}
-	if err := msg.ValidateBasic(); err != nil {
-		return "", "", -1, nil, nil, err
-	}
-
-	anyMsg, err := types2.NewAnyWithValue(msg)
-	if err != nil {
-		return "", "", -1, nil, nil, err
-	}
-
-	return expiration.ModuleAssetID,
-		expiration.Owner,
-		expiration.BlockHeight,
-		deposit,
-		anyMsg, err
 }
 
 func addSignerFlagCmd(cmd *cobra.Command) {

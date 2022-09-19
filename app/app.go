@@ -428,7 +428,7 @@ func New(
 	)
 
 	app.ExpirationKeeper = expirationkeeper.NewKeeper(
-		appCodec, keys[expirationtypes.StoreKey], app.GetSubspace(expirationtypes.ModuleName), app.AuthzKeeper,
+		appCodec, keys[expirationtypes.StoreKey], app.GetSubspace(expirationtypes.ModuleName), app.AuthzKeeper, app.MsgServiceRouter(),
 	)
 
 	// Create IBC Keeper

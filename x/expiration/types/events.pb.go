@@ -178,24 +178,24 @@ func (m *EventExpirationExtend) GetModuleAssetId() string {
 	return ""
 }
 
-// EventExpirationDelete is an event message indicating an expiration has been deleted
-type EventExpirationDelete struct {
+// EventExpirationInvoke is an event message indicating an expiration has been invoked
+type EventExpirationInvoke struct {
 	// module_asset_id is the bech32 address string of the expiration id that was created.
 	ModuleAssetId string `protobuf:"bytes,1,opt,name=module_asset_id,json=moduleAssetId,proto3" json:"module_asset_id,omitempty"`
 }
 
-func (m *EventExpirationDelete) Reset()         { *m = EventExpirationDelete{} }
-func (m *EventExpirationDelete) String() string { return proto.CompactTextString(m) }
-func (*EventExpirationDelete) ProtoMessage()    {}
-func (*EventExpirationDelete) Descriptor() ([]byte, []int) {
+func (m *EventExpirationInvoke) Reset()         { *m = EventExpirationInvoke{} }
+func (m *EventExpirationInvoke) String() string { return proto.CompactTextString(m) }
+func (*EventExpirationInvoke) ProtoMessage()    {}
+func (*EventExpirationInvoke) Descriptor() ([]byte, []int) {
 	return fileDescriptor_db63118c179972b3, []int{3}
 }
-func (m *EventExpirationDelete) XXX_Unmarshal(b []byte) error {
+func (m *EventExpirationInvoke) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventExpirationDelete) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventExpirationInvoke) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventExpirationDelete.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventExpirationInvoke.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -205,19 +205,19 @@ func (m *EventExpirationDelete) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
-func (m *EventExpirationDelete) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventExpirationDelete.Merge(m, src)
+func (m *EventExpirationInvoke) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventExpirationInvoke.Merge(m, src)
 }
-func (m *EventExpirationDelete) XXX_Size() int {
+func (m *EventExpirationInvoke) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventExpirationDelete) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventExpirationDelete.DiscardUnknown(m)
+func (m *EventExpirationInvoke) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventExpirationInvoke.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventExpirationDelete proto.InternalMessageInfo
+var xxx_messageInfo_EventExpirationInvoke proto.InternalMessageInfo
 
-func (m *EventExpirationDelete) GetModuleAssetId() string {
+func (m *EventExpirationInvoke) GetModuleAssetId() string {
 	if m != nil {
 		return m.ModuleAssetId
 	}
@@ -228,7 +228,7 @@ func init() {
 	proto.RegisterType((*EventTxCompleted)(nil), "provenance.expiration.v1.EventTxCompleted")
 	proto.RegisterType((*EventExpirationAdd)(nil), "provenance.expiration.v1.EventExpirationAdd")
 	proto.RegisterType((*EventExpirationExtend)(nil), "provenance.expiration.v1.EventExpirationExtend")
-	proto.RegisterType((*EventExpirationDelete)(nil), "provenance.expiration.v1.EventExpirationDelete")
+	proto.RegisterType((*EventExpirationInvoke)(nil), "provenance.expiration.v1.EventExpirationInvoke")
 }
 
 func init() {
@@ -236,7 +236,7 @@ func init() {
 }
 
 var fileDescriptor_db63118c179972b3 = []byte{
-	// 277 bytes of a gzipped FileDescriptorProto
+	// 278 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x2d, 0x28, 0xca, 0x2f,
 	0x4b, 0xcd, 0x4b, 0xcc, 0x4b, 0x4e, 0xd5, 0x4f, 0xad, 0x28, 0xc8, 0x2c, 0x4a, 0x2c, 0xc9, 0xcc,
 	0xcf, 0xd3, 0x2f, 0x33, 0xd4, 0x4f, 0x2d, 0x4b, 0xcd, 0x2b, 0x29, 0xd6, 0x2b, 0x28, 0xca, 0x2f,
@@ -248,13 +248,13 @@ var fileDescriptor_db63118c179972b3 = []byte{
 	0xb3, 0x06, 0x67, 0x10, 0x8c, 0xab, 0x64, 0xc3, 0x25, 0x04, 0xb6, 0xc1, 0x15, 0x6e, 0xaf, 0x63,
 	0x4a, 0x8a, 0x90, 0x1a, 0x17, 0x3f, 0xc4, 0xd4, 0xf8, 0xc4, 0xe2, 0xe2, 0xd4, 0x92, 0xf8, 0xcc,
 	0x14, 0xa8, 0x65, 0xbc, 0x10, 0x61, 0x47, 0x90, 0xa8, 0x67, 0x8a, 0x92, 0x3d, 0x97, 0x28, 0x9a,
-	0x6e, 0xd7, 0x8a, 0x92, 0xd4, 0x3c, 0x4a, 0x0c, 0x70, 0x49, 0x05, 0x79, 0x93, 0x58, 0x03, 0x9c,
-	0xf2, 0x4f, 0x3c, 0x92, 0x63, 0xbc, 0xf0, 0x48, 0x8e, 0xf1, 0xc1, 0x23, 0x39, 0xc6, 0x09, 0x8f,
-	0xe5, 0x18, 0x2e, 0x3c, 0x96, 0x63, 0xb8, 0xf1, 0x58, 0x8e, 0x81, 0x4b, 0x3a, 0x33, 0x5f, 0x0f,
-	0x57, 0xc0, 0x06, 0x30, 0x46, 0x99, 0xa5, 0x67, 0x96, 0x64, 0x94, 0x26, 0xe9, 0x25, 0xe7, 0xe7,
-	0xea, 0x23, 0x94, 0xe9, 0x66, 0xe6, 0x23, 0xf1, 0xf4, 0x2b, 0x90, 0xa3, 0xad, 0xa4, 0xb2, 0x20,
-	0xb5, 0x38, 0x89, 0x0d, 0x1c, 0x67, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0xfa, 0x8d, 0x2a,
-	0x68, 0xdc, 0x01, 0x00, 0x00,
+	0x6e, 0xd7, 0x8a, 0x92, 0xd4, 0x3c, 0x4a, 0x0c, 0xf0, 0xcc, 0x2b, 0xcb, 0xcf, 0x4e, 0x25, 0xd6,
+	0x00, 0xa7, 0xfc, 0x13, 0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71,
+	0xc2, 0x63, 0x39, 0x86, 0x0b, 0x8f, 0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0xe0, 0x92, 0xce, 0xcc,
+	0xd7, 0xc3, 0x15, 0xb0, 0x01, 0x8c, 0x51, 0x66, 0xe9, 0x99, 0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9,
+	0xf9, 0xb9, 0xfa, 0x08, 0x65, 0xba, 0x99, 0xf9, 0x48, 0x3c, 0xfd, 0x0a, 0xe4, 0x68, 0x2b, 0xa9,
+	0x2c, 0x48, 0x2d, 0x4e, 0x62, 0x03, 0xc7, 0x99, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x44, 0x54,
+	0x94, 0x2d, 0xdc, 0x01, 0x00, 0x00,
 }
 
 func (m *EventTxCompleted) Marshal() (dAtA []byte, err error) {
@@ -363,7 +363,7 @@ func (m *EventExpirationExtend) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EventExpirationDelete) Marshal() (dAtA []byte, err error) {
+func (m *EventExpirationInvoke) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -373,12 +373,12 @@ func (m *EventExpirationDelete) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventExpirationDelete) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventExpirationInvoke) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventExpirationDelete) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventExpirationInvoke) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -453,7 +453,7 @@ func (m *EventExpirationExtend) Size() (n int) {
 	return n
 }
 
-func (m *EventExpirationDelete) Size() (n int) {
+func (m *EventExpirationInvoke) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -782,7 +782,7 @@ func (m *EventExpirationExtend) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventExpirationDelete) Unmarshal(dAtA []byte) error {
+func (m *EventExpirationInvoke) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -805,10 +805,10 @@ func (m *EventExpirationDelete) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventExpirationDelete: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventExpirationInvoke: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventExpirationDelete: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventExpirationInvoke: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

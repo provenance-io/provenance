@@ -29,9 +29,14 @@ service Query {
     option (google.api.http).get = "/provenance/expiration/v1/all";
   }
 
-  // Query all Expirations
+  // Query Expirations by owner
   rpc AllExpirationsByOwner(QueryAllExpirationsByOwnerRequest) returns (QueryAllExpirationsByOwnerResponse) {
     option (google.api.http).get = "/provenance/expiration/v1/all/{owner}";
+  }
+
+  // Query all expired Expirations
+  rpc AllExpiredExpirations(QueryAllExpiredExpirationsRequest) returns (QueryAllExpiredExpirationsResponse) {
+    option (google.api.http).get = "/provenance/expiration/v1/all/expired";
   }
 }
 
@@ -77,6 +82,19 @@ message QueryAllExpirationsByOwnerRequest {
 
 // QueryAllExpirationsByOwnerResponse response for querying all expirations by owner
 message QueryAllExpirationsByOwnerResponse {
+  repeated Expiration expirations = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryAllExpiredExpirationsRequest queries all expired expirations
+message QueryAllExpiredExpirationsRequest {
+  // pagination defines an optional pagination for the request
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryAllExpiredExpirationsResponse response for querying all expired expirations
+message QueryAllExpiredExpirationsResponse {
   repeated Expiration expirations = 1;
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;

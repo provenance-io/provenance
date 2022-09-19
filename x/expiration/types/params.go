@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	"gopkg.in/yaml.v2"
 
@@ -13,9 +14,14 @@ const (
 	NhashDenom = "nhash"
 )
 
+// DefaultDuration is the default duration a module asset
+// will live on chain before expiring. Defaults to 1 year
+var DefaultDuration = 24 * 365 * time.Hour
+
 var DefaultDeposit = sdk.Coin{
-	Denom:  NhashDenom,
-	Amount: sdk.NewInt(1905), // todo: set default required amount
+	Denom: NhashDenom,
+	// todo: what should this be? should this be a configurable property in app.toml?
+	Amount: sdk.NewInt(1905),
 }
 
 var (

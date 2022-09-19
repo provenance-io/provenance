@@ -3,17 +3,22 @@ package keeper_test
 import (
 	"context"
 	"testing"
+	"time"
+
+	"github.com/google/uuid"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	types2 "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/expiration/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 
 	"github.com/stretchr/testify/assert"
@@ -40,7 +45,7 @@ type GrpcQueryTestSuite struct {
 	user3Addr sdk.AccAddress
 
 	moduleAssetID string
-	blockHeight   int64
+	time          time.Time
 	deposit       sdk.Coin
 	signers       []string
 }
@@ -75,7 +80,7 @@ func (s *GrpcQueryTestSuite) SetupTest() {
 
 	// expiration tests
 	s.moduleAssetID = "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
-	s.blockHeight = s.ctx.BlockHeight() + 1
+	s.time = s.ctx.BlockTime().AddDate(0, 0, 2)
 	s.deposit = types.DefaultDeposit
 	s.signers = []string{s.user1}
 }
@@ -84,11 +89,24 @@ func TestGrpcQueryTestSuite(t *testing.T) {
 	suite.Run(t, new(GrpcQueryTestSuite))
 }
 
+func anyMsg(owner string) types2.Any {
+	scopeID := metadatatypes.ScopeMetadataAddress(uuid.New())
+	msg := &metadatatypes.MsgDeleteScopeRequest{
+		ScopeId: scopeID,
+		Signers: []string{owner},
+	}
+	anyMsg, err := types2.NewAnyWithValue(msg)
+	if err != nil {
+		panic(err)
+	}
+	return *anyMsg
+}
+
 func (s *GrpcQueryTestSuite) TestQueryExpiration() {
 	moduleAssetID := s.moduleAssetID
 
 	s.T().Run("add expiration for querying", func(t *testing.T) {
-		expiration := *types.NewExpiration(moduleAssetID, s.user1, s.blockHeight, s.deposit, nil)
+		expiration := *types.NewExpiration(moduleAssetID, s.user1, s.time, s.deposit, anyMsg(s.user1))
 		assert.NoError(t, expiration.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err := s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")
@@ -107,12 +125,12 @@ func (s *GrpcQueryTestSuite) TestQueryAllExpirations() {
 	expectedAll := 2
 
 	s.T().Run("add expirations for querying", func(t *testing.T) {
-		expiration1 := *types.NewExpiration(s.moduleAssetID, s.user1, s.blockHeight, s.deposit, nil)
+		expiration1 := *types.NewExpiration(s.moduleAssetID, s.user1, s.time, s.deposit, anyMsg(s.user1))
 		assert.NoError(t, expiration1.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err := s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration1)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")
 
-		expiration2 := *types.NewExpiration(s.user2, s.user3, 2, s.deposit, nil)
+		expiration2 := *types.NewExpiration(s.user2, s.user3, s.time, s.deposit, anyMsg(s.user3))
 		assert.NoError(t, expiration2.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err = s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration2)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")
@@ -137,19 +155,20 @@ func (s *GrpcQueryTestSuite) TestQueryAllExpirationsByOwner() {
 
 	expectedAll := 3
 	expectedByOwner := 2
+	expectedExpired := 0
 
 	s.T().Run("add expirations for querying", func(t *testing.T) {
-		expiration1 := *types.NewExpiration(moduleAssetID1, sameOwner, s.blockHeight, s.deposit, nil)
+		expiration1 := *types.NewExpiration(moduleAssetID1, sameOwner, s.time, s.deposit, anyMsg(sameOwner))
 		assert.NoError(t, expiration1.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err := s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration1)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")
 
-		expiration2 := *types.NewExpiration(moduleAssetID2, sameOwner, 2, s.deposit, nil)
+		expiration2 := *types.NewExpiration(moduleAssetID2, sameOwner, s.time, s.deposit, anyMsg(sameOwner))
 		assert.NoError(t, expiration2.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err = s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration2)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")
 
-		expiration3 := *types.NewExpiration(moduleAssetID3, diffOwner, 1, s.deposit, nil)
+		expiration3 := *types.NewExpiration(moduleAssetID3, diffOwner, s.time, s.deposit, anyMsg(diffOwner))
 		assert.NoError(t, expiration3.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err = s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration3)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")
@@ -164,11 +183,20 @@ func (s *GrpcQueryTestSuite) TestQueryAllExpirationsByOwner() {
 	})
 
 	// Query expirations by owner
-	s.T().Run("query expirations by owner", func(t *testing.T) {
+	s.T().Run("query all expirations by owner", func(t *testing.T) {
 		req := types.QueryAllExpirationsByOwnerRequest{Owner: sameOwner}
 		res, err := s.queryClient.AllExpirationsByOwner(context.Background(), &req)
 		assert.NoError(t, err, "query by owner: %s", "error")
 		assert.NotNil(t, res, "query by owner: %s", "response")
 		assert.Equal(t, expectedByOwner, len(res.Expirations), "query by owner: %s", "expirations")
+	})
+
+	// Query expired expirations
+	s.T().Run("query all expired expirations", func(t *testing.T) {
+		req := types.QueryAllExpiredExpirationsRequest{}
+		res, err := s.queryClient.AllExpiredExpirations(context.Background(), &req)
+		assert.NoError(t, err, "query expired: %s", "error")
+		assert.NotNil(t, res, "query expired: %s", "response")
+		assert.Equal(t, expectedExpired, len(res.Expirations), "query expired: %s", "expirations")
 	})
 }

@@ -42,7 +42,7 @@ type KeeperTestSuite struct {
 	user3Addr sdk.AccAddress
 
 	moduleAssetID string
-	blockHeight   int64
+	time          time.Time
 	deposit       sdk.Coin
 	signers       []string
 
@@ -82,30 +82,30 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	// expiration tests
 	s.moduleAssetID = "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
-	s.blockHeight = s.ctx.BlockHeight() + 1
+	s.time = s.ctx.BlockTime().AddDate(0, 0, 2)
 	s.deposit = types.DefaultDeposit
 	s.signers = []string{s.user1}
 
 	s.validExpiration = types.Expiration{
 		ModuleAssetId: s.moduleAssetID,
 		Owner:         s.user1,
-		BlockHeight:   s.blockHeight,
+		Time:          s.time,
 		Deposit:       s.deposit,
 	}
 	s.emptyModuleAssetIdExpiration = types.Expiration{
-		Owner:       s.user1,
-		BlockHeight: s.blockHeight,
-		Deposit:     s.deposit,
+		Owner:   s.user1,
+		Time:    s.time,
+		Deposit: s.deposit,
 	}
 	s.emptyOwnerAddressExpiration = types.Expiration{
 		ModuleAssetId: s.moduleAssetID,
-		BlockHeight:   s.blockHeight,
+		Time:          s.time,
 		Deposit:       s.deposit,
 	}
 	s.minDepositNotMetExpiration = types.Expiration{
 		ModuleAssetId: s.moduleAssetID,
 		Owner:         s.user1,
-		BlockHeight:   s.blockHeight,
+		Time:          s.time,
 		Deposit:       sdk.NewInt64Coin(simapp.DefaultFeeDenom, 1),
 	}
 }
@@ -339,122 +339,6 @@ func (s *KeeperTestSuite) TestExtendExpiration() {
 			} else {
 				assert.NoError(t, err, "%s unexpected error", tc.name)
 				if err := s.app.ExpirationKeeper.SetExpiration(s.ctx, tc.expiration); err != nil {
-					assert.Fail(t, err.Error())
-				}
-			}
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestDeleteExpiration() {
-	request := types.MsgDeleteExpirationRequest{}
-	cases := []struct {
-		name          string
-		moduleAssetID string
-		signers       []string
-		msgTypeURL    string
-		granter       sdk.AccAddress
-		grantee       sdk.AccAddress
-		addExpiration bool
-		isExpired     bool
-		wantErr       bool
-		expectedErr   string
-	}{
-		{
-			name:          "should fail to find and delete expiration",
-			moduleAssetID: s.moduleAssetID,
-			signers:       s.signers,
-			msgTypeURL:    request.MsgTypeURL(),
-			granter:       nil,
-			grantee:       nil,
-			addExpiration: false,
-			isExpired:     false,
-			wantErr:       true,
-			expectedErr:   fmt.Sprintf("expiration for module asset id [%s] does not exist: expiration not found", s.moduleAssetID),
-		},
-		{
-			name:          "should fail to validate due to empty module asset id",
-			moduleAssetID: "",
-			signers:       s.signers,
-			msgTypeURL:    request.MsgTypeURL(),
-			granter:       nil,
-			grantee:       nil,
-			addExpiration: false,
-			isExpired:     false,
-			wantErr:       true,
-			expectedErr:   "empty address string is not allowed: invalid key prefix",
-		},
-		{
-			name:          "should successfully delete expiration",
-			moduleAssetID: s.moduleAssetID,
-			signers:       []string{s.validExpiration.Owner},
-			msgTypeURL:    request.MsgTypeURL(),
-			granter:       nil,
-			grantee:       nil,
-			addExpiration: true,
-			isExpired:     false,
-			wantErr:       false,
-			expectedErr:   "",
-		},
-		{
-			name:          "should successfully delete expiration with authz",
-			moduleAssetID: s.moduleAssetID,
-			signers:       []string{s.user3},
-			msgTypeURL:    request.MsgTypeURL(),
-			granter:       s.user1Addr, // user1 is the owner in s.expiration
-			grantee:       s.user3Addr,
-			addExpiration: true,
-			isExpired:     false,
-			wantErr:       false,
-			expectedErr:   "",
-		},
-		{
-			name:          "should successfully delete expired expiration",
-			moduleAssetID: s.moduleAssetID,
-			signers:       []string{},
-			msgTypeURL:    request.MsgTypeURL(),
-			granter:       nil,
-			grantee:       nil,
-			addExpiration: true,
-			isExpired:     true,
-			wantErr:       false,
-			expectedErr:   "",
-		},
-	}
-
-	now := s.ctx.BlockHeader().Time
-	s.Assert().NotNil(now)
-
-	for _, tc := range cases {
-		tc := tc
-
-		s.T().Run(tc.name, func(t *testing.T) {
-			if tc.addExpiration {
-				if err := s.app.ExpirationKeeper.SetExpiration(s.ctx, s.validExpiration); err != nil {
-					assert.Fail(t, err.Error())
-				}
-			}
-
-			createAuth := tc.grantee != nil && tc.granter != nil
-			if createAuth {
-				a := authz.NewGenericAuthorization(tc.msgTypeURL)
-				err := s.app.AuthzKeeper.SaveGrant(s.ctx, tc.grantee, tc.granter, a, now.Add(time.Hour))
-				s.Assert().NoError(err)
-			}
-
-			ctx := s.ctx
-			if tc.isExpired {
-				// move block height forward to simulate expired expiration
-				ctx = s.ctx.WithBlockHeader(tmproto.Header{Height: 2, Time: now})
-			}
-
-			err := s.app.ExpirationKeeper.ValidateDeleteExpiration(ctx, tc.moduleAssetID, tc.signers, tc.msgTypeURL)
-			if tc.wantErr {
-				assert.Error(t, err)
-				assert.Equal(t, tc.expectedErr, err.Error(), "%s error", tc.name)
-			} else {
-				assert.NoError(t, err, "%s unexpected error", tc.name)
-				if err := s.app.ExpirationKeeper.DeleteExpiration(ctx, tc.moduleAssetID); err != nil {
 					assert.Fail(t, err.Error())
 				}
 			}

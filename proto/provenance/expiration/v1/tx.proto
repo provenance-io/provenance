@@ -15,8 +15,6 @@ service Msg {
   rpc AddExpiration(MsgAddExpirationRequest) returns (MsgAddExpirationResponse);
   // ExtendExpiration defines a method for extending an expiration of a module asset
   rpc ExtendExpiration(MsgExtendExpirationRequest) returns (MsgExtendExpirationResponse);
-  // DeleteExpiration defines a method for deleting an expiration of a module asset
-  rpc DeleteExpiration(MsgDeleteExpirationRequest) returns (MsgDeleteExpirationResponse);
   // InvokeExpiration defines a method for invoking expiration logic for a module asset
   rpc InvokeExpiration(MsgInvokeExpirationRequest) returns (MsgInvokeExpirationResponse);
 }
@@ -42,29 +40,16 @@ message MsgExtendExpirationRequest {
   option (gogoproto.stringer)        = false;
   option (gogoproto.goproto_getters) = false;
 
-  // expiration is the Expiration you want to add
-  Expiration expiration = 1 [(gogoproto.nullable) = false];
+  // the module asset identifier
+  string module_asset_id = 1;
+  // the duration period for which to extend the asset to remain on chain
+  string duration = 2;
   // signers is the list of addresses of those signing this request.
-  repeated string signers = 2;
+  repeated string signers = 3;
 }
 
 // MsgExtendExpirationResponse defines the MsgExtendExpirationRequest response type
 message MsgExtendExpirationResponse {}
-
-// MsgDeleteExpirationRequest represents a message to delete an expiration
-message MsgDeleteExpirationRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.stringer)        = false;
-  option (gogoproto.goproto_getters) = false;
-
-  // Module asset ID used to delete asset from chain
-  string module_asset_id = 1 [(gogoproto.moretags) = "yaml:\"module_asset_id\""];
-  // signers is the list of addresses of those signing this request.
-  repeated string signers = 2;
-}
-
-// MsgDeleteExpirationResponse defines the MsgDeleteExpirationRequest response type
-message MsgDeleteExpirationResponse {}
 
 // MsgInvokeExpirationRequest represents a message to invoke expiration logic for an asset
 message MsgInvokeExpirationRequest {

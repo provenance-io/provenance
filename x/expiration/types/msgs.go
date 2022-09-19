@@ -1,14 +1,17 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // Compile time interface checks
 var (
 	_ sdk.Msg = &MsgAddExpirationRequest{}
 	_ sdk.Msg = &MsgExtendExpirationRequest{}
-	_ sdk.Msg = &MsgDeleteExpirationRequest{}
 	_ sdk.Msg = &MsgInvokeExpirationRequest{}
 )
 
@@ -43,6 +46,18 @@ func validateBasic(expiration Expiration, signers []string) error {
 	return nil
 }
 
+// private method that checks an address string is bech32 or MetadataAddress type
+func validateAddress(s string) error {
+	if _, err := sdk.AccAddressFromBech32(s); err != nil {
+		// check if we're dealing with a MetadataAddress
+		if _, err2 := metadatatypes.MetadataAddressFromBech32(s); err2 != nil {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress,
+				fmt.Sprintf("invalid module asset id: %s", err.Error()))
+		}
+	}
+	return nil
+}
+
 // ------------------  MsgAddExpirationRequest  ------------------
 
 func NewMsgAddExpirationRequest(expiration Expiration, signers []string) *MsgAddExpirationRequest {
@@ -70,17 +85,35 @@ func (m *MsgAddExpirationRequest) MsgTypeURL() string {
 
 // ------------------  MsgExtendExpirationRequest  ------------------
 
-func NewMsgExtendExpirationRequest(expiration Expiration, signers []string) *MsgExtendExpirationRequest {
+func NewMsgExtendExpirationRequest(
+	moduleAssetID string,
+	duration string,
+	signers []string,
+) *MsgExtendExpirationRequest {
 	return &MsgExtendExpirationRequest{
-		Expiration: expiration,
-		Signers:    signers,
+		ModuleAssetId: moduleAssetID,
+		Duration:      duration,
+		Signers:       signers,
 	}
 }
 
 // ValidateBasic does a simple validation check that
 // doesn't require access to any other information.
 func (m *MsgExtendExpirationRequest) ValidateBasic() error {
-	return validateBasic(m.Expiration, m.Signers)
+	if len(m.ModuleAssetId) == 0 {
+		return ErrEmptyModuleAssetID
+	}
+	if err := validateAddress(m.ModuleAssetId); err != nil {
+		return err
+	}
+	_, err := ParseDuration(m.Duration)
+	if err != nil {
+		return err
+	}
+	if len(m.Signers) == 0 {
+		return ErrMissingSigners
+	}
+	return nil
 }
 
 // GetSigners returns the typed AccAddress of signers that must sign
@@ -90,37 +123,6 @@ func (m *MsgExtendExpirationRequest) GetSigners() []sdk.AccAddress {
 
 // MsgTypeURL returns the TypeURL of a `sdk.Msg`
 func (m *MsgExtendExpirationRequest) MsgTypeURL() string {
-	return sdk.MsgTypeURL(m)
-}
-
-// ------------------  MsgDeleteExpirationRequest  ------------------
-
-func NewMsgDeleteExpirationRequest(moduleAssetID string, signers []string) *MsgDeleteExpirationRequest {
-	return &MsgDeleteExpirationRequest{
-		ModuleAssetId: moduleAssetID,
-		Signers:       signers,
-	}
-}
-
-// ValidateBasic does a simple validation check that
-// doesn't require access to any other information.
-func (m *MsgDeleteExpirationRequest) ValidateBasic() error {
-	if len(m.ModuleAssetId) == 0 {
-		return ErrEmptyModuleAssetID
-	}
-	if len(m.Signers) == 0 {
-		return ErrMissingSigners
-	}
-	return nil
-}
-
-// GetSigners returns the typed AccAddress of signers that must sign
-func (m *MsgDeleteExpirationRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(m.Signers)
-}
-
-// MsgTypeURL returns the TypeURL of a `sdk.Msg`
-func (m *MsgDeleteExpirationRequest) MsgTypeURL() string {
 	return sdk.MsgTypeURL(m)
 }
 
@@ -138,6 +140,9 @@ func NewMsgInvokeExpirationRequest(moduleAssetID string, signers []string) *MsgI
 func (m *MsgInvokeExpirationRequest) ValidateBasic() error {
 	if len(m.ModuleAssetId) == 0 {
 		return ErrEmptyModuleAssetID
+	}
+	if err := validateAddress(m.ModuleAssetId); err != nil {
+		return err
 	}
 	if len(m.Signers) == 0 {
 		return ErrMissingSigners

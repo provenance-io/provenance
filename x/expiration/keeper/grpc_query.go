@@ -4,12 +4,14 @@ import (
 	"context"
 	"strings"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+
 	"github.com/provenance-io/provenance/x/expiration/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -53,17 +55,9 @@ func (k Keeper) AllExpirations(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	var expirations []*types.Expiration
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	store := ctx.KVStore(k.storeKey)
-	expirationStore := prefix.NewStore(store, types.ModuleAssetKeyPrefix)
-	pageRes, err := query.Paginate(expirationStore, req.Pagination, func(key []byte, value []byte) error {
-		var expiration types.Expiration
-		if err := k.cdc.Unmarshal(value, &expiration); err != nil {
-			return err
-		}
-		expirations = append(expirations, &expiration)
-		return nil
+	pageRes, expirations, err := k.filteredPaginate(ctx, req.Pagination, func(expiration types.Expiration) bool {
+		return true // do not filter
 	})
 
 	if err != nil {
@@ -82,16 +76,55 @@ func (k Keeper) AllExpirationsByOwner(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	var expirations []*types.Expiration
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	pageRes, expirations, err := k.filteredPaginate(ctx, req.Pagination, func(expiration types.Expiration) bool {
+		return strings.TrimSpace(req.Owner) == expiration.Owner
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryAllExpirationsByOwnerResponse{Expirations: expirations, Pagination: pageRes}, nil
+}
+
+// AllExpiredExpirations queries all expired expirations
+func (k Keeper) AllExpiredExpirations(
+	goCtx context.Context,
+	req *types.QueryAllExpiredExpirationsRequest,
+) (*types.QueryAllExpiredExpirationsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	pageRes, expirations, err := k.filteredPaginate(ctx, req.Pagination, func(expiration types.Expiration) bool {
+		return ctx.BlockTime().After(expiration.Time)
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryAllExpiredExpirationsResponse{Expirations: expirations, Pagination: pageRes}, nil
+}
+
+// Private method that does pagination of the filtered results.
+// onMatch predicate should be used as the filter criteria.
+func (k Keeper) filteredPaginate(
+	ctx sdk.Context,
+	pagination *query.PageRequest,
+	onMatch func(expiration types.Expiration) bool,
+) (*query.PageResponse, []*types.Expiration, error) {
+	var expirations []*types.Expiration
 	store := ctx.KVStore(k.storeKey)
 	expirationStore := prefix.NewStore(store, types.ModuleAssetKeyPrefix)
-	pageRes, err := query.FilteredPaginate(expirationStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(expirationStore, pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var expiration types.Expiration
 		if err := k.cdc.Unmarshal(value, &expiration); err != nil {
 			return false, err
 		}
-		if strings.TrimSpace(req.Owner) != expiration.Owner {
+		if !onMatch(expiration) {
 			return false, nil
 		}
 		if accumulate {
@@ -101,8 +134,8 @@ func (k Keeper) AllExpirationsByOwner(
 	})
 
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, nil, err
 	}
 
-	return &types.QueryAllExpirationsByOwnerResponse{Expirations: expirations, Pagination: pageRes}, nil
+	return pageRes, expirations, nil
 }

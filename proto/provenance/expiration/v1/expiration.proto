@@ -4,6 +4,7 @@ package provenance.expiration.v1;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/expiration/types";
@@ -25,10 +26,10 @@ message Expiration {
   string module_asset_id = 1;
   // The bech32 address the expiration is bound to
   string owner = 2;
-  // The block height the module asset expires
-  int64 block_height = 3;
+  // The time the module asset expires
+  google.protobuf.Timestamp time = 3 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
   // The deposit amount held while module asset is in use
   cosmos.base.v1beta1.Coin deposit = 4 [(gogoproto.nullable) = false];
   // Message relating to the expiring module asset
-  google.protobuf.Any message = 5;
+  google.protobuf.Any message = 5 [(gogoproto.nullable) = false];
 }

@@ -43,8 +43,8 @@
   
 - [provenance/expiration/v1/events.proto](#provenance/expiration/v1/events.proto)
     - [EventExpirationAdd](#provenance.expiration.v1.EventExpirationAdd)
-    - [EventExpirationDelete](#provenance.expiration.v1.EventExpirationDelete)
     - [EventExpirationExtend](#provenance.expiration.v1.EventExpirationExtend)
+    - [EventExpirationInvoke](#provenance.expiration.v1.EventExpirationInvoke)
     - [EventTxCompleted](#provenance.expiration.v1.EventTxCompleted)
   
 - [provenance/expiration/v1/expiration.proto](#provenance/expiration/v1/expiration.proto)
@@ -59,6 +59,8 @@
     - [QueryAllExpirationsByOwnerResponse](#provenance.expiration.v1.QueryAllExpirationsByOwnerResponse)
     - [QueryAllExpirationsRequest](#provenance.expiration.v1.QueryAllExpirationsRequest)
     - [QueryAllExpirationsResponse](#provenance.expiration.v1.QueryAllExpirationsResponse)
+    - [QueryAllExpiredExpirationsRequest](#provenance.expiration.v1.QueryAllExpiredExpirationsRequest)
+    - [QueryAllExpiredExpirationsResponse](#provenance.expiration.v1.QueryAllExpiredExpirationsResponse)
     - [QueryExpirationRequest](#provenance.expiration.v1.QueryExpirationRequest)
     - [QueryExpirationResponse](#provenance.expiration.v1.QueryExpirationResponse)
     - [QueryParamsRequest](#provenance.expiration.v1.QueryParamsRequest)
@@ -69,8 +71,6 @@
 - [provenance/expiration/v1/tx.proto](#provenance/expiration/v1/tx.proto)
     - [MsgAddExpirationRequest](#provenance.expiration.v1.MsgAddExpirationRequest)
     - [MsgAddExpirationResponse](#provenance.expiration.v1.MsgAddExpirationResponse)
-    - [MsgDeleteExpirationRequest](#provenance.expiration.v1.MsgDeleteExpirationRequest)
-    - [MsgDeleteExpirationResponse](#provenance.expiration.v1.MsgDeleteExpirationResponse)
     - [MsgExtendExpirationRequest](#provenance.expiration.v1.MsgExtendExpirationRequest)
     - [MsgExtendExpirationResponse](#provenance.expiration.v1.MsgExtendExpirationResponse)
     - [MsgInvokeExpirationRequest](#provenance.expiration.v1.MsgInvokeExpirationRequest)
@@ -931,10 +931,10 @@ EventExpirationAdd is an event message indicating an expiration has been created
 
 
 
-<a name="provenance.expiration.v1.EventExpirationDelete"></a>
+<a name="provenance.expiration.v1.EventExpirationExtend"></a>
 
-### EventExpirationDelete
-EventExpirationDelete is an event message indicating an expiration has been deleted
+### EventExpirationExtend
+EventExpirationExtend is an event message indicating an expiration has been extended
 
 
 | Field | Type | Label | Description |
@@ -946,10 +946,10 @@ EventExpirationDelete is an event message indicating an expiration has been dele
 
 
 
-<a name="provenance.expiration.v1.EventExpirationExtend"></a>
+<a name="provenance.expiration.v1.EventExpirationInvoke"></a>
 
-### EventExpirationExtend
-EventExpirationExtend is an event message indicating an expiration has been extended
+### EventExpirationInvoke
+EventExpirationInvoke is an event message indicating an expiration has been invoked
 
 
 | Field | Type | Label | Description |
@@ -1004,7 +1004,7 @@ Expiration holds a typed key/value structure for data associated with an expirin
 | ----- | ---- | ----- | ----------- |
 | `module_asset_id` | [string](#string) |  | the module asset identifier |
 | `owner` | [string](#string) |  | The bech32 address the expiration is bound to |
-| `block_height` | [int64](#int64) |  | The block height the module asset expires |
+| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | The time the module asset expires |
 | `deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The deposit amount held while module asset is in use |
 | `message` | [google.protobuf.Any](#google.protobuf.Any) |  | Message relating to the expiring module asset |
 
@@ -1139,6 +1139,37 @@ QueryAllExpirationsResponse response for querying all expirations
 
 
 
+<a name="provenance.expiration.v1.QueryAllExpiredExpirationsRequest"></a>
+
+### QueryAllExpiredExpirationsRequest
+QueryAllExpiredExpirationsRequest queries all expired expirations
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request |
+
+
+
+
+
+
+<a name="provenance.expiration.v1.QueryAllExpiredExpirationsResponse"></a>
+
+### QueryAllExpiredExpirationsResponse
+QueryAllExpiredExpirationsResponse response for querying all expired expirations
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `expirations` | [Expiration](#provenance.expiration.v1.Expiration) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
 <a name="provenance.expiration.v1.QueryExpirationRequest"></a>
 
 ### QueryExpirationRequest
@@ -1210,7 +1241,8 @@ Query defines the gRPC querier service for expiration module.
 | `Params` | [QueryParamsRequest](#provenance.expiration.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.expiration.v1.QueryParamsResponse) | Params queries the parameters for x/expiration | GET|/provenance/expiration/v1/params|
 | `Expiration` | [QueryExpirationRequest](#provenance.expiration.v1.QueryExpirationRequest) | [QueryExpirationResponse](#provenance.expiration.v1.QueryExpirationResponse) | Query Expiration | GET|/provenance/expiration/v1/{module_asset_id}|
 | `AllExpirations` | [QueryAllExpirationsRequest](#provenance.expiration.v1.QueryAllExpirationsRequest) | [QueryAllExpirationsResponse](#provenance.expiration.v1.QueryAllExpirationsResponse) | Query all Expirations | GET|/provenance/expiration/v1/all|
-| `AllExpirationsByOwner` | [QueryAllExpirationsByOwnerRequest](#provenance.expiration.v1.QueryAllExpirationsByOwnerRequest) | [QueryAllExpirationsByOwnerResponse](#provenance.expiration.v1.QueryAllExpirationsByOwnerResponse) | Query all Expirations | GET|/provenance/expiration/v1/all/{owner}|
+| `AllExpirationsByOwner` | [QueryAllExpirationsByOwnerRequest](#provenance.expiration.v1.QueryAllExpirationsByOwnerRequest) | [QueryAllExpirationsByOwnerResponse](#provenance.expiration.v1.QueryAllExpirationsByOwnerResponse) | Query Expirations by owner | GET|/provenance/expiration/v1/all/{owner}|
+| `AllExpiredExpirations` | [QueryAllExpiredExpirationsRequest](#provenance.expiration.v1.QueryAllExpiredExpirationsRequest) | [QueryAllExpiredExpirationsResponse](#provenance.expiration.v1.QueryAllExpiredExpirationsResponse) | Query all expired Expirations | GET|/provenance/expiration/v1/all/expired|
 
  <!-- end services -->
 
@@ -1249,32 +1281,6 @@ MsgAddExpirationResponse defines the MsgAddExpirationRequest response type
 
 
 
-<a name="provenance.expiration.v1.MsgDeleteExpirationRequest"></a>
-
-### MsgDeleteExpirationRequest
-MsgDeleteExpirationRequest represents a message to delete an expiration
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `module_asset_id` | [string](#string) |  | Module asset ID used to delete asset from chain |
-| `signers` | [string](#string) | repeated | signers is the list of addresses of those signing this request. |
-
-
-
-
-
-
-<a name="provenance.expiration.v1.MsgDeleteExpirationResponse"></a>
-
-### MsgDeleteExpirationResponse
-MsgDeleteExpirationResponse defines the MsgDeleteExpirationRequest response type
-
-
-
-
-
-
 <a name="provenance.expiration.v1.MsgExtendExpirationRequest"></a>
 
 ### MsgExtendExpirationRequest
@@ -1283,7 +1289,8 @@ MsgExtendExpirationRequest represents a message to extend an expiration
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `expiration` | [Expiration](#provenance.expiration.v1.Expiration) |  | expiration is the Expiration you want to add |
+| `module_asset_id` | [string](#string) |  | the module asset identifier |
+| `duration` | [string](#string) |  | the duration period for which to extend the asset to remain on chain |
 | `signers` | [string](#string) | repeated | signers is the list of addresses of those signing this request. |
 
 
@@ -1342,7 +1349,6 @@ Msg defines the Expiration Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `AddExpiration` | [MsgAddExpirationRequest](#provenance.expiration.v1.MsgAddExpirationRequest) | [MsgAddExpirationResponse](#provenance.expiration.v1.MsgAddExpirationResponse) | AddExpiration defines a method for adding an expiration of a module asset | |
 | `ExtendExpiration` | [MsgExtendExpirationRequest](#provenance.expiration.v1.MsgExtendExpirationRequest) | [MsgExtendExpirationResponse](#provenance.expiration.v1.MsgExtendExpirationResponse) | ExtendExpiration defines a method for extending an expiration of a module asset | |
-| `DeleteExpiration` | [MsgDeleteExpirationRequest](#provenance.expiration.v1.MsgDeleteExpirationRequest) | [MsgDeleteExpirationResponse](#provenance.expiration.v1.MsgDeleteExpirationResponse) | DeleteExpiration defines a method for deleting an expiration of a module asset | |
 | `InvokeExpiration` | [MsgInvokeExpirationRequest](#provenance.expiration.v1.MsgInvokeExpirationRequest) | [MsgInvokeExpirationResponse](#provenance.expiration.v1.MsgInvokeExpirationResponse) | InvokeExpiration defines a method for invoking expiration logic for a module asset | |
 
  <!-- end services -->
