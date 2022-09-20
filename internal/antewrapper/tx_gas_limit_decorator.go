@@ -18,17 +18,17 @@ func NewTxGasLimitDecorator() TxGasLimitDecorator {
 	return TxGasLimitDecorator{}
 }
 
-// govMsgUrls the MsgURLs of all the governance module's messages.
-// Use getGovMsgUrls() instead of using this variable directly.
-var govMsgUrls []string
+// govMsgURLs the MsgURLs of all the governance module's messages.
+// Use getGovMsgURLs() instead of using this variable directly.
+var govMsgURLs []string
 
-// getGovMsgUrls returns govVoteMsgUrls, but first sets it if it hasn't yet been set.
-func getGovMsgUrls() []string {
-	if len(govMsgUrls) != 8 {
+// getGovMsgURLs returns govVoteMsgUrls, but first sets it if it hasn't yet been set.
+func getGovMsgURLs() []string {
+	if len(govMsgURLs) != 8 {
 		// sdk.MsgTypeURL sometimes uses reflection and/or proto registration.
-		// So govMsgUrls is only set when it's finally needed in the hopes
+		// So govMsgURLs is only set when it's finally needed in the hopes
 		// that everything's wired up as needed by then.
-		govMsgUrls = []string{
+		govMsgURLs = []string{
 			sdk.MsgTypeURL(&govtypesv1.MsgSubmitProposal{}),
 			sdk.MsgTypeURL(&govtypesv1.MsgVote{}),
 			sdk.MsgTypeURL(&govtypesv1.MsgVoteWeighted{}),
@@ -39,14 +39,14 @@ func getGovMsgUrls() []string {
 			sdk.MsgTypeURL(&govtypesv1beta1.MsgDeposit{}),
 		}
 	}
-	return govMsgUrls
+	return govMsgURLs
 }
 
 // Checks whether the given message is related to governance.
 func isGovernanceMessage(msg sdk.Msg) bool {
-	msgUrl := sdk.MsgTypeURL(msg)
-	for _, govMsgUrl := range getGovMsgUrls() {
-		if msgUrl == govMsgUrl {
+	msgURL := sdk.MsgTypeURL(msg)
+	for _, govMsgURL := range getGovMsgURLs() {
+		if msgURL == govMsgURL {
 			return true
 		}
 	}
