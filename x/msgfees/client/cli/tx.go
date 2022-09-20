@@ -15,7 +15,7 @@ import (
 	"github.com/provenance-io/provenance/x/msgfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // Flag names and values
@@ -105,7 +105,7 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 				}
 			}
 
-			var proposal govtypes.Content
+			var proposal govtypesv1beta1.Content
 
 			switch args[0] {
 			case "add":
@@ -142,7 +142,7 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 			}
 
 			callerAddr := clientCtx.GetFromAddress()
-			msg, err := govtypes.NewMsgSubmitProposal(proposal, deposit, callerAddr)
+			msg, err := govtypesv1beta1.NewMsgSubmitProposal(proposal, deposit, callerAddr)
 			if err != nil {
 				return fmt.Errorf("invalid governance proposal. Error: %w", err)
 			}
@@ -185,7 +185,7 @@ $ %[1]s tx msgfees npum "updating nhash to usd mil" "changes the nhash per mil t
 				return err
 			}
 			callerAddr := clientCtx.GetFromAddress()
-			msg, err := govtypes.NewMsgSubmitProposal(proposal, deposit, callerAddr)
+			msg, err := govtypesv1beta1.NewMsgSubmitProposal(proposal, deposit, callerAddr)
 			if err != nil {
 				return fmt.Errorf("invalid governance proposal. Error: %w", err)
 			}

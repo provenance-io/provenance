@@ -15,7 +15,7 @@ import (
 )
 
 func TestNewQuerier(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	cdc := app.LegacyAmino()
 	user := testUserAddress("test")
@@ -85,7 +85,7 @@ func TestNewQuerier(t *testing.T) {
 }
 
 func TestQuerierAccess(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	user := testUserAddress("test")
 	// create a marker account
@@ -109,7 +109,7 @@ func TestQuerierAccess(t *testing.T) {
 }
 
 func TestQuerierCoins(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	user := testUserAddress("test")
 	// create a marker account
@@ -133,7 +133,7 @@ func TestQuerierCoins(t *testing.T) {
 }
 
 func TestQuerierSupply(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	user := testUserAddress("test")
 	// create a marker account

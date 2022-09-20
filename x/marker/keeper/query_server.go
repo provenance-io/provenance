@@ -81,37 +81,25 @@ func (k Keeper) Holding(c context.Context, req *types.QueryHoldingRequest) (*typ
 	}
 
 	denom := marker.GetDenom()
-	balancesStore := prefix.NewStore(ctx.KVStore(k.bankKeeperStoreKey), banktypes.BalancesPrefix)
-	var balances []types.Balance
-	pageRes, perr := query.FilteredPaginate(balancesStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var coin sdk.Coin
-		if cerr := k.cdc.Unmarshal(value, &coin); cerr != nil {
-			return false, cerr
-		}
-		if coin.Denom != denom || coin.Amount.IsZero() {
-			return false, nil
-		}
-		if accumulate {
-			address, aerr := banktypes.AddressFromBalancesStore(key)
-			if aerr != nil {
-				k.Logger(ctx).With("key", key, "err", aerr).Error("failed to get address from balances store")
-				return true, aerr
-			}
-			balances = append(balances,
-				types.Balance{
-					Address: address.String(),
-					Coins:   sdk.NewCoins(coin),
-				})
-		}
-		return true, nil
+	denomOwners, err := k.bankKeeper.DenomOwners(c, &banktypes.QueryDenomOwnersRequest{
+		Denom:      denom,
+		Pagination: req.Pagination,
 	})
-	if perr != nil {
-		return nil, perr
+	if err != nil {
+		return nil, err
+	}
+
+	balances := make([]types.Balance, len(denomOwners.DenomOwners))
+	for i, bal := range denomOwners.DenomOwners {
+		balances[i] = types.Balance{
+			Address: bal.Address,
+			Coins:   sdk.NewCoins(bal.Balance),
+		}
 	}
 
 	return &types.QueryHoldingResponse{
 		Balances:   balances,
-		Pagination: pageRes,
+		Pagination: denomOwners.Pagination,
 	}, nil
 }
 

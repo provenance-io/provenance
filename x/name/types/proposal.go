@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -13,12 +13,11 @@ const (
 	ProposalTypeCreateRootName = "CreateRootName"
 )
 
-// Assert CreateRootNameProposal implements govtypes.Content at compile-time
-var _ govtypes.Content = &CreateRootNameProposal{}
+// Assert CreateRootNameProposal implements govtypesv1beta1.Content at compile-time
+var _ govtypesv1beta1.Content = &CreateRootNameProposal{}
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeCreateRootName)
-	govtypes.RegisterProposalTypeCodec(&CreateRootNameProposal{}, "provenance/CreateRootNameProposal")
+	govtypesv1beta1.RegisterProposalType(ProposalTypeCreateRootName)
 }
 
 // NewCreateRootNameProposal create a new governance proposal request to create a root name
@@ -48,7 +47,7 @@ func (crnp CreateRootNameProposal) ProposalType() string { return ProposalTypeCr
 
 // ValidateBasic runs basic stateless validity checks
 func (crnp CreateRootNameProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(crnp)
+	err := govtypesv1beta1.ValidateAbstract(crnp)
 	if err != nil {
 		return err
 	}

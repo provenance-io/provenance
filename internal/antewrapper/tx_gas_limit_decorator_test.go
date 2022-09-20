@@ -2,21 +2,17 @@ package antewrapper_test
 
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
-	"testing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 )
 
-func TestAnteTxGasLimitDecoratorTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
-}
+// These tests are kicked off by TestAnteTestSuite in testutil_test.go
 
 func (suite *AnteTestSuite) TestNoErrorWhenMaxGasIsUnlimited() {
 	err, antehandler := setUpTxGasLimitDecorator(suite, true)

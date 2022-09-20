@@ -89,7 +89,7 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins
 		baseFeeConsumedAtAnteHandler := feeGasMeter.BaseFeeConsumed()
 
 		// this sweeps all extra fees too, 1. keeps current behavior 2. accounts for priority mempool
-		chargedFees, _ = feeTx.GetFee().SafeSub(baseFeeConsumedAtAnteHandler)
+		chargedFees, _ = feeTx.GetFee().SafeSub(baseFeeConsumedAtAnteHandler...)
 
 		if len(chargedFees) > 0 && chargedFees.IsAllPositive() {
 			// deduct fees from remainingFees and distribute
@@ -104,7 +104,7 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins
 			eventsToReturn = append(eventsToReturn, sdk.NewEvent(sdk.EventTypeTx,
 				sdk.NewAttribute(antewrapper.AttributeKeyAdditionalFee, feeGasMeter.FeeConsumed().String())))
 		}
-		eventsToReturn = append(eventsToReturn, sdk.NewEvent(sdk.EventTypeTx, sdk.NewAttribute(antewrapper.AttributeKeyBaseFee, feeGasMeter.BaseFeeConsumed().Add(chargedFees...).Sub(feeGasMeter.FeeConsumed()).String())))
+		eventsToReturn = append(eventsToReturn, sdk.NewEvent(sdk.EventTypeTx, sdk.NewAttribute(antewrapper.AttributeKeyBaseFee, feeGasMeter.BaseFeeConsumed().Add(chargedFees...).Sub(feeGasMeter.FeeConsumed()...).String())))
 
 		if hasAdditionalFees {
 			msgFeesSummaryEvent, err := sdk.TypedEventToEvent(feeGasMeter.EventFeeSummary())

@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/provenance-io/provenance/x/reward/types"
 )
@@ -13,7 +13,7 @@ func (s *KeeperTestSuite) TestCreateRewardProgramTransaction() {
 
 	minimumDelegation := sdk.NewInt64Coin("nhash", 100)
 	maximumDelegation := sdk.NewInt64Coin("nhash", 200)
-	simapp.FundAccount(s.app.BankKeeper, s.ctx, s.accountAddresses[0], sdk.NewCoins(sdk.NewInt64Coin("nhash", 100000)))
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, s.accountAddresses[0], sdk.NewCoins(sdk.NewInt64Coin("nhash", 100000))), "funding account")
 
 	msg := types.NewMsgCreateRewardProgramRequest(
 		"title",
@@ -100,7 +100,7 @@ func (s *KeeperTestSuite) TestCreateRewardProgramFailedTransaction() {
 
 func (s *KeeperTestSuite) TestRewardClaimTransaction() {
 
-	time := s.ctx.BlockTime()
+	now := s.ctx.BlockTime()
 	rewardProgram := types.NewRewardProgram(
 		"title",
 		"description",
@@ -108,11 +108,11 @@ func (s *KeeperTestSuite) TestRewardClaimTransaction() {
 		"cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv",
 		sdk.NewInt64Coin("nhash", 1000),
 		sdk.NewInt64Coin("nhash", 100),
-		time,
+		now,
 		10,
 		3,
 		0,
-		uint64(time.Day()),
+		uint64(now.Day()),
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Vote{
@@ -176,7 +176,7 @@ func (s *KeeperTestSuite) TestRewardClaimInvalidTransaction() {
 
 func (s *KeeperTestSuite) TestRewardClaimTransactionInvalidClaimer() {
 
-	time := s.ctx.BlockTime()
+	now := s.ctx.BlockTime()
 	rewardProgram := types.NewRewardProgram(
 		"title",
 		"description",
@@ -184,11 +184,11 @@ func (s *KeeperTestSuite) TestRewardClaimTransactionInvalidClaimer() {
 		"cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv",
 		sdk.NewInt64Coin("nhash", 1000),
 		sdk.NewInt64Coin("nhash", 100),
-		time,
+		now,
 		10,
 		3,
 		0,
-		uint64(time.Day()),
+		uint64(now.Day()),
 		[]types.QualifyingAction{
 			{
 				Type: &types.QualifyingAction_Vote{
@@ -239,7 +239,7 @@ func (s *KeeperTestSuite) TestRewardClaimTransactionInvalidClaimer() {
 }
 
 func (s *KeeperTestSuite) TestClaimAllRewardsTransaction() {
-	time := s.ctx.BlockTime()
+	now := s.ctx.BlockTime()
 
 	for i := 0; i < 3; i++ {
 		rewardProgram := types.NewRewardProgram(
@@ -249,11 +249,11 @@ func (s *KeeperTestSuite) TestClaimAllRewardsTransaction() {
 			s.accountAddresses[0].String(),
 			sdk.NewInt64Coin("nhash", 1000),
 			sdk.NewInt64Coin("nhash", 100),
-			time,
+			now,
 			10,
 			3,
 			0,
-			uint64(time.Day()),
+			uint64(now.Day()),
 			[]types.QualifyingAction{
 				{
 					Type: &types.QualifyingAction_Vote{
@@ -324,7 +324,7 @@ func (s *KeeperTestSuite) TestClaimAllRewardsNoProgramsTransaction() {
 }
 
 func (s *KeeperTestSuite) TestRewardClaimAllRewardsInvalidAddressTransaction() {
-	time := s.ctx.BlockTime()
+	now := s.ctx.BlockTime()
 
 	for i := 0; i < 3; i++ {
 		rewardProgram := types.NewRewardProgram(
@@ -334,11 +334,11 @@ func (s *KeeperTestSuite) TestRewardClaimAllRewardsInvalidAddressTransaction() {
 			s.accountAddresses[0].String(),
 			sdk.NewInt64Coin("nhash", 1000),
 			sdk.NewInt64Coin("nhash", 100),
-			time,
+			now,
 			10,
 			3,
 			0,
-			uint64(time.Day()),
+			uint64(now.Day()),
 			[]types.QualifyingAction{
 				{
 					Type: &types.QualifyingAction_Vote{
@@ -384,7 +384,7 @@ func (s *KeeperTestSuite) TestRewardClaimAllRewardsInvalidAddressTransaction() {
 }
 
 func (s *KeeperTestSuite) TestClaimAllRewardsExpiredTransaction() {
-	time := s.ctx.BlockTime()
+	now := s.ctx.BlockTime()
 
 	for i := 0; i < 3; i++ {
 		rewardProgram := types.NewRewardProgram(
@@ -394,11 +394,11 @@ func (s *KeeperTestSuite) TestClaimAllRewardsExpiredTransaction() {
 			s.accountAddresses[0].String(),
 			sdk.NewInt64Coin("nhash", 1000),
 			sdk.NewInt64Coin("nhash", 100),
-			time,
+			now,
 			10,
 			3,
 			0,
-			uint64(time.Day()),
+			uint64(now.Day()),
 			[]types.QualifyingAction{
 				{
 					Type: &types.QualifyingAction_Vote{
@@ -489,7 +489,7 @@ func (s *KeeperTestSuite) TestEndRewardProgramRequest() {
 		},
 	}
 
-	time := s.ctx.BlockTime()
+	now := s.ctx.BlockTime()
 	for i := 0; i < 3; i++ {
 		rewardProgram := types.NewRewardProgram(
 			"title",
@@ -498,11 +498,11 @@ func (s *KeeperTestSuite) TestEndRewardProgramRequest() {
 			s.accountAddresses[0].String(),
 			sdk.NewInt64Coin("nhash", 1000),
 			sdk.NewInt64Coin("nhash", 100),
-			time,
+			now,
 			10,
 			3,
 			0,
-			uint64(time.Day()),
+			uint64(now.Day()),
 			[]types.QualifyingAction{
 				{
 					Type: &types.QualifyingAction_Vote{

@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -57,8 +56,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			depCdc := clientCtx.JSONCodec
-			cdc := depCdc.(codec.Codec)
+			cdc := clientCtx.Codec
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -74,7 +72,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 				}
 
 				// attempt to lookup address from Keybase if no address was provided
-				kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf)
+				kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf, cdc)
 				if err != nil {
 					return err
 				}
@@ -84,7 +82,10 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 					return fmt.Errorf("failed to get address from Keybase: %w, could not use address as bech32 string: %s", err, parseErr.Error())
 				}
 
-				addr = info.GetAddress()
+				addr, err = info.GetAddress()
+				if err != nil {
+					return fmt.Errorf("failed to keyring get address: %w", err)
+				}
 			}
 
 			coins, err := sdk.ParseCoinsNormalized(args[1])
@@ -177,7 +178,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 			appState[authtypes.ModuleName] = authGenStateBz
 
-			bankGenState := banktypes.GetGenesisStateFromAppState(depCdc, appState)
+			bankGenState := banktypes.GetGenesisStateFromAppState(cdc, appState)
 			bankGenState.Balances = append(bankGenState.Balances, balances)
 			bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
 
@@ -222,8 +223,7 @@ func AddRootDomainAccountCmd(defaultNodeHome string) *cobra.Command {
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			depCdc := clientCtx.JSONCodec
-			cdc := depCdc.(codec.Codec)
+			cdc := clientCtx.Codec
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -239,7 +239,7 @@ func AddRootDomainAccountCmd(defaultNodeHome string) *cobra.Command {
 				}
 
 				// attempt to lookup address from Keybase if no address was provided
-				kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf)
+				kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf, cdc)
 				if err != nil {
 					return err
 				}
@@ -249,7 +249,10 @@ func AddRootDomainAccountCmd(defaultNodeHome string) *cobra.Command {
 					return fmt.Errorf("failed to get address from Keybase: %w, could use use address as bech32 string: %s", err, parseErr.Error())
 				}
 
-				addr = info.GetAddress()
+				addr, err = info.GetAddress()
+				if err != nil {
+					return fmt.Errorf("failed to keyring get address: %w", err)
+				}
 			}
 
 			genFile := config.GenesisFile()
@@ -313,8 +316,7 @@ enforced immediately.  An optional type flag can be provided or the default of C
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			depCdc := clientCtx.JSONCodec
-			cdc := depCdc.(codec.Codec)
+			cdc := clientCtx.Codec
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -345,7 +347,7 @@ enforced immediately.  An optional type flag can be provided or the default of C
 						return keyFlagError
 					}
 					// attempt to lookup address from Keybase if no address was provided
-					kb, newKeyringError := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf)
+					kb, newKeyringError := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf, cdc)
 					if newKeyringError != nil {
 						return newKeyringError
 					}
@@ -354,7 +356,10 @@ enforced immediately.  An optional type flag can be provided or the default of C
 						return fmt.Errorf("failed to get address from Keybase: %w", keyErr)
 					}
 
-					managerAddr = info.GetAddress()
+					managerAddr, err = info.GetAddress()
+					if err != nil {
+						return fmt.Errorf("failed to keyring get address: %w", err)
+					}
 				}
 			}
 			acs, err := cmd.Flags().GetString(flagAccess)
@@ -438,7 +443,7 @@ enforced immediately.  An optional type flag can be provided or the default of C
 					return fmt.Errorf("failed to parse escrow coins: %w", parseCoinErr)
 				}
 				balances := banktypes.Balance{Address: genAccount.Address, Coins: escrowCoins}
-				bankGenState := banktypes.GetGenesisStateFromAppState(depCdc, appState)
+				bankGenState := banktypes.GetGenesisStateFromAppState(cdc, appState)
 				bankGenState.Balances = append(bankGenState.Balances, balances)
 				bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
 
@@ -570,8 +575,7 @@ func AddGenesisMsgFeeCmd(defaultNodeHome string, interfaceRegistry types.Interfa
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			depCdc := clientCtx.JSONCodec
-			cdc := depCdc.(codec.Codec)
+			cdc := clientCtx.Codec
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config

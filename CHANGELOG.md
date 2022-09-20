@@ -38,7 +38,22 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## Unreleased
 
 ### Improvements
+
 * Ignore hardcoded tx gas limit when `consensus_params.block.max_gas` is set to -1 for local nodes
+* Bump Cosmos-SDK to Bump cosmos to v0.46.0-pio-1-rc4 (from v0.45.5-pio-1). [#995](https://github.com/provenance-io/provenance/issues/995)
+  See https://github.com/provenance-io/cosmos-sdk/blob/v0.46.0-pio-1-rc4/RELEASE_NOTES.md for more info.
+* Bump IBC to v5.0.0-beta1. [#995](https://github.com/provenance-io/provenance/issues/995)
+* Refactor the `x/marker` module's `Holding` query to utilize the `x/bank` module's new `DenomOwners` query. [#995](https://github.com/provenance-io/provenance/issues/995)
+  The only real difference between those two queries is that the `Holding` query accepts either a denom or marker address.
+
+### Bug Fixes
+
+* Remove the workaround for the index-events configuration field (now fixed in the SDK). [#995](https://github.com/provenance-io/provenance/issues/995)
+
+### Client Breaking
+
+* Remove the custom/legacy rest endpoints from the `x/attribute`, `x/marker`, and `x/name` modules. [#995](https://github.com/provenance-io/provenance/issues/995)
+* Remove the state-listening/plugin system (and `librdkafka` dependencies). [#995](https://github.com/provenance-io/provenance/issues/995)
 
 ---
 

@@ -3,10 +3,12 @@ package types
 import (
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -29,38 +31,25 @@ const (
 )
 
 var (
-	_ govtypes.Content = &AddMarkerProposal{}
-	_ govtypes.Content = &SupplyIncreaseProposal{}
-	_ govtypes.Content = &SupplyDecreaseProposal{}
-	_ govtypes.Content = &SetAdministratorProposal{}
-	_ govtypes.Content = &RemoveAdministratorProposal{}
-	_ govtypes.Content = &ChangeStatusProposal{}
-	_ govtypes.Content = &WithdrawEscrowProposal{}
-	_ govtypes.Content = &SetDenomMetadataProposal{}
+	_ govtypesv1beta1.Content = &AddMarkerProposal{}
+	_ govtypesv1beta1.Content = &SupplyIncreaseProposal{}
+	_ govtypesv1beta1.Content = &SupplyDecreaseProposal{}
+	_ govtypesv1beta1.Content = &SetAdministratorProposal{}
+	_ govtypesv1beta1.Content = &RemoveAdministratorProposal{}
+	_ govtypesv1beta1.Content = &ChangeStatusProposal{}
+	_ govtypesv1beta1.Content = &WithdrawEscrowProposal{}
+	_ govtypesv1beta1.Content = &SetDenomMetadataProposal{}
 )
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeAddMarker)
-	govtypes.RegisterProposalTypeCodec(AddMarkerProposal{}, "provenance/marker/AddMarkerProposal")
-
-	govtypes.RegisterProposalType(ProposalTypeIncreaseSupply)
-	govtypes.RegisterProposalTypeCodec(SupplyIncreaseProposal{}, "provenance/marker/SupplyIncreaseProposal")
-	govtypes.RegisterProposalType(ProposalTypeDecreaseSupply)
-	govtypes.RegisterProposalTypeCodec(SupplyDecreaseProposal{}, "provenance/marker/SupplyDecreaseProposal")
-
-	govtypes.RegisterProposalType(ProposalTypeSetAdministrator)
-	govtypes.RegisterProposalTypeCodec(SetAdministratorProposal{}, "provenance/marker/SetAdministratorProposal")
-	govtypes.RegisterProposalType(ProposalTypeRemoveAdministrator)
-	govtypes.RegisterProposalTypeCodec(RemoveAdministratorProposal{}, "provenance/marker/RemoveAdministratorProposal")
-
-	govtypes.RegisterProposalType(ProposalTypeChangeStatus)
-	govtypes.RegisterProposalTypeCodec(ChangeStatusProposal{}, "provenance/marker/ChangeStatusProposal")
-
-	govtypes.RegisterProposalType(ProposalTypeWithdrawEscrow)
-	govtypes.RegisterProposalTypeCodec(WithdrawEscrowProposal{}, "provenance/marker/WithdrawEscrowProposal")
-
-	govtypes.RegisterProposalType(ProposalTypeSetDenomMetadata)
-	govtypes.RegisterProposalTypeCodec(SetDenomMetadataProposal{}, "provenance/marker/SetDenomMetadataProposal")
+	govtypesv1beta1.RegisterProposalType(ProposalTypeAddMarker)
+	govtypesv1beta1.RegisterProposalType(ProposalTypeIncreaseSupply)
+	govtypesv1beta1.RegisterProposalType(ProposalTypeDecreaseSupply)
+	govtypesv1beta1.RegisterProposalType(ProposalTypeSetAdministrator)
+	govtypesv1beta1.RegisterProposalType(ProposalTypeRemoveAdministrator)
+	govtypesv1beta1.RegisterProposalType(ProposalTypeChangeStatus)
+	govtypesv1beta1.RegisterProposalType(ProposalTypeWithdrawEscrow)
+	govtypesv1beta1.RegisterProposalType(ProposalTypeSetDenomMetadata)
 }
 
 // NewAddMarkerProposal creates a new proposal
@@ -68,7 +57,7 @@ func NewAddMarkerProposal(
 	title,
 	description string,
 	denom string,
-	totalSupply sdk.Int,
+	totalSupply sdkmath.Int,
 	manager sdk.AccAddress,
 	status MarkerStatus,
 	markerType MarkerType,
@@ -108,7 +97,7 @@ func (amp AddMarkerProposal) ValidateBasic() error {
 	if !testCoin.IsValid() {
 		return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
 	}
-	return govtypes.ValidateAbstract(&amp)
+	return govtypesv1beta1.ValidateAbstract(&amp)
 }
 
 func (amp AddMarkerProposal) String() string {
@@ -135,7 +124,7 @@ func (sip SupplyIncreaseProposal) ValidateBasic() error {
 	if sip.Amount.IsNegative() {
 		return fmt.Errorf("amount to increase must be greater than zero")
 	}
-	return govtypes.ValidateAbstract(&sip)
+	return govtypesv1beta1.ValidateAbstract(&sip)
 }
 
 func (sip SupplyIncreaseProposal) String() string {
@@ -160,7 +149,7 @@ func (sdp SupplyDecreaseProposal) ValidateBasic() error {
 	if sdp.Amount.IsNegative() {
 		return fmt.Errorf("amount to decrease must be greater than zero")
 	}
-	return govtypes.ValidateAbstract(&sdp)
+	return govtypesv1beta1.ValidateAbstract(&sdp)
 }
 
 func (sdp SupplyDecreaseProposal) String() string {
@@ -188,7 +177,7 @@ func (sap SetAdministratorProposal) ValidateBasic() error {
 			return fmt.Errorf("invalid access grant for administrator: %w", err)
 		}
 	}
-	return govtypes.ValidateAbstract(&sap)
+	return govtypesv1beta1.ValidateAbstract(&sap)
 }
 
 func (sap SetAdministratorProposal) String() string {
@@ -217,7 +206,7 @@ func (rap RemoveAdministratorProposal) ValidateBasic() error {
 		}
 	}
 
-	return govtypes.ValidateAbstract(&rap)
+	return govtypesv1beta1.ValidateAbstract(&rap)
 }
 
 func (rap RemoveAdministratorProposal) String() string {
@@ -238,7 +227,7 @@ func NewChangeStatusProposal(title, description, denom string, status MarkerStat
 func (csp ChangeStatusProposal) ProposalRoute() string { return RouterKey }
 func (csp ChangeStatusProposal) ProposalType() string  { return ProposalTypeChangeStatus }
 func (csp ChangeStatusProposal) ValidateBasic() error {
-	return govtypes.ValidateAbstract(&csp)
+	return govtypesv1beta1.ValidateAbstract(&csp)
 }
 
 func (csp ChangeStatusProposal) String() string {
@@ -259,7 +248,7 @@ func NewWithdrawEscrowProposal(title, description, denom string, amount sdk.Coin
 func (wep WithdrawEscrowProposal) ProposalRoute() string { return RouterKey }
 func (wep WithdrawEscrowProposal) ProposalType() string  { return ProposalTypeWithdrawEscrow }
 func (wep WithdrawEscrowProposal) ValidateBasic() error {
-	return govtypes.ValidateAbstract(&wep)
+	return govtypesv1beta1.ValidateAbstract(&wep)
 }
 
 func (wep WithdrawEscrowProposal) String() string {
@@ -287,7 +276,7 @@ func (sdmdp SetDenomMetadataProposal) ValidateBasic() error {
 	if err := sdmdp.Metadata.Validate(); err != nil {
 		return sdkerrors.Wrap(govtypes.ErrInvalidProposalContent, "invalid metadata: "+err.Error())
 	}
-	return govtypes.ValidateAbstract(&sdmdp)
+	return govtypesv1beta1.ValidateAbstract(&sdmdp)
 }
 
 func (sdmdp SetDenomMetadataProposal) String() string {

@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/app/params"
@@ -94,7 +95,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			// set app context based on initialized EnvTypeFlag
 			testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
 			customDenom := server.GetServerContextFromCmd(cmd).Viper.GetString(CustomDenomFlag)
-			app.SetConfig(testnet)
+			app.SetConfig(testnet,true)
 			pioconfig.SetProvenanceConfig(customDenom, 0)
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
@@ -256,7 +257,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 			panic(err)
 		}
 	}
-	snapshotDB, err := sdk.NewDB("metadata", cast.ToString(appOpts.Get("db_backend")), snapshotDir)
+	snapshotDB, err := dbm.NewDB("metadata", server.GetAppDBBackend(appOpts), snapshotDir)
 	if err != nil {
 		panic(err)
 	}
@@ -283,6 +284,11 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		}
 	}
 
+	snapshotOptions := snapshottypes.NewSnapshotOptions(
+		cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval)),
+		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
+	)
+
 	return app.New(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
@@ -297,9 +303,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		baseapp.SetInterBlockCache(cache),
 		baseapp.SetTrace(cast.ToBool(appOpts.Get(server.FlagTrace))),
 		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents))),
-		baseapp.SetSnapshotStore(snapshotStore),
-		baseapp.SetSnapshotInterval(cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval))),
-		baseapp.SetSnapshotKeepRecent(cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent))),
+		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(getIAVLCacheSize(appOpts)),
 	)
 }

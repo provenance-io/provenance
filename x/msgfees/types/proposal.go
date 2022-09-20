@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -23,28 +23,19 @@ const (
 )
 
 var (
-	_ govtypes.Content = &AddMsgFeeProposal{}
-	_ govtypes.Content = &UpdateMsgFeeProposal{}
-	_ govtypes.Content = &RemoveMsgFeeProposal{}
-	_ govtypes.Content = &UpdateNhashPerUsdMilProposal{}
-	_ govtypes.Content = &UpdateConversionFeeDenomProposal{}
+	_ govtypesv1beta1.Content = &AddMsgFeeProposal{}
+	_ govtypesv1beta1.Content = &UpdateMsgFeeProposal{}
+	_ govtypesv1beta1.Content = &RemoveMsgFeeProposal{}
+	_ govtypesv1beta1.Content = &UpdateNhashPerUsdMilProposal{}
+	_ govtypesv1beta1.Content = &UpdateConversionFeeDenomProposal{}
 )
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeAddMsgFee)
-	govtypes.RegisterProposalTypeCodec(AddMsgFeeProposal{}, "provenance/msgfees/AddMsgFeeProposal")
-
-	govtypes.RegisterProposalType(ProposalTypeUpdateMsgFee)
-	govtypes.RegisterProposalTypeCodec(UpdateMsgFeeProposal{}, "provenance/msgfees/UpdateMsgFeeProposal")
-
-	govtypes.RegisterProposalType(ProposalTypeRemoveMsgFee)
-	govtypes.RegisterProposalTypeCodec(RemoveMsgFeeProposal{}, "provenance/msgfees/RemoveMsgFeeProposal")
-
-	govtypes.RegisterProposalType(ProposalTypeUpdateUsdConversionRate)
-	govtypes.RegisterProposalTypeCodec(UpdateNhashPerUsdMilProposal{}, "provenance/msgfees/UpdateNhashPerUsdMilProposal")
-
-	govtypes.RegisterProposalType(ProposalTypeUpdateConversionFeeDenom)
-	govtypes.RegisterProposalTypeCodec(UpdateConversionFeeDenomProposal{}, "provenance/msgfees/UpdateConversionFeeDenomProposal")
+	govtypesv1beta1.RegisterProposalType(ProposalTypeAddMsgFee)
+	govtypesv1beta1.RegisterProposalType(ProposalTypeUpdateMsgFee)
+	govtypesv1beta1.RegisterProposalType(ProposalTypeRemoveMsgFee)
+	govtypesv1beta1.RegisterProposalType(ProposalTypeUpdateUsdConversionRate)
+	govtypesv1beta1.RegisterProposalType(ProposalTypeUpdateConversionFeeDenom)
 }
 
 func NewAddMsgFeeProposal(
@@ -99,7 +90,7 @@ func (p AddMsgFeeProposal) ValidateBasic() error {
 		return fmt.Errorf("")
 	}
 
-	return govtypes.ValidateAbstract(&p)
+	return govtypesv1beta1.ValidateAbstract(&p)
 }
 
 func NewUpdateMsgFeeProposal(
@@ -149,7 +140,7 @@ func (p UpdateMsgFeeProposal) ValidateBasic() error {
 		}
 	}
 
-	return govtypes.ValidateAbstract(&p)
+	return govtypesv1beta1.ValidateAbstract(&p)
 }
 
 func NewRemoveMsgFeeProposal(
@@ -172,7 +163,7 @@ func (p RemoveMsgFeeProposal) ValidateBasic() error {
 	if len(p.MsgTypeUrl) == 0 {
 		return ErrEmptyMsgType
 	}
-	return govtypes.ValidateAbstract(&p)
+	return govtypesv1beta1.ValidateAbstract(&p)
 }
 
 func NewUpdateNhashPerUsdMilProposal(
@@ -197,7 +188,7 @@ func (p UpdateNhashPerUsdMilProposal) ValidateBasic() error {
 	if p.NhashPerUsdMil < 1 {
 		return errors.New("nhash per usd mil must be greater than 0")
 	}
-	return govtypes.ValidateAbstract(&p)
+	return govtypesv1beta1.ValidateAbstract(&p)
 }
 
 func NewUpdateConversionFeeDenomProposal(
@@ -222,5 +213,5 @@ func (p UpdateConversionFeeDenomProposal) ValidateBasic() error {
 	if err := sdk.ValidateDenom(p.ConversionFeeDenom); err != nil {
 		return err
 	}
-	return govtypes.ValidateAbstract(&p)
+	return govtypesv1beta1.ValidateAbstract(&p)
 }

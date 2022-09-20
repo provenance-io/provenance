@@ -1,31 +1,24 @@
 package antewrapper_test
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/suite"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 
-	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
+// These tests are kicked off by TestAnteTestSuite in testutil_test.go
 const (
 	NHash = "nhash"
 )
-
-func TestAnteFeeDecoratorTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
-}
 
 // checkTx true, high min gas price(high enough so that additional fee in same denom tips it over,
 // and this is what sets it apart from MempoolDecorator which has already been run)
@@ -135,7 +128,7 @@ func (s *AnteTestSuite) TestEnsureMempoolAndMsgFeesPass() {
 	s.Require().NotNil(err, "Decorator should have errored on fee payer account not having enough balance.")
 	s.Require().Contains(err.Error(), "fee payer account does not have enough balance to pay for \"100100stake\"", "got wrong message")
 
-	s.Require().NoError(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100100)))))
+	s.Require().NoError(testutil.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100100)))))
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().Nil(err, "Decorator should not have errored.")
 }
@@ -147,7 +140,7 @@ func (s *AnteTestSuite) TestEnsureMempoolAndMsgFees_AccountBalanceNotEnough() {
 	s.Require().NoError(err)
 
 	// Set no hotdog balance, only stake balance
-	s.Require().NoError(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000)))))
+	s.Require().NoError(testutil.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000)))))
 
 	// antehandler errors with insufficient fees
 	_, err = antehandler(s.ctx, tx, false)
@@ -155,13 +148,13 @@ func (s *AnteTestSuite) TestEnsureMempoolAndMsgFees_AccountBalanceNotEnough() {
 	s.Require().Contains(err.Error(), "fee payer account does not have enough balance to pay for \"100hotdog,100000stake\"", "got wrong message")
 
 	// set not enough hotdog balance
-	s.Require().NoError(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(1)))))
+	s.Require().NoError(testutil.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(1)))))
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NotNil(err, "Decorator should have errored on fee payer account not having enough balance.")
 	s.Require().Contains(err.Error(), "fee payer account does not have enough balance to pay for \"100hotdog,100000stake\"", "got wrong message")
 
 	// set enough hotdog balance, also stake balance should be enough with prev fund
-	s.Require().NoError(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(99)))))
+	s.Require().NoError(testutil.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(99)))))
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().Nil(err, "Decorator should have errored on fee payer account not having enough balance.")
 }
@@ -208,7 +201,7 @@ func (s *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant() {
 	// Set IsCheckTx to true
 	s.ctx = s.ctx.WithIsCheckTx(true)
 
-	s.Require().NoError(simapp.FundAccount(s.app, s.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100100)))))
+	s.Require().NoError(testutil.FundAccount(s.app, s.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100100)))))
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().Nil(err, "Decorator should not have errored.")
 }
@@ -257,7 +250,7 @@ func (s *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant_1() {
 	// Set IsCheckTx to true
 	s.ctx = s.ctx.WithIsCheckTx(true)
 
-	s.Require().NoError(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100100)))))
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100100)))))
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NotNil(err, "Decorator should not have errored.")
 }
@@ -299,7 +292,7 @@ func (s *AnteTestSuite) TestEnsureMempoolAndMsgFeesPassFeeGrant_2() {
 	// Set IsCheckTx to true
 	s.ctx = s.ctx.WithIsCheckTx(true)
 
-	s.Require().NoError(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100100)))))
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100100)))))
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NotNil(err, "Decorator should not have errored.")
 }
@@ -322,8 +315,8 @@ func (s *AnteTestSuite) TestEnsureMempoolAndMsgFees_1() {
 	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
 	tx, acct1 := createTestTx(s, err, NewTestFeeAmountMultiple())
 
-	s.Require().NoError(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(100)))), "should fund account for test setup")
-	s.Require().NoError(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(150)))), "should fund account for test setup")
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(100)))), "should fund account for test setup")
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(150)))), "should fund account for test setup")
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NoError(err, "MsgFeesDecorator returned error in DeliverTx")
 }
@@ -335,7 +328,7 @@ func (s *AnteTestSuite) TestEnsureMempoolAndMsgFees_2() {
 
 	_, acct1 := createTestTx(s, err, NewTestFeeAmountMultiple())
 
-	s.Require().NoError(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(10000)))), "should fund account for test setup")
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(10000)))), "should fund account for test setup")
 
 	tx, _ := createTestTx(s, err, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
 	_, err = antehandler(s.ctx, tx, false)
@@ -358,7 +351,7 @@ func (s *AnteTestSuite) TestEnsureMempoolAndMsgFees_3() {
 	params := s.app.MsgFeesKeeper.GetParams(s.ctx)
 	params.FloorGasPrice = sdk.NewInt64Coin(NHash, 1905)
 	s.app.MsgFeesKeeper.SetParams(s.ctx, params)
-	s.Require().NoError(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(10000)))))
+	s.Require().NoError(testutil.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(10000)))))
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
 	// TODO revisit this
@@ -369,12 +362,12 @@ func (s *AnteTestSuite) TestEnsureMempoolAndMsgFees_3() {
 func (s *AnteTestSuite) TestEnsureMempoolAndMsgFees_4() {
 	err, antehandler := setUpApp(s, false, NHash, 100)
 	tx, acct1 := createTestTx(s, err, sdk.NewCoins(sdk.NewInt64Coin(NHash, 190500200)))
-	s.Require().NoError(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(190500100)))))
+	s.Require().NoError(testutil.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(190500100)))))
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
 	s.Require().Contains(err.Error(), "fee payer account does not have enough balance to pay for \"190500200nhash\"", "wrong error message")
 	// add some nhash
-	s.Require().NoError(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(100)))))
+	s.Require().NoError(testutil.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(100)))))
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().Nil(err, "Decorator should not have errored for insufficient additional fee")
 }
@@ -383,7 +376,7 @@ func (s *AnteTestSuite) TestEnsureMempoolAndMsgFees_4() {
 func (s *AnteTestSuite) TestEnsureMempoolAndMsgFees_5() {
 	err, antehandler := setUpApp(s, false, sdk.DefaultBondDenom, 100)
 	tx, acct1 := createTestTx(s, err, sdk.NewCoins(sdk.NewInt64Coin(NHash, 190500200)))
-	s.Require().NoError(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(190500100)))))
+	s.Require().NoError(testutil.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(190500100)))))
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NotNil(err, "Decorator should not have errored for insufficient additional fee")
 	s.Require().Contains(err.Error(), "not enough fees; after deducting fees required,got: \"190500200nhash,-100stake\", required additional fee: \"100stake\"", "wrong error message")
@@ -393,7 +386,7 @@ func (s *AnteTestSuite) TestEnsureMempoolAndMsgFees_5() {
 func (s *AnteTestSuite) TestEnsureMempoolAndMsgFees_6() {
 	err, antehandler := setUpApp(s, true, sdk.DefaultBondDenom, 100)
 	tx, acct1 := createTestTx(s, err, sdk.NewCoins(sdk.NewInt64Coin(NHash, 190500200)))
-	s.Require().NoError(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(190500100)))))
+	s.Require().NoError(testutil.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(190500100)))))
 	hashPrice := sdk.NewDecCoinFromDec(NHash, sdk.NewDec(1))
 	highGasPrice := []sdk.DecCoin{hashPrice}
 	s.ctx = s.ctx.WithMinGasPrices(highGasPrice)

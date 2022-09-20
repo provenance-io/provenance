@@ -7,7 +7,7 @@ import (
 )
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerSetUp() {
-	encodingConfig, err := setUpApp(s, false, sdk.DefaultBondDenom, 100)
+	encodingConfig, err := setUpApp(s, sdk.DefaultBondDenom, 100)
 
 	_, err = piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
 		AccountKeeper:  s.app.AccountKeeper,
@@ -17,11 +17,10 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerSetUp() {
 		Decoder:        encodingConfig.TxConfig.TxDecoder(),
 	})
 	s.Require().NoError(err)
-
 }
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerSetUpIncorrect() {
-	encodingConfig, err := setUpApp(s, false, sdk.DefaultBondDenom, 100)
+	encodingConfig, err := setUpApp(s, sdk.DefaultBondDenom, 100)
 
 	_, err = piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
 		AccountKeeper:  s.app.AccountKeeper,

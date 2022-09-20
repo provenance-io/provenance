@@ -29,6 +29,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -37,6 +38,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -180,7 +182,7 @@ func InitTestnet(
 		memo := fmt.Sprintf("%s@%s:26656", nodeIDs[i], ip)
 		genFiles = append(genFiles, nodeConfig.GenesisFile())
 
-		kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, nodeDir, inBuf)
+		kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, nodeDir, inBuf, clientCtx.Codec)
 		if err != nil {
 			return err
 		}
@@ -191,7 +193,7 @@ func InitTestnet(
 			return err
 		}
 
-		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, true, algo)
+		addr, secret, err := testutil.GenerateSaveCoinKey(kb, nodeDirName, "", true, algo)
 		if err != nil {
 			_ = os.RemoveAll(outputDir)
 			return err
@@ -302,11 +304,11 @@ func initGenFiles(
 	genMarkers []markertypes.MarkerAccount, genFiles []string, numValidators int,
 	chainDenom string,
 ) error {
-	appGenState := mbm.DefaultGenesis(clientCtx.JSONCodec)
+	appGenState := mbm.DefaultGenesis(clientCtx.Codec)
 
 	// set the accounts in the genesis state
 	var authGenState authtypes.GenesisState
-	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[authtypes.ModuleName], &authGenState)
+	clientCtx.Codec.MustUnmarshalJSON(appGenState[authtypes.ModuleName], &authGenState)
 
 	accounts, err := authtypes.PackAccounts(genAccounts)
 	if err != nil {
@@ -314,14 +316,14 @@ func initGenFiles(
 	}
 
 	authGenState.Accounts = accounts
-	appGenState[authtypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&authGenState)
+	appGenState[authtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&authGenState)
 
 	// PROVENANCE SPECIFIC CONFIG
 	// ----------------------------------------
 
 	// set the balances in the genesis state
 	var bankGenState banktypes.GenesisState
-	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState)
+	clientCtx.Codec.MustUnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState)
 
 	bankGenState.Balances = banktypes.SanitizeGenesisBalances(genBalances)
 	for _, bal := range bankGenState.Balances {
@@ -348,52 +350,52 @@ func initGenFiles(
 		DenomUnits:  denomUnits,
 	}
 	bankGenState.DenomMetadata = []banktypes.Metadata{denomMetadata}
-	appGenState[banktypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&bankGenState)
+	appGenState[banktypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&bankGenState)
 
 	// Set the staking denom
 	var stakeGenState stakingtypes.GenesisState
-	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[stakingtypes.ModuleName], &stakeGenState)
+	clientCtx.Codec.MustUnmarshalJSON(appGenState[stakingtypes.ModuleName], &stakeGenState)
 	stakeGenState.Params.BondDenom = chainDenom
 	appGenState[stakingtypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&stakeGenState)
 
 	// Set the crisis denom
 	var crisisGenState crisistypes.GenesisState
-	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[crisistypes.ModuleName], &crisisGenState)
+	clientCtx.Codec.MustUnmarshalJSON(appGenState[crisistypes.ModuleName], &crisisGenState)
 	crisisGenState.ConstantFee.Denom = chainDenom
 	appGenState[crisistypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&crisisGenState)
 
 	// Set the gov depost denom
 	var govGenState govtypes.GenesisState
-	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState)
+	clientCtx.Codec.MustUnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState)
 	govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(chainDenom, sdk.NewInt(10000000)))
 	govGenState.VotingParams.VotingPeriod, _ = time.ParseDuration("360s")
-	appGenState[govtypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&govGenState)
+	appGenState[govtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&govGenState)
 
 	// Set the mint module parameters to stop inflation on the BondDenom.
 	var mintGenState minttypes.GenesisState
-	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState)
+	clientCtx.Codec.MustUnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState)
 	mintGenState.Params.MintDenom = chainDenom
 	mintGenState.Minter.AnnualProvisions = sdk.ZeroDec()
 	mintGenState.Minter.Inflation = sdk.ZeroDec()
 	mintGenState.Params.InflationMax = sdk.ZeroDec()
 	mintGenState.Params.InflationMin = sdk.ZeroDec()
-	appGenState[minttypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&mintGenState)
+	appGenState[minttypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&mintGenState)
 
 	// Set the root names
 	var nameGenState nametypes.GenesisState
-	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[nametypes.ModuleName], &nameGenState)
+	clientCtx.Codec.MustUnmarshalJSON(appGenState[nametypes.ModuleName], &nameGenState)
 	// create the four root example domains
 	nameGenState.Bindings = append(nameGenState.Bindings, nametypes.NewNameRecord("pb", genAccounts[0].GetAddress(), true))
 	nameGenState.Bindings = append(nameGenState.Bindings, nametypes.NewNameRecord("io", genAccounts[0].GetAddress(), true))
 	nameGenState.Bindings = append(nameGenState.Bindings, nametypes.NewNameRecord("pio", genAccounts[0].GetAddress(), false))
 	nameGenState.Bindings = append(nameGenState.Bindings, nametypes.NewNameRecord("provenance", genAccounts[0].GetAddress(), false))
-	appGenState[nametypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&nameGenState)
+	appGenState[nametypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&nameGenState)
 
 	// set markers
 	var markerGenState markertypes.GenesisState
-	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[markertypes.ModuleName], &markerGenState)
+	clientCtx.Codec.MustUnmarshalJSON(appGenState[markertypes.ModuleName], &markerGenState)
 	markerGenState.Markers = genMarkers
-	appGenState[markertypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&markerGenState)
+	appGenState[markertypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&markerGenState)
 
 	// END OF PROVENANCE SPECIFIC CONFIG
 	// --------------------------------------------
@@ -459,7 +461,7 @@ func collectGenFiles(
 			return err
 		}
 
-		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.JSONCodec, clientCtx.TxConfig, nodeConfig, initCfg, *genDoc, genBalIterator)
+		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.Codec, clientCtx.TxConfig, nodeConfig, initCfg, *genDoc, genBalIterator)
 		if err != nil {
 			return err
 		}

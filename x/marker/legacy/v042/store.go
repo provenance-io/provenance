@@ -4,12 +4,13 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
-func MigrateMarkerAddressKeys(ctx sdk.Context, storeKey sdk.StoreKey) error {
+func MigrateMarkerAddressKeys(ctx sdk.Context, storeKey storetypes.StoreKey) error {
 	ctx.Logger().Info("Migrating Marker Module Markers (1/2)")
 	store := ctx.KVStore(storeKey)
 	oldStore := prefix.NewStore(store, MarkerStoreKeyPrefixLegacy)

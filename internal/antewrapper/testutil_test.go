@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	simappCosmos "github.com/cosmos/cosmos-sdk/simapp"
+	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -45,9 +45,14 @@ type AnteTestSuite struct {
 }
 
 // returns context and app with params set on account keeper
-func createTestApp(isCheckTx bool) (*simapp.App, sdk.Context) {
-	app := simapp.Setup(isCheckTx)
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{ChainID: "ante-test"})
+func createTestApp(t *testing.T, isCheckTx bool) (*simapp.App, sdk.Context) {
+	var app *simapp.App
+	if isCheckTx {
+		app = simapp.SetupQuerier(t)
+	} else {
+		app = simapp.Setup(t)
+	}
+	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
 	return app, ctx
@@ -56,11 +61,11 @@ func createTestApp(isCheckTx bool) (*simapp.App, sdk.Context) {
 // SetupTest setups a new test, with new app, context, and anteHandler.
 func (s *AnteTestSuite) SetupTest(isCheckTx bool) {
 	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1)
-	s.app, s.ctx = createTestApp(isCheckTx)
+	s.app, s.ctx = createTestApp(s.T(), isCheckTx)
 	s.ctx = s.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
-	encodingConfig := simappCosmos.MakeTestEncodingConfig()
+	encodingConfig := sdksim.MakeTestEncodingConfig()
 	// We're using TestMsg encoding in some tests, so register it here.
 	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
 	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)
@@ -174,8 +179,8 @@ func (s *AnteTestSuite) RunTestCase(privs []cryptotypes.PrivKey, msgs []sdk.Msg,
 		// Theoretically speaking, ante handler unit tests should only test
 		// ante handlers, but here we sometimes also test the tx creation
 		// process.
-		tx, txErr := s.CreateTestTx(privs, accNums, accSeqs, chainID)
-		newCtx, anteErr := s.anteHandler(s.ctx, tx, tc.simulate)
+		ttx, txErr := s.CreateTestTx(privs, accNums, accSeqs, chainID)
+		newCtx, anteErr := s.anteHandler(s.ctx, ttx, tc.simulate)
 
 		if tc.expPass {
 			s.Require().NoError(txErr)

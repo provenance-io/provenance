@@ -53,7 +53,7 @@ func TestIntegrationTestSuite(t *testing.T) {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
-	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
+	addr, err := sdk.AccAddressFromHexUnsafe(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
 	s.accountAddr = addr
 
@@ -210,10 +210,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.cfg.ChainID = antewrapper.SimAppChainID
 
-	s.network = network.New(s.T(), s.cfg)
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err, "network.New")
 
 	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "WaitForHeight")
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -225,14 +226,18 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) GenerateAccountsWithKeyrings(number int) {
 	path := hd.CreateHDPath(118, 0, 0).String()
 	s.keyringDir = s.T().TempDir()
-	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil)
+	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil, s.cfg.Codec)
 	s.Require().NoError(err)
 	s.keyring = kr
 	for i := 0; i < number; i++ {
 		keyId := fmt.Sprintf("test_key%v", i)
 		info, _, err := kr.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 		s.Require().NoError(err)
-		s.accountAddresses = append(s.accountAddresses, info.GetAddress())
+		addr, err := info.GetAddress()
+		if err != nil {
+			panic(err)
+		}
+		s.accountAddresses = append(s.accountAddresses, addr)
 	}
 }
 
@@ -886,7 +891,7 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 			addressArg:     "invalid address",
 			stateArg:       "expired",
 			byId:           false,
-			expectErrMsg:   "failed to query reward distributions: rpc error: code = InvalidArgument desc = decoding bech32 failed: invalid character in string: ' ': invalid address: invalid request",
+			expectErrMsg:   "failed to query reward distributions: rpc error: code = Unknown desc = decoding bech32 failed: invalid character in string: ' ': invalid address: unknown request",
 			expectedCode:   0,
 			expectedIds:    []uint64{},
 			expectedLength: 0,
