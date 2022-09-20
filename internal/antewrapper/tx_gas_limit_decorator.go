@@ -3,6 +3,7 @@ package antewrapper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -17,13 +18,41 @@ func NewTxGasLimitDecorator() TxGasLimitDecorator {
 	return TxGasLimitDecorator{}
 }
 
+// govMsgURLs the MsgURLs of all the governance module's messages.
+// Use getGovMsgURLs() instead of using this variable directly.
+var govMsgURLs []string
+
+// getGovMsgURLs returns govVoteMsgUrls, but first sets it if it hasn't yet been set.
+func getGovMsgURLs() []string {
+	// Checking for nil here (as opposed to len == 0) because we only want to set it
+	// if it hasn't been set yet.
+	if govMsgURLs == nil {
+		// sdk.MsgTypeURL sometimes uses reflection and/or proto registration.
+		// So govMsgURLs is only set when it's finally needed in the hopes
+		// that everything's wired up as needed by then.
+		govMsgURLs = []string{
+			sdk.MsgTypeURL(&govtypesv1.MsgSubmitProposal{}),
+			sdk.MsgTypeURL(&govtypesv1.MsgVote{}),
+			sdk.MsgTypeURL(&govtypesv1.MsgVoteWeighted{}),
+			sdk.MsgTypeURL(&govtypesv1.MsgDeposit{}),
+			sdk.MsgTypeURL(&govtypesv1beta1.MsgSubmitProposal{}),
+			sdk.MsgTypeURL(&govtypesv1beta1.MsgVote{}),
+			sdk.MsgTypeURL(&govtypesv1beta1.MsgVoteWeighted{}),
+			sdk.MsgTypeURL(&govtypesv1beta1.MsgDeposit{}),
+		}
+	}
+	return govMsgURLs
+}
+
 // Checks whether the given message is related to governance.
 func isGovernanceMessage(msg sdk.Msg) bool {
-	_, isSubmitPropMsg := msg.(*govtypesv1beta1.MsgSubmitProposal)
-	_, isVoteMsg := msg.(*govtypesv1beta1.MsgVote)
-	_, isVoteWeightedMsg := msg.(*govtypesv1beta1.MsgVoteWeighted)
-	_, isDepositMsg := msg.(*govtypesv1beta1.MsgDeposit)
-	return isSubmitPropMsg || isVoteMsg || isVoteWeightedMsg || isDepositMsg
+	msgURL := sdk.MsgTypeURL(msg)
+	for _, govMsgURL := range getGovMsgURLs() {
+		if msgURL == govMsgURL {
+			return true
+		}
+	}
+	return false
 }
 
 func (mfd TxGasLimitDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
