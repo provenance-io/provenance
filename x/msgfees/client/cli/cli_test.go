@@ -351,7 +351,7 @@ func (s *IntegrationTestSuite) TestUpdateConversionFeeDenomProposal() {
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
 			}
 		})
 	}

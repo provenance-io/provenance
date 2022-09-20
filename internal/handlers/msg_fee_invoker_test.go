@@ -30,7 +30,7 @@ import (
 )
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
-	encodingConfig, err := setUpApp(s, false, "atom", 100)
+	encodingConfig, err := setUpApp(s, "atom", 100)
 	testTx, acct1 := createTestTx(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin("nhash", 1000000)))
 
 	// See comment for Check().
@@ -70,7 +70,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
 	coins, _, err = feeChargeFn(s.ctx, false)
 	s.Require().NoError(err, "feeChargeFn 3")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	s.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000))}), "coins all gt 1000000nhash")
+	s.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin("nhash", sdk.NewInt(1000000))}), "coins all gt 1000000nhash")
 }
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
@@ -100,28 +100,24 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
 	})
 	s.Require().NoError(err, "NewAdditionalMsgFeeHandler")
 
-	check(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(1000000)))))
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)))), "funding account")
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(1000000)))), "funding account")
 	coins, _, err := feeChargeFn(s.ctx, false)
 	s.Require().ErrorContains(err, "0atom is smaller than 20000atom: insufficient funds: insufficient funds", "feeChargeFn 1")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	s.Require().True(coins.IsZero(), "coins.IsZero() 1")
 
-	s.Require().NoError((simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin("nhash", 1000000))))
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000))), "funding account again")
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin("nhash", 1000000))), "funding account again")
 	coins, _, err = feeChargeFn(s.ctx, false)
 	s.Require().Nil(err, "Got error when should have successfully paid all msg fees and swept remaining base fees")
 	s.Require().True(coins.IsEqual(sdk.Coins{sdk.NewInt64Coin("nhash", 1000000), sdk.NewInt64Coin("atom", 20000)}))
 	s.Require().NoError(err, "feeChargeFn 2")
-	expected := sdk.Coins{sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)}
+	expected := sdk.Coins{sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin("nhash", 1000000)}
 	s.Require().Equal(expected, coins, "final coins")
 }
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
-	encodingConfig, err := setUpApp(s, false, "atom", 100)
-	testTxWithFeeGrant, _ := createTestTxWithFeeGrant(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin("nhash", 1000000)))
 	encodingConfig, err := setUpApp(s, "atom", 100)
-	testTxWithFeeGrant, _ := createTestTxWithFeeGrant(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)))
+	testTxWithFeeGrant, _ := createTestTxWithFeeGrant(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin("nhash", 1000000)))
 
 	// See comment for Check().
 	txEncoder := encodingConfig.TxConfig.TxEncoder()

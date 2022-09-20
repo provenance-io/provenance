@@ -445,7 +445,7 @@ func TestRewardsProgramStartError(t *testing.T) {
 	//_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
 	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin("atom", 1000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000))
-	app := piosimapp.SetupWithGenesisAccounts("", []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisAccounts(t, []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	blockTime := ctx.BlockTime()
@@ -490,7 +490,7 @@ func TestRewardsProgramStart(t *testing.T) {
 	priv, _, addr := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
 	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin("atom", 1000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000))
-	app := piosimapp.SetupWithGenesisAccounts("", []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisAccounts(t, []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))))
@@ -1645,7 +1645,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 	priv2, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv1.PubKey(), 0, 0)
 	acct2 := authtypes.NewBaseAccount(addr2, priv2.PubKey(), 1, 0)
-	acctBalance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+	acctBalance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin("nhash", 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
 		"title",

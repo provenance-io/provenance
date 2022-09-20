@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"net"
 	"os"
 	"path/filepath"
@@ -38,7 +39,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -356,16 +356,16 @@ func initGenFiles(
 	var stakeGenState stakingtypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[stakingtypes.ModuleName], &stakeGenState)
 	stakeGenState.Params.BondDenom = chainDenom
-	appGenState[stakingtypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&stakeGenState)
+	appGenState[stakingtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&stakeGenState)
 
 	// Set the crisis denom
 	var crisisGenState crisistypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[crisistypes.ModuleName], &crisisGenState)
 	crisisGenState.ConstantFee.Denom = chainDenom
-	appGenState[crisistypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&crisisGenState)
+	appGenState[crisistypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&crisisGenState)
 
 	// Set the gov depost denom
-	var govGenState govtypes.GenesisState
+	var govGenState govtypesv1beta1.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState)
 	govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(chainDenom, sdk.NewInt(10000000)))
 	govGenState.VotingParams.VotingPeriod, _ = time.ParseDuration("360s")

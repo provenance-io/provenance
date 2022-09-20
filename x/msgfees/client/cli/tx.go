@@ -219,7 +219,7 @@ $ %[1]s tx msgfees cfd "updating conversion fee denom" "changes the conversion f
 				return err
 			}
 			callerAddr := clientCtx.GetFromAddress()
-			msg, err := govtypes.NewMsgSubmitProposal(proposal, deposit, callerAddr)
+			msg, err := govtypesv1beta1.NewMsgSubmitProposal(proposal, deposit, callerAddr)
 			if err != nil {
 				return fmt.Errorf("invalid governance proposal. Error: %w", err)
 			}
