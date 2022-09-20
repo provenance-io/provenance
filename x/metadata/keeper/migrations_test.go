@@ -39,7 +39,7 @@ type MigrationsTestSuite struct {
 }
 
 func (s *MigrationsTestSuite) SetupTest() {
-	s.app = simapp.Setup(false)
+	s.app = simapp.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{}).WithLogger(log.TestingLogger())
 	s.store = s.ctx.KVStore(s.app.GetKey(types.ModuleName))
 

@@ -14,12 +14,13 @@ import (
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
-	AccountKeeper   cosmosante.AccountKeeper
-	BankKeeper      banktypes.Keeper
-	FeegrantKeeper  msgfeestypes.FeegrantKeeper
-	MsgFeesKeeper   msgfeestypes.MsgFeesKeeper
-	SignModeHandler authsigning.SignModeHandler
-	SigGasConsumer  func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
+	AccountKeeper          cosmosante.AccountKeeper
+	BankKeeper             banktypes.Keeper
+	ExtensionOptionChecker cosmosante.ExtensionOptionChecker
+	FeegrantKeeper         msgfeestypes.FeegrantKeeper
+	MsgFeesKeeper          msgfeestypes.MsgFeesKeeper
+	SignModeHandler        authsigning.SignModeHandler
+	SigGasConsumer         func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
@@ -44,10 +45,10 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		cosmosante.NewSetUpContextDecorator(),
 		// outermost AnteDecorator. SetUpContext must be called first
 		NewFeeMeterContextDecorator(), // NOTE : fee gas meter also has the functionality of GasTracerContextDecorator in previous versions
-		cosmosante.NewRejectExtensionOptionsDecorator(),
+		cosmosante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		NewTxGasLimitDecorator(),
-		cosmosante.NewMempoolFeeDecorator(),
-		// Fee Decorator works to augment NewMempoolFeeDecorator and also check that enough fees are paid
+		cosmosante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, nil),
+		// Fee Decorator works to augment NewDeductFeeDecorator and also check that enough fees are paid
 		NewMsgFeesDecorator(options.BankKeeper, options.AccountKeeper, options.FeegrantKeeper, options.MsgFeesKeeper),
 		cosmosante.NewValidateBasicDecorator(),
 		cosmosante.NewTxTimeoutHeightDecorator(),

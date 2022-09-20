@@ -86,6 +86,7 @@ func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 	if !totalAdditionalFees.IsZero() {
 		// ensure enough fees to cover mempool fee for base fee + additional fee
 		// This is exact same logic as NewMempoolFeeDecorator except it accounts for additional Fees.
+		// TODO: Required for v1.13.x: Update this logic to match the DeductFeeDecorator now. https://github.com/provenance-io/provenance/issues/1006
 		if ctx.IsCheckTx() && !simulate {
 			errFromMempoolCalc := EnsureSufficientMempoolFees(ctx, gas, feeCoins, totalAdditionalFees)
 			if errFromMempoolCalc != nil {
@@ -185,7 +186,7 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins
 
 	// Before checking gas prices, remove taxed from fee
 	var hasNeg bool
-	if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees); hasNeg {
+	if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees...); hasNeg {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, DefaultInsufficientFeeMsg+": %q, required fees: %q = %q(base-fee) +%q(additional-fees)", feeCoins, requiredFees.Add(additionalFees...), requiredFees, additionalFees)
 	}
 
@@ -203,7 +204,7 @@ func EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas uint64, feeCoins sdk
 	if err != nil {
 		return err
 	}
-	_, hasNeg := balancePerCoin.SafeSub(feeCoins)
+	_, hasNeg := balancePerCoin.SafeSub(feeCoins...)
 	if balancePerCoin.IsZero() || hasNeg {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "fee payer account does not have enough balance to pay for %q", feeCoins)
 	}
@@ -215,7 +216,7 @@ func EnsureSufficientFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coi
 	minGasPriceForAdditionalFeeCalc sdk.Coin) error {
 	// Step 1. Check if fees has enough money to pay additional fees.
 	var hasNeg bool
-	if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees); hasNeg {
+	if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees...); hasNeg {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, DefaultInsufficientFeeMsg+": %q, required additional fee: %q", feeCoins, additionalFees)
 	}
 	// Step 2: check if additional fees in nhash, that base fees and additional fees can be paid
@@ -235,7 +236,7 @@ func checkFloorGasFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins,
 	// where fee = ceil(floorGasPrice * gasLimit).
 	fee := minGasPriceForAdditionalFeeCalc.Amount.Mul(sdk.NewIntFromUint64(gas))
 	baseFees := sdk.NewCoin(minGasPriceForAdditionalFeeCalc.Denom, fee)
-	if _, hasNeg := feeCoins.SafeSub(sdk.Coins{baseFees}); hasNeg {
+	if _, hasNeg := feeCoins.SafeSub(baseFees); hasNeg {
 		// for tx without additional fees.
 		if additionalFees == nil || additionalFees.IsZero() {
 			return sdkerrors.ErrInsufficientFee.Wrapf("not enough fees based on floor gas price: %q; required base fees >=%q: Supplied fee was %q", minGasPriceForAdditionalFeeCalc, baseFees, feeCoins)

@@ -39,7 +39,7 @@ func TestMigrateTestSuite(t *testing.T) {
 }
 
 func (s *MigrateTestSuite) SetupTest() {
-	app := app.Setup(false)
+	app := app.Setup(s.T())
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	s.app = app
 	s.ctx = ctx

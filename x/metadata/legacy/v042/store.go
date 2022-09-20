@@ -2,12 +2,13 @@ package v042
 
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
-func MigrateAddresses(ctx sdk.Context, storeKey sdk.StoreKey) error {
+func MigrateAddresses(ctx sdk.Context, storeKey storetypes.StoreKey) error {
 	ctx.Logger().Info("Migrating Metadata OSLocators (1/5)")
 	err := MigrateOSLocatorKeys(ctx, storeKey)
 	if err != nil {
@@ -32,7 +33,7 @@ func MigrateAddresses(ctx sdk.Context, storeKey sdk.StoreKey) error {
 	return MigrateAddressContractSpecCacheKey(ctx, storeKey)
 }
 
-func MigrateOSLocatorKeys(ctx sdk.Context, storeKey sdk.StoreKey) error {
+func MigrateOSLocatorKeys(ctx sdk.Context, storeKey storetypes.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 	oldStore := prefix.NewStore(store, OSLocatorAddressKeyPrefixLegacy)
 
@@ -63,7 +64,7 @@ func MigrateOSLocatorKeys(ctx sdk.Context, storeKey sdk.StoreKey) error {
 	return nil
 }
 
-func MigrateAddressScopeCacheKey(ctx sdk.Context, storeKey sdk.StoreKey) error {
+func MigrateAddressScopeCacheKey(ctx sdk.Context, storeKey storetypes.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 	oldStore := prefix.NewStore(store, AddressScopeCacheKeyPrefixLegacy)
 
@@ -84,7 +85,7 @@ func MigrateAddressScopeCacheKey(ctx sdk.Context, storeKey sdk.StoreKey) error {
 	return nil
 }
 
-func MigrateValueOwnerScopeCacheKey(ctx sdk.Context, storeKey sdk.StoreKey) error {
+func MigrateValueOwnerScopeCacheKey(ctx sdk.Context, storeKey storetypes.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 	oldStore := prefix.NewStore(store, ValueOwnerScopeCacheKeyPrefixLegacy)
 
@@ -105,7 +106,7 @@ func MigrateValueOwnerScopeCacheKey(ctx sdk.Context, storeKey sdk.StoreKey) erro
 	return nil
 }
 
-func MigrateAddressScopeSpecCacheKey(ctx sdk.Context, storeKey sdk.StoreKey) error {
+func MigrateAddressScopeSpecCacheKey(ctx sdk.Context, storeKey storetypes.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 	oldStore := prefix.NewStore(store, AddressScopeSpecCacheKeyPrefixLegacy)
 
@@ -126,7 +127,7 @@ func MigrateAddressScopeSpecCacheKey(ctx sdk.Context, storeKey sdk.StoreKey) err
 	return nil
 }
 
-func MigrateAddressContractSpecCacheKey(ctx sdk.Context, storeKey sdk.StoreKey) error {
+func MigrateAddressContractSpecCacheKey(ctx sdk.Context, storeKey storetypes.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 	oldStore := prefix.NewStore(store, AddressContractSpecCacheKeyPrefixLegacy)
 

@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
@@ -41,7 +42,7 @@ type KeeperTestSuite struct {
 func (s *KeeperTestSuite) CreateAccounts(number int) {
 	for i := 0; i < number; i++ {
 		accountKey := secp256k1.GenPrivKeyFromSecret([]byte(fmt.Sprintf("acc%d", i+2)))
-		addr, err := sdk.AccAddressFromHex(accountKey.PubKey().Address().String())
+		addr, err := sdk.AccAddressFromHexUnsafe(accountKey.PubKey().Address().String())
 		s.Require().NoError(err)
 		s.accountAddr = addr
 		s.accountAddresses = append(s.accountAddresses, addr)
@@ -49,12 +50,12 @@ func (s *KeeperTestSuite) CreateAccounts(number int) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	s.app = app.Setup(false)
+	s.app = app.Setup(s.T())
 	s.CreateAccounts(4)
 	s.handler = reward.NewHandler(s.app.RewardKeeper)
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now().UTC()})
 	s.createTestValidators(10)
-	simapp.FundModuleAccount(s.app, s.ctx, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("nhash", 10000000000000)))
+	s.Require().NoError(testutil.FundModuleAccount(s.app.BankKeeper, s.ctx, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("nhash", 10000000000000))), "funding module")
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.app.RewardKeeper)
@@ -312,7 +313,7 @@ func (s *KeeperTestSuite) TestSingleDelegate() {
 			},
 		},
 	)
-	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
+	s.Require().NoError(s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram), "StartRewardProgram")
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -378,7 +379,7 @@ func (s *KeeperTestSuite) TestMultipleDelegate() {
 			},
 		},
 	)
-	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
+	s.Require().NoError(s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram), "StartRewardProgram")
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -445,7 +446,7 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumActions() {
 			},
 		},
 	)
-	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
+	s.Require().NoError(s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram), "StartRewardProgram")
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -505,7 +506,7 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumActions() {
 			},
 		},
 	)
-	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
+	s.Require().NoError(s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram), "StartRewardProgram")
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -573,7 +574,7 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumDelegation() {
 			},
 		},
 	)
-	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
+	s.Require().NoError(s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram), "StartRewardProgram")
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -641,7 +642,7 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumDelegation() {
 			},
 		},
 	)
-	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
+	s.Require().NoError(s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram), "StartRewardProgram")
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -709,7 +710,7 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumPercentile() {
 			},
 		},
 	)
-	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
+	s.Require().NoError(s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram), "StartRewardProgram")
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here
@@ -777,7 +778,7 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumPercentile() {
 			},
 		},
 	)
-	s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram)
+	s.Require().NoError(s.app.RewardKeeper.StartRewardProgram(s.ctx, &rewardProgram), "StartRewardProgram")
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, rewardProgram)
 
 	// We want to set the events here

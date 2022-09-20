@@ -15,7 +15,7 @@ import (
 
 func TestMarkerInvariant(t *testing.T) {
 	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	app.MarkerKeeper.SetParams(ctx, markertypes.DefaultParams())

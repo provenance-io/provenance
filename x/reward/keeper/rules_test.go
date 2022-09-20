@@ -4,13 +4,12 @@ import (
 	"errors"
 	"time"
 
+	sdksim "github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	staking "github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -85,10 +84,11 @@ func (s *KeeperTestSuite) TestIterateABCIEventsWildcard() {
 	var events []types.ABCIEvent
 	criteria := types.NewEventCriteria(events)
 	counter := 0
-	s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
+	err := s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
 		counter += 1
 		return nil
 	})
+	s.Assert().NoError(err, "IterateABCIEvents")
 	s.Assert().Equal(3, counter, "should iterate for each event")
 }
 
@@ -101,10 +101,11 @@ func (s *KeeperTestSuite) TestIterateABCIEventsByEventType() {
 		},
 	}
 	criteria := types.NewEventCriteria(events)
-	s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
+	err := s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
 		counter += 1
 		return nil
 	})
+	s.Assert().NoError(err, "IterateABCIEvents")
 	s.Assert().Equal(2, counter, "should iterate only for specified event types")
 }
 
@@ -120,10 +121,11 @@ func (s *KeeperTestSuite) TestIterateABCIEventsByEventTypeAndAttributeName() {
 		},
 	}
 	criteria := types.NewEventCriteria(events)
-	s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
+	err := s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
 		counter += 1
 		return nil
 	})
+	s.Assert().NoError(err, "IterateABCIEvents")
 	s.Assert().Equal(2, counter, "should iterate only for specified event types with matching attributes")
 }
 
@@ -139,10 +141,11 @@ func (s *KeeperTestSuite) TestIterateABCIEventsByEventTypeAndAttributeNameAndVal
 		},
 	}
 	criteria := types.NewEventCriteria(events)
-	s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
+	err := s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
 		counter += 1
 		return nil
 	})
+	s.Assert().NoError(err, "IterateABCIEvents")
 	s.Assert().Equal(2, counter, "should iterate only for specified event types with matching attributes")
 }
 
@@ -156,10 +159,11 @@ func (s *KeeperTestSuite) TestIterateABCIEventsNonExistantEventType() {
 		},
 	}
 	criteria := types.NewEventCriteria(events)
-	s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
+	err := s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
 		counter += 1
 		return nil
 	})
+	s.Assert().NoError(err, "IterateABCIEvents")
 	s.Assert().Equal(0, counter, "should not iterate if event doesn't exist")
 }
 
@@ -175,10 +179,11 @@ func (s *KeeperTestSuite) TestIterateABCIEventsNonExistantAttributeName() {
 		},
 	}
 	criteria := types.NewEventCriteria(events)
-	s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
+	err := s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
 		counter += 1
 		return nil
 	})
+	s.Assert().NoError(err, "IterateABCIEvents")
 	s.Assert().Equal(0, counter, "should not iterate if attribute doesn't match")
 }
 
@@ -194,10 +199,11 @@ func (s *KeeperTestSuite) TestIterateABCIEventsNonAttributeValueMatch() {
 		},
 	}
 	criteria := types.NewEventCriteria(events)
-	s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
+	err := s.app.RewardKeeper.IterateABCIEvents(s.ctx, criteria, func(name string, attributes *map[string][]byte) error {
 		counter += 1
 		return nil
 	})
+	s.Assert().NoError(err, "IterateABCIEvents")
 	s.Assert().Equal(0, counter, "should not iterate if attribute doesn't match")
 }
 
@@ -416,14 +422,14 @@ func (m MockStakingKeeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.V
 
 func (s *KeeperTestSuite) createTestValidators(amount int) {
 	addrDels := simapp.AddTestAddrsIncremental(s.app, s.ctx, amount, sdk.NewInt(10000))
-	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
+	valAddrs := sdksim.ConvertAddrsToValAddrs(addrDels)
 
 	totalSupply := sdk.NewCoins(sdk.NewCoin(s.app.StakingKeeper.BondDenom(s.ctx), sdk.NewInt(1000000000)))
 	notBondedPool := s.app.StakingKeeper.GetNotBondedPool(s.ctx)
 	s.app.AccountKeeper.SetModuleAccount(s.ctx, notBondedPool)
 
-	s.app.BankKeeper.MintCoins(s.ctx, minttypes.ModuleName, totalSupply)
-	s.app.BankKeeper.SendCoinsFromModuleToModule(s.ctx, minttypes.ModuleName, notBondedPool.GetName(), totalSupply)
+	s.Require().NoError(testutil.FundModuleAccount(s.app.BankKeeper, s.ctx, notBondedPool.GetName(), totalSupply),
+		"funding %s with %s", notBondedPool.GetName(), totalSupply)
 
 	var validators []stakingtypes.Validator
 	for i := 0; i < amount; i++ {
@@ -439,7 +445,8 @@ func (s *KeeperTestSuite) createTestValidators(amount int) {
 
 		// We want even validators to be bonded
 		if i%2 == 0 {
-			s.app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+			_, err := s.app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+			s.Require().NoError(err, "ApplyAndReturnValidatorSetUpdates")
 			validator.ABCIValidatorUpdate(s.app.StakingKeeper.PowerReduction(s.ctx))
 		}
 	}

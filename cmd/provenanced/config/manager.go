@@ -187,7 +187,6 @@ func writeUnpackedConfig(
 			cmd.Printf("Writing app config to: %s ... ", confFile)
 		}
 		serverconfig.WriteConfigFile(confFile, appConfig)
-		appConfigIndexEventsWorkAround(confFile, appConfig)
 		if verbose {
 			cmd.Printf("Done.\n")
 		}
@@ -211,42 +210,6 @@ func writeUnpackedConfig(
 		if verbose {
 			cmd.Printf("Done.\n")
 		}
-	}
-}
-
-// appConfigIndexEventsWorkAround fixes the incorrect marshaling of the index-events config field into the toml file.
-// Issue: https://github.com/cosmos/cosmos-sdk/issues/10016
-// Once that issue is fixed, this can be removed.
-func appConfigIndexEventsWorkAround(configFilePath string, config *serverconfig.Config) {
-	// If there aren't any index events, it's marshaled just fine.
-	if len(config.IndexEvents) == 0 {
-		return
-	}
-	// Manually read in the file, change the index-events line to the correct format and write it again.
-	indexEventsBz, merr := json.Marshal(config.IndexEvents)
-	if merr != nil {
-		panic(fmt.Errorf("marshaling index events to json: %w", merr))
-	}
-
-	bz, rerr := os.ReadFile(configFilePath)
-	if rerr != nil {
-		panic(fmt.Errorf("reading app config file: %w", rerr))
-	}
-	fixedFileBz := []byte{}
-	for _, line := range strings.Split(string(bz), "\n") {
-		if len(line) >= 12 && line[:12] == "index-events" {
-			fixedFileBz = append(fixedFileBz, []byte("index-events = ")...)
-			fixedFileBz = append(fixedFileBz, indexEventsBz...)
-		} else {
-			fixedFileBz = append(fixedFileBz, []byte(line)...)
-		}
-		fixedFileBz = append(fixedFileBz, '\n')
-	}
-
-	//nolint:gosec // These are the correct permissions
-	werr := os.WriteFile(configFilePath, fixedFileBz, 0644)
-	if werr != nil {
-		panic(fmt.Errorf("writing fixec app config: %w", werr))
 	}
 }
 

@@ -1,8 +1,6 @@
 package app
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -11,6 +9,7 @@ const (
 	AccountAddressPrefixTestNet = "tp"
 	CoinTypeMainNet             = 505
 	CoinTypeTestNet             = 1
+	Purpose                     = 44
 )
 
 var (
@@ -26,7 +25,7 @@ var (
 )
 
 // SetConfig sets the configuration for the network using mainnet or testnet
-func SetConfig(testnet bool) {
+func SetConfig(testnet bool, seal bool) {
 	// not the default (mainnet) so reset with testnet config
 	if testnet {
 		AccountAddressPrefix = AccountAddressPrefixTestNet
@@ -40,9 +39,11 @@ func SetConfig(testnet bool) {
 
 	config := sdk.GetConfig()
 	config.SetCoinType(uint32(CoinType))
-	config.SetFullFundraiserPath(fmt.Sprintf("m/44'/%d'/0'/0/0", CoinType))
+	config.SetPurpose(Purpose)
 	config.SetBech32PrefixForAccount(AccountAddressPrefix, AccountPubKeyPrefix)
 	config.SetBech32PrefixForValidator(ValidatorAddressPrefix, ValidatorPubKeyPrefix)
 	config.SetBech32PrefixForConsensusNode(ConsNodeAddressPrefix, ConsNodePubKeyPrefix)
-	config.Seal()
+	if seal {
+		config.Seal()
+	}
 }

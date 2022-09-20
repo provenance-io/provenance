@@ -38,7 +38,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(false)
+	app := simapp.Setup(s.T())
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	s.app = app
 	s.ctx = ctx
