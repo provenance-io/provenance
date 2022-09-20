@@ -1,12 +1,12 @@
 #!/bin/bash
 
-RELAY_PATH="${RELAY_PATH:=local_local2}"
+RELAY_PATH="${RELAY_PATH:=local_testnet}"
 RELAY_CMD="${RELAY_CMD:-rly}"
 RELAYER_HOME="${RELAYER_HOME:-$HOME/.relayer}"
 
 # We have to get CHAIN_1 and CHAIN_2 by splitting the path
-CHAIN_1=$(echo "$RELAY_PATH" | cut -d "_" -f 1)
-CHAIN_2=$(echo "$RELAY_PATH" | cut -d "_" -f 2)
+CHAIN_1="$( echo "$RELAY_PATH" | cut -d "_" -f 1 )"
+CHAIN_2="$( echo "$RELAY_PATH" | cut -d "_" -f 2 )"
 
 check_keys() {
     CHAIN=$1
@@ -21,8 +21,8 @@ check_keys() {
 }
 
 check_links() {
-    PATH_STATUS=$("$RELAY_CMD" paths list --home "$RELAYER_HOME" | grep "$RELAY_PATH")
-    PASSING=$(grep -o "✔" <<< "$PATH_STATUS" | wc -l | tr -d ' ')
+    PATH_STATUS="$( "$RELAY_CMD" paths list --home "$RELAYER_HOME" | grep "$RELAY_PATH" )"
+    PASSING="$( grep -o "✔" <<< "$PATH_STATUS" | wc -l | tr -d ' ')"
     if [ "$PASSING" == 3 ]; then
         return 0
     fi

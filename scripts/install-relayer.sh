@@ -4,15 +4,14 @@ RESET_CONFIG="${RESET_CONFIG:-0}"
 VERSION="${VERSION:-v2.0.0}"
 RELAYER_HOME="${RELAYER_HOME:-$HOME/.relayer}"
 RELAY_CMD="${RELAY_CMD:-rly}"
-RELAYER_CONFIG="$RELAYER_HOME"/config/config.yaml
+RELAYER_CONFIG="$RELAYER_HOME/config/config.yaml"
 PROVENANCE_CONFIG=scripts/relayer-config.yaml
 
 # Install relayer if it doesn't exist
-RELAYER_EXISTS=$(command -v "$RELAY_CMD")
-if ! [ -x "$RELAYER_EXISTS" ]; then
+if ! command -v "$RELAY_CMD" > /dev/null 2>&1; then
     echo "relayer not installed. Installing..."
     # Install relayer
-    DIR=$(pwd)
+    DIR="$( pwd )"
     git clone https://github.com/cosmos/relayer.git /tmp/relayer
     cd /tmp/relayer || exit 1 
     git checkout "$VERSION"
