@@ -61,6 +61,9 @@ jobs:
       - name: proto-update-check
         if: always()
         run: |
+          # TODO: Remove this FORCE stuff before merging to main.
+          FORCE=1
+          export FORCE
           BASE_BRANCH="..origin/${{ steps.setup.outputs.base-branch }}"
           export BASE_BRANCH
           make proto-update-check
