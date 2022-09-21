@@ -189,6 +189,7 @@
     - [EventRecordUpdated](#provenance.metadata.v1.EventRecordUpdated)
     - [EventScopeCreated](#provenance.metadata.v1.EventScopeCreated)
     - [EventScopeDeleted](#provenance.metadata.v1.EventScopeDeleted)
+    - [EventScopeExpired](#provenance.metadata.v1.EventScopeExpired)
     - [EventScopeSpecificationCreated](#provenance.metadata.v1.EventScopeSpecificationCreated)
     - [EventScopeSpecificationDeleted](#provenance.metadata.v1.EventScopeSpecificationDeleted)
     - [EventScopeSpecificationUpdated](#provenance.metadata.v1.EventScopeSpecificationUpdated)
@@ -345,6 +346,8 @@
     - [MsgDeleteScopeResponse](#provenance.metadata.v1.MsgDeleteScopeResponse)
     - [MsgDeleteScopeSpecificationRequest](#provenance.metadata.v1.MsgDeleteScopeSpecificationRequest)
     - [MsgDeleteScopeSpecificationResponse](#provenance.metadata.v1.MsgDeleteScopeSpecificationResponse)
+    - [MsgExpireScopeRequest](#provenance.metadata.v1.MsgExpireScopeRequest)
+    - [MsgExpireScopeResponse](#provenance.metadata.v1.MsgExpireScopeResponse)
     - [MsgModifyOSLocatorRequest](#provenance.metadata.v1.MsgModifyOSLocatorRequest)
     - [MsgModifyOSLocatorResponse](#provenance.metadata.v1.MsgModifyOSLocatorResponse)
     - [MsgP8eMemorializeContractRequest](#provenance.metadata.v1.MsgP8eMemorializeContractRequest)
@@ -2915,6 +2918,21 @@ EventScopeDeleted is an event message indicating a scope has been deleted.
 
 
 
+<a name="provenance.metadata.v1.EventScopeExpired"></a>
+
+### EventScopeExpired
+EventScopeExpired is an event message indicating a scope has been expired.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `scope_addr` | [string](#string) |  | scope_addr is the bech32 address string of the scope id that was expired. |
+
+
+
+
+
+
 <a name="provenance.metadata.v1.EventScopeSpecificationCreated"></a>
 
 ### EventScopeSpecificationCreated
@@ -5290,6 +5308,32 @@ MsgDeleteScopeSpecificationResponse is the response type for the Msg/DeleteScope
 
 
 
+<a name="provenance.metadata.v1.MsgExpireScopeRequest"></a>
+
+### MsgExpireScopeRequest
+MsgExpireScopeRequest is the request type for the Msg/ExpireScope RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `scope_id` | [bytes](#bytes) |  | Unique ID for the scope to expire |
+| `signers` | [string](#string) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgExpireScopeResponse"></a>
+
+### MsgExpireScopeResponse
+MsgExpireScopeResponse is the response type for the Msg/ExpireScope RPC method.
+
+
+
+
+
+
 <a name="provenance.metadata.v1.MsgModifyOSLocatorRequest"></a>
 
 ### MsgModifyOSLocatorRequest
@@ -5618,6 +5662,7 @@ Msg defines the Metadata Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `WriteScope` | [MsgWriteScopeRequest](#provenance.metadata.v1.MsgWriteScopeRequest) | [MsgWriteScopeResponse](#provenance.metadata.v1.MsgWriteScopeResponse) | WriteScope adds or updates a scope. | |
 | `DeleteScope` | [MsgDeleteScopeRequest](#provenance.metadata.v1.MsgDeleteScopeRequest) | [MsgDeleteScopeResponse](#provenance.metadata.v1.MsgDeleteScopeResponse) | DeleteScope deletes a scope and all associated Records, Sessions. | |
+| `ExpireScope` | [MsgExpireScopeRequest](#provenance.metadata.v1.MsgExpireScopeRequest) | [MsgExpireScopeResponse](#provenance.metadata.v1.MsgExpireScopeResponse) | ExpireScope deletes a scope and all associated Records, Sessions. | |
 | `AddScopeDataAccess` | [MsgAddScopeDataAccessRequest](#provenance.metadata.v1.MsgAddScopeDataAccessRequest) | [MsgAddScopeDataAccessResponse](#provenance.metadata.v1.MsgAddScopeDataAccessResponse) | AddScopeDataAccess adds data access AccAddress to scope | |
 | `DeleteScopeDataAccess` | [MsgDeleteScopeDataAccessRequest](#provenance.metadata.v1.MsgDeleteScopeDataAccessRequest) | [MsgDeleteScopeDataAccessResponse](#provenance.metadata.v1.MsgDeleteScopeDataAccessResponse) | DeleteScopeDataAccess removes data access AccAddress from scope | |
 | `AddScopeOwner` | [MsgAddScopeOwnerRequest](#provenance.metadata.v1.MsgAddScopeOwnerRequest) | [MsgAddScopeOwnerResponse](#provenance.metadata.v1.MsgAddScopeOwnerResponse) | AddScopeOwner adds new owner AccAddress to scope | |

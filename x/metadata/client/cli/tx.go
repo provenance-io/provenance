@@ -131,7 +131,7 @@ func WriteScopeCmd() *cobra.Command {
 func RemoveScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "remove-scope [scope-id]",
-		Short:   "Remove a metadata scope to the provenance blockchain",
+		Short:   "Remove a metadata scope from the provenance blockchain",
 		Example: fmt.Sprintf(`$ %[1]s tx metadata remove-scope scope1qzhpuff00wpy2yuf7xr0rp8aucqstsk0cn`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

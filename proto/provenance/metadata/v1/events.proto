@@ -34,6 +34,12 @@ message EventScopeDeleted {
   string scope_addr = 1;
 }
 
+// EventScopeExpired is an event message indicating a scope has been expired.
+message EventScopeExpired {
+  // scope_addr is the bech32 address string of the scope id that was expired.
+  string scope_addr = 1;
+}
+
 // EventSessionCreated is an event message indicating a session has been created.
 message EventSessionCreated {
   // session_addr is the bech32 address string of the session id that was created.

@@ -73,6 +73,31 @@ func (k msgServer) DeleteScope(
 	return types.NewMsgDeleteScopeResponse(), nil
 }
 
+func (k msgServer) ExpireScope(
+	goCtx context.Context,
+	msg *types.MsgExpireScopeRequest,
+) (*types.MsgExpireScopeResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "ExpireScope")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if len(msg.ScopeId) == 0 {
+		return nil, errors.New("scope id cannot be empty")
+	}
+	existing, found := k.GetScope(ctx, msg.ScopeId)
+	if !found {
+		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
+	}
+
+	if err := k.ValidateScopeRemove(ctx, existing, msg.Signers, msg.MsgTypeURL()); err != nil {
+		return nil, err
+	}
+
+	k.RemoveScope(ctx, msg.ScopeId)
+
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_ExpireScope, msg.GetSigners()))
+	return types.NewMsgExpireScopeResponse(), nil
+}
+
 func (k msgServer) AddScopeDataAccess(
 	goCtx context.Context,
 	msg *types.MsgAddScopeDataAccessRequest,
