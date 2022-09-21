@@ -42632,6 +42632,12 @@ paths:
                                     type: string
                                   amount:
                                     type: string
+                              validator_multiplier:
+                                type: string
+                                format: uint64
+                                description: >-
+                                  If not zero, this is multiplier that shares
+                                  will be multiplied by.
                             description: >-
                               ActionVote represents the voting action and its
                               required eligibility criteria.
@@ -43001,6 +43007,12 @@ paths:
                                   type: string
                                 amount:
                                   type: string
+                            validator_multiplier:
+                              type: string
+                              format: uint64
+                              description: >-
+                                If not zero, this is multiplier that shares will
+                                be multiplied by.
                           description: >-
                             ActionVote represents the voting action and its
                             required eligibility criteria.
@@ -72870,6 +72882,10 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
+      validator_multiplier:
+        type: string
+        format: uint64
+        description: 'If not zero, this is multiplier that shares will be multiplied by.'
     description: >-
       ActionVote represents the voting action and its required eligibility
       criteria.
@@ -73173,6 +73189,10 @@ definitions:
               method
 
               signatures required by gogoproto.
+          validator_multiplier:
+            type: string
+            format: uint64
+            description: 'If not zero, this is multiplier that shares will be multiplied by.'
         description: >-
           ActionVote represents the voting action and its required eligibility
           criteria.
@@ -73666,6 +73686,12 @@ definitions:
                           type: string
                         amount:
                           type: string
+                    validator_multiplier:
+                      type: string
+                      format: uint64
+                      description: >-
+                        If not zero, this is multiplier that shares will be
+                        multiplied by.
                   description: >-
                     ActionVote represents the voting action and its required
                     eligibility criteria.
@@ -73918,6 +73944,12 @@ definitions:
                             type: string
                           amount:
                             type: string
+                      validator_multiplier:
+                        type: string
+                        format: uint64
+                        description: >-
+                          If not zero, this is multiplier that shares will be
+                          multiplied by.
                     description: >-
                       ActionVote represents the voting action and its required
                       eligibility criteria.
@@ -74212,6 +74244,12 @@ definitions:
                       type: string
                     amount:
                       type: string
+                validator_multiplier:
+                  type: string
+                  format: uint64
+                  description: >-
+                    If not zero, this is multiplier that shares will be
+                    multiplied by.
               description: >-
                 ActionVote represents the voting action and its required
                 eligibility criteria.
