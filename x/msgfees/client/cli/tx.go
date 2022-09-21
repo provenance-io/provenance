@@ -203,7 +203,7 @@ func GetUpdateDenomMetadataProposal() *cobra.Command {
 		Use:     "update-denom-metadata-proposal",
 		Aliases: []string{"udmp", "u-d-m-p"},
 		Args:    cobra.ExactArgs(2),
-		Short:   "Submit a proposal to update fee denom metadata",
+		Short:   "Submit a proposal to update fee denom metadata along with an initial deposit",
 		Long: strings.TrimSpace(`Submit a proposal to update fee denom metadata`),
 		Example: fmt.Sprintf(`$ %[1]s`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -309,7 +309,7 @@ func (s *IntegrationTestSuite) TestUpdateDenomMetadataProposalProposal() {
 	p, _ := ioutil.TempFile("", "proposal.json")
 	tmpFile := p.Name()
 	proposal := &msgfeetypes.UpdateDenomMetadataProposal{
-		Title:       "",
+		Title:       "update fee denom metadata",
 		Description: "description",
 		Metadata: banktypes.Metadata{
 			Description: "",
@@ -325,7 +325,7 @@ func (s *IntegrationTestSuite) TestUpdateDenomMetadataProposalProposal() {
 
 	content, _ := json.Marshal(proposal)
 
-	p.WriteString(string(content))
+	_, _ = p.WriteString(string(content))
 
 	testCases := []struct {
 		name         string
@@ -342,14 +342,7 @@ func (s *IntegrationTestSuite) TestUpdateDenomMetadataProposalProposal() {
 			expectedCode: 0,
 		},
 		{
-			name:         "update fee denom proposal - invalid - rate param error",
-			proposal:     tmpFile,
-			deposit:      sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
-			expectErrMsg: "unable to parse nhash value: invalid-rate",
-			expectedCode: 0,
-		},
-		{
-			name:         "update nhash to usd mil proposal - invalid - deposit param",
+			name:         "update fee denom proposal - invalid - deposit param",
 			proposal:     tmpFile,
 			deposit:      "invalid-deposit",
 			expectErrMsg: "invalid decimal coin expression: invalid-deposit",

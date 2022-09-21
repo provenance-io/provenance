@@ -43,6 +43,7 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeUpdateUsdConversionRate)
 	govtypes.RegisterProposalTypeCodec(UpdateNhashPerUsdMilProposal{}, "provenance/msgfees/UpdateNhashPerUsdMilProposal")
 
+	govtypes.RegisterProposalType(ProposalTypeUpdateDenomMetadata)
 	govtypes.RegisterProposalTypeCodec(UpdateDenomMetadataProposal{}, "provenance/msgfees/UpdateDenomMetadataProposal")
 }
 

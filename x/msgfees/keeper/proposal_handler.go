@@ -137,7 +137,7 @@ func HandleUpdateNhashPerUsdMilProposal(ctx sdk.Context, k Keeper, proposal *typ
 
 // HandleUpdateDenomMetadataProposal handles update of msg fee denom metadata
 func HandleUpdateDenomMetadataProposal(ctx sdk.Context, k Keeper, proposal *types.UpdateDenomMetadataProposal, registry codectypes.InterfaceRegistry) error {
-	if err := proposal.ValidateBasic(); err != nil {
+	if err := sdk.ValidateDenom(proposal.Metadata.Base); err != nil {
 		return err
 	}
 	k.bankKeeper.SetDenomMetaData(ctx, proposal.Metadata)

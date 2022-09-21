@@ -40,6 +40,7 @@ func NewKeeper(
 	defaultFeeDenom string,
 	simulateFunc baseAppSimulateFunc,
 	txDecoder sdk.TxDecoder,
+	bankkeeper bankkeeper.Keeper,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -53,6 +54,7 @@ func NewKeeper(
 		defaultFeeDenom:  defaultFeeDenom,
 		simulateFunc:     simulateFunc,
 		txDecoder:        txDecoder,
+		bankKeeper:		  bankkeeper,
 	}
 }
 

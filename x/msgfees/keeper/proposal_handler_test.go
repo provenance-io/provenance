@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"errors"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -34,7 +35,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.app = provenance.Setup(false)
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
-	s.k = msgfeeskeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(msgfeestypes.ModuleName), s.app.GetSubspace(msgfeestypes.ModuleName), "", msgfeestypes.NhashDenom, nil, nil)
+	s.k = msgfeeskeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(msgfeestypes.ModuleName), s.app.GetSubspace(msgfeestypes.ModuleName), "", msgfeestypes.NhashDenom, nil, nil, s.app.BankKeeper)
 	s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 }
 
@@ -106,6 +107,46 @@ func (s *IntegrationTestSuite) TestMsgFeeProposals() {
 			msgfeestypes.NewUpdateNhashPerUsdMilProposal("title update conversion", "description", 1),
 			nil,
 		},
+		{
+			"set denom metadata - bad denom",
+			msgfeestypes.NewUpdateDenomMetadataProposal("title", "description",
+				banktypes.Metadata{
+					Description: "some denom description",
+					Base:        "bad$char",
+					Display:     "badchar",
+					Name:        "Bad Char",
+					Symbol:      "BC",
+					DenomUnits: []*banktypes.DenomUnit{
+						{
+							Denom:    "bad$char",
+							Exponent: 0,
+							Aliases:  nil,
+						},
+					},
+				},
+			),
+			errors.New("invalid denom: bad$char"),
+		},
+		{
+			"set denom metadata - valid",
+			msgfeestypes.NewUpdateDenomMetadataProposal("title", "description",
+				banktypes.Metadata{
+					Description: "the best denom description",
+					Base:        "test1",
+					Display:     "test1",
+					Name:        "Test One",
+					Symbol:      "TONE",
+					DenomUnits: []*banktypes.DenomUnit{
+						{
+							Denom:    "test1",
+							Exponent: 0,
+							Aliases:  []string{"tone"},
+						},
+					},
+				},
+			),
+			nil,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -122,6 +163,8 @@ func (s *IntegrationTestSuite) TestMsgFeeProposals() {
 				err = msgfeeskeeper.HandleRemoveMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
 			case *msgfeestypes.UpdateNhashPerUsdMilProposal:
 				err = msgfeeskeeper.HandleUpdateNhashPerUsdMilProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
+			case *msgfeestypes.UpdateDenomMetadataProposal:
+				err = msgfeeskeeper.HandleUpdateDenomMetadataProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
 			default:
 				panic("invalid proposal type")
 			}
