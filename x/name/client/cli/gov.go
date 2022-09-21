@@ -34,7 +34,7 @@ restrict flag is included.  When included the proposer will be the default owner
 all child name creation unless an alterate owner is provided.
 
 Example:
-$ %s tx gov submit-proposal param-change \
+$ %s tx gov submit-proposal param-change tx gov submit-proposal \
     root-name-proposal \
 	<root name> \
 	--restrict  \ 

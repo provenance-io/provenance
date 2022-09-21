@@ -26,6 +26,7 @@ const (
 	FlagMsgType   = "msg-type"
 	FlagRecipient = "recipient"
 	FlagBips      = "bips"
+	FlagDeposit   = "deposit"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -200,12 +201,15 @@ $ %[1]s tx msgfees npum nhash-per-usd-mil "updating nhash to usd mil" "changes t
 
 func GetUpdateDenomMetadataProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "update-denom-metadata-proposal",
+		Use:     "update-denom-metadata-proposal <path-to-proposal-file.json> <deposit>",
 		Aliases: []string{"udmp", "u-d-m-p"},
 		Args:    cobra.ExactArgs(2),
-		Short:   "Submit a proposal to update fee denom metadata along with an initial deposit",
-		Long: strings.TrimSpace(`Submit a proposal to update fee denom metadata`),
-		Example: fmt.Sprintf(`$ %[1]s`, version.AppName),
+		Short:   "Proposal to update msg fee denom metadata",
+		Long: strings.TrimSpace(`Submit a proposal to update msg fee denom metadata along with an initial deposit.`),
+		Example: fmt.Sprintf(`$ %[1]s tx msgfees update-denom-metadata-proposal path/to/proposal/file.json 1000000000nhash
+$ %[1]s tx msgfees udmp path/to/proposal/file.json 1000000000nhash
+$ %[1]s tx msgfees u-d-m-p path/to/proposal/file.json 1000000000nhash
+`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
