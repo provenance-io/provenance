@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -519,25 +518,19 @@ Currently, the denom and price defaults to 1905nhash
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			depCdc := clientCtx.Codec
-			cdc := depCdc.(codec.Codec)
-
 			serverCtx := server.GetServerContextFromCmd(cmd)
+			cdc := clientCtx.Codec
 			config := serverCtx.Config
-
 			config.SetRoot(clientCtx.HomeDir)
-
 			coin, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
 				return fmt.Errorf("failed to parse coin: %w", err)
 			}
-
 			genFile := config.GenesisFile()
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 			}
-
 			msgFeesGenState := msgfeetypes.GetGenesisStateFromAppState(cdc, appState)
 
 			msgFeesGenState.Params.FloorGasPrice = coin

@@ -6,11 +6,12 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"net"
 	"os"
 	"path/filepath"
 	"time"
+
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/version"
 

@@ -95,7 +95,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			// set app context based on initialized EnvTypeFlag
 			testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
 			customDenom := server.GetServerContextFromCmd(cmd).Viper.GetString(CustomDenomFlag)
-			app.SetConfig(testnet,true)
+			app.SetConfig(testnet, true)
 			pioconfig.SetProvenanceConfig(customDenom, 0)
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
