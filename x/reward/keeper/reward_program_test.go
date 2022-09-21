@@ -4,14 +4,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
 func (s *KeeperTestSuite) TestNewRewardProgram() {
-	time := time.Now().UTC()
+	now := time.Now().UTC()
 	program := types.NewRewardProgram(
 		"title",
 		"description",
@@ -19,7 +19,7 @@ func (s *KeeperTestSuite) TestNewRewardProgram() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -33,14 +33,14 @@ func (s *KeeperTestSuite) TestNewRewardProgram() {
 	s.Assert().Equal("insert address", program.GetDistributeFromAddress(), "address should match input")
 	s.Assert().Equal(sdk.NewInt64Coin("nhash", 100000), program.GetTotalRewardPool(), "coin should match input")
 	s.Assert().Equal(sdk.NewInt64Coin("nhash", 1000), program.GetMaxRewardByAddress(), "max reward by address should match")
-	s.Assert().Equal(time.UTC(), program.GetProgramStartTime(), "program start time should match input")
+	s.Assert().Equal(now.UTC(), program.GetProgramStartTime(), "program start time should match input")
 	s.Assert().Equal(uint64(60*60), program.GetClaimPeriodSeconds(), "claim period seconds should match input")
 	s.Assert().Equal(uint64(3), program.GetClaimPeriods(), "claim periods should match input")
 	s.Assert().Equal(0, len(program.GetQualifyingActions()), "qualifying actions should match input")
 }
 
 func (s *KeeperTestSuite) TestGetSetRewardProgram() {
-	time := time.Now().Local().UTC()
+	now := time.Now().Local().UTC()
 	program := types.NewRewardProgram(
 		"title",
 		"description",
@@ -48,7 +48,7 @@ func (s *KeeperTestSuite) TestGetSetRewardProgram() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -74,7 +74,7 @@ func (s *KeeperTestSuite) TestGetSetRewardProgram() {
 }
 
 func (s *KeeperTestSuite) TestEndingRewardProgram() {
-	time := time.Now()
+	now := time.Now()
 	program := types.NewRewardProgram(
 		"title",
 		"description",
@@ -82,7 +82,7 @@ func (s *KeeperTestSuite) TestEndingRewardProgram() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		3,
@@ -93,7 +93,7 @@ func (s *KeeperTestSuite) TestEndingRewardProgram() {
 	program.Id = 10
 
 	program.CurrentClaimPeriod = 2
-	program.ClaimPeriodEndTime = time
+	program.ClaimPeriodEndTime = now
 	s.app.RewardKeeper.SetRewardProgram(s.ctx, program)
 	s.app.RewardKeeper.EndingRewardProgram(s.ctx, program)
 
@@ -101,8 +101,8 @@ func (s *KeeperTestSuite) TestEndingRewardProgram() {
 	s.Assert().NoError(err)
 	s.Assert().Equal(uint64(2), endingRewardProgram.ClaimPeriods)
 	s.Assert().Equal(uint64(0), endingRewardProgram.MaxRolloverClaimPeriods)
-	s.Assert().Equal(time.UTC(), endingRewardProgram.ExpectedProgramEndTime)
-	s.Assert().Equal(time.UTC(), endingRewardProgram.ProgramEndTimeMax)
+	s.Assert().Equal(now.UTC(), endingRewardProgram.ExpectedProgramEndTime)
+	s.Assert().Equal(now.UTC(), endingRewardProgram.ProgramEndTimeMax)
 
 	program.State = types.RewardProgram_STATE_PENDING
 	program.Id = 20
@@ -118,7 +118,7 @@ func (s *KeeperTestSuite) TestEndingRewardProgram() {
 }
 
 func (s *KeeperTestSuite) TestRemoveValidRewardProgram() {
-	time := time.Now()
+	now := time.Now()
 	program := types.NewRewardProgram(
 		"title",
 		"description",
@@ -126,7 +126,7 @@ func (s *KeeperTestSuite) TestRemoveValidRewardProgram() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -150,7 +150,7 @@ func (s *KeeperTestSuite) TestRemoveInvalidRewardProgram() {
 }
 
 func (s *KeeperTestSuite) TestIterateRewardPrograms() {
-	time := time.Now()
+	now := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
 		"description",
@@ -158,7 +158,7 @@ func (s *KeeperTestSuite) TestIterateRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -172,7 +172,7 @@ func (s *KeeperTestSuite) TestIterateRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -186,7 +186,7 @@ func (s *KeeperTestSuite) TestIterateRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -208,7 +208,7 @@ func (s *KeeperTestSuite) TestIterateRewardPrograms() {
 }
 
 func (s *KeeperTestSuite) TestIterateRewardProgramsHalt() {
-	time := time.Now()
+	now := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
 		"description",
@@ -216,7 +216,7 @@ func (s *KeeperTestSuite) TestIterateRewardProgramsHalt() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -230,7 +230,7 @@ func (s *KeeperTestSuite) TestIterateRewardProgramsHalt() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -244,7 +244,7 @@ func (s *KeeperTestSuite) TestIterateRewardProgramsHalt() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -277,7 +277,7 @@ func (s *KeeperTestSuite) TestIterateRewardProgramsEmpty() {
 }
 
 func (s *KeeperTestSuite) TestGetAllOutstandingRewardPrograms() {
-	time := time.Now()
+	now := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
 		"description",
@@ -285,7 +285,7 @@ func (s *KeeperTestSuite) TestGetAllOutstandingRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -299,7 +299,7 @@ func (s *KeeperTestSuite) TestGetAllOutstandingRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -313,7 +313,7 @@ func (s *KeeperTestSuite) TestGetAllOutstandingRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -341,7 +341,7 @@ func (s *KeeperTestSuite) TestGetAllOutstandingRewardProgramsEmpty() {
 }
 
 func (s *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
-	time := time.Now()
+	now := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
 		"description",
@@ -349,7 +349,7 @@ func (s *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -363,7 +363,7 @@ func (s *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -377,7 +377,7 @@ func (s *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -391,7 +391,7 @@ func (s *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -405,7 +405,7 @@ func (s *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -437,7 +437,7 @@ func (s *KeeperTestSuite) TestGetAllExpiredRewardProgramsEmpty() {
 }
 
 func (s *KeeperTestSuite) TestGetAllUnexpiredRewardPrograms() {
-	time := time.Now()
+	now := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
 		"description",
@@ -445,7 +445,7 @@ func (s *KeeperTestSuite) TestGetAllUnexpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -459,7 +459,7 @@ func (s *KeeperTestSuite) TestGetAllUnexpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -473,7 +473,7 @@ func (s *KeeperTestSuite) TestGetAllUnexpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -487,7 +487,7 @@ func (s *KeeperTestSuite) TestGetAllUnexpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -501,7 +501,7 @@ func (s *KeeperTestSuite) TestGetAllUnexpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -534,7 +534,7 @@ func (s *KeeperTestSuite) TestGetAllUnexpiredRewardProgramsEmpty() {
 }
 
 func (s *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
-	time := time.Now()
+	now := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
 		"description",
@@ -542,7 +542,7 @@ func (s *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -556,7 +556,7 @@ func (s *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -570,7 +570,7 @@ func (s *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -597,7 +597,7 @@ func (s *KeeperTestSuite) TestGetAllActiveRewardProgramsEmpty() {
 }
 
 func (s *KeeperTestSuite) TestGetAllRewardPrograms() {
-	time := time.Now()
+	now := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
 		"description",
@@ -605,7 +605,7 @@ func (s *KeeperTestSuite) TestGetAllRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -619,7 +619,7 @@ func (s *KeeperTestSuite) TestGetAllRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -633,7 +633,7 @@ func (s *KeeperTestSuite) TestGetAllRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -662,7 +662,7 @@ func (s *KeeperTestSuite) TestGetAllRewardProgramsEmpty() {
 }
 
 func (s *KeeperTestSuite) TestCreateRewardProgram() {
-	simapp.FundAccount(s.app.BankKeeper, s.ctx, s.accountAddresses[0], sdk.NewCoins(sdk.NewInt64Coin("nhash", 1000000000000)))
+	testutil.FundAccount(s.app.BankKeeper, s.ctx, s.accountAddresses[0], sdk.NewCoins(sdk.NewInt64Coin("nhash", 1000000000000)))
 
 	err := s.app.RewardKeeper.CreateRewardProgram(s.ctx, types.RewardProgram{})
 	s.Assert().Error(err)
@@ -795,7 +795,7 @@ func (s *KeeperTestSuite) TestCreateRewardProgram() {
 }
 
 func (s *KeeperTestSuite) TestRefundRemainingBalance() {
-	time := s.ctx.BlockTime()
+	now := s.ctx.BlockTime()
 	rewardProgram := types.NewRewardProgram(
 		"title",
 		"description",
@@ -803,11 +803,11 @@ func (s *KeeperTestSuite) TestRefundRemainingBalance() {
 		"cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv",
 		sdk.NewInt64Coin("nhash", 1000),
 		sdk.NewInt64Coin("nhash", 100),
-		time,
+		now,
 		10,
 		5,
 		0,
-		uint64(time.Day()),
+		uint64(now.Day()),
 		[]types.QualifyingAction{},
 	)
 	remainingBalance := rewardProgram.GetTotalRewardPool()
@@ -825,7 +825,7 @@ func (s *KeeperTestSuite) TestRefundRemainingBalance() {
 }
 
 func (s *KeeperTestSuite) TestRefundRemainingBalanceEmpty() {
-	time := s.ctx.BlockTime()
+	now := s.ctx.BlockTime()
 	rewardProgram := types.NewRewardProgram(
 		"title",
 		"description",
@@ -833,11 +833,11 @@ func (s *KeeperTestSuite) TestRefundRemainingBalanceEmpty() {
 		"cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv",
 		sdk.NewInt64Coin("nhash", 1000),
 		sdk.NewInt64Coin("nhash", 100),
-		time,
+		now,
 		10,
 		5,
 		0,
-		uint64(time.Day()),
+		uint64(now.Day()),
 		[]types.QualifyingAction{},
 	)
 	rewardProgram.RemainingPoolBalance = sdk.NewInt64Coin("nhash", 0)

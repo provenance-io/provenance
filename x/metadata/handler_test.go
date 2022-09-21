@@ -40,7 +40,7 @@ type MetadataHandlerTestSuite struct {
 }
 
 func (s *MetadataHandlerTestSuite) SetupTest() {
-	s.app = app.Setup(false)
+	s.app = app.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.handler = metadata.NewHandler(s.app.MetadataKeeper)
 

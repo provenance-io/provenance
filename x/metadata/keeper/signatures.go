@@ -85,7 +85,10 @@ func (k Keeper) CreateRawSignature(txf clienttx.Factory, name string, txBuilder 
 		return err
 	}
 
-	pubKey := key.GetPubKey()
+	pubKey, err := key.GetPubKey()
+	if err != nil {
+		return err
+	}
 	var prevSignatures []signing.SignatureV2
 	if appendSignature {
 		prevSignatures, err = txBuilder.GetTx().GetSignaturesV2()

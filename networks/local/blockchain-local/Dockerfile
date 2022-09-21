@@ -65,11 +65,8 @@ COPY internal/ ./internal/
 COPY x/ ./x/
 COPY vendor/ ./vendor/
 
-# Build and install librdkafka
-RUN git clone --depth 1 --branch v1.8.2 https://github.com/edenhill/librdkafka.git && cd librdkafka && ./configure --enable-static && make && make install
-
 # Build the binaries
-RUN go build -mod vendor -tags=cleveldb,dynamic -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/version.Name=Provenance-Blockchain' -o /go/bin/ ./cmd/...
+RUN go build -mod vendor -tags=cleveldb -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/version.Name=Provenance-Blockchain' -o /go/bin/ ./cmd/...
 
 ## Run provenance for ARM
 FROM debian:bullseye-slim as provenance-arm64
@@ -83,12 +80,6 @@ RUN apt-get update && \
     apt-get install -y curl jq libleveldb-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/
-
-# Setup librdkafka
-RUN apt-get update
-RUN apt-get install -y pkg-config
-COPY --from=build-arm64 /usr/local/include/librdkafka /usr/local/include/
-COPY --from=build-arm64 /usr/local/lib/librdkafka* /usr/local/lib/
 
 # Requires a mounted volume with the config in it.
 VOLUME [ "/provenance" ]

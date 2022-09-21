@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	simappCosmos "github.com/cosmos/cosmos-sdk/simapp"
+	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	sdkgas "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -17,6 +17,7 @@ import (
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -29,15 +30,14 @@ import (
 )
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
-	encodingConfig, err := setUpApp(s, false, "atom", 100)
+	encodingConfig, err := setUpApp(s, "atom", 100)
 	testTx, acct1 := createTestTx(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)))
 
 	// See comment for Check().
 	txEncoder := encodingConfig.TxConfig.TxEncoder()
 	bz, err := txEncoder(testTx)
-	if err != nil {
-		panic(err)
-	}
+	s.Require().NoError(err, "txEncoder")
+
 	s.ctx = s.ctx.WithTxBytes(bz)
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	s.Require().NotPanics(func() {
@@ -56,25 +56,25 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
 	s.Require().NoError(err)
 	coins, _, err := feeChargeFn(s.ctx, false)
 
-	s.Require().Contains(err.Error(), "0nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "got wrong message")
+	s.Require().ErrorContains(err, "0nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "feeChargeFn 1")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	s.Require().True(coins.IsZero())
+	s.Require().True(coins.IsZero(), "coins.IsZero() 1")
 
-	check(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(900000)))))
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(900000)))), "fund account")
 	coins, _, err = feeChargeFn(s.ctx, false)
-	s.Require().Contains(err.Error(), "900000nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "got wrong message")
+	s.Require().ErrorContains(err, "900000nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "feeChargeFn 2")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	s.Require().True(coins.IsZero())
+	s.Require().True(coins.IsZero(), "coins.IsZero() 2")
 
-	check(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(100000)))))
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(100000)))), "fund account again")
 	coins, _, err = feeChargeFn(s.ctx, false)
-	s.Require().Nil(err, "Got error when should not have.")
+	s.Require().NoError(err, "feeChargeFn 3")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	s.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000))}))
+	s.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000))}), "coins all gt 1000000nhash")
 }
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
-	encodingConfig, err := setUpApp(s, false, "atom", 100)
+	encodingConfig, err := setUpApp(s, "atom", 100)
 	testTx, acct1 := createTestTx(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 120000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)))
 
 	// See comment for Check().
@@ -98,22 +98,23 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
 		MsgFeesKeeper:  s.app.MsgFeesKeeper,
 		Decoder:        encodingConfig.TxConfig.TxDecoder(),
 	})
-	s.Require().NoError(err)
+	s.Require().NoError(err, "NewAdditionalMsgFeeHandler")
 
-	check(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)))))
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)))), "funding account")
 	coins, _, err := feeChargeFn(s.ctx, false)
-	s.Require().Contains(err.Error(), "0atom is smaller than 20000atom: insufficient funds: insufficient funds", "should have enough to pay msg fees, but not enough to sweep remaining base fees of 20000atom")
+	s.Require().ErrorContains(err, "0atom is smaller than 20000atom: insufficient funds: insufficient funds", "feeChargeFn 1")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	s.Require().True(coins.IsZero())
+	s.Require().True(coins.IsZero(), "coins.IsZero() 1")
 
-	check(simapp.FundAccount(s.app, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000))))
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000))), "funding account again")
 	coins, _, err = feeChargeFn(s.ctx, false)
-	s.Require().Nil(err, "Got error when should have successfully paid all msg fees and swept remaining base fees")
-	s.Require().True(coins.IsEqual(sdk.Coins{sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000), sdk.NewInt64Coin("atom", 20000)}))
+	s.Require().NoError(err, "feeChargeFn 2")
+	expected := sdk.Coins{sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)}
+	s.Require().Equal(expected, coins, "final coins")
 }
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
-	encodingConfig, err := setUpApp(s, false, "atom", 100)
+	encodingConfig, err := setUpApp(s, "atom", 100)
 	testTxWithFeeGrant, _ := createTestTxWithFeeGrant(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin(msgfeetype.NhashDenom, 1000000)))
 
 	// See comment for Check().
@@ -145,7 +146,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 }
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
-	encodingConfig, err := setUpApp(s, false, "atom", 100)
+	encodingConfig, err := setUpApp(s, "atom", 100)
 	testTx, _ := createTestTx(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
 
 	// See comment for Check().
@@ -162,14 +163,14 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
 		BankKeeper:     s.app.BankKeeper,
 		FeegrantKeeper: s.app.FeeGrantKeeper,
 		MsgFeesKeeper:  s.app.MsgFeesKeeper,
-		Decoder:        simappCosmos.MakeTestEncodingConfig().TxConfig.TxDecoder(),
+		Decoder:        sdksim.MakeTestEncodingConfig().TxConfig.TxDecoder(),
 	})
 	s.Require().NoError(err)
 	s.Require().Panics(func() { feeChargeFn(s.ctx, false) }, "Bad decoder while setting up app.")
 }
 
-func setUpApp(s *HandlerTestSuite, checkTx bool, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) (params.EncodingConfig, error) {
-	encodingConfig := s.SetupTest(checkTx) // setup
+func setUpApp(s *HandlerTestSuite, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) (params.EncodingConfig, error) {
+	encodingConfig := s.SetupTest(s.T()) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 	// create fee in stake
 	newCoin := sdk.NewInt64Coin(additionalFeeCoinDenom, additionalFeeCoinAmt)
@@ -182,9 +183,9 @@ func setUpApp(s *HandlerTestSuite, checkTx bool, additionalFeeCoinDenom string, 
 }
 
 // returns context and app with params set on account keeper
-func createTestApp(isCheckTx bool) (*simapp.App, sdk.Context) {
-	app := simapp.Setup(isCheckTx)
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
+func createTestApp(t *testing.T) (*simapp.App, sdk.Context) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
 	return app, ctx
@@ -236,20 +237,20 @@ func createTestTxWithFeeGrant(s *HandlerTestSuite, err error, feeAmount sdk.Coin
 	})
 	s.txBuilder.SetFeeGranter(acct2.GetAddress())
 
-	check(simapp.FundAccount(s.app, s.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)))))
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeetype.NhashDenom, sdk.NewInt(1000000)))), "funding account")
 
 	testTx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
-	s.Require().NoError(err)
+	s.Require().NoError(err, "CreateTestTx")
 	return testTx, acct1
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
-func (s *HandlerTestSuite) SetupTest(isCheckTx bool) params.EncodingConfig {
-	s.app, s.ctx = createTestApp(isCheckTx)
+func (s *HandlerTestSuite) SetupTest(t *testing.T) params.EncodingConfig {
+	s.app, s.ctx = createTestApp(t)
 	s.ctx = s.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
-	encodingConfig := simappCosmos.MakeTestEncodingConfig()
+	encodingConfig := sdksim.MakeTestEncodingConfig()
 	// We're using TestMsg encoding in some tests, so register it here.
 	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
 	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)
@@ -327,12 +328,6 @@ type HandlerTestSuite struct {
 	txBuilder client.TxBuilder
 }
 
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
-func TestAnteTestSuite(t *testing.T) {
+func TestHandlerTestSuite(t *testing.T) {
 	suite.Run(t, new(HandlerTestSuite))
 }

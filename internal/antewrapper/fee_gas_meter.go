@@ -73,6 +73,11 @@ func (g *FeeGasMeter) GasConsumedToLimit() sdkgas.Gas {
 	return g.base.GasConsumedToLimit()
 }
 
+// GasRemaining returns the gas left in the GasMeter.
+func (g *FeeGasMeter) GasRemaining() sdkgas.Gas {
+	return g.base.GasRemaining()
+}
+
 // Limit for amount of gas that can be consumed (if zero then unlimited)
 func (g *FeeGasMeter) Limit() sdkgas.Gas {
 	return g.base.Limit()

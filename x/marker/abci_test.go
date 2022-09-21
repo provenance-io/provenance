@@ -16,7 +16,7 @@ import (
 )
 
 func TestBeginBlocker(t *testing.T) {
-	app := app.Setup(false)
+	app := app.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	testmint := &types.MarkerAccount{

@@ -19,7 +19,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/testutil"
@@ -47,12 +46,12 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
-	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
+	addr, err := sdk.AccAddressFromHexUnsafe(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
 	s.accountAddr = addr
 
 	s.account2Key = secp256k1.GenPrivKeyFromSecret([]byte("acc22"))
-	addr2, err2 := sdk.AccAddressFromHex(s.account2Key.PubKey().Address().String())
+	addr2, err2 := sdk.AccAddressFromHexUnsafe(s.account2Key.PubKey().Address().String())
 	s.Require().NoError(err2)
 	s.account2Addr = addr2
 	s.acc2NameCount = 50
@@ -83,10 +82,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cfg.ChainID = antewrapper.SimAppChainID
 	s.cfg = cfg
 
-	s.testnet = testnet.New(s.T(), cfg)
+	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
+	s.Require().NoError(err, "creating testnet")
 
 	_, err = s.testnet.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "waiting for height 1")
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -257,7 +257,7 @@ func (s *IntegrationTestSuite) TestResolveNameCommand() {
 
 func (s *IntegrationTestSuite) TestReverseLookupCommand() {
 	accountKey := secp256k1.GenPrivKeyFromSecret([]byte("nobindinginthisaccount"))
-	addr, _ := sdk.AccAddressFromHex(accountKey.PubKey().Address().String())
+	addr, _ := sdk.AccAddressFromHexUnsafe(accountKey.PubKey().Address().String())
 	testCases := []struct {
 		name           string
 		args           []string
@@ -354,7 +354,7 @@ func (s *IntegrationTestSuite) TestGetBindNameCommand() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
@@ -428,7 +428,7 @@ func (s *IntegrationTestSuite) TestGetDeleteNameCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
@@ -503,9 +503,9 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 			"should create a root name proposal",
 			namecli.GetRootNameProposalCmd(),
 			[]string{"rootprop",
-				fmt.Sprintf("--%s=%s", cli.FlagTitle, "title"),
-				fmt.Sprintf("--%s=%s", cli.FlagDescription, "description"),
-				fmt.Sprintf("--%s=%s%s", cli.FlagDeposit, "10", s.cfg.BondDenom),
+				fmt.Sprintf("--%s=%s", namecli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s", namecli.FlagDescription, "description"),
+				fmt.Sprintf("--%s=%s%s", namecli.FlagDeposit, "10", s.cfg.BondDenom),
 				fmt.Sprintf("--%s=%s", "owner", s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -518,8 +518,8 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 			"should succeed with missing deposit",
 			namecli.GetRootNameProposalCmd(),
 			[]string{"rootprop",
-				fmt.Sprintf("--%s=%s", cli.FlagTitle, "title"),
-				fmt.Sprintf("--%s=%s", cli.FlagDescription, "description"),
+				fmt.Sprintf("--%s=%s", namecli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s", namecli.FlagDescription, "description"),
 				fmt.Sprintf("--%s=%s", "owner", s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -532,9 +532,9 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 			"should fail for bad deposit",
 			namecli.GetRootNameProposalCmd(),
 			[]string{"rootprop",
-				fmt.Sprintf("--%s=%s", cli.FlagTitle, "title"),
-				fmt.Sprintf("--%s=%s", cli.FlagDescription, "description"),
-				fmt.Sprintf("--%s=%s", cli.FlagDeposit, "10"),
+				fmt.Sprintf("--%s=%s", namecli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s", namecli.FlagDescription, "description"),
+				fmt.Sprintf("--%s=%s", namecli.FlagDeposit, "10"),
 				fmt.Sprintf("--%s=%s", "owner", s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -547,8 +547,8 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 			"should fail for empty title",
 			namecli.GetRootNameProposalCmd(),
 			[]string{"rootprop",
-				fmt.Sprintf("--%s=%s", cli.FlagDescription, "description"),
-				fmt.Sprintf("--%s=%s%s", cli.FlagDeposit, "10", s.cfg.BondDenom),
+				fmt.Sprintf("--%s=%s", namecli.FlagDescription, "description"),
+				fmt.Sprintf("--%s=%s%s", namecli.FlagDeposit, "10", s.cfg.BondDenom),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -560,8 +560,8 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 			"should fail for empty description",
 			namecli.GetRootNameProposalCmd(),
 			[]string{"rootprop",
-				fmt.Sprintf("--%s=%s", cli.FlagTitle, "title"),
-				fmt.Sprintf("--%s=%s%s", cli.FlagDeposit, "10", s.cfg.BondDenom),
+				fmt.Sprintf("--%s=%s", namecli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s%s", namecli.FlagDeposit, "10", s.cfg.BondDenom),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -573,8 +573,8 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 			"should fail for bad owner",
 			namecli.GetRootNameProposalCmd(),
 			[]string{"rootprop",
-				fmt.Sprintf("--%s=%s", cli.FlagTitle, "title"),
-				fmt.Sprintf("--%s=%s%s", cli.FlagDeposit, "10", s.cfg.BondDenom),
+				fmt.Sprintf("--%s=%s", namecli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s%s", namecli.FlagDeposit, "10", s.cfg.BondDenom),
 
 				fmt.Sprintf("--%s=%s", "owner", "asdf"),
 
@@ -599,7 +599,7 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}

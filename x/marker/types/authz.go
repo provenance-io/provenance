@@ -53,5 +53,5 @@ func (a MarkerTransferAuthorization) ValidateBasic() error {
 
 // DecreaseTransferLimit will return the decreased transfer limit and if it is negative
 func (a MarkerTransferAuthorization) DecreaseTransferLimit(amount sdk.Coin) (sdk.Coins, bool) {
-	return a.TransferLimit.SafeSub(sdk.NewCoins(amount))
+	return a.TransferLimit.SafeSub(amount)
 }

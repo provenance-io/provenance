@@ -1,29 +1,29 @@
 package antewrapper_test
 
 import (
-	"testing"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/stretchr/testify/suite"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	pioante "github.com/provenance-io/provenance/internal/antewrapper"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
+
+// These tests are kicked off by TestAnteTestSuite in testutil_test.go
 
 func (s *AnteTestSuite) TestEnsureMempoolFees() {
 	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewMempoolFeeDecorator()
+	mfd := ante.NewDeductFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, nil)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
-	// keys and addresses
-	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	testaccs := s.CreateTestAccounts(1)
+	priv1 := testaccs[0].priv
+	addr1 := testaccs[0].acc.GetAddress()
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
@@ -47,7 +47,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFees() {
 
 	// antehandler errors with insufficient fees
 	_, err = antehandler(s.ctx, tx, false)
-	s.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
+	s.Require().ErrorContains(err, "insufficient fees", "Decorator should have errored on too low fee for local gasPrice")
 
 	// Set IsCheckTx to false
 	s.ctx = s.ctx.WithIsCheckTx(false)
@@ -89,7 +89,7 @@ func (s *AnteTestSuite) TestDeductFees() {
 	acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)))
-	err = simapp.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)), s.app.BankKeeper.GetAllBalances(s.ctx, addr1), "should have the new balance after funding account")
 
@@ -102,16 +102,12 @@ func (s *AnteTestSuite) TestDeductFees() {
 
 	// Set account with sufficient funds
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
-	err = simapp.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 200_000)))
-	s.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 200_010)), s.app.BankKeeper.GetAllBalances(s.ctx, addr1), "should have the new balance after funding account")
+	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200_000))))
 	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 200_010)), s.app.BankKeeper.GetAllBalances(s.ctx, addr1), "Balance before tx")
 	_, err = antehandler(s.ctx, tx, false)
-	s.Require().Nil(err, "Tx errored after account has been set with sufficient funds")
-	s.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)), s.app.BankKeeper.GetAllBalances(s.ctx, addr1), "should have spent fee amount of 200_000 from account")
-}
-
-func TestAnteFeeTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
+	s.Require().NoError(err, "Tx errored after account has been set with sufficient funds")
+	s.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)), s.app.BankKeeper.GetAllBalances(s.ctx, addr1), "Balance after tx")
 }
 
 func (s *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
@@ -144,7 +140,7 @@ func (s *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
 	acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)))
-	err = simapp.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 	s.Require().NoError(err)
 
 	decorators := []sdk.AnteDecorator{pioante.NewFeeMeterContextDecorator(), pioante.NewProvenanceDeductFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.MsgFeesKeeper)}
@@ -157,7 +153,7 @@ func (s *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
 
 	// Set account with sufficient funds for base fees and but not additional fees
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
-	err = simapp.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200_000))))
+	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200_000))))
 	s.Require().NoError(err)
 
 	_, err = antehandler(s.ctx, tx, false)
@@ -168,7 +164,7 @@ func (s *AnteTestSuite) TestEnsureAdditionalFeesPaid() {
 	// set gas fee and msg fees (steak)
 	// Set account with sufficient funds
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
-	err = simapp.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(100))))
+	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(100))))
 	s.Require().NoError(err)
 
 	s.txBuilder.SetFeeAmount(NewTestFeeAmountMultiple())
