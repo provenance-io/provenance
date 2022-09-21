@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,33 +24,11 @@ const (
 )
 
 var (
-	_ govtypes.Content = &AddMsgFeeProposal{}
-	_ govtypes.Content = &UpdateMsgFeeProposal{}
-	_ govtypes.Content = &RemoveMsgFeeProposal{}
-	_ govtypes.Content = &UpdateNhashPerUsdMilProposal{}
-	_ govtypes.Content = &UpdateDenomMetadataProposal{}
-)
-
-func init() {
-	govtypes.RegisterProposalType(ProposalTypeAddMsgFee)
-	govtypes.RegisterProposalTypeCodec(AddMsgFeeProposal{}, "provenance/msgfees/AddMsgFeeProposal")
-
-	govtypes.RegisterProposalType(ProposalTypeUpdateMsgFee)
-	govtypes.RegisterProposalTypeCodec(UpdateMsgFeeProposal{}, "provenance/msgfees/UpdateMsgFeeProposal")
-
-	govtypes.RegisterProposalType(ProposalTypeRemoveMsgFee)
-	govtypes.RegisterProposalTypeCodec(RemoveMsgFeeProposal{}, "provenance/msgfees/RemoveMsgFeeProposal")
-	govtypes.RegisterProposalType(ProposalTypeUpdateUsdConversionRate)
-	govtypes.RegisterProposalTypeCodec(UpdateNhashPerUsdMilProposal{}, "provenance/msgfees/UpdateNhashPerUsdMilProposal")
-
-	govtypes.RegisterProposalType(ProposalTypeUpdateDenomMetadata)
-	govtypes.RegisterProposalTypeCodec(UpdateDenomMetadataProposal{}, "provenance/msgfees/UpdateDenomMetadataProposal")
-
 	_ govtypesv1beta1.Content = &AddMsgFeeProposal{}
 	_ govtypesv1beta1.Content = &UpdateMsgFeeProposal{}
 	_ govtypesv1beta1.Content = &RemoveMsgFeeProposal{}
 	_ govtypesv1beta1.Content = &UpdateNhashPerUsdMilProposal{}
-	_govtypesv1beta1
+	_ govtypesv1beta1.Content = &UpdateDenomMetadataProposal{}
 )
 
 func init() {
@@ -59,6 +36,7 @@ func init() {
 	govtypesv1beta1.RegisterProposalType(ProposalTypeUpdateMsgFee)
 	govtypesv1beta1.RegisterProposalType(ProposalTypeRemoveMsgFee)
 	govtypesv1beta1.RegisterProposalType(ProposalTypeUpdateUsdConversionRate)
+	govtypesv1beta1.RegisterProposalType(ProposalTypeUpdateDenomMetadata)
 }
 
 func NewAddMsgFeeProposal(
@@ -233,5 +211,5 @@ func (p UpdateDenomMetadataProposal) ProposalType() string {
 }
 
 func (p UpdateDenomMetadataProposal) ValidateBasic() error {
-	return govtypes.ValidateAbstract(&p)
+	return govtypesv1beta1.ValidateAbstract(&p)
 }
