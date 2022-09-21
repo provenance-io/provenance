@@ -29,7 +29,7 @@ GOGO_PROTO_URL=https://raw.githubusercontent.com/regen-network/protobuf/$(go lis
 COSMOS_PROTO_URL=https://raw.githubusercontent.com/regen-network/cosmos-proto/master/cosmos.proto
 COSMWASM_TARBALL_URL=github.com/CosmWasm/wasmd/tarball/v0.17.0  # Backwards compatibility. Needed to serialize/deserialize older wasmd protos.
 WASMD_TARBALL_URL=$(go list -m github.com/CosmWasm/wasmd | sed 's:.* => ::' | sed 's/ /\/tarball\//')
-IBC_GO_TARBALL_URL=$(go list -m github.com/cosmos/ibc-go/v2 | sed 's:.* => ::' | sed 's/\/v2//' | sed 's/ /\/tarball\//')
+IBC_GO_TARBALL_URL=$(go list -m github.com/cosmos/ibc-go/v5 | sed 's:.* => ::' | sed 's/\/v5//' | sed 's/ /\/tarball\//')
 COSMOS_TARBALL_URL=$(go list -m github.com/cosmos/cosmos-sdk | sed 's:.* => ::' | sed 's/ /\/tarball\//')
 TM_TARBALL_URL=$(go list -m github.com/tendermint/tendermint | sed 's:.* => ::' | sed 's/ /\/tarball\//')
 

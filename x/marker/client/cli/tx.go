@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	"github.com/spf13/cobra"
 )
@@ -139,7 +139,7 @@ Valid Proposal Types (and associated parameters):
 				return err
 			}
 
-			var proposal govtypes.Content
+			var proposal govtypesv1beta1.Content
 
 			switch args[0] {
 			case types.ProposalTypeAddMarker:
@@ -172,7 +172,7 @@ Valid Proposal Types (and associated parameters):
 			}
 
 			callerAddr := clientCtx.GetFromAddress()
-			msg, err := govtypes.NewMsgSubmitProposal(proposal, deposit, callerAddr)
+			msg, err := govtypesv1beta1.NewMsgSubmitProposal(proposal, deposit, callerAddr)
 			if err != nil {
 				return fmt.Errorf("invalid governance proposal. Error: %w", err)
 			}
@@ -550,7 +550,7 @@ func GetCmdGrantAuthorization() *cobra.Command {
 				return err
 			}
 
-			exp, err := cmd.Flags().GetInt64(FlagExpiration)
+			expSec, err := cmd.Flags().GetInt64(FlagExpiration)
 			if err != nil {
 				return err
 			}
@@ -577,7 +577,8 @@ func GetCmdGrantAuthorization() *cobra.Command {
 				return fmt.Errorf("invalid authorization type, %s", args[1])
 			}
 
-			msg, err := authz.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, time.Unix(exp, 0))
+			exp := time.Unix(expSec, 0)
+			msg, err := authz.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, &exp)
 			if err != nil {
 				return err
 			}

@@ -55,14 +55,16 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) GenerateAccountsWithKeyrings(number int) {
 	path := hd.CreateHDPath(118, 0, 0).String()
 	s.keyringDir = s.T().TempDir()
-	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil)
+	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil, s.cfg.Codec)
 	s.Require().NoError(err)
 	s.keyring = kr
 	for i := 0; i < number; i++ {
 		keyId := fmt.Sprintf("test_key%v", i)
 		info, _, err := kr.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 		s.Require().NoError(err)
-		s.accountAddresses = append(s.accountAddresses, info.GetAddress())
+		addr, err := info.GetAddress()
+		s.Require().NoError(err, "getting keyring address")
+		s.accountAddresses = append(s.accountAddresses, addr)
 	}
 }
 
@@ -77,6 +79,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1
+	s.cfg = cfg
 	s.GenerateAccountsWithKeyrings(4)
 
 	// Configure Genesis auth data for adding test accounts
@@ -130,6 +133,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var markerData markertypes.GenesisState
 	markerData.Params.EnableGovernance = true
 	markerData.Params.MaxTotalSupply = 1000000
+	// Note: These account numbers get ignored.
 	markerData.Markers = []markertypes.MarkerAccount{
 		{
 			BaseAccount: &authtypes.BaseAccount{
@@ -238,14 +242,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	genesisState[markertypes.ModuleName] = markerDataBz
 
 	cfg.GenesisState = genesisState
-
-	s.cfg = cfg
 	cfg.ChainID = antewrapper.SimAppChainID
 
-	s.testnet = testnet.New(s.T(), cfg)
+	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
+	s.Require().NoError(err, "creating testnet")
 
 	_, err = s.testnet.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "waiting for height 1")
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -407,7 +410,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 				"testcoin",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"11","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false}}`,
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"13","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false}}`,
 		},
 		{
 			"get testcoin marker test",
@@ -421,7 +424,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
   access_control: []
   allow_governance_control: false
   base_account:
-    account_number: "11"
+    account_number: "13"
     address: cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq
     pub_key: null
     sequence: "0"
@@ -447,7 +450,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 				"lockedcoin",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"12","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false}}`,
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"14","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false}}`,
 		},
 		{
 			"query access",
@@ -828,7 +831,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
@@ -968,7 +971,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
@@ -1048,7 +1051,14 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 			fmt.Sprintf(`{"title":"test withdraw marker","description":"description","target_address":"%s",
 			"denom":"%s", "amount":[{"denom":"%s","amount":"1"}]}`, s.testnet.Validators[0].Address.String(),
 				s.cfg.BondDenom, s.cfg.BondDenom),
-			false, &sdk.TxResponse{}, 0x5, // request is good, NSF on account though
+			false, &sdk.TxResponse{}, 0x9,
+			// The gov module now has its own set of errors.
+			// This /should/ fail due to insufficient funds, and it does, but then the gov module erroneously wraps it again.
+			// Insufficient funds is 0x5 in the main SDK's set of errors.
+			// However, the governance module erroneously wraps this error in a 0x9, "no handler exists for proposal type"
+			// So we're looking for a 0x9 here.
+			// Here's the expected error (from the rawlog):
+			// 	0stake is smaller than 1stake: insufficient funds: invalid proposal content: no handler exists for proposal type
 		},
 	}
 
@@ -1074,15 +1084,17 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "500000"),
 			}
+			s.T().Logf("args: %q", args)
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, markercli.GetCmdMarkerProposal(), args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, txResp.Logs.String())
+				s.Require().Equal(tc.expectedCode, txResp.Code, txResp.RawLog)
 			}
 
 			s.Require().NoError(os.Remove(tmpFile))

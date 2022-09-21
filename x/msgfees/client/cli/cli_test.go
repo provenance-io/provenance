@@ -41,12 +41,12 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
-	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
+	addr, err := sdk.AccAddressFromHexUnsafe(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
 	s.accountAddr = addr
 
 	s.account2Key = secp256k1.GenPrivKeyFromSecret([]byte("acc22"))
-	addr2, err2 := sdk.AccAddressFromHex(s.account2Key.PubKey().Address().String())
+	addr2, err2 := sdk.AccAddressFromHexUnsafe(s.account2Key.PubKey().Address().String())
 	s.Require().NoError(err2)
 	s.account2Addr = addr2
 	s.acc2NameCount = 50
@@ -62,10 +62,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.cfg = cfg
 	msgfeetypes.DefaultFloorGasPrice = sdk.NewCoin("atom", sdk.NewInt(0))
-	s.testnet = testnet.New(s.T(), cfg)
+	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
+	s.Require().NoError(err, "creating testnet")
 
 	_, err = s.testnet.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "waiting for height 1")
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -235,7 +236,7 @@ func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
 			}
 		})
 	}
@@ -299,7 +300,7 @@ func (s *IntegrationTestSuite) TestUpdateUsdConversionRateProposal() {
 				s.Assert().Equal(tc.expectErrMsg, err.Error())
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
 			}
 		})
 	}

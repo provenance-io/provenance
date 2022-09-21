@@ -13,9 +13,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
@@ -40,8 +43,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-
-	"github.com/provenance-io/provenance/app"
 )
 
 const (
@@ -89,7 +90,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 			// set app context based on initialized EnvTypeFlag
 			testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
-			app.SetConfig(testnet)
+			app.SetConfig(testnet, true)
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
 				CoinTypeFlag: fmt.Sprint(app.CoinType),
@@ -101,7 +102,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        ChainID,
 		flags.FlagKeyringBackend: "test",
-		server.FlagMinGasPrices:  app.DefaultMinGasPrices,
+		server.FlagMinGasPrices:  pioconfig.DefaultMinGasPrices,
 		CoinTypeFlag:             fmt.Sprint(app.CoinTypeMainNet),
 	})
 
@@ -247,7 +248,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 			panic(err)
 		}
 	}
-	snapshotDB, err := sdk.NewDB("metadata", cast.ToString(appOpts.Get("db_backend")), snapshotDir)
+	snapshotDB, err := dbm.NewDB("metadata", server.GetAppDBBackend(appOpts), snapshotDir)
 	if err != nil {
 		panic(err)
 	}
@@ -260,23 +261,28 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	if fee, err := sdk.ParseCoinNormalized(cast.ToString(appOpts.Get(server.FlagMinGasPrices))); err == nil {
 		if int(sdk.GetConfig().GetCoinType()) == app.CoinTypeMainNet {
 			// require the fee denom to match the bond denom on mainnet
-			if fee.Denom != app.DefaultBondDenom {
-				panic(fmt.Errorf("invalid min-gas-price fee denom, must be: %s", app.DefaultBondDenom))
+			if fee.Denom != pioconfig.DefaultBondDenom {
+				panic(fmt.Errorf("invalid min-gas-price fee denom, must be: %s", pioconfig.DefaultBondDenom))
 			}
 			// prevent the use of exceptionally small gas amounts that are typical defaults (i.e. 0.0025nhash)
 			if fee.Amount.LTE(sdk.OneInt()) {
-				panic(fmt.Errorf("min-gas-price must be greater than 1%s", app.DefaultBondDenom))
+				panic(fmt.Errorf("min-gas-price must be greater than 1%s", pioconfig.DefaultBondDenom))
 			}
 		}
 	} else {
 		// panic if there was a parse error (for example more than one coin was passed in for required fee).
 		if err != nil {
 			panic(fmt.Errorf("invalid min-gas-price value, expected single decimal coin value such as '%s', got '%s';\n\n %w",
-				app.DefaultMinGasPrices,
+				pioconfig.DefaultMinGasPrices,
 				appOpts.Get(server.FlagMinGasPrices),
 				err))
 		}
 	}
+
+	snapshotOptions := snapshottypes.NewSnapshotOptions(
+		cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval)),
+		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
+	)
 
 	return app.New(
 		logger, db, traceStore, true, skipUpgradeHeights,
@@ -292,9 +298,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		baseapp.SetInterBlockCache(cache),
 		baseapp.SetTrace(cast.ToBool(appOpts.Get(server.FlagTrace))),
 		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents))),
-		baseapp.SetSnapshotStore(snapshotStore),
-		baseapp.SetSnapshotInterval(cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval))),
-		baseapp.SetSnapshotKeepRecent(cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent))),
+		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(getIAVLCacheSize(appOpts)),
 	)
 }

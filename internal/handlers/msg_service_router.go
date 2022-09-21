@@ -8,6 +8,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -26,6 +27,7 @@ type PioMsgServiceRouter struct {
 }
 
 var _ gogogrpc.Server = &PioMsgServiceRouter{}
+var _ baseapp.IMsgServiceRouter = &PioMsgServiceRouter{}
 
 // NewPioMsgServiceRouter creates a new PioMsgServiceRouter.
 func NewPioMsgServiceRouter(decoder sdk.TxDecoder) *PioMsgServiceRouter {
@@ -163,7 +165,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 				if !ok {
 					panic("could not convert request msg to MsgAssessCustomMsgFeeRequest")
 				}
-				ctx.Logger().Debug(fmt.Sprintf("NOTICE: Tx Msg is an assess custom msg fee of %v ", assessCustomFee))
+				ctx.Logger().Debug(fmt.Sprintf("Tx Msg is an assess custom msg fee of %v ", assessCustomFee))
 				var msgFeeCoin sdk.Coin
 				msgFeeCoin, err = msr.msgFeesKeeper.ConvertDenomToHash(ctx, assessCustomFee.Amount)
 				if err != nil {

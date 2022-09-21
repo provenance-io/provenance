@@ -390,6 +390,54 @@
   
     - [Msg](#provenance.name.v1.Msg)
   
+- [provenance/reward/v1/reward.proto](#provenance/reward/v1/reward.proto)
+    - [ActionCounter](#provenance.reward.v1.ActionCounter)
+    - [ActionDelegate](#provenance.reward.v1.ActionDelegate)
+    - [ActionTransfer](#provenance.reward.v1.ActionTransfer)
+    - [ActionVote](#provenance.reward.v1.ActionVote)
+    - [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution)
+    - [QualifyingAction](#provenance.reward.v1.QualifyingAction)
+    - [QualifyingActions](#provenance.reward.v1.QualifyingActions)
+    - [RewardAccountState](#provenance.reward.v1.RewardAccountState)
+    - [RewardProgram](#provenance.reward.v1.RewardProgram)
+  
+    - [RewardAccountState.ClaimStatus](#provenance.reward.v1.RewardAccountState.ClaimStatus)
+    - [RewardProgram.State](#provenance.reward.v1.RewardProgram.State)
+  
+- [provenance/reward/v1/genesis.proto](#provenance/reward/v1/genesis.proto)
+    - [GenesisState](#provenance.reward.v1.GenesisState)
+  
+- [provenance/reward/v1/query.proto](#provenance/reward/v1/query.proto)
+    - [QueryClaimPeriodRewardDistributionsByIDRequest](#provenance.reward.v1.QueryClaimPeriodRewardDistributionsByIDRequest)
+    - [QueryClaimPeriodRewardDistributionsByIDResponse](#provenance.reward.v1.QueryClaimPeriodRewardDistributionsByIDResponse)
+    - [QueryClaimPeriodRewardDistributionsRequest](#provenance.reward.v1.QueryClaimPeriodRewardDistributionsRequest)
+    - [QueryClaimPeriodRewardDistributionsResponse](#provenance.reward.v1.QueryClaimPeriodRewardDistributionsResponse)
+    - [QueryRewardDistributionsByAddressRequest](#provenance.reward.v1.QueryRewardDistributionsByAddressRequest)
+    - [QueryRewardDistributionsByAddressResponse](#provenance.reward.v1.QueryRewardDistributionsByAddressResponse)
+    - [QueryRewardProgramByIDRequest](#provenance.reward.v1.QueryRewardProgramByIDRequest)
+    - [QueryRewardProgramByIDResponse](#provenance.reward.v1.QueryRewardProgramByIDResponse)
+    - [QueryRewardProgramsRequest](#provenance.reward.v1.QueryRewardProgramsRequest)
+    - [QueryRewardProgramsResponse](#provenance.reward.v1.QueryRewardProgramsResponse)
+    - [RewardAccountResponse](#provenance.reward.v1.RewardAccountResponse)
+  
+    - [QueryRewardProgramsRequest.QueryType](#provenance.reward.v1.QueryRewardProgramsRequest.QueryType)
+  
+    - [Query](#provenance.reward.v1.Query)
+  
+- [provenance/reward/v1/tx.proto](#provenance/reward/v1/tx.proto)
+    - [ClaimedRewardPeriodDetail](#provenance.reward.v1.ClaimedRewardPeriodDetail)
+    - [MsgClaimAllRewardsRequest](#provenance.reward.v1.MsgClaimAllRewardsRequest)
+    - [MsgClaimAllRewardsResponse](#provenance.reward.v1.MsgClaimAllRewardsResponse)
+    - [MsgClaimRewardsRequest](#provenance.reward.v1.MsgClaimRewardsRequest)
+    - [MsgClaimRewardsResponse](#provenance.reward.v1.MsgClaimRewardsResponse)
+    - [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest)
+    - [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse)
+    - [MsgEndRewardProgramRequest](#provenance.reward.v1.MsgEndRewardProgramRequest)
+    - [MsgEndRewardProgramResponse](#provenance.reward.v1.MsgEndRewardProgramResponse)
+    - [RewardProgramClaimDetail](#provenance.reward.v1.RewardProgramClaimDetail)
+  
+    - [Msg](#provenance.reward.v1.Msg)
+  
 - [Scalar Value Types](#scalar-value-types)
 
 
@@ -5892,6 +5940,676 @@ Msg defines the bank Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `BindName` | [MsgBindNameRequest](#provenance.name.v1.MsgBindNameRequest) | [MsgBindNameResponse](#provenance.name.v1.MsgBindNameResponse) | BindName binds a name to an address under a root name. | |
 | `DeleteName` | [MsgDeleteNameRequest](#provenance.name.v1.MsgDeleteNameRequest) | [MsgDeleteNameResponse](#provenance.name.v1.MsgDeleteNameResponse) | DeleteName defines a method to verify a particular invariance. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/reward/v1/reward.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/reward/v1/reward.proto
+
+
+
+<a name="provenance.reward.v1.ActionCounter"></a>
+
+### ActionCounter
+ActionCounter is a key-value pair that maps action type to the number of times it was performed.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `action_type` | [string](#string) |  | The type of action performed. |
+| `number_of_actions` | [uint64](#uint64) |  | The number of times this action has been performed |
+
+
+
+
+
+
+<a name="provenance.reward.v1.ActionDelegate"></a>
+
+### ActionDelegate
+ActionDelegate represents the delegate action and its required eligibility criteria.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `minimum_actions` | [uint64](#uint64) |  | Minimum number of successful delegates. |
+| `maximum_actions` | [uint64](#uint64) |  | Maximum number of successful delegates. |
+| `minimum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Minimum amount that the user must have currently delegated on the validator. |
+| `maximum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Maximum amount that the user must have currently delegated on the validator. |
+| `minimum_active_stake_percentile` | [string](#string) |  | Minimum percentile that can be below the validator's power ranking. |
+| `maximum_active_stake_percentile` | [string](#string) |  | Maximum percentile that can be below the validator's power ranking. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.ActionTransfer"></a>
+
+### ActionTransfer
+ActionTransfer represents the transfer action and its required eligibility criteria.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `minimum_actions` | [uint64](#uint64) |  | Minimum number of successful transfers. |
+| `maximum_actions` | [uint64](#uint64) |  | Maximum number of successful transfers. |
+| `minimum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Minimum delegation amount the account must have across all validators, for the transfer action to be counted. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.ActionVote"></a>
+
+### ActionVote
+ActionVote represents the voting action and its required eligibility criteria.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `minimum_actions` | [uint64](#uint64) |  | Minimum number of successful votes. |
+| `maximum_actions` | [uint64](#uint64) |  | Maximum number of successful votes. |
+| `minimum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Minimum delegation amount the account must have across all validators, for the vote action to be counted. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.ClaimPeriodRewardDistribution"></a>
+
+### ClaimPeriodRewardDistribution
+ClaimPeriodRewardDistribution, this is updated at the end of every claim period.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `claim_period_id` | [uint64](#uint64) |  | The claim period id. |
+| `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this reward belongs to. |
+| `total_rewards_pool_for_claim_period` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The sum of all the granted rewards for this claim period. |
+| `rewards_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The final allocated rewards for this claim period. |
+| `total_shares` | [int64](#int64) |  | The total number of granted shares for this claim period. |
+| `claim_period_ended` | [bool](#bool) |  | A flag representing if the claim period for this reward has ended. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QualifyingAction"></a>
+
+### QualifyingAction
+QualifyingAction can be one of many action types.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegate` | [ActionDelegate](#provenance.reward.v1.ActionDelegate) |  |  |
+| `transfer` | [ActionTransfer](#provenance.reward.v1.ActionTransfer) |  |  |
+| `vote` | [ActionVote](#provenance.reward.v1.ActionVote) |  |  |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QualifyingActions"></a>
+
+### QualifyingActions
+QualifyingActions contains a list of QualifyingActions.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated | The actions that count towards the reward. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.RewardAccountState"></a>
+
+### RewardAccountState
+RewardAccountState contains state at the claim period level for a specific address.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this share belongs to. |
+| `claim_period_id` | [uint64](#uint64) |  | The id of the claim period that the share belongs to. |
+| `address` | [string](#string) |  | Owner of the reward account state. |
+| `action_counter` | [ActionCounter](#provenance.reward.v1.ActionCounter) | repeated | The number of actions performed by this account, mapped by action type. |
+| `shares_earned` | [uint64](#uint64) |  | The amount of granted shares for the address in the reward program's claim period. |
+| `claim_status` | [RewardAccountState.ClaimStatus](#provenance.reward.v1.RewardAccountState.ClaimStatus) |  | The status of the claim. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.RewardProgram"></a>
+
+### RewardProgram
+RewardProgram
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | An integer to uniquely identify the reward program. |
+| `title` | [string](#string) |  | Name to help identify the Reward Program.(MaxTitleLength=140) |
+| `description` | [string](#string) |  | Short summary describing the Reward Program.(MaxDescriptionLength=10000) |
+| `distribute_from_address` | [string](#string) |  | address that provides funds for the total reward pool. |
+| `total_reward_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The total amount of funding given to the RewardProgram. |
+| `remaining_pool_balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The remaining funds available to distribute after n claim periods have passed. |
+| `claimed_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The total amount of all funds claimed by participants for all past claim periods. |
+| `max_reward_by_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Maximum reward per claim period per address. |
+| `minimum_rollover_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Minimum amount of coins for a program to rollover. |
+| `claim_period_seconds` | [uint64](#uint64) |  | Number of seconds that a claim period lasts. |
+| `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that a RewardProgram should start and switch to STARTED state. |
+| `expected_program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that a RewardProgram is expected to end, based on data when it was setup. |
+| `program_end_time_max` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that a RewardProgram MUST end. |
+| `claim_period_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Used internally to calculate and track the current claim period's ending time. |
+| `actual_program_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time the RewardProgram switched to FINISHED state. Initially set as empty. |
+| `claim_periods` | [uint64](#uint64) |  | Number of claim periods this program will run for. |
+| `current_claim_period` | [uint64](#uint64) |  | Current claim period of the RewardProgram. Uses 1-based indexing. |
+| `max_rollover_claim_periods` | [uint64](#uint64) |  | maximum number of claim periods a reward program can rollover. |
+| `state` | [RewardProgram.State](#provenance.reward.v1.RewardProgram.State) |  | Current state of the RewardProgram. |
+| `expiration_offset` | [uint64](#uint64) |  | Grace period after a RewardProgram FINISHED. It is the number of seconds until a RewardProgram enters the EXPIRED state. |
+| `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated | Actions that count towards the reward. |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="provenance.reward.v1.RewardAccountState.ClaimStatus"></a>
+
+### RewardAccountState.ClaimStatus
+ClaimStatus is the state a claim is in
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| CLAIM_STATUS_UNSPECIFIED | 0 | undefined state |
+| CLAIM_STATUS_UNCLAIMABLE | 1 | unclaimable status |
+| CLAIM_STATUS_CLAIMABLE | 2 | unclaimable claimable |
+| CLAIM_STATUS_CLAIMED | 3 | unclaimable claimed |
+| CLAIM_STATUS_EXPIRED | 4 | unclaimable expired |
+
+
+
+<a name="provenance.reward.v1.RewardProgram.State"></a>
+
+### RewardProgram.State
+State is the state of the reward program
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| STATE_UNSPECIFIED | 0 | undefined program state |
+| STATE_PENDING | 1 | pending state of reward program |
+| STATE_STARTED | 2 | started state of reward program |
+| STATE_FINISHED | 3 | finished state of reward program |
+| STATE_EXPIRED | 4 | expired state of reward program |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/reward/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/reward/v1/genesis.proto
+
+
+
+<a name="provenance.reward.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the reward module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_program_id` | [uint64](#uint64) |  | Reward program id is the next auto incremented id to be assigned to the next created reward program |
+| `reward_programs` | [RewardProgram](#provenance.reward.v1.RewardProgram) | repeated | Reward programs to initially start with. |
+| `claim_period_reward_distributions` | [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution) | repeated | Claim period reward distributions to initially start with. |
+| `reward_account_states` | [RewardAccountState](#provenance.reward.v1.RewardAccountState) | repeated | Reward account states to initially start with. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/reward/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/reward/v1/query.proto
+
+
+
+<a name="provenance.reward.v1.QueryClaimPeriodRewardDistributionsByIDRequest"></a>
+
+### QueryClaimPeriodRewardDistributionsByIDRequest
+QueryClaimPeriodRewardDistributionsByIDRequest queries for a single ClaimPeriodRewardDistribution
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_id` | [uint64](#uint64) |  | The reward program that the claim period reward distribution belongs to. |
+| `claim_period_id` | [uint64](#uint64) |  | The claim period that the claim period reward distribution was created for. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryClaimPeriodRewardDistributionsByIDResponse"></a>
+
+### QueryClaimPeriodRewardDistributionsByIDResponse
+QueryClaimPeriodRewardDistributionsByIDResponse returns the requested ClaimPeriodRewardDistribution
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `claim_period_reward_distribution` | [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution) |  | The ClaimPeriodRewardDistribution object that was queried for. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryClaimPeriodRewardDistributionsRequest"></a>
+
+### QueryClaimPeriodRewardDistributionsRequest
+QueryClaimPeriodRewardDistributionsRequest queries for all the ClaimPeriodRewardDistributions with pagination.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryClaimPeriodRewardDistributionsResponse"></a>
+
+### QueryClaimPeriodRewardDistributionsResponse
+QueryClaimPeriodRewardDistributionsResponse returns the list of paginated ClaimPeriodRewardDistributions
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `claim_period_reward_distributions` | [ClaimPeriodRewardDistribution](#provenance.reward.v1.ClaimPeriodRewardDistribution) | repeated | List of all ClaimPeriodRewardDistribution objects queried for. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the response. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryRewardDistributionsByAddressRequest"></a>
+
+### QueryRewardDistributionsByAddressRequest
+QueryRewardDistributionsByAddressRequest queries for reward claims by address that match the claim_status.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | The address that the claim belongs to. |
+| `claim_status` | [RewardAccountState.ClaimStatus](#provenance.reward.v1.RewardAccountState.ClaimStatus) |  | The status that the reward account must have. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryRewardDistributionsByAddressResponse"></a>
+
+### QueryRewardDistributionsByAddressResponse
+QueryRewardDistributionsByAddressResponse returns the reward claims for an address that match the claim_status.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | The address that the reward account belongs to. |
+| `reward_account_state` | [RewardAccountResponse](#provenance.reward.v1.RewardAccountResponse) | repeated | List of RewardAccounts queried for. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the response. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryRewardProgramByIDRequest"></a>
+
+### QueryRewardProgramByIDRequest
+QueryRewardProgramByIDRequest queries for the Reward Program with an identifier of id
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | The id of the reward program to query. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryRewardProgramByIDResponse"></a>
+
+### QueryRewardProgramByIDResponse
+QueryRewardProgramByIDResponse contains the requested RewardProgram
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_program` | [RewardProgram](#provenance.reward.v1.RewardProgram) |  | The reward program object that was queried for. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryRewardProgramsRequest"></a>
+
+### QueryRewardProgramsRequest
+QueryRewardProgramsRequest queries for all reward programs matching the query_type
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `query_type` | [QueryRewardProgramsRequest.QueryType](#provenance.reward.v1.QueryRewardProgramsRequest.QueryType) |  | A filter on the types of reward programs. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.QueryRewardProgramsResponse"></a>
+
+### QueryRewardProgramsResponse
+QueryRewardProgramsResponse contains the list of RewardPrograms matching the query
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_programs` | [RewardProgram](#provenance.reward.v1.RewardProgram) | repeated | List of RewardProgram objects matching the query_type. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the response. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.RewardAccountResponse"></a>
+
+### RewardAccountResponse
+RewardAccountResponse is an address' reward claim for a reward program's claim period.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_program_id` | [uint64](#uint64) |  | The id of the reward program that this claim belongs to. |
+| `total_reward_claim` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | total rewards claimed for all eligible claim periods in program. |
+| `claim_status` | [RewardAccountState.ClaimStatus](#provenance.reward.v1.RewardAccountState.ClaimStatus) |  | The status of the claim. |
+| `claim_id` | [uint64](#uint64) |  | The claim period that the claim belongs to. |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="provenance.reward.v1.QueryRewardProgramsRequest.QueryType"></a>
+
+### QueryRewardProgramsRequest.QueryType
+QueryType is the state of reward program to query
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| QUERY_TYPE_UNSPECIFIED | 0 | unspecified type |
+| QUERY_TYPE_ALL | 1 | all reward programs states |
+| QUERY_TYPE_PENDING | 2 | pending reward program state= |
+| QUERY_TYPE_ACTIVE | 3 | active reward program state |
+| QUERY_TYPE_OUTSTANDING | 4 | pending and active reward program states |
+| QUERY_TYPE_FINISHED | 5 | finished reward program state |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.reward.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service for reward module.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `RewardProgramByID` | [QueryRewardProgramByIDRequest](#provenance.reward.v1.QueryRewardProgramByIDRequest) | [QueryRewardProgramByIDResponse](#provenance.reward.v1.QueryRewardProgramByIDResponse) | RewardProgramByID returns a reward program matching the ID. | GET|/provenance/rewards/v1/reward_programs/{id}|
+| `RewardPrograms` | [QueryRewardProgramsRequest](#provenance.reward.v1.QueryRewardProgramsRequest) | [QueryRewardProgramsResponse](#provenance.reward.v1.QueryRewardProgramsResponse) | RewardPrograms returns a list of reward programs matching the query type. | GET|/provenance/rewards/v1/reward_programs|
+| `ClaimPeriodRewardDistributions` | [QueryClaimPeriodRewardDistributionsRequest](#provenance.reward.v1.QueryClaimPeriodRewardDistributionsRequest) | [QueryClaimPeriodRewardDistributionsResponse](#provenance.reward.v1.QueryClaimPeriodRewardDistributionsResponse) | ClaimPeriodRewardDistributions returns a list of claim period reward distributions matching the claim_status. | GET|/provenance/rewards/v1/claim_period_reward_distributions|
+| `ClaimPeriodRewardDistributionsByID` | [QueryClaimPeriodRewardDistributionsByIDRequest](#provenance.reward.v1.QueryClaimPeriodRewardDistributionsByIDRequest) | [QueryClaimPeriodRewardDistributionsByIDResponse](#provenance.reward.v1.QueryClaimPeriodRewardDistributionsByIDResponse) | ClaimPeriodRewardDistributionsByID returns a claim period reward distribution matching the ID. | GET|/provenance/rewards/v1/claim_period_reward_distributions/{reward_id}/claim_periods/{claim_period_id}|
+| `RewardDistributionsByAddress` | [QueryRewardDistributionsByAddressRequest](#provenance.reward.v1.QueryRewardDistributionsByAddressRequest) | [QueryRewardDistributionsByAddressResponse](#provenance.reward.v1.QueryRewardDistributionsByAddressResponse) | RewardDistributionsByAddress returns a list of reward claims belonging to the account and matching the claim status. | GET|/provenance/rewards/v1/reward_claims/{address}|
+
+ <!-- end services -->
+
+
+
+<a name="provenance/reward/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/reward/v1/tx.proto
+
+
+
+<a name="provenance.reward.v1.ClaimedRewardPeriodDetail"></a>
+
+### ClaimedRewardPeriodDetail
+ClaimedRewardPeriodDetail is information regarding an addresses' shares and reward for a claim period.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `claim_period_id` | [uint64](#uint64) |  | claim period id |
+| `total_shares` | [uint64](#uint64) |  | total shares accumulated for claim period |
+| `claim_period_reward` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | total rewards for claim period |
+
+
+
+
+
+
+<a name="provenance.reward.v1.MsgClaimAllRewardsRequest"></a>
+
+### MsgClaimAllRewardsRequest
+MsgClaimRewardsResponse is the request type for claiming rewards from all reward programs RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_address` | [string](#string) |  | reward address and signer of msg to send claimed rewards to. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.MsgClaimAllRewardsResponse"></a>
+
+### MsgClaimAllRewardsResponse
+MsgClaimRewardsResponse is the response type for claiming rewards from all reward programs RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `total_reward_claim` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | total rewards claimed for all eligible claim periods in all programs. |
+| `claim_details` | [RewardProgramClaimDetail](#provenance.reward.v1.RewardProgramClaimDetail) | repeated | details about acquired rewards from a reward program. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.MsgClaimRewardsRequest"></a>
+
+### MsgClaimRewardsRequest
+MsgClaimRewardsRequest is the request type for claiming reward from reward program RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_program_id` | [uint64](#uint64) |  | reward program id to claim rewards. |
+| `reward_address` | [string](#string) |  | reward address and signer of msg to send claimed rewards to. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.MsgClaimRewardsResponse"></a>
+
+### MsgClaimRewardsResponse
+MsgClaimRewardsResponse is the response type for claiming reward from reward program RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `claim_details` | [RewardProgramClaimDetail](#provenance.reward.v1.RewardProgramClaimDetail) |  | details about acquired rewards from reward program. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.MsgCreateRewardProgramRequest"></a>
+
+### MsgCreateRewardProgramRequest
+MsgCreateRewardProgramRequest is the request type for creating a reward program RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  | title for the reward program. |
+| `description` | [string](#string) |  | description for the reward program. |
+| `distribute_from_address` | [string](#string) |  | provider address for the reward program funds and signer of message. |
+| `total_reward_pool` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | total reward pool for the reward program. |
+| `max_reward_per_claim_address` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | maximum amount of funds an address can be rewarded per claim period. |
+| `program_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | start time of the reward program. |
+| `claim_periods` | [uint64](#uint64) |  | number of claim periods the reward program runs for. |
+| `claim_period_days` | [uint64](#uint64) |  | number of days a claim period will exist. |
+| `max_rollover_claim_periods` | [uint64](#uint64) |  | maximum number of claim periods a reward program can rollover. |
+| `expire_days` | [uint64](#uint64) |  | number of days before a reward program will expire after it has ended. |
+| `qualifying_actions` | [QualifyingAction](#provenance.reward.v1.QualifyingAction) | repeated | actions that count towards the reward. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.MsgCreateRewardProgramResponse"></a>
+
+### MsgCreateRewardProgramResponse
+MsgCreateRewardProgramResponse is the response type for creating a reward program RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | reward program id that is generated on creation. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.MsgEndRewardProgramRequest"></a>
+
+### MsgEndRewardProgramRequest
+MsgEndRewardProgramRequest is the request type for ending a reward program RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_program_id` | [uint64](#uint64) |  | reward program id to end. |
+| `program_owner_address` | [string](#string) |  | owner of the reward program that funds were distributed from. |
+
+
+
+
+
+
+<a name="provenance.reward.v1.MsgEndRewardProgramResponse"></a>
+
+### MsgEndRewardProgramResponse
+MsgEndRewardProgramResponse is the response type for ending a reward program RPC
+
+
+
+
+
+
+<a name="provenance.reward.v1.RewardProgramClaimDetail"></a>
+
+### RewardProgramClaimDetail
+RewardProgramClaimDetail is the response object regarding an address's shares and reward for a reward program.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_program_id` | [uint64](#uint64) |  | reward program id. |
+| `total_reward_claim` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | total rewards claimed for all eligible claim periods in program. |
+| `claimed_reward_period_details` | [ClaimedRewardPeriodDetail](#provenance.reward.v1.ClaimedRewardPeriodDetail) | repeated | claim period details. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.reward.v1.Msg"></a>
+
+### Msg
+Msg
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `CreateRewardProgram` | [MsgCreateRewardProgramRequest](#provenance.reward.v1.MsgCreateRewardProgramRequest) | [MsgCreateRewardProgramResponse](#provenance.reward.v1.MsgCreateRewardProgramResponse) | CreateRewardProgram is the RPC endpoint for creating a rewards program | POST|/provenance/reward/v1/reward_programs|
+| `EndRewardProgram` | [MsgEndRewardProgramRequest](#provenance.reward.v1.MsgEndRewardProgramRequest) | [MsgEndRewardProgramResponse](#provenance.reward.v1.MsgEndRewardProgramResponse) | EndRewardProgram is the RPC endpoint for ending a rewards program | PATCH|/provenance/reward/v1/reward_programs/{reward_program_id}|
+| `ClaimRewards` | [MsgClaimRewardsRequest](#provenance.reward.v1.MsgClaimRewardsRequest) | [MsgClaimRewardsResponse](#provenance.reward.v1.MsgClaimRewardsResponse) | ClaimRewards is the RPC endpoint for claiming rewards belonging to completed claim periods of a reward program | PATCH|/provenance/reward/v1/reward_claims/{reward_address}/reward_programs/{reward_program_id}|
+| `ClaimAllRewards` | [MsgClaimAllRewardsRequest](#provenance.reward.v1.MsgClaimAllRewardsRequest) | [MsgClaimAllRewardsResponse](#provenance.reward.v1.MsgClaimAllRewardsResponse) | ClaimAllRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program for the signer of the tx. | PATCH|/provenance/reward/v1/reward_claims/{reward_address}|
 
  <!-- end services -->
 

@@ -2,12 +2,13 @@ package v042
 
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
 
-func MigrateAddressLength(ctx sdk.Context, storeKey sdk.StoreKey) error {
+func MigrateAddressLength(ctx sdk.Context, storeKey storetypes.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 	oldStore := prefix.NewStore(store, AttributeKeyPrefixLegacy)
 
