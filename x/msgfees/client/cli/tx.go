@@ -233,7 +233,7 @@ $ %[1]s tx msgfees u-d-m-p path/to/proposal/file.json 1000000000nhash
 				return err
 			}
 			callerAddr := clientCtx.GetFromAddress()
-			msg, err := govtypes.NewMsgSubmitProposal(proposal, deposit, callerAddr)
+			msg, err := govtypesv1beta1.NewMsgSubmitProposal(proposal, deposit, callerAddr)
 			if err != nil {
 				return fmt.Errorf("invalid governance proposal. Error: %w", err)
 			}
