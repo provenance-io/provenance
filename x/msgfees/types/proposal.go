@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
