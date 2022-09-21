@@ -26,7 +26,6 @@ const (
 	FlagMsgType   = "msg-type"
 	FlagRecipient = "recipient"
 	FlagBips      = "bips"
-	FlagDeposit   = "deposit"
 )
 
 func NewTxCmd() *cobra.Command {
