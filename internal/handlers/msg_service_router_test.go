@@ -1856,7 +1856,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
 }
 
-// checks to see that votes are coming from an address that has delegated enough coins but is a validator, and gets the multiplier applied
+// checks to see that votes are coming from an address that has delegated enough coins and is a validator, and gets the multiplier applied
 func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multiplier_Present(t *testing.T) {
 	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
@@ -1968,7 +1968,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
 }
 
-// checks to see that votes are coming from an address that has delegated enough coins but is not a validator
+// checks to see that votes are coming from an address that has delegated enough coins but is not a validator, hence does not get the multiplier applied
 func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multiplier_Present_But_NotValidatorVotes(t *testing.T) {
 	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
