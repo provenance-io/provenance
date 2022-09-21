@@ -204,7 +204,7 @@ func GetUpdateDenomMetadataProposal() *cobra.Command {
 		Aliases: []string{"udmp", "u-d-m-p"},
 		Args:    cobra.ExactArgs(2),
 		Short:   "Proposal to update msg fee denom metadata",
-		Long: strings.TrimSpace(`Submit a proposal to update msg fee denom metadata along with an initial deposit.`),
+		Long:    strings.TrimSpace(`Submit a proposal to update msg fee denom metadata along with an initial deposit.`),
 		Example: fmt.Sprintf(`$ %[1]s tx msgfees update-denom-metadata-proposal path/to/proposal/file.json 1000000000nhash
 $ %[1]s tx msgfees udmp path/to/proposal/file.json 1000000000nhash
 $ %[1]s tx msgfees u-d-m-p path/to/proposal/file.json 1000000000nhash
@@ -244,4 +244,3 @@ $ %[1]s tx msgfees u-d-m-p path/to/proposal/file.json 1000000000nhash
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
-

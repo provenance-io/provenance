@@ -3,9 +3,9 @@ package types
 import (
 	"errors"
 	"fmt"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"strconv"
 
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
@@ -198,9 +198,9 @@ func NewUpdateDenomMetadataProposal(
 	metadata banktypes.Metadata,
 ) *UpdateDenomMetadataProposal {
 	return &UpdateDenomMetadataProposal{
-		Title: title,
+		Title:       title,
 		Description: description,
-		Metadata: metadata,
+		Metadata:    metadata,
 	}
 }
 
