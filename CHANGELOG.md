@@ -67,7 +67,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add documentation for `gRPCurl` to `docs/grpcurl.md` [#953](https://github.com/provenance-io/provenance/issues/953)
 * Updated to go 1.18 [#996](https://github.com/provenance-io/provenance/issues/996)
 * Add docker files for local psql indexing [#997](https://github.com/provenance-io/provenance/issues/997)
-* Bump IBC to 5.0.0-rc1 [PR 1076](https://github.com/provenance-io/provenance/pull/1076)
 
 ### Features
 
@@ -75,6 +74,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update metadata module authz handling to properly call `Accept` and delete/update authorizations as they're used [#905](https://github.com/provenance-io/provenance/issues/905)
 * Read the `custom.toml` config file if it exists. This is read before the other config files, and isn't managed by the `config` commands [#989](https://github.com/provenance-io/provenance/issues/989)
 * Allow a msg fee to be paid to a specific address with basis points [#690](https://github.com/provenance-io/provenance/issues/690)
+* Bump IBC to 5.0.0-rc1 and add support for ICA Host module [PR 1076](https://github.com/provenance-io/provenance/pull/1076)
 
 ### Bug Fixes
 
