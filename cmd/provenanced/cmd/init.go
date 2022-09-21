@@ -22,14 +22,15 @@ import (
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/go-bip39"
 
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
@@ -209,7 +210,7 @@ func createAndExportGenesisFile(
 	// Set the gov deposit denom
 	{
 		moduleName := govtypes.ModuleName
-		var govGenState govtypes.GenesisState
+		var govGenState govtypesv1beta1.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &govGenState)
 		govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(pioconfig.DefaultBondDenom, sdk.NewInt(minDeposit)))
 		appGenState[moduleName] = cdc.MustMarshalJSON(&govGenState)

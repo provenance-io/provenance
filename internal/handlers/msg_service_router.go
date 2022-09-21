@@ -8,6 +8,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -26,6 +27,7 @@ type PioMsgServiceRouter struct {
 }
 
 var _ gogogrpc.Server = &PioMsgServiceRouter{}
+var _ baseapp.IMsgServiceRouter = &PioMsgServiceRouter{}
 
 // NewPioMsgServiceRouter creates a new PioMsgServiceRouter.
 func NewPioMsgServiceRouter(decoder sdk.TxDecoder) *PioMsgServiceRouter {
@@ -152,8 +154,10 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 						return nil, err
 					}
 				}
-
-				feeGasMeter.ConsumeFee(fee.AdditionalFee, msgTypeURL, "")
+				err = msr.DistributeFees(feeGasMeter, fee.Recipient, msgTypeURL, fee.AdditionalFee, fee.RecipientBasisPoints)
+				if err != nil {
+					return nil, err
+				}
 			}
 			if isAssessMsgFee {
 				var assessCustomFee *msgfeestypes.MsgAssessCustomMsgFeeRequest
@@ -175,12 +179,9 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 					}
 				}
 				if msgFeeCoin.IsPositive() {
-					if len(assessCustomFee.Recipient) != 0 {
-						recipientCoin, feePayoutCoin := msgfeestypes.SplitAmount(msgFeeCoin)
-						feeGasMeter.ConsumeFee(recipientCoin, msgTypeURL, assessCustomFee.Recipient)
-						feeGasMeter.ConsumeFee(feePayoutCoin, msgTypeURL, "")
-					} else {
-						feeGasMeter.ConsumeFee(assessCustomFee.Amount, msgTypeURL, "")
+					err = msr.DistributeFees(feeGasMeter, assessCustomFee.Recipient, msgTypeURL, msgFeeCoin, msgfeestypes.AssessCustomMsgFeeBips)
+					if err != nil {
+						return nil, err
 					}
 				}
 			}
@@ -206,6 +207,21 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 			return sdk.WrapServiceResult(ctx, resMsg, err)
 		}
 	}
+}
+
+// DistributeFees consumes additional fees and their splitting if they have a recipient
+func (msr *PioMsgServiceRouter) DistributeFees(feeGasMeter *antewrapper.FeeGasMeter, recipient string, msgTypeURL string, feeCoin sdk.Coin, bips uint32) error {
+	if len(recipient) != 0 {
+		recipientCoin, feePayoutCoin, err := msgfeestypes.SplitCoinByBips(feeCoin, bips)
+		if err != nil {
+			return err
+		}
+		feeGasMeter.ConsumeFee(recipientCoin, msgTypeURL, recipient)
+		feeGasMeter.ConsumeFee(feePayoutCoin, msgTypeURL, "")
+	} else {
+		feeGasMeter.ConsumeFee(feeCoin, msgTypeURL, "")
+	}
+	return nil
 }
 
 // SetInterfaceRegistry sets the interface registry for the router.

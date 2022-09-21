@@ -68,8 +68,7 @@ message MsgCreateRewardProgramRequest {
   // number of days before a reward program will expire after it has ended.
   uint64 expire_days = 10;
   // actions that count towards the reward.
-  repeated QualifyingAction qualifying_actions = 11
-      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"qualifying_actions"];
+  repeated QualifyingAction qualifying_actions = 11 [(gogoproto.nullable) = false];
 }
 
 // MsgCreateRewardProgramResponse is the response type for creating a reward program RPC

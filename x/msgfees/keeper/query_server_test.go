@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -14,17 +16,15 @@ import (
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil"
-	"github.com/provenance-io/provenance/x/msgfees/types"
-
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-
-	"github.com/stretchr/testify/suite"
+	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type QueryServerTestSuite struct {
@@ -52,7 +52,7 @@ type QueryServerTestSuite struct {
 }
 
 func (s *QueryServerTestSuite) SetupTest() {
-	s.app = simapp.Setup(true)
+	s.app = simapp.SetupQuerier(s.T())
 	s.ctx = s.app.BaseApp.NewContext(true, tmproto.Header{})
 	s.app.AccountKeeper.SetParams(s.ctx, authtypes.DefaultParams())
 	s.app.BankKeeper.SetParams(s.ctx, banktypes.DefaultParams())
@@ -83,7 +83,7 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.acct2 = s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr)
 	s.app.AccountKeeper.SetAccount(s.ctx, s.acct2)
 
-	s.Require().NoError(simapp.FundAccount(s.app, s.ctx, s.acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100000)))))
+	s.Require().NoError(banktestutil.FundAccount(s.app.BankKeeper, s.ctx, s.acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100000)))))
 }
 
 func TestQuerierTestSuite(t *testing.T) {
@@ -104,7 +104,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFees() {
 
 	// do send with an additional fee
 	sendAddFee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))
-	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee("/cosmos.bank.v1beta1.MsgSend", sendAddFee)))
+	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee("/cosmos.bank.v1beta1.MsgSend", sendAddFee, "", types.DefaultMsgFeeBips)))
 	response, err = s.queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
 	s.Assert().NoError(err)
 	s.Assert().NotNil(response)
@@ -178,7 +178,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFeesWithAssessCustomFees() {
 
 	// do assessCustomFee where custom fee has a message fee associated with it
 	additionalAccessedFeesCoin = sdk.NewInt64Coin(types.NhashDenom, 100)
-	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee(sdk.MsgTypeURL(&assessCustomFeeMsg), additionalAccessedFeesCoin)))
+	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee(sdk.MsgTypeURL(&assessCustomFeeMsg), additionalAccessedFeesCoin, "", types.DefaultMsgFeeBips)))
 	response, err = s.queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
 	s.Assert().NoError(err)
 	s.Assert().NotNil(response)

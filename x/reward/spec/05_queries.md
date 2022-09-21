@@ -18,12 +18,12 @@ In this section we describe the queries available for looking up rewards informa
 The `QueryRewardProgramByID` query is used to obtain the content of a specific Reward Program.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/query.proto#L47-L49
++++ https://github.com/provenance-io/provenance/blob/243a89c76378bb5af8a8017e099ee04ac22e99ce/proto/provenance/reward/v1/query.proto#L47-L51
 
 The `id` is the unique identifier for the Reward Program.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/query.proto#L51-L53
++++ https://github.com/provenance-io/provenance/blob/243a89c76378bb5af8a8017e099ee04ac22e99ce/proto/provenance/reward/v1/query.proto#L53-L57
 
 
 ---
@@ -31,7 +31,7 @@ The `id` is the unique identifier for the Reward Program.
 The `QueryRewardPrograms` query is used to obtain the content of all Reward Programs matching the supplied `query_type`.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/query.proto#L55-L64
++++ https://github.com/provenance-io/provenance/blob/243a89c76378bb5af8a8017e099ee04ac22e99ce/proto/provenance/reward/v1/query.proto#L59-L80
 
 The `query_type` is used to filter on the Reward Program state. The following are a list of `query_types`.
 * ALL - All Reward Programs will be returned.
@@ -41,7 +41,7 @@ The `query_type` is used to filter on the Reward Program state. The following ar
 * FINISHED - All Reward Programs that are in the `FINISHED` or `EXPIRED` state will be returned.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/query.proto#L66-L68
++++ https://github.com/provenance-io/provenance/blob/243a89c76378bb5af8a8017e099ee04ac22e99ce/proto/provenance/reward/v1/query.proto#L82-L88
 
 
 ---
@@ -49,12 +49,12 @@ The `query_type` is used to filter on the Reward Program state. The following ar
 The `QueryClaimPeriodRewardDistributionByID` query is used to obtain the content of a specific `Claim Period Reward Distribution`.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/query.proto#L78-L81
++++ https://github.com/provenance-io/provenance/blob/243a89c76378bb5af8a8017e099ee04ac22e99ce/proto/provenance/reward/v1/query.proto#L104-L110
 
 The `reward_id` is a unique identifier for the Reward Program and the `claim_id` is a unique identifier for the Reward Program's Claim Period.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/query.proto#L83-L85
++++ https://github.com/provenance-io/provenance/blob/243a89c76378bb5af8a8017e099ee04ac22e99ce/proto/provenance/reward/v1/query.proto#L112-L116
 
 
 ---
@@ -62,12 +62,12 @@ The `reward_id` is a unique identifier for the Reward Program and the `claim_id`
 The `QueryClaimPeriodRewardDistributions` query is used to obtain the content of all `Claim Period Reward Distributions` matching the supplied `query_type`.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/query.proto#L70-L72
++++ https://github.com/provenance-io/provenance/blob/243a89c76378bb5af8a8017e099ee04ac22e99ce/proto/provenance/reward/v1/query.proto#L90-L94
 
 The `pagination` field is used to help limit the number of results.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/query.proto#L73-L76
++++ https://github.com/provenance-io/provenance/blob/243a89c76378bb5af8a8017e099ee04ac22e99ce/proto/provenance/reward/v1/query.proto#L96-L102
 
 
 ---
@@ -75,7 +75,7 @@ The `pagination` field is used to help limit the number of results.
 The `QueryRewardsByAddress` query is used to obtain the status of the address' Reward Claims.
 
 ### Request
-+++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/query.proto#L87-L97
++++ https://github.com/provenance-io/provenance/blob/243a89c76378bb5af8a8017e099ee04ac22e99ce/proto/provenance/reward/v1/query.proto#L118-L126
 
 The `address` field is the bech32 address of the user to list Reward Claims for. The `claim_status` is used to filter on the Reward Claim. The following are a list of `claim_status`.
 * ALL - All Reward Claims are returned.
@@ -85,4 +85,4 @@ The `address` field is the bech32 address of the user to list Reward Claims for.
 * EXPIRED - All Reward Claims that have expired.
 
 ### Response
-+++ https://github.com/provenance-io/provenance/blob/f77baab1ffe688b05c9e9e587632e28aad723898/proto/provenance/reward/v1/query.proto#L99-L102
++++ https://github.com/provenance-io/provenance/blob/243a89c76378bb5af8a8017e099ee04ac22e99ce/proto/provenance/reward/v1/query.proto#L128-L136

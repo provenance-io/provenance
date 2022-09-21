@@ -9,7 +9,7 @@ import (
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
-func (suite *KeeperTestSuite) TestGetSetClaimPeriodRewardDistribution() {
+func (s *KeeperTestSuite) TestGetSetClaimPeriodRewardDistribution() {
 	rewardDistribution := types.NewClaimPeriodRewardDistribution(
 		1,
 		2,
@@ -18,22 +18,22 @@ func (suite *KeeperTestSuite) TestGetSetClaimPeriodRewardDistribution() {
 		3,
 		true,
 	)
-	suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, rewardDistribution)
-	retrieved, err := suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 1, 2)
-	suite.Assert().NoError(err)
-	suite.Assert().Equal(rewardDistribution.ClaimPeriodId, retrieved.ClaimPeriodId, "claim period id must match")
-	suite.Assert().Equal(rewardDistribution.RewardProgramId, retrieved.RewardProgramId, "reward program id must match")
-	suite.Assert().Equal(rewardDistribution.RewardsPool, retrieved.RewardsPool, "rewards pool must match")
-	suite.Assert().Equal(rewardDistribution.TotalRewardsPoolForClaimPeriod, retrieved.TotalRewardsPoolForClaimPeriod, "total rewards pool must match")
-	suite.Assert().Equal(rewardDistribution.TotalShares, retrieved.TotalShares, "total shares must match")
-	suite.Assert().Equal(rewardDistribution.ClaimPeriodEnded, retrieved.ClaimPeriodEnded, "claim period ended must match")
+	s.app.RewardKeeper.SetClaimPeriodRewardDistribution(s.ctx, rewardDistribution)
+	retrieved, err := s.app.RewardKeeper.GetClaimPeriodRewardDistribution(s.ctx, 1, 2)
+	s.Assert().NoError(err)
+	s.Assert().Equal(rewardDistribution.ClaimPeriodId, retrieved.ClaimPeriodId, "claim period id must match")
+	s.Assert().Equal(rewardDistribution.RewardProgramId, retrieved.RewardProgramId, "reward program id must match")
+	s.Assert().Equal(rewardDistribution.RewardsPool, retrieved.RewardsPool, "rewards pool must match")
+	s.Assert().Equal(rewardDistribution.TotalRewardsPoolForClaimPeriod, retrieved.TotalRewardsPoolForClaimPeriod, "total rewards pool must match")
+	s.Assert().Equal(rewardDistribution.TotalShares, retrieved.TotalShares, "total shares must match")
+	s.Assert().Equal(rewardDistribution.ClaimPeriodEnded, retrieved.ClaimPeriodEnded, "claim period ended must match")
 
-	retrieved, err = suite.app.RewardKeeper.GetClaimPeriodRewardDistribution(suite.ctx, 1, 99)
-	suite.Assert().NoError(err)
-	suite.Assert().Equal(uint64(0), retrieved.RewardProgramId, "reward program id must be invalid")
+	retrieved, err = s.app.RewardKeeper.GetClaimPeriodRewardDistribution(s.ctx, 1, 99)
+	s.Assert().NoError(err)
+	s.Assert().Equal(uint64(0), retrieved.RewardProgramId, "reward program id must be invalid")
 }
 
-func (suite *KeeperTestSuite) TestIterateClaimPeriodRewardDistributions() {
+func (s *KeeperTestSuite) TestIterateClaimPeriodRewardDistributions() {
 	tests := []struct {
 		name          string
 		distributions []types.ClaimPeriodRewardDistribution
@@ -77,12 +77,12 @@ func (suite *KeeperTestSuite) TestIterateClaimPeriodRewardDistributions() {
 	}
 
 	for _, tc := range tests {
-		suite.T().Run(tc.name, func(t *testing.T) {
+		s.T().Run(tc.name, func(t *testing.T) {
 			counter := 0
 			for _, distribution := range tc.distributions {
-				suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, distribution)
+				s.app.RewardKeeper.SetClaimPeriodRewardDistribution(s.ctx, distribution)
 			}
-			err := suite.app.RewardKeeper.IterateClaimPeriodRewardDistributions(suite.ctx, func(ClaimPeriodRewardDistribution types.ClaimPeriodRewardDistribution) (stop bool) {
+			err := s.app.RewardKeeper.IterateClaimPeriodRewardDistributions(s.ctx, func(ClaimPeriodRewardDistribution types.ClaimPeriodRewardDistribution) (stop bool) {
 				counter += 1
 				return tc.halt
 			})
@@ -92,7 +92,7 @@ func (suite *KeeperTestSuite) TestIterateClaimPeriodRewardDistributions() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetAllClaimPeriodRewardDistributions() {
+func (s *KeeperTestSuite) TestGetAllClaimPeriodRewardDistributions() {
 	tests := []struct {
 		name          string
 		distributions []types.ClaimPeriodRewardDistribution
@@ -122,18 +122,18 @@ func (suite *KeeperTestSuite) TestGetAllClaimPeriodRewardDistributions() {
 	}
 
 	for _, tc := range tests {
-		suite.T().Run(tc.name, func(t *testing.T) {
+		s.T().Run(tc.name, func(t *testing.T) {
 			for _, distribution := range tc.distributions {
-				suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, distribution)
+				s.app.RewardKeeper.SetClaimPeriodRewardDistribution(s.ctx, distribution)
 			}
-			results, err := suite.app.RewardKeeper.GetAllClaimPeriodRewardDistributions(suite.ctx)
+			results, err := s.app.RewardKeeper.GetAllClaimPeriodRewardDistributions(s.ctx)
 			assert.NoError(t, err, "No error is thrown")
 			assert.Equal(t, tc.expected, len(results), "returned the correct number of claim period reward distributions")
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestRemoveClaimPeriodRewardDistribution() {
+func (s *KeeperTestSuite) TestRemoveClaimPeriodRewardDistribution() {
 	tests := []struct {
 		name          string
 		distributions []types.ClaimPeriodRewardDistribution
@@ -158,12 +158,12 @@ func (suite *KeeperTestSuite) TestRemoveClaimPeriodRewardDistribution() {
 	}
 
 	for _, tc := range tests {
-		suite.T().Run(tc.name, func(t *testing.T) {
+		s.T().Run(tc.name, func(t *testing.T) {
 			for _, distribution := range tc.distributions {
-				suite.app.RewardKeeper.SetClaimPeriodRewardDistribution(suite.ctx, distribution)
+				s.app.RewardKeeper.SetClaimPeriodRewardDistribution(s.ctx, distribution)
 			}
-			removed := suite.app.RewardKeeper.RemoveClaimPeriodRewardDistribution(suite.ctx, 1, 1)
-			results, err := suite.app.RewardKeeper.GetAllClaimPeriodRewardDistributions(suite.ctx)
+			removed := s.app.RewardKeeper.RemoveClaimPeriodRewardDistribution(s.ctx, 1, 1)
+			results, err := s.app.RewardKeeper.GetAllClaimPeriodRewardDistributions(s.ctx)
 			assert.Equal(t, tc.removed, removed, "removal status does not match expectation")
 			assert.NoError(t, err, "No error is thrown")
 			assert.Equal(t, tc.expected, len(results), "returned the correct number of claim period reward distributions")

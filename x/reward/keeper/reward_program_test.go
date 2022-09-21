@@ -4,16 +4,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
-func (suite *KeeperTestSuite) TestNewRewardProgram() {
-	suite.SetupTest()
-
-	time := time.Now().UTC()
+func (s *KeeperTestSuite) TestNewRewardProgram() {
+	now := time.Now().UTC()
 	program := types.NewRewardProgram(
 		"title",
 		"description",
@@ -21,7 +19,7 @@ func (suite *KeeperTestSuite) TestNewRewardProgram() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -29,22 +27,20 @@ func (suite *KeeperTestSuite) TestNewRewardProgram() {
 		[]types.QualifyingAction{},
 	)
 
-	suite.Assert().Equal("title", program.GetTitle(), "title should match input")
-	suite.Assert().Equal("description", program.GetDescription(), "description should match input")
-	suite.Assert().Equal(uint64(1), program.GetId(), "id should match input")
-	suite.Assert().Equal("insert address", program.GetDistributeFromAddress(), "address should match input")
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 100000), program.GetTotalRewardPool(), "coin should match input")
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 1000), program.GetMaxRewardByAddress(), "max reward by address should match")
-	suite.Assert().Equal(time.UTC(), program.GetProgramStartTime(), "program start time should match input")
-	suite.Assert().Equal(uint64(60*60), program.GetClaimPeriodSeconds(), "claim period seconds should match input")
-	suite.Assert().Equal(uint64(3), program.GetClaimPeriods(), "claim periods should match input")
-	suite.Assert().Equal(0, len(program.GetQualifyingActions()), "qualifying actions should match input")
+	s.Assert().Equal("title", program.GetTitle(), "title should match input")
+	s.Assert().Equal("description", program.GetDescription(), "description should match input")
+	s.Assert().Equal(uint64(1), program.GetId(), "id should match input")
+	s.Assert().Equal("insert address", program.GetDistributeFromAddress(), "address should match input")
+	s.Assert().Equal(sdk.NewInt64Coin("nhash", 100000), program.GetTotalRewardPool(), "coin should match input")
+	s.Assert().Equal(sdk.NewInt64Coin("nhash", 1000), program.GetMaxRewardByAddress(), "max reward by address should match")
+	s.Assert().Equal(now.UTC(), program.GetProgramStartTime(), "program start time should match input")
+	s.Assert().Equal(uint64(60*60), program.GetClaimPeriodSeconds(), "claim period seconds should match input")
+	s.Assert().Equal(uint64(3), program.GetClaimPeriods(), "claim periods should match input")
+	s.Assert().Equal(0, len(program.GetQualifyingActions()), "qualifying actions should match input")
 }
 
-func (suite *KeeperTestSuite) TestGetSetRewardProgram() {
-	suite.SetupTest()
-
-	time := time.Now().Local().UTC()
+func (s *KeeperTestSuite) TestGetSetRewardProgram() {
+	now := time.Now().Local().UTC()
 	program := types.NewRewardProgram(
 		"title",
 		"description",
@@ -52,7 +48,7 @@ func (suite *KeeperTestSuite) TestGetSetRewardProgram() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -60,27 +56,25 @@ func (suite *KeeperTestSuite) TestGetSetRewardProgram() {
 		[]types.QualifyingAction{},
 	)
 
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program)
-	program2, err := suite.app.RewardKeeper.GetRewardProgram(suite.ctx, 1)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program)
+	program2, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
 
-	suite.Assert().NoError(err, "no error should be returned when getting reward program")
+	s.Assert().NoError(err, "no error should be returned when getting reward program")
 
-	suite.Assert().Equal(program.GetTitle(), program2.GetTitle(), "title should match")
-	suite.Assert().Equal(program.GetDescription(), program2.GetDescription(), "description should match")
-	suite.Assert().Equal(program.GetId(), program2.GetId(), "id should match")
-	suite.Assert().Equal(program.GetDistributeFromAddress(), program2.GetDistributeFromAddress(), "address should match")
-	suite.Assert().Equal(program.GetTotalRewardPool(), program2.GetTotalRewardPool(), "coin should match")
-	suite.Assert().Equal(program.GetMaxRewardByAddress(), program2.GetMaxRewardByAddress(), "max reward by address should")
-	suite.Assert().Equal(program.GetProgramStartTime(), program2.GetProgramStartTime(), "program start time should match")
-	suite.Assert().Equal(program.GetClaimPeriodSeconds(), program2.GetClaimPeriodSeconds(), "claim period seconds should match")
-	suite.Assert().Equal(program.GetClaimPeriods(), program2.GetClaimPeriods(), "number of claim periods should match")
-	suite.Assert().Equal(len(program.GetQualifyingActions()), len(program2.GetQualifyingActions()), "qualifying actions should match")
+	s.Assert().Equal(program.GetTitle(), program2.GetTitle(), "title should match")
+	s.Assert().Equal(program.GetDescription(), program2.GetDescription(), "description should match")
+	s.Assert().Equal(program.GetId(), program2.GetId(), "id should match")
+	s.Assert().Equal(program.GetDistributeFromAddress(), program2.GetDistributeFromAddress(), "address should match")
+	s.Assert().Equal(program.GetTotalRewardPool(), program2.GetTotalRewardPool(), "coin should match")
+	s.Assert().Equal(program.GetMaxRewardByAddress(), program2.GetMaxRewardByAddress(), "max reward by address should")
+	s.Assert().Equal(program.GetProgramStartTime(), program2.GetProgramStartTime(), "program start time should match")
+	s.Assert().Equal(program.GetClaimPeriodSeconds(), program2.GetClaimPeriodSeconds(), "claim period seconds should match")
+	s.Assert().Equal(program.GetClaimPeriods(), program2.GetClaimPeriods(), "number of claim periods should match")
+	s.Assert().Equal(len(program.GetQualifyingActions()), len(program2.GetQualifyingActions()), "qualifying actions should match")
 }
 
-func (suite *KeeperTestSuite) TestEndingRewardProgram() {
-	suite.SetupTest()
-
-	time := time.Now()
+func (s *KeeperTestSuite) TestEndingRewardProgram() {
+	now := time.Now()
 	program := types.NewRewardProgram(
 		"title",
 		"description",
@@ -88,7 +82,7 @@ func (suite *KeeperTestSuite) TestEndingRewardProgram() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		3,
@@ -99,34 +93,32 @@ func (suite *KeeperTestSuite) TestEndingRewardProgram() {
 	program.Id = 10
 
 	program.CurrentClaimPeriod = 2
-	program.ClaimPeriodEndTime = time
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program)
-	suite.app.RewardKeeper.EndingRewardProgram(suite.ctx, program)
+	program.ClaimPeriodEndTime = now
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program)
+	s.app.RewardKeeper.EndingRewardProgram(s.ctx, program)
 
-	endingRewardProgram, err := suite.app.RewardKeeper.GetRewardProgram(suite.ctx, 10)
-	suite.Assert().NoError(err)
-	suite.Assert().Equal(uint64(2), endingRewardProgram.ClaimPeriods)
-	suite.Assert().Equal(uint64(0), endingRewardProgram.MaxRolloverClaimPeriods)
-	suite.Assert().Equal(time.UTC(), endingRewardProgram.ExpectedProgramEndTime)
-	suite.Assert().Equal(time.UTC(), endingRewardProgram.ProgramEndTimeMax)
+	endingRewardProgram, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 10)
+	s.Assert().NoError(err)
+	s.Assert().Equal(uint64(2), endingRewardProgram.ClaimPeriods)
+	s.Assert().Equal(uint64(0), endingRewardProgram.MaxRolloverClaimPeriods)
+	s.Assert().Equal(now.UTC(), endingRewardProgram.ExpectedProgramEndTime)
+	s.Assert().Equal(now.UTC(), endingRewardProgram.ProgramEndTimeMax)
 
 	program.State = types.RewardProgram_STATE_PENDING
 	program.Id = 20
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program)
-	endingRewardProgram, err = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, 20)
-	suite.Assert().NoError(err)
-	suite.Assert().Equal(uint64(20), endingRewardProgram.Id)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program)
+	endingRewardProgram, err = s.app.RewardKeeper.GetRewardProgram(s.ctx, 20)
+	s.Assert().NoError(err)
+	s.Assert().Equal(uint64(20), endingRewardProgram.Id)
 
-	suite.app.RewardKeeper.EndingRewardProgram(suite.ctx, program)
-	endingRewardProgram, err = suite.app.RewardKeeper.GetRewardProgram(suite.ctx, 20)
-	suite.Assert().Error(err)
-	suite.Assert().Equal(uint64(0), endingRewardProgram.Id)
+	s.app.RewardKeeper.EndingRewardProgram(s.ctx, program)
+	endingRewardProgram, err = s.app.RewardKeeper.GetRewardProgram(s.ctx, 20)
+	s.Assert().Error(err)
+	s.Assert().Equal(uint64(0), endingRewardProgram.Id)
 }
 
-func (suite *KeeperTestSuite) TestRemoveValidRewardProgram() {
-	suite.SetupTest()
-
-	time := time.Now()
+func (s *KeeperTestSuite) TestRemoveValidRewardProgram() {
+	now := time.Now()
 	program := types.NewRewardProgram(
 		"title",
 		"description",
@@ -134,7 +126,7 @@ func (suite *KeeperTestSuite) TestRemoveValidRewardProgram() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -142,25 +134,23 @@ func (suite *KeeperTestSuite) TestRemoveValidRewardProgram() {
 		[]types.QualifyingAction{},
 	)
 
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program)
-	removed := suite.app.RewardKeeper.RemoveRewardProgram(suite.ctx, 1)
-	suite.Assert().True(removed, "remove should succeed")
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program)
+	removed := s.app.RewardKeeper.RemoveRewardProgram(s.ctx, 1)
+	s.Assert().True(removed, "remove should succeed")
 
-	invalidProgram, err := suite.app.RewardKeeper.GetRewardProgram(suite.ctx, 1)
-	suite.Assert().Error(err)
-	suite.Assert().Equal(uint64(0), invalidProgram.Id)
+	invalidProgram, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
+	s.Assert().Error(err)
+	s.Assert().Equal(uint64(0), invalidProgram.Id)
 }
 
-func (suite *KeeperTestSuite) TestRemoveInvalidRewardProgram() {
-	suite.SetupTest()
-	invalidProgram, err := suite.app.RewardKeeper.GetRewardProgram(suite.ctx, 1)
-	suite.Assert().Error(err)
-	suite.Assert().Equal(uint64(0), invalidProgram.Id)
+func (s *KeeperTestSuite) TestRemoveInvalidRewardProgram() {
+	invalidProgram, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
+	s.Assert().Error(err)
+	s.Assert().Equal(uint64(0), invalidProgram.Id)
 }
 
-func (suite *KeeperTestSuite) TestIterateRewardPrograms() {
-	suite.SetupTest()
-	time := time.Now()
+func (s *KeeperTestSuite) TestIterateRewardPrograms() {
+	now := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
 		"description",
@@ -168,7 +158,7 @@ func (suite *KeeperTestSuite) TestIterateRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -182,7 +172,7 @@ func (suite *KeeperTestSuite) TestIterateRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -196,7 +186,7 @@ func (suite *KeeperTestSuite) TestIterateRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -204,22 +194,21 @@ func (suite *KeeperTestSuite) TestIterateRewardPrograms() {
 		[]types.QualifyingAction{},
 	)
 
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program3)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program1)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program2)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program3)
 
 	counter := 0
-	err := suite.app.RewardKeeper.IterateRewardPrograms(suite.ctx, func(rewardProgram types.RewardProgram) (stop bool, err error) {
+	err := s.app.RewardKeeper.IterateRewardPrograms(s.ctx, func(rewardProgram types.RewardProgram) (stop bool, err error) {
 		counter += 1
 		return false, nil
 	})
-	suite.Assert().NoError(err, "no error should be returned")
-	suite.Assert().Equal(3, counter, "should iterate through each reward program")
+	s.Assert().NoError(err, "no error should be returned")
+	s.Assert().Equal(3, counter, "should iterate through each reward program")
 }
 
-func (suite *KeeperTestSuite) TestIterateRewardProgramsHalt() {
-	suite.SetupTest()
-	time := time.Now()
+func (s *KeeperTestSuite) TestIterateRewardProgramsHalt() {
+	now := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
 		"description",
@@ -227,7 +216,7 @@ func (suite *KeeperTestSuite) TestIterateRewardProgramsHalt() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -241,7 +230,7 @@ func (suite *KeeperTestSuite) TestIterateRewardProgramsHalt() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -255,7 +244,7 @@ func (suite *KeeperTestSuite) TestIterateRewardProgramsHalt() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -263,35 +252,32 @@ func (suite *KeeperTestSuite) TestIterateRewardProgramsHalt() {
 		[]types.QualifyingAction{},
 	)
 
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program3)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program1)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program2)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program3)
 
 	counter := 0
-	err := suite.app.RewardKeeper.IterateRewardPrograms(suite.ctx, func(rewardProgram types.RewardProgram) (stop bool, err error) {
+	err := s.app.RewardKeeper.IterateRewardPrograms(s.ctx, func(rewardProgram types.RewardProgram) (stop bool, err error) {
 		counter += 1
 		return true, nil
 	})
-	suite.Assert().NoError(err, "no error should be returned")
-	suite.Assert().Equal(1, counter, "should stop when iteration is instructed to stop")
+	s.Assert().NoError(err, "no error should be returned")
+	s.Assert().Equal(1, counter, "should stop when iteration is instructed to stop")
 }
 
-func (suite *KeeperTestSuite) TestIterateRewardProgramsEmpty() {
-	suite.SetupTest()
-
+func (s *KeeperTestSuite) TestIterateRewardProgramsEmpty() {
 	counter := 0
-	err := suite.app.RewardKeeper.IterateRewardPrograms(suite.ctx, func(rewardProgram types.RewardProgram) (stop bool, err error) {
+	err := s.app.RewardKeeper.IterateRewardPrograms(s.ctx, func(rewardProgram types.RewardProgram) (stop bool, err error) {
 		counter += 1
 		return true, nil
 	})
 
-	suite.Assert().NoError(err, "no error should be returned")
-	suite.Assert().Equal(0, counter, "should stop when iteration is instructed to stop")
+	s.Assert().NoError(err, "no error should be returned")
+	s.Assert().Equal(0, counter, "should stop when iteration is instructed to stop")
 }
 
-func (suite *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
-	suite.SetupTest()
-	time := time.Now()
+func (s *KeeperTestSuite) TestGetAllOutstandingRewardPrograms() {
+	now := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
 		"description",
@@ -299,7 +285,7 @@ func (suite *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -313,7 +299,7 @@ func (suite *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -327,7 +313,7 @@ func (suite *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -337,27 +323,25 @@ func (suite *KeeperTestSuite) TestGetOutstandingRewardPrograms() {
 	program2.State = types.RewardProgram_STATE_STARTED
 	program3.State = types.RewardProgram_STATE_FINISHED
 
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program3)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program1)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program2)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program3)
 
-	programs, err := suite.app.RewardKeeper.GetOutstandingRewardPrograms(suite.ctx)
-	suite.Assert().NoError(err, "no error should be returned")
-	suite.Assert().Equal(2, len(programs), "should have all outstanding programs")
-	suite.Assert().Equal(uint64(1), programs[0].GetId(), "should have program 1")
-	suite.Assert().Equal(uint64(2), programs[1].GetId(), "should have program 2")
+	programs, err := s.app.RewardKeeper.GetAllOutstandingRewardPrograms(s.ctx)
+	s.Assert().NoError(err, "no error should be returned")
+	s.Assert().Equal(2, len(programs), "should have all outstanding programs")
+	s.Assert().Equal(uint64(1), programs[0].GetId(), "should have program 1")
+	s.Assert().Equal(uint64(2), programs[1].GetId(), "should have program 2")
 }
 
-func (suite *KeeperTestSuite) TestGetOutstandingRewardProgramsEmpty() {
-	suite.SetupTest()
-	programs, err := suite.app.RewardKeeper.GetOutstandingRewardPrograms(suite.ctx)
-	suite.Assert().NoError(err, "no error should be returned")
-	suite.Assert().Equal(0, len(programs), "should have no outstanding programs")
+func (s *KeeperTestSuite) TestGetAllOutstandingRewardProgramsEmpty() {
+	programs, err := s.app.RewardKeeper.GetAllOutstandingRewardPrograms(s.ctx)
+	s.Assert().NoError(err, "no error should be returned")
+	s.Assert().Equal(0, len(programs), "should have no outstanding programs")
 }
 
-func (suite *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
-	suite.SetupTest()
-	time := time.Now()
+func (s *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
+	now := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
 		"description",
@@ -365,7 +349,7 @@ func (suite *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -379,7 +363,7 @@ func (suite *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -393,7 +377,7 @@ func (suite *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -407,7 +391,7 @@ func (suite *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -421,7 +405,7 @@ func (suite *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -433,29 +417,27 @@ func (suite *KeeperTestSuite) TestGetAllExpiredRewardPrograms() {
 	program4.State = types.RewardProgram_STATE_EXPIRED
 	program5.State = types.RewardProgram_STATE_EXPIRED
 
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program3)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program4)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program5)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program1)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program2)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program3)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program4)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program5)
 
-	programs, err := suite.app.RewardKeeper.GetAllExpiredRewardPrograms(suite.ctx)
-	suite.Assert().NoError(err, "no error should be returned")
-	suite.Assert().Equal(2, len(programs), "should have all outstanding programs")
-	suite.Assert().Equal(uint64(4), programs[0].GetId(), "should have program 4")
-	suite.Assert().Equal(uint64(5), programs[1].GetId(), "should have program 5")
+	programs, err := s.app.RewardKeeper.GetAllExpiredRewardPrograms(s.ctx)
+	s.Assert().NoError(err, "no error should be returned")
+	s.Assert().Equal(2, len(programs), "should have all outstanding programs")
+	s.Assert().Equal(uint64(4), programs[0].GetId(), "should have program 4")
+	s.Assert().Equal(uint64(5), programs[1].GetId(), "should have program 5")
 }
 
-func (suite *KeeperTestSuite) TestGetAllExpiredRewardProgramsEmpty() {
-	suite.SetupTest()
-	programs, err := suite.app.RewardKeeper.GetAllExpiredRewardPrograms(suite.ctx)
-	suite.Assert().NoError(err, "no error should be returned")
-	suite.Assert().Equal(0, len(programs), "should have no expired programs")
+func (s *KeeperTestSuite) TestGetAllExpiredRewardProgramsEmpty() {
+	programs, err := s.app.RewardKeeper.GetAllExpiredRewardPrograms(s.ctx)
+	s.Assert().NoError(err, "no error should be returned")
+	s.Assert().Equal(0, len(programs), "should have no expired programs")
 }
 
-func (suite *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
-	suite.SetupTest()
-	time := time.Now()
+func (s *KeeperTestSuite) TestGetAllUnexpiredRewardPrograms() {
+	now := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
 		"description",
@@ -463,7 +445,7 @@ func (suite *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -477,7 +459,7 @@ func (suite *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -491,7 +473,7 @@ func (suite *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -505,7 +487,7 @@ func (suite *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -519,7 +501,7 @@ func (suite *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -531,30 +513,28 @@ func (suite *KeeperTestSuite) TestGetUnexpiredRewardPrograms() {
 	program4.State = types.RewardProgram_STATE_EXPIRED
 	program5.State = types.RewardProgram_STATE_EXPIRED
 
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program3)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program4)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program5)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program1)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program2)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program3)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program4)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program5)
 
-	programs, err := suite.app.RewardKeeper.GetUnexpiredRewardPrograms(suite.ctx)
-	suite.Assert().NoError(err, "no error should be returned")
-	suite.Assert().Equal(3, len(programs), "should have all unexpired programs")
-	suite.Assert().Equal(uint64(1), programs[0].GetId(), "should have program 1")
-	suite.Assert().Equal(uint64(2), programs[1].GetId(), "should have program 2")
-	suite.Assert().Equal(uint64(3), programs[2].GetId(), "should have program 3")
+	programs, err := s.app.RewardKeeper.GetAllUnexpiredRewardPrograms(s.ctx)
+	s.Assert().NoError(err, "no error should be returned")
+	s.Assert().Equal(3, len(programs), "should have all unexpired programs")
+	s.Assert().Equal(uint64(1), programs[0].GetId(), "should have program 1")
+	s.Assert().Equal(uint64(2), programs[1].GetId(), "should have program 2")
+	s.Assert().Equal(uint64(3), programs[2].GetId(), "should have program 3")
 }
 
-func (suite *KeeperTestSuite) TestGetUnexpiredRewardProgramsEmpty() {
-	suite.SetupTest()
-	programs, err := suite.app.RewardKeeper.GetUnexpiredRewardPrograms(suite.ctx)
-	suite.Assert().NoError(err, "no error should be returned")
-	suite.Assert().Equal(0, len(programs), "should have no expired programs")
+func (s *KeeperTestSuite) TestGetAllUnexpiredRewardProgramsEmpty() {
+	programs, err := s.app.RewardKeeper.GetAllUnexpiredRewardPrograms(s.ctx)
+	s.Assert().NoError(err, "no error should be returned")
+	s.Assert().Equal(0, len(programs), "should have no expired programs")
 }
 
-func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
-	suite.SetupTest()
-	time := time.Now()
+func (s *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
+	now := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
 		"description",
@@ -562,7 +542,7 @@ func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -576,7 +556,7 @@ func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -590,7 +570,7 @@ func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -600,26 +580,24 @@ func (suite *KeeperTestSuite) TestGetAllActiveRewardPrograms() {
 	program2.State = types.RewardProgram_STATE_STARTED
 	program3.State = types.RewardProgram_STATE_FINISHED
 
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program3)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program1)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program2)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program3)
 
-	programs, err := suite.app.RewardKeeper.GetAllActiveRewardPrograms(suite.ctx)
-	suite.Assert().NoError(err, "no error should be returned")
-	suite.Assert().Equal(1, len(programs), "should have all active programs")
-	suite.Assert().Equal(uint64(2), programs[0].GetId(), "should have program 2")
+	programs, err := s.app.RewardKeeper.GetAllActiveRewardPrograms(s.ctx)
+	s.Assert().NoError(err, "no error should be returned")
+	s.Assert().Equal(1, len(programs), "should have all active programs")
+	s.Assert().Equal(uint64(2), programs[0].GetId(), "should have program 2")
 }
 
-func (suite *KeeperTestSuite) TestGetAllActiveRewardProgramsEmpty() {
-	suite.SetupTest()
-	programs, err := suite.app.RewardKeeper.GetAllActiveRewardPrograms(suite.ctx)
-	suite.Assert().NoError(err, "no error should be returned")
-	suite.Assert().Equal(0, len(programs), "should have no active programs")
+func (s *KeeperTestSuite) TestGetAllActiveRewardProgramsEmpty() {
+	programs, err := s.app.RewardKeeper.GetAllActiveRewardPrograms(s.ctx)
+	s.Assert().NoError(err, "no error should be returned")
+	s.Assert().Equal(0, len(programs), "should have no active programs")
 }
 
-func (suite *KeeperTestSuite) TestGetAllRewardPrograms() {
-	suite.SetupTest()
-	time := time.Now()
+func (s *KeeperTestSuite) TestGetAllRewardPrograms() {
+	now := time.Now()
 	program1 := types.NewRewardProgram(
 		"title",
 		"description",
@@ -627,7 +605,7 @@ func (suite *KeeperTestSuite) TestGetAllRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -641,7 +619,7 @@ func (suite *KeeperTestSuite) TestGetAllRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -655,7 +633,7 @@ func (suite *KeeperTestSuite) TestGetAllRewardPrograms() {
 		"insert address",
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
-		time,
+		now,
 		60*60,
 		3,
 		0,
@@ -665,38 +643,36 @@ func (suite *KeeperTestSuite) TestGetAllRewardPrograms() {
 	program2.State = types.RewardProgram_STATE_STARTED
 	program3.State = types.RewardProgram_STATE_FINISHED
 
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program1)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program2)
-	suite.app.RewardKeeper.SetRewardProgram(suite.ctx, program3)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program1)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program2)
+	s.app.RewardKeeper.SetRewardProgram(s.ctx, program3)
 
-	programs, err := suite.app.RewardKeeper.GetAllRewardPrograms(suite.ctx)
-	suite.Assert().NoError(err, "no error should be returned")
-	suite.Assert().Equal(3, len(programs), "should have all active programs")
-	suite.Assert().Equal(uint64(1), programs[0].GetId(), "should have program 1")
-	suite.Assert().Equal(uint64(2), programs[1].GetId(), "should have program 2")
-	suite.Assert().Equal(uint64(3), programs[2].GetId(), "should have program 3")
+	programs, err := s.app.RewardKeeper.GetAllRewardPrograms(s.ctx)
+	s.Assert().NoError(err, "no error should be returned")
+	s.Assert().Equal(3, len(programs), "should have all active programs")
+	s.Assert().Equal(uint64(1), programs[0].GetId(), "should have program 1")
+	s.Assert().Equal(uint64(2), programs[1].GetId(), "should have program 2")
+	s.Assert().Equal(uint64(3), programs[2].GetId(), "should have program 3")
 }
 
-func (suite *KeeperTestSuite) TestGetAllRewardProgramsEmpty() {
-	suite.SetupTest()
-	programs, err := suite.app.RewardKeeper.GetAllRewardPrograms(suite.ctx)
-	suite.Assert().NoError(err, "no error should be returned")
-	suite.Assert().Equal(0, len(programs), "should have no active programs")
+func (s *KeeperTestSuite) TestGetAllRewardProgramsEmpty() {
+	programs, err := s.app.RewardKeeper.GetAllRewardPrograms(s.ctx)
+	s.Assert().NoError(err, "no error should be returned")
+	s.Assert().Equal(0, len(programs), "should have no active programs")
 }
 
-func (suite *KeeperTestSuite) TestCreateRewardProgram() {
-	suite.SetupTest()
-	simapp.FundAccount(suite.app.BankKeeper, suite.ctx, suite.accountAddresses[0], sdk.NewCoins(sdk.NewInt64Coin("nhash", 1000000000000)))
+func (s *KeeperTestSuite) TestCreateRewardProgram() {
+	testutil.FundAccount(s.app.BankKeeper, s.ctx, s.accountAddresses[0], sdk.NewCoins(sdk.NewInt64Coin("nhash", 1000000000000)))
 
-	err := suite.app.RewardKeeper.CreateRewardProgram(suite.ctx, types.RewardProgram{})
-	suite.Assert().Error(err)
+	err := s.app.RewardKeeper.CreateRewardProgram(s.ctx, types.RewardProgram{})
+	s.Assert().Error(err)
 
 	now := time.Now()
 	validProgram := types.NewRewardProgram(
 		"title",
 		"description",
 		1,
-		suite.accountAddresses[0].String(),
+		s.accountAddresses[0].String(),
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
 		now,
@@ -728,17 +704,17 @@ func (suite *KeeperTestSuite) TestCreateRewardProgram() {
 			},
 		},
 	)
-	err = suite.app.RewardKeeper.CreateRewardProgram(suite.ctx, validProgram)
-	suite.Assert().NoError(err)
-	actualProgram, err := suite.app.RewardKeeper.GetRewardProgram(suite.ctx, uint64(1))
-	suite.Assert().NoError(err)
-	suite.Equal(uint64(1), actualProgram.Id)
+	err = s.app.RewardKeeper.CreateRewardProgram(s.ctx, validProgram)
+	s.Assert().NoError(err)
+	actualProgram, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, uint64(1))
+	s.Assert().NoError(err)
+	s.Equal(uint64(1), actualProgram.Id)
 	lastYear := now.Add(-60 * 60 * 365 * time.Second)
 	inValidProgramStartTime := types.NewRewardProgram(
 		"title",
 		"description",
 		2,
-		suite.accountAddresses[0].String(),
+		s.accountAddresses[0].String(),
 		sdk.NewInt64Coin("nhash", 100000),
 		sdk.NewInt64Coin("nhash", 1000),
 		lastYear,
@@ -770,9 +746,9 @@ func (suite *KeeperTestSuite) TestCreateRewardProgram() {
 			},
 		},
 	)
-	err = suite.app.RewardKeeper.CreateRewardProgram(suite.ctx, inValidProgramStartTime)
-	suite.Assert().Error(err)
-	suite.Assert().True(strings.Contains(err.Error(), "start time is before current block time"))
+	err = s.app.RewardKeeper.CreateRewardProgram(s.ctx, inValidProgramStartTime)
+	s.Assert().Error(err)
+	s.Assert().True(strings.Contains(err.Error(), "start time is before current block time"))
 
 	minDelegation := sdk.NewInt64Coin("nhash", 4)
 	maxDelegation := sdk.NewInt64Coin("nhash", 40)
@@ -781,7 +757,7 @@ func (suite *KeeperTestSuite) TestCreateRewardProgram() {
 		"title",
 		"description",
 		2,
-		suite.accountAddresses[0].String(),
+		s.accountAddresses[0].String(),
 		sdk.NewInt64Coin("nhash", 10000000000000),
 		sdk.NewInt64Coin("nhash", 1000),
 		now,
@@ -813,14 +789,13 @@ func (suite *KeeperTestSuite) TestCreateRewardProgram() {
 			},
 		},
 	)
-	err = suite.app.RewardKeeper.CreateRewardProgram(suite.ctx, invalidAmount)
-	suite.Assert().Error(err)
-	suite.Assert().True(strings.Contains(err.Error(), "unable to send coin to module reward pool : 999999900000nhash is smaller than 10000000000000nhash: insufficient funds"))
+	err = s.app.RewardKeeper.CreateRewardProgram(s.ctx, invalidAmount)
+	s.Assert().Error(err)
+	s.Assert().True(strings.Contains(err.Error(), "unable to send coin to module reward pool : 999999900000nhash is smaller than 10000000000000nhash: insufficient funds"))
 }
 
-func (suite *KeeperTestSuite) TestRefundRemainingBalance() {
-	suite.SetupTest()
-	time := suite.ctx.BlockTime()
+func (s *KeeperTestSuite) TestRefundRemainingBalance() {
+	now := s.ctx.BlockTime()
 	rewardProgram := types.NewRewardProgram(
 		"title",
 		"description",
@@ -828,11 +803,11 @@ func (suite *KeeperTestSuite) TestRefundRemainingBalance() {
 		"cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv",
 		sdk.NewInt64Coin("nhash", 1000),
 		sdk.NewInt64Coin("nhash", 100),
-		time,
+		now,
 		10,
 		5,
 		0,
-		uint64(time.Day()),
+		uint64(now.Day()),
 		[]types.QualifyingAction{},
 	)
 	remainingBalance := rewardProgram.GetTotalRewardPool()
@@ -840,18 +815,17 @@ func (suite *KeeperTestSuite) TestRefundRemainingBalance() {
 	rewardProgram.ClaimedAmount = sdk.NewInt64Coin("nhash", 0)
 
 	addr, _ := sdk.AccAddressFromBech32("cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
-	beforeBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
-	err := suite.app.RewardKeeper.RefundRemainingBalance(suite.ctx, &rewardProgram)
-	afterBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
+	beforeBalance := s.app.BankKeeper.GetBalance(s.ctx, addr, "nhash")
+	err := s.app.RewardKeeper.RefundRemainingBalance(s.ctx, &rewardProgram)
+	afterBalance := s.app.BankKeeper.GetBalance(s.ctx, addr, "nhash")
 
-	suite.Assert().NoError(err, "no error should be thrown")
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), rewardProgram.GetRemainingPoolBalance(), "no remaining balance should be left")
-	suite.Assert().Equal(beforeBalance.Add(remainingBalance), afterBalance, "balance should be given remaining pool balance")
+	s.Assert().NoError(err, "no error should be thrown")
+	s.Assert().Equal(sdk.NewInt64Coin("nhash", 0), rewardProgram.GetRemainingPoolBalance(), "no remaining balance should be left")
+	s.Assert().Equal(beforeBalance.Add(remainingBalance), afterBalance, "balance should be given remaining pool balance")
 }
 
-func (suite *KeeperTestSuite) TestRefundRemainingBalanceEmpty() {
-	suite.SetupTest()
-	time := suite.ctx.BlockTime()
+func (s *KeeperTestSuite) TestRefundRemainingBalanceEmpty() {
+	now := s.ctx.BlockTime()
 	rewardProgram := types.NewRewardProgram(
 		"title",
 		"description",
@@ -859,37 +833,36 @@ func (suite *KeeperTestSuite) TestRefundRemainingBalanceEmpty() {
 		"cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv",
 		sdk.NewInt64Coin("nhash", 1000),
 		sdk.NewInt64Coin("nhash", 100),
-		time,
+		now,
 		10,
 		5,
 		0,
-		uint64(time.Day()),
+		uint64(now.Day()),
 		[]types.QualifyingAction{},
 	)
 	rewardProgram.RemainingPoolBalance = sdk.NewInt64Coin("nhash", 0)
 	rewardProgram.ClaimedAmount = sdk.NewInt64Coin("nhash", 0)
 
 	addr, _ := sdk.AccAddressFromBech32("cosmos1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv")
-	beforeBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
-	err := suite.app.RewardKeeper.RefundRemainingBalance(suite.ctx, &rewardProgram)
-	afterBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "nhash")
+	beforeBalance := s.app.BankKeeper.GetBalance(s.ctx, addr, "nhash")
+	err := s.app.RewardKeeper.RefundRemainingBalance(s.ctx, &rewardProgram)
+	afterBalance := s.app.BankKeeper.GetBalance(s.ctx, addr, "nhash")
 
-	suite.Assert().NoError(err, "no error should be thrown")
-	suite.Assert().Equal(sdk.NewInt64Coin("nhash", 0), rewardProgram.GetRemainingPoolBalance(), "no remaining balance should be left")
-	suite.Assert().Equal(beforeBalance, afterBalance, "balance should remain same because there is no remaining pool balance")
+	s.Assert().NoError(err, "no error should be thrown")
+	s.Assert().Equal(sdk.NewInt64Coin("nhash", 0), rewardProgram.GetRemainingPoolBalance(), "no remaining balance should be left")
+	s.Assert().Equal(beforeBalance, afterBalance, "balance should remain same because there is no remaining pool balance")
 }
 
-func (suite *KeeperTestSuite) TestGetRewardProgramID() {
-	suite.SetupTest()
-	id, err := suite.app.RewardKeeper.GetRewardProgramID(suite.ctx)
-	suite.Assert().NoError(err, "no error should be thrown")
-	suite.Assert().Equal(uint64(1), id, "id should match")
+func (s *KeeperTestSuite) TestGetRewardProgramID() {
+	id, err := s.app.RewardKeeper.GetRewardProgramID(s.ctx)
+	s.Assert().NoError(err, "no error should be thrown")
+	s.Assert().Equal(uint64(1), id, "id should match")
 
-	next, err := suite.app.RewardKeeper.GetNextRewardProgramID(suite.ctx)
-	suite.Assert().NoError(err, "no error should be thrown")
-	suite.Assert().Equal(uint64(1), next, "id should match")
+	next, err := s.app.RewardKeeper.GetNextRewardProgramID(s.ctx)
+	s.Assert().NoError(err, "no error should be thrown")
+	s.Assert().Equal(uint64(1), next, "id should match")
 
-	id, err = suite.app.RewardKeeper.GetRewardProgramID(suite.ctx)
-	suite.Assert().NoError(err, "no error should be thrown")
-	suite.Assert().Equal(uint64(2), id, "id should match")
+	id, err = s.app.RewardKeeper.GetRewardProgramID(s.ctx)
+	s.Assert().NoError(err, "no error should be thrown")
+	s.Assert().Equal(uint64(2), id, "id should match")
 }

@@ -114,8 +114,8 @@ message RewardAccountState {
   uint64 claim_period_id = 2;
   // Owner of the reward account state.
   string address = 3;
-  // The number of actions done by this account, mapped by action type.
-  map<string, uint64> action_counter = 4;
+  // The number of actions performed by this account, mapped by action type.
+  repeated ActionCounter action_counter = 4;
   // The amount of granted shares for the address in the reward program's claim period.
   uint64 shares_earned = 5;
   // The status of the claim.
@@ -187,4 +187,15 @@ message ActionVote {
   cosmos.base.v1beta1.Coin minimum_delegation_amount = 3 [(gogoproto.nullable) = false];
   // If not zero, this is multiplier that shares will be multiplied by.
   uint64 validator_multiplier = 4;
+}
+
+// ActionCounter is a key-value pair that maps action type to the number of times it was performed.
+message ActionCounter {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  // The type of action performed.
+  string action_type = 1;
+  // The number of times this action has been performed
+  uint64 number_of_actions = 2;
 }

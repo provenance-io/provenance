@@ -18,7 +18,7 @@ type MigratorTestSuite struct {
 	suite.Suite
 }
 
-func (s MigratorTestSuite) SetupTest() {
+func (s *MigratorTestSuite) SetupTest() {
 
 }
 
@@ -26,7 +26,7 @@ func TestMigratorTestSuite(t *testing.T) {
 	suite.Run(t, new(MigratorTestSuite))
 }
 
-func (s MigratorTestSuite) TestInitialize() {
+func (s *MigratorTestSuite) TestInitialize() {
 	tdir := s.T().TempDir()
 	dbdir := "some.db"
 	someFile := "somefile.txt"
@@ -70,12 +70,12 @@ func (s MigratorTestSuite) TestInitialize() {
 	})
 }
 
-func (s MigratorTestSuite) TestApplyDefaults() {
+func (s *MigratorTestSuite) TestApplyDefaults() {
 	defaultDateFormat := "2006-01-02-15-04"
 	tdir := s.T().TempDir()
 	dirForPermTest := filepath.Join(tdir, "permissions-test")
 	permForPermTest := os.FileMode(0750)
-	os.MkdirAll(dirForPermTest, permForPermTest)
+	s.Require().NoError(os.MkdirAll(dirForPermTest, permForPermTest), "making permissions test dir")
 	var tests = []struct {
 		name     string
 		migrator *Migrator
@@ -417,7 +417,7 @@ func (s MigratorTestSuite) TestApplyDefaults() {
 	}
 }
 
-func (s MigratorTestSuite) TestValidateBasic() {
+func (s *MigratorTestSuite) TestValidateBasic() {
 	makeValidMigrator := func() *Migrator {
 		rv := &Migrator{
 			HomePath:     "testing",
@@ -510,7 +510,7 @@ func (s MigratorTestSuite) TestValidateBasic() {
 	}
 }
 
-func (s MigratorTestSuite) TestReadSourceDataDir() {
+func (s *MigratorTestSuite) TestReadSourceDataDir() {
 
 	s.T().Run("no source data dir", func(t *testing.T) {
 		m := &Migrator{
@@ -588,13 +588,13 @@ func (s MigratorTestSuite) TestReadSourceDataDir() {
 // TODO: Migrate tests
 // TODO: migrationManager tests
 
-func (s MigratorTestSuite) TestNoKeyvals() {
+func (s *MigratorTestSuite) TestNoKeyvals() {
 	f := noKeyvals()
 	s.Require().NotNil(f)
 	s.Assert().Len(f, 0)
 }
 
-func (s MigratorTestSuite) TestSplitDBPath() {
+func (s *MigratorTestSuite) TestSplitDBPath() {
 	tests := []struct {
 		name   string
 		elem   []string
@@ -684,7 +684,7 @@ func (s MigratorTestSuite) TestSplitDBPath() {
 	}
 }
 
-func (s MigratorTestSuite) TestGetDataDirContents() {
+func (s *MigratorTestSuite) TestGetDataDirContents() {
 	// Setup a temp directory with the following:
 	// 1) A directory named dbdir1.db with nothing in it
 	// 2) A directory named dbdir2 with files named MANIFEST, other1.txt, other2.log
@@ -751,7 +751,7 @@ func (s MigratorTestSuite) TestGetDataDirContents() {
 	})
 }
 
-func (s MigratorTestSuite) TestDetectDBType() {
+func (s *MigratorTestSuite) TestDetectDBType() {
 	tDir := s.T().TempDir()
 
 	s.T().Run("badger", func(t *testing.T) {
@@ -869,7 +869,7 @@ func (s MigratorTestSuite) TestDetectDBType() {
 	})
 }
 
-func (s MigratorTestSuite) TestDirExists() {
+func (s *MigratorTestSuite) TestDirExists() {
 	s.T().Run("does not exist", func(t *testing.T) {
 		assert.False(t, dirExists("does not exist"))
 	})
@@ -895,7 +895,7 @@ func (s MigratorTestSuite) TestDirExists() {
 	})
 }
 
-func (s MigratorTestSuite) TestFileExists() {
+func (s *MigratorTestSuite) TestFileExists() {
 	s.T().Run("does not exist", func(t *testing.T) {
 		assert.False(t, fileExists("does not exist"))
 	})
@@ -921,7 +921,7 @@ func (s MigratorTestSuite) TestFileExists() {
 	})
 }
 
-func (s MigratorTestSuite) TestCommaString() {
+func (s *MigratorTestSuite) TestCommaString() {
 	tests := []struct {
 		v   uint
 		exp string

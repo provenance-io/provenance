@@ -11,7 +11,7 @@ import (
 
 // UpdateUnexpiredRewardsProgram called from begin blocker, starts/ends or expires rewards programs.
 func (k Keeper) UpdateUnexpiredRewardsProgram(ctx sdk.Context) {
-	rewardPrograms, err := k.GetUnexpiredRewardPrograms(ctx)
+	rewardPrograms, err := k.GetAllUnexpiredRewardPrograms(ctx)
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("error iterating reward programs: %v ", err))
 		// called from the beginblocker, not much we can do here but return

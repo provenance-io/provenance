@@ -8,13 +8,12 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simappparams "github.com/provenance-io/provenance/app/params"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/provenance-io/provenance/app"
-
+	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/x/reward/simulation"
 	"github.com/provenance-io/provenance/x/reward/types"
 )
@@ -26,28 +25,26 @@ type SimTestSuite struct {
 	app *app.App
 }
 
-func (suite *SimTestSuite) SetupTest() {
-	checkTx := false
-	application := app.Setup(checkTx)
-	suite.app = application
-	suite.ctx = application.BaseApp.NewContext(checkTx, tmproto.Header{})
+func (s *SimTestSuite) SetupTest() {
+	s.app = app.Setup(s.T())
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 }
 
-func (suite *SimTestSuite) TestWeightedOperations() {
-	cdc := suite.app.AppCodec()
+func (s *SimTestSuite) TestWeightedOperations() {
+	cdc := s.app.AppCodec()
 	appParams := make(simtypes.AppParams)
 
-	weightedOps := simulation.WeightedOperations(appParams, cdc, suite.app.RewardKeeper,
-		suite.app.AccountKeeper, suite.app.BankKeeper,
+	weightedOps := simulation.WeightedOperations(appParams, cdc, s.app.RewardKeeper,
+		s.app.AccountKeeper, s.app.BankKeeper,
 	)
 
 	// setup 3 accounts
-	s := rand.NewSource(1)
-	r := rand.New(s)
-	accs := suite.getTestingAccounts(r, 3)
+	source := rand.NewSource(1)
+	r := rand.New(source)
+	accs := s.getTestingAccounts(r, 3)
 
 	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	expected := []struct {
 		weight     int
@@ -59,45 +56,45 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}
 
 	for i, w := range weightedOps {
-		operationMsg, _, _ := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
+		operationMsg, _, _ := w.Op()(r, s.app.BaseApp, s.ctx, accs, "")
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
-		suite.Require().Equal(expected[i].weight, w.Weight(), "weight should be the same")
-		suite.Require().Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
-		suite.Require().Equal(expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
+		s.Require().Equal(expected[i].weight, w.Weight(), "weight should be the same")
+		s.Require().Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
+		s.Require().Equal(expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
 	}
 }
 
-func (suite *SimTestSuite) TestSimulateMsgAddRewards() {
+func (s *SimTestSuite) TestSimulateMsgAddRewards() {
 
 	// setup 3 accounts
-	s := rand.NewSource(1)
-	r := rand.New(s)
-	accounts := suite.getTestingAccounts(r, 3)
+	source := rand.NewSource(1)
+	r := rand.New(source)
+	accounts := s.getTestingAccounts(r, 3)
 
 	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgCreateRewardsProgram(suite.app.RewardKeeper, suite.app.AccountKeeper, suite.app.BankKeeper)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
-	suite.Require().NoError(err)
+	op := simulation.SimulateMsgCreateRewardsProgram(s.app.RewardKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
+	s.Require().NoError(err)
 
 	var msg types.MsgCreateRewardProgramRequest
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
-	suite.Require().True(operationMsg.OK, operationMsg.String())
-	suite.Require().Equal(types.TypeMsgCreateRewardProgramRequest, msg.Type())
-	suite.Require().Equal(types.ModuleName, msg.Route())
-	suite.Require().Len(futureOperations, 0)
+	s.Require().True(operationMsg.OK, operationMsg.String())
+	s.Require().Equal(types.TypeMsgCreateRewardProgramRequest, msg.Type())
+	s.Require().Equal(types.ModuleName, msg.Route())
+	s.Require().Len(futureOperations, 0)
 }
 
 func TestSimTestSuite(t *testing.T) {
 	suite.Run(t, new(SimTestSuite))
 }
 
-func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
+func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
 	initAmt := sdk.TokensFromConsensusPower(1000000, sdk.DefaultPowerReduction)
@@ -105,10 +102,10 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 
 	// add coins to the accounts
 	for _, account := range accounts {
-		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
-		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-		err := app.FundAccount(suite.app, suite.ctx, account.Address, initCoins)
-		suite.Require().NoError(err)
+		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
+		s.app.AccountKeeper.SetAccount(s.ctx, acc)
+		err := testutil.FundAccount(s.app.BankKeeper, s.ctx, account.Address, initCoins)
+		s.Require().NoError(err)
 	}
 
 	return accounts

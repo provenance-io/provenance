@@ -5,24 +5,23 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/stretchr/testify/require"
-
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
 func TestAccountMapperGetSet(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := types.MustGetMarkerAddress("testcoin")
@@ -69,8 +68,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 }
 
 func TestExistingAccounts(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 
@@ -82,7 +80,7 @@ func TestExistingAccounts(t *testing.T) {
 
 	// prefund the marker address so an account gets created before the marker does.
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
-	require.NoError(t, simapp.FundAccount(app, ctx, addr, sdk.NewCoins(existingBalance)), "funding account")
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr, sdk.NewCoins(existingBalance)), "funding account")
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balance must be set")
 
 	// Creating a marker over an account with zero sequence is fine.
@@ -105,8 +103,7 @@ func TestExistingAccounts(t *testing.T) {
 }
 
 func TestAccountUnrestrictedDenoms(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 
@@ -130,8 +127,7 @@ func TestAccountUnrestrictedDenoms(t *testing.T) {
 }
 
 func TestAccountKeeperReader(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := types.MustGetMarkerAddress("testcoin")
@@ -167,8 +163,7 @@ func TestAccountKeeperReader(t *testing.T) {
 
 // nolint:funlen
 func TestAccountKeeperManageAccess(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := types.MustGetMarkerAddress("testcoin")
@@ -274,8 +269,7 @@ func TestAccountKeeperManageAccess(t *testing.T) {
 }
 
 func TestAccountKeeperCancelProposedByManager(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := types.MustGetMarkerAddress("testcoin")
@@ -318,8 +312,7 @@ func TestAccountKeeperCancelProposedByManager(t *testing.T) {
 
 // nolint:funlen
 func TestAccountKeeperMintBurnCoins(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.MarkerKeeper.SetParams(ctx, types.DefaultParams())
 	addr := types.MustGetMarkerAddress("testcoin")
@@ -413,7 +406,7 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.CancelMarker(ctx, user, "testcoin"))
 
 	// Set an escrow balance
-	require.NoError(t, simapp.FundAccount(app, ctx, addr, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()))), "funding account")
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()))), "funding account")
 	// Fails because there are coins in escrow.
 	require.Error(t, app.MarkerKeeper.DeleteMarker(ctx, user, "testcoin"))
 
@@ -437,8 +430,7 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 }
 
 func TestAccountKeeperGetAll(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	user := testUserAddress("test")
@@ -475,8 +467,7 @@ func TestAccountKeeperGetAll(t *testing.T) {
 }
 
 func TestAccountInsufficientExisting(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	pubkey := secp256k1.GenPrivKey().PubKey()
@@ -486,7 +477,7 @@ func TestAccountInsufficientExisting(t *testing.T) {
 	existingSupply := sdk.NewCoin("testcoin", sdk.NewInt(10000))
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
 
-	require.NoError(t, simapp.FundAccount(app, ctx, user, sdk.NewCoins(existingSupply)), "funding account")
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, user, sdk.NewCoins(existingSupply)), "funding account")
 
 	//prevSupply := app.BankKeeper.GetSupply(ctx, "testcoin")
 	//app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(prevSupply.Amount.Add(existingSupply.Amount)))
@@ -520,8 +511,7 @@ func TestAccountInsufficientExisting(t *testing.T) {
 }
 
 func TestAccountRemoveDeletesSendEnabled(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	pubkey := secp256k1.GenPrivKey().PubKey()
@@ -531,7 +521,7 @@ func TestAccountRemoveDeletesSendEnabled(t *testing.T) {
 	existingSupply := sdk.NewCoin("testcoin", sdk.NewInt(10000))
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
 
-	require.NoError(t, simapp.FundAccount(app, ctx, user, sdk.NewCoins(existingSupply)), "funding account")
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, user, sdk.NewCoins(existingSupply)), "funding account")
 
 	// create account and check default values
 	mac := types.NewEmptyMarkerAccount("testcoin", user.String(), []types.AccessGrant{*types.NewAccessGrant(user,
@@ -570,8 +560,7 @@ func TestAccountRemoveDeletesSendEnabled(t *testing.T) {
 }
 
 func TestAccountImplictControl(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	user := testUserAddress("test")
 	user2 := testUserAddress("test2")
@@ -615,13 +604,14 @@ func TestAccountImplictControl(t *testing.T) {
 	granter := user
 	grantee := user2
 	now := ctx.BlockHeader().Time
-	require.NotNil(t, now)
+	require.NotNil(t, now, "now")
+	exp1Hour := now.Add(time.Hour)
 	a := types.NewMarkerTransferAuthorization(sdk.NewCoins(sdk.NewCoin("testcoin", sdk.NewInt(10))))
 
 	// fails when admin user (grantee without authz permissions) has transfer authority
 	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
 	// succeeds when admin user (grantee with authz permissions) has transfer authority
-	require.NoError(t, app.AuthzKeeper.SaveGrant(ctx, grantee, granter, a, time.Now().Add(time.Hour)))
+	require.NoError(t, app.AuthzKeeper.SaveGrant(ctx, grantee, granter, a, &exp1Hour))
 	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
 	// succeeds when admin user (grantee with authz permissions) has transfer authority (transfer remaining balance)
 	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
@@ -630,8 +620,7 @@ func TestAccountImplictControl(t *testing.T) {
 }
 
 func TestMarkerFeeGrant(t *testing.T) {
-	//app, ctx := createTestApp(true)
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 
@@ -659,7 +648,7 @@ func TestMarkerFeeGrant(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, mac)
 
 	existingSupply := sdk.NewCoin("testcoin", sdk.NewInt(10000))
-	require.NoError(t, simapp.FundAccount(app, ctx, user, sdk.NewCoins(existingSupply)), "funding accont")
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, user, sdk.NewCoins(existingSupply)), "funding accont")
 
 	allowance, err := types.NewMsgGrantAllowance(
 		"testcoin",

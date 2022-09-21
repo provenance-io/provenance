@@ -78,7 +78,7 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 			continue
 		}
 		if state.Validate() != nil {
-			state = types.NewRewardAccountState(program.GetId(), program.GetCurrentClaimPeriod(), action.Address.String(), 0, map[string]uint64{})
+			state = types.NewRewardAccountState(program.GetId(), program.GetCurrentClaimPeriod(), action.Address.String(), 0, []*types.ActionCounter{})
 		}
 
 		if !processor.PreEvaluate(ctx, k, state) {
@@ -89,14 +89,13 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 			k.SetRewardAccountState(ctx, state)
 			continue
 		}
-		state.ActionCounter[processor.ActionType()]++
-		postEvalRes, actionFromPostEval := processor.PostEvaluate(ctx, k, state, action)
-		if !postEvalRes {
+		state.ActionCounter = types.IncrementActionCount(state.ActionCounter, processor.ActionType())
+		if !processor.PostEvaluate(ctx, k, state) {
 			k.SetRewardAccountState(ctx, state)
 			continue
 		}
 
-		successfulActions = append(successfulActions, actionFromPostEval)
+		successfulActions = append(successfulActions, action)
 		k.SetRewardAccountState(ctx, state)
 	}
 
@@ -224,10 +223,12 @@ func (k Keeper) FindQualifyingActions(ctx sdk.Context, action types.RewardAction
 	return result, nil
 }
 
+// GetAccountKeeper gets this Keeper's AccountKeeper.
 func (k Keeper) GetAccountKeeper() types.AccountKeeper {
 	return k.authkeeper
 }
 
+// GetStakingKeeper gets this Keeper's StakingKeeper.
 func (k Keeper) GetStakingKeeper() types.StakingKeeper {
 	return k.stakingKeeper
 }

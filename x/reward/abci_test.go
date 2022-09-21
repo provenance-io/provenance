@@ -18,7 +18,7 @@ func TestEndBlockWithNoActiveRewards(t *testing.T) {
 
 	now := time.Now()
 
-	app = simapp.Setup(false)
+	app = simapp.Setup(t)
 	ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockHeight(1).WithBlockTime(now)
 
@@ -34,7 +34,7 @@ func TestBeginBlockWithNoActiveRewards(t *testing.T) {
 
 	now := time.Now()
 
-	app = simapp.Setup(false)
+	app = simapp.Setup(t)
 	ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockHeight(1).WithBlockTime(now)
 

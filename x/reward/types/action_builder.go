@@ -7,7 +7,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 var (
@@ -16,11 +18,19 @@ var (
 	_ ActionBuilder = &VoteActionBuilder{}
 )
 
+// ActionBuilder defines functions used to collect events to check against specific actions.
 type ActionBuilder interface {
+	// GetEventCriteria returns the event criteria for this action.
 	GetEventCriteria() *EventCriteria
+	// AddEvent adds an event to this builder in preparation for checking events against the criteria.
 	AddEvent(eventType string, attributes *map[string][]byte) error
+	// CanBuild returns true if this builder has enough event information for an evaluation result.
 	CanBuild() bool
+	// BuildAction builds the action and returns an EvaluationResult.
+	// This should only be called when CanBuild returns true.
+	// This should return an error if CanBuild is false or some other error is encountered.
 	BuildAction() (EvaluationResult, error)
+	// Reset clears out any previous event data, returning the builder to it's initial state.
 	Reset()
 }
 
@@ -87,7 +97,7 @@ func (b *TransferActionBuilder) CanBuild() bool {
 
 func (b *TransferActionBuilder) BuildAction() (EvaluationResult, error) {
 	if !b.CanBuild() {
-		return EvaluationResult{}, nil
+		return EvaluationResult{}, fmt.Errorf("missing sender or recipient or action from transfer action")
 	}
 
 	result := EvaluationResult{
@@ -211,13 +221,35 @@ func (v *VoteActionBuilder) GetEventCriteria() *EventCriteria {
 	return NewEventCriteria([]ABCIEvent{
 		{
 			Type:       sdk.EventTypeMessage,
-			Attributes: map[string][]byte{sdk.AttributeKeyModule: []byte(types.AttributeValueCategory)},
+			Attributes: map[string][]byte{sdk.AttributeKeyModule: []byte(govtypes.AttributeValueCategory)},
 		},
 		{
 			Type:       sdk.EventTypeMessage,
 			Attributes: map[string][]byte{sdk.AttributeKeyAction: nil},
 		},
 	})
+}
+
+// govVoteMsgURLs the MsgURLs of all the governance module's vote messages.
+// Use getGovVoteMsgURLs() instead of using this variable directly.
+var govVoteMsgURLs []string
+
+// getGovVoteMsgURLs returns govVoteMsgURLs, but first sets it if it hasn't yet been set.
+func getGovVoteMsgURLs() []string {
+	// Checking for nil here (as opposed to len == 0) because we only want to set it
+	// if it hasn't been set yet.
+	if govVoteMsgURLs == nil {
+		// sdk.MsgTypeURL sometimes uses reflection and/or proto registration.
+		// So govVoteMsgURLs is only set when it's finally needed in the hopes
+		// that everything's wired up as needed by then.
+		govVoteMsgURLs = []string{
+			sdk.MsgTypeURL(&govtypesv1.MsgVote{}),
+			sdk.MsgTypeURL(&govtypesv1.MsgVoteWeighted{}),
+			sdk.MsgTypeURL(&govtypesv1beta1.MsgVote{}),
+			sdk.MsgTypeURL(&govtypesv1beta1.MsgVoteWeighted{}),
+		}
+	}
+	return govVoteMsgURLs
 }
 
 func (v *VoteActionBuilder) AddEvent(eventType string, attributes *map[string][]byte) error {
@@ -229,11 +261,13 @@ func (v *VoteActionBuilder) AddEvent(eventType string, attributes *map[string][]
 		}
 		v.Voter = address
 	} else if action, ok := (*attributes)[sdk.AttributeKeyAction]; ok {
-		if string(action) != sdk.MsgTypeURL(&types.MsgVote{}) && string(action) != sdk.MsgTypeURL(&types.MsgVoteWeighted{}) {
-			return nil
+		a := string(action)
+		for _, m := range getGovVoteMsgURLs() {
+			if a == m {
+				v.Voted = true
+				break
+			}
 		}
-
-		v.Voted = true
 	}
 
 	return nil

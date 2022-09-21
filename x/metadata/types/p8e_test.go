@@ -597,7 +597,6 @@ func (s *P8eTestSuite) TestConvertP8eMemorializeContractRequest() {
 						EncryptionPublicKey: nil,
 					},
 					Inputs:         []*p8e.Fact{},          // TODO
-					Conditions:     []*p8e.Condition{},     // TODO
 					Considerations: []*p8e.Consideration{}, // TODO
 					Recitals:       []*p8e.Recital{},       // TODO
 					TimesExecuted:  1,

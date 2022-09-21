@@ -10,15 +10,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-// The flag for the owner address of a name record
-const flagOwner = "owner"
+const (
+	// FlagOwner is the flag for the owner address of a name record.
+	FlagOwner = "owner"
+	// FlagDescription is the flag for a description.
+	FlagDescription = "description"
+	// FlagTitle is the flag for a title.
+	FlagTitle = "title"
+	// FlagDeposit is the flag for a deposit.
+	FlagDeposit string = "deposit"
+)
 
 // GetRootNameProposalCmd returns a command for registration with the gov module
 func GetRootNameProposalCmd() *cobra.Command {
@@ -51,15 +58,15 @@ $ %s tx gov submit-proposal param-change tx gov submit-proposal \
 				return err
 			}
 
-			proposalTitle, err := cmd.Flags().GetString(cli.FlagTitle)
+			proposalTitle, err := cmd.Flags().GetString(FlagTitle)
 			if err != nil {
 				return fmt.Errorf("proposal title: %w", err)
 			}
-			proposalDescr, err := cmd.Flags().GetString(cli.FlagDescription)
+			proposalDescr, err := cmd.Flags().GetString(FlagDescription)
 			if err != nil {
 				return fmt.Errorf("proposal description: %w", err)
 			}
-			proposalOwner, err := cmd.Flags().GetString(flagOwner)
+			proposalOwner, err := cmd.Flags().GetString(FlagOwner)
 			if err != nil {
 				return fmt.Errorf("proposal root name owner: %w", err)
 			}
@@ -70,7 +77,7 @@ $ %s tx gov submit-proposal param-change tx gov submit-proposal \
 			if err != nil {
 				return err
 			}
-			depositArg, err := cmd.Flags().GetString(cli.FlagDeposit)
+			depositArg, err := cmd.Flags().GetString(FlagDeposit)
 			if err != nil {
 				return err
 			}
@@ -87,7 +94,7 @@ $ %s tx gov submit-proposal param-change tx gov submit-proposal \
 				Restricted:  viper.GetBool(flagRestricted),
 			}
 
-			msg, err := govtypes.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
+			msg, err := govtypesv1beta1.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}
@@ -99,11 +106,11 @@ $ %s tx gov submit-proposal param-change tx gov submit-proposal \
 		},
 	}
 
-	cmd.Flags().String(flagOwner, "", "The owner of the new name, optional (defaults to from address")
+	cmd.Flags().String(FlagOwner, "", "The owner of the new name, optional (defaults to from address")
 	cmd.Flags().BoolP(flagRestricted, "r", true, "Restrict creation of child names to owner only, optional (default false)")
 	// proposal flags
-	cmd.Flags().String(cli.FlagTitle, "", "Title of proposal")
-	cmd.Flags().String(cli.FlagDescription, "", "Description of proposal")
-	cmd.Flags().String(cli.FlagDeposit, "", "Deposit of proposal")
+	cmd.Flags().String(FlagTitle, "", "Title of proposal")
+	cmd.Flags().String(FlagDescription, "", "Description of proposal")
+	cmd.Flags().String(FlagDeposit, "", "Deposit of proposal")
 	return cmd
 }

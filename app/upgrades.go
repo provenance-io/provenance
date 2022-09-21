@@ -28,17 +28,26 @@ type appUpgrade struct {
 }
 
 var handlers = map[string]appUpgrade{
-	"lava": {}, // upgrade for 1.10.0
-	"mango": {
+	"mango": { // upgrade for 1.11.1
 		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
 			params := app.MsgFeesKeeper.GetParams(ctx)
 			app.MsgFeesKeeper.SetParams(ctx, params)
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
-	}, // upgrade for 1.11.1
+	},
 	"mango-rc4":      {}, // upgrade for 1.11.1-rc4
 	"neoncarrot-rc1": {}, // upgrade for 1.12.0-rc1
+	"neoncarrot":     {}, // upgrade for 1.12.0
+	"ochre-rc1": { // upgrade for 1.13.0-rc1
+		// TODO: Required for v1.13.x: Fill in Added with modules new to 1.13.x https://github.com/provenance-io/provenance/issues/1007
+		Added: []string{rewardtypes.ModuleName},
+		Handler: func(app *App, ctx sdk.Context, plan upgradetypes.Plan) (module.VersionMap, error) {
+			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
+			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
+		},
+	},
 	// TODO - Add new upgrade definitions here.
 	// TODO - CHECK UPGRADE HANDLER
 	"nickel": {
@@ -75,7 +84,7 @@ func InstallCustomUpgradeHandlers(app *App) {
 }
 
 // CustomUpgradeStoreLoader provides upgrade handlers for store and application module upgrades at specified versions
-func CustomUpgradeStoreLoader(app *App, info storetypes.UpgradeInfo) baseapp.StoreLoader {
+func CustomUpgradeStoreLoader(app *App, info upgradetypes.Plan) baseapp.StoreLoader {
 	// Current upgrade info is empty or we are at the wrong height, skip this.
 	if info.Name == "" || info.Height-1 != app.LastBlockHeight() {
 		return nil

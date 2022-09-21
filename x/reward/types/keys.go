@@ -110,10 +110,10 @@ func GetClaimPeriodRewardDistributionKey(claimID uint64, rewardID uint64) []byte
 	claimBytes := make([]byte, 8)
 	rewardBytes := make([]byte, 8)
 	key := ClaimPeriodRewardDistributionKeyPrefix
-	binary.BigEndian.PutUint64(claimBytes, claimID)
 	binary.BigEndian.PutUint64(rewardBytes, rewardID)
-	key = append(key, claimBytes...)
-	return append(key, rewardBytes...)
+	binary.BigEndian.PutUint64(claimBytes, claimID)
+	key = append(key, rewardBytes...)
+	return append(key, claimBytes...)
 }
 
 // GetAllRewardAccountByAddressPartialKey returns the key to iterate over all AccountStateAddressLookup by address
@@ -143,6 +143,7 @@ func MustAccAddressFromBech32(s string) sdk.AccAddress {
 	return accAddress
 }
 
+// ParseFilterLookUpKey splits the provided key into a reward id and claim id and returns them in a RewardAccountLookup along with the provided address.
 func ParseFilterLookUpKey(accountStateAddressLookupKey []byte, addr sdk.AccAddress) (RewardAccountLookup, error) {
 	rewardID := binary.BigEndian.Uint64(accountStateAddressLookupKey[0:8])
 	claimID := binary.BigEndian.Uint64(accountStateAddressLookupKey[8:16])

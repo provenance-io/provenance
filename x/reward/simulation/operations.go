@@ -9,12 +9,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
@@ -61,6 +61,7 @@ func WeightedOperations(
 	}
 }
 
+// SimulateMsgCreateRewardsProgram sends of a MsgCreateRewardProgramRequest.
 func SimulateMsgCreateRewardsProgram(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -128,7 +129,7 @@ func Dispatch(
 	if err != nil {
 		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate fees"), nil, err
 	}
-	err = simapp.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
+	err = testutil.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 		Denom:  pioconfig.DefaultBondDenom,
 		Amount: sdk.NewInt(1_000_000_000_000_000),
 	}))
@@ -136,7 +137,8 @@ func Dispatch(
 		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to fund account"), nil, err
 	}
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenTx(
+	tx, err := helpers.GenSignedMockTx(
+		r,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
@@ -150,7 +152,7 @@ func Dispatch(
 		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate mock tx"), nil, err
 	}
 
-	_, _, err = app.Deliver(txGen.TxEncoder(), tx)
+	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 	if err != nil {
 		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), err.Error()), nil, nil
 	}
@@ -158,6 +160,7 @@ func Dispatch(
 	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), futures, nil
 }
 
+// SimulateMsgEndRewardsProgram sends a MsgEndRewardProgramRequest for a random existing reward program.
 func SimulateMsgEndRewardsProgram(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,

@@ -1,18 +1,17 @@
 package antewrapper_test
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,20 +19,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 
 	pioante "github.com/provenance-io/provenance/internal/antewrapper"
 )
 
-func TestProvFeeGrantTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
-}
+// These tests are kicked off by TestAnteTestSuite in testutil_test.go
 
-func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
-	suite.SetupTest(false)
+func (s *AnteTestSuite) TestDeductFeesNoDelegation() {
+	s.SetupTest(false)
 	// setup
-	app, ctx := suite.app, suite.ctx
+	app, ctx := s.app, s.ctx
 
 	protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(app.InterfaceRegistry()), tx.DefaultSignModes)
 
@@ -45,7 +42,7 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	feeAnteHandler := sdk.ChainAnteDecorators(decorators...)
 
 	// this tests the whole stack
-	anteHandlerStack := suite.anteHandler
+	anteHandlerStack := s.anteHandler
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -55,24 +52,26 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	priv5, _, addr5 := testdata.KeyTestPubAddr()
 
 	// Set addr1 with insufficient funds
-	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(10))})
-	suite.Require().NoError(err)
+	err := testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, []sdk.Coin{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))})
+	s.Require().NoError(err, "funding account 1")
 
 	// Set addr2 with more funds
-	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999999))})
-	suite.Require().NoError(err)
+	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr2, []sdk.Coin{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(99_999_999))})
+	s.Require().NoError(err, "funding account 2")
 
 	// grant fee allowance from `addr2` to `addr3` (plenty to pay)
 	err = app.FeeGrantKeeper.GrantAllowance(ctx, addr2, addr3, &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", helpers.DefaultGenTxGas*5)),
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, helpers.DefaultGenTxGas*5)),
 	})
-	suite.Require().NoError(err)
+	s.Require().NoError(err, "grant allowance 2 to 3")
 
-	// grant low fee allowance (20atom), to check the tx requesting more than allowed.
+	// grant low fee allowance (20stake), to check the tx requesting more than allowed.
 	err = app.FeeGrantKeeper.GrantAllowance(ctx, addr2, addr4, &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 20)),
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 20)),
 	})
-	suite.Require().NoError(err)
+	s.Require().NoError(err, "grant allowance 2 to 4")
+
+	defaultGasStr := fmt.Sprintf("%d%s", helpers.DefaultGenTxGas, sdk.DefaultBondDenom)
 
 	cases := []struct {
 		name       string
@@ -80,67 +79,70 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 		signer     sdk.AccAddress
 		feeAccount sdk.AccAddress
 		fee        int64
-		valid      bool
+		expInErr   []string
 	}{
 		{
 			name:      "paying from account with insufficient funds and no grants",
 			signerKey: priv1,
 			signer:    addr1,
 			fee:       helpers.DefaultGenTxGas,
-			valid:     false,
+			expInErr:  []string{"10stake", defaultGasStr, "insufficient funds"},
 		}, {
 			name:      "paying with good funds",
 			signerKey: priv2,
 			signer:    addr2,
 			fee:       helpers.DefaultGenTxGas,
-			valid:     true,
+			expInErr:  nil,
 		}, {
 			name:      "paying with no account",
 			signerKey: priv3,
 			signer:    addr3,
 			fee:       helpers.DefaultGenTxGas,
-			valid:     false,
+			expInErr:  []string{"0stake", defaultGasStr, "insufficient funds"},
 		}, {
 			name:      "no fee with no account",
 			signerKey: priv5,
 			signer:    addr5,
 			fee:       0,
-			valid:     false,
+			expInErr:  []string{"fee payer address", addr5.String(), "does not exist"},
 		}, {
 			name:       "valid fee grant without account",
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr2,
 			fee:        helpers.DefaultGenTxGas,
-			valid:      true,
+			expInErr:   nil,
 		}, {
 			name:       "no fee grant",
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr1,
 			fee:        helpers.DefaultGenTxGas,
-			valid:      false,
+			expInErr:   []string{addr3.String(), addr1.String(), "not", "allow", "to pay fees", "fee-grant not found"},
+			// Note: They have a different error than us for this, and I don't think we should change ours.
+			//	Our error has this format:  "<addr> not allowed to pay fees from <addr>"
+			//	But theirs has this format: "<addr> does not not allow to pay fees for <addr>"
 		}, {
 			name:       "allowance smaller than requested fee",
 			signerKey:  priv4,
 			signer:     addr4,
 			feeAccount: addr2,
 			fee:        helpers.DefaultGenTxGas,
-			valid:      false,
+			expInErr:   []string{addr4.String(), addr2.String(), "not", "allow", "to pay fees", "basic allowance", "fee limit exceeded"},
 		}, {
 			name:       "granter cannot cover allowed fee grant",
 			signerKey:  priv4,
 			signer:     addr4,
 			feeAccount: addr1,
 			fee:        helpers.DefaultGenTxGas,
-			valid:      false,
+			expInErr:   []string{addr4.String(), addr1.String(), "not", "allow", "to pay fees", "fee-grant not found"},
 		},
 	}
 
 	for _, stc := range cases {
 		tc := stc // to make scopelint happy
-		suite.T().Run(tc.name, func(t *testing.T) {
-			fee := sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee))
+		s.T().Run(tc.name, func(t *testing.T) {
+			fee := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, tc.fee))
 			msgs := []sdk.Msg{testdata.NewTestMsg(tc.signer)}
 
 			acc := app.AccountKeeper.GetAccount(ctx, tc.signer)
@@ -149,28 +151,29 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 				accNums, seqs = []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}
 			}
 
-			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
-			suite.Require().NoError(err)
-			_, err = feeAnteHandler(ctx, tx, false) // tests only feegrant ante
-			if tc.valid {
-				suite.Assert().NoError(err, tc.name)
+			txfg, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
+			require.NoError(t, err, "genTxWithFeeGranter")
+			_, err = feeAnteHandler(ctx, txfg, false) // tests only feegrant ante
+			if len(tc.expInErr) == 0 {
+				require.NoError(t, err, "feeAnteHandler")
 			} else {
-				suite.Assert().Error(err, tc.name)
+				require.Error(t, err, "feeAnteHandler")
+				for _, exp := range tc.expInErr {
+					assert.ErrorContains(t, err, exp, "feeAnteHandler err")
+				}
 			}
 
-			_, err = anteHandlerStack(ctx, tx, false) // tests while stack
-			if tc.valid {
-				suite.Assert().NoError(err, tc.name)
+			_, err = anteHandlerStack(ctx, txfg, false) // tests while stack
+			if len(tc.expInErr) == 0 {
+				require.NoError(t, err, "anteHandlerStack")
 			} else {
-				suite.Assert().Error(err, tc.name)
+				require.Error(t, err, "anteHandlerStack")
+				for _, exp := range tc.expInErr {
+					assert.ErrorContains(t, err, exp, "anteHandlerStack err")
+				}
 			}
 		})
 	}
-}
-
-// don't consume any gas
-func SigGasNoConsumer(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params authtypes.Params) error {
-	return nil
 }
 
 func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums,
@@ -196,19 +199,19 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 		}
 	}
 
-	tx := gen.NewTxBuilder()
-	err := tx.SetMsgs(msgs...)
+	txb := gen.NewTxBuilder()
+	err := txb.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
 	}
-	err = tx.SetSignatures(sigs...)
+	err = txb.SetSignatures(sigs...)
 	if err != nil {
 		return nil, err
 	}
-	tx.SetMemo(memo)
-	tx.SetFeeAmount(feeAmt)
-	tx.SetGasLimit(gas)
-	tx.SetFeeGranter(feeGranter)
+	txb.SetMemo(memo)
+	txb.SetFeeAmount(feeAmt)
+	txb.SetGasLimit(gas)
+	txb.SetFeeGranter(feeGranter)
 
 	// 2nd round: once all signer infos are set, every signer can sign.
 	for i, p := range priv {
@@ -217,7 +220,7 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
 		}
-		signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
+		signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, txb.GetTx())
 		if err != nil {
 			panic(err)
 		}
@@ -226,11 +229,11 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 			panic(err)
 		}
 		sigs[i].Data.(*signing.SingleSignatureData).Signature = sig
-		err = tx.SetSignatures(sigs...)
+		err = txb.SetSignatures(sigs...)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	return tx.GetTx(), nil
+	return txb.GetTx(), nil
 }

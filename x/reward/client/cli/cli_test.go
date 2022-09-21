@@ -53,7 +53,7 @@ func TestIntegrationTestSuite(t *testing.T) {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
-	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
+	addr, err := sdk.AccAddressFromHexUnsafe(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
 	s.accountAddr = addr
 
@@ -180,7 +180,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	rewardAccountState := make([]rewardtypes.RewardAccountState, 101)
 	for i := 0; i < 101; i++ {
-		rewardAccountState[i] = rewardtypes.NewRewardAccountState(1, uint64(i+1), s.accountAddr.String(), 10, map[string]uint64{})
+		rewardAccountState[i] = rewardtypes.NewRewardAccountState(1, uint64(i+1), s.accountAddr.String(), 10, []*types.ActionCounter{})
 		switch i % 4 {
 		case 0:
 			rewardAccountState[i].ClaimStatus = rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE
@@ -210,10 +210,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.cfg.ChainID = antewrapper.SimAppChainID
 
-	s.network = network.New(s.T(), s.cfg)
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err, "network.New")
 
 	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "WaitForHeight")
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -225,14 +226,18 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) GenerateAccountsWithKeyrings(number int) {
 	path := hd.CreateHDPath(118, 0, 0).String()
 	s.keyringDir = s.T().TempDir()
-	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil)
+	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil, s.cfg.Codec)
 	s.Require().NoError(err)
 	s.keyring = kr
 	for i := 0; i < number; i++ {
 		keyId := fmt.Sprintf("test_key%v", i)
 		info, _, err := kr.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 		s.Require().NoError(err)
-		s.accountAddresses = append(s.accountAddresses, info.GetAddress())
+		addr, err := info.GetAddress()
+		if err != nil {
+			panic(err)
+		}
+		s.accountAddresses = append(s.accountAddresses, addr)
 	}
 }
 
@@ -746,35 +751,40 @@ func (s *IntegrationTestSuite) TestTxEndRewardProgram() {
 		expectedCode       uint32
 		signer             string
 	}{
-		{"end reward program - valid",
-			"1",
-			"",
-			0,
-			s.accountAddresses[0].String(),
+		{
+			name:               "end reward program - valid",
+			endRewardProgramId: "1",
+			expectErrMsg:       "",
+			expectedCode:       0,
+			signer:             s.accountAddresses[0].String(),
 		},
-		{"end reward program - invalid id",
-			"999",
-			"",
-			3,
-			s.accountAddresses[0].String(),
+		{
+			name:               "end reward program - invalid id",
+			endRewardProgramId: "999",
+			expectErrMsg:       "",
+			expectedCode:       3,
+			signer:             s.accountAddresses[0].String(),
 		},
-		{"end reward program - invalid state",
-			"2",
-			"",
-			5,
-			s.accountAddresses[0].String(),
+		{
+			name:               "end reward program - invalid state",
+			endRewardProgramId: "2",
+			expectErrMsg:       "",
+			expectedCode:       5,
+			signer:             s.accountAddresses[0].String(),
 		},
-		{"end reward program - not authorized",
-			"1",
-			"",
-			4,
-			s.accountAddresses[1].String(),
+		{
+			name:               "end reward program - not authorized",
+			endRewardProgramId: "1",
+			expectErrMsg:       "",
+			expectedCode:       4,
+			signer:             s.accountAddresses[1].String(),
 		},
-		{"end reward program - invalid id format",
-			"abc",
-			"invalid argument : abc",
-			0,
-			s.accountAddresses[0].String(),
+		{
+			name:               "end reward program - invalid id format",
+			endRewardProgramId: "abc",
+			expectErrMsg:       "invalid argument : abc",
+			expectedCode:       0,
+			signer:             s.accountAddresses[0].String(),
 		},
 	}
 
@@ -816,68 +826,75 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 		expectedIds    []uint64
 		expectedLength int64
 	}{
-		{"query all reward by address",
-			s.accountAddr.String(),
-			"all",
-			false,
-			"",
-			0,
-			[]uint64{1, 2, 3, 4},
-			100,
+		{
+			name:           "query all reward by address",
+			addressArg:     s.accountAddr.String(),
+			stateArg:       "all",
+			byId:           false,
+			expectErrMsg:   "",
+			expectedCode:   0,
+			expectedIds:    []uint64{1, 2, 3, 4},
+			expectedLength: 100,
 		},
-		{"query unclaimable reward by address",
-			s.accountAddr.String(),
-			"unclaimable",
-			false,
-			"",
-			0,
-			[]uint64{1, 5},
-			26,
+		{
+			name:           "query unclaimable reward by address",
+			addressArg:     s.accountAddr.String(),
+			stateArg:       "unclaimable",
+			byId:           false,
+			expectErrMsg:   "",
+			expectedCode:   0,
+			expectedIds:    []uint64{1, 5},
+			expectedLength: 26,
 		},
-		{"query claimable reward by address",
-			s.accountAddr.String(),
-			"claimable",
-			false,
-			"",
-			0,
-			[]uint64{2, 6},
-			25,
+		{
+			name:           "query claimable reward by address",
+			addressArg:     s.accountAddr.String(),
+			stateArg:       "claimable",
+			byId:           false,
+			expectErrMsg:   "",
+			expectedCode:   0,
+			expectedIds:    []uint64{2, 6},
+			expectedLength: 25,
 		},
-		{"query claimed reward by address",
-			s.accountAddr.String(),
-			"claimed",
-			false,
-			"",
-			0,
-			[]uint64{3, 7},
-			25,
+		{
+			name:           "query claimed reward by address",
+			addressArg:     s.accountAddr.String(),
+			stateArg:       "claimed",
+			byId:           false,
+			expectErrMsg:   "",
+			expectedCode:   0,
+			expectedIds:    []uint64{3, 7},
+			expectedLength: 25,
 		},
-		{"query expired reward by address",
-			s.accountAddr.String(),
-			"expired",
-			false,
-			"",
-			0,
-			[]uint64{4, 8},
-			25,
+		{
+			name:           "query expired reward by address",
+			addressArg:     s.accountAddr.String(),
+			stateArg:       "expired",
+			byId:           false,
+			expectErrMsg:   "",
+			expectedCode:   0,
+			expectedIds:    []uint64{4, 8},
+			expectedLength: 25,
 		},
-		{"query reward by address",
-			s.accountAddr.String(),
-			"invalid",
-			false,
-			"failed to query reward distributions. invalid is not a valid query param",
-			0,
-			[]uint64{},
-			0,
+		{
+			name:           "query reward by address",
+			addressArg:     s.accountAddr.String(),
+			stateArg:       "invalid",
+			byId:           false,
+			expectErrMsg:   "failed to query reward distributions. invalid is not a valid query param",
+			expectedCode:   0,
+			expectedIds:    []uint64{},
+			expectedLength: 0,
 		},
-		{"query reward by invalid address",
-			"invalid address",
-			"expired",
-			false,
-			"failed to query reward distributions: rpc error: code = InvalidArgument desc = decoding bech32 failed: invalid character in string: ' ': invalid address: invalid request",
-			0,
-			[]uint64{},
-			0,
+		{
+			name:           "query reward by invalid address",
+			addressArg:     "invalid address",
+			stateArg:       "expired",
+			byId:           false,
+			expectErrMsg:   "failed to query reward distributions: rpc error: code = Unknown desc = decoding bech32 failed: invalid character in string: ' ': invalid address: unknown request",
+			expectedCode:   0,
+			expectedIds:    []uint64{},
+			expectedLength: 0,
 		},
 	}
 

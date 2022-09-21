@@ -66,7 +66,7 @@ func (s *RewardGenesisTypesTestSuite) TestGenesisValidate() {
 		2,
 		"test",
 		0,
-		map[string]uint64{},
+		[]*ActionCounter{},
 	)
 	s.Assert().Error(NewGenesisState(10, []RewardProgram{rewardProgram}, []ClaimPeriodRewardDistribution{validClaimPeriod}, []RewardAccountState{invalidRewardState}).Validate(), "should fail on validation on reward state")
 
@@ -75,7 +75,7 @@ func (s *RewardGenesisTypesTestSuite) TestGenesisValidate() {
 		2,
 		"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 		0,
-		map[string]uint64{},
+		[]*ActionCounter{},
 	)
 	s.Assert().NoError(NewGenesisState(10, []RewardProgram{rewardProgram}, []ClaimPeriodRewardDistribution{validClaimPeriod}, []RewardAccountState{validRewardState}).Validate(), "should pass all validations")
 

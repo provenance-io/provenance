@@ -4,13 +4,22 @@ order: 3
 
 # State Transitions
 
-This document describes the state transition operations pertaining to:
-
-1. [Reward Programs](./03_state_transitions.md#reward-programs)
-2. [Reward Claims](./03_state_transitions.md#reward-claims)
-
-<!-- TOC 2 2 -->
+This document describes the state transition operations involved in the rewards module.
  
+<!-- TOC -->
+  - [Reward Programs](#reward-programs)
+    - [Pending ](#pending)
+    - [Started ](#started)
+    - [Finished ](#finished)
+    - [Expired](#expired)
+  - [Reward Claims](#reward-claims)
+    - [Unclaimable](#unclaimable)
+    - [Claimable](#claimable)
+    - [Claimed](#claimed)
+    - [Expired](#expired)
+
+
+
 ## Reward Programs
 State transition for Reward Programs happen on `BeginBlock` and make use of the `BlockTime` attribute.
 
@@ -28,11 +37,11 @@ A user may force a Reward Program in this state to end with the `end-reward-prog
 ### Started 
 The Reward Program has started, and users can participate by performing qualifying actions. Participants can claim their rewards at the end of the claim period that the qualifying action was performed in.
 
-### Finished 
-The Reward Program has ended, and participants can no longer make qualifying actions. Participants have a limited amount of time to collect their remaining rewards.
-
 #### Note
 A user may force a Reward Program in this state to end with the `end-reward-program` transaction. The Reward Program will transition to the `Finished` state on the next `BeginBlock`.
+
+### Finished 
+The Reward Program has ended, and participants can no longer make qualifying actions. Participants have a limited amount of time to collect their remaining rewards.
 
 ### Expired
 Reward program has passed its expiration date, and participants can no longer claim rewards. The remaining balance and any unclaimed rewards will be returned to the creator.

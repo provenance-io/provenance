@@ -38,10 +38,15 @@ const (
 
 // RewardAction defines the interface that actions need to implement
 type RewardAction interface {
+	// ActionType returns a string identifying this action type.
 	ActionType() string
+	// Evaluate returns true if this reward action satisfies the provided state and event.
 	Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool
+	// PreEvaluate returns true if this reward action is in a state that's ready for evaluation.
 	PreEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool
+	// PostEvaluate returns true if the state's action counter is within this reward action's min and max (inclusive), also returns the EvaluationResult especially important if there are additional rules which result in additional shares being awarded.
 	PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) (bool, EvaluationResult)
+	// GetBuilder returns a new ActionBuilder for this reward action.
 	GetBuilder() ActionBuilder
 }
 
@@ -70,6 +75,8 @@ func NewEventCriteria(events []ABCIEvent) *EventCriteria {
 	return &criteria
 }
 
+// MatchesEvent returns true if this EventCriteria's events contains the
+// provided event type or if this EventCriteria's doesn't have any events.
 func (ec *EventCriteria) MatchesEvent(eventType string) bool {
 	// If we have no Events then we match everything
 	if ec.Events == nil {
@@ -81,6 +88,8 @@ func (ec *EventCriteria) MatchesEvent(eventType string) bool {
 	return exists
 }
 
+// MatchesAttribute returns true if this ABCIEvent has an attribute that matches the provided key and value.
+// The value is only compared if this ABCIEvent's attribute has a value.
 func (ec *ABCIEvent) MatchesAttribute(name string, value []byte) bool {
 	attribute, exists := ec.Attributes[name]
 	if !exists {
@@ -239,7 +248,7 @@ func (rp *RewardProgram) Validate() error {
 
 // ============ Account State ============
 
-func NewRewardAccountState(rewardProgramID, rewardClaimPeriodID uint64, address string, shares uint64, actionCounter map[string]uint64) RewardAccountState {
+func NewRewardAccountState(rewardProgramID, rewardClaimPeriodID uint64, address string, shares uint64, actionCounter []*ActionCounter) RewardAccountState {
 	return RewardAccountState{
 		RewardProgramId: rewardProgramID,
 		ClaimPeriodId:   rewardClaimPeriodID,
@@ -264,10 +273,14 @@ func (s *RewardAccountState) Validate() error {
 	return nil
 }
 
+// CalculateExpectedEndTime returns the expected end time (in UTC).
+// expected end time = programStartTime + claimPeriodSeconds * numberOfClaimPeriods.
 func CalculateExpectedEndTime(programStartTime time.Time, claimPeriodSeconds, numberOfClaimPeriods uint64) time.Time {
 	return programStartTime.Add(time.Duration(claimPeriodSeconds*numberOfClaimPeriods) * time.Second).UTC()
 }
 
+// CalculateEndTimeMax returns the latest time that a program can end (in UTC).
+// end time max = programStartTime + claimPeriodSeconds * (numberOfClaimPeriods + maxRolloverPeriods).
 func CalculateEndTimeMax(programStartTime time.Time, claimPeriodSeconds, numberOfClaimPeriods uint64, maxRolloverPeriods uint64) time.Time {
 	return programStartTime.Add(time.Duration(claimPeriodSeconds*(numberOfClaimPeriods+maxRolloverPeriods)) * time.Second).UTC()
 }
@@ -395,6 +408,7 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	return hasValidDelegationAmount && hasValidActivePercentile
 }
 
+// GetMinimumActiveStakePercentile returns this action's minimum active stake percentile or zero if not defined.
 func (ad *ActionDelegate) GetMinimumActiveStakePercentile() sdk.Dec {
 	if ad != nil {
 		return ad.MinimumActiveStakePercentile
@@ -402,6 +416,7 @@ func (ad *ActionDelegate) GetMinimumActiveStakePercentile() sdk.Dec {
 	return sdk.NewDec(0)
 }
 
+// GetMaximumActiveStakePercentile returns this action's maximum active stake percentile or zero if not defined.
 func (ad *ActionDelegate) GetMaximumActiveStakePercentile() sdk.Dec {
 	if ad != nil {
 		return ad.MaximumActiveStakePercentile
@@ -413,10 +428,10 @@ func (ad *ActionDelegate) PreEvaluate(ctx sdk.Context, provider KeeperProvider, 
 	return true
 }
 
-func (ad *ActionDelegate) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) (bool, EvaluationResult) {
-	actionCounter := state.ActionCounter[ad.ActionType()]
+func (ad *ActionDelegate) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+	actionCounter := GetActionCount(state.ActionCounter, ad.ActionType())
 	hasValidActionCount := actionCounter >= ad.GetMinimumActions() && actionCounter <= ad.GetMaximumActions()
-	return hasValidActionCount, event
+	return hasValidActionCount
 }
 
 // ============ Action Transfer Delegations ============
@@ -443,13 +458,13 @@ func (at *ActionTransfer) ActionType() string {
 	return ActionTypeTransfer
 }
 
-func (at *ActionTransfer) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) bool {
+func (at *ActionTransfer) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
 	// get the address that is performing the send
-	addressSender := evaluationResult.Address
+	addressSender := event.Address
 	if addressSender == nil {
 		return false
 	}
-	if provider.GetAccountKeeper().GetModuleAddress(authtypes.FeeCollectorName).Equals(evaluationResult.Recipient) {
+	if provider.GetAccountKeeper().GetModuleAddress(authtypes.FeeCollectorName).Equals(event.Recipient) {
 		return false
 	}
 	// check delegations if and only if mandated by the Action
@@ -472,7 +487,7 @@ func (at *ActionTransfer) PreEvaluate(ctx sdk.Context, provider KeeperProvider, 
 }
 
 func (at *ActionTransfer) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) (bool, EvaluationResult) {
-	actionCounter := state.ActionCounter[at.ActionType()]
+	actionCounter := GetActionCount(state.ActionCounter, at.ActionType())
 	hasValidActionCount := actionCounter >= at.GetMinimumActions() && actionCounter <= at.GetMaximumActions()
 	return hasValidActionCount, evaluationResult
 }
@@ -501,9 +516,9 @@ func (atd *ActionVote) ActionType() string {
 	return ActionTypeVote
 }
 
-func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) bool {
+func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
 	// get the address that voted
-	addressVoting := evaluationResult.Address
+	addressVoting := event.Address
 	if !sdk.NewCoin(pioconfig.DefaultBondDenom, sdk.ZeroInt()).IsGTE(atd.MinimumDelegationAmount) {
 		// now check if it has any delegations
 		totalDelegations, found := getAllDelegations(ctx, provider, addressVoting)
@@ -523,7 +538,7 @@ func (atd *ActionVote) PreEvaluate(ctx sdk.Context, provider KeeperProvider, sta
 }
 
 func (atd *ActionVote) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) (bool, EvaluationResult) {
-	actionCounter := state.ActionCounter[atd.ActionType()]
+	actionCounter := GetActionCount(state.ActionCounter, atd.ActionType())
 	hasValidActionCount := actionCounter >= atd.GetMinimumActions() && actionCounter <= atd.GetMaximumActions()
 	// only for action vote do Shares in EvaluationResult need to be changed.
 	// get the address that voted
@@ -556,6 +571,8 @@ func (qa *QualifyingAction) Validate() (isValid error) {
 	return isValid
 }
 
+// GetRewardAction returns the reward action for this qualifying action.
+// An error is returned if the action is of an unexpected type.
 func (qa *QualifyingAction) GetRewardAction(ctx sdk.Context) (RewardAction, error) {
 	var action RewardAction
 
@@ -602,4 +619,36 @@ func getAllDelegations(ctx sdk.Context, provider KeeperProvider, delegator sdk.A
 		return sum, false
 	}
 	return sum, true
+}
+
+// GetActionCount convenience method to find NumberOfActions for a given action type from a ActionCounter Slice
+func GetActionCount(actionCounter []*ActionCounter, actionType string) uint64 {
+	// nil slices are automatically checked for by golang range, so no need to check for nil explicitly https://go.dev/play/p/BwaVSIHclPm
+	for i := range actionCounter {
+		if actionCounter[i].ActionType == actionType {
+			// Found return counter
+			return actionCounter[i].GetNumberOfActions()
+		}
+	}
+	return 0
+}
+
+// IncrementActionCount convenience method to increment NumberOfActions for a given action type by 1(for now) and return an ActionCounter Slice
+// if action type not found will create one and append to slice and return slice.
+func IncrementActionCount(actionCounter []*ActionCounter, actionType string) []*ActionCounter {
+	// nil slices are automatically checked for by golang range, so no need to check for nil explicitly https://go.dev/play/p/BwaVSIHclPm
+	for i := range actionCounter {
+		// if found increment counter
+		if actionCounter[i].ActionType == actionType {
+			// Found return counter
+			actionCounter[i].NumberOfActions = actionCounter[i].GetNumberOfActions() + 1
+			return actionCounter
+		}
+	}
+	// if not found create one and add
+	actionCounter = append(actionCounter, &ActionCounter{
+		ActionType:      actionType,
+		NumberOfActions: 1,
+	})
+	return actionCounter
 }

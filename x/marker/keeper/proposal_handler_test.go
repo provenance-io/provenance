@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -32,7 +32,7 @@ type IntegrationTestSuite struct {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
-	s.app = provenance.Setup(false)
+	s.app = provenance.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.k = markerkeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(markertypes.ModuleName), s.app.GetSubspace(markertypes.ModuleName), s.app.AccountKeeper, s.app.BankKeeper, s.app.AuthzKeeper, s.app.FeeGrantKeeper, s.app.GetKey(banktypes.StoreKey))
 	s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
@@ -46,7 +46,7 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 
 	testCases := []struct {
 		name string
-		prop govtypes.Content
+		prop govtypesv1beta1.Content
 		err  error
 	}{
 		// ADD MARKER PROPOSALS
