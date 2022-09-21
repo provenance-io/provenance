@@ -49,8 +49,9 @@ const (
 	// EnvTypeFlag is a flag for indicating a testnet
 	EnvTypeFlag = "testnet"
 	// Flag used to indicate coin type.
-	CoinTypeFlag    = "coin-type"
-	CustomDenomFlag = "custom-denom"
+	CoinTypeFlag               = "coin-type"
+	CustomDenomFlag            = "custom-denom"
+	CustomMsgFeeFloorPriceFlag = "msgfee-floor-price"
 )
 
 // ChainID is the id of the running chain
@@ -95,8 +96,10 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			// set app context based on initialized EnvTypeFlag
 			testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
 			customDenom := server.GetServerContextFromCmd(cmd).Viper.GetString(CustomDenomFlag)
+			customMsgFeeFloor := server.GetServerContextFromCmd(cmd).Viper.GetInt64(CustomMsgFeeFloorPriceFlag)
 			app.SetConfig(testnet, true)
-			pioconfig.SetProvenanceConfig(customDenom, 0)
+			cmd.Printf("The Msg Fee Floor price is %v\n", customMsgFeeFloor)
+			pioconfig.SetProvenanceConfig(customDenom, customMsgFeeFloor)
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
 				CoinTypeFlag: fmt.Sprint(app.CoinType),
@@ -108,7 +111,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        ChainID,
 		flags.FlagKeyringBackend: "test",
-		server.FlagMinGasPrices:  pioconfig.GetProvenanceConfig().MinGasPrices,
+		server.FlagMinGasPrices:  pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices,
 		CoinTypeFlag:             fmt.Sprint(app.CoinTypeMainNet),
 	})
 
@@ -132,6 +135,7 @@ func Execute(rootCmd *cobra.Command) error {
 	rootCmd.PersistentFlags().String(flags.FlagLogFormat, tmcfg.LogFormatPlain, "The logging format (json|plain)")
 	// Custom denom flag added to root command
 	rootCmd.PersistentFlags().String(CustomDenomFlag, "", "Indicates if a custom denom is to be used, and the name of it.")
+	rootCmd.PersistentFlags().Int64(CustomMsgFeeFloorPriceFlag, 0, "Custom msg fee floor price, optional.")
 
 	executor := tmcli.PrepareBaseCmd(rootCmd, "", app.DefaultNodeHome)
 	return executor.ExecuteContext(ctx)
@@ -278,7 +282,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		// panic if there was a parse error (for example more than one coin was passed in for required fee).
 		if err != nil {
 			panic(fmt.Errorf("invalid min-gas-price value, expected single decimal coin value such as '%s', got '%s';\n\n %w",
-				pioconfig.GetProvenanceConfig().MinGasPrices,
+				pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices,
 				appOpts.Get(server.FlagMinGasPrices),
 				err))
 		}

@@ -60,6 +60,7 @@ func InitCmd(mbm module.BasicManager) *cobra.Command {
 	cmd.Flags().BoolP(FlagRecover, "r", false, "interactive key recovery from mnemonic")
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().String(CustomDenomFlag, "", "custom denom, optional")
+	cmd.Flags().Int64(CustomMsgFeeFloorPriceFlag, 0, "custom msg fee floor price, optional")
 	return cmd
 }
 
@@ -75,8 +76,9 @@ func Init(
 	doOverwrite, _ := cmd.Flags().GetBool(FlagOverwrite)
 
 	customDenom, _ := cmd.Flags().GetString(CustomDenomFlag)
+	customMsgFeeFloorPrice, _ := cmd.Flags().GetInt64(CustomMsgFeeFloorPriceFlag)
 
-	pioconfig.SetProvenanceConfig(customDenom, 0)
+	pioconfig.SetProvenanceConfig(customDenom, customMsgFeeFloorPrice)
 	if err := provconfig.EnsureConfigDir(cmd); err != nil {
 		return err
 	}
@@ -102,7 +104,7 @@ func Init(
 	}
 
 	// Set a few things in the configs.
-	appConfig.MinGasPrices = pioconfig.GetProvenanceConfig().MinGasPrices
+	appConfig.MinGasPrices = pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices
 
 	tmConfig.Moniker = moniker
 	if len(chainID) == 0 {

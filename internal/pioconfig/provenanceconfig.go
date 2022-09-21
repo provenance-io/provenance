@@ -20,12 +20,13 @@ const (
 )
 
 type ProvenanceConfig struct {
-	FeeDenom string
-	// Min gas price as a node level config, i.e. each node before could set its gas price in app.toml
-	MinGasPrices        string
-	MsgFeeFloorGasPrice int64 // Msg fee ante handlers and code use this for their calculations, this only sets the default param
+	FeeDenom               string
+	ProvenanceMinGasPrices string // Node level config that provenance binary can set and enforce across the board
+	// e.g. provenance enforces 1905nhash across the board, also for now it will mirror MsgFeeFloorGasPrice.
+	MsgFeeFloorGasPrice int64 // Msg fee ante handlers and code use this for their calculations, this ***ONLY SETS***
+	// the default param(see method DefaultFloorGasPrice), all calculated values are still from msg fee module PARAMS.
 	// for that module, if the param is changed via governance then the code will pick the new value.(should pick that up from module param)
-	BondDenom string
+	BondDenom string // Also referred to as Staking Denom sometimes.
 }
 
 var provConfig *ProvenanceConfig
@@ -35,17 +36,17 @@ func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
 	defer lock.Unlock()
 	if len(customDenom) > 0 {
 		provConfig = &ProvenanceConfig{
-			FeeDenom:            customDenom,
-			MinGasPrices:        fmt.Sprintf("%v", msgFeeFloorGasPrice) + customDenom,
-			MsgFeeFloorGasPrice: msgFeeFloorGasPrice,
-			BondDenom:           customDenom,
+			FeeDenom:               customDenom,
+			ProvenanceMinGasPrices: fmt.Sprintf("%v", msgFeeFloorGasPrice) + customDenom,
+			MsgFeeFloorGasPrice:    msgFeeFloorGasPrice,
+			BondDenom:              customDenom,
 		}
 	} else {
 		provConfig = &ProvenanceConfig{
-			FeeDenom:            defaultFeeDenom,
-			MinGasPrices:        fmt.Sprintf("%v", defaultMinGasPrices) + defaultFeeDenom,
-			MsgFeeFloorGasPrice: defaultMinGasPrices,
-			BondDenom:           defaultBondDenom,
+			FeeDenom:               defaultFeeDenom,
+			ProvenanceMinGasPrices: fmt.Sprintf("%v", defaultMinGasPrices) + defaultFeeDenom,
+			MsgFeeFloorGasPrice:    defaultMinGasPrices,
+			BondDenom:              defaultBondDenom,
 		}
 	}
 }
