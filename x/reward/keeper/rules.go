@@ -90,12 +90,13 @@ func (k Keeper) ProcessQualifyingActions(ctx sdk.Context, program *types.RewardP
 			continue
 		}
 		state.ActionCounter = types.IncrementActionCount(state.ActionCounter, processor.ActionType())
-		if !processor.PostEvaluate(ctx, k, state) {
+		postEvalRes, actionFromPostEval := processor.PostEvaluate(ctx, k, state, action)
+		if !postEvalRes {
 			k.SetRewardAccountState(ctx, state)
 			continue
 		}
 
-		successfulActions = append(successfulActions, action)
+		successfulActions = append(successfulActions, actionFromPostEval)
 		k.SetRewardAccountState(ctx, state)
 	}
 

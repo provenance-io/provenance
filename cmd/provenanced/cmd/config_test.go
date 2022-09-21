@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"io/ioutil"
 	"regexp"
 	"strings"

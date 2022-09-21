@@ -5998,6 +5998,7 @@ ActionVote represents the voting action and its required eligibility criteria.
 | `minimum_actions` | [uint64](#uint64) |  | Minimum number of successful votes. |
 | `maximum_actions` | [uint64](#uint64) |  | Maximum number of successful votes. |
 | `minimum_delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Minimum delegation amount the account must have across all validators, for the vote action to be counted. |
+| `validator_multiplier` | [uint64](#uint64) |  | If not zero, this is multiplier that shares will be multiplied by. |
 
 
 

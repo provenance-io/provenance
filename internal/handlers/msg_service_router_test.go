@@ -1856,12 +1856,11 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
 }
 
-
 // checks to see that votes are coming from an address that has delegated enough coins but is a validator, and gets the multiplier applied
 func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multiplier_Present(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
+	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
-	_, pubKey2, addr2 := testdata.KeyTestPubAddr()
+	_, pubKey2, _ := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
 	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
 
@@ -1892,16 +1891,16 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	)
 
 	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
-	err, bondedVal1, bondedVal2 := createTestValidators(pubKey, pubKey2, addr, addr2)
-	app := piosimapp.SetupWithGenesisRewardsProgram(uint64(2), []rewardtypes.RewardProgram{rewardProgram}, []authtypes.GenesisAccount{acct1}, []stakingtypes.Validator{bondedVal1, bondedVal2}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+	//err, bondedVal1, bondedVal2 := createTestValidators(pubKey, pubKey2, addr, addr2)
+	app := piosimapp.SetupWithGenesisRewardsProgram(t, uint64(2), []rewardtypes.RewardProgram{rewardProgram}, []authtypes.GenesisAccount{acct1}, createValSet(t, pubKey, pubKey2), banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
-	msg, err := govtypes.NewMsgSubmitProposal(
-		ContentFromProposalType("title", "description", govtypes.ProposalTypeText),
+	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
+		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
 		coinsPos,
 		addr,
 	)
@@ -1917,7 +1916,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 	require.NoError(t, err)
 
-	_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), txGov)
+	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
 	require.NoError(t, errFromDeliverTx)
 
 	app.EndBlock(abci.RequestEndBlock{Height: 2})
@@ -1928,7 +1927,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 
 	require.NotEmpty(t, proposal, "proposal has to exist")
 	// tx with a fee associated with msg type and account has funds
-	vote1 := govtypes.NewMsgVote(addr, proposal[0].ProposalId, govtypes.OptionYes)
+	vote1 := govtypesv1beta1.NewMsgVote(addr, proposal[0].Id, govtypesv1beta1.OptionYes)
 
 	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 
@@ -1938,7 +1937,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 		require.NoError(t, acct1.SetSequence(seq))
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
 		require.NoError(t, err1)
-		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx)
 		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 		app.EndBlock(abci.RequestEndBlock{Height: height})
@@ -1957,7 +1956,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
 	require.NoError(t, err)
-	assert.Equal(t, 20, int(accountState.ActionCounter["ActionVote"]), "account state incorrect")
+	assert.Equal(t, uint64(20), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionVote"), "account state incorrect")
 	assert.Equal(t, 100, int(accountState.SharesEarned), "account state incorrect")
 
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
@@ -1971,9 +1970,9 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 
 // checks to see that votes are coming from an address that has delegated enough coins but is not a validator
 func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multiplier_Present_But_NotValidatorVotes(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
+	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
-	_, pubKey2, addr2 := testdata.KeyTestPubAddr()
+	_, pubKey2, _ := testdata.KeyTestPubAddr()
 	priv3, _, addr3 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
 	acct3 := authtypes.NewBaseAccount(addr3, priv3.PubKey(), 0, 0)
@@ -2006,17 +2005,16 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	)
 
 	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
-	err, bondedVal1, bondedVal2 := createTestValidators(pubKey, pubKey2, addr, addr2)
-	app := piosimapp.SetupWithGenesisRewardsProgram(uint64(2), []rewardtypes.RewardProgram{rewardProgram}, []authtypes.GenesisAccount{acct3}, []stakingtypes.Validator{bondedVal1, bondedVal2}, banktypes.Balance{Address: addr.String(), Coins: acct1Balance}, banktypes.Balance{Address: addr3.String(), Coins: acct1Balance})
+	app := piosimapp.SetupWithGenesisRewardsProgram(t, uint64(2), []rewardtypes.RewardProgram{rewardProgram}, []authtypes.GenesisAccount{acct3}, createValSet(t, pubKey, pubKey2), banktypes.Balance{Address: addr.String(), Coins: acct1Balance}, banktypes.Balance{Address: addr3.String(), Coins: acct1Balance})
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
-	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, acct3.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct3.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
-	msg, err := govtypes.NewMsgSubmitProposal(
-		ContentFromProposalType("title", "description", govtypes.ProposalTypeText),
+	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
+		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
 		coinsPos,
 		addr3,
 	)
@@ -2032,7 +2030,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), msg)
 	require.NoError(t, err)
 
-	_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), txGov)
+	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
 	require.NoError(t, errFromDeliverTx)
 
 	app.EndBlock(abci.RequestEndBlock{Height: 2})
@@ -2043,7 +2041,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 
 	require.NotEmpty(t, proposal, "proposal has to exist")
 	// tx with a fee associated with msg type and account has funds
-	vote1 := govtypes.NewMsgVote(addr3, proposal[0].ProposalId, govtypes.OptionYes)
+	vote1 := govtypesv1beta1.NewMsgVote(addr3, proposal[0].Id, govtypesv1beta1.OptionYes)
 
 	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 
@@ -2053,7 +2051,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 		require.NoError(t, acct3.SetSequence(seq))
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), vote1)
 		require.NoError(t, err1)
-		_, res, errFromDeliverTx := app.Deliver(encCfg.TxConfig.TxEncoder(), tx1)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx)
 		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 		app.EndBlock(abci.RequestEndBlock{Height: height})
@@ -2072,7 +2070,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct3.Address)
 	require.NoError(t, err)
-	assert.Equal(t, 20, int(accountState.ActionCounter["ActionVote"]), "account state incorrect")
+	assert.Equal(t, uint64(20), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionVote"), "account state incorrect")
 	assert.Equal(t, 10, int(accountState.SharesEarned), "account state incorrect")
 
 	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
@@ -2413,14 +2411,6 @@ func signAndGenTx(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingC
 		return nil, err
 	}
 	err = txBuilder.SetSignatures(sigV2)
-	if err != nil {
-		return nil, err
-	}
-	return txBuilder, nil
-}
-
-func SignTxAndGetBytes(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey types.PubKey, privKey types.PrivKey, acct authtypes.BaseAccount, chainId string, msg ...sdk.Msg) ([]byte, error) {
-	txBuilder, err := signAndGenTx(gaslimit, fees, encCfg, pubKey, privKey, acct, chainId, msg)
 	if err != nil {
 		return nil, err
 	}
