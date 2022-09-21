@@ -52,6 +52,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add documentation for `gRPCurl` to `docs/grpcurl.md` [#953](https://github.com/provenance-io/provenance/issues/953)
 * Updated to go 1.18 [#996](https://github.com/provenance-io/provenance/issues/996)
 * Add docker files for local psql indexing [#997](https://github.com/provenance-io/provenance/issues/997)
+* Added two new Makefile targets to install and start the relayer [#1051] (https://github.com/provenance-io/provenance/pull/1051)
+* Updated relayer scripts to make them headless for external services [#1068] (https://github.com/provenance-io/provenance/pull/1068)
 
 ### Features
 
