@@ -230,11 +230,26 @@ func (v *VoteActionBuilder) GetEventCriteria() *EventCriteria {
 	})
 }
 
-var govVoteMsgUrls = []string{
-	sdk.MsgTypeURL(&govtypesv1.MsgVote{}),
-	sdk.MsgTypeURL(&govtypesv1.MsgVoteWeighted{}),
-	sdk.MsgTypeURL(&govtypesv1beta1.MsgVote{}),
-	sdk.MsgTypeURL(&govtypesv1beta1.MsgVoteWeighted{}),
+// govVoteMsgURLs the MsgURLs of all the governance module's vote messages.
+// Use getGovVoteMsgURLs() instead of using this variable directly.
+var govVoteMsgURLs []string
+
+// getGovVoteMsgURLs returns govVoteMsgURLs, but first sets it if it hasn't yet been set.
+func getGovVoteMsgURLs() []string {
+	// Checking for nil here (as opposed to len == 0) because we only want to set it
+	// if it hasn't been set yet.
+	if govVoteMsgURLs == nil {
+		// sdk.MsgTypeURL sometimes uses reflection and/or proto registration.
+		// So govVoteMsgURLs is only set when it's finally needed in the hopes
+		// that everything's wired up as needed by then.
+		govVoteMsgURLs = []string{
+			sdk.MsgTypeURL(&govtypesv1.MsgVote{}),
+			sdk.MsgTypeURL(&govtypesv1.MsgVoteWeighted{}),
+			sdk.MsgTypeURL(&govtypesv1beta1.MsgVote{}),
+			sdk.MsgTypeURL(&govtypesv1beta1.MsgVoteWeighted{}),
+		}
+	}
+	return govVoteMsgURLs
 }
 
 func (v *VoteActionBuilder) AddEvent(eventType string, attributes *map[string][]byte) error {
@@ -247,7 +262,7 @@ func (v *VoteActionBuilder) AddEvent(eventType string, attributes *map[string][]
 		v.Voter = address
 	} else if action, ok := (*attributes)[sdk.AttributeKeyAction]; ok {
 		a := string(action)
-		for _, m := range govVoteMsgUrls {
+		for _, m := range getGovVoteMsgURLs() {
 			if a == m {
 				v.Voted = true
 				break
