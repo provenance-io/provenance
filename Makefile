@@ -528,7 +528,7 @@ indexer-db-down:
 ##############################
 # Proto -> golang compilation
 ##############################
-proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-gen proto-swagger-gen
+proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-gen proto-swagger-gen
 
 containerProtoVer=v0.2
 containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
@@ -576,6 +576,10 @@ proto-check-breaking:
 	@echo "Check breaking Protobuf files"
 	$(DOCKER_BUF) breaking proto --against $(HTTPS_GIT)#branch=main,subdir=proto --error-format=json
 
+proto-check-breaking-third-party:
+	@echo "Check breaking Protobuf files"
+	$(DOCKER_BUF) breaking third_party/proto --against $(HTTPS_GIT)#branch=main,subdir=third_party/proto --error-format=json
+
 proto-update-check:
 	@echo "Checking for third_party Protobuf updates"
 	sh ./scripts/proto-update-check.sh
@@ -584,7 +588,7 @@ proto-update-deps:
 	@echo "Updating Protobuf files"
 	sh ./scripts/proto-update-deps.sh
 
-.PHONY: proto-all proto-gen proto-format proto-gen-any proto-lint proto-check-breaking proto-update-deps proto-update-check
+.PHONY: proto-all proto-gen proto-format proto-gen-any proto-lint proto-check-breaking proto-check-breaking-third-party proto-update-deps proto-update-check
 
 
 ##############################

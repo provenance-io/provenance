@@ -38,7 +38,7 @@ func (s *AnteTestSuite) TestEnsureMempoolAndMsgFees() {
 	// antehandler errors with insufficient fees
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
-	s.Require().Contains(err.Error(), "Base Fee+additional fee cannot be paid with fee value passed in : \"100000stake\", required: \"100100stake\" = \"100000stake\"(base-fee) +\"100stake\"(additional-fees): insufficient fee", "got wrong message")
+	s.Require().Contains(err.Error(), "Base Fee+additional fee cannot be paid with fee value passed in: \"100000stake\", required: \"100100stake\" = \"100000stake\"(base-fee) +\"100stake\"(additional-fees): insufficient fee", "got wrong message")
 }
 
 // checkTx true, fees supplied that do not meet floor gas price requirement (floor gas price * gas wanted)
@@ -107,7 +107,7 @@ func (s *AnteTestSuite) TestEnsureMempoolHighMinGasPrice() {
 	// antehandler errors with insufficient fees
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
-	s.Require().Contains(err.Error(), "Base Fee+additional fee cannot be paid with fee value passed in : \"100000stake\", required: \"2000000100stake\" = \"2000000000stake\"(base-fee) +\"100stake\"(additional-fees): insufficient fee", "got wrong message")
+	s.Require().Contains(err.Error(), "Base Fee+additional fee cannot be paid with fee value passed in: \"100000stake\", required: \"2000000100stake\" = \"2000000000stake\"(base-fee) +\"100stake\"(additional-fees): insufficient fee", "got wrong message")
 }
 
 func (s *AnteTestSuite) TestEnsureMempoolAndMsgFeesPass() {

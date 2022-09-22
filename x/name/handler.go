@@ -24,7 +24,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.DeleteName(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
+			return nil, sdkerrors.ErrUnknownRequest.Wrapf("unrecognized %s message type: %T", types.ModuleName, msg)
 		}
 	}
 }
@@ -35,7 +35,7 @@ func NewProposalHandler(k keeper.Keeper) govtypesv1beta1.Handler {
 		case *types.CreateRootNameProposal:
 			return keeper.HandleCreateRootNameProposal(ctx, k, c)
 		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized name proposal content type: %T", c)
+			return sdkerrors.ErrUnknownRequest.Wrapf("unrecognized name proposal content type: %T", c)
 		}
 	}
 }

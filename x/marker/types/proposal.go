@@ -274,7 +274,7 @@ func (sdmdp SetDenomMetadataProposal) ProposalRoute() string { return RouterKey 
 func (sdmdp SetDenomMetadataProposal) ProposalType() string  { return ProposalTypeSetDenomMetadata }
 func (sdmdp SetDenomMetadataProposal) ValidateBasic() error {
 	if err := sdmdp.Metadata.Validate(); err != nil {
-		return sdkerrors.Wrap(govtypes.ErrInvalidProposalContent, "invalid metadata: "+err.Error())
+		return govtypes.ErrInvalidProposalContent.Wrap("invalid metadata: " + err.Error())
 	}
 	return govtypesv1beta1.ValidateAbstract(&sdmdp)
 }

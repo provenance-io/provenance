@@ -20,24 +20,47 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.18
+      - name: Setup Job
+        id: setup
+        run: |
+          branch='main'
+          if [ -n "$GITHUB_BASE_REF" ]; then
+            branch="$GITHUB_BASE_REF"
+          fi
+          echo "base-branch: [$branch]"
+          echo "::set-output name=base-branch::$branch"
       - uses: bufbuild/buf-setup-action@v1.8.0
-      - uses: bufbuild/buf-lint-action@v1
+      - uses: bufbuild/buf-lint-action@v1.0.1
         if: always()
         with:
           input: 'proto'
-      - uses: bufbuild/buf-breaking-action@v1
+      - name: provenance breaking
+        id: breaking-prov
         if: always()
+        uses: bufbuild/buf-breaking-action@v1.1.0
         with:
           input: 'proto'
-          # The 'main' branch of the GitHub repository that defines the module.
-          against: 'buf.build/provenance-io/provenance'
-      - name: third_party breaking
+          against: 'https://github.com/provenance-io/provenance.git#branch=${{ steps.setup.outputs.base-branch }},subdir=proto'
+      - name: provenance breaking results
+        if: always() && steps.breaking-prov.outcome == 'failure'
+        run: |
+          echo "results:"
+          echo "${{ toJSON(steps.breaking-prov.outputs) }}"
+      - name: third-party breaking
+        id: breaking-third
         if: always()
-        uses: bufbuild/buf-breaking-action@v1
+        uses: bufbuild/buf-breaking-action@v1.1.0
         with:
           input: 'third_party/proto'
-          # The 'main' branch of the GitHub repository that defines the module.
-          against: 'buf.build/provenance-io/third-party'
+          against: 'https://github.com/provenance-io/provenance.git#branch=${{ steps.setup.outputs.base-branch }},subdir=third_party/proto'
+      - name: third-party breaking results
+        if: always() && steps.breaking-third.outcome == 'failure'
+        run: |
+          echo "results:"
+          echo "${{ toJSON(steps.breaking-third.outputs) }}"
       - name: proto-update-check
         if: always()
-        run: make proto-update-check
+        run: |
+          BASE_BRANCH="..origin/${{ steps.setup.outputs.base-branch }}"
+          export BASE_BRANCH
+          make proto-update-check
