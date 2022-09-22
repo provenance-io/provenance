@@ -1947,12 +1947,12 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	require.NoError(t, err)
 	assert.Len(t, claimPeriodDistributions, 1, "claim period reward distributions should exist")
-	assert.Equal(t, int64(100), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
-	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
+	assert.Equal(t, int64(100), claimPeriodDistributions[0].TotalShares, "shares should have accumulated to value of 100 ( 10 action * multiplier (10) shares")
+	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended.")
 	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
 		Denom:  "nhash",
 		Amount: sdk.ZeroInt(),
-	}), "claim period has not ended so shares have to be 0")
+	}), "claim period has not ended so rewards still haven't been calculated(hence 0 coins)")
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
 	require.NoError(t, err)
@@ -1973,6 +1973,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
 	_, pubKey2, _ := testdata.KeyTestPubAddr()
+	// an address which is not a validator
 	priv3, _, addr3 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
 	acct3 := authtypes.NewBaseAccount(addr3, priv3.PubKey(), 0, 0)
@@ -2040,8 +2041,8 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	proposal := app.GovKeeper.GetProposals(ctx)
 
 	require.NotEmpty(t, proposal, "proposal has to exist")
-	// tx with a fee associated with msg type and account has funds
-	vote1 := govtypesv1beta1.NewMsgVote(addr3, proposal[0].Id, govtypesv1beta1.OptionYes)
+	// vote with an account which is not a validator
+	vote := govtypesv1beta1.NewMsgVote(addr3, proposal[0].Id, govtypesv1beta1.OptionYes)
 
 	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 
@@ -2049,7 +2050,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	for height := int64(3); height < int64(23); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
 		require.NoError(t, acct3.SetSequence(seq))
-		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), vote1)
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), vote)
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx)
@@ -2061,12 +2062,12 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
 	require.NoError(t, err)
 	assert.Len(t, claimPeriodDistributions, 1, "claim period reward distributions should exist")
-	assert.Equal(t, int64(10), claimPeriodDistributions[0].TotalShares, "claim period has not ended so shares have to be 0")
-	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended so shares have to be 0")
+	assert.Equal(t, int64(10), claimPeriodDistributions[0].TotalShares, "shares should have accumulated to value of 10, ( 10 action leading to 1 share each) (no multiplier is applied) ")
+	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended.")
 	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
 		Denom:  "nhash",
 		Amount: sdk.ZeroInt(),
-	}), "claim period has not ended so shares have to be 0")
+	}), "claim period has not ended so rewards still haven't been calculated(hence 0 coins)")
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct3.Address)
 	require.NoError(t, err)
