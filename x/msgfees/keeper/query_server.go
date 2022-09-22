@@ -57,7 +57,7 @@ func (k Keeper) CalculateTxFees(goCtx context.Context, request *types.CalculateT
 
 	gasInfo, _, txCtx, err := k.simulateFunc(request.TxBytes)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	gasMeter, ok := txCtx.GasMeter().(*antewrapper.FeeGasMeter)

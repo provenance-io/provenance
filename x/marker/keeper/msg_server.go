@@ -30,18 +30,18 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *types.MsgGrantAllo
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	m, err := k.GetMarkerByDenom(ctx, msg.Denom)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	admin, err := sdk.AccAddressFromBech32(msg.Administrator)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	if !m.AddressHasAccess(admin, types.Access_Admin) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "administrator must have admin grant on marker")
+		return nil, sdkerrors.ErrUnauthorized.Wrap("administrator must have admin grant on marker")
 	}
 	allowance, err := msg.GetFeeAllowanceI()
 	if err != nil {
@@ -58,10 +58,10 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 	// Validate transaction message.
 	err := msg.ValidateBasic()
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	if msg.Status >= types.StatusActive {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "a marker can not be created in an ACTIVE status")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("a marker can not be created in an ACTIVE status")
 	}
 
 	// Add marker requests must pass extra validation for denom (in addition to regular coin validation expression)
@@ -97,7 +97,7 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 
 	if err := k.Keeper.AddMarkerAccount(ctx, ma); err != nil {
 		ctx.Logger().Error("unable to add marker", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -116,14 +116,14 @@ func (k msgServer) AddAccess(goCtx context.Context, msg *types.MsgAddAccessReque
 
 	// Validate transaction message.
 	if err := msg.ValidateBasic(); err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	for i := range msg.Access {
 		access := msg.Access[i]
 		if err := k.Keeper.AddAccess(ctx, msg.GetSigners()[0], msg.Denom, &access); err != nil {
 			ctx.Logger().Error("unable to add access grant to marker", "err", err)
-			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
+			return nil, sdkerrors.ErrUnauthorized.Wrap(err.Error())
 		}
 	}
 
@@ -143,17 +143,17 @@ func (k msgServer) DeleteAccess(goCtx context.Context, msg *types.MsgDeleteAcces
 
 	// Validate transaction message.
 	if err := msg.ValidateBasic(); err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	addr, err := sdk.AccAddressFromBech32(msg.RemovedAddress)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
+		return nil, sdkerrors.ErrInvalidAddress.Wrap(err.Error())
 	}
 
 	if err := k.Keeper.RemoveAccess(ctx, msg.GetSigners()[0], msg.Denom, addr); err != nil {
 		ctx.Logger().Error("unable to remove access grant from marker", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
+		return nil, sdkerrors.ErrUnauthorized.Wrap(err.Error())
 	}
 
 	return &types.MsgDeleteAccessResponse{}, nil
@@ -165,11 +165,11 @@ func (k msgServer) Finalize(goCtx context.Context, msg *types.MsgFinalizeRequest
 
 	// Validate transaction message.
 	if err := msg.ValidateBasic(); err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	if err := k.Keeper.FinalizeMarker(ctx, msg.GetSigners()[0], msg.Denom); err != nil {
 		ctx.Logger().Error("unable to finalize marker", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -188,11 +188,11 @@ func (k msgServer) Activate(goCtx context.Context, msg *types.MsgActivateRequest
 
 	// Validate transaction message.
 	if err := msg.ValidateBasic(); err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	if err := k.Keeper.ActivateMarker(ctx, msg.GetSigners()[0], msg.Denom); err != nil {
 		ctx.Logger().Error("unable to activate marker", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -211,11 +211,11 @@ func (k msgServer) Cancel(goCtx context.Context, msg *types.MsgCancelRequest) (*
 
 	// Validate transaction message.
 	if err := msg.ValidateBasic(); err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	if err := k.Keeper.CancelMarker(ctx, msg.GetSigners()[0], msg.Denom); err != nil {
 		ctx.Logger().Error("unable to cancel marker", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -234,11 +234,11 @@ func (k msgServer) Delete(goCtx context.Context, msg *types.MsgDeleteRequest) (*
 
 	// Validate transaction message.
 	if err := msg.ValidateBasic(); err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	if err := k.Keeper.DeleteMarker(ctx, msg.GetSigners()[0], msg.Denom); err != nil {
 		ctx.Logger().Error("unable to delete marker", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -257,11 +257,11 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 
 	// Validate transaction message.
 	if err := msg.ValidateBasic(); err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	if err := k.Keeper.MintCoin(ctx, msg.GetSigners()[0], msg.Amount); err != nil {
 		ctx.Logger().Error("unable to mint coin for marker", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -298,11 +298,11 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurnRequest) (*type
 
 	// Validate transaction message.
 	if err := msg.ValidateBasic(); err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	if err := k.Keeper.BurnCoin(ctx, msg.GetSigners()[0], msg.Amount); err != nil {
 		ctx.Logger().Error("unable to burn coin from marker", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -339,7 +339,7 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 
 	// Validate transaction message.
 	if err := msg.ValidateBasic(); err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
@@ -349,7 +349,7 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 
 	if err := k.Keeper.WithdrawCoins(ctx, msg.GetSigners()[0], to, msg.Denom, msg.Amount); err != nil {
 		ctx.Logger().Error("unable to withdraw coins from marker", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -391,7 +391,7 @@ func (k msgServer) Transfer(goCtx context.Context, msg *types.MsgTransferRequest
 
 	// Validate transaction message.
 	if err := msg.ValidateBasic(); err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
@@ -451,12 +451,12 @@ func (k msgServer) SetDenomMetadata(
 
 	// Validate transaction message.
 	if err := msg.ValidateBasic(); err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	admin, addrErr := sdk.AccAddressFromBech32(msg.Administrator)
 	if addrErr != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, addrErr.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(addrErr.Error())
 	}
 
 	err := k.SetMarkerDenomMetadata(ctx, msg.Metadata, admin)
