@@ -44,7 +44,7 @@ type RewardAction interface {
 	Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool
 	// PreEvaluate returns true if this reward action is in a state that's ready for evaluation.
 	PreEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool
-	// PostEvaluate returns true if the state's action counter is within this reward action's min and max (inclusive), also returns the EvaluationResult especially important if there are additional rules which result in additional shares being awarded.
+	// PostEvaluate returns true if the all the action's post evaluation checks are met and allows the action to update the evaluation result as needed by the Action.
 	PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) (bool, EvaluationResult)
 	// GetBuilder returns a new ActionBuilder for this reward action.
 	GetBuilder() ActionBuilder
