@@ -1,6 +1,10 @@
 package keeper
 
 import (
+	"sort"
+
+	"golang.org/x/exp/constraints"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -146,7 +150,8 @@ func (k Keeper) IterateMsgFees(ctx sdk.Context, handle func(msgFees types.MsgFee
 // the remainder of remainingFees will be swept to the fee collector account.
 func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc cosmosauthtypes.AccountI, remainingFees sdk.Coins, fees map[string]sdk.Coins) error {
 	sentCoins := sdk.NewCoins()
-	for key, coins := range fees {
+	for _, key := range sortedKeys(fees) {
+		coins := fees[key]
 		if !coins.IsValid() {
 			return sdkerrors.ErrInsufficientFee.Wrapf("invalid fee amount: %q", fees)
 		}
@@ -231,4 +236,16 @@ func (k Keeper) CalculateAdditionalFeesToBePaid(ctx sdk.Context, msgs ...sdk.Msg
 	}
 
 	return msgFeesDistribution, nil
+}
+
+// sortedKeys gets the keys of a map, sorts them and returns them as a slice.
+func sortedKeys[K constraints.Ordered, V any](m map[K]V) []K {
+	keys := make([]K, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] < keys[j]
+	})
+	return keys
 }
