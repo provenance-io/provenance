@@ -60,7 +60,7 @@ message MigrateContractProposal {
 
   // Contract is the address of the smart contract
   string contract = 4;
-  // CodeID references the new WASM codesudo
+  // CodeID references the new WASM code
   uint64 code_id = 5 [ (gogoproto.customname) = "CodeID" ];
   // Msg json encoded message to be passed to the contract on migration
   bytes msg = 6 [ (gogoproto.casttype) = "RawContractMessage" ];
@@ -147,4 +147,26 @@ message UnpinCodesProposal {
     (gogoproto.customname) = "CodeIDs",
     (gogoproto.moretags) = "yaml:\"code_ids\""
   ];
+}
+
+// AccessConfigUpdate contains the code id and the access config to be
+// applied.
+message AccessConfigUpdate {
+  // CodeID is the reference to the stored WASM code to be updated
+  uint64 code_id = 1 [ (gogoproto.customname) = "CodeID" ];
+  // InstantiatePermission to apply to the set of code ids
+  AccessConfig instantiate_permission = 2 [ (gogoproto.nullable) = false ];
+}
+
+// UpdateInstantiateConfigProposal gov proposal content type to update
+// instantiate config to a  set of code ids.
+message UpdateInstantiateConfigProposal {
+  // Title is a short summary
+  string title = 1 [ (gogoproto.moretags) = "yaml:\"title\"" ];
+  // Description is a human readable text
+  string description = 2 [ (gogoproto.moretags) = "yaml:\"description\"" ];
+  // AccessConfigUpdate contains the list of code ids and the access config
+  // to be applied.
+  repeated AccessConfigUpdate access_config_updates = 3
+      [ (gogoproto.nullable) = false ];
 }
