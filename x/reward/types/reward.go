@@ -41,11 +41,11 @@ type RewardAction interface {
 	// ActionType returns a string identifying this action type.
 	ActionType() string
 	// Evaluate returns true if this reward action satisfies the provided state and event.
-	Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool
+	Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) bool
 	// PreEvaluate returns true if this reward action is in a state that's ready for evaluation.
 	PreEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool
 	// PostEvaluate returns true if the all the action's post evaluation checks are met and allows the action to update the evaluation result as needed by the Action.
-	PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) (bool, EvaluationResult)
+	PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) (bool, EvaluationResult)
 	// GetBuilder returns a new ActionBuilder for this reward action.
 	GetBuilder() ActionBuilder
 }
