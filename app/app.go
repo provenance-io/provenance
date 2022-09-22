@@ -67,6 +67,9 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/group"
+	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
+	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -181,6 +184,7 @@ var (
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
 		authzmodule.AppModuleBasic{},
+		groupmodule.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 
 		ibc.AppModuleBasic{},
@@ -260,6 +264,7 @@ type App struct {
 	UpgradeKeeper    upgradekeeper.Keeper
 	ParamsKeeper     paramskeeper.Keeper
 	AuthzKeeper      authzkeeper.Keeper
+	GroupKeeper      groupkeeper.Keeper
 	EvidenceKeeper   evidencekeeper.Keeper
 	FeeGrantKeeper   feegrantkeeper.Keeper
 	MsgFeesKeeper    msgfeeskeeper.Keeper
@@ -279,8 +284,6 @@ type App struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
-
-	// TODO: Required for v1.13.x: Add keepers for new modules and wire them up. https://github.com/provenance-io/provenance/issues/1007
 
 	// TODO: Required for v1.13.x: Add keepers for new modules and wire them up. https://github.com/provenance-io/provenance/issues/1007
 
@@ -331,7 +334,7 @@ func New(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
-		authzkeeper.StoreKey,
+		authzkeeper.StoreKey, group.StoreKey,
 
 		ibchost.StoreKey,
 		ibctransfertypes.StoreKey,
@@ -429,6 +432,8 @@ func New(
 	app.AuthzKeeper = authzkeeper.NewKeeper(
 		keys[authzkeeper.StoreKey], appCodec, app.BaseApp.MsgServiceRouter(), app.AccountKeeper,
 	)
+
+	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.BaseApp.MsgServiceRouter(), app.AccountKeeper, group.DefaultConfig())
 
 	app.MetadataKeeper = metadatakeeper.NewKeeper(
 		appCodec, keys[metadatatypes.StoreKey], app.GetSubspace(metadatatypes.ModuleName), app.AccountKeeper, app.AuthzKeeper,
@@ -567,10 +572,7 @@ func New(
 	// must be passed by reference here.
 
 	app.mm = module.NewManager(
-		genutil.NewAppModule(
-			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
-			encodingConfig.TxConfig,
-		),
+		genutil.NewAppModule(app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx, encodingConfig.TxConfig),
 		auth.NewAppModule(appCodec, app.AccountKeeper, nil),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
@@ -586,6 +588,7 @@ func New(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 
 		// PROVENANCE
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
@@ -626,6 +629,7 @@ func New(
 		crisistypes.ModuleName,
 		genutiltypes.ModuleName,
 		authz.ModuleName,
+		group.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		msgfeestypes.ModuleName,
@@ -643,6 +647,7 @@ func New(
 		stakingtypes.ModuleName,
 		authtypes.ModuleName,
 		icatypes.ModuleName,
+		group.ModuleName,
 		rewardtypes.ModuleName,
 
 		// no-ops
@@ -686,6 +691,7 @@ func New(
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		authz.ModuleName,
+		group.ModuleName,
 		feegrant.ModuleName,
 
 		markertypes.ModuleName,
@@ -710,6 +716,7 @@ func New(
 	app.mm.SetOrderMigrations(
 		banktypes.ModuleName,
 		authz.ModuleName,
+		group.ModuleName,
 		capabilitytypes.ModuleName,
 		crisistypes.ModuleName,
 		distrtypes.ModuleName,
@@ -736,7 +743,7 @@ func New(
 		nametypes.ModuleName,
 		rewardtypes.ModuleName,
 
-		// required to be last (cosmos-sdk enforces this when migrations are ran)
+		// Last due to v0.44 issue: https://github.com/cosmos/cosmos-sdk/issues/10591
 		authtypes.ModuleName,
 	)
 
@@ -758,6 +765,7 @@ func New(
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper),
@@ -810,29 +818,35 @@ func New(
 
 	app.SetEndBlocker(app.EndBlocker)
 
-	// -- TODO: Add upgrade plans for each release here
-	//    NOTE: Do not remove any handlers once deployed
-	//    NOTE: These have to be added before the baseapp seals via LoadLatestVersion() down below.
-	// * https://pkg.go.dev/github.com/cosmos/cosmos-sdk@v0.40.0-rc6/x/upgrade#hdr-Performing_Upgrades
-	// * https://github.com/cosmos/cosmos-sdk/issues/8265
+	// Add upgrade plans for each release. This must be done before the baseapp seals via LoadLatestVersion() down below.
 	InstallCustomUpgradeHandlers(app)
+
 	// Use the dump of $home/data/upgrade-info.json:{"name":"$plan","height":321654} to determine
 	// if we load a store upgrade from the handlers. No file == no error from read func.
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(err)
 	}
+
 	// Currently in an upgrade hold for this block.
 	if upgradeInfo.Name != "" && upgradeInfo.Height == app.LastBlockHeight()+1 {
-		app.Logger().Info("Managing upgrade",
-			"plan", upgradeInfo.Name,
-			"upgradeHeight", upgradeInfo.Height,
-			"lastHeight", app.LastBlockHeight(),
-		)
-		// See if we have a custom store loader to use for upgrades.
-		storeLoader := CustomUpgradeStoreLoader(app, upgradeInfo)
-		if storeLoader != nil {
-			app.SetStoreLoader(storeLoader)
+		if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+			app.Logger().Info("Skipping upgrade based on height",
+				"plan", upgradeInfo.Name,
+				"upgradeHeight", upgradeInfo.Height,
+				"lastHeight", app.LastBlockHeight(),
+			)
+		} else {
+			app.Logger().Info("Managing upgrade",
+				"plan", upgradeInfo.Name,
+				"upgradeHeight", upgradeInfo.Height,
+				"lastHeight", app.LastBlockHeight(),
+			)
+			// See if we have a custom store loader to use for upgrades.
+			storeLoader := GetUpgradeStoreLoader(app, upgradeInfo)
+			if storeLoader != nil {
+				app.SetStoreLoader(storeLoader)
+			}
 		}
 	}
 	// --
