@@ -10,6 +10,7 @@ import (
 
 	"github.com/provenance-io/provenance/x/marker/types"
 
+	cerrs "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -255,7 +256,7 @@ marker must be in the active status.`),
 
 			coin, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
-				return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid coin %s", args[0])
+				return sdkErrors.ErrInvalidCoins.Wrapf("invalid coin %s", args[0])
 			}
 			callerAddr := clientCtx.GetFromAddress()
 			msg := types.NewMsgMintRequest(callerAddr, coin)
@@ -286,7 +287,7 @@ for burning.  Marker must be in the active status to burn coin.`),
 
 			coin, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
-				return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid coin %s", args[0])
+				return sdkErrors.ErrInvalidCoins.Wrapf("invalid coin %s", args[0])
 			}
 			callerAddr := clientCtx.GetFromAddress()
 			msg := types.NewMsgBurnRequest(callerAddr, coin)
@@ -414,11 +415,11 @@ are one of [mint, burn, deposit, withdraw, delete, admin, transfer].`),
 
 			targetAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
-				return sdkErrors.Wrapf(err, "grant for invalid address %s", args[0])
+				return cerrs.Wrapf(err, "grant for invalid address %s", args[0])
 			}
 			grant := types.NewAccessGrant(targetAddr, types.AccessListByNames(args[2]))
 			if err = grant.Validate(); err != nil {
-				return sdkErrors.Wrapf(err, "invalid access grant permission: %s", args[2])
+				return cerrs.Wrapf(err, "invalid access grant permission: %s", args[2])
 			}
 			callerAddr := clientCtx.GetFromAddress()
 			msg := types.NewMsgAddAccessRequest(args[1], callerAddr, *grant)
@@ -447,7 +448,7 @@ From Address must have appropriate existing access.`),
 
 			targetAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
-				return sdkErrors.Wrapf(err, "revoke grant for invalid address %s", args[0])
+				return cerrs.Wrapf(err, "revoke grant for invalid address %s", args[0])
 			}
 			callerAddr := clientCtx.GetFromAddress()
 			msg := types.NewDeleteAccessRequest(args[1], callerAddr, targetAddr)
@@ -476,14 +477,14 @@ func GetCmdWithdrawCoins() *cobra.Command {
 			denom := args[0]
 			coins, err := sdk.ParseCoinsNormalized(args[1])
 			if err != nil {
-				return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid coin %s", args[0])
+				return sdkErrors.ErrInvalidCoins.Wrapf("invalid coin %s", args[0])
 			}
 			callerAddr := clientCtx.GetFromAddress()
 			recipientAddr := sdk.AccAddress{}
 			if len(args) == 3 {
 				recipientAddr, err = sdk.AccAddressFromBech32(args[2])
 				if err != nil {
-					return sdkErrors.Wrapf(err, "invalid recipient address %s", args[2])
+					return cerrs.Wrapf(err, "invalid recipient address %s", args[2])
 				}
 			}
 			msg := types.NewMsgWithdrawRequest(callerAddr, recipientAddr, denom, coins)
@@ -509,18 +510,18 @@ func GetNewTransferCmd() *cobra.Command {
 			}
 			from, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
-				return sdkErrors.Wrapf(err, "invalid from address %s", args[0])
+				return cerrs.Wrapf(err, "invalid from address %s", args[0])
 			}
 			to, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
-				return sdkErrors.Wrapf(err, "invalid recipient address %s", args[1])
+				return cerrs.Wrapf(err, "invalid recipient address %s", args[1])
 			}
 			coins, err := sdk.ParseCoinsNormalized(args[2])
 			if err != nil {
-				return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid coin %s", args[2])
+				return sdkErrors.ErrInvalidCoins.Wrapf("invalid coin %s", args[2])
 			}
 			if len(coins) != 1 {
-				return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid coin %s", args[2])
+				return sdkErrors.ErrInvalidCoins.Wrapf("invalid coin %s", args[2])
 			}
 			msg := types.NewMsgTransferRequest(clientCtx.GetFromAddress(), from, to, coins[0])
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
