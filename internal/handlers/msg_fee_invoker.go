@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 
+	cerrs "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -58,7 +59,7 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins
 		chargedFees = feeGasMeter.FeeConsumed()
 
 		if chargedFees.IsAnyNegative() {
-			return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "charged fees %v are negative, which should not be possible, aborting", chargedFees)
+			return nil, nil, sdkerrors.ErrInvalidCoins.Wrapf("charged fees %v are negative, which should not be possible, aborting", chargedFees)
 		}
 		// eat up the gas cost for charging fees. (This one is on us, Cheers!, mainly because we don't want to fail at this step, imo, but we can remove this is f necessary)
 		ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
@@ -70,18 +71,18 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins
 		// this works with only when feegrant enabled.
 		if feeGranter != nil {
 			if afd.feegrantKeeper == nil {
-				return nil, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
+				return nil, nil, sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
 			} else if !feeGranter.Equals(feePayer) {
 				err = afd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, chargedFees, tx.GetMsgs())
 				if err != nil {
-					return nil, nil, sdkerrors.Wrapf(err, "%q not allowed to pay fees from %q", feeGranter, feePayer)
+					return nil, nil, cerrs.Wrapf(err, "%q not allowed to pay fees from %q", feeGranter, feePayer)
 				}
 			}
 			deductFeesFrom = feeGranter
 		}
 		deductFeesFromAcc := afd.accountKeeper.GetAccount(ctx, deductFeesFrom)
 		if deductFeesFromAcc == nil {
-			return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %q does not exist", deductFeesFrom)
+			return nil, nil, sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %q does not exist", deductFeesFrom)
 		}
 
 		ctx.Logger().Debug(fmt.Sprintf("The Fee consumed by message types : %v", feeGasMeter.FeeConsumedByMsg()))

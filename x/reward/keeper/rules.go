@@ -109,7 +109,7 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 		rewardProgram.GetId(), rewardProgram.GetCurrentClaimPeriod()))
 
 	if rewardProgram == nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "reward program cannot be nil")
+		return sdkerrors.ErrNotFound.Wrapf("reward program cannot be nil")
 	}
 
 	// get the ClaimPeriodRewardDistribution
@@ -120,7 +120,7 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 	}
 
 	if claimPeriodRewardDistribution.Validate() != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "invalid claim period reward distribution.")
+		return sdkerrors.ErrNotFound.Wrapf("invalid claim period reward distribution.")
 	}
 
 	for _, res := range evaluateRes {
