@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	uuid "github.com/google/uuid"
@@ -76,7 +75,7 @@ func (keeper Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAdd
 		return err
 	}
 	if err = types.ValidateAddress(addr); err != nil {
-		return sdkerrors.Wrap(types.ErrInvalidAddress, err.Error())
+		return types.ErrInvalidAddress.Wrap(err.Error())
 	}
 	key, err := types.GetNameKeyPrefix(name)
 	if err != nil {
