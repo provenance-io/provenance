@@ -643,7 +643,7 @@ func (k msgServer) BindOSLocator(
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
 		ctx.Logger().Error("unable to validate message", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	// already valid address, checked in ValidateBasic
@@ -654,13 +654,13 @@ func (k msgServer) BindOSLocator(
 	}
 	if k.Keeper.OSLocatorExists(ctx, ownerAddress) {
 		ctx.Logger().Error("Address already bound to an URI", "owner", msg.Locator.Owner)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrOSLocatorAlreadyBound.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(types.ErrOSLocatorAlreadyBound.Error())
 	}
 
 	// Bind owner to URI
 	if err := k.Keeper.SetOSLocator(ctx, ownerAddress, encryptionKey, msg.Locator.LocatorUri); err != nil {
 		ctx.Logger().Error("unable to bind name", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_BindOSLocator, msg.GetSigners()))
@@ -676,7 +676,7 @@ func (k msgServer) DeleteOSLocator(
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
 		ctx.Logger().Error("unable to validate message", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	// already valid address, checked in ValidateBasic
@@ -684,18 +684,18 @@ func (k msgServer) DeleteOSLocator(
 
 	if !k.Keeper.OSLocatorExists(ctx, ownerAddr) {
 		ctx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrOSLocatorAlreadyBound.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(types.ErrOSLocatorAlreadyBound.Error())
 	}
 
 	if !k.Keeper.VerifyCorrectOwner(ctx, ownerAddr) {
 		ctx.Logger().Error("msg sender cannot delete os locator", "owner", ownerAddr)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg sender cannot delete os locator.")
+		return nil, sdkerrors.ErrUnauthorized.Wrap("msg sender cannot delete os locator.")
 	}
 
 	// Delete
 	if err := k.Keeper.RemoveOSLocator(ctx, ownerAddr); err != nil {
 		ctx.Logger().Error("error deleting name", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteOSLocator, msg.GetSigners()))
@@ -711,7 +711,7 @@ func (k msgServer) ModifyOSLocator(
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
 		ctx.Logger().Error("unable to validate message", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	// already valid address(es), checked in ValidateBasic
@@ -723,17 +723,17 @@ func (k msgServer) ModifyOSLocator(
 
 	if !k.Keeper.OSLocatorExists(ctx, ownerAddr) {
 		ctx.Logger().Error("Address not already bound to an URI", "owner", msg.Locator.Owner)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrOSLocatorAlreadyBound.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(types.ErrOSLocatorAlreadyBound.Error())
 	}
 
 	if !k.Keeper.VerifyCorrectOwner(ctx, ownerAddr) {
 		ctx.Logger().Error("msg sender cannot modify os locator", "owner", ownerAddr)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg sender cannot delete os locator.")
+		return nil, sdkerrors.ErrUnauthorized.Wrap("msg sender cannot delete os locator.")
 	}
 	// Modify
 	if err := k.Keeper.ModifyOSLocator(ctx, ownerAddr, encryptionKey, msg.Locator.LocatorUri); err != nil {
 		ctx.Logger().Error("error deleting name", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_ModifyOSLocator, msg.GetSigners()))

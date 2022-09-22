@@ -10,34 +10,25 @@ Updates third_party Protobuf files
 
 Usage: ./proto-update-deps.sh [dest]
 
-The dest is optional.
-  The default location is ./third_party/proto/
-  If a dest is supplied then the path becomes ./<dest>/third_party/proto/.
+The [dest] argument is the optional download destination.
+  Default is {repo root}/third_party/
 
 EOF
 
-dir="$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )"
-dest="$dir${1:+/$1}"
-
-EXT_PROTO_DIR="$dest"/third_party
-
-echo "$EXT_PROTO_DIR"
+# This assumes that this script is located in {repo root}/scripts.
+# Basically: "If an argument was provided, use that, otherwise get the full path to this repo's root and append /third_party to it."
+DEST="${1:-$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )/third_party}"
 
 # Retrieve versions from go.mod (single source of truth)
-CONFIO_PROTO_URL=https://raw.githubusercontent.com/confio/ics23/go/$(go list -m github.com/confio/ics23/go | sed 's:.* ::')/proofs.proto
-GOGO_PROTO_URL=https://raw.githubusercontent.com/regen-network/protobuf/$(go list -m github.com/gogo/protobuf | sed 's:.* ::')/gogoproto/gogo.proto
-COSMOS_PROTO_URL=https://raw.githubusercontent.com/regen-network/cosmos-proto/master/cosmos.proto
-COSMWASM_TARBALL_URL=github.com/CosmWasm/wasmd/tarball/v0.17.0  # Backwards compatibility. Needed to serialize/deserialize older wasmd protos.
-WASMD_TARBALL_URL=$(go list -m github.com/CosmWasm/wasmd | sed 's:.* => ::' | sed 's/ /\/tarball\//')
-IBC_GO_TARBALL_URL=$(go list -m github.com/cosmos/ibc-go/v5 | sed 's:.* => ::' | sed 's/\/v5//' | sed 's/ /\/tarball\//')
-COSMOS_TARBALL_URL=$(go list -m github.com/cosmos/cosmos-sdk | sed 's:.* => ::' | sed 's/ /\/tarball\//')
-TM_TARBALL_URL=$(go list -m github.com/tendermint/tendermint | sed 's:.* => ::' | sed 's/ /\/tarball\//')
-
-# Download third_party protos
-mkdir -p "$EXT_PROTO_DIR"/proto
-#cp -r "$dir"/third_party/proto/google "$EXT_PROTO_DIR"/proto || exit $?
-cd "$EXT_PROTO_DIR"
-PROTO_EXPR="*/proto/**/*.proto"
+CONFIO_PROTO_URL="https://raw.githubusercontent.com/confio/ics23/go/$( go list -m github.com/confio/ics23/go | sed 's:.* ::' )/proofs.proto"
+GOGO_PROTO_URL="https://raw.githubusercontent.com/regen-network/protobuf/$( go list -m github.com/gogo/protobuf | sed 's:.* ::' )/gogoproto/gogo.proto"
+COSMOS_PROTO_URL="raw.githubusercontent.com/cosmos/cosmos-proto/$( go list -m github.com/cosmos/cosmos-proto | sed 's:.* ::' )/proto/cosmos_proto/cosmos.proto"
+COSMWASM_V1BETA1_TARBALL_URL='github.com/CosmWasm/wasmd/tarball/v0.17.0'  # Backwards compatibility. Needed to serialize/deserialize older wasmd protos.
+COSMWASM_CUR_TARBALL_URL="$( go list -m github.com/CosmWasm/wasmd | sed 's:.* => ::; s: :/tarball/:;' )"
+IBC_PORT_V1_QUERY_URL='https://raw.githubusercontent.com/cosmos/ibc-go/v2.3.1/proto/ibc/core/port/v1/query.proto' # Backwards compatibility.
+IBC_GO_TARBALL_URL="$( go list -m github.com/cosmos/ibc-go/v5 | sed 's:.* => ::; s: :/tarball/:; s:/v5::;')"
+COSMOS_TARBALL_URL="$( go list -m github.com/cosmos/cosmos-sdk | sed 's:.* => ::; s: :/tarball/:;' )"
+TM_TARBALL_URL="$( go list -m github.com/tendermint/tendermint | sed 's:.* => ::; s: :/tarball/:;' )"
 
 # gnu tar on ubuntu requires the '--wildcards' flag
 tar='tar zx --strip-components 1'
@@ -45,24 +36,48 @@ if tar --version 2> /dev/null | grep GNU > /dev/null 2>&1; then
   tar="$tar --wildcards"
 fi
 
-curl -f -sSL "$CONFIO_PROTO_URL" -o proto/proofs.proto.orig --create-dirs
-curl -f -sSL "$GOGO_PROTO_URL" -o proto/gogoproto/gogo.proto --create-dirs
-curl -f -sSL "$COSMOS_PROTO_URL" -o proto/cosmos_proto/cosmos.proto --create-dirs
-curl -f -sSL "$COSMWASM_TARBALL_URL" | $tar --exclude="*/third_party" "$PROTO_EXPR"
-curl -f -sSL "$WASMD_TARBALL_URL" | $tar --exclude="*/third_party" --exclude="*/proto/ibc" "$PROTO_EXPR"
-curl -f -sSL "$IBC_GO_TARBALL_URL" | $tar --exclude="*/third_party" "$PROTO_EXPR"
-curl -f -sSL "$COSMOS_TARBALL_URL" | $tar --exclude="*/third_party" --exclude="*/testutil" "$PROTO_EXPR"
-curl -f -sSL "$TM_TARBALL_URL" | $tar --exclude="*/third_party" "$PROTO_EXPR"
+mkdir -p "$DEST/proto"
+cd "$DEST"
+PROTO_EXPR='*/proto/**/*.proto'
+
+# Refresh third_party protos
+CONFIO_FILE='proto/proofs.proto'
+rm -f "$CONFIO_FILE" "$CONFIO_FILE.orig"
+curl -f -sSL "$CONFIO_PROTO_URL" -o "$CONFIO_FILE.orig" --create-dirs
+
+GOGO_FILE='proto/gogoproto/gogo.proto'
+rm -f "$GOGO_FILE"
+curl -f -sSL "$GOGO_PROTO_URL" -o "$GOGO_FILE" --create-dirs
+
+COSMOS_FILE='proto/cosmos_proto/cosmos.proto'
+rm -f "$COSMOS_FILE"
+curl -f -sSL "$COSMOS_PROTO_URL" -o "$COSMOS_FILE" --create-dirs
+
+rm -rf 'proto/cosmwasm'
+curl -f -sSL "$COSMWASM_V1BETA1_TARBALL_URL" | $tar --exclude='*/third_party' "$PROTO_EXPR"
+curl -f -sSL "$COSMWASM_CUR_TARBALL_URL" | $tar --exclude='*/third_party' --exclude='*/proto/ibc' "$PROTO_EXPR"
+
+rm -rf 'proto/ibc'
+curl -f -sSL "$IBC_GO_TARBALL_URL" | $tar --exclude='*/third_party' "$PROTO_EXPR"
+IBC_PORT_QUERY_FILE='proto/ibc/core/port/v1/query.proto'
+if [ ! -f "$IBC_PORT_QUERY_FILE" ]; then
+    curl -f -sSL "$IBC_PORT_V1_QUERY_URL" -o "$IBC_PORT_QUERY_FILE" --create-dirs
+fi
+
+rm -rf 'proto/cosmos'
+curl -f -sSL "$COSMOS_TARBALL_URL" | $tar --exclude='*/third_party' --exclude='*/testutil' "$PROTO_EXPR"
+
+rm -rf 'proto/tendermint'
+curl -f -sSL "$TM_TARBALL_URL" | $tar --exclude='*/third_party' "$PROTO_EXPR"
 
 ## insert go, java package option into proofs.proto file
 ## Issue link: https://github.com/confio/ics23/issues/32 (instead of a simple sed we need 4 lines cause bsd sed -i is incompatible)
-CONFIO_TYPES="$EXT_PROTO_DIR"/proto
-head -n3 "$CONFIO_TYPES"/proofs.proto.orig > "$CONFIO_TYPES"/proofs.proto
 # See: https://github.com/koalaman/shellcheck/wiki/SC2129
 {
-  echo 'option go_package = "github.com/confio/ics23/go";'
-  echo 'option java_package = "tech.confio.ics23";'
-  echo 'option java_multiple_files = true;'
-  tail -n+4 "$CONFIO_TYPES"/proofs.proto.orig
-} >> "$CONFIO_TYPES"/proofs.proto
-rm "$CONFIO_TYPES"/proofs.proto.orig
+  head -n3 "$CONFIO_FILE.orig"
+  printf 'option go_package = "github.com/confio/ics23/go";\n'
+  printf 'option java_package = "tech.confio.ics23";\n'
+  printf 'option java_multiple_files = true;\n'
+  tail -n+4 "$CONFIO_FILE.orig"
+} > "$CONFIO_FILE"
+rm "$CONFIO_FILE.orig"

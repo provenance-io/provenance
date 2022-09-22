@@ -424,7 +424,7 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 		panic(err)
 	}
 	if len(pkBytes) != ed25519.PubKeySize {
-		panic(errors.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size"))
+		panic(errors.ErrInvalidPubKey.Wrap("invalid pubkey size"))
 	}
 	return &ed25519.PubKey{Key: pkBytes}
 }

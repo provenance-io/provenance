@@ -30,25 +30,25 @@ func (s msgServer) BindName(goCtx context.Context, msg *types.MsgBindNameRequest
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
 		ctx.Logger().Error("unable to validate message", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	// Fetch the parent name record from the keeper.
 	record, err := s.Keeper.GetRecordByName(ctx, msg.Parent.Name)
 	if err != nil {
 		ctx.Logger().Error("unable to find parent name record", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	// Ensure that if the parent name is restricted, it resolves to the given parent address (message signer).
 	if record.Restricted {
 		parentAddress, addrErr := sdk.AccAddressFromBech32(msg.Parent.Address)
 		if addrErr != nil {
 			ctx.Logger().Error("unable to parse parent address", "err", addrErr)
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, addrErr.Error())
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(addrErr.Error())
 		}
 		if !s.Keeper.ResolvesTo(ctx, msg.Parent.Name, parentAddress) {
 			errm := "parent name is restricted and does not resolve to the provided parent address"
 			ctx.Logger().Error(errm)
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, errm)
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(errm)
 		}
 	}
 	// Combine names, normalize, and check for existing record
@@ -56,21 +56,21 @@ func (s msgServer) BindName(goCtx context.Context, msg *types.MsgBindNameRequest
 	name, err := s.Keeper.Normalize(ctx, n)
 	if err != nil {
 		ctx.Logger().Error("invalid name", "name", name)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	if s.Keeper.NameExists(ctx, name) {
 		ctx.Logger().Error("name already bound", "name", name)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, types.ErrNameAlreadyBound.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(types.ErrNameAlreadyBound.Error())
 	}
 	// Bind name to address
 	address, err := sdk.AccAddressFromBech32(msg.Record.Address)
 	if err != nil {
 		ctx.Logger().Error("invalid address", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	if err := s.Keeper.SetNameRecord(ctx, name, address, msg.Record.Restricted); err != nil {
 		ctx.Logger().Error("unable to bind name", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	// key: modulename+name+bind
@@ -99,34 +99,34 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
 		ctx.Logger().Error("unable to validate message", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	// Normalize
 	name, err := s.Keeper.Normalize(ctx, msg.Record.Name)
 	if err != nil {
 		ctx.Logger().Error("invalid name", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	// Parse address
 	address, err := sdk.AccAddressFromBech32(msg.Record.Address)
 	if err != nil {
 		ctx.Logger().Error("invalid address", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	// Ensure the name exists
 	if !s.Keeper.NameExists(ctx, name) {
 		ctx.Logger().Error("invalid name", "name", name)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "name does not exist")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("name does not exist")
 	}
 	// Ensure permission
 	if !s.Keeper.ResolvesTo(ctx, name, address) {
 		ctx.Logger().Error("msg sender cannot delete name", "name", name)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "msg sender cannot delete name")
+		return nil, sdkerrors.ErrUnauthorized.Wrap("msg sender cannot delete name")
 	}
 	// Delete
 	if err := s.Keeper.DeleteRecord(ctx, name); err != nil {
 		ctx.Logger().Error("error deleting name", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	// key: modulename+name+unbind

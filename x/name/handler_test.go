@@ -68,7 +68,7 @@ func TestCreateName(t *testing.T) {
 		{
 			name:          "create bad name record",
 			msg:           nametypes.NewMsgBindNameRequest(nametypes.NewNameRecord("new", addr2, false), nametypes.NewNameRecord("foo.name", addr1, false)),
-			expectedError: sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, nametypes.ErrNameNotBound.Error()),
+			expectedError: sdkerrors.ErrInvalidRequest.Wrap(nametypes.ErrNameNotBound.Error()),
 		},
 	}
 
@@ -131,7 +131,7 @@ func TestDeleteName(t *testing.T) {
 		{
 			name:          "create bad name record",
 			msg:           nametypes.NewMsgDeleteNameRequest(nametypes.NewNameRecord("example.name", addr1, false)),
-			expectedError: sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "name does not exist"),
+			expectedError: sdkerrors.ErrInvalidRequest.Wrap("name does not exist"),
 		},
 	}
 

@@ -70,7 +70,7 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins
 
 		deductFeesFromAcc := afd.accountKeeper.GetAccount(ctx, deductFeesFrom)
 		if deductFeesFromAcc == nil {
-			return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %q does not exist", deductFeesFrom)
+			return nil, nil, sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %q does not exist", deductFeesFrom)
 		}
 
 		// this sweeps all extra fees too, 1. keeps current behavior 2. accounts for priority mempool
