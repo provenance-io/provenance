@@ -1078,7 +1078,7 @@ func SetupEventHistoryWithTransfers(s *KeeperTestSuite) {
 }
 
 // with vote
-func SetupEventHistoryWithVotes(suite *KeeperTestSuite, sender string) {
+func SetupEventHistoryWithVotes(s *KeeperTestSuite, sender string) {
 	attributes1 := []sdk.Attribute{
 		sdk.NewAttribute("action", "/cosmos.gov.v1beta1.MsgVote"),
 	}
@@ -1100,9 +1100,9 @@ func SetupEventHistoryWithVotes(suite *KeeperTestSuite, sender string) {
 		event3,
 	}
 	newEvents := loggedEvents.ToABCIEvents()
-	newEvents = append(newEvents, suite.ctx.EventManager().GetABCIEventHistory()...)
+	newEvents = append(newEvents, s.ctx.EventManager().GetABCIEventHistory()...)
 	eventManagerStub := sdk.NewEventManagerWithHistory(newEvents)
-	suite.ctx = suite.ctx.WithEventManager(eventManagerStub)
+	s.ctx = s.ctx.WithEventManager(eventManagerStub)
 }
 
 // transfer
@@ -1180,10 +1180,10 @@ func (s *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingAction
 	s.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
 }
 
-func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingActionMultiplierPresent() {
-	suite.SetupTest()
-	SetupEventHistoryWithVotes(suite, getOperatorBech32AddressForTestValidator().String())
-	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+func (s *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingActionMultiplierPresent() {
+	s.SetupTest()
+	SetupEventHistoryWithVotes(s, getOperatorBech32AddressForTestValidator().String())
+	s.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 0)
 
 	rewardProgram := types.NewRewardProgram(
@@ -1212,16 +1212,16 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingAc
 		},
 	)
 	rewardProgram.CurrentClaimPeriod = 1
-	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
-	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
-	suite.Assert().Equal(int64(10), qualifyingActions[0].Shares, "shares should be 10")
+	qualifyingActions, err := s.app.RewardKeeper.DetectQualifyingActions(s.ctx, &rewardProgram)
+	s.Assert().NoError(err, "must not error")
+	s.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
+	s.Assert().Equal(int64(10), qualifyingActions[0].Shares, "shares should be 10")
 }
 
-func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingActionMultiplierPresentAndDelegationRequired() {
-	suite.SetupTest()
-	SetupEventHistoryWithVotes(suite, getOperatorBech32AddressForTestValidator().String())
-	suite.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+func (s *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingActionMultiplierPresentAndDelegationRequired() {
+	s.SetupTest()
+	SetupEventHistoryWithVotes(s, getOperatorBech32AddressForTestValidator().String())
+	s.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 	minDelegation := sdk.NewInt64Coin("nhash", 3)
 
 	rewardProgram := types.NewRewardProgram(
@@ -1250,10 +1250,10 @@ func (suite *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingQualifyingAc
 		},
 	)
 	rewardProgram.CurrentClaimPeriod = 1
-	qualifyingActions, err := suite.app.RewardKeeper.DetectQualifyingActions(suite.ctx, &rewardProgram)
-	suite.Assert().NoError(err, "must not error")
-	suite.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
-	suite.Assert().Equal(int64(10), qualifyingActions[0].Shares, "shares should be 10")
+	qualifyingActions, err := s.app.RewardKeeper.DetectQualifyingActions(s.ctx, &rewardProgram)
+	s.Assert().NoError(err, "must not error")
+	s.Assert().Equal(1, len(qualifyingActions), "must find one qualifying actions")
+	s.Assert().Equal(int64(10), qualifyingActions[0].Shares, "shares should be 10")
 }
 
 func getOperatorBech32AddressForTestValidator() sdk.AccAddress {
