@@ -23,7 +23,7 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 			return queryLookupNames(ctx, path[1:], req, k, legacyQuerierCdc)
 
 		default:
-			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query endpoint")
+			return nil, sdkerrors.ErrUnknownRequest.Wrap("unknown query endpoint")
 		}
 	}
 }
@@ -33,7 +33,7 @@ func queryParams(ctx sdk.Context, _ []string, _ abci.RequestQuery, keeper Keeper
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(err.Error())
 	}
 
 	return res, nil
@@ -43,18 +43,18 @@ func queryParams(ctx sdk.Context, _ []string, _ abci.RequestQuery, keeper Keeper
 func queryResolveName(ctx sdk.Context, path []string, _ abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	name := strings.TrimSpace(path[0])
 	if name == "" {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "name cannot be empty")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("name cannot be empty")
 	}
 	record, err := keeper.GetRecordByName(ctx, name)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	if record == nil {
 		return nil, types.ErrNameNotBound
 	}
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, queryResFromNameRecord(*record))
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(err.Error())
 	}
 
 	return res, nil
@@ -64,15 +64,15 @@ func queryResolveName(ctx sdk.Context, path []string, _ abci.RequestQuery, keepe
 func queryLookupNames(ctx sdk.Context, path []string, _ abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	addrs := strings.TrimSpace(path[0])
 	if addrs == "" {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "address cannot be empty")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("address cannot be empty")
 	}
 	addr, err := sdk.AccAddressFromBech32(addrs)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	records, err := keeper.GetRecordsByAddress(ctx, addr)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	result := types.QueryNameResults{}
 	for _, r := range records {
@@ -80,7 +80,7 @@ func queryLookupNames(ctx sdk.Context, path []string, _ abci.RequestQuery, keepe
 	}
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, result)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(err.Error())
 	}
 
 	return res, nil

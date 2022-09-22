@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -40,7 +39,7 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 		case types.QueryOSGetAll:
 			return queryOSGetAll(ctx, k, legacyQuerierCdc)
 		default:
-			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query endpoint")
+			return nil, sdkerrors.ErrUnknownRequest.Wrap("unknown query endpoint")
 		}
 	}
 }
@@ -50,20 +49,20 @@ func queryScope(ctx sdk.Context, path []string, _ abci.RequestQuery, k Keeper, l
 	scopeUUID, err := uuid.Parse(strings.TrimSpace(path[1]))
 	if err != nil {
 		ctx.Logger().Error(err.Error())
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	scope, found := k.GetScope(ctx, types.ScopeMetadataAddress(scopeUUID))
 	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, "scope does not exist")
+		return nil, sdkerrors.ErrKeyNotFound.Wrap("scope does not exist")
 	}
 	scopeBytes, err := k.cdc.Marshal(&scope)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	res, err := legacyQuerierCdc.MarshalJSON(types.QueryResScope{Scope: scopeBytes})
 	if err != nil {
 		ctx.Logger().Error("unable to marshal scope to JSON", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(err.Error())
 	}
 	return res, nil
 }
@@ -75,7 +74,7 @@ func queryAddressScopes(ctx sdk.Context, path []string, req abci.RequestQuery, k
 	if err != nil || address.Empty() {
 		errm := "invalid address to query scopes for"
 		ctx.Logger().Error(errm)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, errm)
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(errm)
 	}
 	scopes := make([]string, 0)
 	err = k.IterateScopesForAddress(ctx, address, func(scopeID types.MetadataAddress) (stop bool) {
@@ -86,7 +85,7 @@ func queryAddressScopes(ctx sdk.Context, path []string, req abci.RequestQuery, k
 	if len(req.Data) > 0 {
 		err = legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
 		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+			return nil, sdkerrors.ErrJSONUnmarshal.Wrap(err.Error())
 		}
 	}
 
@@ -102,12 +101,12 @@ func queryAddressScopes(ctx sdk.Context, path []string, req abci.RequestQuery, k
 	}
 	if err != nil {
 		ctx.Logger().Error("unable to get scope IDs for address", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	res, err := legacyQuerierCdc.MarshalJSON(types.QueryResOwnership{Address: address, ScopeID: scopes})
 	if err != nil {
 		ctx.Logger().Error("unable to marshal scope ids to JSON", "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(err.Error())
 	}
 	return res, nil
 }
@@ -117,7 +116,7 @@ func queryParams(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAmino)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(err.Error())
 	}
 
 	return res, nil
@@ -128,16 +127,16 @@ func queryScopeSpecification(ctx sdk.Context, path []string, k Keeper, legacyQue
 	specificationUUID, err := uuid.Parse(strings.TrimSpace(path[1]))
 	if err != nil {
 		ctx.Logger().Error(err.Error())
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	scopeSpec, found := k.GetScopeSpecification(ctx, types.ScopeMetadataAddress(specificationUUID))
 	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("scope specification uuid [%s] does not exist", specificationUUID))
+		return nil, sdkerrors.ErrKeyNotFound.Wrapf("scope specification uuid [%s] does not exist", specificationUUID)
 	}
 	res, err := legacyQuerierCdc.MarshalJSON(types.NewQueryResScopeSpec(scopeSpec))
 	if err != nil {
 		ctx.Logger().Error("unable to marshal scope spec to JSON", "specificationUUID", specificationUUID, "err", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(err.Error())
 	}
 	return res, nil
 }
@@ -147,7 +146,7 @@ func queryOSLocatorParams(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *code
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(err.Error())
 	}
 
 	return res, nil
@@ -162,7 +161,7 @@ func queryOSGet(ctx sdk.Context, path []string, keeper Keeper, legacyQuerierCdc 
 
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, msgs)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(err.Error())
 	}
 
 	return bz, nil
@@ -187,7 +186,7 @@ func queryOSGetByURI(ctx sdk.Context, path []string, keeper Keeper, legacyQuerie
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, &uniqueRecords)
 
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(err.Error())
 	}
 
 	return bz, nil
@@ -210,7 +209,7 @@ func queryOSGetAll(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.Legac
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, &uniqueRecords)
 
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(err.Error())
 	}
 
 	return bz, nil
@@ -219,12 +218,12 @@ func queryOSGetAll(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.Legac
 func queryOSGetByScope(ctx sdk.Context, path []string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	locators, lErr := keeper.GetOSLocatorByScope(ctx, path[1])
 	if lErr != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, lErr.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(lErr.Error())
 	}
 
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, locators)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(err.Error())
 	}
 
 	return bz, nil
