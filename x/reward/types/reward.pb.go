@@ -815,7 +815,8 @@ type ActionVote struct {
 	MaximumActions uint64 `protobuf:"varint,2,opt,name=maximum_actions,json=maximumActions,proto3" json:"maximum_actions,omitempty"`
 	// Minimum delegation amount the account must have across all validators, for the vote action to be counted.
 	MinimumDelegationAmount types.Coin `protobuf:"bytes,3,opt,name=minimum_delegation_amount,json=minimumDelegationAmount,proto3" json:"minimum_delegation_amount"`
-	// If not zero, this is multiplier that shares will be multiplied by.
+	// Positive multiplier that is applied to the shares awarded by the vote action when conditions
+	// are met(for now the only condition is the current vote is a validator vote). A value of zero will behave the same as one
 	ValidatorMultiplier uint64 `protobuf:"varint,4,opt,name=validator_multiplier,json=validatorMultiplier,proto3" json:"validator_multiplier,omitempty"`
 }
 

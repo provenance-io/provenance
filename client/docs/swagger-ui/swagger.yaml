@@ -42635,9 +42635,14 @@ paths:
                               validator_multiplier:
                                 type: string
                                 format: uint64
-                                description: >-
-                                  If not zero, this is multiplier that shares
-                                  will be multiplied by.
+                                title: >-
+                                  Positive multiplier that is applied to the
+                                  shares awarded by the vote action when
+                                  conditions
+
+                                  are met(for now the only condition is the
+                                  current vote is a validator vote). A value of
+                                  zero will behave the same as one
                             description: >-
                               ActionVote represents the voting action and its
                               required eligibility criteria.
@@ -43010,9 +43015,14 @@ paths:
                             validator_multiplier:
                               type: string
                               format: uint64
-                              description: >-
-                                If not zero, this is multiplier that shares will
-                                be multiplied by.
+                              title: >-
+                                Positive multiplier that is applied to the
+                                shares awarded by the vote action when
+                                conditions
+
+                                are met(for now the only condition is the
+                                current vote is a validator vote). A value of
+                                zero will behave the same as one
                           description: >-
                             ActionVote represents the voting action and its
                             required eligibility criteria.
@@ -72885,7 +72895,12 @@ definitions:
       validator_multiplier:
         type: string
         format: uint64
-        description: 'If not zero, this is multiplier that shares will be multiplied by.'
+        title: >-
+          Positive multiplier that is applied to the shares awarded by the vote
+          action when conditions
+
+          are met(for now the only condition is the current vote is a validator
+          vote). A value of zero will behave the same as one
     description: >-
       ActionVote represents the voting action and its required eligibility
       criteria.
@@ -73192,7 +73207,12 @@ definitions:
           validator_multiplier:
             type: string
             format: uint64
-            description: 'If not zero, this is multiplier that shares will be multiplied by.'
+            title: >-
+              Positive multiplier that is applied to the shares awarded by the
+              vote action when conditions
+
+              are met(for now the only condition is the current vote is a
+              validator vote). A value of zero will behave the same as one
         description: >-
           ActionVote represents the voting action and its required eligibility
           criteria.
@@ -73689,9 +73709,13 @@ definitions:
                     validator_multiplier:
                       type: string
                       format: uint64
-                      description: >-
-                        If not zero, this is multiplier that shares will be
-                        multiplied by.
+                      title: >-
+                        Positive multiplier that is applied to the shares
+                        awarded by the vote action when conditions
+
+                        are met(for now the only condition is the current vote
+                        is a validator vote). A value of zero will behave the
+                        same as one
                   description: >-
                     ActionVote represents the voting action and its required
                     eligibility criteria.
@@ -73947,9 +73971,13 @@ definitions:
                       validator_multiplier:
                         type: string
                         format: uint64
-                        description: >-
-                          If not zero, this is multiplier that shares will be
-                          multiplied by.
+                        title: >-
+                          Positive multiplier that is applied to the shares
+                          awarded by the vote action when conditions
+
+                          are met(for now the only condition is the current vote
+                          is a validator vote). A value of zero will behave the
+                          same as one
                     description: >-
                       ActionVote represents the voting action and its required
                       eligibility criteria.
@@ -74247,9 +74275,12 @@ definitions:
                 validator_multiplier:
                   type: string
                   format: uint64
-                  description: >-
-                    If not zero, this is multiplier that shares will be
-                    multiplied by.
+                  title: >-
+                    Positive multiplier that is applied to the shares awarded by
+                    the vote action when conditions
+
+                    are met(for now the only condition is the current vote is a
+                    validator vote). A value of zero will behave the same as one
               description: >-
                 ActionVote represents the voting action and its required
                 eligibility criteria.
