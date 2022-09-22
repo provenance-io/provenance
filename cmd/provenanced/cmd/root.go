@@ -98,7 +98,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			customDenom := server.GetServerContextFromCmd(cmd).Viper.GetString(CustomDenomFlag)
 			customMsgFeeFloor := server.GetServerContextFromCmd(cmd).Viper.GetInt64(CustomMsgFeeFloorPriceFlag)
 			app.SetConfig(testnet, true)
-			cmd.Printf("The Msg Fee Floor price is %v\n", customMsgFeeFloor)
 			pioconfig.SetProvenanceConfig(customDenom, customMsgFeeFloor)
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
