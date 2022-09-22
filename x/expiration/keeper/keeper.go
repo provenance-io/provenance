@@ -186,7 +186,7 @@ func (k Keeper) InvokeExpiration(ctx sdk.Context, moduleAssetID string) error {
 
 	// unpack expiration message
 	var msg sdk.Msg
-	if err := k.cdc.UnpackAny(&expiration.Message, &msg); err != nil {
+	if err = k.cdc.UnpackAny(&expiration.Message, &msg); err != nil {
 		return err
 	}
 
