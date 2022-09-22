@@ -540,8 +540,7 @@ func (atd *ActionVote) PreEvaluate(ctx sdk.Context, provider KeeperProvider, sta
 func (atd *ActionVote) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) (bool, EvaluationResult) {
 	actionCounter := GetActionCount(state.ActionCounter, atd.ActionType())
 	hasValidActionCount := actionCounter >= atd.GetMinimumActions() && actionCounter <= atd.GetMaximumActions()
-	// only for action vote do Shares in EvaluationResult need to be changed.
-	// get the address that voted
+	// get the address that voted, and see if the multiplier needs to be applied if the vote came from a validator.
 	addressVoting := evaluationResult.Address
 	valAddrStr := sdk.ValAddress(addressVoting)
 	_, found := provider.GetStakingKeeper().GetValidator(ctx, valAddrStr)
