@@ -245,7 +245,7 @@ func createAndExportGenesisFile(
 		moduleName := markertypes.ModuleName
 		var markerGenState markertypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &markerGenState)
-		markerGenState.Params.UnrestrictedDenomRegex = `[a-zA-Z][a-zA-Z0-9/\-\.]{2,127}}`
+		markerGenState.Params.UnrestrictedDenomRegex = `[a-zA-Z][a-zA-Z0-9\-\.]{7,83}`
 		appGenState[moduleName] = cdc.MustMarshalJSON(&markerGenState)
 	}
 

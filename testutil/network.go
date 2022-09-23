@@ -2,7 +2,6 @@ package testutil
 
 import (
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 	"time"
 
@@ -39,7 +38,6 @@ func NewAppConstructor(encodingCfg params.EncodingConfig) testnet.AppConstructor
 // DefaultTestNetworkConfig creates a network configuration for inproc testing
 func DefaultTestNetworkConfig() testnet.Config {
 	encCfg := provenanceapp.MakeEncodingConfig()
-	pioconfig.SetProvenanceConfig("", 0)
 	return testnet.Config{
 		Codec:             encCfg.Marshaler,
 		TxConfig:          encCfg.TxConfig,
