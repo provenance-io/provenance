@@ -7,6 +7,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/group"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	ica "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts"
@@ -37,7 +38,7 @@ var handlers = map[string]appUpgrade{
 	"neoncarrot-rc1": {}, // upgrade for 1.12.0-rc1
 	"neoncarrot":     {}, // upgrade for 1.12.0
 	"ochre-rc1": { // upgrade for 1.13.0-rc1
-		Added: []string{rewardtypes.ModuleName, icacontrollertypes.StoreKey, icahosttypes.StoreKey},
+		Added: []string{group.ModuleName, rewardtypes.ModuleName, icacontrollertypes.StoreKey, icahosttypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			UpgradeICA(ctx, app, &versionMap)
