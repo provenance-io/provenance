@@ -45925,6 +45925,17 @@ paths:
                                     type: string
                                   amount:
                                     type: string
+                              validator_multiplier:
+                                type: string
+                                format: uint64
+                                title: >-
+                                  Positive multiplier that is applied to the
+                                  shares awarded by the vote action when
+                                  conditions
+
+                                  are met(for now the only condition is the
+                                  current vote is a validator vote). A value of
+                                  zero will behave the same as one
                             description: >-
                               ActionVote represents the voting action and its
                               required eligibility criteria.
@@ -46295,6 +46306,17 @@ paths:
                                   type: string
                                 amount:
                                   type: string
+                            validator_multiplier:
+                              type: string
+                              format: uint64
+                              title: >-
+                                Positive multiplier that is applied to the
+                                shares awarded by the vote action when
+                                conditions
+
+                                are met(for now the only condition is the
+                                current vote is a validator vote). A value of
+                                zero will behave the same as one
                           description: >-
                             ActionVote represents the voting action and its
                             required eligibility criteria.
@@ -78575,6 +78597,15 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
+      validator_multiplier:
+        type: string
+        format: uint64
+        title: >-
+          Positive multiplier that is applied to the shares awarded by the vote
+          action when conditions
+
+          are met(for now the only condition is the current vote is a validator
+          vote). A value of zero will behave the same as one
     description: >-
       ActionVote represents the voting action and its required eligibility
       criteria.
@@ -78878,6 +78909,15 @@ definitions:
               method
 
               signatures required by gogoproto.
+          validator_multiplier:
+            type: string
+            format: uint64
+            title: >-
+              Positive multiplier that is applied to the shares awarded by the
+              vote action when conditions
+
+              are met(for now the only condition is the current vote is a
+              validator vote). A value of zero will behave the same as one
         description: >-
           ActionVote represents the voting action and its required eligibility
           criteria.
@@ -79373,6 +79413,16 @@ definitions:
                           type: string
                         amount:
                           type: string
+                    validator_multiplier:
+                      type: string
+                      format: uint64
+                      title: >-
+                        Positive multiplier that is applied to the shares
+                        awarded by the vote action when conditions
+
+                        are met(for now the only condition is the current vote
+                        is a validator vote). A value of zero will behave the
+                        same as one
                   description: >-
                     ActionVote represents the voting action and its required
                     eligibility criteria.
@@ -79625,6 +79675,16 @@ definitions:
                             type: string
                           amount:
                             type: string
+                      validator_multiplier:
+                        type: string
+                        format: uint64
+                        title: >-
+                          Positive multiplier that is applied to the shares
+                          awarded by the vote action when conditions
+
+                          are met(for now the only condition is the current vote
+                          is a validator vote). A value of zero will behave the
+                          same as one
                     description: >-
                       ActionVote represents the voting action and its required
                       eligibility criteria.
@@ -79920,6 +79980,15 @@ definitions:
                       type: string
                     amount:
                       type: string
+                validator_multiplier:
+                  type: string
+                  format: uint64
+                  title: >-
+                    Positive multiplier that is applied to the shares awarded by
+                    the vote action when conditions
+
+                    are met(for now the only condition is the current vote is a
+                    validator vote). A value of zero will behave the same as one
               description: >-
                 ActionVote represents the voting action and its required
                 eligibility criteria.
