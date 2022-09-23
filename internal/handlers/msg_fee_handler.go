@@ -19,23 +19,23 @@ type PioBaseAppKeeperOptions struct {
 
 func NewAdditionalMsgFeeHandler(options PioBaseAppKeeperOptions) (sdk.FeeHandler, error) {
 	if options.AccountKeeper == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "account keeper is required for AdditionalMsgFeeHandler builder")
+		return nil, sdkerrors.ErrLogic.Wrap("account keeper is required for AdditionalMsgFeeHandler builder")
 	}
 
 	if options.BankKeeper == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "bank keeper is required for AdditionalMsgFeeHandler builder")
+		return nil, sdkerrors.ErrLogic.Wrap("bank keeper is required for AdditionalMsgFeeHandler builder")
 	}
 
 	if options.FeegrantKeeper == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "fee grant keeper is required for AdditionalMsgFeeHandler builder")
+		return nil, sdkerrors.ErrLogic.Wrap("fee grant keeper is required for AdditionalMsgFeeHandler builder")
 	}
 
 	if options.MsgFeesKeeper == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "msgbased fee keeper is required for AdditionalMsgFeeHandler builder")
+		return nil, sdkerrors.ErrLogic.Wrap("msgbased fee keeper is required for AdditionalMsgFeeHandler builder")
 	}
 
 	if options.Decoder == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "Decoder is required for AdditionalMsgFeeHandler builder")
+		return nil, sdkerrors.ErrLogic.Wrap("Decoder is required for AdditionalMsgFeeHandler builder")
 	}
 
 	return NewMsgFeeInvoker(options.BankKeeper, options.AccountKeeper, options.FeegrantKeeper,

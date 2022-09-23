@@ -3,6 +3,7 @@ package antewrapper
 import (
 	"fmt"
 
+	cerrs "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -41,7 +42,7 @@ func NewProvenanceDeductFeeDecorator(ak authante.AccountKeeper, bk bankkeeper.Ke
 func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+		return ctx, sdkerrors.ErrTxDecode.Wrap("Tx must be a FeeTx")
 	}
 
 	if addr := dfd.ak.GetModuleAddress(types.FeeCollectorName); addr == nil {
@@ -52,7 +53,7 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	feeGranter := feeTx.FeeGranter()
 	feeGasMeter, ok := ctx.GasMeter().(*FeeGasMeter)
 	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "GasMeter not a FeeGasMeter")
+		return ctx, sdkerrors.ErrTxDecode.Wrap("GasMeter not a FeeGasMeter")
 	}
 
 	payerAccount := feePayer
@@ -62,24 +63,24 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	msgs := feeTx.GetMsgs()
 	feeDist, errFromCalculateAdditionalFeesToBePaid := CalculateAdditionalFeesToBePaid(ctx, dfd.msgFeeKeeper, msgs...)
 	if errFromCalculateAdditionalFeesToBePaid != nil {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, errFromCalculateAdditionalFeesToBePaid.Error())
+		return ctx, sdkerrors.ErrInvalidRequest.Wrap(errFromCalculateAdditionalFeesToBePaid.Error())
 	}
 	if feeDist != nil && len(feeDist.TotalAdditionalFees) > 0 {
 		var hasNeg bool
 		_, hasNeg = fee.SafeSub(feeDist.TotalAdditionalFees...)
 		if hasNeg && !simulate {
-			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fee)
+			return ctx, sdkerrors.ErrInsufficientFee.Wrapf("invalid fee amount: %s", fee)
 		}
 	}
 
 	if feeGranter != nil && !simulate {
 		if dfd.feegrantKeeper == nil {
-			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
+			return ctx, sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
 		} else if !feeGranter.Equals(feePayer) {
 			err = dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, tx.GetMsgs())
 
 			if err != nil {
-				return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
+				return ctx, cerrs.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
 			}
 		}
 
@@ -88,7 +89,7 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 
 	deductFeesFromAcc := dfd.ak.GetAccount(ctx, payerAccount)
 	if deductFeesFromAcc == nil {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", payerAccount)
+		return ctx, sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %s does not exist", payerAccount)
 	}
 
 	// deduct minimum amount from fee, remainder will be swept on success
@@ -136,12 +137,12 @@ func DetermineTestBaseFeeAmount(ctx sdk.Context, feeTx sdk.FeeTx) sdk.Coins {
 // DeductBaseFees deducts fees from the given account.
 func DeductBaseFees(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc types.AccountI, fee sdk.Coins) error {
 	if !fee.IsValid() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fee)
+		return sdkerrors.ErrInsufficientFee.Wrapf("invalid fee amount: %s", fee)
 	}
 
 	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fee)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+		return sdkerrors.ErrInsufficientFunds.Wrap(err.Error())
 	}
 	return nil
 }

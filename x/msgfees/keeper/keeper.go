@@ -151,33 +151,33 @@ func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Co
 	sentCoins := sdk.NewCoins()
 	for key, coins := range fees {
 		if !coins.IsValid() {
-			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", fees)
+			return sdkerrors.ErrInsufficientFee.Wrapf("invalid fee amount: %q", fees)
 		}
 		if len(key) == 0 {
 			err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, coins)
 			if err != nil {
-				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+				return sdkerrors.ErrInsufficientFunds.Wrap(err.Error())
 			}
 		} else {
 			recipient, err := sdk.AccAddressFromBech32(key)
 			if err != nil {
-				return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, err.Error())
+				return sdkerrors.ErrInvalidAddress.Wrap(err.Error())
 			}
 			err = bankKeeper.SendCoins(ctx, acc.GetAddress(), recipient, coins)
 			if err != nil {
-				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+				return sdkerrors.ErrInsufficientFunds.Wrap(err.Error())
 			}
 		}
 		sentCoins = sentCoins.Add(coins...)
 	}
 	remainingFee, neg := remainingFees.SafeSub(sentCoins...)
 	if neg {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "negative balance after sending coins to accounts and fee collector")
+		return sdkerrors.ErrInsufficientFunds.Wrap("negative balance after sending coins to accounts and fee collector")
 	}
 	// sweep the rest of the fees to module
 	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, remainingFee)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+		return sdkerrors.ErrInsufficientFunds.Wrap(err.Error())
 	}
 
 	return nil
@@ -195,6 +195,6 @@ func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, er
 	case types.NhashDenom:
 		return coin, nil
 	default:
-		return sdk.Coin{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "denom not supported for conversion %s", coin.Denom)
+		return sdk.Coin{}, sdkerrors.ErrInvalidType.Wrapf("denom not supported for conversion %s", coin.Denom)
 	}
 }

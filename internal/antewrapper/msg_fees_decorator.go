@@ -3,8 +3,8 @@ package antewrapper
 import (
 	"fmt"
 
+	cerrs "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -142,10 +142,10 @@ func getFeeGranterIfExists(ctx sdk.Context, feeGranter sdk.AccAddress, afd MsgFe
 		} else if !feeGranter.Equals(feePayer) {
 			grant, err := afd.feegrantKeeper.GetAllowance(ctx, feeGranter, feePayer)
 			if err != nil {
-				return nil, sdkerrors.Wrapf(err, "%q not allowed to pay fees from %q", feeGranter, feePayer)
+				return nil, cerrs.Wrapf(err, "%q not allowed to pay fees from %q", feeGranter, feePayer)
 			}
 			if grant == nil {
-				return nil, sdkerrors.Wrapf(err, "%q not allowed to pay fees from %q", feeGranter, feePayer)
+				return nil, cerrs.Wrapf(err, "%q not allowed to pay fees from %q", feeGranter, feePayer)
 			}
 		}
 
@@ -157,7 +157,7 @@ func getFeeGranterIfExists(ctx sdk.Context, feeGranter sdk.AccAddress, afd MsgFe
 func getFeeTx(tx sdk.Tx) (sdk.FeeTx, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+		return nil, sdkerrors.ErrTxDecode.Wrap("Tx must be a FeeTx")
 	}
 	return feeTx, nil
 }
@@ -187,11 +187,11 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins
 	// Before checking gas prices, remove taxed from fee
 	var hasNeg bool
 	if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees...); hasNeg {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, DefaultInsufficientFeeMsg+": %q, required fees: %q = %q(base-fee) +%q(additional-fees)", feeCoins, requiredFees.Add(additionalFees...), requiredFees, additionalFees)
+		return sdkerrors.ErrInsufficientFee.Wrapf("%s: %q, required fees: %q = %q(base-fee) +%q(additional-fees)", DefaultInsufficientFeeMsg, feeCoins, requiredFees.Add(additionalFees...), requiredFees, additionalFees)
 	}
 
 	if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "Base Fee+additional fee cannot be paid with fee value passed in "+": %q, required: %q = %q(base-fee) +%q(additional-fees)", feeCoinsOriginal, requiredFees.Add(additionalFees...),
+		return sdkerrors.ErrInsufficientFee.Wrapf("Base Fee+additional fee cannot be paid with fee value passed in: %q, required: %q = %q(base-fee) +%q(additional-fees)", feeCoinsOriginal, requiredFees.Add(additionalFees...),
 			requiredFees, additionalFees)
 	}
 
@@ -206,7 +206,7 @@ func EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas uint64, feeCoins sdk
 	}
 	_, hasNeg := balancePerCoin.SafeSub(feeCoins...)
 	if balancePerCoin.IsZero() || hasNeg {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "fee payer account does not have enough balance to pay for %q", feeCoins)
+		return sdkerrors.ErrInsufficientFee.Wrapf("fee payer account does not have enough balance to pay for %q", feeCoins)
 	}
 	return nil
 }
@@ -217,7 +217,7 @@ func EnsureSufficientFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coi
 	// Step 1. Check if fees has enough money to pay additional fees.
 	var hasNeg bool
 	if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees...); hasNeg {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, DefaultInsufficientFeeMsg+": %q, required additional fee: %q", feeCoins, additionalFees)
+		return sdkerrors.ErrInsufficientFee.Wrapf("%s: %q, required additional fee: %q", DefaultInsufficientFeeMsg, feeCoins, additionalFees)
 	}
 	// Step 2: check if additional fees in nhash, that base fees and additional fees can be paid
 	// total fees in hash - gas limit * price per gas >= additional fees in hash
