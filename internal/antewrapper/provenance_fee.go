@@ -1,13 +1,14 @@
 package antewrapper
 
 import (
+	"fmt"
+
 	cerrs "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -22,7 +23,7 @@ import (
 type ProvenanceDeductFeeDecorator struct {
 	ak             authante.AccountKeeper
 	bankKeeper     bankkeeper.Keeper
-	feegrantKeeper authante.FeegrantKeeper
+	feegrantKeeper msgfeestypes.FeegrantKeeper
 	msgFeeKeeper   msgfeestypes.MsgFeesKeeper
 }
 
@@ -46,6 +47,8 @@ func NewProvenanceDeductFeeDecorator(
 }
 
 func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+	ctx.Logger().Debug(fmt.Sprintf("In ProvenanceDeductFeeDecorator %d", ctx.GasMeter().GasConsumed()))
+
 	feeTx, err := GetFeeTx(tx)
 	if err != nil {
 		return ctx, err
@@ -110,7 +113,7 @@ func (dfd ProvenanceDeductFeeDecorator) checkDeductBaseFee(ctx sdk.Context, feeT
 
 	// deduct minimum amount from fee, remainder will be swept on success
 	if !baseFeeToConsume.IsZero() && !simulate {
-		err := DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, baseFeeToConsume)
+		err = DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, baseFeeToConsume)
 		if err != nil {
 			return err
 		}
@@ -131,7 +134,7 @@ func (dfd ProvenanceDeductFeeDecorator) checkDeductBaseFee(ctx sdk.Context, feeT
 	return nil
 }
 
-func GetFeePayerUsingFeeGrant(ctx sdk.Context, feegrantKeeper authante.FeegrantKeeper, feeTx sdk.FeeTx, fee sdk.Coins, msgs []sdk.Msg) (sdk.AccAddress, error) {
+func GetFeePayerUsingFeeGrant(ctx sdk.Context, feegrantKeeper msgfeestypes.FeegrantKeeper, feeTx sdk.FeeTx, fee sdk.Coins, msgs []sdk.Msg) (sdk.AccAddress, error) {
 	feePayer := feeTx.FeePayer()
 	feeGranter := feeTx.FeeGranter()
 	deductFeesFrom := feePayer
