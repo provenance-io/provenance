@@ -86,7 +86,6 @@ func (dfd ProvenanceDeductFeeDecorator) checkDeductBaseFee(ctx sdk.Context, feeT
 	if err != nil {
 		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	requiredFunds := baseFeeToConsume.Add(feeDist.TotalAdditionalFees...)
 
 	deductFeesFrom, err := GetFeePayerUsingFeeGrant(ctx, dfd.feegrantKeeper, feeTx, baseFeeToConsume, msgs)
 	if err != nil {
@@ -98,10 +97,11 @@ func (dfd ProvenanceDeductFeeDecorator) checkDeductBaseFee(ctx sdk.Context, feeT
 		return sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %s does not exist", deductFeesFrom)
 	}
 
-	// Make sure the payer has enough funds for the whole fee.
+	// Get the payers balance of each denom in the msg-based additional fees.
+	requiredFunds := feeDist.TotalAdditionalFees
 	fee := feeTx.GetFee()
 	balancePerCoin := sdk.NewCoins()
-	for _, fc := range fee {
+	for _, fc := range requiredFunds {
 		balancePerCoin = balancePerCoin.Add(dfd.bankKeeper.GetBalance(ctx, deductFeesFrom, fc.Denom))
 	}
 
@@ -113,13 +113,19 @@ func (dfd ProvenanceDeductFeeDecorator) checkDeductBaseFee(ctx sdk.Context, feeT
 		"balancePerCoin", balancePerCoin,
 	)
 
-	_, hasNeg := balancePerCoin.SafeSub(requiredFunds...)
-	if hasNeg && !simulate {
-		return sdkerrors.ErrInsufficientFunds.Wrapf("account %s does not have enough balance to pay for %q, balance: %q", deductFeesFrom, requiredFunds, balancePerCoin)
+	// Make sure the payer has enough funds for the msg-based additional fees.
+	// This is just a nicety so we can prevent extra work that'll be rejected later anyway.
+	if !requiredFunds.IsZero() {
+		_, hasNeg := balancePerCoin.SafeSub(requiredFunds...)
+		if hasNeg && !simulate {
+			return sdkerrors.ErrInsufficientFunds.Wrapf("account %s does not have enough balance to pay for %q, balance: %q", deductFeesFrom, requiredFunds, balancePerCoin)
+		}
 	}
 
 	// deduct minimum amount from fee, remainder will be swept on success
-	if !baseFeeToConsume.IsZero() && !simulate {
+	// We don't do this when simulating since we're simulating.
+	// And we don't do this during InitGenesis since those Txs don't have any fees on them at all.
+	if !simulate && !IsInitGenesis(ctx) && !baseFeeToConsume.IsZero() {
 		err = DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, baseFeeToConsume)
 		if err != nil {
 			return err
