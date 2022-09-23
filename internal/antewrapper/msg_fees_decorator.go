@@ -53,7 +53,7 @@ func (mfd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 	// Make sure there are enough fees to cover base fee + additional fees.
 	// base fee = floor gas price * gas wanted
 	// additional fees = sum of message based fees
-	if ctx.IsCheckTx() && !simulate {
+	if ctx.IsCheckTx() {
 		feeCoins := feeTx.GetFee()
 		gas := feeTx.GetGas()
 		floorGasPrice := mfd.msgFeeKeeper.GetFloorGasPrice(ctx)
@@ -61,12 +61,12 @@ func (mfd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 
 		// Compute msg all additional fees
 		msgFeesDistribution, calcErr := mfd.msgFeeKeeper.CalculateAdditionalFeesToBePaid(ctx, msgs...)
-		if calcErr != nil {
+		if calcErr != nil && !simulate {
 			return ctx, sdkerrors.ErrInsufficientFee.Wrap(calcErr.Error())
 		}
 
 		mpErr := EnsureSufficientFloorAndMsgFees(ctx, feeCoins, floorGasPrice, gas, msgFeesDistribution.TotalAdditionalFees)
-		if mpErr != nil {
+		if mpErr != nil && !simulate {
 			return ctx, sdkerrors.ErrInsufficientFee.Wrapf(mpErr.Error())
 		}
 	}
