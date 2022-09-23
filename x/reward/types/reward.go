@@ -41,11 +41,11 @@ type RewardAction interface {
 	// ActionType returns a string identifying this action type.
 	ActionType() string
 	// Evaluate returns true if this reward action satisfies the provided state and event.
-	Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool
+	Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) bool
 	// PreEvaluate returns true if this reward action is in a state that's ready for evaluation.
 	PreEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool
-	// PostEvaluate returns true if the state's action counter is within this reward action's min and max (inclusive).
-	PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool
+	// PostEvaluate returns true if the all the action's post evaluation checks are met and allows the action to update the evaluation result as needed by the Action.
+	PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) (bool, EvaluationResult)
 	// GetBuilder returns a new ActionBuilder for this reward action.
 	GetBuilder() ActionBuilder
 }
@@ -428,10 +428,10 @@ func (ad *ActionDelegate) PreEvaluate(ctx sdk.Context, provider KeeperProvider, 
 	return true
 }
 
-func (ad *ActionDelegate) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+func (ad *ActionDelegate) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) (bool, EvaluationResult) {
 	actionCounter := GetActionCount(state.ActionCounter, ad.ActionType())
 	hasValidActionCount := actionCounter >= ad.GetMinimumActions() && actionCounter <= ad.GetMaximumActions()
-	return hasValidActionCount
+	return hasValidActionCount, event
 }
 
 // ============ Action Transfer Delegations ============
@@ -486,10 +486,10 @@ func (at *ActionTransfer) PreEvaluate(ctx sdk.Context, provider KeeperProvider, 
 	return true
 }
 
-func (at *ActionTransfer) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+func (at *ActionTransfer) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) (bool, EvaluationResult) {
 	actionCounter := GetActionCount(state.ActionCounter, at.ActionType())
 	hasValidActionCount := actionCounter >= at.GetMinimumActions() && actionCounter <= at.GetMaximumActions()
-	return hasValidActionCount
+	return hasValidActionCount, evaluationResult
 }
 
 // ============ Action Vote  ============
@@ -537,10 +537,19 @@ func (atd *ActionVote) PreEvaluate(ctx sdk.Context, provider KeeperProvider, sta
 	return true
 }
 
-func (atd *ActionVote) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+func (atd *ActionVote) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) (bool, EvaluationResult) {
 	actionCounter := GetActionCount(state.ActionCounter, atd.ActionType())
 	hasValidActionCount := actionCounter >= atd.GetMinimumActions() && actionCounter <= atd.GetMaximumActions()
-	return hasValidActionCount
+	// get the address that voted, and see if the multiplier needs to be applied if the vote came from a validator.
+	addressVoting := evaluationResult.Address
+	valAddrStr := sdk.ValAddress(addressVoting)
+	_, found := provider.GetStakingKeeper().GetValidator(ctx, valAddrStr)
+	if found && atd.ValidatorMultiplier > 0 {
+		// shares can be negative, as per requirements, and this may lead to negative shares with multiplier.
+		evaluationResult.Shares *= int64(atd.ValidatorMultiplier)
+	}
+
+	return hasValidActionCount, evaluationResult
 }
 
 // ============ Qualifying Action ============
