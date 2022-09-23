@@ -172,12 +172,12 @@ func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Co
 		}
 		sentCoins = sentCoins.Add(coins...)
 	}
-	remainingFee, neg := remainingFees.SafeSub(sentCoins...)
+	unsentFee, neg := remainingFees.SafeSub(sentCoins...)
 	if neg {
-		return sdkerrors.ErrInsufficientFunds.Wrap("negative balance after sending coins to accounts and fee collector")
+		return sdkerrors.ErrInsufficientFunds.Wrapf("negative balance after sending coins to accounts and fee collector: remainingFees: %q, sentCoins: %q, distribution: %v", remainingFees, sentCoins, fees)
 	}
 	// sweep the rest of the fees to module
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, remainingFee)
+	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, unsentFee)
 	if err != nil {
 		return sdkerrors.ErrInsufficientFunds.Wrap(err.Error())
 	}
