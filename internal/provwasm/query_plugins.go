@@ -49,26 +49,26 @@ func customPlugins(registry *QuerierRegistry) wasm.CustomQuerier {
 		req := QueryRequest{}
 		if err := json.Unmarshal(request, &req); err != nil {
 			ctx.Logger().Error("failed to unmarshal query request", "err", err)
-			return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+			return nil, sdkerrors.ErrJSONUnmarshal.Wrap(err.Error())
 		}
 		query, exists := registry.queriers[req.Route]
 		if !exists {
 			ctx.Logger().Error("querier not found", "route", req.Route)
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "querier not found for route: %s", req.Route)
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("querier not found for route: %s", req.Route)
 		}
 		bz, err := query(ctx, req.Params, req.Version)
 		if err != nil {
 			ctx.Logger().Error("failed to execute query", "err", err)
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 		}
 		if len(bz) > maxQueryResultSize {
 			errm := "query result size limit exceeded"
 			ctx.Logger().Error(errm, "maxQueryResultSize", maxQueryResultSize)
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, errm)
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(errm)
 		}
 		if !json.Valid(bz) {
 			ctx.Logger().Error("invalid querier JSON", "route", req.Route)
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrJSONMarshal, "invalid querier JSON from route: %s", req.Route)
+			return nil, sdkerrors.ErrJSONMarshal.Wrapf("invalid querier JSON from route: %s", req.Route)
 		}
 		return bz, nil
 	}

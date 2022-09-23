@@ -14,7 +14,6 @@ import (
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
-// StoreKey is the store key string for authz
 const StoreKey = types.ModuleName
 
 type baseAppSimulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, sdk.Context, error)
@@ -149,33 +148,33 @@ func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Co
 	sentCoins := sdk.NewCoins()
 	for key, coins := range fees {
 		if !coins.IsValid() {
-			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", fees)
+			return sdkerrors.ErrInsufficientFee.Wrapf("invalid fee amount: %q", fees)
 		}
 		if len(key) == 0 {
 			err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, coins)
 			if err != nil {
-				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+				return sdkerrors.ErrInsufficientFunds.Wrap(err.Error())
 			}
 		} else {
 			recipient, err := sdk.AccAddressFromBech32(key)
 			if err != nil {
-				return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, err.Error())
+				return sdkerrors.ErrInvalidAddress.Wrap(err.Error())
 			}
 			err = bankKeeper.SendCoins(ctx, acc.GetAddress(), recipient, coins)
 			if err != nil {
-				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+				return sdkerrors.ErrInsufficientFunds.Wrap(err.Error())
 			}
 		}
 		sentCoins = sentCoins.Add(coins...)
 	}
 	remainingFee, neg := remainingFees.SafeSub(sentCoins...)
 	if neg {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "negative balance after sending coins to accounts and fee collector")
+		return sdkerrors.ErrInsufficientFunds.Wrap("negative balance after sending coins to accounts and fee collector")
 	}
 	// sweep the rest of the fees to module
 	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, remainingFee)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+		return sdkerrors.ErrInsufficientFunds.Wrap(err.Error())
 	}
 
 	return nil
@@ -193,56 +192,6 @@ func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, er
 	case types.NhashDenom:
 		return coin, nil
 	default:
-		return sdk.Coin{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "denom not supported for conversion %s", coin.Denom)
+		return sdk.Coin{}, sdkerrors.ErrInvalidType.Wrapf("denom not supported for conversion %s", coin.Denom)
 	}
-}
-
-// CalculateAdditionalFeesToBePaid computes the additional fees to be paid for the provided messages.
-func (k Keeper) CalculateAdditionalFeesToBePaid(ctx sdk.Context, msgs ...sdk.Msg) (types.MsgFeesDistribution, error) {
-	msgFeesDistribution := types.MsgFeesDistribution{
-		RecipientDistributions: make(map[string]sdk.Coins),
-	}
-	assessCustomMsgTypeURL := sdk.MsgTypeURL(&types.MsgAssessCustomMsgFeeRequest{})
-	for _, msg := range msgs {
-		typeURL := sdk.MsgTypeURL(msg)
-		msgFees, err := k.GetMsgFee(ctx, typeURL)
-		if err != nil {
-			return msgFeesDistribution, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-		}
-
-		if msgFees != nil {
-			if msgFees.AdditionalFee.IsPositive() {
-				msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFees.AdditionalFee)
-				msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFees.AdditionalFee)
-			}
-		}
-
-		if typeURL == assessCustomMsgTypeURL {
-			assessFee, ok := msg.(*types.MsgAssessCustomMsgFeeRequest)
-			if !ok {
-				return msgFeesDistribution, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "unable to convert msg to MsgAssessCustomMsgFeeRequest")
-			}
-			msgFeeCoin, err := k.ConvertDenomToHash(ctx, assessFee.Amount)
-			if err != nil {
-				return msgFeesDistribution, err
-			}
-			if msgFeeCoin.IsPositive() {
-				if len(assessFee.Recipient) != 0 {
-					recipientCoin, feePayoutCoin := types.SplitAmount(msgFeeCoin)
-					cur, exists := msgFeesDistribution.RecipientDistributions[assessFee.Recipient]
-					if !exists {
-						msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = sdk.NewCoins()
-					}
-					msgFeesDistribution.RecipientDistributions[assessFee.Recipient] = cur.Add(recipientCoin)
-					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(feePayoutCoin)
-					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFeeCoin)
-				} else {
-					msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(msgFeeCoin)
-					msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(msgFeeCoin)
-				}
-			}
-		}
-	}
-
-	return msgFeesDistribution, nil
 }

@@ -112,13 +112,13 @@ func (g *FeeGasMeter) String() string {
 }
 
 // ConsumeFee increments the amount of msg fee required by a msg type.
-func (g *FeeGasMeter) ConsumeFee(amount sdk.Coins, msgType string, recipient string) {
+func (g *FeeGasMeter) ConsumeFee(amount sdk.Coin, msgType string, recipient string) {
 	key := msgfeestypes.GetCompositeKey(msgType, recipient)
 	cur := g.usedFees[key]
 	if cur.Empty() {
-		g.usedFees[key] = sdk.NewCoins(amount...)
+		g.usedFees[key] = sdk.NewCoins(amount)
 	} else {
-		g.usedFees[key] = cur.Add(amount...)
+		g.usedFees[key] = cur.Add(amount)
 	}
 	g.feeCalls[key]++
 }

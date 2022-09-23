@@ -3,29 +3,41 @@ package antewrapper
 import (
 	"fmt"
 
+	cerrs "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 const (
-	SimAppChainID = "simapp-unit-testing"
+	DefaultInsufficientFeeMsg = "not enough fees; after deducting fees required,got"
+	SimAppChainID             = "simapp-unit-testing"
 )
 
 // MsgFeesDecorator will check if the transaction's fee is at least as large
-// as floor gas fee (defined in MsgFee module) + message-based fees (also defined in the MsgFee module).
+// as tax + additional minimum gasFee (defined in msgfeeskeeper)
+// and record additional fee proceeds to msgfees module to track additional fee proceeds.
 // If fee is too low, decorator returns error and tx is rejected from mempool.
 // Note this only applies when ctx.CheckTx = true
 // If fee is high enough or not CheckTx, then call next AnteHandler
 // CONTRACT: Tx must implement FeeTx to use MsgFeesDecorator
 type MsgFeesDecorator struct {
-	msgFeeKeeper msgfeestypes.MsgFeesKeeper
+	msgFeeKeeper   msgfeestypes.MsgFeesKeeper
+	bankKeeper     banktypes.Keeper
+	accountKeeper  cosmosante.AccountKeeper
+	feegrantKeeper msgfeestypes.FeegrantKeeper
 }
 
-func NewMsgFeesDecorator(msgFeeKeeper msgfeestypes.MsgFeesKeeper) MsgFeesDecorator {
+func NewMsgFeesDecorator(bankKeeper banktypes.Keeper, accountKeeper cosmosante.AccountKeeper, feegrantKeeper msgfeestypes.FeegrantKeeper, keeper msgfeestypes.MsgFeesKeeper) MsgFeesDecorator {
 	return MsgFeesDecorator{
-		msgFeeKeeper: msgFeeKeeper,
+		keeper,
+		bankKeeper,
+		accountKeeper,
+		feegrantKeeper,
 	}
 }
 
@@ -44,35 +56,74 @@ type MsgFeesDistribution struct {
 // Let y is the additional fees to be paid per MsgType
 // then z = x + y
 // This Fee Decorator makes sure that z is >= to x + y
-func (mfd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	ctx.Logger().Debug(fmt.Sprintf("In MsgFeesDecorator %d", ctx.GasMeter().GasConsumed()))
+func (afd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	feeTx, err := getFeeTx(tx)
 
-	feeTx, err := GetFeeTx(tx)
 	if err != nil {
 		return ctx, err
 	}
 
-	// Make sure there are enough fees to cover base fee + additional fees.
-	// base fee = floor gas price * gas wanted
-	// additional fees = sum of message based fees
-	if ctx.IsCheckTx() && !simulate {
-		feeCoins := feeTx.GetFee()
-		gas := feeTx.GetGas()
-		floorGasPrice := mfd.msgFeeKeeper.GetFloorGasPrice(ctx)
-		msgs := feeTx.GetMsgs()
+	ctx.Logger().Debug(fmt.Sprintf("In MsgFeesDecorator %d", ctx.GasMeter().GasConsumed()))
 
-		// Compute msg all additional fees
-		msgFeesDistribution, calcErr := mfd.msgFeeKeeper.CalculateAdditionalFeesToBePaid(ctx, msgs...)
-		if calcErr != nil {
-			return ctx, sdkerrors.ErrInsufficientFee.Wrap(calcErr.Error())
-		}
+	feeCoins := feeTx.GetFee()
+	gas := feeTx.GetGas()
+	msgs := feeTx.GetMsgs()
 
-		mpErr := EnsureSufficientFloorAndMsgFees(ctx, feeCoins, floorGasPrice, gas, msgFeesDistribution.TotalAdditionalFees)
-		if mpErr != nil {
-			return ctx, sdkerrors.ErrInsufficientFee.Wrapf(mpErr.Error())
+	// Compute msg all additional fees
+	msgFeesDistribution, err := CalculateAdditionalFeesToBePaid(ctx, afd.msgFeeKeeper, msgs...)
+	totalAdditionalFees := msgFeesDistribution.TotalAdditionalFees
+	if err != nil {
+		return ctx, sdkerrors.ErrInsufficientFee.Wrap(err.Error())
+	}
+	// floor gas price should be checked for all Tx's ( i.e nodes cannot set min-gas-price < floor gas price)
+	// the chain id check is exclusively for not breaking all existing sim tests which freak out when denom is anything other than stake.
+	if ctx.IsCheckTx() && !simulate && !isTestContext(ctx) && (totalAdditionalFees.IsZero() || totalAdditionalFees == nil) {
+		err = checkFloorGasFees(gas, feeCoins, totalAdditionalFees, afd.msgFeeKeeper.GetFloorGasPrice(ctx))
+		if err != nil {
+			return ctx, err
 		}
 	}
+	if !totalAdditionalFees.IsZero() {
+		// ensure enough fees to cover mempool fee for base fee + additional fee
+		// This is exact same logic as NewMempoolFeeDecorator except it accounts for additional Fees.
+		// TODO: Required for v1.13.x: Update this logic to match the DeductFeeDecorator now. https://github.com/provenance-io/provenance/issues/1006
+		if ctx.IsCheckTx() && !simulate {
+			errFromMempoolCalc := EnsureSufficientMempoolFees(ctx, gas, feeCoins, totalAdditionalFees)
+			if errFromMempoolCalc != nil {
+				return ctx, sdkerrors.ErrInsufficientFee.Wrap(errFromMempoolCalc.Error())
+			}
+		}
+		feePayer := feeTx.FeePayer()
+		feeGranter := feeTx.FeeGranter()
 
+		deductFeesFrom := feePayer
+
+		deductFeesFrom, errorFromFeeGrant := getFeeGranterIfExists(ctx, feeGranter, afd, feePayer, deductFeesFrom)
+		if errorFromFeeGrant != nil {
+			return ctx, errorFromFeeGrant
+		}
+
+		deductFeesFromAcc := afd.accountKeeper.GetAccount(ctx, deductFeesFrom)
+		if deductFeesFromAcc == nil {
+			err = sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %q does not exist", deductFeesFrom)
+			if err != nil {
+				return ctx, err
+			}
+		}
+
+		// get all the coin balances for the fee payer account
+		balancePerCoin := sdk.NewCoins()
+		for _, fc := range feeCoins {
+			balancePerCoin = balancePerCoin.Add(afd.bankKeeper.GetBalance(ctx, deductFeesFrom, fc.Denom))
+		}
+
+		if !simulate {
+			if err = EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas, feeCoins, totalAdditionalFees, balancePerCoin,
+				afd.msgFeeKeeper.GetFloorGasPrice(ctx)); err != nil {
+				return ctx, err
+			}
+		}
+	}
 	return next(ctx, tx, simulate)
 }
 
@@ -80,41 +131,177 @@ func (mfd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 // and some network tests won't work without a chain id being set(but they also setup everything with stake denom) so `simapp-unit-testing` chain id is skipped also.
 // This only needs to work to pio-testnet and pio-mainnet, so this is safe.
 func isTestContext(ctx sdk.Context) bool {
-	return len(ctx.ChainID()) == 0 || ctx.ChainID() == SimAppChainID || ctx.ChainID() == helpers.SimAppChainID
+	return !(len(ctx.ChainID()) != 0 && ctx.ChainID() != SimAppChainID && ctx.ChainID() != helpers.SimAppChainID)
 }
 
-// EnsureSufficientFloorAndMsgFees verifies that the given transaction has supplied
-// enough fees(gas + additional fees) to cover x/msgfees costs.
+// getFeeGranterIfExists checks if fee granter exists and returns account to deduct fees from
+func getFeeGranterIfExists(ctx sdk.Context, feeGranter sdk.AccAddress, afd MsgFeesDecorator, feePayer sdk.AccAddress, deductFeesFrom sdk.AccAddress) (sdk.AccAddress, error) {
+	if feeGranter != nil {
+		if afd.feegrantKeeper == nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
+		} else if !feeGranter.Equals(feePayer) {
+			grant, err := afd.feegrantKeeper.GetAllowance(ctx, feeGranter, feePayer)
+			if err != nil {
+				return nil, cerrs.Wrapf(err, "%q not allowed to pay fees from %q", feeGranter, feePayer)
+			}
+			if grant == nil {
+				return nil, cerrs.Wrapf(err, "%q not allowed to pay fees from %q", feeGranter, feePayer)
+			}
+		}
+
+		deductFeesFrom = feeGranter
+	}
+	return deductFeesFrom, nil
+}
+
+func getFeeTx(tx sdk.Tx) (sdk.FeeTx, error) {
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return nil, sdkerrors.ErrTxDecode.Wrap("Tx must be a FeeTx")
+	}
+	return feeTx, nil
+}
+
+// EnsureSufficientMempoolFees verifies that the given transaction has supplied
+// enough fees(gas + additional fees) to cover a proposer's minimum fees. A result object is returned
+// indicating success or failure.
 //
 // Contract: This should only be called during CheckTx as it cannot be part of
 // consensus.
-func EnsureSufficientFloorAndMsgFees(ctx sdk.Context, feeCoins sdk.Coins, floorGasPrice sdk.Coin, gas uint64, additionalFees sdk.Coins) error {
-	// the isTestContext is exclusively for not breaking all existing sim tests which freak out when denom is anything other than stake.
-	if isTestContext(ctx) {
-		return nil
-	}
+func EnsureSufficientMempoolFees(ctx sdk.Context, gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins) error {
+	feeCoinsOriginal := feeCoins
+	requiredFees := sdk.Coins{}
+	minGasPrices := ctx.MinGasPrices()
+	if !minGasPrices.IsZero() {
+		requiredFees = make(sdk.Coins, len(minGasPrices))
 
-	var baseFee sdk.Coins
-	if !floorGasPrice.IsZero() {
-		baseFee = baseFee.Add(sdk.NewCoin(floorGasPrice.Denom, floorGasPrice.Amount.Mul(sdk.NewIntFromUint64(gas))))
-	}
-	reqTotal := baseFee.Add(additionalFees...)
-
-	if reqTotal.IsZero() {
-		return nil
-	}
-
-	if _, hasNeg := feeCoins.SafeSub(reqTotal...); hasNeg {
-		// Slightly different messages when there's additional fees and not.
-		feeDesc := "base fee"
-		if !additionalFees.IsZero() {
-			feeDesc = "base fee + additional fee"
+		// Determine the required fees by multiplying each required minimum gas
+		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
+		glDec := sdk.NewDec(int64(gas))
+		for i, gp := range minGasPrices {
+			fee := gp.Amount.Mul(glDec)
+			requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
 		}
-		return sdkerrors.ErrInsufficientFee.Wrapf(
-			"%s cannot be paid with provided fees: %q"+
-				", required: %q = %q(base-fee) + %q(additional-fees)",
-			feeDesc, feeCoins, reqTotal, baseFee, additionalFees)
 	}
 
+	// Before checking gas prices, remove taxed from fee
+	var hasNeg bool
+	if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees...); hasNeg {
+		return sdkerrors.ErrInsufficientFee.Wrapf("%s: %q, required fees: %q = %q(base-fee) +%q(additional-fees)", DefaultInsufficientFeeMsg, feeCoins, requiredFees.Add(additionalFees...), requiredFees, additionalFees)
+	}
+
+	if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
+		return sdkerrors.ErrInsufficientFee.Wrapf("Base Fee+additional fee cannot be paid with fee value passed in: %q, required: %q = %q(base-fee) +%q(additional-fees)", feeCoinsOriginal, requiredFees.Add(additionalFees...),
+			requiredFees, additionalFees)
+	}
+
+	return nil
+}
+
+func EnsureAccountHasSufficientFeesWithAcctBalanceCheck(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins,
+	balancePerCoin sdk.Coins, minGasPriceForAdditionalFeeCalc sdk.Coin) error {
+	err := EnsureSufficientFees(gas, feeCoins, additionalFees, minGasPriceForAdditionalFeeCalc)
+	if err != nil {
+		return err
+	}
+	_, hasNeg := balancePerCoin.SafeSub(feeCoins...)
+	if balancePerCoin.IsZero() || hasNeg {
+		return sdkerrors.ErrInsufficientFee.Wrapf("fee payer account does not have enough balance to pay for %q", feeCoins)
+	}
+	return nil
+}
+
+// EnsureSufficientFees to be used by msg_service_router
+func EnsureSufficientFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins,
+	minGasPriceForAdditionalFeeCalc sdk.Coin) error {
+	// Step 1. Check if fees has enough money to pay additional fees.
+	var hasNeg bool
+	if feeCoins, hasNeg = feeCoins.SafeSub(additionalFees...); hasNeg {
+		return sdkerrors.ErrInsufficientFee.Wrapf("%s: %q, required additional fee: %q", DefaultInsufficientFeeMsg, feeCoins, additionalFees)
+	}
+	// Step 2: check if additional fees in nhash, that base fees and additional fees can be paid
+	// total fees in hash - gas limit * price per gas >= additional fees in hash
+	if !additionalFees.AmountOf(minGasPriceForAdditionalFeeCalc.Denom).IsZero() {
+		// Determine the required fees by multiplying each required minimum gas
+		err := checkFloorGasFees(gas, feeCoins, additionalFees, minGasPriceForAdditionalFeeCalc)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checkFloorGasFees(gas uint64, feeCoins sdk.Coins, additionalFees sdk.Coins, minGasPriceForAdditionalFeeCalc sdk.Coin) error {
+	// where fee = ceil(floorGasPrice * gasLimit).
+	fee := minGasPriceForAdditionalFeeCalc.Amount.Mul(sdk.NewIntFromUint64(gas))
+	baseFees := sdk.NewCoin(minGasPriceForAdditionalFeeCalc.Denom, fee)
+	if _, hasNeg := feeCoins.SafeSub(baseFees); hasNeg {
+		// for tx without additional fees.
+		if additionalFees == nil || additionalFees.IsZero() {
+			return sdkerrors.ErrInsufficientFee.Wrapf("not enough fees based on floor gas price: %q; required base fees >=%q: Supplied fee was %q", minGasPriceForAdditionalFeeCalc, baseFees, feeCoins)
+		}
+		return sdkerrors.ErrInsufficientFee.Wrapf("not enough fees based on floor gas price: %q; after deducting (total fee supplied fees - additional fees(%q)) required base fees >=%q: Supplied fee was %q", minGasPriceForAdditionalFeeCalc, additionalFees, baseFees, feeCoins)
+	}
+	return nil
+}
+
+// CalculateAdditionalFeesToBePaid computes the additional fees to be paid and the distributions to recipients
+func CalculateAdditionalFeesToBePaid(ctx sdk.Context, mbfk msgfeestypes.MsgFeesKeeper, msgs ...sdk.Msg) (*MsgFeesDistribution, error) {
+	msgFeesDistribution := MsgFeesDistribution{
+		RecipientDistributions: make(map[string]sdk.Coin),
+	}
+	assessCustomMsgTypeURL := sdk.MsgTypeURL(&msgfeestypes.MsgAssessCustomMsgFeeRequest{})
+	for _, msg := range msgs {
+		typeURL := sdk.MsgTypeURL(msg)
+		msgFees, err := mbfk.GetMsgFee(ctx, typeURL)
+		if err != nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		}
+
+		if msgFees != nil {
+			if msgFees.AdditionalFee.IsPositive() {
+				if err := CalculateDistributions(msgFees.Recipient, msgFees.AdditionalFee, msgFees.RecipientBasisPoints, &msgFeesDistribution); err != nil {
+					return nil, err
+				}
+			}
+		}
+		if typeURL == assessCustomMsgTypeURL {
+			assessFee, ok := msg.(*msgfeestypes.MsgAssessCustomMsgFeeRequest)
+			if !ok {
+				return nil, sdkerrors.ErrInvalidType.Wrap("unable to convert msg to MsgAssessCustomMsgFeeRequest")
+			}
+			assessFeeCoin, err := mbfk.ConvertDenomToHash(ctx, assessFee.Amount)
+			if err != nil {
+				return nil, err
+			}
+			if assessFeeCoin.IsPositive() {
+				if err := CalculateDistributions(assessFee.Recipient, assessFeeCoin, msgfeestypes.AssessCustomMsgFeeBips, &msgFeesDistribution); err != nil {
+					return nil, err
+				}
+			}
+		}
+	}
+	return &msgFeesDistribution, nil
+}
+
+// CalculateDistributions hydrates MsgFeesDistribution with additional fee and when recipient is present it splits the fee using the basis points
+func CalculateDistributions(recipient string, additionalFee sdk.Coin, basisPoints uint32, msgFeesDistribution *MsgFeesDistribution) error {
+	if len(recipient) != 0 {
+		recipientCoin, feePayoutCoin, err := msgfeestypes.SplitCoinByBips(additionalFee, basisPoints)
+		if err != nil {
+			return err
+		}
+		if len(msgFeesDistribution.RecipientDistributions[recipient].Denom) == 0 {
+			msgFeesDistribution.RecipientDistributions[recipient] = recipientCoin
+		} else {
+			msgFeesDistribution.RecipientDistributions[recipient] = msgFeesDistribution.RecipientDistributions[recipient].Add(recipientCoin)
+		}
+		msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(feePayoutCoin)
+		msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(additionalFee)
+	} else {
+		msgFeesDistribution.AdditionalModuleFees = msgFeesDistribution.AdditionalModuleFees.Add(additionalFee)
+		msgFeesDistribution.TotalAdditionalFees = msgFeesDistribution.TotalAdditionalFees.Add(additionalFee)
+	}
 	return nil
 }

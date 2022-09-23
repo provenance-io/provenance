@@ -67,6 +67,9 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/group"
+	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
+	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -113,6 +116,7 @@ import (
 	_ "github.com/provenance-io/provenance/client/docs/statik" // registers swagger-ui files with statik
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	piohandlers "github.com/provenance-io/provenance/internal/handlers"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/internal/provwasm"
 	"github.com/provenance-io/provenance/internal/statesync"
 	"github.com/provenance-io/provenance/x/attribute"
@@ -137,6 +141,9 @@ import (
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	namewasm "github.com/provenance-io/provenance/x/name/wasm"
+	rewardkeeper "github.com/provenance-io/provenance/x/reward/keeper"
+	rewardmodule "github.com/provenance-io/provenance/x/reward/module"
+	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
@@ -195,6 +202,7 @@ var (
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
 		authzmodule.AppModuleBasic{},
+		groupmodule.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 
 		ibc.AppModuleBasic{},
@@ -208,6 +216,7 @@ var (
 		metadata.AppModuleBasic{},
 		wasm.AppModuleBasic{},
 		msgfeesmodule.AppModuleBasic{},
+		rewardmodule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -224,6 +233,7 @@ var (
 
 		markertypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 		wasm.ModuleName:        {authtypes.Burner},
+		rewardtypes.ModuleName: nil,
 	}
 )
 
@@ -240,7 +250,7 @@ type WasmWrapper struct {
 
 // SdkCoinDenomRegex returns a new sdk base denom regex string
 func SdkCoinDenomRegex() string {
-	return DefaultReDnmString
+	return pioconfig.DefaultReDnmString
 }
 
 // App extends an ABCI application, but with most of its parameters exported.
@@ -273,10 +283,11 @@ type App struct {
 	UpgradeKeeper    upgradekeeper.Keeper
 	ParamsKeeper     paramskeeper.Keeper
 	AuthzKeeper      authzkeeper.Keeper
+	GroupKeeper      groupkeeper.Keeper
 	EvidenceKeeper   evidencekeeper.Keeper
 	FeeGrantKeeper   feegrantkeeper.Keeper
-
-	MsgFeesKeeper msgfeeskeeper.Keeper
+	MsgFeesKeeper    msgfeeskeeper.Keeper
+	RewardKeeper     rewardkeeper.Keeper
 
 	IBCKeeper           *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	ICAHostKeeper       icahostkeeper.Keeper
@@ -346,7 +357,7 @@ func New(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
-		authzkeeper.StoreKey,
+		authzkeeper.StoreKey, group.StoreKey,
 
 		ibchost.StoreKey,
 		ibctransfertypes.StoreKey,
@@ -360,6 +371,7 @@ func New(
 		nametypes.StoreKey,
 		msgfeestypes.StoreKey,
 		wasm.StoreKey,
+		rewardtypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -431,7 +443,7 @@ func New(
 	)
 
 	app.MsgFeesKeeper = msgfeeskeeper.NewKeeper(
-		appCodec, keys[msgfeestypes.StoreKey], app.GetSubspace(msgfeestypes.ModuleName), authtypes.FeeCollectorName, DefaultFeeDenom, app.Simulate, encodingConfig.TxConfig.TxDecoder())
+		appCodec, keys[msgfeestypes.StoreKey], app.GetSubspace(msgfeestypes.ModuleName), authtypes.FeeCollectorName, pioconfig.DefaultFeeDenom, app.Simulate, encodingConfig.TxConfig.TxDecoder())
 
 	pioMsgFeesRouter := app.MsgServiceRouter().(*piohandlers.PioMsgServiceRouter)
 	pioMsgFeesRouter.SetMsgFeesKeeper(app.MsgFeesKeeper)
@@ -442,9 +454,13 @@ func New(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
 
+	app.RewardKeeper = rewardkeeper.NewKeeper(appCodec, keys[rewardtypes.StoreKey], app.StakingKeeper, &app.GovKeeper, app.BankKeeper, app.AccountKeeper)
+
 	app.AuthzKeeper = authzkeeper.NewKeeper(
 		keys[authzkeeper.StoreKey], appCodec, app.BaseApp.MsgServiceRouter(), app.AccountKeeper,
 	)
+
+	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.BaseApp.MsgServiceRouter(), app.AccountKeeper, group.DefaultConfig())
 
 	app.MetadataKeeper = metadatakeeper.NewKeeper(
 		appCodec, keys[metadatatypes.StoreKey], app.GetSubspace(metadatatypes.ModuleName), app.AccountKeeper, app.AuthzKeeper,
@@ -597,10 +613,7 @@ func New(
 	// must be passed by reference here.
 
 	app.mm = module.NewManager(
-		genutil.NewAppModule(
-			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
-			encodingConfig.TxConfig,
-		),
+		genutil.NewAppModule(app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx, encodingConfig.TxConfig),
 		auth.NewAppModule(appCodec, app.AccountKeeper, nil),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
@@ -616,6 +629,7 @@ func New(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 
 		// PROVENANCE
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
@@ -624,6 +638,7 @@ func New(
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
@@ -648,6 +663,7 @@ func New(
 		markertypes.ModuleName,
 		icatypes.ModuleName,
 		intertxtypes.ModuleName,
+		rewardtypes.ModuleName,
 
 		// no-ops
 		authtypes.ModuleName,
@@ -656,6 +672,7 @@ func New(
 		crisistypes.ModuleName,
 		genutiltypes.ModuleName,
 		authz.ModuleName,
+		group.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		msgfeestypes.ModuleName,
@@ -674,6 +691,8 @@ func New(
 		authtypes.ModuleName,
 		icatypes.ModuleName,
 		intertxtypes.ModuleName,
+		group.ModuleName,
+		rewardtypes.ModuleName,
 
 		// no-ops
 		vestingtypes.ModuleName,
@@ -716,6 +735,7 @@ func New(
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		authz.ModuleName,
+		group.ModuleName,
 		feegrant.ModuleName,
 
 		markertypes.ModuleName,
@@ -730,6 +750,7 @@ func New(
 		intertxtypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
+		rewardtypes.ModuleName,
 
 		// no-ops
 		paramstypes.ModuleName,
@@ -740,6 +761,7 @@ func New(
 	app.mm.SetOrderMigrations(
 		banktypes.ModuleName,
 		authz.ModuleName,
+		group.ModuleName,
 		capabilitytypes.ModuleName,
 		crisistypes.ModuleName,
 		distrtypes.ModuleName,
@@ -765,8 +787,9 @@ func New(
 		msgfeestypes.ModuleName,
 		metadatatypes.ModuleName,
 		nametypes.ModuleName,
+		rewardtypes.ModuleName,
 
-		// required to be last (cosmos-sdk enforces this when migrations are ran)
+		// Last due to v0.44 issue: https://github.com/cosmos/cosmos-sdk/issues/10591
 		authtypes.ModuleName,
 	)
 
@@ -788,12 +811,14 @@ func New(
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
+		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
 		provwasm.NewWrapper(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 
 		ibc.NewAppModule(app.IBCKeeper),
@@ -839,29 +864,35 @@ func New(
 
 	app.SetEndBlocker(app.EndBlocker)
 
-	// -- TODO: Add upgrade plans for each release here
-	//    NOTE: Do not remove any handlers once deployed
-	//    NOTE: These have to be added before the baseapp seals via LoadLatestVersion() down below.
-	// * https://pkg.go.dev/github.com/cosmos/cosmos-sdk@v0.40.0-rc6/x/upgrade#hdr-Performing_Upgrades
-	// * https://github.com/cosmos/cosmos-sdk/issues/8265
+	// Add upgrade plans for each release. This must be done before the baseapp seals via LoadLatestVersion() down below.
 	InstallCustomUpgradeHandlers(app)
+
 	// Use the dump of $home/data/upgrade-info.json:{"name":"$plan","height":321654} to determine
 	// if we load a store upgrade from the handlers. No file == no error from read func.
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(err)
 	}
+
 	// Currently in an upgrade hold for this block.
 	if upgradeInfo.Name != "" && upgradeInfo.Height == app.LastBlockHeight()+1 {
-		app.Logger().Info("Managing upgrade",
-			"plan", upgradeInfo.Name,
-			"upgradeHeight", upgradeInfo.Height,
-			"lastHeight", app.LastBlockHeight(),
-		)
-		// See if we have a custom store loader to use for upgrades.
-		storeLoader := CustomUpgradeStoreLoader(app, upgradeInfo)
-		if storeLoader != nil {
-			app.SetStoreLoader(storeLoader)
+		if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+			app.Logger().Info("Skipping upgrade based on height",
+				"plan", upgradeInfo.Name,
+				"upgradeHeight", upgradeInfo.Height,
+				"lastHeight", app.LastBlockHeight(),
+			)
+		} else {
+			app.Logger().Info("Managing upgrade",
+				"plan", upgradeInfo.Name,
+				"upgradeHeight", upgradeInfo.Height,
+				"lastHeight", app.LastBlockHeight(),
+			)
+			// See if we have a custom store loader to use for upgrades.
+			storeLoader := GetUpgradeStoreLoader(app, upgradeInfo)
+			if storeLoader != nil {
+				app.SetStoreLoader(storeLoader)
+			}
 		}
 	}
 	// --
@@ -1041,6 +1072,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(attributetypes.ModuleName)
 	paramsKeeper.Subspace(msgfeestypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
+	paramsKeeper.Subspace(rewardtypes.ModuleName)
 
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)

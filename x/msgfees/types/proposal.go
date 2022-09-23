@@ -2,8 +2,8 @@ package types
 
 import (
 	"errors"
-	fmt "fmt"
-	"strings"
+	"fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -38,12 +38,17 @@ func NewAddMsgFeeProposal(
 	title string,
 	description string,
 	msg string,
-	additionalFee sdk.Coin) *AddMsgFeeProposal {
+	additionalFee sdk.Coin,
+	recipient string,
+	recipientBasisPoints string,
+) *AddMsgFeeProposal {
 	return &AddMsgFeeProposal{
-		Title:         title,
-		Description:   description,
-		MsgTypeUrl:    msg,
-		AdditionalFee: additionalFee,
+		Title:                title,
+		Description:          description,
+		MsgTypeUrl:           msg,
+		AdditionalFee:        additionalFee,
+		Recipient:            recipient,
+		RecipientBasisPoints: recipientBasisPoints,
 	}
 }
 
@@ -58,29 +63,47 @@ func (p AddMsgFeeProposal) ValidateBasic() error {
 		return ErrInvalidFee
 	}
 
+	if err := p.AdditionalFee.Validate(); err != nil {
+		return err
+	}
+
+	if len(p.Recipient) != 0 {
+		_, err := sdk.AccAddressFromBech32(p.Recipient)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(p.RecipientBasisPoints) > 0 && len(p.Recipient) > 0 {
+		bips, err := strconv.ParseUint(p.RecipientBasisPoints, 0, 64)
+		if err != nil {
+			return err
+		}
+		if bips > 10_000 {
+			return fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", p.RecipientBasisPoints)
+		}
+	} else if len(p.RecipientBasisPoints) > 0 && len(p.Recipient) == 0 {
+		return fmt.Errorf("")
+	}
+
 	return govtypesv1beta1.ValidateAbstract(&p)
-}
-func (p AddMsgFeeProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Add Msg Fee Proposal:
-Title:         %s
-Description:   %s
-Msg:           %s
-AdditionalFee: %s
-`, p.Title, p.Description, p.MsgTypeUrl, p.AdditionalFee))
-	return b.String()
 }
 
 func NewUpdateMsgFeeProposal(
 	title string,
 	description string,
 	msg string,
-	additionalFee sdk.Coin) *UpdateMsgFeeProposal {
+	additionalFee sdk.Coin,
+	recipient string,
+	recipientBasisPoints string,
+) *UpdateMsgFeeProposal {
 	return &UpdateMsgFeeProposal{
-		Title:         title,
-		Description:   description,
-		MsgTypeUrl:    msg,
-		AdditionalFee: additionalFee,
+		Title:                title,
+		Description:          description,
+		MsgTypeUrl:           msg,
+		AdditionalFee:        additionalFee,
+		Recipient:            recipient,
+		RecipientBasisPoints: recipientBasisPoints,
 	}
 }
 
@@ -97,18 +120,23 @@ func (p UpdateMsgFeeProposal) ValidateBasic() error {
 		return ErrInvalidFee
 	}
 
-	return govtypesv1beta1.ValidateAbstract(&p)
-}
+	if len(p.Recipient) != 0 {
+		_, err := sdk.AccAddressFromBech32(p.Recipient)
+		if err != nil {
+			return err
+		}
+	}
+	if len(p.RecipientBasisPoints) > 0 {
+		bips, err := strconv.ParseUint(p.RecipientBasisPoints, 0, 64)
+		if err != nil {
+			return err
+		}
+		if bips > 10_000 {
+			return fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", p.RecipientBasisPoints)
+		}
+	}
 
-func (p UpdateMsgFeeProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Update Msg Fee Proposal:
-Title:         %s
-Description:   %s
-Msg:           %s
-AdditionalFee: %s
-`, p.Title, p.Description, p.MsgTypeUrl, p.AdditionalFee))
-	return b.String()
+	return govtypesv1beta1.ValidateAbstract(&p)
 }
 
 func NewRemoveMsgFeeProposal(
@@ -134,16 +162,6 @@ func (p RemoveMsgFeeProposal) ValidateBasic() error {
 	return govtypesv1beta1.ValidateAbstract(&p)
 }
 
-func (p RemoveMsgFeeProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Remove Msg Fee Proposal:
-  Title:       %s
-  Description: %s
-  MsgTypeUrl:  %s
-`, p.Title, p.Description, p.MsgTypeUrl))
-	return b.String()
-}
-
 func NewUpdateNhashPerUsdMilProposal(
 	title string,
 	description string,
@@ -167,14 +185,4 @@ func (p UpdateNhashPerUsdMilProposal) ValidateBasic() error {
 		return errors.New("nhash per usd mil must be greater than 0")
 	}
 	return govtypesv1beta1.ValidateAbstract(&p)
-}
-
-func (p UpdateNhashPerUsdMilProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Update Nhash to Usd Mil Proposal:
-  Title:             %s
-  Description:       %s
-  NhashPerUsdMil:    %v
-`, p.Title, p.Description, p.NhashPerUsdMil))
-	return b.String()
 }

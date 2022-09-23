@@ -39,11 +39,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+<<<<<<< HEAD
+=======
+* Ignore hardcoded tx gas limit when `consensus_params.block.max_gas` is set to -1 for local nodes
+>>>>>>> origin/main
 * Bump Cosmos-SDK to Bump cosmos to v0.46.0-pio-1-rc4 (from v0.45.5-pio-1). [#995](https://github.com/provenance-io/provenance/issues/995)
   See https://github.com/provenance-io/cosmos-sdk/blob/v0.46.0-pio-1-rc4/RELEASE_NOTES.md for more info.
 * Bump IBC to v5.0.0-beta1. [#995](https://github.com/provenance-io/provenance/issues/995)
 * Refactor the `x/marker` module's `Holding` query to utilize the `x/bank` module's new `DenomOwners` query. [#995](https://github.com/provenance-io/provenance/issues/995)
   The only real difference between those two queries is that the `Holding` query accepts either a denom or marker address.
+<<<<<<< HEAD
+=======
+* Update the third-party protos and swagger files after the cosmos v0.46 bump. [#1017](https://github.com/provenance-io/provenance/issues/1017)
+* Stop using the deprecated Wrap and Wrapf functions in the sdk/types/errors package in favor of those functions off specific errors, or else the cosmossdk.io/errors package. [#1013](https://github.com/provenance-io/provenance/issues/995)
+>>>>>>> origin/main
 
 ### Bug Fixes
 
@@ -66,12 +75,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add documentation for `gRPCurl` to `docs/grpcurl.md` [#953](https://github.com/provenance-io/provenance/issues/953)
 * Updated to go 1.18 [#996](https://github.com/provenance-io/provenance/issues/996)
 * Add docker files for local psql indexing [#997](https://github.com/provenance-io/provenance/issues/997)
+* Added two new Makefile targets to install and start the relayer [#1051] (https://github.com/provenance-io/provenance/pull/1051)
+* Updated relayer scripts to make them headless for external services [#1068] (https://github.com/provenance-io/provenance/pull/1068)
 
 ### Features
 
 * Bump Cosmos-SDK to `v0.45.4-pio-4` (from `v0.45.4-pio-2`) to utilize the new `CountAuthorization` authz grant type. [#807](https://github.com/provenance-io/provenance/issues/807)
 * Update metadata module authz handling to properly call `Accept` and delete/update authorizations as they're used [#905](https://github.com/provenance-io/provenance/issues/905)
 * Read the `custom.toml` config file if it exists. This is read before the other config files, and isn't managed by the `config` commands [#989](https://github.com/provenance-io/provenance/issues/989)
+* Allow a msg fee to be paid to a specific address with basis points [#690](https://github.com/provenance-io/provenance/issues/690)
 
 ### Bug Fixes
 
@@ -85,6 +97,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Fix the `MarkerTransferAuthorization` Accept function and `TransferCoin` authz handling to prevent problems when other authorization types are used [#903](https://github.com/provenance-io/provenance/issues/903)
 * Fix fee charging to sweep remaining fees on successful transaction [#1019](https://github.com/provenance-io/provenance/issues/1019)
+* Allow a msg fee to be paid to a specific address with basis points [#690](https://github.com/provenance-io/provenance/issues/690)
 
 ---
 

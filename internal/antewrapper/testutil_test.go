@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -22,7 +23,6 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/internal/antewrapper"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -32,7 +32,7 @@ type TestAccount struct {
 	priv cryptotypes.PrivKey
 }
 
-// AnteTestSuite is a test suite to be used with ante handler tests.
+// AnteTestSuite is a test s to be used with ante handler tests.
 type AnteTestSuite struct {
 	suite.Suite
 
@@ -60,7 +60,7 @@ func createTestApp(t *testing.T, isCheckTx bool) (*simapp.App, sdk.Context) {
 // SetupTest setups a new test, with new app, context, and anteHandler.
 func (s *AnteTestSuite) SetupTest(isCheckTx bool) {
 	msgfeetype.DefaultFloorGasPrice = sdk.Coin{
-		Denom:  "atom",
+		Denom:  sdk.DefaultBondDenom,
 		Amount: sdk.NewInt(1),
 	}
 	s.app, s.ctx = createTestApp(s.T(), isCheckTx)
@@ -75,14 +75,13 @@ func (s *AnteTestSuite) SetupTest(isCheckTx bool) {
 	s.clientCtx = client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig)
 
-	anteHandler, err := antewrapper.NewAnteHandler(
-		antewrapper.HandlerOptions{
+	anteHandler, err := ante.NewAnteHandler(
+		ante.HandlerOptions{
 			AccountKeeper:   s.app.AccountKeeper,
 			BankKeeper:      s.app.BankKeeper,
 			FeegrantKeeper:  s.app.FeeGrantKeeper,
 			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-			MsgFeesKeeper:   s.app.MsgFeesKeeper,
 		},
 	)
 
@@ -210,7 +209,7 @@ func (s *AnteTestSuite) RunTestCase(privs []cryptotypes.PrivKey, msgs []sdk.Msg,
 
 func (s *AnteTestSuite) CreateMsgFee(fee sdk.Coin, msgs ...sdk.Msg) error {
 	for _, msg := range msgs {
-		msgFeeToCreate := msgfeetype.NewMsgFee(sdk.MsgTypeURL(msg), fee)
+		msgFeeToCreate := msgfeetype.NewMsgFee(sdk.MsgTypeURL(msg), fee, "", msgfeetype.DefaultMsgFeeBips)
 		err := s.app.MsgFeesKeeper.SetMsgFee(s.ctx, msgFeeToCreate)
 		if err != nil {
 			return err

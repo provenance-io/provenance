@@ -9,7 +9,6 @@ breaking:
     - FILE_NO_DELETE
     - FILE_SAME_SYNTAX
   ignore:
-    - confio
     - cosmos
     - cosmos_proto
     - cosmowasm

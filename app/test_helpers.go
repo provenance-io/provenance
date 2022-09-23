@@ -4,6 +4,7 @@ package app
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -18,10 +19,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/server/types"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -35,6 +37,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/provenance-io/provenance/app/params"
+	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 )
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
@@ -64,8 +67,7 @@ type SetupOptions struct {
 	HomePath           string
 	SkipUpgradeHeights map[int64]bool
 	EncConfig          params.EncodingConfig
-	AppOpts            types.AppOptions
-	ChainID            string
+	AppOpts            servertypes.AppOptions
 }
 
 func setup(t *testing.T, withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
@@ -112,7 +114,6 @@ func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions)
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
-				ChainId:         options.ChainID,
 			},
 		)
 	}
@@ -140,7 +141,7 @@ func Setup(t *testing.T) *App {
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
 	}
 
-	app := SetupWithGenesisValSet(t, "", valSet, []authtypes.GenesisAccount{acc}, balance)
+	app := SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
 
 	return app
 }
@@ -191,16 +192,16 @@ func genesisStateWithValSet(t *testing.T,
 		totalSupply = totalSupply.Add(b.Coins...)
 	}
 
-	for range delegations {
+	if len(delegations) > 0 {
+		bondCoins := sdk.NewCoin(sdk.DefaultBondDenom, bondAmt.Mul(sdk.NewInt(int64(len(delegations)))))
 		// add delegated tokens to total supply
-		totalSupply = totalSupply.Add(sdk.NewCoin(sdk.DefaultBondDenom, bondAmt))
+		totalSupply = totalSupply.Add(bondCoins)
+		// add bonded amount to bonded pool module account
+		balances = append(balances, banktypes.Balance{
+			Address: authtypes.NewModuleAddress(stakingtypes.BondedPoolName).String(),
+			Coins:   sdk.Coins{bondCoins},
+		})
 	}
-
-	// add bonded amount to bonded pool module account
-	balances = append(balances, banktypes.Balance{
-		Address: authtypes.NewModuleAddress(stakingtypes.BondedPoolName).String(),
-		Coins:   sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, bondAmt)},
-	})
 
 	// update total supply
 	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{}, []banktypes.SendEnabled{})
@@ -219,7 +220,7 @@ func SetupQuerier(t *testing.T) *App {
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
 // of one consensus engine unit in the default token of the app from first genesis
 // account. A Nop logger is set in App.
-func SetupWithGenesisValSet(t *testing.T, chainID string, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
+func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
 	t.Helper()
 
 	app, genesisState := setup(t, true, 5)
@@ -234,7 +235,6 @@ func SetupWithGenesisValSet(t *testing.T, chainID string, valSet *tmtypes.Valida
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
-			ChainId:         chainID,
 		},
 	)
 
@@ -245,7 +245,6 @@ func SetupWithGenesisValSet(t *testing.T, chainID string, valSet *tmtypes.Valida
 		AppHash:            app.LastCommitID().Hash,
 		ValidatorsHash:     valSet.Hash(),
 		NextValidatorsHash: valSet.Hash(),
-		ChainID:            chainID,
 	}})
 
 	return app
@@ -253,7 +252,7 @@ func SetupWithGenesisValSet(t *testing.T, chainID string, valSet *tmtypes.Valida
 
 // SetupWithGenesisAccounts initializes a new App with the provided genesis
 // accounts and possible balances.
-func SetupWithGenesisAccounts(t *testing.T, chainID string, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
+func SetupWithGenesisAccounts(t *testing.T, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
 	t.Helper()
 
 	privVal := mock.NewPV()
@@ -264,7 +263,7 @@ func SetupWithGenesisAccounts(t *testing.T, chainID string, genAccs []authtypes.
 	validator := tmtypes.NewValidator(pubKey, 1)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
-	return SetupWithGenesisValSet(t, chainID, valSet, genAccs, balances...)
+	return SetupWithGenesisValSet(t, valSet, genAccs, balances...)
 }
 
 // GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts
@@ -395,4 +394,88 @@ func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
 	}
 
 	return res, nil
+}
+
+// CreateTestPubKeys returns a total of numPubKeys public keys in ascending order.
+func CreateTestPubKeys(numPubKeys int) []cryptotypes.PubKey {
+	var publicKeys []cryptotypes.PubKey
+	var buffer bytes.Buffer
+
+	// start at 10 to avoid changing 1 to 01, 2 to 02, etc
+	for i := 100; i < (numPubKeys + 100); i++ {
+		numString := strconv.Itoa(i)
+		buffer.WriteString("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AF") // base pubkey string
+		buffer.WriteString(numString)                                                       // adding on final two digits to make pubkeys unique
+		publicKeys = append(publicKeys, NewPubKeyFromHex(buffer.String()))
+		buffer.Reset()
+	}
+
+	return publicKeys
+}
+
+// NewPubKeyFromHex returns a PubKey from a hex string.
+func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
+	pkBytes, err := hex.DecodeString(pk)
+	if err != nil {
+		panic(err)
+	}
+	if len(pkBytes) != ed25519.PubKeySize {
+		panic(errors.ErrInvalidPubKey.Wrap("invalid pubkey size"))
+	}
+	return &ed25519.PubKey{Key: pkBytes}
+}
+
+// SetupWithGenesisRewardsProgram initializes a new SimApp with the provided
+// rewards programs, genesis accounts, validators, and balances.
+func SetupWithGenesisRewardsProgram(t *testing.T, nextRewardProgramID uint64, genesisRewards []rewardtypes.RewardProgram, genAccs []authtypes.GenesisAccount, valSet *tmtypes.ValidatorSet, balances ...banktypes.Balance) *App {
+	t.Helper()
+
+	// Make sure there's a validator set with at least one validator in it.
+	if valSet == nil || len(valSet.Validators) == 0 {
+		privVal := mock.NewPV()
+		pubKey, err := privVal.GetPubKey()
+		require.NoError(t, err)
+		validator := tmtypes.NewValidator(pubKey, 1)
+		if valSet == nil {
+			valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+		} else {
+			require.NoError(t, valSet.UpdateWithChangeSet([]*tmtypes.Validator{validator}))
+		}
+	}
+
+	app, genesisState := setup(t, true, 0)
+	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, genAccs, balances...)
+	genesisState = genesisStateWithRewards(t, app, genesisState, nextRewardProgramID, genesisRewards)
+
+	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+	require.NoError(t, err, "marshaling genesis state to json")
+
+	app.InitChain(
+		abci.RequestInitChain{
+			Validators:      []abci.ValidatorUpdate{},
+			ConsensusParams: DefaultConsensusParams,
+			AppStateBytes:   stateBytes,
+		},
+	)
+
+	app.Commit()
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, Time: time.Now().UTC()}})
+
+	return app
+}
+
+func genesisStateWithRewards(t *testing.T,
+	app *App, genesisState GenesisState,
+	nextRewardProgramID uint64, genesisRewards []rewardtypes.RewardProgram,
+) GenesisState {
+	rewardGenesisState := rewardtypes.NewGenesisState(
+		nextRewardProgramID,
+		genesisRewards,
+		[]rewardtypes.ClaimPeriodRewardDistribution{},
+		[]rewardtypes.RewardAccountState{},
+	)
+	var err error
+	genesisState[rewardtypes.ModuleName], err = app.AppCodec().MarshalJSON(rewardGenesisState)
+	require.NoError(t, err, "marshaling reward genesis state JSON")
+	return genesisState
 }

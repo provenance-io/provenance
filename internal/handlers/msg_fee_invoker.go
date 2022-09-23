@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 
+	cerrs "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -35,65 +36,78 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins
 	chargedFees := sdk.Coins{}
 	eventsToReturn := sdk.Events{}
 
-	if len(ctx.TxBytes()) != 0 {
+	if ctx.TxBytes() != nil && len(ctx.TxBytes()) != 0 {
 		tx, err := afd.txDecoder(ctx.TxBytes())
 		if err != nil {
-			panic(fmt.Errorf("error in MsgFeeInvoker.Invoke() while getting txBytes: %w", err))
+			panic(fmt.Errorf("error in chargeFees() while getting txBytes: %w", err))
 		}
 
-		feeTx, err := antewrapper.GetFeeTx(tx)
-		if err != nil {
-			// For provenance, should be a FeeTx since antehandler should enforce it,
-			// but not adding complexity here.
-			panic(err)
+		feeTx, ok := tx.(sdk.FeeTx)
+		// only charge additional fee if of type FeeTx since it should give fee payer.
+		// for provenance should be a FeeTx since antehandler should enforce it, but
+		// not adding complexity here
+		if !ok {
+			panic("Transaction not of type FeeTx.  Provenance only supports feeTx for now.")
 		}
 
-		feeGasMeter, err := antewrapper.GetFeeGasMeter(ctx)
-		if err != nil {
-			// For provenance, should be a FeeGasMeter since antehandler should enforce it,
-			// but not adding complexity here.
-			panic(err)
+		feeGasMeter, ok := ctx.GasMeter().(*antewrapper.FeeGasMeter)
+		if !ok {
+			// all provenance tx's should have this set
+			panic("GasMeter is not of type FeeGasMeter")
 		}
 
+		chargedFees = feeGasMeter.FeeConsumed()
+
+		if chargedFees.IsAnyNegative() {
+			return nil, nil, sdkerrors.ErrInvalidCoins.Wrapf("charged fees %v are negative, which should not be possible, aborting", chargedFees)
+		}
 		// eat up the gas cost for charging fees. (This one is on us, Cheers!, mainly because we don't want to fail at this step, imo, but we can remove this is f necessary)
 		ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 
-		consumedFees := feeGasMeter.FeeConsumed()
-		if consumedFees.IsAnyNegative() {
-			return nil, nil, sdkerrors.ErrInvalidCoins.Wrapf("charged fees %v are negative, which should not be possible, aborting", chargedFees)
+		feePayer := feeTx.FeePayer()
+		feeGranter := feeTx.FeeGranter()
+		deductFeesFrom := feePayer
+		// if feegranter set deduct fee from feegranter account.
+		// this works with only when feegrant enabled.
+		if feeGranter != nil {
+			if afd.feegrantKeeper == nil {
+				return nil, nil, sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
+			} else if !feeGranter.Equals(feePayer) {
+				err = afd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, chargedFees, tx.GetMsgs())
+				if err != nil {
+					return nil, nil, cerrs.Wrapf(err, "%q not allowed to pay fees from %q", feeGranter, feePayer)
+				}
+			}
+			deductFeesFrom = feeGranter
 		}
-
-		deductFeesFrom, err := antewrapper.GetFeePayerUsingFeeGrant(ctx, afd.feegrantKeeper, feeTx, chargedFees, tx.GetMsgs())
-		if err != nil {
-			return nil, nil, err
-		}
-
 		deductFeesFromAcc := afd.accountKeeper.GetAccount(ctx, deductFeesFrom)
 		if deductFeesFromAcc == nil {
-			return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %q does not exist", deductFeesFrom)
+			return nil, nil, sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %q does not exist", deductFeesFrom)
 		}
 
-		// this sweeps all extra fees too, 1. keeps current behavior 2. accounts for priority mempool
-		unchargedFees, _ := feeTx.GetFee().SafeSub(feeGasMeter.BaseFeeConsumed()...)
+		ctx.Logger().Debug(fmt.Sprintf("The Fee consumed by message types : %v", feeGasMeter.FeeConsumedByMsg()))
 
-		// If there's fees left to collect, or there were consumed fees, deduct/distribute them now.
-		if !unchargedFees.IsZero() || !consumedFees.IsZero() {
-			err = afd.msgFeeKeeper.DeductFeesDistributions(afd.bankKeeper, ctx, deductFeesFromAcc, unchargedFees, feeGasMeter.FeeConsumedDistributions())
+		baseFeeConsumedAtAnteHandler := feeGasMeter.BaseFeeConsumed()
+
+		// this sweeps all extra fees too, 1. keeps current behavior 2. accounts for priority mempool
+		chargedFees, _ = feeTx.GetFee().SafeSub(baseFeeConsumedAtAnteHandler...)
+
+		if len(chargedFees) > 0 && chargedFees.IsAllPositive() {
+			// deduct fees from remainingFees and distribute
+			err = afd.msgFeeKeeper.DeductFeesDistributions(afd.bankKeeper, ctx, deductFeesFromAcc, chargedFees, feeGasMeter.FeeConsumedDistributions())
 			if err != nil {
 				return nil, nil, err
 			}
 		}
-		// the uncharged fees have now been charged.
-		chargedFees = chargedFees.Add(unchargedFees...)
 
-		// If there were msg based fees, add some events for them.
-		if !consumedFees.IsZero() {
-			// Add event for the total fees added by msg based fees.
+		hasAdditionalFees := feeGasMeter.FeeConsumed().IsAllPositive()
+		if hasAdditionalFees {
 			eventsToReturn = append(eventsToReturn, sdk.NewEvent(sdk.EventTypeTx,
-				sdk.NewAttribute(antewrapper.AttributeKeyAdditionalFee, consumedFees.String()),
-				sdk.NewAttribute(sdk.AttributeKeyFeePayer, deductFeesFrom.String())))
+				sdk.NewAttribute(antewrapper.AttributeKeyAdditionalFee, feeGasMeter.FeeConsumed().String())))
+		}
+		eventsToReturn = append(eventsToReturn, sdk.NewEvent(sdk.EventTypeTx, sdk.NewAttribute(antewrapper.AttributeKeyBaseFee, feeGasMeter.BaseFeeConsumed().Add(chargedFees...).Sub(feeGasMeter.FeeConsumed()...).String())))
 
-			// Add event with a breakdown of those fees.
+		if hasAdditionalFees {
 			msgFeesSummaryEvent, err := sdk.TypedEventToEvent(feeGasMeter.EventFeeSummary())
 			if err != nil {
 				return nil, nil, err

@@ -2,14 +2,14 @@ package keeper
 
 import (
 	"context"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/x/msgfees/types"
@@ -57,12 +57,12 @@ func (k Keeper) CalculateTxFees(goCtx context.Context, request *types.CalculateT
 
 	gasInfo, _, txCtx, err := k.simulateFunc(request.TxBytes)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	gasMeter, err := antewrapper.GetFeeGasMeter(txCtx)
-	if err != nil {
-		return nil, err
+	gasMeter, ok := txCtx.GasMeter().(*antewrapper.FeeGasMeter)
+	if !ok {
+		return nil, fmt.Errorf("unable to extract fee gas meter from transaction context")
 	}
 	// based on Carlton H's comment this is only for testing, has no real value in practical usage.
 	baseDenom := k.defaultFeeDenom
