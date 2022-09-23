@@ -1856,6 +1856,233 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
 }
 
+// checks to see that votes are coming from an address that has delegated enough coins and is a validator, and gets the multiplier applied
+func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multiplier_Present(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, pubKey, addr := testdata.KeyTestPubAddr()
+	_, pubKey2, _ := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(30),
+		10,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Vote{
+					Vote: &rewardtypes.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.NewInt(1000)),
+						ValidatorMultiplier:     10,
+					},
+				},
+			},
+		},
+	)
+
+	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
+	//err, bondedVal1, bondedVal2 := createTestValidators(pubKey, pubKey2, addr, addr2)
+	app := piosimapp.SetupWithGenesisRewardsProgram(t, uint64(2), []rewardtypes.RewardProgram{rewardProgram}, []authtypes.GenesisAccount{acct1}, createValSet(t, pubKey, pubKey2), banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx.WithBlockTime(time.Now())
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
+	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
+		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
+		coinsPos,
+		addr,
+	)
+
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	ctx.WithBlockTime(time.Now())
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	ctx.WithBlockTime(time.Now())
+	time.Sleep(200 * time.Millisecond)
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	require.NoError(t, err)
+
+	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
+	require.NoError(t, errFromDeliverTx)
+
+	app.EndBlock(abci.RequestEndBlock{Height: 2})
+	app.Commit()
+
+	seq = seq + 1
+	proposal := app.GovKeeper.GetProposals(ctx)
+
+	require.NotEmpty(t, proposal, "proposal has to exist")
+	// tx with a fee associated with msg type and account has funds
+	vote1 := govtypesv1beta1.NewMsgVote(addr, proposal[0].Id, govtypesv1beta1.OptionYes)
+
+	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+
+	// threshold will be met after 10 actions
+	for height := int64(3); height < int64(23); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct1.SetSequence(seq))
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
+		require.NoError(t, err1)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx)
+		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err)
+	assert.Len(t, claimPeriodDistributions, 1, "claim period reward distributions should exist")
+	assert.Equal(t, int64(100), claimPeriodDistributions[0].TotalShares, "shares should have accumulated to value of 100 ( 10 action * multiplier (10) shares")
+	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended.")
+	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
+		Denom:  "nhash",
+		Amount: sdk.ZeroInt(),
+	}), "claim period has not ended so rewards still haven't been calculated(hence 0 coins)")
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	require.NoError(t, err)
+	assert.Equal(t, uint64(20), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionVote"), "account state incorrect")
+	assert.Equal(t, 100, int(accountState.SharesEarned), "account state incorrect")
+
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
+		Address:     acct1.Address,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
+	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
+}
+
+// checks to see that votes are coming from an address that has delegated enough coins but is not a validator, hence does not get the multiplier applied
+func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multiplier_Present_But_NotValidatorVotes(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, pubKey, addr := testdata.KeyTestPubAddr()
+	_, pubKey2, _ := testdata.KeyTestPubAddr()
+	// an address which is not a validator
+	priv3, _, addr3 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct3 := authtypes.NewBaseAccount(addr3, priv3.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(30),
+		10,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Vote{
+					Vote: &rewardtypes.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.NewInt(1000)),
+						ValidatorMultiplier:     10,
+					},
+				},
+			},
+		},
+	)
+
+	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
+	app := piosimapp.SetupWithGenesisRewardsProgram(t, uint64(2), []rewardtypes.RewardProgram{rewardProgram}, []authtypes.GenesisAccount{acct3}, createValSet(t, pubKey, pubKey2), banktypes.Balance{Address: addr.String(), Coins: acct1Balance}, banktypes.Balance{Address: addr3.String(), Coins: acct1Balance})
+
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx.WithBlockTime(time.Now())
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct3.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
+	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
+		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
+		coinsPos,
+		addr3,
+	)
+
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	ctx.WithBlockTime(time.Now())
+	acct3 = app.AccountKeeper.GetAccount(ctx, acct3.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct3.Sequence
+	ctx.WithBlockTime(time.Now())
+	time.Sleep(200 * time.Millisecond)
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), msg)
+	require.NoError(t, err)
+
+	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
+	require.NoError(t, errFromDeliverTx)
+
+	app.EndBlock(abci.RequestEndBlock{Height: 2})
+	app.Commit()
+
+	seq = seq + 1
+	proposal := app.GovKeeper.GetProposals(ctx)
+
+	require.NotEmpty(t, proposal, "proposal has to exist")
+	// vote with an account which is not a validator
+	vote := govtypesv1beta1.NewMsgVote(addr3, proposal[0].Id, govtypesv1beta1.OptionYes)
+
+	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+
+	// threshold will be met after 10 actions
+	for height := int64(3); height < int64(23); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct3.SetSequence(seq))
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), vote)
+		require.NoError(t, err1)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx)
+		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err)
+	assert.Len(t, claimPeriodDistributions, 1, "claim period reward distributions should exist")
+	assert.Equal(t, int64(10), claimPeriodDistributions[0].TotalShares, "shares should have accumulated to value of 10, ( 10 action leading to 1 share each) (no multiplier is applied) ")
+	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended.")
+	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
+		Denom:  "nhash",
+		Amount: sdk.ZeroInt(),
+	}), "claim period has not ended so rewards still haven't been calculated(hence 0 coins)")
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct3.Address)
+	require.NoError(t, err)
+	assert.Equal(t, uint64(20), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionVote"), "account state incorrect")
+	assert.Equal(t, 10, int(accountState.SharesEarned), "account state incorrect")
+
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
+		Address:     acct3.Address,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
+	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
+}
+
 func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingActions(t *testing.T) {
 	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
