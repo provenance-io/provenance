@@ -9,8 +9,7 @@ import (
 
 const gasTxLimit uint64 = 4_000_000
 
-// TxGasLimitDecorator will check if the transaction's gas amount is higher than
-// 5% of the maximum gas allowed per block.
+// TxGasLimitDecorator will check if the transaction's gas amount is higher 4,000,000.
 // If gas is too high, decorator returns error and tx is rejected from mempool.
 // If gas is below the limit, then call next AnteHandler
 // CONTRACT: Tx must implement FeeTx to use TxGasLimitDecorator
