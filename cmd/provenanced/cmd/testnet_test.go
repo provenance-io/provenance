@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,6 +22,7 @@ import (
 func Test_TestnetCmd(t *testing.T) {
 	home := t.TempDir()
 	encodingConfig := app.MakeEncodingConfig()
+	pioconfig.SetProvenanceConfig("", 0)
 	logger := log.NewNopLogger()
 	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 	require.NoError(t, err)

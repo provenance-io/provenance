@@ -3,6 +3,7 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"sort"
 	"strings"
 	"testing"
@@ -41,6 +42,7 @@ type IntegrationTestSuite struct {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(IntegrationTestSuite))
 }
 

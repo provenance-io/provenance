@@ -3,6 +3,7 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"io/ioutil"
 	"os"
 	"sort"
@@ -69,6 +70,7 @@ func (s *IntegrationTestSuite) GenerateAccountsWithKeyrings(number int) {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(IntegrationTestSuite))
 }
 

@@ -216,5 +216,6 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(IntegrationTestSuite))
 }

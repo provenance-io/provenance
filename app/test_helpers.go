@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
+
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
@@ -73,6 +75,8 @@ type SetupOptions struct {
 func setup(t *testing.T, withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeEncodingConfig()
+	// set default config
+	pioconfig.SetProvenanceConfig("", 0)
 	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, t.TempDir(), invCheckPeriod, encCdc, sdksim.EmptyAppOptions{})
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
@@ -83,7 +87,7 @@ func setup(t *testing.T, withGenesis bool, invCheckPeriod uint) (*App, GenesisSt
 // NewAppWithCustomOptions initializes a new SimApp with custom options.
 func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions) *App {
 	t.Helper()
-
+	pioconfig.SetProvenanceConfig("", 0)
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)

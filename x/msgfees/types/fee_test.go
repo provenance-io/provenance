@@ -11,6 +11,7 @@ import (
 )
 
 func TestSplitCoinByBips(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	splitCases := []struct {
 		testName              string
 		splitCoin             sdk.Coin

@@ -216,5 +216,6 @@ func (s *IntegrationTestSuite) TestDetermineBipsProposals() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(IntegrationTestSuite))
 }

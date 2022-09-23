@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"errors"
 	"fmt"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -360,5 +361,6 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(IntegrationTestSuite))
 }

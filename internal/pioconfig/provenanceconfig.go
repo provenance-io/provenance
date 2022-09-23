@@ -2,10 +2,7 @@ package pioconfig
 
 import (
 	"fmt"
-	"sync"
 )
-
-var lock = &sync.Mutex{}
 
 const (
 	// DefaultBondDenom is the denomination of coin to use for bond/staking
@@ -42,7 +39,7 @@ func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
 	} else {
 		provConfig = &ProvenanceConfig{
 			FeeDenom: defaultFeeDenom,
-			// for backwards compatibility when these flags were not around, nhash will maintain behaviour.
+			// for backwards compatibility when these flags were not around, nhash will maintain behavior.
 			ProvenanceMinGasPrices: fmt.Sprintf("%v", defaultMinGasPrices) + defaultFeeDenom,
 			MsgFeeFloorGasPrice:    defaultMinGasPrices,
 			BondDenom:              defaultBondDenom,
@@ -52,7 +49,7 @@ func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
 
 func GetProvenanceConfig() ProvenanceConfig {
 	if provConfig == nil {
-		SetProvenanceConfig("", defaultMinGasPrices)
+		panic("Provenance config should have been set.")
 	}
 	return *provConfig
 }

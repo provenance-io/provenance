@@ -13,6 +13,7 @@ import (
 )
 
 func TestFeeGasMeter(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	casesFeeGas := []struct {
 		limit sdkgas.Gas
 		usage []sdkgas.Gas
