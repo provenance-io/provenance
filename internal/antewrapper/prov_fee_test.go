@@ -40,12 +40,10 @@ func (s *AnteTestSuite) TestProvenanceDeductFeeDecoratorChecksFunds() {
 	antehandler := sdk.ChainAnteDecorators(decorators...)
 
 	_, err = antehandler(s.ctx, tx, false)
-	// Example error: account cosmos1llzpsq97pd7z3x4c805cq87j3rd6lgarkp5ky4 does not have enough balance to pay for "200000stake", balance: "10stake": insufficient funds
+	// Example error: "10stake is smaller than 200000stake: insufficient funds: insufficient funds"
 	s.Require().Error(err, "antehandler insufficient funds")
 	s.Assert().ErrorContains(err, addr1.String())
-	s.Assert().ErrorContains(err, "does not have enough balance to pay")
-	s.Assert().ErrorContains(err, `"200000stake"`)
-	s.Assert().ErrorContains(err, `balance: "10stake"`)
+	s.Assert().ErrorContains(err, "10stake is smaller than 200000stake")
 	s.Assert().ErrorContains(err, "insufficient funds")
 	if s.T().Failed() {
 		s.T().FailNow()
@@ -100,12 +98,12 @@ func (s *AnteTestSuite) TestProvenanceDeductFeeDecoratorAdditionalFees() {
 
 	s.Run("insufficient funds for both base and additional fees", func() {
 		_, err = antehandler(s.ctx, tx, false)
-		// Example error: account cosmos1flu4xj7c66tdmvdjjas3a62a6jynf93ezrgysj does not have enough balance to pay for "150stake,100steak", balance: "10stake": insufficient funds
+		// Example error: account cosmos1flu4xj7c66tdmvdjjas3a62a6jynf93ezrgysj does not have enough balance to pay for "100steak", balance: "": insufficient funds
 		s.Require().Error(err, "antehandler")
 		s.Assert().ErrorContains(err, addr1.String())
 		s.Assert().ErrorContains(err, "does not have enough balance to pay")
-		s.Assert().ErrorContains(err, `"150stake,100steak"`)
-		s.Assert().ErrorContains(err, `"10stake"`)
+		s.Assert().ErrorContains(err, `"100steak"`)
+		s.Assert().ErrorContains(err, `balance: ""`)
 		s.Assert().ErrorContains(err, `insufficient funds`)
 	})
 
@@ -119,8 +117,8 @@ func (s *AnteTestSuite) TestProvenanceDeductFeeDecoratorAdditionalFees() {
 		s.Require().Error(err, "antehandler")
 		s.Assert().ErrorContains(err, addr1.String())
 		s.Assert().ErrorContains(err, "does not have enough balance to pay")
-		s.Assert().ErrorContains(err, `"150stake,100steak"`)
-		s.Assert().ErrorContains(err, `"200010stake"`)
+		s.Assert().ErrorContains(err, `"100steak"`)
+		s.Assert().ErrorContains(err, `balance: ""`)
 		s.Assert().ErrorContains(err, `insufficient funds`)
 	})
 
