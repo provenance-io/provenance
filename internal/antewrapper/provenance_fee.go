@@ -92,8 +92,8 @@ func (dfd ProvenanceDeductFeeDecorator) checkDeductBaseFee(ctx sdk.Context, feeT
 		return err
 	}
 
-	deductFeesFromAcc := dfd.ak.GetAccount(ctx, deductFeesFrom)
-	if deductFeesFromAcc == nil {
+	// Make sure the paying account exists before we try to get their balance.
+	if dfd.ak.GetAccount(ctx, deductFeesFrom) == nil {
 		return sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %s does not exist", deductFeesFrom)
 	}
 
@@ -126,7 +126,7 @@ func (dfd ProvenanceDeductFeeDecorator) checkDeductBaseFee(ctx sdk.Context, feeT
 	// We don't do this when simulating since we're simulating.
 	// And we don't do this during InitGenesis since those Txs don't have any fees on them at all.
 	if !simulate && !IsInitGenesis(ctx) && !baseFeeToConsume.IsZero() {
-		err = DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, baseFeeToConsume)
+		err = DeductFees(dfd.bankKeeper, ctx, deductFeesFrom, baseFeeToConsume)
 		if err != nil {
 			return err
 		}
@@ -207,14 +207,14 @@ func DetermineTestBaseFeeAmount(ctx sdk.Context, feeTx sdk.FeeTx) (fee sdk.Coins
 }
 
 // DeductFees deducts fees from the given account.
-func DeductFees(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc types.AccountI, fee sdk.Coins) error {
+func DeductFees(bankKeeper bankkeeper.Keeper, ctx sdk.Context, addr sdk.AccAddress, fee sdk.Coins) error {
 	if !fee.IsValid() {
 		return sdkerrors.ErrInsufficientFee.Wrapf("invalid fee amount: %s", fee)
 	}
 
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fee)
+	err := bankKeeper.SendCoinsFromAccountToModule(ctx, addr, types.FeeCollectorName, fee)
 	if err != nil {
-		return sdkerrors.ErrInsufficientFunds.Wrap(err.Error())
+		return sdkerrors.ErrInsufficientFunds.Wrapf("%v: account: %s:", err, addr)
 	}
 	return nil
 }
