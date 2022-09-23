@@ -497,6 +497,9 @@ containerProtoGen=prov-proto-gen-$(containerProtoVer)
 containerProtoGenSwagger=prov-proto-gen-swagger-$(containerProtoVer)
 containerProtoFmt=prov-proto-fmt-$(containerProtoVer)
 
+# The proto gen stuff will update go.mod and go.sum in ways we don't want (due to docker stuff).
+# So we need to go mod tidy afterward, but it can't go in the scripts for the same reason that we need it.
+
 proto-gen:
 	@echo "Generating Protobuf files"
 	if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then \
@@ -505,11 +508,13 @@ proto-gen:
 		docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
 			sh ./scripts/protocgen.sh; \
 	fi
+	go mod tidy
 
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:
 	@echo "Generating Protobuf Any"
 	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) sh ./scripts/protocgen-any.sh
+	go mod tidy
 
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
@@ -519,6 +524,7 @@ proto-swagger-gen:
 		docker run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
 			sh ./scripts/protoc-swagger-gen.sh; \
 	fi
+	go mod tidy
 
 proto-format:
 	@echo "Formatting Protobuf files"
