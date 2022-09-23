@@ -32,8 +32,6 @@ type ProvenanceConfig struct {
 var provConfig *ProvenanceConfig
 
 func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
-	lock.Lock()
-	defer lock.Unlock()
 	if len(customDenom) > 0 {
 		provConfig = &ProvenanceConfig{
 			FeeDenom:               customDenom,
@@ -43,7 +41,8 @@ func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
 		}
 	} else {
 		provConfig = &ProvenanceConfig{
-			FeeDenom:               defaultFeeDenom,
+			FeeDenom: defaultFeeDenom,
+			// for backwards compatibility when these flags were not around, nhash will maintain behaviour.
 			ProvenanceMinGasPrices: fmt.Sprintf("%v", defaultMinGasPrices) + defaultFeeDenom,
 			MsgFeeFloorGasPrice:    defaultMinGasPrices,
 			BondDenom:              defaultBondDenom,

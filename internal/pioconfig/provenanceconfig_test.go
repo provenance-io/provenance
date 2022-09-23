@@ -21,7 +21,9 @@ func TestConfigSetRegularDenom(t *testing.T) {
 	assert.Equal(t, GetProvenanceConfig().ProvenanceMinGasPrices, "1905nhash")
 }
 
-func TestConfigSetRegularDenomCustomMsgFloorFeeIgnored(t *testing.T) {
+// TestConfigSetRegularDenomCustomMsgFloorFeeIgnoredForNhash msg fee floor passed in but ignored since nhash will always be 1905nhash
+//(for backwards compatibility when these flags were not around.)
+func TestConfigSetRegularDenomCustomMsgFloorFeeIgnoredForNhash(t *testing.T) {
 	// doesn't matter still setting nhash base fee as 1905, even though it can and should be changed by governance.
 	SetProvenanceConfig("", 0)
 	assert.Equal(t, GetProvenanceConfig().BondDenom, "nhash")
