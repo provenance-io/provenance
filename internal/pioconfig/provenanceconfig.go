@@ -31,7 +31,12 @@ type ProvenanceConfig struct {
 
 var provConfig *ProvenanceConfig
 
+// SetProvenanceConfig in running the app it is called once from root.go. We decided not to seal it because we have tests,
+// which set the Config to test certain msg fee flows.
+// But the contract remains that this will be called once from root.go while starting up.
 func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
+	// custom denom (e.g. vspn) to be used in custom zones, if not passed in will default to nhash,
+	// to preserve backwards compatible behaviour.
 	if len(customDenom) > 0 {
 		provConfig = &ProvenanceConfig{
 			FeeDenom:               customDenom,
@@ -50,9 +55,11 @@ func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
 	}
 }
 
+// GetProvenanceConfig get ProvenanceConfig
 func GetProvenanceConfig() ProvenanceConfig {
+	// check that config is set
 	if provConfig == nil {
-		SetProvenanceConfig("", defaultMinGasPrices)
+		panic("Config should have been set explicitly.")
 	}
 	return *provConfig
 }

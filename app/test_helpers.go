@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"strconv"
 	"testing"
 	"time"
@@ -73,6 +74,7 @@ type SetupOptions struct {
 func setup(t *testing.T, withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeEncodingConfig()
+	pioconfig.SetProvenanceConfig("", 0)
 	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, t.TempDir(), invCheckPeriod, encCdc, sdksim.EmptyAppOptions{})
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
@@ -83,7 +85,7 @@ func setup(t *testing.T, withGenesis bool, invCheckPeriod uint) (*App, GenesisSt
 // NewAppWithCustomOptions initializes a new SimApp with custom options.
 func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions) *App {
 	t.Helper()
-
+	pioconfig.SetProvenanceConfig("", 0)
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
@@ -98,7 +100,6 @@ func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions)
 		Address: acc.GetAddress().String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
 	}
-
 	app := New(options.Logger, options.DB, nil, true, options.SkipUpgradeHeights, options.HomePath, options.InvCheckPeriod, options.EncConfig, options.AppOpts)
 	genesisState := NewDefaultGenesisState(app.appCodec)
 	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)

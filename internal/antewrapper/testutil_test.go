@@ -3,6 +3,7 @@ package antewrapper_test
 import (
 	"errors"
 	"fmt"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -23,7 +24,6 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -60,8 +60,8 @@ func createTestApp(t *testing.T, isCheckTx bool) (*simapp.App, sdk.Context) {
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
 func (s *AnteTestSuite) SetupTest(isCheckTx bool) {
-	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1)
 	s.app, s.ctx = createTestApp(s.T(), isCheckTx)
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1)
 	s.ctx = s.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
