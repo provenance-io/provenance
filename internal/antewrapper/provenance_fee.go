@@ -1,8 +1,6 @@
 package antewrapper
 
 import (
-	"fmt"
-
 	cerrs "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -47,7 +45,7 @@ func NewProvenanceDeductFeeDecorator(
 }
 
 func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	ctx.Logger().Debug(fmt.Sprintf("In ProvenanceDeductFeeDecorator %d", ctx.GasMeter().GasConsumed()))
+	ctx.Logger().Debug("In ProvenanceDeductFeeDecorator", "GasConsumed", ctx.GasMeter().GasConsumed())
 
 	feeTx, err := GetFeeTx(tx)
 	if err != nil {
@@ -106,6 +104,15 @@ func (dfd ProvenanceDeductFeeDecorator) checkDeductBaseFee(ctx sdk.Context, feeT
 	for _, fc := range fee {
 		balancePerCoin = balancePerCoin.Add(dfd.bankKeeper.GetBalance(ctx, deductFeesFrom, fc.Denom))
 	}
+
+	ctx.Logger().Debug("ProvenanceDeductFeeDecorator Amounts:",
+		"baseFeeToConsume", baseFeeToConsume,
+		"feeDist", feeDist,
+		"requiredFunds", requiredFunds,
+		"fee", fee,
+		"balancePerCoin", balancePerCoin,
+	)
+
 	_, hasNeg := balancePerCoin.SafeSub(requiredFunds...)
 	if hasNeg && !simulate {
 		return sdkerrors.ErrInsufficientFunds.Wrapf("account %s does not have enough balance to pay for %q, balance: %q", deductFeesFrom, requiredFunds, balancePerCoin)
@@ -163,22 +170,34 @@ func GetFeePayerUsingFeeGrant(ctx sdk.Context, feegrantKeeper msgfeestypes.Feegr
 // The base fee is floor gas price
 func CalculateBaseFee(ctx sdk.Context, feeTx sdk.FeeTx, msgfeekeeper msgfeestypes.MsgFeesKeeper) sdk.Coins {
 	if isTestContext(ctx) {
-		return DetermineTestBaseFeeAmount(ctx, feeTx)
+		baseFeeToDeduct := DetermineTestBaseFeeAmount(ctx, feeTx)
+		ctx.Logger().Debug("CalculateBaseFee for test context", "baseFeeToDeduct", baseFeeToDeduct)
+		return baseFeeToDeduct
 	}
 	gasWanted := feeTx.GetGas()
 	floorPrice := msgfeekeeper.GetFloorGasPrice(ctx)
 	amount := floorPrice.Amount.Mul(sdk.NewIntFromUint64(gasWanted))
 	baseFeeToDeduct := sdk.NewCoins(sdk.NewCoin(floorPrice.Denom, amount))
+	ctx.Logger().Debug("CalculateBaseFee",
+		"gasWanted", gasWanted,
+		"floorPrice", floorPrice,
+		"baseFeeToDeduct", baseFeeToDeduct,
+	)
 	return baseFeeToDeduct
 }
 
 // DetermineTestBaseFeeAmount determines the type of test that is running.  ChainID = "" is a simple unit
 // We need this because of how tests are setup using atom and we have nhash specific code for msgfees
-func DetermineTestBaseFeeAmount(ctx sdk.Context, feeTx sdk.FeeTx) sdk.Coins {
+func DetermineTestBaseFeeAmount(ctx sdk.Context, feeTx sdk.FeeTx) (fee sdk.Coins) {
 	if len(ctx.ChainID()) == 0 {
-		return feeTx.GetFee()
+		fee = feeTx.GetFee()
+		ctx.Logger().Debug("Using tx.GetFee() for test fee amount.")
+	} else {
+		fee = sdk.NewCoins()
+		ctx.Logger().Debug("Using sdk.NewCoins() for test fee amount.")
 	}
-	return sdk.NewCoins()
+	ctx.Logger().Debug("DetermineTestBaseFeeAmount", "fee", fee)
+	return fee
 }
 
 // DeductFees deducts fees from the given account.

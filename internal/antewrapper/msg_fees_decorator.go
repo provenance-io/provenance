@@ -1,8 +1,6 @@
 package antewrapper
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -45,7 +43,7 @@ type MsgFeesDistribution struct {
 // then z = x + y
 // This Fee Decorator makes sure that z is >= to x + y
 func (mfd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	ctx.Logger().Debug(fmt.Sprintf("In MsgFeesDecorator %d", ctx.GasMeter().GasConsumed()))
+	ctx.Logger().Debug("In MsgFeesDecorator", "GasConsumed", ctx.GasMeter().GasConsumed())
 
 	feeTx, err := GetFeeTx(tx)
 	if err != nil {
