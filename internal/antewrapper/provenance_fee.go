@@ -52,7 +52,7 @@ func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		return ctx, err
 	}
 
-	if !simulate && ctx.BlockHeight() > 0 && feeTx.GetGas() == 0 {
+	if !simulate && feeTx.GetGas() == 0 && !IsInitGenesis(ctx) {
 		return ctx, sdkerrors.ErrInvalidGasLimit.Wrap("must provide positive gas")
 	}
 

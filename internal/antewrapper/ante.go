@@ -43,3 +43,11 @@ func GetFeeGasMeter(ctx sdk.Context) (*FeeGasMeter, error) {
 	}
 	return feeGasMeter, nil
 }
+
+// IsInitGenesis returns true if the context indicates we're in InitGenesis.
+func IsInitGenesis(ctx sdk.Context) bool {
+	// Note: This isn't fully accurate since you can initialize a chain at a height other than zero.
+	// But it should be good enough for our stuff. Ideally we'd want something specifically set in
+	// the context during InitGenesis to check, but that'd probably involve some SDK work.
+	return ctx.BlockHeight() <= 0
+}
