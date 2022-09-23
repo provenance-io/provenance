@@ -31,7 +31,7 @@ func NewMsgFeeInvoker(bankKeeper bankkeeper.Keeper, accountKeeper msgfeestypes.A
 	}
 }
 
-func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins, events sdk.Events, err error) {
+func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (sdk.Coins, sdk.Events, error) {
 	chargedFees := sdk.Coins{}
 	eventsToReturn := sdk.Events{}
 
@@ -60,10 +60,13 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins
 
 		consumedFees := feeGasMeter.FeeConsumed()
 		if consumedFees.IsAnyNegative() {
-			return nil, nil, sdkerrors.ErrInvalidCoins.Wrapf("charged fees %v are negative, which should not be possible, aborting", chargedFees)
+			return nil, nil, sdkerrors.ErrInvalidCoins.Wrapf("consumed fees %v are negative, which should not be possible, aborting", chargedFees)
 		}
 
-		deductFeesFrom, err := antewrapper.GetFeePayerUsingFeeGrant(ctx, afd.feegrantKeeper, feeTx, chargedFees, tx.GetMsgs())
+		// this sweeps all extra fees too, 1. keeps current behavior 2. accounts for priority mempool
+		unchargedFees, _ := feeTx.GetFee().SafeSub(feeGasMeter.BaseFeeConsumed()...)
+
+		deductFeesFrom, err := antewrapper.GetFeePayerUsingFeeGrant(ctx, afd.feegrantKeeper, feeTx, unchargedFees, tx.GetMsgs())
 		if err != nil {
 			return nil, nil, err
 		}
@@ -72,9 +75,6 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (coins sdk.Coins
 		if deductFeesFromAcc == nil {
 			return nil, nil, sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %q does not exist", deductFeesFrom)
 		}
-
-		// this sweeps all extra fees too, 1. keeps current behavior 2. accounts for priority mempool
-		unchargedFees, _ := feeTx.GetFee().SafeSub(feeGasMeter.BaseFeeConsumed()...)
 
 		// If there's fees left to collect, or there were consumed fees, deduct/distribute them now.
 		if !unchargedFees.IsZero() || !consumedFees.IsZero() {
