@@ -28,8 +28,8 @@ func (mfd MinGasPricesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	return next(ctx, tx, simulate)
 }
 
-// checkTxFeeWithValidatorMinGasPrices implements the default fee logic, where the minimum price per
-// unit of gas is fixed and set by each validator, can the tx priority is computed from the gas price.
+// checkTxFeeWithValidatorMinGasPrices makes sure one or more of the fee coins has enough to cover
+// the validator's min gas fee.
 func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) error {
 	// Note: This is copied from Cosmos-SDK:x/auth/ante/validator_tx_fee.go and tweaked as follows:
 	//	1. The priority return value and call to calculate the priority has been removed because we
@@ -40,6 +40,7 @@ func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) error {
 	//	3. Use of deprecated sdkerrors.Wrap and .Wrapf has been fixed.
 	//	4. The first lines were updated to use GetFeeTx.
 	//	5. The content of the final error message was updated to hopefully avoid confusion with the floor gas price.
+	//  6. The comment above the function was fixed.
 	feeTx, err := GetFeeTx(tx)
 	if err != nil {
 		return err
