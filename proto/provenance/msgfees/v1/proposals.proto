@@ -89,8 +89,8 @@ message UpdateNhashPerUsdMilProposal {
 message UpdateDenomMetadataProposal {
   option (gogoproto.goproto_stringer) = true;
 
-  string title       = 1; // proposal title
-  string description = 2; // proposal description
+  string                       title       = 1; // proposal title
+  string                       description = 2; // proposal description
   cosmos.bank.v1beta1.Metadata metadata    = 3
-  [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/x/bank/types.Metadata"];
+      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/x/bank/types.Metadata"];
 }
