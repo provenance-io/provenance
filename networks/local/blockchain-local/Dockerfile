@@ -72,8 +72,6 @@ RUN go build -mod vendor -tags=cleveldb -ldflags '-w -s -X github.com/cosmos/cos
 FROM debian:bullseye-slim as provenance-arm64
 ENV LOCALNET=1
 ENV LD_LIBRARY_PATH="/usr/local/lib"
-# This is for M1 to find package config
-ENV PKG_CONFIG_PATH="/usr/local/lib"
 
 RUN apt-get update && \
     apt-get upgrade -y && \
