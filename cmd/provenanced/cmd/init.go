@@ -103,8 +103,12 @@ func Init(
 		return fmt.Errorf("genesis file already exists: %v", genFile)
 	}
 
+<<<<<<< Updated upstream
 	// Set a few things in the configs.
 	appConfig.MinGasPrices = pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices
+=======
+	appConfig.MinGasPrices = pioconfig.GetProvenanceConfig().MinGasPrices
+>>>>>>> Stashed changes
 
 	tmConfig.Moniker = moniker
 	if len(chainID) == 0 {

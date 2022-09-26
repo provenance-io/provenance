@@ -3,11 +3,12 @@ package cmd_test
 import (
 	"context"
 	"fmt"
-	"github.com/provenance-io/provenance/app"
 	"testing"
 
 	"github.com/spf13/viper"
+
 	"github.com/stretchr/testify/require"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -19,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 
+	"github.com/provenance-io/provenance/app"
 	provenancecmd "github.com/provenance-io/provenance/cmd/provenanced/cmd"
 )
 
