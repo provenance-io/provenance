@@ -25,9 +25,10 @@ type ProvenanceDeductFeeDecorator struct {
 	msgFeeKeeper   msgfeestypes.MsgFeesKeeper
 }
 
-var (
+const (
 	AttributeKeyBaseFee       = "basefee"
 	AttributeKeyAdditionalFee = "additionalfee"
+	AttributeKeyMinFeeCharged = "min_fee_charged"
 )
 
 func NewProvenanceDeductFeeDecorator(
@@ -139,7 +140,7 @@ func (dfd ProvenanceDeductFeeDecorator) checkDeductBaseFee(ctx sdk.Context, feeT
 			sdk.NewAttribute(sdk.AttributeKeyFeePayer, deductFeesFrom.String()),
 		),
 		sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(AttributeKeyBaseFee, baseFeeToConsume.String()),
+			sdk.NewAttribute(AttributeKeyMinFeeCharged, baseFeeToConsume.String()),
 			sdk.NewAttribute(sdk.AttributeKeyFeePayer, deductFeesFrom.String()),
 		),
 	})

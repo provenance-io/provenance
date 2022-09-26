@@ -64,7 +64,8 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (sdk.Coins, sdk.
 		}
 
 		// this sweeps all extra fees too, 1. keeps current behavior 2. accounts for priority mempool
-		unchargedFees, _ := feeTx.GetFee().SafeSub(feeGasMeter.BaseFeeConsumed()...)
+		baseFeeConsumed := feeGasMeter.BaseFeeConsumed()
+		unchargedFees, _ := feeTx.GetFee().SafeSub(baseFeeConsumed...)
 
 		deductFeesFrom, err := antewrapper.GetFeePayerUsingFeeGrant(ctx, afd.feegrantKeeper, feeTx, unchargedFees, tx.GetMsgs())
 		if err != nil {
@@ -88,9 +89,11 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (sdk.Coins, sdk.
 
 		// If there were msg based fees, add some events for them.
 		if !consumedFees.IsZero() {
-			// Add event for the total fees added by msg based fees.
+			// Add event with fee breakdown between additional fees and the rest.
+			nonMsgFees := baseFeeConsumed.Add(chargedFees...).Sub(consumedFees...)
 			eventsToReturn = append(eventsToReturn, sdk.NewEvent(sdk.EventTypeTx,
 				sdk.NewAttribute(antewrapper.AttributeKeyAdditionalFee, consumedFees.String()),
+				sdk.NewAttribute(antewrapper.AttributeKeyBaseFee, nonMsgFees.String()),
 				sdk.NewAttribute(sdk.AttributeKeyFeePayer, deductFeesFrom.String())))
 
 			// Add event with a breakdown of those fees.

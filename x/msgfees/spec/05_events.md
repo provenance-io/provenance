@@ -8,9 +8,10 @@ Existing fee event continue to show total fee charged
 
 ## Any Tx
 
-| Type     | Attribute Key | Attribute Value    |
-| -------- | ------------- | ------------------ |
-| message  | fee           | total fee (coins)  |
+| Type     | Attribute Key    | Attribute Value               |
+| -------- |------------------|-------------------------------|
+| message  | fee              | total fee (coins)             |
+| message  | min_fee_charged  | floor gas price * gas (coins) |
 
 If additional fee is assessed, these events will also be emitted (reason for not always emitting them mainly saving space on block output)
 
