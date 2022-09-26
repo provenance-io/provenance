@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
@@ -54,7 +53,6 @@ const (
 	flagOutputDir         = "output-dir"
 	flagNodeDaemonHome    = "node-daemon-home"
 	flagStartingIPAddress = "starting-ip-address"
-	flagCustomDenom       = "custom-denom"
 )
 
 // get cmd to initialize all files for tendermint testnet and application
@@ -83,11 +81,10 @@ Note, strict routability for addresses is turned off in the config file.
 			startingIPAddress, _ := cmd.Flags().GetString(flagStartingIPAddress)
 			numValidators, _ := cmd.Flags().GetInt(flagNumValidators)
 			algo, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
-			customDenom, _ := cmd.Flags().GetString(flagCustomDenom)
 
 			return InitTestnet(
 				clientCtx, cmd, config, mbm, genBalIterator, outputDir, chainID, minGasPrices,
-				nodeDirPrefix, nodeDaemonHome, startingIPAddress, keyringBackend, algo, numValidators, customDenom,
+				nodeDirPrefix, nodeDaemonHome, startingIPAddress, keyringBackend, algo, numValidators,
 			)
 		},
 	}
@@ -102,8 +99,6 @@ Note, strict routability for addresses is turned off in the config file.
 	cmd.Flags().String(server.FlagMinGasPrices, "1905nhash", "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 1905nhash)")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
-	// testnet only so should get passed in by the command
-	cmd.Flags().String(flagCustomDenom, "", "Default denom to be used for this chain(both fee and staked)")
 
 	return cmd
 }
@@ -126,7 +121,6 @@ func InitTestnet(
 	keyringBackend,
 	algoStr string,
 	numValidators int,
-	customDenom string,
 ) error {
 	if chainID == "" {
 		chainID = "chain-" + tmrand.NewRand().Str(6)
