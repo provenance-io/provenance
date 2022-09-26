@@ -29,7 +29,7 @@ type ProvenanceConfig struct {
 var provConfig *ProvenanceConfig
 
 func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
-	if len(customDenom) > 0 {
+	if len(customDenom) > 0 && customDenom != defaultBondDenom {
 		provConfig = &ProvenanceConfig{
 			FeeDenom:               customDenom,
 			ProvenanceMinGasPrices: fmt.Sprintf("%v", msgFeeFloorGasPrice) + customDenom,

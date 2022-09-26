@@ -178,33 +178,14 @@ build: validate-go-version go.sum
 build-linux: go.sum
 	WITH_LEDGER=false GOOS=linux GOARCH=amd64 $(MAKE) build
 
+CUSTOM_DENOM ?= nhash
+CUSTOM_MIN_FLOOR_PRICE ?= 1905nhash
+
 # Run an instance of the daemon against a local config (create the config if it does not exit.)
+# if required to use something other than vspn, use: make run CUSTOM_DENOM=vspn CUSTOM_MIN_FLOOR_PRICE=0vspn
 run-config: check-built
 	@if [ ! -d "$(BUILDDIR)/run/provenanced/config" ]; then \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=testing testing ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced keys add validator --keyring-backend test ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pio --keyring-backend test ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pb --restrict=false --keyring-backend test ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator io --restrict --keyring-backend test ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator provenance --keyring-backend test ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-account validator 100000000000000000000nhash --keyring-backend test ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced gentx validator 1000000000000000nhash --keyring-backend test --chain-id=testing; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-marker 100000000000000000000nhash --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.name.v1.MsgBindNameRequest 10000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.marker.v1.MsgAddMarkerRequest 100000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest 10000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest 10000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgP8eMemorializeContractRequest 10000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced collect-gentxs; \
-	fi ;
-
-run: check-built run-config;
-	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
-
-# Run an instance of the daemon against a local config (create the config if it does not exit.)
-run-config-custom: check-built
-	@if [ ! -d "$(BUILDDIR)/run/provenanced/config" ]; then \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=testing-custom-$(CUSTOM_DENOM)-2 testing --custom-denom=$(CUSTOM_DENOM); \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=testing testing --custom-denom=$(CUSTOM_DENOM); \
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced keys add validator --keyring-backend test ; \
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pio --keyring-backend test ; \
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pb --restrict=false --keyring-backend test ; \
@@ -222,12 +203,12 @@ run-config-custom: check-built
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced collect-gentxs ; \
       fi ;
 
-CUSTOM_DENOM ?= vspn
-CUSTOM_MIN_FLOOR_PRICE ?= 0vspn
-# if required to use something other than vspn, use: make run-custom CUSTOM_DENOM=hotdog CUSTOM_MIN_FLOOR_PRICE=10hotdog
-run-custom: check-built run-config-custom ;
+run: check-built run-config ;
+ifeq ($(CUSTOM_DENOM),nhash)
+	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
+else
 	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start --custom-denom $(CUSTOM_DENOM)
-
+endif
 .PHONY: install build build-linux run
 
 ##############################
