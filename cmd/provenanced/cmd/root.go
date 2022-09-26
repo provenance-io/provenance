@@ -49,8 +49,10 @@ const (
 	// EnvTypeFlag is a flag for indicating a testnet
 	EnvTypeFlag = "testnet"
 	// Flag used to indicate coin type.
-	CoinTypeFlag               = "coin-type"
-	CustomDenomFlag            = "custom-denom"
+	CoinTypeFlag = "coin-type"
+	// CustomDenomFlag flag to take in custom denom, defaults to nhash if not passed in.
+	CustomDenomFlag = "custom-denom"
+	// CustomMsgFeeFloorPriceFlag flag to take in custom msg floor fees, defaults to 1905nhash if not passed in.
 	CustomMsgFeeFloorPriceFlag = "msgfee-floor-price"
 )
 
@@ -131,9 +133,11 @@ func Execute(rootCmd *cobra.Command) error {
 	rootCmd.PersistentFlags().BoolP(EnvTypeFlag, "t", false, "Indicates this command should use the testnet configuration (default: false [mainnet])")
 	rootCmd.PersistentFlags().String(flags.FlagLogLevel, zerolog.InfoLevel.String(), "The logging level (trace|debug|info|warn|error|fatal|panic)")
 	rootCmd.PersistentFlags().String(flags.FlagLogFormat, tmcfg.LogFormatPlain, "The logging format (json|plain)")
+
 	// Custom denom flag added to root command
 	rootCmd.PersistentFlags().String(CustomDenomFlag, "", "Indicates if a custom denom is to be used, and the name of it.")
-	rootCmd.PersistentFlags().Int64(CustomMsgFeeFloorPriceFlag, 0, "Custom msg fee floor price, optional.")
+	// Custom msgFee floor price flag added to root command
+	rootCmd.PersistentFlags().Int64(CustomMsgFeeFloorPriceFlag, 0, "Custom msgfee floor price, optional.")
 
 	executor := tmcli.PrepareBaseCmd(rootCmd, "", app.DefaultNodeHome)
 	return executor.ExecuteContext(ctx)
