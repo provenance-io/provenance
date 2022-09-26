@@ -111,6 +111,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		flags.FlagChainID:        ChainID,
 		flags.FlagKeyringBackend: "test",
 		CoinTypeFlag:             fmt.Sprint(app.CoinTypeMainNet),
+		server.FlagMinGasPrices:  "1905nhash",
 	})
 
 	return rootCmd, encodingConfig
