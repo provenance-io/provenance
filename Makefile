@@ -24,7 +24,6 @@ ifeq ($(WITH_BADGERDB),yes)
   WITH_BADGERDB=true
 endif
 
-
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
 TM_VERSION := $(shell $(GO) list -m github.com/tendermint/tendermint 2> /dev/null | sed 's:.* ::') # grab everything after the space in "github.com/tendermint/tendermint v0.34.7"
@@ -199,32 +198,35 @@ run-config: check-built
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced collect-gentxs; \
 	fi ;
 
+run: check-built run-config;
+	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
+
 # Run an instance of the daemon against a local config (create the config if it does not exit.)
 run-config-custom: check-built
 	@if [ ! -d "$(BUILDDIR)/run/provenanced/config" ]; then \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=testing-custom-vspn-2 testing --custom-denom=vspn; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=testing-custom-$(CUSTOM_DENOM)-2 testing --custom-denom=$(CUSTOM_DENOM); \
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced keys add validator --keyring-backend test ; \
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pio --keyring-backend test ; \
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pb --restrict=false --keyring-backend test ; \
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator io --restrict --keyring-backend test ; \
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator provenance --keyring-backend test ; \
-        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-account validator 100000000000000000000vspn  --keyring-backend test ; \
-        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced gentx validator 1000000000000000vspn  --keyring-backend test --chain-id=testing-custom-vspn-2; \
-        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-marker 100000000000000000000vspn  --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test; \
-        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.name.v1.MsgBindNameRequest 10000000000vspn ; \
-        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.marker.v1.MsgAddMarkerRequest 100000000000vspn ; \
-        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest 10000000000vspn ; \
-        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest 10000000000vspn ; \
-        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgP8eMemorializeContractRequest 10000000000vspn ; \
-        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-custom-floor-denom 0vspn ; \
+        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-account validator 100000000000000000000$(CUSTOM_DENOM)  --keyring-backend test ; \
+        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced gentx validator 1000000000000000$(CUSTOM_DENOM)  --keyring-backend test --chain-id=testing-custom-$(CUSTOM_DENOM)-2; \
+        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-marker 100000000000000000000$(CUSTOM_DENOM)  --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test; \
+        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.name.v1.MsgBindNameRequest 10000000000$(CUSTOM_DENOM) ; \
+        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.marker.v1.MsgAddMarkerRequest 100000000000$(CUSTOM_DENOM) ; \
+        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest 10000000000$(CUSTOM_DENOM) ; \
+        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest 10000000000$(CUSTOM_DENOM) ; \
+        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgP8eMemorializeContractRequest 10000000000$(CUSTOM_DENOM) ; \
+        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-custom-floor-denom $(CUSTOM_MIN_FLOOR_PRICE) ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced collect-gentxs ; \
       fi ;
 
-run: check-built run-config;
-	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
-
-run-custom: check-built run-config-custom;
-	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start --custom-denom vspn
+CUSTOM_DENOM ?= vspn
+CUSTOM_MIN_FLOOR_PRICE ?= 0vspn
+# if required to use something other than vspn, use: make run-custom CUSTOM_DENOM=hotdog CUSTOM_MIN_FLOOR_PRICE=10hotdog
+run-custom: check-built run-config-custom ;
+	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start --custom-denom $(CUSTOM_DENOM)
 
 .PHONY: install build build-linux run
 
