@@ -18,8 +18,8 @@ const (
 
 type ProvenanceConfig struct {
 	FeeDenom               string
-	ProvenanceMinGasPrices string // Node level config that provenance binary can set and enforce across the board
-	// e.g. provenance enforces 1905nhash across the board, also for now it will mirror MsgFeeFloorGasPrice.
+	ProvenanceMinGasPrices string // maps to defaultMinGasPrices in previous code,Node level config that provenance binary set's from appOpts.
+	// Current it will mirror MsgFeeFloorGasPrice.
 	MsgFeeFloorGasPrice int64 // Msg fee ante handlers and code use this for their calculations, this ***ONLY SETS***
 	// the default param(see method DefaultFloorGasPrice), all calculated values are still from msg fee module PARAMS.
 	// for that module, if the param is changed via governance then the code will pick the new value.(should pick that up from module param)
