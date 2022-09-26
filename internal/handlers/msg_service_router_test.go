@@ -218,6 +218,56 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 	})
 }
 
+func TestFailedTx(t *testing.T) {
+	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1) // will create a gas fee of 1stake * gas
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, _, addr1 := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())+1))
+	app := piosimapp.SetupWithGenesisAccounts(t, "msgfee-testing",
+		[]authtypes.GenesisAccount{acct1},
+		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
+	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+
+	msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2))))
+	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())))
+
+	// Check both account balances before we begin.
+	addr1beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
+	addr2beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
+	assert.Equal(t, "100001stake", addr1beforeBalance, "addr1beforeBalance")
+	assert.Equal(t, "", addr2beforeBalance, "addr2beforeBalance")
+	stopIfFailed(t)
+
+	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	require.NoError(t, err, "SignTxAndGetBytes")
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	t.Logf("Events:\n%s\n", eventsString(res.Events, true))
+	require.Equal(t, 5, int(res.Code), "res=%+v", res)
+
+	// Check both account balances after transaction
+	// the 100000 should have been deducted from account 1, and the send should have failed.
+	// So account 2 should still be empty, and account 1 should only have 1 left.
+	addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
+	addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
+	assert.Equal(t, "1stake", addr1AfterBalance, "addr1AfterBalance")
+	assert.Equal(t, "", addr2AfterBalance, "addr2AfterBalance")
+
+	// Make sure a couple events are in the list.
+	expEvents := []abci.Event{
+		NewEvent(sdk.EventTypeTx,
+			NewAttribute(sdk.AttributeKeyFee, "100000stake"),
+			NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+		NewEvent(sdk.EventTypeTx,
+			NewAttribute(antewrapper.AttributeKeyMinFeeCharged, "100000stake"),
+			NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+	}
+	assertEventsContains(t, res.Events, expEvents)
+}
+
 func TestMsgService(tt *testing.T) {
 	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1) // will create a gas fee of 1stake * gas
 	encCfg := sdksim.MakeTestEncodingConfig()
@@ -249,6 +299,7 @@ func TestMsgService(tt *testing.T) {
 		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err, "SignTxAndGetBytes")
 		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+		t.Logf("Events:\n%s\n", eventsString(res.Events, true))
 		require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
 
 		// Check both account balances after transaction
@@ -282,6 +333,7 @@ func TestMsgService(tt *testing.T) {
 		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err, "SignTxAndGetBytes")
 		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+		t.Logf("Events:\n%s\n", eventsString(res.Events, true))
 		require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
 
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
@@ -316,6 +368,7 @@ func TestMsgService(tt *testing.T) {
 		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err, "SignTxAndGetBytes")
 		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+		t.Logf("Events:\n%s\n", eventsString(res.Events, true))
 		require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
 
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
