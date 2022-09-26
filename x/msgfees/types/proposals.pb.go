@@ -336,7 +336,7 @@ func (m *UpdateNhashPerUsdMilProposal) GetNhashPerUsdMil() uint64 {
 type UpdateConversionFeeDenomProposal struct {
 	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	// conversion_fee_denom is denom usd will be converted to
+	// conversion_fee_denom is the denom that usd will be converted to
 	ConversionFeeDenom string `protobuf:"bytes,4,opt,name=conversion_fee_denom,json=conversionFeeDenom,proto3" json:"conversion_fee_denom,omitempty"`
 }
 

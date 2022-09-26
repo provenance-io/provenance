@@ -25,9 +25,7 @@ message MsgAssessCustomMsgFeeRequest {
   option (gogoproto.goproto_stringer) = true;
 
   string name = 1; // optional short name for custom msg fee, this will be emitted as a property of the event
-  cosmos.base.v1beta1.Coin amount = 2 [
-    (gogoproto.nullable) = false
-  ];                    // amount of additional fee that must be paid
+  cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false]; // amount of additional fee that must be paid
   string recipient = 3; // optional recipient address, the amount is split 50/50 between recipient and fee module. If
                         // empty, whole amount goes to fee module
   string from = 4;      // the signer of the msg

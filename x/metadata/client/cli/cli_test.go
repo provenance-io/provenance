@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client"
-
 	"github.com/gogo/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
@@ -17,6 +15,7 @@ import (
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"

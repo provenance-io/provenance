@@ -6,9 +6,12 @@ import (
 
 	sdkgas "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/internal/pioconfig"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	"github.com/tendermint/tendermint/libs/log"
 )
 
@@ -19,12 +22,12 @@ func TestFeeGasMeter(t *testing.T) {
 		usage []sdkgas.Gas
 		fees  map[string]sdk.Coin
 	}{
-		{10, []sdkgas.Gas{1, 2, 3, 4}, nil},
-		{1000, []sdkgas.Gas{40, 30, 20, 10, 900}, map[string]sdk.Coin{"/cosmos.bank.v1beta1.MsgSend": sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(1000000)), "/provenance.marker.v1.MsgAddMarkerRequest": sdk.NewCoin("doge", sdk.NewInt(1000000))}},
-		{100000, []sdkgas.Gas{99999, 1}, map[string]sdk.Coin{"/cosmos.bank.v1beta1.MsgSend": sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(1000000))}},
-		{100000000, []sdkgas.Gas{50000000, 40000000, 10000000}, map[string]sdk.Coin{"/cosmos.bank.v1beta1.MsgSend": sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(5555))}},
-		{65535, []sdkgas.Gas{32768, 32767}, nil},
-		{65536, []sdkgas.Gas{32768, 32767, 1}, nil},
+		{limit: 10, usage: []sdkgas.Gas{1, 2, 3, 4}, fees: nil},
+		{limit: 1000, usage: []sdkgas.Gas{40, 30, 20, 10, 900}, fees: map[string]sdk.Coin{"/cosmos.bank.v1beta1.MsgSend": sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(1000000)), "/provenance.marker.v1.MsgAddMarkerRequest": sdk.NewCoin("doge", sdk.NewInt(1000000))}},
+		{limit: 100000, usage: []sdkgas.Gas{99999, 1}, fees: map[string]sdk.Coin{"/cosmos.bank.v1beta1.MsgSend": sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(1000000))}},
+		{limit: 100000000, usage: []sdkgas.Gas{50000000, 40000000, 10000000}, fees: map[string]sdk.Coin{"/cosmos.bank.v1beta1.MsgSend": sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(5555))}},
+		{limit: 65535, usage: []sdkgas.Gas{32768, 32767}, fees: nil},
+		{limit: 65536, usage: []sdkgas.Gas{32768, 32767, 1}, fees: nil},
 	}
 
 	for tcnum, tc := range casesFeeGas {

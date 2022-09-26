@@ -15,11 +15,11 @@ import (
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
-// These tests are kicked off by TestAnteTestSuite in testutil_test.go
 const (
 	NHash = "nhash"
 )
 
+// These tests are kicked off by TestAnteTestSuite in testutil_test.go
 // checkTx true, high min gas price(high enough so that additional fee in same denom tips it over,
 // and this is what sets it apart from MempoolDecorator which has already been run)
 func (s *AnteTestSuite) TestEnsureMempoolAndMsgFees() {

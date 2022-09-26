@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"errors"
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,12 +13,12 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
+	provenance "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	provenance "github.com/provenance-io/provenance/app"
 )
 
 type IntegrationTestSuite struct {

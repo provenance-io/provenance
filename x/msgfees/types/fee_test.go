@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/internal/pioconfig"
 
 	"github.com/stretchr/testify/assert"
@@ -13,7 +14,7 @@ import (
 func TestSplitCoinByBips(t *testing.T) {
 	pioconfig.SetProvenanceConfig("", 0)
 	splitCases := []struct {
-		testName              string
+		name                  string
 		splitCoin             sdk.Coin
 		bips                  uint32
 		expectedRecipientCoin sdk.Coin
@@ -21,68 +22,68 @@ func TestSplitCoinByBips(t *testing.T) {
 		expectedErrorMsg      string
 	}{
 		{
-			"Should all go to recipient",
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 10),
-			10_000,
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 10),
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 0),
-			"",
+			name:                  "Should all go to recipient",
+			splitCoin:             sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 10),
+			bips:                  10_000,
+			expectedRecipientCoin: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 10),
+			expectedFeePayoutCoin: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 0),
+			expectedErrorMsg:      "",
 		},
 		{
-			"Should all go to fee payout",
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 10),
-			0,
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 0),
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 10),
-			"",
+			name:                  "Should all go to fee payout",
+			splitCoin:             sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 10),
+			bips:                  0,
+			expectedRecipientCoin: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 0),
+			expectedFeePayoutCoin: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 10),
+			expectedErrorMsg:      "",
 		},
 		{
-			"Should error on invalid bips value",
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 10),
-			10_001,
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 0),
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 10),
-			"invalid: 10001: invalid bips amount",
+			name:                  "Should error on invalid bips value",
+			splitCoin:             sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 10),
+			bips:                  10_001,
+			expectedRecipientCoin: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 0),
+			expectedFeePayoutCoin: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 10),
+			expectedErrorMsg:      "invalid: 10001: invalid bips amount",
 		},
 		{
-			"Both Recipient and FeePayout should equal on split of even number",
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 10),
-			5_000,
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 5),
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 5),
-			"",
+			name:                  "Both Recipient and FeePayout should equal on split of even number",
+			splitCoin:             sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 10),
+			bips:                  5_000,
+			expectedRecipientCoin: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 5),
+			expectedFeePayoutCoin: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 5),
+			expectedErrorMsg:      "",
 		},
 		{
-			"Recipient will get floor of calc",
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 9),
-			5_000,
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 4),
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 5),
-			"",
+			name:                  "Recipient will get floor of calc",
+			splitCoin:             sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 9),
+			bips:                  5_000,
+			expectedRecipientCoin: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 4),
+			expectedFeePayoutCoin: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 5),
+			expectedErrorMsg:      "",
 		},
 		{
-			"FeePayout should get the remaining amount",
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1),
-			5_000,
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 0),
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1),
-			"",
+			name:                  "FeePayout should get the remaining amount",
+			splitCoin:             sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1),
+			bips:                  5_000,
+			expectedRecipientCoin: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 0),
+			expectedFeePayoutCoin: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1),
+			expectedErrorMsg:      "",
 		},
 		{
-			"Recipient should receive bips amount calculated to 25",
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 100),
-			2_500,
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 25),
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 75),
-			"",
+			name:                  "Recipient should receive bips amount calculated to 25",
+			splitCoin:             sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 100),
+			bips:                  2_500,
+			expectedRecipientCoin: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 25),
+			expectedFeePayoutCoin: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 75),
+			expectedErrorMsg:      "",
 		},
 		{
-			"Recipient should receive bips amount calculated to 25 with truncation remainder going to fee module",
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 101),
-			2_500,
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 25),
-			sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 76),
-			"",
+			name:                  "Recipient should receive bips amount calculated to 25 with truncation remainder going to fee module",
+			splitCoin:             sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 101),
+			bips:                  2_500,
+			expectedRecipientCoin: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 25),
+			expectedFeePayoutCoin: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 76),
+			expectedErrorMsg:      "",
 		},
 	}
 
@@ -90,10 +91,10 @@ func TestSplitCoinByBips(t *testing.T) {
 		actualRecipientCoin, actualFeePayoutCoin, err := SplitCoinByBips(tc.splitCoin, tc.bips)
 		if len(tc.expectedErrorMsg) == 0 {
 			assert.NoError(t, err)
-			assert.True(t, tc.expectedRecipientCoin.Equal(actualRecipientCoin), fmt.Sprintf("RecipientCoin for bips: %v not equal expected: %s actual: %s name: %s", tc.bips, tc.expectedRecipientCoin.String(), actualRecipientCoin, tc.testName))
-			assert.True(t, tc.expectedFeePayoutCoin.Equal(actualFeePayoutCoin), fmt.Sprintf("FeePayoutCoin not equal expected: %s actual: %s name: %s", tc.expectedFeePayoutCoin.String(), actualFeePayoutCoin.String(), tc.testName))
+			assert.True(t, tc.expectedRecipientCoin.Equal(actualRecipientCoin), fmt.Sprintf("RecipientCoin for bips: %v not equal expected: %s actual: %s name: %s", tc.bips, tc.expectedRecipientCoin.String(), actualRecipientCoin, tc.name))
+			assert.True(t, tc.expectedFeePayoutCoin.Equal(actualFeePayoutCoin), fmt.Sprintf("FeePayoutCoin not equal expected: %s actual: %s name: %s", tc.expectedFeePayoutCoin.String(), actualFeePayoutCoin.String(), tc.name))
 		} else {
-			assert.EqualError(t, err, tc.expectedErrorMsg, tc.testName)
+			assert.EqualError(t, err, tc.expectedErrorMsg, tc.name)
 		}
 	}
 }

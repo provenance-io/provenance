@@ -5384,7 +5384,7 @@ UpdateMsgFeeDenomProposal defines a governance proposal to update the msg fee de
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  | proposal title |
 | `description` | [string](#string) |  | proposal description |
-| `conversion_fee_denom` | [string](#string) |  | conversion_fee_denom is denom usd will be converted to |
+| `conversion_fee_denom` | [string](#string) |  | conversion_fee_denom is the denom that usd will be converted to |
 
 
 

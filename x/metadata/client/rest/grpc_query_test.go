@@ -17,14 +17,13 @@ import (
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/metadata/types"
-
-	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
 type IntegrationGRPCTestSuite struct {

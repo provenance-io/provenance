@@ -6,7 +6,6 @@ import (
 	"github.com/provenance-io/provenance/internal/pioconfig"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 

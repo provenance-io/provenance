@@ -3,7 +3,6 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"sort"
 	"strings"
 	"testing"
@@ -22,6 +21,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	namecli "github.com/provenance-io/provenance/x/name/client/cli"
 	nametypes "github.com/provenance-io/provenance/x/name/types"

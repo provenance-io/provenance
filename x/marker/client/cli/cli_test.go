@@ -3,7 +3,6 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"io/ioutil"
 	"os"
 	"sort"
@@ -29,6 +28,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
