@@ -2309,7 +2309,7 @@ type MsgClient interface {
 	WriteScope(ctx context.Context, in *MsgWriteScopeRequest, opts ...grpc.CallOption) (*MsgWriteScopeResponse, error)
 	// DeleteScope deletes a scope and all associated Records, Sessions.
 	DeleteScope(ctx context.Context, in *MsgDeleteScopeRequest, opts ...grpc.CallOption) (*MsgDeleteScopeResponse, error)
-	// ExpireScope deletes a scope and all associated Records, Sessions.
+	// ExpireScope expires a scope and all associated Records, Sessions.
 	ExpireScope(ctx context.Context, in *MsgExpireScopeRequest, opts ...grpc.CallOption) (*MsgExpireScopeResponse, error)
 	// AddScopeDataAccess adds data access AccAddress to scope
 	AddScopeDataAccess(ctx context.Context, in *MsgAddScopeDataAccessRequest, opts ...grpc.CallOption) (*MsgAddScopeDataAccessResponse, error)
@@ -2578,7 +2578,7 @@ type MsgServer interface {
 	WriteScope(context.Context, *MsgWriteScopeRequest) (*MsgWriteScopeResponse, error)
 	// DeleteScope deletes a scope and all associated Records, Sessions.
 	DeleteScope(context.Context, *MsgDeleteScopeRequest) (*MsgDeleteScopeResponse, error)
-	// ExpireScope deletes a scope and all associated Records, Sessions.
+	// ExpireScope expires a scope and all associated Records, Sessions.
 	ExpireScope(context.Context, *MsgExpireScopeRequest) (*MsgExpireScopeResponse, error)
 	// AddScopeDataAccess adds data access AccAddress to scope
 	AddScopeDataAccess(context.Context, *MsgAddScopeDataAccessRequest) (*MsgAddScopeDataAccessResponse, error)

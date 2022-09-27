@@ -21,7 +21,7 @@ service Msg {
   rpc WriteScope(MsgWriteScopeRequest) returns (MsgWriteScopeResponse);
   // DeleteScope deletes a scope and all associated Records, Sessions.
   rpc DeleteScope(MsgDeleteScopeRequest) returns (MsgDeleteScopeResponse);
-  // ExpireScope deletes a scope and all associated Records, Sessions.
+  // ExpireScope expires a scope and all associated Records, Sessions.
   rpc ExpireScope(MsgExpireScopeRequest) returns (MsgExpireScopeResponse);
 
   // AddScopeDataAccess adds data access AccAddress to scope
