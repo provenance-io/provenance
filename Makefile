@@ -180,12 +180,13 @@ build-linux: go.sum
 
 DENOM ?= nhash
 MIN_FLOOR_PRICE ?= 1905nhash
+CHAIN_ID ?= testing
 
 # Run an instance of the daemon against a local config (create the config if it does not exit.)
 # if required to use something other than vspn, use: make run DENOM=vspn MIN_FLOOR_PRICE=0vspn
 run-config: check-built
 	@if [ ! -d "$(BUILDDIR)/run/provenanced/config" ]; then \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=testing testing --custom-denom=$(DENOM); \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=$(CHAIN_ID) testing --custom-denom=$(DENOM); \
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced keys add validator --keyring-backend test ; \
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pio --keyring-backend test ; \
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pb --restrict=false --keyring-backend test ; \
