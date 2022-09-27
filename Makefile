@@ -205,11 +205,11 @@ run-config: check-built
     fi ;
 
 run: check-built run-config ;
-ifeq ($(DENOM),nhash)
-	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
-else
-	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start --custom-denom $(DENOM)
-endif
+	ifeq ($(DENOM),nhash)
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
+	else
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start --custom-denom $(DENOM)
+	endif
 
 .PHONY: install build build-linux run
 
@@ -452,11 +452,11 @@ docker-build-local: vendor
 
 # Generate config files for a 4-node localnet
 localnet-generate: localnet-stop docker-build-local
-ifeq ($(DENOM),nhash)
-	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=chain-local ; fi
-else
-	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=chain-local --custom-denom=$(DENOM) --minimum-gas-prices=$(MIN_FLOOR_PRICE) ; fi
-endif
+	ifeq ($(DENOM),nhash)
+		@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=chain-local ; fi
+	else
+		@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=chain-local --custom-denom=$(DENOM) --minimum-gas-prices=$(MIN_FLOOR_PRICE) ; fi
+	endif
 
 # Run a 4-node testnet locally
 localnet-up:
