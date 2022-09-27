@@ -332,7 +332,7 @@ func (m *UpdateNhashPerUsdMilProposal) GetNhashPerUsdMil() uint64 {
 	return 0
 }
 
-// UpdateMsgFeeDenomProposal defines a governance proposal to update the msg fee denom
+// UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
 type UpdateConversionFeeDenomProposal struct {
 	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`

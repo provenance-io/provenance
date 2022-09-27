@@ -5377,7 +5377,7 @@ RemoveMsgFeeProposal defines a governance proposal to delete a current msg based
 <a name="provenance.msgfees.v1.UpdateConversionFeeDenomProposal"></a>
 
 ### UpdateConversionFeeDenomProposal
-UpdateMsgFeeDenomProposal defines a governance proposal to update the msg fee denom
+UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
 
 
 | Field | Type | Label | Description |

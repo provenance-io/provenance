@@ -101,7 +101,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
 				CoinTypeFlag: fmt.Sprint(app.CoinType),
-				// override min gas price(server level config) here since the config would have been set based on flags
+				// Override min gas price(server level config) here since the provenance config would have been set based on flags.
 				server.FlagMinGasPrices: pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices,
 			})
 			return nil

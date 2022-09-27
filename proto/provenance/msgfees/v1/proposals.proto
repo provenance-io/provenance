@@ -81,7 +81,7 @@ message UpdateNhashPerUsdMilProposal {
   uint64 nhash_per_usd_mil = 3;
 }
 
-// UpdateMsgFeeDenomProposal defines a governance proposal to update the msg fee denom
+// UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
 message UpdateConversionFeeDenomProposal {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;
