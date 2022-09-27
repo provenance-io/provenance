@@ -6,11 +6,12 @@ import (
 
 const (
 	// defaultBondDenom is the denomination of coin to use for bond/staking
-	// should only be via provConfig variable
+	// should only be via provConfig
+	//variable
 	defaultBondDenom = "nhash" // nano-hash
-	// defaultFeeDenom is the denomination of coin to use for fees
+	// defaultFeeDenom is the (default) denomination of coin to use for fees
 	defaultFeeDenom = "nhash" // nano-hash
-	// defaultMinGasPrices is the minimum gas prices integer value only
+	// defaultMinGasPrices is the (default) minimum gas prices integer value only
 	defaultMinGasPrices = 1905
 	// DefaultReDnmString is the allowed denom regex expression
 	DefaultReDnmString = `[a-zA-Z][a-zA-Z0-9/\-\.]{2,127}`
@@ -29,7 +30,7 @@ type ProvenanceConfig struct {
 var provConfig *ProvenanceConfig
 
 func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
-	if len(customDenom) > 0 && customDenom != defaultBondDenom {
+	if len(customDenom) > 0 && customDenom != defaultFeeDenom {
 		provConfig = &ProvenanceConfig{
 			FeeDenom:               customDenom,
 			ProvenanceMinGasPrices: fmt.Sprintf("%v", msgFeeFloorGasPrice) + customDenom,
