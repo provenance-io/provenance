@@ -8,18 +8,17 @@ Existing fee event continue to show total fee charged
 
 ## Any Tx
 
-| Type     | Attribute Key | Attribute Value    |
-| -------- | ------------- | ------------------ |
-| message  | fee           | total fee (coins)  |
-
-If additional fee is assessed, these events will also be emitted (reason for not always emitting them mainly saving space on block output)
+| Type     | Attribute Key | Attribute Value                                                                                                  |
+| -------- | ------------- | ---------------------------------------------------------------------------------------------------------------- |
+| message  | fee           | total fee (coins)                                                                                                |
+| message  | min_base_fee  | the minimum fee is the fee that will always be charged on failure or success                                     |
+| message  | basefee       | base fee is the total amount charged for a successful transaction.  This will be equal to fee - additionalfees   |
 
 ## Tx with Additional Fee
 
-| Type     | Attribute Key | Attribute Value                                                    |
-| -------- | ------------- | -------------------------------------------------------------------|
-| message  | additionalfee | additional fee charged (coins)                                     |
-| message  | basefee       | total fee - additional fee, should always cover gas costs (coins)  |
+| Type     | Attribute Key | Attribute Value                                                                           |
+| -------- | ------------- | ----------------------------------------------------------------------------------------- |
+| message  | additionalfee | additional fee charged (coins).  This is the sum of msg fees if they exists for a tx msg  |
 
 ## Tx Summary Event
 
