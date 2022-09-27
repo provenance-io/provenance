@@ -5,12 +5,12 @@ import (
 )
 
 const (
-	// DefaultBondDenom is the denomination of coin to use for bond/staking
+	// defaultBondDenom is the denomination of coin to use for bond/staking
 	// should only be via provConfig variable
 	defaultBondDenom = "nhash" // nano-hash
-	// DefaultFeeDenom is the denomination of coin to use for fees
+	// defaultFeeDenom is the denomination of coin to use for fees
 	defaultFeeDenom = "nhash" // nano-hash
-	// DefaultMinGasPrices is the minimum gas prices integer value only
+	// defaultMinGasPrices is the minimum gas prices integer value only
 	defaultMinGasPrices = 1905
 	// DefaultReDnmString is the allowed denom regex expression
 	DefaultReDnmString = `[a-zA-Z][a-zA-Z0-9/\-\.]{2,127}`

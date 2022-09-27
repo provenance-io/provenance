@@ -59,9 +59,6 @@ const (
 // ChainID is the id of the running chain
 var ChainID string
 
-// DefaultDenom for fee and staking
-var DefaultDenom string
-
 // NewRootCmd creates a new root command for simd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
@@ -104,6 +101,8 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
 				CoinTypeFlag: fmt.Sprint(app.CoinType),
+				// override min gas price(server level config) here since the config would have been set based on flags
+				server.FlagMinGasPrices: pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices,
 			})
 			return nil
 		},
