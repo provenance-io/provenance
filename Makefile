@@ -179,11 +179,12 @@ build-linux: go.sum
 	WITH_LEDGER=false GOOS=linux GOARCH=amd64 $(MAKE) build
 
 DENOM ?= nhash
-MIN_FLOOR_PRICE ?= 1905nhash
+MIN_FLOOR_PRICE ?= 1905
 CHAIN_ID ?= testing
+CHAIN_ID_DOCKER ?= chain-local
 
 # Run an instance of the daemon against a local config (create the config if it does not exit.)
-# if required to use something other than vspn, use: make run DENOM=vspn MIN_FLOOR_PRICE=0vspn
+# if required to use something other than vspn, use: make run DENOM=vspn MIN_FLOOR_PRICE=0
 run-config: check-built
 	@if [ ! -d "$(BUILDDIR)/run/provenanced/config" ]; then \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=$(CHAIN_ID) testing --custom-denom=$(DENOM); \
@@ -200,7 +201,7 @@ run-config: check-built
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest 10000000000$(DENOM) ; \
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest 10000000000$(DENOM) ; \
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgP8eMemorializeContractRequest 10000000000$(DENOM) ; \
-        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-custom-floor-denom $(MIN_FLOOR_PRICE) ; \
+        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-custom-floor-denom $(MIN_FLOOR_PRICE)$(DENOM) ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced collect-gentxs ; \
     fi ;
 
@@ -453,9 +454,9 @@ docker-build-local: vendor
 # Generate config files for a 4-node localnet
 localnet-generate: localnet-stop docker-build-local
 ifeq ($(DENOM),nhash)
-	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=chain-local ; fi
+	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=$(CHAIN_ID_DOCKER) ; fi
 else
-	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=chain-local --custom-denom=$(DENOM) --minimum-gas-prices=$(MIN_FLOOR_PRICE) ; fi
+	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=$(CHAIN_ID_DOCKER) --custom-denom=$(DENOM) --minimum-gas-prices=$(MIN_FLOOR_PRICE)$(DENOM) --msgfee-floor-price=$(MIN_FLOOR_PRICE) ; fi
 endif
 
 # Run a 4-node testnet locally
@@ -463,7 +464,7 @@ localnet-up:
 	docker-compose -f networks/local/docker-compose.yml --project-directory ./ up -d
 
 # Run a 4-node testnet locally (replace docker-build with docker-build local for better speed)
-# to run custom denom network, `make clean localnet-start DENOM=vspn MIN_FLOOR_PRICE=0vspn`
+# to run custom denom network, `make clean localnet-start DENOM=vspn MIN_FLOOR_PRICE=0`
 localnet-start: localnet-generate localnet-up
 
 # Stop testnet
