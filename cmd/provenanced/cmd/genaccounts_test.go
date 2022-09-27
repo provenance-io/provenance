@@ -88,39 +88,39 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 
 func TestAddGenesisMsgFeeCmd(t *testing.T) {
 	tests := []struct {
-		name         string
-		msgType      string
-		fee          string
-		coinDenom    string
-		expectErrMsg string
+		name            string
+		msgType         string
+		fee             string
+		msgFeeFloorCoin string
+		expectErrMsg    string
 	}{
 		{
-			name:         "invalid msg type",
-			msgType:      "InvalidMsgType",
-			fee:          "1000jackthecat",
-			coinDenom:    "0vspn",
-			expectErrMsg: "unable to resolve type URL /InvalidMsgType",
+			name:            "invalid msg type",
+			msgType:         "InvalidMsgType",
+			fee:             "1000jackthecat",
+			msgFeeFloorCoin: "0vspn",
+			expectErrMsg:    "unable to resolve type URL /InvalidMsgType",
 		},
 		{
-			name:         "invalid fee",
-			msgType:      "/provenance.name.v1.MsgBindNameRequest",
-			fee:          "not-a-fee",
-			coinDenom:    "0vspn",
-			expectErrMsg: "failed to parse coin: invalid decimal coin expression: not-a-fee",
+			name:            "invalid fee",
+			msgType:         "/provenance.name.v1.MsgBindNameRequest",
+			fee:             "not-a-fee",
+			msgFeeFloorCoin: "0vspn",
+			expectErrMsg:    "failed to parse coin: invalid decimal coin expression: not-a-fee",
 		},
 		{
-			name:         "valid msg type and fee",
-			msgType:      "/provenance.name.v1.MsgBindNameRequest",
-			fee:          "1000jackthecat",
-			coinDenom:    "0vspn",
-			expectErrMsg: "",
+			name:            "valid msg type and fee",
+			msgType:         "/provenance.name.v1.MsgBindNameRequest",
+			fee:             "1000jackthecat",
+			msgFeeFloorCoin: "10jackthecat",
+			expectErrMsg:    "",
 		},
 		{
-			name:         "invalid fee",
-			msgType:      "provenance.name.v1.MsgBindNameRequest",
-			fee:          "1000jackthecat",
-			coinDenom:    "0vspn",
-			expectErrMsg: "",
+			name:            "invalid fee",
+			msgType:         "provenance.name.v1.MsgBindNameRequest",
+			fee:             "1000jackthecat",
+			msgFeeFloorCoin: "0vspn",
+			expectErrMsg:    "",
 		},
 	}
 
@@ -146,7 +146,7 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 			cmd := provenancecmd.AddGenesisCustomFloorPriceDenom(home)
 			cmdFee := provenancecmd.AddGenesisMsgFeeCmd(home, app.MakeEncodingConfig().InterfaceRegistry)
 			cmd.SetArgs([]string{
-				tc.coinDenom,
+				tc.msgFeeFloorCoin,
 				fmt.Sprintf("--%s=home", flags.FlagHome)})
 			cmdFee.SetArgs([]string{
 				tc.msgType,
