@@ -59,7 +59,7 @@ func (k msgServer) WriteScope(
 func (k msgServer) createExpirationForScope(ctx sdk.Context, msg *types.MsgWriteScopeRequest) (*exptypes.Expiration, error) {
 	// create expire scope request.
 	expireMsg := types.NewMsgExpireScopeRequest(msg.Scope.ScopeId, msg.Signers)
-	any, anyErr := codec.NewAnyWithValue(expireMsg)
+	wrapper, anyErr := codec.NewAnyWithValue(expireMsg)
 	if anyErr != nil {
 		return nil, anyErr
 	}
@@ -80,7 +80,7 @@ func (k msgServer) createExpirationForScope(ctx sdk.Context, msg *types.MsgWrite
 	expTime := ctx.BlockTime().Add(*duration)
 	expDeposit := k.expKeeper.GetDeposit(ctx)
 	expiration := exptypes.NewExpiration(msg.Scope.ScopeId.String(), msg.Scope.ValueOwnerAddress, expTime,
-		expDeposit, *any)
+		expDeposit, *wrapper)
 	expErr := k.expKeeper.SetExpiration(ctx, *expiration)
 	if expErr != nil {
 		return nil, expErr
