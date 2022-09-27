@@ -31,3 +31,11 @@ func TestConfigSetRegularDenomCustomMsgFloorFeeIgnoredForNhash(t *testing.T) {
 	assert.Equal(t, GetProvenanceConfig().MsgFeeFloorGasPrice, int64(1905))
 	assert.Equal(t, GetProvenanceConfig().ProvenanceMinGasPrices, "1905nhash")
 }
+
+// all code flows shows set the config for e.g. root cmd etc
+func TestGetConfigNotSet(t *testing.T) {
+	provConfig = nil
+	assert.Panics(t, func() {
+		GetProvenanceConfig()
+	})
+}
