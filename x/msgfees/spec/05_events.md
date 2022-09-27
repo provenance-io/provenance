@@ -6,7 +6,7 @@ order: 5
 
 Existing fee event continue to show total fee charged
 
-## Any Tx
+## Standard Tx
 
 | Type     | Attribute Key | Attribute Value                                                                                                  |
 | -------- | ------------- | ---------------------------------------------------------------------------------------------------------------- |
@@ -14,7 +14,7 @@ Existing fee event continue to show total fee charged
 | message  | min_base_fee  | the minimum fee is the fee that will always be charged on failure or success                                     |
 | message  | basefee       | base fee is the total amount charged for a successful transaction.  This will be equal to fee - additionalfees   |
 
-## Tx with Additional Fee
+## Additional events for Tx with Additional Fee including ones emitted on Standard Tx
 
 | Type     | Attribute Key | Attribute Value                                                                           |
 | -------- | ------------- | ----------------------------------------------------------------------------------------- |

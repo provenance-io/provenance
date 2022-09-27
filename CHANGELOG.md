@@ -73,6 +73,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add docker files for local psql indexing [#997](https://github.com/provenance-io/provenance/issues/997)
 * Added two new Makefile targets to install and start the relayer [#1051] (https://github.com/provenance-io/provenance/pull/1051)
 * Updated relayer scripts to make them headless for external services [#1068] (https://github.com/provenance-io/provenance/pull/1068)
+* Update MsgFee event spec to detail new events added [#1091](https://github.com/provenance-io/provenance/issues/1091)
 
 ### Features
 
