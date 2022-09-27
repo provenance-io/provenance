@@ -228,7 +228,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.expiration6 = *expirationtypes.NewExpiration(s.moduleAssetID6, s.user6AddrStr, s.time, s.deposit, s.anyMsg(s.user6AddrStr))
 	s.expirationMetadataScope = *expirationtypes.NewExpiration(s.scopeID.String(), s.accountAddrStr, s.time, s.deposit, s.anyMsg(s.accountAddrStr))
 
-	utcFormat := "2006-01-02T15:04:05.999999Z"
+	utcFormat := "2006-01-02T15:04:05.000000000Z"
 	// expected expirations as JSON
 	s.expiration1AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"time\":\"%v\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":{\"@type\":\"/provenance.metadata.v1.MsgDeleteScopeRequest\",\"scope_id\":\"%s\",\"signers\":[\"%s\"]}}}",
 		s.moduleAssetID1,

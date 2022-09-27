@@ -114,13 +114,12 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-// TODO fix  >>>>>  panic: UnmarshalJSON expects a pointer
-//func (s *KeeperTestSuite) TestParams() {
-//	s.T().Run("param tests", func(t *testing.T) {
-//		p := s.app.ExpirationKeeper.GetParams(s.ctx)
-//		assert.NotNil(t, p)
-//	})
-//}
+func (s *KeeperTestSuite) TestParams() {
+	s.T().Run("param tests", func(t *testing.T) {
+		p := s.app.ExpirationKeeper.GetParams(s.ctx)
+		assert.NotNil(t, p)
+	})
+}
 
 func (s *KeeperTestSuite) TestAddExpiration() {
 	request := types.MsgAddExpirationRequest{}

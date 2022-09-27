@@ -37,6 +37,8 @@ type MetadataHandlerTestSuite struct {
 	pubkey2   cryptotypes.PubKey
 	user2     string
 	user2Addr sdk.AccAddress
+
+	scopeExpiration string
 }
 
 func (s *MetadataHandlerTestSuite) SetupTest() {
@@ -55,6 +57,8 @@ func (s *MetadataHandlerTestSuite) SetupTest() {
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr))
+
+	s.scopeExpiration = "1y"
 }
 
 func TestMetadataHandlerTestSuite(t *testing.T) {
@@ -732,7 +736,7 @@ func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeOwners() {
 		},
 		{
 			"setup test with new scope",
-			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}),
+			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}, s.scopeExpiration),
 			[]string{s.user1},
 			"",
 		},
@@ -896,7 +900,7 @@ func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
 		},
 		{
 			"setup test with new scope",
-			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}),
+			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}, s.scopeExpiration),
 			[]string{s.user1},
 			"",
 		},

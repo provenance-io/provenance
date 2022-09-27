@@ -411,8 +411,12 @@ func New(
 		keys[authzkeeper.StoreKey], appCodec, app.BaseApp.MsgServiceRouter(),
 	)
 
+	app.ExpirationKeeper = expirationkeeper.NewKeeper(
+		appCodec, keys[expirationtypes.StoreKey], app.GetSubspace(expirationtypes.ModuleName), app.AuthzKeeper, app.MsgServiceRouter(),
+	)
+
 	app.MetadataKeeper = metadatakeeper.NewKeeper(
-		appCodec, keys[metadatatypes.StoreKey], app.GetSubspace(metadatatypes.ModuleName), app.AccountKeeper, app.AuthzKeeper,
+		appCodec, keys[metadatatypes.StoreKey], app.GetSubspace(metadatatypes.ModuleName), app.AccountKeeper, app.AuthzKeeper, app.ExpirationKeeper,
 	)
 
 	app.MarkerKeeper = markerkeeper.NewKeeper(
@@ -425,10 +429,6 @@ func New(
 
 	app.AttributeKeeper = attributekeeper.NewKeeper(
 		appCodec, keys[attributetypes.StoreKey], app.GetSubspace(attributetypes.ModuleName), app.AccountKeeper, app.NameKeeper,
-	)
-
-	app.ExpirationKeeper = expirationkeeper.NewKeeper(
-		appCodec, keys[expirationtypes.StoreKey], app.GetSubspace(expirationtypes.ModuleName), app.AuthzKeeper, app.MsgServiceRouter(),
 	)
 
 	// Create IBC Keeper

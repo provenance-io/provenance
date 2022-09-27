@@ -73,11 +73,9 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GetDeposit returns the default deposit used in setting module asset expirations
 func (k Keeper) GetDeposit(ctx sdk.Context) sdk.Coin {
-	deposit := types.DefaultDeposit
-	if k.paramSpace.Has(ctx, types.ParamStoreKeyDeposit) {
-		k.paramSpace.Get(ctx, types.ParamStoreKeyDeposit, deposit)
-	}
-	return deposit
+	deposit := &types.DefaultDeposit
+	k.paramSpace.GetIfExists(ctx, types.ParamStoreKeyDeposit, deposit)
+	return *deposit
 }
 
 // GetExpiration returns the expiration with the given module asset id.

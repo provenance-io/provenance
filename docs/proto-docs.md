@@ -5544,6 +5544,7 @@ MsgWriteScopeRequest is the request type for the Msg/WriteScope RPC method.
 | `signers` | [string](#string) | repeated | signers is the list of address of those signing this request. |
 | `scope_uuid` | [string](#string) |  | scope_uuid is an optional uuid string, e.g. "91978ba2-5f35-459a-86a7-feca1b0512e0" If provided, it will be used to generate the MetadataAddress for the scope which will override the scope_id in the provided scope. If not provided (or it is an empty string), nothing special happens. If there is a value in scope.scope_id that is different from the one created from this uuid, an error is returned. |
 | `spec_uuid` | [string](#string) |  | spec_uuid is an optional scope specification uuid string, e.g. "dc83ea70-eacd-40fe-9adf-1cf6148bf8a2" If provided, it will be used to generate the MetadataAddress for the scope specification which will override the specification_id in the provided scope. If not provided (or it is an empty string), nothing special happens. If there is a value in scope.specification_id that is different from the one created from this uuid, an error is returned. |
+| `expiration` | [string](#string) |  | expiration is an optional expiration timespan string, e.g. "1y" (see expiration module for format) If provided, it overrides the default scope expiration with the given time period. |
 
 
 

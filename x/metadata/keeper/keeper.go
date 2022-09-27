@@ -12,6 +12,7 @@ import (
 	authzKeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/gogo/protobuf/proto"
+	expKeeper "github.com/provenance-io/provenance/x/expiration/keeper"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -25,6 +26,8 @@ type MetadataKeeperI interface {
 	SetScope(sdk.Context, types.Scope)
 	// RemoveScope removes a scope from the module kv store along with all its records and sessions.
 	RemoveScope(sdk.Context, types.MetadataAddress)
+	// Get default expiration duration for a scope.
+	GetDefaultScopeExpiration(ctx sdk.Context, scope types.Scope) string
 
 	// IterateScopes processes all stored scopes with the given handler.
 	IterateScopes(sdk.Context, func(types.Scope) bool) error
@@ -119,6 +122,9 @@ type Keeper struct {
 
 	// To check granter grantee authorization of messages.
 	authzKeeper authzKeeper.Keeper
+
+	// To support creating expiration metadata on scope creation.
+	expKeeper expKeeper.Keeper
 }
 
 // NewKeeper creates new instances of the metadata Keeper.
@@ -126,6 +132,7 @@ func NewKeeper(
 	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	authKeeper authkeeper.AccountKeeper,
 	authzKeeper authzKeeper.Keeper,
+	expKeeper expKeeper.Keeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
@@ -137,6 +144,7 @@ func NewKeeper(
 		paramSpace:  paramSpace,
 		authKeeper:  authKeeper,
 		authzKeeper: authzKeeper,
+		expKeeper:   expKeeper,
 	}
 }
 

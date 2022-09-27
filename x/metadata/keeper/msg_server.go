@@ -10,8 +10,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	codec "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	exptypes "github.com/provenance-io/provenance/x/expiration/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -37,6 +39,12 @@ func (k msgServer) WriteScope(
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
+	// attempt to create expiration metadata for scope
+	_, expErr := k.createExpirationForScope(ctx, msg)
+	if expErr != nil {
+		return nil, expErr
+	}
+
 	existing, _ := k.GetScope(ctx, msg.Scope.ScopeId)
 	if err := k.ValidateScopeUpdate(ctx, existing, msg.Scope, msg.Signers, msg.MsgTypeURL()); err != nil {
 		return nil, err
@@ -46,6 +54,38 @@ func (k msgServer) WriteScope(
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteScope, msg.GetSigners()))
 	return types.NewMsgWriteScopeResponse(msg.Scope.ScopeId), nil
+}
+
+func (k msgServer) createExpirationForScope(ctx sdk.Context, msg *types.MsgWriteScopeRequest) (*exptypes.Expiration, error) {
+	// create expire scope request.
+	expireMsg := types.NewMsgExpireScopeRequest(msg.Scope.ScopeId, msg.Signers)
+	any, anyErr := codec.NewAnyWithValue(expireMsg)
+	if anyErr != nil {
+		return nil, anyErr
+	}
+
+	// use default expiration, but override with cmd line arg if provided
+	expShort := k.GetDefaultScopeExpiration(ctx, msg.Scope)
+	if len(msg.Expiration) > 0 {
+		expShort = msg.Expiration
+	}
+
+	// parse expiration into a duration
+	duration, durErr := exptypes.ParseDuration(expShort)
+	if durErr != nil {
+		return nil, durErr
+	}
+
+	// create expiration metadata that will expire scope when executed.
+	expTime := ctx.BlockTime().Add(*duration)
+	expDeposit := k.expKeeper.GetDeposit(ctx)
+	expiration := exptypes.NewExpiration(msg.Scope.ScopeId.String(), msg.Scope.ValueOwnerAddress, expTime,
+		expDeposit, *any)
+	expErr := k.expKeeper.SetExpiration(ctx, *expiration)
+	if expErr != nil {
+		return nil, expErr
+	}
+	return expiration, nil
 }
 
 func (k msgServer) DeleteScope(

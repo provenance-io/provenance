@@ -113,6 +113,10 @@ message MsgWriteScopeRequest {
   // If there is a value in scope.specification_id that is different from the one created from this uuid, an error is
   // returned.
   string spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"spec_uuid\""];
+
+  // expiration is an optional expiration timespan string, e.g. "1y" (see expiration module for format)
+  // If provided, it overrides the default scope expiration with the given time period.
+  string expiration = 5 [(gogoproto.moretags) = "yaml:\"expiration\""];
 }
 
 // MsgWriteScopeResponse is the response type for the Msg/WriteScope RPC method.

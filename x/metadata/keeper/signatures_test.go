@@ -87,7 +87,7 @@ func TestValidateRawSingleSignature(t *testing.T) {
 	require.NoError(t, err)
 
 	s := *types.NewScope(types.ScopeMetadataAddress(uuid.New()), nil, ownerPartyList(testkey1.GetAddress().String()), []string{}, "")
-	txb, err := tx.BuildUnsignedTx(txf, types.NewMsgWriteScopeRequest(s, []string{testkey1.GetAddress().String()}))
+	txb, err := tx.BuildUnsignedTx(txf, types.NewMsgWriteScopeRequest(s, []string{testkey1.GetAddress().String()}, "1y"))
 	require.NoError(t, err)
 	require.NotNil(t, txb)
 

@@ -116,10 +116,11 @@ func MustAccAddressFromBech32(s string) sdk.AccAddress {
 // ------------------  MsgWriteScopeRequest  ------------------
 
 // NewMsgWriteScopeRequest creates a new msg instance
-func NewMsgWriteScopeRequest(scope Scope, signers []string) *MsgWriteScopeRequest {
+func NewMsgWriteScopeRequest(scope Scope, signers []string, expiration string) *MsgWriteScopeRequest {
 	return &MsgWriteScopeRequest{
-		Scope:   scope,
-		Signers: signers,
+		Scope:      scope,
+		Signers:    signers,
+		Expiration: expiration,
 	}
 }
 
