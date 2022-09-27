@@ -49,6 +49,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Stop using the deprecated Wrap and Wrapf functions in the sdk/types/errors package in favor of those functions off specific errors, or else the cosmossdk.io/errors package. [#1013](https://github.com/provenance-io/provenance/issues/995)
 * For newly added reward's module, Voting incentive program, validator votes should count for higher shares, since they vote for all their delegations.
   This feature allows the reward creator to introduce the multiplier to achieve the above.
+* Refactored the fee handling [#1006](https://github.com/provenance-io/provenance/issues/1006):
+  * Created a `MinGasPricesDecorator` to replace the `MempoolFeeDecorator` that was removed from the SDK. It makes sure the fee is greater than the validators min-gas fee.
+  * Refactored the `MsgFeesDecorator` to only make sure there's enough fee provided. It no longer deducts/consumes anything and it no longer checks the payer's account.
+  * Refactored the `ProvenanceDeductFeeDecorator`. It now makes sure the payer has enough in their account to cover the additional fees. It also now deducts/consumes the `floor gas price * gas`.
+  * Added the `fee_payer` attribute to events of type `tx` involving fees (i.e. the ones with attributes `fee`, `min_fee_charged`, `additionalfee` and/or `baseFee`).
+  * Moved the additional fees calculation logic into the msgfees keeper.
 
 ### Bug Fixes
 
