@@ -21,7 +21,7 @@ export PIO_OUTPUT=json
 
 valAddr="$( "$prov" keys list --output json | jq -r '.[] | select( .name == "validator" ) | .address' )"
 curHeight="$( "$prov" status | jq -r '.SyncInfo.latest_block_height' )"
-targetHeight="$(( curHeight + 20 ))"
+targetHeight="$(( curHeight + 40 ))"
 
 propRes="$( "$prov" tx gov submit-proposal software-upgrade "$color" \
     --title "Upgrade for $color" \
@@ -50,3 +50,4 @@ propId="$( tail -n 1 <<< "$propRes" | jq -r '.logs[0].events[] | select( .type =
 
 "$prov" query gov tally "$propId"
 
+printf 'Success: Upgrade will happen at height=%d\n' "$targetHeight"
