@@ -30,14 +30,14 @@ jobs:
           echo "base-branch: [$branch]"
           echo "::set-output name=base-branch::$branch"
       - uses: bufbuild/buf-setup-action@v1.8.0
-      - uses: bufbuild/buf-lint-action@v1.0.1
+      - uses: bufbuild/buf-lint-action@v1.0.2
         if: always()
         with:
           input: 'proto'
       - name: provenance breaking
         id: breaking-prov
         if: always()
-        uses: bufbuild/buf-breaking-action@v1.1.0
+        uses: bufbuild/buf-breaking-action@v1.1.1
         with:
           input: 'proto'
           against: 'https://github.com/provenance-io/provenance.git#branch=${{ steps.setup.outputs.base-branch }},subdir=proto'
@@ -49,7 +49,7 @@ jobs:
       - name: third-party breaking
         id: breaking-third
         if: always()
-        uses: bufbuild/buf-breaking-action@v1.1.0
+        uses: bufbuild/buf-breaking-action@v1.1.1
         with:
           input: 'third_party/proto'
           against: 'https://github.com/provenance-io/provenance.git#branch=${{ steps.setup.outputs.base-branch }},subdir=third_party/proto'
