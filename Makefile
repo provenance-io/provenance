@@ -193,7 +193,7 @@ run-config: check-built
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator io --restrict --keyring-backend test ; \
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator provenance --keyring-backend test ; \
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-account validator 100000000000000000000$(DENOM)  --keyring-backend test ; \
-        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced gentx validator 1000000000000000$(DENOM)  --keyring-backend test --chain-id=testing-custom-$(DENOM)-2; \
+        $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced gentx validator 1000000000000000$(DENOM)  --keyring-backend test --chain-id=$(CHAIN_ID); \
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-marker 100000000000000000000$(DENOM)  --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test; \
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.name.v1.MsgBindNameRequest 10000000000$(DENOM) ; \
         $(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.marker.v1.MsgAddMarkerRequest 100000000000$(DENOM) ; \
@@ -205,11 +205,11 @@ run-config: check-built
     fi ;
 
 run: check-built run-config ;
-	ifeq ($(DENOM),nhash)
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
-	else
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start --custom-denom $(DENOM)
-	endif
+ifeq ($(DENOM),nhash)
+	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
+else
+	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start --custom-denom $(DENOM)
+endif
 
 .PHONY: install build build-linux run
 
@@ -452,11 +452,11 @@ docker-build-local: vendor
 
 # Generate config files for a 4-node localnet
 localnet-generate: localnet-stop docker-build-local
-	ifeq ($(DENOM),nhash)
-		@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=chain-local ; fi
-	else
-		@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=chain-local --custom-denom=$(DENOM) --minimum-gas-prices=$(MIN_FLOOR_PRICE) ; fi
-	endif
+ifeq ($(DENOM),nhash)
+	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=chain-local ; fi
+else
+	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=chain-local --custom-denom=$(DENOM) --minimum-gas-prices=$(MIN_FLOOR_PRICE) ; fi
+endif
 
 # Run a 4-node testnet locally
 localnet-up:
