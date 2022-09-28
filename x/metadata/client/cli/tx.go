@@ -105,7 +105,7 @@ func WriteScopeCmd() *cobra.Command {
 				return err
 			}
 
-			expiration, err := parseExpires(cmd, &clientCtx)
+			expiration, err := parseExpires(cmd)
 			if err != nil {
 				return err
 			}
@@ -1012,7 +1012,7 @@ func addExpiresFlagCmd(cmd *cobra.Command) {
 }
 
 // parseExpires checks expires flag, else uses the default expiration period
-func parseExpires(cmd *cobra.Command, client *client.Context) (string, error) {
+func parseExpires(cmd *cobra.Command) (string, error) {
 	flagSet := cmd.Flags()
 	if flagSet.Changed(FlagExpires) {
 		expires, _ := flagSet.GetString(FlagExpires)
