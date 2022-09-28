@@ -43,6 +43,7 @@
   
 - [provenance/expiration/v1/events.proto](#provenance/expiration/v1/events.proto)
     - [EventExpirationAdd](#provenance.expiration.v1.EventExpirationAdd)
+    - [EventExpirationDeposit](#provenance.expiration.v1.EventExpirationDeposit)
     - [EventExpirationExtend](#provenance.expiration.v1.EventExpirationExtend)
     - [EventExpirationInvoke](#provenance.expiration.v1.EventExpirationInvoke)
     - [EventTxCompleted](#provenance.expiration.v1.EventTxCompleted)
@@ -928,6 +929,23 @@ EventExpirationAdd is an event message indicating an expiration has been created
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `module_asset_id` | [string](#string) |  | module_asset_id is the bech32 address string of the expiration id that was created. |
+
+
+
+
+
+
+<a name="provenance.expiration.v1.EventExpirationDeposit"></a>
+
+### EventExpirationDeposit
+EventExpirationDeposit is an event message indicating a deposit was collected for expiration
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `module_asset_id` | [string](#string) |  | module_asset_id is the bech32 address string of the expiration id that was created. |
+| `depositor` | [string](#string) |  | bech32 address string of the account that provided the expiration deposit. |
+| `deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | deposit amount held until asset is expired |
 
 
 

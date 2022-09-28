@@ -86,7 +86,7 @@ type IntegrationCLITestSuite struct {
 
 	time    time.Time
 	deposit sdk.Coin
-	signers []string
+	// signers []string
 
 	scopeID metadatatypes.MetadataAddress
 
@@ -96,8 +96,6 @@ type IntegrationCLITestSuite struct {
 	expiration4 expirationtypes.Expiration
 	expiration5 expirationtypes.Expiration
 	expiration6 expirationtypes.Expiration
-
-	expirationMetadataScope expirationtypes.Expiration
 
 	expiration1AsJson string
 	expiration2AsJson string
@@ -174,27 +172,26 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	var genBalances []banktypes.Balance
 	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddrStr, Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
-		sdk.NewCoin("authzhotdog", sdk.NewInt(100)),
-	).Sort()})
+		expirationtypes.DefaultDeposit).Sort()})
 	genBalances = append(genBalances, banktypes.Balance{Address: s.user1AddrStr, Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
-		sdk.NewCoin("authzhotdog", sdk.NewInt(100)),
-	).Sort()})
+		expirationtypes.DefaultDeposit).Add(expirationtypes.DefaultDeposit).Sort()})
 	genBalances = append(genBalances, banktypes.Balance{Address: s.user2AddrStr, Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
-	).Sort()})
+		expirationtypes.DefaultDeposit).Sort()})
 	genBalances = append(genBalances, banktypes.Balance{Address: s.user3AddrStr, Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
-	).Sort()})
+		expirationtypes.DefaultDeposit).Sort()})
 	genBalances = append(genBalances, banktypes.Balance{Address: s.user4AddrStr, Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
-	).Sort()})
+		expirationtypes.DefaultDeposit).Sort()})
 	genBalances = append(genBalances, banktypes.Balance{Address: s.user5AddrStr, Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
-	).Sort()})
+		expirationtypes.DefaultDeposit).Sort()})
 	genBalances = append(genBalances, banktypes.Balance{Address: s.user6AddrStr, Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
-	).Sort()})
+		expirationtypes.DefaultDeposit).Sort()})
+
 	var bankGenState banktypes.GenesisState
 	bankGenState.Params = banktypes.DefaultParams()
 	bankGenState.Balances = genBalances
@@ -226,7 +223,6 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.expiration4 = *expirationtypes.NewExpiration(s.moduleAssetID4, s.user4AddrStr, s.time, s.deposit, s.anyMsg(s.user4AddrStr))
 	s.expiration5 = *expirationtypes.NewExpiration(s.moduleAssetID5, s.user5AddrStr, s.time, s.deposit, s.anyMsg(s.user5AddrStr))
 	s.expiration6 = *expirationtypes.NewExpiration(s.moduleAssetID6, s.user6AddrStr, s.time, s.deposit, s.anyMsg(s.user6AddrStr))
-	s.expirationMetadataScope = *expirationtypes.NewExpiration(s.scopeID.String(), s.accountAddrStr, s.time, s.deposit, s.anyMsg(s.accountAddrStr))
 
 	utcFormat := "2006-01-02T15:04:05.000000000Z"
 	// expected expirations as JSON
@@ -328,7 +324,6 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	expirationData.Expirations = append(expirationData.Expirations, s.expiration4)
 	expirationData.Expirations = append(expirationData.Expirations, s.expiration5)
 	expirationData.Expirations = append(expirationData.Expirations, s.expiration6)
-	expirationData.Expirations = append(expirationData.Expirations, s.expirationMetadataScope)
 	expirationDataBz, err := cfg.Codec.MarshalJSON(&expirationData)
 	s.Require().NoError(err)
 	genesisState[expirationtypes.ModuleName] = expirationDataBz
@@ -740,8 +735,8 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			name: "should successfully invoke metadata scope expiration",
 			cmd:  cli.InvokeExpirationCmd(),
 			args: []string{
-				s.expirationMetadataScope.ModuleAssetId,
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.expirationMetadataScope.Owner),
+				s.scopeID.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),

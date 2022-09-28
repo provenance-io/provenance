@@ -208,6 +208,8 @@ var (
 
 		markertypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 		wasm.ModuleName:        {authtypes.Burner},
+
+		expirationtypes.ModuleName: nil,
 	}
 )
 
@@ -412,7 +414,7 @@ func New(
 	)
 
 	app.ExpirationKeeper = expirationkeeper.NewKeeper(
-		appCodec, keys[expirationtypes.StoreKey], app.GetSubspace(expirationtypes.ModuleName), app.AuthzKeeper, app.MsgServiceRouter(),
+		appCodec, keys[expirationtypes.StoreKey], app.GetSubspace(expirationtypes.ModuleName), app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(),
 	)
 
 	app.MetadataKeeper = metadatakeeper.NewKeeper(

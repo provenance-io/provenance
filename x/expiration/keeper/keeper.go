@@ -12,7 +12,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/provenance-io/provenance/x/expiration/types"
@@ -36,6 +39,12 @@ type Keeper struct {
 	// To check granter grantee authorization of messages
 	authzKeeper authzkeeper.Keeper
 
+	// To handle account interactions.
+	acctKeeper banktypes.AccountKeeper
+
+	// To handle expiration deposit processing.
+	bankKeeper bankkeeper.Keeper
+
 	// Message service router
 	router baseapp.IMsgServiceRouter
 }
@@ -50,6 +59,8 @@ func NewKeeper(
 	key sdk.StoreKey,
 	paramSpace paramtypes.Subspace,
 	authzKeeper authzkeeper.Keeper,
+	acctKeeper banktypes.AccountKeeper,
+	bankKeeper bankkeeper.Keeper,
 	router baseapp.IMsgServiceRouter,
 ) Keeper {
 	// set KeyTable if it has not already been set
@@ -57,11 +68,18 @@ func NewKeeper(
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
+	// ensure governance module account is set
+	if addr := acctKeeper.GetModuleAddress(types.ModuleName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+	}
+
 	return Keeper{
 		storeKey:    key,
 		paramSpace:  paramSpace,
 		cdc:         cdc,
 		authzKeeper: authzKeeper,
+		acctKeeper:  acctKeeper,
+		bankKeeper:  bankKeeper,
 		router:      router,
 	}
 }
@@ -69,6 +87,11 @@ func NewKeeper(
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
+}
+
+// GetModuleAccount returns the expiration ModuleAccount
+func (keeper Keeper) GetModuleAccount(ctx sdk.Context) authtypes.ModuleAccountI {
+	return keeper.acctKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 
 // GetDeposit returns the default deposit used in setting module asset expirations
@@ -110,16 +133,34 @@ func (k Keeper) SetExpiration(ctx sdk.Context, expiration types.Expiration) erro
 		return err
 	}
 
-	// Marshal expiration record and store
+	// move deposit from owner account into expiration module account
+	ownerAddr, addrErr := sdk.AccAddressFromBech32(expiration.Owner)
+	if addrErr != nil {
+		return addrErr
+	}
+
+	// attempt to send coins from owner account to expiration module account
+	depErr := k.bankKeeper.SendCoinsFromAccountToModule(ctx, ownerAddr,
+		types.ModuleName, sdk.NewCoins(expiration.Deposit))
+	if depErr != nil {
+		return sdkerrors.Wrapf(types.ErrInsufficientDeposit, fmt.Sprintf(": %v", depErr))
+	}
+
+	// marshal expiration record and store
 	b, err := k.cdc.Marshal(&expiration)
 	if err != nil {
 		return err
 	}
 	store.Set(key, b)
 
-	// emit Add event
+	// emit event indicating the expiration was added
 	addEvent := types.NewEventExpirationAdd(expiration.ModuleAssetId)
-	return k.emitEvent(ctx, addEvent)
+	if err := k.emitEvent(ctx, addEvent); err != nil {
+		return err
+	}
+
+	// emit event indicating that a deposit was collected
+	return k.emitEvent(ctx, types.NewEventExpirationDeposit(expiration.ModuleAssetId, expiration.Owner, expiration.Deposit))
 }
 
 func (k Keeper) ExtendExpiration(ctx sdk.Context, expiration types.Expiration) error {
@@ -205,6 +246,12 @@ func (k Keeper) InvokeExpiration(ctx sdk.Context, moduleAssetID string) error {
 	// clean up
 	if err := k.deleteExpiration(ctx, moduleAssetID); err != nil {
 		return err
+	}
+
+	// refund deposit from expiration module account to depositor
+	refundErr := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdk.AccAddress(expiration.Owner), sdk.NewCoins(expiration.Deposit))
+	if refundErr != nil {
+		return refundErr
 	}
 
 	// emit Invoke event

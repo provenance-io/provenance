@@ -76,10 +76,16 @@ func (k msgServer) createExpirationForScope(ctx sdk.Context, msg *types.MsgWrite
 		return nil, durErr
 	}
 
+	// REVIEW THIS: for now, using first owner for scope as expiration depositor
+	if len(msg.Scope.Owners) == 0 {
+		return nil, errors.New("no owners found for expiration deposit")
+	}
+	firstOwner := msg.Scope.Owners[0].Address
+
 	// create expiration metadata that will expire scope when executed.
 	expTime := ctx.BlockTime().Add(*duration)
 	expDeposit := k.expKeeper.GetDeposit(ctx)
-	expiration := exptypes.NewExpiration(msg.Scope.ScopeId.String(), msg.Scope.ValueOwnerAddress, expTime,
+	expiration := exptypes.NewExpiration(msg.Scope.ScopeId.String(), firstOwner, expTime,
 		expDeposit, *wrapper)
 	expErr := k.expKeeper.SetExpiration(ctx, *expiration)
 	if expErr != nil {

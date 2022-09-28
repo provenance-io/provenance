@@ -5,6 +5,8 @@ package types
 
 import (
 	fmt "fmt"
+	types "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
@@ -132,6 +134,70 @@ func (m *EventExpirationAdd) GetModuleAssetId() string {
 	return ""
 }
 
+// EventExpirationDeposit is an event message indicating a deposit was collected for expiration
+type EventExpirationDeposit struct {
+	// module_asset_id is the bech32 address string of the expiration id that was created.
+	ModuleAssetId string `protobuf:"bytes,1,opt,name=module_asset_id,json=moduleAssetId,proto3" json:"module_asset_id,omitempty"`
+	// bech32 address string of the account that provided the expiration deposit.
+	Depositor string `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
+	// deposit amount held until asset is expired
+	Deposit types.Coin `protobuf:"bytes,3,opt,name=deposit,proto3" json:"deposit"`
+}
+
+func (m *EventExpirationDeposit) Reset()         { *m = EventExpirationDeposit{} }
+func (m *EventExpirationDeposit) String() string { return proto.CompactTextString(m) }
+func (*EventExpirationDeposit) ProtoMessage()    {}
+func (*EventExpirationDeposit) Descriptor() ([]byte, []int) {
+	return fileDescriptor_db63118c179972b3, []int{2}
+}
+func (m *EventExpirationDeposit) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventExpirationDeposit) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventExpirationDeposit.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventExpirationDeposit) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventExpirationDeposit.Merge(m, src)
+}
+func (m *EventExpirationDeposit) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventExpirationDeposit) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventExpirationDeposit.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventExpirationDeposit proto.InternalMessageInfo
+
+func (m *EventExpirationDeposit) GetModuleAssetId() string {
+	if m != nil {
+		return m.ModuleAssetId
+	}
+	return ""
+}
+
+func (m *EventExpirationDeposit) GetDepositor() string {
+	if m != nil {
+		return m.Depositor
+	}
+	return ""
+}
+
+func (m *EventExpirationDeposit) GetDeposit() types.Coin {
+	if m != nil {
+		return m.Deposit
+	}
+	return types.Coin{}
+}
+
 // EventExpirationExtend is an event message indicating an expiration has been extended
 type EventExpirationExtend struct {
 	// module_asset_id is the bech32 address string of the expiration id that was created.
@@ -142,7 +208,7 @@ func (m *EventExpirationExtend) Reset()         { *m = EventExpirationExtend{} }
 func (m *EventExpirationExtend) String() string { return proto.CompactTextString(m) }
 func (*EventExpirationExtend) ProtoMessage()    {}
 func (*EventExpirationExtend) Descriptor() ([]byte, []int) {
-	return fileDescriptor_db63118c179972b3, []int{2}
+	return fileDescriptor_db63118c179972b3, []int{3}
 }
 func (m *EventExpirationExtend) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -188,7 +254,7 @@ func (m *EventExpirationInvoke) Reset()         { *m = EventExpirationInvoke{} }
 func (m *EventExpirationInvoke) String() string { return proto.CompactTextString(m) }
 func (*EventExpirationInvoke) ProtoMessage()    {}
 func (*EventExpirationInvoke) Descriptor() ([]byte, []int) {
-	return fileDescriptor_db63118c179972b3, []int{3}
+	return fileDescriptor_db63118c179972b3, []int{4}
 }
 func (m *EventExpirationInvoke) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -227,6 +293,7 @@ func (m *EventExpirationInvoke) GetModuleAssetId() string {
 func init() {
 	proto.RegisterType((*EventTxCompleted)(nil), "provenance.expiration.v1.EventTxCompleted")
 	proto.RegisterType((*EventExpirationAdd)(nil), "provenance.expiration.v1.EventExpirationAdd")
+	proto.RegisterType((*EventExpirationDeposit)(nil), "provenance.expiration.v1.EventExpirationDeposit")
 	proto.RegisterType((*EventExpirationExtend)(nil), "provenance.expiration.v1.EventExpirationExtend")
 	proto.RegisterType((*EventExpirationInvoke)(nil), "provenance.expiration.v1.EventExpirationInvoke")
 }
@@ -236,25 +303,31 @@ func init() {
 }
 
 var fileDescriptor_db63118c179972b3 = []byte{
-	// 278 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x2d, 0x28, 0xca, 0x2f,
-	0x4b, 0xcd, 0x4b, 0xcc, 0x4b, 0x4e, 0xd5, 0x4f, 0xad, 0x28, 0xc8, 0x2c, 0x4a, 0x2c, 0xc9, 0xcc,
-	0xcf, 0xd3, 0x2f, 0x33, 0xd4, 0x4f, 0x2d, 0x4b, 0xcd, 0x2b, 0x29, 0xd6, 0x2b, 0x28, 0xca, 0x2f,
-	0xc9, 0x17, 0x92, 0x40, 0x28, 0xd3, 0x43, 0x28, 0xd3, 0x2b, 0x33, 0x54, 0x4a, 0xe0, 0x12, 0x70,
-	0x05, 0xa9, 0x0c, 0xa9, 0x70, 0xce, 0xcf, 0x2d, 0xc8, 0x49, 0x2d, 0x49, 0x4d, 0x11, 0x12, 0xe3,
-	0x62, 0xcb, 0xcd, 0x4f, 0x29, 0xcd, 0x49, 0x95, 0x60, 0x54, 0x60, 0xd4, 0xe0, 0x0c, 0x82, 0xf2,
-	0x84, 0xa4, 0xb8, 0x38, 0x52, 0xf3, 0x52, 0x0a, 0xf2, 0x33, 0xf3, 0x4a, 0x24, 0x98, 0xc0, 0x32,
-	0x70, 0xbe, 0x90, 0x04, 0x17, 0x7b, 0x71, 0x66, 0x7a, 0x5e, 0x6a, 0x51, 0xb1, 0x04, 0xb3, 0x02,
-	0xb3, 0x06, 0x67, 0x10, 0x8c, 0xab, 0x64, 0xc3, 0x25, 0x04, 0xb6, 0xc1, 0x15, 0x6e, 0xaf, 0x63,
-	0x4a, 0x8a, 0x90, 0x1a, 0x17, 0x3f, 0xc4, 0xd4, 0xf8, 0xc4, 0xe2, 0xe2, 0xd4, 0x92, 0xf8, 0xcc,
-	0x14, 0xa8, 0x65, 0xbc, 0x10, 0x61, 0x47, 0x90, 0xa8, 0x67, 0x8a, 0x92, 0x3d, 0x97, 0x28, 0x9a,
-	0x6e, 0xd7, 0x8a, 0x92, 0xd4, 0x3c, 0x4a, 0x0c, 0xf0, 0xcc, 0x2b, 0xcb, 0xcf, 0x4e, 0x25, 0xd6,
-	0x00, 0xa7, 0xfc, 0x13, 0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71,
-	0xc2, 0x63, 0x39, 0x86, 0x0b, 0x8f, 0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0xe0, 0x92, 0xce, 0xcc,
-	0xd7, 0xc3, 0x15, 0xb0, 0x01, 0x8c, 0x51, 0x66, 0xe9, 0x99, 0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9,
-	0xf9, 0xb9, 0xfa, 0x08, 0x65, 0xba, 0x99, 0xf9, 0x48, 0x3c, 0xfd, 0x0a, 0xe4, 0x68, 0x2b, 0xa9,
-	0x2c, 0x48, 0x2d, 0x4e, 0x62, 0x03, 0xc7, 0x99, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x44, 0x54,
-	0x94, 0x2d, 0xdc, 0x01, 0x00, 0x00,
+	// 377 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x52, 0x4f, 0xeb, 0xd3, 0x40,
+	0x10, 0xcd, 0x5a, 0xf9, 0xfd, 0xec, 0x8a, 0x28, 0x8b, 0xfe, 0x88, 0x55, 0x62, 0x09, 0x28, 0xbd,
+	0xb8, 0x4b, 0x14, 0x04, 0x41, 0x90, 0xb6, 0xf6, 0xd0, 0x9b, 0x14, 0x4f, 0x5e, 0x6a, 0x92, 0x1d,
+	0xe2, 0x62, 0xb3, 0x13, 0xb2, 0xdb, 0x10, 0xbf, 0x85, 0x57, 0xbf, 0x51, 0x8f, 0x3d, 0x7a, 0x12,
+	0x69, 0xbf, 0x88, 0xe4, 0x4f, 0x9b, 0x52, 0x3d, 0xf4, 0x36, 0xef, 0xe5, 0xcd, 0x9b, 0xc9, 0xec,
+	0xa3, 0xcf, 0xb3, 0x1c, 0x0b, 0xd0, 0xa1, 0x8e, 0x41, 0x40, 0x99, 0xa9, 0x3c, 0xb4, 0x0a, 0xb5,
+	0x28, 0x02, 0x01, 0x05, 0x68, 0x6b, 0x78, 0x96, 0xa3, 0x45, 0xe6, 0x76, 0x32, 0xde, 0xc9, 0x78,
+	0x11, 0x0c, 0xbc, 0x18, 0x4d, 0x8a, 0x46, 0x44, 0xa1, 0x01, 0x51, 0x04, 0x11, 0xd8, 0x30, 0x10,
+	0x31, 0x2a, 0xdd, 0x74, 0x0e, 0x1e, 0x26, 0x98, 0x60, 0x5d, 0x8a, 0xaa, 0x6a, 0x58, 0xff, 0x0b,
+	0x7d, 0x30, 0xab, 0xfc, 0x3f, 0x95, 0x53, 0x4c, 0xb3, 0x15, 0x58, 0x90, 0xec, 0x86, 0x5e, 0xa5,
+	0x28, 0xd7, 0x2b, 0x70, 0xc9, 0x90, 0x8c, 0xfa, 0x8b, 0x16, 0xb1, 0x01, 0xbd, 0x03, 0x5a, 0x66,
+	0xa8, 0xb4, 0x75, 0x6f, 0xd5, 0x5f, 0x8e, 0x98, 0xb9, 0xf4, 0xda, 0xa8, 0x44, 0x43, 0x6e, 0xdc,
+	0xde, 0xb0, 0x37, 0xea, 0x2f, 0x0e, 0xd0, 0x7f, 0x47, 0x59, 0x3d, 0x61, 0x76, 0xdc, 0x76, 0x2c,
+	0x25, 0x7b, 0x41, 0xef, 0x37, 0xae, 0xcb, 0xd0, 0x18, 0xb0, 0x4b, 0x25, 0xdb, 0x61, 0xf7, 0x1a,
+	0x7a, 0x5c, 0xb1, 0x73, 0xe9, 0xff, 0x24, 0xf4, 0xe6, 0xac, 0xfd, 0x03, 0x64, 0x68, 0x94, 0xbd,
+	0xd4, 0x82, 0x3d, 0xa5, 0x7d, 0xd9, 0xb4, 0x60, 0xde, 0xee, 0xdd, 0x11, 0xec, 0x2d, 0xbd, 0x6e,
+	0x81, 0xdb, 0x1b, 0x92, 0xd1, 0xdd, 0x57, 0x8f, 0x79, 0x73, 0x48, 0x5e, 0x1d, 0x92, 0xb7, 0x87,
+	0xe4, 0x53, 0x54, 0x7a, 0x72, 0x7b, 0xf3, 0xfb, 0x99, 0xb3, 0x38, 0xe8, 0xfd, 0xf7, 0xf4, 0xd1,
+	0xd9, 0x6a, 0xb3, 0xd2, 0x82, 0xbe, 0xfc, 0xe7, 0xfe, 0x35, 0x98, 0xeb, 0x02, 0xbf, 0xc1, 0xa5,
+	0x06, 0x13, 0xdc, 0xec, 0x3c, 0xb2, 0xdd, 0x79, 0xe4, 0xcf, 0xce, 0x23, 0x3f, 0xf6, 0x9e, 0xb3,
+	0xdd, 0x7b, 0xce, 0xaf, 0xbd, 0xe7, 0xd0, 0x27, 0xaa, 0x7e, 0xe1, 0xff, 0x46, 0xe5, 0x23, 0xf9,
+	0xfc, 0x26, 0x51, 0xf6, 0xeb, 0x3a, 0xe2, 0x31, 0xa6, 0xa2, 0x93, 0xbd, 0x54, 0x78, 0x82, 0x44,
+	0x79, 0x1a, 0x44, 0xfb, 0x3d, 0x03, 0x13, 0x5d, 0xd5, 0xa9, 0x79, 0xfd, 0x37, 0x00, 0x00, 0xff,
+	0xff, 0xa3, 0x91, 0xb5, 0x45, 0xae, 0x02, 0x00, 0x00,
 }
 
 func (m *EventTxCompleted) Marshal() (dAtA []byte, err error) {
@@ -323,6 +396,53 @@ func (m *EventExpirationAdd) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.ModuleAssetId) > 0 {
+		i -= len(m.ModuleAssetId)
+		copy(dAtA[i:], m.ModuleAssetId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.ModuleAssetId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventExpirationDeposit) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventExpirationDeposit) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventExpirationDeposit) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Deposit.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvents(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.Depositor) > 0 {
+		i -= len(m.Depositor)
+		copy(dAtA[i:], m.Depositor)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Depositor)))
+		i--
+		dAtA[i] = 0x12
+	}
 	if len(m.ModuleAssetId) > 0 {
 		i -= len(m.ModuleAssetId)
 		copy(dAtA[i:], m.ModuleAssetId)
@@ -437,6 +557,25 @@ func (m *EventExpirationAdd) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
+	return n
+}
+
+func (m *EventExpirationDeposit) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ModuleAssetId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Depositor)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = m.Deposit.Size()
+	n += 1 + l + sovEvents(uint64(l))
 	return n
 }
 
@@ -678,6 +817,153 @@ func (m *EventExpirationAdd) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.ModuleAssetId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventExpirationDeposit) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventExpirationDeposit: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventExpirationDeposit: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ModuleAssetId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ModuleAssetId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Depositor", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Depositor = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Deposit", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Deposit.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

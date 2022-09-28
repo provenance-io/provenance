@@ -2,6 +2,9 @@
 syntax = "proto3";
 package provenance.expiration.v1;
 
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+
 option go_package          = "github.com/provenance-io/provenance/x/expiration/types";
 option java_package        = "io.provenance.expiration.v1";
 option java_multiple_files = true;
@@ -20,6 +23,16 @@ message EventTxCompleted {
 message EventExpirationAdd {
   // module_asset_id is the bech32 address string of the expiration id that was created.
   string module_asset_id = 1;
+}
+
+// EventExpirationDeposit is an event message indicating a deposit was collected for expiration
+message EventExpirationDeposit {
+  // module_asset_id is the bech32 address string of the expiration id that was created.
+  string module_asset_id = 1;
+  // bech32 address string of the account that provided the expiration deposit.
+  string depositor = 2;
+  // deposit amount held until asset is expired
+  cosmos.base.v1beta1.Coin deposit = 3 [(gogoproto.nullable) = false];
 }
 
 // EventExpirationExtend is an event message indicating an expiration has been extended

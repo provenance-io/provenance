@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/app"
+	exptypes "github.com/provenance-io/provenance/x/expiration/types"
 	"github.com/provenance-io/provenance/x/metadata"
 	"github.com/provenance-io/provenance/x/metadata/types"
 	"github.com/provenance-io/provenance/x/metadata/types/p8e"
@@ -49,6 +50,7 @@ func (s *MetadataHandlerTestSuite) SetupTest() {
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
+	app.FundAccount(s.app, s.ctx, s.user1Addr, sdk.NewCoins(exptypes.DefaultDeposit))
 
 	privKey, _ := secp256r1.GenPrivKey()
 	s.pubkey2 = privKey.PubKey()

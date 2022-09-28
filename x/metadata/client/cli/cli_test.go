@@ -2,10 +2,11 @@ package cli_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/google/uuid"
@@ -29,6 +30,7 @@ import (
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/testutil"
+	exptypes "github.com/provenance-io/provenance/x/expiration/types"
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
@@ -172,11 +174,11 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddrStr, Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
 		sdk.NewCoin("authzhotdog", sdk.NewInt(100)),
-	).Sort()})
+	).Add(exptypes.DefaultDeposit).Add(exptypes.DefaultDeposit).Add(exptypes.DefaultDeposit).Sort()})
 	genBalances = append(genBalances, banktypes.Balance{Address: s.user1AddrStr, Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
 		sdk.NewCoin("authzhotdog", sdk.NewInt(100)),
-	).Sort()})
+	).Add(exptypes.DefaultDeposit).Add(exptypes.DefaultDeposit).Sort()})
 	genBalances = append(genBalances, banktypes.Balance{Address: s.user2AddrStr, Coins: sdk.NewCoins(
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
 	).Sort()})
