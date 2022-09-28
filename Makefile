@@ -172,7 +172,7 @@ all: build format lint test
 install: go.sum
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install $(BUILD_FLAGS) ./cmd/provenanced
 
-build: validate-os-dependencies validate-go-version go.sum
+build: validate-go-version go.sum
 	mkdir -p $(BUILDDIR)
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/provenanced
 
@@ -368,15 +368,6 @@ validate-go-version: ## Validates the installed version of go against Provenance
 		exit 1; \
 	fi
 
-validate-os-dependencies: ## Validates all the dependencies needed by a specific os
-	@if [ "$(UNAME_S)" = "darwin" ] && [ "$(UNAME_M)" = "arm64" ]; then \
-		output=$$(scripts/m1-dependency-check.sh); \
-		if [ "$$?" = "1" ]; then echo "\x1B[31m>> Build halted\x1B[39m"; echo "\x1B[31m>> $$output\x1B[39m"; exit 1; fi; \
-	elif [ "$(UNAME_S)" = "linux" ] && [ "$(UNAME_M)" = "aarch64" ]; then \
-		output=$$(scripts/linux-arm64-dependency-check.sh); \
-		if [ "$$?" = "1" ]; then echo ">> Build halted"; echo ">> $$output"; exit 1; fi; \
-	fi
-
 download-smart-contracts:
 	./scripts/download_smart_contracts.sh
 
@@ -506,6 +497,9 @@ containerProtoGen=prov-proto-gen-$(containerProtoVer)
 containerProtoGenSwagger=prov-proto-gen-swagger-$(containerProtoVer)
 containerProtoFmt=prov-proto-fmt-$(containerProtoVer)
 
+# The proto gen stuff will update go.mod and go.sum in ways we don't want (due to docker stuff).
+# So we need to go mod tidy afterward, but it can't go in the scripts for the same reason that we need it.
+
 proto-gen:
 	@echo "Generating Protobuf files"
 	if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then \
@@ -514,11 +508,13 @@ proto-gen:
 		docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
 			sh ./scripts/protocgen.sh; \
 	fi
+	go mod tidy
 
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:
 	@echo "Generating Protobuf Any"
 	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) sh ./scripts/protocgen-any.sh
+	go mod tidy
 
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
@@ -528,6 +524,7 @@ proto-swagger-gen:
 		docker run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
 			sh ./scripts/protoc-swagger-gen.sh; \
 	fi
+	go mod tidy
 
 proto-format:
 	@echo "Formatting Protobuf files"

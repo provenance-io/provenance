@@ -47,6 +47,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
   The only real difference between those two queries is that the `Holding` query accepts either a denom or marker address.
 * Update the third-party protos and swagger files after the cosmos v0.46 bump. [#1017](https://github.com/provenance-io/provenance/issues/1017)
 * Stop using the deprecated Wrap and Wrapf functions in the sdk/types/errors package in favor of those functions off specific errors, or else the cosmossdk.io/errors package. [#1013](https://github.com/provenance-io/provenance/issues/995)
+* For newly added reward's module, Voting incentive program, validator votes should count for higher shares, since they vote for all their delegations.
+  This feature allows the reward creator to introduce the multiplier to achieve the above.
 
 ### Bug Fixes
 
