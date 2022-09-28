@@ -90,8 +90,8 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetModuleAccount returns the expiration ModuleAccount
-func (keeper Keeper) GetModuleAccount(ctx sdk.Context) authtypes.ModuleAccountI {
-	return keeper.acctKeeper.GetModuleAccount(ctx, types.ModuleName)
+func (k Keeper) GetModuleAccount(ctx sdk.Context) authtypes.ModuleAccountI {
+	return k.acctKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 
 // GetDeposit returns the default deposit used in setting module asset expirations
