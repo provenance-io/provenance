@@ -342,7 +342,7 @@ func (s *TestSuite) TestCalculateAdditionalFeesToBePaid() {
 	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee(assessFeeTypeURL, oneHash, "", 0)), "setting MsgAssessCustomMsgFeeRequest fee without split")
 	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee(sendTypeURL, oneHash, "", 0)), "setting MsgSend fee back to no recipient")
 
-	s.Run("with fee on custom asses too do send and custom with no recipient", func() {
+	s.Run("with fee on custom assess too do send and custom with no recipient", func() {
 		expected := types.MsgFeesDistribution{
 			TotalAdditionalFees:    nhashCoins(3_000_000_000),
 			AdditionalModuleFees:   nhashCoins(3_000_000_000),
@@ -354,7 +354,7 @@ func (s *TestSuite) TestCalculateAdditionalFeesToBePaid() {
 		assertEqualDist(s.T(), expected, actual)
 	})
 
-	s.Run("with fee on custom asses too do send and custom with recipient", func() {
+	s.Run("with fee on custom assess too do send and custom with recipient", func() {
 		expected := types.MsgFeesDistribution{
 			TotalAdditionalFees:  nhashCoins(3_000_000_000),
 			AdditionalModuleFees: nhashCoins(2_500_000_000),
