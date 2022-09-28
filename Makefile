@@ -458,11 +458,11 @@ localnet-stop:
 
 # Quick build using devnet environment and go platform target options.
 docker-build-dev: vendor
-	docker build --tag provenance-io/blockchain-dev -f networks/dev/blockchain-dev/Dockerfile .
+	docker build --target provenance-$(shell uname -m) --tag provenance-io/blockchain-dev -f networks/dev/blockchain-dev/Dockerfile .
 
 # Generate config files for a single node devnet
 devnet-generate: devnet-stop docker-build-dev
-	docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-dev keys list
+	@if ! [ -f build/nodedev/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-dev keys list ; fi
 
 # Run a single node devnet locally
 devnet-up:
