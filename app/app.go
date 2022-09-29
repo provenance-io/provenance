@@ -863,11 +863,21 @@ func (app *App) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block
 func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	// Make sure the gas meter is a fee gas meter.
+	// https://github.com/provenance-io/provenance/issues/1099
+	if _, err := antewrapper.GetFeeGasMeter(ctx); err != nil {
+		ctx = ctx.WithGasMeter(antewrapper.NewFeeGasMeterWrapper(ctx.Logger(), ctx.GasMeter(), false))
+	}
 	return app.mm.BeginBlock(ctx, req)
 }
 
 // EndBlocker application updates every end block
 func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	// Make sure the gas meter is a fee gas meter.
+	// https://github.com/provenance-io/provenance/issues/1099
+	if _, err := antewrapper.GetFeeGasMeter(ctx); err != nil {
+		ctx = ctx.WithGasMeter(antewrapper.NewFeeGasMeterWrapper(ctx.Logger(), ctx.GasMeter(), false))
+	}
 	return app.mm.EndBlock(ctx, req)
 }
 
