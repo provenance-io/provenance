@@ -21,6 +21,8 @@ service Msg {
   rpc WriteScope(MsgWriteScopeRequest) returns (MsgWriteScopeResponse);
   // DeleteScope deletes a scope and all associated Records, Sessions.
   rpc DeleteScope(MsgDeleteScopeRequest) returns (MsgDeleteScopeResponse);
+  // ExpireScope expires a scope and all associated Records, Sessions.
+  rpc ExpireScope(MsgExpireScopeRequest) returns (MsgExpireScopeResponse);
 
   // AddScopeDataAccess adds data access AccAddress to scope
   rpc AddScopeDataAccess(MsgAddScopeDataAccessRequest) returns (MsgAddScopeDataAccessResponse);
@@ -111,6 +113,10 @@ message MsgWriteScopeRequest {
   // If there is a value in scope.specification_id that is different from the one created from this uuid, an error is
   // returned.
   string spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"spec_uuid\""];
+
+  // expiration is an optional expiration timespan string, e.g. "1y" (see expiration module for format)
+  // If provided, it overrides the default scope expiration with the given time period.
+  string expiration = 5 [(gogoproto.moretags) = "yaml:\"expiration\""];
 }
 
 // MsgWriteScopeResponse is the response type for the Msg/WriteScope RPC method.
@@ -137,6 +143,25 @@ message MsgDeleteScopeRequest {
 
 // MsgDeleteScopeResponse is the response type for the Msg/DeleteScope RPC method.
 message MsgDeleteScopeResponse {}
+
+// MsgExpireScopeRequest is the request type for the Msg/ExpireScope RPC method.
+message MsgExpireScopeRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // Unique ID for the scope to expire
+  bytes scope_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"scope_id\""
+  ];
+  repeated string signers = 2;
+}
+
+// MsgExpireScopeResponse is the response type for the Msg/ExpireScope RPC method.
+message MsgExpireScopeResponse {}
 
 // MsgAddScopeDataAccessRequest is the request to add data access AccAddress to scope
 message MsgAddScopeDataAccessRequest {

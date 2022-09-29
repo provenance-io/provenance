@@ -66,6 +66,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.user1Addr = sdk.AccAddress(s.pubKey1.Address())
 	s.user1 = s.user1Addr.String()
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+	simapp.FundAccount(s.app, s.ctx, s.user1Addr, sdk.NewCoins(types.DefaultDeposit).Add(types.DefaultDeposit))
 
 	s.pubKey2 = secp256k1.GenPrivKey().PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubKey2.Address())
@@ -74,6 +75,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.pubKey3 = secp256k1.GenPrivKey().PubKey()
 	s.user3Addr = sdk.AccAddress(s.pubKey3.Address())
 	s.user3 = s.user3Addr.String()
+	simapp.FundAccount(s.app, s.ctx, s.user3Addr, sdk.NewCoins(types.DefaultDeposit))
 
 	// setup up genesis
 	var expirationData types.GenesisState
@@ -114,13 +116,19 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-// TODO fix  >>>>>  panic: UnmarshalJSON expects a pointer
-//func (s *KeeperTestSuite) TestParams() {
-//	s.T().Run("param tests", func(t *testing.T) {
-//		p := s.app.ExpirationKeeper.GetParams(s.ctx)
-//		assert.NotNil(t, p)
-//	})
-//}
+func (s *KeeperTestSuite) TestParams() {
+	s.T().Run("param tests", func(t *testing.T) {
+		p := s.app.ExpirationKeeper.GetParams(s.ctx)
+		assert.NotNil(t, p)
+	})
+}
+
+func (s *KeeperTestSuite) TestModuleAccount() {
+	s.T().Run("module account check", func(t *testing.T) {
+		gov := s.app.ExpirationKeeper.GetModuleAccount(s.ctx)
+		assert.NotNil(t, gov)
+	})
+}
 
 func (s *KeeperTestSuite) TestAddExpiration() {
 	request := types.MsgAddExpirationRequest{}

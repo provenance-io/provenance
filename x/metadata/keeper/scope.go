@@ -135,6 +135,12 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 	defer types.GetIncObjFunc(types.TLType_Scope, types.TLAction_Deleted)
 }
 
+// GetDefaultScopeExpiration gets default expiration for scope.
+func (k Keeper) GetDefaultScopeExpiration(ctx sdk.Context, scope types.Scope) string {
+	// hard-coded value for now, but may be calculated in the future based on scope info..
+	return "1y"
+}
+
 // scopeIndexValues is a struct containing the values used to index a scope.
 type scopeIndexValues struct {
 	ScopeID         types.MetadataAddress

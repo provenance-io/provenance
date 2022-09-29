@@ -30,7 +30,7 @@ func TestWriteScopeRoute(t *testing.T) {
 		[]string{"data_accessor"},
 		"value_owner",
 	)
-	var msg = NewMsgWriteScopeRequest(*scope, []string{})
+	var msg = NewMsgWriteScopeRequest(*scope, []string{}, "1y")
 
 	require.Equal(t, msg.Route(), RouterKey)
 	require.Equal(t, msg.Type(), "write_scope_request")
@@ -46,9 +46,10 @@ func TestWriteScopeRoute(t *testing.T) {
 signers: []
 scope_uuid: ""
 spec_uuid: ""
+expiration: 1y
 `
 	require.Equal(t, yaml, msg.String())
-	require.Equal(t, "{\"type\":\"provenance/metadata/WriteScopeRequest\",\"value\":{\"scope\":{\"data_access\":[\"data_accessor\"],\"owners\":[{\"address\":\"data_owner\",\"role\":5}],\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"value_owner_address\":\"value_owner\"}}}", string(msg.GetSignBytes()))
+	require.Equal(t, "{\"type\":\"provenance/metadata/WriteScopeRequest\",\"value\":{\"expiration\":\"1y\",\"scope\":{\"data_access\":[\"data_accessor\"],\"owners\":[{\"address\":\"data_owner\",\"role\":5}],\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"value_owner_address\":\"value_owner\"}}}", string(msg.GetSignBytes()))
 }
 
 func TestWriteScopeValidation(t *testing.T) {
@@ -59,7 +60,7 @@ func TestWriteScopeValidation(t *testing.T) {
 		[]string{"data_accessor"},
 		"value_owner",
 	)
-	var msg = NewMsgWriteScopeRequest(*scope, []string{"invalid"})
+	var msg = NewMsgWriteScopeRequest(*scope, []string{"invalid"}, "1y")
 	err := msg.ValidateBasic()
 	require.EqualError(t, err, "invalid scope owners: invalid party address [data_owner]: decoding bech32 failed: invalid separator index -1")
 	require.Panics(t, func() { msg.GetSigners() }, "panics due to invalid addresses")

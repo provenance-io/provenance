@@ -20,6 +20,7 @@ import (
 
 const (
 	FlagSigners  = "signers"
+	FlagExpires  = "expires"
 	AddSwitch    = "add"
 	RemoveSwitch = "remove"
 )
@@ -104,6 +105,11 @@ func WriteScopeCmd() *cobra.Command {
 				return err
 			}
 
+			expiration, err := parseExpires(cmd)
+			if err != nil {
+				return err
+			}
+
 			scope := *types.NewScope(
 				scopeID,
 				specID,
@@ -111,7 +117,7 @@ func WriteScopeCmd() *cobra.Command {
 				dataAccess,
 				valueOwnerAddress)
 
-			msg := types.NewMsgWriteScopeRequest(scope, signers)
+			msg := types.NewMsgWriteScopeRequest(scope, signers, expiration)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
@@ -122,6 +128,7 @@ func WriteScopeCmd() *cobra.Command {
 	}
 
 	addSignerFlagCmd(cmd)
+	addExpiresFlagCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -131,7 +138,7 @@ func WriteScopeCmd() *cobra.Command {
 func RemoveScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "remove-scope [scope-id]",
-		Short:   "Remove a metadata scope to the provenance blockchain",
+		Short:   "Remove a metadata scope from the provenance blockchain",
 		Example: fmt.Sprintf(`$ %[1]s tx metadata remove-scope scope1qzhpuff00wpy2yuf7xr0rp8aucqstsk0cn`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -998,6 +1005,20 @@ func parseSigners(cmd *cobra.Command, client *client.Context) ([]string, error) 
 		return signers, nil
 	}
 	return []string{client.GetFromAddress().String()}, nil
+}
+
+func addExpiresFlagCmd(cmd *cobra.Command) {
+	cmd.Flags().String(FlagExpires, "", "expiration period (e.g. '1y')")
+}
+
+// parseExpires checks expires flag, else uses the default expiration period
+func parseExpires(cmd *cobra.Command) (string, error) {
+	flagSet := cmd.Flags()
+	if flagSet.Changed(FlagExpires) {
+		expires, _ := flagSet.GetString(FlagExpires)
+		return expires, nil
+	}
+	return "", nil
 }
 
 func parsePartyTypes(delimitedPartyTypes string) []types.PartyType {

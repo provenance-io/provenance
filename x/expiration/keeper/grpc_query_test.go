@@ -32,6 +32,18 @@ type GrpcQueryTestSuite struct {
 	ctx         sdk.Context
 	queryClient types.QueryClient
 
+	asset1Key  cryptotypes.PubKey
+	asset1Addr sdk.AccAddress
+	asset1     string
+
+	asset2Key  cryptotypes.PubKey
+	asset2Addr sdk.AccAddress
+	asset2     string
+
+	asset3Key  cryptotypes.PubKey
+	asset3Addr sdk.AccAddress
+	asset3     string
+
 	pubKey1   cryptotypes.PubKey
 	user1     string
 	user1Addr sdk.AccAddress
@@ -44,10 +56,9 @@ type GrpcQueryTestSuite struct {
 	user3     string
 	user3Addr sdk.AccAddress
 
-	moduleAssetID string
-	time          time.Time
-	deposit       sdk.Coin
-	signers       []string
+	time    time.Time
+	deposit sdk.Coin
+	signers []string
 }
 
 func (s *GrpcQueryTestSuite) SetupTest() {
@@ -59,19 +70,35 @@ func (s *GrpcQueryTestSuite) SetupTest() {
 	types.RegisterQueryServer(queryHelper, s.app.ExpirationKeeper)
 	s.queryClient = types.NewQueryClient(queryHelper)
 
+	// set up assets
+	s.asset1Key = secp256k1.GenPrivKey().PubKey()
+	s.asset1Addr = sdk.AccAddress(s.asset1Key.Address())
+	s.asset1 = s.asset1Addr.String()
+
+	s.asset2Key = secp256k1.GenPrivKey().PubKey()
+	s.asset2Addr = sdk.AccAddress(s.asset2Key.Address())
+	s.asset2 = s.asset2Addr.String()
+
+	s.asset3Key = secp256k1.GenPrivKey().PubKey()
+	s.asset3Addr = sdk.AccAddress(s.asset3Key.Address())
+	s.asset3 = s.asset3Addr.String()
+
 	// set up users
 	s.pubKey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubKey1.Address())
 	s.user1 = s.user1Addr.String()
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+	simapp.FundAccount(s.app, s.ctx, s.user1Addr, sdk.NewCoins(types.DefaultDeposit).Add(types.DefaultDeposit))
 
 	s.pubKey2 = secp256k1.GenPrivKey().PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubKey2.Address())
 	s.user2 = s.user2Addr.String()
+	simapp.FundAccount(s.app, s.ctx, s.user2Addr, sdk.NewCoins(types.DefaultDeposit))
 
 	s.pubKey3 = secp256k1.GenPrivKey().PubKey()
 	s.user3Addr = sdk.AccAddress(s.pubKey3.Address())
 	s.user3 = s.user3Addr.String()
+	simapp.FundAccount(s.app, s.ctx, s.user3Addr, sdk.NewCoins(types.DefaultDeposit))
 
 	// setup up genesis
 	var expirationData types.GenesisState
@@ -79,7 +106,6 @@ func (s *GrpcQueryTestSuite) SetupTest() {
 	s.app.ExpirationKeeper.InitGenesis(s.ctx, &expirationData)
 
 	// expiration tests
-	s.moduleAssetID = "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
 	s.time = s.ctx.BlockTime().AddDate(0, 0, 2)
 	s.deposit = types.DefaultDeposit
 	s.signers = []string{s.user1}
@@ -103,7 +129,7 @@ func anyMsg(owner string) types2.Any {
 }
 
 func (s *GrpcQueryTestSuite) TestQueryExpiration() {
-	moduleAssetID := s.moduleAssetID
+	moduleAssetID := s.asset1
 
 	s.T().Run("add expiration for querying", func(t *testing.T) {
 		expiration := *types.NewExpiration(moduleAssetID, s.user1, s.time, s.deposit, anyMsg(s.user1))
@@ -113,7 +139,7 @@ func (s *GrpcQueryTestSuite) TestQueryExpiration() {
 	})
 
 	s.T().Run("query expiration", func(t *testing.T) {
-		req := types.QueryExpirationRequest{ModuleAssetId: s.moduleAssetID}
+		req := types.QueryExpirationRequest{ModuleAssetId: s.asset1}
 		res, err := s.queryClient.Expiration(context.Background(), &req)
 		assert.NoError(t, err, "query: %s", "error")
 		assert.NotNil(t, res, "query: %s", "response")
@@ -125,12 +151,12 @@ func (s *GrpcQueryTestSuite) TestQueryAllExpirations() {
 	expectedAll := 2
 
 	s.T().Run("add expirations for querying", func(t *testing.T) {
-		expiration1 := *types.NewExpiration(s.moduleAssetID, s.user1, s.time, s.deposit, anyMsg(s.user1))
+		expiration1 := *types.NewExpiration(s.asset1, s.user1, s.time, s.deposit, anyMsg(s.user1))
 		assert.NoError(t, expiration1.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err := s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration1)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")
 
-		expiration2 := *types.NewExpiration(s.user2, s.user3, s.time, s.deposit, anyMsg(s.user3))
+		expiration2 := *types.NewExpiration(s.asset2, s.user2, s.time, s.deposit, anyMsg(s.user3))
 		assert.NoError(t, expiration2.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err = s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration2)
 		assert.NoError(t, err, "SetExpiration: %s", "NewExpiration")
@@ -146,9 +172,9 @@ func (s *GrpcQueryTestSuite) TestQueryAllExpirations() {
 }
 
 func (s *GrpcQueryTestSuite) TestQueryAllExpirationsByOwner() {
-	moduleAssetID1 := s.user1
-	moduleAssetID2 := s.user2
-	moduleAssetID3 := s.user3
+	moduleAssetID1 := s.asset1
+	moduleAssetID2 := s.asset2
+	moduleAssetID3 := s.asset3
 
 	sameOwner := s.user1
 	diffOwner := s.user3

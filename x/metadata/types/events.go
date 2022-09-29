@@ -95,6 +95,7 @@ type TxEndpoint string
 const (
 	TxEndpoint_WriteScope            TxEndpoint = "WriteScope"
 	TxEndpoint_DeleteScope           TxEndpoint = "DeleteScope"
+	TxEndpoint_ExpireScope           TxEndpoint = "ExpireScope"
 	TxEndpoint_AddScopeDataAccess    TxEndpoint = "AddScopeDataAccess"
 	TxEndpoint_DeleteScopeDataAccess TxEndpoint = "DeleteScopeDataAccess"
 	TxEndpoint_AddScopeOwner         TxEndpoint = "AddScopeOwner"
@@ -151,6 +152,12 @@ func NewEventScopeUpdated(scopeID MetadataAddress) *EventScopeUpdated {
 
 func NewEventScopeDeleted(scopeID MetadataAddress) *EventScopeDeleted {
 	return &EventScopeDeleted{
+		ScopeAddr: scopeID.String(),
+	}
+}
+
+func NewEventScopeExpired(scopeID MetadataAddress) *EventScopeExpired {
+	return &EventScopeExpired{
 		ScopeAddr: scopeID.String(),
 	}
 }

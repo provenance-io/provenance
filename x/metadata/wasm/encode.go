@@ -59,7 +59,8 @@ func (params *WriteScope) Encode() ([]sdk.Msg, error) {
 		return nil, err
 	}
 
-	msg := types.NewMsgWriteScopeRequest(*scope, params.Signers)
+	// TODO: should the structures be updated with expiration settings?
+	msg := types.NewMsgWriteScopeRequest(*scope, params.Signers, "1y")
 
 	return []sdk.Msg{msg}, nil
 }

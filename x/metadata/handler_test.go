@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/app"
+	exptypes "github.com/provenance-io/provenance/x/expiration/types"
 	"github.com/provenance-io/provenance/x/metadata"
 	"github.com/provenance-io/provenance/x/metadata/types"
 	"github.com/provenance-io/provenance/x/metadata/types/p8e"
@@ -37,6 +38,8 @@ type MetadataHandlerTestSuite struct {
 	pubkey2   cryptotypes.PubKey
 	user2     string
 	user2Addr sdk.AccAddress
+
+	scopeExpiration string
 }
 
 func (s *MetadataHandlerTestSuite) SetupTest() {
@@ -47,6 +50,7 @@ func (s *MetadataHandlerTestSuite) SetupTest() {
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
+	app.FundAccount(s.app, s.ctx, s.user1Addr, sdk.NewCoins(exptypes.DefaultDeposit))
 
 	privKey, _ := secp256r1.GenPrivKey()
 	s.pubkey2 = privKey.PubKey()
@@ -55,6 +59,8 @@ func (s *MetadataHandlerTestSuite) SetupTest() {
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr))
+
+	s.scopeExpiration = "1y"
 }
 
 func TestMetadataHandlerTestSuite(t *testing.T) {
@@ -87,6 +93,95 @@ func createDefinitionSpec(name string, classname string, reference p8e.Provenanc
 
 // TODO: WriteScope tests
 // TODO: DeleteScope tests
+
+func (s MetadataHandlerTestSuite) TestExpireScope() {
+	cSpecUUID := uuid.New()
+	cSpec := types.ContractSpecification{
+		SpecificationId: types.ContractSpecMetadataAddress(cSpecUUID),
+		Description:     nil,
+		OwnerAddresses:  []string{s.user1},
+		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		Source:          types.NewContractSpecificationSourceHash("somesource1"),
+		ClassName:       "someclass1",
+	}
+	s.app.MetadataKeeper.SetContractSpecification(s.ctx, cSpec)
+
+	sSpecUUID := uuid.New()
+	sSpec := types.ScopeSpecification{
+		SpecificationId: types.ScopeSpecMetadataAddress(sSpecUUID),
+		Description:     nil,
+		OwnerAddresses:  []string{s.user1},
+		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		ContractSpecIds: []types.MetadataAddress{cSpec.SpecificationId},
+	}
+	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, sSpec)
+
+	scopeUUID := uuid.New()
+	scope := types.Scope{
+		ScopeId:         types.ScopeMetadataAddress(scopeUUID),
+		SpecificationId: sSpec.SpecificationId,
+		Owners: []types.Party{{
+			Address: s.user1,
+			Role:    types.PartyType_PARTY_TYPE_OWNER,
+		}},
+		DataAccess:        nil,
+		ValueOwnerAddress: "",
+	}
+	s.app.MetadataKeeper.SetScope(s.ctx, scope)
+
+	cases := []struct {
+		name     string
+		scopeId  types.MetadataAddress
+		signers  []string
+		errorMsg string
+	}{
+		{
+			"fails for valid scope id with no signers",
+			scope.ScopeId,
+			[]string{},
+			fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
+		},
+		{
+			"fails for valid scope id with wrong signer",
+			scope.ScopeId,
+			[]string{s.user2},
+			fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
+		},
+		{
+			"successfully expires existing scope",
+			scope.ScopeId,
+			[]string{s.user1},
+			"",
+		},
+		{
+			"fails if no scope id provided",
+			types.MetadataAddress{},
+			[]string{s.user1},
+			"scope id cannot be empty",
+		},
+		{
+			"fails if scope does not exist for id",
+			scope.ScopeId,
+			[]string{s.user1},
+			fmt.Sprintf("scope not found with id %s", scope.ScopeId),
+		},
+	}
+
+	for _, tc := range cases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			msg := types.MsgExpireScopeRequest{
+				ScopeId: tc.scopeId,
+				Signers: tc.signers,
+			}
+			_, err := s.handler(s.ctx, &msg)
+			if len(tc.errorMsg) > 0 {
+				assert.EqualError(t, err, tc.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
 
 func (s MetadataHandlerTestSuite) TestWriteSession() {
 	cSpec := types.ContractSpecification{
@@ -643,7 +738,7 @@ func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeOwners() {
 		},
 		{
 			"setup test with new scope",
-			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}),
+			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}, s.scopeExpiration),
 			[]string{s.user1},
 			"",
 		},
@@ -807,7 +902,7 @@ func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
 		},
 		{
 			"setup test with new scope",
-			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}),
+			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}, s.scopeExpiration),
 			[]string{s.user1},
 			"",
 		},
