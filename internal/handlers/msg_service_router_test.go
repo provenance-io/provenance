@@ -296,7 +296,7 @@ func TestFailedTx(tt *testing.T) {
 		// Make sure a couple events are in the list.
 		expEvents := []abci.Event{
 			NewEvent(sdk.EventTypeTx,
-				NewAttribute(sdk.AttributeKeyFee, "100010stake"),
+				NewAttribute(sdk.AttributeKeyFee, "100000stake"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 			NewEvent(sdk.EventTypeTx,
 				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, "100000stake"),
