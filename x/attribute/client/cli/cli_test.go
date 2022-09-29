@@ -58,11 +58,11 @@ type IntegrationTestSuite struct {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(IntegrationTestSuite))
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
+	pioconfig.SetProvenanceConfig("", 0)
 	s.account1Key = secp256k1.GenPrivKeyFromSecret([]byte("acc1"))
 	addr1, err1 := sdk.AccAddressFromHexUnsafe(s.account1Key.PubKey().Address().String())
 	s.Require().NoError(err1)

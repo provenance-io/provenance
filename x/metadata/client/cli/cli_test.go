@@ -121,13 +121,12 @@ type IntegrationCLITestSuite struct {
 }
 
 func TestIntegrationCLITestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(IntegrationCLITestSuite))
 }
 
 func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-
+	pioconfig.SetProvenanceConfig("", 0)
 	cfg := testutil.DefaultTestNetworkConfig()
 	cfg.NumValidators = 1
 	genesisState := cfg.GenesisState

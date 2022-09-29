@@ -32,7 +32,6 @@ type IntegrationTestSuite struct {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(IntegrationTestSuite))
 }
 
@@ -49,6 +48,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.acc2NameCount = 50
 
 	s.T().Log("setting up integration test suite")
+	pioconfig.SetProvenanceConfig("atom", 0)
 
 	cfg := testutil.DefaultTestNetworkConfig()
 
@@ -58,7 +58,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cfg.GenesisState = genesisState
 
 	s.cfg = cfg
-	pioconfig.SetProvenanceConfig("atom", 0)
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err, "creating testnet")
 

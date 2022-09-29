@@ -35,7 +35,6 @@ func TestConfigSetRegularDenomCustomMsgFloorFeeIgnoredForNhash(t *testing.T) {
 // all code flows shows set the config for e.g. root cmd etc
 func TestGetConfigNotSet(t *testing.T) {
 	provConfig = nil
-	assert.Panics(t, func() {
-		GetProvenanceConfig()
-	})
+	assert.Equal(t,
+		GetProvenanceConfig(), ProvenanceConfig{}, "Should get empty config if not set, several things in app wiring will fail fast if this not set so not too worried.")
 }

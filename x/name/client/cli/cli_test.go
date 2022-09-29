@@ -42,7 +42,6 @@ type IntegrationTestSuite struct {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(IntegrationTestSuite))
 }
 
@@ -59,6 +58,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.acc2NameCount = 50
 
 	s.T().Log("setting up integration test suite")
+	pioconfig.SetProvenanceConfig("", 0)
 
 	cfg := testutil.DefaultTestNetworkConfig()
 
