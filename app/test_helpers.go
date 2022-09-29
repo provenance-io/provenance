@@ -76,6 +76,10 @@ type SetupOptions struct {
 func setup(t *testing.T, withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeEncodingConfig()
+	// set default config if not set by the flow
+	if len(pioconfig.GetProvenanceConfig().FeeDenom) == 0 {
+		pioconfig.SetProvenanceConfig("", 0)
+	}
 	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, t.TempDir(), invCheckPeriod, encCdc, sdksim.EmptyAppOptions{})
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)

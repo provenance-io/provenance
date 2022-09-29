@@ -55,8 +55,5 @@ func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
 
 // GetProvenanceConfig get ProvenanceConfig
 func GetProvenanceConfig() ProvenanceConfig {
-	if provConfig == nil {
-		panic("Provenance config should have been set.")
-	}
 	return *provConfig
 }
