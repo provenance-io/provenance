@@ -9,6 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	ica "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts"
+	icacontrollertypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/types"
+	icahosttypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 )
 
@@ -33,9 +38,10 @@ var handlers = map[string]appUpgrade{
 	"neoncarrot-rc1": {}, // upgrade for 1.12.0-rc1
 	"neoncarrot":     {}, // upgrade for 1.12.0
 	"ochre-rc1": { // upgrade for 1.13.0-rc1
-		Added: []string{group.ModuleName, rewardtypes.ModuleName},
+		Added: []string{group.ModuleName, rewardtypes.ModuleName, icacontrollertypes.StoreKey, icahosttypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+			UpgradeICA(ctx, app, &versionMap)
 			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
@@ -96,4 +102,34 @@ func GetUpgradeStoreLoader(app *App, info upgradetypes.Plan) baseapp.StoreLoader
 		"upgrade.renamed", storeUpgrades.Renamed,
 	)
 	return upgradetypes.UpgradeStoreLoader(info.Height, &storeUpgrades)
+}
+
+func UpgradeICA(ctx sdk.Context, app *App, versionMap *module.VersionMap) {
+	app.Logger().Info("Initializing ICA")
+
+	// Set the consensus version so InitGenesis is not ran
+	// We are configuring the module here
+	(*versionMap)[icatypes.ModuleName] = app.mm.Modules[icatypes.ModuleName].ConsensusVersion()
+
+	// create ICS27 Controller submodule params
+	controllerParams := icacontrollertypes.Params{
+		ControllerEnabled: false,
+	}
+
+	// create ICS27 Host submodule params
+	// TODO Verify which messages we want to run on the host/Provenance chain
+	hostParams := icahosttypes.Params{
+		HostEnabled: true,
+		AllowMessages: []string{
+			"*",
+		},
+	}
+
+	// initialize ICS27 module
+	icamodule, correctTypecast := app.mm.Modules[icatypes.ModuleName].(ica.AppModule)
+	if !correctTypecast {
+		panic("mm.Modules[icatypes.ModuleName] is not of type ica.AppModule")
+	}
+	icamodule.InitModule(ctx, controllerParams, hostParams)
+	app.Logger().Info("Finished initializing ICA")
 }
