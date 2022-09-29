@@ -5,6 +5,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"math/rand"
 	"os"
 	"runtime/debug"
@@ -53,6 +54,7 @@ const (
 
 func init() {
 	sdksim.GetSimulatorFlags()
+	pioconfig.SetProvenanceConfig("", 0)
 }
 
 type StoreKeysPrefixes struct {
