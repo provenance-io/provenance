@@ -2,7 +2,6 @@ package attribute_test
 
 import (
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -31,10 +30,6 @@ type HandlerTestSuite struct {
 	pubkey1   cryptotypes.PubKey
 	user1     string
 	user1Addr sdk.AccAddress
-}
-
-func init() {
-	pioconfig.SetProvenanceConfig("", 0)
 }
 
 func (s *HandlerTestSuite) SetupTest() {
