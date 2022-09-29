@@ -59,6 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * Remove the workaround for the index-events configuration field (now fixed in the SDK). [#995](https://github.com/provenance-io/provenance/issues/995)
+* Fix consensus failure at the end of gov voting periods. [#1099](https://github.com/provenance-io/provenance/issues/1099)
 
 ### Client Breaking
 
