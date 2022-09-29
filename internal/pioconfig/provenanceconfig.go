@@ -23,11 +23,15 @@ type ProvenanceConfig struct {
 	MsgFeeFloorGasPrice int64 // Msg fee ante handlers and code use this for their calculations, this ***ONLY SETS***
 	// the default param(see method DefaultFloorGasPrice), all calculated values are still from msg fee module PARAMS.
 	// for that module, if the param is changed via governance then the code will pick the new value.(should pick that up from module param)
-	BondDenom string // Also referred to as Staking Denom sometimes.
+	BondDenom     string // Also referred to as Staking Denom sometimes.
+	MsgFloorDenom string // MsgFloorDenom should always be the same Fee Denom, but maybe useful for tests.
 }
 
 var provConfig *ProvenanceConfig
 
+// SetProvenanceConfig in running the app it is called once from root.go. We decided not to seal it because we have tests,
+// which set the Config to test certain msg fee flows.
+// But the contract remains that this will be called once from root.go while starting up.
 func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
 	if len(customDenom) > 0 && customDenom != defaultFeeDenom {
 		provConfig = &ProvenanceConfig{
@@ -35,6 +39,7 @@ func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
 			ProvenanceMinGasPrices: fmt.Sprintf("%v", msgFeeFloorGasPrice) + customDenom,
 			MsgFeeFloorGasPrice:    msgFeeFloorGasPrice,
 			BondDenom:              customDenom,
+			MsgFloorDenom:          customDenom,
 		}
 	} else {
 		provConfig = &ProvenanceConfig{
@@ -43,10 +48,12 @@ func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
 			ProvenanceMinGasPrices: fmt.Sprintf("%v", defaultMinGasPrices) + defaultFeeDenom,
 			MsgFeeFloorGasPrice:    defaultMinGasPrices,
 			BondDenom:              defaultBondDenom,
+			MsgFloorDenom:          defaultFeeDenom,
 		}
 	}
 }
 
+// GetProvenanceConfig get ProvenanceConfig
 func GetProvenanceConfig() ProvenanceConfig {
 	if provConfig == nil {
 		panic("Provenance config should have been set.")

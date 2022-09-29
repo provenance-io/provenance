@@ -1,6 +1,7 @@
 package reward_test
 
 import (
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 	"time"
 
@@ -11,6 +12,10 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
+
+func init() {
+	pioconfig.SetProvenanceConfig("", 0)
+}
 
 func TestEndBlockWithNoActiveRewards(t *testing.T) {
 	var app *simapp.App

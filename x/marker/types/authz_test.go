@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,6 +19,10 @@ var (
 	coin500    = sdk.NewCoin("stake", sdk.NewInt(500))
 	msgTypeURL = "/provenance.marker.v1.MsgTransferRequest"
 )
+
+func init() {
+	pioconfig.SetProvenanceConfig("", 0)
+}
 
 func TestMarkerTransferAuthorization(t *testing.T) {
 	app := simapp.Setup(t)

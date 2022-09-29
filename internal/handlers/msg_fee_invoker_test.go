@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -46,7 +47,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	s.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
-		feeGasMeter.ConsumeFee(sdk.NewCoin(NHash, sdk.NewInt(1000000)), msgType, "")
+		feeGasMeter.ConsumeFee(sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(1000000))), msgType, "")
 		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))})
 	}, "panicked on adding fees")
 	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
@@ -91,7 +92,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	s.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
-		feeGasMeter.ConsumeFee(sdk.NewCoin(NHash, sdk.NewInt(1000000)), msgType, "")
+		feeGasMeter.ConsumeFee(sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(1000000))), msgType, "")
 		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))}) // fee consumed at ante handler
 	}, "panicked on adding fees")
 	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
@@ -133,7 +134,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	s.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
-		feeGasMeter.ConsumeFee(sdk.NewCoin(NHash, sdk.NewInt(1000000)), msgType, "")
+		feeGasMeter.ConsumeFee(sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(1000000))), msgType, "")
 		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))})
 	}, "panicked on adding fees")
 	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
@@ -176,6 +177,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
 }
 
 func setUpApp(s *HandlerTestSuite, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) (params.EncodingConfig, error) {
+	pioconfig.SetProvenanceConfig("", 0)
 	encodingConfig := s.SetupTest(s.T()) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 	// create fee in stake
@@ -184,7 +186,6 @@ func setUpApp(s *HandlerTestSuite, additionalFeeCoinDenom string, additionalFeeC
 	if err != nil {
 		panic(err)
 	}
-
 	return encodingConfig, err
 }
 

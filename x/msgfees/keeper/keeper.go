@@ -1,6 +1,10 @@
 package keeper
 
 import (
+	"sort"
+
+	"golang.org/x/exp/constraints"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -155,7 +159,8 @@ func (k Keeper) IterateMsgFees(ctx sdk.Context, handle func(msgFees types.MsgFee
 // the remainder of remainingFees will be swept to the fee collector account.
 func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc cosmosauthtypes.AccountI, remainingFees sdk.Coins, fees map[string]sdk.Coins) error {
 	sentCoins := sdk.NewCoins()
-	for key, coins := range fees {
+	for _, key := range sortedKeys(fees) {
+		coins := fees[key]
 		if !coins.IsValid() {
 			return sdkerrors.ErrInsufficientFee.Wrapf("invalid fee amount: %q", fees)
 		}
@@ -176,12 +181,12 @@ func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Co
 		}
 		sentCoins = sentCoins.Add(coins...)
 	}
-	remainingFee, neg := remainingFees.SafeSub(sentCoins...)
+	unsentFee, neg := remainingFees.SafeSub(sentCoins...)
 	if neg {
-		return sdkerrors.ErrInsufficientFunds.Wrap("negative balance after sending coins to accounts and fee collector")
+		return sdkerrors.ErrInsufficientFunds.Wrapf("negative balance after sending coins to accounts and fee collector: remainingFees: %q, sentCoins: %q, distribution: %v", remainingFees, sentCoins, fees)
 	}
 	// sweep the rest of the fees to module
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, remainingFee)
+	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, unsentFee)
 	if err != nil {
 		return sdkerrors.ErrInsufficientFunds.Wrap(err.Error())
 	}
@@ -204,4 +209,53 @@ func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, er
 	default:
 		return sdk.Coin{}, sdkerrors.ErrInvalidType.Wrapf("denom not supported for conversion %s", coin.Denom)
 	}
+}
+
+// CalculateAdditionalFeesToBePaid computes the additional fees to be paid for the provided messages.
+func (k Keeper) CalculateAdditionalFeesToBePaid(ctx sdk.Context, msgs ...sdk.Msg) (types.MsgFeesDistribution, error) {
+	msgFeesDistribution := types.MsgFeesDistribution{
+		RecipientDistributions: make(map[string]sdk.Coins),
+	}
+	assessCustomMsgTypeURL := sdk.MsgTypeURL(&types.MsgAssessCustomMsgFeeRequest{})
+	for _, msg := range msgs {
+		typeURL := sdk.MsgTypeURL(msg)
+		msgFees, err := k.GetMsgFee(ctx, typeURL)
+		if err != nil {
+			return msgFeesDistribution, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		}
+
+		if msgFees != nil {
+			if err := msgFeesDistribution.Increase(msgFees.AdditionalFee, msgFees.RecipientBasisPoints, msgFees.Recipient); err != nil {
+				return msgFeesDistribution, err
+			}
+		}
+
+		if typeURL == assessCustomMsgTypeURL {
+			assessFee, ok := msg.(*types.MsgAssessCustomMsgFeeRequest)
+			if !ok {
+				return msgFeesDistribution, sdkerrors.ErrInvalidType.Wrap("unable to convert msg to MsgAssessCustomMsgFeeRequest")
+			}
+			msgFeeCoin, err := k.ConvertDenomToHash(ctx, assessFee.Amount)
+			if err != nil {
+				return msgFeesDistribution, err
+			}
+			if err := msgFeesDistribution.Increase(msgFeeCoin, types.AssessCustomMsgFeeBips, assessFee.Recipient); err != nil {
+				return msgFeesDistribution, err
+			}
+		}
+	}
+
+	return msgFeesDistribution, nil
+}
+
+// sortedKeys gets the keys of a map, sorts them and returns them as a slice.
+func sortedKeys[K constraints.Ordered, V any](m map[K]V) []K {
+	keys := make([]K, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] < keys[j]
+	})
+	return keys
 }

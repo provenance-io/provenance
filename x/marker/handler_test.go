@@ -2,6 +2,7 @@ package marker_test
 
 import (
 	"fmt"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -60,6 +61,7 @@ func (s *HandlerTestSuite) SetupTest() {
 }
 
 func TestHandlerTestSuite(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(HandlerTestSuite))
 }
 

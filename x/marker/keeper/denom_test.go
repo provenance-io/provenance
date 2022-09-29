@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,6 +22,10 @@ type DenomTestSuite struct {
 	ctx sdk.Context
 
 	suite.Suite
+}
+
+func init() {
+	pioconfig.SetProvenanceConfig("", 0)
 }
 
 func (s *DenomTestSuite) SetupTest() {

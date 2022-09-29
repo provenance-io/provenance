@@ -24,6 +24,7 @@ import (
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -73,13 +74,14 @@ func (s *AnteTestSuite) SetupTest(isCheckTx bool) {
 	s.clientCtx = client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig)
 
-	anteHandler, err := ante.NewAnteHandler(
-		ante.HandlerOptions{
+	anteHandler, err := antewrapper.NewAnteHandler(
+		antewrapper.HandlerOptions{
 			AccountKeeper:   s.app.AccountKeeper,
 			BankKeeper:      s.app.BankKeeper,
 			FeegrantKeeper:  s.app.FeeGrantKeeper,
 			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			MsgFeesKeeper:   s.app.MsgFeesKeeper,
 		},
 	)
 

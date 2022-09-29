@@ -121,6 +121,7 @@ type IntegrationCLITestSuite struct {
 }
 
 func TestIntegrationCLITestSuite(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(IntegrationCLITestSuite))
 }
 

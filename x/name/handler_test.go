@@ -2,6 +2,7 @@ package name_test
 
 import (
 	"fmt"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"strings"
 	"testing"
 
@@ -22,6 +23,10 @@ import (
 	"github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
+
+func init() {
+	pioconfig.SetProvenanceConfig("", 0)
+}
 
 func TestInvalidMsg(t *testing.T) {
 	k := keeper.Keeper{}
@@ -79,7 +84,7 @@ func TestCreateName(t *testing.T) {
 		Address: addr2.String(),
 	}
 	accs := authtypes.GenesisAccounts{acc1, acc2}
-	app := simapp.SetupWithGenesisAccounts(t, accs)
+	app := simapp.SetupWithGenesisAccounts(t, "", accs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	var nameData nametypes.GenesisState
@@ -139,7 +144,7 @@ func TestDeleteName(t *testing.T) {
 		Address: addr1.String(),
 	}
 	accs := authtypes.GenesisAccounts{acc1}
-	app := simapp.SetupWithGenesisAccounts(t, accs)
+	app := simapp.SetupWithGenesisAccounts(t, "", accs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	var nameData nametypes.GenesisState

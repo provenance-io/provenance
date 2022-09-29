@@ -1,6 +1,7 @@
 package v042_test
 
 import (
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 
 	cryptotypes "github.com/tendermint/tendermint/crypto"
@@ -38,6 +39,7 @@ type MigrateTestSuite struct {
 }
 
 func TestMigrateTestSuite(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(MigrateTestSuite))
 }
 

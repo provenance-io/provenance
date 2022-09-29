@@ -1,8 +1,10 @@
 package keeper_test
 
 import (
+	"github.com/provenance-io/provenance/x/msgfees/types"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -17,7 +19,6 @@ import (
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
-	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type TestSuite struct {
@@ -44,7 +45,7 @@ func (s *TestSuite) SetupTest() {
 	s.app = app
 	s.ctx = ctx
 	s.queryClient = queryClient
-	s.addrs = simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(30000000))
+	s.addrs = simapp.AddTestAddrsIncremental(app, ctx, 4, sdk.NewInt(30000000))
 }
 
 func (s *TestSuite) TestKeeper() {
@@ -172,5 +173,200 @@ func (s *TestSuite) TestDeductFeesDistributions() {
 }
 
 func TestTestSuite(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(TestSuite))
+}
+
+func (s *TestSuite) TestCalculateAdditionalFeesToBePaid() {
+	// nhashCoins = a shorter way to create sdk.Coins with a single entry for nhash in the given amount.
+	nhashCoins := func(amount int64) sdk.Coins {
+		return sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, amount))
+	}
+	// nhashCoin = a shorter way to create sdk.Coin for nhash in the given amount.
+	nhashCoin := func(amount int64) sdk.Coin {
+		return sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, amount)
+	}
+	someAddress := s.addrs[3]
+	sendTypeURL := sdk.MsgTypeURL(&banktypes.MsgSend{})
+	assessFeeTypeURL := sdk.MsgTypeURL(&types.MsgAssessCustomMsgFeeRequest{})
+	oneHash := nhashCoin(1_000_000_000)
+
+	msgSend := banktypes.NewMsgSend(someAddress, someAddress, nhashCoins(1_234_567_890))
+	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee(sendTypeURL, oneHash, "", 0)), "setting MsgSend fee")
+
+	assertEqualDist := func(t *testing.T, expected, actual types.MsgFeesDistribution) bool {
+		t.Helper()
+		failed := false
+		failed = assert.Equal(t, expected.TotalAdditionalFees, actual.TotalAdditionalFees, "TotalAdditionalFees") || failed
+		failed = assert.Equal(t, expected.AdditionalModuleFees, actual.AdditionalModuleFees, "AdditionalModuleFees") || failed
+		failed = assert.Equal(t, expected.RecipientDistributions, actual.RecipientDistributions, "RecipientDistributions") || failed
+		return failed
+	}
+
+	s.Run("single send", func() {
+		expected := types.MsgFeesDistribution{
+			TotalAdditionalFees:    nhashCoins(1_000_000_000),
+			AdditionalModuleFees:   nhashCoins(1_000_000_000),
+			RecipientDistributions: map[string]sdk.Coins{},
+		}
+		actual, err := s.app.MsgFeesKeeper.CalculateAdditionalFeesToBePaid(s.ctx, msgSend)
+		s.Require().NoError(err)
+		assertEqualDist(s.T(), expected, actual)
+	})
+
+	s.Run("double send", func() {
+		expected := types.MsgFeesDistribution{
+			TotalAdditionalFees:    nhashCoins(2_000_000_000),
+			AdditionalModuleFees:   nhashCoins(2_000_000_000),
+			RecipientDistributions: map[string]sdk.Coins{},
+		}
+		actual, err := s.app.MsgFeesKeeper.CalculateAdditionalFeesToBePaid(s.ctx, msgSend, msgSend)
+		s.Require().NoError(err)
+		assertEqualDist(s.T(), expected, actual)
+	})
+
+	s.Run("send and custom with recipient", func() {
+		expected := types.MsgFeesDistribution{
+			TotalAdditionalFees:  nhashCoins(2_000_000_000),
+			AdditionalModuleFees: nhashCoins(1_500_000_000),
+			RecipientDistributions: map[string]sdk.Coins{
+				"recipient1": nhashCoins(500_000_000),
+			},
+		}
+		assessFee := types.NewMsgAssessCustomMsgFeeRequest("", oneHash, "recipient1", someAddress.String())
+		actual, err := s.app.MsgFeesKeeper.CalculateAdditionalFeesToBePaid(s.ctx, msgSend, &assessFee)
+		s.Require().NoError(err)
+		assertEqualDist(s.T(), expected, actual)
+	})
+
+	s.Run("send and custom without recipient", func() {
+		expected := types.MsgFeesDistribution{
+			TotalAdditionalFees:    nhashCoins(2_000_000_000),
+			AdditionalModuleFees:   nhashCoins(2_000_000_000),
+			RecipientDistributions: map[string]sdk.Coins{},
+		}
+		assessFee := types.NewMsgAssessCustomMsgFeeRequest("", oneHash, "", someAddress.String())
+		actual, err := s.app.MsgFeesKeeper.CalculateAdditionalFeesToBePaid(s.ctx, msgSend, &assessFee)
+		s.Require().NoError(err)
+		assertEqualDist(s.T(), expected, actual)
+	})
+
+	s.Run("send and two customs with different recipients", func() {
+		expected := types.MsgFeesDistribution{
+			TotalAdditionalFees:  nhashCoins(2_500_000_000),
+			AdditionalModuleFees: nhashCoins(1_750_000_000),
+			RecipientDistributions: map[string]sdk.Coins{
+				"recipient1": nhashCoins(500_000_000),
+				"recipient2": nhashCoins(250_000_000),
+			},
+		}
+		assessFee1 := types.NewMsgAssessCustomMsgFeeRequest("", oneHash, "recipient1", someAddress.String())
+		assessFee2 := types.NewMsgAssessCustomMsgFeeRequest("", nhashCoin(500_000_000), "recipient2", someAddress.String())
+		actual, err := s.app.MsgFeesKeeper.CalculateAdditionalFeesToBePaid(s.ctx, msgSend, &assessFee1, &assessFee2)
+		s.Require().NoError(err)
+		assertEqualDist(s.T(), expected, actual)
+	})
+
+	s.Run("send and two customs with same recipient", func() {
+		expected := types.MsgFeesDistribution{
+			TotalAdditionalFees:  nhashCoins(2_500_000_000),
+			AdditionalModuleFees: nhashCoins(1_750_000_000),
+			RecipientDistributions: map[string]sdk.Coins{
+				"recipient1": nhashCoins(750_000_000),
+			},
+		}
+		assessFee1 := types.NewMsgAssessCustomMsgFeeRequest("", oneHash, "recipient1", someAddress.String())
+		assessFee2 := types.NewMsgAssessCustomMsgFeeRequest("", nhashCoin(500_000_000), "recipient1", someAddress.String())
+		actual, err := s.app.MsgFeesKeeper.CalculateAdditionalFeesToBePaid(s.ctx, msgSend, &assessFee1, &assessFee2)
+		s.Require().NoError(err)
+		assertEqualDist(s.T(), expected, actual)
+	})
+
+	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee(sendTypeURL, oneHash, "sendrecipient", 2_500)), "setting MsgSend fee with recipient")
+
+	s.Run("send with recipient at 2500", func() {
+		expected := types.MsgFeesDistribution{
+			TotalAdditionalFees:  nhashCoins(1_000_000_000),
+			AdditionalModuleFees: nhashCoins(750_000_000),
+			RecipientDistributions: map[string]sdk.Coins{
+				"sendrecipient": nhashCoins(250_000_000),
+			},
+		}
+		actual, err := s.app.MsgFeesKeeper.CalculateAdditionalFeesToBePaid(s.ctx, msgSend)
+		s.Require().NoError(err)
+		assertEqualDist(s.T(), expected, actual)
+	})
+
+	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee(assessFeeTypeURL, oneHash, "sendrecipient", 1_000)), "setting MsgAssessCustomMsgFeeRequest fee")
+
+	s.Run("send and two customs all with fees and same recipient", func() {
+		// The Send will have a fee of 750_000_000 to the module and 250_000_000 to sendrecipient.
+		// The 1st assess will have a fee of  900_000_000 to the module, and 100_000_000 to sendrecipient.
+		// then it will send 500_000_000 to the module and 500_000_000 to sendrecipient
+		// The 2nd assess will have a fee of  900_000_000 to the module, and 100_000_000 to sendrecipient.
+		// then it will send 250_000_000 to the module and 250_000_000 to sendrecipient
+		expected := types.MsgFeesDistribution{
+			TotalAdditionalFees:  nhashCoins(4_500_000_000),
+			AdditionalModuleFees: nhashCoins(3_300_000_000),
+			RecipientDistributions: map[string]sdk.Coins{
+				"sendrecipient": nhashCoins(1_200_000_000),
+			},
+		}
+		assessFee1 := types.NewMsgAssessCustomMsgFeeRequest("", oneHash, "sendrecipient", someAddress.String())
+		assessFee2 := types.NewMsgAssessCustomMsgFeeRequest("", nhashCoin(500_000_000), "sendrecipient", someAddress.String())
+		actual, err := s.app.MsgFeesKeeper.CalculateAdditionalFeesToBePaid(s.ctx, msgSend, &assessFee1, &assessFee2)
+		s.Require().NoError(err)
+		assertEqualDist(s.T(), expected, actual)
+	})
+
+	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee(assessFeeTypeURL, oneHash, "customrecipient", 1_000)), "setting MsgAssessCustomMsgFeeRequest fee")
+
+	s.Run("send and custom all different recipients", func() {
+		// The Send will have a fee of 750_000_000 to the module and 250_000_000 to sendrecipient.
+		// The 1st assess will have a fee of 900_000_000 to the module, and 100_000_000 to customrecipient.
+		// then it will send 500_000_000 to the module and 500_000_000 to anotherrecipient
+		expected := types.MsgFeesDistribution{
+			TotalAdditionalFees:  nhashCoins(3_000_000_000),
+			AdditionalModuleFees: nhashCoins(2_150_000_000),
+			RecipientDistributions: map[string]sdk.Coins{
+				"sendrecipient":    nhashCoins(250_000_000),
+				"customrecipient":  nhashCoins(100_000_000),
+				"anotherrecipient": nhashCoins(500_000_000),
+			},
+		}
+		assessFee1 := types.NewMsgAssessCustomMsgFeeRequest("", oneHash, "anotherrecipient", someAddress.String())
+		actual, err := s.app.MsgFeesKeeper.CalculateAdditionalFeesToBePaid(s.ctx, msgSend, &assessFee1)
+		s.Require().NoError(err)
+		assertEqualDist(s.T(), expected, actual)
+
+	})
+
+	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee(assessFeeTypeURL, oneHash, "", 0)), "setting MsgAssessCustomMsgFeeRequest fee without split")
+	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee(sendTypeURL, oneHash, "", 0)), "setting MsgSend fee back to no recipient")
+
+	s.Run("with fee on custom assess too do send and custom with no recipient", func() {
+		expected := types.MsgFeesDistribution{
+			TotalAdditionalFees:    nhashCoins(3_000_000_000),
+			AdditionalModuleFees:   nhashCoins(3_000_000_000),
+			RecipientDistributions: map[string]sdk.Coins{},
+		}
+		assessFee := types.NewMsgAssessCustomMsgFeeRequest("", oneHash, "", someAddress.String())
+		actual, err := s.app.MsgFeesKeeper.CalculateAdditionalFeesToBePaid(s.ctx, msgSend, &assessFee)
+		s.Require().NoError(err)
+		assertEqualDist(s.T(), expected, actual)
+	})
+
+	s.Run("with fee on custom assess too do send and custom with recipient", func() {
+		expected := types.MsgFeesDistribution{
+			TotalAdditionalFees:  nhashCoins(3_000_000_000),
+			AdditionalModuleFees: nhashCoins(2_500_000_000),
+			RecipientDistributions: map[string]sdk.Coins{
+				"recipient1": nhashCoins(500_000_000),
+			},
+		}
+		assessFee := types.NewMsgAssessCustomMsgFeeRequest("", oneHash, "recipient1", someAddress.String())
+		actual, err := s.app.MsgFeesKeeper.CalculateAdditionalFeesToBePaid(s.ctx, msgSend, &assessFee)
+		s.Require().NoError(err)
+		assertEqualDist(s.T(), expected, actual)
+	})
 }

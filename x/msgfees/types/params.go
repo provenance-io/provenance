@@ -14,7 +14,7 @@ import (
 func DefaultFloorGasPrice() sdk.Coin {
 	return sdk.Coin{
 		Amount: sdk.NewInt(pioconfig.GetProvenanceConfig().MsgFeeFloorGasPrice),
-		Denom:  pioconfig.GetProvenanceConfig().FeeDenom,
+		Denom:  pioconfig.GetProvenanceConfig().MsgFloorDenom,
 	}
 }
 

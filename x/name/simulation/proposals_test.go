@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"math/rand"
 	"testing"
 
@@ -15,6 +16,10 @@ import (
 	"github.com/provenance-io/provenance/x/name/simulation"
 	"github.com/provenance-io/provenance/x/name/types"
 )
+
+func init() {
+	pioconfig.SetProvenanceConfig("", 0)
+}
 
 func TestProposalContents(t *testing.T) {
 	app := simapp.Setup(t)
