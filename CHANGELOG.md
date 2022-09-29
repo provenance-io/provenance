@@ -95,6 +95,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump Cosmos-SDK to `v0.45.5-pio-1` (from `v0.45.4-pio-4`) to remove buggy ADR 038 plugin system. [#983](https://github.com/provenance-io/provenance/issues/983)
 * Remove ADR 038 plugin system implementation due to `AppHash` error [#983](https://github.com/provenance-io/provenance/issues/983)
 * Fix fee charging to sweep remaining fees on successful transaction [#1019](https://github.com/provenance-io/provenance/issues/1019)
+* Bump IBC from `5.0.0` to `5.0.0-pio` to add a check for SendEnabled [#1100](https://github.com/provenance-io/provenance/issues/1100)
 
 ### State Machine Breaking
 
