@@ -22,8 +22,14 @@ var _ sdk.AnteDecorator = FeeMeterContextDecorator{}
 
 // AnteHandle implements the AnteDecorator.AnteHandle method
 func (r FeeMeterContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	newCtx := ctx.WithGasMeter(NewFeeGasMeterWrapper(ctx.Logger(), ctx.GasMeter(), simulate))
-	return next(newCtx, tx, simulate)
+	gasMeter, err := GetFeeGasMeter(ctx)
+	switch {
+	case err != nil:
+		ctx = ctx.WithGasMeter(NewFeeGasMeterWrapper(ctx.Logger(), ctx.GasMeter(), simulate))
+	case gasMeter.IsSimulate() != simulate:
+		ctx = ctx.WithGasMeter(gasMeter.WithSimulate(simulate))
+	}
+	return next(ctx, tx, simulate)
 }
 
 // GetFeeTx coverts the provided Tx to a FeeTx if possible.
@@ -39,7 +45,7 @@ func GetFeeTx(tx sdk.Tx) (sdk.FeeTx, error) {
 func GetFeeGasMeter(ctx sdk.Context) (*FeeGasMeter, error) {
 	feeGasMeter, ok := ctx.GasMeter().(*FeeGasMeter)
 	if !ok {
-		return nil, sdkerrors.ErrLogic.Wrap("gas meter is not a FeeGasMeter")
+		return nil, sdkerrors.ErrLogic.Wrapf("gas meter is not a FeeGasMeter: %T", ctx.GasMeter())
 	}
 	return feeGasMeter, nil
 }
