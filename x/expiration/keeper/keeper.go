@@ -216,7 +216,7 @@ func (k Keeper) deleteExpiration(ctx sdk.Context, moduleAssetID string) error {
 	return nil
 }
 
-func (k Keeper) InvokeExpiration(ctx sdk.Context, moduleAssetID string) error {
+func (k Keeper) InvokeExpiration(ctx sdk.Context, moduleAssetID string, refundTo sdk.AccAddress) error {
 	// lookup expiration
 	expiration, err := k.GetExpiration(ctx, moduleAssetID)
 	if err != nil {
@@ -249,7 +249,7 @@ func (k Keeper) InvokeExpiration(ctx sdk.Context, moduleAssetID string) error {
 	}
 
 	// refund deposit from expiration module account to depositor
-	refundErr := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdk.AccAddress(expiration.Owner), sdk.NewCoins(expiration.Deposit))
+	refundErr := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, refundTo, sdk.NewCoins(expiration.Deposit))
 	if refundErr != nil {
 		return refundErr
 	}
@@ -306,23 +306,51 @@ func (k Keeper) ValidateInvokeExpiration(
 	moduleAssetID string,
 	signers []string,
 	msgTypeURL string,
-) error {
+) (*types.Expiration, error) {
 	expiration, err := k.GetExpiration(ctx, moduleAssetID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// anyone can delete an expired expiration
 	if ctx.BlockTime().After(expiration.Time) {
-		return nil
+		return expiration, nil
 	}
 
 	// validate signers
 	if err := k.validateSigners(ctx, expiration.Owner, signers, msgTypeURL); err != nil {
-		return sdkerrors.Wrap(types.ErrInvalidSigners, err.Error())
+		return expiration, sdkerrors.Wrap(types.ErrInvalidSigners, err.Error())
 	}
 
-	return nil
+	return expiration, nil
+}
+
+func (k Keeper) ResolveDepositor(
+	ctx sdk.Context,
+	expiration types.Expiration,
+	msg *types.MsgInvokeExpirationRequest,
+) (sdk.AccAddress, error) {
+	// check for owner in list first
+	for _, signer := range msg.Signers {
+		if signer == expiration.Owner {
+			addr, err := sdk.AccAddressFromBech32(expiration.Owner)
+			if err != nil {
+				return nil, err
+			}
+			return addr, nil
+		}
+	}
+	// fall back to first signer if after expiration
+	if ctx.BlockTime().After(expiration.Time) && len(msg.Signers) >= 1 {
+		addr, err := sdk.AccAddressFromBech32(msg.Signers[0])
+		if err != nil {
+			return nil, err
+		}
+		return addr, nil
+	}
+
+	// error if no qualifying depositors are found
+	return nil, fmt.Errorf("unable to resolve depositor for asset %s", msg.ModuleAssetId)
 }
 
 func (k Keeper) validateSigners(
@@ -340,7 +368,7 @@ func (k Keeper) validateSigners(
 
 		// validate signer with authz
 		var err error
-		found, err = k.checkSignerWithAuthz(ctx, owner, signer, msgTypeURL)
+		found, err = k.hasSignerWithAuthz(ctx, owner, signer, msgTypeURL)
 		if err != nil {
 			return err
 		}
@@ -356,7 +384,7 @@ func (k Keeper) validateSigners(
 	return nil
 }
 
-func (k Keeper) checkSignerWithAuthz(
+func (k Keeper) hasSignerWithAuthz(
 	ctx sdk.Context,
 	owner string,
 	signer string,
