@@ -41,6 +41,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.accountAddr = addr
 	s.accountStr = s.accountAddr.String()
 	s.T().Log("setting up integration test suite")
+	pioconfig.SetProvenanceConfig("atom", 0)
 
 	cfg := testutil.DefaultTestNetworkConfig()
 
@@ -85,7 +86,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cfg.GenesisState = genesisState
 
 	s.cfg = cfg
-	pioconfig.SetProvenanceConfig("atom", 0)
 	//   TODO -- the following line needs to be patched because we must register our modules into this test node.
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err, "creating testnet")
@@ -216,6 +216,5 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(IntegrationTestSuite))
 }
