@@ -49,6 +49,13 @@ func NewFeeGasMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter, isSimul
 	}
 }
 
+// WithSimulate returns this FeeGasMeter with the provided simulate flag value.
+// Note: It does not change the simulate flag of this.
+func (g FeeGasMeter) WithSimulate(isSimulate bool) sdkgas.GasMeter {
+	g.simulate = isSimulate
+	return &g
+}
+
 var _ sdkgas.GasMeter = &FeeGasMeter{}
 
 // GasConsumed reports the amount of gas consumed at Log.Info level

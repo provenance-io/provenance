@@ -83,3 +83,75 @@ func TestFeeGasMeter(t *testing.T) {
 		require.Equalf(t, false, meter2.IsSimulate(), "simulate should be false")
 	}
 }
+
+func TestWithSimulate(t *testing.T) {
+	tests := []struct {
+		from bool
+		to   bool
+	}{
+		{false, false},
+		{false, true},
+		{true, false},
+		{true, true},
+	}
+
+	for _, tc := range tests {
+		t.Run(fmt.Sprintf("%t to %t", tc.from, tc.to), func(tt *testing.T) {
+			infGm := sdkgas.NewInfiniteGasMeter()
+			gm1 := NewFeeGasMeterWrapper(log.TestingLogger(), infGm, tc.from).(*FeeGasMeter)
+			require.Equal(tt, tc.from, gm1.IsSimulate(), "original IsSimulate")
+
+			gm1.ConsumeGas(63, "testing")
+			gm1.ConsumeGas(74, "testing")
+			gm1.ConsumeGas(3, "other")
+			gm1.ConsumeBaseFee(sdk.NewCoins(sdk.NewInt64Coin("banana", 99)))
+			gm1.ConsumeFee(sdk.NewCoins(sdk.NewInt64Coin("orange", 22)), "some.msg", "")
+			gm1.ConsumeFee(sdk.NewCoins(sdk.NewInt64Coin("orange", 33)), "another.msg", "someone")
+
+			gm1Sim := gm1.IsSimulate()
+			gm1Gas := gm1.GasConsumed()
+			gm1BaseFee := gm1.BaseFeeConsumed()
+			gm1Fee := gm1.FeeConsumed()
+			gm1FeeDist := gm1.FeeConsumedDistributions()
+			gm1String := gm1.String()
+			gm1Events := gm1.EventFeeSummary()
+
+			gm2 := gm1.WithSimulate(tc.to).(*FeeGasMeter)
+			require.Equal(tt, tc.to, gm2.IsSimulate(), "new IsSimulate")
+
+			tt.Run("original is unchanged", func(ttt *testing.T) {
+				gm1Sim2 := gm1.IsSimulate()
+				gm1Gas2 := gm1.GasConsumed()
+				gm1BaseFee2 := gm1.BaseFeeConsumed()
+				gm1Fee2 := gm1.FeeConsumed()
+				gm1FeeDist2 := gm1.FeeConsumedDistributions()
+				gm1String2 := gm1.String()
+				gm1Events2 := gm1.EventFeeSummary()
+
+				assert.Equal(ttt, gm1Sim, gm1Sim2, "IsSimulate")
+				assert.Equal(ttt, int(gm1Gas), int(gm1Gas2), "GasConsumed")
+				assert.Equal(ttt, gm1BaseFee, gm1BaseFee2, "BaseFeeConsumed")
+				assert.Equal(ttt, gm1Fee, gm1Fee2, "FeeConsumed")
+				assert.Equal(ttt, gm1FeeDist, gm1FeeDist2, "FeeConsumedDistributions")
+				assert.Equal(ttt, gm1String, gm1String2, "String")
+				assert.Equal(ttt, gm1Events, gm1Events2, "EventFeeSummary")
+			})
+
+			tt.Run("new is unchanged except for simulate", func(ttt *testing.T) {
+				gm2Gas := gm2.GasConsumed()
+				gm2BaseFee := gm2.BaseFeeConsumed()
+				gm2Fee := gm2.FeeConsumed()
+				gm2FeeDist := gm2.FeeConsumedDistributions()
+				gm2String := gm2.String()
+				gm2Events := gm2.EventFeeSummary()
+
+				assert.Equal(ttt, int(gm1Gas), int(gm2Gas), "GasConsumed")
+				assert.Equal(ttt, gm1BaseFee, gm2BaseFee, "BaseFeeConsumed")
+				assert.Equal(ttt, gm1Fee, gm2Fee, "FeeConsumed")
+				assert.Equal(ttt, gm1FeeDist, gm2FeeDist, "FeeConsumedDistributions")
+				assert.Equal(ttt, gm1String, gm2String, "String")
+				assert.Equal(ttt, gm1Events, gm2Events, "EventFeeSummary")
+			})
+		})
+	}
+}
