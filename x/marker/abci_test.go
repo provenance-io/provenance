@@ -1,7 +1,6 @@
 package marker_test
 
 import (
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,10 +14,6 @@ import (
 	"github.com/provenance-io/provenance/x/marker"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
-
-func init() {
-	pioconfig.SetProvenanceConfig("", 0)
-}
 
 func TestBeginBlocker(t *testing.T) {
 	app := app.Setup(t)
