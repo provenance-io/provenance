@@ -84,7 +84,7 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (sdk.Coins, sdk.
 			if err != nil {
 				return nil, nil, err
 			}
-			eventsToReturn = append(eventsToReturn, ctx.EventManager().Events()...)
+			eventsToReturn = append(eventsToReturn, eventCtx.EventManager().Events()...)
 		}
 		// the uncharged fees have now been charged.
 		chargedFees = chargedFees.Add(unchargedFees...)

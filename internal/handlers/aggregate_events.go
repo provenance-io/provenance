@@ -2,7 +2,7 @@ package handlers
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/provenance-io/provenance/internal/antewrapper"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -14,24 +14,28 @@ import (
 func AggregateEvents(anteEvents []abci.Event, resultEvents []abci.Event) ([]abci.Event, []abci.Event) {
 	if len(resultEvents) == 0 { // tx failed...fix fee event to have the exact fee charged
 		var txFee []byte
-		var feeIndex int
-		var feeFound, spenderFound bool
+		var feeEventIndex, feeAttributeIndex int
+		var feeFound, minFeeFound bool
 		for i, event := range anteEvents {
-			if !feeFound && event.Type == sdk.EventTypeTx && string(event.Attributes[0].Key) == sdk.AttributeKeyFee {
-				feeFound = true
-				feeIndex = i
+			if event.Type == sdk.EventTypeTx {
+				for j, attr := range event.Attributes {
+					if !feeFound && string(attr.Key) == sdk.AttributeKeyFee {
+						feeEventIndex = i
+						feeAttributeIndex = j
+						feeFound = true
+					}
+					if !minFeeFound && string(attr.Key) == antewrapper.AttributeKeyMinFeeCharged {
+						txFee = attr.Value
+						minFeeFound = true
+					}
+				}
 			}
-			// first spent coin event is the coin sent to fee module for tx
-			if !spenderFound && event.Type == banktypes.EventTypeCoinSpent && string(event.Attributes[0].Key) == banktypes.AttributeKeySpender {
-				txFee = event.Attributes[1].Value
-				spenderFound = true
-			}
-			if spenderFound && feeFound {
+			if minFeeFound && feeFound {
 				break
 			}
 		}
-		if feeFound && spenderFound {
-			anteEvents[feeIndex].Attributes[0].Value = txFee
+		if feeFound && minFeeFound {
+			anteEvents[feeEventIndex].Attributes[feeAttributeIndex].Value = txFee
 		}
 	}
 

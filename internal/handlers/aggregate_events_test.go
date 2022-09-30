@@ -8,10 +8,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	piohandlers "github.com/provenance-io/provenance/internal/handlers"
 )
 
 func TestAggregateEvents(tt *testing.T) {
+
 	originalFeeEvent := NewEvent(sdk.EventTypeTx,
 		NewAttribute(sdk.AttributeKeyFee, "100111stake"),
 		NewAttribute(sdk.AttributeKeyFeePayer, "payer"))
@@ -24,15 +26,18 @@ func TestAggregateEvents(tt *testing.T) {
 	assert.Nil(tt, actualResultEvents, "should not have any resultEvents since this is a failed tx case")
 	assert.Equal(tt, anteEvents, actualAnte, "should return original anteevents since first spent_event not found")
 
-	sendCoinsEvent := CreateSendCoinEvents("from", "to", sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))
-	sendCoinsEvent = append(sendCoinsEvent, CreateSendCoinEvents("from", "to", sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 40)))...)
+	minFeeEvent := []abci.Event{NewEvent(sdk.EventTypeTx,
+		NewAttribute(antewrapper.AttributeKeyMinFeeCharged, "100000stake"),
+		NewAttribute(sdk.AttributeKeyFeePayer, "payer")),
+	}
+
 	expectedFeeEvent := []abci.Event{NewEvent(sdk.EventTypeTx,
 		NewAttribute(sdk.AttributeKeyFee, "100000stake"),
 		NewAttribute(sdk.AttributeKeyFeePayer, "payer")),
 	}
 
-	expectedAnteEvents := append(expectedFeeEvent, sendCoinsEvent...)
-	anteEvents = append(anteEvents, sendCoinsEvent...)
+	expectedAnteEvents := append(expectedFeeEvent, minFeeEvent...)
+	anteEvents = append(anteEvents, minFeeEvent...)
 
 	actualAnte, actualResultEvents = piohandlers.AggregateEvents(anteEvents, nil)
 	assert.Nil(tt, actualResultEvents, "should not have any resultEvents since this is a failed tx case")
