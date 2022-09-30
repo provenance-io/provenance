@@ -39,10 +39,13 @@ func (k msgServer) WriteScope(
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
-	// attempt to create expiration metadata for scope
-	_, expErr := k.createExpirationForScope(ctx, msg)
-	if expErr != nil {
-		return nil, expErr
+	// temporarily only create expiration if an expiration value is specified (e.g. via flag on command)
+	if len(msg.Expiration) > 0 {
+		// attempt to create expiration metadata for scope
+		_, expErr := k.createExpirationForScope(ctx, msg)
+		if expErr != nil {
+			return nil, expErr
+		}
 	}
 
 	existing, _ := k.GetScope(ctx, msg.Scope.ScopeId)

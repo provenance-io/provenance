@@ -90,6 +90,8 @@ type IntegrationCLITestSuite struct {
 
 	scopeID metadatatypes.MetadataAddress
 
+	noExpScopeId metadatatypes.MetadataAddress
+
 	expiration1 expirationtypes.Expiration
 	expiration2 expirationtypes.Expiration
 	expiration3 expirationtypes.Expiration
@@ -216,6 +218,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.deposit = expirationtypes.DefaultDeposit
 
 	s.scopeID = metadatatypes.ScopeMetadataAddress(uuid.New())
+	s.noExpScopeId = metadatatypes.ScopeMetadataAddress(uuid.New())
 
 	s.expiration1 = *expirationtypes.NewExpiration(s.moduleAssetID1, s.sameOwner, s.time, s.deposit, s.anyMsg(s.sameOwner))
 	s.expiration2 = *expirationtypes.NewExpiration(s.moduleAssetID2, s.sameOwner, s.time, s.deposit, s.anyMsg(s.sameOwner))
@@ -716,10 +719,27 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			false, "", &sdk.TxResponse{}, 0,
 		},
 		{
-			"should successfully add metadata scope",
+			"should successfully add metadata scope with expiration",
 			metadatacli.WriteScopeCmd(),
 			[]string{
 				s.scopeID.String(),
+				scopeSpecID,
+				s.accountAddrStr,
+				s.accountAddrStr,
+				s.accountAddrStr,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", metadatacli.FlagExpires, "1y"),
+			},
+			false, "", &sdk.TxResponse{}, 0,
+		},
+		{
+			"should successfully add metadata scope without expiration",
+			metadatacli.WriteScopeCmd(),
+			[]string{
+				s.noExpScopeId.String(),
 				scopeSpecID,
 				s.accountAddrStr,
 				s.accountAddrStr,
@@ -745,6 +765,21 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			expectErrMsg: "",
 			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
+		},
+		{
+			name: "should fail to invoke expiration on scope with no expiration set",
+			cmd:  cli.InvokeExpirationCmd(),
+			args: []string{
+				s.noExpScopeId.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    false,
+			expectErrMsg: "",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 4,
 		},
 		{
 			name: "should fail to extend expiration, not found",
