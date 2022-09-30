@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -17,6 +16,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
 func Test_TestnetCmd(t *testing.T) {
