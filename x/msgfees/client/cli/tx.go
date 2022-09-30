@@ -39,6 +39,7 @@ func NewTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		GetCmdMsgFeesProposal(),
 		GetUpdateNhashPerUsdMilProposal(),
+		GetUpdateConversionFeeDenomProposal(),
 	)
 
 	return txCmd
@@ -166,7 +167,7 @@ func GetUpdateNhashPerUsdMilProposal() *cobra.Command {
 The nhash per usd mil is the number of nhash that will be multiplied by the usd mil amount.  Example: $1.000 usd where 1 mil equals 2000nhash will equate to 1000 * 2000 = 2000000nhash
 `),
 		Example: fmt.Sprintf(`$ %[1]s tx msgfees nhash-per-usd-mil "updating nhash to usd mil" "changes the nhash per mil to 1234nhash"  1234 1000000000nhash
-$ %[1]s tx msgfees npum nhash-per-usd-mil "updating nhash to usd mil" "changes the nhash per mil to 1234nhash"   1234 1000000000nhash
+$ %[1]s tx msgfees npum "updating nhash to usd mil" "changes the nhash per mil to 1234nhash" 1234 1000000000nhash
 `, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -179,6 +180,40 @@ $ %[1]s tx msgfees npum nhash-per-usd-mil "updating nhash to usd mil" "changes t
 				return fmt.Errorf("unable to parse nhash value: %s", nhash)
 			}
 			proposal := types.NewUpdateNhashPerUsdMilProposal(title, description, rate)
+			deposit, err := sdk.ParseCoinsNormalized(depositArg)
+			if err != nil {
+				return err
+			}
+			callerAddr := clientCtx.GetFromAddress()
+			msg, err := govtypesv1beta1.NewMsgSubmitProposal(proposal, deposit, callerAddr)
+			if err != nil {
+				return fmt.Errorf("invalid governance proposal. Error: %w", err)
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func GetUpdateConversionFeeDenomProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "conversion-fee-denom <title> <description> <conversion-fee-denom> <deposit>",
+		Aliases: []string{"cfd", "c-f-d"},
+		Args:    cobra.ExactArgs(4),
+		Short:   "Submit a conversion fee denom update proposal along with an initial deposit",
+		Long: strings.TrimSpace(`Submit a conversion fee denom update proposal along with an initial deposit.
+The custom fee denom is the denom that usd will be converted to for fees with usd as denom type.`),
+		Example: fmt.Sprintf(`$ %[1]s tx msgfees conversion-fee-denom "updating conversion fee denom" "changes the conversion fee denom to customcoin"  customcoin 1000000000nhash
+$ %[1]s tx msgfees cfd "updating conversion fee denom" "changes the conversion fee denom to customcoin"  customcoin 1000000000nhash
+`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			title, description, customCoin, depositArg := args[0], args[1], args[2], args[3]
+			proposal := types.NewUpdateConversionFeeDenomProposal(title, description, customCoin)
 			deposit, err := sdk.ParseCoinsNormalized(depositArg)
 			if err != nil {
 				return err

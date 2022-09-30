@@ -18,6 +18,7 @@ import (
 
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/provenance-io/provenance/internal/antewrapper"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
@@ -55,7 +56,7 @@ func (s *SimulateTestSuite) SetupTest() {
 		Denom:  "stake",
 		Amount: sdk.NewInt(1000),
 	}
-	msgfeestypes.DefaultFloorGasPrice = s.floorGasPrice
+	pioconfig.SetProvenanceConfig(s.floorGasPrice.Denom, s.floorGasPrice.Amount.Int64())
 
 	s.sendMsgTypeUrl = "/cosmos.bank.v1beta1.MsgSend"
 	s.sendMsgAdditionalFee = sdk.NewCoin("stake", sdk.NewInt(1))

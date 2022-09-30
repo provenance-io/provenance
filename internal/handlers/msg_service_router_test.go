@@ -219,8 +219,8 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 }
 
 func TestFailedTx(tt *testing.T) {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1) // will create a gas fee of 1stake * gas
 	encCfg := sdksim.MakeTestEncodingConfig()
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1) // will create a gas fee of 1stake * gas
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
@@ -312,7 +312,7 @@ func TestFailedTx(tt *testing.T) {
 }
 
 func TestMsgService(tt *testing.T) {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1) // will create a gas fee of 1stake * gas
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1) // set denom as stake and floor gas price as 1 stake.
 	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
@@ -456,7 +456,7 @@ func TestMsgService(tt *testing.T) {
 }
 
 func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1) // will create a gas fee of 1stake * gas
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1)
 	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
@@ -520,7 +520,7 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 }
 
 func TestMsgServiceAuthz(tt *testing.T) {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1)
 	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	priv2, _, addr2 := testdata.KeyTestPubAddr()
@@ -657,7 +657,9 @@ func TestMsgServiceAuthz(tt *testing.T) {
 }
 
 func TestMsgServiceAssessMsgFee(tt *testing.T) {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)
+	pioconfig.SetProvenanceConfig("", 0)
+	pioconfig.ChangeMsgFeeFloorDenom(1, sdk.DefaultBondDenom)
+
 	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
@@ -665,7 +667,7 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 	acct1Balance := sdk.NewCoins(
 		sdk.NewInt64Coin("hotdog", 1000),
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 101000),
-		sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_001),
+		sdk.NewInt64Coin(NHash, 1_190_500_001),
 	)
 	app := piosimapp.SetupWithGenesisAccounts(tt, "msgfee-testing",
 		[]authtypes.GenesisAccount{acct1},
@@ -686,7 +688,7 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 		msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", msgFeeCoin, addr2.String(), addr1.String())
 		fees := sdk.NewCoins(
 			sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000),
-			sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_001),
+			sdk.NewInt64Coin(NHash, 1_190_500_001),
 		)
 		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &msg)
 		require.NoError(t, err, "SignTxAndGetBytes")
@@ -738,7 +740,7 @@ func TestRewardsProgramStartError(t *testing.T) {
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
 	acct1Balance := sdk.NewCoins(
 		sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin("atom", 1000),
-		sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000),
+		sdk.NewInt64Coin(NHash, 1_190_500_000),
 	)
 	app := piosimapp.SetupWithGenesisAccounts(t, "",
 		[]authtypes.GenesisAccount{acct1},
@@ -747,7 +749,7 @@ func TestRewardsProgramStartError(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	blockTime := ctx.BlockTime()
-	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
@@ -777,7 +779,7 @@ func TestRewardsProgramStartError(t *testing.T) {
 
 	txBytes, err := SignTxAndGetBytes(
 		NewTestRewardsGasLimit(),
-		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
 		&rewardProgram,
 	)
@@ -788,12 +790,13 @@ func TestRewardsProgramStartError(t *testing.T) {
 
 func TestRewardsProgramStart(t *testing.T) {
 	encCfg := sdksim.MakeTestEncodingConfig()
+	pioconfig.SetProvenanceConfig("nhash", 0)
 	priv, _, addr := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
 	acct1Balance := sdk.NewCoins(
 		sdk.NewInt64Coin("hotdog", 1000),
 		sdk.NewInt64Coin("atom", 1000),
-		sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000),
+		sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000),
 	)
 	app := piosimapp.SetupWithGenesisAccounts(t, "",
 		[]authtypes.GenesisAccount{acct1},
@@ -801,7 +804,7 @@ func TestRewardsProgramStart(t *testing.T) {
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
@@ -831,7 +834,7 @@ func TestRewardsProgramStart(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
 	txReward, err := SignTx(
 		NewTestRewardsGasLimit(),
-		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
 		&rewardProgram,
 	)
@@ -852,6 +855,7 @@ func TestRewardsProgramStart(t *testing.T) {
 }
 
 func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
+	pioconfig.SetProvenanceConfig("nhash", 0)
 	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, _, addr := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
@@ -859,7 +863,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	acct1Balance := sdk.NewCoins(
 		sdk.NewInt64Coin("hotdog", 10000000000),
 		sdk.NewInt64Coin("atom", 10000000),
-		sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000),
+		sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000),
 	)
 	app := piosimapp.SetupWithGenesisAccounts(t, "",
 		[]authtypes.GenesisAccount{acct1},
@@ -867,7 +871,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
@@ -897,7 +901,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
 	txReward, err := SignTx(
 		NewTestRewardsGasLimit(),
-		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
 		&rewardProgram,
 	)
@@ -989,7 +993,7 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 	priv, _, addr := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
 		"title",
@@ -1024,7 +1028,7 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
@@ -1125,7 +1129,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	priv, _, addr := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
 		"title",
@@ -1162,7 +1166,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
@@ -1275,7 +1279,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	app.Commit()
 	balanceLater := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
 	// make sure account balance has the tokens
-	balanceChange := balanceLater.AmountOf(pioconfig.DefaultBondDenom).Sub(balance.AmountOf(pioconfig.DefaultBondDenom))
+	balanceChange := balanceLater.AmountOf(pioconfig.GetProvenanceConfig().FeeDenom).Sub(balance.AmountOf(pioconfig.GetProvenanceConfig().FeeDenom))
 	assert.Equal(t, sdk.NewInt(50_000_000_000).String(), balanceChange.String(), "balance change")
 }
 
@@ -1321,7 +1325,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
@@ -1514,7 +1518,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
@@ -1651,7 +1655,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	priv, _, addr := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
 		"title",
@@ -1687,7 +1691,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
@@ -1788,7 +1792,7 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 	priv, _, addr := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
 		"title",
@@ -1825,7 +1829,7 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
@@ -1875,7 +1879,7 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
 	_, pubKey2, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
 		"title",
@@ -1912,7 +1916,7 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
@@ -1980,7 +1984,7 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
 	_, pubKey2, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
 		"title",
@@ -2017,7 +2021,7 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
@@ -2067,7 +2071,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 	acct1Balance := sdk.NewCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
 		sdk.NewInt64Coin("atom", 10000000),
-		sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000),
+		sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000),
 	)
 
 	rewardProgram := rewardtypes.NewRewardProgram(
@@ -2103,7 +2107,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
@@ -2121,7 +2125,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
 	txGov, err := SignTx(
 		NewTestRewardsGasLimit(),
-		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
 		msg,
 	)
@@ -2179,7 +2183,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 	acctBalance := sdk.NewCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
 		sdk.NewInt64Coin("atom", 10000000),
-		sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000),
+		sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000),
 	)
 
 	rewardProgram := rewardtypes.NewRewardProgram(
@@ -2216,7 +2220,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct2.GetAddress(), fundCoins),
 		"funding acct2 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
@@ -2232,7 +2236,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
 	txGov, err := SignTx(
 		NewTestRewardsGasLimit(),
-		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv1.PubKey(), priv1, *acct1, ctx.ChainID(),
 		msg,
 	)
@@ -2308,7 +2312,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	acct1Balance := sdk.NewCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
 		sdk.NewInt64Coin("atom", 10000000),
-		sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000),
+		sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000),
 	)
 
 	rewardProgram := rewardtypes.NewRewardProgram(
@@ -2344,7 +2348,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
@@ -2362,7 +2366,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
 	txGov, err := SignTx(
 		NewTestRewardsGasLimit(),
-		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
 		msg,
 	)
@@ -2432,7 +2436,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
 	_, pubKey2, _ := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin("nhash", 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
 		"title",
@@ -2467,7 +2471,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(290500010)))))
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
 	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
 		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
@@ -2483,7 +2487,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	time.Sleep(200 * time.Millisecond)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
-	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("nhash", 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 	require.NoError(t, err)
 
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
@@ -2547,7 +2551,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	priv3, _, addr3 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
 	acct3 := authtypes.NewBaseAccount(addr3, priv3.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000))
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin("nhash", 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
 		"title",
@@ -2581,8 +2585,8 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct3.GetAddress(), sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(290500010)))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct3.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(290500010)))))
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
 	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
 		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
@@ -2598,7 +2602,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	time.Sleep(200 * time.Millisecond)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
-	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)), encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), msg)
+	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("nhash", 1_190_500_000)), encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), msg)
 	require.NoError(t, err)
 
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
@@ -2661,7 +2665,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 	acct1Balance := sdk.NewCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
 		sdk.NewInt64Coin("atom", 10000000),
-		sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000),
+		sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000),
 	)
 
 	rewardProgram := rewardtypes.NewRewardProgram(
@@ -2698,7 +2702,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
@@ -2716,7 +2720,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
 	txGov, err := SignTx(
 		NewTestRewardsGasLimit(),
-		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
 		msg,
 	)
@@ -2784,7 +2788,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	acct1Balance := sdk.NewCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
 		sdk.NewInt64Coin("atom", 10000000),
-		sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1000000_000_000_000),
+		sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000),
 	)
 	minDelegation := sdk.NewInt64Coin("nhash", 4)
 	maxDelegation := sdk.NewInt64Coin("nhash", 2001000)
@@ -2826,7 +2830,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(msgfeestypes.NhashDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
@@ -2844,7 +2848,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
 	txGov, err := SignTx(
 		NewTestRewardsGasLimit(),
-		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_000)),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
 		msg,
 	)

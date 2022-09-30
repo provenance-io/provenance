@@ -44776,6 +44776,9 @@ paths:
                     type: string
                     format: uint64
                     title: total nhash per usd mil for converting usd to nhash
+                  conversion_fee_denom:
+                    type: string
+                    title: conversion fee denom is the denom usd is converted to
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -78084,6 +78087,9 @@ definitions:
         type: string
         format: uint64
         title: total nhash per usd mil for converting usd to nhash
+      conversion_fee_denom:
+        type: string
+        title: conversion fee denom is the denom usd is converted to
     description: Params defines the set of params for the msgfees module.
   provenance.msgfees.v1.QueryAllMsgFeesResponse:
     type: object
@@ -78180,6 +78186,9 @@ definitions:
             type: string
             format: uint64
             title: total nhash per usd mil for converting usd to nhash
+          conversion_fee_denom:
+            type: string
+            title: conversion fee denom is the denom usd is converted to
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   provenance.reward.v1.ActionDelegate:
     type: object

@@ -24,7 +24,6 @@ ifeq ($(WITH_BADGERDB),yes)
   WITH_BADGERDB=true
 endif
 
-
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
 TM_VERSION := $(shell $(GO) list -m github.com/tendermint/tendermint 2> /dev/null | sed 's:.* ::') # grab everything after the space in "github.com/tendermint/tendermint v0.34.7"
@@ -179,28 +178,39 @@ build: validate-go-version go.sum
 build-linux: go.sum
 	WITH_LEDGER=false GOOS=linux GOARCH=amd64 $(MAKE) build
 
+DENOM ?= nhash
+MIN_FLOOR_PRICE ?= 1905
+CHAIN_ID ?= testing
+CHAIN_ID_DOCKER ?= chain-local
+
 # Run an instance of the daemon against a local config (create the config if it does not exit.)
+# if required to use something other than nhash, use: make run DENOM=vspn MIN_FLOOR_PRICE=0
 run-config: check-built
 	@if [ ! -d "$(BUILDDIR)/run/provenanced/config" ]; then \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=testing testing ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=$(CHAIN_ID) testing --custom-denom=$(DENOM); \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced keys add validator --keyring-backend test ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pio --keyring-backend test ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pb --restrict=false --keyring-backend test ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator io --restrict --keyring-backend test ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator provenance --keyring-backend test ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-account validator 100000000000000000000nhash --keyring-backend test ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced gentx validator 1000000000000000nhash --keyring-backend test --chain-id=testing; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-marker 100000000000000000000nhash --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.name.v1.MsgBindNameRequest 10000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.marker.v1.MsgAddMarkerRequest 100000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest 10000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest 10000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgP8eMemorializeContractRequest 10000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced collect-gentxs; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-account validator 100000000000000000000$(DENOM)  --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced gentx validator 1000000000000000$(DENOM)  --keyring-backend test --chain-id=$(CHAIN_ID); \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-marker 100000000000000000000$(DENOM)  --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.name.v1.MsgBindNameRequest 10000000000$(DENOM) ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.marker.v1.MsgAddMarkerRequest 100000000000$(DENOM) ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest 10000000000$(DENOM) ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest 10000000000$(DENOM) ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgP8eMemorializeContractRequest 10000000000$(DENOM) ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-custom-floor $(MIN_FLOOR_PRICE)$(DENOM) ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced collect-gentxs ; \
 	fi ;
 
-run: check-built run-config;
+run: check-built run-config ;
+ifeq ($(DENOM),nhash)
 	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
+else
+	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start --custom-denom $(DENOM)
+endif
 
 .PHONY: install build build-linux run
 
@@ -443,13 +453,18 @@ docker-build-local: vendor
 
 # Generate config files for a 4-node localnet
 localnet-generate: localnet-stop docker-build-local
-	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=chain-local ; fi
+ifeq ($(DENOM),nhash)
+	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=$(CHAIN_ID_DOCKER) ; fi
+else
+	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=$(CHAIN_ID_DOCKER) --custom-denom=$(DENOM) --minimum-gas-prices=$(MIN_FLOOR_PRICE)$(DENOM) --msgfee-floor-price=$(MIN_FLOOR_PRICE) ; fi
+endif
 
 # Run a 4-node testnet locally
 localnet-up:
 	docker-compose -f networks/local/docker-compose.yml --project-directory ./ up -d
 
 # Run a 4-node testnet locally (replace docker-build with docker-build local for better speed)
+# to run custom denom network, `make clean localnet-start DENOM=vspn MIN_FLOOR_PRICE=0`
 localnet-start: localnet-generate localnet-up
 
 # Stop testnet
