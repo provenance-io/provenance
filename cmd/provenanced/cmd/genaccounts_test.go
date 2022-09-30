@@ -143,7 +143,7 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-			cmd := provenancecmd.AddGenesisCustomFloorPriceDenom(home)
+			cmd := provenancecmd.AddGenesisCustomFloorPriceDenomCmd(home)
 			cmdFee := provenancecmd.AddGenesisMsgFeeCmd(home, app.MakeEncodingConfig().InterfaceRegistry)
 			cmd.SetArgs([]string{
 				tc.msgFeeFloorCoin,

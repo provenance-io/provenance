@@ -152,7 +152,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		AddRootDomainAccountCmd(app.DefaultNodeHome),
 		AddGenesisMarkerCmd(app.DefaultNodeHome),
 		AddGenesisMsgFeeCmd(app.DefaultNodeHome, encodingConfig.InterfaceRegistry),
-		AddGenesisCustomFloorPriceDenom(app.DefaultNodeHome),
+		AddGenesisCustomFloorPriceDenomCmd(app.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),

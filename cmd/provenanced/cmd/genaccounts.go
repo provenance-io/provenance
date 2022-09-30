@@ -506,8 +506,8 @@ enforced immediately.  An optional type flag can be provided or the default of C
 	return cmd
 }
 
-// AddGenesisCustomFloorPriceDenom returns add-genesis-msg-fee cobra command.
-func AddGenesisCustomFloorPriceDenom(defaultNodeHome string) *cobra.Command {
+// AddGenesisCustomFloorPriceDenomCmd returns add-genesis-msg-fee cobra command.
+func AddGenesisCustomFloorPriceDenomCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-genesis-custom-floor-denom [coin]",
 		Short: "Add a floor price denom and amount to genesis.json",
