@@ -96,7 +96,7 @@ Note, strict routability for addresses is turned off in the config file.
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	// testnet only so should get passed in by the make command, moving this to a default value if not provided, since this is only for testnet. custom chain will pass in the flag for minimum-gas-prices. e.g. minimum-gas-prices = 0vspn
-	cmd.Flags().String(server.FlagMinGasPrices, "1905nhash", "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum.")
+	cmd.Flags().String(server.FlagMinGasPrices, "1905nhash", "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
