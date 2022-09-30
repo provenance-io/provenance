@@ -43,8 +43,6 @@ type MsgFeesDistribution struct {
 // then z = x + y
 // This Fee Decorator makes sure that z is >= to x + y
 func (mfd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	ctx.Logger().Debug("In MsgFeesDecorator", "GasConsumed", ctx.GasMeter().GasConsumed())
-
 	feeTx, err := GetFeeTx(tx)
 	if err != nil {
 		return ctx, err
