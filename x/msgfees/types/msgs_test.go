@@ -5,6 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -30,21 +32,17 @@ func TestMsgAssessCustomMsgFeeValidateBasic(t *testing.T) {
 			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 0), validAddress, validAddress),
 			"amount must be greater than zero",
 		}, {
-			"should fail to validate basic, invalid coin type",
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin("jackthecat", 10), validAddress, validAddress),
-			"denom must be in usd or nhash : jackthecat",
-		}, {
 			"should succeed to validate basic, without recipient",
 			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 10), "", validAddress),
 			"",
 		}, {
 			"should fail to validate basic, invalid address",
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(NhashDenom, 10), "invalid", validAddress),
+			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 10), "invalid", validAddress),
 			"decoding bech32 failed: invalid bech32 string length 7",
 		},
 		{
 			"should fail to validate basic, invalid address from address",
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(NhashDenom, 10), "", "invalid"),
+			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 10), "", "invalid"),
 			"decoding bech32 failed: invalid bech32 string length 7",
 		},
 	}

@@ -28,6 +28,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -74,7 +75,7 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-
+	pioconfig.SetProvenanceConfig("", 0)
 	cfg := testutil.DefaultTestNetworkConfig()
 
 	genesisState := cfg.GenesisState

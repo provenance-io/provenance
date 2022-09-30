@@ -70,7 +70,7 @@ func (k Keeper) GetFeeCollectorName() string {
 
 // GetFloorGasPrice returns the current minimum gas price in sdk.Coin used in calculations for charging additional fees
 func (k Keeper) GetFloorGasPrice(ctx sdk.Context) sdk.Coin {
-	min := types.DefaultFloorGasPrice
+	min := types.DefaultFloorGasPrice()
 	if k.paramSpace.Has(ctx, types.ParamStoreKeyFloorGasPrice) {
 		k.paramSpace.Get(ctx, types.ParamStoreKeyFloorGasPrice, &min)
 	}
@@ -84,6 +84,15 @@ func (k Keeper) GetNhashPerUsdMil(ctx sdk.Context) uint64 {
 		k.paramSpace.Get(ctx, types.ParamStoreKeyNhashPerUsdMil, &rateInMils)
 	}
 	return rateInMils
+}
+
+// GetConversionFeeDenom returns the conversion fee denom
+func (k Keeper) GetConversionFeeDenom(ctx sdk.Context) string {
+	conversionFeeDenom := types.DefaultParams().ConversionFeeDenom
+	if k.paramSpace.Has(ctx, types.ParamStoreKeyConversionFeeDenom) {
+		k.paramSpace.Get(ctx, types.ParamStoreKeyConversionFeeDenom, &conversionFeeDenom)
+	}
+	return conversionFeeDenom
 }
 
 // SetMsgFee sets the additional fee schedule for a Msg
@@ -176,10 +185,12 @@ func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Co
 	if neg {
 		return sdkerrors.ErrInsufficientFunds.Wrapf("negative balance after sending coins to accounts and fee collector: remainingFees: %q, sentCoins: %q, distribution: %v", remainingFees, sentCoins, fees)
 	}
-	// sweep the rest of the fees to module
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, unsentFee)
-	if err != nil {
-		return sdkerrors.ErrInsufficientFunds.Wrap(err.Error())
+	if !unsentFee.IsZero() {
+		// sweep the rest of the fees to module
+		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, unsentFee)
+		if err != nil {
+			return sdkerrors.ErrInsufficientFunds.Wrap(err.Error())
+		}
 	}
 
 	return nil
@@ -188,13 +199,14 @@ func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Co
 // ConvertDenomToHash converts usd coin to nhash coin using nhash per usd mil.
 // Currently, usd is only supported with nhash to usd mil coming from params
 func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, error) {
+	conversionDenom := k.GetConversionFeeDenom(ctx)
 	switch coin.Denom {
 	case types.UsdDenom:
 		nhashPerMil := int64(k.GetNhashPerUsdMil(ctx))
 		amount := coin.Amount.Mul(sdk.NewInt(nhashPerMil))
-		msgFeeCoin := sdk.NewInt64Coin(types.NhashDenom, amount.Int64())
+		msgFeeCoin := sdk.NewInt64Coin(conversionDenom, amount.Int64())
 		return msgFeeCoin, nil
-	case types.NhashDenom:
+	case conversionDenom:
 		return coin, nil
 	default:
 		return sdk.Coin{}, sdkerrors.ErrInvalidType.Wrapf("denom not supported for conversion %s", coin.Denom)

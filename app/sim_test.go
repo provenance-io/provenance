@@ -44,6 +44,7 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 
 	cmdconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
@@ -53,6 +54,7 @@ import (
 
 func init() {
 	sdksim.GetSimulatorFlags()
+	pioconfig.SetProvenanceConfig("", 0)
 }
 
 type StoreKeysPrefixes struct {

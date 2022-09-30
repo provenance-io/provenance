@@ -414,7 +414,7 @@ func New(
 	)
 
 	app.MsgFeesKeeper = msgfeeskeeper.NewKeeper(
-		appCodec, keys[msgfeestypes.StoreKey], app.GetSubspace(msgfeestypes.ModuleName), authtypes.FeeCollectorName, pioconfig.DefaultFeeDenom, app.Simulate, encodingConfig.TxConfig.TxDecoder())
+		appCodec, keys[msgfeestypes.StoreKey], app.GetSubspace(msgfeestypes.ModuleName), authtypes.FeeCollectorName, pioconfig.GetProvenanceConfig().FeeDenom, app.Simulate, encodingConfig.TxConfig.TxDecoder())
 
 	pioMsgFeesRouter := app.MsgServiceRouter().(*piohandlers.PioMsgServiceRouter)
 	pioMsgFeesRouter.SetMsgFeesKeeper(app.MsgFeesKeeper)
@@ -811,6 +811,8 @@ func New(
 	app.SetFeeHandler(msgfeehandler)
 
 	app.SetEndBlocker(app.EndBlocker)
+
+	app.SetAggregateEventsFunc(piohandlers.AggregateEvents)
 
 	// Add upgrade plans for each release. This must be done before the baseapp seals via LoadLatestVersion() down below.
 	InstallCustomUpgradeHandlers(app)

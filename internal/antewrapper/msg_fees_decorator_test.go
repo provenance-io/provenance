@@ -9,7 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/provenance-io/provenance/internal/antewrapper"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
+	"github.com/provenance-io/provenance/internal/pioconfig"
+)
+
+const (
+	NHash = "nhash"
 )
 
 // These tests are kicked off by TestAnteTestSuite in testutil_test.go
@@ -42,10 +46,10 @@ func (s *AnteTestSuite) TestMsgFeesDecoratorIgnoresMinGasPrice() {
 }
 
 func (s *AnteTestSuite) TestMsgFeesDecoratorFloorGasPriceNotMet() {
-	antehandler := setUpApp(s, true, msgfeestypes.NhashDenom, 0)
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1905)
+	antehandler := setUpApp(s, true, NHash, 0)
+	pioconfig.SetProvenanceConfig(NHash, 1905)
 	reqFee := int64(1905 * s.NewTestGasLimit())
-	feeCoins := sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, reqFee-1))
+	feeCoins := sdk.NewCoins(sdk.NewInt64Coin(NHash, reqFee-1))
 	tx, _ := createTestTx(s, feeCoins)
 	ctx := s.ctx.WithChainID("test-chain")
 
@@ -59,7 +63,7 @@ func (s *AnteTestSuite) TestMsgFeesDecoratorFloorGasPriceNotMet() {
 }
 
 func (s *AnteTestSuite) TestMsgFeesDecoratorFloorGasPriceMet() {
-	antehandler := setUpApp(s, true, msgfeestypes.NhashDenom, 0)
+	antehandler := setUpApp(s, true, NHash, 0)
 	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))
 	ctx := s.ctx.WithChainID("test-chain")
 
@@ -69,7 +73,7 @@ func (s *AnteTestSuite) TestMsgFeesDecoratorFloorGasPriceMet() {
 
 func (s *AnteTestSuite) TestMsgFeesDecoratorNonCheckTxPassesAllChecks() {
 	antehandler := setUpApp(s, false, "bananas", 100)
-	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 88)))
+	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150), sdk.NewInt64Coin(NHash, 88)))
 
 	// antehandler should not error since we do not check anything in DeliverTx
 	_, err := antehandler(s.ctx, tx, false)
@@ -78,7 +82,7 @@ func (s *AnteTestSuite) TestMsgFeesDecoratorNonCheckTxPassesAllChecks() {
 
 func (s *AnteTestSuite) TestMsgFeesDecoratorSimulatingPassesAllChecks() {
 	antehandler := setUpApp(s, true, "bananas", 100)
-	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 88)))
+	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150), sdk.NewInt64Coin(NHash, 88)))
 
 	// antehandler should not error since we do not check anything in Simulate
 	_, err := antehandler(s.ctx, tx, true)
@@ -86,8 +90,8 @@ func (s *AnteTestSuite) TestMsgFeesDecoratorSimulatingPassesAllChecks() {
 }
 
 func (s *AnteTestSuite) TestMsgFeesDecoratorWrongDenomOnlyMsg() {
-	antehandler := setUpApp(s, true, msgfeestypes.NhashDenom, 100)
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
+	antehandler := setUpApp(s, true, NHash, 100)
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
 	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
 	ctx := s.ctx.WithChainID("test-chain")
 
@@ -101,11 +105,11 @@ func (s *AnteTestSuite) TestMsgFeesDecoratorWrongDenomOnlyMsg() {
 }
 
 func (s *AnteTestSuite) TestMsgFeesDecoratorFloorFromParams() {
-	antehandler := setUpApp(s, true, msgfeestypes.NhashDenom, 100)
-	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 10000)))
+	antehandler := setUpApp(s, true, NHash, 100)
+	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(NHash, 10000)))
 	ctx := s.ctx.WithChainID("test-chain")
 	params := s.app.MsgFeesKeeper.GetParams(ctx)
-	params.FloorGasPrice = sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1905)
+	params.FloorGasPrice = sdk.NewInt64Coin(NHash, 1905)
 	s.app.MsgFeesKeeper.SetParams(ctx, params)
 
 	_, err := antehandler(ctx, tx, false)
@@ -119,7 +123,7 @@ func (s *AnteTestSuite) TestMsgFeesDecoratorFloorFromParams() {
 
 func (s *AnteTestSuite) TestMsgFeesDecoratorWrongDenom() {
 	antehandler := setUpApp(s, true, sdk.DefaultBondDenom, 100)
-	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(msgfeestypes.NhashDenom, 190500200)))
+	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(NHash, 190500200)))
 	ctx := s.ctx.WithChainID("test-chain")
 
 	_, err := antehandler(ctx, tx, false)

@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/attribute/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
@@ -34,6 +35,7 @@ type KeeperTestSuite struct {
 }
 
 func TestKeeperTestSuite(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(KeeperTestSuite))
 }
 
