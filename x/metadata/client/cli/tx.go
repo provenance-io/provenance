@@ -105,10 +105,7 @@ func WriteScopeCmd() *cobra.Command {
 				return err
 			}
 
-			expiration, err := parseExpires(cmd)
-			if err != nil {
-				return err
-			}
+			expiration := parseExpires(cmd)
 
 			scope := *types.NewScope(
 				scopeID,
@@ -1012,13 +1009,13 @@ func addExpiresFlagCmd(cmd *cobra.Command) {
 }
 
 // parseExpires checks expires flag, else uses the default expiration period
-func parseExpires(cmd *cobra.Command) (string, error) {
+func parseExpires(cmd *cobra.Command) string {
 	flagSet := cmd.Flags()
 	if flagSet.Changed(FlagExpires) {
 		expires, _ := flagSet.GetString(FlagExpires)
-		return expires, nil
+		return expires
 	}
-	return "", nil
+	return ""
 }
 
 func parsePartyTypes(delimitedPartyTypes string) []types.PartyType {
