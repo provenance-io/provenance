@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/provenance-io/provenance/internal/antewrapper"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 const (
@@ -93,7 +92,6 @@ func (s *AnteTestSuite) TestMsgFeesDecoratorSimulatingPassesAllChecks() {
 func (s *AnteTestSuite) TestMsgFeesDecoratorWrongDenomOnlyMsg() {
 	antehandler := setUpApp(s, true, NHash, 100)
 	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
-	msgfeestypes.DefaultFloorGasPrice()
 	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
 	ctx := s.ctx.WithChainID("test-chain")
 
