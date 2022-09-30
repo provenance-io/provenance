@@ -509,12 +509,12 @@ enforced immediately.  An optional type flag can be provided or the default of C
 // AddGenesisCustomFloorPriceDenomCmd returns add-genesis-msg-fee cobra command.
 func AddGenesisCustomFloorPriceDenomCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-genesis-custom-floor-denom [coin]",
+		Use:   "add-genesis-custom-floor [coin]",
 		Short: "Add a floor price denom and amount to genesis.json",
 		Long: `Add a floor price denom and amount to genesis.json. This will create a custom floor price denom and amount for calculating additional message costs.
 Currently, the denom and price defaults to 1905nhash
 		`,
-		Example: fmt.Sprintf(`$ %[1]s add-genesis-custom-floor-denom 0vspn`, version.AppName),
+		Example: fmt.Sprintf(`$ %[1]s add-genesis-custom-floor 0vspn`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
