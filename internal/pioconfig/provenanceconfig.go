@@ -43,13 +43,18 @@ func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
 		}
 	} else {
 		provConfig = &ProvenanceConfig{
-			FeeDenom: defaultFeeDenom,
-			// for backwards compatibility when these flags were not around, nhash will maintain behavior.
+			FeeDenom:               defaultFeeDenom,
 			ProvenanceMinGasPrices: fmt.Sprintf("%v", defaultMinGasPrices) + defaultFeeDenom,
 			MsgFeeFloorGasPrice:    defaultMinGasPrices,
 			BondDenom:              defaultBondDenom,
 			MsgFloorDenom:          defaultFeeDenom,
 		}
+		if msgFeeFloorGasPrice > 0 {
+			provConfig.MsgFeeFloorGasPrice = msgFeeFloorGasPrice
+		}
+		// for backwards compatibility when these flags were not around, nhash will maintain behavior default floor
+		// price unless a msgFeeFloorGasPrice is passed in at which point assumes the caller knows that they are doing.
+		provConfig.ProvenanceMinGasPrices = fmt.Sprintf("%d%s", provConfig.MsgFeeFloorGasPrice, provConfig.FeeDenom)
 	}
 }
 
