@@ -203,7 +203,7 @@ run-config: check-built
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgP8eMemorializeContractRequest 10000000000$(DENOM) ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-custom-floor-denom $(MIN_FLOOR_PRICE)$(DENOM) ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced collect-gentxs ; \
-fi ;
+	fi ;
 
 run: check-built run-config ;
 ifeq ($(DENOM),nhash)
