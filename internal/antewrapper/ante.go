@@ -30,7 +30,7 @@ func (r FeeMeterContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulat
 func GetFeeTx(tx sdk.Tx) (sdk.FeeTx, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
-		return nil, sdkerrors.ErrTxDecode.Wrap("Tx must be a FeeTx")
+		return nil, sdkerrors.ErrTxDecode.Wrapf("Tx must be a FeeTx: %T", tx)
 	}
 	return feeTx, nil
 }
@@ -39,7 +39,7 @@ func GetFeeTx(tx sdk.Tx) (sdk.FeeTx, error) {
 func GetFeeGasMeter(ctx sdk.Context) (*FeeGasMeter, error) {
 	feeGasMeter, ok := ctx.GasMeter().(*FeeGasMeter)
 	if !ok {
-		return nil, sdkerrors.ErrLogic.Wrap("gas meter is not a FeeGasMeter")
+		return nil, sdkerrors.ErrLogic.Wrapf("gas meter is not a FeeGasMeter: %T", ctx.GasMeter())
 	}
 	return feeGasMeter, nil
 }

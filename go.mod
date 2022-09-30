@@ -157,7 +157,7 @@ require (
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.1-poi-events-1
+replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.1-pio-1
 
 replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 
@@ -169,3 +169,6 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
 // TODO: Required for v1.13.x: Remove this and update the require line above to have the new version once it's out. https://github.com/provenance-io/provenance/issues/1015
 replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.28.0-pio-1-rc1
+
+// TODO: Required for IBC Transfer Module. Remove this when they patch it to include our changes. https://github.com/provenance-io/provenance/issues/1100
+replace github.com/cosmos/ibc-go/v5 => github.com/provenance-io/ibc-go/v5 v5.0.0-pio-1

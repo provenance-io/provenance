@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -20,11 +21,13 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
@@ -38,6 +41,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 
 	cmdconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -45,10 +49,6 @@ import (
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
-)
-
-const (
-	chainID = "sim-provenance"
 )
 
 func init() {
@@ -59,6 +59,34 @@ type StoreKeysPrefixes struct {
 	A        storetypes.StoreKey
 	B        storetypes.StoreKey
 	Prefixes [][]byte
+}
+
+// ProvAppStateFn wraps the sdksim.AppStateFn and sets the ICA GenesisState if isn't yet defined in the appState.
+func ProvAppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simtypes.AppStateFn {
+	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config) (json.RawMessage, []simtypes.Account, string, time.Time) {
+		appState, simAccs, chainID, genesisTimestamp := sdksim.AppStateFn(cdc, simManager)(r, accs, config)
+		appState = appStateWithICA(appState, cdc)
+		return appState, simAccs, chainID, genesisTimestamp
+	}
+}
+
+// appStateWithICA checks the given appState for an ica entry. If it's not found, it's populated with the defaults.
+func appStateWithICA(appState json.RawMessage, cdc codec.JSONCodec) json.RawMessage {
+	rawState := make(map[string]json.RawMessage)
+	err := json.Unmarshal(appState, &rawState)
+	if err != nil {
+		panic(fmt.Sprintf("error unmarshalling appstate: %v", err))
+	}
+	icaGenJSON, icaGenFound := rawState[icatypes.ModuleName]
+	if !icaGenFound || len(icaGenJSON) == 0 {
+		icaGenState := icatypes.DefaultGenesis()
+		rawState[icatypes.ModuleName] = cdc.MustMarshalJSON(icaGenState)
+		appState, err = json.Marshal(rawState)
+		if err != nil {
+			panic(fmt.Sprintf("error marshalling appstate: %v", err))
+		}
+	}
+	return appState
 }
 
 func TestFullAppSimulation(t *testing.T) {
@@ -84,7 +112,7 @@ func TestFullAppSimulation(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		ProvAppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		sdksim.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -121,7 +149,7 @@ func TestSimple(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		ProvAppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		sdksim.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -161,7 +189,7 @@ func TestAppImportExport(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		ProvAppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		sdksim.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -272,7 +300,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		ProvAppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		sdksim.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -317,7 +345,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		t,
 		os.Stdout,
 		newApp.BaseApp,
-		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		ProvAppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		sdksim.SimulationOperations(newApp, newApp.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -372,7 +400,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				t,
 				os.Stdout,
 				app.BaseApp,
-				sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+				ProvAppStateFn(app.AppCodec(), app.SimulationManager()),
 				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 				sdksim.SimulationOperations(app, app.AppCodec(), config),
 				app.ModuleAccountAddrs(),

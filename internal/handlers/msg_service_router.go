@@ -165,7 +165,11 @@ func noopInterceptor(_ context.Context, _ interface{}, _ *grpc.UnaryServerInfo, 
 func (msr *PioMsgServiceRouter) consumeMsgFees(ctx sdk.Context, req sdk.Msg) error {
 	feeGasMeter, err := antewrapper.GetFeeGasMeter(ctx)
 	if err != nil {
-		panic(err)
+		// The x/gov module calls the message service router for proposal messages that have passed.
+		// In such cases, the antehandler is not run, so the gas meter will not be a fee gas meter.
+		// But those messages were voted on and have passed, so they should be processed regardless of msg fees.
+		// So in here, if there's an error getting the fee gas meter, we skip all this msg fee consumption.
+		return nil
 	}
 
 	tx, err := msr.decoder(ctx.TxBytes())
