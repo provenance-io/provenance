@@ -1,7 +1,6 @@
 package handlers_test
 
 import (
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -27,6 +26,7 @@ import (
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	piohandlers "github.com/provenance-io/provenance/internal/handlers"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
