@@ -49,7 +49,6 @@ func (s *AnteTestSuite) TestMsgFeesDecoratorIgnoresMinGasPrice() {
 func (s *AnteTestSuite) TestMsgFeesDecoratorFloorGasPriceNotMet() {
 	antehandler := setUpApp(s, true, NHash, 0)
 	pioconfig.SetProvenanceConfig(NHash, 1905)
-	msgfeestypes.DefaultFloorGasPrice()
 	reqFee := int64(1905 * s.NewTestGasLimit())
 	feeCoins := sdk.NewCoins(sdk.NewInt64Coin(NHash, reqFee-1))
 	tx, _ := createTestTx(s, feeCoins)
