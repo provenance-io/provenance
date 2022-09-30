@@ -6,7 +6,7 @@ import (
 
 const (
 	// defaultBondDenom is the denomination of coin to use for bond/staking
-	// should only be via provConfig variable
+	// should only be done via provConfig variable
 	defaultBondDenom = "nhash" // nano-hash
 	// defaultFeeDenom is the (default) denomination of coin to use for fees
 	defaultFeeDenom = "nhash" // nano-hash
