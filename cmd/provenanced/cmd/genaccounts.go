@@ -551,7 +551,6 @@ Currently, the denom and price defaults to 1905nhash
 			return genutil.ExportGenesisFile(genDoc, genFile)
 		},
 	}
-	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
