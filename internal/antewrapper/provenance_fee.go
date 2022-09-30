@@ -134,9 +134,10 @@ func (dfd ProvenanceDeductFeeDecorator) checkDeductBaseFee(ctx sdk.Context, feeT
 		feeGasMeter.ConsumeBaseFee(baseFeeToConsume)
 	}
 
+	feeEventValue := feeTx.GetFee().String()
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeyFee, feeTx.GetFee().String()),
+			sdk.NewAttribute(sdk.AttributeKeyFee, feeEventValue),
 			sdk.NewAttribute(sdk.AttributeKeyFeePayer, deductFeesFrom.String()),
 		),
 		sdk.NewEvent(sdk.EventTypeTx,
