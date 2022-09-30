@@ -79,10 +79,12 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (sdk.Coins, sdk.
 
 		// If there's fees left to collect, or there were consumed fees, deduct/distribute them now.
 		if !unchargedFees.IsZero() || !consumedFees.IsZero() {
-			err = afd.msgFeeKeeper.DeductFeesDistributions(afd.bankKeeper, ctx, deductFeesFromAcc, unchargedFees, feeGasMeter.FeeConsumedDistributions())
+			eventCtx := ctx.WithEventManager(sdk.NewEventManager())
+			err = afd.msgFeeKeeper.DeductFeesDistributions(afd.bankKeeper, eventCtx, deductFeesFromAcc, unchargedFees, feeGasMeter.FeeConsumedDistributions())
 			if err != nil {
 				return nil, nil, err
 			}
+			eventsToReturn = append(eventsToReturn, eventCtx.EventManager().Events()...)
 		}
 		// the uncharged fees have now been charged.
 		chargedFees = chargedFees.Add(unchargedFees...)
