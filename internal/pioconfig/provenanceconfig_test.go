@@ -38,3 +38,20 @@ func TestGetConfigNotSet(t *testing.T) {
 	assert.Equal(t,
 		GetProvenanceConfig(), ProvenanceConfig{}, "Should get empty config if not set, several things in app wiring will fail fast if this not set so not too worried.")
 }
+
+func TestNotChangeableOutsideSet(t *testing.T) {
+	SetProvenanceConfig("foo", 8)
+	cfg1 := GetProvenanceConfig()
+	cfg1.FeeDenom = "fee"
+	cfg1.BondDenom = "bond"
+	cfg1.MsgFloorDenom = "floor"
+	cfg1.MsgFeeFloorGasPrice = 50
+	cfg1.ProvenanceMinGasPrices = "50floor"
+
+	cfg2 := GetProvenanceConfig()
+	assert.Equal(t, "foo", cfg2.FeeDenom)
+	assert.Equal(t, "foo", cfg2.BondDenom)
+	assert.Equal(t, "foo", cfg2.MsgFloorDenom)
+	assert.Equal(t, 8, int(cfg2.MsgFeeFloorGasPrice))
+	assert.Equal(t, "8foo", cfg2.ProvenanceMinGasPrices)
+}
