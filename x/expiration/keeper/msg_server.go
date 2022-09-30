@@ -72,12 +72,19 @@ func (m msgServer) InvokeExpiration(goCtx context.Context, msg *types.MsgInvokeE
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// validate invocation request
-	if err := m.Keeper.ValidateInvokeExpiration(ctx, msg.ModuleAssetId, msg.Signers, msg.MsgTypeURL()); err != nil {
+	exp, err := m.Keeper.ValidateInvokeExpiration(ctx, msg.ModuleAssetId, msg.Signers, msg.MsgTypeURL())
+	if err != nil {
+		return nil, err
+	}
+
+	// resolve the depositor to the owner or fallback to first signer if not found and after expiration
+	refundTo, err := m.Keeper.ResolveDepositor(ctx, *exp, msg)
+	if err != nil {
 		return nil, err
 	}
 
 	// execute expiration logic
-	if err := m.Keeper.InvokeExpiration(ctx, msg.ModuleAssetId); err != nil {
+	if err := m.Keeper.InvokeExpiration(ctx, msg.ModuleAssetId, refundTo); err != nil {
 		return nil, sdkerrors.Wrapf(types.ErrInvoke, fmt.Sprintf(": %v", err))
 	}
 
