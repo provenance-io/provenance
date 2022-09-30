@@ -18,10 +18,6 @@ import (
 	simappparams "github.com/provenance-io/provenance/app/params"
 )
 
-func init() {
-	pioconfig.SetProvenanceConfig("", 0)
-}
-
 func TestProposalContents(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})

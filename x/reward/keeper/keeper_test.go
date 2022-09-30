@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 	"time"
 
@@ -64,7 +63,6 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 func TestKeeperTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(KeeperTestSuite))
 }
 

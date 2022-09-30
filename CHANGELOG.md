@@ -55,6 +55,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Refactored the `ProvenanceDeductFeeDecorator`. It now makes sure the payer has enough in their account to cover the additional fees. It also now deducts/consumes the `floor gas price * gas`.
   * Added the `fee_payer` attribute to events of type `tx` involving fees (i.e. the ones with attributes `fee`, `min_fee_charged`, `additionalfee` and/or `baseFee`).
   * Moved the additional fees calculation logic into the msgfees keeper.
+*  [#1067](https://github.com/provenance-io/provenance/issues/1067) This feature makes it so that you can start the chain with custom denoms for a chain, by passing in the required flags, also makes MsgFee not coupled only to the nhash denom.
+   For running the chain locally `make run DENOM=vspn MIN_FLOOR_PRICE=0` and `make clean localnet-start DENOM=vspn MIN_FLOOR_PRICE=0` make targets were also updated.
 
 ### Bug Fixes
 

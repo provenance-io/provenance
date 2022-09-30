@@ -1,7 +1,6 @@
 package simulation_test
 
 import (
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"math/rand"
 	"testing"
 
@@ -27,7 +26,6 @@ type SimTestSuite struct {
 }
 
 func (s *SimTestSuite) SetupTest() {
-	pioconfig.SetProvenanceConfig("", 0)
 	s.app = app.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 }

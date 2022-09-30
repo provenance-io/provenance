@@ -2,7 +2,6 @@ package name_test
 
 import (
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"strings"
 	"testing"
 
@@ -23,10 +22,6 @@ import (
 	"github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
-
-func init() {
-	pioconfig.SetProvenanceConfig("", 0)
-}
 
 func TestInvalidMsg(t *testing.T) {
 	k := keeper.Keeper{}

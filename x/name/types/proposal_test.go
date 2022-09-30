@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -76,6 +75,5 @@ func (s *IntegrationTestSuite) TestParamChangeVariations() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(IntegrationTestSuite))
 }

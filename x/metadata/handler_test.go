@@ -3,7 +3,6 @@ package metadata_test
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 
 	"github.com/google/uuid"
@@ -59,7 +58,6 @@ func (s *MetadataHandlerTestSuite) SetupTest() {
 }
 
 func TestMetadataHandlerTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(MetadataHandlerTestSuite))
 }
 

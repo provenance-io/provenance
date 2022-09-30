@@ -126,7 +126,7 @@ func TestIntegrationCLITestSuite(t *testing.T) {
 
 func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-	pioconfig.SetProvenanceConfig("", 0)
+	pioconfig.SetProvenanceConfig("atom", 0)
 	cfg := testutil.DefaultTestNetworkConfig()
 	cfg.NumValidators = 1
 	genesisState := cfg.GenesisState
@@ -463,7 +463,6 @@ owner: %s`,
 	genesisState[metadatatypes.ModuleName] = metadataDataBz
 
 	cfg.GenesisState = genesisState
-	pioconfig.SetProvenanceConfig("atom", 0)
 
 	cfg.ChainID = antewrapper.SimAppChainID
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)

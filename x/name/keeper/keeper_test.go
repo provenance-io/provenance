@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -34,7 +33,6 @@ type KeeperTestSuite struct {
 }
 
 func TestKeeperTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(KeeperTestSuite))
 }
 

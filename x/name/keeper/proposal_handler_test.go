@@ -10,12 +10,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
+	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
+	nametypes "github.com/provenance-io/provenance/x/name/types"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	provenance "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/internal/pioconfig"
-	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
-	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
 type IntegrationTestSuite struct {
@@ -128,6 +128,5 @@ func (s *IntegrationTestSuite) TestNameProposals() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(IntegrationTestSuite))
 }

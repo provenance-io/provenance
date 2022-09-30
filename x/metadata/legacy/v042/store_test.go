@@ -1,7 +1,6 @@
 package v042_test
 
 import (
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"testing"
 
 	"github.com/google/uuid"
@@ -38,10 +37,6 @@ type MigrateTestSuite struct {
 	scopeMetaaddrs        []types.MetadataAddress
 	scopeSpecMetaaddrs    []types.MetadataAddress
 	contractSpecMetaaddrs []types.MetadataAddress
-}
-
-func init() {
-	pioconfig.SetProvenanceConfig("", 0)
 }
 
 func TestMigrateTestSuite(t *testing.T) {

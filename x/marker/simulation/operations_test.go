@@ -2,7 +2,6 @@ package simulation_test
 
 import (
 	"fmt"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"math/rand"
 	"testing"
 
@@ -129,6 +128,5 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 }
 
 func TestSimTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(SimTestSuite))
 }

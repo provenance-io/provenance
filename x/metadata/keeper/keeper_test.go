@@ -103,7 +103,6 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 func TestKeeperTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(KeeperTestSuite))
 }
 
