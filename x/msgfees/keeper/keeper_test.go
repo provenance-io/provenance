@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"github.com/provenance-io/provenance/x/msgfees/types"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,6 +18,7 @@ import (
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type TestSuite struct {
