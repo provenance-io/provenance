@@ -136,7 +136,7 @@ func Execute(rootCmd *cobra.Command) error {
 	// Custom denom flag added to root command
 	rootCmd.PersistentFlags().String(CustomDenomFlag, "", "Indicates if a custom denom is to be used, and the name of it (default nhash)")
 	// Custom msgFee floor price flag added to root command
-	rootCmd.PersistentFlags().Int64(CustomMsgFeeFloorPriceFlag, 0, "Custom msgfee floor price, optional (default 1905nhash)")
+	rootCmd.PersistentFlags().Int64(CustomMsgFeeFloorPriceFlag, 0, "Custom msgfee floor price, optional (default 1905)")
 
 	executor := tmcli.PrepareBaseCmd(rootCmd, "", app.DefaultNodeHome)
 	return executor.ExecuteContext(ctx)
