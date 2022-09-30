@@ -813,6 +813,7 @@ func New(
 	app.SetEndBlocker(app.EndBlocker)
 
 	app.SetAggregateEventsFunc(piohandlers.AggregateEvents)
+
 	// Add upgrade plans for each release. This must be done before the baseapp seals via LoadLatestVersion() down below.
 	InstallCustomUpgradeHandlers(app)
 

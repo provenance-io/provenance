@@ -11,10 +11,9 @@ import (
 // This is used to modify the events that are emitted for a transaction.
 // anteEvents will be populated on failure and success
 // resultEvents will only be populated on success
-func AggregateEvents(anteEvents []abci.Event, resultEvents []abci.Event) ([]abci.Event, []abci.Event, error) {
+func AggregateEvents(anteEvents []abci.Event, resultEvents []abci.Event) ([]abci.Event, []abci.Event) {
 	if len(resultEvents) == 0 { // tx failed...fix fee event to have the exact fee charged
-		var err error
-		var txFee sdk.Coins
+		var txFee []byte
 		var feeIndex int
 		var feeFound, spenderFound bool
 		for i, event := range anteEvents {
@@ -23,18 +22,18 @@ func AggregateEvents(anteEvents []abci.Event, resultEvents []abci.Event) ([]abci
 				feeIndex = i
 			}
 			// first spent coin event is the coin sent to fee module for tx
-			if !spenderFound && event.Type == banktypes.EventTypeCoinSpent && string(event.Attributes[0].Key) == banktypes.AttributeKeySpender && len(anteEvents) >= i+3 {
-				txFee, err = sdk.ParseCoinsNormalized(string(event.Attributes[1].Value))
-				if err != nil {
-					return nil, nil, err
-				}
+			if !spenderFound && event.Type == banktypes.EventTypeCoinSpent && string(event.Attributes[0].Key) == banktypes.AttributeKeySpender {
+				txFee = event.Attributes[1].Value
 				spenderFound = true
+			}
+			if spenderFound && feeFound {
+				break
 			}
 		}
 		if feeFound && spenderFound {
-			anteEvents[feeIndex].Attributes[0].Value = []byte(txFee.String())
+			anteEvents[feeIndex].Attributes[0].Value = txFee
 		}
 	}
 
-	return anteEvents, resultEvents, nil
+	return anteEvents, resultEvents
 }
