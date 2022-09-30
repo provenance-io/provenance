@@ -32,7 +32,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -267,7 +266,7 @@ func TestFailedTx(tt *testing.T) {
 				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, "100000stake"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 		}
-		expEvents = append(expEvents, createSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
 
 		assertEventsContains(t, res.Events, expEvents)
 	})
@@ -306,41 +305,10 @@ func TestFailedTx(tt *testing.T) {
 				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, "100000stake"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 		}
-		expEvents = append(expEvents, createSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
 
 		assertEventsContains(t, res.Events, expEvents)
 	})
-}
-
-// creates the sequence of events that are created on bankkeeper.SendCoins
-func createSendCoinEvents(fromAddress, toAddress string, amt sdk.Coins) []abci.Event {
-	events := sdk.NewEventManager().Events()
-	// subUnlockedCoins event `coin_spent`
-	events = events.AppendEvent(sdk.NewEvent(
-		banktypes.EventTypeCoinSpent,
-		sdk.NewAttribute(banktypes.AttributeKeySpender, fromAddress),
-		sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
-	))
-	// addCoins event
-	events = events.AppendEvent(sdk.NewEvent(
-		banktypes.EventTypeCoinReceived,
-		sdk.NewAttribute(banktypes.AttributeKeyReceiver, toAddress),
-		sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
-	))
-
-	// SendCoins function
-	events = events.AppendEvent(sdk.NewEvent(
-		types.EventTypeTransfer,
-		sdk.NewAttribute(types.AttributeKeyRecipient, toAddress),
-		sdk.NewAttribute(types.AttributeKeySender, fromAddress),
-		sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
-	))
-	events = events.AppendEvent(sdk.NewEvent(
-		sdk.EventTypeMessage,
-		sdk.NewAttribute(types.AttributeKeySender, fromAddress),
-	))
-
-	return events.ToABCIEvents()
 }
 
 func TestMsgService(tt *testing.T) {
@@ -394,7 +362,7 @@ func TestMsgService(tt *testing.T) {
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 		}
 		// fee charge in antehandler
-		expEvents = append(expEvents, createSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
 
 		assertEventsContains(t, res.Events, expEvents)
 	})
@@ -435,11 +403,11 @@ func TestMsgService(tt *testing.T) {
 				NewAttribute("msg_fees", jsonArrayJoin(msgFeesMsgSendEventJSON(1, 800, "hotdog", "")))),
 		}
 		// fee charge in antehandler
-		expEvents = append(expEvents, createSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
 		// fee charged for msg based fee
-		expEvents = append(expEvents, createSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 800)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 800)))...)
 		// swept fee amount
-		expEvents = append(expEvents, createSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100)))...)
 
 		assertEventsContains(t, res.Events, expEvents)
 	})
@@ -477,11 +445,11 @@ func TestMsgService(tt *testing.T) {
 				NewAttribute("msg_fees", jsonArrayJoin(msgFeesMsgSendEventJSON(1, 10, "stake", "")))),
 		}
 		// fee charge in antehandler
-		expEvents = append(expEvents, createSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
 		// fee charged for msg based fee
-		expEvents = append(expEvents, createSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)))...)
 		// swept fee amount
-		expEvents = append(expEvents, createSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 101)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 101)))...)
 
 		assertEventsContains(t, res.Events, expEvents)
 	})
@@ -542,11 +510,11 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 				jsonArrayJoin(msgFeesMsgSendEventJSON(1, 200, "hotdog", ""), msgFeesMsgSendEventJSON(1, 600, "hotdog", addr2.String())))),
 	}
 	// fee charge in antehandler
-	expEvents = append(expEvents, createSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
+	expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
 	// fee charged for msg based fee
-	expEvents = append(expEvents, createSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 200)))...)
+	expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 200)))...)
 	// fee charged for msg based fee
-	expEvents = append(expEvents, createSendCoinEvents(addr1.String(), addr2.String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 600)))...)
+	expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), addr2.String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 600)))...)
 
 	assertEventsContains(t, res.Events, expEvents)
 }
@@ -622,9 +590,9 @@ func TestMsgServiceAuthz(tt *testing.T) {
 				NewAttribute("msg_fees", jsonArrayJoin(msgFeesMsgSendEventJSON(1, 800, "hotdog", "")))),
 		}
 		// fee charge in antehandler
-		expEvents = append(expEvents, createSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
 		// fee charged for msg based fee
-		expEvents = append(expEvents, createSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 800)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 800)))...)
 		assertEventsContains(t, res.Events, expEvents)
 	})
 
@@ -661,9 +629,9 @@ func TestMsgServiceAuthz(tt *testing.T) {
 				NewAttribute("msg_fees", jsonArrayJoin(msgFeesMsgSendEventJSON(2, 1600, "hotdog", "")))),
 		}
 		// fee charge in antehandler
-		expEvents = append(expEvents, createSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 200000)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 200000)))...)
 		// fee charged for msg based fee
-		expEvents = append(expEvents, createSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1600)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1600)))...)
 
 		assertEventsContains(t, res.Events, expEvents)
 	})
@@ -751,13 +719,13 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 					msgFeesEventJSON("/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest", 1, 87500000, "nhash", addr2.String())))),
 		}
 		// fee charge in antehandler
-		expEvents = append(expEvents, createSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
 		// fee charged for msg based fee to fee module on assess msg split
-		expEvents = append(expEvents, createSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 87500000)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 87500000)))...)
 		// fee charged for msg based fee to recipient from assess msg split
-		expEvents = append(expEvents, createSendCoinEvents(addr1.String(), addr2.String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 87500000)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), addr2.String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 87500000)))...)
 		// swept amount
-		expEvents = append(expEvents, createSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
 
 		assertEventsContains(t, res.Events, expEvents)
 	})
@@ -3063,4 +3031,35 @@ func NewTestGasLimit() uint64 {
 
 func NewTestRewardsGasLimit() uint64 {
 	return 200000
+}
+
+// CreateSendCoinEvents creates the sequence of events that are created on bankkeeper.SendCoins
+func CreateSendCoinEvents(fromAddress, toAddress string, amt sdk.Coins) []abci.Event {
+	events := sdk.NewEventManager().Events()
+	// subUnlockedCoins event `coin_spent`
+	events = events.AppendEvent(sdk.NewEvent(
+		banktypes.EventTypeCoinSpent,
+		sdk.NewAttribute(banktypes.AttributeKeySpender, fromAddress),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+	))
+	// addCoins event
+	events = events.AppendEvent(sdk.NewEvent(
+		banktypes.EventTypeCoinReceived,
+		sdk.NewAttribute(banktypes.AttributeKeyReceiver, toAddress),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+	))
+
+	// SendCoins function
+	events = events.AppendEvent(sdk.NewEvent(
+		banktypes.EventTypeTransfer,
+		sdk.NewAttribute(banktypes.AttributeKeyRecipient, toAddress),
+		sdk.NewAttribute(banktypes.AttributeKeySender, fromAddress),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+	))
+	events = events.AppendEvent(sdk.NewEvent(
+		sdk.EventTypeMessage,
+		sdk.NewAttribute(banktypes.AttributeKeySender, fromAddress),
+	))
+
+	return events.ToABCIEvents()
 }
