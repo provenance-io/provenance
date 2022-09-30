@@ -184,7 +184,7 @@ CHAIN_ID ?= testing
 CHAIN_ID_DOCKER ?= chain-local
 
 # Run an instance of the daemon against a local config (create the config if it does not exit.)
-# if required to use something other than vspn, use: make run DENOM=vspn MIN_FLOOR_PRICE=0
+# if required to use something other than nhash, use: make run DENOM=vspn MIN_FLOOR_PRICE=0
 run-config: check-built
 	@if [ ! -d "$(BUILDDIR)/run/provenanced/config" ]; then \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=$(CHAIN_ID) testing --custom-denom=$(DENOM); \
