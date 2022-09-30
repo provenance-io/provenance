@@ -42,7 +42,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Ignore hardcoded tx gas limit when `consensus_params.block.max_gas` is set to -1 for local nodes
 * Bump Cosmos-SDK to Bump cosmos to v0.46.0-pio-1-rc4 (from v0.45.5-pio-1). [#995](https://github.com/provenance-io/provenance/issues/995)
   See https://github.com/provenance-io/cosmos-sdk/blob/v0.46.0-pio-1-rc4/RELEASE_NOTES.md for more info.
-* Bump IBC to v5.0.0-beta1. [#995](https://github.com/provenance-io/provenance/issues/995)
 * Refactor the `x/marker` module's `Holding` query to utilize the `x/bank` module's new `DenomOwners` query. [#995](https://github.com/provenance-io/provenance/issues/995)
   The only real difference between those two queries is that the `Holding` query accepts either a denom or marker address.
 * Update the third-party protos and swagger files after the cosmos v0.46 bump. [#1017](https://github.com/provenance-io/provenance/issues/1017)
@@ -55,6 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Refactored the `ProvenanceDeductFeeDecorator`. It now makes sure the payer has enough in their account to cover the additional fees. It also now deducts/consumes the `floor gas price * gas`.
   * Added the `fee_payer` attribute to events of type `tx` involving fees (i.e. the ones with attributes `fee`, `min_fee_charged`, `additionalfee` and/or `baseFee`).
   * Moved the additional fees calculation logic into the msgfees keeper.
+* Bump IBC to `5.0.0-pio-1` (from `v2.3.0`) to add a check for SendEnabled [#1100](https://github.com/provenance-io/provenance/issues/1100)
 
 ### Bug Fixes
 
