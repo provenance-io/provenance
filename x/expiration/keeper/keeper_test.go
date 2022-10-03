@@ -13,10 +13,11 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/expiration/types"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -53,9 +54,7 @@ type KeeperTestSuite struct {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
-
-	s.app = simapp.Setup(false)
+	s.app = simapp.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: tmtime.Now()})
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.app.ExpirationKeeper)
@@ -66,7 +65,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.user1Addr = sdk.AccAddress(s.pubKey1.Address())
 	s.user1 = s.user1Addr.String()
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
-	simapp.FundAccount(s.app, s.ctx, s.user1Addr, sdk.NewCoins(types.DefaultDeposit).Add(types.DefaultDeposit))
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, s.user1Addr, sdk.NewCoins(types.DefaultDeposit).Add(types.DefaultDeposit)), "funding account")
 
 	s.pubKey2 = secp256k1.GenPrivKey().PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubKey2.Address())
@@ -75,7 +74,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.pubKey3 = secp256k1.GenPrivKey().PubKey()
 	s.user3Addr = sdk.AccAddress(s.pubKey3.Address())
 	s.user3 = s.user3Addr.String()
-	simapp.FundAccount(s.app, s.ctx, s.user3Addr, sdk.NewCoins(types.DefaultDeposit))
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, s.user3Addr, sdk.NewCoins(types.DefaultDeposit)), "funding account")
 
 	// setup up genesis
 	var expirationData types.GenesisState
@@ -108,7 +107,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		ModuleAssetId: s.moduleAssetID,
 		Owner:         s.user1,
 		Time:          s.time,
-		Deposit:       sdk.NewInt64Coin(simapp.DefaultFeeDenom, 1),
+		Deposit:       sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1),
 	}
 }
 
@@ -224,7 +223,8 @@ func (s *KeeperTestSuite) TestAddExpiration() {
 			createAuth := tc.grantee != nil && tc.granter != nil
 			if createAuth {
 				a := authz.NewGenericAuthorization(tc.msgTypeURL)
-				err := s.app.AuthzKeeper.SaveGrant(s.ctx, tc.grantee, tc.granter, a, now.Add(time.Hour))
+				onehour := now.Add(time.Hour)
+				err := s.app.AuthzKeeper.SaveGrant(s.ctx, tc.grantee, tc.granter, a, &onehour)
 				s.Assert().NoError(err)
 			}
 
@@ -336,7 +336,8 @@ func (s *KeeperTestSuite) TestExtendExpiration() {
 			createAuth := tc.grantee != nil && tc.granter != nil
 			if createAuth {
 				a := authz.NewGenericAuthorization(tc.msgTypeURL)
-				err := s.app.AuthzKeeper.SaveGrant(s.ctx, tc.grantee, tc.granter, a, now.Add(time.Hour))
+				onehour := now.Add(time.Hour)
+				err := s.app.AuthzKeeper.SaveGrant(s.ctx, tc.grantee, tc.granter, a, &onehour)
 				s.Assert().NoError(err)
 			}
 

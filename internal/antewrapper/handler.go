@@ -14,25 +14,26 @@ import (
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
-	AccountKeeper   cosmosante.AccountKeeper
-	BankKeeper      banktypes.Keeper
-	FeegrantKeeper  msgfeestypes.FeegrantKeeper
-	MsgFeesKeeper   msgfeestypes.MsgFeesKeeper
-	SignModeHandler authsigning.SignModeHandler
-	SigGasConsumer  func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
+	AccountKeeper          cosmosante.AccountKeeper
+	BankKeeper             banktypes.Keeper
+	ExtensionOptionChecker cosmosante.ExtensionOptionChecker
+	FeegrantKeeper         msgfeestypes.FeegrantKeeper
+	MsgFeesKeeper          msgfeestypes.MsgFeesKeeper
+	SignModeHandler        authsigning.SignModeHandler
+	SigGasConsumer         func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	if options.AccountKeeper == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "account keeper is required for ante builder")
+		return nil, sdkerrors.ErrLogic.Wrap("account keeper is required for ante builder")
 	}
 
 	if options.BankKeeper == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "bank keeper is required for ante builder")
+		return nil, sdkerrors.ErrLogic.Wrap("bank keeper is required for ante builder")
 	}
 
 	if options.SignModeHandler == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for ante builder")
+		return nil, sdkerrors.ErrLogic.Wrap("sign mode handler is required for ante builder")
 	}
 
 	var sigGasConsumer = options.SigGasConsumer
@@ -41,14 +42,12 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	decorators := []sdk.AnteDecorator{
-		cosmosante.NewSetUpContextDecorator(),
-		// outermost AnteDecorator. SetUpContext must be called first
-		NewFeeMeterContextDecorator(), // NOTE : fee gas meter also has the functionality of GasTracerContextDecorator in previous versions
-		cosmosante.NewRejectExtensionOptionsDecorator(),
+		cosmosante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
+		NewFeeMeterContextDecorator(),         // NOTE : fee gas meter also has the functionality of GasTracerContextDecorator in previous versions
 		NewTxGasLimitDecorator(),
-		cosmosante.NewMempoolFeeDecorator(),
-		// Fee Decorator works to augment NewMempoolFeeDecorator and also check that enough fees are paid
-		NewMsgFeesDecorator(options.BankKeeper, options.AccountKeeper, options.FeegrantKeeper, options.MsgFeesKeeper),
+		NewMinGasPricesDecorator(),
+		NewMsgFeesDecorator(options.MsgFeesKeeper),
+		cosmosante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		cosmosante.NewValidateBasicDecorator(),
 		cosmosante.NewTxTimeoutHeightDecorator(),
 		cosmosante.NewValidateMemoDecorator(options.AccountKeeper),

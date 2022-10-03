@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/msgfees/keeper"
 	"github.com/provenance-io/provenance/x/msgfees/simulation"
 	"github.com/provenance-io/provenance/x/msgfees/types"
@@ -18,7 +19,7 @@ import (
 )
 
 func TestProposalContents(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	// initialize parameters
@@ -29,7 +30,7 @@ func TestProposalContents(t *testing.T) {
 
 	// execute ProposalContents function
 	weightedProposalContent := simulation.ProposalContents(keeper.NewKeeper(app.AppCodec(), app.GetKey(types.ModuleName),
-		app.GetSubspace(types.ModuleName), "", types.NhashDenom, nil, nil))
+		app.GetSubspace(types.ModuleName), "", pioconfig.GetProvenanceConfig().FeeDenom, nil, nil))
 	require.Len(t, weightedProposalContent, 2)
 
 	w0 := weightedProposalContent[0]

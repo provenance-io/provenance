@@ -13,55 +13,81 @@ option java_multiple_files = true;
 // AddMsgFeeProposal defines a governance proposal to add additional msg based fee
 message AddMsgFeeProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
-  string title       = 1;
+  // propsal title
+  string title = 1;
+  // propsal description
   string description = 2;
 
+  // type url of msg to add fee
   string msg_type_url = 3;
 
+  // additional fee for msg type
   cosmos.base.v1beta1.Coin additional_fee = 4 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"additional_fee\""
   ];
+
+  // optional recipient to recieve basis points
+  string recipient = 5;
+  // basis points to use when recipient is present (1 - 10,000)
+  string recipient_basis_points = 6;
 }
 
 // UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
 message UpdateMsgFeeProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
-  string title       = 1;
+  // propsal title
+  string title = 1;
+  // propsal description
   string description = 2;
-
+  // type url of msg to update fee
   string msg_type_url = 3;
 
-  cosmos.base.v1beta1.Coin additional_fee = 4 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags)     = "yaml:\"additional_fee\""
-  ];
+  // additional fee for msg type
+  cosmos.base.v1beta1.Coin additional_fee = 4
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // optional recipient to recieve basis points
+  string recipient = 5;
+  // basis points to use when recipient is present (1 - 10,000)
+  string recipient_basis_points = 6;
 }
 
 // RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
 message RemoveMsgFeeProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
-  string title       = 1;
+  // propsal title
+  string title = 1;
+  // propsal description
   string description = 2;
-
+  // type url of msg fee to remove
   string msg_type_url = 3;
 }
 
 // UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
 message UpdateNhashPerUsdMilProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
-  string title       = 1;
-  string description = 2;
+  string title       = 1; // proposal title
+  string description = 2; // proposal description
   // nhash_per_usd_mil is number of nhash per usd mil
   uint64 nhash_per_usd_mil = 3;
+}
+
+// UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
+message UpdateConversionFeeDenomProposal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  string title       = 1; // proposal title
+  string description = 2; // proposal description
+  // conversion_fee_denom is the denom that usd will be converted to
+  string conversion_fee_denom = 4;
 }

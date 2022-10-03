@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -312,7 +313,7 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 }
 
 // Returns the current supply in network according to the bank module for the given marker
-func (k Keeper) CurrentCirculation(ctx sdk.Context, marker types.MarkerAccountI) sdk.Int {
+func (k Keeper) CurrentCirculation(ctx sdk.Context, marker types.MarkerAccountI) sdkmath.Int {
 	return k.bankKeeper.GetSupply(ctx, marker.GetDenom()).Amount
 }
 
@@ -698,7 +699,7 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 
 func (k Keeper) authzHandler(ctx sdk.Context, admin sdk.AccAddress, from sdk.AccAddress, amount sdk.Coin) error {
 	markerAuth := types.MarkerTransferAuthorization{}
-	authorization, expireTime := k.authzKeeper.GetCleanAuthorization(ctx, admin, from, markerAuth.MsgTypeURL())
+	authorization, expireTime := k.authzKeeper.GetAuthorization(ctx, admin, from, markerAuth.MsgTypeURL())
 	if authorization == nil {
 		return fmt.Errorf("%s account has not been granted authority to withdraw from %s account", admin, from)
 	}

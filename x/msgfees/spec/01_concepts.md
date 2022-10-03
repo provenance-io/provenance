@@ -25,7 +25,7 @@ addition to the normal gas consumption.
 Additional fees are assessed and finally consumed based on msgType of the msgs contained in the transaction,
 and the fee schedule that is persisted on chain.  These additional fees are created/updated/removed by governance through `AddMsgFeeProposal`, `UpdateMsgFeeProposal`, and `RemoveMsgFeeProposal` proposals.
 
-Additional fee can be in any *denom*.
+Additional fee can be in any *denom*.  This can be split to an optional bech32 account address with basis points.
 
 ## Base Fee
 

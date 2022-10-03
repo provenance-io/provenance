@@ -1,10 +1,7 @@
 #!/usr/bin/make -f
 export GO111MODULE=on
 
-PACKAGES               := $(shell go list ./... 2>/dev/null || true)
-PACKAGES_NOSIMULATION  := $(filter-out %/simulation%,$(PACKAGES))
-PACKAGES_SIMULATION    := $(filter     %/simulation%,$(PACKAGES))
-
+GO ?= go
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 
@@ -27,10 +24,9 @@ ifeq ($(WITH_BADGERDB),yes)
   WITH_BADGERDB=true
 endif
 
-
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
-TM_VERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::') # grab everything after the space in "github.com/tendermint/tendermint v0.34.7"
+TM_VERSION := $(shell $(GO) list -m github.com/tendermint/tendermint 2> /dev/null | sed 's:.* ::') # grab everything after the space in "github.com/tendermint/tendermint v0.34.7"
 COMMIT := $(shell git log -1 --format='%h')
 # don't override user values
 ifeq (,$(VERSION))
@@ -45,8 +41,6 @@ GOLANGCI_LINT=$(shell which golangci-lint)
 ifeq ("$(wildcard $(GOLANGCI_LINT))","")
     GOLANGCI_LINT = $(BINDIR)/golangci-lint
 endif
-
-GO ?= go
 
 HTTPS_GIT := https://github.com/provenance-io/provenance.git
 DOCKER := $(shell which docker)
@@ -83,20 +77,6 @@ endif
 ##############################
 # Build Flags/Tags
 ##############################
-
-build_tags = netgo
-ifeq ($(UNAME_S),darwin)
-	ifeq ($(UNAME_M),arm64)
-		# Needed on M1 macs due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
-		build_tags += dynamic
-	endif
-endif
-ifeq ($(UNAME_S),linux)
-	ifeq ($(UNAME_M),aarch64)
-		# Needed on aarch64 due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
-		build_tags += dynamic
-	endif
-endif
 
 ifeq ($(WITH_CLEVELDB),true)
   ifneq ($(have_gcc),true)
@@ -191,35 +171,46 @@ all: build format lint test
 install: go.sum
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install $(BUILD_FLAGS) ./cmd/provenanced
 
-build: validate-os-dependencies validate-go-version go.sum
+build: validate-go-version go.sum
 	mkdir -p $(BUILDDIR)
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/provenanced
 
 build-linux: go.sum
 	WITH_LEDGER=false GOOS=linux GOARCH=amd64 $(MAKE) build
 
+DENOM ?= nhash
+MIN_FLOOR_PRICE ?= 1905
+CHAIN_ID ?= testing
+CHAIN_ID_DOCKER ?= chain-local
+
 # Run an instance of the daemon against a local config (create the config if it does not exit.)
+# if required to use something other than nhash, use: make run DENOM=vspn MIN_FLOOR_PRICE=0
 run-config: check-built
 	@if [ ! -d "$(BUILDDIR)/run/provenanced/config" ]; then \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=testing testing ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=$(CHAIN_ID) testing --custom-denom=$(DENOM); \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced keys add validator --keyring-backend test ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pio --keyring-backend test ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pb --restrict=false --keyring-backend test ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator io --restrict --keyring-backend test ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator provenance --keyring-backend test ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-account validator 100000000000000000000nhash --keyring-backend test ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced gentx validator 1000000000000000nhash --keyring-backend test --chain-id=testing; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-marker 100000000000000000000nhash --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.name.v1.MsgBindNameRequest 10000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.marker.v1.MsgAddMarkerRequest 100000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest 10000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest 10000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgP8eMemorializeContractRequest 10000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced collect-gentxs; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-account validator 100000000000000000000$(DENOM)  --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced gentx validator 1000000000000000$(DENOM)  --keyring-backend test --chain-id=$(CHAIN_ID); \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-marker 100000000000000000000$(DENOM)  --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.name.v1.MsgBindNameRequest 10000000000$(DENOM) ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.marker.v1.MsgAddMarkerRequest 100000000000$(DENOM) ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest 10000000000$(DENOM) ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest 10000000000$(DENOM) ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgP8eMemorializeContractRequest 10000000000$(DENOM) ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-custom-floor $(MIN_FLOOR_PRICE)$(DENOM) ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced collect-gentxs ; \
 	fi ;
 
-run: check-built run-config;
+run: check-built run-config ;
+ifeq ($(DENOM),nhash)
 	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
+else
+	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start --custom-denom $(DENOM)
+endif
 
 .PHONY: install build build-linux run
 
@@ -331,14 +322,13 @@ $(RELEASE_BIN):
 ##############################
 
 go-mod-cache: go.sum
-	@echo "--> Download go modules to local cache"
-	@go mod download
+	$(GO) mod download
 .PHONY: go-mod-cache
 
 go.sum: go.mod
 	@echo "--> Ensure dependencies have not been modified"
-	@go mod verify
-	@go mod tidy
+	$(GO) mod verify
+	$(GO) mod tidy
 
 # look into .golangci.yml for enabling / disabling linters
 lint:
@@ -374,15 +364,7 @@ rocksdb:
 cleveldb:
 	scripts/cleveldb_build_and_install.sh
 
-# Download and install librdkafka so that it can be used when doing a build.
-librdkafka:
-	@if [ "$(UNAME_S)" = "darwin" ] && [ "$(UNAME_M)" = "arm64" ]; then \
-		scripts/m1_librdkafka_install.sh;\
-	elif [ "$(UNAME_S)" = "linux" ] && [ "$(UNAME_M)" = "aarch64" ]; then \
-		scripts/linux_arm64_librdkafka_install.sh;\
-	fi
-
-.PHONY: go-mod-cache go.sum lint clean format check-built linkify update-tocs rocksdb cleveldb librdkafka
+.PHONY: go-mod-cache go.sum lint clean format check-built linkify update-tocs rocksdb cleveldb
 
 
 validate-go-version: ## Validates the installed version of go against Provenance's minimum requirement.
@@ -394,15 +376,6 @@ validate-go-version: ## Validates the installed version of go against Provenance
 	elif [ $(GO_MINOR_VERSION) -lt $(MINIMUM_SUPPORTED_GO_MINOR_VERSION) ] ; then \
 		echo '$(GO_VERSION_VALIDATION_ERR_MSG)';\
 		exit 1; \
-	fi
-
-validate-os-dependencies: ## Validates all the dependencies needed by a specific os
-	@if [ "$(UNAME_S)" = "darwin" ] && [ "$(UNAME_M)" = "arm64" ]; then \
-		output=$$(scripts/m1-dependency-check.sh); \
-		if [ "$$?" = "1" ]; then echo "\x1B[31m>> Build halted\x1B[39m"; echo "\x1B[31m>> $$output\x1B[39m"; exit 1; fi; \
-	elif [ "$(UNAME_S)" = "linux" ] && [ "$(UNAME_M)" = "aarch64" ]; then \
-		output=$$(scripts/linux-arm64-dependency-check.sh); \
-		if [ "$$?" = "1" ]; then echo ">> Build halted"; echo ">> $$output"; exit 1; fi; \
 	fi
 
 download-smart-contracts:
@@ -417,23 +390,15 @@ include sims.mk
 test: test-unit
 test-all: test-unit test-ledger-mock test-race test-cover
 
+PACKAGES               := $(shell $(GO) list ./... 2>/dev/null || true)
+PACKAGES_NOSIMULATION  := $(filter-out %/simulation%,$(PACKAGES))
+PACKAGES_SIMULATION    := $(filter     %/simulation%,$(PACKAGES))
+
 TEST_PACKAGES=./...
 TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-race test-ledger test-race
 
 ifeq ($(WITH_CLEVELDB),true)
 	TAGS+= cleveldb
-endif
-ifeq ($(UNAME_S),darwin)
-	ifeq ($(UNAME_M),arm64)
-		# Needed on M1 macs due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
-		TAGS += dynamic
-	endif
-endif
-ifeq ($(UNAME_S),linux)
-	ifeq ($(UNAME_M),aarch64)
-		# Needed on aarch64 due to kafka issue: https://github.com/confluentinc/confluent-kafka-go/issues/591#issuecomment-811705552
-		TAGS += dynamic
-	endif
 endif
 
 # Test runs-specific rules. To add a new test target, just add
@@ -456,18 +421,18 @@ check-test-unit-amino: TAGS+=ledger test_ledger_mock test_amino norace
 $(CHECK_TEST_TARGETS): ARGS+=-run=none
 $(CHECK_TEST_TARGETS): run-tests
 
-run-tests:
+run-tests: go.sum
 ifneq (,$(shell which tparse 2>/dev/null))
-	go test -mod=readonly -json $(ARGS) -tags='$(TAGS)'$(TEST_PACKAGES) | tparse
+	$(GO) test -mod=readonly -json $(ARGS) -tags='$(TAGS)'$(TEST_PACKAGES) | tparse
 else
-	go test -mod=readonly $(ARGS) -tags='$(TAGS)' $(TEST_PACKAGES)
+	$(GO) test -mod=readonly $(ARGS) -tags='$(TAGS)' $(TEST_PACKAGES)
 endif
 
 test-cover:
-	@export VERSION=$(VERSION); bash -x contrib/test_cover.sh
+	export VERSION=$(VERSION); bash -x contrib/test_cover.sh
 
 benchmark:
-	go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
+	$(GO) test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
 
 .PHONY: test test-all test-unit test-race test-cover benchmark run-tests  $(TEST_TARGETS)
 
@@ -476,7 +441,7 @@ benchmark:
 ##############################
 .PHONY: vendor
 vendor:
-	go mod vendor -v
+	$(GO) mod vendor -v
 
 # Full build inside a docker container for a clean release build
 docker-build: vendor
@@ -488,13 +453,18 @@ docker-build-local: vendor
 
 # Generate config files for a 4-node localnet
 localnet-generate: localnet-stop docker-build-local
-	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=chain-local ; fi
+ifeq ($(DENOM),nhash)
+	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=$(CHAIN_ID_DOCKER) ; fi
+else
+	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=$(CHAIN_ID_DOCKER) --custom-denom=$(DENOM) --minimum-gas-prices=$(MIN_FLOOR_PRICE)$(DENOM) --msgfee-floor-price=$(MIN_FLOOR_PRICE) ; fi
+endif
 
 # Run a 4-node testnet locally
 localnet-up:
 	docker-compose -f networks/local/docker-compose.yml --project-directory ./ up -d
 
 # Run a 4-node testnet locally (replace docker-build with docker-build local for better speed)
+# to run custom denom network, `make clean localnet-start DENOM=vspn MIN_FLOOR_PRICE=0`
 localnet-start: localnet-generate localnet-up
 
 # Stop testnet
@@ -534,7 +504,7 @@ indexer-db-down:
 ##############################
 # Proto -> golang compilation
 ##############################
-proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-gen proto-swagger-gen
+proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-gen proto-swagger-gen
 
 containerProtoVer=v0.2
 containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
@@ -542,33 +512,55 @@ containerProtoGen=prov-proto-gen-$(containerProtoVer)
 containerProtoGenSwagger=prov-proto-gen-swagger-$(containerProtoVer)
 containerProtoFmt=prov-proto-fmt-$(containerProtoVer)
 
+# The proto gen stuff will update go.mod and go.sum in ways we don't want (due to docker stuff).
+# So we need to go mod tidy afterward, but it can't go in the scripts for the same reason that we need it.
+
 proto-gen:
 	@echo "Generating Protobuf files"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
-		sh ./scripts/protocgen.sh; fi
+	if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then \
+		docker start -a $(containerProtoGen); \
+	else \
+		docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
+			sh ./scripts/protocgen.sh; \
+	fi
+	go mod tidy
 
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:
 	@echo "Generating Protobuf Any"
 	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) sh ./scripts/protocgen-any.sh
+	go mod tidy
 
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenSwagger}$$"; then docker start -a $(containerProtoGenSwagger); else docker run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
-		sh ./scripts/protoc-swagger-gen.sh; fi
+	if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenSwagger}$$"; then \
+		docker start -a $(containerProtoGenSwagger); \
+	else \
+		docker run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
+			sh ./scripts/protoc-swagger-gen.sh; \
+	fi
+	go mod tidy
 
 proto-format:
 	@echo "Formatting Protobuf files"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then docker start -a $(containerProtoFmt); else docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
-		find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \; ; fi
+	if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then \
+		docker start -a $(containerProtoFmt); \
+	else \
+		docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
+			find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \; ; \
+	fi
 
 proto-lint:
 	@echo "Linting Protobuf files"
-	@$(DOCKER_BUF) lint --error-format=json
+	$(DOCKER_BUF) lint --error-format=json
 
 proto-check-breaking:
 	@echo "Check breaking Protobuf files"
-	@$(DOCKER_BUF) breaking proto --against $(HTTPS_GIT)#branch=main,subdir=proto --error-format=json
+	$(DOCKER_BUF) breaking proto --against $(HTTPS_GIT)#branch=main,subdir=proto --error-format=json
+
+proto-check-breaking-third-party:
+	@echo "Check breaking Protobuf files"
+	$(DOCKER_BUF) breaking third_party/proto --against $(HTTPS_GIT)#branch=main,subdir=third_party/proto --error-format=json
 
 proto-update-check:
 	@echo "Checking for third_party Protobuf updates"
@@ -578,7 +570,7 @@ proto-update-deps:
 	@echo "Updating Protobuf files"
 	sh ./scripts/proto-update-deps.sh
 
-.PHONY: proto-all proto-gen proto-format proto-gen-any proto-lint proto-check-breaking proto-update-deps proto-update-check
+.PHONY: proto-all proto-gen proto-format proto-gen-any proto-lint proto-check-breaking proto-check-breaking-third-party proto-update-deps proto-update-check
 
 
 ##############################
@@ -593,3 +585,14 @@ test-rosetta:
 	docker build -t rosetta-ci:latest -f client/rosetta/rosetta-ci/Dockerfile .
 	docker-compose -f client/rosetta/docker-compose.yaml --project-directory ./ up --abort-on-container-exit --exit-code-from test_rosetta --build
 .PHONY: test-rosetta
+
+##############################
+### Relayer
+##############################
+relayer-install:
+	scripts/install-relayer.sh
+
+relayer-start: relayer-install
+	scripts/start-relayer.sh
+
+.PHONY: relayer-install relayer-start

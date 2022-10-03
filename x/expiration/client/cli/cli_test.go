@@ -26,12 +26,12 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/expiration/client/cli"
 	expirationtypes "github.com/provenance-io/provenance/x/expiration/types"
 	metadatacli "github.com/provenance-io/provenance/x/metadata/client/cli"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -45,10 +45,12 @@ type IntegrationCLITestSuite struct {
 	testnet         *testnet.Network
 	keyring         keyring.Keyring
 	keyringDir      string
-	keyringAccounts []keyring.Info
+	keyringAccounts []keyring.Record
 
 	asJson string
 	asText string
+
+	acctErr error
 
 	accountAddr    sdk.AccAddress
 	accountAddrStr string
@@ -114,38 +116,46 @@ func TestIntegrationCLITestSuite(t *testing.T) {
 
 func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-
+	pioconfig.SetProvenanceConfig("", 0)
 	cfg := testutil.DefaultTestNetworkConfig()
+
 	cfg.NumValidators = 1
 	genesisState := cfg.GenesisState
 	s.generateAccountsWithKeyrings(7)
 
 	// An account
-	s.accountAddr = s.keyringAccounts[0].GetAddress()
+	s.accountAddr, s.acctErr = s.keyringAccounts[0].GetAddress()
+	s.Require().NoError(s.acctErr, "getting keyringAccounts[0] address")
 	s.accountAddrStr = s.accountAddr.String()
 
 	// A user account
-	s.user1Addr = s.keyringAccounts[1].GetAddress()
+	s.user1Addr, s.acctErr = s.keyringAccounts[1].GetAddress()
+	s.Require().NoError(s.acctErr, "getting keyringAccounts[1] address")
 	s.user1AddrStr = s.user1Addr.String()
 
 	// A second user account
-	s.user2Addr = s.keyringAccounts[2].GetAddress()
+	s.user2Addr, s.acctErr = s.keyringAccounts[2].GetAddress()
+	s.Require().NoError(s.acctErr, "getting keyringAccounts[2] address")
 	s.user2AddrStr = s.user2Addr.String()
 
 	// A third user account
-	s.user3Addr = s.keyringAccounts[3].GetAddress()
+	s.user3Addr, s.acctErr = s.keyringAccounts[3].GetAddress()
+	s.Require().NoError(s.acctErr, "getting keyringAccounts[3] address")
 	s.user3AddrStr = s.user3Addr.String()
 
 	// A third user account
-	s.user4Addr = s.keyringAccounts[4].GetAddress()
+	s.user4Addr, s.acctErr = s.keyringAccounts[4].GetAddress()
+	s.Require().NoError(s.acctErr, "getting keyringAccounts[4] address")
 	s.user4AddrStr = s.user4Addr.String()
 
 	// A third user account
-	s.user5Addr = s.keyringAccounts[5].GetAddress()
+	s.user5Addr, s.acctErr = s.keyringAccounts[5].GetAddress()
+	s.Require().NoError(s.acctErr, "getting keyringAccounts[5] address")
 	s.user5AddrStr = s.user5Addr.String()
 
 	// A third user account
-	s.user6Addr = s.keyringAccounts[6].GetAddress()
+	s.user6Addr, s.acctErr = s.keyringAccounts[6].GetAddress()
+	s.Require().NoError(s.acctErr, "getting keyringAccounts[6] address")
 	s.user6AddrStr = s.user6Addr.String()
 
 	// An account that isn't known
@@ -332,11 +342,10 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	genesisState[expirationtypes.ModuleName] = expirationDataBz
 
 	cfg.GenesisState = genesisState
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewCoin("atom", sdk.NewInt(0))
 
 	s.cfg = cfg
 	cfg.ChainID = antewrapper.SimAppChainID
-	s.testnet = testnet.New(s.T(), cfg)
+	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
 
 	_, err = s.testnet.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -349,14 +358,14 @@ func (s *IntegrationCLITestSuite) TearDownSuite() {
 func (s *IntegrationCLITestSuite) generateAccountsWithKeyrings(number int) {
 	path := hd.CreateHDPath(118, 0, 0).String()
 	s.keyringDir = s.T().TempDir()
-	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil)
+	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil, s.cfg.Codec)
 	s.Require().NoError(err, "keyring creation")
 	s.keyring = kr
 	for i := 0; i < number; i++ {
 		keyId := fmt.Sprintf("test_key%v", i)
 		info, _, err := kr.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 		s.Require().NoError(err, "key creation")
-		s.keyringAccounts = append(s.keyringAccounts, info)
+		s.keyringAccounts = append(s.keyringAccounts, *info)
 	}
 }
 
@@ -581,7 +590,7 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 			} else {
 				require.NoError(t, err, "%s unexpected error", cmdName)
 
-				umErr := clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType)
+				umErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType)
 				require.NoError(t, umErr, "%s UnmarshalJSON error", cmdName)
 
 				txResp := tc.respType.(*sdk.TxResponse)

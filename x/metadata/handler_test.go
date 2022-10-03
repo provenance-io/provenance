@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,14 +44,14 @@ type MetadataHandlerTestSuite struct {
 }
 
 func (s *MetadataHandlerTestSuite) SetupTest() {
-	s.app = app.Setup(false)
+	s.app = app.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.handler = metadata.NewHandler(s.app.MetadataKeeper)
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
-	app.FundAccount(s.app, s.ctx, s.user1Addr, sdk.NewCoins(exptypes.DefaultDeposit))
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, s.user1Addr, sdk.NewCoins(exptypes.DefaultDeposit)), "fund account")
 
 	privKey, _ := secp256r1.GenPrivKey()
 	s.pubkey2 = privKey.PubKey()

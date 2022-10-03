@@ -9,7 +9,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/provenance-io/provenance/x/marker/client/cli"
-	"github.com/provenance-io/provenance/x/marker/client/rest"
 	"github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/simulation"
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -26,7 +25,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 
-	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 )
 
@@ -62,11 +60,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 	}
 
 	return data.Validate()
-}
-
-// RegisterRESTRoutes registers rest routes.
-func (AppModuleBasic) RegisterRESTRoutes(ctx client.Context, rtr *mux.Router) {
-	rest.RegisterRoutes(ctx, rtr)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the account module.

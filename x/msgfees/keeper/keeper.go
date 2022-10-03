@@ -1,7 +1,12 @@
 package keeper
 
 import (
+	"sort"
+
+	"golang.org/x/exp/constraints"
+
 	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -13,14 +18,13 @@ import (
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
-// StoreKey is the store key string for authz
 const StoreKey = types.ModuleName
 
 type baseAppSimulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, sdk.Context, error)
 
 // Keeper of the Additional fee store
 type Keeper struct {
-	storeKey         sdk.StoreKey
+	storeKey         storetypes.StoreKey
 	cdc              codec.BinaryCodec
 	paramSpace       paramtypes.Subspace
 	feeCollectorName string // name of the FeeCollector ModuleAccount
@@ -33,7 +37,7 @@ type Keeper struct {
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	key sdk.StoreKey,
+	key storetypes.StoreKey,
 	paramSpace paramtypes.Subspace,
 	feeCollectorName string,
 	defaultFeeDenom string,
@@ -66,7 +70,7 @@ func (k Keeper) GetFeeCollectorName() string {
 
 // GetFloorGasPrice returns the current minimum gas price in sdk.Coin used in calculations for charging additional fees
 func (k Keeper) GetFloorGasPrice(ctx sdk.Context) sdk.Coin {
-	min := types.DefaultFloorGasPrice
+	min := types.DefaultFloorGasPrice()
 	if k.paramSpace.Has(ctx, types.ParamStoreKeyFloorGasPrice) {
 		k.paramSpace.Get(ctx, types.ParamStoreKeyFloorGasPrice, &min)
 	}
@@ -80,6 +84,15 @@ func (k Keeper) GetNhashPerUsdMil(ctx sdk.Context) uint64 {
 		k.paramSpace.Get(ctx, types.ParamStoreKeyNhashPerUsdMil, &rateInMils)
 	}
 	return rateInMils
+}
+
+// GetConversionFeeDenom returns the conversion fee denom
+func (k Keeper) GetConversionFeeDenom(ctx sdk.Context) string {
+	conversionFeeDenom := types.DefaultParams().ConversionFeeDenom
+	if k.paramSpace.Has(ctx, types.ParamStoreKeyConversionFeeDenom) {
+		k.paramSpace.Get(ctx, types.ParamStoreKeyConversionFeeDenom, &conversionFeeDenom)
+	}
+	return conversionFeeDenom
 }
 
 // SetMsgFee sets the additional fee schedule for a Msg
@@ -146,35 +159,38 @@ func (k Keeper) IterateMsgFees(ctx sdk.Context, handle func(msgFees types.MsgFee
 // the remainder of remainingFees will be swept to the fee collector account.
 func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc cosmosauthtypes.AccountI, remainingFees sdk.Coins, fees map[string]sdk.Coins) error {
 	sentCoins := sdk.NewCoins()
-	for key, coins := range fees {
+	for _, key := range sortedKeys(fees) {
+		coins := fees[key]
 		if !coins.IsValid() {
-			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %q", fees)
+			return sdkerrors.ErrInsufficientFee.Wrapf("invalid fee amount: %q", fees)
 		}
 		if len(key) == 0 {
 			err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, coins)
 			if err != nil {
-				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+				return sdkerrors.ErrInsufficientFunds.Wrap(err.Error())
 			}
 		} else {
 			recipient, err := sdk.AccAddressFromBech32(key)
 			if err != nil {
-				return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, err.Error())
+				return sdkerrors.ErrInvalidAddress.Wrap(err.Error())
 			}
 			err = bankKeeper.SendCoins(ctx, acc.GetAddress(), recipient, coins)
 			if err != nil {
-				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+				return sdkerrors.ErrInsufficientFunds.Wrap(err.Error())
 			}
 		}
 		sentCoins = sentCoins.Add(coins...)
 	}
-	remainingFee, neg := remainingFees.SafeSub(sentCoins)
+	unsentFee, neg := remainingFees.SafeSub(sentCoins...)
 	if neg {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "negative balance after sending coins to accounts and fee collector")
+		return sdkerrors.ErrInsufficientFunds.Wrapf("negative balance after sending coins to accounts and fee collector: remainingFees: %q, sentCoins: %q, distribution: %v", remainingFees, sentCoins, fees)
 	}
-	// sweep the rest of the fees to module
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, remainingFee)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+	if !unsentFee.IsZero() {
+		// sweep the rest of the fees to module
+		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), k.feeCollectorName, unsentFee)
+		if err != nil {
+			return sdkerrors.ErrInsufficientFunds.Wrap(err.Error())
+		}
 	}
 
 	return nil
@@ -183,15 +199,65 @@ func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Co
 // ConvertDenomToHash converts usd coin to nhash coin using nhash per usd mil.
 // Currently, usd is only supported with nhash to usd mil coming from params
 func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, error) {
+	conversionDenom := k.GetConversionFeeDenom(ctx)
 	switch coin.Denom {
 	case types.UsdDenom:
 		nhashPerMil := int64(k.GetNhashPerUsdMil(ctx))
 		amount := coin.Amount.Mul(sdk.NewInt(nhashPerMil))
-		msgFeeCoin := sdk.NewInt64Coin(types.NhashDenom, amount.Int64())
+		msgFeeCoin := sdk.NewInt64Coin(conversionDenom, amount.Int64())
 		return msgFeeCoin, nil
-	case types.NhashDenom:
+	case conversionDenom:
 		return coin, nil
 	default:
-		return sdk.Coin{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "denom not supported for conversion %s", coin.Denom)
+		return sdk.Coin{}, sdkerrors.ErrInvalidType.Wrapf("denom not supported for conversion %s", coin.Denom)
 	}
+}
+
+// CalculateAdditionalFeesToBePaid computes the additional fees to be paid for the provided messages.
+func (k Keeper) CalculateAdditionalFeesToBePaid(ctx sdk.Context, msgs ...sdk.Msg) (types.MsgFeesDistribution, error) {
+	msgFeesDistribution := types.MsgFeesDistribution{
+		RecipientDistributions: make(map[string]sdk.Coins),
+	}
+	assessCustomMsgTypeURL := sdk.MsgTypeURL(&types.MsgAssessCustomMsgFeeRequest{})
+	for _, msg := range msgs {
+		typeURL := sdk.MsgTypeURL(msg)
+		msgFees, err := k.GetMsgFee(ctx, typeURL)
+		if err != nil {
+			return msgFeesDistribution, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		}
+
+		if msgFees != nil {
+			if err := msgFeesDistribution.Increase(msgFees.AdditionalFee, msgFees.RecipientBasisPoints, msgFees.Recipient); err != nil {
+				return msgFeesDistribution, err
+			}
+		}
+
+		if typeURL == assessCustomMsgTypeURL {
+			assessFee, ok := msg.(*types.MsgAssessCustomMsgFeeRequest)
+			if !ok {
+				return msgFeesDistribution, sdkerrors.ErrInvalidType.Wrap("unable to convert msg to MsgAssessCustomMsgFeeRequest")
+			}
+			msgFeeCoin, err := k.ConvertDenomToHash(ctx, assessFee.Amount)
+			if err != nil {
+				return msgFeesDistribution, err
+			}
+			if err := msgFeesDistribution.Increase(msgFeeCoin, types.AssessCustomMsgFeeBips, assessFee.Recipient); err != nil {
+				return msgFeesDistribution, err
+			}
+		}
+	}
+
+	return msgFeesDistribution, nil
+}
+
+// sortedKeys gets the keys of a map, sorts them and returns them as a slice.
+func sortedKeys[K constraints.Ordered, V any](m map[K]V) []K {
+	keys := make([]K, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] < keys[j]
+	})
+	return keys
 }

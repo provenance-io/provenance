@@ -5,15 +5,57 @@ import (
 )
 
 const (
-	UsdDenom   string = "usd"
-	NhashDenom string = "nhash"
+	UsdDenom string = "usd"
 )
 
-// SplitAmount returns split of Amount to be used for coin recipient and one for payout of fee, NOTE: this should only be used if a Recipient address exists
-func SplitAmount(coin sdk.Coin) (recipientCoin sdk.Coin, feePayoutCoin sdk.Coin) {
-	addFeeToPay := coin.Amount.Uint64()
-	addFeeToPay /= 2
-	feePayoutCoin = sdk.NewCoin(coin.Denom, sdk.NewIntFromUint64(addFeeToPay))
-	recipientCoin = coin.Sub(feePayoutCoin)
-	return recipientCoin, feePayoutCoin
+// SplitCoinByBips returns split to recipient and fee module based on basis points for recipient
+func SplitCoinByBips(coin sdk.Coin, bips uint32) (recipientCoin sdk.Coin, feePayoutCoin sdk.Coin, err error) {
+	if bips > 10_000 {
+		return recipientCoin, feePayoutCoin, ErrInvalidBipsValue.Wrapf("invalid: %v", bips)
+	}
+	numerator := sdk.NewDec(int64(bips))
+	denominator := sdk.NewDec(10_000)
+	decAmount := sdk.NewDec(coin.Amount.Int64())
+	percentage := numerator.Quo(denominator)
+	bipsAmount := decAmount.Mul(percentage).TruncateInt()
+	feePayoutAmount := coin.Amount.Sub(bipsAmount)
+
+	recipientCoin = sdk.NewCoin(coin.Denom, bipsAmount)
+	feePayoutCoin = sdk.NewCoin(coin.Denom, feePayoutAmount)
+	return recipientCoin, feePayoutCoin, nil
+}
+
+// MsgFeesDistribution holds information on message based fees that should be collected.
+type MsgFeesDistribution struct {
+	// TotalAdditionalFees is the total of all additional fees.
+	TotalAdditionalFees sdk.Coins
+	// AdditionalModuleFees is just the additional fees to send to the module.
+	AdditionalModuleFees sdk.Coins
+	// RecipientDistributions is just the additional specific distribution fees.
+	RecipientDistributions map[string]sdk.Coins
+}
+
+// Increase adds the provided coin to be distributed (as long as it's positive).
+// If there's no recipient, it all goes to the module. Otherwise, it's split using bips between recipient and module.
+func (d *MsgFeesDistribution) Increase(coin sdk.Coin, bips uint32, recipient string) error {
+	if !coin.IsPositive() {
+		return nil
+	}
+
+	d.TotalAdditionalFees = d.TotalAdditionalFees.Add(coin)
+
+	if len(recipient) == 0 {
+		d.AdditionalModuleFees = d.AdditionalModuleFees.Add(coin)
+		return nil
+	}
+
+	recipientCoin, feePayoutCoin, err := SplitCoinByBips(coin, bips)
+	if err != nil {
+		return err
+	}
+
+	d.RecipientDistributions[recipient] = d.RecipientDistributions[recipient].Add(recipientCoin)
+	d.AdditionalModuleFees = d.AdditionalModuleFees.Add(feePayoutCoin)
+
+	return nil
 }

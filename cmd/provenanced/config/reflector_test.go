@@ -83,7 +83,7 @@ func noPanic(f func(t *testing.T)) func(t *testing.T) {
 	}
 }
 
-func (s ReflectorTestSuit) TestGetFieldValueMapWithFill() {
+func (s *ReflectorTestSuit) TestGetFieldValueMapWithFill() {
 	thing := DefaultMainThing()
 	thingMap := MakeFieldValueMap(&thing, true)
 
@@ -163,7 +163,7 @@ func (s ReflectorTestSuit) TestGetFieldValueMapWithFill() {
 	}))
 }
 
-func (s ReflectorTestSuit) TestGetFieldValueMapNoFillWithValue() {
+func (s *ReflectorTestSuit) TestGetFieldValueMapNoFillWithValue() {
 	aString := "This is a string!"
 	someStrings := []string{"one", "two", "three"}
 	thing := DefaultMainThing()
@@ -202,7 +202,7 @@ func (s ReflectorTestSuit) TestGetFieldValueMapNoFillWithValue() {
 	}))
 }
 
-func (s ReflectorTestSuit) TestGetFieldValueMapBaseFieldsNoFill() {
+func (s *ReflectorTestSuit) TestGetFieldValueMapBaseFieldsNoFill() {
 	thing := DefaultMainThing()
 	thingMap := MakeFieldValueMap(&thing, false)
 
@@ -250,7 +250,7 @@ func (s ReflectorTestSuit) TestGetFieldValueMapBaseFieldsNoFill() {
 	}))
 }
 
-func (s ReflectorTestSuit) TestGetFieldValueMapSquashedFields() {
+func (s *ReflectorTestSuit) TestGetFieldValueMapSquashedFields() {
 	thing := DefaultMainThing()
 	thingMap := MakeFieldValueMap(&thing, false)
 
@@ -302,7 +302,7 @@ func (s ReflectorTestSuit) TestGetFieldValueMapSquashedFields() {
 	}))
 }
 
-func (s ReflectorTestSuit) TestGetFieldValueMapSubFields() {
+func (s *ReflectorTestSuit) TestGetFieldValueMapSubFields() {
 	thing := DefaultMainThing()
 	thingMap := MakeFieldValueMap(&thing, false)
 

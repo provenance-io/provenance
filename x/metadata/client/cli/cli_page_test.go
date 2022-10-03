@@ -12,6 +12,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto"
@@ -21,10 +23,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	mdcli "github.com/provenance-io/provenance/x/metadata/client/cli"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type IntegrationCLIPageTestSuite struct {
@@ -67,17 +69,17 @@ func TestIntegrationCLIPageTestSuite(t *testing.T) {
 func (s *IntegrationCLIPageTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 	var err error
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
+	pioconfig.SetProvenanceConfig("atom", 0)
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	s.cfg.NumValidators = 1
 
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("account"))
-	s.accountAddr, err = sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
+	s.accountAddr, err = sdk.AccAddressFromHexUnsafe(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err, "getting accountAddr from s.accountKey")
 	s.accountAddrStr = s.accountAddr.String()
 
 	s.user1Key = secp256k1.GenPrivKeyFromSecret([]byte("user1"))
-	s.user1Addr, err = sdk.AccAddressFromHex(s.user1Key.PubKey().Address().String())
+	s.user1Addr, err = sdk.AccAddressFromHexUnsafe(s.user1Key.PubKey().Address().String())
 	s.Require().NoError(err, "getting user1Addr from s.user1Key")
 	s.user1AddrStr = s.user1Addr.String()
 
@@ -302,7 +304,8 @@ func (s *IntegrationCLIPageTestSuite) SetupSuite() {
 	s.Require().NoError(err, "marshalling json authData")
 	s.cfg.GenesisState[authtypes.ModuleName] = authDataBz
 
-	s.testnet = testnet.New(s.T(), s.cfg)
+	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err, "creating testnet")
 
 	_, err = s.testnet.WaitForHeight(1)
 	s.Require().NoError(err, "calling s.testnet.WaitForHeight(1)")
@@ -314,13 +317,15 @@ func (s *IntegrationCLIPageTestSuite) TearDownSuite() {
 	testutil.CleanUp(s.testnet, s.T())
 }
 
+var titleCaser = cases.Title(language.English)
+
 // Converts an integer to a written version of it. E.g. 1 => one, 83 => eightyThree.
 func toWritten(i int) string {
 	if i > 999999 {
 		panic("cannot convert number larger than 999,999 to written string")
 	}
 	if i < 0 {
-		return "nagative" + strings.Title(toWritten(-1*i))
+		return "negative" + titleCaser.String(toWritten(-i*i))
 	}
 	switch i {
 	case 0:
@@ -396,7 +401,7 @@ func toWritten(i int) string {
 		if r == 0 {
 			return l
 		}
-		return l + strings.Title(toWritten(r))
+		return l + titleCaser.String(toWritten(r))
 	}
 }
 

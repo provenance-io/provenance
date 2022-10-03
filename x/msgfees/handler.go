@@ -8,11 +8,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-func NewProposalHandler(k keeper.Keeper, registry cdctypes.InterfaceRegistry) govtypes.Handler {
-	return func(ctx sdk.Context, content govtypes.Content) error {
+func NewProposalHandler(k keeper.Keeper, registry cdctypes.InterfaceRegistry) govtypesv1beta1.Handler {
+	return func(ctx sdk.Context, content govtypesv1beta1.Content) error {
 		switch c := content.(type) {
 		case *types.AddMsgFeeProposal:
 			return keeper.HandleAddMsgFeeProposal(ctx, k, c, registry)
@@ -22,8 +22,10 @@ func NewProposalHandler(k keeper.Keeper, registry cdctypes.InterfaceRegistry) go
 			return keeper.HandleRemoveMsgFeeProposal(ctx, k, c, registry)
 		case *types.UpdateNhashPerUsdMilProposal:
 			return keeper.HandleUpdateNhashPerUsdMilProposal(ctx, k, c, registry)
+		case *types.UpdateConversionFeeDenomProposal:
+			return keeper.HandleUpdateConversionFeeDenomProposal(ctx, k, c, registry)
 		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized marker proposal content type: %T", c)
+			return sdkerrors.ErrUnknownRequest.Wrapf("unrecognized marker proposal content type: %T", c)
 		}
 	}
 }

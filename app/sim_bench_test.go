@@ -36,14 +36,14 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		}
 	}()
 
-	app := New(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, sdksim.FlagPeriodValue, MakeEncodingConfig(), EmptyAppOptions{}, interBlockCacheOpt())
+	app := New(logger, db, nil, true, map[int64]bool{}, b.TempDir(), sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, interBlockCacheOpt())
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,
 		app.BaseApp,
-		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		ProvAppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		sdksim.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -85,14 +85,14 @@ func BenchmarkInvariants(b *testing.B) {
 		}
 	}()
 
-	app := New(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, sdksim.FlagPeriodValue, MakeEncodingConfig(), EmptyAppOptions{}, interBlockCacheOpt())
+	app := New(logger, db, nil, true, map[int64]bool{}, b.TempDir(), sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, interBlockCacheOpt())
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,
 		app.BaseApp,
-		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		ProvAppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		sdksim.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),

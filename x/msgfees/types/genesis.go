@@ -17,7 +17,7 @@ func NewGenesisState(params Params, entries []MsgFee) *GenesisState {
 // Validate ensures all grants in the genesis state are valid
 func (state GenesisState) Validate() error {
 	for _, a := range state.MsgFees {
-		if err := a.ValidateBasic(); err != nil {
+		if err := a.Validate(); err != nil {
 			return err
 		}
 	}

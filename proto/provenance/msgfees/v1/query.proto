@@ -75,5 +75,5 @@ message CalculateTxFeesResponse {
   repeated cosmos.base.v1beta1.Coin total_fees = 2
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   // estimated_gas is the amount of gas needed for the transaction
-  uint64 estimated_gas = 3 [(gogoproto.moretags) = "yaml:\"estimated_gas\""];
+  uint64 estimated_gas = 3;
 }

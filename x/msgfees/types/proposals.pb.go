@@ -26,14 +26,23 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // AddMsgFeeProposal defines a governance proposal to add additional msg based fee
 type AddMsgFeeProposal struct {
-	Title         string     `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description   string     `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	MsgTypeUrl    string     `protobuf:"bytes,3,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
+	// propsal title
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// propsal description
+	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	// type url of msg to add fee
+	MsgTypeUrl string `protobuf:"bytes,3,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
+	// additional fee for msg type
 	AdditionalFee types.Coin `protobuf:"bytes,4,opt,name=additional_fee,json=additionalFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"additional_fee" yaml:"additional_fee"`
+	// optional recipient to recieve basis points
+	Recipient string `protobuf:"bytes,5,opt,name=recipient,proto3" json:"recipient,omitempty"`
+	// basis points to use when recipient is present (1 - 10,000)
+	RecipientBasisPoints string `protobuf:"bytes,6,opt,name=recipient_basis_points,json=recipientBasisPoints,proto3" json:"recipient_basis_points,omitempty"`
 }
 
-func (m *AddMsgFeeProposal) Reset()      { *m = AddMsgFeeProposal{} }
-func (*AddMsgFeeProposal) ProtoMessage() {}
+func (m *AddMsgFeeProposal) Reset()         { *m = AddMsgFeeProposal{} }
+func (m *AddMsgFeeProposal) String() string { return proto.CompactTextString(m) }
+func (*AddMsgFeeProposal) ProtoMessage()    {}
 func (*AddMsgFeeProposal) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a2e168825d6c34a4, []int{0}
 }
@@ -92,16 +101,39 @@ func (m *AddMsgFeeProposal) GetAdditionalFee() types.Coin {
 	return types.Coin{}
 }
 
-// UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
-type UpdateMsgFeeProposal struct {
-	Title         string     `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description   string     `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	MsgTypeUrl    string     `protobuf:"bytes,3,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
-	AdditionalFee types.Coin `protobuf:"bytes,4,opt,name=additional_fee,json=additionalFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"additional_fee" yaml:"additional_fee"`
+func (m *AddMsgFeeProposal) GetRecipient() string {
+	if m != nil {
+		return m.Recipient
+	}
+	return ""
 }
 
-func (m *UpdateMsgFeeProposal) Reset()      { *m = UpdateMsgFeeProposal{} }
-func (*UpdateMsgFeeProposal) ProtoMessage() {}
+func (m *AddMsgFeeProposal) GetRecipientBasisPoints() string {
+	if m != nil {
+		return m.RecipientBasisPoints
+	}
+	return ""
+}
+
+// UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
+type UpdateMsgFeeProposal struct {
+	// propsal title
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// propsal description
+	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	// type url of msg to update fee
+	MsgTypeUrl string `protobuf:"bytes,3,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
+	// additional fee for msg type
+	AdditionalFee types.Coin `protobuf:"bytes,4,opt,name=additional_fee,json=additionalFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"additional_fee"`
+	// optional recipient to recieve basis points
+	Recipient string `protobuf:"bytes,5,opt,name=recipient,proto3" json:"recipient,omitempty"`
+	// basis points to use when recipient is present (1 - 10,000)
+	RecipientBasisPoints string `protobuf:"bytes,6,opt,name=recipient_basis_points,json=recipientBasisPoints,proto3" json:"recipient_basis_points,omitempty"`
+}
+
+func (m *UpdateMsgFeeProposal) Reset()         { *m = UpdateMsgFeeProposal{} }
+func (m *UpdateMsgFeeProposal) String() string { return proto.CompactTextString(m) }
+func (*UpdateMsgFeeProposal) ProtoMessage()    {}
 func (*UpdateMsgFeeProposal) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a2e168825d6c34a4, []int{1}
 }
@@ -160,15 +192,33 @@ func (m *UpdateMsgFeeProposal) GetAdditionalFee() types.Coin {
 	return types.Coin{}
 }
 
-// RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
-type RemoveMsgFeeProposal struct {
-	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	MsgTypeUrl  string `protobuf:"bytes,3,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
+func (m *UpdateMsgFeeProposal) GetRecipient() string {
+	if m != nil {
+		return m.Recipient
+	}
+	return ""
 }
 
-func (m *RemoveMsgFeeProposal) Reset()      { *m = RemoveMsgFeeProposal{} }
-func (*RemoveMsgFeeProposal) ProtoMessage() {}
+func (m *UpdateMsgFeeProposal) GetRecipientBasisPoints() string {
+	if m != nil {
+		return m.RecipientBasisPoints
+	}
+	return ""
+}
+
+// RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
+type RemoveMsgFeeProposal struct {
+	// propsal title
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// propsal description
+	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	// type url of msg fee to remove
+	MsgTypeUrl string `protobuf:"bytes,3,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
+}
+
+func (m *RemoveMsgFeeProposal) Reset()         { *m = RemoveMsgFeeProposal{} }
+func (m *RemoveMsgFeeProposal) String() string { return proto.CompactTextString(m) }
+func (*RemoveMsgFeeProposal) ProtoMessage()    {}
 func (*RemoveMsgFeeProposal) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a2e168825d6c34a4, []int{2}
 }
@@ -228,8 +278,9 @@ type UpdateNhashPerUsdMilProposal struct {
 	NhashPerUsdMil uint64 `protobuf:"varint,3,opt,name=nhash_per_usd_mil,json=nhashPerUsdMil,proto3" json:"nhash_per_usd_mil,omitempty"`
 }
 
-func (m *UpdateNhashPerUsdMilProposal) Reset()      { *m = UpdateNhashPerUsdMilProposal{} }
-func (*UpdateNhashPerUsdMilProposal) ProtoMessage() {}
+func (m *UpdateNhashPerUsdMilProposal) Reset()         { *m = UpdateNhashPerUsdMilProposal{} }
+func (m *UpdateNhashPerUsdMilProposal) String() string { return proto.CompactTextString(m) }
+func (*UpdateNhashPerUsdMilProposal) ProtoMessage()    {}
 func (*UpdateNhashPerUsdMilProposal) Descriptor() ([]byte, []int) {
 	return fileDescriptor_a2e168825d6c34a4, []int{3}
 }
@@ -281,11 +332,74 @@ func (m *UpdateNhashPerUsdMilProposal) GetNhashPerUsdMil() uint64 {
 	return 0
 }
 
+// UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
+type UpdateConversionFeeDenomProposal struct {
+	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	// conversion_fee_denom is the denom that usd will be converted to
+	ConversionFeeDenom string `protobuf:"bytes,4,opt,name=conversion_fee_denom,json=conversionFeeDenom,proto3" json:"conversion_fee_denom,omitempty"`
+}
+
+func (m *UpdateConversionFeeDenomProposal) Reset()         { *m = UpdateConversionFeeDenomProposal{} }
+func (m *UpdateConversionFeeDenomProposal) String() string { return proto.CompactTextString(m) }
+func (*UpdateConversionFeeDenomProposal) ProtoMessage()    {}
+func (*UpdateConversionFeeDenomProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a2e168825d6c34a4, []int{4}
+}
+func (m *UpdateConversionFeeDenomProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *UpdateConversionFeeDenomProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_UpdateConversionFeeDenomProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *UpdateConversionFeeDenomProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpdateConversionFeeDenomProposal.Merge(m, src)
+}
+func (m *UpdateConversionFeeDenomProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *UpdateConversionFeeDenomProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpdateConversionFeeDenomProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpdateConversionFeeDenomProposal proto.InternalMessageInfo
+
+func (m *UpdateConversionFeeDenomProposal) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+func (m *UpdateConversionFeeDenomProposal) GetDescription() string {
+	if m != nil {
+		return m.Description
+	}
+	return ""
+}
+
+func (m *UpdateConversionFeeDenomProposal) GetConversionFeeDenom() string {
+	if m != nil {
+		return m.ConversionFeeDenom
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*AddMsgFeeProposal)(nil), "provenance.msgfees.v1.AddMsgFeeProposal")
 	proto.RegisterType((*UpdateMsgFeeProposal)(nil), "provenance.msgfees.v1.UpdateMsgFeeProposal")
 	proto.RegisterType((*RemoveMsgFeeProposal)(nil), "provenance.msgfees.v1.RemoveMsgFeeProposal")
 	proto.RegisterType((*UpdateNhashPerUsdMilProposal)(nil), "provenance.msgfees.v1.UpdateNhashPerUsdMilProposal")
+	proto.RegisterType((*UpdateConversionFeeDenomProposal)(nil), "provenance.msgfees.v1.UpdateConversionFeeDenomProposal")
 }
 
 func init() {
@@ -293,35 +407,41 @@ func init() {
 }
 
 var fileDescriptor_a2e168825d6c34a4 = []byte{
-	// 439 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x93, 0x41, 0x6b, 0xd4, 0x40,
-	0x14, 0xc7, 0x33, 0x6b, 0x15, 0x9d, 0x6a, 0xa1, 0x61, 0x0b, 0xb1, 0x48, 0xb2, 0x2c, 0x08, 0xeb,
-	0xa1, 0x19, 0xd6, 0xde, 0x7a, 0xb3, 0x42, 0xc1, 0x43, 0x65, 0x59, 0xdc, 0x8b, 0x97, 0x30, 0x9b,
-	0x79, 0xcd, 0x0e, 0x66, 0x32, 0xc3, 0xbc, 0xd9, 0xe0, 0x7a, 0x17, 0x84, 0x5e, 0x3c, 0x7a, 0xec,
-	0xd9, 0x4f, 0xd2, 0x63, 0x8f, 0x9e, 0xaa, 0xec, 0x5e, 0x3c, 0xfb, 0x09, 0x24, 0xc9, 0xe2, 0xa6,
-	0x78, 0x14, 0xbc, 0xf4, 0x94, 0xbc, 0xbc, 0xff, 0x7b, 0xef, 0x97, 0xf7, 0xf8, 0xd3, 0xa7, 0xc6,
-	0xea, 0x12, 0x0a, 0x5e, 0xa4, 0xc0, 0x14, 0x66, 0x67, 0x00, 0xc8, 0xca, 0x21, 0x33, 0x56, 0x1b,
-	0x8d, 0x3c, 0xc7, 0xd8, 0x58, 0xed, 0xb4, 0xbf, 0xb7, 0x91, 0xc5, 0x6b, 0x59, 0x5c, 0x0e, 0xf7,
-	0xbb, 0x99, 0xce, 0x74, 0xad, 0x60, 0xd5, 0x5b, 0x23, 0xde, 0x0f, 0x53, 0x8d, 0x4a, 0x23, 0x9b,
-	0x72, 0x04, 0x56, 0x0e, 0xa7, 0xe0, 0xf8, 0x90, 0xa5, 0x5a, 0x16, 0x4d, 0xbe, 0xff, 0xb1, 0x43,
-	0x77, 0x5f, 0x08, 0x71, 0x8a, 0xd9, 0x09, 0xc0, 0x68, 0x3d, 0xc9, 0xef, 0xd2, 0xbb, 0x4e, 0xba,
-	0x1c, 0x02, 0xd2, 0x23, 0x83, 0x07, 0xe3, 0x26, 0xf0, 0x7b, 0x74, 0x5b, 0x00, 0xa6, 0x56, 0x1a,
-	0x27, 0x75, 0x11, 0x74, 0xea, 0x5c, 0xfb, 0x93, 0xdf, 0xa3, 0x0f, 0x15, 0x66, 0x89, 0x5b, 0x18,
-	0x48, 0xe6, 0x36, 0x0f, 0xee, 0xd4, 0x12, 0xaa, 0x30, 0x7b, 0xb3, 0x30, 0x30, 0xb1, 0xb9, 0x7f,
-	0x4e, 0xe8, 0x0e, 0x17, 0x42, 0x56, 0x72, 0x9e, 0x27, 0x67, 0x00, 0xc1, 0x56, 0x8f, 0x0c, 0xb6,
-	0x9f, 0x3f, 0x8e, 0x1b, 0xd2, 0xb8, 0x22, 0x8d, 0xd7, 0xa4, 0xf1, 0x4b, 0x2d, 0x8b, 0xe3, 0x57,
-	0x97, 0xd7, 0x91, 0xf7, 0xeb, 0x3a, 0xda, 0x5b, 0x70, 0x95, 0x1f, 0xf5, 0x6f, 0x96, 0xf7, 0xbf,
-	0x7e, 0x8f, 0x06, 0x99, 0x74, 0xb3, 0xf9, 0x34, 0x4e, 0xb5, 0x62, 0xeb, 0xff, 0x6d, 0x1e, 0x07,
-	0x28, 0xde, 0xb1, 0x8a, 0x06, 0xeb, 0x4e, 0x38, 0x7e, 0xb4, 0x29, 0x3e, 0x01, 0x38, 0xba, 0xff,
-	0xe5, 0x22, 0xf2, 0x7e, 0x5e, 0x44, 0xa4, 0xff, 0xa9, 0x43, 0xbb, 0x13, 0x23, 0xb8, 0x83, 0x5b,
-	0xbf, 0x8a, 0x0f, 0xb4, 0x3b, 0x06, 0xa5, 0xcb, 0xff, 0xb6, 0x89, 0xd6, 0xec, 0x73, 0x42, 0x9f,
-	0x34, 0x67, 0x78, 0x3d, 0xe3, 0x38, 0x1b, 0x81, 0x9d, 0xa0, 0x38, 0x95, 0xf9, 0x3f, 0x43, 0x3c,
-	0xa3, 0xbb, 0x45, 0xd5, 0x31, 0x31, 0x60, 0x93, 0x39, 0x8a, 0x44, 0xc9, 0x86, 0x64, 0x6b, 0xbc,
-	0x53, 0xdc, 0x18, 0xb5, 0xa1, 0x39, 0x96, 0x97, 0xcb, 0x90, 0x5c, 0x2d, 0x43, 0xf2, 0x63, 0x19,
-	0x92, 0xcf, 0xab, 0xd0, 0xbb, 0x5a, 0x85, 0xde, 0xb7, 0x55, 0xe8, 0xd1, 0x40, 0xd6, 0x06, 0xfb,
-	0xdb, 0x86, 0x23, 0xf2, 0xf6, 0xb0, 0x75, 0x82, 0x8d, 0xe6, 0x40, 0xea, 0x56, 0xc4, 0xde, 0xff,
-	0x71, 0x78, 0x7d, 0x93, 0xe9, 0xbd, 0xda, 0x8e, 0x87, 0xbf, 0x03, 0x00, 0x00, 0xff, 0xff, 0xac,
-	0xcb, 0x02, 0x75, 0x04, 0x04, 0x00, 0x00,
+	// 532 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x94, 0x31, 0x6f, 0xd3, 0x40,
+	0x14, 0xc7, 0x73, 0xa1, 0xad, 0xc8, 0x15, 0x2a, 0xd5, 0x72, 0x91, 0xa9, 0x2a, 0x27, 0x8a, 0x84,
+	0x14, 0x86, 0xda, 0x0d, 0x65, 0xea, 0x46, 0x8a, 0x22, 0x31, 0x14, 0x45, 0x11, 0x59, 0x58, 0x2c,
+	0xc7, 0x7e, 0x75, 0x4e, 0xd8, 0x77, 0xa7, 0x7b, 0x17, 0x8b, 0xf0, 0x15, 0xba, 0x30, 0x21, 0xc6,
+	0xce, 0x7c, 0x0c, 0xa6, 0x8e, 0x1d, 0x61, 0x29, 0x28, 0x59, 0x98, 0xf9, 0x04, 0xc8, 0xe7, 0x28,
+	0x49, 0xd5, 0x09, 0x55, 0xaa, 0x3a, 0xd9, 0xef, 0xde, 0xff, 0xde, 0xfb, 0xf9, 0xef, 0xa7, 0x47,
+	0x9f, 0x49, 0x25, 0x72, 0xe0, 0x21, 0x8f, 0xc0, 0xcf, 0x30, 0x39, 0x05, 0x40, 0x3f, 0x6f, 0xfb,
+	0x52, 0x09, 0x29, 0x30, 0x4c, 0xd1, 0x93, 0x4a, 0x68, 0x61, 0xed, 0x2c, 0x65, 0xde, 0x5c, 0xe6,
+	0xe5, 0xed, 0x5d, 0x3b, 0x11, 0x89, 0x30, 0x0a, 0xbf, 0x78, 0x2b, 0xc5, 0xbb, 0x6e, 0x24, 0x30,
+	0x13, 0xe8, 0x0f, 0x43, 0x04, 0x3f, 0x6f, 0x0f, 0x41, 0x87, 0x6d, 0x3f, 0x12, 0x8c, 0x97, 0xf9,
+	0xe6, 0xcf, 0x2a, 0xdd, 0x7e, 0x15, 0xc7, 0x27, 0x98, 0x74, 0x01, 0x7a, 0xf3, 0x4e, 0x96, 0x4d,
+	0xd7, 0x35, 0xd3, 0x29, 0x38, 0xa4, 0x41, 0x5a, 0xb5, 0x7e, 0x19, 0x58, 0x0d, 0xba, 0x19, 0x03,
+	0x46, 0x8a, 0x49, 0xcd, 0x04, 0x77, 0xaa, 0x26, 0xb7, 0x7a, 0x64, 0x35, 0xe8, 0xa3, 0x0c, 0x93,
+	0x40, 0x4f, 0x24, 0x04, 0x63, 0x95, 0x3a, 0x0f, 0x8c, 0x84, 0x66, 0x98, 0xbc, 0x9b, 0x48, 0x18,
+	0xa8, 0xd4, 0x3a, 0x23, 0x74, 0x2b, 0x8c, 0x63, 0x56, 0xc8, 0xc3, 0x34, 0x38, 0x05, 0x70, 0xd6,
+	0x1a, 0xa4, 0xb5, 0xf9, 0xe2, 0xa9, 0x57, 0x92, 0x7a, 0x05, 0xa9, 0x37, 0x27, 0xf5, 0x8e, 0x05,
+	0xe3, 0x9d, 0x37, 0x17, 0x57, 0xf5, 0xca, 0xdf, 0xab, 0xfa, 0xce, 0x24, 0xcc, 0xd2, 0xa3, 0xe6,
+	0xf5, 0xeb, 0xcd, 0x6f, 0xbf, 0xea, 0xad, 0x84, 0xe9, 0xd1, 0x78, 0xe8, 0x45, 0x22, 0xf3, 0xe7,
+	0xdf, 0x5b, 0x3e, 0xf6, 0x31, 0xfe, 0xe0, 0x17, 0x34, 0x68, 0x2a, 0x61, 0xff, 0xf1, 0xf2, 0x72,
+	0x17, 0xc0, 0xda, 0xa3, 0x35, 0x05, 0x11, 0x93, 0x0c, 0xb8, 0x76, 0xd6, 0x0d, 0xec, 0xf2, 0xc0,
+	0x7a, 0x49, 0x9f, 0x2c, 0x82, 0x60, 0x18, 0x22, 0xc3, 0x40, 0x0a, 0xc6, 0x35, 0x3a, 0x1b, 0x46,
+	0x6a, 0x2f, 0xb2, 0x9d, 0x22, 0xd9, 0x33, 0xb9, 0xa3, 0x87, 0x5f, 0xcf, 0xeb, 0xe4, 0xcf, 0x79,
+	0x9d, 0x34, 0xbf, 0x57, 0xa9, 0x3d, 0x90, 0x71, 0xa8, 0xe1, 0xce, 0xec, 0x55, 0xff, 0xef, 0xee,
+	0x41, 0xe1, 0xee, 0xfd, 0x35, 0xf1, 0x13, 0xb5, 0xfb, 0x90, 0x89, 0xfc, 0xce, 0x3c, 0x5c, 0xe9,
+	0x7d, 0x46, 0xe8, 0x5e, 0xf9, 0x03, 0xdf, 0x8e, 0x42, 0x1c, 0xf5, 0x40, 0x0d, 0x30, 0x3e, 0x61,
+	0xe9, 0xad, 0x21, 0x9e, 0xd3, 0x6d, 0x5e, 0x54, 0x0c, 0x24, 0xa8, 0x60, 0x8c, 0x71, 0x90, 0xb1,
+	0x92, 0x64, 0xad, 0xbf, 0xc5, 0xaf, 0xb5, 0x5a, 0xa1, 0xf9, 0x42, 0x68, 0xa3, 0xa4, 0x39, 0x16,
+	0x3c, 0x07, 0x85, 0x4c, 0xf0, 0x2e, 0xc0, 0x6b, 0xe0, 0x22, 0xbb, 0x35, 0xd1, 0x01, 0xb5, 0xa3,
+	0x45, 0xd5, 0x62, 0x70, 0x82, 0xb8, 0xa8, 0x6b, 0xc6, 0xa7, 0xd6, 0xb7, 0xa2, 0x1b, 0x1d, 0x97,
+	0x60, 0x1d, 0x76, 0x31, 0x75, 0xc9, 0xe5, 0xd4, 0x25, 0xbf, 0xa7, 0x2e, 0xf9, 0x3c, 0x73, 0x2b,
+	0x97, 0x33, 0xb7, 0xf2, 0x63, 0xe6, 0x56, 0xa8, 0xc3, 0xcc, 0x1e, 0xba, 0xb9, 0xad, 0x7a, 0xe4,
+	0xfd, 0xe1, 0xca, 0xbc, 0x2d, 0x35, 0xfb, 0x4c, 0xac, 0x44, 0xfe, 0xc7, 0xc5, 0x22, 0x34, 0x03,
+	0x38, 0xdc, 0x30, 0x5b, 0xeb, 0xf0, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xe3, 0x2b, 0x44, 0x6e,
+	0x2b, 0x05, 0x00, 0x00,
 }
 
 func (this *AddMsgFeeProposal) Equal(that interface{}) bool {
@@ -355,6 +475,12 @@ func (this *AddMsgFeeProposal) Equal(that interface{}) bool {
 	if !this.AdditionalFee.Equal(&that1.AdditionalFee) {
 		return false
 	}
+	if this.Recipient != that1.Recipient {
+		return false
+	}
+	if this.RecipientBasisPoints != that1.RecipientBasisPoints {
+		return false
+	}
 	return true
 }
 func (this *UpdateMsgFeeProposal) Equal(that interface{}) bool {
@@ -386,6 +512,12 @@ func (this *UpdateMsgFeeProposal) Equal(that interface{}) bool {
 		return false
 	}
 	if !this.AdditionalFee.Equal(&that1.AdditionalFee) {
+		return false
+	}
+	if this.Recipient != that1.Recipient {
+		return false
+	}
+	if this.RecipientBasisPoints != that1.RecipientBasisPoints {
 		return false
 	}
 	return true
@@ -450,6 +582,36 @@ func (this *UpdateNhashPerUsdMilProposal) Equal(that interface{}) bool {
 	}
 	return true
 }
+func (this *UpdateConversionFeeDenomProposal) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*UpdateConversionFeeDenomProposal)
+	if !ok {
+		that2, ok := that.(UpdateConversionFeeDenomProposal)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Title != that1.Title {
+		return false
+	}
+	if this.Description != that1.Description {
+		return false
+	}
+	if this.ConversionFeeDenom != that1.ConversionFeeDenom {
+		return false
+	}
+	return true
+}
 func (m *AddMsgFeeProposal) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -470,6 +632,20 @@ func (m *AddMsgFeeProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.RecipientBasisPoints) > 0 {
+		i -= len(m.RecipientBasisPoints)
+		copy(dAtA[i:], m.RecipientBasisPoints)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.RecipientBasisPoints)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.Recipient) > 0 {
+		i -= len(m.Recipient)
+		copy(dAtA[i:], m.Recipient)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Recipient)))
+		i--
+		dAtA[i] = 0x2a
+	}
 	{
 		size, err := m.AdditionalFee.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -524,6 +700,20 @@ func (m *UpdateMsgFeeProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.RecipientBasisPoints) > 0 {
+		i -= len(m.RecipientBasisPoints)
+		copy(dAtA[i:], m.RecipientBasisPoints)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.RecipientBasisPoints)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.Recipient) > 0 {
+		i -= len(m.Recipient)
+		copy(dAtA[i:], m.Recipient)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Recipient)))
+		i--
+		dAtA[i] = 0x2a
+	}
 	{
 		size, err := m.AdditionalFee.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -644,6 +834,50 @@ func (m *UpdateNhashPerUsdMilProposal) MarshalToSizedBuffer(dAtA []byte) (int, e
 	return len(dAtA) - i, nil
 }
 
+func (m *UpdateConversionFeeDenomProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *UpdateConversionFeeDenomProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *UpdateConversionFeeDenomProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ConversionFeeDenom) > 0 {
+		i -= len(m.ConversionFeeDenom)
+		copy(dAtA[i:], m.ConversionFeeDenom)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.ConversionFeeDenom)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintProposals(dAtA []byte, offset int, v uint64) int {
 	offset -= sovProposals(v)
 	base := offset
@@ -675,6 +909,14 @@ func (m *AddMsgFeeProposal) Size() (n int) {
 	}
 	l = m.AdditionalFee.Size()
 	n += 1 + l + sovProposals(uint64(l))
+	l = len(m.Recipient)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.RecipientBasisPoints)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
 	return n
 }
 
@@ -698,6 +940,14 @@ func (m *UpdateMsgFeeProposal) Size() (n int) {
 	}
 	l = m.AdditionalFee.Size()
 	n += 1 + l + sovProposals(uint64(l))
+	l = len(m.Recipient)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.RecipientBasisPoints)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
 	return n
 }
 
@@ -738,6 +988,27 @@ func (m *UpdateNhashPerUsdMilProposal) Size() (n int) {
 	}
 	if m.NhashPerUsdMil != 0 {
 		n += 1 + sovProposals(uint64(m.NhashPerUsdMil))
+	}
+	return n
+}
+
+func (m *UpdateConversionFeeDenomProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.ConversionFeeDenom)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
 	}
 	return n
 }
@@ -905,6 +1176,70 @@ func (m *AddMsgFeeProposal) Unmarshal(dAtA []byte) error {
 			if err := m.AdditionalFee.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Recipient", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Recipient = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecipientBasisPoints", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RecipientBasisPoints = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1084,6 +1419,70 @@ func (m *UpdateMsgFeeProposal) Unmarshal(dAtA []byte) error {
 			if err := m.AdditionalFee.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Recipient", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Recipient = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecipientBasisPoints", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RecipientBasisPoints = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1364,6 +1763,152 @@ func (m *UpdateNhashPerUsdMilProposal) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProposals(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *UpdateConversionFeeDenomProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProposals
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UpdateConversionFeeDenomProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UpdateConversionFeeDenomProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConversionFeeDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConversionFeeDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipProposals(dAtA[iNdEx:])
