@@ -46,8 +46,6 @@ func NewProvenanceDeductFeeDecorator(
 }
 
 func (dfd ProvenanceDeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	ctx.Logger().Debug("In ProvenanceDeductFeeDecorator", "GasConsumed", ctx.GasMeter().GasConsumed())
-
 	feeTx, err := GetFeeTx(tx)
 	if err != nil {
 		return ctx, err
