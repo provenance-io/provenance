@@ -37,7 +37,7 @@ var (
 func CreateTxFactory(t *testing.T) tx.Factory {
 	requireT := require.New(t)
 	path := hd.CreateHDPath(118, 0, 0).String()
-	kr, err := keyring.New(t.Name(), "test", t.TempDir(), nil)
+	kr, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encoding.Marshaler)
 	requireT.NoError(err)
 
 	var from1 = "test_key1"
@@ -53,9 +53,12 @@ func CreateTxFactory(t *testing.T) tx.Factory {
 	acc3, _, err := kr.NewMnemonic(from3, keyring.English, path, "", hd.Secp256k1)
 	requireT.NoError(err)
 
-	pubKey1 := acc1.GetPubKey()
-	pubKey2 := acc2.GetPubKey()
-	pubKey3 := acc3.GetPubKey()
+	pubKey1, err := acc1.GetPubKey()
+	requireT.NotEqual(err, "getting acc1 pub key")
+	pubKey2, err := acc2.GetPubKey()
+	requireT.NotEqual(err, "getting acc2 pub key")
+	pubKey3, err := acc3.GetPubKey()
+	requireT.NotEqual(err, "getting acc3 pub key")
 
 	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pubKey1, pubKey2})
 	kr.SaveMultisig("test_multi1", multi)
@@ -77,17 +80,21 @@ func CreateTxFactory(t *testing.T) tx.Factory {
 }
 
 func TestValidateRawSingleSignature(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 
 	txf := CreateTxFactory(t).WithSignMode(signingtypes.SignMode_SIGN_MODE_DIRECT)
 	testkey1, err := txf.Keybase().Key("test_key1")
 	require.NoError(t, err)
+	testkey1addr, err := testkey1.GetAddress()
+	require.NoError(t, err, "getting test_key1 address")
 
 	testkey2, err := txf.Keybase().Key("test_key2")
 	require.NoError(t, err)
+	testkey2addr, err := testkey2.GetAddress()
+	require.NoError(t, err, "getting test_key2 address")
 
-	s := *types.NewScope(types.ScopeMetadataAddress(uuid.New()), nil, ownerPartyList(testkey1.GetAddress().String()), []string{}, "")
-	txb, err := tx.BuildUnsignedTx(txf, types.NewMsgWriteScopeRequest(s, []string{testkey1.GetAddress().String()}, "1y"))
+	s := *types.NewScope(types.ScopeMetadataAddress(uuid.New()), nil, ownerPartyList(testkey1addr.String()), []string{}, "")
+	txb, err := txf.BuildUnsignedTx(types.NewMsgWriteScopeRequest(s, []string{testkey1addr.String()}, ""))
 	require.NoError(t, err)
 	require.NotNil(t, txb)
 
@@ -113,11 +120,11 @@ func TestValidateRawSingleSignature(t *testing.T) {
 
 	addr, err := app.MetadataKeeper.ValidateRawSignature(*descriptors[0], bytesToSign)
 	require.NoError(t, err)
-	require.EqualValues(t, testkey1.GetAddress(), addr)
+	require.EqualValues(t, testkey1addr, addr)
 
 	addr, err = app.MetadataKeeper.ValidateRawSignature(*descriptors[1], bytesToSign)
 	require.NoError(t, err)
-	require.EqualValues(t, testkey2.GetAddress(), addr)
+	require.EqualValues(t, testkey2addr, addr)
 }
 
 func sigV2ToDescriptors(sigs []signingtypes.SignatureV2) ([]*signingtypes.SignatureDescriptor, error) {
@@ -139,7 +146,7 @@ func sigV2ToDescriptors(sigs []signingtypes.SignatureV2) ([]*signingtypes.Signat
 }
 
 func TestIsMarkerAndHasAuthority_IsMarker(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	pubkey := secp256k1.GenPrivKey().PubKey()
@@ -178,7 +185,7 @@ func TestIsMarkerAndHasAuthority_IsMarker(t *testing.T) {
 }
 
 func TestIsMarkerAndHasAuthority_HasAuth(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	pubkey := secp256k1.GenPrivKey().PubKey()

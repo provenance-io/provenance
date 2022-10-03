@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client"
-
 	"github.com/gogo/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
@@ -17,6 +15,7 @@ import (
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -29,11 +28,11 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	exptypes "github.com/provenance-io/provenance/x/expiration/types"
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type IntegrationCLITestSuite struct {
@@ -43,7 +42,7 @@ type IntegrationCLITestSuite struct {
 	testnet         *testnet.Network
 	keyring         keyring.Keyring
 	keyringDir      string
-	keyringAccounts []keyring.Info
+	keyringAccounts []keyring.Record
 
 	asJson         string
 	asText         string
@@ -128,26 +127,32 @@ func TestIntegrationCLITestSuite(t *testing.T) {
 
 func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-
+	pioconfig.SetProvenanceConfig("atom", 0)
 	cfg := testutil.DefaultTestNetworkConfig()
 	cfg.NumValidators = 1
 	genesisState := cfg.GenesisState
+	s.cfg = cfg
 	s.generateAccountsWithKeyrings(4)
 
+	var err error
 	// An account
-	s.accountAddr = s.keyringAccounts[0].GetAddress()
+	s.accountAddr, err = s.keyringAccounts[0].GetAddress()
+	s.Require().NoError(err, "getting keyringAccounts[0] address")
 	s.accountAddrStr = s.accountAddr.String()
 
 	// A user account
-	s.user1Addr = s.keyringAccounts[1].GetAddress()
+	s.user1Addr, err = s.keyringAccounts[1].GetAddress()
+	s.Require().NoError(err, "getting keyringAccounts[1] address")
 	s.user1AddrStr = s.user1Addr.String()
 
 	// A second user account
-	s.user2Addr = s.keyringAccounts[2].GetAddress()
+	s.user2Addr, err = s.keyringAccounts[2].GetAddress()
+	s.Require().NoError(err, "getting keyringAccounts[2] address")
 	s.user2AddrStr = s.user2Addr.String()
 
 	// A third user account
-	s.user3Addr = s.keyringAccounts[3].GetAddress()
+	s.user3Addr, err = s.keyringAccounts[3].GetAddress()
+	s.Require().NoError(err, "getting keyringAccounts[3] address")
 	s.user3AddrStr = s.user3Addr.String()
 
 	// An account that isn't known
@@ -459,14 +464,13 @@ owner: %s`,
 	genesisState[metadatatypes.ModuleName] = metadataDataBz
 
 	cfg.GenesisState = genesisState
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewCoin("atom", sdk.NewInt(0))
 
-	s.cfg = cfg
 	cfg.ChainID = antewrapper.SimAppChainID
-	s.testnet = testnet.New(s.T(), cfg)
+	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
+	s.Require().NoError(err, "creating testnet")
 
 	_, err = s.testnet.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "waiting for height 1")
 }
 
 func (s *IntegrationCLITestSuite) TearDownSuite() {
@@ -476,14 +480,14 @@ func (s *IntegrationCLITestSuite) TearDownSuite() {
 func (s *IntegrationCLITestSuite) generateAccountsWithKeyrings(number int) {
 	path := hd.CreateHDPath(118, 0, 0).String()
 	s.keyringDir = s.T().TempDir()
-	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil)
+	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil, s.cfg.Codec)
 	s.Require().NoError(err, "keyring creation")
 	s.keyring = kr
 	for i := 0; i < number; i++ {
 		keyId := fmt.Sprintf("test_key%v", i)
 		info, _, err := kr.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 		s.Require().NoError(err, "key creation")
-		s.keyringAccounts = append(s.keyringAccounts, info)
+		s.keyringAccounts = append(s.keyringAccounts, *info)
 	}
 }
 
@@ -1820,7 +1824,7 @@ func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
 		{
 			"by owner unknown owner",
 			[]string{s.userOtherAddr.String()},
-			"rpc error: code = InvalidArgument desc = no locator bound to address: invalid request",
+			"rpc error: code = Unknown desc = no locator bound to address: unknown request",
 			[]string{""},
 		},
 		{
@@ -1888,7 +1892,7 @@ func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
 		{
 			"by uri unknown uri",
 			[]string{"http://not-an-entry.corn"},
-			"rpc error: code = InvalidArgument desc = No records found.: invalid request",
+			"rpc error: code = Unknown desc = No records found.: unknown request",
 			[]string{},
 		},
 	}
@@ -1923,7 +1927,7 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 			} else {
 				require.NoError(t, err, "%s unexpected error", cmdName)
 
-				umErr := clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType)
+				umErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType)
 				require.NoError(t, umErr, "%s UnmarshalJSON error", cmdName)
 
 				txResp := tc.respType.(*sdk.TxResponse)
@@ -3249,7 +3253,7 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 	)
 	require.NoError(s.T(), err, "adding base scope")
 	scopeResp := sdk.TxResponse{}
-	umErr := ctx.JSONCodec.UnmarshalJSON(out.Bytes(), &scopeResp)
+	umErr := ctx.Codec.UnmarshalJSON(out.Bytes(), &scopeResp)
 	require.NoError(s.T(), umErr, "%s UnmarshalJSON error", writeScopeCmd.Name())
 	if scopeResp.Code != 0 {
 		s.T().Logf("write-scope response code is not 0.\ntx response:\n%v\n", scopeResp)

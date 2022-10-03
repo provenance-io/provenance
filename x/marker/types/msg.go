@@ -6,6 +6,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
+	sdkmath "cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -86,7 +87,7 @@ func (msg MsgGrantAllowanceRequest) Type() string { return TypeGrantAllowance }
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
 func NewMsgAddMarkerRequest(
-	denom string, totalSupply sdk.Int, fromAddress sdk.AccAddress, manager sdk.AccAddress, markerType MarkerType, supplyFixed bool, allowGovernanceControl bool, //nolint:interfacer
+	denom string, totalSupply sdkmath.Int, fromAddress sdk.AccAddress, manager sdk.AccAddress, markerType MarkerType, supplyFixed bool, allowGovernanceControl bool, //nolint:interfacer
 ) *MsgAddMarkerRequest {
 	return &MsgAddMarkerRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
@@ -560,7 +561,7 @@ func (msg MsgSetDenomMetadataRequest) GetSigners() []sdk.AccAddress {
 func (msg MsgGrantAllowanceRequest) GetFeeAllowanceI() (feegranttypes.FeeAllowanceI, error) {
 	allowance, ok := msg.Allowance.GetCachedValue().(feegranttypes.FeeAllowanceI)
 	if !ok {
-		return nil, sdkerrors.Wrap(feegranttypes.ErrNoAllowance, "failed to get allowance")
+		return nil, feegranttypes.ErrNoAllowance.Wrap("failed to get allowance")
 	}
 
 	return allowance, nil
@@ -572,7 +573,7 @@ func NewMsgGrantAllowance(
 ) (*MsgGrantAllowanceRequest, error) {
 	msg, ok := allowance.(proto.Message)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", msg)
+		return nil, sdkerrors.ErrPackAny.Wrapf("cannot proto marshal %T", msg)
 	}
 	anyMsg, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
@@ -599,13 +600,13 @@ func (msg MsgGrantAllowanceRequest) Route() string { return ModuleName }
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgGrantAllowanceRequest) ValidateBasic() error {
 	if msg.Denom == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "missing marker denom")
+		return sdkerrors.ErrInvalidRequest.Wrap("missing marker denom")
 	}
 	if msg.Administrator == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing administrator address")
+		return sdkerrors.ErrInvalidAddress.Wrap("missing administrator address")
 	}
 	if msg.Grantee == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
+		return sdkerrors.ErrInvalidAddress.Wrap("missing grantee address")
 	}
 
 	allowance, err := msg.GetFeeAllowanceI()

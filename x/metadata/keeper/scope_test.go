@@ -50,7 +50,7 @@ type ScopeKeeperTestSuite struct {
 }
 
 func (s *ScopeKeeperTestSuite) SetupTest() {
-	s.app = simapp.Setup(false)
+	s.app = simapp.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.app.MetadataKeeper)
@@ -186,11 +186,12 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 
 	// Give user 3 authority to sign for user 1 for scope updates.
 	now := s.ctx.BlockHeader().Time
-	s.Require().NotNil(now)
+	s.Require().NotNil(now, "now")
+	exp1Hour := now.Add(time.Hour)
 	granter := s.user1Addr
 	grantee := s.user3Addr
 	a := authz.NewGenericAuthorization(types.TypeURLMsgWriteScopeRequest)
-	s.Require().NoError(s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour)), "authz SaveGrant user1 to user3")
+	s.Require().NoError(s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, &exp1Hour), "authz SaveGrant user1 to user3")
 
 	cases := []struct {
 		name     string

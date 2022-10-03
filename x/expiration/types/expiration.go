@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func NewExpiration(
@@ -47,10 +46,7 @@ func (e *Expiration) ValidateBasic() error {
 		return ErrInvalidDeposit
 	}
 	if err := e.validateMessage(); err != nil {
-		return sdkerrors.New(
-			ErrInvalidMessage.Codespace(),
-			ErrInvalidMessage.ABCICode(),
-			err.Error())
+		return ErrInvalidMessage
 	}
 	return nil
 }

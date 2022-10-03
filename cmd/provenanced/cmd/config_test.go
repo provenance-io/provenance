@@ -18,11 +18,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 
-	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 
 	tmconfig "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/log"
@@ -49,9 +49,9 @@ func (s *ConfigTestSuite) SetupTest() {
 	s.Home = s.T().TempDir()
 	s.T().Logf("%s Home: %s", s.T().Name(), s.Home)
 
-	encodingConfig := simapp.MakeTestEncodingConfig()
+	encodingConfig := sdksim.MakeTestEncodingConfig()
 	clientCtx := client.Context{}.
-		WithCodec(encodingConfig.Marshaler).
+		WithCodec(encodingConfig.Codec).
 		WithHomeDir(s.Home)
 	clientCtx.Viper = viper.New()
 	serverCtx := server.NewContext(clientCtx.Viper, tmconfig.DefaultConfig(), log.NewNopLogger())
@@ -110,7 +110,7 @@ func (s ConfigTestSuite) ensureConfigFiles() {
 	s.Require().NoError(terr, "extracting tendermint config")
 	clientConfig, cerr := provconfig.ExtractClientConfig(configCmd)
 	s.Require().NoError(cerr, "extracting client config")
-	appConfig.MinGasPrices = app.DefaultMinGasPrices
+	appConfig.MinGasPrices = pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices
 	// And then save them.
 	provconfig.SaveConfigs(configCmd, appConfig, tmConfig, clientConfig, false)
 }
@@ -450,7 +450,7 @@ func (s *ConfigTestSuite) TestConfigChanged() {
 	}
 	expectedAppOutLines := []string{
 		s.makeAppDiffHeaderLines(),
-		fmt.Sprintf(`minimum-gas-prices="%s" (default="")`, app.DefaultMinGasPrices),
+		fmt.Sprintf(`minimum-gas-prices="%s" (default="")`, pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices),
 		"",
 	}
 	expectedTMOutLines := []string{

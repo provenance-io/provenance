@@ -11,16 +11,14 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/golang/protobuf/proto"
-
 	simappparams "github.com/provenance-io/provenance/app/params"
 	markersim "github.com/provenance-io/provenance/x/marker/simulation"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -46,7 +44,7 @@ type Wrapper struct {
 func NewWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource keeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper) *Wrapper {
 	return &Wrapper{
 		cdc:  cdc,
-		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource),
+		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource, ak, bk),
 		ak:   ak,
 		bk:   bk,
 		nk:   nk,
@@ -61,8 +59,8 @@ func (pw Wrapper) GenerateGenesisState(input *module.SimulationState) {
 	params := types.Params{
 		CodeUploadAccess:             accessConfig,
 		InstantiateDefaultPermission: accessConfig.Permission,
-		MaxWasmCodeSize:              uint64(600 * 1024),
 	}
+	types.MaxWasmSize = 600 * 1024
 
 	wasmGenesis := types.GenesisState{
 		Params:    params,
@@ -171,7 +169,7 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk
 		)
 
 		// fund the node account to do all of these txs
-		fundErr := simapp.FundAccount(bk, ctx, node.Address, sdk.NewCoins(sdk.Coin{
+		fundErr := testutil.FundAccount(bk, ctx, node.Address, sdk.NewCoins(sdk.Coin{
 			Denom:  "stake",
 			Amount: sdk.NewInt(1000000000000000),
 		}))
@@ -301,20 +299,32 @@ func SimulateMsgInstantiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.
 		msg2, ops, sdkResponse, instantiateErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
 
 		// get the contract address for use when executing the contract
-		var protoResult sdk.TxMsgData
-		err3 := proto.Unmarshal(sdkResponse.Data, &protoResult)
-
-		if err3 != nil {
-			panic(err3)
+		if len(sdkResponse.MsgResponses) == 0 {
+			app.Logger().Info("instantiate contract", "Log", sdkResponse.Log, "Events", sdkResponse.Events)
+			panic("no msg responses from instantiate contract")
+		}
+		var pInstResp *types.MsgInstantiateContractResponse
+		for _, resp := range sdkResponse.MsgResponses {
+			if resp.TypeUrl == "/cosmwasm.wasm.v1.MsgInstantiateContractResponse" {
+				if pInstResp != nil {
+					app.Logger().Info("instantiate contract", "MsgResponses", sdkResponse.MsgResponses)
+					panic("multiple instantiate contract responses found")
+				}
+				instResp, ok := resp.GetCachedValue().(*types.MsgInstantiateContractResponse)
+				if !ok {
+					app.Logger().Error("instantiate contract", "MsgInstantiateContractResponse", resp)
+					panic("could not cast response to MsgInstantiateContractResponse")
+				}
+				pInstResp = instResp
+			}
 		}
 
-		var pInstResp types.MsgInstantiateContractResponse
-		err4 := pInstResp.Unmarshal(protoResult.Data[0].Data)
-
-		var contractAddr string
-		if err4 == nil {
-			contractAddr = pInstResp.Address
+		if pInstResp == nil {
+			app.Logger().Error("instantiate contract", "MsgResponses", sdkResponse.MsgResponses)
+			panic("no instantiate contract response found")
 		}
+
+		contractAddr := pInstResp.Address
 
 		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgExecuteContract(ak, bk, node, consumer, contractAddr), BlockHeight: int(ctx.BlockHeight()) + 1})
 
@@ -374,7 +384,8 @@ func Dispatch(
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenTx(
+	tx, err := helpers.GenSignedMockTx(
+		r,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
@@ -388,7 +399,7 @@ func Dispatch(
 		panic(err)
 	}
 
-	_, sdkResponse, err2 := app.Deliver(txGen.TxEncoder(), tx)
+	_, sdkResponse, err2 := app.SimDeliver(txGen.TxEncoder(), tx)
 	if err2 != nil {
 		panic(err2)
 	}

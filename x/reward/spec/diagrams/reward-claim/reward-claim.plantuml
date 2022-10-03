@@ -1,0 +1,22 @@
+@startuml RewardClaim
+<style>
+    arrow {
+        FontSize 10
+    }
+</style>
+skinparam linetype ortho
+skinparam SequenceMessageAlign center
+hide empty description
+state c <<choice>>
+state Unclaimable
+state Claimable
+state Claimed
+state Expired
+
+[*] -down-> Unclaimable : [Participant engages in qualifying action]
+Unclaimable -down-> Claimable : [Claim period ends]
+Claimable -down-> c
+c -down-> Expired : [End time + Offset <= Block Time]
+c -down-> Claimed : [Participant claims transaction]
+
+@enduml

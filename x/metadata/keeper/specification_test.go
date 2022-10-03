@@ -48,7 +48,7 @@ func TestSpecKeeperTestSuite(t *testing.T) {
 }
 
 func (s *SpecKeeperTestSuite) SetupTest() {
-	testApp := simapp.Setup(false)
+	testApp := simapp.Setup(s.T())
 	ctx := testApp.BaseApp.NewContext(false, tmproto.Header{})
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()

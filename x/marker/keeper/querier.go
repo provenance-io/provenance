@@ -29,7 +29,7 @@ func NewQuerier(keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier 
 		case types.QueryMarkerSupply:
 			return querySupply(ctx, path[1:], req, keeper, legacyQuerierCdc)
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
+			return nil, sdkerrors.ErrUnknownRequest.Wrapf("unknown %s query endpoint: %s", types.ModuleName, path[0])
 		}
 	}
 }
@@ -43,7 +43,7 @@ func queryMarker(ctx sdk.Context, path []string, _ abci.RequestQuery, keeper Kee
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, account)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(err.Error())
 	}
 
 	return res, nil
@@ -59,7 +59,7 @@ func queryAccess(ctx sdk.Context, path []string, _ abci.RequestQuery, keeper Kee
 	m := account.(*types.MarkerAccount)
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, m.AccessControl)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(err.Error())
 	}
 
 	return res, nil
@@ -75,7 +75,7 @@ func queryCoins(ctx sdk.Context, path []string, _ abci.RequestQuery, keeper Keep
 	m := account.(*types.MarkerAccount)
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, keeper.GetEscrow(ctx, m))
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(err.Error())
 	}
 
 	return res, nil
@@ -91,7 +91,7 @@ func querySupply(ctx sdk.Context, path []string, _ abci.RequestQuery, keeper Kee
 	m := account.(*types.MarkerAccount)
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, m.Supply)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(err.Error())
 	}
 
 	return res, nil
@@ -103,7 +103,7 @@ func queryMarkers(ctx sdk.Context, _ []string, req abci.RequestQuery, keeper Kee
 
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+		return nil, sdkerrors.ErrJSONUnmarshal.Wrap(err.Error())
 	}
 
 	filteredMarkers := make([]types.MarkerAccount, 0)
@@ -124,7 +124,7 @@ func queryMarkers(ctx sdk.Context, _ []string, req abci.RequestQuery, keeper Kee
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, filteredMarkers)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(err.Error())
 	}
 
 	return res, nil
@@ -136,7 +136,7 @@ func queryHolders(ctx sdk.Context, _ []string, req abci.RequestQuery, keeper Kee
 
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+		return nil, sdkerrors.ErrJSONUnmarshal.Wrap(err.Error())
 	}
 
 	holders := keeper.GetAllMarkerHolders(ctx, params.Denom)
@@ -150,7 +150,7 @@ func queryHolders(ctx sdk.Context, _ []string, req abci.RequestQuery, keeper Kee
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, holders)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.ErrJSONMarshal.Wrap(err.Error())
 	}
 
 	return res, nil
@@ -168,7 +168,7 @@ func accountForDenomOrAddress(ctx sdk.Context, keeper Keeper, lookup string) (ty
 		account, err = keeper.GetMarker(ctx, addr)
 	}
 	if err != nil {
-		return nil, sdkerrors.Wrap(types.ErrMarkerNotFound, "invalid denom or address")
+		return nil, types.ErrMarkerNotFound.Wrap("invalid denom or address")
 	}
 	return account, nil
 }

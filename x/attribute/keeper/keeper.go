@@ -11,6 +11,7 @@ import (
 	"github.com/provenance-io/provenance/x/attribute/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -30,7 +31,7 @@ type Keeper struct {
 	nameKeeper types.NameKeeper
 
 	// Key to access the key-value store from sdk.Context.
-	storeKey sdk.StoreKey
+	storeKey storetypes.StoreKey
 
 	// The codec codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
@@ -43,7 +44,7 @@ type Keeper struct {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
+	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace paramtypes.Subspace,
 	authKeeper types.AccountKeeper, nameKeeper types.NameKeeper,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {

@@ -6,7 +6,6 @@
     - [Go](#go)
     - [CLevelDB](#cleveldb)
     - [RocksDB](#rocksdb)
-    - [librdkafka](#librdkafka)
   - [Building or Installing `provenanced`](#building-or-installing-provenanced)
   - [Build Options](#build-options)
   - [Building `dbmigrate`](#building-dbmigrate)
@@ -95,26 +94,6 @@ $ make rocksdb
 * `ROCKSDB_DO_CLEANUP` defines whether to delete the downloaded and unpacked repo when done.
   The default is `true`.
 </details>
-
-### librdkafka
-
-On ARM64, `librdkafka` and its dependencies are required.
-
-To download, build, and install librdkafka and its dependencies on your system:
-```console
-$ make librdkafka
-```
-
-For M1's Openssl's pkg-config files need to be included in the PKG_CONFIG_PATH.
-
-```console
-$ export PKG_CONFIG_PATH="$( brew --prefix openssl )"/lib/pkgconfig"${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
-```
-
-For Linux ARM64 LD_LIBRARY_PATH needs to include the path to librdkafka.
-```console
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-```
 
 ## Building or Installing `provenanced`
 

@@ -13,9 +13,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
@@ -40,8 +43,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-
-	"github.com/provenance-io/provenance/app"
 )
 
 const (
@@ -49,6 +50,10 @@ const (
 	EnvTypeFlag = "testnet"
 	// Flag used to indicate coin type.
 	CoinTypeFlag = "coin-type"
+	// CustomDenomFlag flag to take in custom denom, defaults to nhash if not passed in.
+	CustomDenomFlag = "custom-denom"
+	// CustomMsgFeeFloorPriceFlag flag to take in custom msg floor fees, defaults to 1905nhash if not passed in.
+	CustomMsgFeeFloorPriceFlag = "msgfee-floor-price"
 )
 
 // ChainID is the id of the running chain
@@ -89,10 +94,15 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 			// set app context based on initialized EnvTypeFlag
 			testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
-			app.SetConfig(testnet)
+			customDenom := server.GetServerContextFromCmd(cmd).Viper.GetString(CustomDenomFlag)
+			customMsgFeeFloor := server.GetServerContextFromCmd(cmd).Viper.GetInt64(CustomMsgFeeFloorPriceFlag)
+			app.SetConfig(testnet, true)
+			pioconfig.SetProvenanceConfig(customDenom, customMsgFeeFloor)
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
 				CoinTypeFlag: fmt.Sprint(app.CoinType),
+				// Override min gas price(server level config) here since the provenance config would have been set based on flags.
+				server.FlagMinGasPrices: pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices,
 			})
 			return nil
 		},
@@ -101,7 +111,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        ChainID,
 		flags.FlagKeyringBackend: "test",
-		server.FlagMinGasPrices:  app.DefaultMinGasPrices,
 		CoinTypeFlag:             fmt.Sprint(app.CoinTypeMainNet),
 	})
 
@@ -124,6 +133,11 @@ func Execute(rootCmd *cobra.Command) error {
 	rootCmd.PersistentFlags().String(flags.FlagLogLevel, zerolog.InfoLevel.String(), "The logging level (trace|debug|info|warn|error|fatal|panic)")
 	rootCmd.PersistentFlags().String(flags.FlagLogFormat, tmcfg.LogFormatPlain, "The logging format (json|plain)")
 
+	// Custom denom flag added to root command
+	rootCmd.PersistentFlags().String(CustomDenomFlag, "", "Indicates if a custom denom is to be used, and the name of it (default nhash)")
+	// Custom msgFee floor price flag added to root command
+	rootCmd.PersistentFlags().Int64(CustomMsgFeeFloorPriceFlag, 0, "Custom msgfee floor price, optional (default 1905)")
+
 	executor := tmcli.PrepareBaseCmd(rootCmd, "", app.DefaultNodeHome)
 	return executor.ExecuteContext(ctx)
 }
@@ -138,6 +152,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		AddRootDomainAccountCmd(app.DefaultNodeHome),
 		AddGenesisMarkerCmd(app.DefaultNodeHome),
 		AddGenesisMsgFeeCmd(app.DefaultNodeHome, encodingConfig.InterfaceRegistry),
+		AddGenesisCustomFloorPriceDenomCmd(app.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
@@ -247,7 +262,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 			panic(err)
 		}
 	}
-	snapshotDB, err := sdk.NewDB("metadata", cast.ToString(appOpts.Get("db_backend")), snapshotDir)
+	snapshotDB, err := dbm.NewDB("metadata", server.GetAppDBBackend(appOpts), snapshotDir)
 	if err != nil {
 		panic(err)
 	}
@@ -256,27 +271,28 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		panic(err)
 	}
 
-	// Validate min-gas-price is a single coin.  If mainnet then must be "nhash" and have a value greater than one.
+	// Validate min-gas-price is a single coin.
 	if fee, err := sdk.ParseCoinNormalized(cast.ToString(appOpts.Get(server.FlagMinGasPrices))); err == nil {
 		if int(sdk.GetConfig().GetCoinType()) == app.CoinTypeMainNet {
-			// require the fee denom to match the bond denom on mainnet
-			if fee.Denom != app.DefaultBondDenom {
-				panic(fmt.Errorf("invalid min-gas-price fee denom, must be: %s", app.DefaultBondDenom))
-			}
-			// prevent the use of exceptionally small gas amounts that are typical defaults (i.e. 0.0025nhash)
-			if fee.Amount.LTE(sdk.OneInt()) {
-				panic(fmt.Errorf("min-gas-price must be greater than 1%s", app.DefaultBondDenom))
+			// require the fee denom to match the bond denom on mainnet(still applies)
+			if fee.Denom != pioconfig.GetProvenanceConfig().FeeDenom {
+				panic(fmt.Errorf("invalid min-gas-price fee denom, must be: %s", pioconfig.GetProvenanceConfig().FeeDenom))
 			}
 		}
 	} else {
 		// panic if there was a parse error (for example more than one coin was passed in for required fee).
 		if err != nil {
 			panic(fmt.Errorf("invalid min-gas-price value, expected single decimal coin value such as '%s', got '%s';\n\n %w",
-				app.DefaultMinGasPrices,
+				pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices,
 				appOpts.Get(server.FlagMinGasPrices),
 				err))
 		}
 	}
+
+	snapshotOptions := snapshottypes.NewSnapshotOptions(
+		cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval)),
+		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
+	)
 
 	return app.New(
 		logger, db, traceStore, true, skipUpgradeHeights,
@@ -292,9 +308,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		baseapp.SetInterBlockCache(cache),
 		baseapp.SetTrace(cast.ToBool(appOpts.Get(server.FlagTrace))),
 		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents))),
-		baseapp.SetSnapshotStore(snapshotStore),
-		baseapp.SetSnapshotInterval(cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval))),
-		baseapp.SetSnapshotKeepRecent(cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent))),
+		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(getIAVLCacheSize(appOpts)),
 	)
 }

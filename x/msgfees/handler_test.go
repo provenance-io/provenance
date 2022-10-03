@@ -2,12 +2,9 @@ package msgfees_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -18,7 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/marker"
@@ -43,7 +42,7 @@ type HandlerTestSuite struct {
 }
 
 func (s *HandlerTestSuite) SetupTest() {
-	s.app = app.Setup(false)
+	s.app = app.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.handler = marker.NewHandler(s.app.MarkerKeeper)
 
@@ -79,9 +78,8 @@ func TestInvalidProposal(t *testing.T) {
 	k := keeper.Keeper{}
 	h := marker.NewProposalHandler(k)
 
-	err := h(sdk.NewContext(nil, tmproto.Header{}, false, nil), govtypes.NewTextProposal("Test", "description"))
-	require.Error(t, err)
-	require.True(t, strings.Contains(err.Error(), "unrecognized marker proposal content type: *types.TextProposal"))
+	err := h(sdk.NewContext(nil, tmproto.Header{}, false, nil), govtypesv1beta1.NewTextProposal("Test", "description"))
+	require.ErrorContains(t, err, "unrecognized marker proposal content type: *v1beta1.TextProposal")
 }
 
 func (s HandlerTestSuite) containsMessage(result *sdk.Result, msg proto.Message) bool {

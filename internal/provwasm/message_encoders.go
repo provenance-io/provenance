@@ -48,22 +48,22 @@ func customEncoders(registry *EncoderRegistry, logger log.Logger) wasm.CustomEnc
 		req := EncodeRequest{}
 		if err := json.Unmarshal(msg, &req); err != nil {
 			logger.Error("failed to unmarshal encode request", "err", err)
-			return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+			return nil, sdkerrors.ErrJSONUnmarshal.Wrap(err.Error())
 		}
 		encode, exists := registry.encoders[req.Route]
 		if !exists {
 			logger.Error("encoder not found", "route", req.Route)
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "encoder not found for route: %s", req.Route)
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("encoder not found for route: %s", req.Route)
 		}
 		msgs, err := encode(contract, req.Params, req.Version)
 		if err != nil {
 			logger.Error("failed to encode message", "err", err)
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 		}
 		for _, msg := range msgs {
 			if err := msg.ValidateBasic(); err != nil {
 				logger.Error("message validation failed", "err", err)
-				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+				return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 			}
 		}
 		return msgs, nil

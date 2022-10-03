@@ -46,7 +46,7 @@ func containsMessage(result *sdk.Result, msg proto.Message) bool {
 	return false
 }
 
-//  create name record
+// create name record
 func TestCreateName(t *testing.T) {
 	priv1 := secp256k1.GenPrivKey()
 	addr1 := sdk.AccAddress(priv1.PubKey().Address())
@@ -68,7 +68,7 @@ func TestCreateName(t *testing.T) {
 		{
 			name:          "create bad name record",
 			msg:           nametypes.NewMsgBindNameRequest(nametypes.NewNameRecord("new", addr2, false), nametypes.NewNameRecord("foo.name", addr1, false)),
-			expectedError: sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, nametypes.ErrNameNotBound.Error()),
+			expectedError: sdkerrors.ErrInvalidRequest.Wrap(nametypes.ErrNameNotBound.Error()),
 		},
 	}
 
@@ -79,7 +79,7 @@ func TestCreateName(t *testing.T) {
 		Address: addr2.String(),
 	}
 	accs := authtypes.GenesisAccounts{acc1, acc2}
-	app := simapp.SetupWithGenesisAccounts("", accs)
+	app := simapp.SetupWithGenesisAccounts(t, "", accs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	var nameData nametypes.GenesisState
@@ -111,7 +111,7 @@ func TestCreateName(t *testing.T) {
 	}
 }
 
-//  delete name record
+// delete name record
 func TestDeleteName(t *testing.T) {
 	priv1 := secp256k1.GenPrivKey()
 	addr1 := sdk.AccAddress(priv1.PubKey().Address())
@@ -131,7 +131,7 @@ func TestDeleteName(t *testing.T) {
 		{
 			name:          "create bad name record",
 			msg:           nametypes.NewMsgDeleteNameRequest(nametypes.NewNameRecord("example.name", addr1, false)),
-			expectedError: sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "name does not exist"),
+			expectedError: sdkerrors.ErrInvalidRequest.Wrap("name does not exist"),
 		},
 	}
 
@@ -139,7 +139,7 @@ func TestDeleteName(t *testing.T) {
 		Address: addr1.String(),
 	}
 	accs := authtypes.GenesisAccounts{acc1}
-	app := simapp.SetupWithGenesisAccounts("", accs)
+	app := simapp.SetupWithGenesisAccounts(t, "", accs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	var nameData nametypes.GenesisState

@@ -15,11 +15,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/expiration/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -62,9 +62,9 @@ type GrpcQueryTestSuite struct {
 }
 
 func (s *GrpcQueryTestSuite) SetupTest() {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
+	//msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
 
-	s.app = simapp.Setup(false)
+	s.app = simapp.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: tmtime.Now()})
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.app.ExpirationKeeper)
@@ -88,17 +88,20 @@ func (s *GrpcQueryTestSuite) SetupTest() {
 	s.user1Addr = sdk.AccAddress(s.pubKey1.Address())
 	s.user1 = s.user1Addr.String()
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
-	simapp.FundAccount(s.app, s.ctx, s.user1Addr, sdk.NewCoins(types.DefaultDeposit).Add(types.DefaultDeposit))
+	err := testutil.FundAccount(s.app.BankKeeper, s.ctx, s.user1Addr, sdk.NewCoins(types.DefaultDeposit).Add(types.DefaultDeposit))
+	s.Require().NoError(err, "funding account")
 
 	s.pubKey2 = secp256k1.GenPrivKey().PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubKey2.Address())
 	s.user2 = s.user2Addr.String()
-	simapp.FundAccount(s.app, s.ctx, s.user2Addr, sdk.NewCoins(types.DefaultDeposit))
+	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, s.user2Addr, sdk.NewCoins(types.DefaultDeposit))
+	s.Require().NoError(err, "funding account")
 
 	s.pubKey3 = secp256k1.GenPrivKey().PubKey()
 	s.user3Addr = sdk.AccAddress(s.pubKey3.Address())
 	s.user3 = s.user3Addr.String()
-	simapp.FundAccount(s.app, s.ctx, s.user3Addr, sdk.NewCoins(types.DefaultDeposit))
+	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, s.user3Addr, sdk.NewCoins(types.DefaultDeposit))
+	s.Require().NoError(err, "funding account")
 
 	// setup up genesis
 	var expirationData types.GenesisState

@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -31,7 +32,7 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 
 	// Key to access the key-value store from sdk.Context.
-	storeKey sdk.StoreKey
+	storeKey storetypes.StoreKey
 
 	// The codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
@@ -56,7 +57,7 @@ type Keeper struct {
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	key sdk.StoreKey,
+	key storetypes.StoreKey,
 	paramSpace paramtypes.Subspace,
 	authzKeeper authzkeeper.Keeper,
 	acctKeeper banktypes.AccountKeeper,
@@ -399,7 +400,7 @@ func (k Keeper) hasSignerWithAuthz(
 		return false, fmt.Errorf("invalid signers: %w", err)
 	}
 
-	authorization, exp := k.authzKeeper.GetCleanAuthorization(ctx, grantee, granter, msgTypeURL)
+	authorization, exp := k.authzKeeper.GetAuthorization(ctx, grantee, granter, msgTypeURL)
 	if authorization != nil {
 		resp, err := authorization.Accept(ctx, nil)
 		if err != nil {
