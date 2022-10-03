@@ -121,6 +121,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 
 	cfg.NumValidators = 1
 	genesisState := cfg.GenesisState
+	s.cfg = cfg
 	s.generateAccountsWithKeyrings(7)
 
 	// An account
@@ -450,7 +451,7 @@ func (s *IntegrationCLITestSuite) TestGetExpirationByModuleAssetIdCmd() {
 		{
 			name:             "get expiration by module asset id - does not exist",
 			args:             []string{s.userOtherStr},
-			expectedError:    fmt.Sprintf("expiration for module asset id [%s] does not exist: expiration not found: invalid request", s.userOtherStr),
+			expectedError:    fmt.Sprintf("expiration for module asset id [%s] does not exist: expiration not found: unknown request", s.userOtherStr),
 			expectedInOutput: []string{},
 		},
 		{
