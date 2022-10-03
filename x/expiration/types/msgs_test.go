@@ -6,9 +6,9 @@ import (
 
 	"github.com/google/uuid"
 
+	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
@@ -24,7 +24,6 @@ type ExpirationTestSuite struct {
 	owner         string
 	time          time.Time
 	deposit       sdk.Coin
-	message       types.Any
 
 	signers      []string
 	otherSigners []string

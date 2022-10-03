@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -14,10 +16,9 @@ import (
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 
-	"github.com/stretchr/testify/suite"
-
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/provenance-io/provenance/internal/antewrapper"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
@@ -42,12 +43,12 @@ type SimulateTestSuite struct {
 
 func (s *SimulateTestSuite) SetupTest() {
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
-	addr, err := sdk.AccAddressFromHex(s.accountKey.PubKey().Address().String())
+	addr, err := sdk.AccAddressFromHexUnsafe(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
 	s.accountAddr = addr
 
 	s.account2Key = secp256k1.GenPrivKeyFromSecret([]byte("acc22"))
-	addr2, err2 := sdk.AccAddressFromHex(s.account2Key.PubKey().Address().String())
+	addr2, err2 := sdk.AccAddressFromHexUnsafe(s.account2Key.PubKey().Address().String())
 	s.Require().NoError(err2)
 	s.account2Addr = addr2
 
@@ -55,7 +56,7 @@ func (s *SimulateTestSuite) SetupTest() {
 		Denom:  "stake",
 		Amount: sdk.NewInt(1000),
 	}
-	msgfeestypes.DefaultFloorGasPrice = s.floorGasPrice
+	pioconfig.SetProvenanceConfig(s.floorGasPrice.Denom, s.floorGasPrice.Amount.Int64())
 
 	s.sendMsgTypeUrl = "/cosmos.bank.v1beta1.MsgSend"
 	s.sendMsgAdditionalFee = sdk.NewCoin("stake", sdk.NewInt(1))
@@ -67,7 +68,7 @@ func (s *SimulateTestSuite) SetupTest() {
 	genesisState := cfg.GenesisState
 	var msgfeesData msgfeestypes.GenesisState
 	msgfeesData.Params.FloorGasPrice = s.floorGasPrice
-	msgfeesData.MsgFees = append(msgfeesData.MsgFees, msgfeestypes.NewMsgFee(s.sendMsgTypeUrl, s.sendMsgAdditionalFee))
+	msgfeesData.MsgFees = append(msgfeesData.MsgFees, msgfeestypes.NewMsgFee(s.sendMsgTypeUrl, s.sendMsgAdditionalFee, "", msgfeestypes.DefaultMsgFeeBips))
 	msgFeesDataBz, err := cfg.Codec.MarshalJSON(&msgfeesData)
 	s.Require().NoError(err)
 	genesisState[msgfeestypes.ModuleName] = msgFeesDataBz
@@ -78,10 +79,11 @@ func (s *SimulateTestSuite) SetupTest() {
 
 	s.cfg = cfg
 	cfg.ChainID = antewrapper.SimAppChainID
-	s.testnet = testnet.New(s.T(), cfg)
+	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
+	s.Require().NoError(err, "creating testnet")
 
 	_, err = s.testnet.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "waiting for height 1")
 }
 
 func (s *SimulateTestSuite) TearDownTest() {

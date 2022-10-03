@@ -29,6 +29,8 @@ message AddMsgFeeProposal {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"additional_fee\""
   ];
+  string recipient              = 5;
+  uint32 recipient_basis_points = 6;
 }
 
 ```
@@ -66,6 +68,8 @@ message UpdateMsgFeeProposal {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"additional_fee\""
   ];
+  string recipient              = 5;
+  uint32 recipient_basis_points = 6;
 }
 ```
 

@@ -2,11 +2,11 @@ package types
 
 import (
 	"errors"
-	fmt "fmt"
-	"strings"
+	"fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -18,38 +18,41 @@ const (
 	ProposalTypeRemoveMsgFee string = "RemoveMsgFee"
 	// ProposalTypeUpdateUsdConversionRate to update the usd conversion rate param
 	ProposalTypeUpdateUsdConversionRate string = "UpdateUsdConversionRate"
+	// ProposalTypeUpdateConversionFeeDenom to update the conversion rate denom
+	ProposalTypeUpdateConversionFeeDenom string = "UpdateConversionFeeDenom"
 )
 
 var (
-	_ govtypes.Content = &AddMsgFeeProposal{}
-	_ govtypes.Content = &UpdateMsgFeeProposal{}
-	_ govtypes.Content = &RemoveMsgFeeProposal{}
-	_ govtypes.Content = &UpdateNhashPerUsdMilProposal{}
+	_ govtypesv1beta1.Content = &AddMsgFeeProposal{}
+	_ govtypesv1beta1.Content = &UpdateMsgFeeProposal{}
+	_ govtypesv1beta1.Content = &RemoveMsgFeeProposal{}
+	_ govtypesv1beta1.Content = &UpdateNhashPerUsdMilProposal{}
+	_ govtypesv1beta1.Content = &UpdateConversionFeeDenomProposal{}
 )
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeAddMsgFee)
-	govtypes.RegisterProposalTypeCodec(AddMsgFeeProposal{}, "provenance/msgfees/AddMsgFeeProposal")
-
-	govtypes.RegisterProposalType(ProposalTypeUpdateMsgFee)
-	govtypes.RegisterProposalTypeCodec(UpdateMsgFeeProposal{}, "provenance/msgfees/UpdateMsgFeeProposal")
-
-	govtypes.RegisterProposalType(ProposalTypeRemoveMsgFee)
-	govtypes.RegisterProposalTypeCodec(RemoveMsgFeeProposal{}, "provenance/msgfees/RemoveMsgFeeProposal")
-	govtypes.RegisterProposalType(ProposalTypeUpdateUsdConversionRate)
-	govtypes.RegisterProposalTypeCodec(UpdateNhashPerUsdMilProposal{}, "provenance/msgfees/UpdateNhashPerUsdMilProposal")
+	govtypesv1beta1.RegisterProposalType(ProposalTypeAddMsgFee)
+	govtypesv1beta1.RegisterProposalType(ProposalTypeUpdateMsgFee)
+	govtypesv1beta1.RegisterProposalType(ProposalTypeRemoveMsgFee)
+	govtypesv1beta1.RegisterProposalType(ProposalTypeUpdateUsdConversionRate)
+	govtypesv1beta1.RegisterProposalType(ProposalTypeUpdateConversionFeeDenom)
 }
 
 func NewAddMsgFeeProposal(
 	title string,
 	description string,
 	msg string,
-	additionalFee sdk.Coin) *AddMsgFeeProposal {
+	additionalFee sdk.Coin,
+	recipient string,
+	recipientBasisPoints string,
+) *AddMsgFeeProposal {
 	return &AddMsgFeeProposal{
-		Title:         title,
-		Description:   description,
-		MsgTypeUrl:    msg,
-		AdditionalFee: additionalFee,
+		Title:                title,
+		Description:          description,
+		MsgTypeUrl:           msg,
+		AdditionalFee:        additionalFee,
+		Recipient:            recipient,
+		RecipientBasisPoints: recipientBasisPoints,
 	}
 }
 
@@ -64,29 +67,47 @@ func (p AddMsgFeeProposal) ValidateBasic() error {
 		return ErrInvalidFee
 	}
 
-	return govtypes.ValidateAbstract(&p)
-}
-func (p AddMsgFeeProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Add Msg Fee Proposal:
-Title:         %s
-Description:   %s
-Msg:           %s
-AdditionalFee: %s
-`, p.Title, p.Description, p.MsgTypeUrl, p.AdditionalFee))
-	return b.String()
+	if err := p.AdditionalFee.Validate(); err != nil {
+		return err
+	}
+
+	if len(p.Recipient) != 0 {
+		_, err := sdk.AccAddressFromBech32(p.Recipient)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(p.RecipientBasisPoints) > 0 && len(p.Recipient) > 0 {
+		bips, err := strconv.ParseUint(p.RecipientBasisPoints, 0, 64)
+		if err != nil {
+			return err
+		}
+		if bips > 10_000 {
+			return fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", p.RecipientBasisPoints)
+		}
+	} else if len(p.RecipientBasisPoints) > 0 && len(p.Recipient) == 0 {
+		return fmt.Errorf("")
+	}
+
+	return govtypesv1beta1.ValidateAbstract(&p)
 }
 
 func NewUpdateMsgFeeProposal(
 	title string,
 	description string,
 	msg string,
-	additionalFee sdk.Coin) *UpdateMsgFeeProposal {
+	additionalFee sdk.Coin,
+	recipient string,
+	recipientBasisPoints string,
+) *UpdateMsgFeeProposal {
 	return &UpdateMsgFeeProposal{
-		Title:         title,
-		Description:   description,
-		MsgTypeUrl:    msg,
-		AdditionalFee: additionalFee,
+		Title:                title,
+		Description:          description,
+		MsgTypeUrl:           msg,
+		AdditionalFee:        additionalFee,
+		Recipient:            recipient,
+		RecipientBasisPoints: recipientBasisPoints,
 	}
 }
 
@@ -103,18 +124,23 @@ func (p UpdateMsgFeeProposal) ValidateBasic() error {
 		return ErrInvalidFee
 	}
 
-	return govtypes.ValidateAbstract(&p)
-}
+	if len(p.Recipient) != 0 {
+		_, err := sdk.AccAddressFromBech32(p.Recipient)
+		if err != nil {
+			return err
+		}
+	}
+	if len(p.RecipientBasisPoints) > 0 {
+		bips, err := strconv.ParseUint(p.RecipientBasisPoints, 0, 64)
+		if err != nil {
+			return err
+		}
+		if bips > 10_000 {
+			return fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", p.RecipientBasisPoints)
+		}
+	}
 
-func (p UpdateMsgFeeProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Update Msg Fee Proposal:
-Title:         %s
-Description:   %s
-Msg:           %s
-AdditionalFee: %s
-`, p.Title, p.Description, p.MsgTypeUrl, p.AdditionalFee))
-	return b.String()
+	return govtypesv1beta1.ValidateAbstract(&p)
 }
 
 func NewRemoveMsgFeeProposal(
@@ -137,17 +163,7 @@ func (p RemoveMsgFeeProposal) ValidateBasic() error {
 	if len(p.MsgTypeUrl) == 0 {
 		return ErrEmptyMsgType
 	}
-	return govtypes.ValidateAbstract(&p)
-}
-
-func (p RemoveMsgFeeProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Remove Msg Fee Proposal:
-  Title:       %s
-  Description: %s
-  MsgTypeUrl:  %s
-`, p.Title, p.Description, p.MsgTypeUrl))
-	return b.String()
+	return govtypesv1beta1.ValidateAbstract(&p)
 }
 
 func NewUpdateNhashPerUsdMilProposal(
@@ -172,15 +188,30 @@ func (p UpdateNhashPerUsdMilProposal) ValidateBasic() error {
 	if p.NhashPerUsdMil < 1 {
 		return errors.New("nhash per usd mil must be greater than 0")
 	}
-	return govtypes.ValidateAbstract(&p)
+	return govtypesv1beta1.ValidateAbstract(&p)
 }
 
-func (p UpdateNhashPerUsdMilProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Update Nhash to Usd Mil Proposal:
-  Title:             %s
-  Description:       %s
-  NhashPerUsdMil:    %v
-`, p.Title, p.Description, p.NhashPerUsdMil))
-	return b.String()
+func NewUpdateConversionFeeDenomProposal(
+	title string,
+	description string,
+	converstionFeeDenom string,
+) *UpdateConversionFeeDenomProposal {
+	return &UpdateConversionFeeDenomProposal{
+		Title:              title,
+		Description:        description,
+		ConversionFeeDenom: converstionFeeDenom,
+	}
+}
+
+func (p UpdateConversionFeeDenomProposal) ProposalRoute() string { return RouterKey }
+
+func (p UpdateConversionFeeDenomProposal) ProposalType() string {
+	return ProposalTypeUpdateConversionFeeDenom
+}
+
+func (p UpdateConversionFeeDenomProposal) ValidateBasic() error {
+	if err := sdk.ValidateDenom(p.ConversionFeeDenom); err != nil {
+		return err
+	}
+	return govtypesv1beta1.ValidateAbstract(&p)
 }

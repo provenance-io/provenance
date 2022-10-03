@@ -5,15 +5,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
-
 	"github.com/provenance-io/provenance/x/attribute/simulation"
 	types "github.com/provenance-io/provenance/x/attribute/types"
 )
@@ -26,10 +27,8 @@ type SimTestSuite struct {
 }
 
 func (suite *SimTestSuite) SetupTest() {
-	checkTx := false
-	app := app.Setup(checkTx)
-	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
+	suite.app = app.Setup(suite.T())
+	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
 }
 
 func (suite *SimTestSuite) TestWeightedOperations() {
@@ -196,7 +195,7 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 	for _, account := range accounts {
 		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-		err := app.FundAccount(suite.app, suite.ctx, account.Address, initCoins)
+		err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, account.Address, initCoins)
 		suite.Require().NoError(err)
 	}
 

@@ -20,15 +20,15 @@ import (
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/go-bip39"
 
-	"github.com/provenance-io/provenance/app"
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
@@ -59,6 +59,8 @@ func InitCmd(mbm module.BasicManager) *cobra.Command {
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().BoolP(FlagRecover, "r", false, "interactive key recovery from mnemonic")
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
+	cmd.Flags().String(CustomDenomFlag, "", "custom denom, optional")
+	cmd.Flags().Int64(CustomMsgFeeFloorPriceFlag, 0, "custom msg fee floor price, optional")
 	return cmd
 }
 
@@ -73,6 +75,10 @@ func Init(
 	doRecover, _ := cmd.Flags().GetBool(FlagRecover)
 	doOverwrite, _ := cmd.Flags().GetBool(FlagOverwrite)
 
+	customDenom, _ := cmd.Flags().GetString(CustomDenomFlag)
+	customMsgFeeFloorPrice, _ := cmd.Flags().GetInt64(CustomMsgFeeFloorPriceFlag)
+
+	pioconfig.SetProvenanceConfig(customDenom, customMsgFeeFloorPrice)
 	if err := provconfig.EnsureConfigDir(cmd); err != nil {
 		return err
 	}
@@ -98,9 +104,8 @@ func Init(
 	}
 
 	// Set a few things in the configs.
-	if len(appConfig.MinGasPrices) == 0 {
-		appConfig.MinGasPrices = app.DefaultMinGasPrices
-	}
+	appConfig.MinGasPrices = pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices
+
 	tmConfig.Moniker = moniker
 	if len(chainID) == 0 {
 		chainID = "provenance-chain-" + tmrand.NewRand().Str(6)
@@ -178,7 +183,7 @@ func createAndExportGenesisFile(
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &mintGenState)
 		mintGenState.Minter.Inflation = sdk.ZeroDec()
 		mintGenState.Minter.AnnualProvisions = sdk.OneDec()
-		mintGenState.Params.MintDenom = app.DefaultBondDenom
+		mintGenState.Params.MintDenom = pioconfig.GetProvenanceConfig().BondDenom
 		mintGenState.Params.InflationMax = sdk.ZeroDec()
 		mintGenState.Params.InflationMin = sdk.ZeroDec()
 		mintGenState.Params.InflationRateChange = sdk.OneDec()
@@ -192,7 +197,7 @@ func createAndExportGenesisFile(
 		moduleName := stakingtypes.ModuleName
 		var stakeGenState stakingtypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &stakeGenState)
-		stakeGenState.Params.BondDenom = app.DefaultBondDenom
+		stakeGenState.Params.BondDenom = pioconfig.GetProvenanceConfig().BondDenom
 		appGenState[moduleName] = cdc.MustMarshalJSON(&stakeGenState)
 	}
 
@@ -201,16 +206,16 @@ func createAndExportGenesisFile(
 		moduleName := crisistypes.ModuleName
 		var crisisGenState crisistypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &crisisGenState)
-		crisisGenState.ConstantFee.Denom = app.DefaultBondDenom
+		crisisGenState.ConstantFee.Denom = pioconfig.GetProvenanceConfig().FeeDenom
 		appGenState[moduleName] = cdc.MustMarshalJSON(&crisisGenState)
 	}
 
 	// Set the gov deposit denom
 	{
 		moduleName := govtypes.ModuleName
-		var govGenState govtypes.GenesisState
+		var govGenState govtypesv1beta1.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &govGenState)
-		govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(app.DefaultBondDenom, sdk.NewInt(minDeposit)))
+		govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().BondDenom, sdk.NewInt(minDeposit)))
 		appGenState[moduleName] = cdc.MustMarshalJSON(&govGenState)
 	}
 

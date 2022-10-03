@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -60,7 +60,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 			require.NoError(t, err)
 
-			appCodec := simapp.MakeTestEncodingConfig().Marshaler
+			appCodec := sdksim.MakeTestEncodingConfig().Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
@@ -88,39 +88,39 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 
 func TestAddGenesisMsgFeeCmd(t *testing.T) {
 	tests := []struct {
-		name         string
-		msgType      string
-		fee          string
-		expectErr    bool
-		expectErrMsg string
+		name            string
+		msgType         string
+		fee             string
+		msgFeeFloorCoin string
+		expectErrMsg    string
 	}{
 		{
-			name:         "invalid msg type",
-			msgType:      "InvalidMsgType",
-			fee:          "1000jackthecat",
-			expectErr:    true,
-			expectErrMsg: "unable to resolve type URL /InvalidMsgType",
+			name:            "invalid msg type",
+			msgType:         "InvalidMsgType",
+			fee:             "1000jackthecat",
+			msgFeeFloorCoin: "0vspn",
+			expectErrMsg:    "unable to resolve type URL /InvalidMsgType",
 		},
 		{
-			name:         "invalid fee",
-			msgType:      "/provenance.name.v1.MsgBindNameRequest",
-			fee:          "not-a-fee",
-			expectErr:    true,
-			expectErrMsg: "failed to parse coin: invalid decimal coin expression: not-a-fee",
+			name:            "invalid fee",
+			msgType:         "/provenance.name.v1.MsgBindNameRequest",
+			fee:             "not-a-fee",
+			msgFeeFloorCoin: "0vspn",
+			expectErrMsg:    "failed to parse coin: invalid decimal coin expression: not-a-fee",
 		},
 		{
-			name:         "valid msg type and fee",
-			msgType:      "/provenance.name.v1.MsgBindNameRequest",
-			fee:          "1000jackthecat",
-			expectErr:    false,
-			expectErrMsg: "",
+			name:            "valid msg type and fee",
+			msgType:         "/provenance.name.v1.MsgBindNameRequest",
+			fee:             "1000jackthecat",
+			msgFeeFloorCoin: "10jackthecat",
+			expectErrMsg:    "",
 		},
 		{
-			name:         "invalid fee",
-			msgType:      "provenance.name.v1.MsgBindNameRequest",
-			fee:          "1000jackthecat",
-			expectErr:    false,
-			expectErrMsg: "",
+			name:            "invalid fee",
+			msgType:         "provenance.name.v1.MsgBindNameRequest",
+			fee:             "1000jackthecat",
+			msgFeeFloorCoin: "0vspn",
+			expectErrMsg:    "",
 		},
 	}
 
@@ -132,7 +132,7 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 			require.NoError(t, err)
 
-			appCodec := simapp.MakeTestEncodingConfig().Marshaler
+			appCodec := sdksim.MakeTestEncodingConfig().Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
@@ -143,18 +143,23 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-			cmd := provenancecmd.AddGenesisMsgFeeCmd(home, app.MakeEncodingConfig().InterfaceRegistry)
+			cmd := provenancecmd.AddGenesisCustomFloorPriceDenomCmd(home)
+			cmdFee := provenancecmd.AddGenesisMsgFeeCmd(home, app.MakeEncodingConfig().InterfaceRegistry)
 			cmd.SetArgs([]string{
+				tc.msgFeeFloorCoin,
+				fmt.Sprintf("--%s=home", flags.FlagHome)})
+			cmdFee.SetArgs([]string{
 				tc.msgType,
 				tc.fee,
 				fmt.Sprintf("--%s=home", flags.FlagHome)})
 
-			if tc.expectErr {
-				err := cmd.ExecuteContext(ctx)
+			if len(tc.expectErrMsg) > 0 {
+				err = cmdFee.ExecuteContext(ctx)
 				require.Error(t, err)
 				require.Equal(t, tc.expectErrMsg, err.Error())
 			} else {
 				require.NoError(t, cmd.ExecuteContext(ctx))
+				require.NoError(t, cmdFee.ExecuteContext(ctx))
 			}
 		})
 	}

@@ -5,6 +5,9 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -12,9 +15,6 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Handler is a handler function for use with IterateRecords.
@@ -56,10 +56,10 @@ type Keeper struct {
 	feegrantKeeper feegrantkeeper.Keeper
 
 	// For access to bank keeper storage outside what their keeper provides.
-	bankKeeperStoreKey sdk.StoreKey
+	bankKeeperStoreKey storetypes.StoreKey
 
 	// Key to access the key-value store from sdk.Context.
-	storeKey sdk.StoreKey
+	storeKey storetypes.StoreKey
 
 	// The codec codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
@@ -72,13 +72,13 @@ type Keeper struct {
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	key sdk.StoreKey,
+	key storetypes.StoreKey,
 	paramSpace paramtypes.Subspace,
 	authKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper,
 	authzKeeper authzkeeper.Keeper,
 	feegrantKeeper feegrantkeeper.Keeper,
-	bankKey sdk.StoreKey,
+	bankKey storetypes.StoreKey,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())

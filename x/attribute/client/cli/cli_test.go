@@ -24,6 +24,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/attribute/client/cli"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -61,26 +62,27 @@ func TestIntegrationTestSuite(t *testing.T) {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
+	pioconfig.SetProvenanceConfig("", 0)
 	s.account1Key = secp256k1.GenPrivKeyFromSecret([]byte("acc1"))
-	addr1, err1 := sdk.AccAddressFromHex(s.account1Key.PubKey().Address().String())
+	addr1, err1 := sdk.AccAddressFromHexUnsafe(s.account1Key.PubKey().Address().String())
 	s.Require().NoError(err1)
 	s.account1Addr = addr1
 	s.account1Str = addr1.String()
 
 	s.account2Key = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
-	addr2, err2 := sdk.AccAddressFromHex(s.account2Key.PubKey().Address().String())
+	addr2, err2 := sdk.AccAddressFromHexUnsafe(s.account2Key.PubKey().Address().String())
 	s.Require().NoError(err2)
 	s.account2Addr = addr2
 	s.account2Str = addr2.String()
 
 	s.account3Key = secp256k1.GenPrivKeyFromSecret([]byte("acc3"))
-	addr3, err3 := sdk.AccAddressFromHex(s.account3Key.PubKey().Address().String())
+	addr3, err3 := sdk.AccAddressFromHexUnsafe(s.account3Key.PubKey().Address().String())
 	s.Require().NoError(err3)
 	s.account3Addr = addr3
 	s.account3Str = addr3.String()
 
 	s.account4Key = secp256k1.GenPrivKeyFromSecret([]byte("acc4"))
-	addr4, err4 := sdk.AccAddressFromHex(s.account4Key.PubKey().Address().String())
+	addr4, err4 := sdk.AccAddressFromHexUnsafe(s.account4Key.PubKey().Address().String())
 	s.Require().NoError(err4)
 	s.account4Addr = addr4
 	s.account4Str = addr4.String()
@@ -168,10 +170,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.cfg = cfg
 	cfg.ChainID = antewrapper.SimAppChainID
-	s.testnet = testnet.New(s.T(), cfg)
+	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
+	s.Require().NoError(err, "creating testnet")
 
 	_, err = s.testnet.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "waiting for height 1")
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -580,7 +583,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
@@ -724,7 +727,7 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
@@ -825,7 +828,7 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
@@ -908,7 +911,7 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}

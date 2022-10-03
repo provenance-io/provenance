@@ -1,27 +1,29 @@
 package handlers_test
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
-	piosimapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/internal/antewrapper"
-	"github.com/provenance-io/provenance/internal/handlers"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
-
+	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,14 +31,145 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	piosimapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/internal/antewrapper"
+	"github.com/provenance-io/provenance/internal/handlers"
+	"github.com/provenance-io/provenance/internal/pioconfig"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
+	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 )
+
+func stopIfFailed(t *testing.T) {
+	t.Helper()
+	if t.Failed() {
+		t.FailNow()
+	}
+}
+
+func assertEventsContains(t *testing.T, events, contains []abci.Event, msgAndArgs ...interface{}) bool {
+	t.Helper()
+	var missingEvents []abci.Event
+LookingForLoop:
+	for _, lookingFor := range contains {
+		for _, event := range events {
+			if eventContains(event, lookingFor) {
+				continue LookingForLoop
+			}
+		}
+		missingEvents = append(missingEvents, lookingFor)
+	}
+	if len(missingEvents) > 0 {
+		err := fmt.Sprintf("Events missing %d/%d expected entries.\n"+
+			"Events:\n%s\n"+
+			"Missing:\n%s",
+			len(missingEvents), len(contains),
+			eventsString(events, true), eventsString(missingEvents, false),
+		)
+		msg := messageFromMsgAndArgs(msgAndArgs...)
+		if len(msg) > 0 {
+			err = err + "\nMessage: " + msg
+		}
+		t.Error(err)
+		return false
+	}
+	return true
+}
+
+func messageFromMsgAndArgs(msgAndArgs ...interface{}) string {
+	switch len(msgAndArgs) {
+	case 0:
+		return ""
+	case 1:
+		msg := msgAndArgs[0]
+		if msgAsStr, ok := msg.(string); ok {
+			return msgAsStr
+		}
+		return fmt.Sprintf("%+v", msg)
+	default:
+		return fmt.Sprintf(msgAndArgs[0].(string), msgAndArgs[1:]...)
+	}
+}
+
+// eventContains returns true if the provided event has the same type as contains and has all
+// attributes (key/value) that contains has. The event can have extra attributes too, but it has to have
+// at least all the attributes in contains.
+func eventContains(event, contains abci.Event) bool {
+	if event.Type != contains.Type {
+		return false
+	}
+	return eventAttributesHasSubset(event.Attributes, contains.Attributes)
+}
+
+func eventAttributesHasSubset(eventAttributes, subset []abci.EventAttribute) bool {
+SubsetLoop:
+	for _, sattr := range subset {
+		for _, eattr := range eventAttributes {
+			if bytes.Equal(sattr.Key, eattr.Key) && bytes.Equal(sattr.Value, eattr.Value) {
+				continue SubsetLoop
+			}
+		}
+		return false
+	}
+	return true
+}
+
+func eventsString(events []abci.Event, includeIndex bool) string {
+	strs := make([]string, len(events))
+	for i, e := range events {
+		if includeIndex {
+			strs[i] = fmt.Sprintf("    [%d]: %s", i, eventString(e))
+		} else {
+			strs[i] = fmt.Sprintf("    %s", eventString(e))
+		}
+	}
+	return strings.Join(strs, "\n")
+}
+
+func eventString(event abci.Event) string {
+	attrs := make([]string, len(event.Attributes))
+	for i, attr := range event.Attributes {
+		attrs[i] = fmt.Sprintf("%q = %q", attr.Key, attr.Value)
+	}
+	return fmt.Sprintf("%s: %s", event.Type, strings.Join(attrs, ", "))
+}
+
+func NewEvent(ty string, attrs ...abci.EventAttribute) abci.Event {
+	return abci.Event{
+		Type:       ty,
+		Attributes: attrs,
+	}
+}
+
+func NewAttribute(key, value string) abci.EventAttribute {
+	return abci.EventAttribute{
+		Key:   []byte(key),
+		Value: []byte(value),
+	}
+}
+
+func msgFeesMsgSendEventJSON(count int, amount int, denom string, recipient string) string {
+	return msgFeesEventJSON("/cosmos.bank.v1beta1.MsgSend", count, amount, denom, recipient)
+}
+
+func msgFeesEventJSON(msg_type string, count int, amount int, denom string, recipient string) string {
+	return fmt.Sprintf(`{"msg_type":"%s","count":"%d","total":"%d%s","recipient":"%s"}`,
+		msg_type, count, amount, denom, recipient)
+}
+
+func jsonArrayJoin(entries ...string) string {
+	return "[" + strings.Join(entries, ",") + "]"
+}
 
 func TestRegisterMsgService(t *testing.T) {
 	db := dbm.NewMemDB()
 
 	// Create an encoding config that doesn't register testdata Msg services.
-	encCfg := simapp.MakeTestEncodingConfig()
+	encCfg := sdksim.MakeTestEncodingConfig()
 	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
 	router := handlers.NewPioMsgServiceRouter(encCfg.TxConfig.TxDecoder())
 	router.SetInterfaceRegistry(encCfg.InterfaceRegistry)
@@ -61,7 +194,7 @@ func TestRegisterMsgService(t *testing.T) {
 func TestRegisterMsgServiceTwice(t *testing.T) {
 	// Setup baseapp.
 	db := dbm.NewMemDB()
-	encCfg := simapp.MakeTestEncodingConfig()
+	encCfg := sdksim.MakeTestEncodingConfig()
 	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
 	router := handlers.NewPioMsgServiceRouter(encCfg.TxConfig.TxDecoder())
 	router.SetInterfaceRegistry(encCfg.InterfaceRegistry)
@@ -85,282 +218,2732 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 	})
 }
 
-func TestMsgService(t *testing.T) {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 1) // will create a gas fee of 1atom * gas
-	encCfg := simapp.MakeTestEncodingConfig()
+func TestFailedTx(tt *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1) // will create a gas fee of 1stake * gas
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(1000)), sdk.NewCoin("atom", sdk.NewInt(400500)))
-	app := piosimapp.SetupWithGenesisAccounts("msgfee-testing", []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr1.String(), Coins: acct1Balance})
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())+1))
+	app := piosimapp.SetupWithGenesisAccounts(tt, "msgfee-testing",
+		[]authtypes.GenesisAccount{acct1},
+		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
+	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 100000))
+	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 
-	// tx without a fee associated with msg type
-	msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
+	// Check both account balances before we begin.
+	addr1beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
+	addr2beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
+	assert.Equal(tt, "100001stake", addr1beforeBalance, "addr1beforeBalance")
+	assert.Equal(tt, "", addr2beforeBalance, "addr2beforeBalance")
+	stopIfFailed(tt)
+
+	tt.Run("no msg-based fee", func(t *testing.T) {
+		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2))))
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())))
+		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+		t.Logf("Events:\n%s\n", eventsString(res.Events, true))
+		assert.Equal(t, 5, int(res.Code), "res=%+v", res)
+
+		// Check both account balances after transaction
+		// the 100000 should have been deducted from account 1, and the send should have failed.
+		// So account 2 should still be empty, and account 1 should only have 1 left.
+		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
+		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
+		assert.Equal(t, "1stake", addr1AfterBalance, "addr1AfterBalance")
+		assert.Equal(t, "", addr2AfterBalance, "addr2AfterBalance")
+
+		// Make sure a couple events are in the list.
+		expEvents := []abci.Event{
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(sdk.AttributeKeyFee, "100000stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, "100000stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+		}
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
+
+		assertEventsContains(t, res.Events, expEvents)
+	})
+
+	// Give acct1 100000stake back.
+	require.NoError(tt, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(),
+		sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())))),
+		"funding acct1 with 100000stake")
+
+	tt.Run("10stake fee associated with msg type", func(t *testing.T) {
+		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2))))
+		msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin(sdk.DefaultBondDenom, 10), "", 0)
+		require.NoError(t, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 10stake")
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())+10))
+		acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+		t.Logf("Events:\n%s\n", eventsString(res.Events, true))
+		assert.Equal(t, 5, int(res.Code), "res=%+v", res)
+
+		// Check both account balances after transaction
+		// the 100000 should have been deducted from account 1, and the send should have failed.
+		// So account 2 should still be empty, and account 1 should only have 1 left.
+		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
+		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
+		assert.Equal(t, "1stake", addr1AfterBalance, "addr1AfterBalance")
+		assert.Equal(t, "", addr2AfterBalance, "addr2AfterBalance")
+
+		// Make sure a couple events are in the list.
+		expEvents := []abci.Event{
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(sdk.AttributeKeyFee, "100000stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, "100000stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+		}
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
+
+		assertEventsContains(t, res.Events, expEvents)
+	})
+}
+
+func TestMsgService(tt *testing.T) {
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1) // set denom as stake and floor gas price as 1 stake.
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, _, addr1 := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(1000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(400500)))
+	app := piosimapp.SetupWithGenesisAccounts(tt, "msgfee-testing",
+		[]authtypes.GenesisAccount{acct1},
+		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
+	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
+
+	// Check both account balances before we begin.
+	addr1beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
+	assert.Equal(tt, "1000hotdog,400500stake", addr1beforeBalance, "addr1beforeBalance")
+	addr2beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
+	assert.Equal(tt, "", addr2beforeBalance, "addr2beforeBalance")
+	stopIfFailed(tt)
+
+	tt.Run("no fee associated with msg type", func(t *testing.T) {
+		// Sending 100hotdog with fees of 100000stake.
+		// account 1 will lose 100hotdog,100000stake
+		// account 2 will gain 100hotdog
+		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000))
+
+		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+		t.Logf("Events:\n%s\n", eventsString(res.Events, true))
+		require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+
+		// Check both account balances after transaction
+		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
+		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
+		assert.Equal(t, "900hotdog,300500stake", addr1AfterBalance, "addr1AfterBalance")
+		assert.Equal(t, "100hotdog", addr2AfterBalance, "addr2AfterBalance")
+
+		// Make sure a couple events are in the list.
+		expEvents := []abci.Event{
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(sdk.AttributeKeyFee, "100000stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, "100000stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+		}
+		// fee charge in antehandler
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
+
+		assertEventsContains(t, res.Events, expEvents)
+	})
+
+	tt.Run("800hotdog fee associated with msg type", func(t *testing.T) {
+		// Sending 50hotdog with fees of 100100stake,800hotdog.
+		// The send message will have a fee of 800hotdog.
+		// account 1 will lose 100100stake,800hotdog.
+		// account 2 will gain 50hotdog.
+		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(50))))
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100100), sdk.NewInt64Coin("hotdog", 800))
+		msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)), "", 0)
+		require.NoError(t, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 800hotdog")
+		acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+		t.Logf("Events:\n%s\n", eventsString(res.Events, true))
+		require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+
+		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
+		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
+		assert.Equal(t, "50hotdog,200400stake", addr1AfterBalance, "addr1AfterBalance")
+		assert.Equal(t, "150hotdog", addr2AfterBalance, "addr2AfterBalance")
+
+		expEvents := []abci.Event{
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(sdk.AttributeKeyFee, "800hotdog,100100stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, "100000stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(antewrapper.AttributeKeyAdditionalFee, "800hotdog"),
+				NewAttribute(antewrapper.AttributeKeyBaseFee, "100100stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+			NewEvent("provenance.msgfees.v1.EventMsgFees",
+				NewAttribute("msg_fees", jsonArrayJoin(msgFeesMsgSendEventJSON(1, 800, "hotdog", "")))),
+		}
+		// fee charge in antehandler
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
+		// fee charged for msg based fee
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 800)))...)
+		// swept fee amount
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100)))...)
+
+		assertEventsContains(t, res.Events, expEvents)
+	})
+
+	tt.Run("10stake fee associated with msg type", func(t *testing.T) {
+		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(50))))
+		msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin(sdk.DefaultBondDenom, 10), "", 0)
+		require.NoError(t, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 10stake")
+
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100111))
+		acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+		t.Logf("Events:\n%s\n", eventsString(res.Events, true))
+		require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+
+		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
+		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
+		assert.Equal(t, "100289stake", addr1AfterBalance, "addr1AfterBalance")
+		assert.Equal(t, "200hotdog", addr2AfterBalance, "addr2AfterBalance")
+
+		expEvents := []abci.Event{
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(sdk.AttributeKeyFee, "100111stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, "100000stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(antewrapper.AttributeKeyAdditionalFee, "10stake"),
+				NewAttribute(antewrapper.AttributeKeyBaseFee, "100101stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+			NewEvent("provenance.msgfees.v1.EventMsgFees",
+				NewAttribute("msg_fees", jsonArrayJoin(msgFeesMsgSendEventJSON(1, 10, "stake", "")))),
+		}
+		// fee charge in antehandler
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
+		// fee charged for msg based fee
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)))...)
+		// swept fee amount
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 101)))...)
+
+		assertEventsContains(t, res.Events, expEvents)
+	})
+}
+
+func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1)
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, _, addr1 := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(1_000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000)))
+	app := piosimapp.SetupWithGenesisAccounts(t, "msgfee-testing",
+		[]authtypes.GenesisAccount{acct1},
+		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
+	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 
 	// Check both account balances before transaction
 	addr1beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	assert.Equal(t, "400500atom,1000hotdog", addr1beforeBalance, "should have the new balance after funding account")
 	addr2beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "", addr2beforeBalance, "should have the new balance after funding account")
+	assert.Equal(t, "1000hotdog,100000stake", addr1beforeBalance, "addr1beforeBalance")
+	assert.Equal(t, "", addr2beforeBalance, "addr2beforeBalance")
+	stopIfFailed(t)
+
+	// Sending 100hotdog coin from 1 to 2.
+	// Will have a msg fee of 800hotdog, 600 will go to 2, 200 to module.
+	msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
+	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000), sdk.NewInt64Coin("hotdog", 800))
+	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)), addr2.String(), 7_500)
+	require.NoError(t, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 800hotdog addr2 75%")
 
 	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-	require.NoError(t, err)
+	require.NoError(t, err, "SignTxAndGetBytes")
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
 
 	// Check both account balances after transaction
 	addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	require.Equal(t, "300500atom,900hotdog", addr1AfterBalance, "should have the new balance running transaction")
 	addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "100hotdog", addr2AfterBalance, "should have the new balance running transaction")
-	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-	assert.Equal(t, 15, len(res.Events))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[4].Type)
-	assert.Equal(t, sdk.AttributeKeyFee, string(res.Events[4].Attributes[0].Key))
-	assert.Equal(t, "100000atom", string(res.Events[4].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[5].Type)
-	assert.Equal(t, antewrapper.AttributeKeyMinFeeCharged, string(res.Events[5].Attributes[0].Key))
-	assert.Equal(t, "100000atom", string(res.Events[4].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[14].Type)
-	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[14].Attributes[0].Key))
-	assert.Equal(t, "100000atom", string(res.Events[14].Attributes[0].Value))
+	assert.Equal(t, "100hotdog", addr1AfterBalance, "addr1AfterBalance")
+	assert.Equal(t, "700hotdog", addr2AfterBalance, "addr2AfterBalance")
 
-	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)))
-	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
+	expEvents := []abci.Event{
+		NewEvent(sdk.EventTypeTx,
+			NewAttribute(sdk.AttributeKeyFee, "800hotdog,100000stake"),
+			NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+		NewEvent(sdk.EventTypeTx,
+			NewAttribute(antewrapper.AttributeKeyAdditionalFee, "800hotdog"),
+			NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+		NewEvent(sdk.EventTypeTx,
+			NewAttribute(antewrapper.AttributeKeyBaseFee, "100000stake"),
+			NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+		NewEvent("provenance.msgfees.v1.EventMsgFees",
+			NewAttribute("msg_fees",
+				jsonArrayJoin(msgFeesMsgSendEventJSON(1, 200, "hotdog", ""), msgFeesMsgSendEventJSON(1, 600, "hotdog", addr2.String())))),
+	}
+	// fee charge in antehandler
+	expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
+	// fee charged for msg based fee
+	expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 200)))...)
+	// fee charged for msg based fee
+	expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), addr2.String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 600)))...)
 
-	// tx with a fee associated with msg type and account has funds
-	msg = banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(50))))
-	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 100100), sdk.NewInt64Coin("hotdog", 800))
-	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
-	txBytes, err = SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-	require.NoError(t, err)
-	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-
-	addr1AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	require.Equal(t, "200400atom,50hotdog", addr1AfterBalance, "should have the new balance running transaction")
-	addr2AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "150hotdog", addr2AfterBalance, "should have the new balance running transaction")
-	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-	assert.Equal(t, 17, len(res.Events))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[4].Type)
-	assert.Equal(t, sdk.AttributeKeyFee, string(res.Events[4].Attributes[0].Key))
-	assert.Equal(t, "100100atom,800hotdog", string(res.Events[4].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[5].Type)
-	assert.Equal(t, antewrapper.AttributeKeyMinFeeCharged, string(res.Events[5].Attributes[0].Key))
-	assert.Equal(t, "100000atom", string(res.Events[5].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[14].Type)
-	assert.Equal(t, antewrapper.AttributeKeyAdditionalFee, string(res.Events[14].Attributes[0].Key))
-	assert.Equal(t, "800hotdog", string(res.Events[14].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[15].Type)
-	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[15].Attributes[0].Key))
-	assert.Equal(t, "100100atom", string(res.Events[15].Attributes[0].Value))
-	assert.Equal(t, "provenance.msgfees.v1.EventMsgFees", res.Events[16].Type)
-	assert.Equal(t, "msg_fees", string(res.Events[16].Attributes[0].Key))
-	assert.Equal(t, "[{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"800hotdog\",\"recipient\":\"\"}]", string(res.Events[16].Attributes[0].Value))
-
-	msgbasedFee = msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("atom", 10))
-	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
-
-	// tx with a fee associated with msg type, additional cost is in same base as fee
-	msg = banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(50))))
-	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 100111))
-	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
-	txBytes, err = SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-	require.NoError(t, err)
-	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-
-	addr1AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	require.Equal(t, "100289atom", addr1AfterBalance, "should have the new balance running transaction")
-	addr2AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "200hotdog", addr2AfterBalance, "should have the new balance running transaction")
-	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-	assert.Equal(t, 17, len(res.Events))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[4].Type)
-	assert.Equal(t, sdk.AttributeKeyFee, string(res.Events[4].Attributes[0].Key))
-	assert.Equal(t, "100111atom", string(res.Events[4].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[5].Type)
-	assert.Equal(t, antewrapper.AttributeKeyMinFeeCharged, string(res.Events[5].Attributes[0].Key))
-	assert.Equal(t, "100000atom", string(res.Events[5].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[14].Type)
-	assert.Equal(t, antewrapper.AttributeKeyAdditionalFee, string(res.Events[14].Attributes[0].Key))
-	assert.Equal(t, "10atom", string(res.Events[14].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[15].Type)
-	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[15].Attributes[0].Key))
-	assert.Equal(t, "100101atom", string(res.Events[15].Attributes[0].Value))
-	assert.Equal(t, "provenance.msgfees.v1.EventMsgFees", res.Events[16].Type)
-	assert.Equal(t, "msg_fees", string(res.Events[16].Attributes[0].Key))
-	assert.Equal(t, "[{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"10atom\",\"recipient\":\"\"}]", string(res.Events[16].Attributes[0].Value))
-
+	assertEventsContains(t, res.Events, expEvents)
 }
 
-func TestMsgServiceAuthz(t *testing.T) {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 1)
-	encCfg := simapp.MakeTestEncodingConfig()
+func TestMsgServiceAuthz(tt *testing.T) {
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1)
+	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	priv2, _, addr2 := testdata.KeyTestPubAddr()
 	_, _, addr3 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
 	acct2 := authtypes.NewBaseAccount(addr2, priv2.PubKey(), 1, 0)
 	acct3 := authtypes.NewBaseAccount(addr3, priv2.PubKey(), 2, 0)
-	initBalance := sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(10000)), sdk.NewCoin("atom", sdk.NewInt(401000)))
-	app := piosimapp.SetupWithGenesisAccounts("msgfee-testing", []authtypes.GenesisAccount{acct1, acct2, acct3}, banktypes.Balance{Address: addr1.String(), Coins: initBalance}, banktypes.Balance{Address: addr2.String(), Coins: initBalance})
+	initBalance := sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(10000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(401000)))
+	app := piosimapp.SetupWithGenesisAccounts(tt, "msgfee-testing",
+		[]authtypes.GenesisAccount{acct1, acct2, acct3},
+		banktypes.Balance{Address: addr1.String(), Coins: initBalance},
+		banktypes.Balance{Address: addr2.String(), Coins: initBalance},
+	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 
-	// Check both account balances before transaction
+	// Create an authz grant from addr1 to addr2 for 500hotdog.
+	now := ctx.BlockHeader().Time
+	exp1Hour := now.Add(time.Hour)
+	sendAuth := banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("hotdog", 500)))
+	require.NoError(tt, app.AuthzKeeper.SaveGrant(ctx, addr2, addr1, sendAuth, &exp1Hour), "Save Grant addr2 addr1 500hotdog")
+	// Set a MsgSend msg-based fee of 800hotdog.
+	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&banktypes.MsgSend{}), sdk.NewCoin("hotdog", sdk.NewInt(800)), "", 0)
+	require.NoError(tt, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 800hotdog")
+
+	// Check all account balances before we start.
 	addr1beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	assert.Equal(t, "401000atom,10000hotdog", addr1beforeBalance, "should have the new balance after funding account")
 	addr2beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "401000atom,10000hotdog", addr2beforeBalance, "should have the new balance after funding account")
 	addr3beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr3).String()
-	require.Equal(t, "", addr3beforeBalance, "should have the new balance after funding account")
+	assert.Equal(tt, "10000hotdog,401000stake", addr1beforeBalance, "addr1beforeBalance")
+	assert.Equal(tt, "10000hotdog,401000stake", addr2beforeBalance, "addr2beforeBalance")
+	assert.Equal(tt, "", addr3beforeBalance, "addr3beforeBalance")
+	stopIfFailed(tt)
 
-	msg := banktypes.NewMsgSend(addr1, addr3, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
-	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)))
-	app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee)
-	app.AuthzKeeper.SaveGrant(ctx, addr2, addr1, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("hotdog", 500))), time.Now().Add(time.Hour))
+	tt.Run("exec one send", func(t *testing.T) {
+		msg := banktypes.NewMsgSend(addr1, addr3, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
 
-	// tx authz send message with correct amount of fees associated
-	msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
-	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin("hotdog", 800))
-	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
-	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
-	require.NoError(t, err)
-	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+		// tx authz send message with correct amount of fees associated
+		msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000), sdk.NewInt64Coin("hotdog", 800))
+		acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
+		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+		require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
 
-	// acct1 sent 100hotdog to acct3 with acct2 paying fees 100000atom in gas, 800hotdog msgfees
-	addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	require.Equal(t, "401000atom,9900hotdog", addr1AfterBalance, "should have the new balance running transaction")
-	addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "301000atom,9200hotdog", addr2AfterBalance, "should have the new balance running transaction")
-	addr3AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr3).String()
-	require.Equal(t, "100hotdog", addr3AfterBalance, "should have the new balance running transaction")
+		// acct1 sent 100hotdog to acct3 with acct2 paying fees 100000stake in gas, 800hotdog msgfees
+		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
+		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
+		addr3AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr3).String()
+		assert.Equal(t, "9900hotdog,401000stake", addr1AfterBalance, "addr1AfterBalance")
+		assert.Equal(t, "9200hotdog,301000stake", addr2AfterBalance, "addr2AfterBalance")
+		assert.Equal(t, "100hotdog", addr3AfterBalance, "addr3AfterBalance")
 
-	assert.Equal(t, 17, len(res.Events))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[4].Type)
-	assert.Equal(t, sdk.AttributeKeyFee, string(res.Events[4].Attributes[0].Key))
-	assert.Equal(t, "100000atom,800hotdog", string(res.Events[4].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[5].Type)
-	assert.Equal(t, antewrapper.AttributeKeyMinFeeCharged, string(res.Events[5].Attributes[0].Key))
-	assert.Equal(t, "100000atom", string(res.Events[5].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[14].Type)
-	assert.Equal(t, antewrapper.AttributeKeyAdditionalFee, string(res.Events[14].Attributes[0].Key))
-	assert.Equal(t, "800hotdog", string(res.Events[14].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[15].Type)
-	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[15].Attributes[0].Key))
-	assert.Equal(t, "100000atom", string(res.Events[15].Attributes[0].Value))
-	assert.Equal(t, "provenance.msgfees.v1.EventMsgFees", res.Events[16].Type)
-	assert.Equal(t, "msg_fees", string(res.Events[16].Attributes[0].Key))
-	assert.Equal(t, "[{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"1\",\"total\":\"800hotdog\",\"recipient\":\"\"}]", string(res.Events[16].Attributes[0].Value))
+		expEvents := []abci.Event{
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(sdk.AttributeKeyFee, "800hotdog,100000stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr2.String())),
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(antewrapper.AttributeKeyBaseFee, "100000stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr2.String())),
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(antewrapper.AttributeKeyAdditionalFee, "800hotdog"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr2.String())),
+			NewEvent("provenance.msgfees.v1.EventMsgFees",
+				NewAttribute("msg_fees", jsonArrayJoin(msgFeesMsgSendEventJSON(1, 800, "hotdog", "")))),
+		}
+		// fee charge in antehandler
+		expEvents = append(expEvents, CreateSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
+		// fee charged for msg based fee
+		expEvents = append(expEvents, CreateSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 800)))...)
+		assertEventsContains(t, res.Events, expEvents)
+	})
 
-	// send 2 successful authz messages
-	msgExec = authztypes.NewMsgExec(addr2, []sdk.Msg{msg, msg})
-	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 200000), sdk.NewInt64Coin("hotdog", 1600))
-	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
-	txBytes, err = SignTxAndGetBytes(NewTestGasLimit()*2, fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
-	require.NoError(t, err)
-	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+	tt.Run("exec two sends", func(t *testing.T) {
+		// send 2 successful authz messages
+		msg := banktypes.NewMsgSend(addr1, addr3, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(80))))
+		msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg, msg})
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 200000), sdk.NewInt64Coin("hotdog", 1600))
+		acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
+		txBytes, err := SignTxAndGetBytes(NewTestGasLimit()*2, fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+		require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
 
-	// acct1 2x sent 100hotdog to acct3 with acct2 paying fees 200000atom in gas, 1600hotdog msgfees
-	addr1AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	require.Equal(t, "401000atom,9700hotdog", addr1AfterBalance, "should have the new balance running transaction")
-	addr2AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "101000atom,7600hotdog", addr2AfterBalance, "should have the new balance running transaction")
-	addr3AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr3).String()
-	require.Equal(t, "300hotdog", addr3AfterBalance, "should have the new balance running transaction")
+		// acct1 2x sent 100hotdog to acct3 with acct2 paying fees 200000stake in gas, 1600hotdog msgfees
+		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
+		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
+		addr3AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr3).String()
+		assert.Equal(t, "9740hotdog,401000stake", addr1AfterBalance, "addr1AfterBalance")
+		assert.Equal(t, "7600hotdog,101000stake", addr2AfterBalance, "addr2AfterBalance")
+		assert.Equal(t, "260hotdog", addr3AfterBalance, "addr3AfterBalance")
 
-	assert.Equal(t, 22, len(res.Events))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[4].Type)
-	assert.Equal(t, sdk.AttributeKeyFee, string(res.Events[4].Attributes[0].Key))
-	assert.Equal(t, "200000atom,1600hotdog", string(res.Events[4].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[5].Type)
-	assert.Equal(t, antewrapper.AttributeKeyMinFeeCharged, string(res.Events[5].Attributes[0].Key))
-	assert.Equal(t, "200000atom", string(res.Events[5].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[19].Type)
-	assert.Equal(t, antewrapper.AttributeKeyAdditionalFee, string(res.Events[19].Attributes[0].Key))
-	assert.Equal(t, "1600hotdog", string(res.Events[19].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[20].Type)
-	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[20].Attributes[0].Key))
-	assert.Equal(t, "200000atom", string(res.Events[20].Attributes[0].Value))
-	assert.Equal(t, "provenance.msgfees.v1.EventMsgFees", res.Events[21].Type)
-	assert.Equal(t, "msg_fees", string(res.Events[21].Attributes[0].Key))
-	assert.Equal(t, "[{\"msg_type\":\"/cosmos.bank.v1beta1.MsgSend\",\"count\":\"2\",\"total\":\"1600hotdog\",\"recipient\":\"\"}]", string(res.Events[21].Attributes[0].Value))
+		expEvents := []abci.Event{
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(sdk.AttributeKeyFee, "1600hotdog,200000stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr2.String())),
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(antewrapper.AttributeKeyBaseFee, "200000stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr2.String())),
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(antewrapper.AttributeKeyAdditionalFee, "1600hotdog"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr2.String())),
+			NewEvent("provenance.msgfees.v1.EventMsgFees",
+				NewAttribute("msg_fees", jsonArrayJoin(msgFeesMsgSendEventJSON(2, 1600, "hotdog", "")))),
+		}
+		// fee charge in antehandler
+		expEvents = append(expEvents, CreateSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 200000)))...)
+		// fee charged for msg based fee
+		expEvents = append(expEvents, CreateSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1600)))...)
 
-	// tx authz single send message without enough fees associated
-	fees = sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin("hotdog", 1))
-	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
-	txBytes, err = SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
-	require.NoError(t, err)
-	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	require.Equal(t, uint32(0xd), res.Code, "res=%+v", res)
-	addr1AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	require.Equal(t, "401000atom,9700hotdog", addr1AfterBalance, "should have the new balance running transaction")
-	addr2AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "1000atom,7600hotdog", addr2AfterBalance, "should have the new balance running transaction")
-	addr3AfterBalance = app.BankKeeper.GetAllBalances(ctx, addr3).String()
-	require.Equal(t, "300hotdog", addr3AfterBalance, "should have the new balance running transaction")
+		assertEventsContains(t, res.Events, expEvents)
+	})
+
+	tt.Run("not enough fees", func(t *testing.T) {
+		msg := banktypes.NewMsgSend(addr1, addr3, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
+		msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000), sdk.NewInt64Coin("hotdog", 799))
+		acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
+		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+		require.Equal(t, 13, int(res.Code), "res=%+v", res)
+
+		// addr2 pays the base fee, but nothing else is changes.
+		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
+		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
+		addr3AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr3).String()
+		assert.Equal(t, "9740hotdog,401000stake", addr1AfterBalance, "addr1AfterBalance")
+		assert.Equal(t, "7600hotdog,1000stake", addr2AfterBalance, "addr2AfterBalance")
+		assert.Equal(t, "260hotdog", addr3AfterBalance, "addr3AfterBalance")
+	})
 }
 
-func TestMsgServiceAssessMsgFee(t *testing.T) {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 1)
-	encCfg := simapp.MakeTestEncodingConfig()
+func TestMsgServiceAssessMsgFee(tt *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
+	pioconfig.ChangeMsgFeeFloorDenom(1, sdk.DefaultBondDenom)
+
+	encCfg := sdksim.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin("atom", 101000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_001))
-	app := piosimapp.SetupWithGenesisAccounts("msgfee-testing", []authtypes.GenesisAccount{acct1}, banktypes.Balance{Address: addr1.String(), Coins: acct1Balance})
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin("hotdog", 1000),
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 101000),
+		sdk.NewInt64Coin(NHash, 1_190_500_001),
+	)
+	app := piosimapp.SetupWithGenesisAccounts(tt, "msgfee-testing",
+		[]authtypes.GenesisAccount{acct1},
+		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
+	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 
-	// Check both account balances before transaction
+	// Check both account balances before we start.
 	addr1beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	assert.Equal(t, "101000atom,1000hotdog,1190500001nhash", addr1beforeBalance, "should have the new balance after funding account")
 	addr2beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "", addr2beforeBalance, "should have the new balance after funding account")
+	assert.Equal(tt, "1000hotdog,1190500001nhash,101000stake", addr1beforeBalance, "addr1beforeBalance")
+	assert.Equal(tt, "", addr2beforeBalance, "addr2beforeBalance")
+	stopIfFailed(tt)
+	tt.Run("assess custom msg fee", func(t *testing.T) {
+		msgFeeCoin := sdk.NewInt64Coin(msgfeestypes.UsdDenom, 7)
+		msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", msgFeeCoin, addr2.String(), addr1.String())
+		fees := sdk.NewCoins(
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000),
+			sdk.NewInt64Coin(NHash, 1_190_500_001),
+		)
+		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &msg)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+		require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
 
-	msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", sdk.NewInt64Coin(msgfeestypes.UsdDenom, 7), addr2.String(), addr1.String())
-	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 100000), sdk.NewInt64Coin(msgfeestypes.NhashDenom, 1_190_500_001)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &msg)
-	require.NoError(t, err)
-	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
+		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
+		assert.Equal(t, "1000hotdog,1000stake", addr1AfterBalance, "addr1AfterBalance")
+		assert.Equal(t, "87500000nhash", addr2AfterBalance, "addr2AfterBalance")
 
-	addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	require.Equal(t, "1000atom,1000hotdog", addr1AfterBalance, "should have the new balance running transaction")
-	addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	require.Equal(t, "87500000nhash", addr2AfterBalance, "should have the new balance running transaction")
+		expEvents := []abci.Event{
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(sdk.AttributeKeyFee, "1190500001nhash,100000stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, "100000stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+			NewEvent(msgfeestypes.EventTypeAssessCustomMsgFee,
+				NewAttribute(msgfeestypes.KeyAttributeName, "test"),
+				NewAttribute(msgfeestypes.KeyAttributeAmount, "7usd"),
+				NewAttribute(msgfeestypes.KeyAttributeRecipient, addr2.String())),
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(antewrapper.AttributeKeyAdditionalFee, "175000000nhash"),
+				NewAttribute(antewrapper.AttributeKeyBaseFee, "1015500001nhash,100000stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+			NewEvent("provenance.msgfees.v1.EventMsgFees",
+				NewAttribute("msg_fees", jsonArrayJoin(
+					msgFeesEventJSON("/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest", 1, 87500000, "nhash", ""),
+					msgFeesEventJSON("/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest", 1, 87500000, "nhash", addr2.String())))),
+		}
+		// fee charge in antehandler
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
+		// fee charged for msg based fee to fee module on assess msg split
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 87500000)))...)
+		// fee charged for msg based fee to recipient from assess msg split
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), addr2.String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 87500000)))...)
+		// swept amount
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
 
-	assert.Equal(t, 13, len(res.Events))
-
-	assert.Equal(t, sdk.EventTypeTx, res.Events[4].Type)
-	assert.Equal(t, sdk.AttributeKeyFee, string(res.Events[4].Attributes[0].Key))
-	assert.Equal(t, "100000atom,1190500001nhash", string(res.Events[4].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[5].Type)
-	assert.Equal(t, antewrapper.AttributeKeyMinFeeCharged, string(res.Events[5].Attributes[0].Key))
-	assert.Equal(t, "100000atom", string(res.Events[5].Attributes[0].Value))
-	assert.Equal(t, msgfeestypes.EventTypeAssessCustomMsgFee, res.Events[9].Type)
-	assert.Equal(t, msgfeestypes.KeyAttributeName, string(res.Events[9].Attributes[0].Key))
-	assert.Equal(t, "test", string(res.Events[9].Attributes[0].Value))
-	assert.Equal(t, msgfeestypes.KeyAttributeAmount, string(res.Events[9].Attributes[1].Key))
-	assert.Equal(t, "7usd", string(res.Events[9].Attributes[1].Value))
-	assert.Equal(t, msgfeestypes.KeyAttributeRecipient, string(res.Events[9].Attributes[2].Key))
-	assert.Equal(t, addr2.String(), string(res.Events[9].Attributes[2].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[10].Type)
-	assert.Equal(t, antewrapper.AttributeKeyAdditionalFee, string(res.Events[10].Attributes[0].Key))
-	assert.Equal(t, "175000000nhash", string(res.Events[10].Attributes[0].Value))
-	assert.Equal(t, sdk.EventTypeTx, res.Events[11].Type)
-	assert.Equal(t, antewrapper.AttributeKeyBaseFee, string(res.Events[11].Attributes[0].Key))
-	assert.Equal(t, "100000atom,1015500001nhash", string(res.Events[11].Attributes[0].Value))
-	assert.Equal(t, "provenance.msgfees.v1.EventMsgFees", res.Events[12].Type)
-	assert.Equal(t, "msg_fees", string(res.Events[12].Attributes[0].Key))
-	assert.Equal(t, fmt.Sprintf("[{\"msg_type\":\"/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest\",\"count\":\"1\",\"total\":\"87500000nhash\",\"recipient\":\"\"},{\"msg_type\":\"/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest\",\"count\":\"1\",\"total\":\"87500000nhash\",\"recipient\":\"%s\"}]", addr2.String()), string(res.Events[12].Attributes[0].Value))
-
+		assertEventsContains(t, res.Events, expEvents)
+	})
 }
 
-func SignTxAndGetBytes(gaslimit uint64, fees sdk.Coins, encCfg simappparams.EncodingConfig, pubKey types.PubKey, privKey types.PrivKey, acct authtypes.BaseAccount, chainId string, msg ...sdk.Msg) ([]byte, error) {
+func TestRewardsProgramStartError(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, _, addr := testdata.KeyTestPubAddr()
+	//_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin("atom", 1000),
+		sdk.NewInt64Coin(NHash, 1_190_500_000),
+	)
+	app := piosimapp.SetupWithGenesisAccounts(t, "",
+		[]authtypes.GenesisAccount{acct1},
+		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
+	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	blockTime := ctx.BlockTime()
+	fundCoins := sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
+
+	rewardProgram := *rewardtypes.NewMsgCreateRewardProgramRequest(
+		"title",
+		"description",
+		acct1.Address,
+		sdk.NewInt64Coin("nhash", 1000),
+		sdk.NewInt64Coin("nhash", 100),
+		blockTime,
+		0,
+		3,
+		3,
+		uint64(blockTime.Day()),
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+					},
+				},
+			},
+		},
+	)
+
+	txBytes, err := SignTxAndGetBytes(
+		NewTestRewardsGasLimit(),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		&rewardProgram,
+	)
+	require.NoError(t, err, "SignTxAndGetBytes")
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.True(t, res.IsErr(), "Should return an error: res=%+v", res)
+}
+
+func TestRewardsProgramStart(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	pioconfig.SetProvenanceConfig("nhash", 0)
+	priv, _, addr := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin("hotdog", 1000),
+		sdk.NewInt64Coin("atom", 1000),
+		sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000),
+	)
+	app := piosimapp.SetupWithGenesisAccounts(t, "",
+		[]authtypes.GenesisAccount{acct1},
+		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
+	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
+
+	rewardProgram := *rewardtypes.NewMsgCreateRewardProgramRequest(
+		"title",
+		"description",
+		acct1.Address,
+		sdk.NewInt64Coin("nhash", 1000),
+		sdk.NewInt64Coin("nhash", 100),
+		time.Now().Add(time.Duration(1)*time.Second),
+		9,
+		3,
+		3,
+		10,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+					},
+				},
+			},
+		},
+	)
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	txReward, err := SignTx(
+		NewTestRewardsGasLimit(),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		&rewardProgram,
+	)
+	require.NoError(t, err, "SignTx")
+	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txReward)
+	require.NoError(t, errFromDeliverTx, "SimDeliver")
+	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
+	app.EndBlock(abci.RequestEndBlock{Height: 2})
+	app.Commit()
+
+	expEvents := []abci.Event{
+		NewEvent(rewardtypes.EventTypeRewardProgramCreated,
+			NewAttribute(rewardtypes.AttributeKeyRewardProgramID, "1")),
+		NewEvent(sdk.EventTypeMessage,
+			NewAttribute(sdk.AttributeKeyAction, rewardtypes.TypeMsgCreateRewardProgramRequest)),
+	}
+	assertEventsContains(t, res.Events, expEvents)
+}
+
+func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
+	pioconfig.SetProvenanceConfig("nhash", 0)
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, _, addr := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin("hotdog", 10000000000),
+		sdk.NewInt64Coin("atom", 10000000),
+		sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000),
+	)
+	app := piosimapp.SetupWithGenesisAccounts(t, "",
+		[]authtypes.GenesisAccount{acct1},
+		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
+	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
+
+	rewardProgram := *rewardtypes.NewMsgCreateRewardProgramRequest(
+		"title",
+		"description",
+		acct1.Address,
+		sdk.NewInt64Coin("nhash", 1000),
+		sdk.NewInt64Coin("nhash", 100),
+		time.Now().Add(time.Duration(100)*time.Millisecond),
+		9,
+		3,
+		3,
+		10,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+					},
+				},
+			},
+		},
+	)
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	txReward, err := SignTx(
+		NewTestRewardsGasLimit(),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		&rewardProgram,
+	)
+	require.NoError(t, err, "SignTx")
+	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txReward)
+	require.NoError(t, errFromDeliverTx, "SimDeliver")
+	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
+	app.EndBlock(abci.RequestEndBlock{Height: 2})
+	app.Commit()
+
+	time.Sleep(110 * time.Millisecond)
+	// tx with a fee associated with msg type and account has funds
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	for height := int64(3); height <= int64(100); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1, "[%d]: SignTx", height)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err, "GetAllClaimPeriodRewardDistributions")
+	if assert.NotEmpty(t, claimPeriodDistributions, "claimPeriodDistributions") {
+		assert.Len(t, claimPeriodDistributions, 1, "claimPeriodDistributions")
+		assert.Equal(t, 10, int(claimPeriodDistributions[0].TotalShares), "TotalShares")
+		assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "ClaimPeriodEnded")
+		assert.NotEqual(t, "0nhash", claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
+	}
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	require.NoError(t, err, "GetRewardAccountState")
+	actionCounter := rewardtypes.GetActionCount(accountState.ActionCounter, rewardtypes.ActionTypeTransfer)
+	assert.Equal(t, 98, int(actionCounter), "ActionCounter transfer")
+	assert.Equal(t, 10, int(accountState.SharesEarned), "SharesEarned")
+
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress unspecified")
+	canCheck := assert.NotNil(t, byAddress, "byAddress unspecified")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified")
+	if canCheck {
+		assert.Len(t, byAddress.RewardAccountState, 1, "RewardAccountState unspecified")
+		assert.Equal(t, "100nhash", byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unspecified")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unspecified")
+	}
+
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress unclaimable")
+	canCheck = assert.NotNil(t, byAddress, "byAddress unclaimable")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unclaimable")
+	if canCheck {
+		assert.Len(t, byAddress.RewardAccountState, 1, "RewardAccountState unclaimable")
+		assert.Equal(t, "100nhash", byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unclaimable")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unclaimable")
+	}
+
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress claimable")
+	assert.Empty(t, byAddress.RewardAccountState, "RewardAccountState claimable")
+}
+
+func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, _, addr := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000))
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(50*time.Millisecond),
+		uint64(30),
+		10,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
+
+	app := piosimapp.SetupWithGenesisRewardsProgram(t,
+		uint64(2), []rewardtypes.RewardProgram{rewardProgram},
+		[]authtypes.GenesisAccount{acct1}, nil,
+		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
+	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
+
+	// tx with a fee associated with msg type and account has funds
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	// get past the reward start time ( test that reward program starts up after 50ms)
+	time.Sleep(55 * time.Millisecond)
+
+	for height := int64(2); height < int64(22); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1, "[%d]: SignTx", height)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err, "GetAllClaimPeriodRewardDistributions")
+	if assert.NotEmpty(t, claimPeriodDistributions, "claimPeriodDistributions") {
+		assert.Len(t, claimPeriodDistributions, 1, "claimPeriodDistributions")
+		assert.Equal(t, 10, int(claimPeriodDistributions[0].TotalShares), "TotalShares")
+		assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "ClaimPeriodEnded")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 100_000_000_000).String(),
+			claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
+	}
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	require.NoError(t, err, "GetRewardAccountState")
+	actionCounter := rewardtypes.GetActionCount(accountState.ActionCounter, rewardtypes.ActionTypeTransfer)
+	assert.Equal(t, 20, int(actionCounter), "ActionCounter transfer")
+	assert.Equal(t, 10, int(accountState.SharesEarned), "SharesEarned")
+
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress unspecified")
+	canCheck := assert.NotNil(t, byAddress, "byAddress unspecified")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified")
+	if canCheck {
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unspecified")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unspecified")
+	}
+
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress unclaimable")
+	canCheck = assert.NotNil(t, byAddress, "byAddress unclaimable")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unclaimable")
+	if canCheck {
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unclaimable")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unclaimable")
+	}
+
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress claimable")
+	if assert.NotNil(t, byAddress, "byAddress claimable") {
+		assert.Empty(t, byAddress.RewardAccountState, "RewardAccountState claimable")
+	}
+
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMED,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress claimed")
+	if assert.NotNil(t, byAddress, "byAddress claimed") {
+		assert.Empty(t, byAddress.RewardAccountState, "RewardAccountState claimed")
+	}
+}
+
+func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAccountFunded(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, _, addr := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000))
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(1),
+		100,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
+
+	// fund th =e deterministic rewards account, since genesis won't do that work
+	app := piosimapp.SetupWithGenesisRewardsProgram(t,
+		uint64(2), []rewardtypes.RewardProgram{rewardProgram},
+		[]authtypes.GenesisAccount{acct1}, nil,
+		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
+		banktypes.Balance{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Coins: acct1Balance},
+	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
+
+	// tx with a fee associated with msg type and account has funds
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	time.Sleep(150 * time.Millisecond)
+
+	//go through 5 blocks, but take a long time to cut blocks.
+	for height := int64(2); height < int64(7); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1, "[%d]: SignTx", height)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		// wait for claim period to end (claim period is 1s)
+		time.Sleep(1500 * time.Millisecond)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err, "GetAllClaimPeriodRewardDistributions")
+	if assert.NotEmpty(t, claimPeriodDistributions, "claimPeriodDistributions") {
+		assert.Equal(t, 1, int(claimPeriodDistributions[0].TotalShares), "TotalShares")
+		assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "ClaimPeriodEnded")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000), claimPeriodDistributions[0].RewardsPool, "RewardsPool")
+	}
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	require.NoError(t, err, "GetRewardAccountState")
+	actionCounter := rewardtypes.GetActionCount(accountState.ActionCounter, rewardtypes.ActionTypeTransfer)
+	assert.Equal(t, 1, int(actionCounter), "ActionCounter transfer")
+	assert.Equal(t, 1, int(accountState.SharesEarned), "SharesEarned")
+
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress unspecified")
+	canCheck := assert.NotNil(t, byAddress, "byAddress unspecified")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified")
+	if canCheck {
+		assert.Len(t, byAddress.RewardAccountState, 5, "RewardAccountState unspecified")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unspecified")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unspecified")
+	}
+
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress claimable")
+	canCheck = assert.NotNil(t, byAddress, "byAddress claimable")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState claimable")
+	if canCheck {
+		assert.Len(t, byAddress.RewardAccountState, 4, "RewardAccountState claimable")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim claimable")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus claimable")
+	}
+
+	// get the accoutn balances of acct1
+	balance := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
+	// claim rewards for the address
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 7, Time: time.Now().UTC()}})
+	msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
+	require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+	txClaim, errClaim := SignTxAndGetBytes(
+		NewTestRewardsGasLimit(),
+		fees,
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		msgClaim,
+	)
+	require.NoError(t, errClaim, "SignTxAndGetBytes")
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txClaim})
+	require.Equal(t, true, res.IsOK(), "res=%+v", res)
+	// unmarshal the TxMsgData
+	var protoResult sdk.TxMsgData
+	require.NoError(t, proto.Unmarshal(res.Data, &protoResult), "unmarshalling protoResult")
+	require.Len(t, protoResult.MsgResponses, 1, "protoResult.MsgResponses")
+	require.Equal(t, protoResult.MsgResponses[0].GetTypeUrl(), "/provenance.reward.v1.MsgClaimAllRewardsResponse",
+		"protoResult.MsgResponses[0].GetTypeUrl()")
+	claimResponse := rewardtypes.MsgClaimAllRewardsResponse{}
+	require.NoError(t, claimResponse.Unmarshal(protoResult.MsgResponses[0].Value), "unmarshalling claimResponse")
+	assert.Equal(t, sdk.NewInt64Coin("nhash", 50_000_000_000).String(), claimResponse.TotalRewardClaim[0].String(),
+		"TotalRewardClaim")
+	if assert.Len(t, claimResponse.ClaimDetails, 1, "ClaimDetails") {
+		assert.Equal(t, 1, int(claimResponse.ClaimDetails[0].RewardProgramId), "RewardProgramId")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 50_000_000_000).String(),
+			claimResponse.ClaimDetails[0].TotalRewardClaim.String(), "ClaimDetails TotalRewardClaim")
+		if assert.Len(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, 5, "ClaimedRewardPeriodDetails") {
+			assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+				claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails[0].ClaimPeriodReward.String(), "ClaimPeriodReward")
+		}
+	}
+	app.EndBlock(abci.RequestEndBlock{Height: 7})
+	app.Commit()
+	balanceLater := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
+	// make sure account balance has the tokens
+	balanceChange := balanceLater.AmountOf(pioconfig.GetProvenanceConfig().FeeDenom).Sub(balance.AmountOf(pioconfig.GetProvenanceConfig().FeeDenom))
+	assert.Equal(t, sdk.NewInt(50_000_000_000).String(), balanceChange.String(), "balance change")
+}
+
+func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAccountFundedDifferentDenom(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, _, addr := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin("hotdog", 1000000_000_000_000))
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("hotdog", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("hotdog", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(1),
+		100,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
+
+	// fund th =e deterministic rewards account, since genesis won't do that work
+	app := piosimapp.SetupWithGenesisRewardsProgram(t,
+		uint64(2), []rewardtypes.RewardProgram{rewardProgram},
+		[]authtypes.GenesisAccount{acct1}, nil,
+		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
+		banktypes.Balance{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Coins: acct1Balance},
+	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
+
+	// tx with a fee associated with msg type and account has funds
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	time.Sleep(150 * time.Millisecond)
+
+	//go through 5 blocks, but take a long time to cut blocks.
+	for height := int64(2); height < int64(7); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1, "[%d]: SignTx", height)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		// wait for claim period to end (claim period is 1s)
+		time.Sleep(1500 * time.Millisecond)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err, "GetAllClaimPeriodRewardDistributions")
+	if assert.NotEmpty(t, claimPeriodDistributions, "claimPeriodDistributions") {
+		assert.Equal(t, 1, int(claimPeriodDistributions[0].TotalShares), "TotalShares")
+		assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "ClaimPeriodEnded")
+		assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(),
+			claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
+	}
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	require.NoError(t, err, "GetRewardAccountState")
+	actionCount := int(rewardtypes.GetActionCount(accountState.ActionCounter, rewardtypes.ActionTypeTransfer))
+	assert.Equal(t, 1, actionCount, "ActionCounter transfer")
+	assert.Equal(t, 1, int(accountState.SharesEarned), "SharesEarned")
+
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress unspecified")
+	canCheck := assert.NotNil(t, byAddress, "byAddress unspecified")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified")
+	if canCheck {
+		assert.Len(t, byAddress.RewardAccountState, 5, "RewardAccountState unspecified")
+		assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unspecified")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unspecified")
+	}
+
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress claimable")
+	canCheck = assert.NotNil(t, byAddress, "byAddress claimable")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState claimable")
+	if canCheck {
+		assert.Len(t, byAddress.RewardAccountState, 4, "claimable rewards should be 4 for this address.")
+		assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim claimable")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus claimable")
+	}
+
+	// get the accoutn balances of acct1
+	balance := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
+	// claim rewards for the address
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 7, Time: time.Now().UTC()}})
+	msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
+	require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+	txClaim, errClaim := SignTxAndGetBytes(
+		NewTestRewardsGasLimit(),
+		fees,
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		msgClaim,
+	)
+	require.NoError(t, errClaim, "SignTxAndGetBytes")
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txClaim})
+	require.Equal(t, true, res.IsOK(), "res=%+v", res)
+	// unmarshal the TxMsgData
+	var protoResult sdk.TxMsgData
+	require.NoError(t, proto.Unmarshal(res.Data, &protoResult), "unmarshalling protoResult")
+	require.Len(t, protoResult.MsgResponses, 1, "protoResult.MsgResponses")
+	require.Equal(t, protoResult.MsgResponses[0].GetTypeUrl(), "/provenance.reward.v1.MsgClaimAllRewardsResponse",
+		"protoResult.MsgResponses[0].GetTypeUrl()")
+	claimResponse := rewardtypes.MsgClaimAllRewardsResponse{}
+	require.NoError(t, claimResponse.Unmarshal(protoResult.MsgResponses[0].Value), "unmarshalling claimResponse")
+	if assert.NotEmpty(t, claimResponse.TotalRewardClaim, "TotalRewardClaim") {
+		assert.Equal(t, sdk.NewInt64Coin("hotdog", 50_000_000_000).String(),
+			claimResponse.TotalRewardClaim[0].String(), "TotalRewardClaim")
+	}
+	if assert.NotEmpty(t, claimResponse.ClaimDetails, "ClaimDetails") {
+		assert.Len(t, claimResponse.ClaimDetails, 1, "ClaimDetails")
+		assert.Equal(t, 1, int(claimResponse.ClaimDetails[0].RewardProgramId), "RewardProgramId")
+		assert.Equal(t, sdk.NewInt64Coin("hotdog", 50_000_000_000).String(),
+			claimResponse.ClaimDetails[0].TotalRewardClaim.String(), "ClaimDetails TotalRewardClaim")
+		if assert.NotEmpty(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, "ClaimedRewardPeriodDetails") {
+			assert.Len(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, 5, "ClaimedRewardPeriodDetails")
+			assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(),
+				claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails[0].ClaimPeriodReward.String(), "ClaimPeriodReward")
+		}
+	}
+	app.EndBlock(abci.RequestEndBlock{Height: 7})
+	app.Commit()
+	balanceLater := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
+	balanceChange := balanceLater.AmountOf("hotdog").Sub(balance.AmountOf("hotdog"))
+	// make sure account balance has the tokens
+	assert.Equal(t, sdk.NewInt(50_000_000_000).String(), balanceChange.String(), "balance change")
+}
+
+func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAccountFundedDifferentDenomClaimedTogether(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, _, addr := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin("atom", 10000000),
+		sdk.NewInt64Coin("hotdog", 1000000_000_000_000),
+		sdk.NewInt64Coin("nhash", 1000000_000_000_000),
+	)
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("hotdog", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("hotdog", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(1),
+		100,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+					},
+				},
+			},
+		},
+	)
+
+	secondRewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		2,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(1),
+		100,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
+
+	// fund th =e deterministic rewards account, since genesis won't do that work
+	app := piosimapp.SetupWithGenesisRewardsProgram(t,
+		uint64(3), []rewardtypes.RewardProgram{rewardProgram, secondRewardProgram},
+		[]authtypes.GenesisAccount{acct1}, nil,
+		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
+		banktypes.Balance{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Coins: acct1Balance},
+	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
+
+	// tx with a fee associated with msg type and account has funds
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	time.Sleep(150 * time.Millisecond)
+
+	//go through 5 blocks, but take a long time to cut blocks.
+	for height := int64(2); height < int64(7); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1, "[%d]: SignTx", height)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		// wait for claim period to end (claim period is 1s)
+		time.Sleep(1500 * time.Millisecond)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err, "GetAllClaimPeriodRewardDistributions")
+	if assert.NotEmpty(t, claimPeriodDistributions, "claimPeriodDistributions") {
+		assert.Equal(t, 1, int(claimPeriodDistributions[0].TotalShares), "TotalShares")
+		assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "ClaimPeriodEnded")
+		assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(),
+			claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
+	}
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	require.NoError(t, err, "GetRewardAccountState")
+	actionCounter := rewardtypes.GetActionCount(accountState.ActionCounter, rewardtypes.ActionTypeTransfer)
+	assert.Equal(t, 1, int(actionCounter), "ActionCounter transfer")
+	assert.Equal(t, 1, int(accountState.SharesEarned), "SharesEarned")
+
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress unspecified")
+	canCheck := assert.NotNil(t, byAddress, "byAddress unspecified")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified")
+	if canCheck {
+		assert.Len(t, byAddress.RewardAccountState, 10, "RewardAccountState unspecified")
+		assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unspecified")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unspecified")
+	}
+
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress claimable")
+	canCheck = assert.NotNil(t, byAddress, "byAddress claimable")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState claimable")
+	if canCheck {
+		assert.Len(t, byAddress.RewardAccountState, 8, "RewardAccountState claimable")
+		assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim claimable")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus claimable")
+	}
+
+	// get the accoutn balances of acct1
+	balance := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
+	// claim rewards for the address
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 7, Time: time.Now().UTC()}})
+	msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
+	require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+	// needs extra gas
+	txClaim, errClaim := SignTxAndGetBytes(300000, fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msgClaim)
+	require.NoError(t, errClaim, "SignTxAndGetBytes")
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txClaim})
+	require.Equal(t, true, res.IsOK(), "res=%+v", res)
+	// unmarshal the TxMsgData
+	var protoResult sdk.TxMsgData
+	require.NoError(t, proto.Unmarshal(res.Data, &protoResult), "unmarshalling protoResult")
+	require.Len(t, protoResult.MsgResponses, 1, "protoResult.MsgResponses")
+	require.Equal(t, protoResult.MsgResponses[0].GetTypeUrl(), "/provenance.reward.v1.MsgClaimAllRewardsResponse",
+		"protoResult.MsgResponses[0].GetTypeUrl()")
+	claimResponse := rewardtypes.MsgClaimAllRewardsResponse{}
+	require.NoError(t, claimResponse.Unmarshal(protoResult.MsgResponses[0].Value), "unmarshalling claimResponse")
+	assert.Equal(t, sdk.NewInt64Coin("hotdog", 50_000_000_000).String(),
+		claimResponse.TotalRewardClaim[0].String(), "TotalRewardClaim")
+	if assert.NotEmpty(t, claimResponse.ClaimDetails, "ClaimDetails") {
+		assert.Len(t, claimResponse.ClaimDetails, 2)
+
+		assert.Equal(t, 1, int(claimResponse.ClaimDetails[0].RewardProgramId), "[0].RewardProgramId")
+		assert.Equal(t, sdk.NewInt64Coin("hotdog", 50_000_000_000).String(),
+			claimResponse.ClaimDetails[0].TotalRewardClaim.String(), "[0].TotalRewardClaim")
+		if assert.NotEmpty(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, "[0].ClaimedRewardPeriodDetails") {
+			assert.Len(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, 5, "[0].ClaimedRewardPeriodDetails")
+			assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(),
+				claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails[0].ClaimPeriodReward.String(), "[0].[0].ClaimPeriodReward")
+		}
+
+		assert.Equal(t, 2, int(claimResponse.ClaimDetails[1].RewardProgramId), "[1].RewardProgramId")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 50_000_000_000).String(),
+			claimResponse.ClaimDetails[1].TotalRewardClaim.String(), "[1].TotalRewardClaim")
+		if assert.NotEmpty(t, claimResponse.ClaimDetails[1].ClaimedRewardPeriodDetails, "[1].ClaimedRewardPeriodDetails") {
+			assert.Len(t, claimResponse.ClaimDetails[1].ClaimedRewardPeriodDetails, 5, "[1].ClaimedRewardPeriodDetails")
+			assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+				claimResponse.ClaimDetails[1].ClaimedRewardPeriodDetails[0].ClaimPeriodReward.String(), "[1].[0].ClaimPeriodReward")
+		}
+	}
+
+	app.EndBlock(abci.RequestEndBlock{Height: 7})
+	app.Commit()
+	balanceLater := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
+	// make sure account balance has the tokens
+	balanceChangeHotDog := balanceLater.AmountOf("hotdog").Sub(balance.AmountOf("hotdog"))
+	assert.Equal(t, sdk.NewInt(50_000_000_000).String(), balanceChangeHotDog.String(), "balance change hotdog")
+
+	balanceLater = app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
+	// make sure account balance has the tokens
+	balanceChangeNHash := balanceLater.AmountOf("nhash").Sub(balance.AmountOf("nhash"))
+	assert.Equal(t, sdk.NewInt(50_000_000_000).String(), balanceChangeNHash.String(), "balance change nhash")
+}
+
+func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAccountNotFunded(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, _, addr := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000))
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(1),
+		100,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
+
+	// do not fund the deterministic rewards account
+	app := piosimapp.SetupWithGenesisRewardsProgram(t,
+		uint64(2), []rewardtypes.RewardProgram{rewardProgram},
+		[]authtypes.GenesisAccount{acct1}, nil,
+		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
+	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
+
+	// tx with a fee associated with msg type and account has funds
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	time.Sleep(150 * time.Millisecond)
+
+	//go through 5 blocks, but take a long time to cut blocks.
+	for height := int64(2); height < int64(7); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1, "[%d]: SignTx", height)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		// wait for claim period to end (claim period is 1s)
+		time.Sleep(1500 * time.Millisecond)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err, "GetAllClaimPeriodRewardDistributions")
+	if assert.NotEmpty(t, claimPeriodDistributions, "claimPeriodDistributions") {
+		assert.Equal(t, 1, int(claimPeriodDistributions[0].TotalShares), "TotalShares")
+		assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "ClaimPeriodEnded")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+			claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
+	}
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	require.NoError(t, err, "GetRewardAccountState")
+	actionCounter := rewardtypes.GetActionCount(accountState.ActionCounter, rewardtypes.ActionTypeTransfer)
+	assert.Equal(t, 1, int(actionCounter), "ActionCounter transfer")
+	assert.Equal(t, 1, int(accountState.SharesEarned), "SharesEarned")
+
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress unspecified")
+	canCheck := assert.NotNil(t, byAddress, "byAddress unspecified")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState unspecified")
+	if canCheck {
+		assert.Len(t, byAddress.RewardAccountState, 5, "RewardAccountState unspecified")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim unspecified")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus unspecified")
+	}
+
+	byAddress, err = app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress claimable")
+	canCheck = assert.NotNil(t, byAddress, "byAddress claimable")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState claimable")
+	if canCheck {
+		assert.Len(t, byAddress.RewardAccountState, 4, "RewardAccountState claimable")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim claimable")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus claimable")
+	}
+
+	// claim rewards for the address
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 7, Time: time.Now().UTC()}})
+	msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
+	require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+	txClaim, errClaim := SignTxAndGetBytes(
+		NewTestRewardsGasLimit(),
+		fees,
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		msgClaim,
+	)
+	require.NoError(t, errClaim, "SignTxAndGetBytes")
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txClaim})
+	require.Equal(t, true, res.IsErr(), "res=%+v", res)
+	app.EndBlock(abci.RequestEndBlock{Height: 7})
+	app.Commit()
+}
+
+// Checks to see if delegation are met for a Qualifying action in this case Transfer
+// this tests has transfers from an account which DOES NOT have the minimum delegation
+// amount needed to get a share
+func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, _, addr := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000))
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(1),
+		100,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions: 0,
+						MaximumActions: 10,
+						MinimumDelegationAmount: sdk.Coin{
+							Denom:  "nhash",
+							Amount: sdk.NewInt(10_000_000_000)},
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
+
+	app := piosimapp.SetupWithGenesisRewardsProgram(t,
+		uint64(2), []rewardtypes.RewardProgram{rewardProgram},
+		[]authtypes.GenesisAccount{acct1}, nil,
+		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
+	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
+
+	// tx with a fee associated with msg type and account has funds
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	time.Sleep(110 * time.Millisecond)
+
+	//go through 5 blocks, but take a long time to cut blocks.
+	for height := int64(2); height < int64(7); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1, "[%d]: SignTx", height)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		time.Sleep(1100 * time.Millisecond)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err, "GetAllClaimPeriodRewardDistributions")
+	if assert.NotEmpty(t, claimPeriodDistributions, "claimPeriodDistributions") {
+		assert.Equal(t, 0, int(claimPeriodDistributions[0].TotalShares), "TotalShares")
+		assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "ClaimPeriodEnded")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+			claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
+	}
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	require.NoError(t, err, "GetRewardAccountState")
+	actionCounter := rewardtypes.GetActionCount(accountState.ActionCounter, rewardtypes.ActionTypeTransfer)
+	assert.Equal(t, 0, int(actionCounter), "ActionCounter transfer")
+	assert.Equal(t, 0, int(accountState.SharesEarned), "SharesEarned")
+}
+
+// Checks to see if delegation are met for a Qualifying action in this case, Transfer, create an address with delegations
+// transfers which map to QualifyingAction map to the delegated address
+// delegation threshold is met
+func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresent(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, pubKey, addr := testdata.KeyTestPubAddr()
+	_, pubKey2, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000))
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(1),
+		100,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions: 0,
+						MaximumActions: 10,
+						MinimumDelegationAmount: sdk.Coin{
+							Denom:  "nhash",
+							Amount: sdk.NewInt(100)},
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
+
+	app := piosimapp.SetupWithGenesisRewardsProgram(t,
+		uint64(2), []rewardtypes.RewardProgram{rewardProgram},
+		[]authtypes.GenesisAccount{acct1}, createValSet(t, pubKey, pubKey2),
+		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
+	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
+
+	// tx with a fee associated with msg type and account has funds
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	// wait for program to start
+	time.Sleep(150 * time.Millisecond)
+
+	//go through 5 blocks, but take a time to cut blocks > claim period time interval.
+	for height := int64(2); height < int64(7); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1, "[%d]: SignTx", height)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		time.Sleep(1100 * time.Millisecond)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err, "GetAllClaimPeriodRewardDistributions")
+	if assert.NotEmpty(t, claimPeriodDistributions, "claimPeriodDistributions") {
+		assert.Equal(t, 1, int(claimPeriodDistributions[0].TotalShares), "TotalShares")
+		assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "ClaimPeriodEnded")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+			claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
+	}
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	require.NoError(t, err, "GetRewardAccountState")
+	actionCounter := rewardtypes.GetActionCount(accountState.ActionCounter, rewardtypes.ActionTypeTransfer)
+	assert.Equal(t, 1, int(actionCounter), "ActionCounter transfer")
+	assert.Equal(t, 1, int(accountState.SharesEarned), "account state incorrect")
+
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress")
+	canCheck := assert.NotNil(t, byAddress, "byAddress unspecified")
+	canCheck = canCheck && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState")
+	if canCheck {
+		assert.Len(t, byAddress.RewardAccountState, 5, "RewardAccountState")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_CLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus")
+	}
+}
+
+// Checks to see if delegation are met for a Qualifying action in this case Transfer, create an address with delegations
+// transfers which map to QualifyingAction map to the delegated address
+// delegation threshold is *not* met
+func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, pubKey, addr := testdata.KeyTestPubAddr()
+	_, pubKey2, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000))
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(1),
+		100,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Transfer{
+					Transfer: &rewardtypes.ActionTransfer{
+						MinimumActions: 0,
+						MaximumActions: 10,
+						MinimumDelegationAmount: sdk.Coin{
+							Denom:  "nhash",
+							Amount: sdk.NewInt(100000000)},
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
+
+	app := piosimapp.SetupWithGenesisRewardsProgram(t,
+		uint64(2), []rewardtypes.RewardProgram{rewardProgram},
+		[]authtypes.GenesisAccount{acct1}, createValSet(t, pubKey, pubKey2),
+		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
+	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
+
+	// tx with a fee associated with msg type and account has funds
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	time.Sleep(1 * time.Second)
+
+	//go through 5 blocks, but take a long time to cut blocks.
+	for height := int64(2); height < int64(7); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1, "[%d]: SignTx", height)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		time.Sleep(1100 * time.Millisecond)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err, "GetAllClaimPeriodRewardDistributions")
+	if assert.NotEmpty(t, claimPeriodDistributions, "claimPeriodDistributions") {
+		assert.Equal(t, 0, int(claimPeriodDistributions[0].TotalShares), "TotalShares")
+		assert.Equal(t, true, claimPeriodDistributions[0].ClaimPeriodEnded, "ClaimPeriodEnded")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+			claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
+	}
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	require.NoError(t, err, "GetRewardAccountState")
+	actionCounter := rewardtypes.GetActionCount(accountState.ActionCounter, rewardtypes.ActionTypeTransfer)
+	assert.Equal(t, 0, int(actionCounter), "ActionCounter transfer")
+	assert.Equal(t, 0, int(accountState.SharesEarned), "SharesEarned")
+}
+
+func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, _, addr := testdata.KeyTestPubAddr()
+	//_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
+		sdk.NewInt64Coin("atom", 10000000),
+		sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000),
+	)
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(30),
+		10,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Vote{
+					Vote: &rewardtypes.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
+
+	app := piosimapp.SetupWithGenesisRewardsProgram(t,
+		uint64(2), []rewardtypes.RewardProgram{rewardProgram},
+		[]authtypes.GenesisAccount{acct1}, nil,
+		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
+	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
+	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
+	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
+		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
+		coinsPos,
+		addr,
+	)
+
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	time.Sleep(200 * time.Millisecond)
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	txGov, err := SignTx(
+		NewTestRewardsGasLimit(),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		msg,
+	)
+	require.NoError(t, err, "SignTx")
+
+	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
+	require.NoError(t, errFromDeliverTx, "SimDeliver")
+	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
+
+	app.EndBlock(abci.RequestEndBlock{Height: 2})
+	app.Commit()
+
+	seq = seq + 1
+	proposal := app.GovKeeper.GetProposals(ctx)
+	require.NotEmpty(t, proposal, "proposal has to exist")
+
+	// tx with a fee associated with msg type and account has funds
+	vote1 := govtypesv1beta1.NewMsgVote(addr, proposal[0].Id, govtypesv1beta1.OptionYes)
+
+	for height := int64(3); height < int64(23); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
+		require.NoError(t, err1, "[%d]: SignTx", height)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err, "GetAllClaimPeriodRewardDistributions")
+	if assert.NotEmpty(t, claimPeriodDistributions, "claimPeriodDistributions") {
+		assert.Len(t, claimPeriodDistributions, 1, "claimPeriodDistributions")
+		assert.Equal(t, 10, int(claimPeriodDistributions[0].TotalShares), "TotalShares")
+		assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "ClaimPeriodEnded")
+		assert.NotEqual(t, "0nhash", claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
+	}
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	require.NoError(t, err, "GetRewardAccountState")
+	actionCounter := rewardtypes.GetActionCount(accountState.ActionCounter, rewardtypes.ActionTypeVote)
+	assert.Equal(t, 20, int(actionCounter), "ActionCounter vote")
+	assert.Equal(t, 10, int(accountState.SharesEarned), "SharesEarned")
+}
+
+func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv1, pubKey1, addr1 := testdata.KeyTestPubAddr()
+	priv2, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr1, priv1.PubKey(), 0, 0)
+	acct2 := authtypes.NewBaseAccount(addr2, priv2.PubKey(), 1, 0)
+	acctBalance := sdk.NewCoins(
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
+		sdk.NewInt64Coin("atom", 10000000),
+		sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000),
+	)
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(30),
+		10,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Vote{
+					Vote: &rewardtypes.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.NewInt(1000)),
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
+
+	app := piosimapp.SetupWithGenesisRewardsProgram(t,
+		uint64(2), []rewardtypes.RewardProgram{rewardProgram},
+		[]authtypes.GenesisAccount{acct1, acct2}, createValSet(t, pubKey1),
+		banktypes.Balance{Address: addr1.String(), Coins: acctBalance},
+		banktypes.Balance{Address: addr2.String(), Coins: acctBalance},
+	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct2.GetAddress(), fundCoins),
+		"funding acct2 with 290500010nhash")
+	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
+	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
+		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
+		coinsPos,
+		addr1,
+	)
+
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	time.Sleep(200 * time.Millisecond)
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	txGov, err := SignTx(
+		NewTestRewardsGasLimit(),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
+		encCfg, priv1.PubKey(), priv1, *acct1, ctx.ChainID(),
+		msg,
+	)
+	require.NoError(t, err, "SignTx")
+
+	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
+	require.NoError(t, errFromDeliverTx, "SimDeliver")
+	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
+
+	app.EndBlock(abci.RequestEndBlock{Height: 2})
+	app.Commit()
+
+	proposal := app.GovKeeper.GetProposals(ctx)
+	require.NotEmpty(t, proposal, "proposal has to exist")
+
+	// tx with a fee associated with msg type and account has funds
+	vote2 := govtypesv1beta1.NewMsgVote(addr2, proposal[0].Id, govtypesv1beta1.OptionYes)
+	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct2.Sequence
+
+	for height := int64(3); height < int64(5); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct2.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), vote2)
+		require.NoError(t, err1, "[%d]: SignTx", height)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err, "GetAllClaimPeriodRewardDistributions")
+	if assert.NotEmpty(t, claimPeriodDistributions, "claimPeriodDistributions") {
+		assert.Len(t, claimPeriodDistributions, 1, "claimPeriodDistributions")
+		assert.Equal(t, 0, int(claimPeriodDistributions[0].TotalShares), "TotalShares")
+		assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "ClaimPeriodEnded")
+		assert.Equal(t, "100000000000nhash", claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
+	}
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct2.Address)
+	require.NoError(t, err, "GetRewardAccountState")
+	actionCounter := rewardtypes.GetActionCount(accountState.ActionCounter, rewardtypes.ActionTypeVote)
+	assert.Equal(t, 0, int(actionCounter), "ActionCounter vote")
+	assert.Equal(t, 0, int(accountState.SharesEarned), "SharesEarned")
+
+	byAddress1, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress acct1")
+	assert.Empty(t, byAddress1.RewardAccountState, "RewardAccountState acct1")
+
+	byAddress2, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct2.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress acct2")
+	assert.Empty(t, byAddress2.RewardAccountState, "RewardAccountState acct2")
+}
+
+func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, pubKey, addr := testdata.KeyTestPubAddr()
+	_, pubKey2, _ := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
+		sdk.NewInt64Coin("atom", 10000000),
+		sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000),
+	)
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(30),
+		10,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Vote{
+					Vote: &rewardtypes.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.NewInt(1000)),
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
+
+	app := piosimapp.SetupWithGenesisRewardsProgram(t,
+		uint64(2), []rewardtypes.RewardProgram{rewardProgram},
+		[]authtypes.GenesisAccount{acct1}, createValSet(t, pubKey, pubKey2),
+		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
+	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
+	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
+	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
+		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
+		coinsPos,
+		addr,
+	)
+
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	time.Sleep(200 * time.Millisecond)
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	txGov, err := SignTx(
+		NewTestRewardsGasLimit(),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		msg,
+	)
+	require.NoError(t, err, "SignTx")
+
+	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
+	require.NoError(t, errFromDeliverTx, "SimDeliver")
+	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
+
+	app.EndBlock(abci.RequestEndBlock{Height: 2})
+	app.Commit()
+
+	seq = seq + 1
+	proposal := app.GovKeeper.GetProposals(ctx)
+	require.NotEmpty(t, proposal, "proposal has to exist")
+
+	// tx with a fee associated with msg type and account has funds
+	vote1 := govtypesv1beta1.NewMsgVote(addr, proposal[0].Id, govtypesv1beta1.OptionYes)
+
+	// threshold will be met after 10 actions
+	for height := int64(3); height < int64(23); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
+		require.NoError(t, err1, "[%d]: SignTx", height)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err, "GetAllClaimPeriodRewardDistributions")
+	if assert.NotEmpty(t, claimPeriodDistributions, "claimPeriodDistributions") {
+		assert.Len(t, claimPeriodDistributions, 1, "claimPeriodDistributions")
+		assert.Equal(t, 10, int(claimPeriodDistributions[0].TotalShares), "TotalShares")
+		assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "ClaimPeriodEnded")
+		assert.NotEqual(t, "0nhash", claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
+	}
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	require.NoError(t, err, "GetRewardAccountState")
+	actionCounter := rewardtypes.GetActionCount(accountState.ActionCounter, rewardtypes.ActionTypeVote)
+	assert.Equal(t, 20, int(actionCounter), "ActionCounter vote")
+	assert.Equal(t, 10, int(accountState.SharesEarned), "SharesEarned")
+
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress")
+	if assert.NotNil(t, byAddress, "byAddress") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState") {
+		assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus")
+	}
+}
+
+// checks to see that votes are coming from an address that has delegated enough coins and is a validator, and gets the multiplier applied
+func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multiplier_Present(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, pubKey, addr := testdata.KeyTestPubAddr()
+	_, pubKey2, _ := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin("nhash", 1000000_000_000_000))
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(30),
+		10,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Vote{
+					Vote: &rewardtypes.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.NewInt(1000)),
+						ValidatorMultiplier:     10,
+					},
+				},
+			},
+		},
+	)
+
+	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
+	//err, bondedVal1, bondedVal2 := createTestValidators(pubKey, pubKey2, addr, addr2)
+	app := piosimapp.SetupWithGenesisRewardsProgram(t, uint64(2), []rewardtypes.RewardProgram{rewardProgram}, []authtypes.GenesisAccount{acct1}, createValSet(t, pubKey, pubKey2), banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
+
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx.WithBlockTime(time.Now())
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(290500010)))))
+	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
+	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
+		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
+		coinsPos,
+		addr,
+	)
+
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	ctx.WithBlockTime(time.Now())
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	ctx.WithBlockTime(time.Now())
+	time.Sleep(200 * time.Millisecond)
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("nhash", 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	require.NoError(t, err)
+
+	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
+	require.NoError(t, errFromDeliverTx)
+
+	app.EndBlock(abci.RequestEndBlock{Height: 2})
+	app.Commit()
+
+	seq = seq + 1
+	proposal := app.GovKeeper.GetProposals(ctx)
+
+	require.NotEmpty(t, proposal, "proposal has to exist")
+	// tx with a fee associated with msg type and account has funds
+	vote1 := govtypesv1beta1.NewMsgVote(addr, proposal[0].Id, govtypesv1beta1.OptionYes)
+
+	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+
+	// threshold will be met after 10 actions
+	for height := int64(3); height < int64(23); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct1.SetSequence(seq))
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
+		require.NoError(t, err1)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx)
+		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err)
+	assert.Len(t, claimPeriodDistributions, 1, "claim period reward distributions should exist")
+	assert.Equal(t, int64(100), claimPeriodDistributions[0].TotalShares, "shares should have accumulated to value of 100 ( 10 action * multiplier (10) shares")
+	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended.")
+	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
+		Denom:  "nhash",
+		Amount: sdk.ZeroInt(),
+	}), "claim period has not ended so rewards still haven't been calculated(hence 0 coins)")
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	require.NoError(t, err)
+	assert.Equal(t, uint64(20), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionVote"), "account state incorrect")
+	assert.Equal(t, 100, int(accountState.SharesEarned), "account state incorrect")
+
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
+		Address:     acct1.Address,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
+	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
+}
+
+// checks to see that votes are coming from an address that has delegated enough coins but is not a validator, hence does not get the multiplier applied
+func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multiplier_Present_But_NotValidatorVotes(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, pubKey, addr := testdata.KeyTestPubAddr()
+	_, pubKey2, _ := testdata.KeyTestPubAddr()
+	// an address which is not a validator
+	priv3, _, addr3 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct3 := authtypes.NewBaseAccount(addr3, priv3.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin("nhash", 1000000_000_000_000))
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(30),
+		10,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Vote{
+					Vote: &rewardtypes.ActionVote{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.NewInt(1000)),
+						ValidatorMultiplier:     10,
+					},
+				},
+			},
+		},
+	)
+
+	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
+	app := piosimapp.SetupWithGenesisRewardsProgram(t, uint64(2), []rewardtypes.RewardProgram{rewardProgram}, []authtypes.GenesisAccount{acct3}, createValSet(t, pubKey, pubKey2), banktypes.Balance{Address: addr.String(), Coins: acct1Balance}, banktypes.Balance{Address: addr3.String(), Coins: acct1Balance})
+
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx.WithBlockTime(time.Now())
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(290500010)))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct3.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(290500010)))))
+	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
+	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
+		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
+		coinsPos,
+		addr3,
+	)
+
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	ctx.WithBlockTime(time.Now())
+	acct3 = app.AccountKeeper.GetAccount(ctx, acct3.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct3.Sequence
+	ctx.WithBlockTime(time.Now())
+	time.Sleep(200 * time.Millisecond)
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("nhash", 1_190_500_000)), encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), msg)
+	require.NoError(t, err)
+
+	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
+	require.NoError(t, errFromDeliverTx)
+
+	app.EndBlock(abci.RequestEndBlock{Height: 2})
+	app.Commit()
+
+	seq = seq + 1
+	proposal := app.GovKeeper.GetProposals(ctx)
+
+	require.NotEmpty(t, proposal, "proposal has to exist")
+	// vote with an account which is not a validator
+	vote := govtypesv1beta1.NewMsgVote(addr3, proposal[0].Id, govtypesv1beta1.OptionYes)
+
+	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+
+	// threshold will be met after 10 actions
+	for height := int64(3); height < int64(23); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct3.SetSequence(seq))
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), vote)
+		require.NoError(t, err1)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx)
+		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err)
+	assert.Len(t, claimPeriodDistributions, 1, "claim period reward distributions should exist")
+	assert.Equal(t, int64(10), claimPeriodDistributions[0].TotalShares, "shares should have accumulated to value of 10, ( 10 action leading to 1 share each) (no multiplier is applied) ")
+	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended.")
+	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
+		Denom:  "nhash",
+		Amount: sdk.ZeroInt(),
+	}), "claim period has not ended so rewards still haven't been calculated(hence 0 coins)")
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct3.Address)
+	require.NoError(t, err)
+	assert.Equal(t, uint64(20), rewardtypes.GetActionCount(accountState.ActionCounter, "ActionVote"), "account state incorrect")
+	assert.Equal(t, 10, int(accountState.SharesEarned), "account state incorrect")
+
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx), &rewardtypes.QueryRewardDistributionsByAddressRequest{
+		Address:     acct3.Address,
+		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
+	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
+}
+
+func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingActions(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, pubKey, addr := testdata.KeyTestPubAddr()
+	_, pubKey2, _ := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
+		sdk.NewInt64Coin("atom", 10000000),
+		sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000),
+	)
+
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(30),
+		10,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Delegate{
+					Delegate: &rewardtypes.ActionDelegate{
+						MinimumActions:          0,
+						MaximumActions:          10,
+						MinimumDelegationAmount: nil,
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
+
+	app := piosimapp.SetupWithGenesisRewardsProgram(t,
+		uint64(2), []rewardtypes.RewardProgram{rewardProgram},
+		[]authtypes.GenesisAccount{acct1}, createValSet(t, pubKey, pubKey2),
+		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
+	)
+
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
+	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
+	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
+		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
+		coinsPos,
+		addr,
+	)
+
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	time.Sleep(110 * time.Millisecond)
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	txGov, err := SignTx(
+		NewTestRewardsGasLimit(),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		msg,
+	)
+	require.NoError(t, err, "SignTx")
+
+	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
+	require.NoError(t, errFromDeliverTx, "SimDeliver")
+	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
+
+	app.EndBlock(abci.RequestEndBlock{Height: 2})
+	app.Commit()
+
+	seq = seq + 1
+	proposal := app.GovKeeper.GetProposals(ctx)
+	require.NotEmpty(t, proposal, "proposal has to exist")
+
+	// tx with a fee associated with msg type and account has funds
+	vote1 := govtypesv1beta1.NewMsgVote(addr, proposal[0].Id, govtypesv1beta1.OptionYes)
+
+	for height := int64(3); height < int64(15); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
+		require.NoError(t, err1, "[%d]: SignTx", height)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err, "GetAllClaimPeriodRewardDistributions")
+	if assert.NotEmpty(t, claimPeriodDistributions, "claimPeriodDistributions") {
+		assert.Len(t, claimPeriodDistributions, 1, "claimPeriodDistributions")
+		assert.Equal(t, 0, int(claimPeriodDistributions[0].TotalShares), "TotalShares")
+		assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "ClaimPeriodEnded")
+		assert.NotEqual(t, "0nhash", claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
+	}
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	require.NoError(t, err, "GetRewardAccountState")
+	actionCounter := rewardtypes.GetActionCount(accountState.ActionCounter, rewardtypes.ActionTypeVote)
+	assert.Equal(t, 0, int(actionCounter), "ActionCounter vote")
+	assert.Equal(t, 0, int(accountState.SharesEarned), "SharesEarned")
+
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress")
+	if assert.NotNil(t, byAddress, "byAddress") {
+		assert.Empty(t, byAddress.RewardAccountState, "RewardAccountState")
+	}
+}
+
+func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsPresent(t *testing.T) {
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, pubKey, addr := testdata.KeyTestPubAddr()
+	_, pubKey2, _ := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
+		sdk.NewInt64Coin("atom", 10000000),
+		sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000),
+	)
+	minDelegation := sdk.NewInt64Coin("nhash", 4)
+	maxDelegation := sdk.NewInt64Coin("nhash", 2001000)
+	rewardProgram := rewardtypes.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		acct1.Address,
+		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
+		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		time.Now().Add(100*time.Millisecond),
+		uint64(30),
+		10,
+		10,
+		3,
+		[]rewardtypes.QualifyingAction{
+			{
+				Type: &rewardtypes.QualifyingAction_Delegate{
+					Delegate: &rewardtypes.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               10,
+						MinimumDelegationAmount:      &minDelegation,
+						MaximumDelegationAmount:      &maxDelegation,
+						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdk.NewDecWithPrec(100, 0),
+					},
+				},
+			},
+		},
+	)
+	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
+
+	valSet := createValSet(t, pubKey, pubKey2)
+	app := piosimapp.SetupWithGenesisRewardsProgram(t,
+		uint64(2), []rewardtypes.RewardProgram{rewardProgram},
+		[]authtypes.GenesisAccount{acct1}, valSet,
+		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
+	)
+
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+		"funding acct1 with 290500010nhash")
+	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
+	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
+		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
+		coinsPos,
+		addr,
+	)
+
+	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
+	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
+	seq := acct1.Sequence
+	time.Sleep(200 * time.Millisecond)
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	txGov, err := SignTx(
+		NewTestRewardsGasLimit(),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		msg,
+	)
+	require.NoError(t, err, "SignTx")
+
+	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
+	require.NoError(t, errFromDeliverTx, "SimDeliver")
+	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
+
+	app.EndBlock(abci.RequestEndBlock{Height: 2})
+	app.Commit()
+
+	seq = seq + 1
+	proposal := app.GovKeeper.GetProposals(ctx)
+	require.NotEmpty(t, proposal, "proposal has to exist")
+
+	// tx with a fee associated with msg type and account has funds
+	delAddr, _ := valSet.GetByIndex(0)
+	delegation := stakingtypes.NewMsgDelegate(addr, delAddr, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))
+
+	for height := int64(3); height < int64(23); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
+		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), delegation)
+		require.NoError(t, err1, "[%d]: SignTx", height)
+		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
+		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
+		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		time.Sleep(100 * time.Millisecond)
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+		seq = seq + 1
+	}
+
+	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
+	require.NoError(t, err, "GetAllClaimPeriodRewardDistributions")
+	if assert.NotEmpty(t, claimPeriodDistributions, "claimPeriodDistributions") {
+		assert.Len(t, claimPeriodDistributions, 1, "claimPeriodDistributions")
+		assert.Equal(t, 10, int(claimPeriodDistributions[0].TotalShares), "TotalShares")
+		assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "ClaimPeriodEnded")
+		assert.NotEqual(t, "0nhash", claimPeriodDistributions[0].RewardsPool.String(), "RewardsPool")
+	}
+
+	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
+	require.NoError(t, err, "GetRewardAccountState")
+	actionCounter := rewardtypes.GetActionCount(accountState.ActionCounter, rewardtypes.ActionTypeDelegate)
+	assert.Equal(t, 20, int(actionCounter), "ActionCounter delegate")
+	assert.Equal(t, 10, int(accountState.SharesEarned), "SharesEarned")
+
+	byAddress, err := app.RewardKeeper.RewardDistributionsByAddress(sdk.WrapSDKContext(ctx),
+		&rewardtypes.QueryRewardDistributionsByAddressRequest{
+			Address:     acct1.Address,
+			ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
+		},
+	)
+	require.NoError(t, err, "RewardDistributionsByAddress")
+	if assert.NotNil(t, byAddress, "byAddress") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState") {
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim")
+		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
+			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus")
+	}
+}
+
+// ContentFromProposalType returns a Content object based on the proposal type.
+func ContentFromProposalType(title, desc, ty string) govtypesv1beta1.Content {
+	switch ty {
+	case govtypesv1beta1.ProposalTypeText:
+		return govtypesv1beta1.NewTextProposal(title, desc)
+
+	default:
+		return nil
+	}
+}
+
+func createValSet(t *testing.T, pubKeys ...cryptotypes.PubKey) *tmtypes.ValidatorSet {
+	validators := make([]*tmtypes.Validator, len(pubKeys))
+	for i, key := range pubKeys {
+		pk, err := cryptocodec.ToTmPubKeyInterface(key)
+		require.NoError(t, err, "ToTmPubKeyInterface")
+		validators[i] = tmtypes.NewValidator(pk, 1)
+	}
+	return tmtypes.NewValidatorSet(validators)
+}
+
+func signAndGenTx(
+	gaslimit uint64,
+	fees sdk.Coins,
+	encCfg simappparams.EncodingConfig,
+	pubKey cryptotypes.PubKey,
+	privKey cryptotypes.PrivKey,
+	acct authtypes.BaseAccount,
+	chainId string,
+	msg []sdk.Msg,
+) (client.TxBuilder, error) {
 	txBuilder := encCfg.TxConfig.NewTxBuilder()
 	txBuilder.SetFeeAmount(fees)
 	txBuilder.SetGasLimit(gaslimit)
@@ -401,6 +2984,23 @@ func SignTxAndGetBytes(gaslimit uint64, fees sdk.Coins, encCfg simappparams.Enco
 	if err != nil {
 		return nil, err
 	}
+	return txBuilder, nil
+}
+
+func SignTxAndGetBytes(
+	gaslimit uint64,
+	fees sdk.Coins,
+	encCfg simappparams.EncodingConfig,
+	pubKey cryptotypes.PubKey,
+	privKey cryptotypes.PrivKey,
+	acct authtypes.BaseAccount,
+	chainId string,
+	msg ...sdk.Msg,
+) ([]byte, error) {
+	txBuilder, err := signAndGenTx(gaslimit, fees, encCfg, pubKey, privKey, acct, chainId, msg)
+	if err != nil {
+		return nil, err
+	}
 	// Send the tx to the app
 	txBytes, err := encCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
 	if err != nil {
@@ -409,8 +3009,61 @@ func SignTxAndGetBytes(gaslimit uint64, fees sdk.Coins, encCfg simappparams.Enco
 	return txBytes, nil
 }
 
+func SignTx(
+	gaslimit uint64,
+	fees sdk.Coins,
+	encCfg simappparams.EncodingConfig,
+	pubKey cryptotypes.PubKey,
+	privKey cryptotypes.PrivKey,
+	acct authtypes.BaseAccount,
+	chainId string,
+	msg ...sdk.Msg,
+) (sdk.Tx, error) {
+	txBuilder, err := signAndGenTx(gaslimit, fees, encCfg, pubKey, privKey, acct, chainId, msg)
+	if err != nil {
+		return nil, err
+	}
+	// Send the tx to the app
+	return txBuilder.GetTx(), nil
+}
+
 // NewTestGasLimit is a test fee gas limit.
 // they keep changing this value and our tests break, hence moving it to test.
 func NewTestGasLimit() uint64 {
 	return 100000
+}
+
+func NewTestRewardsGasLimit() uint64 {
+	return 200000
+}
+
+// CreateSendCoinEvents creates the sequence of events that are created on bankkeeper.SendCoins
+func CreateSendCoinEvents(fromAddress, toAddress string, amt sdk.Coins) []abci.Event {
+	events := sdk.NewEventManager().Events()
+	// subUnlockedCoins event `coin_spent`
+	events = events.AppendEvent(sdk.NewEvent(
+		banktypes.EventTypeCoinSpent,
+		sdk.NewAttribute(banktypes.AttributeKeySpender, fromAddress),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+	))
+	// addCoins event
+	events = events.AppendEvent(sdk.NewEvent(
+		banktypes.EventTypeCoinReceived,
+		sdk.NewAttribute(banktypes.AttributeKeyReceiver, toAddress),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+	))
+
+	// SendCoins function
+	events = events.AppendEvent(sdk.NewEvent(
+		banktypes.EventTypeTransfer,
+		sdk.NewAttribute(banktypes.AttributeKeyRecipient, toAddress),
+		sdk.NewAttribute(banktypes.AttributeKeySender, fromAddress),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+	))
+	events = events.AppendEvent(sdk.NewEvent(
+		sdk.EventTypeMessage,
+		sdk.NewAttribute(banktypes.AttributeKeySender, fromAddress),
+	))
+
+	return events.ToABCIEvents()
 }

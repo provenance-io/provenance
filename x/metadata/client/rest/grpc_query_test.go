@@ -17,14 +17,13 @@ import (
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/metadata/types"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
-
-	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
 type IntegrationGRPCTestSuite struct {
@@ -71,9 +70,9 @@ func ownerPartyList(addresses ...string) []types.Party {
 }
 
 func (suite *IntegrationGRPCTestSuite) SetupSuite() {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
+	pioconfig.SetProvenanceConfig("atom", 0)
 	suite.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
-	addr, err := sdk.AccAddressFromHex(suite.accountKey.PubKey().Address().String())
+	addr, err := sdk.AccAddressFromHexUnsafe(suite.accountKey.PubKey().Address().String())
 	suite.Require().NoError(err)
 	suite.accountAddr = addr
 	suite.T().Log("setting up integration test suite")
@@ -135,10 +134,11 @@ func (suite *IntegrationGRPCTestSuite) SetupSuite() {
 
 	suite.cfg = cfg
 
-	suite.testnet = testnet.New(suite.T(), cfg)
+	suite.testnet, err = testnet.New(suite.T(), suite.T().TempDir(), cfg)
+	suite.Require().NoError(err, "creating testnet")
 
 	_, err = suite.testnet.WaitForHeight(1)
-	suite.Require().NoError(err)
+	suite.Require().NoError(err, "waiting for height 1")
 }
 
 func (suite *IntegrationGRPCTestSuite) TearDownSuite() {
@@ -286,7 +286,7 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 		suite.Run(tc.name, func() {
 			resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 			suite.Require().NoError(err)
-			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType)
 			if tc.expErr {
 				suite.Require().Error(err)
 			} else {
@@ -336,7 +336,7 @@ func (suite *IntegrationGRPCTestSuite) TestAllOSLocator() {
 		suite.Run(tc.name, func() {
 			resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 			suite.Require().NoError(err, "GetRequestWithHeaders err")
-			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType)
 			if tc.expErr {
 				suite.Require().Error(err, "UnmarshalJSON expected error")
 			} else {
