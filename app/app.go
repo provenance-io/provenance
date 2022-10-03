@@ -501,7 +501,6 @@ func New(
 	encoderRegistry.RegisterEncoder(markertypes.RouterKey, markerwasm.Encoder)
 	encoderRegistry.RegisterEncoder(metadatatypes.RouterKey, metadatawasm.Encoder)
 	encoderRegistry.RegisterEncoder(msgfeestypes.RouterKey, msgfeeswasm.Encoder)
-	// TODO add expiration module router key
 
 	// Init CosmWasm query integrations
 	querierRegistry := provwasm.NewQuerierRegistry()
@@ -547,7 +546,6 @@ func New(
 		AddRoute(nametypes.ModuleName, name.NewProposalHandler(app.NameKeeper)).
 		AddRoute(markertypes.ModuleName, marker.NewProposalHandler(app.MarkerKeeper)).
 		AddRoute(msgfeestypes.ModuleName, msgfees.NewProposalHandler(app.MsgFeesKeeper, app.InterfaceRegistry()))
-	// TODO do we need to register a gov proposal for expiration module? If so, we need to add the proposal code
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, govRouter, app.BaseApp.MsgServiceRouter(), govtypes.Config{MaxMetadataLen: 10000},
@@ -648,7 +646,6 @@ func New(
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
 		vestingtypes.ModuleName,
-		// TODO put in correct order
 		expirationtypes.ModuleName,
 	)
 
@@ -682,7 +679,6 @@ func New(
 		markertypes.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
-		// TODO put in correct order
 		expirationtypes.ModuleName,
 	)
 
