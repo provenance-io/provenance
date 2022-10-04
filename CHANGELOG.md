@@ -40,8 +40,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Ignore hardcoded tx gas limit when `consensus_params.block.max_gas` is set to -1 for local nodes
-* Bump Cosmos-SDK to Bump cosmos to v0.46.0-pio-1-rc4 (from v0.45.5-pio-1). [#995](https://github.com/provenance-io/provenance/issues/995)
-  See https://github.com/provenance-io/cosmos-sdk/blob/v0.46.0-pio-1-rc4/RELEASE_NOTES.md for more info.
+* Bump Cosmos-SDK to v0.46.2-pio-1 (from v0.45.5-pio-1). [#995](https://github.com/provenance-io/provenance/issues/995)
+  See https://github.com/provenance-io/cosmos-sdk/blob/v0.46.2-pio-1/RELEASE_NOTES.md for more info.
 * Refactor the `x/marker` module's `Holding` query to utilize the `x/bank` module's new `DenomOwners` query. [#995](https://github.com/provenance-io/provenance/issues/995)
   The only real difference between those two queries is that the `Holding` query accepts either a denom or marker address.
 * Update the third-party protos and swagger files after the cosmos v0.46 bump. [#1017](https://github.com/provenance-io/provenance/issues/1017)
