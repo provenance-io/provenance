@@ -498,7 +498,7 @@ func New(
 	querierRegistry.RegisterQuerier(metadatatypes.RouterKey, metadatawasm.Querier(app.MetadataKeeper))
 
 	// Add the staking feature and indicate that provwasm contracts can be run on this chain.
-	supportedFeatures := "staking,provenance,stargate,iterator"
+	supportedFeatures := "staking,provenance,stargate,iterator,cosmwasm_1_1"
 
 	// The last arguments contain custom message handlers, and custom query handlers,
 	// to allow smart contracts to use provenance modules.
