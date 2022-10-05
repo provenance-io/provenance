@@ -282,7 +282,7 @@ build-release-libwasm: $(RELEASE_WASM)
 
 $(RELEASE_WASM): $(RELEASE_BIN)
 	go mod vendor && \
-	cp vendor/github.com/CosmWasm/wasmvm/api/$(LIBWASMVM) $(RELEASE_BIN)
+	cp vendor/github.com/CosmWasm/wasmvm/internal/api/$(LIBWASMVM) $(RELEASE_BIN)
 
 .PHONY: build-release-bin
 build-release-bin: $(RELEASE_PIO)
