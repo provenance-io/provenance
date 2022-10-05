@@ -22,7 +22,8 @@ fi
 #  2. Changing ': "time"' or ':import "time"' into ':time'.
 #  3. Removing the leading './' on the filename.
 # Then sort them because I'm pedantic like that.
-time_imports="$( find . -type f -name '*.go' -not -path '*/vendor/*' \
+time_imports="$( \
+    find . -type f -name '*.go' -not -path '*/vendor/*' \
     | xargs grep -E '^(import)?[[:space:]]+([[:alnum:]]+[[:space:]]+)?"([^"]+/)?time"' \
     | sed -E -e 's/:(import)?[[:space:]]+([[:alnum:]]+)[[:space:]]+"([^"]+\/)?time".*$/:\2/' \
              -e 's/:(import)?[[:space:]]+"([^"]+\/)?time".*$/:time/' \
@@ -35,7 +36,8 @@ time_imports="$( find . -type f -name '*.go' -not -path '*/vendor/*' \
 # Loop through each line of time imports.
 # Split the line into the file and the alias.
 # Grep the file for <alias>.Now() taking care to not include entries of a different alias that ends the same.
-now_uses="$( while IFS= read -r line; do
+now_uses="$( \
+    while IFS= read -r line; do
         file="$( sed 's/:.*$//' <<< "$line" )"
         alias="$( sed 's/^.*://' <<< "$line" )"
         grep -EHn "[^[:alnum:]]$alias\.Now\(\)" "$file"
@@ -50,16 +52,16 @@ now_uses="$( while IFS= read -r line; do
 #
 # Any use in a unit test file is okay (but maybe frowned upon).
 #     These are removed here (instead of in the find command) so that they can be included in verbose output above.
-# It's okay to use it in the telemetry.MeasureSince and telemetry\.ModuleMeasureSince\( functions.
+# It's okay to use it in the telemetry.MeasureSince and telemetry.ModuleMeasureSince functions.
 # There's a use in the x/reward/simulation/operations.go file that's okay.
 #     It's pretty generic though, so rather than ignoring all such lines in the file, only ignore
 #     such lines from line 70 to 85 (inclusive). It's on line 78 as of writing this.
 # The app/test_helpers.go file also has a legitimate use since it's only for unit tests.
 #     It's in the header creation for the BeginBlock.
 #     Since it's expected that it might move, and also that additional
-#     such uses might be added allow it to be on any line number.
+#     such uses might be added, allow it to be on any line number.
 # The x/marker/client/cli/tx.go file has two legitimate uses due to authz and feegrant grant creation.
-#     Since that file is not involved in any running chain code, I'm just ignoring the whole file.
+#     Since that file is not involved in any block processing, just ignore the whole file.
 # The cmd/provenanced/cmd/testnet.go file needs to use it to properly create the genesis file.
 #     Since it's setting a variable more specifically named than 'now',
 #     we can ignore the specific line, but let it be on any line number.
