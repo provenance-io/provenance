@@ -12,9 +12,9 @@ import (
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	msgfeescli "github.com/provenance-io/provenance/x/msgfees/client/cli"
-	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type IntegrationTestSuite struct {
@@ -48,6 +48,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.acc2NameCount = 50
 
 	s.T().Log("setting up integration test suite")
+	pioconfig.SetProvenanceConfig("atom", 0)
 
 	cfg := testutil.DefaultTestNetworkConfig()
 
@@ -57,7 +58,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cfg.GenesisState = genesisState
 
 	s.cfg = cfg
-	msgfeetypes.DefaultFloorGasPrice = sdk.NewCoin("atom", sdk.NewInt(0))
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err, "creating testnet")
 
@@ -291,6 +291,61 @@ func (s *IntegrationTestSuite) TestUpdateUsdConversionRateProposal() {
 			args = append(args, tc.name, tc.description, tc.rate, tc.deposit)
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, msgfeescli.GetUpdateNhashPerUsdMilProposal(), args)
+			if len(tc.expectErrMsg) != 0 {
+				s.Require().Error(err)
+				s.Assert().Equal(tc.expectErrMsg, err.Error())
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestUpdateConversionFeeDenomProposal() {
+	testCases := []struct {
+		name               string
+		title              string
+		description        string
+		conversionFeeDenom string
+		deposit            string
+		expectErrMsg       string
+		expectedCode       uint32
+	}{
+		{
+			name:               "update nhash to usd mil proposal - valid",
+			title:              "title",
+			description:        "description",
+			conversionFeeDenom: "jackthecat",
+			deposit:            sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+			expectErrMsg:       "",
+			expectedCode:       0,
+		},
+		{
+			name:               "update nhash to usd mil proposal - invalid - deposit param",
+			title:              "title",
+			description:        "description",
+			conversionFeeDenom: "jackthecat",
+			deposit:            "invalid-deposit",
+			expectErrMsg:       "invalid decimal coin expression: invalid-deposit",
+			expectedCode:       0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			args := []string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			}
+			args = append(args, tc.name, tc.description, tc.conversionFeeDenom, tc.deposit)
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, msgfeescli.GetUpdateConversionFeeDenomProposal(), args)
 			if len(tc.expectErrMsg) != 0 {
 				s.Require().Error(err)
 				s.Assert().Equal(tc.expectErrMsg, err.Error())

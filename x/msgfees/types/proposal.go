@@ -18,6 +18,8 @@ const (
 	ProposalTypeRemoveMsgFee string = "RemoveMsgFee"
 	// ProposalTypeUpdateUsdConversionRate to update the usd conversion rate param
 	ProposalTypeUpdateUsdConversionRate string = "UpdateUsdConversionRate"
+	// ProposalTypeUpdateConversionFeeDenom to update the conversion rate denom
+	ProposalTypeUpdateConversionFeeDenom string = "UpdateConversionFeeDenom"
 )
 
 var (
@@ -25,6 +27,7 @@ var (
 	_ govtypesv1beta1.Content = &UpdateMsgFeeProposal{}
 	_ govtypesv1beta1.Content = &RemoveMsgFeeProposal{}
 	_ govtypesv1beta1.Content = &UpdateNhashPerUsdMilProposal{}
+	_ govtypesv1beta1.Content = &UpdateConversionFeeDenomProposal{}
 )
 
 func init() {
@@ -32,6 +35,7 @@ func init() {
 	govtypesv1beta1.RegisterProposalType(ProposalTypeUpdateMsgFee)
 	govtypesv1beta1.RegisterProposalType(ProposalTypeRemoveMsgFee)
 	govtypesv1beta1.RegisterProposalType(ProposalTypeUpdateUsdConversionRate)
+	govtypesv1beta1.RegisterProposalType(ProposalTypeUpdateConversionFeeDenom)
 }
 
 func NewAddMsgFeeProposal(
@@ -183,6 +187,31 @@ func (p UpdateNhashPerUsdMilProposal) ProposalType() string {
 func (p UpdateNhashPerUsdMilProposal) ValidateBasic() error {
 	if p.NhashPerUsdMil < 1 {
 		return errors.New("nhash per usd mil must be greater than 0")
+	}
+	return govtypesv1beta1.ValidateAbstract(&p)
+}
+
+func NewUpdateConversionFeeDenomProposal(
+	title string,
+	description string,
+	converstionFeeDenom string,
+) *UpdateConversionFeeDenomProposal {
+	return &UpdateConversionFeeDenomProposal{
+		Title:              title,
+		Description:        description,
+		ConversionFeeDenom: converstionFeeDenom,
+	}
+}
+
+func (p UpdateConversionFeeDenomProposal) ProposalRoute() string { return RouterKey }
+
+func (p UpdateConversionFeeDenomProposal) ProposalType() string {
+	return ProposalTypeUpdateConversionFeeDenom
+}
+
+func (p UpdateConversionFeeDenomProposal) ValidateBasic() error {
+	if err := sdk.ValidateDenom(p.ConversionFeeDenom); err != nil {
+		return err
 	}
 	return govtypesv1beta1.ValidateAbstract(&p)
 }

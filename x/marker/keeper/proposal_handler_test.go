@@ -13,12 +13,12 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
+	provenance "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	provenance "github.com/provenance-io/provenance/app"
 )
 
 type IntegrationTestSuite struct {
@@ -360,5 +360,6 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(IntegrationTestSuite))
 }

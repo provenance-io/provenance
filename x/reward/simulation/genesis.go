@@ -25,12 +25,12 @@ const (
 
 // GenTotalRewardsPool randomized TotalRewardsPool
 func GenTotalRewardsPool(r *rand.Rand) sdk.Coin {
-	return sdk.NewInt64Coin(pioconfig.DefaultBondDenom, int64(simtypes.RandIntBetween(r, 1000, 10000000000)))
+	return sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, int64(simtypes.RandIntBetween(r, 1000, 10000000000)))
 }
 
 // GenMaxRewardsByAddress randomized MaxRewardByAddress
 func GenMaxRewardsByAddress(r *rand.Rand) sdk.Coin {
-	return sdk.NewInt64Coin(pioconfig.DefaultBondDenom, int64(simtypes.RandIntBetween(r, 1, 999)))
+	return sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, int64(simtypes.RandIntBetween(r, 1, 999)))
 }
 
 // MaxActionsFn randomized MaxActions
@@ -68,7 +68,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { minActions = MinActionsFn(r) },
 	)
 
-	minDelegation := sdk.NewInt64Coin(pioconfig.DefaultBondDenom, int64(minActions))
+	minDelegation := sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, int64(minActions))
 
 	now := simState.GenTimestamp
 	claimPeriodSeconds := uint64(simState.Rand.Intn(100000))

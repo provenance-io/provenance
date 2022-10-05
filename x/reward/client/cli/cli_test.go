@@ -52,6 +52,7 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
+	pioconfig.SetProvenanceConfig("", 0)
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
 	addr, err := sdk.AccAddressFromHexUnsafe(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
@@ -91,8 +92,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	genesisState[authtypes.ModuleName] = authDataBz
 
 	now := time.Now().UTC()
-	minimumDelegation := sdk.NewInt64Coin(pioconfig.DefaultBondDenom, 0)
-	maximumDelegation := sdk.NewInt64Coin(pioconfig.DefaultBondDenom, 10)
+	minimumDelegation := sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, 0)
+	maximumDelegation := sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, 10)
 	s.qualifyingActions = []types.QualifyingAction{
 		{
 			Type: &types.QualifyingAction_Delegate{

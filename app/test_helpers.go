@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
+
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
@@ -68,11 +70,16 @@ type SetupOptions struct {
 	SkipUpgradeHeights map[int64]bool
 	EncConfig          params.EncodingConfig
 	AppOpts            servertypes.AppOptions
+	ChainID            string
 }
 
 func setup(t *testing.T, withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeEncodingConfig()
+	// set default config if not set by the flow
+	if len(pioconfig.GetProvenanceConfig().FeeDenom) == 0 {
+		pioconfig.SetProvenanceConfig("", 0)
+	}
 	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, t.TempDir(), invCheckPeriod, encCdc, sdksim.EmptyAppOptions{})
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
@@ -83,7 +90,7 @@ func setup(t *testing.T, withGenesis bool, invCheckPeriod uint) (*App, GenesisSt
 // NewAppWithCustomOptions initializes a new SimApp with custom options.
 func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions) *App {
 	t.Helper()
-
+	pioconfig.SetProvenanceConfig("", 0)
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
@@ -114,6 +121,7 @@ func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions)
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
+				ChainId:         options.ChainID,
 			},
 		)
 	}
@@ -124,7 +132,6 @@ func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions)
 // Setup initializes a new App. A Nop logger is set in App.
 func Setup(t *testing.T) *App {
 	t.Helper()
-
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
@@ -141,7 +148,7 @@ func Setup(t *testing.T) *App {
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
 	}
 
-	app := SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
+	app := SetupWithGenesisValSet(t, "", valSet, []authtypes.GenesisAccount{acc}, balance)
 
 	return app
 }
@@ -220,7 +227,7 @@ func SetupQuerier(t *testing.T) *App {
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
 // of one consensus engine unit in the default token of the app from first genesis
 // account. A Nop logger is set in App.
-func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
+func SetupWithGenesisValSet(t *testing.T, chainID string, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
 	t.Helper()
 
 	app, genesisState := setup(t, true, 5)
@@ -235,6 +242,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
+			ChainId:         chainID,
 		},
 	)
 
@@ -245,6 +253,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 		AppHash:            app.LastCommitID().Hash,
 		ValidatorsHash:     valSet.Hash(),
 		NextValidatorsHash: valSet.Hash(),
+		ChainID:            chainID,
 	}})
 
 	return app
@@ -252,7 +261,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 
 // SetupWithGenesisAccounts initializes a new App with the provided genesis
 // accounts and possible balances.
-func SetupWithGenesisAccounts(t *testing.T, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
+func SetupWithGenesisAccounts(t *testing.T, chainID string, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
 	t.Helper()
 
 	privVal := mock.NewPV()
@@ -263,7 +272,7 @@ func SetupWithGenesisAccounts(t *testing.T, genAccs []authtypes.GenesisAccount, 
 	validator := tmtypes.NewValidator(pubKey, 1)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
-	return SetupWithGenesisValSet(t, valSet, genAccs, balances...)
+	return SetupWithGenesisValSet(t, chainID, valSet, genAccs, balances...)
 }
 
 // GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts

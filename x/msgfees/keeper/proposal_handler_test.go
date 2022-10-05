@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
@@ -34,7 +35,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.app = provenance.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
-	s.k = msgfeeskeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(msgfeestypes.ModuleName), s.app.GetSubspace(msgfeestypes.ModuleName), "", msgfeestypes.NhashDenom, nil, nil)
+	s.k = msgfeeskeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(msgfeestypes.ModuleName), s.app.GetSubspace(msgfeestypes.ModuleName), "", pioconfig.GetProvenanceConfig().FeeDenom, nil, nil)
 	s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 }
 
@@ -106,6 +107,21 @@ func (s *IntegrationTestSuite) TestMsgFeeProposals() {
 			msgfeestypes.NewUpdateNhashPerUsdMilProposal("title update conversion", "description", 1),
 			nil,
 		},
+		{
+			"update conversion fee denom - invalid - validate basic fail",
+			msgfeestypes.NewUpdateConversionFeeDenomProposal("title update conversion fee denom", "description", ""),
+			errors.New("invalid denom: "),
+		},
+		{
+			"update conversion fee denom - invalid - validate basic fail regex failure on denom",
+			msgfeestypes.NewUpdateConversionFeeDenomProposal("title update conversion fee denom", "description", "??"),
+			errors.New("invalid denom: ??"),
+		},
+		{
+			"update conversion fee denom - valid",
+			msgfeestypes.NewUpdateConversionFeeDenomProposal("title update conversion", "description", "hotdog"),
+			nil,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -122,6 +138,8 @@ func (s *IntegrationTestSuite) TestMsgFeeProposals() {
 				err = msgfeeskeeper.HandleRemoveMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
 			case *msgfeestypes.UpdateNhashPerUsdMilProposal:
 				err = msgfeeskeeper.HandleUpdateNhashPerUsdMilProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
+			case *msgfeestypes.UpdateConversionFeeDenomProposal:
+				err = msgfeeskeeper.HandleUpdateConversionFeeDenomProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
 			default:
 				panic("invalid proposal type")
 			}
@@ -198,5 +216,6 @@ func (s *IntegrationTestSuite) TestDetermineBipsProposals() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	suite.Run(t, new(IntegrationTestSuite))
 }
