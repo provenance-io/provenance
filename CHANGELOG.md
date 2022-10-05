@@ -61,6 +61,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 *  [#1067](https://github.com/provenance-io/provenance/issues/1067) This feature makes it so that you can start the chain with custom denoms for a chain, by passing in the required flags, also makes MsgFee not coupled only to the nhash denom.
    For running the chain locally `make run DENOM=vspn MIN_FLOOR_PRICE=0` and `make clean localnet-start DENOM=vspn MIN_FLOOR_PRICE=0` make targets were also updated.
 * Use latest ProvWasm contract in wasm tests [#731](https://github.com/provenance-io/provenance/issues/731)
+* Update wasmd to 0.28 with 0.46 sdk version from notional-labs [#1015](https://github.com/provenance-io/provenance/issues/1015)
 
 ### Bug Fixes
 
