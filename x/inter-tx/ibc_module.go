@@ -5,7 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/provenance-io/provenance/x/inter-tx/keeper"
 
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
@@ -127,10 +129,23 @@ func (im IBCModule) OnAcknowledgementPacket(
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-27 tx message data: %v", err)
 	}
 
-	for _, msgResp := range txMsgData.GetMsgResponses() {
-		im.keeper.Logger(ctx).Info("msg response in ICS-27 packet", "response", msgResp.GoString(), "typeURL", msgResp.GetTypeUrl())
+	switch len(txMsgData.Data) {
+	case 0:
+		for _, msgResp := range txMsgData.GetMsgResponses() {
+			im.keeper.Logger(ctx).Info("msg response in ICS-27 packet", "response", msgResp.GoString(), "typeURL", msgResp.GetTypeUrl())
+		}
+		return nil
+	default:
+		for _, msgData := range txMsgData.Data {
+			response, err := handleMsgData(ctx, msgData)
+			if err != nil {
+				return err
+			}
+
+			im.keeper.Logger(ctx).Info("message response in ICS-27 packet response", "response", response)
+		}
+		return nil
 	}
-	return nil
 }
 
 // OnTimeoutPacket implements the IBCModule interface.
@@ -152,4 +167,25 @@ func (im IBCModule) NegotiateAppVersion(
 	proposedVersion string,
 ) (string, error) {
 	return "", nil
+}
+
+func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (string, error) {
+	switch msgData.MsgType {
+	case sdk.MsgTypeURL(&banktypes.MsgSend{}):
+		msgResponse := &banktypes.MsgSendResponse{}
+		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
+			return "", sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal send response message: %s", err.Error())
+		}
+
+		return msgResponse.String(), nil
+	case sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}):
+		msgResponse := &stakingtypes.MsgDelegateResponse{}
+		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
+			return "", sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal delegate response message: %s", err.Error())
+		}
+
+		return msgResponse.String(), nil
+	default:
+		return "", nil
+	}
 }
