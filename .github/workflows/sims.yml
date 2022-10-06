@@ -206,7 +206,7 @@ jobs:
         # The test-sim-multi-seed-short test should take 30-40 minutes.
         # TODO: Add the "after-import" test once it's fixed: https://github.com/provenance-io/provenance/issues/754
         test: ["import-export", "multi-seed-short"]
-        db-backend: ["goleveldb", "cleveldb", "badgerdb"]
+        db-backend: ["goleveldb", "cleveldb"]
         # Not putting "macos-latest" in this because:
         #   a) They take longer than on ubuntu to begin with.
         #   b) We're limited to 5 Mac runners at once so they get queued up, taking even longer to finish all of them.
@@ -279,7 +279,7 @@ jobs:
         # The test-sim-simple test is pretty quick and should be able to identify glaring problems.
         # The test-sim-benchmark is handy to have for each db type.
         test: ["simple", "benchmark"]
-        db-backend: ["goleveldb", "cleveldb", "badgerdb"]
+        db-backend: ["goleveldb", "cleveldb"]
         os: ["ubuntu-latest", "macos-latest"]
     runs-on: ${{ matrix.os }}
     steps:
