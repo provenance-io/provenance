@@ -60,38 +60,40 @@ now_uses="$( \
 # These are controlled in this script rather than through a nolint directive because:
 #  a) Use of time.Now() is very dangerous, and it should be harder to use it than just adding a comment on the line.
 #  b) This isn't a full-fledged, actual linter.
-#
+filters=()
+
 # Any use in a unit test file is okay (but maybe frowned upon).
 #     These are removed here (instead of in the find command) so that they can be included in verbose output above.
+filters+=( '^[^:]+_test\.go:' )
 # It's okay to use it in the telemetry.MeasureSince and telemetry.ModuleMeasureSince functions.
+filters+=( 'telemetry\.(Module)?MeasureSince\(' )
 # There's a use in the x/reward/simulation/operations.go file that's okay.
 #     It's pretty generic though, so rather than ignoring all such lines in the file, only ignore
 #     such lines from line 70 to 85 (inclusive). It's on line 78 as of writing this.
+filters+=( '^x/reward/simulation/operations\.go:(7[0-9]|8[0-5]):[[:space:]]+now := [[:alnum:]]+\.Now\(\)$' )
 # The app/test_helpers.go file also has a legitimate use since it's only for unit tests.
 #     It's in the header creation for the BeginBlock.
 #     Since it's expected that it might move, and also that additional
 #     such uses might be added, allow it to be on any line number.
+filters+=( '^app/test_helpers\.go:[[:digit:]]+:.*tmproto\.Header{' )
 # The x/marker/client/cli/tx.go file has two legitimate uses due to authz and feegrant grant creation.
 #     Since that file is not involved in any block processing, just ignore the whole file.
+filters+=( '^x/marker/client/cli/tx\.go:' )
 # The cmd/provenanced/cmd/testnet.go file needs to use it to properly create the genesis file.
 #     Since it's setting a variable more specifically named than 'now',
 #     we can ignore the specific line, but let it be on any line number.
+filters+=( '^cmd/provenanced/cmd/testnet\.go:[[:digit:]]+:[[:space:]]+genTime := [[:alnum:]]+\.Now\(\)$' )
 # The dbmigrate migrator has several legitimate uses, and there's nothing in there that affects block processing.
-bad_uses="$( \
-    grep -vE \
-        -e '^[^:]+_test\.go:' \
-        -e 'telemetry\.(Module)?MeasureSince\(' \
-        -e '^x/reward/simulation/operations\.go:(7[0-9]|8[0-5]):[[:space:]]+now := [[:alnum:]]+\.Now\(\)$' \
-        -e '^app/test_helpers\.go:[[:digit:]]+:.*tmproto\.Header{' \
-        -e '^x/marker/client/cli/tx\.go:' \
-        -e '^cmd/provenanced/cmd/testnet\.go:[[:digit:]]+:[[:space:]]+genTime := [[:alnum:]]+\.Now\(\)$' \
-        -e '^cmd/dbmigrate/utils/migrator\.go:' \
-    <<< "$now_uses"
-)"
+filters+=( '^cmd/dbmigrate/utils/migrator\.go:' )
 
-# If we found anything bad, output it now and exit 1.
-if [ -n "$bad_uses" ]; then
-    printf 'Improper use(s) of time.Now():\n%s\n' "$bad_uses" >&2
+for filters in "${filters[@]}"; do
+    now_uses="$( grep -vE "$filters" <<< "$now_uses" )"
+    [ -n "$VERBOSE" ] && printf 'After filter %s:\n%s\n\n' "'$filters'" "$( sed 's/^/  /' <<< "$now_uses" )"
+done
+
+# If there's anything left, it's bad.
+if [ -n "$now_uses" ]; then
+    printf 'Improper use(s) of time.Now():\n%s\n' "$now_uses" >&2
     exit 1
 fi
 [ -n "$VERBOSE" ] && printf 'No improper uses of .Now().\n'
