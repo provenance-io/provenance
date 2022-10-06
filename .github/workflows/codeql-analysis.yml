@@ -23,6 +23,15 @@ on:
     # Wednesdays at 21:23 (randomly chosen).
     - cron: '23 21 * * 3'
 
+# Set concurrency for this workflow to cancel in-progress jobs if retriggered.
+# The github.ref is only available when triggered by a PR so fall back to github.run_id for other cases.
+# The github.run_id is unique for each run, giving each such invocation it's own unique concurrency group.
+# Basically, if you push to a PR branch, jobs that are still running for that PR will be cancelled.
+# But jobs started because of a merge to main or a release tag push are not cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   analyze:
     name: Analyze
