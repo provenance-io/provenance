@@ -4,6 +4,15 @@
 # If there isn't anything of concern, nothing will be outputted, and the script will exit with code 0.
 # Providing the -v or --verbose flag (or exporting VERBOSE=1) will make this output middle-step information.
 
+# This exists because use of time.Now() in the processing of a block (or Tx) is an easy way to halt a chain.
+# All time-based validation/processing/calculations should be done against the block time.
+# Doing them against time.Now() makes the outcome change depending on when it's run.
+# That might sound like something desirable, but consider a chain that is starting/catching up by replaying old blocks.
+# If using time.Now(), a Tx that was fine when it was run originally might now fail validation.
+# If someone desides to be malicious, then could send a Tx with a time field set a few seconds in the future.
+# The block creater processes the Tx and includes it in the block.
+# Then some or none of the other validators agree as they're checking it a few seconds later.
+
 if [ "$1" == '-v' ] || [ "$1" == '--verbose' ]; then
     VERBOSE='1'
 fi
