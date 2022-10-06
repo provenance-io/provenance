@@ -12,6 +12,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant"
+
+	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 )
 
 const (
@@ -522,12 +525,22 @@ func (msg MsgTransferRequest) GetSigners() []sdk.AccAddress {
 
 // NewIbcMsgTransferRequest
 func NewIbcMsgTransferRequest(
-	admin, fromAddress, amount sdk.Coin, //nolint:interfacer
+	administrator string,
+	sourcePort, sourceChannel string,
+	token sdk.Coin, sender, receiver string,
+	timeoutHeight clienttypes.Height, timeoutTimestamp uint64, //nolint:interfacer
 ) *MsgIbcTransferRequest {
 	return &MsgIbcTransferRequest{
-		Administrator: admin.String(),
-		FromAddress:   fromAddress.String(),
-		Amount:        amount,
+		Administrator: administrator,
+		Transfer: ibctransfertypes.MsgTransfer{
+			SourcePort:       sourcePort,
+			SourceChannel:    sourceChannel,
+			Token:            token,
+			Sender:           sender,
+			Receiver:         receiver,
+			TimeoutHeight:    timeoutHeight,
+			TimeoutTimestamp: timeoutTimestamp,
+		},
 	}
 }
 
@@ -539,10 +552,7 @@ func (msg MsgIbcTransferRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
 		return err
 	}
-	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return err
-	}
-	return msg.Amount.Validate()
+	return msg.Transfer.ValidateBasic()
 }
 
 // GetSignBytes encodes the message for signing.
@@ -553,12 +563,7 @@ func (msg MsgIbcTransferRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgIbcTransferRequest) GetSigners() []sdk.AccAddress {
-	adminAddr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-
-	return []sdk.AccAddress{adminAddr}
+	return msg.Transfer.GetSigners()
 }
 
 // NewSetDenomMetadataRequest  creates a new marker in a proposed state with a given total supply a denomination

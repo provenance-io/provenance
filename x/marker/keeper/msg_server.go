@@ -453,7 +453,7 @@ func (k msgServer) IbcTransfer(goCtx context.Context, msg *types.MsgIbcTransferR
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	from, err := sdk.AccAddressFromBech32(msg.Transfer.Sender)
 	if err != nil {
 		return nil, err
 	}
@@ -462,7 +462,7 @@ func (k msgServer) IbcTransfer(goCtx context.Context, msg *types.MsgIbcTransferR
 		return nil, err
 	}
 
-	err = k.IbcTransferCoin(ctx, from, admin, msg.Amount)
+	err = k.IbcTransferCoin(ctx, from, admin, msg.Transfer.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -474,24 +474,24 @@ func (k msgServer) IbcTransfer(goCtx context.Context, msg *types.MsgIbcTransferR
 		),
 	)
 
-	defer func() {
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, types.EventTelemetryKeyIbcTransfer},
-			1,
-			[]metrics.Label{
-				telemetry.NewLabel(types.EventTelemetryLabelFromAddress, msg.FromAddress),
-				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom),
-				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
-			},
-		)
-		if msg.Amount.Amount.IsInt64() {
-			telemetry.SetGaugeWithLabels(
-				[]string{types.ModuleName, types.EventTelemetryKeyTransfer, msg.Amount.Denom},
-				float32(msg.Amount.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom)},
-			)
-		}
-	}()
+	// defer func() {
+	// 	telemetry.IncrCounterWithLabels(
+	// 		[]string{types.ModuleName, types.EventTelemetryKeyIbcTransfer},
+	// 		1,
+	// 		[]metrics.Label{
+	// 			telemetry.NewLabel(types.EventTelemetryLabelFromAddress, msg.FromAddress),
+	// 			telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom),
+	// 			telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
+	// 		},
+	// 	)
+	// 	if msg.Amount.Amount.IsInt64() {
+	// 		telemetry.SetGaugeWithLabels(
+	// 			[]string{types.ModuleName, types.EventTelemetryKeyTransfer, msg.Amount.Denom},
+	// 			float32(msg.Amount.Amount.Int64()),
+	// 			[]metrics.Label{telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom)},
+	// 		)
+	// 	}
+	// }()
 
 	return &types.MsgIbcTransferResponse{}, nil
 }

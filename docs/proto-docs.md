@@ -2127,9 +2127,8 @@ MsgIbcTransferRequest defines the Msg/IbcTransfer request type
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `transfer` | [ibc.applications.transfer.v1.MsgTransfer](#ibc.applications.transfer.v1.MsgTransfer) |  |  |
 | `administrator` | [string](#string) |  |  |
-| `from_address` | [string](#string) |  |  |
 
 
 

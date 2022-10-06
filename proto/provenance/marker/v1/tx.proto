@@ -6,6 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
+import "ibc/applications/transfer/v1/tx.proto";
 import "provenance/marker/v1/marker.proto";
 import "provenance/marker/v1/accessgrant.proto";
 
@@ -173,10 +174,9 @@ message MsgTransferResponse {}
 
 // MsgIbcTransferRequest defines the Msg/IbcTransfer request type
 message MsgIbcTransferRequest {
-  cosmos.base.v1beta1.Coin amount = 1
-      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
-  string administrator = 3;
-  string from_address  = 4;
+  ibc.applications.transfer.v1.MsgTransfer transfer = 1
+      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types.MsgTransfer"];
+      string administrator = 2;
 }
 
 // MsgIbcTransferResponse defines the Msg/IbcTransfer response type
