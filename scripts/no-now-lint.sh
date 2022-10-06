@@ -36,11 +36,22 @@ time_imports="$( \
 # Loop through each line of time imports.
 # Split the line into the file and the alias.
 # Grep the file for <alias>.Now() taking care to not include entries of a different alias that ends the same.
+# Then, we want to ignore the line if the only "use" of <alias>.Now() is actually in a comment.
+# But we still want the whole line in the output if it's a match.
+# So we remove any comment from each matching line and re-test it. If it's still a match, include the whole line.
 now_uses="$( \
     while IFS= read -r line; do
         file="$( sed 's/:.*$//' <<< "$line" )"
         alias="$( sed 's/^.*://' <<< "$line" )"
-        grep -EHn "[^[:alnum:]]$alias\.Now\(\)" "$file"
+        rx="[^[:alnum:]]$alias\.Now\(\)"
+        match_lines="$( grep -EHn "$rx" "$file" )"
+        if [ -n "$match_lines" ]; then
+            while IFS= read -r match; do
+                if sed 's/\/\/.*$//;' <<< "$match" | grep -q "$rx" 2>&1; then
+                    printf '%s\n' "$match"
+                fi
+            done <<< "$match_lines"
+        fi
     done <<< "$time_imports"
 )"
 [ -n "$VERBOSE" ] && printf 'Uses of time.Now():\n%s\n\n' "$now_uses"
