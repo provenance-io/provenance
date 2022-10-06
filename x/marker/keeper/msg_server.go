@@ -474,25 +474,6 @@ func (k msgServer) IbcTransfer(goCtx context.Context, msg *types.MsgIbcTransferR
 		),
 	)
 
-	// defer func() {
-	// 	telemetry.IncrCounterWithLabels(
-	// 		[]string{types.ModuleName, types.EventTelemetryKeyIbcTransfer},
-	// 		1,
-	// 		[]metrics.Label{
-	// 			telemetry.NewLabel(types.EventTelemetryLabelFromAddress, msg.FromAddress),
-	// 			telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom),
-	// 			telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
-	// 		},
-	// 	)
-	// 	if msg.Amount.Amount.IsInt64() {
-	// 		telemetry.SetGaugeWithLabels(
-	// 			[]string{types.ModuleName, types.EventTelemetryKeyTransfer, msg.Amount.Denom},
-	// 			float32(msg.Amount.Amount.Int64()),
-	// 			[]metrics.Label{telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom)},
-	// 		)
-	// 	}
-	// }()
-
 	return &types.MsgIbcTransferResponse{}, nil
 }
 
