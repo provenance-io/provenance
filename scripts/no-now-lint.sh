@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # This script looks for all uses of a time.Now() function.
-# If any improper uses are found, they will be outputted to stderr and the script will exit with code 1.
+# If any improper uses are found, they will be outputted and the script will exit with code 1.
 # If there isn't anything of concern, nothing will be outputted, and the script will exit with code 0.
 # Providing the -v or --verbose flag (or exporting VERBOSE=1) will make this output middle-step information.
 
@@ -102,7 +102,7 @@ done
 
 # If there's anything left, it's bad.
 if [ -n "$now_uses" ]; then
-    printf 'Improper use(s) of time.Now():\n%s\n' "$now_uses" >&2
+    printf 'Improper use(s) of time.Now():\n%s\n' "$now_uses"
     exit 1
 fi
 [ -n "$VERBOSE" ] && printf 'No improper uses of .Now().\n'
