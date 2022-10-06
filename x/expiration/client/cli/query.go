@@ -31,10 +31,13 @@ func GetQueryCmd() *cobra.Command {
 		GetExpirationCmd(),
 		GetAllExpirationsCmd(),
 		GetAllExpirationsByOwnerCmd(),
+		GetAllExpiredExpirationsCmd(),
 	)
 
 	return queryCmd
 }
+
+var queryCmdStr = fmt.Sprintf(`%s query expiration`, version.AppName)
 
 // GetQueryParamsCmd is the CLI command for expiration parameter querying
 func GetQueryParamsCmd() *cobra.Command {
@@ -43,7 +46,7 @@ func GetQueryParamsCmd() *cobra.Command {
 		Aliases: []string{"p"},
 		Short:   "Query the current expiration parameters",
 		Args:    cobra.NoArgs,
-		Example: fmt.Sprintf(`$ %s query expiration params`, version.AppName),
+		Example: fmt.Sprintf(`$ %s params`, queryCmdStr),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -72,7 +75,7 @@ func GetExpirationCmd() *cobra.Command {
 		Aliases: []string{"g"},
 		Short:   "Query expiration for a module asset",
 		Args:    cobra.ExactArgs(1),
-		Example: fmt.Sprintf(`$ %s query expiration get pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk`, version.AppName),
+		Example: fmt.Sprintf(`$ %s get pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk`, queryCmdStr),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -104,10 +107,10 @@ func GetAllExpirationsCmd() *cobra.Command {
 		Args:    cobra.NoArgs,
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`
-				$ %[1]s query expiration all
-				$ %[1]s query expiration all --page=2 --limit=100
-				`,
-				version.AppName,
+$ %[1]s all
+$ %[1]s all --page=2 --limit=100
+                `,
+				queryCmdStr,
 			)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -145,10 +148,10 @@ func GetAllExpirationsByOwnerCmd() *cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`
-				$ %[1]s query expiration owner pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
-				$ %[1]s query expiration owner pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk --page=2 --limit=100
-				`,
-				version.AppName,
+$ %[1]s owner pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
+$ %[1]s owner pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk --page=2 --limit=100
+                `,
+				queryCmdStr,
 			)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -186,10 +189,10 @@ func GetAllExpiredExpirationsCmd() *cobra.Command {
 		Args:    cobra.NoArgs,
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`
-				$ %[1]s query expiration expired
-				$ %[1]s query expiration expired --page=2 --limit=100
-				`,
-				version.AppName,
+$ %[1]s expired
+$ %[1]s expired --page=2 --limit=100
+                `,
+				queryCmdStr,
 			)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

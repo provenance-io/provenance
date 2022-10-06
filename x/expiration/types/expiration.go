@@ -29,7 +29,6 @@ func NewExpiration(
 
 // ValidateBasic basic format checking of the data
 func (e *Expiration) ValidateBasic() error {
-	now := time.Now()
 	if strings.TrimSpace(e.ModuleAssetId) == "" {
 		return ErrEmptyModuleAssetID
 	}
@@ -39,8 +38,8 @@ func (e *Expiration) ValidateBasic() error {
 	if strings.TrimSpace(e.Owner) == "" {
 		return ErrEmptyOwnerAddress
 	}
-	if e.Time.Before(now) {
-		return ErrTimeInPast
+	if e.Time.IsZero() {
+		return ErrExpirationTime
 	}
 	if !e.Deposit.IsValid() {
 		return ErrInvalidDeposit
@@ -61,15 +60,7 @@ func (e *Expiration) validateMessage() error {
 	if e.Message.TypeUrl == "" {
 		return fmt.Errorf("expecting message type URL to unpack Any")
 	}
-	// validate message is a whitelisted sdk.Msg during a BroadcastTx
-	var msg sdk.Msg
-	if err := ModuleCdc.UnpackAny(&e.Message, &msg); err != nil {
-		return err
-	}
-	if msg == nil {
-		return fmt.Errorf("failed to unpack Any message: %v", msg)
-	}
-	return msg.ValidateBasic()
+	return nil
 }
 
 var reDuration = regexp.MustCompile(`(^[1-9]\d{0,11})([ywdh])$`)

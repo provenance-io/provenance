@@ -238,7 +238,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.expiration5 = *expirationtypes.NewExpiration(s.moduleAssetID5, s.user5AddrStr, s.time, s.deposit, s.anyMsg(s.user5AddrStr))
 	s.expiration6 = *expirationtypes.NewExpiration(s.moduleAssetID6, s.user6AddrStr, s.time, s.deposit, s.anyMsg(s.user6AddrStr))
 
-	utcFormat := "2006-01-02T15:04:05.000000000Z"
+	utcFormat := "2006-01-02T15:04:05.000000Z"
 	// expected expirations as JSON
 	s.expiration1AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"time\":\"%v\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":{\"@type\":\"/provenance.metadata.v1.MsgDeleteScopeRequest\",\"scope_id\":\"%s\",\"signers\":[\"%s\"]}}}",
 		s.moduleAssetID1,
@@ -451,7 +451,7 @@ func (s *IntegrationCLITestSuite) TestGetExpirationByModuleAssetIdCmd() {
 		{
 			name:             "get expiration by module asset id - does not exist",
 			args:             []string{s.userOtherStr},
-			expectedError:    fmt.Sprintf("expiration for module asset id [%s] does not exist: expiration not found: unknown request", s.userOtherStr),
+			expectedError:    "",
 			expectedInOutput: []string{},
 		},
 		{
@@ -789,7 +789,7 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			expectErr:    false,
 			expectErrMsg: "",
 			respType:     &sdk.TxResponse{},
-			expectedCode: 4,
+			expectedCode: expirationtypes.ErrNotFound.ABCICode(),
 		},
 		{
 			name: "should fail to extend expiration, not found",
@@ -805,7 +805,7 @@ func (s *IntegrationCLITestSuite) TestExpirationTxCommands() {
 			expectErr:    false,
 			expectErrMsg: "",
 			respType:     &sdk.TxResponse{},
-			expectedCode: expirationtypes.ErrNotFound.ABCICode(),
+			expectedCode: expirationtypes.ErrExtendExpiration.ABCICode(),
 		},
 		{
 			name: "should fail to invoke expiration, not found",

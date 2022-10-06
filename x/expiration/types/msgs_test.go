@@ -6,9 +6,10 @@ import (
 
 	"github.com/google/uuid"
 
+	"cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
@@ -34,7 +35,7 @@ type ExpirationTestSuite struct {
 	validExpiration              Expiration
 	emptyModuleAssetIdExpiration Expiration
 	emptyOwnerExpiration         Expiration
-	expireTimeInPastExpiration   Expiration
+	expireTimeIsZeroExpiration   Expiration
 	invalidDepositExpiration     Expiration
 	negativeDepositExpiration    Expiration
 	invalidMessageExpiration     Expiration
@@ -51,8 +52,6 @@ func (s *ExpirationTestSuite) SetupTest() {
 	s.otherSigners = []string{"cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3"}
 
 	s.scopeID = metadatatypes.ScopeMetadataAddress(uuid.New())
-
-	past := expirationTime.AddDate(-1, 0, 0)
 
 	s.validExpiration = Expiration{
 		ModuleAssetId: s.moduleAssetID,
@@ -73,10 +72,9 @@ func (s *ExpirationTestSuite) SetupTest() {
 		Deposit:       s.deposit,
 		Message:       s.anyMsg(s.owner),
 	}
-	s.expireTimeInPastExpiration = Expiration{
+	s.expireTimeIsZeroExpiration = Expiration{
 		ModuleAssetId: s.moduleAssetID,
 		Owner:         s.owner,
-		Time:          past,
 		Deposit:       s.deposit,
 		Message:       s.anyMsg(s.owner),
 	}
@@ -141,10 +139,10 @@ func (s *ExpirationTestSuite) TestMsgAddExpirationRequestValidateBasic() {
 			wantErr:     true,
 			expectedErr: ErrEmptyOwnerAddress,
 		}, {
-			name:        "should fail to validate basic - expiration time in past",
-			msg:         NewMsgAddExpirationRequest(s.expireTimeInPastExpiration, s.signers),
+			name:        "should fail to validate basic - expiration time is zero",
+			msg:         NewMsgAddExpirationRequest(s.expireTimeIsZeroExpiration, s.signers),
 			wantErr:     true,
-			expectedErr: ErrTimeInPast,
+			expectedErr: ErrExpirationTime,
 		}, {
 			name:        "should fail to validate basic - invalid deposit",
 			msg:         NewMsgAddExpirationRequest(s.invalidDepositExpiration, s.signers),

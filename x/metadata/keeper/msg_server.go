@@ -87,7 +87,7 @@ func (k msgServer) createExpirationForScope(ctx sdk.Context, msg *types.MsgWrite
 
 	// create expiration metadata that will expire scope when executed.
 	expTime := ctx.BlockTime().Add(*duration)
-	expDeposit := k.expKeeper.GetDeposit(ctx)
+	expDeposit := k.expKeeper.GetDefaultDeposit(ctx)
 	expiration := exptypes.NewExpiration(msg.Scope.ScopeId.String(), firstOwner, expTime,
 		expDeposit, *wrapper)
 	expErr := k.expKeeper.SetExpiration(ctx, *expiration)

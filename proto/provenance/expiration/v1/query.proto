@@ -51,7 +51,7 @@ message QueryParamsResponse {
 
 // QueryExpirationRequest queries for a specific expiration
 message QueryExpirationRequest {
-  string module_asset_id = 1 [(gogoproto.moretags) = "yaml:\"module_asset_id\""];
+  string module_asset_id = 1;
 }
 
 // QueryExpirationResponse response for querying for a specific expiration
@@ -62,14 +62,14 @@ message QueryExpirationResponse {
 // QueryAllExpirationsRequest queries all expirations
 message QueryAllExpirationsRequest {
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
 // QueryAllExpirationsResponse response for querying all expirations
 message QueryAllExpirationsResponse {
   repeated Expiration expirations = 1;
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // QueryAllExpirationsByOwnerRequest queries all expirations belonging to an owner
@@ -77,25 +77,25 @@ message QueryAllExpirationsByOwnerRequest {
   // the bech32 address the expiration is bound to
   string owner = 1;
   // pagination defines an optional pagination for the request
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
 // QueryAllExpirationsByOwnerResponse response for querying all expirations by owner
 message QueryAllExpirationsByOwnerResponse {
   repeated Expiration expirations = 1;
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // QueryAllExpiredExpirationsRequest queries all expired expirations
 message QueryAllExpiredExpirationsRequest {
   // pagination defines an optional pagination for the request
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
 // QueryAllExpiredExpirationsResponse response for querying all expired expirations
 message QueryAllExpiredExpirationsResponse {
   repeated Expiration expirations = 1;
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }

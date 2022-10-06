@@ -8,7 +8,7 @@ import (
 	"github.com/provenance-io/provenance/x/expiration/types"
 )
 
-// RandomizedGenState generates a random GenesisState for marker
+// RandomizedGenState generates a random GenesisState for expiration
 func RandomizedGenState(simState *module.SimulationState) {
 	expirationGenesis := types.GenesisState{
 		Params: types.DefaultParams(),

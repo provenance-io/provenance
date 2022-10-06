@@ -14,9 +14,6 @@ const (
 
 	// RouterKey is the message route for slashing
 	RouterKey = ModuleName
-
-	// QuerierRoute defines the module's query routing key
-	QuerierRoute = ModuleName
 )
 
 var (
@@ -24,8 +21,8 @@ var (
 	ModuleAssetKeyPrefix = []byte{0x00}
 )
 
-// GetModuleAssetKeyPrefix returns the key prefix used by encoded objects stored in the kv store.
-func GetModuleAssetKeyPrefix(moduleAssetID string) ([]byte, error) {
+// GetModuleAssetKey returns the key used by encoded objects stored in the kv store.
+func GetModuleAssetKey(moduleAssetID string) ([]byte, error) {
 	key := ModuleAssetKeyPrefix
 	accAddress, err := sdk.AccAddressFromBech32(moduleAssetID)
 	if err != nil {
