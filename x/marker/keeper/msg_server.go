@@ -442,6 +442,60 @@ func (k msgServer) Transfer(goCtx context.Context, msg *types.MsgTransferRequest
 	return &types.MsgTransferResponse{}, nil
 }
 
+// Transfer handles a message to send coins from one account to another (used with restricted coins that are not
+//
+//	sent using the normal bank send process)
+func (k msgServer) IbcTransfer(goCtx context.Context, msg *types.MsgIbcTransferRequest) (*types.MsgIbcTransferResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// Validate transaction message.
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return nil, err
+	}
+	admin, err := sdk.AccAddressFromBech32(msg.Administrator)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.IbcTransferCoin(ctx, from, admin, msg.Amount)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, types.EventTelemetryKeyIbcTransfer},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryLabelFromAddress, msg.FromAddress),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
+			},
+		)
+		if msg.Amount.Amount.IsInt64() {
+			telemetry.SetGaugeWithLabels(
+				[]string{types.ModuleName, types.EventTelemetryKeyTransfer, msg.Amount.Denom},
+				float32(msg.Amount.Amount.Int64()),
+				[]metrics.Label{telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Amount.Denom)},
+			)
+		}
+	}()
+
+	return &types.MsgIbcTransferResponse{}, nil
+}
+
 // SetDenomMetadata handles a message setting metadata for a marker with the specified denom.
 func (k msgServer) SetDenomMetadata(
 	goCtx context.Context,

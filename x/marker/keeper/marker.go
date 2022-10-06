@@ -697,6 +697,49 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	return nil
 }
 
+// IbcTransferCoin transfers restricted coins between to chains when the administrator account holds the transfer
+// access right and the marker type is restricted_coin
+func (k Keeper) IbcTransferCoin(ctx sdk.Context, from, admin sdk.AccAddress, amount sdk.Coin) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "transfer_coin")
+
+	m, err := k.GetMarkerByDenom(ctx, amount.Denom)
+	if err != nil {
+		return fmt.Errorf("marker not found for %s: %w", amount.Denom, err)
+	}
+	if m.GetMarkerType() != types.MarkerType_RestrictedCoin {
+		return fmt.Errorf("marker type is not restricted_coin, brokered transfer not supported")
+	}
+	if !m.AddressHasAccess(admin, types.Access_Transfer) {
+		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
+	}
+	if !admin.Equals(from) {
+		err = k.authzHandler(ctx, admin, from, amount)
+		if err != nil {
+			return err
+		}
+	}
+	// if k.bankKeeper.BlockedAddr(to) {
+	// 	return fmt.Errorf("%s is not allowed to receive funds", to)
+	// }
+
+	// // send the coins between accounts (does not check send_enabled on coin denom)
+	// if err = k.bankKeeper.SendCoins(ctx, from, to, sdk.NewCoins(amount)); err != nil {
+	// 	return err
+	// }
+
+	markerIbcTransferEvent := types.NewEventMarkerIbcTransfer(
+		amount.Amount.String(),
+		amount.Denom,
+		admin.String(),
+		from.String(),
+	)
+	if err := ctx.EventManager().EmitTypedEvent(markerIbcTransferEvent); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (k Keeper) authzHandler(ctx sdk.Context, admin sdk.AccAddress, from sdk.AccAddress, amount sdk.Coin) error {
 	markerAuth := types.MarkerTransferAuthorization{}
 	authorization, expireTime := k.authzKeeper.GetAuthorization(ctx, admin, from, markerAuth.MsgTypeURL())

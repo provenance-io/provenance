@@ -38,6 +38,8 @@ service Msg {
   rpc AddMarker(MsgAddMarkerRequest) returns (MsgAddMarkerResponse);
   // Transfer marker denominated coin between accounts
   rpc Transfer(MsgTransferRequest) returns (MsgTransferResponse);
+  // IbcTransfer marker denominated coin between accounts
+  rpc IbcTransfer(MsgIbcTransferRequest) returns (MsgIbcTransferResponse);
   // Allows Denom Metadata (see bank module) to be set for the Marker's Denom
   rpc SetDenomMetadata(MsgSetDenomMetadataRequest) returns (MsgSetDenomMetadataResponse);
   // GrantAllowance grants fee allowance to the grantee on the granter's
@@ -168,6 +170,17 @@ message MsgTransferRequest {
 
 // MsgTransferResponse defines the Msg/Transfer response type
 message MsgTransferResponse {}
+
+// MsgIbcTransferRequest defines the Msg/IbcTransfer request type
+message MsgIbcTransferRequest {
+  cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+  string administrator = 3;
+  string from_address  = 4;
+}
+
+// MsgIbcTransferResponse defines the Msg/IbcTransfer response type
+message MsgIbcTransferResponse {}
 
 // MsgSetDenomMetadataRequest defines the Msg/SetDenomMetadata request type
 message MsgSetDenomMetadataRequest {

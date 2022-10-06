@@ -26,6 +26,7 @@ const (
 	TypeBurnRequest         = "burn"
 	TypeWithdrawRequest     = "withdraw"
 	TypeTransferRequest     = "transfer"
+	TypeIbcTransferRequest  = "ibctransfer"
 	TypeSetMetadataRequest  = "setmetadata"
 	TypeGrantAllowance      = "grantallowance"
 )
@@ -43,6 +44,7 @@ var (
 	_ sdk.Msg = &MsgBurnRequest{}
 	_ sdk.Msg = &MsgWithdrawRequest{}
 	_ sdk.Msg = &MsgTransferRequest{}
+	_ sdk.Msg = &MsgIbcTransferRequest{}
 	_ sdk.Msg = &MsgGrantAllowanceRequest{}
 )
 
@@ -78,6 +80,9 @@ func (msg MsgWithdrawRequest) Type() string { return TypeWithdrawRequest }
 
 // Type returns the message action.
 func (msg MsgTransferRequest) Type() string { return TypeTransferRequest }
+
+// Type returns the message action.
+func (msg MsgIbcTransferRequest) Type() string { return TypeIbcTransferRequest }
 
 // Type returns the message action.
 func (msg MsgSetDenomMetadataRequest) Type() string { return TypeSetMetadataRequest }
@@ -507,6 +512,47 @@ func (msg MsgTransferRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgTransferRequest) GetSigners() []sdk.AccAddress {
+	adminAddr, err := sdk.AccAddressFromBech32(msg.Administrator)
+	if err != nil {
+		panic(err)
+	}
+
+	return []sdk.AccAddress{adminAddr}
+}
+
+// NewIbcMsgTransferRequest
+func NewIbcMsgTransferRequest(
+	admin, fromAddress, amount sdk.Coin, //nolint:interfacer
+) *MsgIbcTransferRequest {
+	return &MsgIbcTransferRequest{
+		Administrator: admin.String(),
+		FromAddress:   fromAddress.String(),
+		Amount:        amount,
+	}
+}
+
+// Route returns the name of the module.
+func (msg MsgIbcTransferRequest) Route() string { return ModuleName }
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgIbcTransferRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
+		return err
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
+		return err
+	}
+	return msg.Amount.Validate()
+}
+
+// GetSignBytes encodes the message for signing.
+func (msg MsgIbcTransferRequest) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners indicates that the message must have been signed by the address provided.
+func (msg MsgIbcTransferRequest) GetSigners() []sdk.AccAddress {
 	adminAddr, err := sdk.AccAddressFromBech32(msg.Administrator)
 	if err != nil {
 		panic(err)
