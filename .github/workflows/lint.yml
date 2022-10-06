@@ -34,4 +34,4 @@ jobs:
           github-token: ${{ secrets.github_token }}
       - name: No Now Usage
         if: env.GIT_DIFF
-        run: scripts/no-now-lint.sh
+        run: scripts/no-now-lint.sh -v
