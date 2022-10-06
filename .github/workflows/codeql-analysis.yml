@@ -12,11 +12,13 @@
 name: "CodeQL"
 
 on:
-  push:
-    branches: [ main, release/* ]
   pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ main, release/* ]
+  push:
+    branches:
+      - main
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+" # Push events to matching v*, i.e. v1.0, v20.15.10
+      - "v[0-9]+.[0-9]+.[0-9]+-rc*" # Push events to matching v*, i.e. v1.0-rc1, v20.15.10-rc5
   schedule:
     # Wednesdays at 21:23 (randomly chosen).
     - cron: '23 21 * * 3'
