@@ -30,7 +30,7 @@ time_imports="$( \
              -e 's/^\.\///' \
     | sort
 )"
-[ -n "$VERBOSE" ] && printf 'Time imports:\n%s\n\n' "$time_imports"
+[ -n "$VERBOSE" ] && printf 'Time imports:\n%s\n\n' "$( sed 's/^/  /' <<< "$time_imports" )"
 
 # Find all uses of a time.Now() function.
 # Loop through each line of time imports.
@@ -54,7 +54,7 @@ now_uses="$( \
         fi
     done <<< "$time_imports"
 )"
-[ -n "$VERBOSE" ] && printf 'Uses of time.Now():\n%s\n\n' "$now_uses"
+[ -n "$VERBOSE" ] && printf 'All uses of time.Now():\n%s\n\n' "$( sed 's/^/  /' <<< "$now_uses" )"
 
 # Ignore known legitimate uses of time.Now().
 # These are controlled in this script rather than through a nolint directive because:
