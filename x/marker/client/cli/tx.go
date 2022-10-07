@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -21,6 +22,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
+	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	channelutils "github.com/cosmos/ibc-go/v5/modules/core/04-channel/client/utils"
+
 	"github.com/spf13/cobra"
 )
 
@@ -34,6 +38,9 @@ const (
 	FlagPeriodLimit            = "period-limit"
 	FlagSpendLimit             = "spend-limit"
 	FlagAllowedMsgs            = "allowed-messages"
+	FlagPacketTimeoutHeight    = "packet-timeout-height"
+	FlagPacketTimeoutTimestamp = "packet-timeout-timestamp"
+	FlagAbsoluteTimeouts       = "absolute-timeouts"
 )
 
 // NewTxCmd returns the top-level command for marker CLI transactions.
@@ -61,6 +68,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdGrantAuthorization(),
 		GetCmdRevokeAuthorization(),
 		GetCmdFeeGrant(),
+		GetIbcTransferTxCmd(),
 	)
 	return txCmd
 }
@@ -527,6 +535,104 @@ func GetNewTransferCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetIbcTransferTxCmd returns the command to create a GetIbcTransferTxCmd transaction
+func GetIbcTransferTxCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "transfer [src-port] [src-channel] [from] [receiver] [amount]",
+		Short: "Transfer a fungible token through IBC",
+		Long: strings.TrimSpace(`Transfer a fungible token through IBC. Timeouts can be specified
+as absolute or relative using the "absolute-timeouts" flag. Timeout height can be set by passing in the height string
+in the form {revision}-{height} using the "packet-timeout-height" flag. Relative timeout height is added to the block
+height queried from the latest consensus state corresponding to the counterparty channel. Relative timeout timestamp 
+is added to the greater value of the local clock time and the block timestamp queried from the latest consensus state 
+corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
+		Example: fmt.Sprintf("%s tx ibc-transfer transfer [src-port] [src-channel] [from] [receiver] [amount]", version.AppName),
+		Args:    cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			sourcePort := args[0]
+			sourceChannel := args[1]
+			sender := args[2]
+			receiver := args[3]
+
+			token, err := sdk.ParseCoinNormalized(args[4])
+			if err != nil {
+				return err
+			}
+
+			timeoutHeightStr, err := cmd.Flags().GetString(FlagPacketTimeoutHeight)
+			if err != nil {
+				return err
+			}
+			timeoutHeight, err := clienttypes.ParseHeight(timeoutHeightStr)
+			if err != nil {
+				return err
+			}
+
+			timeoutTimestamp, err := cmd.Flags().GetUint64(FlagPacketTimeoutTimestamp)
+			if err != nil {
+				return err
+			}
+
+			absoluteTimeouts, err := cmd.Flags().GetBool(FlagAbsoluteTimeouts)
+			if err != nil {
+				return err
+			}
+
+			// if the timeouts are not absolute, retrieve latest block height and block timestamp
+			// for the consensus state connected to the destination port/channel
+			if !absoluteTimeouts {
+				consensusState, height, _, err := channelutils.QueryLatestConsensusState(clientCtx, sourcePort, sourceChannel)
+				if err != nil {
+					return err
+				}
+
+				if !timeoutHeight.IsZero() {
+					absoluteHeight := height
+					absoluteHeight.RevisionNumber += timeoutHeight.RevisionNumber
+					absoluteHeight.RevisionHeight += timeoutHeight.RevisionHeight
+					timeoutHeight = absoluteHeight
+				}
+
+				if timeoutTimestamp != 0 {
+					// use local clock time as reference time if it is later than the
+					// consensus state timestamp of the counter party chain, otherwise
+					// still use consensus state timestamp as reference
+					now := time.Now().UnixNano()
+					consensusStateTimestamp := consensusState.GetTimestamp()
+					if now > 0 {
+						now := uint64(now)
+						if now > consensusStateTimestamp {
+							timeoutTimestamp = now + timeoutTimestamp
+						} else {
+							timeoutTimestamp = consensusStateTimestamp + timeoutTimestamp
+						}
+					} else {
+						return errors.New("local clock time is not greater than Jan 1st, 1970 12:00 AM")
+					}
+				}
+			}
+			msg := types.NewIbcMsgTransferRequest(
+				clientCtx.GetFromAddress().String(),
+				sourcePort, sourceChannel,
+				token, sender, receiver,
+				timeoutHeight, timeoutTimestamp,
+			)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(FlagPacketTimeoutHeight, "0-1000", "Packet timeout block height. The timeout is disabled when set to 0-0.")
+	cmd.Flags().Uint64(FlagPacketTimeoutTimestamp, uint64((time.Duration(10) * time.Minute).Nanoseconds()), "Packet timeout timestamp in nanoseconds from now. Default is 10 minutes. The timeout is disabled when set to 0.")
+	cmd.Flags().Bool(FlagAbsoluteTimeouts, false, "Timeout flags are used as absolute timeouts.")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
