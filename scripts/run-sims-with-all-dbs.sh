@@ -6,6 +6,25 @@ SIMS="${SIMS:-simple import-export multi-seed-short nondeterminism}"
 DB_TYPES="${DB_TYPES:-goleveldb cleveldb rocksdb badgerdb}"
 OUTPUT_DIR="${OUTPUT_DIR:-build/sim-times}"
 
+if [[ "$#" -ne '0' ]]; then
+    cat << EOF
+This script will run multiple sim tests each using multiple DB backends.
+It will time each run, recording them all in a single file.
+
+Script paramaters can be defined using the following environment variables:
+  SIMS - The different sim test make targets to run.
+         Multiple entries should be delimited with a space.
+         If an entry doesn't start with test-sim-, test-sim- will be added to it.
+         Default: '$SIMS'
+  DB_TYPES - The different db types to use.
+             Multiple entries should be delimited with a space.
+             Default: '$DB_TYPES'
+  OUTPUT_DIR - The directory to hold the results.
+               Default: '$OUTPUT_DIR'
+EOF
+    exit 1
+fi
+
 run_sims_with_all_dbs () {
     local sim db_type time_file rv
     time_file="$OUTPUT_DIR/sim-times.log"
@@ -54,7 +73,7 @@ fi
 cd "$CURDIR"
 cd ..
 printf 'Running make commands from directory %s\n\n' "$( pwd )"
-run_sims_with_all_dbs $@
+run_sims_with_all_dbs
 RV=$?
 
 if [[ "$RV" -ne '0' ]]; then
