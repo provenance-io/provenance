@@ -438,7 +438,7 @@ func New(
 	)
 
 	app.MarkerKeeper = markerkeeper.NewKeeper(
-		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper, keys[banktypes.StoreKey],
+		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper, app.TransferKeeper, keys[banktypes.StoreKey],
 	)
 
 	app.NameKeeper = namekeeper.NewKeeper(

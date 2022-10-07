@@ -9,6 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	ibckeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
+	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -699,12 +702,18 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 
 // IbcTransferCoin transfers restricted coins between to chains when the administrator account holds the transfer
 // access right and the marker type is restricted_coin
-func (k Keeper) IbcTransferCoin(ctx sdk.Context, from, admin sdk.AccAddress, amount sdk.Coin) error {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "transfer_coin")
-
-	m, err := k.GetMarkerByDenom(ctx, amount.Denom)
+func (k Keeper) IbcTransferCoin(
+	ctx sdk.Context,
+	sourcePort, sourceChannel string,
+	token sdk.Coin,
+	sender, admin sdk.AccAddress,
+	receiver string,
+	timeoutHeight clienttypes.Height,
+	timeoutTimestamp uint64,
+	checkRestrictionsHandler ibckeeper.CheckRestrictionsHandler) error {
+	m, err := k.GetMarkerByDenom(ctx, token.Denom)
 	if err != nil {
-		return fmt.Errorf("marker not found for %s: %w", amount.Denom, err)
+		return fmt.Errorf("marker not found for %s: %w", token.Denom, err)
 	}
 	if m.GetMarkerType() != types.MarkerType_RestrictedCoin {
 		return fmt.Errorf("marker type is not restricted_coin, brokered transfer not supported")
@@ -712,26 +721,33 @@ func (k Keeper) IbcTransferCoin(ctx sdk.Context, from, admin sdk.AccAddress, amo
 	if !m.AddressHasAccess(admin, types.Access_Transfer) {
 		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
 	}
-	if !admin.Equals(from) {
-		err = k.authzHandler(ctx, admin, from, amount)
+	if !admin.Equals(sender) {
+		err = k.authzHandler(ctx, admin, sender, token)
 		if err != nil {
 			return err
 		}
 	}
-	// if k.bankKeeper.BlockedAddr(to) {
-	// 	return fmt.Errorf("%s is not allowed to receive funds", to)
-	// }
 
-	// // send the coins between accounts (does not check send_enabled on coin denom)
-	// if err = k.bankKeeper.SendCoins(ctx, from, to, sdk.NewCoins(amount)); err != nil {
-	// 	return err
-	// }
+	err = k.ibcKeeper.SendTransfer(
+		ctx,
+		sourcePort,
+		sourceChannel,
+		token,
+		sender,
+		receiver,
+		timeoutHeight,
+		timeoutTimestamp,
+		checkRestrictionsHandler,
+	)
+	if err != nil {
+		return err
+	}
 
 	markerIbcTransferEvent := types.NewEventMarkerIbcTransfer(
-		amount.Amount.String(),
-		amount.Denom,
+		token.Amount.String(),
+		token.Denom,
 		admin.String(),
-		from.String(),
+		sender.String(),
 	)
 	if err := ctx.EventManager().EmitTypedEvent(markerIbcTransferEvent); err != nil {
 		return err

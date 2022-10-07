@@ -462,7 +462,7 @@ func (k msgServer) IbcTransfer(goCtx context.Context, msg *types.MsgIbcTransferR
 		return nil, err
 	}
 
-	err = k.IbcTransferCoin(ctx, from, admin, msg.Transfer.Token)
+	err = k.IbcTransferCoin(ctx, msg.Transfer.SourcePort, msg.Transfer.SourceChannel, msg.Transfer.Token, from, admin, msg.Transfer.Receiver, msg.Transfer.TimeoutHeight, msg.Transfer.TimeoutTimestamp, nil)
 	if err != nil {
 		return nil, err
 	}
