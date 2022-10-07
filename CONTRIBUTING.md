@@ -1,4 +1,4 @@
-# Preface 
+# Preface
 
 The Provenance repository is built on the work of many open source projects including
 the [Cosmos SDK]](https://github.com/cosmos/cosmos-sdk).  The source code outside of the `/x/`
@@ -9,22 +9,26 @@ This project would not be possible without the dedication and support of the [Co
 
 # Contributing
 
-- [Preface](#preface)
-- [Contributing](#contributing)
-  - [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
+<!-- TOC 2 4 -->
   - [Pull Requests](#pull-requests)
+    - [PR Requirements](#pr-requirements)
     - [Process for reviewing PRs](#process-for-reviewing-prs)
-    - [Updating Documentation](#updating-documentation)
   - [Forking](#forking)
   - [Dependencies](#dependencies)
   - [Protobuf](#protobuf)
   - [Testing](#testing)
-  - [Branching Model and Release](#branching-model-and-release)
+  - [Branching Model](#branching-model)
+    - [Branches and Tags](#branches-and-tags)
+    - [Development Branch naming](#development-branch-naming)
     - [PR Targeting](#pr-targeting)
     - [Development Procedure](#development-procedure)
-    - [Pull Merge Procedure](#pull-merge-procedure)
-    - [Release Procedure](#release-procedure)
-    - [Point Release Procedure](#point-release-procedure)
+  - [Release Procedure](#release-procedure)
+    - [Creating a Release](#creating-a-release)
+      - [1. Create a .x Branch if Needed](#1-create-a-x-branch-if-needed)
+      - [2. Update Changelog and Release Notes](#2-update-changelog-and-release-notes)
+      - [3. Create the New Version Tag](#3-create-the-new-version-tag)
+      - [4. PR the .x Branch Back to Main](#4-pr-the-x-branch-back-to-main)
+
 
 Thank you for considering making contributions to the Provenance!
 
@@ -44,7 +48,7 @@ contributors, the general procedure for contributing has been established:
       to begin work
    4. Follow standard Github best practices: fork the repo, branch from the
       HEAD of `main`, make some commits, and submit a PR to `main`
-      - For core developers working within the cosmos-sdk repo, to ensure a clear
+      - For core developers working on `provenance-io`, to ensure a clear
         ownership of branches, branches must be named with the convention
         `{moniker}/{issue#}-branch-name`
    5. Be sure to submit the PR in `Draft` mode submit your PR early, even if
@@ -72,22 +76,34 @@ Other notes:
   A convenience git `pre-commit` hook that runs the formatters automatically
   before each commit is available in the `contrib/githooks/` directory.
 
-## Architecture Decision Records (ADR)
-
-When proposing an architecture decision for the SDK, please create an [ADR](./docs/architecture/README.md)
-so further discussions can be made. We are following this process so all involved parties are in
-agreement before any party begins coding the proposed implementation. If you would like to see some examples
-of how these are written refer to [Tendermint ADRs](https://github.com/tendermint/tendermint/tree/main/docs/architecture)
-
 ## Pull Requests
 
 To accommodate review process we suggest that PRs are categorically broken up.
 Ideally each PR addresses only a single issue. Additionally, as much as possible
 code refactoring and cleanup should be submitted as a separate PRs from bugfixes/feature-additions.
 
+Draft PRs can be used for preliminary feedback and to see the results of the Github action checks.
+They can also be used to better indicate that you are working on an issue.
+
+### PR Requirements
+
+Before a PR can be merged:
+- All commits must be signed.
+- It must be up-to-date with `main`.
+- It must be approved by two or more maintainers.
+- It must must pass all required Github action checks.
+
+The following are encouraged and may sometimes be required:
+- All Github action checks pass (even the non-required ones).
+- New Unit and/or integration tests have been written.
+- Documentation has been updated (in `/docs` or `x/<module>/spec`).
+- Functions and variables have accurate `godoc` comments.
+- Test code coverage increases.
+- Running `go mod tidy` should not cause `go.mod` or `go.sum` to change.
+
 ### Process for reviewing PRs
 
-All PRs require two Reviews before merge (except docs changes, or variable name-changes which only require one). When reviewing PRs please use the following review explanations:
+When reviewing PRs please use the following review explanations:
 
 - `LGTM` without an explicit approval means that the changes look good, but you haven't pulled down the code, run tests locally and thoroughly reviewed it.
 - `Approval` through the GH UI means that you understand the code, documentation/spec is updated in the right places, you have pulled down and tested the code locally. In addition:
@@ -99,12 +115,6 @@ All PRs require two Reviews before merge (except docs changes, or variable name-
   - if you approve of the PR, you are responsible for fixing any of the issues mentioned here and more
 - If you sat down with the PR submitter and did a pairing review please note that in the `Approval`, or your PR comments.
 - If you are only making "surface level" reviews, submit any notes as `Comments` without adding a review.
-
-### Updating Documentation
-
-If you open a PR on Provenance, it is mandatory to update the relevant documentation in /docs.
-
-- If your changes relate to a module, please update the module's spec in `x/moduleName/docs/spec/`.
 
 ## Forking
 
@@ -121,8 +131,8 @@ For instance, to create a fork and work on a branch of it, I would:
 - `git remote rename origin upstream`
 - `git remote add origin git@github.com:rigeyrigerige/provenance.git`
 
-Now `origin` refers to my fork and `upstream` refers to the Cosmos-SDK version.
-So I can `git push -u origin main` to update my fork, and make pull requests to Cosmos-SDK from there.
+Now `origin` refers to my fork and `upstream` refers to the `provenance-io` version.
+So I can `git push -u origin main` to update my fork, and make pull requests to `provenance-io` from there.
 Of course, replace `rigeyrigerige` with your git handle.
 
 To pull in updates from the origin repo, run
@@ -130,19 +140,15 @@ To pull in updates from the origin repo, run
 - `git fetch upstream`
 - `git rebase upstream/main` (or whatever branch you want)
 
-Please don't make Pull Requests from `main`.
+Please don't make Pull Requests from a `main` branch.
 
 ## Dependencies
 
-We use [Go 1.14 Modules](https://github.com/golang/go/wiki/Modules) to manage
+We use [Go Modules](https://github.com/golang/go/wiki/Modules) to manage
 dependency versions.
 
-The main branch of every Cosmos repository should just build with `go get`,
-which means they should be kept up-to-date with their dependencies, so we can
-get away with telling people they can just `go get` our software.
-
-Since some dependencies are not under our control, a third party may break our
-build, in which case we can fall back on `go mod tidy -v`.
+Since most dependencies are not under our control, a third party may break our
+build, in which case we can fall back on `go mod tidy`.
 
 ## Protobuf
 
@@ -150,7 +156,7 @@ We use [Protocol Buffers](https://developers.google.com/protocol-buffers) along 
 
 For determinstic behavior around Protobuf tooling, everything is containerized using Docker. Make sure to have Docker installed on your machine, or head to [Docker's website](https://docs.docker.com/get-docker/) to install it.
 
-For updating the `third_party` `.proto` files, you can run `make proto-update-deps` command. 
+For updating the `third_party` `.proto` files, you can run `make proto-update-deps` command.
 
 For formatting code in `.proto` files, you can run `make proto-format` command.
 
@@ -200,96 +206,179 @@ for tcIndex, tc := range cases {
 				"First 32 bytes of the txs differed. tc #%d, i #%d", tcIndex, i)
 ```
 
-## Branching Model and Release
+## Branching Model
 
-User-facing repos should adhere to the trunk based development branching model: https://trunkbaseddevelopment.com/.
+Provenance uses the [trunk-based development branching model](https://trunkbaseddevelopment.com/) and [semantic versioning](https://semver.org/) (`<major>.<minor>.<patch>`).
 
-Libraries need not follow the model strictly, but would be wise to.
+- The `major` version represents the version of the entire network. It will likely only change as part of a fork.
+- The `minor` version represents the features available. Changing to a new `minor` version involves an upgrade governance proposal.
+- The `patch` version represents features or fixes that can be added without affecting state.
+- Release candidates include `-rc#` at the end where the numbering starts at 1 (e.g. `-rc1`). Release candidates may not be state compatible with their predecessors.
 
-The SDK utilizes [semantic versioning](https://semver.org/).
+### Branches and Tags
+
+Provenance uses the `main` branch for new features and fixes.
+It is not guaranteed that `main` will be compatible with the current Provenance blockchain networks.
+
+A `.x` releases branch is made for each minor version. E.g. `release/v1.12.x`.
+A tag is created for each release. E.g. `v1.12.0`.
+To get a specific version, check it out by tag. E.g. `git checkout v1.12.0 -b tag-v1.12.0`.
+
+Some older repos still use `master` instead of `main` but the two are treated the same way.
+
+The `main` branch and all `release/*` branches are protected and can only be updated via PR.
+Branch protection might not be set up in all repos, but those branches should always be treated as if they were protected.
+
+- The latest state of development is on `main`.
+- Using `--force` onto a protected branch is not allowed (except when reverting a broken commit, which should seldom happen).
+- Protected branches must not fail `make test test-race`.
+- Protected branches must not fail `make lint`.
+- Protected branches should not fail any Github action checks.
+
+### Development Branch naming
+
+- In a main repo (e.g. [provenance](https://github.com/provenance-io/provenance)), the preferred branch name format is `<user>/<issue #>-<short description>`.
+- In forked repos under the `provenance-io` organization (e.g. [provenance-io/cosmos-sdk](https://github.com/provenance-io/cosmos-sdk)), the preferred branch name format is `prov/<user>/<issue #>-<short description>`.
 
 ### PR Targeting
 
-Ensure that you base and target your PR on the `main` branch.
-
-All feature additions should be targeted against `main`. Bug fixes for an outstanding release candidate
-should be targeted against the release candidate branch. Release candidate branches themselves should be the
-only pull requests targeted directly against main.
+All feature additions and bug fixes target `main`.
+If a feature of fix is needed in a release branch, it should first be PRed to `main` then be cherry picked and PRed to the release branch.
 
 ### Development Procedure
 
-- the latest state of development is on `main`
-- `main` must never fail `make test test-race`
-- `main` should not fail `make lint`
-- no `--force` onto `main` (except when reverting a broken commit, which should seldom happen)
-- create a development branch either on github.com/provenance-io/provenance, or your fork (using `git remote add origin`)
-- before submitting a pull request, begin `git rebase` on top of `main`
+1. Assign the issue to yourself and mark it as "In Progress" in any projects the issue is assigned to.
+2. Checkout `main` and make sure it's up-to-date. E.g. `git checkout main && git pull`.
+3. Create a development branch for your work using the development branch name format defined above. E.g. `git checkout -b myuser/123-add-foo-feature`.
+4. Make changes and commit them. The suggested commit message format is `[issue #]: <message>`. E.g. `git commit -m "[123]: Update changelog."`.
+5. Push up your changes.
+6. Make a PR (possibly as a draft).
+7. Repeat steps 4 and 5 as needed.
+8. Mark your PR as "Ready to Review" (unless it's already that way).
+9. Once the PR is ready (approved and all checks pass), it should be merged using the "Squash and Merge" strategy.
 
-### Pull Merge Procedure
+## Release Procedure
 
-- ensure pull branch is rebased on `main`
-- run `make test` to ensure that all tests pass
-- merge pull request
+Definitions:
+- A "major release" is one where the 1st number in the version string is increased.
+  It usually has minor and patch versions of `0`, but in some cases might not.
+- A "minor release" is one where the 2nd number in the version string is increased.
+  It usually has a patch version of `0`, but might not.
+- A "patch release" is one where the 3rd number in the version string is increased.
+- A "release candidate" is one that has `-rc#` at the end of the version string. These are usually not used for patch releases, but can be.
+- A "full release" is a release that isn't a release candidate.
+- A "`.x` branch" is a git branch with the format `release/v#.#.x`.
+- The primary Provenance Blockchain network is "`mainnet`".
+- The Provenance Blockchain network used for testing and integration is "`testnet`".
 
-### Release Procedure
+Git tags should only be used for releases.
+A release is automatically created by Github when a tag is pushed that has the format `v#.#.#` (where `#` is a whole number of any length).
+A release candidate is created if the tag has the format `v#.#.#-rc#`.
 
-- Start on `main`
-- Create the release candidate branch `rc/v*` (going forward known as **RC**)
-  and ensure it's protected against pushing from anyone except the release
-  manager/coordinator
-  - **no PRs targeting this branch should be merged unless exceptional circumstances arise**
-- On the `RC` branch, prepare a new version section in the `CHANGELOG.md`
-  - All links must be link-ified: `$ python ./scripts/linkify.py CHANGELOG.md`
-  - Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on github.
-- Kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks)
-- If errors are found during the simulation testing, commit the fixes to `main`
-  and create a new `RC` branch (making sure to increment the `rcN`)
-- After simulation has successfully completed, create the release branch
-  (`release/vX.XX.X`) from the `RC` branch
-- Create a PR to `main` to incorporate the `CHANGELOG.md` updates
-- Tag the release (use `git tag -a`) and create a release in Github
-- Delete the `RC` branches
+As of `v1.13.0`, release tags are created on the `.x` branches. E.g. on `release/v1.13.x`.
+Prior to `v1.13.0`, release tags were created on branches containing the full version string. E.g. `release/v1.12.0`.
 
-### Point Release Procedure
+For releases of forked repos (e.g. [provenance-io/cosmos-sdk](https://github.com/provenance-io/cosmos-sdk)),
+the version should have the format `<upstream version>-pio-#`
+where `<upstream version>` is the version from the upstream repo that our version is based on.
+The `-pio-#` numbering should start at `1` and should restart when the `<upstream version>` changes.
 
-At the moment, only a single major release will be supported, so all point releases will be based
-off of that release.
+The release cycle generally follows this pattern:
+1. Create a new release candidate.
+2. Test it locally. Go back to step 1 if issues are found.
+3. Upgrade `testnet` to the release candidate.
+4. Test using `testnet`. Go back to step 1 if issues are found.
+5. Create the full release.
+6. Upgrade `mainnet` to the full release.
+7. Release patch versions as needed.
 
-In order to alleviate the burden for a single person to have to cherry-pick and handle merge conflicts
-of all desired backporting PRs to a point release, we instead maintain a living backport branch, where
-all desired features and bug fixes are merged into as separate PRs.
+In some cases, a release candidate is not created before creating a full version.
+Either way, `testnet` will be upgraded to the new version before `mainnet`.
+For patch version releases, no upgrades are required or preformed.
 
-Example:
+Once `mainnet` has upgraded off of a version, that version is no longer supported.
 
-Current release is `v0.1.0`. We then maintain a (living) branch `sru/release/v0.1.N`, given N as
-the next patch release number (currently `0.1.1`) for the `0.1` release series. As bugs are fixed
-and PRs are merged into `main`, if a contributor wishes the PR to be released as SRU into the
-`v0.1.N` point release, the contributor must:
+### Creating a Release
 
-1. Add `0.1.N-backport` label
-2. Pull latest changes on the desired `sru/release/vX.X.N` branch
-3. Create a 2nd PR merging the respective SRU PR into `sru/release/v0.38.N`
-4. Update the PR's description and ensure it contains the following information:
-   - **[Impact]** Explanation of how the bug affects users or developers.
-   - **[Test Case]** section with detailed instructions on how to reproduce the bug.
-   - **[Regression Potential]** section with a discussion how regressions are most likely to manifest, or might
-     manifest even if it's unlikely, as a result of the change. **It is assumed that any SRU candidate PR is
-     well-tested before it is merged in and has an overall low risk of regression**.
+Summary:
+1. Create a `.x` branch if needed.
+2. Update changelog and release notes on the `.x` branch.
+3. Create the new version tag.
+4. PR the `.x` branch back to `main`.
 
-It is the PR's author's responsibility to fix merge conflicts, update changelog entries, and
-ensure CI passes. If a PR originates from an external contributor, it may be a core team member's
-responsibility to perform this process instead of the original author.
-Lastly, it is core team's responsibility to ensure that the PR meets all the SRU criteria.
+#### 1. Create a .x Branch if Needed
 
-Finally, when a point release is ready to be made:
+If a `.x` branch does not yet exist for the desired minor version, create one now:
+1. Start on `main` and make sure you're up-to-date, e.g. `git checkout main && git pull`.
+2. Create the new `.x` branch, e.g. `git checkout -b release/v1.13.x`.
+3. Push it to Github, e.g. `git push`.
 
-1. Create `release/v0.1.N` branch
-2. Ensure changelog entries are verified
-   1. Be sure changelog entries are added to `RELEASE_CHANGELOG.md`
-3. Add release version date to the changelog
-4. Push release branch along with the annotated tag: **git tag -a**
-5. Create a PR into `main` containing ONLY `CHANGELOG.md` updates
-   1. Do not push `RELEASE_CHANGELOG.md` to `main`
+#### 2. Update Changelog and Release Notes
 
-Note, although we aim to support only a single release at a time, the process stated above could be
-used for multiple previous versions.
+You will need to create a new development branch for this and PR it back to the `.x` branch.
+
+The `CHANGELOG.md` on the `.x` branch must be updated to reflect the new release.
+
+1. Run `make linkify`.
+2. Add a horizontal rule and version section heading, e.g.
+   ```plaintext
+   ---
+   
+   ## [v1.13.0](https://github.com/provenance-io/provenance/releases/tag/v1.13.0) - 2022-10-04
+   ```
+   This usually goes immediately under the `## Unreleased` heading to indicate that all unreleased things are now released.
+   There should be an empty line both above the `---` and below the new version header.
+3. If going from a release candidate to a full release, the release candidate entries should all be combined into one entry for the full release.
+4. Optionally add an extra paragraph or two with general new version information.
+   This should go below the newly added version heading but above any subheadings (e.g. `### Improvements`).
+5. Add a `### Full Commit History` section at the end of the new version section with links to diffs between versions. E.g.
+   ```plaintext
+   ### Full Commit History
+   
+   * https://github.com/provenance-io/provenance/compare/v1.12.0...v1.13.0
+   ```
+   Note that the three dot `...` diff is preferred over the two dot `..` one for these links.
+   For release candidates `2` and above, include links from both the previously released version and the previous release candidate.
+   This should be the last section before the `---` above the next version entry.
+
+Now, create/update the `RELEASE_CHANGELOG.md`.
+For release candidates above `2`, the existing `RELEASE_CHANGELOG.md` should be updated to include info on the new version at the top.
+For other releases, delete any existing `RELEASE_CHANGELOG.md` and start a new empty one.
+
+1. Copy the lines from `CHANGELOG.md` starting with the new version header and ending on the blank line before the hr above the next version entry.
+2. Paste them into the `RELEASE_CHANGELOG.md`.
+
+Push up your changes and PR them to the `.x` branch.
+
+#### 3. Create the New Version Tag
+
+Do the following locally.
+
+1. Navigate to your locally cloned repo.
+2. Make sure you've got up-to-date repo info. E.g. `git fetch`.
+3. Checkout the `.x` branch. E.g. `git checkout release/v1.13.x`.
+4. Make sure it's up-to-date. E.g. `git pull`.
+5. Create and sign the tag. E.g. `git tag -s v1.13.0 -m "Release v1.13.0"`
+6. Push the branch. E.g. `git push`.
+7. Push the tag. E.g. `git push origin v1.13.0`.
+
+You can then monitor the Github actions for the repo and also watch for the new release page to be created.
+
+#### 4. PR the .x Branch Back to Main
+
+This PR should update the `CHANGELOG.md` and contain any changes applied to the `.x` branch but not `main`.
+It should NOT contain the `RELEASE_CHANGELOG.md` file.
+
+Do the following locally.
+
+1. Navigate to your locally cloned repo.
+2. Check out the `main` branch. E.g. `git checkout main`.
+3. Make sure it's up-to-date. E.g. `git pull`.
+4. Check out the `.x` branch. E.g. `git checkout release/v1.13.x`.
+5. Make sure it's up-to-date. E.g. `git pull`.
+6. Create a new development branch. E.g. `git checkout -b myuser/v1.13.0-back-to-main`.
+7. Remove the `RELEASE_CHANGELOG.md` file.
+8. Merge `main` into your branch. E.g. `git merge main`.
+9. Make sure the `CHANGELOG.md` correctly indicates the contents of the new release still contains any still unreleased entries.
+10. Address any other conflicts that might exist.
+11. Create a PR from your branch to `main`.
