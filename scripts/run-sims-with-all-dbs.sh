@@ -2,9 +2,9 @@
 # This script will run some sim tests: simple, import-export, multi-seed-short, nondeterminism
 # using each of the db backends: goleveldb, cleveldb, rocksdb, badgerdb.
 
-SIMS="${SIMS:-simple import-export multi-seed-short nondeterminism}"
-DB_TYPES="${DB_TYPES:-goleveldb cleveldb rocksdb badgerdb}"
-OUTPUT_DIR="${OUTPUT_DIR:-build/sim-times}"
+default_sims='simple import-export multi-seed-short nondeterminism'
+default_db_types='goleveldb cleveldb rocksdb badgerdb'
+default_output_dir='build/sim-times'
 
 if [[ "$#" -ne '0' ]]; then
     cat << EOF
@@ -15,15 +15,21 @@ Script paramaters can be defined using the following environment variables:
   SIMS - The different sim test make targets to run.
          Multiple entries should be delimited with a space.
          If an entry doesn't start with test-sim-, test-sim- will be added to it.
-         Default: '$SIMS'
+         Default: '$default_sims'
   DB_TYPES - The different db types to use.
              Multiple entries should be delimited with a space.
-             Default: '$DB_TYPES'
+             Default: '$default_db_types'
   OUTPUT_DIR - The directory to hold the results.
-               Default: '$OUTPUT_DIR'
+               There will be a .log file for each test.
+               There will be a single additional sim-times.log file with the timing results.
+               Default: '$default_output_dir'
 EOF
     exit 1
 fi
+
+SIMS="${SIMS:-$default_sims}"
+DB_TYPES="${DB_TYPES:-$default_db_types}"
+OUTPUT_DIR="${OUTPUT_DIR:-$default_output_dir}"
 
 run_sims_with_all_dbs () {
     local sim db_type time_file rv
