@@ -540,6 +540,7 @@ func GetNewTransferCmd() *cobra.Command {
 	return cmd
 }
 
+// TODO: refactor usage comments to be provenance specific
 // GetIbcTransferTxCmd returns the command to create a GetIbcTransferTxCmd transaction
 func GetIbcTransferTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
