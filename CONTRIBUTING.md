@@ -242,8 +242,8 @@ Branch protection might not be set up in all repos, but those branches should al
 
 ### PR Targeting
 
-All feature additions and bug fixes target `main`.
-If a feature of fix is needed in a release branch, it should first be PRed to `main` then be cherry picked and PRed to the release branch.
+All changes should target `main`.
+If a change is needed in a release branch, it should first be PRed to `main` then be cherry-picked and re-PRed to the release branch.
 
 ### Development Procedure
 
@@ -308,7 +308,11 @@ Summary:
 
 #### 1. Create a .x Branch if Needed
 
-If a `.x` branch does not yet exist for the desired minor version, create one now:
+If a `.x` branch does not yet exist for the desired minor version, one must be created now.
+
+- In a main repo (e.g. [provenance](https://github.com/provenance-io/provenance)), the `.x` branch name format is `release/v#.#.x`.
+- In forked repos under the `provenance-io` organization (e.g. [provenance-io/cosmos-sdk](https://github.com/provenance-io/cosmos-sdk)), the `.x` branch name format is `release-pio/v#.#.x`.
+
 1. Start on `main` and make sure you're up-to-date, e.g. `git checkout main && git pull`.
 2. Create the new `.x` branch, e.g. `git checkout -b release/v1.13.x`.
 3. Push it to Github, e.g. `git push`.
@@ -342,8 +346,8 @@ The `CHANGELOG.md` on the `.x` branch must be updated to reflect the new release
    This should be the last section before the `---` above the next version entry.
 
 Now, create/update the `RELEASE_CHANGELOG.md`.
-For release candidates above `2`, the existing `RELEASE_CHANGELOG.md` should be updated to include info on the new version at the top.
-For other releases, delete any existing `RELEASE_CHANGELOG.md` and start a new empty one.
+For release candidates above `2`, the existing `RELEASE_CHANGELOG.md` should be updated to include info about the new version at the top.
+For full or `-rc1` releases, delete any existing `RELEASE_CHANGELOG.md` and start a new empty one.
 
 1. Copy the lines from `CHANGELOG.md` starting with the new version header and ending on the blank line before the hr above the next version entry.
 2. Paste them into the `RELEASE_CHANGELOG.md`.
@@ -356,29 +360,26 @@ Do the following locally.
 
 1. Navigate to your locally cloned repo.
 2. Make sure you've got up-to-date repo info. E.g. `git fetch`.
-3. Checkout the `.x` branch. E.g. `git checkout release/v1.13.x`.
-4. Make sure it's up-to-date. E.g. `git pull`.
-5. Create and sign the tag. E.g. `git tag -s v1.13.0 -m "Release v1.13.0"`
-6. Push the branch. E.g. `git push`.
-7. Push the tag. E.g. `git push origin v1.13.0`.
+3. Checkout the `.x` branch and make sure it's up-to-date. E.g. `git checkout release/v1.13.x && git pull`.
+4. Create and sign the tag. E.g. `git tag -s v1.13.0 -m "Release v1.13.0"`.
+5. Push the branch. E.g. `git push`.
+6. Push the tag. E.g. `git push origin v1.13.0`.
 
 You can then monitor the Github actions for the repo and also watch for the new release page to be created.
 
 #### 4. PR the .x Branch Back to Main
 
-This PR should update the `CHANGELOG.md` and contain any changes applied to the `.x` branch but not `main`.
+This PR should update the `CHANGELOG.md` and contain any changes applied to the `.x` branch but not yet in `main`.
 It should NOT contain the `RELEASE_CHANGELOG.md` file.
 
 Do the following locally.
 
 1. Navigate to your locally cloned repo.
-2. Check out the `main` branch. E.g. `git checkout main`.
-3. Make sure it's up-to-date. E.g. `git pull`.
-4. Check out the `.x` branch. E.g. `git checkout release/v1.13.x`.
-5. Make sure it's up-to-date. E.g. `git pull`.
-6. Create a new development branch. E.g. `git checkout -b myuser/v1.13.0-back-to-main`.
-7. Remove the `RELEASE_CHANGELOG.md` file.
-8. Merge `main` into your branch. E.g. `git merge main`.
-9. Make sure the `CHANGELOG.md` correctly indicates the contents of the new release still contains any still unreleased entries.
-10. Address any other conflicts that might exist.
-11. Create a PR from your branch to `main`.
+2. Check out the `main` branch and make sure it's up-to-date. E.g. `git checkout main && git pull`.
+3. Check out the `.x` branch and make sure it's up-to-date. E.g. `git checkout release/v1.13.x && git pull`.
+4. Create a new development branch. E.g. `git checkout -b myuser/v1.13.0-back-to-main`.
+5. Remove the `RELEASE_CHANGELOG.md` file.
+6. Update your branch with `main`. E.g. `git merge main`.
+7. Make sure the `CHANGELOG.md` correctly indicates the contents of the new release and still contains any unreleased entries.
+8. Address any other conflicts that might exist.
+9. Create a PR from your branch targeting `main`.
