@@ -56,17 +56,12 @@ jobs:
       # * Go binary directory
       # * Go module directory
       # * Go build cache (Linux)
-      # * Go build cache (Mac)
       go-cache-path: |
         ~/go/bin
         ~/go/pkg/mod
         ~/.cache/go-build
-        ~/Library/Caches/go-build
 
   build-linux:
-    # Note: Can't use a matrix to combine build-linux and build-mac because they'd both have the same job id and that would cause
-    #       problems below with the "needs" directive on the tests. Basically, as soon as the first one finished, the tests
-    #       would kick off for both OSes even though one might not be ready yet.
     needs: setup
     if: needs.setup.outputs.should-run
     runs-on: ubuntu-latest
@@ -128,72 +123,6 @@ jobs:
       - name: Provenanced version
         run: build/provenanced version --long
 
-  build-mac:
-    # Note: Can't use a matrix to combine build-linux and build-mac because they'd both have the same job id and that would cause
-    #       problems below with the "needs" directive on the tests. Basically, as soon as the first one finished, the tests
-    #       would kick off for both OSes even though one might not be ready yet.
-    needs: setup
-    if: needs.setup.outputs.should-run
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Output setup
-        run: |
-          echo "         go-version: [${{ needs.setup.outputs.go-version }}]"
-          echo "         should-run: [${{ needs.setup.outputs.should-run }}]"
-          echo "        file-prefix: [${{ needs.setup.outputs.file-prefix }}]"
-          echo "db-cache-key-suffix: [${{ needs.setup.outputs.db-cache-key-suffix }}]"
-          echo "      db-cache-path: [${{ needs.setup.outputs.db-cache-path }}]"
-          echo "go-cache-key-suffix: [${{ needs.setup.outputs.go-cache-key-suffix }}]"
-          echo "      go-cache-path: [${{ needs.setup.outputs.go-cache-path }}]"
-      - uses: actions/cache@v3
-        name: Load db cache
-        id: db-cache-setup
-        with:
-          key: ${{ runner.os }}-${{ needs.setup.outputs.db-cache-key-suffix }}
-          path: ${{ needs.setup.outputs.db-cache-path }}
-      - uses: actions/cache@v3
-        name: Load go cache
-        id: go-cache-setup
-        with:
-          key: ${{ runner.os }}-${{ needs.setup.outputs.go-cache-key-suffix }}
-          path: ${{ needs.setup.outputs.go-cache-path }}
-      - name: Setup build environment
-        run: |
-          brew install cmake sqlite3
-      - name: Build cleveldb
-        if: steps.db-cache-setup.outputs.cache-hit != 'true'
-        # As of 2022-06-13 (it was a Monday), the macos-latest runners do not have the nproc command.
-        # But have 3 cores according to https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
-        # The linux runners have nproc, so we don't need to set the _JOBS in that job.
-        run: |
-          export CLEVELDB_JOBS=3
-          export CLEVELDB_DO_BUILD='true'
-          export CLEVELDB_DO_INSTALL='false'
-          export CLEVELDB_DO_CLEANUP='false'
-          make cleveldb
-      - name: Install cleveldb
-        run: |
-          export CLEVELDB_DO_BUILD='false'
-          export CLEVELDB_DO_INSTALL='true'
-          export CLEVELDB_SUDO='true'
-          export CLEVELDB_DO_CLEANUP='false'
-          make cleveldb
-      - uses: actions/setup-go@v3
-        with:
-          go-version: ${{ needs.setup.outputs.go-version }}
-      - name: Display go version
-        run: go version
-      - name: Install runsim
-        if: steps.go-cache-setup.outputs.cache-hit != 'true'
-        run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
-      - name: Update provwasm contract
-        run: make download-smart-contracts
-      - name: Build provenanced
-        run: make build
-      - name: Provenanced version
-        run: build/provenanced version --long
-
   runsim:
     # These tests are the ones that use the runsim program (see sims.mk).
     needs: [setup, build-linux]
@@ -207,10 +136,6 @@ jobs:
         # TODO: Add the "after-import" test once it's fixed: https://github.com/provenance-io/provenance/issues/754
         test: ["import-export", "multi-seed-short", "after-import"]
         db-backend: ["goleveldb", "cleveldb"]
-        # Not putting "macos-latest" in this because:
-        #   a) They take longer than on ubuntu to begin with.
-        #   b) We're limited to 5 Mac runners at once so they get queued up, taking even longer to finish all of them.
-        #   c) Most of the devs use a mac, so it's less likely that a Mac-specific bug goes unnoticed without these tests.
         os: ["ubuntu-latest"]
     runs-on: ${{ matrix.os }}
     steps:
@@ -271,7 +196,7 @@ jobs:
 
   go-test-multi-db:
     # These are tests that use go test to run (see sims.mk), and that we want to test using different database backends.
-    needs: [setup, build-linux, build-mac]
+    needs: [setup, build-linux]
     if: needs.setup.outputs.should-run
     strategy:
       fail-fast: false
@@ -280,7 +205,7 @@ jobs:
         # The test-sim-benchmark is handy to have for each db type.
         test: ["simple", "benchmark"]
         db-backend: ["goleveldb", "cleveldb"]
-        os: ["ubuntu-latest", "macos-latest"]
+        os: ["ubuntu-latest"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
@@ -326,7 +251,7 @@ jobs:
 
   go-test-single-db:
     # These are tests that use go test to run (see sims.mk), and that we don't care about testing using different database backends.
-    needs: [setup, build-linux, build-mac]
+    needs: [setup, build-linux]
     if: needs.setup.outputs.should-run
     strategy:
       fail-fast: false
@@ -334,7 +259,7 @@ jobs:
         # The test-sim-nondeterminism test hard-codes the db backend to use memdb.
         # The test-sim-benchmark-invariants test can use different db backends, but to save resources, is down here.
         test: ["nondeterminism", "benchmark-invariants"]
-        os: ["ubuntu-latest", "macos-latest"]
+        os: ["ubuntu-latest"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
