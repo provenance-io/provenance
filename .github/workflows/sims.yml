@@ -130,10 +130,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The test-sim-import-export test can take up to two hours.
-        # The test-sim-after-import test can take even longer.
-        # The test-sim-multi-seed-short test should take 30-40 minutes.
-        # TODO: Add the "after-import" test once it's fixed: https://github.com/provenance-io/provenance/issues/754
         test: ["import-export", "multi-seed-short", "after-import"]
         db-backend: ["goleveldb"]
         os: ["ubuntu-latest"]
