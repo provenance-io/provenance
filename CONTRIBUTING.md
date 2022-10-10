@@ -187,24 +187,13 @@ We expect tests to use `require` or `assert` rather than `t.Skip` or `t.Fail`,
 unless there is a reason to do otherwise.
 When testing a function under a variety of different inputs, we prefer to use
 [table driven tests](https://github.com/golang/go/wiki/TableDrivenTests).
-Table driven test error messages should follow the following format
-`<desc>, tc #<index>, i #<index>`.
-`<desc>` is an optional short description of whats failing, `tc` is the
-index within the table of the testcase that is failing, and `i` is when there
-is a loop, exactly which iteration of the loop failed.
-The idea is you should be able to see the
-error message and figure out exactly what failed.
-Here is an example check:
+Always use a slice for the test table (never a map).
+When iterating over the test cases, `tc` as the variable that holds the current test, e.g. `for _, tc := range tests`.
+Each test case should be run as it's own sub-test, e.g. using `t.Run`.
 
-```go
-<some table>
-for tcIndex, tc := range cases {
-  <some code>
-  for i := 0; i < tc.numTxsToTest; i++ {
-      <some code>
-			require.Equal(t, expectedTx[:32], calculatedTx[:32],
-				"First 32 bytes of the txs differed. tc #%d, i #%d", tcIndex, i)
-```
+Messages should be provided for every `assert` and `require`.
+A message should reference the value being tested in the assert/require as opposed to the general purpose of the test as a whole.
+For example: `err := DoThing()`, good: `require.NoError(t, err, "DoThing")`, bad: `require.NoError(t, err, "should not fail")`.
 
 ## Branching Model
 
