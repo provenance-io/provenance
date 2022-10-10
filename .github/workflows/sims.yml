@@ -137,11 +137,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
-        name: Load db cache
-        with:
-          key: ${{ runner.os }}-${{ needs.setup.outputs.db-cache-key-suffix }}
-          path: ${{ needs.setup.outputs.db-cache-path }}
-      - uses: actions/cache@v3
         name: Load go cache
         with:
           key: ${{ runner.os }}-${{ needs.setup.outputs.go-cache-key-suffix }}
