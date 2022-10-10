@@ -135,7 +135,7 @@ jobs:
         # The test-sim-multi-seed-short test should take 30-40 minutes.
         # TODO: Add the "after-import" test once it's fixed: https://github.com/provenance-io/provenance/issues/754
         test: ["import-export", "multi-seed-short", "after-import"]
-        db-backend: ["goleveldb", "cleveldb"]
+        db-backend: ["goleveldb"]
         os: ["ubuntu-latest"]
     runs-on: ${{ matrix.os }}
     steps:
@@ -153,14 +153,6 @@ jobs:
       - name: Define test-logs
         id: test-logs
         run: echo "::set-output name=test-logs::${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
-      - name: Install cleveldb
-        if: matrix.db-backend == 'cleveldb'
-        run: |
-          export CLEVELDB_DO_BUILD='false'
-          export CLEVELDB_DO_INSTALL='true'
-          export CLEVELDB_SUDO='true'
-          export CLEVELDB_DO_CLEANUP='false'
-          make cleveldb
       - uses: actions/setup-go@v3
         with:
           go-version: ${{ needs.setup.outputs.go-version }}
