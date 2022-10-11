@@ -2122,7 +2122,7 @@ MsgGrantAllowanceResponse defines the Msg/GrantAllowanceResponse response type.
 <a name="provenance.marker.v1.MsgIbcTransferRequest"></a>
 
 ### MsgIbcTransferRequest
-MsgIbcTransferRequest defines the Msg/IbcTransfer request type
+MsgIbcTransferRequest defines the Msg/IbcTransfer request type for markers.
 
 
 | Field | Type | Label | Description |
@@ -2277,7 +2277,7 @@ Msg defines the Marker Msg service.
 | `Withdraw` | [MsgWithdrawRequest](#provenance.marker.v1.MsgWithdrawRequest) | [MsgWithdrawResponse](#provenance.marker.v1.MsgWithdrawResponse) | Withdraw | |
 | `AddMarker` | [MsgAddMarkerRequest](#provenance.marker.v1.MsgAddMarkerRequest) | [MsgAddMarkerResponse](#provenance.marker.v1.MsgAddMarkerResponse) | AddMarker | |
 | `Transfer` | [MsgTransferRequest](#provenance.marker.v1.MsgTransferRequest) | [MsgTransferResponse](#provenance.marker.v1.MsgTransferResponse) | Transfer marker denominated coin between accounts | |
-| `IbcTransfer` | [MsgIbcTransferRequest](#provenance.marker.v1.MsgIbcTransferRequest) | [MsgIbcTransferResponse](#provenance.marker.v1.MsgIbcTransferResponse) | IbcTransfer marker denominated coin between accounts | |
+| `IbcTransfer` | [MsgIbcTransferRequest](#provenance.marker.v1.MsgIbcTransferRequest) | [MsgIbcTransferResponse](#provenance.marker.v1.MsgIbcTransferResponse) | Transfer over ibc any marker(including restricted markers) between ibc accounts. The relayer is still needed to accomplish ibc middleware relays. | |
 | `SetDenomMetadata` | [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest) | [MsgSetDenomMetadataResponse](#provenance.marker.v1.MsgSetDenomMetadataResponse) | Allows Denom Metadata (see bank module) to be set for the Marker's Denom | |
 | `GrantAllowance` | [MsgGrantAllowanceRequest](#provenance.marker.v1.MsgGrantAllowanceRequest) | [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse) | GrantAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
 

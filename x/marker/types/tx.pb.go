@@ -1203,7 +1203,7 @@ func (m *MsgTransferResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgTransferResponse proto.InternalMessageInfo
 
-// MsgIbcTransferRequest defines the Msg/IbcTransfer request type
+// MsgIbcTransferRequest defines the Msg/IbcTransfer request type for markers.
 type MsgIbcTransferRequest struct {
 	Transfer      github_com_cosmos_ibc_go_v5_modules_apps_transfer_types.MsgTransfer `protobuf:"bytes,1,opt,name=transfer,proto3,customtype=github.com/cosmos/ibc-go/v5/modules/apps/transfer/types.MsgTransfer" json:"transfer"`
 	Administrator string                                                              `protobuf:"bytes,2,opt,name=administrator,proto3" json:"administrator,omitempty"`
@@ -1519,7 +1519,8 @@ type MsgClient interface {
 	AddMarker(ctx context.Context, in *MsgAddMarkerRequest, opts ...grpc.CallOption) (*MsgAddMarkerResponse, error)
 	// Transfer marker denominated coin between accounts
 	Transfer(ctx context.Context, in *MsgTransferRequest, opts ...grpc.CallOption) (*MsgTransferResponse, error)
-	// IbcTransfer marker denominated coin between accounts
+	// Transfer over ibc any marker(including restricted markers) between ibc accounts.
+	// The relayer is still needed to accomplish ibc middleware relays.
 	IbcTransfer(ctx context.Context, in *MsgIbcTransferRequest, opts ...grpc.CallOption) (*MsgIbcTransferResponse, error)
 	// Allows Denom Metadata (see bank module) to be set for the Marker's Denom
 	SetDenomMetadata(ctx context.Context, in *MsgSetDenomMetadataRequest, opts ...grpc.CallOption) (*MsgSetDenomMetadataResponse, error)
@@ -1686,7 +1687,8 @@ type MsgServer interface {
 	AddMarker(context.Context, *MsgAddMarkerRequest) (*MsgAddMarkerResponse, error)
 	// Transfer marker denominated coin between accounts
 	Transfer(context.Context, *MsgTransferRequest) (*MsgTransferResponse, error)
-	// IbcTransfer marker denominated coin between accounts
+	// Transfer over ibc any marker(including restricted markers) between ibc accounts.
+	// The relayer is still needed to accomplish ibc middleware relays.
 	IbcTransfer(context.Context, *MsgIbcTransferRequest) (*MsgIbcTransferResponse, error)
 	// Allows Denom Metadata (see bank module) to be set for the Marker's Denom
 	SetDenomMetadata(context.Context, *MsgSetDenomMetadataRequest) (*MsgSetDenomMetadataResponse, error)
