@@ -862,6 +862,26 @@ func (s *IntegrationTestSuite) TestMarkerIbcTransfer() {
 			amount:      "not-a-valid-coin-amount",
 			expectedErr: "invalid decimal coin expression: not-a-valid-coin-amount",
 		},
+		{
+			name:                    "should fail on invalid packet timeout height",
+			srcPort:                 "port",
+			srcChannel:              "channel",
+			sender:                  "sender",
+			receiver:                "receiver",
+			amount:                  "10jackthecat",
+			flagPacketTimeoutHeight: "invalidtimeoutheight",
+			expectedErr:             "expected height string format: {revision}-{height}. Got: invalidtimeoutheight: invalid height",
+		},
+		{
+			name:                 "should fail on parsing absolute timeouts boolean",
+			srcPort:              "port",
+			srcChannel:           "channel",
+			sender:               "sender",
+			receiver:             "receiver",
+			amount:               "10jackthecat",
+			flagAbsoluteTimeouts: "not-a-bool",
+			expectedErr:          `invalid argument "not-a-bool" for "--absolute-timeouts" flag: strconv.ParseBool: parsing "not-a-bool": invalid syntax`,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -880,6 +900,12 @@ func (s *IntegrationTestSuite) TestMarkerIbcTransfer() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			}...)
+			if len(tc.flagPacketTimeoutHeight) > 0 {
+				args = append(args, fmt.Sprintf("--%s=%s", markercli.FlagPacketTimeoutHeight, tc.flagPacketTimeoutHeight))
+			}
+			if len(tc.flagAbsoluteTimeouts) > 0 {
+				args = append(args, fmt.Sprintf("--%s=%s", markercli.FlagAbsoluteTimeouts, tc.flagAbsoluteTimeouts))
+			}
 			_, err := clitestutil.ExecTestCLICmd(clientCtx, markercli.GetIbcTransferTxCmd(), args)
 			if len(tc.expectedErr) > 0 {
 				s.Assert().EqualError(err, tc.expectedErr)
