@@ -840,6 +840,56 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestMarkerIbcTransfer() {
+	testCases := []struct {
+		name                       string
+		srcPort                    string
+		srcChannel                 string
+		sender                     string
+		receiver                   string
+		amount                     string
+		flagPacketTimeoutHeight    string
+		flagPacketTimeoutTimestamp string
+		flagAbsoluteTimeouts       string
+		expectedErr                string
+	}{
+		{
+			name:        "should fail on invalid coin",
+			srcPort:     "port",
+			srcChannel:  "channel",
+			sender:      "sender",
+			receiver:    "receiver",
+			amount:      "not-a-valid-coin-amount",
+			expectedErr: "invalid decimal coin expression: not-a-valid-coin-amount",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			args := []string{
+				tc.srcPort,
+				tc.srcChannel,
+				tc.sender,
+				tc.receiver,
+				tc.amount,
+			}
+			args = append(args, []string{fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			}...)
+			_, err := clitestutil.ExecTestCLICmd(clientCtx, markercli.GetIbcTransferTxCmd(), args)
+			if len(tc.expectedErr) > 0 {
+				s.Assert().EqualError(err, tc.expectedErr)
+			} else {
+				s.Assert().NoError(err, tc.name)
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 	testCases := []struct {
 		name         string
