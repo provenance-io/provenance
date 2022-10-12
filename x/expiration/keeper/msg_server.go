@@ -15,7 +15,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-// AddExpiration adds a new expiration records
+// AddExpiration adds a new expiration record.
 func (m msgServer) AddExpiration(
 	goCtx context.Context,
 	msg *types.MsgAddExpirationRequest,

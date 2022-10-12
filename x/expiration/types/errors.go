@@ -21,7 +21,6 @@ var (
 	ErrDurationValue       = cerrs.Register(ModuleName, 16, "invalid duration value")
 	ErrInsufficientDeposit = cerrs.Register(ModuleName, 17, "insufficient funds for expiration deposit")
 	ErrMsgHandler          = cerrs.Register(ModuleName, 18, "invalid message handler")
-	ErrGetExpiration       = cerrs.Register(ModuleName, 19, "failed get expiration")
 	ErrSetExpiration       = cerrs.Register(ModuleName, 20, "failed set expiration")
 	ErrResolveDepositor    = cerrs.Register(ModuleName, 21, "failed to resolve depositor")
 )

@@ -75,7 +75,7 @@ func (p *Params) Validate() error {
 func validateDepositParam(i interface{}) error {
 	coin, ok := i.(sdk.Coin)
 	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+		return fmt.Errorf("invalid coin: %T", i)
 	}
 
 	// validate appropriate Coin
