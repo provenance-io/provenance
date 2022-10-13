@@ -2,6 +2,22 @@
 
 The expiration module manages asset expirations.
 
+<!-- TOC -->
+  - [Assets](#assets)
+  - [Expiration Metadata](#expiration-metadata)
+    - [Module Asset ID](#module-asset-id)
+    - [Owner](#owner)
+    - [Expiration Time](#expiration-time)
+    - [Deposit](#deposit)
+    - [Message](#message)
+  - [Creating Expirations on Assets](#creating-expirations-on-assets)
+  - [Extending Expirations on Assets](#extending-expirations-on-assets)
+  - [Owner Enforced Expiration](#owner-enforced-expiration)
+  - [Externally Enforced Expiration](#externally-enforced-expiration)
+  - [Authz](#authz)
+
+
+---
 ## Assets
 
 When storing assets on-chain, there is an expense in terms of node memory and processing 

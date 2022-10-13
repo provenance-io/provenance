@@ -2,7 +2,6 @@
 
 In this section we describe the queries available for looking up expiration information.
 
----
 <!-- TOC -->
   - [Params](#params)
     - [Request](#request)
@@ -21,7 +20,7 @@ In this section we describe the queries available for looking up expiration info
     - [Response](#response)
 
 
-
+---
 ## Params
 
 The `Params` query gets the parameters of the expiration module.
