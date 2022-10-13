@@ -354,7 +354,7 @@ linkify:
 	python ./scripts/linkify.py CHANGELOG.md
 
 update-tocs:
-	scripts/update-toc.sh x docs
+	scripts/update-toc.sh x docs CONTRIBUTING.md
 
 # Download, compile, and install rocksdb so that it can be used when doing a build.
 rocksdb:
