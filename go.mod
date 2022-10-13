@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/math v1.0.0-beta.3
 	github.com/CosmWasm/wasmd v0.29.0
 	github.com/armon/go-metrics v0.4.1
-	github.com/btcsuite/btcd v0.22.1
+	github.com/btcsuite/btcd v0.22.2
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/cosmos/cosmos-sdk v0.46.2
 	github.com/cosmos/go-bip39 v1.0.0
@@ -30,7 +30,7 @@ require (
 	github.com/tendermint/tendermint v0.34.21
 	github.com/tendermint/tm-db v0.6.7
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
-	golang.org/x/text v0.3.7
+	golang.org/x/text v0.3.8
 	google.golang.org/genproto v0.0.0-20220815135757-37a418bb8959
 	google.golang.org/grpc v1.50.0
 	google.golang.org/protobuf v1.28.1
