@@ -51,7 +51,7 @@ The `Expiration` query retrieves an expiration.
 ---
 ## AllExpirations
 
-The `AllExpirations` query retrieves all all expirations.
+The `AllExpirations` query retrieves all expirations.
 
 This query is paginated.
 
