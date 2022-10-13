@@ -44,7 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * Bump wasmd to our v0.29.0-pio-1 (from v0.28.0-0.46sdk-notional) [PR 1148](https://github.com/provenance-io/provenance/pull/1148).
-  This fixes an erroneous attempt to migrate the wasd module.
+  This fixes an erroneous attempt to migrate the wasmd module.
 
 ---
 
