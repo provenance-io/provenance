@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Bug Fixes
+
+* Use the ICS23 module provided in Cosmos-SDK v0.45.9 to patch a vulnerability [PR 1157](https://github.com/provenance-io/provenance/pull/1157).
+
 ---
 
 ## [v1.12.0](https://github.com/provenance-io/provenance/releases/tag/v1.12.0) - 2022-08-22
