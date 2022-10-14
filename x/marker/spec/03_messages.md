@@ -16,6 +16,7 @@ All created/modified state objects specified by each message are defined within 
   - [Msg/BurnRequest](#msg-burnrequest)
   - [Msg/WithdrawRequest](#msg-withdrawrequest)
   - [Msg/TransferRequest](#msg-transferrequest)
+  - [Msg/IbcTransferRequest](#msg-ibctransferrequest)
   - [Msg/SetDenomMetadataRequest](#msg-setdenommetadatarequest)
 
 
@@ -242,6 +243,17 @@ This service message is expected to fail if:
 - The marker is not in a `Active` status or:
   - The given administrator address does not currently have the "transfer" access granted on the marker
   - The marker types is not `RESTRICTED_COIN`
+
+## Msg/IbcTransferRequest
+
+Ibc transfer Request defines the Msg/IbcTransfer request type.  A ibc transfer request is used to transfer coin between two
+chains via ibc for `RESTRICTED_COIN` type markers that have `send_enabled=false` configured with the `bank` module and thus
+can not be sent using a normal `send_coin` operation.  A transfer request requires a signature from an account with
+the transfer permission as well as approval from the account the funds will be withdrawn from.
+
++++ https://github.com/provenance-io/provenance/blob/80a02497023b22c7b0ee21c84e07315060bd0f8a/proto/provenance/marker/v1/tx.proto#L177-L183
+
++++ https://github.com/provenance-io/provenance/blob/80a02497023b22c7b0ee21c84e07315060bd0f8a/proto/provenance/marker/v1/tx.proto#L186
 
 ## Msg/SetDenomMetadataRequest
 
