@@ -42,7 +42,7 @@ The Provenance networks are based on work from the private [Figure Technologies]
 
 ## Quick Start
 
-The Provenance Blockchain is based on Cosmos, the [sdk introduction](https://github.com/cosmos/cosmos-sdk/blob/master/docs/intro/overview.md)
+The Provenance Blockchain is based on Cosmos, the [sdk introduction](https://github.com/cosmos/cosmos-sdk/blob/main/docs/docs/intro/00-overview.md)
 is a useful starting point.
 
 Developers can use a local checkout and the make targets `make run` and `make localnet-start` to run a local development network.

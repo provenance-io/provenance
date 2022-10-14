@@ -37,6 +37,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+
+* Updated name restrictions documentation [#808](https://github.com/provenance-io/provenance/issues/808)
+
+### Bug Fixes
+
+* Bump wasmd to our v0.29.0-pio-1 (from v0.28.0-0.46sdk-notional) [PR 1148](https://github.com/provenance-io/provenance/pull/1148).
+  This fixes an erroneous attempt to migrate the wasmd module.
+
 ---
 
 ## [v1.13.0](https://github.com/provenance-io/provenance/releases/tag/v1.13.0) - 2022-10-04
