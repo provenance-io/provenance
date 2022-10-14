@@ -7,7 +7,7 @@ All created/modified state objects specified by each message are defined within 
   - [Entries](#entries)
     - [Msg/AddExpirationRequest](#msg-addexpirationrequest)
     - [Msg/ExtendExpirationRequest](#msg-extendexpirationrequest)
-    - [Msg/ExtendInvokeRequest](#msg-extendinvokerequest)
+    - [Msg/InvokeExpirationRequest](#msg-invokeexpirationrequest)
   - [Authz Grants](#authz-grants)
 
 ---
@@ -58,7 +58,7 @@ This service is expected to fail if:
 * The `module_asset_id` is missing or invalid.
 * The `duration` is missing or is invalid.
 
-### Msg/ExtendInvokeRequest
+### Msg/InvokeExpirationRequest
 
 An expiration is invoked using the `InvokeExpiration` service method.
 
