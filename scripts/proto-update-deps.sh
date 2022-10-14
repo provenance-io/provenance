@@ -24,7 +24,7 @@ EXT_PROTO_DIR="$dest"/third_party
 echo "$EXT_PROTO_DIR"
 
 # Retrieve versions from go.mod (single source of truth)
-CONFIO_PROTO_URL=https://raw.githubusercontent.com/confio/ics23/go/$(go list -m github.com/confio/ics23/go | sed 's:.* ::')/proofs.proto
+CONFIO_PROTO_URL=https://raw.githubusercontent.com/confio/ics23/go/v0.7.0/proofs.proto
 GOGO_PROTO_URL=https://raw.githubusercontent.com/regen-network/protobuf/$(go list -m github.com/gogo/protobuf | sed 's:.* ::')/gogoproto/gogo.proto
 COSMOS_PROTO_URL=https://raw.githubusercontent.com/regen-network/cosmos-proto/master/cosmos.proto
 COSMWASM_TARBALL_URL=github.com/CosmWasm/wasmd/tarball/v0.17.0  # Backwards compatibility. Needed to serialize/deserialize older wasmd protos.
