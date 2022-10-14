@@ -133,7 +133,8 @@ func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadDefaults() {
 	ctx := client.GetClientContextFromCmd(dCmd)
 	vpr := ctx.Viper
 	s.Require().NotPanics(func() {
-		appConfig2 := serverconfig.GetConfig(vpr)
+		appConfig2, err := serverconfig.GetConfig(vpr)
+		s.Require().NoError(err, "GetConfig")
 		s.Assert().Equal(*appConfig, appConfig2)
 	})
 }
@@ -152,7 +153,8 @@ func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadGlobalLabels() {
 	ctx := client.GetClientContextFromCmd(dCmd)
 	vpr := ctx.Viper
 	s.Require().NotPanics(func() {
-		appConfig2 := serverconfig.GetConfig(vpr)
+		appConfig2, err := serverconfig.GetConfig(vpr)
+		s.Require().NoError(err, "GetConfig")
 		s.Assert().Equal(appConfig.Telemetry.GlobalLabels, appConfig2.Telemetry.GlobalLabels)
 	})
 }
