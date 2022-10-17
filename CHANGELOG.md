@@ -39,6 +39,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* Updated name restrictions documentation [#808](https://github.com/provenance-io/provenance/issues/808)
+
+### Bug Fixes
+
+* Bump wasmd to our v0.29.0-pio-1 (from v0.28.0-0.46sdk-notional) [PR 1148](https://github.com/provenance-io/provenance/pull/1148).
+  This fixes an erroneous attempt to migrate the wasmd module.
+
+---
+
+## [v1.13.0](https://github.com/provenance-io/provenance/releases/tag/v1.13.0) - 2022-10-04
+
+### Improvements
+
 * Ignore hardcoded tx gas limit when `consensus_params.block.max_gas` is set to -1 for local nodes
 * Bump Cosmos-SDK to v0.46.2-pio-1 (from v0.45.5-pio-1). [#995](https://github.com/provenance-io/provenance/issues/995)
   See https://github.com/provenance-io/cosmos-sdk/blob/v0.46.2-pio-1/RELEASE_NOTES.md for more info.
@@ -59,6 +72,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 *  [#1067](https://github.com/provenance-io/provenance/issues/1067) This feature makes it so that you can start the chain with custom denoms for a chain, by passing in the required flags, also makes MsgFee not coupled only to the nhash denom.
    For running the chain locally `make run DENOM=vspn MIN_FLOOR_PRICE=0` and `make clean localnet-start DENOM=vspn MIN_FLOOR_PRICE=0` make targets were also updated.
 * Use latest ProvWasm contract in wasm tests [#731](https://github.com/provenance-io/provenance/issues/731)
+* Update wasmd to 0.28 with 0.46 sdk version from notional-labs [#1015](https://github.com/provenance-io/provenance/issues/1015)
 
 ### Bug Fixes
 
@@ -68,6 +82,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Remove the custom/legacy rest endpoints from the `x/attribute`, `x/marker`, and `x/name` modules. [#995](https://github.com/provenance-io/provenance/issues/995)
 * Remove the state-listening/plugin system (and `librdkafka` dependencies). [#995](https://github.com/provenance-io/provenance/issues/995)
+
+---
+
+## [v1.12.1](https://github.com/provenance-io/provenance/releases/tag/v1.12.1) - 2022-10-14
+
+### Improvements
+
+* Bump Cosmos-SDK to v0.45.9-pio-1 (from v0.45.5-pio-1) [PR 1159](https://github.com/provenance-io/provenance/pull/1159).
+
+### Bug Fixes
+
+* Bump ics23/go to Cosmos-SDK's v0.8.0 (from confio's v0.7.0) [PR 1159](https://github.com/provenance-io/provenance/pull/1159).
 
 ---
 

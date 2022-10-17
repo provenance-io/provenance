@@ -282,7 +282,7 @@ build-release-libwasm: $(RELEASE_WASM)
 
 $(RELEASE_WASM): $(RELEASE_BIN)
 	go mod vendor && \
-	cp vendor/github.com/CosmWasm/wasmvm/api/$(LIBWASMVM) $(RELEASE_BIN)
+	cp vendor/github.com/CosmWasm/wasmvm/internal/api/$(LIBWASMVM) $(RELEASE_BIN)
 
 .PHONY: build-release-bin
 build-release-bin: $(RELEASE_PIO)
@@ -354,7 +354,7 @@ linkify:
 	python ./scripts/linkify.py CHANGELOG.md
 
 update-tocs:
-	scripts/update-toc.sh x docs
+	scripts/update-toc.sh x docs CONTRIBUTING.md
 
 # Download, compile, and install rocksdb so that it can be used when doing a build.
 rocksdb:
