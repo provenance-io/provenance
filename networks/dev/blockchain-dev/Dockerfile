@@ -1,6 +1,7 @@
 # This docker file builds a test image using binaries built locally.
-# Use `make docker-build-local` to build or `make localnet-start` to
-# start the test network and `make localnet-stop` to stop it.
+# Use `make docker-build-dev` to build or `make devnet-start` to
+# start the test network and `make devnet-stop` to stop it.
+
 FROM golang:1.18-bullseye as build-x86_64
 WORKDIR /go/src/github.com/provenance-io/provenance
 ENV GOPRIVATE=github.com/provenance-io
