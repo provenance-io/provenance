@@ -37,6 +37,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Bug Fixes
+
+* Fixed outdated devnet docker configurations [#1062](https://github.com/provenance-io/provenance/issues/1062)
+
+---
+
 ## [v1.13.0](https://github.com/provenance-io/provenance/releases/tag/v1.13.0) - 2022-10-04
 
 ### Improvements
