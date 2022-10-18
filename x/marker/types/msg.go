@@ -180,11 +180,7 @@ func (msg MsgAddAccessRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgAddAccessRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewDeleteAccessRequest
@@ -216,11 +212,7 @@ func (msg MsgDeleteAccessRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgDeleteAccessRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgFinalizeRequest
@@ -250,11 +242,7 @@ func (msg MsgFinalizeRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgFinalizeRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgActivateRequest
@@ -284,11 +272,7 @@ func (msg MsgActivateRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgActivateRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgCancelRequest
@@ -318,11 +302,7 @@ func (msg MsgCancelRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgCancelRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgDeleteRequest
@@ -352,11 +332,7 @@ func (msg MsgDeleteRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgDeleteRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgMintRequest creates a mint supply message
@@ -386,11 +362,7 @@ func (msg MsgMintRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgMintRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgBurnRequest creates a burn supply message
@@ -421,11 +393,7 @@ func (msg MsgBurnRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgBurnRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgWithdrawRequest
@@ -471,11 +439,7 @@ func (msg MsgWithdrawRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgWithdrawRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgTransferRequest
@@ -526,9 +490,13 @@ func (msg MsgTransferRequest) GetSigners() []sdk.AccAddress {
 // NewIbcMsgTransferRequest
 func NewIbcMsgTransferRequest(
 	administrator string,
-	sourcePort, sourceChannel string,
-	token sdk.Coin, sender, receiver string,
-	timeoutHeight clienttypes.Height, timeoutTimestamp uint64, //nolint:interfacer
+	sourcePort,
+	sourceChannel string,
+	token sdk.Coin,
+	sender,
+	receiver string,
+	timeoutHeight clienttypes.Height,
+	timeoutTimestamp uint64, //nolint:interfacer
 ) *MsgIbcTransferRequest {
 	return &MsgIbcTransferRequest{
 		Administrator: administrator,
@@ -563,12 +531,7 @@ func (msg MsgIbcTransferRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgIbcTransferRequest) GetSigners() []sdk.AccAddress {
-	adminAddr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-
-	return []sdk.AccAddress{adminAddr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewSetDenomMetadataRequest  creates a new marker in a proposed state with a given total supply a denomination
@@ -606,11 +569,7 @@ func (msg MsgSetDenomMetadataRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgSetDenomMetadataRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // GetFeeAllowanceI returns unpacked FeeAllowance
@@ -681,9 +640,5 @@ func (msg MsgGrantAllowanceRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
