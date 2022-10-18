@@ -24,10 +24,10 @@ ifeq ($(WITH_BADGERDB),yes)
   WITH_BADGERDB=true
 endif
 
-BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2> /dev/null)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
 TM_VERSION := $(shell $(GO) list -m github.com/tendermint/tendermint 2> /dev/null | sed 's:.* ::') # grab everything after the space in "github.com/tendermint/tendermint v0.34.7"
-COMMIT := $(shell git log -1 --format='%h')
+COMMIT := $(shell git log -1 --format='%h' 2> /dev/null)
 # don't override user values
 ifeq (,$(VERSION))
   VERSION := $(shell git describe --exact-match 2>/dev/null)
