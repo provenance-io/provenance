@@ -246,10 +246,9 @@ This service message is expected to fail if:
 
 ## Msg/IbcTransferRequest
 
-Ibc transfer Request defines the Msg/IbcTransfer request type.  A ibc transfer request is used to transfer coin between two
-chains via ibc for `RESTRICTED_COIN` type markers that have `send_enabled=false` configured with the `bank` module and thus
-can not be sent using a normal `send_coin` operation.  A transfer request requires a signature from an account with
-the transfer permission as well as approval from the account the funds will be withdrawn from.
+Ibc transfer Request defines the Msg/IbcTransfer request type.  The `IbcTransferRequest` is used to transfer `RESTRICTED_COIN` type markers to another chain via ibc. These coins have their `send_enabled` flag disabled by the bank module and thus cannot be sent using a normal `send_coin` operation.
+
+NOTE: A transfer request also requires a signature from an account with the transfer permission as well as approval from the account the funds will be withdrawn from.
 
 +++ https://github.com/provenance-io/provenance/blob/80a02497023b22c7b0ee21c84e07315060bd0f8a/proto/provenance/marker/v1/tx.proto#L177-L183
 
