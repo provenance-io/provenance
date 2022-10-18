@@ -334,6 +334,7 @@ go.sum: go.mod
 lint:
 	$(GOLANGCI_LINT) run
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "./client/*" -not -path "*.git*" -not -path "*.pb.go" | xargs gofmt -d -s
+	scripts/no-now-lint.sh
 	$(GO) mod verify
 
 clean:
