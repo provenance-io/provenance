@@ -37,6 +37,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
+* Add restricted marker transfer over ibc support [#1136](https://github.com/provenance-io/provenance/issues/1136)
+
+---
+
 ## [v1.13.0](https://github.com/provenance-io/provenance/releases/tag/v1.13.0) - 2022-10-04
 
 ### Improvements
