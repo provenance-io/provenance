@@ -10,6 +10,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	ibckeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
+	ibctypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -440,6 +443,71 @@ func (k msgServer) Transfer(goCtx context.Context, msg *types.MsgTransferRequest
 	}()
 
 	return &types.MsgTransferResponse{}, nil
+}
+
+// Transfer handles a message to send coins from one account to another (used with restricted coins that are not
+//
+//	sent using the normal bank send process)
+func (k msgServer) IbcTransfer(goCtx context.Context, msg *types.MsgIbcTransferRequest) (*types.MsgIbcTransferResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// Validate transaction message.
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	from, err := sdk.AccAddressFromBech32(msg.Transfer.Sender)
+	if err != nil {
+		return nil, err
+	}
+	admin, err := sdk.AccAddressFromBech32(msg.Administrator)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.IbcTransferCoin(ctx, msg.Transfer.SourcePort, msg.Transfer.SourceChannel, msg.Transfer.Token, from, admin, msg.Transfer.Receiver, msg.Transfer.TimeoutHeight, msg.Transfer.TimeoutTimestamp, func(ctx sdk.Context, ibcKeeper ibckeeper.Keeper, sender sdk.AccAddress, token sdk.Coin) (canTransfer bool, err error) {
+		if !ibcKeeper.GetSendEnabled(ctx) {
+			return false, ibctypes.ErrSendDisabled
+		}
+
+		if ibcKeeper.BankKeeper.BlockedAddr(sender) {
+			return false, sdkerrors.ErrUnauthorized.Wrapf("%s is not allowed to send funds", sender)
+		}
+
+		return true, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, types.EventTelemetryKeyIbcTransfer},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel(types.EventTelemetryLabelToAddress, msg.Transfer.Receiver),
+				telemetry.NewLabel(types.EventTelemetryLabelFromAddress, msg.Transfer.Sender),
+				telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Transfer.Token.Denom),
+				telemetry.NewLabel(types.EventTelemetryLabelAdministrator, msg.Administrator),
+			},
+		)
+		if msg.Transfer.Token.Amount.IsInt64() {
+			telemetry.SetGaugeWithLabels(
+				[]string{types.ModuleName, types.EventTelemetryKeyIbcTransfer, msg.Transfer.Token.Denom},
+				float32(msg.Transfer.Token.Amount.Int64()),
+				[]metrics.Label{telemetry.NewLabel(types.EventTelemetryLabelDenom, msg.Transfer.Token.Denom)},
+			)
+		}
+	}()
+
+	return &types.MsgIbcTransferResponse{}, nil
 }
 
 // SetDenomMetadata handles a message setting metadata for a marker with the specified denom.
