@@ -14,6 +14,8 @@ import (
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	ibckeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
+
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -55,6 +57,8 @@ type Keeper struct {
 	// To pass through grant creation for callers with admin access on a marker.
 	feegrantKeeper feegrantkeeper.Keeper
 
+	ibcKeeper ibckeeper.Keeper
+
 	// For access to bank keeper storage outside what their keeper provides.
 	bankKeeperStoreKey storetypes.StoreKey
 
@@ -78,6 +82,7 @@ func NewKeeper(
 	bankKeeper bankkeeper.Keeper,
 	authzKeeper authzkeeper.Keeper,
 	feegrantKeeper feegrantkeeper.Keeper,
+	ibcKeeper ibckeeper.Keeper,
 	bankKey storetypes.StoreKey,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
@@ -90,6 +95,7 @@ func NewKeeper(
 		authzKeeper:        authzKeeper,
 		bankKeeper:         bankKeeper,
 		feegrantKeeper:     feegrantKeeper,
+		ibcKeeper:          ibcKeeper,
 		storeKey:           key,
 		bankKeeperStoreKey: bankKey,
 		cdc:                cdc,
