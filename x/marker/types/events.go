@@ -33,6 +33,8 @@ const (
 	EventTelemetryKeyMint string = "mint"
 	// EventTelemetryKeyTransfer transfer telemetry metrics key
 	EventTelemetryKeyTransfer string = "transfer"
+	// EventTelemetryKeyIbcTransfer ibctransfer telemetry metrics key
+	EventTelemetryKeyIbcTransfer string = "ibctransfer"
 	// EventTelemetryKeyWithdraw withdraw telemetry metrics key
 	EventTelemetryKeyWithdraw string = "withdraw"
 )
@@ -133,6 +135,15 @@ func NewEventMarkerTransfer(amount string, denom string, administrator string, t
 		Denom:         denom,
 		Administrator: administrator,
 		ToAddress:     toAddress,
+		FromAddress:   fromAddress,
+	}
+}
+
+func NewEventMarkerIbcTransfer(amount string, denom string, administrator string, fromAddress string) *EventMarkerTransfer {
+	return &EventMarkerTransfer{
+		Amount:        amount,
+		Denom:         denom,
+		Administrator: administrator,
 		FromAddress:   fromAddress,
 	}
 }
