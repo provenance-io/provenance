@@ -1,7 +1,8 @@
 # This docker file builds a test image using binaries built locally.
-# Use `make docker-build-local` to build or `make localnet-start` to
-# start the test network and `make localnet-stop` to stop it.
-FROM golang:1.18-bullseye as build
+# Use `make docker-build-dev` to build or `make devnet-start` to
+# start the test network and `make devnet-stop` to stop it.
+
+FROM golang:1.18-bullseye as build-x86_64
 WORKDIR /go/src/github.com/provenance-io/provenance
 ENV GOPRIVATE=github.com/provenance-io
 RUN apt-get update && apt-get upgrade -y && apt-get install -y libleveldb-dev
@@ -15,14 +16,12 @@ COPY x/ ./x/
 COPY vendor/ ./vendor/
 
 # Build the binaries
-RUN go build -mod vendor \
-    -tags cleveldb \
-    -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/version.Name=Provenance-Blockchain' \
-    -o /go/bin/ ./cmd/...
+RUN go build -mod vendor -tags=cleveldb -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/version.Name=Provenance-Blockchain' -o /go/bin/ ./cmd/...
 
-###
-FROM debian:bullseye-slim
+## Run provenance for x86_64
+FROM debian:bullseye-slim as provenance-x86_64
 ENV LOCALNET=1
+ENV LD_LIBRARY_PATH="/usr/local/lib"
 
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -36,13 +35,60 @@ WORKDIR /provenance
 EXPOSE 26656 26657 1317 9090
 
 # Source binaries from the build above
-COPY --from=build /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/internal/api/libwasmvm.x86_64.so /lib/x86_64-linux-gnu/libwasmvm.x86_64.so
-COPY --from=build /go/bin/provenanced /usr/bin/provenanced
+COPY --from=build-x86_64 /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/internal/api/libwasmvm.x86_64.so /usr/local/lib/
+COPY --from=build-x86_64 /go/bin/provenanced /usr/bin/provenanced
 
 COPY networks/dev/mnemonics/ /mnemonics/
+COPY networks/dev/blockchain-dev/entrypoint.sh /usr/bin/entrypoint.sh
+
+STOPSIGNAL SIGTERM
 
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
 CMD ["start"]
+
+
+## Build provenance for ARM
+FROM golang:1.18-bullseye as build-arm64
+WORKDIR /go/src/github.com/provenance-io/provenance
+ENV GOPRIVATE=github.com/provenance-io
+RUN apt-get update && apt-get upgrade -y && apt-get install -y libleveldb-dev
+
+COPY client/ ./client/
+COPY app/ ./app/
+COPY go.* ./
+COPY cmd/ ./cmd/
+COPY internal/ ./internal/
+COPY x/ ./x/
+COPY vendor/ ./vendor/
+
+# Build the binaries
+RUN go build -mod vendor -tags=cleveldb -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/version.Name=Provenance-Blockchain' -o /go/bin/ ./cmd/...
+
+## Run provenance for ARM
+FROM debian:bullseye-slim as provenance-arm64
+ENV LOCALNET=1
+ENV LD_LIBRARY_PATH="/usr/local/lib"
+
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y curl jq libleveldb-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/
+
+# Requires a mounted volume with the config in it.
+VOLUME [ "/provenance" ]
+WORKDIR /provenance
+EXPOSE 26656 26657 1317 9090
+
+# Source binaries from the build above
+COPY --from=build-arm64 /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/internal/api/libwasmvm.aarch64.so /usr/local/lib/
+
+COPY --from=build-arm64 /go/bin/provenanced /usr/bin/provenanced
+
+COPY networks/dev/mnemonics/ /mnemonics/
+COPY networks/dev/blockchain-dev/entrypoint.sh /usr/bin/entrypoint.sh
+
 STOPSIGNAL SIGTERM
 
-COPY networks/dev/blockchain-dev/entrypoint.sh /usr/bin/entrypoint.sh
+ENTRYPOINT ["/usr/bin/entrypoint.sh"]
+CMD ["start"]
