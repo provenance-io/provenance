@@ -297,8 +297,6 @@ type App struct {
 	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
 	ScopedInterTxKeeper       capabilitykeeper.ScopedKeeper
 
-	// TODO: Required for v1.13.x: Add keepers for new modules and wire them up. https://github.com/provenance-io/provenance/issues/1007
-
 	// the module manager
 	mm *module.Manager
 
