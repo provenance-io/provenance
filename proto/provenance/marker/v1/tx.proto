@@ -47,6 +47,9 @@ service Msg {
   // GrantAllowance grants fee allowance to the grantee on the granter's
   // account with the provided expiration time.
   rpc GrantAllowance(MsgGrantAllowanceRequest) returns (MsgGrantAllowanceResponse);
+  // ReflectMarker is used to create a marker on remote chain using ica that
+  // reflects the marker on the host chain
+  rpc ReflectMarker(MsgReflectMarkerRequest) returns (MsgReflectMarkerResponse);
 }
 
 // MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If
@@ -194,3 +197,13 @@ message MsgSetDenomMetadataRequest {
 
 // MsgSetDenomMetadataResponse defines the Msg/SetDenomMetadata response type
 message MsgSetDenomMetadataResponse {}
+
+// MsgReflectMarkerRequest defines the Msg/ReflectMarker request type for markers.
+message MsgReflectMarkerRequest {
+  string ibc_denom = 1;
+  string ibc_channel =2;
+  string administrator = 3;
+}
+
+// MsgReflectMarkerResponse defines the Msg/ReflectMarker response type
+message MsgReflectMarkerResponse {}
