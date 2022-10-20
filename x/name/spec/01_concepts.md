@@ -28,11 +28,11 @@ Name records are normalized before being processed for creation or query.  Each 
 
 1. Names are always stored and compared using a lower case form or a hash derived from this normalized form.
 2. Unicode values that are not graphic, lower case, or digits are considered invalid.
-3. A single occurance of the hyphen-minus character is allowed unless the value conforms to a valid uuid.
+3. A single occurance of the hyphen-minus character is allowed unless the value conforms to a valid UUID.
 ```value: -
 HYPHEN-MINUS
 Unicode: U+002D, UTF-8: 2D
 ```
-4. Each component of the name is subject to length restrictions for minimum and maxium length.  These limits are configurable in the module [parameters](./05_params.md)
-5. A maximum number of components for a name (levels in the heirarchy) is also enforced.
+4. Each component of the name is restricted to a length of 2 to 32 characters (inclusive). These limits are configurable in the module [parameters](./05_params.md).
+5. A maximum of 16 components for a name (levels in the heirarchy) is also enforced and configurable in the module parameters.
 6. Leading and trailing spaces are always trimmed off of names for consistency during processing and evaluation.
