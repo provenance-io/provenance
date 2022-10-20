@@ -53,6 +53,9 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgTransferRequest:
 			res, err := msgServer.Transfer(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgIbcTransferRequest:
+			res, err := msgServer.IbcTransfer(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *types.MsgSetDenomMetadataRequest:
 			res, err := msgServer.SetDenomMetadata(sdk.WrapSDKContext(ctx), msg)

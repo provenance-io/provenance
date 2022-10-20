@@ -10,6 +10,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
+
+	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 )
 
 func TestMsgGrantAllowance(t *testing.T) {
@@ -87,5 +89,72 @@ func TestMsgGrantAllowance(t *testing.T) {
 		} else {
 			require.Error(t, err)
 		}
+	}
+}
+
+func TestMsgAssessCustomMsgFeeValidateBasic(t *testing.T) {
+	validAddress := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
+
+	cases := []struct {
+		name     string
+		msg      MsgIbcTransferRequest
+		errorMsg string
+	}{
+		{
+			"should fail to validate basic, invalid admin address",
+			*NewIbcMsgTransferRequest(
+				"notvalidaddress",
+				"transfer",
+				"channel-1",
+				sdk.NewInt64Coin("jackthecat", 1),
+				validAddress,
+				validAddress,
+				clienttypes.NewHeight(1, 1),
+				1000,
+			),
+			"decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			"should fail to validate basic, invalid ibctransfertypes.MsgTransfer ",
+			*NewIbcMsgTransferRequest(
+				validAddress,
+				"transfer",
+				"channel-1",
+				sdk.NewInt64Coin("jackthecat", 1),
+				"invalid-address",
+				validAddress,
+				clienttypes.NewHeight(1, 1),
+				1000,
+			),
+			"string could not be parsed as address: decoding bech32 failed: invalid separator index -1: invalid address",
+		},
+		{
+			"should succeed",
+			*NewIbcMsgTransferRequest(
+				validAddress,
+				"transfer",
+				"channel-1",
+				sdk.NewInt64Coin("jackthecat", 1),
+				validAddress,
+				validAddress,
+				clienttypes.NewHeight(1, 1),
+				1000,
+			),
+			"",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.errorMsg) > 0 {
+				require.Error(t, err)
+				require.Equal(t, tc.errorMsg, err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
 	}
 }

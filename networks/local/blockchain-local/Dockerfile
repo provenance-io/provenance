@@ -36,7 +36,7 @@ WORKDIR /provenance
 EXPOSE 26656 26657 1317 9090
 
 # Source binaries from the build above
-COPY --from=build-x86_64 /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.x86_64.so /usr/local/lib/
+COPY --from=build-x86_64 /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/internal/api/libwasmvm.x86_64.so /usr/local/lib/
 COPY --from=build-x86_64 /go/bin/provenanced /usr/bin/provenanced
 
 COPY networks/local/blockchain-local/entrypoint.sh /usr/bin/entrypoint.sh
@@ -72,8 +72,6 @@ RUN go build -mod vendor -tags=cleveldb -ldflags '-w -s -X github.com/cosmos/cos
 FROM debian:bullseye-slim as provenance-arm64
 ENV LOCALNET=1
 ENV LD_LIBRARY_PATH="/usr/local/lib"
-# This is for M1 to find package config
-ENV PKG_CONFIG_PATH="/usr/local/lib"
 
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -87,7 +85,7 @@ WORKDIR /provenance
 EXPOSE 26656 26657 1317 9090
 
 # Source binaries from the build above
-COPY --from=build-arm64 /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/api/libwasmvm.aarch64.so /usr/local/lib/
+COPY --from=build-arm64 /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/internal/api/libwasmvm.aarch64.so /usr/local/lib/
 
 COPY --from=build-arm64 /go/bin/provenanced /usr/bin/provenanced
 

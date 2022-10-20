@@ -6,6 +6,11 @@ on:
   push:
     branches:
       - main
+
+# concurrency is not defined in here because this job usually doesn't
+# run long enough to need cancelling, and it's okay for it to run multiple
+# times for the same PR.
+
 jobs:
   golangci:
     name: golangci-lint
@@ -13,19 +18,25 @@ jobs:
     timeout-minutes: 6
     steps:
       - uses: actions/checkout@v3
-      - uses: technote-space/get-diff-action@v6.1.0
+      - uses: technote-space/get-diff-action@v6.1.1
         with:
           PATTERNS: |
             **/**.go
             go.mod
             go.sum
+            .github/workflows/lint.yml
+            scripts/no-now-lint.sh
       - uses: actions/setup-go@v3
+        if: env.GIT_DIFF
         with:
           go-version: 1.18
       - uses: golangci/golangci-lint-action@v3.2.0
+        if: env.GIT_DIFF
         with:
           # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
           version: v1.48
           args: --timeout 10m --out-${NO_FUTURE}format colored-line-number
           github-token: ${{ secrets.github_token }}
+      - name: No Now Usage
         if: env.GIT_DIFF
+        run: scripts/no-now-lint.sh

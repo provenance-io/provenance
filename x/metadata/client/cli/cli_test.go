@@ -2,7 +2,6 @@ package cli_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client"
 	"strings"
 	"testing"
 	"time"
@@ -16,6 +15,7 @@ import (
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -28,10 +28,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type IntegrationCLITestSuite struct {
@@ -126,7 +126,7 @@ func TestIntegrationCLITestSuite(t *testing.T) {
 
 func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-
+	pioconfig.SetProvenanceConfig("atom", 0)
 	cfg := testutil.DefaultTestNetworkConfig()
 	cfg.NumValidators = 1
 	genesisState := cfg.GenesisState
@@ -463,7 +463,6 @@ owner: %s`,
 	genesisState[metadatatypes.ModuleName] = metadataDataBz
 
 	cfg.GenesisState = genesisState
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewCoin("atom", sdk.NewInt(0))
 
 	cfg.ChainID = antewrapper.SimAppChainID
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)

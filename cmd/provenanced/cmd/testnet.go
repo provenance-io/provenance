@@ -11,8 +11,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/version"
-
 	"github.com/spf13/cobra"
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -32,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -96,7 +95,8 @@ Note, strict routability for addresses is turned off in the config file.
 	cmd.Flags().String(flagNodeDaemonHome, "", "Home directory of the node's daemon configuration")
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().String(server.FlagMinGasPrices, pioconfig.DefaultMinGasPrices, fmt.Sprintf("Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. %s,0.001stake)", pioconfig.DefaultMinGasPrices))
+	// testnet only so should get passed in by the make command, moving this to a default value if not provided, since this is only for testnet. custom chain will pass in the flag for minimum-gas-prices. e.g. minimum-gas-prices = 0vspn
+	cmd.Flags().String(server.FlagMinGasPrices, "1905nhash", "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
@@ -208,8 +208,9 @@ func InitTestnet(
 		hashAmt := sdk.NewInt(100_000_000_000 / int64(numValidators))
 		convAmt := sdk.NewInt(1_000_000_000)
 		nhashAmt := hashAmt.Mul(convAmt)
+
 		coins := sdk.Coins{
-			sdk.NewCoin(pioconfig.DefaultBondDenom, nhashAmt),
+			sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, nhashAmt),
 		}
 
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
@@ -219,7 +220,7 @@ func InitTestnet(
 		createValMsg, _ := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
-			sdk.NewCoin(pioconfig.DefaultBondDenom, valTokens),
+			sdk.NewCoin(pioconfig.GetProvenanceConfig().BondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
 			sdk.OneInt(),
@@ -255,7 +256,7 @@ func InitTestnet(
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), simappConfig)
 	}
 
-	markerAcc := markertypes.NewEmptyMarkerAccount(pioconfig.DefaultBondDenom, genAccounts[0].GetAddress().String(),
+	markerAcc := markertypes.NewEmptyMarkerAccount(pioconfig.GetProvenanceConfig().FeeDenom, genAccounts[0].GetAddress().String(),
 		[]markertypes.AccessGrant{
 			*markertypes.NewAccessGrant(genAccounts[0].GetAddress(), []markertypes.Access{
 				markertypes.Access_Admin,
@@ -265,7 +266,7 @@ func InitTestnet(
 			}),
 		})
 
-	if err := markerAcc.SetSupply(sdk.NewCoin(pioconfig.DefaultBondDenom, sdk.NewInt(100_000_000_000).Mul(sdk.NewInt(1_000_000_000)))); err != nil {
+	if err := markerAcc.SetSupply(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(100_000_000_000).Mul(sdk.NewInt(1_000_000_000)))); err != nil {
 		return err
 	}
 
@@ -275,7 +276,7 @@ func InitTestnet(
 
 	genMarkers = append(genMarkers, *markerAcc)
 
-	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genMarkers, genFiles, numValidators); err != nil {
+	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genMarkers, genFiles, numValidators, pioconfig.GetProvenanceConfig().BondDenom); err != nil {
 		return err
 	}
 
@@ -295,6 +296,7 @@ func initGenFiles(
 	clientCtx client.Context, mbm module.BasicManager, chainID string,
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
 	genMarkers []markertypes.MarkerAccount, genFiles []string, numValidators int,
+	chainDenom string,
 ) error {
 	appGenState := mbm.DefaultGenesis(clientCtx.Codec)
 
@@ -347,26 +349,26 @@ func initGenFiles(
 	// Set the staking denom
 	var stakeGenState stakingtypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[stakingtypes.ModuleName], &stakeGenState)
-	stakeGenState.Params.BondDenom = pioconfig.DefaultBondDenom
+	stakeGenState.Params.BondDenom = chainDenom
 	appGenState[stakingtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&stakeGenState)
 
 	// Set the crisis denom
 	var crisisGenState crisistypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[crisistypes.ModuleName], &crisisGenState)
-	crisisGenState.ConstantFee.Denom = pioconfig.DefaultBondDenom
+	crisisGenState.ConstantFee.Denom = chainDenom
 	appGenState[crisistypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&crisisGenState)
 
 	// Set the gov depost denom
 	var govGenState govtypesv1beta1.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState)
-	govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(pioconfig.DefaultBondDenom, sdk.NewInt(10000000)))
+	govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(chainDenom, sdk.NewInt(10000000)))
 	govGenState.VotingParams.VotingPeriod, _ = time.ParseDuration("360s")
 	appGenState[govtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&govGenState)
 
 	// Set the mint module parameters to stop inflation on the BondDenom.
 	var mintGenState minttypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState)
-	mintGenState.Params.MintDenom = pioconfig.DefaultBondDenom
+	mintGenState.Params.MintDenom = chainDenom
 	mintGenState.Minter.AnnualProvisions = sdk.ZeroDec()
 	mintGenState.Minter.Inflation = sdk.ZeroDec()
 	mintGenState.Params.InflationMax = sdk.ZeroDec()

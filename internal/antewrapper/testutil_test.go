@@ -23,6 +23,8 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/internal/antewrapper"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -59,11 +61,8 @@ func createTestApp(t *testing.T, isCheckTx bool) (*simapp.App, sdk.Context) {
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
 func (s *AnteTestSuite) SetupTest(isCheckTx bool) {
-	msgfeetype.DefaultFloorGasPrice = sdk.Coin{
-		Denom:  sdk.DefaultBondDenom,
-		Amount: sdk.NewInt(1),
-	}
 	s.app, s.ctx = createTestApp(s.T(), isCheckTx)
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1)
 	s.ctx = s.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
@@ -75,13 +74,14 @@ func (s *AnteTestSuite) SetupTest(isCheckTx bool) {
 	s.clientCtx = client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig)
 
-	anteHandler, err := ante.NewAnteHandler(
-		ante.HandlerOptions{
+	anteHandler, err := antewrapper.NewAnteHandler(
+		antewrapper.HandlerOptions{
 			AccountKeeper:   s.app.AccountKeeper,
 			BankKeeper:      s.app.BankKeeper,
 			FeegrantKeeper:  s.app.FeeGrantKeeper,
 			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			MsgFeesKeeper:   s.app.MsgFeesKeeper,
 		},
 	)
 

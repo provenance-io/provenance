@@ -46,6 +46,7 @@ var handlers = map[string]appUpgrade{
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
 	},
+	// TODO - Add new upgrade definitions here.
 }
 
 // InstallCustomUpgradeHandlers sets upgrade handlers for all entries in the handlers map.
@@ -116,12 +117,9 @@ func UpgradeICA(ctx sdk.Context, app *App, versionMap *module.VersionMap) {
 	}
 
 	// create ICS27 Host submodule params
-	// TODO Verify which messages we want to run on the host/Provenance chain
 	hostParams := icahosttypes.Params{
-		HostEnabled: true,
-		AllowMessages: []string{
-			"*",
-		},
+		HostEnabled:   true,
+		AllowMessages: []string{},
 	}
 
 	// initialize ICS27 module

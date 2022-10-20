@@ -9,9 +9,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
 	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
-
 	"github.com/provenance-io/provenance/x/metadata/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -19,8 +20,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
-	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -61,7 +60,7 @@ type KeeperTestSuite struct {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	msgfeestypes.DefaultFloorGasPrice = sdk.NewInt64Coin("atom", 0)
+	pioconfig.SetProvenanceConfig("atom", 0)
 	s.app = simapp.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())

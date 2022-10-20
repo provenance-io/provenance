@@ -41,11 +41,11 @@ type RewardAction interface {
 	// ActionType returns a string identifying this action type.
 	ActionType() string
 	// Evaluate returns true if this reward action satisfies the provided state and event.
-	Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool
+	Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) bool
 	// PreEvaluate returns true if this reward action is in a state that's ready for evaluation.
 	PreEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool
-	// PostEvaluate returns true if the state's action counter is within this reward action's min and max (inclusive).
-	PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool
+	// PostEvaluate returns true if the all the action's post evaluation checks are met and allows the action to update the evaluation result as needed by the Action.
+	PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) (bool, EvaluationResult)
 	// GetBuilder returns a new ActionBuilder for this reward action.
 	GetBuilder() ActionBuilder
 }
@@ -396,7 +396,7 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	}
 	percentile := ad.getValidatorRankPercentile(ctx, provider, validator)
 
-	delegatedHash := sdk.NewInt64Coin(pioconfig.DefaultBondDenom, tokens.TruncateInt64())
+	delegatedHash := sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, tokens.TruncateInt64())
 	minDelegation := ad.GetMinimumDelegationAmount()
 	maxDelegation := ad.GetMaximumDelegationAmount()
 	minPercentile := ad.GetMinimumActiveStakePercentile()
@@ -428,10 +428,10 @@ func (ad *ActionDelegate) PreEvaluate(ctx sdk.Context, provider KeeperProvider, 
 	return true
 }
 
-func (ad *ActionDelegate) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+func (ad *ActionDelegate) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) (bool, EvaluationResult) {
 	actionCounter := GetActionCount(state.ActionCounter, ad.ActionType())
 	hasValidActionCount := actionCounter >= ad.GetMinimumActions() && actionCounter <= ad.GetMaximumActions()
-	return hasValidActionCount
+	return hasValidActionCount, event
 }
 
 // ============ Action Transfer Delegations ============
@@ -468,7 +468,7 @@ func (at *ActionTransfer) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 		return false
 	}
 	// check delegations if and only if mandated by the Action
-	if sdk.NewCoin(pioconfig.DefaultBondDenom, sdk.ZeroInt()).IsLT(at.MinimumDelegationAmount) {
+	if sdk.NewCoin(pioconfig.GetProvenanceConfig().BondDenom, sdk.ZeroInt()).IsLT(at.MinimumDelegationAmount) {
 		// now check if it has any delegations
 		totalDelegations, found := getAllDelegations(ctx, provider, addressSender)
 		if !found {
@@ -486,10 +486,10 @@ func (at *ActionTransfer) PreEvaluate(ctx sdk.Context, provider KeeperProvider, 
 	return true
 }
 
-func (at *ActionTransfer) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+func (at *ActionTransfer) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) (bool, EvaluationResult) {
 	actionCounter := GetActionCount(state.ActionCounter, at.ActionType())
 	hasValidActionCount := actionCounter >= at.GetMinimumActions() && actionCounter <= at.GetMaximumActions()
-	return hasValidActionCount
+	return hasValidActionCount, evaluationResult
 }
 
 // ============ Action Vote  ============
@@ -519,7 +519,7 @@ func (atd *ActionVote) ActionType() string {
 func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
 	// get the address that voted
 	addressVoting := event.Address
-	if !sdk.NewCoin(pioconfig.DefaultBondDenom, sdk.ZeroInt()).IsGTE(atd.MinimumDelegationAmount) {
+	if !sdk.NewCoin(pioconfig.GetProvenanceConfig().BondDenom, sdk.ZeroInt()).IsGTE(atd.MinimumDelegationAmount) {
 		// now check if it has any delegations
 		totalDelegations, found := getAllDelegations(ctx, provider, addressVoting)
 		if !found {
@@ -537,10 +537,19 @@ func (atd *ActionVote) PreEvaluate(ctx sdk.Context, provider KeeperProvider, sta
 	return true
 }
 
-func (atd *ActionVote) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+func (atd *ActionVote) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) (bool, EvaluationResult) {
 	actionCounter := GetActionCount(state.ActionCounter, atd.ActionType())
 	hasValidActionCount := actionCounter >= atd.GetMinimumActions() && actionCounter <= atd.GetMaximumActions()
-	return hasValidActionCount
+	// get the address that voted, and see if the multiplier needs to be applied if the vote came from a validator.
+	addressVoting := evaluationResult.Address
+	valAddrStr := sdk.ValAddress(addressVoting)
+	_, found := provider.GetStakingKeeper().GetValidator(ctx, valAddrStr)
+	if found && atd.ValidatorMultiplier > 0 {
+		// shares can be negative, as per requirements, and this may lead to negative shares with multiplier.
+		evaluationResult.Shares *= int64(atd.ValidatorMultiplier)
+	}
+
+	return hasValidActionCount, evaluationResult
 }
 
 // ============ Qualifying Action ============
@@ -591,17 +600,17 @@ func getAllDelegations(ctx sdk.Context, provider KeeperProvider, delegator sdk.A
 	delegations := stakingKeeper.GetAllDelegatorDelegations(ctx, delegator)
 	// if no delegations then return not found
 	if len(delegations) == 0 {
-		return sdk.NewCoin(pioconfig.DefaultBondDenom, sdk.ZeroInt()), false
+		return sdk.NewCoin(pioconfig.GetProvenanceConfig().BondDenom, sdk.ZeroInt()), false
 	}
 
-	sum := sdk.NewCoin(pioconfig.DefaultBondDenom, sdk.ZeroInt())
+	sum := sdk.NewCoin(pioconfig.GetProvenanceConfig().BondDenom, sdk.ZeroInt())
 
 	for _, delegation := range delegations {
 		val, found := stakingKeeper.GetValidator(ctx, delegation.GetValidatorAddr())
 
 		if found {
 			tokens := val.TokensFromShares(delegation.GetShares()).TruncateInt()
-			sum = sum.Add(sdk.NewCoin(pioconfig.DefaultBondDenom, tokens))
+			sum = sum.Add(sdk.NewCoin(pioconfig.GetProvenanceConfig().BondDenom, tokens))
 		}
 	}
 

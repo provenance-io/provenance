@@ -57,6 +57,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgBurnRequest{},
 		&MsgWithdrawRequest{},
 		&MsgTransferRequest{},
+		&MsgIbcTransferRequest{},
 		&MsgSetDenomMetadataRequest{},
 	)
 

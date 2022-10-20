@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -20,11 +21,13 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
@@ -38,8 +41,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 
 	cmdconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
@@ -47,12 +52,9 @@ import (
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
-const (
-	chainID = "sim-provenance"
-)
-
 func init() {
 	sdksim.GetSimulatorFlags()
+	pioconfig.SetProvenanceConfig("", 0)
 }
 
 type StoreKeysPrefixes struct {
@@ -61,10 +63,35 @@ type StoreKeysPrefixes struct {
 	Prefixes [][]byte
 }
 
-func TestFullAppSimulation(t *testing.T) {
-	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass. https://github.com/provenance-io/provenance/issues/1006
-	t.Skip("This test is disabled, but must be re-enabled before v1.13 can be ready.")
+// ProvAppStateFn wraps the sdksim.AppStateFn and sets the ICA GenesisState if isn't yet defined in the appState.
+func ProvAppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simtypes.AppStateFn {
+	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config) (json.RawMessage, []simtypes.Account, string, time.Time) {
+		appState, simAccs, chainID, genesisTimestamp := sdksim.AppStateFn(cdc, simManager)(r, accs, config)
+		appState = appStateWithICA(appState, cdc)
+		return appState, simAccs, chainID, genesisTimestamp
+	}
+}
 
+// appStateWithICA checks the given appState for an ica entry. If it's not found, it's populated with the defaults.
+func appStateWithICA(appState json.RawMessage, cdc codec.JSONCodec) json.RawMessage {
+	rawState := make(map[string]json.RawMessage)
+	err := json.Unmarshal(appState, &rawState)
+	if err != nil {
+		panic(fmt.Sprintf("error unmarshalling appstate: %v", err))
+	}
+	icaGenJSON, icaGenFound := rawState[icatypes.ModuleName]
+	if !icaGenFound || len(icaGenJSON) == 0 {
+		icaGenState := icatypes.DefaultGenesis()
+		rawState[icatypes.ModuleName] = cdc.MustMarshalJSON(icaGenState)
+		appState, err = json.Marshal(rawState)
+		if err != nil {
+			panic(fmt.Sprintf("error marshalling appstate: %v", err))
+		}
+	}
+	return appState
+}
+
+func TestFullAppSimulation(t *testing.T) {
 	config, db, dir, logger, skip, err := sdksim.SetupSimulation("leveldb-app-sim", "Simulation")
 	if skip {
 		t.Skip("skipping provenance application simulation")
@@ -87,7 +114,7 @@ func TestFullAppSimulation(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		ProvAppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		sdksim.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -104,9 +131,6 @@ func TestFullAppSimulation(t *testing.T) {
 }
 
 func TestSimple(t *testing.T) {
-	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass. https://github.com/provenance-io/provenance/issues/1006
-	t.Skip("This test is disabled, but must be re-enabled before v1.13 can be ready.")
-
 	config, db, dir, logger, skip, err := sdksim.SetupSimulation("leveldb-app-sim", "Simulation")
 	if skip {
 		t.Skip("skipping provenance application simulation")
@@ -127,7 +151,7 @@ func TestSimple(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		ProvAppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		sdksim.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -142,9 +166,6 @@ func TestSimple(t *testing.T) {
 // Profile with:
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/provenance-io/provenance -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func TestAppImportExport(t *testing.T) {
-	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass. https://github.com/provenance-io/provenance/issues/1006
-	t.Skip("This test is disabled, but must be re-enabled before v1.13 can be ready.")
-
 	// uncomment to run in ide without flags.
 	//sdksim.FlagEnabledValue = true
 
@@ -170,7 +191,7 @@ func TestAppImportExport(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		ProvAppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		sdksim.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -261,9 +282,6 @@ func TestAppImportExport(t *testing.T) {
 }
 
 func TestAppSimulationAfterImport(t *testing.T) {
-	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass. https://github.com/provenance-io/provenance/issues/1006
-	t.Skip("This test is disabled, but must be re-enabled before v1.13 can be ready.")
-
 	config, db, dir, logger, skip, err := sdksim.SetupSimulation("leveldb-app-sim", "Simulation")
 	if skip {
 		t.Skip("skipping application simulation after import")
@@ -284,7 +302,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		ProvAppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		sdksim.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -329,7 +347,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		t,
 		os.Stdout,
 		newApp.BaseApp,
-		sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		ProvAppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		sdksim.SimulationOperations(newApp, newApp.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -342,9 +360,6 @@ func TestAppSimulationAfterImport(t *testing.T) {
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
 // and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
-	// TODO: Required for v1.13.x: Remove this t.Skip() line and fix things so these tests pass. https://github.com/provenance-io/provenance/issues/1006
-	t.Skip("This test is disabled, but must be re-enabled before v1.13 can be ready.")
-
 	if !sdksim.FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
@@ -387,7 +402,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				t,
 				os.Stdout,
 				app.BaseApp,
-				sdksim.AppStateFn(app.AppCodec(), app.SimulationManager()),
+				ProvAppStateFn(app.AppCodec(), app.SimulationManager()),
 				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 				sdksim.SimulationOperations(app, app.AppCodec(), config),
 				app.ModuleAccountAddrs(),

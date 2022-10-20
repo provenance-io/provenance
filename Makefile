@@ -24,11 +24,10 @@ ifeq ($(WITH_BADGERDB),yes)
   WITH_BADGERDB=true
 endif
 
-
-BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2> /dev/null)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
 TM_VERSION := $(shell $(GO) list -m github.com/tendermint/tendermint 2> /dev/null | sed 's:.* ::') # grab everything after the space in "github.com/tendermint/tendermint v0.34.7"
-COMMIT := $(shell git log -1 --format='%h')
+COMMIT := $(shell git log -1 --format='%h' 2> /dev/null)
 # don't override user values
 ifeq (,$(VERSION))
   VERSION := $(shell git describe --exact-match 2>/dev/null)
@@ -172,35 +171,46 @@ all: build format lint test
 install: go.sum
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install $(BUILD_FLAGS) ./cmd/provenanced
 
-build: validate-os-dependencies validate-go-version go.sum
+build: validate-go-version go.sum
 	mkdir -p $(BUILDDIR)
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/provenanced
 
 build-linux: go.sum
 	WITH_LEDGER=false GOOS=linux GOARCH=amd64 $(MAKE) build
 
+DENOM ?= nhash
+MIN_FLOOR_PRICE ?= 1905
+CHAIN_ID ?= testing
+CHAIN_ID_DOCKER ?= chain-local
+
 # Run an instance of the daemon against a local config (create the config if it does not exit.)
+# if required to use something other than nhash, use: make run DENOM=vspn MIN_FLOOR_PRICE=0
 run-config: check-built
 	@if [ ! -d "$(BUILDDIR)/run/provenanced/config" ]; then \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=testing testing ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced init --chain-id=$(CHAIN_ID) testing --custom-denom=$(DENOM); \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced keys add validator --keyring-backend test ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pio --keyring-backend test ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator pb --restrict=false --keyring-backend test ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator io --restrict --keyring-backend test ; \
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-root-name validator provenance --keyring-backend test ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-account validator 100000000000000000000nhash --keyring-backend test ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced gentx validator 1000000000000000nhash --keyring-backend test --chain-id=testing; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-marker 100000000000000000000nhash --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.name.v1.MsgBindNameRequest 10000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.marker.v1.MsgAddMarkerRequest 100000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest 10000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest 10000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgP8eMemorializeContractRequest 10000000000nhash ; \
-		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced collect-gentxs; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-account validator 100000000000000000000$(DENOM)  --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced gentx validator 1000000000000000$(DENOM)  --keyring-backend test --chain-id=$(CHAIN_ID); \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-marker 100000000000000000000$(DENOM)  --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.name.v1.MsgBindNameRequest 10000000000$(DENOM) ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.marker.v1.MsgAddMarkerRequest 100000000000$(DENOM) ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest 10000000000$(DENOM) ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest 10000000000$(DENOM) ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgP8eMemorializeContractRequest 10000000000$(DENOM) ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced add-genesis-custom-floor $(MIN_FLOOR_PRICE)$(DENOM) ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced collect-gentxs ; \
 	fi ;
 
-run: check-built run-config;
+run: check-built run-config ;
+ifeq ($(DENOM),nhash)
 	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
+else
+	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start --custom-denom $(DENOM)
+endif
 
 run2-config: check-built
 	@if [ ! -d "$(BUILDDIR)/run2/provenanced/config" ]; then \
@@ -295,7 +305,7 @@ build-release-libwasm: $(RELEASE_WASM)
 
 $(RELEASE_WASM): $(RELEASE_BIN)
 	go mod vendor && \
-	cp vendor/github.com/CosmWasm/wasmvm/api/$(LIBWASMVM) $(RELEASE_BIN)
+	cp vendor/github.com/CosmWasm/wasmvm/internal/api/$(LIBWASMVM) $(RELEASE_BIN)
 
 .PHONY: build-release-bin
 build-release-bin: $(RELEASE_PIO)
@@ -347,6 +357,7 @@ go.sum: go.mod
 lint:
 	$(GOLANGCI_LINT) run
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "./client/*" -not -path "*.git*" -not -path "*.pb.go" | xargs gofmt -d -s
+	scripts/no-now-lint.sh
 	$(GO) mod verify
 
 clean:
@@ -367,7 +378,7 @@ linkify:
 	python ./scripts/linkify.py CHANGELOG.md
 
 update-tocs:
-	scripts/update-toc.sh x docs
+	scripts/update-toc.sh x docs CONTRIBUTING.md
 
 # Download, compile, and install rocksdb so that it can be used when doing a build.
 rocksdb:
@@ -389,15 +400,6 @@ validate-go-version: ## Validates the installed version of go against Provenance
 	elif [ $(GO_MINOR_VERSION) -lt $(MINIMUM_SUPPORTED_GO_MINOR_VERSION) ] ; then \
 		echo '$(GO_VERSION_VALIDATION_ERR_MSG)';\
 		exit 1; \
-	fi
-
-validate-os-dependencies: ## Validates all the dependencies needed by a specific os
-	@if [ "$(UNAME_S)" = "darwin" ] && [ "$(UNAME_M)" = "arm64" ]; then \
-		output=$$(scripts/m1-dependency-check.sh); \
-		if [ "$$?" = "1" ]; then echo "\x1B[31m>> Build halted\x1B[39m"; echo "\x1B[31m>> $$output\x1B[39m"; exit 1; fi; \
-	elif [ "$(UNAME_S)" = "linux" ] && [ "$(UNAME_M)" = "aarch64" ]; then \
-		output=$$(scripts/linux-arm64-dependency-check.sh); \
-		if [ "$$?" = "1" ]; then echo ">> Build halted"; echo ">> $$output"; exit 1; fi; \
 	fi
 
 download-smart-contracts:
@@ -475,13 +477,18 @@ docker-build-local: vendor
 
 # Generate config files for a 4-node localnet
 localnet-generate: localnet-stop docker-build-local
-	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=chain-local ; fi
+ifeq ($(DENOM),nhash)
+	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=$(CHAIN_ID_DOCKER) ; fi
+else
+	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-local testnet --v 4 -o . --starting-ip-address 192.168.20.2 --keyring-backend=test --chain-id=$(CHAIN_ID_DOCKER) --custom-denom=$(DENOM) --minimum-gas-prices=$(MIN_FLOOR_PRICE)$(DENOM) --msgfee-floor-price=$(MIN_FLOOR_PRICE) ; fi
+endif
 
 # Run a 4-node testnet locally
 localnet-up:
 	docker-compose -f networks/local/docker-compose.yml --project-directory ./ up -d
 
 # Run a 4-node testnet locally (replace docker-build with docker-build local for better speed)
+# to run custom denom network, `make clean localnet-start DENOM=vspn MIN_FLOOR_PRICE=0`
 localnet-start: localnet-generate localnet-up
 
 # Stop testnet
@@ -490,11 +497,11 @@ localnet-stop:
 
 # Quick build using devnet environment and go platform target options.
 docker-build-dev: vendor
-	docker build --tag provenance-io/blockchain-dev -f networks/dev/blockchain-dev/Dockerfile .
+	docker build --target provenance-$(shell uname -m) --tag provenance-io/blockchain-dev -f networks/dev/blockchain-dev/Dockerfile .
 
 # Generate config files for a single node devnet
 devnet-generate: devnet-stop docker-build-dev
-	docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-dev keys list
+	@if ! [ -f build/nodedev/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-dev keys list ; fi
 
 # Run a single node devnet locally
 devnet-up:
@@ -529,6 +536,9 @@ containerProtoGen=prov-proto-gen-$(containerProtoVer)
 containerProtoGenSwagger=prov-proto-gen-swagger-$(containerProtoVer)
 containerProtoFmt=prov-proto-fmt-$(containerProtoVer)
 
+# The proto gen stuff will update go.mod and go.sum in ways we don't want (due to docker stuff).
+# So we need to go mod tidy afterward, but it can't go in the scripts for the same reason that we need it.
+
 proto-gen:
 	@echo "Generating Protobuf files"
 	if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then \
@@ -537,11 +547,13 @@ proto-gen:
 		docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
 			sh ./scripts/protocgen.sh; \
 	fi
+	go mod tidy
 
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:
 	@echo "Generating Protobuf Any"
 	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) sh ./scripts/protocgen-any.sh
+	go mod tidy
 
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
@@ -551,6 +563,7 @@ proto-swagger-gen:
 		docker run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
 			sh ./scripts/protoc-swagger-gen.sh; \
 	fi
+	go mod tidy
 
 proto-format:
 	@echo "Formatting Protobuf files"

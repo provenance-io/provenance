@@ -3,16 +3,19 @@ package types
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // DefaultFloorGasPrice to differentiate between base fee and additional fee when additional fee is in same denom as default base denom i.e nhash
 // cannot be a const unfortunately because it's a custom type.
-var DefaultFloorGasPrice = sdk.Coin{
-	Amount: sdk.NewInt(1905),
-	Denom:  NhashDenom,
+func DefaultFloorGasPrice() sdk.Coin {
+	return sdk.Coin{
+		Amount: sdk.NewInt(pioconfig.GetProvenanceConfig().MsgFeeFloorGasPrice),
+		Denom:  pioconfig.GetProvenanceConfig().MsgFloorDenom,
+	}
 }
 
 var DefaultNhashPerUsdMil = uint64(25_000_000)
@@ -20,8 +23,9 @@ var DefaultNhashPerUsdMil = uint64(25_000_000)
 var (
 	// ParamStoreKeyFloorGasPrice if msg fees are paid in the same denom as base default gas is paid, then use this to differentiate between base price
 	// and additional fees.
-	ParamStoreKeyFloorGasPrice  = []byte("FloorGasPrice")
-	ParamStoreKeyNhashPerUsdMil = []byte("NhashPerUsdMil")
+	ParamStoreKeyFloorGasPrice      = []byte("FloorGasPrice")
+	ParamStoreKeyNhashPerUsdMil     = []byte("NhashPerUsdMil")
+	ParamStoreKeyConversionFeeDenom = []byte("ConversionFeeDenom")
 )
 
 // ParamKeyTable for marker module
@@ -33,10 +37,12 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams(
 	floorGasPrice sdk.Coin,
 	nhashPerUsdMil uint64,
+	conversionFeeDenom string,
 ) Params {
 	return Params{
-		FloorGasPrice:  floorGasPrice,
-		NhashPerUsdMil: nhashPerUsdMil,
+		FloorGasPrice:      floorGasPrice,
+		NhashPerUsdMil:     nhashPerUsdMil,
+		ConversionFeeDenom: conversionFeeDenom,
 	}
 }
 
@@ -45,14 +51,16 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(ParamStoreKeyFloorGasPrice, &p.FloorGasPrice, validateCoinParam),
 		paramtypes.NewParamSetPair(ParamStoreKeyNhashPerUsdMil, &p.NhashPerUsdMil, validateNhashPerUsdMilParam),
+		paramtypes.NewParamSetPair(ParamStoreKeyConversionFeeDenom, &p.ConversionFeeDenom, validateConversionFeeDenomParam),
 	}
 }
 
 // DefaultParams is the default parameter configuration for the bank module
 func DefaultParams() Params {
 	return NewParams(
-		DefaultFloorGasPrice,
+		DefaultFloorGasPrice(),
 		DefaultNhashPerUsdMil,
+		pioconfig.GetProvenanceConfig().FeeDenom,
 	)
 }
 
@@ -95,6 +103,14 @@ func validateCoinParam(i interface{}) error {
 
 func validateNhashPerUsdMilParam(i interface{}) error {
 	_, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return nil
+}
+
+func validateConversionFeeDenomParam(i interface{}) error {
+	_, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
