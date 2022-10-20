@@ -11,7 +11,7 @@ services:
     environment:
       - ID=dev
       - LOG=${LOG:-provenanced.log}
-      - PIO_HOME=/provenance/nodedev
+      - PIO_HOME=/provenance
     volumes:
       - ./build:/provenance:Z
 

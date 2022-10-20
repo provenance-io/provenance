@@ -24,10 +24,10 @@ ifeq ($(WITH_BADGERDB),yes)
   WITH_BADGERDB=true
 endif
 
-BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2> /dev/null)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
 TM_VERSION := $(shell $(GO) list -m github.com/tendermint/tendermint 2> /dev/null | sed 's:.* ::') # grab everything after the space in "github.com/tendermint/tendermint v0.34.7"
-COMMIT := $(shell git log -1 --format='%h')
+COMMIT := $(shell git log -1 --format='%h' 2> /dev/null)
 # don't override user values
 ifeq (,$(VERSION))
   VERSION := $(shell git describe --exact-match 2>/dev/null)
@@ -334,6 +334,7 @@ go.sum: go.mod
 lint:
 	$(GOLANGCI_LINT) run
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "./client/*" -not -path "*.git*" -not -path "*.pb.go" | xargs gofmt -d -s
+	scripts/no-now-lint.sh
 	$(GO) mod verify
 
 clean:
@@ -473,11 +474,11 @@ localnet-stop:
 
 # Quick build using devnet environment and go platform target options.
 docker-build-dev: vendor
-	docker build --tag provenance-io/blockchain-dev -f networks/dev/blockchain-dev/Dockerfile .
+	docker build --target provenance-$(shell uname -m) --tag provenance-io/blockchain-dev -f networks/dev/blockchain-dev/Dockerfile .
 
 # Generate config files for a single node devnet
 devnet-generate: devnet-stop docker-build-dev
-	docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-dev keys list
+	@if ! [ -f build/nodedev/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-dev keys list ; fi
 
 # Run a single node devnet locally
 devnet-up:
