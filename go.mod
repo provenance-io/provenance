@@ -167,6 +167,7 @@ replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.4
 
 // Part of dragonberry fix.
 // TODO: Remove (and bump ics23 above) once github.com/confio/ics23/go releases a fixed version.
+// TODO: When this is changed or removed, update the entry in scripts/proto-update-deps.sh too.
 replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 
 replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
