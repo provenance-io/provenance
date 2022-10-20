@@ -117,12 +117,9 @@ func UpgradeICA(ctx sdk.Context, app *App, versionMap *module.VersionMap) {
 	}
 
 	// create ICS27 Host submodule params
-	// TODO Verify which messages we want to run on the host/Provenance chain
 	hostParams := icahosttypes.Params{
-		HostEnabled: true,
-		AllowMessages: []string{
-			"*",
-		},
+		HostEnabled:   true,
+		AllowMessages: []string{},
 	}
 
 	// initialize ICS27 module
