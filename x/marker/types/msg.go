@@ -12,6 +12,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant"
+
+	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 )
 
 const (
@@ -26,6 +29,7 @@ const (
 	TypeBurnRequest         = "burn"
 	TypeWithdrawRequest     = "withdraw"
 	TypeTransferRequest     = "transfer"
+	TypeIbcTransferRequest  = "ibctransfer"
 	TypeSetMetadataRequest  = "setmetadata"
 	TypeGrantAllowance      = "grantallowance"
 )
@@ -43,6 +47,7 @@ var (
 	_ sdk.Msg = &MsgBurnRequest{}
 	_ sdk.Msg = &MsgWithdrawRequest{}
 	_ sdk.Msg = &MsgTransferRequest{}
+	_ sdk.Msg = &MsgIbcTransferRequest{}
 	_ sdk.Msg = &MsgGrantAllowanceRequest{}
 )
 
@@ -78,6 +83,9 @@ func (msg MsgWithdrawRequest) Type() string { return TypeWithdrawRequest }
 
 // Type returns the message action.
 func (msg MsgTransferRequest) Type() string { return TypeTransferRequest }
+
+// Type returns the message action.
+func (msg MsgIbcTransferRequest) Type() string { return TypeIbcTransferRequest }
 
 // Type returns the message action.
 func (msg MsgSetDenomMetadataRequest) Type() string { return TypeSetMetadataRequest }
@@ -172,11 +180,7 @@ func (msg MsgAddAccessRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgAddAccessRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewDeleteAccessRequest
@@ -208,11 +212,7 @@ func (msg MsgDeleteAccessRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgDeleteAccessRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgFinalizeRequest
@@ -242,11 +242,7 @@ func (msg MsgFinalizeRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgFinalizeRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgActivateRequest
@@ -276,11 +272,7 @@ func (msg MsgActivateRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgActivateRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgCancelRequest
@@ -310,11 +302,7 @@ func (msg MsgCancelRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgCancelRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgDeleteRequest
@@ -344,11 +332,7 @@ func (msg MsgDeleteRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgDeleteRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgMintRequest creates a mint supply message
@@ -378,11 +362,7 @@ func (msg MsgMintRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgMintRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgBurnRequest creates a burn supply message
@@ -413,11 +393,7 @@ func (msg MsgBurnRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgBurnRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgWithdrawRequest
@@ -463,11 +439,7 @@ func (msg MsgWithdrawRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgWithdrawRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgTransferRequest
@@ -515,6 +487,53 @@ func (msg MsgTransferRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{adminAddr}
 }
 
+// NewIbcMsgTransferRequest
+func NewIbcMsgTransferRequest(
+	administrator string,
+	sourcePort,
+	sourceChannel string,
+	token sdk.Coin,
+	sender,
+	receiver string,
+	timeoutHeight clienttypes.Height,
+	timeoutTimestamp uint64, //nolint:interfacer
+) *MsgIbcTransferRequest {
+	return &MsgIbcTransferRequest{
+		Administrator: administrator,
+		Transfer: ibctransfertypes.MsgTransfer{
+			SourcePort:       sourcePort,
+			SourceChannel:    sourceChannel,
+			Token:            token,
+			Sender:           sender,
+			Receiver:         receiver,
+			TimeoutHeight:    timeoutHeight,
+			TimeoutTimestamp: timeoutTimestamp,
+		},
+	}
+}
+
+// Route returns the name of the module.
+func (msg MsgIbcTransferRequest) Route() string { return ModuleName }
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgIbcTransferRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
+		return err
+	}
+	return msg.Transfer.ValidateBasic()
+}
+
+// GetSignBytes encodes the message for signing.
+func (msg MsgIbcTransferRequest) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners indicates that the message must have been signed by the address provided.
+func (msg MsgIbcTransferRequest) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
+}
+
 // NewSetDenomMetadataRequest  creates a new marker in a proposed state with a given total supply a denomination
 func NewSetDenomMetadataRequest(
 	metadata banktypes.Metadata, admin sdk.AccAddress, //nolint:interfacer
@@ -550,11 +569,7 @@ func (msg MsgSetDenomMetadataRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgSetDenomMetadataRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // GetFeeAllowanceI returns unpacked FeeAllowance
@@ -625,9 +640,5 @@ func (msg MsgGrantAllowanceRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }

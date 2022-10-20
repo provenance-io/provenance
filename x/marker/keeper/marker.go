@@ -9,6 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	ibckeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
+	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -691,6 +694,62 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 		from.String(),
 	)
 	if err := ctx.EventManager().EmitTypedEvent(markerTransferEvent); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// IbcTransferCoin transfers restricted coins between to chains when the administrator account holds the transfer
+// access right and the marker type is restricted_coin
+func (k Keeper) IbcTransferCoin(
+	ctx sdk.Context,
+	sourcePort, sourceChannel string,
+	token sdk.Coin,
+	sender, admin sdk.AccAddress,
+	receiver string,
+	timeoutHeight clienttypes.Height,
+	timeoutTimestamp uint64,
+	checkRestrictionsHandler ibckeeper.CheckRestrictionsHandler) error {
+	m, err := k.GetMarkerByDenom(ctx, token.Denom)
+	if err != nil {
+		return fmt.Errorf("marker not found for %s: %w", token.Denom, err)
+	}
+	if m.GetMarkerType() != types.MarkerType_RestrictedCoin {
+		return fmt.Errorf("marker type is not restricted_coin, brokered transfer not supported")
+	}
+	if !m.AddressHasAccess(admin, types.Access_Transfer) {
+		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
+	}
+	if !admin.Equals(sender) {
+		err = k.authzHandler(ctx, admin, sender, token)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = k.ibcKeeper.SendTransfer(
+		ctx,
+		sourcePort,
+		sourceChannel,
+		token,
+		sender,
+		receiver,
+		timeoutHeight,
+		timeoutTimestamp,
+		checkRestrictionsHandler,
+	)
+	if err != nil {
+		return err
+	}
+
+	markerIbcTransferEvent := types.NewEventMarkerIbcTransfer(
+		token.Amount.String(),
+		token.Denom,
+		admin.String(),
+		sender.String(),
+	)
+	if err := ctx.EventManager().EmitTypedEvent(markerIbcTransferEvent); err != nil {
 		return err
 	}
 

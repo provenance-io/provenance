@@ -6,6 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
+import "ibc/applications/transfer/v1/tx.proto";
 import "provenance/marker/v1/marker.proto";
 import "provenance/marker/v1/accessgrant.proto";
 
@@ -38,6 +39,9 @@ service Msg {
   rpc AddMarker(MsgAddMarkerRequest) returns (MsgAddMarkerResponse);
   // Transfer marker denominated coin between accounts
   rpc Transfer(MsgTransferRequest) returns (MsgTransferResponse);
+  // Transfer over ibc any marker(including restricted markers) between ibc accounts.
+  // The relayer is still needed to accomplish ibc middleware relays.
+  rpc IbcTransfer(MsgIbcTransferRequest) returns (MsgIbcTransferResponse);
   // Allows Denom Metadata (see bank module) to be set for the Marker's Denom
   rpc SetDenomMetadata(MsgSetDenomMetadataRequest) returns (MsgSetDenomMetadataResponse);
   // GrantAllowance grants fee allowance to the grantee on the granter's
@@ -168,6 +172,18 @@ message MsgTransferRequest {
 
 // MsgTransferResponse defines the Msg/Transfer response type
 message MsgTransferResponse {}
+
+// MsgIbcTransferRequest defines the Msg/IbcTransfer request type for markers.
+message MsgIbcTransferRequest {
+  ibc.applications.transfer.v1.MsgTransfer transfer = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types.MsgTransfer"
+  ];
+  string administrator = 2;
+}
+
+// MsgIbcTransferResponse defines the Msg/IbcTransfer response type
+message MsgIbcTransferResponse {}
 
 // MsgSetDenomMetadataRequest defines the Msg/SetDenomMetadata request type
 message MsgSetDenomMetadataRequest {
