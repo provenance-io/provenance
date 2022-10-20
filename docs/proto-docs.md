@@ -144,6 +144,8 @@
     - [MsgIbcTransferResponse](#provenance.marker.v1.MsgIbcTransferResponse)
     - [MsgMintRequest](#provenance.marker.v1.MsgMintRequest)
     - [MsgMintResponse](#provenance.marker.v1.MsgMintResponse)
+    - [MsgReflectMarkerRequest](#provenance.marker.v1.MsgReflectMarkerRequest)
+    - [MsgReflectMarkerResponse](#provenance.marker.v1.MsgReflectMarkerResponse)
     - [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest)
     - [MsgSetDenomMetadataResponse](#provenance.marker.v1.MsgSetDenomMetadataResponse)
     - [MsgTransferRequest](#provenance.marker.v1.MsgTransferRequest)
@@ -2323,6 +2325,33 @@ MsgMintResponse defines the Msg/Mint response type
 
 
 
+<a name="provenance.marker.v1.MsgReflectMarkerRequest"></a>
+
+### MsgReflectMarkerRequest
+MsgReflectMarkerRequest defines the Msg/ReflectMarker request type for markers.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ibc_denom` | [string](#string) |  |  |
+| `ibc_channel` | [string](#string) |  |  |
+| `administrator` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgReflectMarkerResponse"></a>
+
+### MsgReflectMarkerResponse
+MsgReflectMarkerResponse defines the Msg/ReflectMarker response type
+
+
+
+
+
+
 <a name="provenance.marker.v1.MsgSetDenomMetadataRequest"></a>
 
 ### MsgSetDenomMetadataRequest
@@ -2432,6 +2461,7 @@ Msg defines the Marker Msg service.
 | `IbcTransfer` | [MsgIbcTransferRequest](#provenance.marker.v1.MsgIbcTransferRequest) | [MsgIbcTransferResponse](#provenance.marker.v1.MsgIbcTransferResponse) | Transfer over ibc any marker(including restricted markers) between ibc accounts. The relayer is still needed to accomplish ibc middleware relays. | |
 | `SetDenomMetadata` | [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest) | [MsgSetDenomMetadataResponse](#provenance.marker.v1.MsgSetDenomMetadataResponse) | Allows Denom Metadata (see bank module) to be set for the Marker's Denom | |
 | `GrantAllowance` | [MsgGrantAllowanceRequest](#provenance.marker.v1.MsgGrantAllowanceRequest) | [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse) | GrantAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
+| `ReflectMarker` | [MsgReflectMarkerRequest](#provenance.marker.v1.MsgReflectMarkerRequest) | [MsgReflectMarkerResponse](#provenance.marker.v1.MsgReflectMarkerResponse) | ReflectMarker is used to create a marker on remote chain using ica that reflects the marker on the host chain | |
 
  <!-- end services -->
 

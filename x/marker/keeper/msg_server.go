@@ -541,3 +541,19 @@ func (k msgServer) SetDenomMetadata(
 
 	return &types.MsgSetDenomMetadataResponse{}, nil
 }
+
+func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMarkerRequest) (*types.MsgReflectMarkerResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+	return nil, nil
+}
