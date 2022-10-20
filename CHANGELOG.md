@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
+* Add restricted marker transfer over ibc support [#1136](https://github.com/provenance-io/provenance/issues/1136)
+
 ### Improvements
 
 * Updated name restrictions documentation [#808](https://github.com/provenance-io/provenance/issues/808)
@@ -45,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Bump wasmd to our v0.29.0-pio-1 (from v0.28.0-0.46sdk-notional) [PR 1148](https://github.com/provenance-io/provenance/pull/1148).
   This fixes an erroneous attempt to migrate the wasmd module.
+* Fixed outdated devnet docker configurations [#1062](https://github.com/provenance-io/provenance/issues/1062)
 
 ---
 

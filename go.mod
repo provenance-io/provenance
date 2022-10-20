@@ -8,7 +8,7 @@ require (
 	github.com/CosmWasm/wasmd v0.29.0
 	github.com/armon/go-metrics v0.4.1
 	github.com/btcsuite/btcd v0.22.2
-	github.com/cosmos/cosmos-proto v1.0.0-alpha7
+	github.com/cosmos/cosmos-proto v1.0.0-alpha8
 	github.com/cosmos/cosmos-sdk v0.46.2
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-go/v5 v5.0.0
@@ -30,7 +30,7 @@ require (
 	github.com/tendermint/tendermint v0.34.21
 	github.com/tendermint/tm-db v0.6.7
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
-	golang.org/x/text v0.3.8
+	golang.org/x/text v0.4.0
 	google.golang.org/genproto v0.0.0-20220815135757-37a418bb8959
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1
@@ -86,7 +86,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/google/go-cmp v0.5.8 // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.1.0 // indirect
@@ -177,4 +177,4 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.29.0-pio-1
 
 // TODO: Required for IBC Transfer Module. Remove this when they patch it to include our changes. https://github.com/provenance-io/provenance/issues/1100
-replace github.com/cosmos/ibc-go/v5 => github.com/provenance-io/ibc-go/v5 v5.0.0-pio-1
+replace github.com/cosmos/ibc-go/v5 => github.com/provenance-io/ibc-go/v5 v5.0.0-pio-2
