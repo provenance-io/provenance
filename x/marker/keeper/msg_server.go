@@ -541,3 +541,7 @@ func (k msgServer) SetDenomMetadata(
 
 	return &types.MsgSetDenomMetadataResponse{}, nil
 }
+
+func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMarkerRequest) (*types.MsgReflectMarkerResponse, error) {
+	return nil, nil
+}

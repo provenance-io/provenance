@@ -18,20 +18,21 @@ import (
 )
 
 const (
-	TypeAddMarkerRequest    = "addmarker"
-	TypeAddAccessRequest    = "addaccess"
-	TypeDeleteAccessRequest = "deleteaccess"
-	TypeFinalizeRequest     = "finalize"
-	TypeActivateRequest     = "activate"
-	TypeCancelRequest       = "cancel"
-	TypeDeleteRequest       = "delete"
-	TypeMintRequest         = "mint"
-	TypeBurnRequest         = "burn"
-	TypeWithdrawRequest     = "withdraw"
-	TypeTransferRequest     = "transfer"
-	TypeIbcTransferRequest  = "ibctransfer"
-	TypeSetMetadataRequest  = "setmetadata"
-	TypeGrantAllowance      = "grantallowance"
+	TypeAddMarkerRequest     = "addmarker"
+	TypeAddAccessRequest     = "addaccess"
+	TypeDeleteAccessRequest  = "deleteaccess"
+	TypeFinalizeRequest      = "finalize"
+	TypeActivateRequest      = "activate"
+	TypeCancelRequest        = "cancel"
+	TypeDeleteRequest        = "delete"
+	TypeMintRequest          = "mint"
+	TypeBurnRequest          = "burn"
+	TypeWithdrawRequest      = "withdraw"
+	TypeTransferRequest      = "transfer"
+	TypeIbcTransferRequest   = "ibctransfer"
+	TypeSetMetadataRequest   = "setmetadata"
+	TypeGrantAllowance       = "grantallowance"
+	TypeReflectMarkerRequest = "reflectmarker"
 )
 
 // Compile time interface check.
@@ -49,6 +50,7 @@ var (
 	_ sdk.Msg = &MsgTransferRequest{}
 	_ sdk.Msg = &MsgIbcTransferRequest{}
 	_ sdk.Msg = &MsgGrantAllowanceRequest{}
+	_ sdk.Msg = &MsgReflectMarkerRequest{}
 )
 
 // Type returns the message action.
@@ -92,6 +94,9 @@ func (msg MsgSetDenomMetadataRequest) Type() string { return TypeSetMetadataRequ
 
 // Type returns the message action.
 func (msg MsgGrantAllowanceRequest) Type() string { return TypeGrantAllowance }
+
+// Type returns the message action.
+func (msg MsgReflectMarkerRequest) Type() string { return TypeReflectMarkerRequest }
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
 func NewMsgAddMarkerRequest(
@@ -641,4 +646,28 @@ func (msg MsgGrantAllowanceRequest) GetSignBytes() []byte {
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
+}
+
+// NewReflectMarkerRequest
+func NewReflectMarkerRequest() *MsgIbcTransferRequest {
+	return &MsgIbcTransferRequest{}
+}
+
+// Route returns the name of the module.
+func (msg MsgReflectMarkerRequest) Route() string { return ModuleName }
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgReflectMarkerRequest) ValidateBasic() error {
+	return nil
+}
+
+// GetSignBytes encodes the message for signing.
+func (msg MsgReflectMarkerRequest) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners indicates that the message must have been signed by the address provided.
+func (msg MsgReflectMarkerRequest) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{}
 }
