@@ -69,6 +69,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdRevokeAuthorization(),
 		GetCmdFeeGrant(),
 		GetIbcTransferTxCmd(),
+		GetCmdReflectMarker(),
 	)
 	return txCmd
 }
@@ -877,6 +878,31 @@ Examples:
 	cmd.Flags().Int64(FlagPeriod, 0, "period specifies the time duration in which period_spend_limit coins can be spent before that allowance is reset")
 	cmd.Flags().String(FlagPeriodLimit, "", "period limit specifies the maximum number of coins that can be spent in the period")
 
+	return cmd
+}
+
+func GetCmdReflectMarker() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "reflect [ibc-demon] [channel-id]",
+		Short:   "Reflect a marker from a remote chain",
+		Aliases: []string{"rm"},
+		Args:    cobra.ExactArgs(2),
+		Long:    strings.TrimSpace(`reflect a marker from a remote chain using ibc denom and channel`),
+		Example: fmt.Sprintf(`$ %s tx marker revoke-authz tp1skjw.. transfer`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			msg := types.NewReflectMarkerRequest(args[0], args[1], clientCtx.GetFromAddress().String())
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 

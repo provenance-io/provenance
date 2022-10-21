@@ -20,6 +20,9 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgAddMarkerRequest:
 			res, err := msgServer.AddMarker(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgReflectMarkerRequest:
+			res, err := msgServer.ReflectMarker(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgAddAccessRequest:
 			res, err := msgServer.AddAccess(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)

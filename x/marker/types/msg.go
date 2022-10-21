@@ -649,8 +649,12 @@ func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewReflectMarkerRequest
-func NewReflectMarkerRequest() *MsgReflectMarkerRequest {
-	return &MsgReflectMarkerRequest{}
+func NewReflectMarkerRequest(ibcDenom, channelID, administrator string) *MsgReflectMarkerRequest {
+	return &MsgReflectMarkerRequest{
+		IbcDenom:      ibcDenom,
+		IbcChannel:    channelID,
+		Administrator: administrator,
+	}
 }
 
 // Route returns the name of the module.

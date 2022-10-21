@@ -203,6 +203,7 @@ message MsgReflectMarkerRequest {
   string ibc_denom = 1;
   string ibc_channel =2;
   string administrator = 3;
+  google.protobuf.Any icaMarker = 4 [(cosmos_proto.accepts_interface) = "MarkerAccountI"];
 }
 
 // MsgReflectMarkerResponse defines the Msg/ReflectMarker response type

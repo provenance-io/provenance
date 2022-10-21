@@ -8,7 +8,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/provenance-io/provenance/x/inter-tx/keeper"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
@@ -176,14 +178,18 @@ func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (string, error) {
 		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
 			return "", sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal send response message: %s", err.Error())
 		}
-
 		return msgResponse.String(), nil
 	case sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}):
 		msgResponse := &stakingtypes.MsgDelegateResponse{}
 		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
 			return "", sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal delegate response message: %s", err.Error())
 		}
-
+		return msgResponse.String(), nil
+	case sdk.MsgTypeURL(&markertypes.MsgReflectMarkerRequest{}):
+		msgResponse := &markertypes.MsgReflectMarkerResponse{}
+		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
+			return "", sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal delegate response message: %s", err.Error())
+		}
 		return msgResponse.String(), nil
 	default:
 		return "", nil

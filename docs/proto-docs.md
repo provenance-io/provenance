@@ -2336,6 +2336,7 @@ MsgReflectMarkerRequest defines the Msg/ReflectMarker request type for markers.
 | `ibc_denom` | [string](#string) |  |  |
 | `ibc_channel` | [string](#string) |  |  |
 | `administrator` | [string](#string) |  |  |
+| `icaMarker` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 
 
 
