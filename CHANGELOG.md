@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+---
+
+## [v1.13.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.13.0-rc2) - 2022-10-21
+
 ### Features
 
 * Add restricted marker transfer over ibc support [#1136](https://github.com/provenance-io/provenance/issues/1136)
@@ -53,6 +57,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
   This fixes an erroneous attempt to migrate the wasmd module.
 * Fixed outdated devnet docker configurations [#1062](https://github.com/provenance-io/provenance/issues/1062)
 * Fix the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702) [PR 1173](https://github.com/provenance-io/provenance/pull/1173)
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.13.0-rc1...v1.13.0-rc2
+* https://github.com/provenance-io/provenance/compare/v1.12.1...v1.13.0-rc2
 
 ---
 
