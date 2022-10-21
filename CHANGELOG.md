@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+---
+
+## [v1.13.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.13.0-rc2) - 2022-10-04
+
 ### Features
 
 * Add restricted marker transfer over ibc support [#1136](https://github.com/provenance-io/provenance/issues/1136)
@@ -53,6 +57,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
   This fixes an erroneous attempt to migrate the wasmd module.
 * Fixed outdated devnet docker configurations [#1062](https://github.com/provenance-io/provenance/issues/1062)
 * Fix the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702) [PR 1173](https://github.com/provenance-io/provenance/pull/1173)
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.13.0-rc1...v1.13.0-rc2
+* https://github.com/provenance-io/provenance/compare/v1.12.1...v1.13.0-rc2
 
 ---
 
@@ -90,6 +99,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Remove the custom/legacy rest endpoints from the `x/attribute`, `x/marker`, and `x/name` modules. [#995](https://github.com/provenance-io/provenance/issues/995)
 * Remove the state-listening/plugin system (and `librdkafka` dependencies). [#995](https://github.com/provenance-io/provenance/issues/995)
+
+---
+
+## [v1.12.1](https://github.com/provenance-io/provenance/releases/tag/v1.12.1) - 2022-10-14
+
+### Improvements
+
+* Bump Cosmos-SDK to v0.45.9-pio-1 (from v0.45.5-pio-1) [PR 1159](https://github.com/provenance-io/provenance/pull/1159).
+
+### Bug Fixes
+
+* Bump ics23/go to Cosmos-SDK's v0.8.0 (from confio's v0.7.0) [PR 1159](https://github.com/provenance-io/provenance/pull/1159).
 
 ---
 

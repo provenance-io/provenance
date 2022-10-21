@@ -1,3 +1,29 @@
+## [v1.13.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.13.0-rc2) - 2022-10-04
+
+### Features
+
+* Add restricted marker transfer over ibc support [#1136](https://github.com/provenance-io/provenance/issues/1136)
+* Enable the node query service [PR 1173](https://github.com/provenance-io/provenance/pull/1173)
+
+### Improvements
+
+* Updated name restrictions documentation [#808](https://github.com/provenance-io/provenance/issues/808)
+* Updated Cosmos-SDK to v0.46.3-pio-1 (from v0.46.2-pio-2) [PR 1173](https://github.com/provenance-io/provenance/pull/1173)
+
+### Bug Fixes
+
+* Bump wasmd to our v0.29.0-pio-1 (from v0.28.0-0.46sdk-notional) [PR 1148](https://github.com/provenance-io/provenance/pull/1148).
+  This fixes an erroneous attempt to migrate the wasmd module.
+* Fixed outdated devnet docker configurations [#1062](https://github.com/provenance-io/provenance/issues/1062)
+* Fix the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702) [PR 1173](https://github.com/provenance-io/provenance/pull/1173)
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.13.0-rc1...v1.13.0-rc2
+* https://github.com/provenance-io/provenance/compare/v1.12.1...v1.13.0-rc2
+
+---
+
 ## [v1.13.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.13.0-rc1) - 2022-10-05
 
 ### Improvements
