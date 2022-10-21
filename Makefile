@@ -234,6 +234,17 @@ build-dbmigrate: validate-go-version go.sum
 	mkdir -p $(BUILDDIR)
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/dbmigrate
 
+#############################
+# Build DB Analysis Tools   #
+#############################
+
+install-dbanalyze: go.sum
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install $(BUILD_FLAGS) ./cmd/dbanalyze
+
+build-dbanalyze: validate-go-version go.sum
+	mkdir -p $(BUILDDIR)
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/dbanalyze
+
 ##############################
 # Release artifacts and plan #
 ##############################
