@@ -673,5 +673,5 @@ func (msg MsgReflectMarkerRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgReflectMarkerRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
