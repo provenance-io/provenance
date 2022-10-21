@@ -13,7 +13,6 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/cmd/dbanalyze/utils"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
 )
 
@@ -72,7 +71,7 @@ Provides an overview of the application database broken down by modules and subk
 			return nil
 		},
 		RunE: func(command *cobra.Command, args []string) error {
-			migrator := &utils.Analyzer{
+			migrator := &Analyzer{
 				HomePath: client.GetClientContextFromCmd(command).HomeDir,
 			}
 
@@ -102,7 +101,7 @@ func Execute(command *cobra.Command) error {
 }
 
 // DoMigrateCmd does all the work associated with the dbmigrate command (assuming that inputs have been validated).
-func DoAnalyzeCommand(command *cobra.Command, analyzer *utils.Analyzer) error {
+func DoAnalyzeCommand(command *cobra.Command, analyzer *Analyzer) error {
 	logger := server.GetServerContextFromCmd(command).Logger
 	logger.Info("Initializing analyzer.")
 	err := analyzer.Initialize()
