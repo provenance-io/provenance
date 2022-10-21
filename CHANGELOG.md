@@ -39,7 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
-## [v1.13.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.13.0-rc2) - 2022-10-04
+## [v1.13.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.13.0-rc2) - 2022-10-21
 
 ### Features
 
