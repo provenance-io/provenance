@@ -24,11 +24,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -763,17 +761,6 @@ func New(
 	app.SetFeeHandler(msgfeehandler)
 
 	app.SetEndBlocker(app.EndBlocker)
-
-	// Allow nodes to upgrade their iavl trees whenever they want using either the iavl-disable-fastnode config field or flag.
-	var iavlDisableFastnode = cast.ToBool(appOpts.Get(server.FlagIAVLFastNode))
-	if !iavlDisableFastnode {
-		// Note: If there's an upgrade, this store loader will be overwritten, but the one that replaces it will do the iavl migration too.
-		// The default is LoadLatestVersion() which calls the same stuff, but with a nil StoreUpgrades.
-		// Here, an empty StoreUpgrades is provided to trick it into doing the stores in a deterministic order.
-		app.SetStoreLoader(func(ms sdk.CommitMultiStore) error {
-			return ms.LoadLatestVersionAndUpgrade(&storetypes.StoreUpgrades{})
-		})
-	}
 
 	// -- TODO: Add upgrade plans for each release here
 	//    NOTE: Do not remove any handlers once deployed
