@@ -18,21 +18,22 @@ import (
 )
 
 const (
-	TypeAddMarkerRequest     = "addmarker"
-	TypeAddAccessRequest     = "addaccess"
-	TypeDeleteAccessRequest  = "deleteaccess"
-	TypeFinalizeRequest      = "finalize"
-	TypeActivateRequest      = "activate"
-	TypeCancelRequest        = "cancel"
-	TypeDeleteRequest        = "delete"
-	TypeMintRequest          = "mint"
-	TypeBurnRequest          = "burn"
-	TypeWithdrawRequest      = "withdraw"
-	TypeTransferRequest      = "transfer"
-	TypeIbcTransferRequest   = "ibctransfer"
-	TypeSetMetadataRequest   = "setmetadata"
-	TypeGrantAllowance       = "grantallowance"
-	TypeReflectMarkerRequest = "reflectmarker"
+	TypeAddMarkerRequest        = "addmarker"
+	TypeAddAccessRequest        = "addaccess"
+	TypeDeleteAccessRequest     = "deleteaccess"
+	TypeFinalizeRequest         = "finalize"
+	TypeActivateRequest         = "activate"
+	TypeCancelRequest           = "cancel"
+	TypeDeleteRequest           = "delete"
+	TypeMintRequest             = "mint"
+	TypeBurnRequest             = "burn"
+	TypeWithdrawRequest         = "withdraw"
+	TypeTransferRequest         = "transfer"
+	TypeIbcTransferRequest      = "ibctransfer"
+	TypeSetMetadataRequest      = "setmetadata"
+	TypeGrantAllowance          = "grantallowance"
+	TypeReflectMarkerRequest    = "reflectmarker"
+	TypeIcaReflectMarkerRequest = "icareflectmarker"
 )
 
 // Compile time interface check.
@@ -51,6 +52,7 @@ var (
 	_ sdk.Msg = &MsgIbcTransferRequest{}
 	_ sdk.Msg = &MsgGrantAllowanceRequest{}
 	_ sdk.Msg = &MsgReflectMarkerRequest{}
+	_ sdk.Msg = &MsgIcaReflectMarkerRequest{}
 )
 
 // Type returns the message action.
@@ -97,6 +99,9 @@ func (msg MsgGrantAllowanceRequest) Type() string { return TypeGrantAllowance }
 
 // Type returns the message action.
 func (msg MsgReflectMarkerRequest) Type() string { return TypeReflectMarkerRequest }
+
+// Type returns the message action.
+func (msg MsgIcaReflectMarkerRequest) Type() string { return TypeIcaReflectMarkerRequest }
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
 func NewMsgAddMarkerRequest(
@@ -663,6 +668,9 @@ func (msg MsgReflectMarkerRequest) Route() string { return ModuleName }
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgReflectMarkerRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
+		return err
+	}
 	return nil
 }
 
