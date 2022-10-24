@@ -551,12 +551,18 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	k.bankKeeper.HasSupply(ctx, msg.IbcDenom) // check the ibc exist ibc/blbll
-	// nhash
-	k.GetMarker(ctx, sdk.AccAddress(msg.Owner))
+	denomTrace := ibctypes.ParseDenomTrace(msg.IbcDenom)
+	marker, err := k.Keeper.GetMarkerByDenom(ctx, denomTrace.BaseDenom)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
 
-	icaReflectMsg := types.MsgIcaReflectMarkerRequest{}
-	submitTx, err := intertxtypes.NewMsgSubmitTx(&icaReflectMsg, msg.ConnectionId, msg.Owner)
+	icaReflect, err := types.NewMsgIcaReflectMarkerRequest(msg.IbcDenom, marker)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	submitTx, err := intertxtypes.NewMsgSubmitTx(icaReflect, msg.ConnectionId, msg.Owner)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
