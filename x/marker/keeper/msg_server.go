@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"time"
 
 	"github.com/armon/go-metrics"
 
@@ -13,6 +14,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
 	ibctypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 
+	intertxtypes "github.com/provenance-io/provenance/x/inter-tx/types"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -548,6 +550,17 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
+
+	k.bankKeeper.HasSupply(ctx, msg.IbcDenom) // check the ibc exist ibc/blbll
+	// nhash
+	k.GetMarker(ctx, sdk.AccAddress(msg.Owner))
+
+	icaReflectMsg := types.MsgIcaReflectMarkerRequest{}
+	submitTx, err := intertxtypes.NewMsgSubmitTx(&icaReflectMsg, msg.ConnectionId, msg.Owner)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	k.intertxKeeper.SubmitTx(ctx, submitTx, time.Minute)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

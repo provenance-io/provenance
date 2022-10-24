@@ -894,7 +894,7 @@ func GetCmdReflectMarker() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			msg := types.NewReflectMarkerRequest(args[0], args[1], clientCtx.GetFromAddress().String())
+			msg := types.NewMsgReflectMarkerRequest(args[0], args[1], clientCtx.GetFromAddress().String())
 			if err != nil {
 				return err
 			}

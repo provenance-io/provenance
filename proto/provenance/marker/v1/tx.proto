@@ -201,9 +201,18 @@ message MsgSetDenomMetadataResponse {}
 // MsgReflectMarkerRequest defines the Msg/ReflectMarker request type for markers.
 message MsgReflectMarkerRequest {
   string ibc_denom = 1;
-  string ibc_channel =2;
-  google.protobuf.Any ica_marker = 3 [(cosmos_proto.accepts_interface) = "MarkerAccountI"];
+  string connection_id =2;
+  string owner = 3;
 }
 
 // MsgReflectMarkerResponse defines the Msg/ReflectMarker response type
 message MsgReflectMarkerResponse {}
+
+// MsgIcaReflectRequest defines the Msg/ReflectMarker request type for markers.
+message MsgIcaReflectMarkerRequest {
+  string ibc_denom = 1;
+  google.protobuf.Any marker = 2 [(cosmos_proto.accepts_interface) = "MarkerAccountI"];
+}
+
+// MsgIcaReflectResponse defines the Msg/ReflectMarker response type
+message MsgIcaReflectMarkerResponse {}

@@ -142,6 +142,8 @@
     - [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse)
     - [MsgIbcTransferRequest](#provenance.marker.v1.MsgIbcTransferRequest)
     - [MsgIbcTransferResponse](#provenance.marker.v1.MsgIbcTransferResponse)
+    - [MsgIcaReflectMarkerRequest](#provenance.marker.v1.MsgIcaReflectMarkerRequest)
+    - [MsgIcaReflectMarkerResponse](#provenance.marker.v1.MsgIcaReflectMarkerResponse)
     - [MsgMintRequest](#provenance.marker.v1.MsgMintRequest)
     - [MsgMintResponse](#provenance.marker.v1.MsgMintResponse)
     - [MsgReflectMarkerRequest](#provenance.marker.v1.MsgReflectMarkerRequest)
@@ -2299,6 +2301,32 @@ MsgIbcTransferResponse defines the Msg/IbcTransfer response type
 
 
 
+<a name="provenance.marker.v1.MsgIcaReflectMarkerRequest"></a>
+
+### MsgIcaReflectMarkerRequest
+MsgIcaReflectRequest defines the Msg/ReflectMarker request type for markers.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ibc_denom` | [string](#string) |  |  |
+| `marker` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgIcaReflectMarkerResponse"></a>
+
+### MsgIcaReflectMarkerResponse
+MsgIcaReflectResponse defines the Msg/ReflectMarker response type
+
+
+
+
+
+
 <a name="provenance.marker.v1.MsgMintRequest"></a>
 
 ### MsgMintRequest
@@ -2334,9 +2362,8 @@ MsgReflectMarkerRequest defines the Msg/ReflectMarker request type for markers.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `ibc_denom` | [string](#string) |  |  |
-| `ibc_channel` | [string](#string) |  |  |
-| `administrator` | [string](#string) |  |  |
-| `ica_marker` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `connection_id` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
 
 
 

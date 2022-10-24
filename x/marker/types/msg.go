@@ -648,12 +648,12 @@ func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
-// NewReflectMarkerRequest
-func NewReflectMarkerRequest(ibcDenom, channelID, administrator string) *MsgReflectMarkerRequest {
+// NewMsgReflectMarkerRequest
+func NewMsgReflectMarkerRequest(ibcDenom, connectionID, owner string) *MsgReflectMarkerRequest {
 	return &MsgReflectMarkerRequest{
-		IbcDenom:      ibcDenom,
-		IbcChannel:    channelID,
-		Administrator: administrator,
+		IbcDenom:     ibcDenom,
+		ConnectionId: connectionID,
+		Owner:        owner,
 	}
 }
 
@@ -673,5 +673,40 @@ func (msg MsgReflectMarkerRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgReflectMarkerRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Owner)}
+}
+
+// NewReflectMarkerRequest
+func NewMsgIcaReflectMarkerRequest(ibcDenom string, marker MarkerAccountI) (*MsgIcaReflectMarkerRequest, error) {
+	message, ok := marker.(proto.Message)
+	if !ok {
+		return nil, sdkerrors.ErrPackAny.Wrapf("cannot proto marshal %T", message)
+	}
+	anyMsg, err := codectypes.NewAnyWithValue(message)
+	if err != nil {
+		return nil, err
+	}
+	return &MsgIcaReflectMarkerRequest{
+		IbcDenom: ibcDenom,
+		Marker:   anyMsg,
+	}, nil
+}
+
+// Route returns the name of the module.
+func (msg MsgIcaReflectMarkerRequest) Route() string { return ModuleName }
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgIcaReflectMarkerRequest) ValidateBasic() error {
+	return nil
+}
+
+// GetSignBytes encodes the message for signing.
+func (msg MsgIcaReflectMarkerRequest) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners indicates that the message must have been signed by the address provided.
+func (msg MsgIcaReflectMarkerRequest) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{}
 }
