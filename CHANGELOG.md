@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Bug Fixes
+
+* Pay attention to the `iavl-disable-fastnode` config field/flag [1193](https://github.com/provenance-io/provenance/pull/1193).
+
 ---
 
 ## [v1.13.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.13.0-rc2) - 2022-10-21
