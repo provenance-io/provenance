@@ -19,6 +19,12 @@ import (
 	"github.com/provenance-io/provenance/x/inter-tx/types"
 )
 
+type InterTxKeeperI interface {
+	ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error
+	SubmitTx(ctx sdk.Context, msg *types.MsgSubmitTx, timeout time.Duration) error
+	RegisterAccount(ctx sdk.Context, msg *types.MsgRegisterAccount) error
+}
+
 type Keeper struct {
 	cdc codec.Codec
 
@@ -42,6 +48,8 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, iaKeeper icacontro
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
+
+var _ InterTxKeeperI = &Keeper{}
 
 // ClaimCapability claims the channel capability passed via the OnOpenChanInit callback
 func (k *Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error {

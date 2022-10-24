@@ -566,7 +566,10 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	k.intertxKeeper.SubmitTx(ctx, submitTx, time.Minute)
+	err = k.intertxKeeper.SubmitTx(ctx, submitTx, time.Minute)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
