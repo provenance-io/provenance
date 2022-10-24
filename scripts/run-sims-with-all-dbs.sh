@@ -2,31 +2,58 @@
 # This script will run some sim tests: simple, import-export, multi-seed-short, nondeterminism
 # using each of the db backends: goleveldb, cleveldb, rocksdb, badgerdb.
 
-SIMS="${SIMS:-simple import-export multi-seed-short nondeterminism}"
-DB_TYPES="${DB_TYPES:-goleveldb cleveldb rocksdb badgerdb}"
-OUTPUT_DIR="${OUTPUT_DIR:-build/sim-times}"
+default_sims='simple import-export multi-seed-short nondeterminism'
+default_db_types='goleveldb cleveldb rocksdb badgerdb'
+default_output_dir='build/sim-times'
+
+if [[ "$#" -ne '0' ]]; then
+    cat << EOF
+This script will run multiple sim tests each using multiple DB backends.
+It will time each run, recording them all in a single file.
+
+Script paramaters can be defined using the following environment variables:
+  SIMS - The different sim test make targets to run.
+         Multiple entries should be delimited with a space.
+         If an entry doesn't start with test-sim-, test-sim- will be added to it.
+         Default: '$default_sims'
+  DB_TYPES - The different db types to use.
+             Multiple entries should be delimited with a space.
+             Default: '$default_db_types'
+  OUTPUT_DIR - The directory to hold the results.
+               There will be a .log file for each test.
+               There will be a single additional sim-times.log file with the timing results.
+               Default: '$default_output_dir'
+EOF
+    exit 1
+fi
+
+SIMS="${SIMS:-$default_sims}"
+DB_TYPES="${DB_TYPES:-$default_db_types}"
+OUTPUT_DIR="${OUTPUT_DIR:-$default_output_dir}"
 
 run_sims_with_all_dbs () {
-    local sim db_type time_file
+    local sim db_type time_file rv
     time_file="$OUTPUT_DIR/sim-times.log"
     printf 'Testing sims: %s\n' "${SIMS[*]}"
     printf 'With DB Backends: %s\n' "${DB_TYPES[*]}"
     printf 'Storing timing results in %s\n' "$time_file"
-    [[ -d "$OUTPUT_DIR" ]] || mkdir -p "$OUTPUT_DIR"
+    [[ -d "$OUTPUT_DIR" ]] || mkdir -p "$OUTPUT_DIR" || return $?
     [[ -e "$time_file" ]] && rm "$time_file"
+    rv=0
     for sim in $SIMS; do
         for db_type in $DB_TYPES; do
-            time_sim "$sim" "$db_type" 2> >( grep '[^[:space:]]' | tee -a "$time_file" )
+            time_sim "$sim" "$db_type" 2> >( grep '[^[:space:]]' | tee -a "$time_file" ) || rv=$?
         done
     done
     sleep 1
     printf 'Results stored in %s\n' "$OUTPUT_DIR"
+    return $rv
 }
 
 # Usage: time_sim <sim> <db_type>
 # This will output timing info to stderr, and everything else to stdout.
 time_sim () {
-    local sim db_type log
+    local sim db_type log rv
     sim="$1"
     db_type="$2"
     [[ "$sim" =~ ^test-sim- ]] || sim="test-sim-$sim"
@@ -39,7 +66,9 @@ time_sim () {
     # Redirect both stout and stderr to both the log file and stderr.
     # The time output does not get redirected by either the tee or 2>&1 and goes straight to stderr.
     time DB_BACKEND="$db_type" make "$sim" > >( tee "$log") 2>&1
-    printf 'Done [%d]: %s' "$?" "$log" >&2
+    rv=$?
+    printf 'Done [%d]: %s' "$rv" "$log" >&2
+    return $rv
 }
 
 CURDIR="$( cd "$( dirname "${BASH_SOURCE:-$0}" )"; pwd -P )"
@@ -50,6 +79,13 @@ fi
 cd "$CURDIR"
 cd ..
 printf 'Running make commands from directory %s\n\n' "$( pwd )"
-run_sims_with_all_dbs $@
+run_sims_with_all_dbs
+RV=$?
 
-exit $?
+if [[ "$RV" -ne '0' ]]; then
+    printf 'One or more tests failed.\n'
+else
+    printf 'All tests passed.\n'
+fi
+
+exit $RV
