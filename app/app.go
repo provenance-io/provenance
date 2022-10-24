@@ -439,6 +439,24 @@ func New(
 		return pioMsgFeesRouter.Handler(msg)
 	})
 
+	// register the staking hooks
+	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
+	app.StakingKeeper = *stakingKeeper.SetHooks(
+		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
+	)
+
+	// Create IBC Keeper
+	app.IBCKeeper = ibckeeper.NewKeeper(
+		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
+	)
+
+	// Create Transfer Keepers
+	app.TransferKeeper = ibctransferkeeper.NewKeeper(
+		appCodec, keys[ibctransfertypes.StoreKey], app.GetSubspace(ibctransfertypes.ModuleName),
+		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
+		app.AccountKeeper, app.BankKeeper, scopedTransferKeeper,
+	)
+
 	app.ICAControllerKeeper = icacontrollerkeeper.NewKeeper(
 		appCodec, keys[icacontrollertypes.StoreKey], app.GetSubspace(icacontrollertypes.SubModuleName),
 		app.IBCKeeper.ChannelKeeper, // may be replaced with middleware such as ics29 fee
@@ -460,12 +478,6 @@ func New(
 
 	icaControllerIBCModule := icacontroller.NewIBCMiddleware(interTxIBCModule, app.ICAControllerKeeper)
 
-	// register the staking hooks
-	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
-	app.StakingKeeper = *stakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
-	)
-
 	app.RewardKeeper = rewardkeeper.NewKeeper(appCodec, keys[rewardtypes.StoreKey], app.StakingKeeper, &app.GovKeeper, app.BankKeeper, app.AccountKeeper)
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(
@@ -473,18 +485,6 @@ func New(
 	)
 
 	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.BaseApp.MsgServiceRouter(), app.AccountKeeper, group.DefaultConfig())
-
-	// Create IBC Keeper
-	app.IBCKeeper = ibckeeper.NewKeeper(
-		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
-	)
-
-	// Create Transfer Keepers
-	app.TransferKeeper = ibctransferkeeper.NewKeeper(
-		appCodec, keys[ibctransfertypes.StoreKey], app.GetSubspace(ibctransfertypes.ModuleName),
-		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
-		app.AccountKeeper, app.BankKeeper, scopedTransferKeeper,
-	)
 
 	app.MetadataKeeper = metadatakeeper.NewKeeper(
 		appCodec, keys[metadatatypes.StoreKey], app.GetSubspace(metadatatypes.ModuleName), app.AccountKeeper, app.AuthzKeeper,
