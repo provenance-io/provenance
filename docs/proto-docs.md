@@ -2364,6 +2364,7 @@ MsgReflectMarkerRequest defines the Msg/ReflectMarker request type for markers.
 | `ibc_denom` | [string](#string) |  |  |
 | `connection_id` | [string](#string) |  |  |
 | `owner` | [string](#string) |  |  |
+| `signer` | [string](#string) |  |  |
 
 
 

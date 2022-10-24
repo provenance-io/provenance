@@ -649,11 +649,12 @@ func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgReflectMarkerRequest
-func NewMsgReflectMarkerRequest(ibcDenom, connectionID, owner string) *MsgReflectMarkerRequest {
+func NewMsgReflectMarkerRequest(ibcDenom, connectionID, owner, signer string) *MsgReflectMarkerRequest {
 	return &MsgReflectMarkerRequest{
 		IbcDenom:     ibcDenom,
 		ConnectionId: connectionID,
 		Owner:        owner,
+		Signer:       signer,
 	}
 }
 
@@ -673,7 +674,7 @@ func (msg MsgReflectMarkerRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgReflectMarkerRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Owner)}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Signer)}
 }
 
 // NewReflectMarkerRequest
