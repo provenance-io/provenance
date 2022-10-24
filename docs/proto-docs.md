@@ -2309,7 +2309,6 @@ MsgIcaReflectRequest defines the Msg/ReflectMarker request type for markers.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `ibc_denom` | [string](#string) |  |  |
 | `marker` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 
 
@@ -2361,7 +2360,7 @@ MsgReflectMarkerRequest defines the Msg/ReflectMarker request type for markers.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `ibc_denom` | [string](#string) |  |  |
+| `denom` | [string](#string) |  |  |
 | `connection_id` | [string](#string) |  |  |
 | `owner` | [string](#string) |  |  |
 | `signer` | [string](#string) |  |  |

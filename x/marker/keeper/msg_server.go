@@ -551,13 +551,12 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	denomTrace := ibctypes.ParseDenomTrace(msg.IbcDenom)
-	marker, err := k.Keeper.GetMarkerByDenom(ctx, denomTrace.BaseDenom)
+	marker, err := k.Keeper.GetMarkerByDenom(ctx, msg.Denom)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	icaReflect, err := types.NewMsgIcaReflectMarkerRequest(msg.IbcDenom, marker)
+	icaReflect, err := types.NewMsgIcaReflectMarkerRequest(marker)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}

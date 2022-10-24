@@ -649,9 +649,9 @@ func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgReflectMarkerRequest
-func NewMsgReflectMarkerRequest(ibcDenom, connectionID, owner, signer string) *MsgReflectMarkerRequest {
+func NewMsgReflectMarkerRequest(denom, connectionID, owner, signer string) *MsgReflectMarkerRequest {
 	return &MsgReflectMarkerRequest{
-		IbcDenom:     ibcDenom,
+		Denom:        denom,
 		ConnectionId: connectionID,
 		Owner:        owner,
 		Signer:       signer,
@@ -678,7 +678,7 @@ func (msg MsgReflectMarkerRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewReflectMarkerRequest
-func NewMsgIcaReflectMarkerRequest(ibcDenom string, marker MarkerAccountI) (*MsgIcaReflectMarkerRequest, error) {
+func NewMsgIcaReflectMarkerRequest(marker MarkerAccountI) (*MsgIcaReflectMarkerRequest, error) {
 	message, ok := marker.(proto.Message)
 	if !ok {
 		return nil, sdkerrors.ErrPackAny.Wrapf("cannot proto marshal %T", message)
@@ -688,8 +688,7 @@ func NewMsgIcaReflectMarkerRequest(ibcDenom string, marker MarkerAccountI) (*Msg
 		return nil, err
 	}
 	return &MsgIcaReflectMarkerRequest{
-		IbcDenom: ibcDenom,
-		Marker:   anyMsg,
+		Marker: anyMsg,
 	}, nil
 }
 
