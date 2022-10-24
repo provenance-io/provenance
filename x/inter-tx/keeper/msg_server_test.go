@@ -2,11 +2,13 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/inter-tx/keeper"
 	"github.com/provenance-io/provenance/x/inter-tx/types"
 )
@@ -67,6 +69,20 @@ func (suite *KeeperTestSuite) TestRegisterInterchainAccount() {
 			suite.SetupTest()
 
 			owner = TestOwnerAddress // must be explicitly changed
+			ownerAccount := sdk.MustAccAddressFromBech32(owner)
+
+			testutil.FundAccount(GetICAApp(suite.chainA).BankKeeper,
+				suite.chainA.GetContext(),
+				ownerAccount,
+				sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000000000000)))
+			testutil.FundAccount(GetICAApp(suite.chainA).BankKeeper,
+				suite.chainA.GetContext(),
+				suite.chainA.SenderAccount.GetAddress(),
+				sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000000000000)))
+			testutil.FundAccount(GetICAApp(suite.chainB).BankKeeper,
+				suite.chainB.GetContext(),
+				suite.chainB.SenderAccount.GetAddress(),
+				sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000000000000)))
 
 			path = NewICAPath(suite.chainA, suite.chainB)
 			suite.coordinator.SetupConnections(path)

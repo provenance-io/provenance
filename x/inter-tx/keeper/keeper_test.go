@@ -5,25 +5,19 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 
 	icaapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
 var (
-	// TODO: Cosmos-SDK ADR-28: Update crypto.AddressHash() when sdk uses address.Module()
-	// https://github.com/cosmos/cosmos-sdk/issues/10225
-	//
-	// TestAccAddress defines a reusable bech32 address for testing purposes
-	TestAccAddress = icatypes.GenerateAddress(sdk.AccAddress(crypto.AddressHash([]byte(icatypes.ModuleName))), ibctesting.FirstConnectionID, TestPortID)
-
 	// TestOwnerAddress defines a reusable bech32 address for testing purposes
 	TestOwnerAddress = "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs"
 
@@ -46,9 +40,12 @@ func init() {
 
 func SetupICATestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	db := dbm.NewMemDB()
+	pioconfig.SetProvenanceTestConfig()
 	encCdc := icaapp.MakeEncodingConfig()
-	app := icaapp.New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, icaapp.DefaultNodeHome, 5, encCdc, icaapp.EmptyAppOptions{})
-	return app, icaapp.NewDefaultGenesisState(encCdc.Codec)
+	app := icaapp.New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, icaapp.DefaultNodeHome, 5, encCdc, sdksim.EmptyAppOptions{})
+	app.LastCommitID()
+	app.AppCodec()
+	return app, icaapp.NewDefaultGenesisState(encCdc.Marshaler)
 }
 
 // KeeperTestSuite is a testing suite to test keeper functions
