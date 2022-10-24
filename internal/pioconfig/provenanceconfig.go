@@ -66,3 +66,9 @@ func GetProvenanceConfig() ProvenanceConfig {
 	// Should get empty config if not set, several things in app wiring will fail fast if this not set so not too worried.
 	return ProvenanceConfig{}
 }
+
+// SetTestProvenanceConfig creates a ProvenanceConfig for testing
+func SetProvenanceTestConfig() {
+	SetProvenanceConfig("", 0)
+	provConfig.MsgFeeFloorGasPrice = 0
+}
