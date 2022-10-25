@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/provenance-io/provenance/x/marker/types"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -28,22 +29,20 @@ func (k icaServer) ReflectMarker(goCtx context.Context, msg *types.MsgIcaReflect
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	// What do we do with ibc denom?
-	ibcDenom := msg.GetIbcDenom()
-
 	// TODO We need the correct error
 	reflectedMarker, ok := msg.GetMarker().GetCachedValue().(markertypes.MarkerAccountI)
 	if !ok {
 		return nil, sdkerrors.ErrInvalidType
 	}
 
-	// Check if the marker exists already
-	marker, err := k.GetMarkerByDenom(ctx, marker.GetDenom())
-	// If the marker exists then we want to just update some values on it and set it
-	// What if the marker has a different owner
+	// What do we do with ibc denom?
+	ibcDenom := msg.GetIbcDenom()
 
-	// If the marker doesn't exist then we want to add it
-	// Do we also want to Finalize and Activate it?
+	if k.markerExists(ctx, ibcDenom) {
+		k.updateMarkerPermissions(ctx, ibcDenom, reflectedMarker)
+	} else {
+		k.addMarker(ctx, ibcDenom, reflectedMarker)
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -52,4 +51,44 @@ func (k icaServer) ReflectMarker(goCtx context.Context, msg *types.MsgIcaReflect
 		),
 	)
 	return nil, nil
+}
+
+func (k icaServer) updateMarkerPermissions(ctx context.Context, denom string, marker markertypes.MarkerAccountI) {
+	// Find the permissions that are different
+	// Add these permissions
+
+}
+
+func (k icaServer) addMarker(ctx sdk.Context, denom string, marker markertypes.MarkerAccountI) {
+	addr := types.MustGetMarkerAddress(denom)
+	manager := marker.GetManager()
+	newAccount := authtypes.NewBaseAccount(addr, nil, 0, 0)
+	newMarker := marker.Clone()
+	newMarker.Denom = denom
+	newMarker.BaseAccount = newAccount
+
+	if k.GetEnableGovernance(ctx) {
+		ma.AllowGovernanceControl = true
+	} else {
+		ma.AllowGovernanceControl = msg.AllowGovernanceControl
+	}
+
+	if err := k.Keeper.AddMarkerAccount(ctx, ma); err != nil {
+		ctx.Logger().Error("unable to add marker", "err", err)
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
+	return &types.MsgAddMarkerResponse{}, nil
+}
+
+func (k icaServer) markerExists(ctx sdk.Context, denom string) bool {
+	_, err := k.GetMarkerByDenom(ctx, denom)
+	return err == nil
 }
