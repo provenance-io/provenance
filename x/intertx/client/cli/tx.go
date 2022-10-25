@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/pkg/errors"
-	"github.com/provenance-io/provenance/x/inter-tx/types"
+	"github.com/provenance-io/provenance/x/intertx/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -78,16 +78,15 @@ func getSubmitTxCmd() *cobra.Command {
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 			var txMsg sdk.Msg
-			if err := cdc.UnmarshalInterfaceJSON([]byte(args[0]), &txMsg); err != nil {
-
+			if unmarshalErr := cdc.UnmarshalInterfaceJSON([]byte(args[0]), &txMsg); unmarshalErr != nil {
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[0])
-				if err != nil {
-					return errors.Wrap(err, "neither JSON input nor path to .json file for sdk msg were provided")
+				contents, ioErr := ioutil.ReadFile(args[0])
+				if ioErr != nil {
+					return errors.Wrap(ioErr, "neither JSON input nor path to .json file for sdk msg were provided")
 				}
 
-				if err := cdc.UnmarshalInterfaceJSON(contents, &txMsg); err != nil {
-					return errors.Wrap(err, "error unmarshalling sdk msg file")
+				if unmarshalErr2 := cdc.UnmarshalInterfaceJSON(contents, &txMsg); unmarshalErr2 != nil {
+					return errors.Wrap(unmarshalErr2, "error unmarshalling sdk msg file")
 				}
 			}
 

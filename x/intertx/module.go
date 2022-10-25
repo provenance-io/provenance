@@ -15,9 +15,9 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/provenance-io/provenance/x/inter-tx/client/cli"
-	"github.com/provenance-io/provenance/x/inter-tx/keeper"
-	"github.com/provenance-io/provenance/x/inter-tx/types"
+	"github.com/provenance-io/provenance/x/intertx/client/cli"
+	"github.com/provenance-io/provenance/x/intertx/keeper"
+	"github.com/provenance-io/provenance/x/intertx/types"
 )
 
 var (

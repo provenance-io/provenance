@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package intertx;
+package provenance.intertx.v1;
 
-option go_package = "github.com/provenance-io/provenance/x/inter-tx/types";
+option go_package = "github.com/provenance-io/provenance/x/intertx/types";
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
@@ -11,7 +11,7 @@ import "google/api/annotations.proto";
 service Query {
   // QueryInterchainAccount returns the interchain account for given owner address on a given connection pair
   rpc InterchainAccount(QueryInterchainAccountRequest) returns (QueryInterchainAccountResponse) {
-    option (google.api.http).get = "/inter-tx/interchain_account/owner/{owner}/connection/{connection_id}";
+    option (google.api.http).get = "/intertx/interchain_account/owner/{owner}/connection/{connection_id}";
   }
 }
 

@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 
-	"github.com/provenance-io/provenance/x/inter-tx/types"
+	"github.com/provenance-io/provenance/x/intertx/types"
 )
 
 // InterchainAccount implements the Query/InterchainAccount gRPC method

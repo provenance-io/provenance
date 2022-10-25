@@ -150,9 +150,9 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	intertx "github.com/provenance-io/provenance/x/inter-tx"
-	intertxkeeper "github.com/provenance-io/provenance/x/inter-tx/keeper"
-	intertxtypes "github.com/provenance-io/provenance/x/inter-tx/types"
+	intertx "github.com/provenance-io/provenance/x/intertx"
+	intertxkeeper "github.com/provenance-io/provenance/x/intertx/keeper"
+	intertxtypes "github.com/provenance-io/provenance/x/intertx/types"
 )
 
 var (

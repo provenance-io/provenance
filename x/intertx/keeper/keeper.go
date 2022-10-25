@@ -16,7 +16,7 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
-	"github.com/provenance-io/provenance/x/inter-tx/types"
+	"github.com/provenance-io/provenance/x/intertx/types"
 )
 
 type Keeper struct {
@@ -44,8 +44,8 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // ClaimCapability claims the channel capability passed via the OnOpenChanInit callback
-func (k *Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error {
-	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
+func (k *Keeper) ClaimCapability(ctx sdk.Context, capability *capabilitytypes.Capability, name string) error {
+	return k.scopedKeeper.ClaimCapability(ctx, capability, name)
 }
 
 func (k *Keeper) SubmitTx(ctx sdk.Context, msg *types.MsgSubmitTx, timeout time.Duration) error {
