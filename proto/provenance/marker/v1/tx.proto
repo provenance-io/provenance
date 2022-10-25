@@ -200,7 +200,7 @@ message MsgSetDenomMetadataResponse {}
 
 // MsgReflectMarkerRequest defines the Msg/ReflectMarker request type for markers.
 message MsgReflectMarkerRequest {
-  string denom         = 1;
+  string ibc_denom     = 1;
   string connection_id = 2;
   string owner         = 3;
   string signer        = 4;

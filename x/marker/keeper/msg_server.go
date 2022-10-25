@@ -551,7 +551,12 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	marker, err := k.Keeper.GetMarkerByDenom(ctx, msg.Denom)
+	denom, err := k.ibcKeeper.DenomPathFromHash(ctx, msg.IbcDenom)
+	if err != nil {
+		return nil, err
+	}
+
+	marker, err := k.Keeper.GetMarkerByDenom(ctx, denom)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}

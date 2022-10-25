@@ -654,9 +654,9 @@ func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgReflectMarkerRequest
-func NewMsgReflectMarkerRequest(denom, connectionID, owner, signer string) *MsgReflectMarkerRequest {
+func NewMsgReflectMarkerRequest(ibcDenom, connectionID, owner, signer string) *MsgReflectMarkerRequest {
 	return &MsgReflectMarkerRequest{
-		Denom:        denom,
+		IbcDenom:     ibcDenom,
 		ConnectionId: connectionID,
 		Owner:        owner,
 		Signer:       signer,
