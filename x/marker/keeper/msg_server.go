@@ -561,7 +561,7 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	icaReflect, err := types.NewMsgIcaReflectMarkerRequest(marker)
+	icaReflect, err := types.NewMsgIcaReflectMarkerRequest(msg.IbcDenom, marker)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
