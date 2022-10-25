@@ -1726,8 +1726,8 @@ type MsgClient interface {
 	// GrantAllowance grants fee allowance to the grantee on the granter's
 	// account with the provided expiration time.
 	GrantAllowance(ctx context.Context, in *MsgGrantAllowanceRequest, opts ...grpc.CallOption) (*MsgGrantAllowanceResponse, error)
-	// ReflectMarker is used to create a marker on remote chain using ica that
-	// reflects the marker on the host chain
+	// ReflectMarker is used to create a marker on the host chain using ica that
+	// reflects the marker on the controller chain
 	ReflectMarker(ctx context.Context, in *MsgReflectMarkerRequest, opts ...grpc.CallOption) (*MsgReflectMarkerResponse, error)
 }
 
@@ -1906,8 +1906,8 @@ type MsgServer interface {
 	// GrantAllowance grants fee allowance to the grantee on the granter's
 	// account with the provided expiration time.
 	GrantAllowance(context.Context, *MsgGrantAllowanceRequest) (*MsgGrantAllowanceResponse, error)
-	// ReflectMarker is used to create a marker on remote chain using ica that
-	// reflects the marker on the host chain
+	// ReflectMarker is used to create a marker on the host chain using ica that
+	// reflects the marker on the controller chain
 	ReflectMarker(context.Context, *MsgReflectMarkerRequest) (*MsgReflectMarkerResponse, error)
 }
 

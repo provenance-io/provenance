@@ -47,8 +47,8 @@ service Msg {
   // GrantAllowance grants fee allowance to the grantee on the granter's
   // account with the provided expiration time.
   rpc GrantAllowance(MsgGrantAllowanceRequest) returns (MsgGrantAllowanceResponse);
-  // ReflectMarker is used to create a marker on remote chain using ica that
-  // reflects the marker on the host chain
+  // ReflectMarker is used to create a marker on the host chain using ica that
+  // reflects the marker on the controller chain
   rpc ReflectMarker(MsgReflectMarkerRequest) returns (MsgReflectMarkerResponse);
 }
 
@@ -200,9 +200,9 @@ message MsgSetDenomMetadataResponse {}
 
 // MsgReflectMarkerRequest defines the Msg/ReflectMarker request type for markers.
 message MsgReflectMarkerRequest {
-  string ibc_denom = 1;
-  string connection_id =2;
-  string owner = 3;
+  string ibc_denom     = 1;
+  string connection_id = 2;
+  string owner         = 3;
 }
 
 // MsgReflectMarkerResponse defines the Msg/ReflectMarker response type
@@ -210,8 +210,8 @@ message MsgReflectMarkerResponse {}
 
 // MsgIcaReflectRequest defines the Msg/ReflectMarker request type for markers.
 message MsgIcaReflectMarkerRequest {
-  string ibc_denom = 1;
-  google.protobuf.Any marker = 2 [(cosmos_proto.accepts_interface) = "MarkerAccountI"];
+  string              ibc_denom = 1;
+  google.protobuf.Any marker    = 2 [(cosmos_proto.accepts_interface) = "MarkerAccountI"];
 }
 
 // MsgIcaReflectResponse defines the Msg/ReflectMarker response type
