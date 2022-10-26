@@ -41,7 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
-## [v1.12.2](https://github.com/provenance-io/provenance/releases/tag/v1.12.1) - 2022-10-25
+## [v1.12.2](https://github.com/provenance-io/provenance/releases/tag/v1.12.2) - 2022-10-26
 
 Provenance v1.12.2 enables the ability to upgrade your IAVL state store to be faster and handle errors better. This upgrade is recommended and should be done at your convenience prior to the v1.13 chain upgrade.
 
