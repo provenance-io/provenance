@@ -37,6 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+
+* Bump Cosmos-SDK to v0.45.10-pio-3 (from v0.45.9-pio-1) [PR 1198](https://github.com/provenance-io/provenance/pull/1198)
+* Allow the IAVL store to be upgraded [PR 1193](https://github.com/provenance-io/provenance/pull/1193).
+
 ---
 
 ## [v1.12.1](https://github.com/provenance-io/provenance/releases/tag/v1.12.1) - 2022-10-14
