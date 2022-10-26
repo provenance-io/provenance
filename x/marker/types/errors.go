@@ -14,4 +14,5 @@ var (
 	ErrMarkerNotFound           = cerrs.Register(ModuleName, 7, "marker not found")
 	ErrReflectAccessTypeInvalid = cerrs.Register(ModuleName, 8, "access list contains mint and/or burn")
 	ErrReflectSupplyFixed       = cerrs.Register(ModuleName, 9, "reflected marker can't have fixed supply")
+	ErrReflectMarkerStatus      = cerrs.Register(ModuleName, 10, "reflected marker must have active status")
 )
