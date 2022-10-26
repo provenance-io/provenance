@@ -37,11 +37,12 @@ func (k icaServer) ReflectMarker(goCtx context.Context, msg *types.MsgIcaReflect
 
 	// What do we do with ibc denom?
 	ibcDenom := msg.GetIbcDenom()
+	signer := msg.GetSigners()[0]
 
 	if k.markerExists(ctx, ibcDenom) {
 		k.updateMarkerPermissions(ctx, ibcDenom, reflectedMarker)
 	} else {
-		k.addMarker(ctx, ibcDenom, reflectedMarker)
+		k.addMarker(ctx, signer, ibcDenom, reflectedMarker)
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -56,28 +57,46 @@ func (k icaServer) ReflectMarker(goCtx context.Context, msg *types.MsgIcaReflect
 func (k icaServer) updateMarkerPermissions(ctx context.Context, denom string, marker markertypes.MarkerAccountI) {
 	// Find the permissions that are different
 	// Add these permissions
+	// TODO Implement
 
 }
 
-func (k icaServer) addMarker(ctx sdk.Context, denom string, marker markertypes.MarkerAccountI) {
+func (k icaServer) addMarker(ctx sdk.Context, signer sdk.AccAddress, denom string, reflectedMarker markertypes.MarkerAccountI) error {
 	addr := types.MustGetMarkerAddress(denom)
-	manager := marker.GetManager()
-	newAccount := authtypes.NewBaseAccount(addr, nil, 0, 0)
-	newMarker := marker.Clone()
-	newMarker.Denom = denom
-	newMarker.BaseAccount = newAccount
+	account := authtypes.NewBaseAccount(addr, nil, 0, 0)
+	marker := reflectedMarker.Clone()
+	marker.AccessControl = []markertypes.AccessGrant{}
+	marker.Denom = denom
+	marker.BaseAccount = account
 
-	if k.GetEnableGovernance(ctx) {
-		ma.AllowGovernanceControl = true
-	} else {
-		ma.AllowGovernanceControl = msg.AllowGovernanceControl
-	}
-
-	if err := k.Keeper.AddMarkerAccount(ctx, ma); err != nil {
+	// TODO Check error
+	if err := k.Keeper.AddMarkerAccount(ctx, marker); err != nil {
 		ctx.Logger().Error("unable to add marker", "err", err)
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
+	// Add permissions
+	for _, grant := range reflectedMarker.GetAccessList() {
+		// TODO Check error
+		if err := k.Keeper.AddAccess(ctx, signer, denom, &grant); err != nil {
+			ctx.Logger().Error("unable to add access grant to marker", "err", err)
+			return sdkerrors.ErrUnauthorized.Wrap(err.Error())
+		}
+	}
+
+	// TODO Check error
+	if err := k.Keeper.FinalizeMarker(ctx, signer, marker.Denom); err != nil {
+		ctx.Logger().Error("unable to finalize marker", "err", err)
+		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	// TODO Check error
+	if err := k.Keeper.ActivateMarker(ctx, signer, marker.Denom); err != nil {
+		ctx.Logger().Error("unable to activate marker", "err", err)
+		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	// TODO Check events
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -85,7 +104,7 @@ func (k icaServer) addMarker(ctx sdk.Context, denom string, marker markertypes.M
 		),
 	)
 
-	return &types.MsgAddMarkerResponse{}, nil
+	return nil
 }
 
 func (k icaServer) markerExists(ctx sdk.Context, denom string) bool {
