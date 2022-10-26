@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+
+* Updated Cosmos-SDK to v0.46.3-pio-2 (from v0.46.3-pio-1) [1201](https://github.com/provenance-io/provenance/pull/1201).
+
 ### Bug Fixes
 
 * Pay attention to the `iavl-disable-fastnode` config field/flag [1193](https://github.com/provenance-io/provenance/pull/1193).
