@@ -551,22 +551,30 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	denomTrace := ibctypes.ParseDenomTrace(msg.IbcDenom)
-	marker, err := k.Keeper.GetMarkerByDenom(ctx, denomTrace.BaseDenom)
+	denom, err := k.ibcKeeper.DenomPathFromHash(ctx, msg.IbcDenom)
+	if err != nil {
+		return nil, err
+	}
+	k.ibcKeeper.DenomPathFromHash(ctx, msg.ConnectionId)
+
+	marker, err := k.Keeper.GetMarkerByDenom(ctx, denom)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	icaReflect, err := types.NewMsgIcaReflectMarkerRequest(msg.IbcDenom, marker)
+	icaReflect := types.NewMsgIcaReflectMarkerRequest(msg.IbcDenom, msg.Administrator, marker.GetStatus(), marker.GetMarkerType(), marker.GetAccessList(), marker.HasGovernanceEnabled())
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	submitTx, err := intertxtypes.NewMsgSubmitTx(icaReflect, msg.ConnectionId, msg.Owner)
+	submitTx, err := intertxtypes.NewMsgSubmitTx(icaReflect, msg.ConnectionId, msg.Administrator)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	k.intertxKeeper.SubmitTx(ctx, submitTx, time.Minute)
+	err = k.intertxKeeper.SubmitTx(ctx, submitTx, time.Minute)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

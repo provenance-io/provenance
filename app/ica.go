@@ -8,7 +8,7 @@ import (
 	ibctestingtypes "github.com/cosmos/ibc-go/v5/testing/types"
 )
 
-// These are soley for ica testing purposes
+// These are solely for ica testing purposes
 func (app *App) GetBaseApp() *baseapp.BaseApp {
 	return app.BaseApp
 }

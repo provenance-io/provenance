@@ -202,7 +202,7 @@ message MsgSetDenomMetadataResponse {}
 message MsgReflectMarkerRequest {
   string ibc_denom     = 1;
   string connection_id = 2;
-  string owner         = 3;
+  string administrator = 3;
 }
 
 // MsgReflectMarkerResponse defines the Msg/ReflectMarker response type
@@ -210,8 +210,15 @@ message MsgReflectMarkerResponse {}
 
 // MsgIcaReflectRequest defines the Msg/ReflectMarker request type for markers.
 message MsgIcaReflectMarkerRequest {
-  string              ibc_denom = 1;
-  google.protobuf.Any marker    = 2 [(cosmos_proto.accepts_interface) = "MarkerAccountI"];
+  string ibc_denom = 1;
+  string invoker   = 2;
+  // Indicates the current status of this marker record.
+  MarkerStatus status = 3;
+  // Marker type information
+  MarkerType           marker_type    = 4;
+  repeated AccessGrant access_control = 5 [(gogoproto.nullable) = false];
+  // indicates that governance based control is allowed for this marker
+  bool allow_governance_control = 6;
 }
 
 // MsgIcaReflectResponse defines the Msg/ReflectMarker response type
