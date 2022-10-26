@@ -35,30 +35,62 @@ func (k icaServer) ReflectMarker(goCtx context.Context, msg *types.MsgIcaReflect
 		return nil, sdkerrors.ErrInvalidType
 	}
 
-	// What do we do with ibc denom?
+	// TODO Check for no mint and burn
+
 	ibcDenom := msg.GetIbcDenom()
 	signer := msg.GetSigners()[0]
 
+	var err error
 	if k.markerExists(ctx, ibcDenom) {
-		k.updateMarkerPermissions(ctx, ibcDenom, reflectedMarker)
+		err = k.setMarkerPermissions(ctx, ibcDenom, reflectedMarker)
 	} else {
-		k.addMarker(ctx, signer, ibcDenom, reflectedMarker)
+		err = k.addMarker(ctx, signer, ibcDenom, reflectedMarker)
+	}
+	if err != nil {
+		return nil, err
 	}
 
+	// TODO Check event
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		),
 	)
-	return nil, nil
+
+	return &types.MsgIcaReflectMarkerResponse{}, nil
 }
 
-func (k icaServer) updateMarkerPermissions(ctx context.Context, denom string, marker markertypes.MarkerAccountI) {
-	// Find the permissions that are different
-	// Add these permissions
-	// TODO Implement
+func (k icaServer) setMarkerPermissions(ctx sdk.Context, denom string, reflectedMarker markertypes.MarkerAccountI) error {
+	marker, err := k.GetMarkerByDenom(ctx, denom)
+	if err != nil {
+		// TODO Some log
+		return err
+	}
+	if err := k.clearAccessList(ctx, marker); err != nil {
+		// TODO Some log
+		return err
+	}
 
+	for _, grant := range reflectedMarker.GetAccessList() {
+		// If these are either of the permissions then throw error
+		if grant.HasAccess(markertypes.Access_Mint) || grant.HasAccess(markertypes.Access_Burn) {
+			err := markertypes.ErrReflectAccessTypeInvalid
+			ctx.Logger().Error("unable to reflect grant from marker", "err", err)
+			return err
+		}
+
+		if err := marker.GrantAccess(&grant); err != nil {
+			ctx.Logger().Error("unable to add access grant to marker", "err", err)
+			return sdkerrors.ErrUnauthorized.Wrap(err.Error())
+		}
+	}
+
+	k.SetMarker(ctx, marker)
+
+	// TODO We may want a specific replace permissions event here
+
+	return nil
 }
 
 func (k icaServer) addMarker(ctx sdk.Context, signer sdk.AccAddress, denom string, reflectedMarker markertypes.MarkerAccountI) error {
@@ -69,19 +101,20 @@ func (k icaServer) addMarker(ctx sdk.Context, signer sdk.AccAddress, denom strin
 	marker.Denom = denom
 	marker.BaseAccount = account
 
+	if marker.SupplyFixed {
+		err := markertypes.ErrReflectSupplyFixed
+		ctx.Logger().Error("unable to add a reflected marker with fixed supply", "err", err)
+		return err
+	}
+
 	// TODO Check error
 	if err := k.Keeper.AddMarkerAccount(ctx, marker); err != nil {
 		ctx.Logger().Error("unable to add marker", "err", err)
 		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	// Add permissions
-	for _, grant := range reflectedMarker.GetAccessList() {
-		// TODO Check error
-		if err := k.Keeper.AddAccess(ctx, signer, denom, &grant); err != nil {
-			ctx.Logger().Error("unable to add access grant to marker", "err", err)
-			return sdkerrors.ErrUnauthorized.Wrap(err.Error())
-		}
+	if err := k.setMarkerPermissions(ctx, denom, reflectedMarker); err != nil {
+		return err
 	}
 
 	// TODO Check error
@@ -96,18 +129,20 @@ func (k icaServer) addMarker(ctx sdk.Context, signer sdk.AccAddress, denom strin
 		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	// TODO Check events
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
-
 	return nil
 }
 
 func (k icaServer) markerExists(ctx sdk.Context, denom string) bool {
 	_, err := k.GetMarkerByDenom(ctx, denom)
 	return err == nil
+}
+
+func (k icaServer) clearAccessList(ctx sdk.Context, marker markertypes.MarkerAccountI) error {
+	for _, grant := range marker.GetAccessList() {
+		if err := marker.RevokeAccess(grant.GetAddress()); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
