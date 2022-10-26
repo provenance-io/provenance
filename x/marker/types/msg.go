@@ -654,12 +654,11 @@ func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgReflectMarkerRequest
-func NewMsgReflectMarkerRequest(ibcDenom, connectionID, owner, signer string) *MsgReflectMarkerRequest {
+func NewMsgReflectMarkerRequest(ibcDenom, connectionID, administrator string) *MsgReflectMarkerRequest {
 	return &MsgReflectMarkerRequest{
-		IbcDenom:     ibcDenom,
-		ConnectionId: connectionID,
-		Owner:        owner,
-		Signer:       signer,
+		IbcDenom:      ibcDenom,
+		ConnectionId:  connectionID,
+		Administrator: administrator,
 	}
 }
 
@@ -668,7 +667,7 @@ func (msg MsgReflectMarkerRequest) Route() string { return ModuleName }
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgReflectMarkerRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
+	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
 		return err
 	}
 	return nil
@@ -682,23 +681,23 @@ func (msg MsgReflectMarkerRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgReflectMarkerRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Signer)}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewReflectMarkerRequest
-func NewMsgIcaReflectMarkerRequest(ibcDenom string, marker MarkerAccountI) (*MsgIcaReflectMarkerRequest, error) {
-	message, ok := marker.(proto.Message)
-	if !ok {
-		return nil, sdkerrors.ErrPackAny.Wrapf("cannot proto marshal %T", message)
-	}
-	anyMsg, err := codectypes.NewAnyWithValue(message)
-	if err != nil {
-		return nil, err
-	}
+func NewMsgIcaReflectMarkerRequest(ibcDenom, invoker string,
+	status MarkerStatus,
+	markerType MarkerType,
+	accessControl []AccessGrant,
+	allowGovernanceControl bool,
+) *MsgIcaReflectMarkerRequest {
 	return &MsgIcaReflectMarkerRequest{
-		IbcDenom: ibcDenom,
-		Marker:   anyMsg,
-	}, nil
+		IbcDenom:               ibcDenom,
+		Invoker:                invoker,
+		Status:                 status,
+		AccessControl:          accessControl,
+		AllowGovernanceControl: allowGovernanceControl,
+	}
 }
 
 // Route returns the name of the module.
@@ -717,5 +716,5 @@ func (msg MsgIcaReflectMarkerRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgIcaReflectMarkerRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Invoker)}
 }

@@ -2310,7 +2310,11 @@ MsgIcaReflectRequest defines the Msg/ReflectMarker request type for markers.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `ibc_denom` | [string](#string) |  |  |
-| `marker` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `invoker` | [string](#string) |  |  |
+| `status` | [MarkerStatus](#provenance.marker.v1.MarkerStatus) |  | Indicates the current status of this marker record. |
+| `marker_type` | [MarkerType](#provenance.marker.v1.MarkerType) |  | Marker type information |
+| `access_control` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
+| `allow_governance_control` | [bool](#bool) |  | indicates that governance based control is allowed for this marker |
 
 
 
@@ -2363,8 +2367,7 @@ MsgReflectMarkerRequest defines the Msg/ReflectMarker request type for markers.
 | ----- | ---- | ----- | ----------- |
 | `ibc_denom` | [string](#string) |  |  |
 | `connection_id` | [string](#string) |  |  |
-| `owner` | [string](#string) |  |  |
-| `signer` | [string](#string) |  |  |
+| `administrator` | [string](#string) |  |  |
 
 
 
