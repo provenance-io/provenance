@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/armon/go-metrics"
@@ -562,7 +563,32 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	icaReflect := types.NewMsgIcaReflectMarkerRequest(msg.IbcDenom, msg.Administrator, marker.GetStatus(), marker.GetMarkerType(), marker.GetAccessList(), marker.HasGovernanceEnabled())
+	if marker.GetManager().String() != msg.Administrator {
+		return nil, fmt.Errorf("%s is not the manager of the marker", msg.Administrator)
+	}
+
+	if marker.GetStatus() != types.StatusActive {
+		return nil, fmt.Errorf("marker must be in Active state : %s", marker.GetStatus())
+	}
+
+	var filteredAccessList []types.AccessGrant
+	for _, grant := range marker.GetAccessList() {
+		var acctAccess []types.Access
+		for _, access := range grant.Permissions {
+			if access != types.Access_Burn || access != types.Access_Mint {
+				acctAccess = append(acctAccess, access)
+			}
+		}
+		if len(acctAccess) > 0 {
+			accessGrant := types.AccessGrant{
+				Address:     grant.Address,
+				Permissions: acctAccess,
+			}
+			filteredAccessList = append(filteredAccessList, accessGrant)
+		}
+	}
+
+	icaReflect := types.NewMsgIcaReflectMarkerRequest(msg.IbcDenom, msg.Administrator, marker.GetStatus(), marker.GetMarkerType(), filteredAccessList, marker.HasGovernanceEnabled())
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
