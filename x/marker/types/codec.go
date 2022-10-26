@@ -60,6 +60,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgIbcTransferRequest{},
 		&MsgSetDenomMetadataRequest{},
 		&MsgReflectMarkerRequest{},
+		&MsgIcaReflectMarkerRequest{},
 	)
 
 	registry.RegisterImplementations(
