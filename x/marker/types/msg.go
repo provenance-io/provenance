@@ -695,6 +695,7 @@ func NewMsgIcaReflectMarkerRequest(ibcDenom, invoker string,
 	return &MsgIcaReflectMarkerRequest{
 		IbcDenom:               ibcDenom,
 		Invoker:                invoker,
+		MarkerType:             markerType,
 		Status:                 status,
 		AccessControl:          accessControl,
 		AllowGovernanceControl: allowGovernanceControl,
