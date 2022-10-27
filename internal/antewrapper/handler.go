@@ -8,9 +8,10 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
+
+type BaseAppSimulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, sdk.Context, error)
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
@@ -21,6 +22,7 @@ type HandlerOptions struct {
 	MsgFeesKeeper          msgfeestypes.MsgFeesKeeper
 	SignModeHandler        authsigning.SignModeHandler
 	SigGasConsumer         func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
+	simulateFunc           BaseAppSimulateFunc
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {

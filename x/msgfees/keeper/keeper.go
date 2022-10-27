@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"sort"
 
 	"golang.org/x/exp/constraints"
@@ -20,8 +21,6 @@ import (
 
 const StoreKey = types.ModuleName
 
-type baseAppSimulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, sdk.Context, error)
-
 // Keeper of the Additional fee store
 type Keeper struct {
 	storeKey         storetypes.StoreKey
@@ -29,7 +28,7 @@ type Keeper struct {
 	paramSpace       paramtypes.Subspace
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 	defaultFeeDenom  string
-	simulateFunc     baseAppSimulateFunc
+	simulateFunc     antewrapper.BaseAppSimulateFunc
 	txDecoder        sdk.TxDecoder
 }
 
@@ -41,7 +40,7 @@ func NewKeeper(
 	paramSpace paramtypes.Subspace,
 	feeCollectorName string,
 	defaultFeeDenom string,
-	simulateFunc baseAppSimulateFunc,
+	simulateFunc antewrapper.BaseAppSimulateFunc,
 	txDecoder sdk.TxDecoder,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
