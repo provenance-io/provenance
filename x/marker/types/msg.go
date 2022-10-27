@@ -705,6 +705,27 @@ func (msg MsgIcaReflectMarkerRequest) Route() string { return ModuleName }
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgIcaReflectMarkerRequest) ValidateBasic() error {
+	// Must be in active status
+	if msg.GetStatus() != StatusActive {
+		return ErrReflectMarkerStatus
+	}
+
+	// Must not have unknown marker type
+	if msg.MarkerType == MarkerType_Unknown {
+		return ErrReflectMarkerType
+	}
+
+	// Must have valid address
+	if _, err := sdk.AccAddressFromBech32(msg.Invoker); err != nil {
+		return err
+	}
+
+	// Cannot have mint or burn
+	for _, grant := range msg.GetAccessControl() {
+		if grant.HasAccess(Access_Mint) || grant.HasAccess(Access_Burn) {
+			return ErrReflectAccessTypeInvalid
+		}
+	}
 	return nil
 }
 
