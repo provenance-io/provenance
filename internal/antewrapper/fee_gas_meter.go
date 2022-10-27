@@ -2,6 +2,7 @@ package antewrapper
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/armon/go-metrics"
 
@@ -32,6 +33,12 @@ type FeeGasMeter struct {
 	// this is the base fee charged in decorator
 	baseFeeCharged sdk.Coins
 
+	// gas tracker, this is the gas usage tracker for the tx
+	gasConsumed sdkgas.Gas
+
+	// gas limit should be set to 4 mil
+	gasLimit sdkgas.Gas
+
 	simulate bool
 }
 
@@ -60,6 +67,7 @@ func (g *FeeGasMeter) GasConsumed() sdkgas.Gas {
 	usage = fmt.Sprintf("%s\n  Total: %d gas", usage, g.base.GasConsumed())
 
 	g.log.Info(usage)
+	// don't consume the gas
 	return g.base.GasConsumed()
 }
 
@@ -75,7 +83,10 @@ func (g *FeeGasMeter) GasConsumedToLimit() sdkgas.Gas {
 
 // GasRemaining returns the gas left in the GasMeter.
 func (g *FeeGasMeter) GasRemaining() sdkgas.Gas {
-	return g.base.GasRemaining()
+	if g.IsPastLimit() {
+		return 0
+	}
+	return g.gasLimit - g.gasConsumed
 }
 
 // Limit for amount of gas that can be consumed (if zero then unlimited)
@@ -93,17 +104,39 @@ func (g *FeeGasMeter) ConsumeGas(amount sdkgas.Gas, descriptor string) {
 
 	telemetry.IncrCounterWithLabels([]string{"tx", "gas", "consumed"}, float32(amount), []metrics.Label{telemetry.NewLabel("purpose", descriptor)})
 
-	g.base.ConsumeGas(amount, descriptor)
+	g.ConsumeGasWithOutLimitCheck(amount, descriptor)
+}
+
+// ConsumeGasWithOutLimitCheck adds the given amount of gas to the gas consumed and panics if it overflows the limit or out of gas.
+func (g *FeeGasMeter) ConsumeGasWithOutLimitCheck(amount sdkgas.Gas, descriptor string) {
+	var overflow bool
+	g.gasConsumed, overflow = addUint64Overflow(g.gasConsumed, amount)
+	if overflow {
+		g.gasConsumed = math.MaxUint64
+		panic(sdkgas.ErrorGasOverflow{Descriptor: descriptor})
+	}
+
+	// do not check Limit
+}
+
+// addUint64Overflow performs the addition operation on two uint64 integers and
+// returns a boolean on whether or not the result overflows.
+func addUint64Overflow(a, b uint64) (uint64, bool) {
+	if math.MaxUint64-a < b {
+		return 0, true
+	}
+
+	return a + b, false
 }
 
 // IsPastLimit indicates consumption has passed the limit (if any)
 func (g *FeeGasMeter) IsPastLimit() bool {
-	return g.base.IsPastLimit()
+	return g.gasConsumed > g.gasLimit
 }
 
 // IsOutOfGas indicates the gas meter has tracked consumption at or above the limit
 func (g *FeeGasMeter) IsOutOfGas() bool {
-	return g.base.IsOutOfGas()
+	return g.gasConsumed >= g.gasLimit
 }
 
 // String implements stringer interface
