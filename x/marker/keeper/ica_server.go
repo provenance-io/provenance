@@ -6,9 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/provenance-io/provenance/x/marker/types"
 
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/marker/types"
 )
 
 type icaServer struct {
@@ -25,7 +24,7 @@ func (k icaServer) ReflectMarker(goCtx context.Context, msg *types.MsgIcaReflect
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	var err error
 
-	if err := msg.ValidateBasic(); err != nil {
+	if err = msg.ValidateBasic(); err != nil {
 		ctx.Logger().Error("unable to pass validate basic", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -53,21 +52,22 @@ func (k icaServer) ReflectMarker(goCtx context.Context, msg *types.MsgIcaReflect
 	return &types.MsgIcaReflectMarkerResponse{}, nil
 }
 
-func (k icaServer) setMarkerPermissions(ctx sdk.Context, reflectedMarker markertypes.MarkerAccountI) error {
+func (k icaServer) setMarkerPermissions(ctx sdk.Context, reflectedMarker types.MarkerAccountI) error {
 	marker, err := k.GetMarkerByDenom(ctx, reflectedMarker.GetDenom())
 	if err != nil {
 		ctx.Logger().Error("unable to get marker by denom", "err", err)
 		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	if err := k.clearAccessList(ctx, marker); err != nil {
+	if err := k.clearAccessList(marker); err != nil {
 		ctx.Logger().Error("failed to clear access list of existing marker", "err", err)
 		return sdkerrors.ErrUnauthorized.Wrap(err.Error())
 	}
 
 	for _, grant := range reflectedMarker.GetAccessList() {
+		grant := grant
 		// If these are either of the permissions then throw error
-		/*if grant.HasAccess(markertypes.Access_Mint) || grant.HasAccess(markertypes.Access_Burn) {
-			err := markertypes.ErrReflectAccessTypeInvalid
+		/*if grant.HasAccess(types.Access_Mint) || grant.HasAccess(types.Access_Burn) {
+			err := types.ErrReflectAccessTypeInvalid
 			ctx.Logger().Error("unable to reflect grant from marker", "err", err)
 			return err
 		}*/
@@ -85,11 +85,13 @@ func (k icaServer) setMarkerPermissions(ctx sdk.Context, reflectedMarker markert
 	return nil
 }
 
-func (k icaServer) addMarker(ctx sdk.Context, signer sdk.AccAddress, marker markertypes.MarkerAccountI) error {
+func (k icaServer) addMarker(ctx sdk.Context, signer sdk.AccAddress, marker types.MarkerAccountI) error {
 	// Must be in proposed state
-	marker.SetStatus(markertypes.StatusProposed)
+	if err := marker.SetStatus(types.StatusProposed); err != nil {
+		ctx.Logger().Error("unable to add set status to proposed for marker", "err", err)
+		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
 
-	// TODO Check error
 	if err := k.Keeper.AddMarkerAccount(ctx, marker); err != nil {
 		ctx.Logger().Error("unable to add marker account", "err", err)
 		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
@@ -100,13 +102,11 @@ func (k icaServer) addMarker(ctx sdk.Context, signer sdk.AccAddress, marker mark
 		return err
 	}*/
 
-	// TODO Check error
 	if err := k.Keeper.FinalizeMarker(ctx, signer, marker.GetDenom()); err != nil {
 		ctx.Logger().Error("unable to finalize marker", "err", err)
 		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	// TODO Check error
 	if err := k.Keeper.ActivateMarker(ctx, signer, marker.GetDenom()); err != nil {
 		ctx.Logger().Error("unable to activate marker", "err", err)
 		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
@@ -120,7 +120,7 @@ func (k icaServer) markerExists(ctx sdk.Context, denom string) bool {
 	return err == nil
 }
 
-func (k icaServer) clearAccessList(ctx sdk.Context, marker markertypes.MarkerAccountI) error {
+func (k icaServer) clearAccessList(marker types.MarkerAccountI) error {
 	for _, grant := range marker.GetAccessList() {
 		if err := marker.RevokeAccess(grant.GetAddress()); err != nil {
 			return err
@@ -130,14 +130,14 @@ func (k icaServer) clearAccessList(ctx sdk.Context, marker markertypes.MarkerAcc
 	return nil
 }
 
-func (k icaServer) extractMarker(msg *types.MsgIcaReflectMarkerRequest) markertypes.MarkerAccountI {
+func (k icaServer) extractMarker(msg *types.MsgIcaReflectMarkerRequest) types.MarkerAccountI {
 	manager := msg.GetSigners()[0]
 
 	// TODO Check if this works with the ibc denom
 	addr := types.MustGetMarkerAddress(msg.GetIbcDenom())
 	account := authtypes.NewBaseAccount(addr, nil, 0, 0)
 
-	marker := markertypes.NewMarkerAccount(
+	marker := types.NewMarkerAccount(
 		account,
 		sdk.NewInt64Coin(msg.GetIbcDenom(), 0),
 		manager,
