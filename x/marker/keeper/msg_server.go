@@ -563,14 +563,11 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	if marker.GetManager().String() != msg.Administrator {
-		return nil, fmt.Errorf("%s is not the manager of the marker", msg.Administrator)
-	}
-
 	if marker.GetStatus() != types.StatusActive {
 		return nil, fmt.Errorf("marker must be in Active state : %s", marker.GetStatus())
 	}
 
+	// TODO can probably just do a remove of access rights of mint and burn
 	var filteredAccessList []types.AccessGrant
 	for _, grant := range marker.GetAccessList() {
 		var acctAccess []types.Access
@@ -588,7 +585,11 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 		}
 	}
 
-	icaReflect := types.NewMsgIcaReflectMarkerRequest(msg.IbcDenom, msg.Administrator, marker.GetStatus(), marker.GetMarkerType(), filteredAccessList, marker.HasGovernanceEnabled())
+	owner, found := k.intertxKeeper.GetInterChainAccountAddress(ctx, msg.ConnectionId, msg.Administrator)
+	if !found {
+		return nil, fmt.Errorf("interchain account for address %s not found", msg.Administrator)
+	}
+	icaReflect := types.NewMsgIcaReflectMarkerRequest(msg.IbcDenom, msg.Administrator, marker.GetStatus(), marker.GetMarkerType(), filteredAccessList, marker.HasGovernanceEnabled(), owner)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}

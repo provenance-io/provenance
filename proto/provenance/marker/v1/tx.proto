@@ -218,7 +218,8 @@ message MsgIcaReflectMarkerRequest {
   MarkerType           marker_type    = 4;
   repeated AccessGrant access_control = 5 [(gogoproto.nullable) = false];
   // indicates that governance based control is allowed for this marker
-  bool allow_governance_control = 6;
+  bool   allow_governance_control = 6;
+  string owner                    = 7;
 }
 
 // MsgIcaReflectResponse defines the Msg/ReflectMarker response type

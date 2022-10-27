@@ -690,6 +690,7 @@ func NewMsgIcaReflectMarkerRequest(ibcDenom, invoker string,
 	markerType MarkerType,
 	accessControl []AccessGrant,
 	allowGovernanceControl bool,
+	owner string,
 ) *MsgIcaReflectMarkerRequest {
 	return &MsgIcaReflectMarkerRequest{
 		IbcDenom:               ibcDenom,
@@ -697,6 +698,7 @@ func NewMsgIcaReflectMarkerRequest(ibcDenom, invoker string,
 		Status:                 status,
 		AccessControl:          accessControl,
 		AllowGovernanceControl: allowGovernanceControl,
+		Owner:                  owner,
 	}
 }
 
@@ -737,5 +739,5 @@ func (msg MsgIcaReflectMarkerRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgIcaReflectMarkerRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Invoker)}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Owner)}
 }

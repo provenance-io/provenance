@@ -2315,6 +2315,7 @@ MsgIcaReflectRequest defines the Msg/ReflectMarker request type for markers.
 | `marker_type` | [MarkerType](#provenance.marker.v1.MarkerType) |  | Marker type information |
 | `access_control` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
 | `allow_governance_control` | [bool](#bool) |  | indicates that governance based control is allowed for this marker |
+| `owner` | [string](#string) |  |  |
 
 
 

@@ -56,6 +56,15 @@ func (k *Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capabilit
 	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
 }
 
+func (k *Keeper) GetInterChainAccountAddress(ctx sdk.Context, connectionID, ownerId string) (string, bool) {
+	portID, err := icatypes.NewControllerPortID(ownerId)
+	if err != nil {
+		return "", false
+	}
+	return k.icaControllerKeeper.GetInterchainAccountAddress(ctx, connectionID, portID)
+
+}
+
 func (k *Keeper) SubmitTx(ctx sdk.Context, msg *types.MsgSubmitTx, timeout time.Duration) error {
 	portID, err := icatypes.NewControllerPortID(msg.Owner)
 	if err != nil {
