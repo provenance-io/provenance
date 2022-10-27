@@ -50,6 +50,10 @@ service Msg {
   // ReflectMarker is used to create a marker on the host chain using ica that
   // reflects the marker on the controller chain
   rpc ReflectMarker(MsgReflectMarkerRequest) returns (MsgReflectMarkerResponse);
+
+  // IcaReflectMarker is used to create a marker on the host chain using ica that
+  // reflects the marker on the controller chain
+  rpc IcaReflectMarker(MsgIcaReflectMarkerRequest) returns (MsgIcaReflectMarkerResponse);
 }
 
 // MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If

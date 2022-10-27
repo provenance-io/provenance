@@ -552,11 +552,12 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	denom, err := k.ibcKeeper.DenomPathFromHash(ctx, msg.IbcDenom)
+	denom := "nhash"
+	/*denom, err := k.ibcKeeper.DenomPathFromHash(ctx, msg.IbcDenom)
 	if err != nil {
 		return nil, err
 	}
-	k.ibcKeeper.DenomPathFromHash(ctx, msg.ConnectionId)
+	k.ibcKeeper.DenomPathFromHash(ctx, msg.ConnectionId)*/
 
 	marker, err := k.Keeper.GetMarkerByDenom(ctx, denom)
 	if err != nil {
@@ -572,7 +573,7 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 	for _, grant := range marker.GetAccessList() {
 		var acctAccess []types.Access
 		for _, access := range grant.Permissions {
-			if access != types.Access_Burn || access != types.Access_Mint {
+			if access != types.Access_Burn && access != types.Access_Mint {
 				acctAccess = append(acctAccess, access)
 			}
 		}
@@ -610,4 +611,123 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 		),
 	)
 	return nil, nil
+}
+
+// TODO Cleanup
+func (k msgServer) IcaReflectMarker(goCtx context.Context, msg *types.MsgIcaReflectMarkerRequest) (*types.MsgIcaReflectMarkerResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	var err error
+
+	if err = msg.ValidateBasic(); err != nil {
+		ctx.Logger().Error("unable to pass validate basic", "err", err)
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	marker := k.extractMarker(ctx, msg)
+
+	if k.markerExists(ctx, marker.GetDenom()) {
+		err = k.setMarkerPermissions(ctx, marker)
+	} else {
+		err = k.addMarker(ctx, marker.GetManager(), marker)
+	}
+	if err != nil {
+		ctx.Logger().Error("failed to set permissions or add marker", "err", err)
+		return nil, err
+	}
+
+	// TODO Check event
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
+	return &types.MsgIcaReflectMarkerResponse{}, nil
+}
+
+func (k msgServer) setMarkerPermissions(ctx sdk.Context, reflectedMarker types.MarkerAccountI) error {
+	marker, err := k.GetMarkerByDenom(ctx, reflectedMarker.GetDenom())
+	if err != nil {
+		ctx.Logger().Error("unable to get marker by denom", "err", err)
+		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	if err := k.clearAccessList(marker); err != nil {
+		ctx.Logger().Error("failed to clear access list of existing marker", "err", err)
+		return sdkerrors.ErrUnauthorized.Wrap(err.Error())
+	}
+
+	for _, grant := range reflectedMarker.GetAccessList() {
+		grant := grant
+
+		if err := marker.GrantAccess(&grant); err != nil {
+			ctx.Logger().Error("unable to add access grant to marker", "err", err)
+			return sdkerrors.ErrUnauthorized.Wrap(err.Error())
+		}
+	}
+
+	k.SetMarker(ctx, marker)
+
+	// TODO We may want a specific ReplacePermissionsEvent here
+
+	return nil
+}
+
+func (k msgServer) addMarker(ctx sdk.Context, signer sdk.AccAddress, marker types.MarkerAccountI) error {
+	// Must be in proposed state
+	if err := marker.SetStatus(types.StatusProposed); err != nil {
+		ctx.Logger().Error("unable to add set status to proposed for marker", "err", err)
+		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	if err := k.Keeper.AddMarkerAccount(ctx, marker); err != nil {
+		ctx.Logger().Error("unable to add marker account", "err", err)
+		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	if err := k.Keeper.FinalizeMarker(ctx, signer, marker.GetDenom()); err != nil {
+		ctx.Logger().Error("unable to finalize marker", "err", err)
+		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	if err := k.Keeper.ActivateMarker(ctx, signer, marker.GetDenom()); err != nil {
+		ctx.Logger().Error("unable to activate marker", "err", err)
+		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	return nil
+}
+
+func (k msgServer) markerExists(ctx sdk.Context, denom string) bool {
+	_, err := k.GetMarkerByDenom(ctx, denom)
+	return err == nil
+}
+
+func (k msgServer) clearAccessList(marker types.MarkerAccountI) error {
+	for _, grant := range marker.GetAccessList() {
+		if err := marker.RevokeAccess(grant.GetAddress()); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (k msgServer) extractMarker(ctx sdk.Context, msg *types.MsgIcaReflectMarkerRequest) types.MarkerAccountI {
+	// TODO Check if this works with the ibc denom
+	addr := types.MustGetMarkerAddress(msg.GetIbcDenom())
+	account := authtypes.NewBaseAccount(addr, nil, 0, 0)
+
+	marker := types.NewMarkerAccount(
+		account,
+		k.bankKeeper.GetSupply(ctx, msg.GetIbcDenom()),
+		sdk.MustAccAddressFromBech32(msg.GetInvoker()),
+		msg.GetAccessControl(),
+		msg.GetStatus(),
+		msg.GetMarkerType(),
+	)
+	marker.Manager = msg.GetInvoker()
+	marker.SupplyFixed = false
+	marker.AllowGovernanceControl = msg.GetAllowGovernanceControl()
+	return marker
 }

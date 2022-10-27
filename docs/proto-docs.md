@@ -2495,6 +2495,7 @@ Msg defines the Marker Msg service.
 | `SetDenomMetadata` | [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest) | [MsgSetDenomMetadataResponse](#provenance.marker.v1.MsgSetDenomMetadataResponse) | Allows Denom Metadata (see bank module) to be set for the Marker's Denom | |
 | `GrantAllowance` | [MsgGrantAllowanceRequest](#provenance.marker.v1.MsgGrantAllowanceRequest) | [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse) | GrantAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
 | `ReflectMarker` | [MsgReflectMarkerRequest](#provenance.marker.v1.MsgReflectMarkerRequest) | [MsgReflectMarkerResponse](#provenance.marker.v1.MsgReflectMarkerResponse) | ReflectMarker is used to create a marker on the host chain using ica that reflects the marker on the controller chain | |
+| `IcaReflectMarker` | [MsgIcaReflectMarkerRequest](#provenance.marker.v1.MsgIcaReflectMarkerRequest) | [MsgIcaReflectMarkerResponse](#provenance.marker.v1.MsgIcaReflectMarkerResponse) | IcaReflectMarker is used to create a marker on the host chain using ica that reflects the marker on the controller chain | |
 
  <!-- end services -->
 
