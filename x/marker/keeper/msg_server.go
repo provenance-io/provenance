@@ -625,6 +625,11 @@ func (k msgServer) IcaReflectMarker(goCtx context.Context, msg *types.MsgIcaRefl
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
+	if !k.isMatchingDenom(ctx, msg.GetMarkerDenom(), msg.GetIbcDenom()) {
+		ctx.Logger().Error("marker denom and ibc denom mismatch")
+		return nil, types.ErrReflectDenomMismatch
+	}
+
 	marker := k.extractMarker(ctx, msg)
 
 	if k.markerExists(ctx, marker.GetDenom()) {
@@ -732,4 +737,27 @@ func (k msgServer) extractMarker(ctx sdk.Context, msg *types.MsgIcaReflectMarker
 	marker.SupplyFixed = false
 	marker.AllowGovernanceControl = msg.GetAllowGovernanceControl()
 	return marker
+}
+
+func (k msgServer) isMatchingDenom(ctx sdk.Context, markerDenom, ibcDenom string) bool {
+	denom, found := k.extractDenom(ctx, ibcDenom)
+	return found && denom == markerDenom
+}
+
+func (k msgServer) extractDenom(ctx sdk.Context, denom string) (string, bool) {
+	hexHash := denom[len(ibctypes.DenomPrefix+"/"):]
+
+	hash, err := ibctypes.ParseHexHash(hexHash)
+	if err != nil {
+		ctx.Logger().Error("unable to parse hex hash", "err", err)
+		return "", false
+	}
+
+	denomTrace, found := k.ibcKeeper.GetDenomTrace(ctx, hash)
+	if !found {
+		ctx.Logger().Error("unable to get denom trace for hash")
+		return "", false
+	}
+
+	return denomTrace.BaseDenom, true
 }
