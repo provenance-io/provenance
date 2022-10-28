@@ -33,6 +33,7 @@ type FeeGasMeter struct {
 	// this is the base fee charged in decorator
 	baseFeeCharged sdk.Coins
 
+	// Idea is that these two below fields are used to track consumption but panic only if greater than 4 m gas.
 	// gas tracker, this is the gas usage tracker for the tx
 	gasConsumed sdkgas.Gas
 
@@ -116,7 +117,10 @@ func (g *FeeGasMeter) ConsumeGasWithOutLimitCheck(amount sdkgas.Gas, descriptor 
 		panic(sdkgas.ErrorGasOverflow{Descriptor: descriptor})
 	}
 
-	// do not check Limit
+	// check only the 4m (or param) limit
+	if g.gasConsumed > g.gasLimit {
+		panic(sdkgas.ErrorOutOfGas{descriptor})
+	}
 }
 
 // addUint64Overflow performs the addition operation on two uint64 integers and

@@ -22,7 +22,8 @@ type HandlerOptions struct {
 	MsgFeesKeeper          msgfeestypes.MsgFeesKeeper
 	SignModeHandler        authsigning.SignModeHandler
 	SigGasConsumer         func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
-	simulateFunc           BaseAppSimulateFunc
+	SimulateFunc           BaseAppSimulateFunc
+	TxEncoder              sdk.TxEncoder
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
@@ -44,8 +45,8 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	decorators := []sdk.AnteDecorator{
-		cosmosante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
-		NewFeeMeterContextDecorator(),         // NOTE : fee gas meter also has the functionality of GasTracerContextDecorator in previous versions
+		cosmosante.NewSetUpContextDecorator(),                                // outermost AnteDecorator. SetUpContext must be called first
+		NewFeeMeterContextDecorator(options.SimulateFunc, options.TxEncoder), // NOTE : fee gas meter also has the functionality of GasTracerContextDecorator in previous versions
 		NewTxGasLimitDecorator(),
 		NewMinGasPricesDecorator(),
 		NewMsgFeesDecorator(options.MsgFeesKeeper),

@@ -793,6 +793,8 @@ func New(
 			FeegrantKeeper:  app.FeeGrantKeeper,
 			MsgFeesKeeper:   app.MsgFeesKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			SimulateFunc:    app.Simulate,
+			TxEncoder:       encodingConfig.TxConfig.TxEncoder(),
 		})
 	if err != nil {
 		panic(err)
