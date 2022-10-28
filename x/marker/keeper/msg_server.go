@@ -557,26 +557,42 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
+	if marker.HasFixedSupply() {
+		return nil, fmt.Errorf("marker cannot have fixed supply")
+	}
+
 	if marker.GetStatus() != types.StatusActive {
 		return nil, fmt.Errorf("marker must be in Active state : %s", marker.GetStatus())
 	}
 
-	// TODO can probably just do a remove of access rights of mint and burn
+	// TODO extract to method
+	var containsAdmin bool
 	var filteredAccessList []types.AccessGrant
 	for _, grant := range marker.GetAccessList() {
+		if grant.Address == msg.Administrator {
+			containsAdmin = true
+		}
+		var hasTransfer bool
 		var acctAccess []types.Access
 		for _, access := range grant.Permissions {
 			if access != types.Access_Burn && access != types.Access_Mint {
 				acctAccess = append(acctAccess, access)
 			}
+			if access == types.Access_Transfer {
+				hasTransfer = true
+			}
 		}
-		if len(acctAccess) > 0 {
+		if len(acctAccess) > 0 && hasTransfer {
 			accessGrant := types.AccessGrant{
 				Address:     grant.Address,
 				Permissions: acctAccess,
 			}
 			filteredAccessList = append(filteredAccessList, accessGrant)
 		}
+	}
+
+	if !containsAdmin && len(filteredAccessList) > 0 {
+		return nil, fmt.Errorf("marker does not have valid access rights")
 	}
 
 	owner, found := k.intertxKeeper.GetInterChainAccountAddress(ctx, msg.ConnectionId, msg.Administrator)
@@ -593,6 +609,7 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 		filteredAccessList,
 		marker.HasGovernanceEnabled(),
 	)
+	err = icaReflect.ValidateBasic()
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -601,6 +618,11 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
+	err = submitTx.ValidateBasic()
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
 	err = k.intertxKeeper.SubmitTx(ctx, submitTx, time.Minute)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
