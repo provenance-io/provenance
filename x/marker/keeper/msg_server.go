@@ -565,35 +565,7 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 		return nil, fmt.Errorf("marker must be in Active state : %s", marker.GetStatus())
 	}
 
-	// TODO extract to method
-	var containsAdmin bool
-	var filteredAccessList []types.AccessGrant
-	for _, grant := range marker.GetAccessList() {
-		if grant.Address == msg.Administrator {
-			containsAdmin = true
-		}
-		var hasTransfer bool
-		var acctAccess []types.Access
-		for _, access := range grant.Permissions {
-			if access != types.Access_Burn && access != types.Access_Mint {
-				acctAccess = append(acctAccess, access)
-			}
-			if access == types.Access_Transfer {
-				hasTransfer = true
-			}
-		}
-		if len(acctAccess) > 0 && hasTransfer {
-			accessGrant := types.AccessGrant{
-				Address:     grant.Address,
-				Permissions: acctAccess,
-			}
-			filteredAccessList = append(filteredAccessList, accessGrant)
-		}
-	}
-
-	if !containsAdmin && len(filteredAccessList) > 0 {
-		return nil, fmt.Errorf("marker does not have valid access rights")
-	}
+	filteredAccessList, err := filterAccessList(marker.GetAccessList(), msg.Administrator)
 
 	owner, found := k.intertxKeeper.GetInterChainAccountAddress(ctx, msg.ConnectionId, msg.Administrator)
 	if !found {
@@ -635,6 +607,45 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 		),
 	)
 	return nil, nil
+}
+
+// filterAccessList creates a new access list with burn, mint removed.  Will fail if administrator is not in list with transfer rights
+func filterAccessList(accessList []types.AccessGrant, administrator string) ([]types.AccessGrant, error) {
+	// remove mint and burn from grants with transfer permission
+	var filteredAccessList []types.AccessGrant
+	for _, grant := range accessList {
+		var hasTransfer bool
+		var acctAccess []types.Access
+		for _, access := range grant.Permissions {
+			if access != types.Access_Burn && access != types.Access_Mint {
+				acctAccess = append(acctAccess, access)
+			}
+			if access == types.Access_Transfer {
+				hasTransfer = true
+			}
+		}
+		if len(acctAccess) > 0 && hasTransfer {
+			accessGrant := types.AccessGrant{
+				Address:     grant.Address,
+				Permissions: acctAccess,
+			}
+			filteredAccessList = append(filteredAccessList, accessGrant)
+		}
+	}
+
+	// check if administrator address is in the final list
+	var containsAdmin bool
+	for _, accessList := range filteredAccessList {
+		if accessList.Address == administrator {
+			containsAdmin = true
+			break
+		}
+	}
+
+	if !containsAdmin && len(filteredAccessList) > 0 {
+		return nil, fmt.Errorf("marker does not have valid access rights")
+	}
+	return filteredAccessList, nil
 }
 
 // TODO Cleanup
