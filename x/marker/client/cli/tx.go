@@ -883,12 +883,12 @@ Examples:
 
 func GetCmdReflectMarker() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "reflect [ibc-demon] [connection-id]",
+		Use:     "reflect [marker-denom] [ibc-demon] [connection-id]",
 		Short:   "Reflect a marker from a remote chain",
 		Aliases: []string{"rm"},
 		Args:    cobra.ExactArgs(2),
 		Long:    strings.TrimSpace(`reflect a marker from a remote chain using ibc denom and channel`),
-		Example: fmt.Sprintf(`$ %s tx marker reflect ibc/123... connection-1`, version.AppName),
+		Example: fmt.Sprintf(`$ %s tx marker reflect nhash ibc/123... connection-1`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

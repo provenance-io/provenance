@@ -552,14 +552,7 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	denom := "nhash"
-	/*denom, err := k.ibcKeeper.DenomPathFromHash(ctx, msg.IbcDenom)
-	if err != nil {
-		return nil, err
-	}
-	k.ibcKeeper.DenomPathFromHash(ctx, msg.ConnectionId)*/
-
-	marker, err := k.Keeper.GetMarkerByDenom(ctx, denom)
+	marker, err := k.Keeper.GetMarkerByDenom(ctx, msg.MarkerDenom)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -590,7 +583,16 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 	if !found {
 		return nil, fmt.Errorf("interchain account for address %s not found", msg.Administrator)
 	}
-	icaReflect := types.NewMsgIcaReflectMarkerRequest(msg.IbcDenom, msg.Administrator, marker.GetStatus(), marker.GetMarkerType(), filteredAccessList, marker.HasGovernanceEnabled(), owner)
+	icaReflect := types.NewMsgIcaReflectMarkerRequest(
+		msg.MarkerDenom,
+		msg.IbcDenom,
+		msg.Administrator,
+		owner,
+		marker.GetStatus(),
+		marker.GetMarkerType(),
+		filteredAccessList,
+		marker.HasGovernanceEnabled(),
+	)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}

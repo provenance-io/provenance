@@ -2309,6 +2309,7 @@ MsgIcaReflectRequest defines the Msg/ReflectMarker request type for markers.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `marker_denom` | [string](#string) |  |  |
 | `ibc_denom` | [string](#string) |  |  |
 | `invoker` | [string](#string) |  |  |
 | `status` | [MarkerStatus](#provenance.marker.v1.MarkerStatus) |  | Indicates the current status of this marker record. |
@@ -2366,6 +2367,7 @@ MsgReflectMarkerRequest defines the Msg/ReflectMarker request type for markers.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `marker_denom` | [string](#string) |  |  |
 | `ibc_denom` | [string](#string) |  |  |
 | `connection_id` | [string](#string) |  |  |
 | `administrator` | [string](#string) |  |  |

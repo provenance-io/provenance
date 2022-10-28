@@ -654,8 +654,9 @@ func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgReflectMarkerRequest
-func NewMsgReflectMarkerRequest(ibcDenom, connectionID, administrator string) *MsgReflectMarkerRequest {
+func NewMsgReflectMarkerRequest(markerDenom, ibcDenom, connectionID, administrator string) *MsgReflectMarkerRequest {
 	return &MsgReflectMarkerRequest{
+		MarkerDenom:   markerDenom,
 		IbcDenom:      ibcDenom,
 		ConnectionId:  connectionID,
 		Administrator: administrator,
@@ -685,14 +686,14 @@ func (msg MsgReflectMarkerRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewReflectMarkerRequest
-func NewMsgIcaReflectMarkerRequest(ibcDenom, invoker string,
+func NewMsgIcaReflectMarkerRequest(markerDenom, ibcDenom, invoker, owner string,
 	status MarkerStatus,
 	markerType MarkerType,
 	accessControl []AccessGrant,
 	allowGovernanceControl bool,
-	owner string,
 ) *MsgIcaReflectMarkerRequest {
 	return &MsgIcaReflectMarkerRequest{
+		MarkerDenom:            markerDenom,
 		IbcDenom:               ibcDenom,
 		Invoker:                invoker,
 		MarkerType:             markerType,
