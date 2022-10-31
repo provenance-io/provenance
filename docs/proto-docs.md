@@ -2367,10 +2367,10 @@ MsgReflectMarkerRequest defines the Msg/ReflectMarker request type for markers.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `marker_denom` | [string](#string) |  |  |
-| `ibc_denom` | [string](#string) |  |  |
-| `connection_id` | [string](#string) |  |  |
-| `administrator` | [string](#string) |  |  |
+| `marker_denom` | [string](#string) |  | denom of marker on host network |
+| `ibc_denom` | [string](#string) |  | ibc denom of ibc transfered marker |
+| `connection_id` | [string](#string) |  | ica connection id for administrator |
+| `administrator` | [string](#string) |  | administrator of marker and owner of ica connection |
 
 
 

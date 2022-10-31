@@ -204,10 +204,10 @@ message MsgSetDenomMetadataResponse {}
 
 // MsgReflectMarkerRequest defines the Msg/ReflectMarker request type for markers.
 message MsgReflectMarkerRequest {
-  string marker_denom  = 1;
-  string ibc_denom     = 2;
-  string connection_id = 3;
-  string administrator = 4;
+  string marker_denom  = 1; // denom of marker on host network
+  string ibc_denom     = 2; // ibc denom of ibc transfered marker
+  string connection_id = 3; // ica connection id for administrator
+  string administrator = 4; // administrator of marker and owner of ica connection
 }
 
 // MsgReflectMarkerResponse defines the Msg/ReflectMarker response type

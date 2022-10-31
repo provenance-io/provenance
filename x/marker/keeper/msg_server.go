@@ -545,6 +545,7 @@ func (k msgServer) SetDenomMetadata(
 	return &types.MsgSetDenomMetadataResponse{}, nil
 }
 
+// ReflectMarker  handles the  reflect marker request to create the marker on another network via ICA
 func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMarkerRequest) (*types.MsgReflectMarkerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
