@@ -48,6 +48,7 @@ func checkTxFeeWithNodeMinFee(ctx sdk.Context, tx sdk.Tx) error {
 	}
 
 	feeCoins := feeTx.GetFee()
+	println(feeCoins.String())
 
 	// Ensure that the provided fees meet a minimum threshold for the validator,
 	// if this is a CheckTx. This is only for local mempool purposes, and thus

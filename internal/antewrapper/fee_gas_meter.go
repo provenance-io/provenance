@@ -54,6 +54,7 @@ func NewFeeGasMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter, isSimul
 		usedFees:       make(map[string]sdk.Coins),
 		baseFeeCharged: sdk.Coins{},
 		simulate:       isSimulate,
+		gasLimit:       gasTxLimit,
 	}
 }
 

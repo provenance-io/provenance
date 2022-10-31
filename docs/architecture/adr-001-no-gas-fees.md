@@ -18,6 +18,31 @@ So Proposal is to get rid of gas as a construct in provenance blockchain, and on
 Gas was a means to put a limit on the system, we should still set it(internally only) as having a max threshold value but clients need not set it and also pay fees based on it. i.e if messages which exceed max threshold(currently 4 million) will still fail so as to protect the system.
 Fees will be set using MsgFee module per message, for messages which are not in the list will be charged the min fee(let's say 0.,5 hash)
 
+Tendermint considerations
+```go
+// addNewTransaction handles the ABCI CheckTx response for the first time a
+// transaction is added to the mempool.  A recheck after a block is committed
+// goes to handleRecheckResult.
+//
+// If either the application rejected the transaction or a post-check hook is
+// defined and rejects the transaction, it is discarded.
+//
+// Otherwise, if the mempool is full, check for lower-priority transactions
+// that can be evicted to make room for the new one. If no such transactions
+// exist, this transaction is logged and dropped; otherwise the selected
+// transactions are evicted.
+//
+// Finally, the new transaction is added and size stats updated.
+func (txmp *TxMempool) addNewTransaction(wtx *WrappedTx, checkTxRes *abci.ResponseCheckTx) {
+```
+
+```go
+	wtx.SetGasWanted(checkTxRes.GasWanted)
+	wtx.SetPriority(priority)
+	wtx.SetSender(sender)
+	txmp.insertTx(wtx)
+```
+
 Proposal
 1.All clients only pass in fee param with the flat fee required for that MsgType(or the base min fee if fee not defined for that Msg type)
 2. Clients can simulate the fee from the provenance simualtion endpoint
@@ -29,3 +54,6 @@ Proposal
 8. Fee checks are already assessed in msgservicerouter for additional fees, so they probably will work similarly.
 9. wasm module also go through the same checks in msgservicerouter so should be maneagable to change.
 10. Major downside: Clients will have to understand this new construct but overall it should make the fee system easier hopefully.
+
+
+Tender
