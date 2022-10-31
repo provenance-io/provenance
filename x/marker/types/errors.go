@@ -16,4 +16,5 @@ var (
 	ErrReflectSupplyFixed       = cerrs.Register(ModuleName, 9, "reflected marker can't have fixed supply")
 	ErrReflectMarkerStatus      = cerrs.Register(ModuleName, 10, "reflected marker must have active status")
 	ErrReflectMarkerType        = cerrs.Register(ModuleName, 11, "reflected marker must not have unknown type")
+	ErrReflectDenomMismatch     = cerrs.Register(ModuleName, 12, "reflected marker denom and ibc denom must match")
 )
