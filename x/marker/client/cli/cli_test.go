@@ -819,6 +819,17 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			},
 			false, &sdk.TxResponse{}, 0,
 		},
+		{
+			"reflect marker",//tx marker nhash ibc/123... connection-1
+			markercli.GetCmdReflectMarker(),
+			[]string{
+				"hotdogcoin",
+				"ibc/123",
+				"connection-1",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
 	}
 
 	for _, tc := range testCases {
