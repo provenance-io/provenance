@@ -30,7 +30,7 @@ Note: The command `provenanced config get iavl-disable-fastnode` will report a v
 
 ### Improvements
 
-* Bump Cosmos-SDK to v0.45.10-pio-3 (from v0.45.9-pio-1) [PR 1199](https://github.com/provenance-io/provenance/pull/1199)
+* Bump Cosmos-SDK to v0.45.10-pio-4 (from v0.45.9-pio-1) [PR 1202](https://github.com/provenance-io/provenance/pull/1202)
 * Allow the IAVL store to be upgraded [PR 1193](https://github.com/provenance-io/provenance/pull/1193).
 
 ### Full Commit History
