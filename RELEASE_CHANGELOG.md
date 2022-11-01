@@ -1,4 +1,4 @@
-## [v1.12.2](https://github.com/provenance-io/provenance/releases/tag/v1.12.2) - 2022-10-26
+## [v1.12.2](https://github.com/provenance-io/provenance/releases/tag/v1.12.2) - 2022-11-01
 
 Provenance v1.12.2 enables the ability to upgrade your IAVL state store to be faster and handle errors better. This upgrade is recommended and should be done at your convenience prior to the v1.13 chain upgrade.
 
