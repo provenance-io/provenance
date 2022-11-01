@@ -39,7 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* Updated Cosmos-SDK to v0.46.3-pio-2 (from v0.46.3-pio-1) [PR 1201](https://github.com/provenance-io/provenance/pull/1201).
+* Updated Cosmos-SDK to v0.46.3-pio-3 (from v0.46.3-pio-1) [PR 1206](https://github.com/provenance-io/provenance/pull/1206).
 
 ### Bug Fixes
 
