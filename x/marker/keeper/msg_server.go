@@ -643,7 +643,7 @@ func filterAccessList(accessList []types.AccessGrant, administrator string) ([]t
 		}
 	}
 
-	if !containsAdmin && len(filteredAccessList) > 0 {
+	if !containsAdmin {
 		return nil, fmt.Errorf("marker does not have valid access rights")
 	}
 	return filteredAccessList, nil

@@ -34,20 +34,6 @@ func TestFilterAccessList(t *testing.T) {
 			errorMsg: "marker does not have valid access rights",
 		},
 		{
-			name: "success - administrator does not have transfer rights", //TODO: shouldn't this be an error?
-			accessList: []types.AccessGrant{
-				{
-					"non admin address",
-					[]types.Access{
-						types.Access_Deposit,
-					},
-				},
-			},
-			administrator: adminAddress,
-			want: nil,
-			errorMsg: "",
-		},
-		{
 			name: "success - filtered access list should not have mint or burn permissions",
 			accessList: []types.AccessGrant{
 				{
