@@ -158,7 +158,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		debug.Cmd(),
 		ConfigCmd(),
 		AddMetaAddressCmd(),
-		pruning.PruningCmd(newApp),
 	)
 
 	server.AddCommands(rootCmd, app.DefaultNodeHome, newApp, createAppAndExport, addModuleInitFlags)
@@ -173,7 +172,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 	// Add Rosetta command
 	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
-
+	rootCmd.AddCommand(pruning.PruningCmd(newApp))
 	// Disable usage when the start command returns an error.
 	startCmd, _, err := rootCmd.Find([]string{"start"})
 	if err != nil {
@@ -270,24 +269,6 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	snapshotStore, err := snapshots.NewStore(snapshotDB, snapshotDir)
 	if err != nil {
 		panic(err)
-	}
-
-	// Validate min-gas-price is a single coin.
-	if fee, err := sdk.ParseCoinNormalized(cast.ToString(appOpts.Get(server.FlagMinGasPrices))); err == nil {
-		if int(sdk.GetConfig().GetCoinType()) == app.CoinTypeMainNet {
-			// require the fee denom to match the bond denom on mainnet(still applies)
-			if fee.Denom != pioconfig.GetProvenanceConfig().FeeDenom {
-				panic(fmt.Errorf("invalid min-gas-price fee denom, must be: %s", pioconfig.GetProvenanceConfig().FeeDenom))
-			}
-		}
-	} else {
-		// panic if there was a parse error (for example more than one coin was passed in for required fee).
-		if err != nil {
-			panic(fmt.Errorf("invalid min-gas-price value, expected single decimal coin value such as '%s', got '%s';\n\n %w",
-				pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices,
-				appOpts.Get(server.FlagMinGasPrices),
-				err))
-		}
 	}
 
 	snapshotOptions := snapshottypes.NewSnapshotOptions(
