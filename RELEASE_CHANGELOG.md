@@ -2,7 +2,7 @@
 
 ### Improvements
 
-* Updated Cosmos-SDK to v0.46.3-pio-3 (from v0.46.3-pio-1) [PR 1206](https://github.com/provenance-io/provenance/pull/1206).
+* Updated Cosmos-SDK to v0.46.3-pio-4 (from v0.46.3-pio-1) [PR 1211](https://github.com/provenance-io/provenance/pull/1211).
 
 ### Bug Fixes
 
