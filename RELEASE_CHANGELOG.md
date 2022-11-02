@@ -1,3 +1,20 @@
+## [v1.13.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.13.0-rc2) - 2022-11-02
+
+### Improvements
+
+* Updated Cosmos-SDK to v0.46.3-pio-3 (from v0.46.3-pio-1) [PR 1206](https://github.com/provenance-io/provenance/pull/1206).
+
+### Bug Fixes
+
+* Pay attention to the `iavl-disable-fastnode` config field/flag [PR 1193](https://github.com/provenance-io/provenance/pull/1193).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.13.0-rc2...v1.13.0-rc3
+* https://github.com/provenance-io/provenance/compare/v1.12.2...v1.13.0-rc3
+
+---
+
 ## [v1.13.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.13.0-rc2) - 2022-10-21
 
 ### Features
