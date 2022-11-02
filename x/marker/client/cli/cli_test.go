@@ -3,13 +3,6 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
-	ibctesting "github.com/cosmos/ibc-go/v5/testing"
-	provenance "github.com/provenance-io/provenance/app"
-	intertxKeeper "github.com/provenance-io/provenance/x/inter-tx/keeper"
-	intertxtypes "github.com/provenance-io/provenance/x/inter-tx/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"io/ioutil"
 	"os"
 	"sort"
@@ -49,15 +42,6 @@ const (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	coordinator *ibctesting.Coordinator
-
-	app *provenance.App
-	ctx sdk.Context
-	intertxKeeper intertxKeeper.Keeper
-
-	chainA *ibctesting.TestChain
-	chainB *ibctesting.TestChain
-
 	cfg              testnet.Config
 	testnet          *testnet.Network
 	keyring          keyring.Keyring
@@ -91,14 +75,6 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-	s.app = provenance.Setup(s.T())
-
-	keys := sdk.NewKVStoreKeys(
-		intertxtypes.StoreKey,
-	)
-
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
-	s.intertxKeeper = intertxKeeper.NewKeeper(s.app.AppCodec(), keys[intertxtypes.StoreKey], s.app.ICAControllerKeeper, s.app.ScopedInterTxKeeper)
 
 	pioconfig.SetProvenanceConfig("", 0)
 	cfg := testutil.DefaultTestNetworkConfig()
@@ -305,24 +281,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	_, err = s.testnet.WaitForHeight(1)
 	s.Require().NoError(err, "waiting for height 1")
-
-	// configure ICA //TODO: cleanup
-
-	// SetupTest creates a coordinator with 2 test chains.
-	s.coordinator = ibctesting.NewCoordinator(s.T(), 2)
-	s.chainA = s.coordinator.GetChain(ibctesting.GetChainID(1))
-	s.chainB = s.coordinator.GetChain(ibctesting.GetChainID(2))
-
-
-	TestOwnerAddress := "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs"
-
-	path := NewICAPath(s.chainA, s.chainB)
-
-	err = SetupICAPath(path, TestOwnerAddress)
-	s.Require().NoError(err)
-
-	err = s.app.InterTxKeeper.IcaControllerKeeper.RegisterInterchainAccount(s.ctx, "connection-0", TestOwnerAddress, "1.0.0")
-	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -1455,87 +1413,4 @@ func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 
 func getFormattedExpiration(duration int64) string {
 	return time.Now().Add(time.Duration(duration) * time.Second).Format(time.RFC3339)
-}
-
-func SetupICAPath(path *ibctesting.Path, owner string) error {
-	if err := RegisterInterchainAccount(path.EndpointA, owner); err != nil {
-		return err
-	}
-
-	if err := path.EndpointB.ChanOpenTry(); err != nil {
-		return err
-	}
-
-	if err := path.EndpointA.ChanOpenAck(); err != nil {
-		return err
-	}
-
-	if err := path.EndpointB.ChanOpenConfirm(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// RegisterInterchainAccount is a helper function for starting the channel handshake
-func RegisterInterchainAccount(endpoint *ibctesting.Endpoint, owner string) error {
-
-	TestVersion := string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
-		Version:                icatypes.Version,
-		ControllerConnectionId: ibctesting.FirstConnectionID,
-		HostConnectionId:       ibctesting.FirstConnectionID,
-		Encoding:               icatypes.EncodingProtobuf,
-		TxType:                 icatypes.TxTypeSDKMultiMsg,
-	}))
-
-	portID, err := icatypes.NewControllerPortID(owner)
-	if err != nil {
-		return err
-	}
-
-	channelSequence := endpoint.Chain.App.GetIBCKeeper().ChannelKeeper.GetNextChannelSequence(endpoint.Chain.GetContext())
-
-	if err := GetICAApp(endpoint.Chain).ICAControllerKeeper.RegisterInterchainAccount(endpoint.Chain.GetContext(), endpoint.ConnectionID, owner, TestVersion); err != nil {
-		return err
-	}
-
-	// commit state changes for proof verification
-	endpoint.Chain.NextBlock()
-
-	// update port/channel ids
-	endpoint.ChannelID = channeltypes.FormatChannelIdentifier(channelSequence)
-	endpoint.ChannelConfig.PortID = portID
-
-	return nil
-}
-
-
-func GetICAApp(chain *ibctesting.TestChain) *provenance.App {
-	app, ok := chain.App.(*provenance.App)
-	if !ok {
-		panic("not ica app")
-	}
-
-	return app
-}
-
-func NewICAPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
-
-	TestVersion := string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
-		Version:                icatypes.Version,
-		ControllerConnectionId: ibctesting.FirstConnectionID,
-		HostConnectionId:       ibctesting.FirstConnectionID,
-		Encoding:               icatypes.EncodingProtobuf,
-		TxType:                 icatypes.TxTypeSDKMultiMsg,
-	}))
-
-	path := ibctesting.NewPath(chainA, chainB)
-	path.EndpointA.ChannelConfig.PortID = icatypes.PortID
-	path.EndpointB.ChannelConfig.PortID = icatypes.PortID
-	path.EndpointA.ChannelConfig.Order = channeltypes.ORDERED
-	path.EndpointB.ChannelConfig.Order = channeltypes.ORDERED
-	path.EndpointA.ChannelConfig.Version = TestVersion
-	path.EndpointB.ChannelConfig.Version = TestVersion
-
-	return path
 }
