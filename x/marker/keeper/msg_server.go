@@ -7,6 +7,7 @@ import (
 
 	"github.com/armon/go-metrics"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -601,7 +602,17 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	err = k.intertxKeeper.SubmitTx(ctx, submitTx, time.Minute)
+	err = k.intertxKeeper.SubmitTx(ctx, submitTx, time.Minute, func(ctx sdk.Context, message *codectypes.Any) error {
+		if _, ok := message.(*types.MsgIcaReflectMarkerResponse); ok {
+			return im.keeper.FailureCallback(ctx, packet, ack.GetError())
+		}
+		ctx.Logger().Info("success")
+		k.Keeper.Test(ctx)
+		return nil
+	}, func(ctx sdk.Context, err string) error {
+		ctx.Logger().Info(err)
+		return nil
+	})
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}

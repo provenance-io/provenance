@@ -182,3 +182,7 @@ func (k Keeper) IterateMarkers(ctx sdk.Context, cb func(marker types.MarkerAccou
 func (k Keeper) GetEscrow(ctx sdk.Context, marker types.MarkerAccountI) sdk.Coins {
 	return k.bankKeeper.GetAllBalances(ctx, marker.GetAddress())
 }
+
+func (k Keeper) Test(ctx sdk.Context) {
+	ctx.Logger().Info("Inside Keeper")
+}

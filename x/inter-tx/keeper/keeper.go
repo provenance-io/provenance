@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -14,6 +15,7 @@ import (
 
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	channelkeeper "github.com/cosmos/ibc-go/v5/modules/core/04-channel/keeper"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	"github.com/provenance-io/provenance/x/inter-tx/types"
@@ -21,9 +23,17 @@ import (
 
 type InterTxKeeperI interface {
 	ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error
-	SubmitTx(ctx sdk.Context, msg *types.MsgSubmitTx, timeout time.Duration) error
+	SubmitTx(ctx sdk.Context, msg *types.MsgSubmitTx, timeout time.Duration, success SuccessCallbackFunc, failure FailureCallbackFunc) error
 	RegisterAccount(ctx sdk.Context, msg *types.MsgRegisterAccount) error
 }
+
+type InterTxCallbackI interface {
+	SuccessCallback(ctx sdk.Context, packet channeltypes.Packet, message *codectypes.Any) error
+	FailureCallback(ctx sdk.Context, packet channeltypes.Packet, err string) error
+}
+
+type SuccessCallbackFunc = (func(ctx sdk.Context, message *codectypes.Any) error)
+type FailureCallbackFunc = (func(ctx sdk.Context, err string) error)
 
 type Keeper struct {
 	cdc codec.Codec
@@ -32,15 +42,21 @@ type Keeper struct {
 
 	scopedKeeper        capabilitykeeper.ScopedKeeper
 	icaControllerKeeper icacontrollerkeeper.Keeper
+	successCallbacks    map[uint64]SuccessCallbackFunc
+	failureCallbacks    map[uint64]FailureCallbackFunc
+	channelKeeper       channelkeeper.Keeper
 }
 
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, iaKeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, iaKeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, channelKeeper channelkeeper.Keeper) Keeper {
 	return Keeper{
 		cdc:      cdc,
 		storeKey: storeKey,
 
 		scopedKeeper:        scopedKeeper,
 		icaControllerKeeper: iaKeeper,
+		successCallbacks:    make(map[uint64]SuccessCallbackFunc),
+		failureCallbacks:    make(map[uint64]FailureCallbackFunc),
+		channelKeeper:       channelKeeper,
 	}
 }
 
@@ -65,7 +81,7 @@ func (k *Keeper) GetInterChainAccountAddress(ctx sdk.Context, connectionID, owne
 
 }
 
-func (k *Keeper) SubmitTx(ctx sdk.Context, msg *types.MsgSubmitTx, timeout time.Duration) error {
+func (k *Keeper) SubmitTx(ctx sdk.Context, msg *types.MsgSubmitTx, timeout time.Duration, success SuccessCallbackFunc, failure FailureCallbackFunc) error {
 	portID, err := icatypes.NewControllerPortID(msg.Owner)
 	if err != nil {
 		return err
@@ -94,6 +110,11 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msg *types.MsgSubmitTx, timeout time.
 	// timeoutTimestamp set to max value with the unsigned bit shifted to satisfy hermes timestamp conversion
 	// it is the responsibility of the auth module developer to ensure an appropriate timeout timestamp
 	timeoutTimestamp := ctx.BlockTime().Add(timeout).UnixNano()
+
+	nextSequence, _ := k.channelKeeper.GetNextSequenceSend(ctx, portID, channelID)
+	k.successCallbacks[nextSequence] = success
+	k.failureCallbacks[nextSequence] = failure
+
 	_, err = k.icaControllerKeeper.SendTx(ctx, chanCap, msg.ConnectionId, portID, packetData, uint64(timeoutTimestamp))
 	if err != nil {
 		return err
@@ -107,5 +128,29 @@ func (k *Keeper) RegisterAccount(ctx sdk.Context, msg *types.MsgRegisterAccount)
 	if err := k.icaControllerKeeper.RegisterInterchainAccount(ctx, msg.ConnectionId, msg.Owner, msg.Version); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (k *Keeper) SuccessCallback(ctx sdk.Context, packet channeltypes.Packet, message *codectypes.Any) error {
+	if callback, ok := k.successCallbacks[packet.Sequence]; ok && callback != nil {
+		err := callback(ctx, message)
+		delete(k.successCallbacks, packet.Sequence)
+		delete(k.failureCallbacks, packet.Sequence)
+		return err
+	}
+
+	// We received a packet that does not have a callback. This is an error
+	return nil
+}
+
+func (k *Keeper) FailureCallback(ctx sdk.Context, packet channeltypes.Packet, err string) error {
+	if callback, ok := k.failureCallbacks[packet.Sequence]; ok && callback != nil {
+		err := callback(ctx, err)
+		delete(k.successCallbacks, packet.Sequence)
+		delete(k.failureCallbacks, packet.Sequence)
+		return err
+	}
+
+	// We received a packet that does not have a callback. This is an error
 	return nil
 }

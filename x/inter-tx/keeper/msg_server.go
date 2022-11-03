@@ -32,7 +32,7 @@ func (k msgServer) RegisterAccount(goCtx context.Context, msg *types.MsgRegister
 // SubmitTx implements the Msg/SubmitTx interface
 func (k msgServer) SubmitTx(goCtx context.Context, msg *types.MsgSubmitTx) (*types.MsgSubmitTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	err := k.Keeper.SubmitTx(ctx, msg, time.Minute)
+	err := k.Keeper.SubmitTx(ctx, msg, time.Minute, nil, nil)
 	if err != nil {
 		return nil, err
 	}

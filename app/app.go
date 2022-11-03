@@ -472,7 +472,7 @@ func New(
 
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
 
-	app.InterTxKeeper = intertxkeeper.NewKeeper(appCodec, keys[intertxtypes.StoreKey], app.ICAControllerKeeper, scopedInterTxKeeper)
+	app.InterTxKeeper = intertxkeeper.NewKeeper(appCodec, keys[intertxtypes.StoreKey], app.ICAControllerKeeper, scopedInterTxKeeper, app.IBCKeeper.ChannelKeeper)
 	interTxModule := intertx.NewAppModule(appCodec, app.InterTxKeeper)
 	interTxIBCModule := intertx.NewIBCModule(app.InterTxKeeper)
 
