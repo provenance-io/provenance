@@ -603,9 +603,10 @@ func (k msgServer) ReflectMarker(goCtx context.Context, msg *types.MsgReflectMar
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	err = k.intertxKeeper.SubmitTx(ctx, submitTx, time.Minute, func(ctx sdk.Context, message *codectypes.Any) error {
+		/*res := types.MsgIcaReflectMarkerResponse{}
 		if _, ok := message.(*types.MsgIcaReflectMarkerResponse); ok {
 			return im.keeper.FailureCallback(ctx, packet, ack.GetError())
-		}
+		}*/
 		ctx.Logger().Info("success")
 		k.Keeper.Test(ctx)
 		return nil
