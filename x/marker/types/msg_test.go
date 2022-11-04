@@ -158,3 +158,204 @@ func TestMsgAssessCustomMsgFeeValidateBasic(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgReflectMarkerValidateBasic(t *testing.T) {
+	validAddress := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
+
+	cases := []struct {
+		name     string
+		msg      MsgReflectMarkerRequest
+		errorMsg string
+	}{
+		{
+			"should fail to validate basic, invalid admin address",
+			*NewMsgReflectMarkerRequest(
+				"markder-denom",
+				"ibc-denom",
+				"connection-id",
+				"invalid-address",
+			),
+			"decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			"should pass",
+			*NewMsgReflectMarkerRequest(
+				"markder-denom",
+				"ibc-denom",
+				"connection-id",
+				validAddress,
+			),
+			"",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.errorMsg) > 0 {
+				require.Error(t, err)
+				require.Equal(t, tc.errorMsg, err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgIcaReflectMarkerValidateBasic(t *testing.T) {
+	validAddress := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
+
+	cases := []struct {
+		name     string
+		msg      MsgIcaReflectMarkerRequest
+		errorMsg string
+	}{
+		{
+			"should fail to validate basic, invalid marker status",
+			*NewMsgIcaReflectMarkerRequest(
+				"marker-denom",
+				"ibc-denom",
+				"invoker",
+				"owner",
+				StatusUndefined,
+				MarkerType_Unknown,
+				[]AccessGrant{},
+				false,
+			),
+			"reflected marker must have active status",
+		},
+		{
+			"should fail to validate basic, invalid marker type",
+			*NewMsgIcaReflectMarkerRequest(
+				"marker-denom",
+				"ibc-denom",
+				"invoker",
+				"owner",
+				StatusActive,
+				MarkerType_Unknown,
+				[]AccessGrant{},
+				false,
+			),
+			"reflected marker must not have unknown type",
+		},
+		{
+			"should fail to validate basic, invalid invoker address",
+			*NewMsgIcaReflectMarkerRequest(
+				"marker-denom",
+				"ibc-denom",
+				"invalid-address",
+				"owner",
+				StatusActive,
+				MarkerType_RestrictedCoin,
+				[]AccessGrant{},
+				false,
+			),
+			"decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			"should fail to validate basic, invalid admin address",
+			*NewMsgIcaReflectMarkerRequest(
+				"marker-denom",
+				"ibc-denom",
+				"invalid-address",
+				"owner",
+				StatusActive,
+				MarkerType_RestrictedCoin,
+				[]AccessGrant{
+					{
+						"Address",
+						[]Access{
+							Access_Burn,
+						},
+					},
+				},
+				false,
+			),
+			"access list contains mint and/or burn",
+		},
+		{
+			"should fail to validate basic, invalid permissions",
+			*NewMsgIcaReflectMarkerRequest(
+				"marker-denom",
+				"ibc-denom",
+				"invalid-address",
+				"owner",
+				StatusActive,
+				MarkerType_RestrictedCoin,
+				[]AccessGrant{
+					{
+						"Address",
+						[]Access{
+							Access_Mint,
+						},
+					},
+				},
+				false,
+			),
+			"access list contains mint and/or burn",
+		},
+		{
+			"should fail to validate basic, invalid permissions",
+			*NewMsgIcaReflectMarkerRequest(
+				"marker-denom",
+				"ibc-denom",
+				"invalid-address",
+				"owner",
+				StatusActive,
+				MarkerType_RestrictedCoin,
+				[]AccessGrant{
+					{
+						"Address",
+						[]Access{
+							Access_Mint,
+						},
+					},
+				},
+				false,
+			),
+			"access list contains mint and/or burn",
+		},
+		{
+			"should pass to validate basic",
+			*NewMsgIcaReflectMarkerRequest(
+				"marker-denom",
+				"ibc-denom",
+				validAddress,
+				"owner",
+				StatusActive,
+				MarkerType_RestrictedCoin,
+				[]AccessGrant{
+					{
+						"Address",
+						[]Access{
+							Access_Unknown,
+							Access_Deposit,
+							Access_Withdraw,
+							Access_Delete,
+							Access_Admin,
+							Access_Transfer,
+						},
+					},
+				},
+				false,
+			),
+			"",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.errorMsg) > 0 {
+				require.Error(t, err)
+				require.Equal(t, tc.errorMsg, err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}

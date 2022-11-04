@@ -75,6 +75,7 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
+
 	pioconfig.SetProvenanceConfig("", 0)
 	cfg := testutil.DefaultTestNetworkConfig()
 
@@ -219,6 +220,35 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			Supply:                 sdk.NewInt(3000),
 			Denom:                  "hodlercoin",
 		},
+		{
+			BaseAccount: &authtypes.BaseAccount{
+				Address:       markertypes.MustGetMarkerAddress("richardmorty").String(),
+				AccountNumber: 150,
+				Sequence:      0,
+			},
+			Status:                 markertypes.StatusProposed,
+			SupplyFixed:            false,
+			MarkerType:             markertypes.MarkerType_RestrictedCoin,
+			AllowGovernanceControl: false,
+			Supply:                 sdk.NewInt(3000),
+			Denom:                  "richardmorty",
+			AccessControl: []markertypes.AccessGrant{
+				*markertypes.NewAccessGrant(s.accountAddresses[0], []markertypes.Access{markertypes.Access_Transfer, markertypes.Access_Admin}),
+			},
+		},
+		{
+			BaseAccount: &authtypes.BaseAccount{
+				Address:       markertypes.MustGetMarkerAddress("unlimitedsupplycoin").String(),
+				AccountNumber: 150,
+				Sequence:      0,
+			},
+			Status:                 markertypes.StatusActive,
+			SupplyFixed:            false,
+			MarkerType:             markertypes.MarkerType_RestrictedCoin,
+			AllowGovernanceControl: false,
+			Supply:                 sdk.NewInt(0),
+			Denom:                  "unlimitedsupplycoin",
+		},
 	}
 	for i := len(markerData.Markers); i < s.markerCount; i++ {
 		denom := toWritten(i + 1)
@@ -244,6 +274,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	cfg.GenesisState = genesisState
 	cfg.ChainID = antewrapper.SimAppChainID
+
 
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err, "creating testnet")
@@ -818,6 +849,90 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"reflect marker - marker not found",
+			markercli.GetCmdReflectMarker(),
+			[]string{
+				"hotdogcoin",
+				"ibc/123",
+				"connection-1",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 18,
+		},
+		{
+			"reflect marker - marker not found for the address",
+			markercli.GetCmdReflectMarker(),
+			[]string{
+				"hotdogcoin",
+				"ibc/123",
+				"connection-1",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 18,
+		},
+		{
+			"reflect marker - marker cannot have fixed supply",
+			markercli.GetCmdReflectMarker(),
+			[]string{
+				"testcoin",
+				"ibc/123",
+				"connection-1",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 1,
+		},
+		{
+			"reflect marker - marker must be in Active state",
+			markercli.GetCmdReflectMarker(),
+			[]string{
+				"richardmorty",
+				"ibc/123",
+				"connection-1",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 1,
+		},
+		{
+			"reflect marker - interchain account for address not found",
+			markercli.GetCmdReflectMarker(),
+			[]string{
+				"unlimitedsupplycoin",
+				"ibc/123",
+				"connection-1",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 1,
+		},
+		{
+			"reflect marker - pass", //TODO
+			markercli.GetCmdReflectMarker(),
+			[]string{
+				"unlimitedsupplycoin",
+				"ibc/123",
+				"connection-1",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 1,
 		},
 	}
 
