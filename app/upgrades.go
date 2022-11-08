@@ -40,6 +40,8 @@ var handlers = map[string]appUpgrade{
 	"ochre-rc1": { // upgrade for 1.13.0-rc1
 		Added: []string{group.ModuleName, rewardtypes.ModuleName, icacontrollertypes.StoreKey, icahosttypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
+			params := app.MsgFeesKeeper.GetParams(ctx)
+			app.MsgFeesKeeper.SetParams(ctx, params)
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			UpgradeICA(ctx, app, &versionMap)
 			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
