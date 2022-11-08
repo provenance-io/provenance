@@ -9,8 +9,9 @@ import (
 // GetParams returns the total set of distribution parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	return types.Params{
-		FloorGasPrice:  k.GetFloorGasPrice(ctx),
-		NhashPerUsdMil: k.GetNhashPerUsdMil(ctx),
+		FloorGasPrice:      k.GetFloorGasPrice(ctx),
+		NhashPerUsdMil:     k.GetNhashPerUsdMil(ctx),
+		ConversionFeeDenom: k.GetConversionFeeDenom(ctx),
 	}
 }
 
