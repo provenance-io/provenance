@@ -1,7 +1,6 @@
 package antewrapper
 
 import (
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -26,24 +25,7 @@ var _ sdk.AnteDecorator = FeeMeterContextDecorator{}
 
 // AnteHandle implements the AnteDecorator.AnteHandle method
 func (r FeeMeterContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	if !simulate && ctx.BlockHeight() > 0 {
-		bz, err := r.TxEncoder(tx)
-		gasInfo, _, _, err := r.SimulateFunc(bz)
-		ctx.Logger().Info(fmt.Sprintf("gas used for this tx is %v", gasInfo.GasUsed))
-		ctx.Logger().Info(fmt.Sprintf("gas wanted for this tx is %v", gasInfo.GasWanted))
-
-		if err != nil {
-			return ctx, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-		}
-		gasSimulated := gasInfo.GasUsed
-		if gasInfo.GasUsed == 0 {
-			gasSimulated = gasInfo.GasWanted
-		}
-		newCtx := ctx.WithGasMeter(NewFeeGasMeterWrapper(ctx.Logger(), NewFeeGasMeterWrapper(ctx.Logger(), sdk.NewGasMeter(gasSimulated), simulate), simulate))
-
-		return next(newCtx, tx, simulate)
-	}
-	newCtx := ctx.WithGasMeter(NewFeeGasMeterWrapper(ctx.Logger(), ctx.GasMeter(), simulate))
+	newCtx := ctx.WithGasMeter(NewFeeGasMeterWrapper(ctx.Logger(), simulate))
 	return next(newCtx, tx, simulate)
 }
 

@@ -18,8 +18,6 @@ import (
 type FeeGasMeter struct {
 	// a context logger reference for info/debug output
 	log log.Logger
-	// the gas meter being wrapped
-	base sdkgas.GasMeter
 	// tracks amount used per purpose
 	used map[string]uint64
 	// tracks number of usages per purpose
@@ -44,10 +42,9 @@ type FeeGasMeter struct {
 }
 
 // NewFeeGasMeterWrapper returns a reference to a new tracing gas meter that will track calls to the base gas meter
-func NewFeeGasMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter, isSimulate bool) sdkgas.GasMeter {
+func NewFeeGasMeterWrapper(logger log.Logger, isSimulate bool) sdkgas.GasMeter {
 	return &FeeGasMeter{
 		log:            logger,
-		base:           baseMeter,
 		used:           make(map[string]uint64),
 		calls:          make(map[string]uint64),
 		feeCalls:       make(map[string]uint64),
@@ -66,21 +63,33 @@ func (g *FeeGasMeter) GasConsumed() sdkgas.Gas {
 	for i, d := range g.used {
 		usage = fmt.Sprintf("%s\n   - %s (x%d) = %d", usage, i, g.calls[i], d)
 	}
-	usage = fmt.Sprintf("%s\n  Total: %d gas", usage, g.base.GasConsumed())
+	usage = fmt.Sprintf("%s\n  Total: %d gas", usage, g.gasConsumed)
 
 	g.log.Info(usage)
 	// don't consume the gas
-	return g.base.GasConsumed()
+	return g.gasConsumed
 }
 
-// RefundGas refunds an amount of gas
-func (g *FeeGasMeter) RefundGas(amount uint64, descriptor string) {
-	g.base.RefundGas(amount, descriptor)
+// RefundGas will deduct the given amount from the gas consumed. If the amount is greater than the
+// gas consumed, the function will panic.
+//
+// Use case: This functionality enables refunding gas to the transaction or block gas pools so that
+// EVM-compatible chains can fully support the go-ethereum StateDb interface.
+// See https://github.com/cosmos/cosmos-sdk/pull/9403 for reference.
+func (g *FeeGasMeter) RefundGas(amount sdkgas.Gas, descriptor string) {
+	if g.gasConsumed < amount {
+		panic(sdkgas.ErrorNegativeGasConsumed{Descriptor: descriptor})
+	}
+
+	g.gasConsumed -= amount
 }
 
 // GasConsumedToLimit will report the actual consumption or the meter limit, whichever is less.
 func (g *FeeGasMeter) GasConsumedToLimit() sdkgas.Gas {
-	return g.base.GasConsumedToLimit()
+	if g.IsPastLimit() {
+		return g.gasLimit
+	}
+	return g.gasConsumed
 }
 
 // GasRemaining returns the gas left in the GasMeter.
@@ -93,7 +102,7 @@ func (g *FeeGasMeter) GasRemaining() sdkgas.Gas {
 
 // Limit for amount of gas that can be consumed (if zero then unlimited)
 func (g *FeeGasMeter) Limit() sdkgas.Gas {
-	return g.base.Limit()
+	return g.gasLimit
 }
 
 // ConsumeGas increments the amount of gas used on the meter associated with a given purpose.
@@ -120,7 +129,7 @@ func (g *FeeGasMeter) ConsumeGasWithOutLimitCheck(amount sdkgas.Gas, descriptor 
 
 	// check only the 4m (or param) limit
 	if g.gasConsumed > g.gasLimit {
-		panic(sdkgas.ErrorOutOfGas{descriptor})
+		panic(sdkgas.ErrorOutOfGas{Descriptor: descriptor})
 	}
 }
 
@@ -146,7 +155,7 @@ func (g *FeeGasMeter) IsOutOfGas() bool {
 
 // String implements stringer interface
 func (g *FeeGasMeter) String() string {
-	return fmt.Sprintf("feeGasMeter:\n  limit: %d\n  consumed: %d fee consumed: %v", g.base.Limit(), g.base.GasConsumed(), g.FeeConsumed())
+	return fmt.Sprintf("feeGasMeter:\n  limit: %d\n  consumed: %d fee consumed: %v", g.Limit(), g.GasConsumed(), g.FeeConsumed())
 }
 
 // ConsumeFee increments the amount of msg fee required by a msg type.
