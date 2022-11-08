@@ -11,22 +11,31 @@ import (
 // which provided an AnteDecorator that wraps the current
 // context gas meter with one that outputs debug logging and telemetry
 // whenever gas is consumed on the meter.
-type FeeMeterContextDecorator struct {
-	SimulateFunc BaseAppSimulateFunc
-	TxEncoder    sdk.TxEncoder
-}
-
-// NewFeeMeterContextDecorator creates a new FeeMeterContextDecorator
-func NewFeeMeterContextDecorator(simulateFunc BaseAppSimulateFunc, txEncoder sdk.TxEncoder) FeeMeterContextDecorator {
-	return FeeMeterContextDecorator{SimulateFunc: simulateFunc, TxEncoder: txEncoder}
-}
-
-var _ sdk.AnteDecorator = FeeMeterContextDecorator{}
+//type FeeMeterContextDecorator struct {
+//}
+//
+//// NewFeeMeterContextDecorator creates a new FeeMeterContextDecorator
+//func NewFeeMeterContextDecorator() FeeMeterContextDecorator {
+//	return FeeMeterContextDecorator{}
+//}
+//
+//var _ sdk.AnteDecorator = FeeMeterContextDecorator{}
 
 // AnteHandle implements the AnteDecorator.AnteHandle method
-func (r FeeMeterContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	newCtx := ctx.WithGasMeter(NewFeeGasMeterWrapper(ctx.Logger(), simulate))
-	return next(newCtx, tx, simulate)
+//func (r FeeMeterContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+//	newCtx := ctx.WithGasMeter(NewFeeGasMeterWrapper(ctx.Logger(), simulate))
+//	return next(newCtx, tx, simulate)
+//}
+
+// ProvenanceSetGasMeter returns a new context with a gas meter set from a given context.
+func ProvenanceSetGasMeter(simulate bool, ctx sdk.Context, gasLimit uint64) sdk.Context {
+	// In various cases such as simulation and during the genesis block, we do not
+	// meter any gas utilization.
+	if simulate || ctx.BlockHeight() == 0 {
+		return ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	}
+
+	return ctx.WithGasMeter(NewFeeGasMeterWrapper(ctx.Logger(), simulate))
 }
 
 // GetFeeTx coverts the provided Tx to a FeeTx if possible.
