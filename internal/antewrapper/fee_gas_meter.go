@@ -2,8 +2,6 @@ package antewrapper
 
 import (
 	"fmt"
-	"math"
-
 	"github.com/armon/go-metrics"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -18,6 +16,8 @@ import (
 type FeeGasMeter struct {
 	// a context logger reference for info/debug output
 	log log.Logger
+	// the gas meter being wrapped
+	base sdkgas.GasMeter
 	// tracks amount used per purpose
 	used map[string]uint64
 	// tracks number of usages per purpose
@@ -31,10 +31,6 @@ type FeeGasMeter struct {
 	// this is the base fee charged in decorator
 	baseFeeCharged sdk.Coins
 
-	// Idea is that these two below fields are used to track consumption but panic only if greater than 4 m gas.
-	// gas tracker, this is the gas usage tracker for the tx
-	gasConsumed sdkgas.Gas
-
 	// gas limit should be set to 4 mil
 	gasLimit sdkgas.Gas
 
@@ -42,16 +38,17 @@ type FeeGasMeter struct {
 }
 
 // NewFeeGasMeterWrapper returns a reference to a new tracing gas meter that will track calls to the base gas meter
-func NewFeeGasMeterWrapper(logger log.Logger, isSimulate bool) sdkgas.GasMeter {
+func NewFeeGasMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter, isSimulate bool) sdkgas.GasMeter {
 	return &FeeGasMeter{
 		log:            logger,
+		base:           baseMeter,
 		used:           make(map[string]uint64),
 		calls:          make(map[string]uint64),
 		feeCalls:       make(map[string]uint64),
 		usedFees:       make(map[string]sdk.Coins),
 		baseFeeCharged: sdk.Coins{},
 		simulate:       isSimulate,
-		gasLimit:       50000,
+		gasLimit:       gasTxLimit,
 	}
 }
 
@@ -63,46 +60,30 @@ func (g *FeeGasMeter) GasConsumed() sdkgas.Gas {
 	for i, d := range g.used {
 		usage = fmt.Sprintf("%s\n   - %s (x%d) = %d", usage, i, g.calls[i], d)
 	}
-	usage = fmt.Sprintf("%s\n  Total: %d gas", usage, g.gasConsumed)
+	usage = fmt.Sprintf("%s\n  Total: %d gas", usage, g.base.GasConsumed())
 
 	g.log.Info(usage)
-	// don't consume the gas
-	return g.gasConsumed
+	return g.base.GasConsumed()
 }
 
-// RefundGas will deduct the given amount from the gas consumed. If the amount is greater than the
-// gas consumed, the function will panic.
-//
-// Use case: This functionality enables refunding gas to the transaction or block gas pools so that
-// EVM-compatible chains can fully support the go-ethereum StateDb interface.
-// See https://github.com/cosmos/cosmos-sdk/pull/9403 for reference.
-func (g *FeeGasMeter) RefundGas(amount sdkgas.Gas, descriptor string) {
-	if g.gasConsumed < amount {
-		panic(sdkgas.ErrorNegativeGasConsumed{Descriptor: descriptor})
-	}
-
-	g.gasConsumed -= amount
+// RefundGas refunds an amount of gas
+func (g *FeeGasMeter) RefundGas(amount uint64, descriptor string) {
+	g.base.RefundGas(amount, descriptor)
 }
 
 // GasConsumedToLimit will report the actual consumption or the meter limit, whichever is less.
 func (g *FeeGasMeter) GasConsumedToLimit() sdkgas.Gas {
-	if g.IsPastLimit() {
-		return g.gasLimit
-	}
-	return g.gasConsumed
+	return g.base.GasConsumedToLimit()
 }
 
 // GasRemaining returns the gas left in the GasMeter.
 func (g *FeeGasMeter) GasRemaining() sdkgas.Gas {
-	if g.IsPastLimit() {
-		return 0
-	}
-	return g.gasLimit - g.gasConsumed
+	return g.base.GasRemaining()
 }
 
 // Limit for amount of gas that can be consumed (if zero then unlimited)
 func (g *FeeGasMeter) Limit() sdkgas.Gas {
-	return g.gasLimit
+	return g.base.Limit()
 }
 
 // ConsumeGas increments the amount of gas used on the meter associated with a given purpose.
@@ -115,47 +96,22 @@ func (g *FeeGasMeter) ConsumeGas(amount sdkgas.Gas, descriptor string) {
 
 	telemetry.IncrCounterWithLabels([]string{"tx", "gas", "consumed"}, float32(amount), []metrics.Label{telemetry.NewLabel("purpose", descriptor)})
 
-	g.ConsumeGasWithOutLimitCheck(amount, descriptor)
-}
-
-// ConsumeGasWithOutLimitCheck adds the given amount of gas to the gas consumed and panics if it overflows the limit or out of gas.
-func (g *FeeGasMeter) ConsumeGasWithOutLimitCheck(amount sdkgas.Gas, descriptor string) {
-	var overflow bool
-	g.gasConsumed, overflow = addUint64Overflow(g.gasConsumed, amount)
-	if overflow {
-		g.gasConsumed = math.MaxUint64
-		panic(sdkgas.ErrorGasOverflow{Descriptor: descriptor})
-	}
-
-	// check only the 4m (or param) limit
-	if g.gasConsumed > g.gasLimit {
-		panic(sdkgas.ErrorOutOfGas{Descriptor: descriptor})
-	}
-}
-
-// addUint64Overflow performs the addition operation on two uint64 integers and
-// returns a boolean on whether or not the result overflows.
-func addUint64Overflow(a, b uint64) (uint64, bool) {
-	if math.MaxUint64-a < b {
-		return 0, true
-	}
-
-	return a + b, false
+	g.base.ConsumeGas(amount, descriptor)
 }
 
 // IsPastLimit indicates consumption has passed the limit (if any)
 func (g *FeeGasMeter) IsPastLimit() bool {
-	return g.gasConsumed > g.gasLimit
+	return g.base.IsPastLimit()
 }
 
 // IsOutOfGas indicates the gas meter has tracked consumption at or above the limit
 func (g *FeeGasMeter) IsOutOfGas() bool {
-	return g.gasConsumed >= g.gasLimit
+	return g.base.IsOutOfGas()
 }
 
 // String implements stringer interface
 func (g *FeeGasMeter) String() string {
-	return fmt.Sprintf("feeGasMeter:\n  limit: %d\n  consumed: %d fee consumed: %v", g.Limit(), g.GasConsumed(), g.FeeConsumed())
+	return fmt.Sprintf("feeGasMeter:\n  limit: %d\n  consumed: %d fee consumed: %v", g.base.Limit(), g.base.GasConsumed(), g.FeeConsumed())
 }
 
 // ConsumeFee increments the amount of msg fee required by a msg type.

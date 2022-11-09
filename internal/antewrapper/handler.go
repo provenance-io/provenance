@@ -45,8 +45,11 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	decorators := []sdk.AnteDecorator{
-		cosmosante.NewSetUpContextDecorator(ProvenanceSetGasMeter), // outermost AnteDecorator. SetUpContext must be called first
-		//NewFeeMeterContextDecorator(options.SimulateFunc, options.TxEncoder), // NOTE : fee gas meter also has the functionality of GasTracerContextDecorator in previous versions
+		cosmosante.NewSetUpContextDecorator(cosmosante.GasLimit{
+			Limit:         gasTxLimit,
+			OverrideGasTx: true,
+		}), // outermost AnteDecorator. SetUpContext must be called first
+		NewFeeMeterContextDecorator(), // NOTE : fee gas meter also has the functionality of GasTracerContextDecorator in previous versions
 		NewTxGasLimitDecorator(),
 		NewMinGasPricesDecorator(),
 		NewMsgFeesDecorator(options.MsgFeesKeeper),
