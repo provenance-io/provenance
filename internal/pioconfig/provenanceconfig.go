@@ -2,6 +2,7 @@ package pioconfig
 
 import (
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -23,8 +24,9 @@ type ProvenanceConfig struct {
 	MsgFeeFloorGasPrice int64 // Msg fee ante handlers and code use this for their calculations, this ***ONLY SETS***
 	// the default param(see method DefaultFloorGasPrice), all calculated values are still from msg fee module PARAMS.
 	// for that module, if the param is changed via governance then the code will pick the new value.(should pick that up from module param)
-	BondDenom     string // Also referred to as Staking Denom sometimes.
-	MsgFloorDenom string // MsgFloorDenom should always be the same Fee Denom, but maybe useful for tests.
+	BondDenom       string    // Also referred to as Staking Denom sometimes.
+	MsgFloorDenom   string    // MsgFloorDenom should always be the same Fee Denom, but maybe useful for tests.
+	MinimumNodeFees sdk.Coins // Minimum fee that a node sets, to accept a transaction, if not set then all tx's will be accepted.
 }
 
 var provConfig *ProvenanceConfig
@@ -65,4 +67,8 @@ func GetProvenanceConfig() ProvenanceConfig {
 	}
 	// Should get empty config if not set, several things in app wiring will fail fast if this not set so not too worried.
 	return ProvenanceConfig{}
+}
+
+func SetMinimumNodeFee(minimumNodeFee sdk.Coin) {
+	provConfig.MinimumNodeFees = sdk.Coins{minimumNodeFee}
 }

@@ -3,6 +3,7 @@ package antewrapper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
 // MinGasPricesDecorator will check if the transaction's fee is at least as large
@@ -18,6 +19,7 @@ func NewMinGasPricesDecorator() MinGasPricesDecorator {
 }
 
 func (mfd MinGasPricesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+
 	if !simulate {
 		err := checkTxFeeWithNodeMinFee(ctx, tx)
 		if err != nil {
@@ -54,17 +56,10 @@ func checkTxFeeWithNodeMinFee(ctx sdk.Context, tx sdk.Tx) error {
 	// if this is a CheckTx. This is only for local mempool purposes, and thus
 	// is only ran on check tx.
 	if ctx.IsCheckTx() {
-		minGasPrices := ctx.MinGasPrices()
-		if !minGasPrices.IsZero() {
-			requiredFees := make(sdk.Coins, len(minGasPrices))
-
-			for i, gp := range minGasPrices {
-				fee := gp.Amount
-				requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
-			}
-
-			if !feeCoins.IsAnyGTE(requiredFees) {
-				return sdkerrors.ErrInsufficientFee.Wrapf("min-fee not met; got: %s required: %s", feeCoins, requiredFees)
+		minFee := pioconfig.GetProvenanceConfig().MinimumNodeFees
+		if !minFee.IsZero() {
+			if !feeCoins.IsAnyGTE(minFee) {
+				return sdkerrors.ErrInsufficientFee.Wrapf("min-fee for the node not met; got: %s required: %s", feeCoins, minFee)
 			}
 		}
 	}

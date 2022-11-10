@@ -271,22 +271,16 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		panic(err)
 	}
 
-	// Validate min-gas-price is a single coin.
-	if fee, err := sdk.ParseCoinNormalized(cast.ToString(appOpts.Get(server.FlagMinGasPrices))); err == nil {
-		if int(sdk.GetConfig().GetCoinType()) == app.CoinTypeMainNet {
-			// require the fee denom to match the bond denom on mainnet(still applies)
-			if fee.Denom != pioconfig.GetProvenanceConfig().FeeDenom {
-				panic(fmt.Errorf("invalid min-gas-price fee denom, must be: %s", pioconfig.GetProvenanceConfig().FeeDenom))
-			}
-		}
+	minimumNodeFee := cast.ToString(appOpts.Get(fmt.Sprintf("%s.%s", "custom-node", "fees")))
+
+	// If the node has a minimum fee it charges, then set it in config,else set 0nhash
+	if fee, err := sdk.ParseCoinNormalized(minimumNodeFee); err == nil {
+		pioconfig.SetMinimumNodeFee(fee)
 	} else {
-		// panic if there was a parse error (for example more than one coin was passed in for required fee).
-		if err != nil {
-			panic(fmt.Errorf("invalid min-gas-price value, expected single decimal coin value such as '%s', got '%s';\n\n %w",
-				pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices,
-				appOpts.Get(server.FlagMinGasPrices),
-				err))
-		}
+		pioconfig.SetMinimumNodeFee(sdk.Coin{
+			Denom:  "nhash",
+			Amount: sdk.NewInt(0),
+		})
 	}
 
 	snapshotOptions := snapshottypes.NewSnapshotOptions(
