@@ -18,6 +18,12 @@ message Params {
   uint64 nhash_per_usd_mil = 3;
   // conversion fee denom is the denom usd is converted to
   string conversion_fee_denom = 4;
+  // constant to be used to charge a minimum fee for each transaction. for e.g 0.381 hash (1905nhash * 200000) 200k gas,
+  // is the default gas set by the cli. This will be the fee to be charged for spam prevention and failed tx's.
+  cosmos.base.v1beta1.Coin floor_fee = 5 [(gogoproto.nullable) = false];
+  // since gas is not used for fees anymore, the design should accommodate a fee that should be charged if not present
+  // in the fee table, should be >= floor_fee
+  cosmos.base.v1beta1.Coin default_msg_fee = 6 [(gogoproto.nullable) = false];
 }
 
 // MsgFee is the core of what gets stored on the blockchain
@@ -32,7 +38,7 @@ message MsgFee {
   cosmos.base.v1beta1.Coin additional_fee = 2 [(gogoproto.nullable) = false];
   string recipient              = 3; // optional recipient address, the amount is split between recipient and fee module
   uint32 recipient_basis_points = 4; // optional split of funds between the recipient and fee module defaults to 50:50,
-                                     // split recipient basis points can only be between 0 and 10,000
+  // split recipient basis points can only be between 0 and 10,000
 }
 
 // EventMsgFee final event property for msg fee on type

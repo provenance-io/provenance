@@ -5312,6 +5312,8 @@ Params defines the set of params for the msgfees module.
 | `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | constant used to calculate fees when gas fees shares denom with msg fee |
 | `nhash_per_usd_mil` | [uint64](#uint64) |  | total nhash per usd mil for converting usd to nhash |
 | `conversion_fee_denom` | [string](#string) |  | conversion fee denom is the denom usd is converted to |
+| `floor_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | constant to be used to charge a minimum fee for each transaction. for e.g 0.381 hash (1905nhash * 200000) 200k gas, is the default gas set by the cli. This will be the fee to be charged for spam prevention and failed tx's. |
+| `default_msg_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | since gas is not used for fees anymore, the design should accommodate a fee that should be charged if not present in the fee table, should be >= floor_fee |
 
 
 
