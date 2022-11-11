@@ -182,6 +182,10 @@ DENOM ?= nhash
 MIN_FLOOR_PRICE ?= 1905
 CHAIN_ID ?= testing
 CHAIN_ID_DOCKER ?= chain-local
+GRPCPORT_1 ?= 8090
+GRPCPORT_2 ?= 9090
+GRPCWEB_1 ?= 8091
+GRPCWEB_2 ?= 9091
 
 # Run an instance of the daemon against a local config (create the config if it does not exit.)
 # if required to use something other than nhash, use: make run DENOM=vspn MIN_FLOOR_PRICE=0
@@ -205,12 +209,37 @@ run-config: check-built
 		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced collect-gentxs ; \
 	fi ;
 
+
+
 run: check-built run-config ;
 ifeq ($(DENOM),nhash)
-	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start
+	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start --pruning=nothing --grpc.address="0.0.0.0:"$(GRPCPORT_1) --grpc-web.address="0.0.0.0:"$(GRPCWEB_1)
 else
 	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start --custom-denom $(DENOM)
 endif
+
+
+run2-config: check-built
+	@if [ ! -d "$(BUILDDIR)/run2/provenanced/config" ]; then \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced init --chain-id=testing2 testing2 ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced keys add validator --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-root-name validator pio --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-root-name validator pb --restrict=false --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-root-name validator io --restrict --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-root-name validator provenance --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-account validator 100000000000000000000nhash --keyring-backend test ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced gentx validator 1000000000000000nhash --keyring-backend test --chain-id=testing2; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-marker 100000000000000000000nhash --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-msg-fee /provenance.name.v1.MsgBindNameRequest 10000000000nhash ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-msg-fee /provenance.marker.v1.MsgAddMarkerRequest 100000000000nhash ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest 10000000000nhash ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest 10000000000nhash ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced add-genesis-msg-fee /provenance.metadata.v1.MsgP8eMemorializeContractRequest 10000000000nhash ; \
+		$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced collect-gentxs; \
+	fi ;
+
+run2: check-built run2-config;
+	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run2/provenanced start --pruning=nothing --grpc.address="0.0.0.0:"$(GRPCPORT_2) --grpc-web.address="0.0.0.0:"$(GRPCWEB_2)
 
 .PHONY: install build build-linux run
 
