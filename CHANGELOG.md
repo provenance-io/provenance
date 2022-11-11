@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Updated Cosmos-SDK to v0.46.3-pio-4 (from v0.46.3-pio-1) [PR 1211](https://github.com/provenance-io/provenance/pull/1211).
+* Add prune command available though cosmos sdk to provenanced.[#1208](https://github.com/provenance-io/provenance/issues/1208).
 
 ### Bug Fixes
 
