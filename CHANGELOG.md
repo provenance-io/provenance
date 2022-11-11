@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * Pay attention to the `iavl-disable-fastnode` config field/flag [PR 1193](https://github.com/provenance-io/provenance/pull/1193).
+* Unable to publish Java/Kotlin JARs for release candidates to Maven [#1223](https://github.com/provenance-io/provenance/issues/1223)
 
 ---
 
@@ -66,6 +67,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   This fixes an erroneous attempt to migrate the wasmd module.
 * Fixed outdated devnet docker configurations [#1062](https://github.com/provenance-io/provenance/issues/1062)
 * Fix the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702) [PR 1173](https://github.com/provenance-io/provenance/pull/1173)
+* Fix GetParams in `msgfees` modules to return ConversionFeeDenom [#1214](https://github.com/provenance-io/provenance/issues/1214)
 
 ### Full Commit History
 
