@@ -37,7 +37,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Bug Fixes
+
+* Unable to publish Java/Kotlin JARs for release candidates to Maven [#1223](https://github.com/provenance-io/provenance/issues/1223)
 
 ---
 
@@ -50,7 +52,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * Pay attention to the `iavl-disable-fastnode` config field/flag [PR 1193](https://github.com/provenance-io/provenance/pull/1193).
-* Unable to publish Java/Kotlin JARs for release candidates to Maven [#1223](https://github.com/provenance-io/provenance/issues/1223)
 
 ### Full Commit History
 
