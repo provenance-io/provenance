@@ -37,7 +37,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Bug Fixes
+
+* Unable to publish Java/Kotlin JARs for release candidates to Maven [#1223](https://github.com/provenance-io/provenance/issues/1223)
 
 ---
 
