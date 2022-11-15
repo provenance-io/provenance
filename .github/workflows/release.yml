@@ -296,7 +296,7 @@ jobs:
           GPG_PASSWORD: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
         run: |
           cd protoBindings
-          ./gradlew publish $(if [ "${{ needs.build_init.outputs.prerelease }}" = "true" ]; then echo 'closeSonatypeStagingRepository'; else echo 'closeAndReleaseSonatypeStagingRepository'; fi) \
+          ./gradlew publish closeAndReleaseSonatypeStagingRepository \
             -PartifactVersion=$(echo "${{ needs.build_init.outputs.version }}" | sed -e 's/^v//') \
             -Psigning.keyId=B7D30ABE \
             -Psigning.password="${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}" \
