@@ -37,9 +37,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+
+* Updated Cosmos-SDK to v0.46.4-pio-1 (from v0.46.3-pio-1) [PR 1229](https://github.com/provenance-io/provenance/pull/1229).
+* Update swagger files [PR 1229](https://github.com/provenance-io/provenance/pull/1229).
+
 ### Bug Fixes
 
-* Unable to publish Java/Kotlin JARs for release candidates to Maven [#1223](https://github.com/provenance-io/provenance/issues/1223)
+* Unable to publish Java/Kotlin JARs for release candidates to Maven [#1223](https://github.com/provenance-io/provenance/issues/1223).
 
 ---
 
