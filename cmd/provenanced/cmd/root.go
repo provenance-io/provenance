@@ -15,11 +15,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 
+	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"
-
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -172,7 +172,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 	// Add Rosetta command
 	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
-
+	rootCmd.AddCommand(pruning.PruningCmd(newApp))
 	// Disable usage when the start command returns an error.
 	startCmd, _, err := rootCmd.Find([]string{"start"})
 	if err != nil {
@@ -271,24 +271,6 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		panic(err)
 	}
 
-	// Validate min-gas-price is a single coin.
-	if fee, err := sdk.ParseCoinNormalized(cast.ToString(appOpts.Get(server.FlagMinGasPrices))); err == nil {
-		if int(sdk.GetConfig().GetCoinType()) == app.CoinTypeMainNet {
-			// require the fee denom to match the bond denom on mainnet(still applies)
-			if fee.Denom != pioconfig.GetProvenanceConfig().FeeDenom {
-				panic(fmt.Errorf("invalid min-gas-price fee denom, must be: %s", pioconfig.GetProvenanceConfig().FeeDenom))
-			}
-		}
-	} else {
-		// panic if there was a parse error (for example more than one coin was passed in for required fee).
-		if err != nil {
-			panic(fmt.Errorf("invalid min-gas-price value, expected single decimal coin value such as '%s', got '%s';\n\n %w",
-				pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices,
-				appOpts.Get(server.FlagMinGasPrices),
-				err))
-		}
-	}
-
 	snapshotOptions := snapshottypes.NewSnapshotOptions(
 		cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval)),
 		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
@@ -310,7 +292,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents))),
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(getIAVLCacheSize(appOpts)),
-		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagIAVLFastNode))),
+		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
 	)
 }
 

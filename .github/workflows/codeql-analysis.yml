@@ -2,6 +2,11 @@ name: "CodeQL"
 
 on:
   pull_request:
+    paths:
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/codeql-analysis.yml"
   push:
     branches:
       - main
