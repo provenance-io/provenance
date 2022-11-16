@@ -39,14 +39,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* Updated Cosmos-SDK to v0.46.3-pio-4 (from v0.46.3-pio-1) [PR 1211](https://github.com/provenance-io/provenance/pull/1211).
-* Improve CodeQL workflow to run on Go file changes only [#1225](https://github.com/provenance-io/provenance/issues/1225)
+* Updated Cosmos-SDK to v0.46.4-pio-1 (from v0.46.3-pio-1) [PR 1229](https://github.com/provenance-io/provenance/pull/1229).
+* Improve CodeQL workflow to run on Go file changes only [#1225](https://github.com/provenance-io/provenance/issues/1225).
 * Add prune command available though cosmos sdk to provenanced.[#1208](https://github.com/provenance-io/provenance/issues/1208).
+* Update swagger files [PR 1229](https://github.com/provenance-io/provenance/pull/1229).
 
 ### Bug Fixes
 
 * Pay attention to the `iavl-disable-fastnode` config field/flag [PR 1193](https://github.com/provenance-io/provenance/pull/1193).
-* Unable to publish Java/Kotlin JARs for release candidates to Maven [#1223](https://github.com/provenance-io/provenance/issues/1223)
+* Unable to publish Java/Kotlin JARs for release candidates to Maven [#1223](https://github.com/provenance-io/provenance/issues/1223).
 
 ---
 
