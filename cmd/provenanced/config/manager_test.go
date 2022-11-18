@@ -20,6 +20,8 @@ import (
 
 	tmconfig "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
 type ConfigManagerTestSuite struct {
@@ -249,4 +251,120 @@ func (s *ConfigManagerTestSuite) TestServerGetConfigGlobalLabels() {
 	s.Require().NoError(vpr.MergeConfigMap(cfgMap), "MergeConfigMap")
 	_, err := serverconfig.GetConfig(vpr)
 	s.Require().NoError(err, "GetConfig")
+}
+
+func (s *ConfigManagerTestSuite) TestConfigMinGasPrices() {
+	configDir := GetFullPathToConfigDir(s.makeDummyCmd())
+	s.Require().NoError(os.MkdirAll(configDir, 0o755), "making config dir")
+
+	pioconfig.SetProvenanceConfig("manager", 42)
+	defaultMinGasPrices := pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices
+	s.Require().NotEqual("", defaultMinGasPrices, "ProvenanceMinGasPrices")
+
+	s.Run("DefaultAppConfig has MinGasPrices", func() {
+		cfg := DefaultAppConfig()
+		actual := cfg.MinGasPrices
+		s.Assert().Equal(defaultMinGasPrices, actual, "MinGasPrices")
+	})
+
+	s.Run("no files", func() {
+		cmd := s.makeDummyCmd()
+		s.Require().NoError(LoadConfigFromFiles(cmd), "LoadConfigFromFiles")
+		cfg, err := ExtractAppConfig(cmd)
+		s.Require().NoError(err, "ExtractAppConfig")
+		actual := cfg.MinGasPrices
+		s.Assert().Equal(defaultMinGasPrices, actual, "MinGasPrices")
+	})
+
+	s.Run("tm and client files but no app file", func() {
+		cmd1 := s.makeDummyCmd()
+		SaveConfigs(cmd1, nil, tmconfig.DefaultConfig(), DefaultClientConfig(), false)
+		appCfgFile := GetFullPathToAppConf(cmd1)
+		_, err := os.Stat(appCfgFile)
+		fileExists := !os.IsNotExist(err)
+		s.Require().False(fileExists, "file exists: %s", appCfgFile)
+
+		cmd2 := s.makeDummyCmd()
+		s.Require().NoError(LoadConfigFromFiles(cmd2), "LoadConfigFromFiles")
+		cfg, err := ExtractAppConfig(cmd2)
+		s.Require().NoError(err, "ExtractAppConfig")
+		actual := cfg.MinGasPrices
+		s.Assert().Equal(defaultMinGasPrices, actual, "MinGasPrices")
+	})
+
+	s.Run("all files exist min gas price empty", func() {
+		cmd1 := s.makeDummyCmd()
+		appCfg := DefaultAppConfig()
+		appCfg.MinGasPrices = ""
+		SaveConfigs(cmd1, appCfg, tmconfig.DefaultConfig(), DefaultClientConfig(), false)
+		appCfgFile := GetFullPathToAppConf(cmd1)
+		_, err := os.Stat(appCfgFile)
+		fileExists := !os.IsNotExist(err)
+		s.Require().True(fileExists, "file exists: %s", appCfgFile)
+
+		cmd2 := s.makeDummyCmd()
+		s.Require().NoError(LoadConfigFromFiles(cmd2), "LoadConfigFromFiles")
+		cfg, err := ExtractAppConfig(cmd2)
+		s.Require().NoError(err, "ExtractAppConfig")
+		actual := cfg.MinGasPrices
+		s.Assert().Equal("", actual, "MinGasPrices")
+	})
+
+	s.Run("all files exist min gas price something else", func() {
+		cmd1 := s.makeDummyCmd()
+		appCfg := DefaultAppConfig()
+		appCfg.MinGasPrices = "something else"
+		SaveConfigs(cmd1, appCfg, tmconfig.DefaultConfig(), DefaultClientConfig(), false)
+		appCfgFile := GetFullPathToAppConf(cmd1)
+		_, err := os.Stat(appCfgFile)
+		fileExists := !os.IsNotExist(err)
+		s.Require().True(fileExists, "file exists: %s", appCfgFile)
+
+		cmd2 := s.makeDummyCmd()
+		s.Require().NoError(LoadConfigFromFiles(cmd2), "LoadConfigFromFiles")
+		cfg, err := ExtractAppConfig(cmd2)
+		s.Require().NoError(err, "ExtractAppConfig")
+		actual := cfg.MinGasPrices
+		s.Assert().Equal("something else", actual, "MinGasPrices")
+	})
+
+	s.Run("packed config without min-gas-prices", func() {
+		cmd1 := s.makeDummyCmd()
+		SaveConfigs(cmd1, DefaultAppConfig(), tmconfig.DefaultConfig(), DefaultClientConfig(), false)
+		s.Require().NoError(PackConfig(cmd1), "PackConfig")
+		packedCfgFile := GetFullPathToPackedConf(cmd1)
+		_, err := os.Stat(packedCfgFile)
+		fileExists := !os.IsNotExist(err)
+		s.Require().True(fileExists, "file exists: %s", packedCfgFile)
+
+		// Just to be sure, rewrite the file as just "{}".
+		s.Require().NoError(os.WriteFile(packedCfgFile, []byte("{}"), 0o644), "writing packed config")
+
+		cmd2 := s.makeDummyCmd()
+		s.Require().NoError(LoadConfigFromFiles(cmd2), "LoadConfigFromFiles")
+		cfg, err := ExtractAppConfig(cmd2)
+		s.Require().NoError(err, "ExtractAppConfig")
+		actual := cfg.MinGasPrices
+		s.Assert().Equal(defaultMinGasPrices, actual)
+	})
+
+	s.Run("packed config with min-gas-prices", func() {
+		cmd1 := s.makeDummyCmd()
+		SaveConfigs(cmd1, DefaultAppConfig(), tmconfig.DefaultConfig(), DefaultClientConfig(), false)
+		s.Require().NoError(PackConfig(cmd1), "PackConfig")
+		packedCfgFile := GetFullPathToPackedConf(cmd1)
+		_, err := os.Stat(packedCfgFile)
+		fileExists := !os.IsNotExist(err)
+		s.Require().True(fileExists, "file exists: %s", packedCfgFile)
+
+		// rewrite the packed file to include min-gas-prices
+		s.Require().NoError(os.WriteFile(packedCfgFile, []byte(`{"minimum-gas-prices":"65blue"}`), 0o644), "writing packed config")
+
+		cmd2 := s.makeDummyCmd()
+		s.Require().NoError(LoadConfigFromFiles(cmd2), "LoadConfigFromFiles")
+		cfg, err := ExtractAppConfig(cmd2)
+		s.Require().NoError(err, "ExtractAppConfig")
+		actual := cfg.MinGasPrices
+		s.Assert().Equal("65blue", actual)
+	})
 }
