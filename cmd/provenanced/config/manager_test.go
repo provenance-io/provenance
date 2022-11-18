@@ -134,13 +134,11 @@ func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadGlobalLabels() {
 
 	ctx := client.GetClientContextFromCmd(dCmd)
 	vpr := ctx.Viper
-	var appConfig2 serverconfig.Config
-	var err error
 	s.Require().NotPanics(func() {
-		appConfig2, err = serverconfig.GetConfig(vpr)
+		appConfig2, err := serverconfig.GetConfig(vpr)
+		s.Require().NoError(err, "GetConfig")
+		s.Assert().Equal(appConfig.Telemetry.GlobalLabels, appConfig2.Telemetry.GlobalLabels)
 	}, "GetConfig")
-	s.Require().NoError(err, "GetConfig")
-	s.Assert().Equal(appConfig.Telemetry.GlobalLabels, appConfig2.Telemetry.GlobalLabels)
 }
 
 func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
