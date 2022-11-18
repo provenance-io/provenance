@@ -400,13 +400,14 @@ func loadUnpackedConfig(cmd *cobra.Command) error {
 	// Both the server context and client context should be using the same Viper, so this is good for both.
 	vpr := server.GetServerContextFromCmd(cmd).Viper
 
-	// Load the tendermint config if it exists, or else defaults.
+	// Load the tendermint config defaults, then file if it exists.
+	tdErr := addFieldMapToViper(vpr, MakeFieldValueMap(tmconfig.DefaultConfig(), false))
+	if tdErr != nil {
+		return fmt.Errorf("tendermint config defaults load error: %w", tdErr)
+	}
 	switch _, err := os.Stat(tmConfFile); {
 	case os.IsNotExist(err):
-		lerr := addFieldMapToViper(vpr, MakeFieldValueMap(tmconfig.DefaultConfig(), false))
-		if lerr != nil {
-			return fmt.Errorf("tendermint config file load error: %w", lerr)
-		}
+		// Do nothing.
 	case err != nil:
 		return fmt.Errorf("tendermint config file stat error: %w", err)
 	default:
@@ -417,13 +418,14 @@ func loadUnpackedConfig(cmd *cobra.Command) error {
 		}
 	}
 
-	// Load the app/cosmos config if it exists, or else defaults.
+	// Load the app/cosmos config defaults, then file if it exists.
+	adErr := addFieldMapToViper(vpr, MakeFieldValueMap(serverconfig.DefaultConfig(), false))
+	if adErr != nil {
+		return fmt.Errorf("app config defaults load error: %w", adErr)
+	}
 	switch _, err := os.Stat(appConfFile); {
 	case os.IsNotExist(err):
-		lerr := addFieldMapToViper(vpr, MakeFieldValueMap(serverconfig.DefaultConfig(), false))
-		if lerr != nil {
-			return fmt.Errorf("app config load error: %w", lerr)
-		}
+		// Do nothing.
 	case err != nil:
 		return fmt.Errorf("app config file stat error: %w", err)
 	default:
@@ -434,13 +436,14 @@ func loadUnpackedConfig(cmd *cobra.Command) error {
 		}
 	}
 
-	// Load the client config if it exists, or else defaults.
+	// Load the client config defaults, then file if it exists.
+	cdErr := addFieldMapToViper(vpr, MakeFieldValueMap(DefaultClientConfig(), false))
+	if cdErr != nil {
+		return fmt.Errorf("client config defaults load error: %w", cdErr)
+	}
 	switch _, err := os.Stat(clientConfFile); {
 	case os.IsNotExist(err):
-		lerr := addFieldMapToViper(vpr, MakeFieldValueMap(DefaultClientConfig(), false))
-		if lerr != nil {
-			return fmt.Errorf("client config file load error: %w", lerr)
-		}
+		// Do nothing.
 	case err != nil:
 		return fmt.Errorf("client config file stat error: %w", err)
 	default:
