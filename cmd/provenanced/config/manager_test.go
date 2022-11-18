@@ -104,7 +104,7 @@ func (s *ConfigManagerTestSuite) TestManagerWriteAppConfigWithIndexEventsThenRea
 func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadDefaults() {
 	dCmd := s.makeDummyCmd()
 
-	appConfig := serverconfig.DefaultConfig()
+	appConfig := DefaultAppConfig()
 	tmConfig := tmconfig.DefaultConfig()
 	clientConfig := DefaultClientConfig()
 	generateAndWritePackedConfig(dCmd, appConfig, tmConfig, clientConfig, false)
@@ -132,11 +132,13 @@ func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadGlobalLabels() {
 
 	ctx := client.GetClientContextFromCmd(dCmd)
 	vpr := ctx.Viper
+	var appConfig2 serverconfig.Config
+	var err error
 	s.Require().NotPanics(func() {
-		appConfig2, err := serverconfig.GetConfig(vpr)
-		s.Require().NoError(err, "GetConfig")
-		s.Assert().Equal(appConfig.Telemetry.GlobalLabels, appConfig2.Telemetry.GlobalLabels)
-	})
+		appConfig2, err = serverconfig.GetConfig(vpr)
+	}, "GetConfig")
+	s.Require().NoError(err, "GetConfig")
+	s.Assert().Equal(appConfig.Telemetry.GlobalLabels, appConfig2.Telemetry.GlobalLabels)
 }
 
 func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
@@ -170,7 +172,7 @@ func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
 	s.T().Run("unmanaged config is read with unpacked files", func(t *testing.T) {
 		dCmd := s.makeDummyCmd()
 		uFile := GetFullPathToUnmanagedConf(dCmd)
-		SaveConfigs(dCmd, serverconfig.DefaultConfig(), tmconfig.DefaultConfig(), DefaultClientConfig(), false)
+		SaveConfigs(dCmd, DefaultAppConfig(), tmconfig.DefaultConfig(), DefaultClientConfig(), false)
 		require.NoError(t, os.WriteFile(uFile, []byte("my-custom-entry = \"stuff\"\n"), 0o644), "writing unmanaged config")
 		require.NoError(t, LoadConfigFromFiles(dCmd))
 		ctx := client.GetClientContextFromCmd(dCmd)
@@ -182,7 +184,7 @@ func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
 	s.T().Run("unmanaged config is read with packed config", func(t *testing.T) {
 		dCmd := s.makeDummyCmd()
 		uFile := GetFullPathToUnmanagedConf(dCmd)
-		SaveConfigs(dCmd, serverconfig.DefaultConfig(), tmconfig.DefaultConfig(), DefaultClientConfig(), false)
+		SaveConfigs(dCmd, DefaultAppConfig(), tmconfig.DefaultConfig(), DefaultClientConfig(), false)
 		require.NoError(t, PackConfig(dCmd), "packing config")
 		require.NoError(t, os.WriteFile(uFile, []byte("other-custom-entry = 8\n"), 0o644), "writing unmanaged config")
 		require.NoError(t, LoadConfigFromFiles(dCmd))
@@ -191,4 +193,60 @@ func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
 		actual := vpr.GetInt("other-custom-entry")
 		assert.Equal(t, 8, actual, "unmanaged field value")
 	})
+}
+
+func (s *ConfigManagerTestSuite) TestServerGetConfigGlobalLabelsCanary() {
+	// This test checks to see if the special handling of the telemetry.global-labels
+	// field in the config map is still needed.
+	//
+	// As of writing this, the serverconfig.GetConfig function requires viper to return it as a []interface{}
+	// with each element itself being a []interface{}. The main branch of the sdk has been updated to not
+	// care though, so eventually we can clean up our stuff.
+	//
+	// If this test fails, remove the s.T().Skip() line from TestServerGetConfigGlobalLabels and run that.
+	globalLabels := [][]string{
+		{"keya", "valuea"},
+		{"keyb", "valueb"},
+		{"keyc", "valuec"},
+	}
+	telemetry := map[string]interface{}{
+		"global-labels": globalLabels,
+	}
+	cfgMap := map[string]interface{}{
+		"telemetry": telemetry,
+	}
+
+	vpr := viper.New()
+	s.Require().NoError(vpr.MergeConfigMap(cfgMap), "MergeConfigMap")
+	expErr := "failed to parse global-labels config"
+	_, err := serverconfig.GetConfig(vpr)
+	s.Require().ErrorContains(err, expErr, "GetConfig")
+}
+
+func (s *ConfigManagerTestSuite) TestServerGetConfigGlobalLabels() {
+	// If TestServerGetConfigGlobalLabels fails, remove the s.T().Skip line and run this test.
+	// If this then passes:
+	// 1. Remove the now-unneeded special handling of telemetry.global-labels.
+	// 2. Delete the TestServerGetConfigGlobalLabelsCanary test.
+	// 3. Remove this whole set of comments.
+	//
+	// As of writing this, that special handling is in reflector.go: FieldValueMap.AsConfigMap.
+	// Note that the special handling in setValueFromString is probably still needed though, so leave that.
+	s.T().Skip("This cannot pass until TestServerGetConfigCanary fails.")
+	globalLabels := [][]string{
+		{"keya", "valuea"},
+		{"keyb", "valueb"},
+		{"keyc", "valuec"},
+	}
+	telemetry := map[string]interface{}{
+		"global-labels": globalLabels,
+	}
+	cfgMap := map[string]interface{}{
+		"telemetry": telemetry,
+	}
+
+	vpr := viper.New()
+	s.Require().NoError(vpr.MergeConfigMap(cfgMap), "MergeConfigMap")
+	_, err := serverconfig.GetConfig(vpr)
+	s.Require().NoError(err, "GetConfig")
 }
