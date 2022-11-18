@@ -217,13 +217,16 @@ Settings that are their default value will not be included.
 // ConfigUnpackCmd returns a CLI command for creating the several config toml files.
 func ConfigUnpackCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unpack",
-		Short: "Unpack configuration into separate config files",
+		Use:     "unpack",
+		Aliases: []string{"update"},
+		Short:   "Unpack configuration into separate config files",
 		Long: fmt.Sprintf(`Unpack configuration into separate config files.
 
 Splits the %[1]s file into %[2]s, %[3]s, and %[4]s.
 Settings defined through environment variables will be included in the unpacked files.
 Default values are filled in appropriately.
+
+This can also be used to update the config files using the current template so they include all current fields.
 
 `, provconfig.PackedConfFilename, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
 		Example: fmt.Sprintf(`$ %[1]s unpack`, configCmdStart),
