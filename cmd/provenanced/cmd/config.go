@@ -315,10 +315,17 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 }
 
 // runConfigSetCmd sets values as provided.
-// The first return value is whether or not to include help with the output of an error.
+// The first return value is whether to include help with the output of an error.
 // This will only ever be true if an error is also returned.
 // The second return value is any error encountered.
 func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
+	if len(args) == 0 {
+		return true, errors.New("no key/value pairs provided")
+	}
+	if len(args)%2 != 0 {
+		return true, errors.New("an even number of arguments are required when setting values")
+	}
+
 	// Warning: This wipes out all the viper setup stuff up to this point.
 	// It needs to be done so that just the file values or defaults are loaded
 	// without considering environment variables.
@@ -347,12 +354,6 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		return false, fmt.Errorf("couldn't get client config: %w", ccerr)
 	}
 
-	if len(args) == 0 {
-		return true, errors.New("no key/value pairs provided")
-	}
-	if len(args)%2 != 0 {
-		return true, errors.New("an even number of arguments are required when setting values")
-	}
 	keyCount := len(args) / 2
 	keys := make([]string, keyCount)
 	vals := make([]string, keyCount)
