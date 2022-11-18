@@ -50,6 +50,8 @@ func (s *ConfigTestSuite) SetupTest() {
 	s.Home = s.T().TempDir()
 	s.T().Logf("%s Home: %s", s.T().Name(), s.Home)
 
+	pioconfig.SetProvenanceConfig("confcoin", 5)
+
 	encodingConfig := sdksim.MakeTestEncodingConfig()
 	clientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
@@ -451,7 +453,7 @@ func (s *ConfigTestSuite) TestConfigChanged() {
 	}
 	expectedAppOutLines := []string{
 		s.makeAppDiffHeaderLines(),
-		fmt.Sprintf(`minimum-gas-prices="%s" (default="")`, pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices),
+		allEqual("app"),
 		"",
 	}
 	expectedTMOutLines := []string{
@@ -716,14 +718,14 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 			name: "two of each",
 			args: []string{"set",
 				"consensus.timeout_commit", "951ms",
-				"api.swagger", "true",
+				"api.enable", "false",
 				"telemetry.service-name", "blocky2",
 				"node", "tcp://localhost:26657",
 				"output", "text",
 				"log_format", "plain"},
 			out: s.makeMultiLine(
 				s.makeAppConfigUpdateLines(),
-				s.makeKeyUpdatedLine("api.swagger", "false", "true"),
+				s.makeKeyUpdatedLine("api.enable", "true", "false"),
 				s.makeKeyUpdatedLine("telemetry.service-name", `"blocky"`, `"blocky2"`),
 				"",
 				s.makeTMConfigUpdateLines(),
@@ -754,9 +756,7 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 
 func (s *ConfigTestSuite) TestPackUnpack() {
 	s.T().Run("pack", func(t *testing.T) {
-		expectedPacked := map[string]string{
-			"minimum-gas-prices": "1905nhash",
-		}
+		expectedPacked := map[string]string{}
 		expectedPackedJSON, jerr := json.MarshalIndent(expectedPacked, "", "  ")
 		require.NoError(t, jerr, "making expected json")
 		expectedPackedJSONStr := string(expectedPackedJSON)
@@ -810,6 +810,28 @@ func (s *ConfigTestSuite) TestPackUnpack() {
 		assert.Contains(t, outStr, clientFile, "client filename")
 		assert.True(t, provconfig.FileExists(clientFile), "file exists: client")
 	})
+}
+
+func (s *ConfigTestSuite) TestEmptyPackedConfigHasDefaultMinGas() {
+	expected := provconfig.DefaultAppConfig().MinGasPrices
+	s.Require().NotEqual("", expected, "default MinGasPrices")
+
+	// Pack the config, then rewrite the file to be an empty object.
+	pcmd := s.getConfigCmd()
+	pcmd.SetArgs([]string{"pack"})
+	err := pcmd.Execute()
+	s.Require().NoError(err, "pack the config")
+	s.Require().NoError(os.WriteFile(provconfig.GetFullPathToPackedConf(pcmd), []byte("{}"), 0o644), "writing empty packed config")
+
+	// Now read the config and check that the min gas prices are the default that we want.
+	ncmd := s.getConfigCmd()
+	err = provconfig.LoadConfigFromFiles(ncmd)
+	s.Require().NoError(err, "LoadConfigFromFiles")
+
+	appConfig, err := provconfig.ExtractAppConfig(ncmd)
+	s.Require().NoError(err, "ExtractAppConfig")
+	actual := appConfig.MinGasPrices
+	s.Assert().Equal(expected, actual, "MinGasPrices")
 }
 
 func (s *ConfigTestSuite) TestUpdate() {
