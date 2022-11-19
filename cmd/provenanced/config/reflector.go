@@ -253,7 +253,7 @@ func (m FieldValueMap) AsConfigMap() (map[string]interface{}, error) {
 			secMap[section] = sec
 			secMap = sec
 		}
-		if v, has := secMap[key]; has {
+		if v, has := secMap[justKey]; has {
 			return nil, fmt.Errorf("error at key %q: key %q should not already exist in sub-section but has type %T", key, justKey, v)
 		}
 		valueI := value.Interface()
