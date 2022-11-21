@@ -17,6 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
+
+	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
 // PackConfig generates and saves the packed config file then removes the individual config files.
@@ -63,7 +65,7 @@ func FileExists(fullFilePath string) bool {
 // ExtractAppConfig creates an app/cosmos config from the command context.
 func ExtractAppConfig(cmd *cobra.Command) (*serverconfig.Config, error) {
 	v := server.GetServerContextFromCmd(cmd).Viper
-	conf := serverconfig.DefaultConfig()
+	conf := DefaultAppConfig()
 	if err := v.Unmarshal(conf); err != nil {
 		return nil, fmt.Errorf("error extracting app config: %w", err)
 	}
@@ -141,11 +143,18 @@ func ExtractClientConfigAndMap(cmd *cobra.Command) (*ClientConfig, FieldValueMap
 	return conf, fields, nil
 }
 
+// DefaultAppConfig gets our default app config.
+func DefaultAppConfig() *serverconfig.Config {
+	rv := serverconfig.DefaultConfig()
+	rv.MinGasPrices = pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices
+	return rv
+}
+
 // GetAllConfigDefaults gets a field map from the defaults of all the configs.
 func GetAllConfigDefaults() FieldValueMap {
 	rv := FieldValueMap{}
 	rv.AddEntriesFrom(
-		MakeFieldValueMap(serverconfig.DefaultConfig(), false),
+		MakeFieldValueMap(DefaultAppConfig(), false),
 		removeUndesirableTmConfigEntries(MakeFieldValueMap(tmconfig.DefaultConfig(), false)),
 		MakeFieldValueMap(DefaultClientConfig(), false),
 	)
@@ -400,13 +409,14 @@ func loadUnpackedConfig(cmd *cobra.Command) error {
 	// Both the server context and client context should be using the same Viper, so this is good for both.
 	vpr := server.GetServerContextFromCmd(cmd).Viper
 
-	// Load the tendermint config if it exists, or else defaults.
+	// Load the tendermint config defaults, then file if it exists.
+	tdErr := addFieldMapToViper(vpr, MakeFieldValueMap(tmconfig.DefaultConfig(), false))
+	if tdErr != nil {
+		return fmt.Errorf("tendermint config defaults load error: %w", tdErr)
+	}
 	switch _, err := os.Stat(tmConfFile); {
 	case os.IsNotExist(err):
-		lerr := addFieldMapToViper(vpr, MakeFieldValueMap(tmconfig.DefaultConfig(), false))
-		if lerr != nil {
-			return fmt.Errorf("tendermint config file load error: %w", lerr)
-		}
+		// Do nothing.
 	case err != nil:
 		return fmt.Errorf("tendermint config file stat error: %w", err)
 	default:
@@ -417,13 +427,14 @@ func loadUnpackedConfig(cmd *cobra.Command) error {
 		}
 	}
 
-	// Load the app/cosmos config if it exists, or else defaults.
+	// Load the app/cosmos config defaults, then file if it exists.
+	adErr := addFieldMapToViper(vpr, MakeFieldValueMap(DefaultAppConfig(), false))
+	if adErr != nil {
+		return fmt.Errorf("app config defaults load error: %w", adErr)
+	}
 	switch _, err := os.Stat(appConfFile); {
 	case os.IsNotExist(err):
-		lerr := addFieldMapToViper(vpr, MakeFieldValueMap(serverconfig.DefaultConfig(), false))
-		if lerr != nil {
-			return fmt.Errorf("app config load error: %w", lerr)
-		}
+		// Do nothing.
 	case err != nil:
 		return fmt.Errorf("app config file stat error: %w", err)
 	default:
@@ -434,13 +445,14 @@ func loadUnpackedConfig(cmd *cobra.Command) error {
 		}
 	}
 
-	// Load the client config if it exists, or else defaults.
+	// Load the client config defaults, then file if it exists.
+	cdErr := addFieldMapToViper(vpr, MakeFieldValueMap(DefaultClientConfig(), false))
+	if cdErr != nil {
+		return fmt.Errorf("client config defaults load error: %w", cdErr)
+	}
 	switch _, err := os.Stat(clientConfFile); {
 	case os.IsNotExist(err):
-		lerr := addFieldMapToViper(vpr, MakeFieldValueMap(DefaultClientConfig(), false))
-		if lerr != nil {
-			return fmt.Errorf("client config file load error: %w", lerr)
-		}
+		// Do nothing.
 	case err != nil:
 		return fmt.Errorf("client config file stat error: %w", err)
 	default:
@@ -474,7 +486,7 @@ func loadPackedConfig(cmd *cobra.Command) error {
 	}
 
 	// Start with the defaults
-	appConfigMap := MakeFieldValueMap(serverconfig.DefaultConfig(), false)
+	appConfigMap := MakeFieldValueMap(DefaultAppConfig(), false)
 	tmConfigMap := MakeFieldValueMap(tmconfig.DefaultConfig(), false)
 	clientConfigMap := MakeFieldValueMap(DefaultClientConfig(), false)
 
@@ -530,28 +542,9 @@ func loadPackedConfig(cmd *cobra.Command) error {
 }
 
 func addFieldMapToViper(vpr *viper.Viper, fvmap FieldValueMap) error {
-	configMap := make(map[string]interface{})
-	for k, v := range fvmap {
-		configMap[k] = v.Interface()
-	}
-	// The telemetry.global-labels field in the app config struct is a `[][]string`.
-	// But in serverconfig.GetConfig, it expects viper to return it as a `[]interface{}`.
-	// Then each element of that is expected to also be a `[]interface{}`.
-	// So we need to convert that field before adding it to viper.
-	if gli, hasGL := configMap["telemetry.global-labels"]; hasGL {
-		newv := make([]interface{}, 0)
-		if gli != nil {
-			if gl, ok := gli.([][]string); ok {
-				for _, p := range gl {
-					var newp []interface{}
-					for _, k := range p {
-						newp = append(newp, k)
-					}
-					newv = append(newv, newp)
-				}
-			}
-		}
-		configMap["telemetry.global-labels"] = newv
+	configMap, err := fvmap.AsConfigMap()
+	if err != nil {
+		return err
 	}
 	return vpr.MergeConfigMap(configMap)
 }

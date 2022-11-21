@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -48,6 +49,8 @@ type ConfigTestSuite struct {
 func (s *ConfigTestSuite) SetupTest() {
 	s.Home = s.T().TempDir()
 	s.T().Logf("%s Home: %s", s.T().Name(), s.Home)
+
+	pioconfig.SetProvenanceConfig("confcoin", 5)
 
 	encodingConfig := sdksim.MakeTestEncodingConfig()
 	clientCtx := client.Context{}.
@@ -450,7 +453,7 @@ func (s *ConfigTestSuite) TestConfigChanged() {
 	}
 	expectedAppOutLines := []string{
 		s.makeAppDiffHeaderLines(),
-		fmt.Sprintf(`minimum-gas-prices="%s" (default="")`, pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices),
+		allEqual("app"),
 		"",
 	}
 	expectedTMOutLines := []string{
@@ -753,9 +756,7 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 
 func (s *ConfigTestSuite) TestPackUnpack() {
 	s.T().Run("pack", func(t *testing.T) {
-		expectedPacked := map[string]string{
-			"minimum-gas-prices": "1905nhash",
-		}
+		expectedPacked := map[string]string{}
 		expectedPackedJSON, jerr := json.MarshalIndent(expectedPacked, "", "  ")
 		require.NoError(t, jerr, "making expected json")
 		expectedPackedJSONStr := string(expectedPackedJSON)
@@ -808,5 +809,125 @@ func (s *ConfigTestSuite) TestPackUnpack() {
 		clientFile := provconfig.GetFullPathToAppConf(configCmd)
 		assert.Contains(t, outStr, clientFile, "client filename")
 		assert.True(t, provconfig.FileExists(clientFile), "file exists: client")
+	})
+}
+
+func (s *ConfigTestSuite) TestEmptyPackedConfigHasDefaultMinGas() {
+	expected := provconfig.DefaultAppConfig().MinGasPrices
+	s.Require().NotEqual("", expected, "default MinGasPrices")
+
+	// Pack the config, then rewrite the file to be an empty object.
+	pcmd := s.getConfigCmd()
+	pcmd.SetArgs([]string{"pack"})
+	err := pcmd.Execute()
+	s.Require().NoError(err, "pack the config")
+	s.Require().NoError(os.WriteFile(provconfig.GetFullPathToPackedConf(pcmd), []byte("{}"), 0o644), "writing empty packed config")
+
+	// Now read the config and check that the min gas prices are the default that we want.
+	ncmd := s.getConfigCmd()
+	err = provconfig.LoadConfigFromFiles(ncmd)
+	s.Require().NoError(err, "LoadConfigFromFiles")
+
+	appConfig, err := provconfig.ExtractAppConfig(ncmd)
+	s.Require().NoError(err, "ExtractAppConfig")
+	actual := appConfig.MinGasPrices
+	s.Assert().Equal(expected, actual, "MinGasPrices")
+}
+
+func (s *ConfigTestSuite) TestUpdate() {
+	// Write a dumb version of each file that is missing almost everything, but has an easily identifiable comment.
+	customComment := "# There's no way this is comment is in the real config."
+	uFileField := "bananas"
+	uFileValue := "no it's not"
+	uFileContents := fmt.Sprintf("%s\n%s = %q\n", customComment, uFileField, uFileValue)
+	dbBackend := "bananas"
+	tFileContents := fmt.Sprintf("%s\n%s = %q\n", customComment, "db_backend", dbBackend)
+	minGasPrices := "not a lot"
+	aFileContents := fmt.Sprintf("%s\n%s = %q\n", customComment, "minimum-gas-prices", minGasPrices)
+	chainId := "this-will-never-work"
+	cFileContents := fmt.Sprintf("%s\n%s = %q\n", customComment, "chain-id", chainId)
+	configCmd := s.getConfigCmd()
+	configDir := provconfig.GetFullPathToConfigDir(configCmd)
+	uFile := provconfig.GetFullPathToUnmanagedConf(configCmd)
+	tFile := provconfig.GetFullPathToTmConf(configCmd)
+	aFile := provconfig.GetFullPathToAppConf(configCmd)
+	cFile := provconfig.GetFullPathToClientConf(configCmd)
+	s.Require().NoError(os.MkdirAll(configDir, 0o755), "making config dir")
+	s.Require().NoError(os.WriteFile(uFile, []byte(uFileContents), 0o644), "writing unmanaged config")
+	s.Require().NoError(os.WriteFile(tFile, []byte(tFileContents), 0o644), "writing tm config")
+	s.Require().NoError(os.WriteFile(aFile, []byte(aFileContents), 0o644), "writing app config")
+	s.Require().NoError(os.WriteFile(cFile, []byte(cFileContents), 0o644), "writing client config")
+
+	// Load the config from files.
+	// Usually this is done in the pre-run handler, but that's defined in the root command,
+	// so this one doesn't know about it.
+	err := provconfig.LoadConfigFromFiles(configCmd)
+	s.Require().NoError(err, "loading config from files")
+
+	// Run the command!
+	args := []string{"update"}
+	configCmd.SetArgs(args)
+	err = configCmd.Execute()
+	s.Require().NoError(err, "%s %s - unexpected error in execution", configCmd.Name(), args)
+
+	s.Run("unmanaged file is unchanged", func() {
+		actualUFileContents, err := os.ReadFile(uFile)
+		s.Require().NoError(err, "reading unmanaged file: %s", uFile)
+		s.Assert().Equal(uFileContents, string(actualUFileContents), "unmanaged file contents")
+	})
+
+	s.Run("tm file has been updated", func() {
+		actualTFileContents, err := os.ReadFile(tFile)
+		s.Require().NoError(err, "reading tm file: %s", tFile)
+		s.Assert().NotEqual(tFileContents, string(actualTFileContents), "tm file contents")
+		lines := strings.Split(string(actualTFileContents), "\n")
+		s.Assert().Greater(len(lines), 2, "number of lines in tm file.")
+	})
+
+	s.Run("app file has been updated", func() {
+		actualAFileContents, err := os.ReadFile(aFile)
+		s.Require().NoError(err, "reading app file: %s", aFile)
+		s.Assert().NotEqual(aFileContents, string(actualAFileContents), "app file contents")
+		lines := strings.Split(string(actualAFileContents), "\n")
+		s.Assert().Greater(len(lines), 2, "number of lines in app file.")
+	})
+
+	s.Run("client file has been updated", func() {
+		actualCFileContents, err := os.ReadFile(cFile)
+		s.Require().NoError(err, "reading client file: %s", cFile)
+		s.Assert().NotEqual(aFileContents, string(actualCFileContents), "client file contents")
+		lines := strings.Split(string(actualCFileContents), "\n")
+		s.Assert().Greater(len(lines), 2, "number of lines in client file.")
+	})
+
+	err = provconfig.LoadConfigFromFiles(configCmd)
+	s.Require().NoError(err, "loading config from files")
+
+	s.Run("tm db_backend value unchanged", func() {
+		tmConfig, err := provconfig.ExtractTmConfig(configCmd)
+		s.Require().NoError(err, "ExtractTmConfig")
+		actual := tmConfig.DBBackend
+		s.Assert().Equal(dbBackend, actual, "DBBackend")
+	})
+
+	s.Run("app minimum-gas-prices value unchanged", func() {
+		appConfig, err := provconfig.ExtractAppConfig(configCmd)
+		s.Require().NoError(err, "ExtractAppConfig")
+		actual := appConfig.MinGasPrices
+		s.Assert().Equal(minGasPrices, actual, "MinGasPrices")
+	})
+
+	s.Run("client chain-id value unchanged", func() {
+		clientConfig, err := provconfig.ExtractClientConfig(configCmd)
+		s.Require().NoError(err, "ExtractClientConfig")
+		actual := clientConfig.ChainID
+		s.Assert().Equal(chainId, actual, "ChainID")
+	})
+
+	s.Run("unmanaged config entry still applies", func() {
+		ctx := client.GetClientContextFromCmd(configCmd)
+		vpr := ctx.Viper
+		actual := vpr.GetString(uFileField)
+		s.Assert().Equal(uFileValue, actual, "unmanaged config entry")
 	})
 }

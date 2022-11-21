@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -325,4 +326,110 @@ func (s *ReflectorTestSuit) TestGetFieldValueMapSubFields() {
 			assert.True(t, value.CanSet(), "%s value.CanSet()", key)
 		}
 	}))
+}
+
+func (s *ReflectorTestSuit) TestAsConfigMap() {
+	// Note: Because the AsConfigMap function loops over a map,
+	// for the ones expecting errors, there's no telling which error it will hit.
+	// I.e. we don't know if it ends up adding the section first or the key first.
+	// So we can only make sure that the error is one of a possible set.
+	tests := []struct {
+		name     string
+		fvm      FieldValueMap
+		exp      map[string]interface{}
+		errOneOf []string
+	}{
+		{
+			name: "empty",
+			fvm:  FieldValueMap{},
+			exp:  make(map[string]interface{}),
+		},
+		{
+			name: "two keys",
+			fvm: FieldValueMap{
+				"thing1": reflect.ValueOf("value of thing 1"),
+				"thing2": reflect.ValueOf(99),
+			},
+			exp: map[string]interface{}{
+				"thing1": "value of thing 1",
+				"thing2": 99,
+			},
+		},
+		{
+			name: "some deep things",
+			fvm: FieldValueMap{
+				"rootthing":        reflect.ValueOf("root thing"),
+				"sub1.sub2.thing1": reflect.ValueOf("I am thing 1"),
+				"sub1.nothing":     reflect.ValueOf("do I exist?"),
+				"sub1.sub2.thing2": reflect.ValueOf(2),
+				"sub1.sub3.thing3": reflect.ValueOf([]string{"a slice!"}),
+			},
+			exp: map[string]interface{}{
+				"rootthing": "root thing",
+				"sub1": map[string]interface{}{
+					"nothing": "do I exist?",
+					"sub2": map[string]interface{}{
+						"thing1": "I am thing 1",
+						"thing2": 2,
+					},
+					"sub3": map[string]interface{}{
+						"thing3": []string{"a slice!"},
+					},
+				},
+			},
+		},
+		{
+			name: "reused section name",
+			fvm: FieldValueMap{
+				"mysect":       reflect.ValueOf("oops"),
+				"mysect.value": reflect.ValueOf("a deeper value"),
+			},
+			errOneOf: []string{
+				`error at key "mysect": should not already exist but has type map[string]interface {}`,
+				`error at key "mysect.value" at section "mysect": sub-section should have type map[string]interface{}, got string`,
+			},
+		},
+		{
+			name: "deep reused section name",
+			fvm: FieldValueMap{
+				"rootthing":        reflect.ValueOf("a root thing"),
+				"sub1.sub2.value1": reflect.ValueOf("value 1"),
+				"sub1.sub2":        reflect.ValueOf("sub 2 oops"),
+			},
+			errOneOf: []string{
+				`error at key "sub1.sub2.value1" at section "sub2": sub-section should have type map[string]interface{}, got string`,
+				`error at key "sub1.sub2": key "sub2" should not already exist in sub-section but has type map[string]interface {}`,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			actual, err := tc.fvm.AsConfigMap()
+			if len(tc.errOneOf) > 0 {
+				if s.Assert().Error(err, "AsConfigMap error: actual = %+v", actual) {
+					s.Assert().Contains(tc.errOneOf, err.Error(), "AsConfigMap error")
+				}
+			} else {
+				if s.Assert().NoError(err, "AsConfigMap error") {
+					s.Assert().Equal(tc.exp, actual, "AsConfigMap result")
+				}
+			}
+		})
+	}
+}
+
+func (s *ReflectorTestSuit) TestAsConfigMapLotsMoreTimes() {
+	// Because of the non-deterministic nature of map loops, there's some
+	// uncertainty in what happens in AsConfigMap (i.e. which error gets triggered).
+	// To be more certain that it's all good, run it 1,000 more times.
+	// Hopefully in that time, the map looping order changes and things happen
+	// differently, but the tests still pass.
+
+	for i := 1; i <= 1000; i++ {
+		s.Run(fmt.Sprintf("%04d", i), s.TestAsConfigMap)
+		if s.T().Failed() {
+			break
+		}
+	}
 }
