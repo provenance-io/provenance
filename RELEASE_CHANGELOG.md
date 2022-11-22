@@ -1,3 +1,18 @@
+## [v1.13.0-rc5](https://github.com/provenance-io/provenance/releases/tag/v1.13.0-rc5) - 2022-11-22
+
+### Improvements
+
+* Updated Cosmos-SDK to [v0.46.6-pio-1](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.6-pio-1/RELEASE_NOTES.md) (from v0.46.4-pio-1) [PR 1235](https://github.com/provenance-io/provenance/pull/1235).
+* Alias the `config unpack` command to `config update`. It can be used to update config files to include new fields [PR 1233](https://github.com/provenance-io/provenance/pull/1233).
+* When loading the unpacked configs, always load the defaults before reading the files (instead of only loading the defaults if the file doesn't exist) [PR 1233](https://github.com/provenance-io/provenance/pull/1233).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.13.0-rc4...v1.13.0-rc5
+* https://github.com/provenance-io/provenance/compare/v1.12.2...v1.13.0-rc5
+
+---
+
 ## [v1.13.0-rc4](https://github.com/provenance-io/provenance/releases/tag/v1.13.0-rc4) - 2022-11-16
 
 This is a state-compatible version upgrade for v1.13.0-rc3.
