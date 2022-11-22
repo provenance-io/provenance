@@ -258,27 +258,6 @@ func (m FieldValueMap) AsConfigMap() (map[string]interface{}, error) {
 		}
 		valueI := value.Interface()
 		secMap[justKey] = valueI
-
-		// The telemetry.global-labels field in the app config struct is a `[][]string`.
-		// But serverconfig.GetConfig expects viper to return it as a `[]interface{}`.
-		// Then each element of that is expected to also be a `[]interface{}`.
-		// So we need to convert that field so that it's as expected.
-		// In the SDK's main branch, they fixed that function, so eventually we can remove this.
-		if key == "telemetry.global-labels" {
-			newv := make([]interface{}, 0)
-			if valueI != nil {
-				if gl, ok := valueI.([][]string); ok {
-					for _, p := range gl {
-						var newp []interface{}
-						for _, k := range p {
-							newp = append(newp, k)
-						}
-						newv = append(newv, newp)
-					}
-				}
-			}
-			secMap[justKey] = newv
-		}
 	}
 
 	return rv, nil
