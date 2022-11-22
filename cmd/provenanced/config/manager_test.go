@@ -195,44 +195,10 @@ func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
 	})
 }
 
-func (s *ConfigManagerTestSuite) TestServerGetConfigGlobalLabelsCanary() {
-	// This test checks to see if the special handling of the telemetry.global-labels
-	// field in the config map is still needed.
-	//
-	// As of writing this, the serverconfig.GetConfig function requires viper to return it as a []interface{}
-	// with each element itself being a []interface{}. The main branch of the sdk has been updated to not
-	// care though, so eventually we can clean up our stuff.
-	//
-	// If this test fails, remove the s.T().Skip() line from TestServerGetConfigGlobalLabels and run that.
-	globalLabels := [][]string{
-		{"keya", "valuea"},
-		{"keyb", "valueb"},
-		{"keyc", "valuec"},
-	}
-	telemetry := map[string]interface{}{
-		"global-labels": globalLabels,
-	}
-	cfgMap := map[string]interface{}{
-		"telemetry": telemetry,
-	}
-
-	vpr := viper.New()
-	s.Require().NoError(vpr.MergeConfigMap(cfgMap), "MergeConfigMap")
-	expErr := "failed to parse global-labels config"
-	_, err := serverconfig.GetConfig(vpr)
-	s.Require().ErrorContains(err, expErr, "GetConfig")
-}
-
 func (s *ConfigManagerTestSuite) TestServerGetConfigGlobalLabels() {
-	// If TestServerGetConfigGlobalLabels fails, remove the s.T().Skip line and run this test.
-	// If this then passes:
-	// 1. Remove the now-unneeded special handling of telemetry.global-labels.
-	// 2. Delete the TestServerGetConfigGlobalLabelsCanary test.
-	// 3. Remove this whole set of comments.
-	//
-	// As of writing this, that special handling is in reflector.go: FieldValueMap.AsConfigMap.
-	// Note that the special handling in setValueFromString is probably still needed though, so leave that.
-	s.T().Skip("This cannot pass until TestServerGetConfigCanary fails.")
+	// This test exists because the telemetry.global-labels field used to be handled specially in
+	// serverconfig.GetConfig, so we had to have some work-around special handling for that field
+	// in the reflector. Now it exists to make sure it doesn't break again.
 	globalLabels := [][]string{
 		{"keya", "valuea"},
 		{"keyb", "valueb"},
@@ -247,8 +213,10 @@ func (s *ConfigManagerTestSuite) TestServerGetConfigGlobalLabels() {
 
 	vpr := viper.New()
 	s.Require().NoError(vpr.MergeConfigMap(cfgMap), "MergeConfigMap")
-	_, err := serverconfig.GetConfig(vpr)
+	cfg, err := serverconfig.GetConfig(vpr)
 	s.Require().NoError(err, "GetConfig")
+	actual := cfg.Telemetry.GlobalLabels
+	s.Assert().Equal(globalLabels, actual, "cfg.Telemetry.GlobalLabels")
 }
 
 func (s *ConfigManagerTestSuite) TestConfigMinGasPrices() {

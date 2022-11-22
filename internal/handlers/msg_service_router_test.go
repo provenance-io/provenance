@@ -541,7 +541,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 	// Create an authz grant from addr1 to addr2 for 500hotdog.
 	now := ctx.BlockHeader().Time
 	exp1Hour := now.Add(time.Hour)
-	sendAuth := banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("hotdog", 500)))
+	sendAuth := banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("hotdog", 500)), nil)
 	require.NoError(tt, app.AuthzKeeper.SaveGrant(ctx, addr2, addr1, sendAuth, &exp1Hour), "Save Grant addr2 addr1 500hotdog")
 	// Set a MsgSend msg-based fee of 800hotdog.
 	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&banktypes.MsgSend{}), sdk.NewCoin("hotdog", sdk.NewInt(800)), "", 0)

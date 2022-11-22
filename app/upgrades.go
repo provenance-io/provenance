@@ -7,6 +7,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
@@ -37,10 +38,45 @@ type appUpgrade struct {
 var handlers = map[string]appUpgrade{
 	"neoncarrot-rc1": {}, // upgrade for 1.12.0-rc1
 	"neoncarrot":     {}, // upgrade for 1.12.0
-	"ochre-rc1": { // upgrade for 1.13.0-rc1
+	"ochre-rc1": { // upgrade for 1.13.0-rc3
 		Added: []string{group.ModuleName, rewardtypes.ModuleName, icacontrollertypes.StoreKey, icahosttypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+			UpgradeICA(ctx, app, &versionMap)
+			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
+			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
+		},
+	},
+	"ochre-rc2": { // upgrade for 1.13.0-rc5
+		Added: []string{group.ModuleName, rewardtypes.ModuleName, icacontrollertypes.StoreKey, icahosttypes.StoreKey},
+		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
+			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+
+			// We need to run Migrate3_V046_4_To_V046_5 here because testnet already upgraded to v0.46.x.
+			// But we don't need to run it in the ochre upgrade plan because mainnet hasn't upgraded to v0.46.x yet, so it doesn't need fixing.
+			bankBaseKeeper, ok := app.BankKeeper.(bankkeeper.BaseKeeper)
+			if !ok {
+				return versionMap, fmt.Errorf("could not cast app.BankKeeper (type bankkeeper.Keeper) to bankkeeper.BaseKeeper")
+			}
+			bankMigrator := bankkeeper.NewMigrator(bankBaseKeeper)
+			err := bankMigrator.Migrate3_V046_4_To_V046_5(ctx)
+			if err != nil {
+				return versionMap, err
+			}
+
+			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
+			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
+		},
+	},
+	"ochre": {
+		Added: []string{group.ModuleName, rewardtypes.ModuleName, icacontrollertypes.StoreKey, icahosttypes.StoreKey},
+		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
+			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+
+			// This params fix was handled in testnet via gov prop. For mainnet, we want it done in here though.
+			params := app.MsgFeesKeeper.GetParams(ctx)
+			app.MsgFeesKeeper.SetParams(ctx, params)
+
 			UpgradeICA(ctx, app, &versionMap)
 			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
