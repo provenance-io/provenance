@@ -48,7 +48,6 @@ var handlers = map[string]appUpgrade{
 		},
 	},
 	"ochre-rc2": { // upgrade for 1.13.0-rc5
-		Added: []string{group.ModuleName, rewardtypes.ModuleName, icacontrollertypes.StoreKey, icahosttypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 
