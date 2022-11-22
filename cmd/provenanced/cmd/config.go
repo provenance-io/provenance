@@ -217,13 +217,16 @@ Settings that are their default value will not be included.
 // ConfigUnpackCmd returns a CLI command for creating the several config toml files.
 func ConfigUnpackCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unpack",
-		Short: "Unpack configuration into separate config files",
+		Use:     "unpack",
+		Aliases: []string{"update"},
+		Short:   "Unpack configuration into separate config files",
 		Long: fmt.Sprintf(`Unpack configuration into separate config files.
 
 Splits the %[1]s file into %[2]s, %[3]s, and %[4]s.
 Settings defined through environment variables will be included in the unpacked files.
 Default values are filled in appropriately.
+
+This can also be used to update the config files using the current template so they include all current fields.
 
 `, provconfig.PackedConfFilename, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
 		Example: fmt.Sprintf(`$ %[1]s unpack`, configCmdStart),
@@ -312,10 +315,17 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 }
 
 // runConfigSetCmd sets values as provided.
-// The first return value is whether or not to include help with the output of an error.
+// The first return value is whether to include help with the output of an error.
 // This will only ever be true if an error is also returned.
 // The second return value is any error encountered.
 func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
+	if len(args) == 0 {
+		return true, errors.New("no key/value pairs provided")
+	}
+	if len(args)%2 != 0 {
+		return true, errors.New("an even number of arguments are required when setting values")
+	}
+
 	// Warning: This wipes out all the viper setup stuff up to this point.
 	// It needs to be done so that just the file values or defaults are loaded
 	// without considering environment variables.
@@ -344,12 +354,6 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		return false, fmt.Errorf("couldn't get client config: %w", ccerr)
 	}
 
-	if len(args) == 0 {
-		return true, errors.New("no key/value pairs provided")
-	}
-	if len(args)%2 != 0 {
-		return true, errors.New("an even number of arguments are required when setting values")
-	}
 	keyCount := len(args) / 2
 	keys := make([]string, keyCount)
 	vals := make([]string, keyCount)
