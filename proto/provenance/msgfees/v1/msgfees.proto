@@ -21,8 +21,8 @@ message Params {
   // constant to be used to charge a minimum fee for each transaction. for e.g 0.381 hash (1905nhash * 200000) 200k gas,
   // is the default gas set by the cli. This will be the fee to be charged for spam prevention and failed tx's.
   cosmos.base.v1beta1.Coin floor_fee = 5 [(gogoproto.nullable) = false];
-  // since gas is not used for fees anymore, the design should accommodate a fee that should be charged if not present
-  // in the fee table, should be >= floor_fee
+  // since gas is not used for fees anymore, the design should accommodate a fee that should be charged if no entry is present
+  // in the fee table, should be >= floor_fee, this is charged only on successful transactions
   cosmos.base.v1beta1.Coin default_msg_fee = 6 [(gogoproto.nullable) = false];
 }
 

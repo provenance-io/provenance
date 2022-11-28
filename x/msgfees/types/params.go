@@ -18,6 +18,13 @@ func DefaultFloorGasPrice() sdk.Coin {
 	}
 }
 
+func DefaultMsgFee() sdk.Coin {
+	return sdk.Coin{
+		Amount: sdk.NewInt(1_000_000_000), // for now each tx takes 1hash or equivalent
+		Denom:  pioconfig.GetProvenanceConfig().MsgFloorDenom,
+	}
+}
+
 var DefaultNhashPerUsdMil = uint64(25_000_000)
 
 var (
@@ -26,6 +33,7 @@ var (
 	ParamStoreKeyFloorGasPrice      = []byte("FloorGasPrice")
 	ParamStoreKeyNhashPerUsdMil     = []byte("NhashPerUsdMil")
 	ParamStoreKeyConversionFeeDenom = []byte("ConversionFeeDenom")
+	ParamStoreKeyDefaultMsgFee      = []byte("DefaultMsgFee")
 )
 
 // ParamKeyTable for marker module
@@ -38,11 +46,13 @@ func NewParams(
 	floorGasPrice sdk.Coin,
 	nhashPerUsdMil uint64,
 	conversionFeeDenom string,
+	defaultMsgFee sdk.Coin,
 ) Params {
 	return Params{
 		FloorGasPrice:      floorGasPrice,
 		NhashPerUsdMil:     nhashPerUsdMil,
 		ConversionFeeDenom: conversionFeeDenom,
+		DefaultMsgFee:      defaultMsgFee,
 	}
 }
 
@@ -52,6 +62,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(ParamStoreKeyFloorGasPrice, &p.FloorGasPrice, validateCoinParam),
 		paramtypes.NewParamSetPair(ParamStoreKeyNhashPerUsdMil, &p.NhashPerUsdMil, validateNhashPerUsdMilParam),
 		paramtypes.NewParamSetPair(ParamStoreKeyConversionFeeDenom, &p.ConversionFeeDenom, validateConversionFeeDenomParam),
+		paramtypes.NewParamSetPair(ParamStoreKeyDefaultMsgFee, &p.DefaultMsgFee, validateCoinParam),
 	}
 }
 
@@ -61,6 +72,7 @@ func DefaultParams() Params {
 		DefaultFloorGasPrice(),
 		DefaultNhashPerUsdMil,
 		pioconfig.GetProvenanceConfig().FeeDenom,
+		DefaultMsgFee(),
 	)
 }
 

@@ -78,7 +78,7 @@ func setup(t *testing.T, withGenesis bool, invCheckPeriod uint) (*App, GenesisSt
 	encCdc := MakeEncodingConfig()
 	// set default config if not set by the flow
 	if len(pioconfig.GetProvenanceConfig().FeeDenom) == 0 {
-		pioconfig.SetProvenanceConfig("", 0)
+		pioconfig.SetProvenanceConfig("", 0, 0)
 	}
 	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, t.TempDir(), invCheckPeriod, encCdc, sdksim.EmptyAppOptions{})
 	if withGenesis {
@@ -90,7 +90,7 @@ func setup(t *testing.T, withGenesis bool, invCheckPeriod uint) (*App, GenesisSt
 // NewAppWithCustomOptions initializes a new SimApp with custom options.
 func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions) *App {
 	t.Helper()
-	pioconfig.SetProvenanceConfig("", 0)
+	pioconfig.SetProvenanceConfig("", 0, 0)
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)

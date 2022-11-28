@@ -27,6 +27,7 @@ type ProvenanceConfig struct {
 	BondDenom       string    // Also referred to as Staking Denom sometimes.
 	MsgFloorDenom   string    // MsgFloorDenom should always be the same Fee Denom, but maybe useful for tests.
 	MinimumNodeFees sdk.Coins // Minimum fee that a node sets, to accept a transaction, if not set then all tx's will be accepted.
+	DefaultMsgFee   int64
 }
 
 var provConfig *ProvenanceConfig
@@ -34,7 +35,7 @@ var provConfig *ProvenanceConfig
 // SetProvenanceConfig in running the app it is called once from root.go. We decided not to seal it because we have tests,
 // which set the Config to test certain msg fee flows.
 // But the contract remains that this will be called once from root.go while starting up.
-func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
+func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64, defaultMsgFee int64) {
 	if len(customDenom) > 0 && customDenom != defaultFeeDenom {
 		provConfig = &ProvenanceConfig{
 			FeeDenom:               customDenom,
@@ -42,6 +43,7 @@ func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
 			MsgFeeFloorGasPrice:    msgFeeFloorGasPrice,
 			BondDenom:              customDenom,
 			MsgFloorDenom:          customDenom,
+			DefaultMsgFee:          defaultMsgFee,
 		}
 	} else {
 		provConfig = &ProvenanceConfig{
@@ -50,6 +52,7 @@ func SetProvenanceConfig(customDenom string, msgFeeFloorGasPrice int64) {
 			MsgFeeFloorGasPrice:    defaultMinGasPrices,
 			BondDenom:              defaultBondDenom,
 			MsgFloorDenom:          defaultFeeDenom,
+			DefaultMsgFee:          1_000_000_000,
 		}
 		if msgFeeFloorGasPrice > 0 {
 			provConfig.MsgFeeFloorGasPrice = msgFeeFloorGasPrice

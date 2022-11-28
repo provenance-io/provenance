@@ -77,8 +77,8 @@ func Init(
 
 	customDenom, _ := cmd.Flags().GetString(CustomDenomFlag)
 	customMsgFeeFloorPrice, _ := cmd.Flags().GetInt64(CustomMsgFeeFloorPriceFlag)
-
-	pioconfig.SetProvenanceConfig(customDenom, customMsgFeeFloorPrice)
+	// TODo for now just pass in the custom msg fee floor
+	pioconfig.SetProvenanceConfig(customDenom, customMsgFeeFloorPrice,customMsgFeeFloorPrice)
 	if err := provconfig.EnsureConfigDir(cmd); err != nil {
 		return err
 	}

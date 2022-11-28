@@ -12,6 +12,7 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 		FloorGasPrice:      k.GetFloorGasPrice(ctx),
 		NhashPerUsdMil:     k.GetNhashPerUsdMil(ctx),
 		ConversionFeeDenom: k.GetConversionFeeDenom(ctx),
+		DefaultMsgFee:      k.GetDefaultMsgFee(ctx),
 	}
 }
 

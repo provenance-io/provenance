@@ -94,6 +94,16 @@ func (k Keeper) GetConversionFeeDenom(ctx sdk.Context) string {
 	return conversionFeeDenom
 }
 
+// GetDefaultMsgFee a fee that should be charged if no entry is present
+// in the fee table, this is charged only on successful transactions
+func (k Keeper) GetDefaultMsgFee(ctx sdk.Context) sdk.Coin {
+	minMsgFee := types.DefaultParams().DefaultMsgFee
+	if k.paramSpace.Has(ctx, types.ParamStoreKeyDefaultMsgFee) {
+		k.paramSpace.Get(ctx, types.ParamStoreKeyFloorGasPrice, &minMsgFee)
+	}
+	return minMsgFee
+}
+
 // SetMsgFee sets the additional fee schedule for a Msg
 func (k Keeper) SetMsgFee(ctx sdk.Context, msgFees types.MsgFee) error {
 	store := ctx.KVStore(k.storeKey)
