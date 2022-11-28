@@ -672,7 +672,7 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
 	}
 	if !admin.Equals(from) {
-		err = k.authzHandler(ctx, admin, from, amount)
+		err = k.authzHandler(ctx, admin, from, to, amount)
 		if err != nil {
 			return err
 		}
@@ -721,8 +721,12 @@ func (k Keeper) IbcTransferCoin(
 	if !m.AddressHasAccess(admin, types.Access_Transfer) {
 		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
 	}
+	toAddress, err := sdk.AccAddressFromBech32(receiver)
+	if err != nil {
+		return err
+	}
 	if !admin.Equals(sender) {
-		err = k.authzHandler(ctx, admin, sender, token)
+		err = k.authzHandler(ctx, admin, sender, toAddress, token)
 		if err != nil {
 			return err
 		}
@@ -756,13 +760,13 @@ func (k Keeper) IbcTransferCoin(
 	return nil
 }
 
-func (k Keeper) authzHandler(ctx sdk.Context, admin sdk.AccAddress, from sdk.AccAddress, amount sdk.Coin) error {
+func (k Keeper) authzHandler(ctx sdk.Context, admin, from, to sdk.AccAddress, amount sdk.Coin) error {
 	markerAuth := types.MarkerTransferAuthorization{}
 	authorization, expireTime := k.authzKeeper.GetAuthorization(ctx, admin, from, markerAuth.MsgTypeURL())
 	if authorization == nil {
 		return fmt.Errorf("%s account has not been granted authority to withdraw from %s account", admin, from)
 	}
-	accept, err := authorization.Accept(ctx, &types.MsgTransferRequest{Amount: amount})
+	accept, err := authorization.Accept(ctx, &types.MsgTransferRequest{Amount: amount, ToAddress: to.String(), FromAddress: from.String()})
 	switch {
 	case err != nil:
 		return err

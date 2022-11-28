@@ -28,6 +28,7 @@ func (a MarkerTransferAuthorization) MsgTypeURL() string {
 func (a MarkerTransferAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
 	switch msg := msg.(type) {
 	case *MsgTransferRequest:
+		toAddress := msg.ToAddress
 		limitLeft, isNegative := a.DecreaseTransferLimit(msg.Amount)
 		if isNegative {
 			return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrapf("requested amount is more than spend limit")
@@ -41,15 +42,14 @@ func (a MarkerTransferAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz
 		allowedList := a.GetAllowList()
 
 		for _, addr := range allowedList {
-			// ctx.GasMeter().ConsumeGas(gasCostPerIteration, "send authorization")
-			if addr == msg.ToAddress {
+			if addr == toAddress {
 				isAddrExists = true
 				break
 			}
 		}
 
 		if len(allowedList) > 0 && !isAddrExists {
-			return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrapf("cannot send to %s address", msg.ToAddress)
+			return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrapf("cannot send to %s address", toAddress)
 		}
 
 		return authz.AcceptResponse{Accept: true, Delete: shouldDelete, Updated: &MarkerTransferAuthorization{TransferLimit: limitLeft}}, nil

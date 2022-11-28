@@ -933,9 +933,6 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 				"transfer",
 				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "10authzhotdog"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, &sdk.TxResponse{}, 0,
 		},
@@ -947,9 +944,6 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 				"transfer",
 				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "20authzhotdog"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, &sdk.TxResponse{}, 0,
 		},
@@ -961,9 +955,6 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 				s.accountAddresses[1].String(),
 				"4authzhotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, &sdk.TxResponse{}, 0,
 		},
@@ -975,9 +966,6 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 				s.accountAddresses[1].String(),
 				"7authzhotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, &sdk.TxResponse{}, 5,
 		},
@@ -989,9 +977,6 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 				s.accountAddresses[1].String(),
 				"9authzhotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, &sdk.TxResponse{}, 1,
 		},
@@ -1003,9 +988,6 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 				s.accountAddresses[0].String(),
 				"20authzhotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, &sdk.TxResponse{}, 0,
 		},
@@ -1016,9 +998,6 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 				s.accountAddresses[1].String(),
 				"transfer",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, &sdk.TxResponse{}, 0,
 		},
@@ -1030,9 +1009,6 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 				s.accountAddresses[1].String(),
 				"1hotdog",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, &sdk.TxResponse{}, 1,
 		},
@@ -1043,6 +1019,11 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 
 		s.Run(tc.name, func() {
 			clientCtx := s.testnet.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
+
+			tc.args = append(tc.args, fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation))
+			tc.args = append(tc.args, fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock))
+			tc.args = append(tc.args, fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()))
+
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
