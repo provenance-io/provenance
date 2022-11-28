@@ -22,7 +22,7 @@ var (
 func TestMarkerTransferAuthorization(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	authorization := NewMarkerTransferAuthorization(sdk.NewCoins(coin1000))
+	authorization := NewMarkerTransferAuthorization(sdk.NewCoins(coin1000), []sdk.AccAddress{})
 
 	t.Run("verify authorization returns valid method name", func(t *testing.T) {
 		require.Equal(t, authorization.MsgTypeURL(), msgTypeURL)
@@ -35,7 +35,7 @@ func TestMarkerTransferAuthorization(t *testing.T) {
 		require.NoError(t, err)
 		require.False(t, resp.Delete)
 		require.NotNil(t, resp.Updated)
-		sendAuth := NewMarkerTransferAuthorization(sdk.NewCoins(coin500))
+		sendAuth := NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{})
 		require.Equal(t, sendAuth.String(), resp.Updated.String())
 	})
 
