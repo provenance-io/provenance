@@ -53,6 +53,7 @@ The `v1.13.0` release includes minor bug fixes and enhancements along with a res
 * Add the `x/groups` module [#1007](https://github.com/provenance-io/provenance/issues/1007).
 * Allow starting a `provenanced` chain using a custom denom [#1067](https://github.com/provenance-io/provenance/issues/1067).
   For running the chain locally, `make run DENOM=vspn MIN_FLOOR_PRICE=0` or `make clean localnet-start DENOM=vspn MIN_FLOOR_PRICE=0`.
+* [#627](https://github.com/provenance-io/provenance/issues/627) Added Active Participation and Engagement module, see [specification](https://github.com/provenance-io/provenance/blob/main/x/reward/spec/01_concepts.md) for details.
 
 ### Improvements
 
@@ -82,6 +83,8 @@ The `v1.13.0` release includes minor bug fixes and enhancements along with a res
 * Improve CodeQL workflow to run on Go file changes only [#1225](https://github.com/provenance-io/provenance/issues/1225).
 * Use latest ProvWasm contract in wasm tests [#731](https://github.com/provenance-io/provenance/issues/731).
 * Publish Java/Kotlin JARs to Maven for release candidates [#1223](https://github.com/provenance-io/provenance/issues/1223).
+* Added two new Makefile targets to install and start the relayer [#1051] (https://github.com/provenance-io/provenance/pull/1051)
+* Updated relayer scripts to make them headless for external services [#1068] (https://github.com/provenance-io/provenance/pull/1068)
 
 ### Bug Fixes
 
@@ -242,15 +245,13 @@ Note: The command `provenanced config get iavl-disable-fastnode` will report a v
 
 ### Improvements
 
-* [#627](https://github.com/provenance-io/provenance/issues/627) Added Active Participation and Engagement module, see [specification](https://github.com/provenance-io/provenance/blob/main/x/reward/spec/01_concepts.md) for details.
 * Update the swagger files (including third-party changes). [#728](https://github.com/provenance-io/provenance/issues/728)
 * Bump IBC to 2.3.0 and update third-party protos [PR 868](https://github.com/provenance-io/provenance/pull/868)
 * Update docker images from `buster` to b`bullseye` [#963](https://github.com/provenance-io/provenance/issues/963)
 * Add documentation for `gRPCurl` to `docs/grpcurl.md` [#953](https://github.com/provenance-io/provenance/issues/953)
 * Updated to go 1.18 [#996](https://github.com/provenance-io/provenance/issues/996)
 * Add docker files for local psql indexing [#997](https://github.com/provenance-io/provenance/issues/997)
-* Added two new Makefile targets to install and start the relayer [#1051] (https://github.com/provenance-io/provenance/pull/1051)
-* Updated relayer scripts to make them headless for external services [#1068] (https://github.com/provenance-io/provenance/pull/1068)
+
 
 ### Features
 
