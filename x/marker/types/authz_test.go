@@ -54,3 +54,42 @@ func TestMarkerTransferAuthorization(t *testing.T) {
 		require.Nil(t, resp.Updated)
 	})
 }
+
+func TestMarkerTransferAuthorizationValidateBasic(t *testing.T) {
+	addr1, _ := sdk.AccAddressFromBech32("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck")
+
+	cases := []struct {
+		name     string
+		msg      *MarkerTransferAuthorization
+		errorMsg string
+	}{
+		{
+			"valid msg without empty allow list",
+			NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{}),
+			"",
+		},
+		{
+			"valid msg without non-empty allow list",
+			NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{addr1}),
+			"",
+		},
+		{
+			"invalid msg without duplicate allow list",
+			NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{addr1, addr1}),
+			"duplicate entry",
+		},
+	}
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.errorMsg) > 0 {
+				require.Error(t, err)
+				require.Equal(t, tc.errorMsg, err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
