@@ -1,8 +1,7 @@
 syntax = "proto3";
+package provenance.intertx.v1;
 
-package intertx;
-
-option go_package = "github.com/provenance-io/provenance/x/inter-tx/types";
+option go_package = "github.com/provenance-io/provenance/x/intertx/types";
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";

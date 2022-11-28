@@ -9,8 +9,8 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
-	"github.com/provenance-io/provenance/x/inter-tx/keeper"
-	"github.com/provenance-io/provenance/x/inter-tx/types"
+	"github.com/provenance-io/provenance/x/intertx/keeper"
+	"github.com/provenance-io/provenance/x/intertx/types"
 )
 
 func (suite *KeeperTestSuite) TestRegisterInterchainAccount() {

@@ -41,19 +41,19 @@
   
     - [Msg](#provenance.attribute.v1.Msg)
   
-- [provenance/intertx/query.proto](#provenance/intertx/query.proto)
-    - [QueryInterchainAccountRequest](#intertx.QueryInterchainAccountRequest)
-    - [QueryInterchainAccountResponse](#intertx.QueryInterchainAccountResponse)
+- [provenance/intertx/v1/query.proto](#provenance/intertx/v1/query.proto)
+    - [QueryInterchainAccountRequest](#provenance.intertx.v1.QueryInterchainAccountRequest)
+    - [QueryInterchainAccountResponse](#provenance.intertx.v1.QueryInterchainAccountResponse)
   
-    - [Query](#intertx.Query)
+    - [Query](#provenance.intertx.v1.Query)
   
-- [provenance/intertx/tx.proto](#provenance/intertx/tx.proto)
-    - [MsgRegisterAccount](#intertx.MsgRegisterAccount)
-    - [MsgRegisterAccountResponse](#intertx.MsgRegisterAccountResponse)
-    - [MsgSubmitTx](#intertx.MsgSubmitTx)
-    - [MsgSubmitTxResponse](#intertx.MsgSubmitTxResponse)
+- [provenance/intertx/v1/tx.proto](#provenance/intertx/v1/tx.proto)
+    - [MsgRegisterAccount](#provenance.intertx.v1.MsgRegisterAccount)
+    - [MsgRegisterAccountResponse](#provenance.intertx.v1.MsgRegisterAccountResponse)
+    - [MsgSubmitTx](#provenance.intertx.v1.MsgSubmitTx)
+    - [MsgSubmitTxResponse](#provenance.intertx.v1.MsgSubmitTxResponse)
   
-    - [Msg](#intertx.Msg)
+    - [Msg](#provenance.intertx.v1.Msg)
   
 - [provenance/marker/v1/accessgrant.proto](#provenance/marker/v1/accessgrant.proto)
     - [AccessGrant](#provenance.marker.v1.AccessGrant)
@@ -939,14 +939,14 @@ Msg defines the attribute module Msg service.
 
 
 
-<a name="provenance/intertx/query.proto"></a>
+<a name="provenance/intertx/v1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## provenance/intertx/query.proto
+## provenance/intertx/v1/query.proto
 
 
 
-<a name="intertx.QueryInterchainAccountRequest"></a>
+<a name="provenance.intertx.v1.QueryInterchainAccountRequest"></a>
 
 ### QueryInterchainAccountRequest
 QueryInterchainAccountRequest is the request type for the Query/InterchainAccountAddress RPC
@@ -962,7 +962,7 @@ QueryInterchainAccountRequest is the request type for the Query/InterchainAccoun
 
 
 
-<a name="intertx.QueryInterchainAccountResponse"></a>
+<a name="provenance.intertx.v1.QueryInterchainAccountResponse"></a>
 
 ### QueryInterchainAccountResponse
 QueryInterchainAccountResponse the response type for the Query/InterchainAccountAddress RPC
@@ -983,27 +983,27 @@ QueryInterchainAccountResponse the response type for the Query/InterchainAccount
  <!-- end HasExtensions -->
 
 
-<a name="intertx.Query"></a>
+<a name="provenance.intertx.v1.Query"></a>
 
 ### Query
 Query defines the gRPC querier service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `InterchainAccount` | [QueryInterchainAccountRequest](#intertx.QueryInterchainAccountRequest) | [QueryInterchainAccountResponse](#intertx.QueryInterchainAccountResponse) | QueryInterchainAccount returns the interchain account for given owner address on a given connection pair | GET|/inter-tx/interchain_account/owner/{owner}/connection/{connection_id}|
+| `InterchainAccount` | [QueryInterchainAccountRequest](#provenance.intertx.v1.QueryInterchainAccountRequest) | [QueryInterchainAccountResponse](#provenance.intertx.v1.QueryInterchainAccountResponse) | QueryInterchainAccount returns the interchain account for given owner address on a given connection pair | GET|/intertx/interchain_account/owner/{owner}/connection/{connection_id}|
 
  <!-- end services -->
 
 
 
-<a name="provenance/intertx/tx.proto"></a>
+<a name="provenance/intertx/v1/tx.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## provenance/intertx/tx.proto
+## provenance/intertx/v1/tx.proto
 
 
 
-<a name="intertx.MsgRegisterAccount"></a>
+<a name="provenance.intertx.v1.MsgRegisterAccount"></a>
 
 ### MsgRegisterAccount
 MsgRegisterAccount defines the payload for Msg/RegisterAccount
@@ -1020,7 +1020,7 @@ MsgRegisterAccount defines the payload for Msg/RegisterAccount
 
 
 
-<a name="intertx.MsgRegisterAccountResponse"></a>
+<a name="provenance.intertx.v1.MsgRegisterAccountResponse"></a>
 
 ### MsgRegisterAccountResponse
 MsgRegisterAccountResponse defines the response for Msg/RegisterAccount
@@ -1030,7 +1030,7 @@ MsgRegisterAccountResponse defines the response for Msg/RegisterAccount
 
 
 
-<a name="intertx.MsgSubmitTx"></a>
+<a name="provenance.intertx.v1.MsgSubmitTx"></a>
 
 ### MsgSubmitTx
 MsgSubmitTx defines the payload for Msg/SubmitTx
@@ -1047,7 +1047,7 @@ MsgSubmitTx defines the payload for Msg/SubmitTx
 
 
 
-<a name="intertx.MsgSubmitTxResponse"></a>
+<a name="provenance.intertx.v1.MsgSubmitTxResponse"></a>
 
 ### MsgSubmitTxResponse
 MsgSubmitTxResponse defines the response for Msg/SubmitTx
@@ -1063,15 +1063,15 @@ MsgSubmitTxResponse defines the response for Msg/SubmitTx
  <!-- end HasExtensions -->
 
 
-<a name="intertx.Msg"></a>
+<a name="provenance.intertx.v1.Msg"></a>
 
 ### Msg
 Msg defines the intertx Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `RegisterAccount` | [MsgRegisterAccount](#intertx.MsgRegisterAccount) | [MsgRegisterAccountResponse](#intertx.MsgRegisterAccountResponse) | Register defines a rpc handler for MsgRegisterAccount | |
-| `SubmitTx` | [MsgSubmitTx](#intertx.MsgSubmitTx) | [MsgSubmitTxResponse](#intertx.MsgSubmitTxResponse) | SubmitTx defines a rpc handler for MsgSubmitTx | |
+| `RegisterAccount` | [MsgRegisterAccount](#provenance.intertx.v1.MsgRegisterAccount) | [MsgRegisterAccountResponse](#provenance.intertx.v1.MsgRegisterAccountResponse) | Register defines a rpc handler for MsgRegisterAccount | |
+| `SubmitTx` | [MsgSubmitTx](#provenance.intertx.v1.MsgSubmitTx) | [MsgSubmitTxResponse](#provenance.intertx.v1.MsgSubmitTxResponse) | SubmitTx defines a rpc handler for MsgSubmitTx | |
 
  <!-- end services -->
 

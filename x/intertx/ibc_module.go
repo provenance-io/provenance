@@ -8,7 +8,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/provenance-io/provenance/x/inter-tx/keeper"
+	"github.com/provenance-io/provenance/x/intertx/keeper"
 
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
@@ -102,7 +102,7 @@ func (im IBCModule) OnChanCloseConfirm(
 }
 
 // OnRecvPacket implements the IBCModule interface. A successful acknowledgement
-// is returned if the packet data is succesfully decoded and the receive application
+// is returned if the packet data is successfully decoded and the receive application
 // logic returns without error.
 func (im IBCModule) OnRecvPacket(
 	ctx sdk.Context,
@@ -169,7 +169,7 @@ func (im IBCModule) NegotiateAppVersion(
 	return "", nil
 }
 
-func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (string, error) {
+func handleMsgData(_ sdk.Context, msgData *sdk.MsgData) (string, error) {
 	switch msgData.MsgType {
 	case sdk.MsgTypeURL(&banktypes.MsgSend{}):
 		msgResponse := &banktypes.MsgSendResponse{}
