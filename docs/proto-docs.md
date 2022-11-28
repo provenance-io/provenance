@@ -990,6 +990,7 @@ a marker transfer on behalf of the granter's account.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `transfer_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | transfer_limit is the total amount the grantee can transfer |
+| `allow_list` | [string](#string) | repeated | allow_list specifies an optional list of addresses to whom the grantee can send tokens on behalf of the granter. If omitted, any recipient is allowed. |
 
 
 
