@@ -472,6 +472,37 @@ localnet-start: localnet-generate localnet-up
 localnet-stop:
 	docker-compose -f networks/local/docker-compose.yml --project-directory ./ down
 
+
+
+# Quick build using ibc environment and go platform target options.
+docker-build-ibc: vendor
+	docker build --target provenance-$(shell uname -m) --tag provenance-io/blockchain-ibc -f networks/ibc/blockchain-ibc/Dockerfile .
+	docker build --target relayer --tag provenance-io/blockchain-relayer -f networks/ibc/blockchain-relayer/Dockerfile .
+
+# jq . build/ibc0-0/config/genesis.json | jq '.app_state.auth.accounts += [{"@type": "/cosmos.auth.v1beta1.BaseAccount", "address": "tp18uev5722xrwpfd2hnqducmt3qdjsyktmtw558y", "pub_key": null, "account_number": "1", "sequence": "0"}]' | jq '.app_state.bank.balances += [{"address": "tp18uev5722xrwpfd2hnqducmt3qdjsyktmtw558y", "coins": [{"denom": "nhash","amount": "100000000000000000"}]}]' | jq '.app_state.bank.balances[0].coins[0].amount = "99900000000000000000"' > build/ibc0-0/config/genesis.json
+# cat build/ibc1-0/config/genesis.json | jq '.app_state.auth.accounts += [{"@type": "/cosmos.auth.v1beta1.BaseAccount", "address": "tp18uev5722xrwpfd2hnqducmt3qdjsyktmtw558y", "pub_key": null, "account_number": "1", "sequence": "0"}]' | jq '.app_state.bank.balances += [{"address": "tp18uev5722xrwpfd2hnqducmt3qdjsyktmtw558y", "coins": [{"denom": "nhash","amount": "100000000000000000"}]}]' | jq '.app_state.bank.balances[0].coins[0].amount = "99900000000000000000"' > build/ibc1-0/config/genesis.json
+
+# Generate config files for a 2-node ibcnet with relayer
+ibcnet-generate: ibcnet-stop docker-build-ibc
+	@if ! [ -f build/ibc0-0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-ibc testnet --v 1 -o . --starting-ip-address 192.168.20.2 --node-dir-prefix=ibc0- --keyring-backend=test --chain-id=testing ; fi
+	mv build/gentxs/ibc0-0.json build/gentxs/tmp
+	@if ! [ -f build/ibc1-0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-ibc testnet --v 1 -o . --starting-ip-address 192.168.20.3 --node-dir-prefix=ibc1- --keyring-backend=test --chain-id=testing2 ; fi
+	mv build/gentxs/tmp build/gentxs/ibc0-0.json
+	scripts/ibcnet-add-relayer-key.sh
+
+# Run a 2-node testnet locally with a relayer
+ibcnet-up:
+	docker-compose -f networks/ibc/docker-compose.yml --project-directory ./ up -d
+
+# Run a 2-node testnet locally with a relayer
+ibcnet-start: ibcnet-generate ibcnet-up
+
+# Stop ibcnet
+ibcnet-stop:
+	docker-compose -f networks/ibc/docker-compose.yml --project-directory ./ down
+
+
+
 # Quick build using devnet environment and go platform target options.
 docker-build-dev: vendor
 	docker build --target provenance-$(shell uname -m) --tag provenance-io/blockchain-dev -f networks/dev/blockchain-dev/Dockerfile .

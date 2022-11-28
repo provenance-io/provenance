@@ -1,0 +1,39 @@
+## Build provenance for ARM
+FROM golang:1.18-bullseye as build
+WORKDIR /
+RUN apt-get update && apt-get upgrade -y && apt-get install -y libleveldb-dev && apt-get install -y git
+RUN git clone https://github.com/cosmos/relayer.git /relayer && cd /relayer && git checkout v2.1.1 && make install && cd / && rm -rf /relayer
+
+## Run provenance for ARM
+FROM build as relayer
+ENV LD_LIBRARY_PATH="/usr/local/lib"
+
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/
+
+# Requires a mounted volume with the config in it.
+VOLUME [ "/relayer" ]
+WORKDIR /relayer
+EXPOSE 26656 26657 1317 9090
+
+COPY --from=build /go/bin/rly /usr/bin/rly
+
+# We need to setup the relayer
+RUN rly config init --home "/relayer"
+
+# Copy over the network config
+COPY networks/ibc/blockchain-relayer/config.yaml /relayer/config/config.yaml
+
+# Generate the keys
+# Key is tp18uev5722xrwpfd2hnqducmt3qdjsyktmtw558y
+RUN rly keys restore local default "list judge day spike walk easily outer state fashion library review include leisure casino wagon zoo chuckle alien stock bargain stone wait squeeze fade" --home "/relayer"
+RUN rly keys restore local2 default "list judge day spike walk easily outer state fashion library review include leisure casino wagon zoo chuckle alien stock bargain stone wait squeeze fade" --home "/relayer"
+
+COPY networks/ibc/blockchain-relayer/entrypoint.sh /usr/bin/entrypoint.sh
+
+STOPSIGNAL SIGTERM
+
+ENTRYPOINT ["/usr/bin/entrypoint.sh"]
+CMD ["start"]
