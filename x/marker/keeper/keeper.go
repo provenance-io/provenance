@@ -16,7 +16,7 @@ import (
 
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
 
-	intertxKeeper "github.com/provenance-io/provenance/x/inter-tx/keeper"
+	intertxKeeper "github.com/provenance-io/provenance/x/intertx/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
