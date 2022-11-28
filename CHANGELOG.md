@@ -48,6 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Updated Cosmos-SDK to [v0.46.6-pio-1](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.6-pio-1/RELEASE_NOTES.md) (from v0.46.4-pio-1) [PR 1235](https://github.com/provenance-io/provenance/pull/1235).
 * Alias the `config unpack` command to `config update`. It can be used to update config files to include new fields [PR 1233](https://github.com/provenance-io/provenance/pull/1233).
 * When loading the unpacked configs, always load the defaults before reading the files (instead of only loading the defaults if the file doesn't exist) [PR 1233](https://github.com/provenance-io/provenance/pull/1233).
+* Added support to set a list of specific recipients allowed for send authorizations in the marker module [#1237](https://github.com/provenance-io/provenance/issues/1237).
 
 ### Full Commit History
 
