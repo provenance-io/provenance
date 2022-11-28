@@ -1,5 +1,8 @@
 ## [v1.13.0](https://github.com/provenance-io/provenance/releases/tag/v1.13.0) - 2022-11-28
 
+The `v1.13.0 - ochre` release is focused on group based management of on chain accounts and important improvements for public/private zone communication within the Provenance Blockchain network.
+The `v1.13.0` release includes minor bug fixes and enhancements along with a resolution for the [dragonberry]((https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702)) security update.
+
 ### Features
 
 * Add restricted marker transfer over ibc support [#1136](https://github.com/provenance-io/provenance/issues/1136).
