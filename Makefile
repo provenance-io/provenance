@@ -475,9 +475,10 @@ localnet-stop:
 # Quick build using ibc environment and go platform target options.
 RELAYER_MNEMONIC ?= "list judge day spike walk easily outer state fashion library review include leisure casino wagon zoo chuckle alien stock bargain stone wait squeeze fade"
 RELAYER_KEY ?= tp18uev5722xrwpfd2hnqducmt3qdjsyktmtw558y
+RELAYER_VERSION ?= v2.1.2
 docker-build-ibc: vendor
 	docker build --target provenance-$(shell uname -m) --tag provenance-io/blockchain-ibc -f networks/ibc/blockchain-ibc/Dockerfile .
-	docker build --target relayer --tag provenance-io/blockchain-relayer -f networks/ibc/blockchain-relayer/Dockerfile --build-arg MNEMONIC=$(RELAYER_MNEMONIC) .
+	docker build --target relayer --tag provenance-io/blockchain-relayer -f networks/ibc/blockchain-relayer/Dockerfile --build-arg MNEMONIC=$(RELAYER_MNEMONIC) --build-arg VERSION=$(RELAYER_VERSION) .
 
 # Generate config files for a 2-node ibcnet with relayer
 ibcnet-generate: ibcnet-stop docker-build-ibc
