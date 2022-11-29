@@ -76,7 +76,7 @@ func TestMarkerTransferAuthorizationValidateBasic(t *testing.T) {
 		{
 			"invalid msg with duplicate allow list",
 			NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{addr1, addr1}),
-			"duplicate entry",
+			"all allow list addresses must be unique: duplicate entry",
 		},
 	}
 	for _, tc := range cases {
