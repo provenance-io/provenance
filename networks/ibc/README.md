@@ -21,6 +21,20 @@ to publish packets from the sending chain to the receiving chain.
   denom: nhash
 ```
 
+# Networking
+
+It's always important to first verify that your relayer is working before doing anything
+IBC related. You can verify that your relayer is working as inteded by running the following
+command on the relayer container.
+
+```
+rly --home /relayer paths list
+0: local_local2         -> chns(✔) clnts(✔) conn(✔) (testing<>testing2)
+```
+
+Notice that the output above has 3 checkmarks. This is saying that the channels, clients,
+and connections are all properly working.
+
 # Transferring Currency
 
 The simplest test that can be used to verify that IBC is working is using the Fungible Token
@@ -71,20 +85,6 @@ balances:
 - amount: "99899999900000000000"
   denom: nhash
 ```
-
-# Networking
-
-It's always important to first verify that your relayer is working before doing anything
-IBC related. You can verify that your relayer is working as inteded by running the following
-command on the relayer container.
-
-```
-rly --home /relayer paths list
-0: local_local2         -> chns(✔) clnts(✔) conn(✔) (testing<>testing2)
-```
-
-Notice that the output above has 3 checkmarks. This is saying that the channels, clients,
-and connections are all properly working.
 
 # Smart Contracts
 
