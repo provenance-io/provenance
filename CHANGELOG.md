@@ -98,10 +98,9 @@ This is a state-compatible version upgrade for v1.13.0-rc3.
 ---
 
 ## [v1.13.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.13.0-rc2) - 2022-10-21
-=======
+
 The `v1.13.0 - ochre` release is focused on group based management of on chain accounts and important improvements for public/private zone communication within the Provenance Blockchain network.
 The `v1.13.0` release includes minor bug fixes and enhancements along with a resolution for the [dragonberry]((https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702)) security update.
->>>>>>> main
 
 ### Features
 
