@@ -41,7 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
-## [v1.13.0-rc5](https://github.com/provenance-io/provenance/releases/tag/v1.13.0-rc5) - 2022-11-22
+## [v1.13.0](https://github.com/provenance-io/provenance/releases/tag/v1.13.0) - 2022-11-28
 
 ### Improvements
 
@@ -98,66 +98,150 @@ This is a state-compatible version upgrade for v1.13.0-rc3.
 ---
 
 ## [v1.13.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.13.0-rc2) - 2022-10-21
+=======
+The `v1.13.0 - ochre` release is focused on group based management of on chain accounts and important improvements for public/private zone communication within the Provenance Blockchain network.
+The `v1.13.0` release includes minor bug fixes and enhancements along with a resolution for the [dragonberry]((https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702)) security update.
+>>>>>>> main
 
 ### Features
 
-* Add restricted marker transfer over ibc support [#1136](https://github.com/provenance-io/provenance/issues/1136)
-* Enable the node query service [PR 1173](https://github.com/provenance-io/provenance/pull/1173)
+* Add restricted marker transfer over ibc support [#1136](https://github.com/provenance-io/provenance/issues/1136).
+* Enable the node query service [PR 1173](https://github.com/provenance-io/provenance/pull/1173).
+* Add the `x/groups` module [#1007](https://github.com/provenance-io/provenance/issues/1007).
+* Allow starting a `provenanced` chain using a custom denom [#1067](https://github.com/provenance-io/provenance/issues/1067).
+  For running the chain locally, `make run DENOM=vspn MIN_FLOOR_PRICE=0` or `make clean localnet-start DENOM=vspn MIN_FLOOR_PRICE=0`.
+* [#627](https://github.com/provenance-io/provenance/issues/627) Added Active Participation and Engagement module, see [specification](https://github.com/provenance-io/provenance/blob/main/x/reward/spec/01_concepts.md) for details.
 
 ### Improvements
 
-* Updated name restrictions documentation [#808](https://github.com/provenance-io/provenance/issues/808)
-* Updated Cosmos-SDK to v0.46.3-pio-1 (from v0.46.2-pio-2) [PR 1173](https://github.com/provenance-io/provenance/pull/1173)
-
-### Bug Fixes
-
-* Bump wasmd to our v0.29.0-pio-1 (from v0.28.0-0.46sdk-notional) [PR 1148](https://github.com/provenance-io/provenance/pull/1148).
-  This fixes an erroneous attempt to migrate the wasmd module.
-* Fixed outdated devnet docker configurations [#1062](https://github.com/provenance-io/provenance/issues/1062)
-* Fix the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702) [PR 1173](https://github.com/provenance-io/provenance/pull/1173)
-* Fix GetParams in `msgfees` modules to return ConversionFeeDenom [#1214](https://github.com/provenance-io/provenance/issues/1214)
-
-### Full Commit History
-
-* https://github.com/provenance-io/provenance/compare/v1.13.0-rc1...v1.13.0-rc2
-* https://github.com/provenance-io/provenance/compare/v1.12.1...v1.13.0-rc2
-
----
-
-## [v1.13.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.13.0-rc1) - 2022-10-04
-
-### Improvements
-
-* Ignore hardcoded tx gas limit when `consensus_params.block.max_gas` is set to -1 for local nodes
-* Bump Cosmos-SDK to v0.46.2-pio-1 (from v0.45.5-pio-1). [#995](https://github.com/provenance-io/provenance/issues/995)
-  See https://github.com/provenance-io/cosmos-sdk/blob/v0.46.2-pio-1/RELEASE_NOTES.md for more info.
-* Refactor the `x/marker` module's `Holding` query to utilize the `x/bank` module's new `DenomOwners` query. [#995](https://github.com/provenance-io/provenance/issues/995)
+* Updated Cosmos-SDK to `v0.46.6-pio-1` (from `v0.45.10-pio-4`) [PR 1235](https://github.com/provenance-io/provenance/pull/1235).
+  This brings several new features and improvements. For details, see the [release notes](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.6-pio-1/RELEASE_NOTES.md) and [changelog](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.6-pio-1/CHANGELOG.md).
+* Bump IBC to `v5.0.0-pio-2` (from `v2.3.0`) to add a check for SendEnabled [#1100](https://github.com/provenance-io/provenance/issues/1100), [#1158](https://github.com/provenance-io/provenance/issues/1158).
+* Update wasmd to `v0.29.0-pio-1` (from `v0.26.0`) with SDK v0.46 support from notional-labs [#1015](https://github.com/provenance-io/provenance/issues/1015), [PR 1148](https://github.com/provenance-io/provenance/pull/1148).
+* Allow MsgFee fees to be denoms other than `nhash` [#1067](https://github.com/provenance-io/provenance/issues/1067).
+* Ignore hardcoded tx gas limit when `consensus_params.block.max_gas` is set to -1 for local nodes [#1000](https://github.com/provenance-io/provenance/issues/1000).
+* Refactor the `x/marker` module's `Holding` query to utilize the `x/bank` module's new `DenomOwners` query [#995](https://github.com/provenance-io/provenance/issues/995).
   The only real difference between those two queries is that the `Holding` query accepts either a denom or marker address.
-* Update the third-party protos and swagger files after the cosmos v0.46 bump. [#1017](https://github.com/provenance-io/provenance/issues/1017)
-* Stop using the deprecated Wrap and Wrapf functions in the sdk/types/errors package in favor of those functions off specific errors, or else the cosmossdk.io/errors package. [#1013](https://github.com/provenance-io/provenance/issues/995)
+* Stop using the deprecated `Wrap` and `Wrapf` functions in the `sdk/types/errors` package in favor of those functions off specific errors, or else the `cosmossdk.io/errors` package [#1013](https://github.com/provenance-io/provenance/issues/995).
 * For newly added reward's module, Voting incentive program, validator votes should count for higher shares, since they vote for all their delegations.
-  This feature allows the reward creator to introduce the multiplier to achieve the above.
+  This improvement allows the reward creator to introduce the multiplier to achieve the above.
 * Refactored the fee handling [#1006](https://github.com/provenance-io/provenance/issues/1006):
   * Created a `MinGasPricesDecorator` to replace the `MempoolFeeDecorator` that was removed from the SDK. It makes sure the fee is greater than the validators min-gas fee.
   * Refactored the `MsgFeesDecorator` to only make sure there's enough fee provided. It no longer deducts/consumes anything and it no longer checks the payer's account.
   * Refactored the `ProvenanceDeductFeeDecorator`. It now makes sure the payer has enough in their account to cover the additional fees. It also now deducts/consumes the `floor gas price * gas`.
   * Added the `fee_payer` attribute to events of type `tx` involving fees (i.e. the ones with attributes `fee`, `min_fee_charged`, `additionalfee` and/or `baseFee`).
   * Moved the additional fees calculation logic into the msgfees keeper.
-* Update `fee` event with amount charged even on failure and emit SendCoin events from `DeductFeesDistributions` [#1092](https://github.com/provenance-io/provenance/issues/1092)
-* Bump IBC to `5.0.0-pio-1` (from `v2.3.0`) to add a check for SendEnabled [#1100](https://github.com/provenance-io/provenance/issues/1100)
-*  [#1067](https://github.com/provenance-io/provenance/issues/1067) This feature makes it so that you can start the chain with custom denoms for a chain, by passing in the required flags, also makes MsgFee not coupled only to the nhash denom.
-   For running the chain locally `make run DENOM=vspn MIN_FLOOR_PRICE=0` and `make clean localnet-start DENOM=vspn MIN_FLOOR_PRICE=0` make targets were also updated.
-* Use latest ProvWasm contract in wasm tests [#731](https://github.com/provenance-io/provenance/issues/731)
-* Update wasmd to 0.28 with 0.46 sdk version from notional-labs [#1015](https://github.com/provenance-io/provenance/issues/1015)
+* Update `fee` event with amount charged even on failure and emit SendCoin events from `DeductFeesDistributions` [#1092](https://github.com/provenance-io/provenance/issues/1092).
+* Alias the `config unpack` command to `config update`. It can be used to update config files to include new fields [PR 1233](https://github.com/provenance-io/provenance/pull/1233).
+* When loading the unpacked configs, always load the defaults before reading the files (instead of only loading the defaults if the file doesn't exist) [PR 1233](https://github.com/provenance-io/provenance/pull/1233).
+* Add prune command available though cosmos sdk to provenanced. [#1208](https://github.com/provenance-io/provenance/issues/1208).
+* Updated name restrictions documentation [#808](https://github.com/provenance-io/provenance/issues/808).
+* Update swagger files [PR 1229](https://github.com/provenance-io/provenance/pull/1229).
+* Improve CodeQL workflow to run on Go file changes only [#1225](https://github.com/provenance-io/provenance/issues/1225).
+* Use latest ProvWasm contract in wasm tests [#731](https://github.com/provenance-io/provenance/issues/731).
+* Publish Java/Kotlin JARs to Maven for release candidates [#1223](https://github.com/provenance-io/provenance/issues/1223).
+* Added two new Makefile targets to install and start the relayer [#1051] (https://github.com/provenance-io/provenance/pull/1051)
+* Updated relayer scripts to make them headless for external services [#1068] (https://github.com/provenance-io/provenance/pull/1068)
 
 ### Bug Fixes
 
-* Remove the workaround for the index-events configuration field (now fixed in the SDK). [#995](https://github.com/provenance-io/provenance/issues/995)
+* Fixed outdated devnet docker configurations [#1062](https://github.com/provenance-io/provenance/issues/1062).
+* Fix the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702) [PR 1173](https://github.com/provenance-io/provenance/pull/1173).
+* Fix GetParams in `msgfees` modules to return ConversionFeeDenom [#1214](https://github.com/provenance-io/provenance/issues/1214).
+* Pay attention to the `iavl-disable-fastnode` config field/flag [PR 1193](https://github.com/provenance-io/provenance/pull/1193).
+* Remove the workaround for the index-events configuration field (now fixed in the SDK) [#995](https://github.com/provenance-io/provenance/issues/995).
 
 ### Client Breaking
 
-* Remove the custom/legacy rest endpoints from the `x/attribute`, `x/marker`, and `x/name` modules. [#995](https://github.com/provenance-io/provenance/issues/995)
-* Remove the state-listening/plugin system (and `librdkafka` dependencies). [#995](https://github.com/provenance-io/provenance/issues/995)
+* Remove the state-listening/plugin system (and `librdkafka` dependencies) [#995](https://github.com/provenance-io/provenance/issues/995).
+* Remove the custom/legacy rest endpoints from the `x/attribute`, `x/marker`, and `x/name` modules [#995](https://github.com/provenance-io/provenance/issues/995).
+  * The following REST endpoints have been removed in favor of `/provenance/...` counterparts:
+    * `GET` `attribute/{address}/attributes` -> `/provenance/attribute/v1/attributes/{address}`
+    * `GET` `attribute/{address}/attributes/{name}` -> `/provenance/attribute/v1/attribute/{address}/{name}`
+    * `GET` `attribute/{address}/scan/{suffix}` -> `/provenance/attribute/v1/attribute/{address}/scan/{suffix}`
+    * `GET` `marker/all` -> `/provenance/marker/v1/all`
+    * `GET` `marker/holders/{id}` -> `/provenance/marker/v1/holding/{id}`
+    * `GET` `marker/detail/{id}` -> `/provenance/marker/v1/detail/{id}`
+    * `GET` `marker/accesscontrol/{id}` -> `/provenance/marker/v1/accesscontrol/{id}`
+    * `GET` `marker/escrow/{id}` -> `/provenance/marker/v1/escrow/{id}`
+    * `GET` `marker/supply/{id}` -> `/provenance/marker/v1/supply/{id}`
+    * `GET` `marker/assets/{id}` -> `/provenance/metadata/v1/ownership/{address}` (you can get the `{address}` from `/provenance/marker/v1/detail/{id}`).
+    * `GET` `name/{name}` -> `/provenance/name/v1/resolve/{name}`
+    * `GET` `name/{address}/names` -> `/provenance/name/v1/lookup/{address}`
+  * The following REST endpoints have been removed. They do not have any REST replacement counterparts. Use GRPC instead.
+    * `DELETE` `attribute/attributes` -> `DeleteAttribute(MsgDeleteAttributeRequest)`
+    * `POST` `/marker/{denom}/mint` -> `Mint(MsgMintRequest)`
+    * `POST` `/marker/{denom}/burn` -> `Burn(MsgBurnRequest)`
+    * `POST` `/marker/{denom}/status` -> One of:
+      * `Activate(MsgActivateRequest)`
+      * `Finalize(MsgFinalizeRequest)`
+      * `Cancel(MsgCancelRequest)`
+      * `Delete(MsgDeleteRequest)`
+  * The following short-form `GET` endpoints were removed in favor of longer ones:
+    * `/node_info` -> `/cosmos/base/tendermint/v1beta1/node_info`
+    * `/syncing` -> `/cosmos/base/tendermint/v1beta1/syncing`
+    * `/blocks/latest` -> `/cosmos/base/tendermint/v1beta1/blocks/latest`
+    * `/blocks/{height}` -> `/cosmos/base/tendermint/v1beta1/blocks/{height}`
+    * `/validatorsets/latest` -> `/cosmos/base/tendermint/v1beta1/validatorsets/latest`
+    * `/validatorsets/{height}` -> `/cosmos/base/tendermint/v1beta1/validatorsets/{height}`
+  * The denom owners `GET` endpoint changed from `/cosmos/bank/v1beta1/denom_owners/{denom}` to `/cosmos/bank/v1beta1/supply/by_denom?denom={denom}`.
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.12.2...v1.13.0
+
+---
+
+## [v1.12.2](https://github.com/provenance-io/provenance/releases/tag/v1.12.2) - 2022-11-01
+
+Provenance v1.12.2 enables the ability to upgrade your IAVL state store to be faster and handle errors better. This upgrade is recommended and should be done at your convenience prior to the v1.13 chain upgrade.
+
+The IAVL store upgrade is expected to take 30 to 90 minutes. During that time, your node will be down. There will be some log output (info level), but it is sparce and there may be long periods (25+ minutes) without any new log output. Once it has started, it's best to not interrupt the process.
+
+It is highly recommended that you do one of these two prior to the v1.13 chain upgrade:
+
+Either
+
+- Upgrade your node's IAVL store:
+  1. Stop your node.
+  2. Upgrade `provenanced` to v1.12.2.
+  3. Run the command: `provenanced config set iavl-disable-fastnode false`.
+  4. Restart your node. Once the upgrade has finished, your node will automatically run as normal.
+
+Or
+
+- Explicitly define that you don't want to upgrade your node's IAVL store:
+   1. Ensure that you have `provenanced` v1.12.1 (or higher), e.g. Run the command: `provenanced version`. If you are on 1.12.0, upgrade to at least v1.12.1.
+   2. Run the command: `provenanced config set iavl-disable-fastnode true`.
+
+---
+
+You can manually update your `app.toml` file, but using the `config set` command is the recommended method. The `iavl-disable-fastnode` field was added in v1.12.1 and most likely does not yet exist in your `app.toml` file. There are other new sections and fields too. Using the command will add them all (using defaults) as well as their descriptions. If you want to update your `app.toml` manually, the `iavl-disable-fastnode` entry should go below the `index-events` entry and before the `[telemetry]` section.
+
+If you do nothing before the v1.13 chain upgrade, your node will most likely upgrade the IAVL store when v1.13 first runs. The v1.13 chain upgrade and migrations are expected to only take a minute. If your node is also upgrading the IAVL store at that time, it will take 30-90+ minutes.
+
+Note: The command `provenanced config get iavl-disable-fastnode` will report a value regardless of whether the field exists in `app.toml`. As such, that command is insufficient for determining whether the value exists in the `app.toml` file.
+
+### Improvements
+
+* Bump Cosmos-SDK to v0.45.10-pio-4 (from v0.45.9-pio-1) [PR 1202](https://github.com/provenance-io/provenance/pull/1202)
+* Allow the IAVL store to be upgraded [PR 1193](https://github.com/provenance-io/provenance/pull/1193).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.12.1...v1.12.2
+
+---
+
+## [v1.12.1](https://github.com/provenance-io/provenance/releases/tag/v1.12.1) - 2022-10-14
+
+### Improvements
+
+* Bump Cosmos-SDK to v0.45.9-pio-1 (from v0.45.5-pio-1) [PR 1159](https://github.com/provenance-io/provenance/pull/1159).
+
+### Bug Fixes
+
+* Bump ics23/go to Cosmos-SDK's v0.8.0 (from confio's v0.7.0) [PR 1159](https://github.com/provenance-io/provenance/pull/1159).
 
 ---
 
@@ -218,15 +302,13 @@ Note: The command `provenanced config get iavl-disable-fastnode` will report a v
 
 ### Improvements
 
-* [#627](https://github.com/provenance-io/provenance/issues/627) Added Active Participation and Engagement module, see [specification](https://github.com/provenance-io/provenance/blob/main/x/reward/spec/01_concepts.md) for details.
 * Update the swagger files (including third-party changes). [#728](https://github.com/provenance-io/provenance/issues/728)
 * Bump IBC to 2.3.0 and update third-party protos [PR 868](https://github.com/provenance-io/provenance/pull/868)
 * Update docker images from `buster` to b`bullseye` [#963](https://github.com/provenance-io/provenance/issues/963)
 * Add documentation for `gRPCurl` to `docs/grpcurl.md` [#953](https://github.com/provenance-io/provenance/issues/953)
 * Updated to go 1.18 [#996](https://github.com/provenance-io/provenance/issues/996)
 * Add docker files for local psql indexing [#997](https://github.com/provenance-io/provenance/issues/997)
-* Added two new Makefile targets to install and start the relayer [#1051] (https://github.com/provenance-io/provenance/pull/1051)
-* Updated relayer scripts to make them headless for external services [#1068] (https://github.com/provenance-io/provenance/pull/1068)
+
 
 ### Features
 
