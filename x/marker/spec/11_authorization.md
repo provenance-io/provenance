@@ -1,6 +1,6 @@
 # Authorization
 
-The marker module supports granting authorizations for `marker` transfers.  This is implemented using
+The marker module supports granting authorizations for restricted coins transfers.  This is implemented using
 the `authz` module's `Authorization` interface.
 
 ```
