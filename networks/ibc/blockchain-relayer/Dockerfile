@@ -6,6 +6,7 @@ RUN git clone https://github.com/cosmos/relayer.git /relayer && cd /relayer && g
 
 ## Run provenance for ARM
 FROM build as relayer
+ARG MNEMONIC
 ENV LD_LIBRARY_PATH="/usr/local/lib"
 
 RUN apt-get update && \
@@ -27,9 +28,8 @@ RUN rly config init --home "/relayer"
 COPY networks/ibc/blockchain-relayer/config.yaml /relayer/config/config.yaml
 
 # Generate the keys
-# Key is tp18uev5722xrwpfd2hnqducmt3qdjsyktmtw558y
-RUN rly keys restore local default "list judge day spike walk easily outer state fashion library review include leisure casino wagon zoo chuckle alien stock bargain stone wait squeeze fade" --home "/relayer"
-RUN rly keys restore local2 default "list judge day spike walk easily outer state fashion library review include leisure casino wagon zoo chuckle alien stock bargain stone wait squeeze fade" --home "/relayer"
+RUN rly keys restore local default "$MNEMONIC" --home "/relayer"
+RUN rly keys restore local2 default "$MNEMONIC" --home "/relayer"
 
 COPY networks/ibc/blockchain-relayer/entrypoint.sh /usr/bin/entrypoint.sh
 
