@@ -67,8 +67,8 @@ provenanced -t --home ibc0-0/ keys list
 ```
 
 3. Now, we can transfer currency from ibc0-0 to ibc1-0. The following command sends 500nhash from our
-sending account `tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y` to our receiving account
-`tp1u3ry0ry80hvj9vcfa8h5e30wkx9ec4l5jsqujd`, when ran on container ibc0-0.
+sending account `tp1u3ry0ry80hvj9vcfa8h5e30wkx9ec4l5jsqujd` to our receiving account
+`tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y`, when ran on container ibc0-0.
 
 ```
 provenanced -t --home ibc0-0/ tx ibc-transfer transfer transfer channel-0 tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y 500nhash --from tp1u3ry0ry80hvj9vcfa8h5e30wkx9ec4l5jsqujd --gas auto --gas-prices 1905nhash --gas-adjustment 1.5 --chain-id testing -y
