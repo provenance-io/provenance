@@ -69,7 +69,7 @@ func (a MarkerTransferAuthorization) ValidateBasic() error {
 	found := make(map[string]bool, 0)
 	for i := 0; i < len(a.AllowList); i++ {
 		if found[a.AllowList[i]] {
-			return ErrDuplicateEntry
+			return ErrDuplicateEntry.Wrap("all allow list addresses must be unique")
 		}
 		found[a.AllowList[i]] = true
 	}
