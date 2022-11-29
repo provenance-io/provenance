@@ -31,7 +31,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type MarkerTransferAuthorization struct {
 	// transfer_limit is the total amount the grantee can transfer
 	TransferLimit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=transfer_limit,json=transferLimit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"transfer_limit"`
-	// allow_list specifies an optional list of addresses to whom the grantee can send tokens on behalf of the
+	// allow_list specifies an optional list of addresses to whom the grantee can send restricted coins on behalf of the
 	// granter. If omitted, any recipient is allowed.
 	AllowList []string `protobuf:"bytes,2,rep,name=allow_list,json=allowList,proto3" json:"allow_list,omitempty"`
 }

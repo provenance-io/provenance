@@ -1,11 +1,11 @@
 # Authorization
 
-The marker module supports granting authorizations for restricted coins transfers.  This is implemented using
+The marker module supports granting authorizations for restricted coin transfers.  This is implemented using
 the `authz` module's `Authorization` interface.
 
 ```
 // MarkerTransferAuthorization gives the grantee permissions to execute
-// a marker transfer on behalf of the granter's account.
+// a restricted coin transfer on behalf of the granter's account.
 message MarkerTransferAuthorization {
   option (cosmos_proto.implements_interface) = "Authorization";
 
@@ -20,4 +20,4 @@ message MarkerTransferAuthorization {
 ```
 
 With the `MarkerTransferAuthorization` a `granter` can a allow a `grantee` to do transfers on their behalf.
-A transfer limit must be set for the `grantee` and an optional list of allowed recipients.
+A transfer limit is required to be set for the `grantee` and an optional list of allowed recipients.

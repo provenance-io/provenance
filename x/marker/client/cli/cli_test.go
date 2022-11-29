@@ -950,7 +950,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			expectedCode: 0,
 		},
 		{
-			name: "fail grant authz for account invalid allow list address",
+			name: "fail to grant authz for account invalid allow list address",
 			args: []string{
 				s.accountAddresses[1].String(),
 				"transfer",

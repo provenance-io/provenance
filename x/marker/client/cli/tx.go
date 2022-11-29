@@ -706,7 +706,7 @@ func GetCmdGrantAuthorization() *cobra.Command {
 	}
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(FlagTransferLimit, "", "The total amount an account is allowed to tranfer on granter's behalf")
-	cmd.Flags().StringSlice(FlagAllowList, []string{}, "Allowed addresses grantee is allowed to send funds separated by ,")
+	cmd.Flags().StringSlice(FlagAllowList, []string{}, "Allowed addresses grantee is allowed to send restricted coins separated by ,")
 	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
 	return cmd
 }

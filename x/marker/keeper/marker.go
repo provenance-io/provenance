@@ -721,12 +721,12 @@ func (k Keeper) IbcTransferCoin(
 	if !m.AddressHasAccess(admin, types.Access_Transfer) {
 		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
 	}
-	toAddress, err := sdk.AccAddressFromBech32(receiver)
+	to, err := sdk.AccAddressFromBech32(receiver)
 	if err != nil {
 		return err
 	}
 	if !admin.Equals(sender) {
-		err = k.authzHandler(ctx, admin, sender, toAddress, token)
+		err = k.authzHandler(ctx, admin, sender, to, token)
 		if err != nil {
 			return err
 		}
