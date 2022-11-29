@@ -64,7 +64,7 @@ func TestMarkerTransferAuthorizationValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		{
-			"valid msg without empty allow list",
+			"valid msg with empty allow list",
 			NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{}),
 			"",
 		},
@@ -74,7 +74,7 @@ func TestMarkerTransferAuthorizationValidateBasic(t *testing.T) {
 			"",
 		},
 		{
-			"invalid msg without duplicate allow list",
+			"invalid msg with duplicate allow list",
 			NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{addr1, addr1}),
 			"duplicate entry",
 		},
