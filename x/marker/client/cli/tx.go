@@ -680,14 +680,14 @@ func GetCmdGrantAuthorization() *cobra.Command {
 					return fmt.Errorf("transfer-limit should be greater than zero")
 				}
 
-				allowList, err := cmd.Flags().GetStringSlice(FlagAllowList)
-				if err != nil {
-					return err
+				allowList, terr := cmd.Flags().GetStringSlice(FlagAllowList)
+				if terr != nil {
+					return terr
 				}
 
-				allowed, err := bech32toAccAddresses(allowList)
-				if err != nil {
-					return err
+				allowed, terr := bech32toAccAddresses(allowList)
+				if terr != nil {
+					return terr
 				}
 
 				authorization = types.NewMarkerTransferAuthorization(spendLimit, allowed)
