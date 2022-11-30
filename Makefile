@@ -472,6 +472,33 @@ localnet-start: localnet-generate localnet-up
 localnet-stop:
 	docker-compose -f networks/local/docker-compose.yml --project-directory ./ down
 
+# Quick build using ibc environment and go platform target options.
+RELAYER_MNEMONIC ?= "list judge day spike walk easily outer state fashion library review include leisure casino wagon zoo chuckle alien stock bargain stone wait squeeze fade"
+RELAYER_KEY ?= tp18uev5722xrwpfd2hnqducmt3qdjsyktmtw558y
+RELAYER_VERSION ?= v2.1.2
+docker-build-ibc: vendor
+	docker build --target provenance-$(shell uname -m) --tag provenance-io/blockchain-ibc -f networks/ibc/blockchain-ibc/Dockerfile .
+	docker build --target relayer --tag provenance-io/blockchain-relayer -f networks/ibc/blockchain-relayer/Dockerfile --build-arg MNEMONIC=$(RELAYER_MNEMONIC) --build-arg VERSION=$(RELAYER_VERSION) .
+
+# Generate config files for a 2-node ibcnet with relayer
+ibcnet-generate: ibcnet-stop docker-build-ibc
+	@if ! [ -f build/ibc0-0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-ibc testnet --v 1 -o . --starting-ip-address 192.168.20.2 --node-dir-prefix=ibc0- --keyring-backend=test --chain-id=testing ; fi
+	mv build/gentxs/ibc0-0.json build/gentxs/tmp
+	@if ! [ -f build/ibc1-0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-ibc testnet --v 1 -o . --starting-ip-address 192.168.20.3 --node-dir-prefix=ibc1- --keyring-backend=test --chain-id=testing2 ; fi
+	mv build/gentxs/tmp build/gentxs/ibc0-0.json
+	scripts/ibcnet-add-relayer-key.sh $(RELAYER_KEY)
+
+# Run a 2-node testnet locally with a relayer
+ibcnet-up:
+	docker-compose -f networks/ibc/docker-compose.yml --project-directory ./ up -d
+
+# Run a 2-node testnet locally with a relayer
+ibcnet-start: ibcnet-generate ibcnet-up
+
+# Stop ibcnet
+ibcnet-stop:
+	docker-compose -f networks/ibc/docker-compose.yml --project-directory ./ down
+
 # Quick build using devnet environment and go platform target options.
 docker-build-dev: vendor
 	docker build --target provenance-$(shell uname -m) --tag provenance-io/blockchain-dev -f networks/dev/blockchain-dev/Dockerfile .

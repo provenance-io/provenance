@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  ibc0:
+    container_name: ibc0
+    image: "provenance-io/blockchain-ibc"
+    ports:
+      - "26656-26657:26656-26657"
+      - "1317:1317"
+      - "9090:9090"
+    environment:
+      - ID=0
+      - LOG=${LOG:-provenanced.log}
+      - PIO_HOME=/provenance
+    volumes:
+      - ./build:/provenance:Z
+
+    networks:
+      localnet:
+        ipv4_address: 192.168.20.2
+
+  ibc1:
+    container_name: ibc1
+    image: "provenance-io/blockchain-ibc"
+    ports:
+      - "26659-26660:26656-26657"
+    environment:
+      - ID=1
+      - LOG=${LOG:-provenanced.log}
+      - PIO_HOME=/provenance
+    volumes:
+      - ./build:/provenance:Z
+    networks:
+      localnet:
+        ipv4_address: 192.168.20.3
+
+  relayer:
+    container_name: relayer
+    image: "provenance-io/blockchain-relayer"
+    ports:
+      - "26661-26662:26656-26657"
+    networks:
+      localnet:
+        ipv4_address: 192.168.20.4
+
+networks:
+  localnet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      -
+        subnet: 192.168.20.0/24
