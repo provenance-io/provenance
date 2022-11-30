@@ -41,6 +41,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Added support to set a list of specific recipients allowed for send authorizations in the marker module [#1237](https://github.com/provenance-io/provenance/issues/1237).
 
+### Improvements
+
+* Added assess msg fees spec documentation [#1172](https://github.com/provenance-io/provenance/issues/1172).
+
 ---
 
 ## [v1.13.0](https://github.com/provenance-io/provenance/releases/tag/v1.13.0) - 2022-11-28

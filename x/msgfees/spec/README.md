@@ -16,3 +16,4 @@ The msg fees modules manages additional fees that can be applied to tx msgs spec
 6. **[Params](06_params.md)**
 7. **[Governance](07_governance.md)**
 8. **[Genesis](08_genesis.md)**
+9. **[Messages](09_messages.md)**
