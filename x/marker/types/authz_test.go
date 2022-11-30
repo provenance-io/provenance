@@ -22,7 +22,7 @@ var (
 func TestMarkerTransferAuthorization(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	authorization := NewMarkerTransferAuthorization(sdk.NewCoins(coin1000))
+	authorization := NewMarkerTransferAuthorization(sdk.NewCoins(coin1000), []sdk.AccAddress{})
 
 	t.Run("verify authorization returns valid method name", func(t *testing.T) {
 		require.Equal(t, authorization.MsgTypeURL(), msgTypeURL)
@@ -35,7 +35,7 @@ func TestMarkerTransferAuthorization(t *testing.T) {
 		require.NoError(t, err)
 		require.False(t, resp.Delete)
 		require.NotNil(t, resp.Updated)
-		sendAuth := NewMarkerTransferAuthorization(sdk.NewCoins(coin500))
+		sendAuth := NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{})
 		require.Equal(t, sendAuth.String(), resp.Updated.String())
 	})
 
@@ -53,4 +53,43 @@ func TestMarkerTransferAuthorization(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, resp.Updated)
 	})
+}
+
+func TestMarkerTransferAuthorizationValidateBasic(t *testing.T) {
+	addr1, _ := sdk.AccAddressFromBech32("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck")
+
+	cases := []struct {
+		name     string
+		msg      *MarkerTransferAuthorization
+		errorMsg string
+	}{
+		{
+			"valid msg with empty allow list",
+			NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{}),
+			"",
+		},
+		{
+			"valid msg without non-empty allow list",
+			NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{addr1}),
+			"",
+		},
+		{
+			"invalid msg with duplicate allow list",
+			NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{addr1, addr1}),
+			"all allow list addresses must be unique: duplicate entry",
+		},
+	}
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.errorMsg) > 0 {
+				require.Error(t, err)
+				require.Equal(t, tc.errorMsg, err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }

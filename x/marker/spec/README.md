@@ -40,3 +40,4 @@ transfer by the marker itself when invoked by a user/process with appropriate pe
 1. **[Telemetry](08_telemetry.md)**
 1. **[Params](09_params.md)**
 1. **[Governance](10_governance.md)**
+1. **[Authorization](11_authorization.md)**
