@@ -37,7 +37,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Improvements
+
+* Added assess msg fees spec documentation [#1172](https://github.com/provenance-io/provenance/issues/1172).
 
 ---
 
