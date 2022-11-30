@@ -42,6 +42,10 @@ Transfer (ICS-20) subprotocol. This subprotocol is exposed through provenance wi
 transaction. It transfers coins from an account on one chain to an account on another chain.
 In this example we will transfer from an account on ibc0-0 to an account on ibc1-0.
 
+## Note
+The following tutorial assumes the user has built provenanced, and their current working directory
+is within the root of their provenance source directory.
+
 1. First, obtain the receiving address from ibc1-0. In this example our receiving address is
 `tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y`.
 
@@ -71,7 +75,7 @@ sending account `tp1u3ry0ry80hvj9vcfa8h5e30wkx9ec4l5jsqujd` to our receiving acc
 `tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y`.
 
 ```
-./build/provenanced -t --home ./build/ibc0-0/ tx ibc-transfer transfer transfer channel-0 tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y 500nhash --from tp1u3ry0ry80hvj9vcfa8h5e30wkx9ec4l5jsqujd --gas auto --gas-prices 1905nhash --gas-adjustment 1.5 --chain-id testing --node http://localhost:26656 -y
+./build/provenanced -t --home ./build/ibc0-0/ tx ibc-transfer transfer transfer channel-0 tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y 500nhash --from tp1u3ry0ry80hvj9vcfa8h5e30wkx9ec4l5jsqujd --gas auto --gas-prices 1905nhash --gas-adjustment 1.5 --chain-id testing --node http://localhost:26657 -y
 ```
 
 4. Lastly, let's check the balances for the receiving account on container ibc1-0. You should see the 500nhash sent
