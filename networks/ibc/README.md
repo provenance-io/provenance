@@ -49,6 +49,9 @@ In this example we will transfer from an account on ibc0-0 to an account on ibc1
 The following tutorial assumes the user has built provenanced, and their current working directory
 is within the root of their provenance source directory.
 
+All or some of the addresses in the examples may be different than what you have locally. They are
+there just for example purposes.
+
 1. First, obtain the receiving address from ibc1-0. In this example our receiving address is
 `tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y`.
 
