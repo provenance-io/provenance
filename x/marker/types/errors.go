@@ -12,4 +12,5 @@ var (
 	ErrInvalidMarkerStatus     = cerrs.Register(ModuleName, 5, "invalid marker status")
 	ErrAccessTypeNotGranted    = cerrs.Register(ModuleName, 6, "access type not granted")
 	ErrMarkerNotFound          = cerrs.Register(ModuleName, 7, "marker not found")
+	ErrDuplicateEntry          = cerrs.Register(ModuleName, 8, "duplicate entry")
 )

@@ -27,6 +27,12 @@ and the fee schedule that is persisted on chain.  These additional fees are crea
 
 Additional fee can be in any *denom*.  This can be split to an optional bech32 account address with basis points.
 
+## Adding Custom Additional Fee from Wasm Contract
+
+Creators of wasm contracts have the ability to dispatch an `MsgAssessCustomMsgFeeRequest` that charges a custom fee
+defined by the creator of the contract.  The set fee will be split between the fee module and a specified address in the 
+msg.  [Assess Fee Specifications](09_messages.md)
+
 ## Base Fee
 
 Base fee is the current fee implementation. Fees are paid in base denom and determined by gas value passed into the Tx.

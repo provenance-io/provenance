@@ -37,6 +37,7 @@ const (
 	FlagPeriod                 = "period"
 	FlagPeriodLimit            = "period-limit"
 	FlagSpendLimit             = "spend-limit"
+	FlagAllowList              = "allow-list"
 	FlagAllowedMsgs            = "allowed-messages"
 	FlagPacketTimeoutHeight    = "packet-timeout-height"
 	FlagPacketTimeoutTimestamp = "packet-timeout-timestamp"
@@ -679,7 +680,17 @@ func GetCmdGrantAuthorization() *cobra.Command {
 					return fmt.Errorf("transfer-limit should be greater than zero")
 				}
 
-				authorization = types.NewMarkerTransferAuthorization(spendLimit)
+				allowList, terr := cmd.Flags().GetStringSlice(FlagAllowList)
+				if terr != nil {
+					return terr
+				}
+
+				allowed, terr := bech32toAccAddresses(allowList)
+				if terr != nil {
+					return terr
+				}
+
+				authorization = types.NewMarkerTransferAuthorization(spendLimit, allowed)
 			default:
 				return fmt.Errorf("invalid authorization type, %s", args[1])
 			}
@@ -695,8 +706,22 @@ func GetCmdGrantAuthorization() *cobra.Command {
 	}
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(FlagTransferLimit, "", "The total amount an account is allowed to tranfer on granter's behalf")
+	cmd.Flags().StringSlice(FlagAllowList, []string{}, "Allowed addresses grantee is allowed to send restricted coins separated by ,")
 	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
 	return cmd
+}
+
+// bech32toAccAddresses returns []AccAddress from a list of Bech32 string addresses.
+func bech32toAccAddresses(accAddrs []string) ([]sdk.AccAddress, error) {
+	addrs := make([]sdk.AccAddress, len(accAddrs))
+	for i, addr := range accAddrs {
+		accAddr, err := sdk.AccAddressFromBech32(addr)
+		if err != nil {
+			return nil, err
+		}
+		addrs[i] = accAddr
+	}
+	return addrs, nil
 }
 
 func GetCmdRevokeAuthorization() *cobra.Command {

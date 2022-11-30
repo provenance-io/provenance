@@ -606,7 +606,7 @@ func TestAccountImplictControl(t *testing.T) {
 	now := ctx.BlockHeader().Time
 	require.NotNil(t, now, "now")
 	exp1Hour := now.Add(time.Hour)
-	a := types.NewMarkerTransferAuthorization(sdk.NewCoins(sdk.NewCoin("testcoin", sdk.NewInt(10))))
+	a := types.NewMarkerTransferAuthorization(sdk.NewCoins(sdk.NewCoin("testcoin", sdk.NewInt(10))), []sdk.AccAddress{})
 
 	// fails when admin user (grantee without authz permissions) has transfer authority
 	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
@@ -617,6 +617,18 @@ func TestAccountImplictControl(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
 	// fails when admin user (grantee with authz permissions) and transfer authority has transferred all coin ^^^ (grant has now been deleted)
 	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
+
+	// validate authz when with allow list set
+	now = ctx.BlockHeader().Time
+	require.NotNil(t, now, "now")
+	exp1Hour = now.Add(time.Hour)
+	a = types.NewMarkerTransferAuthorization(sdk.NewCoins(sdk.NewCoin("testcoin", sdk.NewInt(10))), []sdk.AccAddress{user})
+	require.NoError(t, app.AuthzKeeper.SaveGrant(ctx, grantee, granter, a, &exp1Hour))
+	// fails when admin user (grantee with authz permissions) has transfer authority but receiver is not on allowed list
+	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, granter, user2, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
+	// succeeds when admin user (grantee with authz permissions) has transfer authority with receiver is on allowed list
+	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
+
 }
 
 func TestMarkerFeeGrant(t *testing.T) {
