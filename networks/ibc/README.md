@@ -4,7 +4,7 @@
 This folder contains the files to create 3 containers for testing IBC. The first container
 is a single node running a blockchain with chain-id testing. The second container is also a
 single node running a blockchain, but this chain has chain-id testing2. Lastly, the third container
-is the relayer used to forward packets between chains.
+holds the relayer used to forward packets between chains.
 
 # Relayer Account
 
@@ -42,11 +42,11 @@ Transfer (ICS-20) subprotocol. This subprotocol is exposed through provenance wi
 transaction. It transfers coins from an account on one chain to an account on another chain.
 In this example we will transfer from an account on ibc0-0 to an account on ibc1-0.
 
-1. On the container for ibc1-0, obtain your receiving address. In this example our receiving address is
+1. First, obtain the receiving address from ibc1-0. In this example our receiving address is
 `tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y`.
 
 ```
-provenanced -t --home ibc1-0/ keys list
+./build/provenanced -t --home ./build/ibc1-0/ keys list
 
 - address: tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y
   name: ibc1-0
@@ -54,11 +54,11 @@ provenanced -t --home ibc1-0/ keys list
   type: local
 ```
 
-2. Next, obtain your sending address on container ibc0-0. In this example our sending address is
+2. Next, obtain your sending address from ibc0-0. In this example our sending address is
 `tp1u3ry0ry80hvj9vcfa8h5e30wkx9ec4l5jsqujd`.
 
 ```
-provenanced -t --home ibc0-0/ keys list
+./build/provenanced -t --home ./build/ibc0-0/ keys list
 
 - address: tp1u3ry0ry80hvj9vcfa8h5e30wkx9ec4l5jsqujd
   name: ibc0-0
@@ -68,17 +68,18 @@ provenanced -t --home ibc0-0/ keys list
 
 3. Now, we can transfer currency from ibc0-0 to ibc1-0. The following command sends 500nhash from our
 sending account `tp1u3ry0ry80hvj9vcfa8h5e30wkx9ec4l5jsqujd` to our receiving account
-`tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y`, when ran on container ibc0-0.
+`tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y`.
 
 ```
-provenanced -t --home ibc0-0/ tx ibc-transfer transfer transfer channel-0 tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y 500nhash --from tp1u3ry0ry80hvj9vcfa8h5e30wkx9ec4l5jsqujd --gas auto --gas-prices 1905nhash --gas-adjustment 1.5 --chain-id testing -y
+./build/provenanced -t --home ./build/ibc0-0/ tx ibc-transfer transfer transfer channel-0 tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y 500nhash --from tp1u3ry0ry80hvj9vcfa8h5e30wkx9ec4l5jsqujd --gas auto --gas-prices 1905nhash --gas-adjustment 1.5 --chain-id testing --node http://localhost:26656 -y
 ```
 
 4. Lastly, let's check the balances for the receiving account on container ibc1-0. You should see the 500nhash sent
 from ibc0-0. It will have its own denom specified with ibc/denom...
 
 ```
-provenanced -t --home ibc1-0/ q bank balances tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y
+./build/provenanced -t --home ./build/ibc1-0/ q bank balances tp1vtvgsl9je747twlxkh4ycl2g3td6g5gcpc6t0y --node http://localhost:26660
+
 balances:
 - amount: "500"
   denom: ibc/319937B2FDA7A07031DBE22EA76C34CAC9DCFBD9AA1A922FA2B87421107B545D
