@@ -6,6 +6,9 @@ is a single node running a blockchain with chain-id testing. The second containe
 single node running a blockchain, but this chain has chain-id testing2. Lastly, the third container
 holds the relayer used to forward packets between chains.
 
+Two make targets `make ibcnet-start` and `make ibcnet-stop` were added to the project's Makefile to
+easily bring the containers up and down. This will also handle all network configuration.
+
 # Relayer Account
 
 Each chain has an account for the relayer that is funded. The relayer uses this account
