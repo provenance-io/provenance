@@ -15,10 +15,14 @@ a max threshold value internally(4million same as the upper thresh hold for now)
 
 We think it will really make client interaction simpler if there was only fee to deal with, in proposing tx's to the provenance blockchain and to get rid of the gas construct.
 So Proposal is to get rid of gas as a construct in provenance blockchain, and only keep the fee construct.
-Gas was a means to put a limit on the system, we should still set it(internally only) as having a max threshold value but clients need not set it and also pay fees based on it. i.e if messages which exceed max threshold(currently 4 million) will still fail so as to protect the system.
-Fees will be set using MsgFee module per message, for messages which are not in the list will be charged the min fee(let's say 0.,5 hash)
+Gas was a means to put a limit on the system, we should still set it(within the provenance software) as having a max threshold value but clients need not set it and also pay fees based on it. 
+i.e if messages which exceed max threshold(currently 4 million) will still fail so as to protect the system.
+Fees will be set using MsgFee module per message, for messages which are not in the list will be charged a default fee(to be decided).
+See disadvantages section also for downside to this system.
+
 
 ### Tendermint considerations
+Tendermint does use gas limits for certain checks, so we cannot blindly set an upper threshold when the state is passed to tendermint.
 ```go
 // addNewTransaction handles the ABCI CheckTx response for the first time a
 // transaction is added to the mempool.  A recheck after a block is committed
@@ -45,7 +49,7 @@ func (txmp *TxMempool) addNewTransaction(wtx *WrappedTx, checkTxRes *abci.Respon
 
 Proposal
 
-1. Ignore the min-gas-price set in `app.toml` and instead read a custom provenance file with 
+1. Ignore the min-gas-price set in `app.toml` and instead read a custom provenance file with (custom.toml)
 ```
 [custom-node]
 fees = "{n}nhash"
