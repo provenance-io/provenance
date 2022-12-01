@@ -221,7 +221,7 @@ https://github.com/notional-labs/wasmd/blob/e714fdf3b44a93462232648ab670ff611c38
 11. Client will have to use the provenance `simulation` endpoint which will also need to augmented to support ``default_msg_fee` if message is not present in the 
 fee table.
 
-![fee_only.png](fee_only.png)
+![Fee_only.png](Fee_only.png)
 ### Advantages:
 1.Fee system will become more transparent and predictable.
 2.Gas always causes confusion for client side developers.
