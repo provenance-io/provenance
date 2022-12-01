@@ -279,7 +279,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		pioconfig.SetMinimumNodeFee(fee)
 	} else {
 		pioconfig.SetMinimumNodeFee(sdk.Coin{
-			Denom:  "nhash",
+			Denom:  pioconfig.GetProvenanceConfig().FeeDenom,
 			Amount: sdk.NewInt(0),
 		})
 	}
@@ -305,7 +305,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents))),
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(getIAVLCacheSize(appOpts)),
-		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagIAVLFastNode))),
+		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
 	)
 }
 

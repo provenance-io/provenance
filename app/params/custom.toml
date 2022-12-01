@@ -1,10 +1,6 @@
-[rpc1]
-
-# TCP or UNIX socket address for the RPC server to listen on
-laddr1 = "tcp://127.0.0.1:26657"
-#[node]
-#minimum-fees = "381000000nhash"
-## minimum fee that a node will accept. thisis the defualt value that can be tweaked curretnly set to (1905nhash * 200000).
+[custom-node]
+fees = "381000000nhash"
+## minimum fee that a node will accept. this is the default value that can be tweaked currently set to (1905nhash * 200000).
 ## Where 200k is the default value the cosmos cli will set if gas is not specified and 1905nhash is the base price of gas set by
 ## provenance currently.
 ## the value if changed should be greater than or equal to {msgfee module param stating the minimum that will be charged}

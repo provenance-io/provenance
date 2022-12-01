@@ -48,6 +48,20 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		cosmosante.NewSetUpContextDecorator(cosmosante.GasLimit{
 			Limit:         gasTxLimit,
 			OverrideGasTx: true,
+			LimitFn: func(ctx sdk.Context, tx sdk.Tx, defaultGasLimit uint64) (actualGasLimit uint64, err error) {
+				maxGasLimit := ctx.ConsensusParams().Block.GetMaxGas()
+				// If consensus_params.block.max_gas is set to -1, ignore gasTxLimit. This is to allow for testing on local nodes
+				// since mainnet and testnet have block level limit set.
+				if maxGasLimit == -1 {
+					// choosing a very high multiplier
+					return gasTxLimit * 10, nil
+				}
+				//if test context or gov messages then set to block limit of gas, should be a reasonable max i think.
+				if isTestContext(ctx) && isOnlyGovMsgs(tx.GetMsgs()) {
+					return gasTxLimit * 10, nil
+				}
+				return gasTxLimit, nil
+			},
 		}), // outermost AnteDecorator. SetUpContext must be called first
 		NewFeeMeterContextDecorator(), // NOTE : fee gas meter also has the functionality of GasTracerContextDecorator in previous versions
 		NewTxGasLimitDecorator(),
