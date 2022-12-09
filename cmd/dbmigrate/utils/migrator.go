@@ -13,6 +13,7 @@ import (
 
 	copier "github.com/otiai10/copy"
 	tmlog "github.com/tendermint/tendermint/libs/log"
+	db "github.com/tendermint/tm-db"
 	tmdb "github.com/tendermint/tm-db"
 )
 
@@ -72,6 +73,9 @@ type Migrator struct {
 
 	// TargetDBType is the type of the target (new) DB.
 	TargetDBType string
+
+	// SourceDBType is the type of the source (old) DB.
+	SourceDBType string
 
 	// SourceDataDir is the path to the source (current) data directory.
 	// Default is { HomePath }/data
@@ -150,10 +154,12 @@ type migrationManager struct {
 
 // Initialize prepares this Migrator by doing the following:
 //  1. Calls ApplyDefaults()
-//  2. Checks ValidateBasic()
-//  3. Calls ReadSourceDataDir()
-func (m *Migrator) Initialize() error {
+//  2. Sets the SourceDBType
+//  3. Checks ValidateBasic()
+//  4. Calls ReadSourceDataDir()
+func (m *Migrator) Initialize(sourceDBType string) error {
 	m.ApplyDefaults()
+	m.SourceDBType = sourceDBType
 	var err error
 	if err = m.ValidateBasic(); err != nil {
 		return err
@@ -232,6 +238,9 @@ func (m Migrator) ValidateBasic() error {
 	}
 	if len(m.DirDateFormat) == 0 {
 		return errors.New("no DirDateFormat defined")
+	}
+	if len(m.SourceDBType) == 0 {
+		return errors.New("no SourceDBType defined")
 	}
 	return nil
 }
@@ -436,7 +445,7 @@ func (m *migrationManager) MigrateDBDir(dbDir string) (summary string, err error
 	var sourceDB, targetDB tmdb.DB
 	var iter tmdb.Iterator
 	var batch tmdb.Batch
-	sourceDBType := unknownDBBackend
+	sourceDBType := db.BackendType(m.Migrator.SourceDBType)
 	defer func() {
 		m.StatusKeyvals = noKeyvals
 		// iter before sourceDB because closing the sourceDB might remove things needed for the iterator to close.
@@ -460,11 +469,6 @@ func (m *migrationManager) MigrateDBDir(dbDir string) (summary string, err error
 	}()
 
 	m.Status = "detecting db type"
-	var ok bool
-	sourceDBType, ok = DetectDBType(dbName, sourceDir)
-	if !ok {
-		return summaryError, fmt.Errorf("could not determine db type: %s", filepath.Join(m.SourceDataDir, dbDir))
-	}
 	if !IsPossibleDBType(string(sourceDBType)) {
 		return summaryError, fmt.Errorf("cannot read source db of type %q", sourceDBType)
 	}
@@ -894,9 +898,9 @@ func DetectDBType(name, dir string) (tmdb.BackendType, bool) {
 				break
 			}
 		}
-		if iter.Error() != nil {
+		/*if iter.Error() != nil {
 			return false
-		}
+		}*/
 		if iter.Close() != nil {
 			return false
 		}
@@ -906,11 +910,12 @@ func DetectDBType(name, dir string) (tmdb.BackendType, bool) {
 		return true
 	}
 
-	if canOpenDB(tmdb.GoLevelDBBackend) {
-		return tmdb.GoLevelDBBackend, true
-	}
 	if IsPossibleDBType(string(tmdb.CLevelDBBackend)) && canOpenDB(tmdb.CLevelDBBackend) {
 		return tmdb.CLevelDBBackend, true
+	}
+
+	if canOpenDB(tmdb.GoLevelDBBackend) {
+		return tmdb.GoLevelDBBackend, true
 	}
 
 	return unknownDBBackend, false

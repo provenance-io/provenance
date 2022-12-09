@@ -152,7 +152,12 @@ func Execute(command *cobra.Command) error {
 func DoMigrateCmd(command *cobra.Command, migrator *utils.Migrator) error {
 	logger := server.GetServerContextFromCmd(command).Logger
 	logger.Info("Setting up database migrations.")
-	err := migrator.Initialize()
+
+	sourceDB, err := ReadDBBackendConfigValue(command)
+	if err != nil {
+		return err
+	}
+	err = migrator.Initialize(sourceDB)
 	if err != nil {
 		return err
 	}
@@ -204,4 +209,13 @@ func UpdateDBBackendConfigValue(command *cobra.Command, newValue string) (string
 	tmConfig.DBBackend = newValue
 	config.SaveConfigs(command, nil, tmConfig, nil, false)
 	return oldValue, nil
+}
+
+// TODO This needs tests
+func ReadDBBackendConfigValue(command *cobra.Command) (string, error) {
+	tmConfig, err := config.ExtractTmConfig(command)
+	if err != nil {
+		return "", fmt.Errorf("could not extract Tendermint config: %w", err)
+	}
+	return tmConfig.DBBackend, nil
 }
