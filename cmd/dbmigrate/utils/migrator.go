@@ -898,6 +898,7 @@ func DetectDBType(name, dir string) (tmdb.BackendType, bool) {
 				break
 			}
 		}
+		// TODO This needs to be uncommented
 		/*if iter.Error() != nil {
 			return false
 		}*/
