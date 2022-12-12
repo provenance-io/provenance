@@ -19,6 +19,9 @@ import (
 const (
 	// BytesPerMB is the number of bytes in a megabyte.
 	BytesPerMB = 1_048_576
+	// unknownDBBackend is mostly a tmdb.BackendType used in output as a string.
+	// It indicates that the backend is unknown.
+	unknownDBBackend = tmdb.BackendType("UNKNOWN")
 )
 
 // Note: The PossibleDBTypes variable is a map instead of a slice because trying to append to it was causing one type to
@@ -233,10 +236,7 @@ func (m Migrator) ValidateBasic() error {
 	if len(m.DirDateFormat) == 0 {
 		return errors.New("no DirDateFormat defined")
 	}
-	if len(m.SourceDBType) == 0 {
-		return errors.New("no SourceDBType defined")
-	}
-	if !IsPossibleDBType(m.SourceDBType) {
+	if len(m.SourceDBType) > 0 && !IsPossibleDBType(m.SourceDBType) {
 		return fmt.Errorf("invalid SourceDBType: %q - must be one of: %s", m.SourceDBType, strings.Join(GetPossibleDBTypes(), ", "))
 	}
 	return nil
@@ -442,7 +442,6 @@ func (m *migrationManager) MigrateDBDir(dbDir string) (summary string, err error
 	var sourceDB, targetDB tmdb.DB
 	var iter tmdb.Iterator
 	var batch tmdb.Batch
-	sourceDBType := tmdb.BackendType(m.Migrator.SourceDBType)
 	defer func() {
 		m.StatusKeyvals = noKeyvals
 		// iter before sourceDB because closing the sourceDB might remove things needed for the iterator to close.
@@ -461,11 +460,19 @@ func (m *migrationManager) MigrateDBDir(dbDir string) (summary string, err error
 		}
 		// always wrap any error with some extra context.
 		if err != nil {
-			err = fmt.Errorf("could not convert %q from %q to %q: %w", dbDir, sourceDBType, m.TargetDBType, err)
+			err = fmt.Errorf("could not convert %q to %q: %w", dbDir, m.TargetDBType, err)
 		}
 	}()
 
 	m.Status = "detecting db type"
+	sourceDBType, ok := tmdb.BackendType(m.Migrator.SourceDBType), true
+	if len(m.Migrator.SourceDBType) == 0 {
+		sourceDBType, ok = DetectDBType(dbName, sourceDir)
+	}
+	if !ok {
+		return summaryError, fmt.Errorf("could not determine db type: %s", filepath.Join(m.SourceDataDir, dbDir))
+	}
+
 	if !IsPossibleDBType(string(sourceDBType)) {
 		return summaryError, fmt.Errorf("cannot read source db of type %q", sourceDBType)
 	}
@@ -790,6 +797,144 @@ func GetDataDirContents(dataDirPath string) ([]string, []string, error) {
 	sort.Strings(dbs)
 	sort.Strings(nonDBs)
 	return dbs, nonDBs, nil
+}
+
+// DetectDBType attempts to identify the type database in the given dir with the given name.
+// The name and dir would be the same things that would be provided to tmdb.NewDB.
+//
+// The return bool indicates whether or not the DB type was identified.
+//
+// The only types this detects are LevelDB, RocksDB, and BadgerDB.
+// If the DB is another type, the behavior of this is unknown.
+// There's a chance this will return false, but there's also a chance it is falsely identified as something else.
+func DetectDBType(name, dir string) (tmdb.BackendType, bool) {
+	// Here are the key differences used to differentiate the DB types.
+	// badgerdb:
+	// * In a directory named "dir/name".
+	// * There are numbered files with the extension ".vlog".
+	// * There are numbered files with the extension ".sst" (might possibly be missing if the db is empty).
+	// * Has the following files: KEYREGISTRY, MANIFEST
+	// * Might also have files: LOCK
+	// rocksdb:
+	// * In a directory named "dir/name.db".
+	// * There are numbered files with the extension ".log".
+	// * There are numbered files with the extension ".sst" (might possibly be missing if the db is empty).
+	// * Has the following files: CURRENT, IDENTITY, LOG, MANIFEST-{6 digits} (multiple), OPTIONS-{6 digits} (multiple)
+	// * Might also have files: LOCK, LOG.old, LOG.old.{16 digits} (multiple)
+	// leveldb:
+	// * In a directory named "dir/name.db".
+	// * There are numbered files with the extension ".log".
+	// * There are numbered files with the extension ".ldb" (might possibly be missing if the db is empty).
+	// * Has the following files: CURRENT, LOG, MANIFEST-{6 digits} (multiple)
+	// * Might also have files: LOCK, LOG.old
+	// boltdb:
+	// * Is an executable file named "dir/name.db"
+
+	// Note: I'm not sure of an easy way to look for files that start or end with certain strings (e.g files ending in ".sst").
+	// The only way I know of is to get the entire dir contents and loop through the entries.
+	// However, specially for large DBs, that can be well over 10k files.
+	// If the list is sorted (e.g. from os.ReadDir), the ".sst" or ".ldb" files would be one of the first few.
+	// And stuff like MANIFEST-{numbers} and OPTIONS-{numbers} would be one of the last few.
+	// But just getting that list is a whole lot of work that should be avoided if possible.
+	// Additionally, this is only being written with badgerdb, rocksdb, and leveldb in mind.
+	//
+	// So in here, rather than being more certain and checking for those types of files, we'll skip those checks and
+	// put up with possible false positives. Hopefully a false positive would error out at some later point (open or reading).
+
+	// Let's first check for badgerdb since it's the easiest.
+	dbDir := filepath.Join(dir, name)
+	if dirExists(dbDir) {
+		// Since that's a pretty standard dir name, do an easy check for a couple files that should be there.
+		if !fileExists(filepath.Join(dbDir, "KEYREGISTRY")) || !fileExists(filepath.Join(dbDir, "MANIFEST")) {
+			return unknownDBBackend, false
+		}
+		// Could also check for a numbered files with the extension ".vlog", but that's expensive.
+		// And for the types involved in here, what's been done should be enough to hopefully prevent false positives.
+		return tmdb.BadgerDBBackend, true
+	}
+
+	// Now lets check for boltdb. It's a file instead of directory with the same name used by rocksdb and leveldb.
+	dbDir = filepath.Join(dir, name+".db")
+	if fileExists(dbDir) {
+		return tmdb.BoltDBBackend, true
+	}
+
+	// The other two (rocksdb and leveldb) should be in directories named "dir/name.db".
+	// and should have files CURRENT and LOG
+	if !dirExists(dbDir) || !fileExists(filepath.Join(dbDir, "CURRENT")) || !fileExists(filepath.Join(dbDir, "LOG")) {
+		return unknownDBBackend, false
+	}
+
+	// Okay, assuming it's either a rocksdb or leveldb directory now.
+
+	// The only statically named file difference between rocksdb and leveldb is IDENTITY with rocksdb.
+	if fileExists(filepath.Join(dbDir, "IDENTITY")) {
+		return tmdb.RocksDBBackend, true
+	}
+
+	// At this point, we assume it's either cleveldb or goleveldb.
+	// Unfortunately, they both use the same files, but possibly with different formats.
+	// Sometimes you can treat a goleveldb as cleveldb and vice versa, but sometimes you can't.
+	// The only way I can think of to differentiate them here is to just try to open them.
+	// I didn't test like this with the other types because the tmdb.NewDB function will create
+	// a db if it doesn't exist which can cause weird behavior if trying with the wrong db type.
+	// Goleveldb and cleveldb are close enough, though that it won't cause problems.
+	canOpenDB := func(backend tmdb.BackendType) (rv bool) {
+		defer func() {
+			if r := recover(); r != nil {
+				rv = false
+			}
+		}()
+		db, err := tmdb.NewDB(name, backend, dir)
+		if err != nil {
+			return false
+		}
+		iter, err := db.Iterator(nil, nil)
+		if err != nil {
+			return false
+		}
+		// Check up to the first 10 entries. 10 randomly picked to not be t0o big, but bigger than 0 or 1.
+		i := 0
+		for ; iter.Valid(); iter.Next() {
+			_ = iter.Key()
+			_ = iter.Value()
+			i++
+			if i >= 10 {
+				break
+			}
+		}
+		if iter.Error() != nil {
+			return false
+		}
+		if iter.Close() != nil {
+			return false
+		}
+		if db.Close() != nil {
+			return false
+		}
+		return true
+	}
+
+	if canOpenDB(tmdb.GoLevelDBBackend) {
+		return tmdb.GoLevelDBBackend, true
+	}
+	if IsPossibleDBType(string(tmdb.CLevelDBBackend)) && canOpenDB(tmdb.CLevelDBBackend) {
+		return tmdb.CLevelDBBackend, true
+	}
+
+	return unknownDBBackend, false
+}
+
+// dirExists returns true if the path exists and is a directory.
+func dirExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.IsDir()
+}
+
+// fileExists returns true if the path exists and is a file.
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir()
 }
 
 // commaString converts a positive integer to a string and adds commas.

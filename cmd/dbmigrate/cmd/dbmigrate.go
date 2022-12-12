@@ -21,10 +21,11 @@ import (
 )
 
 const (
-	FlagBackupDir  = "backup-dir"
-	FlagBatchSize  = "batch-size"
-	FlagStagingDir = "staging-dir"
-	FlagStageOnly  = "stage-only"
+	FlagBackupDir       = "backup-dir"
+	FlagBatchSize       = "batch-size"
+	FlagStagingDir      = "staging-dir"
+	FlagStageOnly       = "stage-only"
+	FlagSourceDbBackend = "source-db-backend"
 )
 
 // NewDBMigrateCmd creates a command for migrating the provenanced database from one underlying type to another.
@@ -73,10 +74,6 @@ Migration process:
    and by default will be in the {home} directoyr.
 3. Move the staging data directory into place as the current data directory.
 4. Update the config file to reflect the new database backend type.
-
-Source Database Type:
-The source database type is read from the config.toml within the home directory. If this does not match the database types, then the conversion
-process will not work properly.
 `, strings.Join(utils.GetPossibleDBTypes(), ", ")),
 		Args: cobra.ExactArgs(1),
 		PersistentPreRunE: func(command *cobra.Command, args []string) error {
@@ -103,9 +100,9 @@ process will not work properly.
 				return fmt.Errorf("could not parse --%s option: %w", FlagBatchSize, err)
 			}
 
-			sourceDB, err := ReadDBBackendConfigValue(command)
+			sourceDB, err := command.Flags().GetString(FlagSourceDbBackend)
 			if err != nil {
-				return err
+				return fmt.Errorf("could not parse --%s option: %w", FlagSourceDbBackend, err)
 			}
 
 			migrator := &utils.Migrator{
@@ -145,6 +142,7 @@ process will not work properly.
 	rv.Flags().String(FlagStagingDir, "", "directory to hold the staging directory (default {home})")
 	rv.Flags().Uint(FlagBatchSize, 2_048, "(in megabytes) after a batch reaches this size it is written and a new one is started (0 = unlimited)")
 	rv.Flags().Bool(FlagStageOnly, false, "only migrate/copy the data (do not backup and replace the data directory and do not update the config)")
+	rv.Flags().String(FlagSourceDbBackend, "", "forces a source database type instead of trying to detect it.")
 	return rv
 }
 
@@ -216,12 +214,4 @@ func UpdateDBBackendConfigValue(command *cobra.Command, newValue string) (string
 	tmConfig.DBBackend = newValue
 	config.SaveConfigs(command, nil, tmConfig, nil, false)
 	return oldValue, nil
-}
-
-func ReadDBBackendConfigValue(command *cobra.Command) (string, error) {
-	tmConfig, err := config.ExtractTmConfig(command)
-	if err != nil {
-		return "", fmt.Errorf("could not extract Tendermint config: %w", err)
-	}
-	return tmConfig.DBBackend, nil
 }
