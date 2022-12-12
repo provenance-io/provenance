@@ -98,10 +98,17 @@ Migration process:
 			if err != nil {
 				return fmt.Errorf("could not parse --%s option: %w", FlagBatchSize, err)
 			}
+
+			sourceDB, err := ReadDBBackendConfigValue(command)
+			if err != nil {
+				return err
+			}
+
 			migrator := &utils.Migrator{
 				TargetDBType: strings.ToLower(args[0]),
 				HomePath:     client.GetClientContextFromCmd(command).HomeDir,
 				BatchSize:    batchSizeMB * utils.BytesPerMB,
+				SourceDBType: sourceDB,
 			}
 
 			migrator.StageOnly, err = command.Flags().GetBool(FlagStageOnly)
@@ -153,11 +160,7 @@ func DoMigrateCmd(command *cobra.Command, migrator *utils.Migrator) error {
 	logger := server.GetServerContextFromCmd(command).Logger
 	logger.Info("Setting up database migrations.")
 
-	sourceDB, err := ReadDBBackendConfigValue(command)
-	if err != nil {
-		return err
-	}
-	err = migrator.Initialize(sourceDB)
+	err := migrator.Initialize()
 	if err != nil {
 		return err
 	}

@@ -154,12 +154,10 @@ type migrationManager struct {
 
 // Initialize prepares this Migrator by doing the following:
 //  1. Calls ApplyDefaults()
-//  2. Sets the SourceDBType
-//  3. Checks ValidateBasic()
-//  4. Calls ReadSourceDataDir()
-func (m *Migrator) Initialize(sourceDBType string) error {
+//  2. Checks ValidateBasic()
+//  3. Calls ReadSourceDataDir()
+func (m *Migrator) Initialize() error {
 	m.ApplyDefaults()
-	m.SourceDBType = sourceDBType
 	var err error
 	if err = m.ValidateBasic(); err != nil {
 		return err

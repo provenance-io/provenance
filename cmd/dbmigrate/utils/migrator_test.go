@@ -28,7 +28,6 @@ func (s *MigratorTestSuite) TestInitialize() {
 	tdir := s.T().TempDir()
 	dbdir := "some.db"
 	someFile := "somefile.txt"
-	sourceDBType := "goleveldb"
 	s.Require().NoError(os.MkdirAll(filepath.Join(tdir, "data", dbdir), 0700), "making dbdir")
 	s.Require().NoError(os.WriteFile(filepath.Join(tdir, "data", someFile), []byte{}, 0600), "making somefile")
 
@@ -37,7 +36,7 @@ func (s *MigratorTestSuite) TestInitialize() {
 			TargetDBType: "", // Will cause error.
 			HomePath:     tdir,
 		}
-		err := m.Initialize(sourceDBType)
+		err := m.Initialize()
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "TargetDBType")
 		assert.Equal(t, m.SourceDataDir, filepath.Join(tdir, "data"))
@@ -48,7 +47,7 @@ func (s *MigratorTestSuite) TestInitialize() {
 			TargetDBType: "", // Will cause error.
 			HomePath:     tdir,
 		}
-		err := m.Initialize(sourceDBType)
+		err := m.Initialize()
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "TargetDBType", "err")
 		assert.Len(t, m.ToConvert, 0, "ToConvert")
@@ -59,8 +58,9 @@ func (s *MigratorTestSuite) TestInitialize() {
 		m := &Migrator{
 			TargetDBType: "goleveldb",
 			HomePath:     tdir,
+			SourceDBType: "goleveldb",
 		}
-		err := m.Initialize(sourceDBType)
+		err := m.Initialize()
 		require.NoError(t, err)
 		assert.Len(t, m.ToConvert, 1, "ToConvert")
 		assert.Contains(t, m.ToConvert, dbdir, "ToConvert")
