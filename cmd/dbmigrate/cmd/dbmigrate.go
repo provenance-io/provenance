@@ -73,6 +73,10 @@ Migration process:
    and by default will be in the {home} directoyr.
 3. Move the staging data directory into place as the current data directory.
 4. Update the config file to reflect the new database backend type.
+
+Source Database Type:
+The source database type is read from the config.toml within the home directory. If this does not match the database types, then the conversion
+process will not work properly.
 `, strings.Join(utils.GetPossibleDBTypes(), ", ")),
 		Args: cobra.ExactArgs(1),
 		PersistentPreRunE: func(command *cobra.Command, args []string) error {
