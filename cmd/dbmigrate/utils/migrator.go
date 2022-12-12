@@ -649,6 +649,7 @@ func (m migrationManager) MakeSummaryString() string {
 		addLine("%16s: %s", "Backup Dir", m.BackupDataDir)
 	}
 	addLine("%16s: %s megabytes", "Batch Size", commaString(m.BatchSize/BytesPerMB))
+	addLine("%16s: %s", "Source DB Type", m.SourceDBType)
 	addLine("%16s: %s", "New DB Type", m.TargetDBType)
 	addLine("%16s: %s", fmt.Sprintf("%s (%d)", copyHead, len(m.ToCopy)), strings.Join(m.ToCopy, "  "))
 	if len(m.Summaries) == 0 {
