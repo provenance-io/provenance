@@ -92,6 +92,7 @@ The `v1.13.0` release includes minor bug fixes and enhancements along with a res
 * Added two new Makefile targets to install and start the relayer [#1051] (https://github.com/provenance-io/provenance/pull/1051)
 * Updated relayer scripts to make them headless for external services [#1068] (https://github.com/provenance-io/provenance/pull/1068)
 * Added docker environment for testing IBC and added Makefile targets to bring this environment up/down [#1248] (https://github.com/provenance-io/provenance/pull/1248).
+* Modified the dbmigrate tool to read the source database type from the config.toml rather than attempting to detect it [#1258] (https://github.com/provenance-io/provenance/pull/1258)
 
 ### Bug Fixes
 
