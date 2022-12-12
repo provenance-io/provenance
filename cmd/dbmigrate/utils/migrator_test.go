@@ -780,27 +780,27 @@ func (s *MigratorTestSuite) TestGetDataDirContents() {
 
 func (s *MigratorTestSuite) TestFileExists() {
 	s.T().Run("does not exist", func(t *testing.T) {
-		assert.False(t, fileExists("does not exist"))
+		assert.False(t, s.fileExists("does not exist"))
 	})
 
 	s.T().Run("containing dir exists", func(t *testing.T) {
 		tdir := t.TempDir()
 		file := filepath.Join(tdir, "nope.tar")
-		assert.False(t, fileExists(file))
+		assert.False(t, s.fileExists(file))
 	})
 
 	s.T().Run("is file", func(t *testing.T) {
 		tdir := t.TempDir()
 		file := filepath.Join(tdir, "filiename.txt")
 		require.NoError(t, os.WriteFile(file, []byte{}, 0600), "making file")
-		assert.True(t, fileExists(file))
+		assert.True(t, s.fileExists(file))
 	})
 
 	s.T().Run("is dir", func(t *testing.T) {
 		tdir := t.TempDir()
 		dir := filepath.Join(tdir, "immadir")
 		require.NoError(t, os.MkdirAll(dir, 0700), "making dir")
-		assert.False(t, fileExists(dir))
+		assert.False(t, s.fileExists(dir))
 	})
 }
 
@@ -849,4 +849,10 @@ func (s *MigratorTestSuite) TestCommaString() {
 			assert.Equal(t, tc.exp, act)
 		})
 	}
+}
+
+// fileExists returns true if the path exists and is a file.
+func (s *MigratorTestSuite) fileExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir()
 }

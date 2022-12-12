@@ -13,16 +13,12 @@ import (
 
 	copier "github.com/otiai10/copy"
 	tmlog "github.com/tendermint/tendermint/libs/log"
-	db "github.com/tendermint/tm-db"
 	tmdb "github.com/tendermint/tm-db"
 )
 
 const (
 	// BytesPerMB is the number of bytes in a megabyte.
 	BytesPerMB = 1_048_576
-	// unknownDBBackend is mostly a tmdb.BackendType used in output as a string.
-	// It indicates that the backend is unknown.
-	unknownDBBackend = tmdb.BackendType("UNKNOWN")
 )
 
 // Note: The PossibleDBTypes variable is a map instead of a slice because trying to append to it was causing one type to
@@ -446,7 +442,7 @@ func (m *migrationManager) MigrateDBDir(dbDir string) (summary string, err error
 	var sourceDB, targetDB tmdb.DB
 	var iter tmdb.Iterator
 	var batch tmdb.Batch
-	sourceDBType := db.BackendType(m.Migrator.SourceDBType)
+	sourceDBType := tmdb.BackendType(m.Migrator.SourceDBType)
 	defer func() {
 		m.StatusKeyvals = noKeyvals
 		// iter before sourceDB because closing the sourceDB might remove things needed for the iterator to close.
@@ -794,12 +790,6 @@ func GetDataDirContents(dataDirPath string) ([]string, []string, error) {
 	sort.Strings(dbs)
 	sort.Strings(nonDBs)
 	return dbs, nonDBs, nil
-}
-
-// fileExists returns true if the path exists and is a file.
-func fileExists(path string) bool {
-	info, err := os.Stat(path)
-	return err == nil && !info.IsDir()
 }
 
 // commaString converts a positive integer to a string and adds commas.
