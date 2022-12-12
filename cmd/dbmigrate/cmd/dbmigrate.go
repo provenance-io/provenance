@@ -211,7 +211,6 @@ func UpdateDBBackendConfigValue(command *cobra.Command, newValue string) (string
 	return oldValue, nil
 }
 
-// TODO This needs tests
 func ReadDBBackendConfigValue(command *cobra.Command) (string, error) {
 	tmConfig, err := config.ExtractTmConfig(command)
 	if err != nil {

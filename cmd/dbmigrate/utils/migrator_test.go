@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	tmdb "github.com/tendermint/tm-db"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -30,6 +28,7 @@ func (s *MigratorTestSuite) TestInitialize() {
 	tdir := s.T().TempDir()
 	dbdir := "some.db"
 	someFile := "somefile.txt"
+	sourceDBType := "goleveldb"
 	s.Require().NoError(os.MkdirAll(filepath.Join(tdir, "data", dbdir), 0700), "making dbdir")
 	s.Require().NoError(os.WriteFile(filepath.Join(tdir, "data", someFile), []byte{}, 0600), "making somefile")
 
@@ -38,7 +37,7 @@ func (s *MigratorTestSuite) TestInitialize() {
 			TargetDBType: "", // Will cause error.
 			HomePath:     tdir,
 		}
-		err := m.Initialize()
+		err := m.Initialize(sourceDBType)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "TargetDBType")
 		assert.Equal(t, m.SourceDataDir, filepath.Join(tdir, "data"))
@@ -49,7 +48,7 @@ func (s *MigratorTestSuite) TestInitialize() {
 			TargetDBType: "", // Will cause error.
 			HomePath:     tdir,
 		}
-		err := m.Initialize()
+		err := m.Initialize(sourceDBType)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "TargetDBType", "err")
 		assert.Len(t, m.ToConvert, 0, "ToConvert")
@@ -61,7 +60,7 @@ func (s *MigratorTestSuite) TestInitialize() {
 			TargetDBType: "goleveldb",
 			HomePath:     tdir,
 		}
-		err := m.Initialize()
+		err := m.Initialize(sourceDBType)
 		require.NoError(t, err)
 		assert.Len(t, m.ToConvert, 1, "ToConvert")
 		assert.Contains(t, m.ToConvert, dbdir, "ToConvert")
@@ -357,6 +356,23 @@ func (s *MigratorTestSuite) TestApplyDefaults() {
 		},
 
 		{
+			name: "source db type not set unchanged",
+			migrator: &Migrator{
+				SourceDBType: "",
+			},
+			getter:   func(m *Migrator) interface{} { return m.SourceDBType },
+			expected: "",
+		},
+		{
+			name: "source db type set unchanged",
+			migrator: &Migrator{
+				SourceDBType: "source type",
+			},
+			getter:   func(m *Migrator) interface{} { return m.SourceDBType },
+			expected: "source type",
+		},
+
+		{
 			name: "batch size not set unchanged",
 			migrator: &Migrator{
 				BatchSize: 0,
@@ -422,6 +438,7 @@ func (s *MigratorTestSuite) TestValidateBasic() {
 		rv := &Migrator{
 			HomePath:     "testing",
 			TargetDBType: "goleveldb",
+			SourceDBType: "goleveldb",
 		}
 		rv.ApplyDefaults()
 		return rv
@@ -455,6 +472,16 @@ func (s *MigratorTestSuite) TestValidateBasic() {
 			name:       "TargetDBType not possible",
 			modifier:   func(m *Migrator) { m.TargetDBType = "not-possible" },
 			expInError: []string{"TargetDBType", "goleveldb", "\"not-possible\""},
+		},
+		{
+			name:       "SourceDBType empty",
+			modifier:   func(m *Migrator) { m.SourceDBType = "" },
+			expInError: []string{"SourceDBType"},
+		},
+		{
+			name:       "SourceDBType not possible",
+			modifier:   func(m *Migrator) { m.SourceDBType = "not-possible" },
+			expInError: []string{"SourceDBType", "goleveldb", "\"not-possible\""},
 		},
 		{
 			name:       "SourceDataDir empty",
@@ -748,150 +775,6 @@ func (s *MigratorTestSuite) TestGetDataDirContents() {
 		_, _, err := GetDataDirContents(tDir + "-nope-not-gonna-exist")
 		require.Error(t, err, "GetDataDirContents on directory that doesn't exist.")
 		assert.Contains(t, err.Error(), "no such file or directory", "err")
-	})
-}
-
-func (s *MigratorTestSuite) TestDetectDBType() {
-	tDir := s.T().TempDir()
-
-	s.T().Run("badger", func(t *testing.T) {
-		expected := tmdb.BadgerDBBackend
-		name := "badger1"
-		dataDir := filepath.Join(tDir, "badger")
-		dbDir := filepath.Join(dataDir, name)
-		require.NoError(t, os.MkdirAll(dbDir, 0700), "making dbDir")
-		require.NoError(t, os.WriteFile(filepath.Join(dbDir, "KEYREGISTRY"), []byte{}, 0600), "making KEYREGISTRY")
-		require.NoError(t, os.WriteFile(filepath.Join(dbDir, "MANIFEST"), []byte{}, 0600), "making KEYREGISTRY")
-		actual, ok := DetectDBType(name, dataDir)
-		assert.True(t, ok, "DetectDBType bool")
-		assert.Equal(t, expected, actual, "DetectDBType BackendType")
-	})
-
-	s.T().Run("rocks", func(t *testing.T) {
-		expected := tmdb.RocksDBBackend
-		name := "rocks2"
-		dataDir := filepath.Join(tDir, "rocks")
-		dbDir := filepath.Join(dataDir, name+".db")
-		require.NoError(t, os.MkdirAll(dbDir, 0700), "making dbDir")
-		require.NoError(t, os.WriteFile(filepath.Join(dbDir, "CURRENT"), []byte{}, 0600), "making CURRENT")
-		require.NoError(t, os.WriteFile(filepath.Join(dbDir, "LOG"), []byte{}, 0600), "making LOG")
-		require.NoError(t, os.WriteFile(filepath.Join(dbDir, "IDENTITY"), []byte{}, 0600), "making IDENTITY")
-		actual, ok := DetectDBType(name, dataDir)
-		assert.True(t, ok, "DetectDBType bool")
-		assert.Equal(t, expected, actual, "DetectDBType BackendType")
-	})
-
-	// To run this test, you'll need to provide the tag 'cleveldb' to the test command.
-	// Both make test and the github action should have that tag, but you might need
-	// to tell your IDE about it in order to use it to run this test.
-	if IsPossibleDBType("cleveldb") {
-		s.T().Run("clevel", func(t *testing.T) {
-			// As far as I can tell, you can always open a cleveldb using goleveldb, but not vice versa.
-			// Since DetectDBType checks for goleveldb first, it should return as goleveldb in this test.
-			expected := tmdb.GoLevelDBBackend
-			name := "clevel3"
-			dataDir := filepath.Join(tDir, "clevel")
-			require.NoError(t, os.MkdirAll(dataDir, 0700), "making data dir")
-			// The reason the other db types aren't done this way (creating the db with NewDB) is that
-			// I didn't want to cause confusion with regard to build tags and external library dependencies.
-			db, err := tmdb.NewDB(name, tmdb.CLevelDBBackend, dataDir)
-			require.NoError(t, err, "NewDB")
-			for i := 0; i < 15; i++ {
-				assert.NoError(t, db.Set([]byte(fmt.Sprintf("%s-key-%d", name, i)), []byte(fmt.Sprintf("%s-value-%d", name, i))), "setting key/value %d", i)
-			}
-			require.NoError(t, db.Close(), "closing db")
-			actual, ok := DetectDBType(name, dataDir)
-			assert.True(t, ok, "DetectDBType bool")
-			assert.Equal(t, expected, actual, "DetectDBType BackendType")
-		})
-	}
-
-	s.T().Run("golevel", func(t *testing.T) {
-		expected := tmdb.GoLevelDBBackend
-		name := "golevel8"
-		dataDir := filepath.Join(tDir, "golevel")
-		require.NoError(t, os.MkdirAll(dataDir, 0700), "making data dir")
-		// The reason the other db types aren't done this way (creating the db with NewDB) is that
-		// I didn't want to cause confusion with regard to build tags and external library dependencies.
-		db, err := tmdb.NewDB(name, expected, dataDir)
-		require.NoError(t, err, "NewDB")
-		for i := 0; i < 15; i++ {
-			assert.NoError(t, db.Set([]byte(fmt.Sprintf("%s-key-%d", name, i)), []byte(fmt.Sprintf("%s-value-%d", name, i))), "setting key/value %d", i)
-		}
-		require.NoError(t, db.Close(), "closing db")
-		actual, ok := DetectDBType(name, dataDir)
-		assert.True(t, ok, "DetectDBType bool")
-		assert.Equal(t, expected, actual, "DetectDBType BackendType")
-	})
-
-	s.T().Run("boltdb", func(t *testing.T) {
-		expected := tmdb.BoltDBBackend
-		name := "bolt7"
-		dataDir := filepath.Join(tDir, "bolt")
-		dbFile := filepath.Join(dataDir, name+".db")
-		require.NoError(t, os.MkdirAll(dataDir, 0700), "making dataDir")
-		require.NoError(t, os.WriteFile(dbFile, []byte{}, 0700), "making dbFile")
-		actual, ok := DetectDBType(name, dataDir)
-		assert.True(t, ok, "DetectDBType bool")
-		assert.Equal(t, expected, actual, "DetectDBType BackendType")
-	})
-
-	s.T().Run("empty", func(t *testing.T) {
-		expected := unknownDBBackend
-		name := "empty4"
-		dataDir := filepath.Join(tDir, "empty")
-		dbDir := filepath.Join(dataDir, name)
-		require.NoError(t, os.MkdirAll(dbDir, 0700), "making dbDir")
-		actual, ok := DetectDBType(name, dataDir)
-		assert.False(t, ok, "DetectDBType bool")
-		assert.Equal(t, expected, actual, "DetectDBType BackendType")
-	})
-
-	s.T().Run("only current", func(t *testing.T) {
-		expected := unknownDBBackend
-		name := "only-current5"
-		dataDir := filepath.Join(tDir, "only-current")
-		dbDir := filepath.Join(dataDir, name+".db")
-		require.NoError(t, os.MkdirAll(dbDir, 0700), "making dbDir")
-		require.NoError(t, os.WriteFile(filepath.Join(dbDir, "CURRENT"), []byte{}, 0600), "making CURRENT")
-		actual, ok := DetectDBType(name, dataDir)
-		assert.False(t, ok, "DetectDBType bool")
-		assert.Equal(t, expected, actual, "DetectDBType BackendType")
-	})
-
-	s.T().Run("does not exist", func(t *testing.T) {
-		expected := unknownDBBackend
-		name := "does-not-exist6"
-		dataDir := filepath.Join(tDir, "only-current")
-		actual, ok := DetectDBType(name, dataDir)
-		assert.False(t, ok, "DetectDBType bool")
-		assert.Equal(t, expected, actual, "DetectDBType BackendType")
-	})
-}
-
-func (s *MigratorTestSuite) TestDirExists() {
-	s.T().Run("does not exist", func(t *testing.T) {
-		assert.False(t, dirExists("does not exist"))
-	})
-
-	s.T().Run("containing dir exists", func(t *testing.T) {
-		tdir := t.TempDir()
-		dir := filepath.Join(tdir, "nope")
-		assert.False(t, dirExists(dir))
-	})
-
-	s.T().Run("is file", func(t *testing.T) {
-		tdir := t.TempDir()
-		file := filepath.Join(tdir, "filiename.txt")
-		require.NoError(t, os.WriteFile(file, []byte{}, 0600), "making file")
-		assert.False(t, dirExists(file))
-	})
-
-	s.T().Run("is dir", func(t *testing.T) {
-		tdir := t.TempDir()
-		dir := filepath.Join(tdir, "immadir")
-		require.NoError(t, os.MkdirAll(dir, 0700), "making dir")
-		assert.True(t, dirExists(dir))
 	})
 }
 
