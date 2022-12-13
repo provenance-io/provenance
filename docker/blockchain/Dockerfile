@@ -42,5 +42,5 @@ ENV PIO_HOME=/home/provenance
 WORKDIR /home/provenance
 
 EXPOSE 1317 9090 26656 26657
-ENTRYPOINT ["/usr/bin/provenanced"]
+CMD ["/usr/bin/provenanced"]
 
