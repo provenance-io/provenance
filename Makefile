@@ -446,7 +446,11 @@ vendor:
 
 # Full build inside a docker container for a clean release build
 docker-build: vendor
-	docker build --build-arg VERSION=$(VERSION) -t provenance-io/blockchain . -f docker/blockchain/Dockerfile
+ifeq ($(UNAME_M),x86_64)
+	docker build --build-arg VERSION=$(VERSION) --build-arg ARCH=$(UNAME_M) -t provenance-io/blockchain . -f docker/blockchain/Dockerfile
+else
+	docker build --build-arg VERSION=$(VERSION) --build-arg ARCH=aarch64 -t provenance-io/blockchain . -f docker/blockchain/Dockerfile
+endif
 
 # Quick build using local environment and go platform target options.
 docker-build-local: vendor
