@@ -442,6 +442,7 @@ func (m *migrationManager) MigrateDBDir(dbDir string) (summary string, err error
 	var sourceDB, targetDB tmdb.DB
 	var iter tmdb.Iterator
 	var batch tmdb.Batch
+	sourceDBType := unknownDBBackend
 	defer func() {
 		m.StatusKeyvals = noKeyvals
 		// iter before sourceDB because closing the sourceDB might remove things needed for the iterator to close.
@@ -460,7 +461,7 @@ func (m *migrationManager) MigrateDBDir(dbDir string) (summary string, err error
 		}
 		// always wrap any error with some extra context.
 		if err != nil {
-			err = fmt.Errorf("could not convert %q to %q: %w", dbDir, m.TargetDBType, err)
+			err = fmt.Errorf("could not convert %q from %q to %q: %w", dbDir, sourceDBType, m.TargetDBType, err)
 		}
 	}()
 
