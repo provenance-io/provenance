@@ -93,9 +93,10 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			}
 
 			// set app context based on initialized EnvTypeFlag
-			testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
-			customDenom := server.GetServerContextFromCmd(cmd).Viper.GetString(CustomDenomFlag)
-			customMsgFeeFloor := server.GetServerContextFromCmd(cmd).Viper.GetInt64(CustomMsgFeeFloorPriceFlag)
+			vpr := server.GetServerContextFromCmd(cmd).Viper
+			testnet := vpr.GetBool(EnvTypeFlag)
+			customDenom := vpr.GetString(CustomDenomFlag)
+			customMsgFeeFloor := vpr.GetInt64(CustomMsgFeeFloorPriceFlag)
 			app.SetConfig(testnet, true)
 			pioconfig.SetProvenanceConfig(customDenom, customMsgFeeFloor)
 			overwriteFlagDefaults(cmd, map[string]string{
