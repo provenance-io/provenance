@@ -21,10 +21,11 @@ import (
 )
 
 const (
-	FlagBackupDir  = "backup-dir"
-	FlagBatchSize  = "batch-size"
-	FlagStagingDir = "staging-dir"
-	FlagStageOnly  = "stage-only"
+	FlagBackupDir       = "backup-dir"
+	FlagBatchSize       = "batch-size"
+	FlagStagingDir      = "staging-dir"
+	FlagStageOnly       = "stage-only"
+	FlagSourceDbBackend = "source-db-backend"
 )
 
 // NewDBMigrateCmd creates a command for migrating the provenanced database from one underlying type to another.
@@ -98,10 +99,17 @@ Migration process:
 			if err != nil {
 				return fmt.Errorf("could not parse --%s option: %w", FlagBatchSize, err)
 			}
+
+			sourceDB, err := command.Flags().GetString(FlagSourceDbBackend)
+			if err != nil {
+				return fmt.Errorf("could not parse --%s option: %w", FlagSourceDbBackend, err)
+			}
+
 			migrator := &utils.Migrator{
 				TargetDBType: strings.ToLower(args[0]),
 				HomePath:     client.GetClientContextFromCmd(command).HomeDir,
 				BatchSize:    batchSizeMB * utils.BytesPerMB,
+				SourceDBType: sourceDB,
 			}
 
 			migrator.StageOnly, err = command.Flags().GetBool(FlagStageOnly)
@@ -134,6 +142,7 @@ Migration process:
 	rv.Flags().String(FlagStagingDir, "", "directory to hold the staging directory (default {home})")
 	rv.Flags().Uint(FlagBatchSize, 2_048, "(in megabytes) after a batch reaches this size it is written and a new one is started (0 = unlimited)")
 	rv.Flags().Bool(FlagStageOnly, false, "only migrate/copy the data (do not backup and replace the data directory and do not update the config)")
+	rv.Flags().String(FlagSourceDbBackend, "", "forces a source database type instead of trying to detect it.")
 	return rv
 }
 
@@ -152,6 +161,7 @@ func Execute(command *cobra.Command) error {
 func DoMigrateCmd(command *cobra.Command, migrator *utils.Migrator) error {
 	logger := server.GetServerContextFromCmd(command).Logger
 	logger.Info("Setting up database migrations.")
+
 	err := migrator.Initialize()
 	if err != nil {
 		return err
