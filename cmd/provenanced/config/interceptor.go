@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -12,6 +11,7 @@ import (
 	tmconfig "github.com/tendermint/tendermint/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
