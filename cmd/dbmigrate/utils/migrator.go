@@ -73,6 +73,9 @@ type Migrator struct {
 	// TargetDBType is the type of the target (new) DB.
 	TargetDBType string
 
+	// SourceDBType is the type of the source (old) DB.
+	SourceDBType string
+
 	// SourceDataDir is the path to the source (current) data directory.
 	// Default is { HomePath }/data
 	SourceDataDir string
@@ -232,6 +235,9 @@ func (m Migrator) ValidateBasic() error {
 	}
 	if len(m.DirDateFormat) == 0 {
 		return errors.New("no DirDateFormat defined")
+	}
+	if len(m.SourceDBType) > 0 && !IsPossibleDBType(m.SourceDBType) {
+		return fmt.Errorf("invalid SourceDBType: %q - must be one of: %s", m.SourceDBType, strings.Join(GetPossibleDBTypes(), ", "))
 	}
 	return nil
 }
@@ -460,11 +466,14 @@ func (m *migrationManager) MigrateDBDir(dbDir string) (summary string, err error
 	}()
 
 	m.Status = "detecting db type"
-	var ok bool
-	sourceDBType, ok = DetectDBType(dbName, sourceDir)
+	sourceDBType, ok := tmdb.BackendType(m.Migrator.SourceDBType), true
+	if len(m.Migrator.SourceDBType) == 0 {
+		sourceDBType, ok = DetectDBType(dbName, sourceDir)
+	}
 	if !ok {
 		return summaryError, fmt.Errorf("could not determine db type: %s", filepath.Join(m.SourceDataDir, dbDir))
 	}
+
 	if !IsPossibleDBType(string(sourceDBType)) {
 		return summaryError, fmt.Errorf("cannot read source db of type %q", sourceDBType)
 	}
@@ -644,6 +653,7 @@ func (m migrationManager) MakeSummaryString() string {
 		addLine("%16s: %s", "Backup Dir", m.BackupDataDir)
 	}
 	addLine("%16s: %s megabytes", "Batch Size", commaString(m.BatchSize/BytesPerMB))
+	addLine("%16s: %s", "Source DB Type", m.SourceDBType)
 	addLine("%16s: %s", "New DB Type", m.TargetDBType)
 	addLine("%16s: %s", fmt.Sprintf("%s (%d)", copyHead, len(m.ToCopy)), strings.Join(m.ToCopy, "  "))
 	if len(m.Summaries) == 0 {
