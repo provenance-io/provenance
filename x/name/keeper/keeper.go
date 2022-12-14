@@ -77,34 +77,37 @@ func (keeper Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAdd
 	if err = types.ValidateAddress(addr); err != nil {
 		return types.ErrInvalidAddress.Wrap(err.Error())
 	}
-	key, err := types.GetNameKeyPrefix(name)
-	if err != nil {
-		return err
-	}
-	store := ctx.KVStore(keeper.storeKey)
-	if store.Has(key) {
-		return types.ErrNameAlreadyBound
-	}
-	record := types.NewNameRecord(name, addr, restrict)
-	if err = record.ValidateBasic(); err != nil {
-		return err
-	}
-	bz, err := keeper.cdc.Marshal(&record)
-	if err != nil {
-		return err
-	}
-	store.Set(key, bz)
-	// Now index by address
-	addrPrefix, err := types.GetAddressKeyPrefix(addr)
-	if err != nil {
-		return err
-	}
-	addrPrefix = append(addrPrefix, key...) // [0x04] :: [addr-bytes] :: [name-key-bytes]
-	store.Set(addrPrefix, bz)
 
-	nameBoundEvent := types.NewEventNameBound(record.Address, name, record.Restricted)
+	if err = keeper.addRecord(ctx, name, addr, restrict, false); err != nil {
+		return err
+	}
+
+	nameBoundEvent := types.NewEventNameBound(addr.String(), name, restrict)
 
 	if err := ctx.EventManager().EmitTypedEvent(nameBoundEvent); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UpdateNameRecord updates the owner address and restricted flag on a name.
+func (keeper Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error {
+	var err error
+	if name, err = keeper.Normalize(ctx, name); err != nil {
+		return err
+	}
+	if err = types.ValidateAddress(addr); err != nil {
+		return types.ErrInvalidAddress.Wrap(err.Error())
+	}
+
+	if err = keeper.addRecord(ctx, name, addr, restrict, true); err != nil {
+		return err
+	}
+
+	nameUpdateEvent := types.NewEventNameUpdate(addr.String(), name, restrict)
+
+	if err := ctx.EventManager().EmitTypedEvent(nameUpdateEvent); err != nil {
 		return err
 	}
 
@@ -290,4 +293,35 @@ func isValidUUID(s string) bool {
 		return false
 	}
 	return true
+}
+
+func (keeper Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict, isModifiable bool) error {
+	key, err := types.GetNameKeyPrefix(name)
+	if err != nil {
+		return err
+	}
+
+	store := ctx.KVStore(keeper.storeKey)
+	if store.Has(key) && !isModifiable {
+		return types.ErrNameAlreadyBound
+	}
+
+	record := types.NewNameRecord(name, addr, restrict)
+	if err := record.ValidateBasic(); err != nil {
+		return err
+	}
+	bz, err := keeper.cdc.Marshal(&record)
+	if err != nil {
+		return err
+	}
+	store.Set(key, bz)
+	// Now index by address
+	addrPrefix, err := types.GetAddressKeyPrefix(addr)
+	if err != nil {
+		return err
+	}
+	addrPrefix = append(addrPrefix, key...) // [0x04] :: [addr-bytes] :: [name-key-bytes]
+	store.Set(addrPrefix, bz)
+
+	return nil
 }

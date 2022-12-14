@@ -74,3 +74,10 @@ message EventNameUnbound {
   string name       = 2;
   bool   restricted = 3;
 }
+
+// Event emitted when name is updated.
+message EventNameUpdate {
+  string address    = 1;
+  string name       = 2;
+  bool   restricted = 3;
+}

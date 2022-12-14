@@ -46,6 +46,7 @@ func HandleCreateRootNameProposal(ctx sdk.Context, k Keeper, p *types.CreateRoot
 
 func HandleModifyNameProposal(ctx sdk.Context, k Keeper, p *types.ModifyNameProposal) error {
 	logger := k.Logger(ctx)
+	logger.Info(fmt.Sprintln("modify name proposal: HandlingModifyNameProposal"))
 	existing, _ := k.GetRecordByName(ctx, p.Name)
 	if existing == nil {
 		return types.ErrNameNotBound
@@ -56,7 +57,7 @@ func HandleModifyNameProposal(ctx sdk.Context, k Keeper, p *types.ModifyNameProp
 		return err
 	}
 
-	if err := k.SetNameRecord(ctx, p.Name, addr, p.Restricted); err != nil {
+	if err := k.UpdateNameRecord(ctx, p.Name, addr, p.Restricted); err != nil {
 		return err
 	}
 	logger.Info(fmt.Sprintf("modify name proposal: updated %s. Set the owner as %s and restricted to %t", p.Name, p.Owner, p.Restricted))

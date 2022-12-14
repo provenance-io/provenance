@@ -120,9 +120,6 @@ func (mnp ModifyNameProposal) ValidateBasic() error {
 	if strings.TrimSpace(mnp.Name) == "" {
 		return ErrInvalidLengthName
 	}
-	if strings.Contains(mnp.Name, ".") {
-		return ErrNameContainsSegments
-	}
 
 	return nil
 }

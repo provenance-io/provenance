@@ -368,6 +368,7 @@
     - [CreateRootNameProposal](#provenance.name.v1.CreateRootNameProposal)
     - [EventNameBound](#provenance.name.v1.EventNameBound)
     - [EventNameUnbound](#provenance.name.v1.EventNameUnbound)
+    - [EventNameUpdate](#provenance.name.v1.EventNameUpdate)
     - [ModifyNameProposal](#provenance.name.v1.ModifyNameProposal)
     - [NameRecord](#provenance.name.v1.NameRecord)
     - [Params](#provenance.name.v1.Params)
@@ -5691,6 +5692,23 @@ Event emitted when name is bound.
 
 ### EventNameUnbound
 Event emitted when name is unbound.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `name` | [string](#string) |  |  |
+| `restricted` | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="provenance.name.v1.EventNameUpdate"></a>
+
+### EventNameUpdate
+Event emitted when name is updated.
 
 
 | Field | Type | Label | Description |
