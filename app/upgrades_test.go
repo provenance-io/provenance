@@ -3,7 +3,8 @@ package app
 import (
 	"testing"
 
-	"github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
@@ -13,47 +14,52 @@ import (
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
-type IntegrationTestSuite struct {
-	suite.Suite
+func TestRemoveLeaveGroupMsgFee(t *testing.T) {
+	var app *App
+	require.NotPanics(t, func() {
+		app = Setup(t)
+	}, "Setup")
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	app *App
-	ctx sdk.Context
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
-}
-
-func (s *IntegrationTestSuite) SetupTest() {
-	s.app = Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
-}
-
-func (s *IntegrationTestSuite) TestRemoveLeaveGroupMsgFee() {
 	typeURL := sdk.MsgTypeURL(&group.MsgLeaveGroup{})
-	s.Run("fee does not exist", func() {
-		// Make sure there isn't one already.
-		_ = s.app.MsgFeesKeeper.RemoveMsgFee(s.ctx, typeURL)
-		err := RemoveLeaveGroupMsgFee(s.ctx, s.app)
-		s.Require().NoError(err, "RemoveLeaveGroupMsgFee error")
-		msgFee, err := s.app.MsgFeesKeeper.GetMsgFee(s.ctx, typeURL)
-		s.Assert().NoError(err, "GetMsgFee error")
-		s.Assert().Nil(msgFee, "GetMsgFee value")
-	})
 
-	s.Run("fee exists", func() {
-		newMsgFee := msgfeetypes.MsgFee{
-			MsgTypeUrl:           typeURL,
-			AdditionalFee:        sdk.NewInt64Coin("feecoin", 8),
-			Recipient:            "",
-			RecipientBasisPoints: 0,
-		}
-		err := s.app.MsgFeesKeeper.SetMsgFee(s.ctx, newMsgFee)
-		s.Require().NoError(err, "SetMsgFee error")
-		err = RemoveLeaveGroupMsgFee(s.ctx, s.app)
-		s.Require().NoError(err, "RemoveLeaveGroupMsgFee error")
-		msgFee, err := s.app.MsgFeesKeeper.GetMsgFee(s.ctx, typeURL)
-		s.Assert().NoError(err, "GetMsgFee error")
-		s.Assert().Nil(msgFee, "GetMsgFee value")
-	})
+	tests := []struct {
+		name  string
+		setup func(t *testing.T)
+	}{
+		{
+			name: "fee does not exist",
+			setup: func(_ *testing.T) {
+				_ = app.MsgFeesKeeper.RemoveMsgFee(ctx, typeURL)
+			},
+		},
+		{
+			name: "fee exists",
+			setup: func(t *testing.T) {
+				msgFee := msgfeetypes.MsgFee{
+					MsgTypeUrl:           typeURL,
+					AdditionalFee:        sdk.NewInt64Coin("feecoin", 8),
+					Recipient:            "",
+					RecipientBasisPoints: 0,
+				}
+				err := app.MsgFeesKeeper.SetMsgFee(ctx, msgFee)
+				require.NoError(t, err, "SetMsgFee error")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.setup(t)
+			var err error
+			testFunc := func() {
+				err = RemoveLeaveGroupMsgFee(ctx, app)
+			}
+			require.NotPanics(t, testFunc, "RemoveLeaveGroupMsgFee")
+			require.NoError(t, err, "RemoveLeaveGroupMsgFee error")
+			msgFee, err := app.MsgFeesKeeper.GetMsgFee(ctx, typeURL)
+			assert.NoError(t, err, "GetMsgFee error")
+			assert.Nil(t, msgFee, "GetMsgFee value")
+		})
+	}
 }
