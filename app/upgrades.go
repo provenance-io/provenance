@@ -194,5 +194,6 @@ func RemoveLeaveGroupMsgFee(ctx sdk.Context, app *App) error {
 	if errors.Is(err, msgfeestypes.ErrMsgFeeDoesNotExist) {
 		return nil
 	}
+	app.Logger().Error("error deleting MsgLeaveGroup msg fee", "error", err)
 	return err
 }
