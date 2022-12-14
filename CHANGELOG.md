@@ -44,6 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Added assess msg fees spec documentation [#1172](https://github.com/provenance-io/provenance/issues/1172).
+* Update Cosmos-SDK to TODO.
 
 ---
 
