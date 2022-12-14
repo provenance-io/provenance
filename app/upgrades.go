@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -15,6 +16,7 @@ import (
 	icacontrollertypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 )
 
@@ -36,8 +38,6 @@ type appUpgrade struct {
 }
 
 var handlers = map[string]appUpgrade{
-	"neoncarrot-rc1": {}, // upgrade for 1.12.0-rc1
-	"neoncarrot":     {}, // upgrade for 1.12.0
 	"ochre-rc1": { // upgrade for 1.13.0-rc3
 		Added: []string{group.ModuleName, rewardtypes.ModuleName, icacontrollertypes.StoreKey, icahosttypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
@@ -67,7 +67,7 @@ var handlers = map[string]appUpgrade{
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
 	},
-	"ochre": {
+	"ochre": { // upgrade for 1.13.0
 		Added: []string{group.ModuleName, rewardtypes.ModuleName, icacontrollertypes.StoreKey, icahosttypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
@@ -79,6 +79,24 @@ var handlers = map[string]appUpgrade{
 			UpgradeICA(ctx, app, &versionMap)
 			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
+		},
+	},
+	"pear": { // upgrade for 1.14.0: #D1E231
+		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
+			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
+			var err error
+			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+			versionMap, err = app.mm.RunMigrations(ctx, app.configurator, versionMap)
+			if err != nil {
+				return nil, err
+			}
+
+			err = RemoveLeaveGroupMsgFee(ctx, app)
+			if err != nil {
+				return nil, err
+			}
+
+			return versionMap, nil
 		},
 	},
 	// TODO - Add new upgrade definitions here.
@@ -164,4 +182,17 @@ func UpgradeICA(ctx sdk.Context, app *App, versionMap *module.VersionMap) {
 	}
 	icamodule.InitModule(ctx, controllerParams, hostParams)
 	app.Logger().Info("Finished initializing ICA")
+}
+
+func RemoveLeaveGroupMsgFee(ctx sdk.Context, app *App) error {
+	typeURL := sdk.MsgTypeURL(&group.MsgLeaveGroup{})
+	app.Logger().Info("deleting MsgLeaveGroup msg fee if it exists")
+	err := app.MsgFeesKeeper.RemoveMsgFee(ctx, typeURL)
+	if err == nil {
+		return nil
+	}
+	if errors.Is(err, msgfeestypes.ErrMsgFeeDoesNotExist) {
+		return nil
+	}
+	return err
 }

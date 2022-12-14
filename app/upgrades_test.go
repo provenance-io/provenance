@@ -1,12 +1,16 @@
 package app
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/group"
 
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type IntegrationTestSuite struct {
@@ -16,16 +20,40 @@ type IntegrationTestSuite struct {
 	ctx sdk.Context
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
+}
+
+func (s *IntegrationTestSuite) SetupTest() {
 	s.app = Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 }
 
-func (s *IntegrationTestSuite) TestUpgradeICA() {
-	s.SetupSuite()
-	versionMap := s.app.UpgradeKeeper.GetModuleVersionMap(s.ctx)
-	UpgradeICA(s.ctx, s.app, &versionMap)
-	s.Assert().Equal(s.app.mm.Modules[icatypes.ModuleName].ConsensusVersion(), versionMap[icatypes.ModuleName], "consensus version should be set to skip init genesis")
-	s.Assert().Equal([]string{"*"}, s.app.ICAHostKeeper.GetAllowMessages(s.ctx), "ica host should accept all messages")
-	s.Assert().True(s.app.ICAHostKeeper.IsHostEnabled(s.ctx), "ica host should be enabled")
+func (s *IntegrationTestSuite) TestRemoveLeaveGroupMsgFee() {
+	typeURL := sdk.MsgTypeURL(&group.MsgLeaveGroup{})
+	s.Run("fee does not exist", func() {
+		// Make sure there isn't one already.
+		_ = s.app.MsgFeesKeeper.RemoveMsgFee(s.ctx, typeURL)
+		err := RemoveLeaveGroupMsgFee(s.ctx, s.app)
+		s.Require().NoError(err, "RemoveLeaveGroupMsgFee error")
+		msgFee, err := s.app.MsgFeesKeeper.GetMsgFee(s.ctx, typeURL)
+		s.Assert().NoError(err, "GetMsgFee error")
+		s.Assert().Nil(msgFee, "GetMsgFee value")
+	})
+
+	s.Run("fee exists", func() {
+		newMsgFee := msgfeetypes.MsgFee{
+			MsgTypeUrl:           typeURL,
+			AdditionalFee:        sdk.NewInt64Coin("feecoin", 8),
+			Recipient:            "",
+			RecipientBasisPoints: 0,
+		}
+		err := s.app.MsgFeesKeeper.SetMsgFee(s.ctx, newMsgFee)
+		s.Require().NoError(err, "SetMsgFee error")
+		err = RemoveLeaveGroupMsgFee(s.ctx, s.app)
+		s.Require().NoError(err, "RemoveLeaveGroupMsgFee error")
+		msgFee, err := s.app.MsgFeesKeeper.GetMsgFee(s.ctx, typeURL)
+		s.Assert().NoError(err, "GetMsgFee error")
+		s.Assert().Nil(msgFee, "GetMsgFee value")
+	})
 }
