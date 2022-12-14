@@ -20,9 +20,7 @@ EOF
 DEST="${1:-$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )/third_party}"
 
 # Retrieve versions from go.mod (single source of truth)
-# With dragonberry, we had to "bump" ics23 to v0.8.0 with a replace line. But confio doesn't have such a version yet.
-# So until we can get rid of the ics23 replace line in go.mo, we need to just hard-code it in here to the most recent version they have.
-CONFIO_PROTO_URL="https://raw.githubusercontent.com/confio/ics23/go/v0.7.0/proofs.proto"
+CONFIO_PROTO_URL="https://raw.githubusercontent.com/confio/ics23/go/$( go list -m github.com/confio/ics23/go | sed 's:.* ::' )/proofs.proto"
 GOGO_PROTO_URL="https://raw.githubusercontent.com/regen-network/protobuf/$( go list -m github.com/gogo/protobuf | sed 's:.* ::' )/gogoproto/gogo.proto"
 COSMOS_PROTO_URL="raw.githubusercontent.com/cosmos/cosmos-proto/$( go list -m github.com/cosmos/cosmos-proto | sed 's:.* ::' )/proto/cosmos_proto/cosmos.proto"
 COSMWASM_V1BETA1_TARBALL_URL='github.com/CosmWasm/wasmd/tarball/v0.17.0'  # Backwards compatibility. Needed to serialize/deserialize older wasmd protos.
