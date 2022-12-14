@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -22,10 +23,12 @@ import (
 // configurations, or to get access to viper.
 func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	// The result of client.GetClientContextFromCmd(cmd) is not a pointer.
-	// Since I'm just getting the Viper pointer from it (for now), I'm not
-	// pulling the context into its own variable.
-	// I'd just have to call it again later anyway because deeper stuff will probably update it.
-	vpr := client.GetClientContextFromCmd(cmd).Viper
+	// I need it for both viper and the home dir.
+	// Don't use the clientCtx variable after these three lines, though since it's info will probably be stale.
+	clientCtx := client.GetClientContextFromCmd(cmd)
+	vpr := clientCtx.Viper
+	// Set the home dir in viper so that all the appOpts stuff gets the correct value.
+	vpr.Set(flags.FlagHome, clientCtx.HomeDir)
 
 	// And now, set up Viper a little more.
 	if err := bindFlagsAndEnv(cmd, vpr); err != nil {
