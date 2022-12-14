@@ -368,6 +368,7 @@
     - [CreateRootNameProposal](#provenance.name.v1.CreateRootNameProposal)
     - [EventNameBound](#provenance.name.v1.EventNameBound)
     - [EventNameUnbound](#provenance.name.v1.EventNameUnbound)
+    - [ModifyNameProposal](#provenance.name.v1.ModifyNameProposal)
     - [NameRecord](#provenance.name.v1.NameRecord)
     - [Params](#provenance.name.v1.Params)
   
@@ -5696,6 +5697,26 @@ Event emitted when name is unbound.
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
 | `name` | [string](#string) |  |  |
+| `restricted` | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="provenance.name.v1.ModifyNameProposal"></a>
+
+### ModifyNameProposal
+ModifyNameProposal details a proposal to update the address
+and/or the restricted flag of a name.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `name` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
 | `restricted` | [bool](#bool) |  |  |
 
 

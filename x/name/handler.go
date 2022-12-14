@@ -34,6 +34,8 @@ func NewProposalHandler(k keeper.Keeper) govtypesv1beta1.Handler {
 		switch c := content.(type) {
 		case *types.CreateRootNameProposal:
 			return keeper.HandleCreateRootNameProposal(ctx, k, c)
+		case *types.ModifyNameProposal:
+			return keeper.HandleModifyNameProposal(ctx, k, c)
 		default:
 			return sdkerrors.ErrUnknownRequest.Wrapf("unrecognized name proposal content type: %T", c)
 		}

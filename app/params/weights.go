@@ -6,6 +6,7 @@ const (
 	DefaultWeightMsgBindName            int = 10
 	DefaultWeightMsgDeleteName          int = 5
 	DefaultWeightCreateRootNameProposal int = 5
+	DefaultWeightModifyNameProposal     int = 5
 	// Attribute
 	DefaultWeightMsgAddAttribute            int = 15
 	DefaultWeightMsgUpdateAttribute         int = 5
