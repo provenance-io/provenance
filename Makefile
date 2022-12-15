@@ -250,7 +250,7 @@ else ifeq ($(UNAME_S),linux)
 endif
 
 ARCH=$(UNAME_M)
-ifeq (ARCH,x86_64)
+ifeq ($(ARCH),x86_64)
 	ARCH=amd64
 endif
 
