@@ -1,10 +1,11 @@
-package app
+package sdkconfig
 
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestFullBIP44Path(t *testing.T) {
@@ -57,7 +58,6 @@ func TestFullBIP44Path(t *testing.T) {
 				fullBIP44Path := config.GetFullBIP44Path()
 				require.Equal(t, tc.expected, fullBIP44Path, "GetFullBIP44Path")
 			}
-
 		})
 	}
 }

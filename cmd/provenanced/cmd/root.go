@@ -35,6 +35,7 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/app/sdkconfig"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 )
@@ -91,11 +92,11 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			testnet := vpr.GetBool(EnvTypeFlag)
 			customDenom := vpr.GetString(CustomDenomFlag)
 			customMsgFeeFloor := vpr.GetInt64(CustomMsgFeeFloorPriceFlag)
-			app.SetConfig(testnet, true)
+			sdkconfig.SetConfig(testnet, true)
 			pioconfig.SetProvenanceConfig(customDenom, customMsgFeeFloor)
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
-				CoinTypeFlag: fmt.Sprint(app.CoinType),
+				CoinTypeFlag: fmt.Sprint(sdkconfig.CoinType),
 				// Override min gas price(server level config) here since the provenance config would have been set based on flags.
 				server.FlagMinGasPrices: pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices,
 			})
@@ -106,7 +107,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        ChainID,
 		flags.FlagKeyringBackend: "test",
-		CoinTypeFlag:             fmt.Sprint(app.CoinTypeMainNet),
+		CoinTypeFlag:             fmt.Sprint(sdkconfig.CoinTypeMainNet),
 	})
 
 	return rootCmd, encodingConfig

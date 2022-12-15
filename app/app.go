@@ -111,6 +111,7 @@ import (
 
 	// PROVENANCE
 	appparams "github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/app/sdkconfig"
 	_ "github.com/provenance-io/provenance/client/docs/statik" // registers swagger-ui files with statik
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	piohandlers "github.com/provenance-io/provenance/internal/handlers"
@@ -384,7 +385,7 @@ func New(
 	// add keepers
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName),
-		authtypes.ProtoBaseAccount, maccPerms, AccountAddressPrefix,
+		authtypes.ProtoBaseAccount, maccPerms, sdkconfig.AccountAddressPrefix,
 	)
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
