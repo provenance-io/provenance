@@ -9,7 +9,7 @@ const (
 )
 
 // SplitCoinByBips returns split to recipient and fee module based on basis points for recipient
-// keeping this method, even though bips is being hardcoded to 100bips to recipient for now(12/14/2022)
+// if bips set to 100bips recipient gets all the fees.
 func SplitCoinByBips(coin sdk.Coin, bips uint32) (recipientCoin sdk.Coin, feePayoutCoin sdk.Coin, err error) {
 	if bips > 10_000 {
 		return recipientCoin, feePayoutCoin, ErrInvalidBipsValue.Wrapf("invalid: %v", bips)
