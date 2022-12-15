@@ -131,7 +131,45 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: linux-zip
-          path: build/*.zip
+          path: build/provenance*.zip
+
+  build_dbmigrate:
+    runs-on: ubuntu-20.04
+    needs:
+      - build_init
+    name: Build dbmigrate
+    env:
+      LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ needs.build_init.outputs.go_version }}
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+      - name: Build and install cleveldb
+        run: make cleveldb
+      - name: Setup go
+        uses: actions/setup-go@v2.1.5
+        with:
+          go-version: ${{ needs.build_init.outputs.go_version }}
+      - name: Build dbmigrate binary
+        run: |
+          export VERSION=${{ needs.build_init.outputs.version }}
+          export WITH_CLEVELDB=true
+          export WITH_ROCKSDB=false
+          export WITH_BADGERDB=false
+          make build-dbmigrate-zip
+      - name: dbmigrate --help
+        run: build/dbmigrate --help
+      - uses: actions/upload-artifact@v3
+        with:
+          name: dbmigrate-zip
+          path: build/dbmigrate*.zip
 
   buf_push:
     needs:
@@ -160,6 +198,7 @@ jobs:
       - build_init
       - build_osx
       - build_linux
+      - build_dbmigrate
     if: needs.build_init.outputs.is_release == 'true'
     runs-on: ubuntu-latest
     name: Create Release
@@ -188,32 +227,33 @@ jobs:
     runs-on: ubuntu-latest
     name: Attach Release Artifacts
     steps:
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v3
-      -
-        name: Setup go
+      - name: Setup go
         uses: actions/setup-go@v3
         with:
           go-version: ${{ needs.build_init.outputs.go_version }}
-      -
-        name: Download linux zip artifact
+      - name: Download linux zip artifact
         uses: actions/download-artifact@v3
         with:
           name: linux-zip
           path: build/
-      -
-        name: Download osx zip artifact
+      - name: Download dbmigrate zip artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: dbmigrate-zip
+          path: build/
+      - name: Download osx zip artifact
         uses: actions/download-artifact@v3
         with:
           name: osx-zip
           path: build/
-      -
-        name: Create release items
+      - name: Create release items
+        id: create-items
         run: |
           make VERSION=${{ needs.build_init.outputs.version }} build-release-checksum build-release-plan build-release-proto
-      -
-        name: Upload osx zip artifact
+      - name: Upload osx zip artifact
+        if: always() && steps.create-items.outcome == 'success'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -222,8 +262,8 @@ jobs:
           asset_path: ./build/provenance-darwin-amd64-${{ needs.build_init.outputs.version }}.zip
           asset_name: provenance-darwin-amd64-${{ needs.build_init.outputs.version }}.zip
           asset_content_type: application/octet-stream
-      -
-        name: Upload linux zip artifact
+      - name: Upload linux zip artifact
+        if: always() && steps.create-items.outcome == 'success'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -232,8 +272,18 @@ jobs:
           asset_path: ./build/provenance-linux-amd64-${{ needs.build_init.outputs.version }}.zip
           asset_name: provenance-linux-amd64-${{ needs.build_init.outputs.version }}.zip
           asset_content_type: application/octet-stream
-      -
-        name: Upload release checksum
+      - name: Upload dbmigrate zip artifact
+        if: always() && steps.create-items.outcome == 'success'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.release_url }}
+          asset_path: ./build/dbmigrate-linux-amd64-${{ needs.build_init.outputs.version }}.zip
+          asset_name: dbmigrate-linux-amd64-${{ needs.build_init.outputs.version }}.zip
+          asset_content_type: application/octet-stream
+      - name: Upload release checksum
+        if: always() && steps.create-items.outcome == 'success'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -242,8 +292,8 @@ jobs:
           asset_path: ./build/sha256sum.txt
           asset_name: sha256sum.txt
           asset_content_type: application/octet-stream
-      -
-        name: Upload release plan
+      - name: Upload release plan
+        if: always() && steps.create-items.outcome == 'success'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -252,8 +302,8 @@ jobs:
           asset_path: ./build/plan-${{ needs.build_init.outputs.version }}.json
           asset_name: plan-${{ needs.build_init.outputs.version }}.json
           asset_content_type: application/octet-stream
-      -
-        name: Upload release protos
+      - name: Upload release protos
+        if: always() && steps.create-items.outcome == 'success'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
