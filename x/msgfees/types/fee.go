@@ -14,7 +14,7 @@ func SplitCoinByBips(coin sdk.Coin, bips uint32) (recipientCoin sdk.Coin, feePay
 	if bips > 10_000 {
 		return recipientCoin, feePayoutCoin, ErrInvalidBipsValue.Wrapf("invalid: %v", bips)
 	}
-	// nothing to calculate, short circuit
+	// nothing to calculate if recipient gets 100 bips, short circuit
 	if bips == 10_000 {
 		recipientCoin = coin
 		feePayoutCoin = sdk.NewCoin(coin.Denom, sdk.NewInt(0))
@@ -62,7 +62,7 @@ func (d *MsgFeesDistribution) Increase(coin sdk.Coin, bips uint32, recipient str
 	}
 
 	d.RecipientDistributions[recipient] = d.RecipientDistributions[recipient].Add(recipientCoin)
-	// fee payout for module for now will be zero, keeping it still here if we goto split bips as a param or even at the message level
+	// fee payout for module for now will be zero, keeping it still here if we goto  bips at a message level or a param this will come back into play.
 	if !feePayoutCoin.IsZero() {
 		d.AdditionalModuleFees = d.AdditionalModuleFees.Add(feePayoutCoin)
 	}

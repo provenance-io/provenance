@@ -717,13 +717,10 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 			NewEvent("provenance.msgfees.v1.EventMsgFees",
 				NewAttribute("msg_fees", jsonArrayJoin(
-					//msgFeesEventJSON("/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest", 1, 87500000, "nhash", ""),
 					msgFeesEventJSON("/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest", 1, 175000000, "nhash", addr2.String())))),
 		}
 		// fee charge in antehandler
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
-		// fee charged for msg based fee to fee module on assess msg split
-		//expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 87500000)))...)
 		// fee charged for msg based fee to recipient from assess msg split
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), addr2.String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 175000000)))...)
 		// swept amount
@@ -733,6 +730,7 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 	})
 }
 
+// TestMsgServiceAssessMsgFeeNoRecipient tests that if no recipient the full fee goes to the module account
 func TestMsgServiceAssessMsgFeeNoRecipient(tt *testing.T) {
 	pioconfig.SetProvenanceConfig("", 0)
 	pioconfig.ChangeMsgFeeFloorDenom(1, sdk.DefaultBondDenom)
@@ -773,9 +771,7 @@ func TestMsgServiceAssessMsgFeeNoRecipient(tt *testing.T) {
 		require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
 
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
-		//addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
 		assert.Equal(t, "1000hotdog,1000stake", addr1AfterBalance, "addr1AfterBalance")
-		//assert.Equal(t, "175000000nhash", addr2AfterBalance, "addr2AfterBalance") // addr2 gets all the fee as recipient
 
 		expEvents := []abci.Event{
 			NewEvent(sdk.EventTypeTx,
@@ -795,14 +791,9 @@ func TestMsgServiceAssessMsgFeeNoRecipient(tt *testing.T) {
 			NewEvent("provenance.msgfees.v1.EventMsgFees",
 				NewAttribute("msg_fees", jsonArrayJoin(
 					msgFeesEventJSON("/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest", 1, 175000000, "nhash", "")))),
-			//msgFeesEventJSON("/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest", 1, 175000000, "nhash", addr2.String())))),
 		}
 		// fee charge in antehandler
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
-		// fee charged for msg based fee to fee module on assess msg split
-		//expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 87500000)))...)
-		// fee charged for msg based fee to recipient from assess msg split
-		//expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), addr2.String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 175000000)))...)
 		// swept amount
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
 
