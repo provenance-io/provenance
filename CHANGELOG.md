@@ -45,6 +45,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Added assess msg fees spec documentation [#1172](https://github.com/provenance-io/provenance/issues/1172).
 
+### Bug Fixes
+
+* Update Maven publishing email to provenance [#1270](https://github.com/provenance-io/provenance/issues/1270).
+
 ---
 
 ## [v1.13.0](https://github.com/provenance-io/provenance/releases/tag/v1.13.0) - 2022-11-28
