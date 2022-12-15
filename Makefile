@@ -249,7 +249,8 @@ else ifeq ($(UNAME_S),linux)
 	endif
 endif
 
-ifeq ($(UNAME_M),x86_64)
+ARCH=$(UNAME_M)
+ifeq (ARCH,x86_64)
 	ARCH=amd64
 endif
 
@@ -258,10 +259,14 @@ RELEASE_PIO=$(RELEASE_BIN)/provenanced
 RELEASE_ZIP_BASE=provenance-$(UNAME_S)-$(ARCH)
 RELEASE_ZIP_NAME=$(RELEASE_ZIP_BASE)-$(VERSION).zip
 RELEASE_ZIP=$(BUILDDIR)/$(RELEASE_ZIP_NAME)
+DBMIGRATE=$(BUILDDIR)/dbmigrate
+DBMIGRATE_ZIP_BASE=dbmigrate-$(UNAME_S)-$(ARCH)
+DBMIGRATE_ZIP_NAME=$(DBMIGRATE_ZIP_BASE)-$(VERSION).zip
+DBMIGRATE_ZIP=$(BUILDDIR)/$(DBMIGRATE_ZIP_NAME)
 
 .PHONY: build-release-clean
 build-release-clean:
-	rm -rf $(RELEASE_BIN) $(RELEASE_PLAN) $(RELEASE_CHECKSUM) $(RELEASE_ZIP)
+	rm -rf $(RELEASE_BIN) $(RELEASE_PLAN) $(RELEASE_CHECKSUM) $(RELEASE_ZIP) $(DBMIGRATE_ZIP)
 
 .PHONY: build-release-checksum
 build-release-checksum: $(RELEASE_CHECKSUM)
@@ -300,6 +305,17 @@ build-release-zip: $(RELEASE_ZIP)
 $(RELEASE_ZIP): $(RELEASE_PIO) $(RELEASE_WASM)
 	cd $(BUILDDIR) && \
 	  zip -u $(RELEASE_ZIP_NAME) bin/$(LIBWASMVM) bin/provenanced && \
+	cd ..
+
+$(DBMIGRATE):
+	$(MAKE) build-dbmigrate
+
+.PHONY: build-dbmigrate-zip
+build-dbmigrate-zip: $(DBMIGRATE_ZIP)
+
+$(DBMIGRATE_ZIP): $(DBMIGRATE)
+	cd $(BUILDDIR) && \
+	  zip -u $(DBMIGRATE_ZIP_NAME) dbmigrate && \
 	cd ..
 
 # gon packages the zip wrong. need bin/provenanced and bin/libwasmvm
