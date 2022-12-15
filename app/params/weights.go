@@ -4,6 +4,7 @@ package params
 const (
 	// Name
 	DefaultWeightMsgBindName            int = 10
+	DefaultWeightMsgModifyName          int = 5
 	DefaultWeightMsgDeleteName          int = 5
 	DefaultWeightCreateRootNameProposal int = 5
 	DefaultWeightModifyNameProposal     int = 5

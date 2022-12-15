@@ -15,6 +15,7 @@ import (
 
 // OpWeightSubmitCreateRootNameProposal app params key for create root name proposal
 const OpWeightSubmitCreateRootNameProposal = "op_weight_submit_create_root_name_proposal"
+const OpWeightSubmitModifyNameProposal = "op_weight_submit_modify_name_proposal"
 
 // ProposalContents defines the module weighted proposals' contents
 func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
@@ -23,6 +24,11 @@ func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
 			OpWeightSubmitCreateRootNameProposal,
 			simappparams.DefaultWeightCreateRootNameProposal,
 			SimulateCreateRootNameProposalContent(k),
+		),
+		simulation.NewWeightedProposalContent(
+			OpWeightSubmitModifyNameProposal,
+			simappparams.DefaultWeightModifyNameProposal,
+			SimulateModifyNameProposalContent(k),
 		),
 	}
 }
@@ -35,6 +41,23 @@ func SimulateCreateRootNameProposalContent(k keeper.Keeper) simtypes.ContentSimu
 		restricted := simtypes.RandIntBetween(r, 1, 100) > 50
 
 		return types.NewCreateRootNameProposal(
+			simtypes.RandStringOfLength(r, 10),
+			simtypes.RandStringOfLength(r, 100),
+			simtypes.RandStringOfLength(r, 10),
+			simAccount.Address,
+			restricted,
+		)
+	}
+}
+
+// SimulateModifyNameProposalContent generates random modify-name proposal content
+func SimulateModifyNameProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
+	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+
+		restricted := simtypes.RandIntBetween(r, 1, 100) > 50
+
+		return types.NewModifyNameProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
 			simtypes.RandStringOfLength(r, 10),
