@@ -54,13 +54,13 @@ func SimulateCreateRootNameProposalContent(k keeper.Keeper) simtypes.ContentSimu
 func SimulateModifyNameProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
-
 		restricted := simtypes.RandIntBetween(r, 1, 100) > 50
+		record, _ := k.GetRecordByName(ctx, ModifyName)
 
 		return types.NewModifyNameProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
-			simtypes.RandStringOfLength(r, 10),
+			record.GetName(),
 			simAccount.Address,
 			restricted,
 		)
