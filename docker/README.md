@@ -12,8 +12,8 @@
 
 # Quick reference (cont.)
 
-- **Supported architectures**: [`amd64`]
-  - **Why not more?**: Upstream dependencies currently lock us into amd64 (namely libwasm). There are future plans for other architectures.
+- **Supported architectures**: [`x86_64, aarch64`]
+  - **Why not more?**: Upstream dependencies currently lock us into x86_64 and aarch64 (namely libwasm). There are future plans for other architectures.
 - **Source of this description**: [docs](https://github.com/provenance-io/provenance/blob/main/docker/README.md)
 
 # What is this image?
