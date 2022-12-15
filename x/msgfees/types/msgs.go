@@ -8,9 +8,11 @@ import (
 
 const (
 
-	// AssessCustomMsgFeeBips is the hardcoded value for bips the recipient will receive while remainder will go to fee module
-	// 5,000 bips is 50:50 to recipient and fee module
-	AssessCustomMsgFeeBips = 5_000
+	// AssessCustomMsgFeeBips is the bips the recipient will get
+	// This should be a message level data (present in TypeAssessCustomMsgFee = "assess_custom_msg_fee") i think so that it can be defined by the smart contract writer
+	// or at the very least it can be a module param.
+	// for now i am hard coding it to avoid breaking any clients and because of this ticket https://github.com/provenance-io/provenance/issues/1263
+	AssessCustomMsgFeeBips = 10_000
 
 	TypeAssessCustomMsgFee = "assess_custom_msg_fee"
 )
