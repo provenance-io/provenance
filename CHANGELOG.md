@@ -40,7 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Added support to set a list of specific recipients allowed for send authorizations in the marker module [#1237](https://github.com/provenance-io/provenance/issues/1237).
-
+* Added a new name governance proposal that allows the fields of a name record to be updated. [#1266] (https://github.com/provenance-io/provenance/pull/1266)
 ### Improvements
 
 * Added assess msg fees spec documentation [#1172](https://github.com/provenance-io/provenance/issues/1172).

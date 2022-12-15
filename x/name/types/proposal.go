@@ -83,6 +83,7 @@ func (crnp CreateRootNameProposal) String() string {
 }
 
 // NewModifyNameProposal creates a new governance proposal request to update an existing name.
+//
 //nolint:interfacer
 func NewModifyNameProposal(title, description, name string, owner sdk.AccAddress, restricted bool) *ModifyNameProposal {
 	return &ModifyNameProposal{
