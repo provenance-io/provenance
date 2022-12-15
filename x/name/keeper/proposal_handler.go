@@ -44,9 +44,9 @@ func HandleCreateRootNameProposal(ctx sdk.Context, k Keeper, p *types.CreateRoot
 	return nil
 }
 
+// HandleModifyNameProposal is a handler for executing a passed modify name proposal
 func HandleModifyNameProposal(ctx sdk.Context, k Keeper, p *types.ModifyNameProposal) error {
 	logger := k.Logger(ctx)
-	logger.Info(fmt.Sprintln("modify name proposal: HandlingModifyNameProposal"))
 	existing, _ := k.GetRecordByName(ctx, p.Name)
 	if existing == nil {
 		return types.ErrNameNotBound

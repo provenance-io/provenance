@@ -74,3 +74,27 @@ This message is expected to fail if:
 - The name already exists
 - Insuffient length of name
 - Excessive length of name
+
+## ModifyNameProposal
+
+The modify name proposal is a governance proposal that allows an existing name record's attributes to be updated.
+
+```proto
+message ModifyNameProposal {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title       = 1;
+  string description = 2;
+  string name        = 3;
+  string owner       = 4;
+  bool   restricted  = 5;
+}
+```
+
+This message is expected to fail if:
+- The name does not exist
+- Insuffient length of name
+- Excessive length of name
+- The owner is not a valid address format.
