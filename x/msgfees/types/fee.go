@@ -14,7 +14,7 @@ func SplitCoinByBips(coin sdk.Coin, bips uint32) (recipientCoin sdk.Coin, feePay
 	if bips > 10_000 {
 		return recipientCoin, feePayoutCoin, ErrInvalidBipsValue.Wrapf("invalid: %v", bips)
 	}
-	// nothing to calculate if recipient gets 100 bips, short circuit
+	// nothing to calculate if recipient gets 10_000 bips or 100%, short circuit
 	if bips == 10_000 {
 		recipientCoin = coin
 		feePayoutCoin = sdk.NewCoin(coin.Denom, sdk.NewInt(0))
