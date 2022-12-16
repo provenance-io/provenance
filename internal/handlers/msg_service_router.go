@@ -198,7 +198,10 @@ func (msr *PioMsgServiceRouter) consumeMsgFees(ctx sdk.Context, req sdk.Msg) err
 		}
 
 		msgTypeURL := sdk.MsgTypeURL(req)
-		feeGasMeter.ConsumeFee(feeDist.AdditionalModuleFees, msgTypeURL, "")
+		// since AccessMsgFee is not always split 50/50 anymore, this fee can be nil when recipients are specified.
+		if feeDist.AdditionalModuleFees != nil {
+			feeGasMeter.ConsumeFee(feeDist.AdditionalModuleFees, msgTypeURL, "")
+		}
 		for _, recipient := range sortedKeys(feeDist.RecipientDistributions) {
 			coins := feeDist.RecipientDistributions[recipient]
 			feeGasMeter.ConsumeFee(coins, msgTypeURL, recipient)
