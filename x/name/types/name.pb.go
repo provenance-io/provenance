@@ -98,11 +98,11 @@ func (m *Params) GetAllowUnrestrictedNames() bool {
 
 // NameRecord is a structure used to bind ownership of a name hierarchy to a collection of addresses
 type NameRecord struct {
-	// The bound name
+	// the bound name
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// The address the name resolved to.
+	// the address the name resolved to
 	Address string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
-	// Whether owner signature is required to add sub-names.
+	// whether owner signature is required to add sub-names
 	Restricted bool `protobuf:"varint,3,opt,name=restricted,proto3" json:"restricted,omitempty"`
 }
 
@@ -163,11 +163,16 @@ func (m *NameRecord) GetRestricted() bool {
 // that is controlled by a given owner and optionally restricted to the owner
 // for the sole creation of sub names.
 type CreateRootNameProposal struct {
-	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// proposal title
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// proposal description
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Name        string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Owner       string `protobuf:"bytes,4,opt,name=owner,proto3" json:"owner,omitempty"`
-	Restricted  bool   `protobuf:"varint,5,opt,name=restricted,proto3" json:"restricted,omitempty"`
+	// the bound name
+	Name string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	// the address the name will resolve to
+	Owner string `protobuf:"bytes,4,opt,name=owner,proto3" json:"owner,omitempty"`
+	// a flag that indicates if an owner signature is required to add sub-names
+	Restricted bool `protobuf:"varint,5,opt,name=restricted,proto3" json:"restricted,omitempty"`
 }
 
 func (m *CreateRootNameProposal) Reset()      { *m = CreateRootNameProposal{} }
@@ -205,11 +210,16 @@ var xxx_messageInfo_CreateRootNameProposal proto.InternalMessageInfo
 // ModifyNameProposal details a proposal to update the address
 // and/or the restricted flag of a name.
 type ModifyNameProposal struct {
-	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// proposal title
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// proposal description
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Name        string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Owner       string `protobuf:"bytes,4,opt,name=owner,proto3" json:"owner,omitempty"`
-	Restricted  bool   `protobuf:"varint,5,opt,name=restricted,proto3" json:"restricted,omitempty"`
+	// the bound name to update
+	Name string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	// the new address that this name will resolve to
+	Owner string `protobuf:"bytes,4,opt,name=owner,proto3" json:"owner,omitempty"`
+	// a flag that indicates if an owner signature is required to add sub-names
+	Restricted bool `protobuf:"varint,5,opt,name=restricted,proto3" json:"restricted,omitempty"`
 }
 
 func (m *ModifyNameProposal) Reset()      { *m = ModifyNameProposal{} }

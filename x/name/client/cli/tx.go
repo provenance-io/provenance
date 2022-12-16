@@ -16,8 +16,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-// The flag for created restricted names
-const flagRestricted = "restrict"
+// The flag for creating unrestricted names
+const flagUnrestricted = "unrestrict"
 
 // NewTxCmd is the top-level command for name CLI transactions.
 func NewTxCmd() *cobra.Command {
@@ -55,7 +55,7 @@ func GetBindNameCmd() *cobra.Command {
 				types.NewNameRecord(
 					strings.ToLower(args[0]),
 					address,
-					viper.GetBool(flagRestricted),
+					!viper.GetBool(flagUnrestricted),
 				),
 				types.NewNameRecord(
 					strings.ToLower(args[2]),
@@ -66,7 +66,7 @@ func GetBindNameCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	cmd.Flags().BoolP(flagRestricted, "r", true, "Restrict creation of child names to owner only")
+	cmd.Flags().BoolP(flagUnrestricted, "u", false, "Allow child name creation by everyone")
 
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd

@@ -5660,11 +5660,11 @@ for the sole creation of sub names.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `name` | [string](#string) |  |  |
-| `owner` | [string](#string) |  |  |
-| `restricted` | [bool](#bool) |  |  |
+| `title` | [string](#string) |  | proposal title |
+| `description` | [string](#string) |  | proposal description |
+| `name` | [string](#string) |  | the bound name |
+| `owner` | [string](#string) |  | the address the name will resolve to |
+| `restricted` | [bool](#bool) |  | a flag that indicates if an owner signature is required to add sub-names |
 
 
 
@@ -5731,11 +5731,11 @@ and/or the restricted flag of a name.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `name` | [string](#string) |  |  |
-| `owner` | [string](#string) |  |  |
-| `restricted` | [bool](#bool) |  |  |
+| `title` | [string](#string) |  | proposal title |
+| `description` | [string](#string) |  | proposal description |
+| `name` | [string](#string) |  | the bound name to update |
+| `owner` | [string](#string) |  | the new address that this name will resolve to |
+| `restricted` | [bool](#bool) |  | a flag that indicates if an owner signature is required to add sub-names |
 
 
 
@@ -5750,9 +5750,9 @@ NameRecord is a structure used to bind ownership of a name hierarchy to a collec
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `name` | [string](#string) |  | The bound name |
-| `address` | [string](#string) |  | The address the name resolved to. |
-| `restricted` | [bool](#bool) |  | Whether owner signature is required to add sub-names. |
+| `name` | [string](#string) |  | the bound name |
+| `address` | [string](#string) |  | the address the name resolved to |
+| `restricted` | [bool](#bool) |  | whether owner signature is required to add sub-names |
 
 
 
