@@ -228,9 +228,9 @@ func (s *TestSuite) TestCalculateAdditionalFeesToBePaid() {
 	s.Run("send and custom with recipient", func() {
 		expected := types.MsgFeesDistribution{
 			TotalAdditionalFees:  nhashCoins(2_000_000_000),
-			AdditionalModuleFees: nhashCoins(1_500_000_000),
+			AdditionalModuleFees: nhashCoins(1_000_000_000),
 			RecipientDistributions: map[string]sdk.Coins{
-				"recipient1": nhashCoins(500_000_000),
+				"recipient1": nhashCoins(1_000_000_000),
 			},
 		}
 		assessFee := types.NewMsgAssessCustomMsgFeeRequest("", oneHash, "recipient1", someAddress.String())
@@ -254,10 +254,10 @@ func (s *TestSuite) TestCalculateAdditionalFeesToBePaid() {
 	s.Run("send and two customs with different recipients", func() {
 		expected := types.MsgFeesDistribution{
 			TotalAdditionalFees:  nhashCoins(2_500_000_000),
-			AdditionalModuleFees: nhashCoins(1_750_000_000),
+			AdditionalModuleFees: nhashCoins(1_000_000_000), // only gets 1 hash from msgfees.
 			RecipientDistributions: map[string]sdk.Coins{
-				"recipient1": nhashCoins(500_000_000),
-				"recipient2": nhashCoins(250_000_000),
+				"recipient1": nhashCoins(1_000_000_000), // gets 1 hash
+				"recipient2": nhashCoins(500_000_000),   // gets 0.5 hash
 			},
 		}
 		assessFee1 := types.NewMsgAssessCustomMsgFeeRequest("", oneHash, "recipient1", someAddress.String())
@@ -270,9 +270,9 @@ func (s *TestSuite) TestCalculateAdditionalFeesToBePaid() {
 	s.Run("send and two customs with same recipient", func() {
 		expected := types.MsgFeesDistribution{
 			TotalAdditionalFees:  nhashCoins(2_500_000_000),
-			AdditionalModuleFees: nhashCoins(1_750_000_000),
+			AdditionalModuleFees: nhashCoins(1_000_000_000), // 1 hash from msg fees.
 			RecipientDistributions: map[string]sdk.Coins{
-				"recipient1": nhashCoins(750_000_000),
+				"recipient1": nhashCoins(1_500_000_000), // 1.5 hash from MsgAssessCustomMsgFee
 			},
 		}
 		assessFee1 := types.NewMsgAssessCustomMsgFeeRequest("", oneHash, "recipient1", someAddress.String())
@@ -301,15 +301,17 @@ func (s *TestSuite) TestCalculateAdditionalFeesToBePaid() {
 
 	s.Run("send and two customs all with fees and same recipient", func() {
 		// The Send will have a fee of 750_000_000 to the module and 250_000_000 to sendrecipient.
-		// The 1st assess will have a fee of  900_000_000 to the module, and 100_000_000 to sendrecipient.
-		// then it will send 500_000_000 to the module and 500_000_000 to sendrecipient
+		// The 1st assess will have a fee of  900_000_000 to the module, and 100_000_000 to sendrecipient.(this still holds)
+		// then it will send 0 to the module and 1_000_000_000 to sendrecipient
 		// The 2nd assess will have a fee of  900_000_000 to the module, and 100_000_000 to sendrecipient.
-		// then it will send 250_000_000 to the module and 250_000_000 to sendrecipient
+		// then it will send 0 to the module and 500_000_000 to sendrecipient
+		// module = (900_000_000 +750_000_000+ 900_000_000=2_550_000_000)
+		// recipient = (250_000_000 + 100_000_000 + 1_000_000_000+ 100_000_000 + 500_000_000 = 1_950_000_000)
 		expected := types.MsgFeesDistribution{
 			TotalAdditionalFees:  nhashCoins(4_500_000_000),
-			AdditionalModuleFees: nhashCoins(3_300_000_000),
+			AdditionalModuleFees: nhashCoins(2_550_000_000),
 			RecipientDistributions: map[string]sdk.Coins{
-				"sendrecipient": nhashCoins(1_200_000_000),
+				"sendrecipient": nhashCoins(1_950_000_000),
 			},
 		}
 		assessFee1 := types.NewMsgAssessCustomMsgFeeRequest("", oneHash, "sendrecipient", someAddress.String())
@@ -324,14 +326,14 @@ func (s *TestSuite) TestCalculateAdditionalFeesToBePaid() {
 	s.Run("send and custom all different recipients", func() {
 		// The Send will have a fee of 750_000_000 to the module and 250_000_000 to sendrecipient.
 		// The 1st assess will have a fee of 900_000_000 to the module, and 100_000_000 to customrecipient.
-		// then it will send 500_000_000 to the module and 500_000_000 to anotherrecipient
+		// then it will send 0 to the module and 1_000_000_000 to anotherrecipient
 		expected := types.MsgFeesDistribution{
 			TotalAdditionalFees:  nhashCoins(3_000_000_000),
-			AdditionalModuleFees: nhashCoins(2_150_000_000),
+			AdditionalModuleFees: nhashCoins(1_650_000_000),
 			RecipientDistributions: map[string]sdk.Coins{
 				"sendrecipient":    nhashCoins(250_000_000),
 				"customrecipient":  nhashCoins(100_000_000),
-				"anotherrecipient": nhashCoins(500_000_000),
+				"anotherrecipient": nhashCoins(1_000_000_000),
 			},
 		}
 		assessFee1 := types.NewMsgAssessCustomMsgFeeRequest("", oneHash, "anotherrecipient", someAddress.String())
@@ -359,9 +361,9 @@ func (s *TestSuite) TestCalculateAdditionalFeesToBePaid() {
 	s.Run("with fee on custom assess too do send and custom with recipient", func() {
 		expected := types.MsgFeesDistribution{
 			TotalAdditionalFees:  nhashCoins(3_000_000_000),
-			AdditionalModuleFees: nhashCoins(2_500_000_000),
+			AdditionalModuleFees: nhashCoins(2_000_000_000),
 			RecipientDistributions: map[string]sdk.Coins{
-				"recipient1": nhashCoins(500_000_000),
+				"recipient1": nhashCoins(1_000_000_000), // 1 hash goes to recipient1
 			},
 		}
 		assessFee := types.NewMsgAssessCustomMsgFeeRequest("", oneHash, "recipient1", someAddress.String())

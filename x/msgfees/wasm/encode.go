@@ -28,8 +28,7 @@ type AssessCustomFeeParams struct {
 	From string `json:"from"`
 	// An optional short name
 	Name string `json:"name,omitempty"`
-	// An optional address to receive the fees. if present, fees are split 50/50 between the account and fee module,
-	// otherwise the fee module receives the full amount
+	// An optional address to receive the fees. if present, the total amount is sent to the address.
 	Recipient string `json:"recipient,omitempty"`
 }
 
