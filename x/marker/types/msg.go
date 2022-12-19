@@ -642,3 +642,39 @@ func (msg MsgGrantAllowanceRequest) GetSignBytes() []byte {
 func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
+
+// Route returns the name of the module.
+func (msg MsgAddFinalizeActivateMarkerRequest) Route() string { return ModuleName }
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
+
+	// A marker to be finalized and activated must have a manager assigned.
+	if len(msg.Manager) == 0 {
+		return fmt.Errorf("marker manager cannot be empty when adding, finalizing and activating marker")
+	}
+	markerCoin := sdk.Coin{
+		Denom:  msg.Amount.Denom,
+		Amount: msg.Amount.Amount,
+	}
+	if !markerCoin.IsValid() {
+		return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
+	}
+
+	return nil
+}
+
+// GetSignBytes encodes the message for signing.
+func (msg MsgAddFinalizeActivateMarkerRequest) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners indicates that the message must have been signed by the address provided.
+func (msg MsgAddFinalizeActivateMarkerRequest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}

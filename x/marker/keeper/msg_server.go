@@ -541,3 +541,67 @@ func (k msgServer) SetDenomMetadata(
 
 	return &types.MsgSetDenomMetadataResponse{}, nil
 }
+
+// AddFinalizeAndActivateMarker Handle a message to add a new marker account, finalize it and activate it in one go.
+func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.MsgAddFinalizeActivateMarkerRequest) (*types.MsgAddFinalizeActivateMarkerResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	ma, errFromCheckAndPrepare := addMarkerCheckAndPrepare(ctx, msg, k)
+	if errFromCheckAndPrepare != nil {
+		return nil, errFromCheckAndPrepare
+	}
+
+	if err := k.Keeper.AddFinalizeAndActivateMarker(ctx, ma); err != nil {
+		ctx.Logger().Error("unable to add, finalize and activate marker", "err", err)
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
+	return &types.MsgAddFinalizeActivateMarkerResponse{}, nil
+}
+
+func addMarkerCheckAndPrepare(ctx sdk.Context, msg *types.MsgAddFinalizeActivateMarkerRequest, k msgServer) (*types.MarkerAccount, error) {
+
+	// Validate transaction message.
+	err := msg.ValidateBasic()
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	// Add marker requests must pass extra validation for denom (in addition to regular coin validation expression)
+	if err = k.ValidateUnrestictedDenom(ctx, msg.Amount.Denom); err != nil {
+		return nil, err
+	}
+
+	addr := types.MustGetMarkerAddress(msg.Amount.Denom)
+	var manager sdk.AccAddress
+	if msg.Manager != "" {
+		manager, err = sdk.AccAddressFromBech32(msg.Manager)
+	} else {
+		manager, err = sdk.AccAddressFromBech32(msg.FromAddress)
+	}
+	if err != nil {
+		return nil, err
+	}
+	account := authtypes.NewBaseAccount(addr, nil, 0, 0)
+	ma := types.NewMarkerAccount(
+		account,
+		sdk.NewCoin(msg.Amount.Denom, msg.Amount.Amount),
+		manager,
+		msg.AccessList,
+		types.StatusProposed,
+		msg.MarkerType)
+	ma.SupplyFixed = msg.SupplyFixed
+
+	if k.GetEnableGovernance(ctx) {
+		ma.AllowGovernanceControl = true
+	} else {
+		ma.AllowGovernanceControl = msg.AllowGovernanceControl
+	}
+	return ma, nil
+}

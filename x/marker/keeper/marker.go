@@ -820,6 +820,27 @@ func (k Keeper) SetMarkerDenomMetadata(ctx sdk.Context, metadata banktypes.Metad
 	return nil
 }
 
+// AddFinalizeAndActivateMarker adds markers, finalizes it and and then activates it.
+func (k Keeper) AddFinalizeAndActivateMarker(ctx sdk.Context, marker types.MarkerAccountI) error {
+	err := k.AddMarkerAccount(ctx, marker)
+	if err != nil {
+		return err
+	}
+
+	// next state is finalized
+	// Manager is the same as the manager in add marker request.
+	err = k.FinalizeMarker(ctx, marker.GetManager(), marker.GetDenom())
+	if err != nil {
+		return err
+	}
+	// next step is activate
+	err = k.ActivateMarker(ctx, marker.GetManager(), marker.GetDenom())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // accountControlsAllSupply return true if the caller account address possess 100% of the total supply of a marker.
 // This check is used to determine if an account should be allowed to perform defacto admin operations on a marker.
 func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress, m types.MarkerAccountI) bool {
@@ -841,25 +862,4 @@ func (k Keeper) ensureSendEnabledStatus(ctx sdk.Context, denom string, sendEnabl
 			k.bankKeeper.SetSendEnabled(ctx, denom, sendEnabled)
 		}
 	}
-}
-
-func (k Keeper) CreateAndActivateMarker(ctx sdk.Context, marker types.MarkerAccountI) error {
-
-	err := k.AddMarkerAccount(ctx, marker)
-	if err != nil {
-		return err
-	}
-
-	// next state is finalized
-	// Manager is the
-	err = k.FinalizeMarker(ctx, marker.GetManager(), marker.GetDenom())
-	if err != nil {
-		return err
-	}
-	err = k.ActivateMarker(ctx, marker.GetManager(), marker.GetDenom())
-	if err != nil {
-		return err
-	}
-	return nil
-
 }
