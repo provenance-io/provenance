@@ -9,9 +9,16 @@ const (
 )
 
 // SplitCoinByBips returns split to recipient and fee module based on basis points for recipient
+// if bips set to 100bips recipient gets all the fees.
 func SplitCoinByBips(coin sdk.Coin, bips uint32) (recipientCoin sdk.Coin, feePayoutCoin sdk.Coin, err error) {
 	if bips > 10_000 {
 		return recipientCoin, feePayoutCoin, ErrInvalidBipsValue.Wrapf("invalid: %v", bips)
+	}
+	// nothing to calculate if recipient gets 10_000 bips or 100%, short circuit
+	if bips == 10_000 {
+		recipientCoin = coin
+		feePayoutCoin = sdk.NewCoin(coin.Denom, sdk.NewInt(0))
+		return recipientCoin, feePayoutCoin, nil
 	}
 	numerator := sdk.NewDec(int64(bips))
 	denominator := sdk.NewDec(10_000)
@@ -55,7 +62,10 @@ func (d *MsgFeesDistribution) Increase(coin sdk.Coin, bips uint32, recipient str
 	}
 
 	d.RecipientDistributions[recipient] = d.RecipientDistributions[recipient].Add(recipientCoin)
-	d.AdditionalModuleFees = d.AdditionalModuleFees.Add(feePayoutCoin)
+	// fee payout for module for now will be zero, keeping it still here if we goto  bips at a message level or a param this will come back into play.
+	if !feePayoutCoin.IsZero() {
+		d.AdditionalModuleFees = d.AdditionalModuleFees.Add(feePayoutCoin)
+	}
 
 	return nil
 }
