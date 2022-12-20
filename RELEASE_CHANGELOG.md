@@ -4,6 +4,8 @@ This is an in-place upgrade of [v1.13.0](https://github.com/provenance-io/proven
 
 Provenance Blockchain has identified some issues with `cleveldb` as a backend. The issues involve improper closing of the database when the `provenanced` process is killed (e.g. by Cosmovisor). As such, please consider switching to `goleveldb` either with this upgrade or separately.
 
+NOTE: `provenanced` configuration commands are sensitive to the `--home` flags and `PIO_HOME` environment variables of your node setup.
+
 Recommended procedure for switching to `goleveldb` from `cleveldb`:
 1. Make sure you're using `cleveldb`. This can be done using the `provenanced config get db_backend` command, or by checking your `config.toml` file. Only proceed with these instructions if you're using `cleveldb`.
 1. Stop your node.
