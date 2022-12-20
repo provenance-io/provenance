@@ -177,7 +177,7 @@ message MsgTransferResponse {}
 message MsgIbcTransferRequest {
   ibc.applications.transfer.v1.MsgTransfer transfer = 1 [
     (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types.MsgTransfer"
+    (gogoproto.customtype) = "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types.MsgTransfer"
   ];
   string administrator = 2;
 }

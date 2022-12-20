@@ -10,8 +10,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
-	ibctypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
+	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 )

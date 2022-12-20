@@ -9,8 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 )
