@@ -9,9 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
+	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -709,8 +708,7 @@ func (k Keeper) IbcTransferCoin(
 	sender, admin sdk.AccAddress,
 	receiver string,
 	timeoutHeight clienttypes.Height,
-	timeoutTimestamp uint64,
-	checkRestrictionsHandler ibckeeper.CheckRestrictionsHandler) error {
+	timeoutTimestamp uint64) error {
 	m, err := k.GetMarkerByDenom(ctx, token.Denom)
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %w", token.Denom, err)
@@ -732,17 +730,17 @@ func (k Keeper) IbcTransferCoin(
 		}
 	}
 
-	err = k.ibcKeeper.SendTransfer(
-		ctx,
-		sourcePort,
-		sourceChannel,
-		token,
-		sender,
-		receiver,
-		timeoutHeight,
-		timeoutTimestamp,
-		checkRestrictionsHandler,
-	)
+	msg := transfertypes.MsgTransfer{
+		SourcePort:       sourcePort,
+		SourceChannel:    sourceChannel,
+		Token:            token,
+		Sender:           sender.String(),
+		Receiver:         receiver,
+		TimeoutHeight:    timeoutHeight,
+		TimeoutTimestamp: timeoutTimestamp,
+	}
+
+	_, err = k.ibcKeeper.Transfer(ctx, &msg)
 	if err != nil {
 		return err
 	}
