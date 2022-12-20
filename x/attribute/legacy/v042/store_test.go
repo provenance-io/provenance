@@ -16,7 +16,6 @@ import (
 
 	v042 "github.com/provenance-io/provenance/x/attribute/legacy/v042"
 	"github.com/provenance-io/provenance/x/attribute/types"
-	namev042 "github.com/provenance-io/provenance/x/name/legacy/v042"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
