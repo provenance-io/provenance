@@ -1,4 +1,4 @@
-## [v1.13.1](https://github.com/provenance-io/provenance/releases/tag/v1.13.1) - 2022-12-16
+## [v1.13.1](https://github.com/provenance-io/provenance/releases/tag/v1.13.1)
 
 This is an emergency in-place upgrade of [v1.13.0](https://github.com/provenance-io/provenance/releases/tag/v1.13.0). Nodes must be upgraded as soon as possible.
 
