@@ -542,7 +542,7 @@ func (k msgServer) SetDenomMetadata(
 	return &types.MsgSetDenomMetadataResponse{}, nil
 }
 
-// AddFinalizeAndActivateMarker Handle a message to add a new marker account, finalize it and activate it in one go.
+// AddFinalizeActivateMarker Handle a message to add a new marker account, finalize it and activate it in one go.
 func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.MsgAddFinalizeActivateMarkerRequest) (*types.MsgAddFinalizeActivateMarkerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	ma, errFromCheckAndPrepare := addMarkerCheckAndPrepare(ctx, msg, k)
@@ -569,6 +569,7 @@ func addMarkerCheckAndPrepare(ctx sdk.Context, msg *types.MsgAddFinalizeActivate
 
 	// Validate transaction message.
 	err := msg.ValidateBasic()
+
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -580,11 +581,7 @@ func addMarkerCheckAndPrepare(ctx sdk.Context, msg *types.MsgAddFinalizeActivate
 
 	addr := types.MustGetMarkerAddress(msg.Amount.Denom)
 	var manager sdk.AccAddress
-	if msg.Manager != "" {
-		manager, err = sdk.AccAddressFromBech32(msg.Manager)
-	} else {
-		manager, err = sdk.AccAddressFromBech32(msg.FromAddress)
-	}
+	manager, err = sdk.AccAddressFromBech32(msg.Manager)
 	if err != nil {
 		return nil, err
 	}

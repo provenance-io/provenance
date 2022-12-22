@@ -648,8 +648,7 @@ func (msg MsgAddFinalizeActivateMarkerRequest) Route() string { return ModuleNam
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
-
-	// A marker to be finalized and activated must have a manager assigned.
+	// A marker to be added, finalized and activated must have a manager assigned.
 	if len(msg.Manager) == 0 {
 		return fmt.Errorf("marker manager cannot be empty when adding, finalizing and activating marker")
 	}
@@ -657,9 +656,13 @@ func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
 		Denom:  msg.Amount.Denom,
 		Amount: msg.Amount.Amount,
 	}
+	// IsValid validates denom and amount is not negative.
 	if !markerCoin.IsValid() {
 		return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
 	}
+
+	// check manager address is valid too
+	sdk.MustAccAddressFromBech32(msg.Manager)
 
 	return nil
 }
@@ -672,9 +675,6 @@ func (msg MsgAddFinalizeActivateMarkerRequest) GetSignBytes() []byte {
 
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgAddFinalizeActivateMarkerRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		panic(err)
-	}
+	addr := sdk.MustAccAddressFromBech32(msg.FromAddress)
 	return []sdk.AccAddress{addr}
 }
