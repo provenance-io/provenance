@@ -547,7 +547,7 @@ func New(
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule).
-		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper)).
+		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper)).
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
