@@ -851,6 +851,7 @@ func (s *IntegrationTestSuite) TestMarkerIbcTransfer() {
 		flagPacketTimeoutHeight    string
 		flagPacketTimeoutTimestamp string
 		flagAbsoluteTimeouts       string
+		flagMemo                   string
 		expectedErr                string
 	}{
 		{
@@ -882,6 +883,25 @@ func (s *IntegrationTestSuite) TestMarkerIbcTransfer() {
 			flagAbsoluteTimeouts: "not-a-bool",
 			expectedErr:          `invalid argument "not-a-bool" for "--absolute-timeouts" flag: strconv.ParseBool: parsing "not-a-bool": invalid syntax`,
 		},
+		{
+			name:        "should pass basic validation with optional flag memo",
+			srcPort:     "port",
+			srcChannel:  "channel-1",
+			sender:      "sender",
+			receiver:    "receiver",
+			amount:      "10jackthecat",
+			flagMemo:    "testing",
+			expectedErr: `rpc error: code = NotFound desc = rpc error: code = NotFound desc = port-id: port, channel-id: channel-1: channel not found: key not found`,
+		},
+		{
+			name:        "should pass basic validation without optional flag memo",
+			srcPort:     "port",
+			srcChannel:  "channel-1",
+			sender:      "sender",
+			receiver:    "receiver",
+			amount:      "10jackthecat",
+			expectedErr: `rpc error: code = NotFound desc = rpc error: code = NotFound desc = port-id: port, channel-id: channel-1: channel not found: key not found`,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -905,6 +925,9 @@ func (s *IntegrationTestSuite) TestMarkerIbcTransfer() {
 			}
 			if len(tc.flagAbsoluteTimeouts) > 0 {
 				args = append(args, fmt.Sprintf("--%s=%s", markercli.FlagAbsoluteTimeouts, tc.flagAbsoluteTimeouts))
+			}
+			if len(tc.flagMemo) > 0 {
+				args = append(args, fmt.Sprintf("--%s=%s", markercli.FlagMemo, tc.flagMemo))
 			}
 			_, err := clitestutil.ExecTestCLICmd(clientCtx, markercli.GetIbcTransferTxCmd(), args)
 			if len(tc.expectedErr) > 0 {
