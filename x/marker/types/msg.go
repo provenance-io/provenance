@@ -643,6 +643,17 @@ func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
+func NewMsgAddFinalizeActivateMarkerRequest(denom string, totalSupply sdkmath.Int, fromAddress sdk.AccAddress, manager sdk.AccAddress, markerType MarkerType, supplyFixed bool, allowGovernanceControl bool) *MsgAddFinalizeActivateMarkerRequest {
+	return &MsgAddFinalizeActivateMarkerRequest{
+		Amount:                 sdk.NewCoin(denom, totalSupply),
+		Manager:                manager.String(),
+		FromAddress:            fromAddress.String(),
+		MarkerType:             markerType,
+		SupplyFixed:            supplyFixed,
+		AllowGovernanceControl: allowGovernanceControl,
+	}
+}
+
 // Route returns the name of the module.
 func (msg MsgAddFinalizeActivateMarkerRequest) Route() string { return ModuleName }
 
