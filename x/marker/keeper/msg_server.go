@@ -9,6 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
+	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 )
@@ -462,7 +464,17 @@ func (k msgServer) IbcTransfer(goCtx context.Context, msg *types.MsgIbcTransferR
 		return nil, err
 	}
 
-	err = k.IbcTransferCoin(ctx, msg.Transfer.SourcePort, msg.Transfer.SourceChannel, msg.Transfer.Token, from, admin, msg.Transfer.Receiver, msg.Transfer.TimeoutHeight, msg.Transfer.TimeoutTimestamp)
+	err = k.IbcTransferCoin(ctx, msg.Transfer.SourcePort, msg.Transfer.SourceChannel, msg.Transfer.Token, from, admin, msg.Transfer.Receiver, msg.Transfer.TimeoutHeight, msg.Transfer.TimeoutTimestamp, msg.Transfer.Memo, func(ctx sdk.Context, ibcKeeper ibckeeper.Keeper, sender sdk.AccAddress, token sdk.Coin) (canTransfer bool, err error) {
+		if !ibcKeeper.GetSendEnabled(ctx) {
+			return false, ibctypes.ErrSendDisabled
+		}
+
+		if ibcKeeper.BankKeeper.BlockedAddr(sender) {
+			return false, sdkerrors.ErrUnauthorized.Wrapf("%s is not allowed to send funds", sender)
+		}
+
+		return true, nil
+	})
 	if err != nil {
 		return nil, err
 	}

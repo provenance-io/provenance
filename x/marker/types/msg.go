@@ -497,6 +497,7 @@ func NewIbcMsgTransferRequest(
 	receiver string,
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64, //nolint:interfacer
+	memo string,
 ) *MsgIbcTransferRequest {
 	return &MsgIbcTransferRequest{
 		Administrator: administrator,
@@ -508,6 +509,7 @@ func NewIbcMsgTransferRequest(
 			Receiver:         receiver,
 			TimeoutHeight:    timeoutHeight,
 			TimeoutTimestamp: timeoutTimestamp,
+			Memo:             memo,
 		},
 	}
 }
