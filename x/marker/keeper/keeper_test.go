@@ -695,20 +695,73 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balance must be set")
 
 	// Creating a marker over an account with zero sequence is fine.
-	_, err := server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true))
+	// One shot marker creation
+	_, err := server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
+		"testcoin",
+		sdk.NewInt(30),
+		user,
+		manager,
+		types.MarkerType_Coin,
+		true,
+		true,
+	))
 	require.NoError(t, err, "should allow a marker over existing account that has not signed anything.")
 
 	// existing coin balance must still be present
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balances must be preserved")
 
+	m, err := app.MarkerKeeper.GetMarkerByDenom(ctx, "testcoin")
+	require.NoError(t, err)
+	require.EqualValues(t, m.GetSupply(), sdk.NewInt64Coin("testcoin", 30))
+	require.EqualValues(t, m.GetStatus(), types.StatusActive)
+
+	m, err = app.MarkerKeeper.GetMarker(ctx, user)
+	require.NoError(t, err)
+	require.EqualValues(t, m.GetSupply(), sdk.NewInt64Coin("testcoin", 30))
+	require.EqualValues(t, m.GetStatus(), types.StatusActive)
+
 	// Creating a marker over an existing marker fails.
-	_, err = server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true))
+	_, err = server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
+		"testcoin",
+		sdk.NewInt(30),
+		user,
+		manager,
+		types.MarkerType_Coin,
+		true,
+		true,
+	))
 	require.Error(t, err, "fails because marker already exists")
 
+	// Load the created marker
+	m, err = app.MarkerKeeper.GetMarker(ctx, user)
+	require.NoError(t, err)
+	require.EqualValues(t, m.GetSupply(), sdk.NewInt64Coin("testcoin", 30))
+	require.EqualValues(t, m.GetStatus(), types.StatusActive)
+
+	// entire supply should have been allocated to marker acount
+	require.EqualValues(t, app.MarkerKeeper.GetEscrow(ctx, m).AmountOf("testcoin"), sdk.NewInt(30))
+}
+
+// Creating a marker over an existing account with a positive sequence number fails.
+func TestInvalidAccount(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	user := testUserAddress("testcoin")
+	manager := testUserAddress("manager")
 	// replace existing test account with a new copy that has a positive sequence number
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 10))
 
-	// Creating a marker over an existing account with a positive sequence number fails.
-	_, err = server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true))
+	_, err := server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
+		"testcoin",
+		sdk.NewInt(30),
+		user,
+		manager,
+		types.MarkerType_Coin,
+		true,
+		true,
+	))
 	require.Error(t, err, "should not allow creation over and existing account with a positive sequence number.")
+	require.Contains(t, err.Error(), "account at "+user.String()+" is not a marker account: invalid request")
 }
