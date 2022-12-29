@@ -970,10 +970,29 @@ func getPeriod(duration int64) time.Duration {
 
 func ParseAccessGrant(accessGrantsJson string) (accessGrants []types.AccessGrant, err error) {
 	var grants []types.AccessGrant
-
+	println(accessGrantsJson)
 	err = json.Unmarshal([]byte(accessGrantsJson), &grants)
 	if err != nil {
 		return nil, err
 	}
 	return grants, nil
+}
+
+// ParseAccessGrantString  splits string (example address1,perm1,perm2...;address2, perm1...) to AccessGrant
+func getAccessGrantFromString(addressPermissionString string) {
+	parts := strings.Split(addressPermissionString, ";")
+	var grants []types.AccessGrant
+	for _, p := range parts {
+		partsPerAddress := strings.Split(p, ",")
+		if !(len(partsPerAddress) > 2) {
+			panic("at least one grant should be provided with address")
+		}
+		var permissions types.AccessList
+		address := sdk.MustAccAddressFromBech32(partsPerAddress[0])
+		for _, permission := range partsPerAddress[1:] {
+			permissions = append(permissions, types.AccessByName(permission))
+		}
+		grants = append(grants, *types.NewAccessGrant(address, permissions))
+	}
+
 }

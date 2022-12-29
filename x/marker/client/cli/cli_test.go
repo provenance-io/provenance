@@ -1271,7 +1271,7 @@ func (s *IntegrationTestSuite) TestAddFinalizeActivateMarkerTxCommands() {
 			markercli.GetCmdAddFinalizeActivateMarker(),
 			[]string{
 				"1000newhotdog",
-				getAccessGrantJson(s.testnet.Validators[0].Address),
+				getAccessGrantJson(s.testnet.Validators[0].Address, s.accountAddresses[1]),
 				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
 				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "true"),
 				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "true"),
@@ -1303,10 +1303,11 @@ func (s *IntegrationTestSuite) TestAddFinalizeActivateMarkerTxCommands() {
 	}
 }
 
-func getAccessGrantJson(address sdk.AccAddress) string {
-	accessgrantJson, err := json.Marshal([]markertypes.AccessGrant{*markertypes.NewAccessGrant(address, []markertypes.Access{markertypes.Access_Mint, markertypes.Access_Admin})})
+func getAccessGrantJson(address sdk.AccAddress, anotherAddress sdk.AccAddress) string {
+	accessGrantJson, err := json.Marshal([]markertypes.AccessGrant{*markertypes.NewAccessGrant(address, []markertypes.Access{markertypes.Access_Mint, markertypes.Access_Admin}),
+		*markertypes.NewAccessGrant(anotherAddress, []markertypes.Access{markertypes.Access_Mint})})
 	if err != nil {
 		panic(err)
 	}
-	return string(accessgrantJson)
+	return string(accessGrantJson)
 }
