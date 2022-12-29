@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -1253,4 +1254,59 @@ func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 
 func getFormattedExpiration(duration int64) string {
 	return time.Now().Add(time.Duration(duration) * time.Second).Format(time.RFC3339)
+}
+
+func (s *IntegrationTestSuite) TestAddFinalizeActivateMarkerTxCommands() {
+
+	testCases := []struct {
+		name         string
+		cmd          *cobra.Command
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"create a new marker",
+			markercli.GetCmdAddFinalizeActivateMarker(),
+			[]string{
+				"1000newhotdog",
+				getAccessGrantJson(s.testnet.Validators[0].Address),
+				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
+				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "true"),
+				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "true"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
+}
+
+func getAccessGrantJson(address sdk.AccAddress) string {
+	accessgrantJson, err := json.Marshal([]markertypes.AccessGrant{*markertypes.NewAccessGrant(address, []markertypes.Access{markertypes.Access_Mint, markertypes.Access_Admin})})
+	if err != nil {
+		panic(err)
+	}
+	return string(accessgrantJson)
 }

@@ -704,6 +704,7 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 		types.MarkerType_Coin,
 		true,
 		true,
+		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Mint, types.Access_Admin})},
 	))
 	require.NoError(t, err, "should allow a marker over existing account that has not signed anything.")
 
@@ -729,6 +730,7 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 		types.MarkerType_Coin,
 		true,
 		true,
+		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Mint, types.Access_Admin})},
 	))
 	require.Error(t, err, "fails because marker already exists")
 
@@ -761,6 +763,7 @@ func TestInvalidAccount(t *testing.T) {
 		types.MarkerType_Coin,
 		true,
 		true,
+		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Mint, types.Access_Admin})},
 	))
 	require.Error(t, err, "should not allow creation over and existing account with a positive sequence number.")
 	require.Contains(t, err.Error(), "account at "+user.String()+" is not a marker account: invalid request")

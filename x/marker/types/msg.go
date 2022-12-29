@@ -643,7 +643,7 @@ func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
-func NewMsgAddFinalizeActivateMarkerRequest(denom string, totalSupply sdkmath.Int, fromAddress sdk.AccAddress, manager sdk.AccAddress, markerType MarkerType, supplyFixed bool, allowGovernanceControl bool) *MsgAddFinalizeActivateMarkerRequest {
+func NewMsgAddFinalizeActivateMarkerRequest(denom string, totalSupply sdkmath.Int, fromAddress sdk.AccAddress, manager sdk.AccAddress, markerType MarkerType, supplyFixed bool, allowGovernanceControl bool, accessGrants []AccessGrant) *MsgAddFinalizeActivateMarkerRequest {
 	return &MsgAddFinalizeActivateMarkerRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
 		Manager:                manager.String(),
@@ -651,6 +651,7 @@ func NewMsgAddFinalizeActivateMarkerRequest(denom string, totalSupply sdkmath.In
 		MarkerType:             markerType,
 		SupplyFixed:            supplyFixed,
 		AllowGovernanceControl: allowGovernanceControl,
+		AccessList:             accessGrants,
 	}
 }
 
@@ -659,10 +660,6 @@ func (msg MsgAddFinalizeActivateMarkerRequest) Route() string { return ModuleNam
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
-	// A marker to be added, finalized and activated must have a manager assigned.
-	if len(msg.Manager) == 0 {
-		return fmt.Errorf("marker manager cannot be empty when adding, finalizing and activating marker")
-	}
 	markerCoin := sdk.Coin{
 		Denom:  msg.Amount.Denom,
 		Amount: msg.Amount.Amount,
@@ -672,9 +669,13 @@ func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
 		return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
 	}
 
-	// check manager address is valid too
+	// check manager address is if supplied is valid
 	sdk.MustAccAddressFromBech32(msg.Manager)
 
+	// since this is a one shot process should have 1 access list member,to have any value for a marker.
+	if len(msg.AccessList) == 0 {
+		return fmt.Errorf("since this will activate the marker, should have access list defined")
+	}
 	return nil
 }
 

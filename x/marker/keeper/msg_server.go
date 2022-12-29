@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/armon/go-metrics"
 
@@ -445,9 +446,9 @@ func (k msgServer) Transfer(goCtx context.Context, msg *types.MsgTransferRequest
 	return &types.MsgTransferResponse{}, nil
 }
 
-// Transfer handles a message to send coins from one account to another (used with restricted coins that are not
+// IbcTransfer handles a message to ibc send coins from one account to another (used with restricted coins that are not
 //
-//	sent using the normal bank send process)
+//	sent using the normal ibc send process)
 func (k msgServer) IbcTransfer(goCtx context.Context, msg *types.MsgIbcTransferRequest) (*types.MsgIbcTransferResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -545,27 +546,6 @@ func (k msgServer) SetDenomMetadata(
 // AddFinalizeActivateMarker Handle a message to add a new marker account, finalize it and activate it in one go.
 func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.MsgAddFinalizeActivateMarkerRequest) (*types.MsgAddFinalizeActivateMarkerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	ma, errFromCheckAndPrepare := addMarkerCheckAndPrepare(ctx, msg, k)
-	if errFromCheckAndPrepare != nil {
-		return nil, errFromCheckAndPrepare
-	}
-
-	if err := k.Keeper.AddFinalizeAndActivateMarker(ctx, ma); err != nil {
-		ctx.Logger().Error("unable to add, finalize and activate marker", "err", err)
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
-
-	return &types.MsgAddFinalizeActivateMarkerResponse{}, nil
-}
-
-func addMarkerCheckAndPrepare(ctx sdk.Context, msg *types.MsgAddFinalizeActivateMarkerRequest, k msgServer) (*types.MarkerAccount, error) {
 
 	// Validate transaction message.
 	err := msg.ValidateBasic()
@@ -579,9 +559,19 @@ func addMarkerCheckAndPrepare(ctx sdk.Context, msg *types.MsgAddFinalizeActivate
 		return nil, err
 	}
 
+	// since this is a one shot process should have 1 access list member, to have any value for a marker.
+	if len(msg.AccessList) == 0 {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(fmt.Errorf("since this will activate the marker, should have at least one access list defined").Error())
+	}
+
 	addr := types.MustGetMarkerAddress(msg.Amount.Denom)
 	var manager sdk.AccAddress
-	manager, err = sdk.AccAddressFromBech32(msg.Manager)
+	// if manager not supplied set manager from the --from-address
+	if msg.Manager != "" {
+		manager, err = sdk.AccAddressFromBech32(msg.Manager)
+	} else {
+		manager, err = sdk.AccAddressFromBech32(msg.FromAddress)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -600,5 +590,18 @@ func addMarkerCheckAndPrepare(ctx sdk.Context, msg *types.MsgAddFinalizeActivate
 	} else {
 		ma.AllowGovernanceControl = msg.AllowGovernanceControl
 	}
-	return ma, nil
+
+	if err := k.Keeper.AddFinalizeAndActivateMarker(ctx, ma); err != nil {
+		ctx.Logger().Error("unable to add, finalize and activate marker", "err", err)
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
+	return &types.MsgAddFinalizeActivateMarkerResponse{}, nil
 }

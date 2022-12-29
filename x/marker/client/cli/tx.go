@@ -909,9 +909,9 @@ Examples:
 // GetCmdAddFinalizeActivateMarker implements the create marker command
 func GetCmdAddFinalizeActivateMarker() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create-finalize-activate [coin]",
+		Use:     "create-finalize-activate [coin] [access-grant-json]",
 		Aliases: []string{"n"},
-		Args:    cobra.ExactArgs(1),
+		Args:    cobra.ExactArgs(2),
 		Short:   "Creates, Finalizes and Activates a new marker",
 		Long: strings.TrimSpace(`Creates a new marker, finalizes it and put's it ACTIVATED state managed by the from address
 with the given supply amount and denomination provided in the coin argument
@@ -947,7 +947,8 @@ with the given supply amount and denomination provided in the coin argument
 			if err != nil {
 				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagAllowGovernanceControl, err)
 			}
-			msg := types.NewMsgAddFinalizeActivateMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue, supplyFixed, allowGovernanceControl)
+			accessGrants, err := ParseAccessGrant(args[1])
+			msg := types.NewMsgAddFinalizeActivateMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue, supplyFixed, allowGovernanceControl, accessGrants)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -965,4 +966,14 @@ func getPeriodReset(duration int64) time.Time {
 
 func getPeriod(duration int64) time.Duration {
 	return time.Duration(duration) * time.Second
+}
+
+func ParseAccessGrant(accessGrantsJson string) (accessGrants []types.AccessGrant, err error) {
+	var grants []types.AccessGrant
+
+	err = json.Unmarshal([]byte(accessGrantsJson), &grants)
+	if err != nil {
+		return nil, err
+	}
+	return grants, nil
 }
