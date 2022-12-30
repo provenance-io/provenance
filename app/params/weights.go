@@ -21,8 +21,8 @@ const (
 	DefaultWeightSetDenomMetadataProposalContent    int = 5
 	DefaultWeightMsgAddMarker                       int = 100
 	DefaultWeightMsgChangeStatus                    int = 10
-	DefaultWeightMsgAddAccess                       int = 10
-	DefaultWeightMsgAddFinalizeActivateMarker       int = 67
+	DefaultWeightMsgAddAccess                       int = 25
+	DefaultWeightMsgAddFinalizeActivateMarker       int = 10
 	DefaultWeightMsgMintMarker                      int = 67
 	DefaultWeightMsgBurnMarker                      int = 67
 	// MsgFees
