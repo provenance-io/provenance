@@ -768,3 +768,55 @@ func TestInvalidAccount(t *testing.T) {
 	require.Error(t, err, "should not allow creation over and existing account with a positive sequence number.")
 	require.Contains(t, err.Error(), "account at "+user.String()+" is not a marker account: invalid request")
 }
+
+func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+
+	user := testUserAddress("test")
+
+	// Require a long unrestricted denom
+	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: "[a-z]{12,20}"})
+
+	_, err := server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx),
+		types.NewMsgAddFinalizeActivateMarkerRequest(
+			"tooshort",
+			sdk.NewInt(30),
+			user,
+			user,
+			types.MarkerType_Coin,
+			true,
+			true,
+			[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})},
+		))
+	require.Error(t, err, "fails with unrestricted denom length fault")
+	require.Equal(t, fmt.Errorf("invalid denom [tooshort] (fails unrestricted marker denom validation [a-z]{12,20})"), err, "should fail with denom restriction")
+
+	_, err = server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
+		"itslongenough",
+		sdk.NewInt(30),
+		user,
+		user,
+		types.MarkerType_Coin,
+		true,
+		true,
+		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})},
+	))
+	require.NoError(t, err, "should allow a marker with a sufficiently long denom")
+
+	// Set to an empty string (returns to default expression)
+	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: ""})
+	_, err = server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
+		"short",
+		sdk.NewInt(30),
+		user,
+		user,
+		types.MarkerType_Coin,
+		true,
+		true,
+		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})},
+	))
+	// succeeds now as the default unrestricted denom expression allows any valid denom (minimum length is 2)
+	require.NoError(t, err, "should allow any valid denom with a min length of two")
+}
