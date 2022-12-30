@@ -18,20 +18,21 @@ import (
 )
 
 const (
-	TypeAddMarkerRequest    = "addmarker"
-	TypeAddAccessRequest    = "addaccess"
-	TypeDeleteAccessRequest = "deleteaccess"
-	TypeFinalizeRequest     = "finalize"
-	TypeActivateRequest     = "activate"
-	TypeCancelRequest       = "cancel"
-	TypeDeleteRequest       = "delete"
-	TypeMintRequest         = "mint"
-	TypeBurnRequest         = "burn"
-	TypeWithdrawRequest     = "withdraw"
-	TypeTransferRequest     = "transfer"
-	TypeIbcTransferRequest  = "ibctransfer"
-	TypeSetMetadataRequest  = "setmetadata"
-	TypeGrantAllowance      = "grantallowance"
+	TypeAddMarkerRequest                 = "addmarker"
+	TypeAddAccessRequest                 = "addaccess"
+	TypeDeleteAccessRequest              = "deleteaccess"
+	TypeFinalizeRequest                  = "finalize"
+	TypeActivateRequest                  = "activate"
+	TypeCancelRequest                    = "cancel"
+	TypeDeleteRequest                    = "delete"
+	TypeMintRequest                      = "mint"
+	TypeBurnRequest                      = "burn"
+	TypeWithdrawRequest                  = "withdraw"
+	TypeTransferRequest                  = "transfer"
+	TypeIbcTransferRequest               = "ibctransfer"
+	TypeSetMetadataRequest               = "setmetadata"
+	TypeGrantAllowance                   = "grantallowance"
+	TypeAddActivateFinalizeMarkerRequest = "addactivatefinalizemarker"
 )
 
 // Compile time interface check.
@@ -49,6 +50,7 @@ var (
 	_ sdk.Msg = &MsgTransferRequest{}
 	_ sdk.Msg = &MsgIbcTransferRequest{}
 	_ sdk.Msg = &MsgGrantAllowanceRequest{}
+	_ sdk.Msg = &MsgAddFinalizeActivateMarkerRequest{}
 )
 
 // Type returns the message action.
@@ -92,6 +94,12 @@ func (msg MsgSetDenomMetadataRequest) Type() string { return TypeSetMetadataRequ
 
 // Type returns the message action.
 func (msg MsgGrantAllowanceRequest) Type() string { return TypeGrantAllowance }
+
+// Type returns the message action.
+// These legacyMsg support should probably be removed but adding new message to this for consistency for now.
+func (msg MsgAddFinalizeActivateMarkerRequest) Type() string {
+	return TypeAddActivateFinalizeMarkerRequest
+}
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
 func NewMsgAddMarkerRequest(
