@@ -935,7 +935,7 @@ Msg defines the attribute module Msg service.
 <a name="provenance.marker.v1.AccessGrant"></a>
 
 ### AccessGrant
-AccessGrant associates a colelction of permisssions with an address for delegated marker account control.
+AccessGrant associates a collection of permissions with an address for delegated marker account control.
 
 
 | Field | Type | Label | Description |

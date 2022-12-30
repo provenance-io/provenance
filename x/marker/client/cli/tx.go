@@ -909,14 +909,14 @@ Examples:
 // GetCmdAddFinalizeActivateMarker implements the create marker command
 func GetCmdAddFinalizeActivateMarker() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create-finalize-activate [coin] [access-grant-json]",
+		Use:     "create-finalize-activate [coin] [access-grant-string]",
 		Aliases: []string{"n"},
 		Args:    cobra.ExactArgs(2),
 		Short:   "Creates, Finalizes and Activates a new marker",
 		Long: strings.TrimSpace(`Creates a new marker, finalizes it and put's it ACTIVATED state managed by the from address
 with the given supply amount and denomination provided in the coin argument
 `),
-		Example: fmt.Sprintf(`$ %s tx marker create-finalize-activate 1000hotdogcoin --%s=false --%s=false --from=mykey`, FlagType, FlagSupplyFixed, FlagAllowGovernanceControl),
+		Example: fmt.Sprintf(`$ %s tx marker create-finalize-activate 1000hotdogcoin address1,mint,admin;address2,burn --%s=false --%s=false --from=mykey`, FlagType, FlagSupplyFixed, FlagAllowGovernanceControl),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -947,7 +947,10 @@ with the given supply amount and denomination provided in the coin argument
 			if err != nil {
 				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagAllowGovernanceControl, err)
 			}
-			accessGrants, err := ParseAccessGrant(args[1])
+			accessGrants := getAccessGrantFromString(args[1])
+			if len(accessGrants) == 0 {
+				panic("at least one access grant should be present.")
+			}
 			msg := types.NewMsgAddFinalizeActivateMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue, supplyFixed, allowGovernanceControl, accessGrants)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -968,23 +971,18 @@ func getPeriod(duration int64) time.Duration {
 	return time.Duration(duration) * time.Second
 }
 
-func ParseAccessGrant(accessGrantsJson string) (accessGrants []types.AccessGrant, err error) {
-	var grants []types.AccessGrant
-	println(accessGrantsJson)
-	err = json.Unmarshal([]byte(accessGrantsJson), &grants)
-	if err != nil {
-		return nil, err
-	}
-	return grants, nil
-}
-
 // ParseAccessGrantString  splits string (example address1,perm1,perm2...;address2, perm1...) to AccessGrant
-func getAccessGrantFromString(addressPermissionString string) {
+func getAccessGrantFromString(addressPermissionString string) []types.AccessGrant {
 	parts := strings.Split(addressPermissionString, ";")
-	var grants []types.AccessGrant
+	grants := make([]types.AccessGrant, 0)
 	for _, p := range parts {
+		// ignore if someone put in a ; at the end by mistake
+		if len(p) == 0 {
+			continue
+		}
 		partsPerAddress := strings.Split(p, ",")
-		if !(len(partsPerAddress) > 2) {
+		// if it has an address has to have at least one access associated with it
+		if !(len(partsPerAddress) > 1) {
 			panic("at least one grant should be provided with address")
 		}
 		var permissions types.AccessList
@@ -994,5 +992,5 @@ func getAccessGrantFromString(addressPermissionString string) {
 		}
 		grants = append(grants, *types.NewAccessGrant(address, permissions))
 	}
-
+	return grants
 }

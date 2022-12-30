@@ -2,7 +2,6 @@ package cli_test
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -1267,11 +1266,11 @@ func (s *IntegrationTestSuite) TestAddFinalizeActivateMarkerTxCommands() {
 		expectedCode uint32
 	}{
 		{
-			"create a new marker",
+			"create a new marker, finalize it and activate it.",
 			markercli.GetCmdAddFinalizeActivateMarker(),
 			[]string{
 				"1000newhotdog",
-				getAccessGrantJson(s.testnet.Validators[0].Address, s.accountAddresses[1]),
+				getAccessGrantString(s.testnet.Validators[0].Address, s.accountAddresses[1]),
 				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
 				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "true"),
 				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "true"),
@@ -1281,6 +1280,85 @@ func (s *IntegrationTestSuite) TestAddFinalizeActivateMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"create a new marker, finalize it and activate it, with access grant to one address ",
+			markercli.GetCmdAddFinalizeActivateMarker(),
+			[]string{
+				"1000newhotdog1",
+				getAccessGrantString(s.testnet.Validators[0].Address, nil),
+				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
+				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "true"),
+				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "true"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"create a new marker with no access grant ",
+			markercli.GetCmdAddFinalizeActivateMarker(),
+			[]string{
+				"1000newhotdog1",
+				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
+				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "true"),
+				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "true"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"create a new marker, finalize it and activate it  with dashes and periods",
+			markercli.GetCmdAddFinalizeActivateMarker(),
+			[]string{
+				"1000newcat-scratch-fever.bobcat",
+				getAccessGrantString(s.testnet.Validators[0].Address, nil),
+				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
+				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "true"),
+				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "true"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"fail to create add/finalize/activate marker, incorrect allow governance value",
+			markercli.GetCmdAddFinalizeActivateMarker(),
+			[]string{
+				"1000hotdog",
+				getAccessGrantString(s.testnet.Validators[0].Address, nil),
+				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
+				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "false"),
+				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "wrong"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"fail to create add/finalize/activate marker, incorrect supply fixed value",
+			markercli.GetCmdAddFinalizeActivateMarker(),
+			[]string{
+				"1000hotdog",
+				getAccessGrantString(s.testnet.Validators[0].Address, nil),
+				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
+				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "wrong"),
+				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "true"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
 		},
 	}
 
@@ -1303,11 +1381,12 @@ func (s *IntegrationTestSuite) TestAddFinalizeActivateMarkerTxCommands() {
 	}
 }
 
-func getAccessGrantJson(address sdk.AccAddress, anotherAddress sdk.AccAddress) string {
-	accessGrantJson, err := json.Marshal([]markertypes.AccessGrant{*markertypes.NewAccessGrant(address, []markertypes.Access{markertypes.Access_Mint, markertypes.Access_Admin}),
-		*markertypes.NewAccessGrant(anotherAddress, []markertypes.Access{markertypes.Access_Mint})})
-	if err != nil {
-		panic(err)
+func getAccessGrantString(address sdk.AccAddress, anotherAddress sdk.AccAddress) string {
+	if anotherAddress != nil {
+		accessGrant := address.String() + ",mint,admin;" + anotherAddress.String() + ",burn"
+		return accessGrant
+	} else {
+		accessGrant := address.String() + ",mint,admin;"
+		return accessGrant
 	}
-	return string(accessGrantJson)
 }
