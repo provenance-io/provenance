@@ -906,11 +906,11 @@ Examples:
 	return cmd
 }
 
-// GetCmdAddFinalizeActivateMarker implements the create marker command
+// GetCmdAddFinalizeActivateMarker implements the add finalize activate marker command
 func GetCmdAddFinalizeActivateMarker() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "create-finalize-activate [coin] [access-grant-string]",
-		Aliases: []string{"n"},
+		Aliases: []string{"cfa"},
 		Args:    cobra.ExactArgs(2),
 		Short:   "Creates, Finalizes and Activates a new marker",
 		Long: strings.TrimSpace(`Creates a new marker, finalizes it and put's it ACTIVATED state managed by the from address
