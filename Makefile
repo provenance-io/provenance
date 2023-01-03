@@ -226,6 +226,17 @@ build-dbmigrate: validate-go-version go.sum
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/dbmigrate
 
 ##############################
+# Build DB Comparison Tool   #
+##############################
+
+install-dbcompare: go.sum
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install $(BUILD_FLAGS) ./cmd/dbcompare
+
+build-dbcompare: validate-go-version go.sum
+	mkdir -p $(BUILDDIR)
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/dbcompare
+
+##############################
 # Release artifacts and plan #
 ##############################
 
