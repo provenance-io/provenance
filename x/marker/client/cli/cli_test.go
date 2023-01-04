@@ -31,6 +31,7 @@ import (
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
+	"github.com/provenance-io/provenance/x/marker/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -1383,10 +1384,64 @@ func (s *IntegrationTestSuite) TestAddFinalizeActivateMarkerTxCommands() {
 
 func getAccessGrantString(address sdk.AccAddress, anotherAddress sdk.AccAddress) string {
 	if anotherAddress != nil {
-		accessGrant := address.String() + ",mint,admin;" + anotherAddress.String() + ",burn"
+		accessGrant := address.String() + ",mint,admin,;" + anotherAddress.String() + ",burn"
 		return accessGrant
 	} else {
-		accessGrant := address.String() + ",mint,admin;"
+		accessGrant := address.String() + ",mint,admin,;"
 		return accessGrant
+	}
+}
+
+func (s *IntegrationTestSuite) TestParseAccessGrantFromString() {
+	testCases := []struct {
+		name              string
+		accessGrantString string
+		expectPanic       bool
+		expectedResult    []types.AccessGrant
+	}{
+		{
+			"successfully parses empty string",
+			"",
+			false,
+			[]types.AccessGrant{},
+		},
+		{
+			"fails parsing invalid string",
+			"blah",
+			true,
+			[]types.AccessGrant{},
+		},
+		{
+			"should fail empty list of permissions",
+			",,;",
+			true,
+			[]types.AccessGrant{},
+		},
+		{
+			"should fail address is not valid",
+			"NotAnAddress,mint;",
+			true,
+			[]types.AccessGrant{},
+		},
+		{
+			"should succeed to add access type",
+			fmt.Sprintf("%s,mint;", s.accountAddresses[0].String()),
+			false,
+			[]types.AccessGrant{markertypes.AccessGrant{Address: s.accountAddresses[0].String(), Permissions: []markertypes.Access{markertypes.Access_Mint}}},
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			if tc.expectPanic {
+				panicFunc := func() { markercli.ParseAccessGrantFromString(tc.accessGrantString) }
+				s.Assert().Panics(panicFunc)
+
+			} else {
+				result := markercli.ParseAccessGrantFromString(tc.accessGrantString)
+				s.Assert().ElementsMatch(result, tc.expectedResult)
+			}
+		})
 	}
 }

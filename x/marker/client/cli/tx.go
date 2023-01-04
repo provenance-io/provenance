@@ -947,7 +947,7 @@ with the given supply amount and denomination provided in the coin argument
 			if err != nil {
 				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagAllowGovernanceControl, err)
 			}
-			accessGrants := getAccessGrantFromString(args[1])
+			accessGrants := ParseAccessGrantFromString(args[1])
 			if len(accessGrants) == 0 {
 				panic("at least one access grant should be present.")
 			}
@@ -971,8 +971,8 @@ func getPeriod(duration int64) time.Duration {
 	return time.Duration(duration) * time.Second
 }
 
-// ParseAccessGrantString  splits string (example address1,perm1,perm2...;address2, perm1...) to AccessGrant
-func getAccessGrantFromString(addressPermissionString string) []types.AccessGrant {
+// ParseAccessGrantFromString splits string (example address1,perm1,perm2...;address2, perm1...) to AccessGrant
+func ParseAccessGrantFromString(addressPermissionString string) []types.AccessGrant {
 	parts := strings.Split(addressPermissionString, ";")
 	grants := make([]types.AccessGrant, 0)
 	for _, p := range parts {
