@@ -820,20 +820,19 @@ func (k Keeper) SetMarkerDenomMetadata(ctx sdk.Context, metadata banktypes.Metad
 	return nil
 }
 
-// AddFinalizeAndActivateMarker adds markers, finalizes it and and then activates it.
+// AddFinalizeAndActivateMarker adds marker, finalizes, and then activates it
 func (k Keeper) AddFinalizeAndActivateMarker(ctx sdk.Context, marker types.MarkerAccountI) error {
 	err := k.AddMarkerAccount(ctx, marker)
 	if err != nil {
 		return err
 	}
 
-	// next state is finalized
 	// Manager is the same as the manager in add marker request.
 	err = k.FinalizeMarker(ctx, marker.GetManager(), marker.GetDenom())
 	if err != nil {
 		return err
 	}
-	// next step is activate
+
 	err = k.ActivateMarker(ctx, marker.GetManager(), marker.GetDenom())
 	if err != nil {
 		return err
