@@ -221,22 +221,6 @@ func (k Keeper) ExtendExpiration(ctx sdk.Context, expiration types.Expiration) e
 	return nil
 }
 
-// removeExpiration removes an expiration record from the kvstore.
-func (k Keeper) removeExpiration(ctx sdk.Context, moduleAssetID string) error {
-	key, err := types.GetModuleAssetKey(moduleAssetID)
-	if err != nil {
-		return err
-	}
-
-	// delete record from store
-	store := ctx.KVStore(k.storeKey)
-	if store.Has(key) {
-		store.Delete(key)
-	}
-
-	return nil
-}
-
 // InvokeExpiration invokes an expiration message through the MsgServiceRouter.
 // The expiration message is removed when the message invocation is successful.
 func (k Keeper) InvokeExpiration(ctx sdk.Context, moduleAssetID string, refundTo sdk.AccAddress) error {
@@ -278,9 +262,14 @@ func (k Keeper) InvokeExpiration(ctx sdk.Context, moduleAssetID string, refundTo
 		return types.ErrInvokeExpiration.Wrapf("failed to refund deposit to [%s]: %v", refundTo, refundErr)
 	}
 
-	// clean up
-	if err := k.removeExpiration(ctx, moduleAssetID); err != nil {
+	// remove record from store
+	key, err := types.GetModuleAssetKey(moduleAssetID)
+	if err != nil {
 		return types.ErrInvokeExpiration.Wrapf("failed to remove expiration: %v", err)
+	}
+	store := ctx.KVStore(k.storeKey)
+	if store.Has(key) {
+		store.Delete(key)
 	}
 
 	// emit Invoke event
