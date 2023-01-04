@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -21,6 +22,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
+	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	channelutils "github.com/cosmos/ibc-go/v5/modules/core/04-channel/client/utils"
+
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +37,11 @@ const (
 	FlagPeriod                 = "period"
 	FlagPeriodLimit            = "period-limit"
 	FlagSpendLimit             = "spend-limit"
+	FlagAllowList              = "allow-list"
 	FlagAllowedMsgs            = "allowed-messages"
+	FlagPacketTimeoutHeight    = "packet-timeout-height"
+	FlagPacketTimeoutTimestamp = "packet-timeout-timestamp"
+	FlagAbsoluteTimeouts       = "absolute-timeouts"
 )
 
 // NewTxCmd returns the top-level command for marker CLI transactions.
@@ -61,6 +69,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdGrantAuthorization(),
 		GetCmdRevokeAuthorization(),
 		GetCmdFeeGrant(),
+		GetIbcTransferTxCmd(),
 	)
 	return txCmd
 }
@@ -532,6 +541,104 @@ func GetNewTransferCmd() *cobra.Command {
 	return cmd
 }
 
+// TODO: refactor usage comments to be provenance specific
+// GetIbcTransferTxCmd returns the command to create a GetIbcTransferTxCmd transaction
+func GetIbcTransferTxCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "ibc-transfer [src-port] [src-channel] [sender] [receiver] [amount]",
+		Short: "Transfer a restricted marker token through IBC",
+		Long: strings.TrimSpace(`Transfer a restricted marker through IBC. Timeouts can be specified
+as absolute or relative using the "absolute-timeouts" flag. Timeout height can be set by passing in the height string
+in the form {revision}-{height} using the "packet-timeout-height" flag. Relative timeout height is added to the block
+height queried from the latest consensus state corresponding to the counterparty channel. Relative timeout timestamp 
+is added to the greater value of the local clock time and the block timestamp queried from the latest consensus state 
+corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
+		Example: fmt.Sprintf("%s tx marker ibc-transfer [src-port] [src-channel] [receiver] [amount]", version.AppName),
+		Args:    cobra.ExactArgs(5),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			sourcePort := args[0]
+			sourceChannel := args[1]
+			sender := args[2]
+			receiver := args[3]
+			token, err := sdk.ParseCoinNormalized(args[4])
+			if err != nil {
+				return err
+			}
+
+			timeoutHeightStr, err := cmd.Flags().GetString(FlagPacketTimeoutHeight)
+			if err != nil {
+				return err
+			}
+			timeoutHeight, err := clienttypes.ParseHeight(timeoutHeightStr)
+			if err != nil {
+				return err
+			}
+
+			timeoutTimestamp, err := cmd.Flags().GetUint64(FlagPacketTimeoutTimestamp)
+			if err != nil {
+				return err
+			}
+
+			absoluteTimeouts, err := cmd.Flags().GetBool(FlagAbsoluteTimeouts)
+			if err != nil {
+				return err
+			}
+
+			// if the timeouts are not absolute, retrieve latest block height and block timestamp
+			// for the consensus state connected to the destination port/channel
+			if !absoluteTimeouts {
+				consensusState, height, _, err := channelutils.QueryLatestConsensusState(clientCtx, sourcePort, sourceChannel)
+				if err != nil {
+					return err
+				}
+
+				if !timeoutHeight.IsZero() {
+					absoluteHeight := height
+					absoluteHeight.RevisionNumber += timeoutHeight.RevisionNumber
+					absoluteHeight.RevisionHeight += timeoutHeight.RevisionHeight
+					timeoutHeight = absoluteHeight
+				}
+
+				if timeoutTimestamp != 0 {
+					// use local clock time as reference time if it is later than the
+					// consensus state timestamp of the counter party chain, otherwise
+					// still use consensus state timestamp as reference
+					now := time.Now().UnixNano()
+					consensusStateTimestamp := consensusState.GetTimestamp()
+					if now > 0 {
+						now := uint64(now)
+						if now > consensusStateTimestamp {
+							timeoutTimestamp = now + timeoutTimestamp
+						} else {
+							timeoutTimestamp = consensusStateTimestamp + timeoutTimestamp
+						}
+					} else {
+						return errors.New("local clock time is not greater than Jan 1st, 1970 12:00 AM")
+					}
+				}
+			}
+			msg := types.NewIbcMsgTransferRequest(
+				clientCtx.GetFromAddress().String(),
+				sourcePort, sourceChannel,
+				token, sender, receiver,
+				timeoutHeight, timeoutTimestamp,
+			)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(FlagPacketTimeoutHeight, "0-1000", "Packet timeout block height. The timeout is disabled when set to 0-0.")
+	cmd.Flags().Uint64(FlagPacketTimeoutTimestamp, uint64((time.Duration(10) * time.Minute).Nanoseconds()), "Packet timeout timestamp in nanoseconds from now. Default is 10 minutes. The timeout is disabled when set to 0.")
+	cmd.Flags().Bool(FlagAbsoluteTimeouts, false, "Timeout flags are used as absolute timeouts.")
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
 func GetCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "grant-authz [grantee] [authorization_type]",
@@ -573,7 +680,17 @@ func GetCmdGrantAuthorization() *cobra.Command {
 					return fmt.Errorf("transfer-limit should be greater than zero")
 				}
 
-				authorization = types.NewMarkerTransferAuthorization(spendLimit)
+				allowList, terr := cmd.Flags().GetStringSlice(FlagAllowList)
+				if terr != nil {
+					return terr
+				}
+
+				allowed, terr := bech32toAccAddresses(allowList)
+				if terr != nil {
+					return terr
+				}
+
+				authorization = types.NewMarkerTransferAuthorization(spendLimit, allowed)
 			default:
 				return fmt.Errorf("invalid authorization type, %s", args[1])
 			}
@@ -589,8 +706,22 @@ func GetCmdGrantAuthorization() *cobra.Command {
 	}
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(FlagTransferLimit, "", "The total amount an account is allowed to tranfer on granter's behalf")
+	cmd.Flags().StringSlice(FlagAllowList, []string{}, "Allowed addresses grantee is allowed to send restricted coins separated by ,")
 	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
 	return cmd
+}
+
+// bech32toAccAddresses returns []AccAddress from a list of Bech32 string addresses.
+func bech32toAccAddresses(accAddrs []string) ([]sdk.AccAddress, error) {
+	addrs := make([]sdk.AccAddress, len(accAddrs))
+	for i, addr := range accAddrs {
+		accAddr, err := sdk.AccAddressFromBech32(addr)
+		if err != nil {
+			return nil, err
+		}
+		addrs[i] = accAddr
+	}
+	return addrs, nil
 }
 
 func GetCmdRevokeAuthorization() *cobra.Command {

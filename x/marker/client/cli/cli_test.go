@@ -840,125 +840,151 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestMarkerIbcTransfer() {
+	testCases := []struct {
+		name                       string
+		srcPort                    string
+		srcChannel                 string
+		sender                     string
+		receiver                   string
+		amount                     string
+		flagPacketTimeoutHeight    string
+		flagPacketTimeoutTimestamp string
+		flagAbsoluteTimeouts       string
+		expectedErr                string
+	}{
+		{
+			name:        "should fail on invalid coin",
+			srcPort:     "port",
+			srcChannel:  "channel",
+			sender:      "sender",
+			receiver:    "receiver",
+			amount:      "not-a-valid-coin-amount",
+			expectedErr: "invalid decimal coin expression: not-a-valid-coin-amount",
+		},
+		{
+			name:                    "should fail on invalid packet timeout height",
+			srcPort:                 "port",
+			srcChannel:              "channel",
+			sender:                  "sender",
+			receiver:                "receiver",
+			amount:                  "10jackthecat",
+			flagPacketTimeoutHeight: "invalidtimeoutheight",
+			expectedErr:             "expected height string format: {revision}-{height}. Got: invalidtimeoutheight: invalid height",
+		},
+		{
+			name:                 "should fail on parsing absolute timeouts boolean",
+			srcPort:              "port",
+			srcChannel:           "channel",
+			sender:               "sender",
+			receiver:             "receiver",
+			amount:               "10jackthecat",
+			flagAbsoluteTimeouts: "not-a-bool",
+			expectedErr:          `invalid argument "not-a-bool" for "--absolute-timeouts" flag: strconv.ParseBool: parsing "not-a-bool": invalid syntax`,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			args := []string{
+				tc.srcPort,
+				tc.srcChannel,
+				tc.sender,
+				tc.receiver,
+				tc.amount,
+			}
+			args = append(args, []string{fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			}...)
+			if len(tc.flagPacketTimeoutHeight) > 0 {
+				args = append(args, fmt.Sprintf("--%s=%s", markercli.FlagPacketTimeoutHeight, tc.flagPacketTimeoutHeight))
+			}
+			if len(tc.flagAbsoluteTimeouts) > 0 {
+				args = append(args, fmt.Sprintf("--%s=%s", markercli.FlagAbsoluteTimeouts, tc.flagAbsoluteTimeouts))
+			}
+			_, err := clitestutil.ExecTestCLICmd(clientCtx, markercli.GetIbcTransferTxCmd(), args)
+			if len(tc.expectedErr) > 0 {
+				s.Assert().EqualError(err, tc.expectedErr)
+			} else {
+				s.Assert().NoError(err, tc.name)
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 	testCases := []struct {
 		name         string
-		cmd          *cobra.Command
 		args         []string
-		expectErr    bool
+		expectedErr  string
 		respType     proto.Message
 		expectedCode uint32
 	}{
 		{
-			"grant authz transfer permissions to account 1 for account 0 tranfer limit of 10",
-			markercli.GetCmdGrantAuthorization(),
-			[]string{
+			name: "successfully grant authz for account without allow list",
+			args: []string{
 				s.accountAddresses[1].String(),
 				"transfer",
 				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "10authzhotdog"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			expectedErr:  "",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"grant authz transfer permissions to account 0 for account 1 transfer limit 20",
-			markercli.GetCmdGrantAuthorization(),
-			[]string{
-				s.accountAddresses[0].String(),
-				"transfer",
-				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "20authzhotdog"),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{}, 0,
-		},
-		{
-			"marker transfer successful, account 1 as grantee and account 0 as granter",
-			markercli.GetNewTransferCmd(),
-			[]string{
-				s.accountAddresses[0].String(),
-				s.accountAddresses[1].String(),
-				"4authzhotdog",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{}, 0,
-		},
-		{
-			"marker transfer failed,  account 1 over transfer limit",
-			markercli.GetNewTransferCmd(),
-			[]string{
-				s.accountAddresses[0].String(),
-				s.accountAddresses[1].String(),
-				"7authzhotdog",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{}, 5,
-		},
-		{
-			"marker transfer failed, account 1 not granted rights by account 2",
-			markercli.GetNewTransferCmd(),
-			[]string{
-				s.accountAddresses[2].String(),
-				s.accountAddresses[1].String(),
-				"9authzhotdog",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{}, 1,
-		},
-		{
-			"grantee successful transfer, removed from auth for reaching transfer limit",
-			markercli.GetNewTransferCmd(),
-			[]string{
-				s.accountAddresses[1].String(),
-				s.accountAddresses[0].String(),
-				"20authzhotdog",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, &sdk.TxResponse{}, 0,
-		},
-		{
-			"revoke authz transfer from grantee",
-			markercli.GetCmdRevokeAuthorization(),
-			[]string{
+			name: "successfully grant authz for account with allow list",
+			args: []string{
 				s.accountAddresses[1].String(),
 				"transfer",
+				fmt.Sprintf("--%s=%s", markercli.FlagAllowList, s.accountAddresses[0].String()),
+				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "10authzhotdog"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			expectedErr:  "",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"transfer should fail, due to account 1's revoked access",
-			markercli.GetNewTransferCmd(),
-			[]string{
-				s.accountAddresses[0].String(),
+			name: "fail to grant authz for account invalid allow list address",
+			args: []string{
 				s.accountAddresses[1].String(),
-				"1hotdog",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[1].String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				"transfer",
+				fmt.Sprintf("--%s=%s", markercli.FlagAllowList, "invalid"),
+				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "10authzhotdog"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 			},
-			false, &sdk.TxResponse{}, 1,
+			expectedErr:  "decoding bech32 failed: invalid bech32 string length 7",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
+			name: "fail to grant authz for account invalid denom for transfer limit",
+			args: []string{
+				s.accountAddresses[1].String(),
+				"transfer",
+				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "invalid"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
+			},
+			expectedErr:  "invalid decimal coin expression: invalid",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
+			name: "fail to grant authz for account invalid action type",
+			args: []string{
+				s.accountAddresses[1].String(),
+				"invalid",
+				fmt.Sprintf("--%s=%s", markercli.FlagTransferLimit, "10authzhotdog"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
+			},
+			expectedErr:  "invalid authorization type, invalid",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 	}
 
@@ -967,14 +993,19 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 
 		s.Run(tc.name, func() {
 			clientCtx := s.testnet.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
+
+			tc.args = append(tc.args, fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation))
+			tc.args = append(tc.args, fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock))
+			tc.args = append(tc.args, fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()))
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, markercli.GetCmdGrantAuthorization(), tc.args)
+			if len(tc.expectedErr) > 0 {
+				s.Assert().EqualError(err, tc.expectedErr)
 			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Assert().NoError(err)
+				s.Assert().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
+				s.Assert().Equal(tc.expectedCode, txResp.Code)
 			}
 		})
 	}

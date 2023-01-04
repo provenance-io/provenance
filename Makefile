@@ -24,10 +24,10 @@ ifeq ($(WITH_BADGERDB),yes)
   WITH_BADGERDB=true
 endif
 
-BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2> /dev/null)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
 TM_VERSION := $(shell $(GO) list -m github.com/tendermint/tendermint 2> /dev/null | sed 's:.* ::') # grab everything after the space in "github.com/tendermint/tendermint v0.34.7"
-COMMIT := $(shell git log -1 --format='%h')
+COMMIT := $(shell git log -1 --format='%h' 2> /dev/null)
 # don't override user values
 ifeq (,$(VERSION))
   VERSION := $(shell git describe --exact-match 2>/dev/null)
@@ -249,7 +249,8 @@ else ifeq ($(UNAME_S),linux)
 	endif
 endif
 
-ifeq ($(UNAME_M),x86_64)
+ARCH=$(UNAME_M)
+ifeq ($(ARCH),x86_64)
 	ARCH=amd64
 endif
 
@@ -258,10 +259,14 @@ RELEASE_PIO=$(RELEASE_BIN)/provenanced
 RELEASE_ZIP_BASE=provenance-$(UNAME_S)-$(ARCH)
 RELEASE_ZIP_NAME=$(RELEASE_ZIP_BASE)-$(VERSION).zip
 RELEASE_ZIP=$(BUILDDIR)/$(RELEASE_ZIP_NAME)
+DBMIGRATE=$(BUILDDIR)/dbmigrate
+DBMIGRATE_ZIP_BASE=dbmigrate-$(UNAME_S)-$(ARCH)
+DBMIGRATE_ZIP_NAME=$(DBMIGRATE_ZIP_BASE)-$(VERSION).zip
+DBMIGRATE_ZIP=$(BUILDDIR)/$(DBMIGRATE_ZIP_NAME)
 
 .PHONY: build-release-clean
 build-release-clean:
-	rm -rf $(RELEASE_BIN) $(RELEASE_PLAN) $(RELEASE_CHECKSUM) $(RELEASE_ZIP)
+	rm -rf $(RELEASE_BIN) $(RELEASE_PLAN) $(RELEASE_CHECKSUM) $(RELEASE_ZIP) $(DBMIGRATE_ZIP)
 
 .PHONY: build-release-checksum
 build-release-checksum: $(RELEASE_CHECKSUM)
@@ -282,7 +287,7 @@ build-release-libwasm: $(RELEASE_WASM)
 
 $(RELEASE_WASM): $(RELEASE_BIN)
 	go mod vendor && \
-	cp vendor/github.com/CosmWasm/wasmvm/api/$(LIBWASMVM) $(RELEASE_BIN)
+	cp vendor/github.com/CosmWasm/wasmvm/internal/api/$(LIBWASMVM) $(RELEASE_BIN)
 
 .PHONY: build-release-bin
 build-release-bin: $(RELEASE_PIO)
@@ -300,6 +305,17 @@ build-release-zip: $(RELEASE_ZIP)
 $(RELEASE_ZIP): $(RELEASE_PIO) $(RELEASE_WASM)
 	cd $(BUILDDIR) && \
 	  zip -u $(RELEASE_ZIP_NAME) bin/$(LIBWASMVM) bin/provenanced && \
+	cd ..
+
+$(DBMIGRATE):
+	$(MAKE) build-dbmigrate
+
+.PHONY: build-dbmigrate-zip
+build-dbmigrate-zip: $(DBMIGRATE_ZIP)
+
+$(DBMIGRATE_ZIP): $(DBMIGRATE)
+	cd $(BUILDDIR) && \
+	  zip -u $(DBMIGRATE_ZIP_NAME) dbmigrate && \
 	cd ..
 
 # gon packages the zip wrong. need bin/provenanced and bin/libwasmvm
@@ -334,6 +350,7 @@ go.sum: go.mod
 lint:
 	$(GOLANGCI_LINT) run
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "./client/*" -not -path "*.git*" -not -path "*.pb.go" | xargs gofmt -d -s
+	scripts/no-now-lint.sh
 	$(GO) mod verify
 
 clean:
@@ -354,7 +371,7 @@ linkify:
 	python ./scripts/linkify.py CHANGELOG.md
 
 update-tocs:
-	scripts/update-toc.sh x docs
+	scripts/update-toc.sh x docs CONTRIBUTING.md
 
 # Download, compile, and install rocksdb so that it can be used when doing a build.
 rocksdb:
@@ -445,7 +462,11 @@ vendor:
 
 # Full build inside a docker container for a clean release build
 docker-build: vendor
-	docker build --build-arg VERSION=$(VERSION) -t provenance-io/blockchain . -f docker/blockchain/Dockerfile
+ifeq ($(UNAME_M),x86_64)
+	docker build --build-arg VERSION=$(VERSION) --build-arg ARCH=$(UNAME_M) -t provenance-io/blockchain . -f docker/blockchain/Dockerfile
+else
+	docker build --build-arg VERSION=$(VERSION) --build-arg ARCH=aarch64 -t provenance-io/blockchain . -f docker/blockchain/Dockerfile
+endif
 
 # Quick build using local environment and go platform target options.
 docker-build-local: vendor
@@ -471,13 +492,40 @@ localnet-start: localnet-generate localnet-up
 localnet-stop:
 	docker-compose -f networks/local/docker-compose.yml --project-directory ./ down
 
+# Quick build using ibc environment and go platform target options.
+RELAYER_MNEMONIC ?= "list judge day spike walk easily outer state fashion library review include leisure casino wagon zoo chuckle alien stock bargain stone wait squeeze fade"
+RELAYER_KEY ?= tp18uev5722xrwpfd2hnqducmt3qdjsyktmtw558y
+RELAYER_VERSION ?= v2.1.2
+docker-build-ibc: vendor
+	docker build --target provenance-$(shell uname -m) --tag provenance-io/blockchain-ibc -f networks/ibc/blockchain-ibc/Dockerfile .
+	docker build --target relayer --tag provenance-io/blockchain-relayer -f networks/ibc/blockchain-relayer/Dockerfile --build-arg MNEMONIC=$(RELAYER_MNEMONIC) --build-arg VERSION=$(RELAYER_VERSION) .
+
+# Generate config files for a 2-node ibcnet with relayer
+ibcnet-generate: ibcnet-stop docker-build-ibc
+	@if ! [ -f build/ibc0-0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-ibc testnet --v 1 -o . --starting-ip-address 192.168.20.2 --node-dir-prefix=ibc0- --keyring-backend=test --chain-id=testing ; fi
+	mv build/gentxs/ibc0-0.json build/gentxs/tmp
+	@if ! [ -f build/ibc1-0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-ibc testnet --v 1 -o . --starting-ip-address 192.168.20.3 --node-dir-prefix=ibc1- --keyring-backend=test --chain-id=testing2 ; fi
+	mv build/gentxs/tmp build/gentxs/ibc0-0.json
+	scripts/ibcnet-add-relayer-key.sh $(RELAYER_KEY)
+
+# Run a 2-node testnet locally with a relayer
+ibcnet-up:
+	docker-compose -f networks/ibc/docker-compose.yml --project-directory ./ up -d
+
+# Run a 2-node testnet locally with a relayer
+ibcnet-start: ibcnet-generate ibcnet-up
+
+# Stop ibcnet
+ibcnet-stop:
+	docker-compose -f networks/ibc/docker-compose.yml --project-directory ./ down
+
 # Quick build using devnet environment and go platform target options.
 docker-build-dev: vendor
-	docker build --tag provenance-io/blockchain-dev -f networks/dev/blockchain-dev/Dockerfile .
+	docker build --target provenance-$(shell uname -m) --tag provenance-io/blockchain-dev -f networks/dev/blockchain-dev/Dockerfile .
 
 # Generate config files for a single node devnet
 devnet-generate: devnet-stop docker-build-dev
-	docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-dev keys list
+	@if ! [ -f build/nodedev/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/provenance:Z provenance-io/blockchain-dev keys list ; fi
 
 # Run a single node devnet locally
 devnet-up:

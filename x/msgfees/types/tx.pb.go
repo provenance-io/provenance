@@ -34,8 +34,7 @@ type MsgAssessCustomMsgFeeRequest struct {
 	Name      string     `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Amount    types.Coin `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount"`
 	Recipient string     `protobuf:"bytes,3,opt,name=recipient,proto3" json:"recipient,omitempty"`
-	// empty, whole amount goes to fee module
-	From string `protobuf:"bytes,4,opt,name=from,proto3" json:"from,omitempty"`
+	From      string     `protobuf:"bytes,4,opt,name=from,proto3" json:"from,omitempty"`
 }
 
 func (m *MsgAssessCustomMsgFeeRequest) Reset()         { *m = MsgAssessCustomMsgFeeRequest{} }

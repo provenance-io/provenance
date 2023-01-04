@@ -7,11 +7,10 @@ import (
 	"testing"
 	"time"
 
-	tmdb "github.com/tendermint/tm-db"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	tmdb "github.com/tendermint/tm-db"
 )
 
 type MigratorTestSuite struct {
@@ -60,6 +59,7 @@ func (s *MigratorTestSuite) TestInitialize() {
 		m := &Migrator{
 			TargetDBType: "goleveldb",
 			HomePath:     tdir,
+			SourceDBType: "goleveldb",
 		}
 		err := m.Initialize()
 		require.NoError(t, err)
@@ -357,6 +357,23 @@ func (s *MigratorTestSuite) TestApplyDefaults() {
 		},
 
 		{
+			name: "source db type not set unchanged",
+			migrator: &Migrator{
+				SourceDBType: "",
+			},
+			getter:   func(m *Migrator) interface{} { return m.SourceDBType },
+			expected: "",
+		},
+		{
+			name: "source db type set unchanged",
+			migrator: &Migrator{
+				SourceDBType: "source type",
+			},
+			getter:   func(m *Migrator) interface{} { return m.SourceDBType },
+			expected: "source type",
+		},
+
+		{
 			name: "batch size not set unchanged",
 			migrator: &Migrator{
 				BatchSize: 0,
@@ -422,6 +439,7 @@ func (s *MigratorTestSuite) TestValidateBasic() {
 		rv := &Migrator{
 			HomePath:     "testing",
 			TargetDBType: "goleveldb",
+			SourceDBType: "goleveldb",
 		}
 		rv.ApplyDefaults()
 		return rv
@@ -455,6 +473,16 @@ func (s *MigratorTestSuite) TestValidateBasic() {
 			name:       "TargetDBType not possible",
 			modifier:   func(m *Migrator) { m.TargetDBType = "not-possible" },
 			expInError: []string{"TargetDBType", "goleveldb", "\"not-possible\""},
+		},
+		{
+			name:       "SourceDBType empty",
+			modifier:   func(m *Migrator) { m.SourceDBType = "" },
+			expInError: nil,
+		},
+		{
+			name:       "SourceDBType not possible",
+			modifier:   func(m *Migrator) { m.SourceDBType = "not-possible" },
+			expInError: []string{"SourceDBType", "goleveldb", "\"not-possible\""},
 		},
 		{
 			name:       "SourceDataDir empty",

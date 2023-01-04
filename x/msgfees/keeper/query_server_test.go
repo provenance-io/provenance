@@ -151,7 +151,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFeesAuthz() {
 		Grantee: s.user2,
 		Grant:   authz.Grant{},
 	}
-	err = msgGrant.SetAuthorization(markertypes.NewMarkerTransferAuthorization(sdk.NewCoins(sdk.NewCoin(hotdogDenom, sdk.NewInt(10)))))
+	err = msgGrant.SetAuthorization(markertypes.NewMarkerTransferAuthorization(sdk.NewCoins(sdk.NewCoin(hotdogDenom, sdk.NewInt(10))), []sdk.AccAddress{s.user1Addr}))
 	s.Require().NoError(err)
 	_, err = s.app.AuthzKeeper.Grant(sdk.WrapSDKContext(s.ctx), msgGrant)
 	s.Require().NoError(err)

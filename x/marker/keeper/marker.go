@@ -9,6 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	ibckeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
+	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -669,7 +672,7 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
 	}
 	if !admin.Equals(from) {
-		err = k.authzHandler(ctx, admin, from, amount)
+		err = k.authzHandler(ctx, admin, from, to, amount)
 		if err != nil {
 			return err
 		}
@@ -697,13 +700,73 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	return nil
 }
 
-func (k Keeper) authzHandler(ctx sdk.Context, admin sdk.AccAddress, from sdk.AccAddress, amount sdk.Coin) error {
+// IbcTransferCoin transfers restricted coins between to chains when the administrator account holds the transfer
+// access right and the marker type is restricted_coin
+func (k Keeper) IbcTransferCoin(
+	ctx sdk.Context,
+	sourcePort, sourceChannel string,
+	token sdk.Coin,
+	sender, admin sdk.AccAddress,
+	receiver string,
+	timeoutHeight clienttypes.Height,
+	timeoutTimestamp uint64,
+	checkRestrictionsHandler ibckeeper.CheckRestrictionsHandler) error {
+	m, err := k.GetMarkerByDenom(ctx, token.Denom)
+	if err != nil {
+		return fmt.Errorf("marker not found for %s: %w", token.Denom, err)
+	}
+	if m.GetMarkerType() != types.MarkerType_RestrictedCoin {
+		return fmt.Errorf("marker type is not restricted_coin, brokered transfer not supported")
+	}
+	if !m.AddressHasAccess(admin, types.Access_Transfer) {
+		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
+	}
+	to, err := sdk.AccAddressFromBech32(receiver)
+	if err != nil {
+		return err
+	}
+	if !admin.Equals(sender) {
+		err = k.authzHandler(ctx, admin, sender, to, token)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = k.ibcKeeper.SendTransfer(
+		ctx,
+		sourcePort,
+		sourceChannel,
+		token,
+		sender,
+		receiver,
+		timeoutHeight,
+		timeoutTimestamp,
+		checkRestrictionsHandler,
+	)
+	if err != nil {
+		return err
+	}
+
+	markerIbcTransferEvent := types.NewEventMarkerIbcTransfer(
+		token.Amount.String(),
+		token.Denom,
+		admin.String(),
+		sender.String(),
+	)
+	if err := ctx.EventManager().EmitTypedEvent(markerIbcTransferEvent); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (k Keeper) authzHandler(ctx sdk.Context, admin, from, to sdk.AccAddress, amount sdk.Coin) error {
 	markerAuth := types.MarkerTransferAuthorization{}
 	authorization, expireTime := k.authzKeeper.GetAuthorization(ctx, admin, from, markerAuth.MsgTypeURL())
 	if authorization == nil {
 		return fmt.Errorf("%s account has not been granted authority to withdraw from %s account", admin, from)
 	}
-	accept, err := authorization.Accept(ctx, &types.MsgTransferRequest{Amount: amount})
+	accept, err := authorization.Accept(ctx, &types.MsgTransferRequest{Amount: amount, ToAddress: to.String(), FromAddress: from.String()})
 	switch {
 	case err != nil:
 		return err

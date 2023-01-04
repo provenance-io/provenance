@@ -223,6 +223,46 @@ func (m FieldValueMap) SetFromString(key, valueStr string) error {
 	return fmt.Errorf("no field found for key: %s", key)
 }
 
+// AsConfigMap converts this into a map[string]interface{} adding sub-sections as single entries
+// (as opposed to full keys containing a . (period)).
+func (m FieldValueMap) AsConfigMap() (map[string]interface{}, error) {
+	rv := make(map[string]interface{})
+
+	for key, value := range m {
+		if !strings.Contains(key, ".") {
+			if v, has := rv[key]; has {
+				return nil, fmt.Errorf("error at key %q: should not already exist but has type %T", key, v)
+			}
+			rv[key] = value.Interface()
+			continue
+		}
+		parts := strings.Split(key, ".")
+		justKey := parts[len(parts)-1]
+		sections := parts[:len(parts)-1]
+		secMap := rv
+		for _, section := range sections {
+			if secM, has := secMap[section]; has {
+				secT, ok := secM.(map[string]interface{})
+				if !ok {
+					return nil, fmt.Errorf("error at key %q at section %q: sub-section should have type map[string]interface{}, got %T", key, section, secM)
+				}
+				secMap = secT
+				continue
+			}
+			sec := make(map[string]interface{})
+			secMap[section] = sec
+			secMap = sec
+		}
+		if v, has := secMap[justKey]; has {
+			return nil, fmt.Errorf("error at key %q: key %q should not already exist in sub-section but has type %T", key, justKey, v)
+		}
+		valueI := value.Interface()
+		secMap[justKey] = valueI
+	}
+
+	return rv, nil
+}
+
 // setValueFromString sets a value from the provided string.
 // The string is converted appropriately for the underlying value type.
 // Assuming the value came from MakeFieldValueMap, this will actually be updating the

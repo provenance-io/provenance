@@ -164,6 +164,8 @@
     - [MsgFinalizeResponse](#provenance.marker.v1.MsgFinalizeResponse)
     - [MsgGrantAllowanceRequest](#provenance.marker.v1.MsgGrantAllowanceRequest)
     - [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse)
+    - [MsgIbcTransferRequest](#provenance.marker.v1.MsgIbcTransferRequest)
+    - [MsgIbcTransferResponse](#provenance.marker.v1.MsgIbcTransferResponse)
     - [MsgMintRequest](#provenance.marker.v1.MsgMintRequest)
     - [MsgMintResponse](#provenance.marker.v1.MsgMintResponse)
     - [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest)
@@ -1492,6 +1494,7 @@ a marker transfer on behalf of the granter's account.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `transfer_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | transfer_limit is the total amount the grantee can transfer |
+| `allow_list` | [string](#string) | repeated | allow_list specifies an optional list of addresses to whom the grantee can send restricted coins on behalf of the granter. If omitted, any recipient is allowed. |
 
 
 
@@ -2621,6 +2624,32 @@ MsgGrantAllowanceResponse defines the Msg/GrantAllowanceResponse response type.
 
 
 
+<a name="provenance.marker.v1.MsgIbcTransferRequest"></a>
+
+### MsgIbcTransferRequest
+MsgIbcTransferRequest defines the Msg/IbcTransfer request type for markers.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `transfer` | [ibc.applications.transfer.v1.MsgTransfer](#ibc.applications.transfer.v1.MsgTransfer) |  |  |
+| `administrator` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgIbcTransferResponse"></a>
+
+### MsgIbcTransferResponse
+MsgIbcTransferResponse defines the Msg/IbcTransfer response type
+
+
+
+
+
+
 <a name="provenance.marker.v1.MsgMintRequest"></a>
 
 ### MsgMintRequest
@@ -2753,6 +2782,7 @@ Msg defines the Marker Msg service.
 | `Withdraw` | [MsgWithdrawRequest](#provenance.marker.v1.MsgWithdrawRequest) | [MsgWithdrawResponse](#provenance.marker.v1.MsgWithdrawResponse) | Withdraw | |
 | `AddMarker` | [MsgAddMarkerRequest](#provenance.marker.v1.MsgAddMarkerRequest) | [MsgAddMarkerResponse](#provenance.marker.v1.MsgAddMarkerResponse) | AddMarker | |
 | `Transfer` | [MsgTransferRequest](#provenance.marker.v1.MsgTransferRequest) | [MsgTransferResponse](#provenance.marker.v1.MsgTransferResponse) | Transfer marker denominated coin between accounts | |
+| `IbcTransfer` | [MsgIbcTransferRequest](#provenance.marker.v1.MsgIbcTransferRequest) | [MsgIbcTransferResponse](#provenance.marker.v1.MsgIbcTransferResponse) | Transfer over ibc any marker(including restricted markers) between ibc accounts. The relayer is still needed to accomplish ibc middleware relays. | |
 | `SetDenomMetadata` | [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest) | [MsgSetDenomMetadataResponse](#provenance.marker.v1.MsgSetDenomMetadataResponse) | Allows Denom Metadata (see bank module) to be set for the Marker's Denom | |
 | `GrantAllowance` | [MsgGrantAllowanceRequest](#provenance.marker.v1.MsgGrantAllowanceRequest) | [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse) | GrantAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
 
@@ -6119,10 +6149,8 @@ MsgAssessCustomMsgFeeRequest defines an sdk.Msg type
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  | optional short name for custom msg fee, this will be emitted as a property of the event |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | amount of additional fee that must be paid |
-| `recipient` | [string](#string) |  | optional recipient address, the amount is split 50/50 between recipient and fee module. If |
-| `from` | [string](#string) |  | empty, whole amount goes to fee module
-
-the signer of the msg |
+| `recipient` | [string](#string) |  | optional recipient address, the total amount is given to the recipient, if present. |
+| `from` | [string](#string) |  | the signer of the msg |
 
 
 
