@@ -616,7 +616,7 @@ func (s *HandlerTestSuite) TestMsgAddFinalizeActivateMarkerRequest() {
 			"should fail to ADD,FINALIZE,ACTIVATE new marker, validate basic failure",
 			accessGrantWrongStatus,
 			[]string{s.user1},
-			"since this will activate the marker, should have access list defined: invalid request",
+			"since this will activate the marker, must have access list defined: invalid request",
 			nil,
 		},
 		{
