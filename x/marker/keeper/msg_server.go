@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/armon/go-metrics"
 
@@ -547,13 +546,7 @@ func (k msgServer) SetDenomMetadata(
 func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.MsgAddFinalizeActivateMarkerRequest) (*types.MsgAddFinalizeActivateMarkerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Validate transaction message.
-	err := msg.ValidateBasic()
-
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	}
-
+	var err error
 	// Add marker requests must pass extra validation for denom (in addition to regular coin validation expression)
 	if err = k.ValidateUnrestictedDenom(ctx, msg.Amount.Denom); err != nil {
 		return nil, err
@@ -561,7 +554,7 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 
 	// since this is a one shot process should have 1 access list member, to have any value for a marker.
 	if len(msg.AccessList) == 0 {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(fmt.Errorf("since this will activate the marker, should have at least one access list defined").Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("since this will activate the marker, must have at least one access list defined")
 	}
 
 	addr := types.MustGetMarkerAddress(msg.Amount.Denom)
