@@ -15,21 +15,11 @@ var (
 	_ sdk.Msg = &MsgInvokeExpirationRequest{}
 )
 
-// MustAccAddressFromBech32 converts a Bech32 address to sdk.AccAddress
-// Panics on error
-func MustAccAddressFromBech32(s string) sdk.AccAddress {
-	accAddress, err := sdk.AccAddressFromBech32(s)
-	if err != nil {
-		panic(err)
-	}
-	return accAddress
-}
-
 // private method to convert an array of strings into an array of Acc Addresses.
 func stringsToAccAddresses(signers []string) []sdk.AccAddress {
 	addresses := make([]sdk.AccAddress, len(signers))
 	for i, address := range signers {
-		addresses[i] = MustAccAddressFromBech32(address)
+		addresses[i] = sdk.MustAccAddressFromBech32(address)
 	}
 	return addresses
 }

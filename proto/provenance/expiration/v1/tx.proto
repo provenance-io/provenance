@@ -34,7 +34,7 @@ message MsgAddExpirationRequest {
 // MsgAddExpirationResponse defines the MsgAddExpirationRequest response type
 message MsgAddExpirationResponse {}
 
-// MsgExtendExpirationRequest represents a message to extend an expiration
+// MsgExtendExpirationRequest represents a message to extend an expiration.
 message MsgExtendExpirationRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.stringer)        = false;
@@ -42,7 +42,9 @@ message MsgExtendExpirationRequest {
 
   // the module asset identifier
   string module_asset_id = 1;
-  // the duration period for which to extend the asset to remain on chain
+  // the duration period by which to extend the existing expiration period
+  // the accepted values for a duration are n{h,d,w,y}
+  // where 1h = 60m, 1d = 24h, 1w = 7d (or 168h), 1y = 365d (or 8760h)
   string duration = 2;
   // signers is the list of addresses of those signing this request.
   repeated string signers = 3;
@@ -58,7 +60,7 @@ message MsgInvokeExpirationRequest {
   option (gogoproto.goproto_getters) = false;
 
   // Module asset ID which will have its expiration logic triggered
-  string module_asset_id = 1 [(gogoproto.moretags) = "yaml:\"module_asset_id\""];
+  string module_asset_id = 1;
   // signers is the list of addresses of those signing this request.
   repeated string signers = 2;
 }

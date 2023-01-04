@@ -127,9 +127,8 @@ func anyMsg(owner string) types2.Any {
 }
 
 func (s *GrpcQueryTestSuite) TestQueryExpiration() {
-	moduleAssetID := s.asset1
-
 	s.T().Run("add expiration for querying", func(t *testing.T) {
+		moduleAssetID := s.asset1
 		expiration := *types.NewExpiration(moduleAssetID, s.user1, s.time, s.deposit, anyMsg(s.user1))
 		assert.NoError(t, expiration.ValidateBasic(), "ValidateBasic: %s", "NewExpiration")
 		err := s.app.ExpirationKeeper.SetExpiration(s.ctx, expiration)
@@ -137,11 +136,20 @@ func (s *GrpcQueryTestSuite) TestQueryExpiration() {
 	})
 
 	s.T().Run("query expiration", func(t *testing.T) {
+		moduleAssetID := s.asset1
 		req := types.QueryExpirationRequest{ModuleAssetId: s.asset1}
 		res, err := s.queryClient.Expiration(context.Background(), &req)
 		assert.NoError(t, err, "query: %s", "error")
 		assert.NotNil(t, res, "query: %s", "response")
 		assert.Equal(t, moduleAssetID, res.Expiration.ModuleAssetId, "query: %s", "expiration")
+	})
+
+	s.T().Run("query expiration - not found", func(t *testing.T) {
+		req := types.QueryExpirationRequest{ModuleAssetId: s.asset2}
+		res, err := s.queryClient.Expiration(context.Background(), &req)
+		assert.NoError(t, err, "query: %s", "error")
+		assert.NotNil(t, res, "query: %s", "response")
+		assert.Nil(t, res.Expiration, "query: %s", "NotFoundExpiration")
 	})
 }
 

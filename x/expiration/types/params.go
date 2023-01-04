@@ -2,8 +2,6 @@ package types
 
 import (
 	"fmt"
-	"time"
-
 	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,15 +12,8 @@ const (
 	NhashDenom = "nhash"
 )
 
-// DefaultDuration is the default duration a module asset
-// will live on chain before expiring. Defaults to 1 year
-var DefaultDuration = 24 * 365 * time.Hour
-
-var DefaultDeposit = sdk.Coin{
-	Denom: NhashDenom,
-	// todo: what should this be? should this be a configurable property in app.toml?
-	Amount: sdk.NewInt(1905),
-}
+// DefaultDeposit is defined as 1000000000nhash (1 hash)
+var DefaultDeposit = sdk.NewInt64Coin(NhashDenom, 1000000000)
 
 var (
 	ParamStoreKeyDeposit = []byte("Deposit")
@@ -71,18 +62,16 @@ func (p *Params) Equal(that interface{}) bool {
 			return false
 		}
 	}
-	if that1 == nil {
-		return p == nil
-	} else if p == nil {
-		return false
-	}
-	return true
+
+	return that1.Deposit.IsEqual(p.Deposit)
 }
 
+// Validate validates the deposit parameter
 func (p *Params) Validate() error {
 	return validateDepositParam(p.Deposit)
 }
 
+// Private method that runs validation on the deposit parameter
 func validateDepositParam(i interface{}) error {
 	coin, ok := i.(sdk.Coin)
 	if !ok {
@@ -90,8 +79,8 @@ func validateDepositParam(i interface{}) error {
 	}
 
 	// validate appropriate Coin
-	if coin.Validate() != nil {
-		return fmt.Errorf("invalid parameter type: %T", i)
+	if err := coin.Validate(); err != nil {
+		return fmt.Errorf("invalid coin: %w", err)
 	}
 
 	return nil

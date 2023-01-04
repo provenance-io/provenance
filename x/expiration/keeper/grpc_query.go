@@ -110,11 +110,14 @@ func (k Keeper) AllExpiredExpirations(
 }
 
 // Private method that does pagination of the filtered results.
-// onMatch predicate should be used as the filter criteria.
+// isMatch predicate should be used as the filter criteria.
+// the returned value (true|false) of the 'isMatch' function
+// will determine whether the expiration record in question
+// will be accumulated into the final results.
 func (k Keeper) filteredPaginate(
 	ctx sdk.Context,
 	pagination *query.PageRequest,
-	onMatch func(expiration types.Expiration) bool,
+	isMatch func(expiration types.Expiration) bool,
 ) (*query.PageResponse, []*types.Expiration, error) {
 	var expirations []*types.Expiration
 	store := ctx.KVStore(k.storeKey)
@@ -124,7 +127,7 @@ func (k Keeper) filteredPaginate(
 		if err := k.cdc.Unmarshal(value, &expiration); err != nil {
 			return false, err
 		}
-		if !onMatch(expiration) {
+		if !isMatch(expiration) {
 			return false, nil
 		}
 		if accumulate {
