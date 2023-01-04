@@ -44,6 +44,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Added assess msg fees spec documentation [#1172](https://github.com/provenance-io/provenance/issues/1172).
+* Build dbmigrate and include it as an artifact with releases [#1264](https://github.com/provenance-io/provenance/issues/1264).
+* Removed, MsgFees Module 50/50 Fee Split on MsgAssessCustomMsgFeeRequest [#1263](https://github.com/provenance-io/provenance/issues/1263).
 
 ### Bug Fixes
 
