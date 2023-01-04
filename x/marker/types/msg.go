@@ -677,12 +677,14 @@ func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
 		return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
 	}
 
-	// check manager address is if supplied is valid
-	sdk.MustAccAddressFromBech32(msg.Manager)
+	_, err := sdk.AccAddressFromBech32(msg.Manager)
+	if err != nil {
+		return err
+	}
 
 	// since this is a one shot process should have 1 access list member, to have any value for a marker
 	if msg.AccessList == nil || len(msg.AccessList) == 0 {
-		return fmt.Errorf("since this will activate the marker, should have access list defined")
+		return fmt.Errorf("since this will activate the marker, must have access list defined")
 	}
 	return nil
 }
