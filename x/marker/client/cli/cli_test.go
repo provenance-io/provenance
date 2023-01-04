@@ -1384,10 +1384,10 @@ func (s *IntegrationTestSuite) TestAddFinalizeActivateMarkerTxCommands() {
 
 func getAccessGrantString(address sdk.AccAddress, anotherAddress sdk.AccAddress) string {
 	if anotherAddress != nil {
-		accessGrant := address.String() + ",mint,admin,;" + anotherAddress.String() + ",burn"
+		accessGrant := address.String() + ",mint,admin;" + anotherAddress.String() + ",burn"
 		return accessGrant
 	} else {
-		accessGrant := address.String() + ",mint,admin,;"
+		accessGrant := address.String() + ",mint,admin;"
 		return accessGrant
 	}
 }
