@@ -24,12 +24,6 @@ func NewMsgBindNameRequest(record, parent NameRecord) *MsgBindNameRequest {
 	}
 }
 
-// Route implements Msg
-func (msg MsgBindNameRequest) Route() string { return ModuleName }
-
-// Type implements Msg
-func (msg MsgBindNameRequest) Type() string { return TypeMsgBindNameRequest }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgBindNameRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Parent.Name) == "" {
@@ -65,12 +59,6 @@ func NewMsgDeleteNameRequest(record NameRecord) *MsgDeleteNameRequest {
 		Record: record,
 	}
 }
-
-// Route implements Msg
-func (msg MsgDeleteNameRequest) Route() string { return ModuleName }
-
-// Type implements Msg
-func (msg MsgDeleteNameRequest) Type() string { return TypeMsgDeleteNameRequest }
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteNameRequest) ValidateBasic() error {
