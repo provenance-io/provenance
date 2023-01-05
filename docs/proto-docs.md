@@ -366,6 +366,7 @@
   
 - [provenance/name/v1/name.proto](#provenance/name/v1/name.proto)
     - [CreateRootNameProposal](#provenance.name.v1.CreateRootNameProposal)
+    - [CreateRootNameProposalResponse](#provenance.name.v1.CreateRootNameProposalResponse)
     - [EventNameBound](#provenance.name.v1.EventNameBound)
     - [EventNameUnbound](#provenance.name.v1.EventNameUnbound)
     - [NameRecord](#provenance.name.v1.NameRecord)
@@ -5663,6 +5664,17 @@ for the sole creation of sub names.
 | `name` | [string](#string) |  |  |
 | `owner` | [string](#string) |  |  |
 | `restricted` | [bool](#bool) |  |  |
+| `fromAddress` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.name.v1.CreateRootNameProposalResponse"></a>
+
+### CreateRootNameProposalResponse
+
 
 
 
@@ -5971,6 +5983,7 @@ Msg defines the bank Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `BindName` | [MsgBindNameRequest](#provenance.name.v1.MsgBindNameRequest) | [MsgBindNameResponse](#provenance.name.v1.MsgBindNameResponse) | BindName binds a name to an address under a root name. | |
 | `DeleteName` | [MsgDeleteNameRequest](#provenance.name.v1.MsgDeleteNameRequest) | [MsgDeleteNameResponse](#provenance.name.v1.MsgDeleteNameResponse) | DeleteName defines a method to verify a particular invariance. | |
+| `CreateName` | [CreateRootNameProposal](#provenance.name.v1.CreateRootNameProposal) | [CreateRootNameProposalResponse](#provenance.name.v1.CreateRootNameProposalResponse) | CreateName defines a service for CreateRootNameProposal. | |
 
  <!-- end services -->
 

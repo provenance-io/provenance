@@ -16,6 +16,9 @@ service Msg {
 
   // DeleteName defines a method to verify a particular invariance.
   rpc DeleteName(MsgDeleteNameRequest) returns (MsgDeleteNameResponse);
+
+  // CreateName defines a service for CreateRootNameProposal.
+  rpc CreateName(MsgCreateRootNameProposal) returns (MsgCreateRootNameProposalResponse);
 }
 
 // MsgBindNameRequest defines an sdk.Msg type that is used to add an address/name binding under an optional parent name.
@@ -46,3 +49,6 @@ message MsgDeleteNameRequest {
 
 // MsgDeleteNameResponse defines the Msg/DeleteName response type.
 message MsgDeleteNameResponse {}
+
+// MsgCreateRootNameProposalResponse defines Msg/CreateName response type.
+message MsgCreateRootNameProposalResponse {}

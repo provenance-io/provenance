@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"bytes"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"strings"
 	"unicode"
 
@@ -30,6 +32,9 @@ type Keeper struct {
 
 	// The codec codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
+
+	// TODO: gov authority
+	authority string
 }
 
 // NewKeeper returns a name keeper. It handles:
@@ -51,6 +56,7 @@ func NewKeeper(
 		storeKey:   key,
 		paramSpace: paramSpace,
 		cdc:        cdc,
+		authority:  authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	}
 }
 
@@ -290,4 +296,8 @@ func isValidUUID(s string) bool {
 		return false
 	}
 	return true
+}
+
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
