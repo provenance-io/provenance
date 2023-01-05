@@ -70,6 +70,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdRevokeAuthorization(),
 		GetCmdFeeGrant(),
 		GetIbcTransferTxCmd(),
+		GetCmdAddFinalizeActivateMarker(),
 	)
 	return txCmd
 }
@@ -905,10 +906,91 @@ Examples:
 	return cmd
 }
 
+// GetCmdAddFinalizeActivateMarker implements the add finalize activate marker command
+func GetCmdAddFinalizeActivateMarker() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "create-finalize-activate [coin] [access-grant-string]",
+		Aliases: []string{"cfa"},
+		Args:    cobra.ExactArgs(2),
+		Short:   "Creates, Finalizes and Activates a new marker",
+		Long: strings.TrimSpace(`Creates a new marker, finalizes it and put's it ACTIVATED state managed by the from address
+with the given supply amount and denomination provided in the coin argument
+`),
+		Example: fmt.Sprintf(`$ %s tx marker create-finalize-activate 1000hotdogcoin address1,mint,admin;address2,burn --%s=false --%s=false --from=mykey`, FlagType, FlagSupplyFixed, FlagAllowGovernanceControl),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			markerType := ""
+			coin, err := sdk.ParseCoinNormalized(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid coin %s", args[0])
+			}
+			callerAddr := clientCtx.GetFromAddress()
+			markerType, err = cmd.Flags().GetString(FlagType)
+			if err != nil {
+				return fmt.Errorf("invalid marker type: %w", err)
+			}
+			typeValue := types.MarkerType_Coin
+			if len(markerType) > 0 {
+				typeValue = types.MarkerType(types.MarkerType_value["MARKER_TYPE_"+markerType])
+				if typeValue < 1 {
+					return fmt.Errorf("invalid marker type: %s; expected COIN|RESTRICTED", markerType)
+				}
+			}
+			supplyFixed, err := cmd.Flags().GetBool(FlagSupplyFixed)
+			if err != nil {
+				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagSupplyFixed, err)
+			}
+			allowGovernanceControl, err := cmd.Flags().GetBool(FlagAllowGovernanceControl)
+			if err != nil {
+				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagAllowGovernanceControl, err)
+			}
+			accessGrants := ParseAccessGrantFromString(args[1])
+			if len(accessGrants) == 0 {
+				panic("at least one access grant should be present.")
+			}
+			msg := types.NewMsgAddFinalizeActivateMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue, supplyFixed, allowGovernanceControl, accessGrants)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	cmd.Flags().String(FlagType, "COIN", "a marker type to assign (default is COIN)")
+	cmd.Flags().Bool(FlagSupplyFixed, false, "a true or false value to denote if a supply is fixed (default is false)")
+	cmd.Flags().Bool(FlagAllowGovernanceControl, false, "a true or false value to denote if marker is allowed governance control (default is false)")
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
 func getPeriodReset(duration int64) time.Time {
 	return time.Now().Add(getPeriod(duration))
 }
 
 func getPeriod(duration int64) time.Duration {
 	return time.Duration(duration) * time.Second
+}
+
+// ParseAccessGrantFromString splits string (example address1,perm1,perm2...;address2, perm1...) to AccessGrant
+func ParseAccessGrantFromString(addressPermissionString string) []types.AccessGrant {
+	parts := strings.Split(addressPermissionString, ";")
+	grants := make([]types.AccessGrant, 0)
+	for _, p := range parts {
+		// ignore if someone put in a ; at the end by mistake
+		if len(p) == 0 {
+			continue
+		}
+		partsPerAddress := strings.Split(p, ",")
+		// if it has an address has to have at least one access associated with it
+		if !(len(partsPerAddress) > 1) {
+			panic("at least one grant should be provided with address")
+		}
+		var permissions types.AccessList
+		address := sdk.MustAccAddressFromBech32(partsPerAddress[0])
+		for _, permission := range partsPerAddress[1:] {
+			permissions = append(permissions, types.AccessByName(permission))
+		}
+		grants = append(grants, *types.NewAccessGrant(address, permissions))
+	}
+	return grants
 }

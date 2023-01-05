@@ -10,7 +10,7 @@ option java_package         = "io.provenance.marker.v1";
 option java_multiple_files  = true;
 option java_outer_classname = "AccessGrantProto";
 
-// AccessGrant associates a colelction of permisssions with an address for delegated marker account control.
+// AccessGrant associates a collection of permissions with an address for delegated marker account control.
 message AccessGrant {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;

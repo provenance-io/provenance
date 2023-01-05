@@ -445,9 +445,9 @@ func (k msgServer) Transfer(goCtx context.Context, msg *types.MsgTransferRequest
 	return &types.MsgTransferResponse{}, nil
 }
 
-// Transfer handles a message to send coins from one account to another (used with restricted coins that are not
+// IbcTransfer handles a message to ibc send coins from one account to another (used with restricted coins that are not
 //
-//	sent using the normal bank send process)
+//	sent using the normal ibc send process)
 func (k msgServer) IbcTransfer(goCtx context.Context, msg *types.MsgIbcTransferRequest) (*types.MsgIbcTransferResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -540,4 +540,61 @@ func (k msgServer) SetDenomMetadata(
 	)
 
 	return &types.MsgSetDenomMetadataResponse{}, nil
+}
+
+// AddFinalizeActivateMarker Handle a message to add a new marker account, finalize it and activate it in one go.
+func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.MsgAddFinalizeActivateMarkerRequest) (*types.MsgAddFinalizeActivateMarkerResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	var err error
+	// Add marker requests must pass extra validation for denom (in addition to regular coin validation expression)
+	if err = k.ValidateUnrestictedDenom(ctx, msg.Amount.Denom); err != nil {
+		return nil, err
+	}
+
+	// since this is a one shot process should have 1 access list member, to have any value for a marker.
+	if len(msg.AccessList) == 0 {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("since this will activate the marker, must have at least one access list defined")
+	}
+
+	addr := types.MustGetMarkerAddress(msg.Amount.Denom)
+	var manager sdk.AccAddress
+	// if manager not supplied set manager from the --from-address
+	if msg.Manager != "" {
+		manager, err = sdk.AccAddressFromBech32(msg.Manager)
+	} else {
+		manager, err = sdk.AccAddressFromBech32(msg.FromAddress)
+	}
+	if err != nil {
+		return nil, err
+	}
+	account := authtypes.NewBaseAccount(addr, nil, 0, 0)
+	ma := types.NewMarkerAccount(
+		account,
+		sdk.NewCoin(msg.Amount.Denom, msg.Amount.Amount),
+		manager,
+		msg.AccessList,
+		types.StatusProposed,
+		msg.MarkerType)
+	ma.SupplyFixed = msg.SupplyFixed
+
+	if k.GetEnableGovernance(ctx) {
+		ma.AllowGovernanceControl = true
+	} else {
+		ma.AllowGovernanceControl = msg.AllowGovernanceControl
+	}
+
+	if err := k.Keeper.AddFinalizeAndActivateMarker(ctx, ma); err != nil {
+		ctx.Logger().Error("unable to add, finalize and activate marker", "err", err)
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
+	return &types.MsgAddFinalizeActivateMarkerResponse{}, nil
 }

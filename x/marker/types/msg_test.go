@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -92,7 +94,7 @@ func TestMsgGrantAllowance(t *testing.T) {
 	}
 }
 
-func TestMsgAssessCustomMsgFeeValidateBasic(t *testing.T) {
+func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 	validAddress := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
 
 	cases := []struct {
@@ -154,6 +156,88 @@ func TestMsgAssessCustomMsgFeeValidateBasic(t *testing.T) {
 				require.Equal(t, tc.errorMsg, err.Error())
 			} else {
 				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
+	validAddress := sdk.MustAccAddressFromBech32("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck")
+
+	cases := []struct {
+		name     string
+		msg      MsgAddFinalizeActivateMarkerRequest
+		errorMsg string
+	}{
+		{
+			"should fail on invalid marker",
+			MsgAddFinalizeActivateMarkerRequest{
+				Amount: sdk.Coin{
+					Amount: math.NewInt(100),
+					Denom:  "",
+				},
+				Manager:                "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
+				FromAddress:            "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
+				MarkerType:             MarkerType_Coin,
+				SupplyFixed:            true,
+				AllowGovernanceControl: true,
+				AccessList:             []AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+			},
+			"invalid marker denom/total supply: invalid coins",
+		},
+		{
+			"should fail on invalid manager address",
+			MsgAddFinalizeActivateMarkerRequest{
+				Amount:                 sdk.NewInt64Coin("hotdog", 100),
+				Manager:                "",
+				FromAddress:            "",
+				MarkerType:             MarkerType_Coin,
+				SupplyFixed:            true,
+				AllowGovernanceControl: true,
+				AccessList:             []AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+			},
+			"empty address string is not allowed",
+		},
+		{
+			"should fail on empty access list",
+			*NewMsgAddFinalizeActivateMarkerRequest(
+				"hotdog",
+				sdk.NewInt(100),
+				validAddress,
+				validAddress,
+				MarkerType_Coin,
+				true,
+				true,
+				[]AccessGrant{},
+			),
+			"since this will activate the marker, must have access list defined",
+		},
+		{
+			"should succeed",
+			*NewMsgAddFinalizeActivateMarkerRequest(
+				"hotdog",
+				sdk.NewInt(100),
+				validAddress,
+				validAddress,
+				MarkerType_Coin,
+				true,
+				true,
+				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+			),
+			"",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.errorMsg) > 0 {
+				assert.Error(t, err)
+				assert.Equal(t, tc.errorMsg, err.Error())
+			} else {
+				assert.NoError(t, err)
 			}
 		})
 	}
