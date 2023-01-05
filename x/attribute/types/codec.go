@@ -8,15 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
-// RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
-// account module.
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgAddAttributeRequest{}, "provenance/attribute/MsgAddAttributeRequest", nil)
-	cdc.RegisterConcrete(&MsgUpdateAttributeRequest{}, "provenance/attribute/MsgUpdateAttributeRequest", nil)
-	cdc.RegisterConcrete(&MsgDeleteAttributeRequest{}, "provenance/attribute/MsgDeleteAttributeRequest", nil)
-	cdc.RegisterConcrete(&MsgDeleteDistinctAttributeRequest{}, "provenance/attribute/MsgDeleteDistinctAttributeRequest", nil)
-}
-
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgAddAttributeRequest{},
@@ -41,7 +32,6 @@ var (
 )
 
 func init() {
-	RegisterLegacyAminoCodec(amino)
 	cryptocodec.RegisterCrypto(amino)
 	amino.Seal()
 }
