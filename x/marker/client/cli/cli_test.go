@@ -31,6 +31,7 @@ import (
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
+	"github.com/provenance-io/provenance/x/marker/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -1253,4 +1254,194 @@ func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 
 func getFormattedExpiration(duration int64) string {
 	return time.Now().Add(time.Duration(duration) * time.Second).Format(time.RFC3339)
+}
+
+func (s *IntegrationTestSuite) TestAddFinalizeActivateMarkerTxCommands() {
+
+	testCases := []struct {
+		name         string
+		cmd          *cobra.Command
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"create a new marker, finalize it and activate it.",
+			markercli.GetCmdAddFinalizeActivateMarker(),
+			[]string{
+				"1000newhotdog",
+				getAccessGrantString(s.testnet.Validators[0].Address, s.accountAddresses[1]),
+				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
+				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "true"),
+				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "true"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"create a new marker, finalize it and activate it, with access grant to one address ",
+			markercli.GetCmdAddFinalizeActivateMarker(),
+			[]string{
+				"1000newhotdog1",
+				getAccessGrantString(s.testnet.Validators[0].Address, nil),
+				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
+				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "true"),
+				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "true"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"create a new marker with no access grant ",
+			markercli.GetCmdAddFinalizeActivateMarker(),
+			[]string{
+				"1000newhotdog1",
+				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
+				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "true"),
+				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "true"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"create a new marker, finalize it and activate it  with dashes and periods",
+			markercli.GetCmdAddFinalizeActivateMarker(),
+			[]string{
+				"1000newcat-scratch-fever.bobcat",
+				getAccessGrantString(s.testnet.Validators[0].Address, nil),
+				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
+				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "true"),
+				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "true"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"fail to create add/finalize/activate marker, incorrect allow governance value",
+			markercli.GetCmdAddFinalizeActivateMarker(),
+			[]string{
+				"1000hotdog",
+				getAccessGrantString(s.testnet.Validators[0].Address, nil),
+				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
+				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "false"),
+				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "wrong"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"fail to create add/finalize/activate marker, incorrect supply fixed value",
+			markercli.GetCmdAddFinalizeActivateMarker(),
+			[]string{
+				"1000hotdog",
+				getAccessGrantString(s.testnet.Validators[0].Address, nil),
+				fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
+				fmt.Sprintf("--%s=%s", markercli.FlagSupplyFixed, "wrong"),
+				fmt.Sprintf("--%s=%s", markercli.FlagAllowGovernanceControl, "true"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
+}
+
+func getAccessGrantString(address sdk.AccAddress, anotherAddress sdk.AccAddress) string {
+	if anotherAddress != nil {
+		accessGrant := address.String() + ",mint,admin;" + anotherAddress.String() + ",burn"
+		return accessGrant
+	} else {
+		accessGrant := address.String() + ",mint,admin;"
+		return accessGrant
+	}
+}
+
+func (s *IntegrationTestSuite) TestParseAccessGrantFromString() {
+	testCases := []struct {
+		name              string
+		accessGrantString string
+		expectPanic       bool
+		expectedResult    []types.AccessGrant
+	}{
+		{
+			"successfully parses empty string",
+			"",
+			false,
+			[]types.AccessGrant{},
+		},
+		{
+			"fails parsing invalid string",
+			"blah",
+			true,
+			[]types.AccessGrant{},
+		},
+		{
+			"should fail empty list of permissions",
+			",,;",
+			true,
+			[]types.AccessGrant{},
+		},
+		{
+			"should fail address is not valid",
+			"NotAnAddress,mint;",
+			true,
+			[]types.AccessGrant{},
+		},
+		{
+			"should succeed to add access type",
+			fmt.Sprintf("%s,mint;", s.accountAddresses[0].String()),
+			false,
+			[]types.AccessGrant{markertypes.AccessGrant{Address: s.accountAddresses[0].String(), Permissions: []markertypes.Access{markertypes.Access_Mint}}},
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			if tc.expectPanic {
+				panicFunc := func() { markercli.ParseAccessGrantFromString(tc.accessGrantString) }
+				s.Assert().Panics(panicFunc)
+
+			} else {
+				result := markercli.ParseAccessGrantFromString(tc.accessGrantString)
+				s.Assert().ElementsMatch(result, tc.expectedResult)
+			}
+		})
+	}
 }

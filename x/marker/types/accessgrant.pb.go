@@ -79,7 +79,7 @@ func (Access) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_7242c30a84644575, []int{0}
 }
 
-// AccessGrant associates a colelction of permisssions with an address for delegated marker account control.
+// AccessGrant associates a collection of permissions with an address for delegated marker account control.
 type AccessGrant struct {
 	Address     string     `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	Permissions AccessList `protobuf:"varint,2,rep,packed,name=permissions,proto3,enum=provenance.marker.v1.Access,castrepeated=AccessList" json:"permissions,omitempty"`
