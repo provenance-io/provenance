@@ -18,7 +18,7 @@ service Msg {
   rpc DeleteName(MsgDeleteNameRequest) returns (MsgDeleteNameResponse);
 
   // CreateName defines a service for CreateRootNameProposal.
-  rpc CreateName(MsgCreateRootNameProposal) returns (MsgCreateRootNameProposalResponse);
+  rpc CreateName(MsgCreateRootNameRequest) returns (MsgCreateRootNameResponse);
 }
 
 // MsgBindNameRequest defines an sdk.Msg type that is used to add an address/name binding under an optional parent name.
@@ -50,5 +50,17 @@ message MsgDeleteNameRequest {
 // MsgDeleteNameResponse defines the Msg/DeleteName response type.
 message MsgDeleteNameResponse {}
 
+// MsgCreateRootNameProposal defines an sdk.Msg type to create a new root name
+// that is controlled by a given owner and optionally restricted to the owner
+// for the sole creation of sub names.
+message MsgCreateRootNameRequest {
+  string title       = 1;
+  string description = 2;
+  string name        = 3;
+  string owner       = 4;
+  bool   restricted  = 5;
+  string fromAddress = 6;
+}
+
 // MsgCreateRootNameProposalResponse defines Msg/CreateName response type.
-message MsgCreateRootNameProposalResponse {}
+message MsgCreateRootNameResponse {}

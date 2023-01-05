@@ -151,8 +151,8 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 	return &types.MsgDeleteNameResponse{}, nil
 }
 
-// CreateName
-func (s msgServer) CreateName(goCtx context.Context, msg *types.CreateRootNameProposal) (*types.CreateRootNameProposalResponse, error) {
+// CreateRootName
+func (s msgServer) CreateRootName(goCtx context.Context, msg *types.MsgCreateRootNameRequest) (*types.MsgCreateRootNameResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if s.Keeper.GetAuthority() != msg.FromAddress {
@@ -165,10 +165,11 @@ func (s msgServer) CreateName(goCtx context.Context, msg *types.CreateRootNamePr
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	err := HandleCreateRootNameProposal(ctx, s.Keeper, msg)
+	//TODO: route to existing handler?
+	err := HandleCreateRootNameProposal(ctx, s.Keeper, types.NewCreateRootNameProposal(msg.Title, msg.Description, msg.Name, sdk.AccAddress(msg.Owner), msg.Restricted))
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.CreateRootNameProposalResponse{}, nil
+	return &types.MsgCreateRootNameResponse{}, nil
 }

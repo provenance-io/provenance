@@ -22,6 +22,8 @@ type NameMsgParams struct {
 	Bind *BindNameParams `json:"bind_name,omitempty"`
 	// Encode a MsgUnBindName
 	Delete *DeleteNameParams `json:"delete_name,omitempty"`
+	// Encode a MsgCreateRootName
+	CreateRoot *CreateRootNameParams `json:create_root_name,omitempty`
 }
 
 // BindNameParams are params for encoding a MsgBindName.
@@ -38,6 +40,17 @@ type BindNameParams struct {
 type DeleteNameParams struct {
 	// The name to unbind from the contract address.
 	Name string `json:"name"`
+}
+
+// CreateRootNameParams are params for encoding a MsgCreateRootNameRequest.
+type CreateRootNameParams struct {
+	// The name to unbind from the contract address.
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Name        string `json:"name"`
+	Owner       string `json:"owner"`
+	Restricted  bool   `json:"restricted"`
+	FromAddress string `json:"fromAddress"`
 }
 
 // Encoder returns a smart contract message encoder for the name module.
@@ -86,5 +99,12 @@ func (params *BindNameParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error)
 func (params *DeleteNameParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
 	record := types.NewNameRecord(params.Name, contract, false)
 	msg := types.NewMsgDeleteNameRequest(record)
+	return []sdk.Msg{msg}, nil
+}
+
+// Encode creates a MsgCreateRootNameRequest.
+func (params *CreateRootNameParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
+	// TODO: test this
+	msg := types.NewMsgCreateRootNameRequest(params.Title, params.Description, params.Name, params.Owner, params.Restricted, params.FromAddress)
 	return []sdk.Msg{msg}, nil
 }
