@@ -92,8 +92,8 @@ func (suite *SimTestSuite) TestSimulateMsgAddAttribute() {
 	suite.Require().Equal("example.provenance", msg.Name)
 	suite.Require().Equal(types.AttributeType_Uri, msg.AttributeType)
 	suite.Require().Equal([]byte("http://www.example.com/"), msg.Value)
-	suite.Require().Equal(types.TypeMsgAddAttribute, msg.Type())
-	suite.Require().Equal(types.ModuleName, msg.Route())
+	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
+	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -118,11 +118,11 @@ func (suite *SimTestSuite) TestSimulateMsgUpdateAttribute() {
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(types.TypeMsgUpdateAttribute, msg.Type())
+	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
 	suite.Require().Equal("example.provenance", msg.Name)
 	suite.Require().Equal(accounts[0].Address.String(), msg.Owner)
 	suite.Require().Equal(accounts[1].Address.String(), msg.Account)
-	suite.Require().Equal(types.ModuleName, msg.Route())
+	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -147,11 +147,11 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteAttribute() {
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(types.TypeMsgDeleteAttribute, msg.Type())
+	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
 	suite.Require().Equal("example.provenance", msg.Name)
 	suite.Require().Equal(accounts[0].Address.String(), msg.Owner)
 	suite.Require().Equal(accounts[1].Address.String(), msg.Account)
-	suite.Require().Equal(types.ModuleName, msg.Route())
+	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -177,11 +177,11 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteDistinctAttribute() {
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(types.TypeMsgDeleteDistinctAttribute, msg.Type())
+	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
 	suite.Require().Equal("example.provenance", msg.Name)
 	suite.Require().Equal(accounts[0].Address.String(), msg.Owner)
 	suite.Require().Equal(accounts[1].Address.String(), msg.Account)
-	suite.Require().Equal(types.ModuleName, msg.Route())
+	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
 	suite.Require().Len(futureOperations, 0)
 }
 
