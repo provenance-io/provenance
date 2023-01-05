@@ -28,7 +28,7 @@ message MsgAssessCustomMsgFeeRequest {
   cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false]; // amount of additional fee that must be paid
   string recipient = 3; // optional recipient address, the total amount is given to the recipient, if present.
   string from      = 4; // the signer of the msg
-  uint32 recipient_basis_points = 5; // optional split of funds between the recipient and fee module defaults to 50:50,
+  string recipient_basis_points = 5; // optional split of funds between the recipient and will default to 50:50 if not set,
                                      // split recipient basis points can only be between 0 and 10,000
 }
 
