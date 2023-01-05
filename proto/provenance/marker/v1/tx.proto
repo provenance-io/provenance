@@ -200,7 +200,7 @@ message MsgSetDenomMetadataResponse {}
 // MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker request type
 message MsgAddFinalizeActivateMarkerRequest {
   cosmos.base.v1beta1.Coin amount = 1
-  [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
   string               manager                  = 3;
   string               from_address             = 4;
   MarkerType           marker_type              = 5;

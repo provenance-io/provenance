@@ -24987,7 +24987,7 @@ paths:
                           This access right is only supported on RESTRICTED
                           markers.
                   description: >-
-                    AccessGrant associates a colelction of permisssions with an
+                    AccessGrant associates a collection of permissions with an
                     address for delegated marker account control.
             description: >-
               QueryAccessResponse is the response type for the
@@ -66303,7 +66303,7 @@ definitions:
              - ACCESS_TRANSFER: ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange.
             This access right is only supported on RESTRICTED markers.
     description: >-
-      AccessGrant associates a colelction of permisssions with an address for
+      AccessGrant associates a collection of permissions with an address for
       delegated marker account control.
   provenance.marker.v1.Balance:
     type: object
@@ -66409,7 +66409,7 @@ definitions:
                    - ACCESS_TRANSFER: ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange.
                   This access right is only supported on RESTRICTED markers.
           description: >-
-            AccessGrant associates a colelction of permisssions with an address
+            AccessGrant associates a collection of permissions with an address
             for delegated marker account control.
     description: >-
       QueryAccessResponse is the response type for the Query/MarkerAccess
@@ -67077,6 +67077,11 @@ definitions:
   provenance.marker.v1.MsgAddAccessResponse:
     type: object
     title: MsgAddAccessResponse defines the Msg/AddAccess response type
+  provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse:
+    type: object
+    title: >-
+      MsgAddFinalizeActivateMarkerResponse defines the
+      Msg/AddFinalizeActivateMarker response type
   provenance.marker.v1.MsgAddMarkerResponse:
     type: object
     title: MsgAddMarkerResponse defines the Msg/AddMarker response type
