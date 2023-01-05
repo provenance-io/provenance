@@ -1011,11 +1011,8 @@ func addExpiresFlagCmd(cmd *cobra.Command) {
 // parseExpires checks expires flag, else uses the default expiration period
 func parseExpires(cmd *cobra.Command) string {
 	flagSet := cmd.Flags()
-	if flagSet.Changed(FlagExpires) {
-		expires, _ := flagSet.GetString(FlagExpires)
-		return expires
-	}
-	return ""
+	expires, _ := flagSet.GetString(FlagExpires)
+	return expires
 }
 
 func parsePartyTypes(delimitedPartyTypes string) []types.PartyType {

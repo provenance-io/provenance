@@ -39,12 +39,11 @@ func (k msgServer) WriteScope(
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
-	// temporarily only create expiration if an expiration value is specified (e.g. via flag on command)
+	// temporarily only create expiration if an expiration value is specified
 	if len(msg.Expiration) > 0 {
 		// attempt to create expiration metadata for scope
-		_, expErr := k.createExpirationForScope(ctx, msg)
-		if expErr != nil {
-			return nil, expErr
+		if err := k.setExpirationForScope(ctx, msg); err != nil {
+			return nil, err
 		}
 	}
 
@@ -59,29 +58,29 @@ func (k msgServer) WriteScope(
 	return types.NewMsgWriteScopeResponse(msg.Scope.ScopeId), nil
 }
 
-func (k msgServer) createExpirationForScope(ctx sdk.Context, msg *types.MsgWriteScopeRequest) (*exptypes.Expiration, error) {
+func (k msgServer) setExpirationForScope(ctx sdk.Context, msg *types.MsgWriteScopeRequest) error {
 	// create expire scope request.
 	expireMsg := types.NewMsgExpireScopeRequest(msg.Scope.ScopeId, msg.Signers)
 	wrapper, anyErr := codec.NewAnyWithValue(expireMsg)
 	if anyErr != nil {
-		return nil, anyErr
+		return anyErr
 	}
 
-	// use default expiration, but override with cmd line arg if provided
-	expShort := k.GetDefaultScopeExpiration(ctx, msg.Scope)
-	if len(msg.Expiration) > 0 {
-		expShort = msg.Expiration
+	// if an expiration period isn't provided, use default expiration period
+	expShort := msg.Expiration
+	if len(expShort) == 0 {
+		expShort = k.GetDefaultScopeExpiration(ctx, msg.Scope)
 	}
 
 	// parse expiration into a duration
 	duration, durErr := exptypes.ParseDuration(expShort)
 	if durErr != nil {
-		return nil, durErr
+		return durErr
 	}
 
-	// REVIEW THIS: for now, using first owner for scope as expiration depositor
+	// use first owner for scope as expiration depositor
 	if len(msg.Scope.Owners) == 0 {
-		return nil, errors.New("no owners found for expiration deposit")
+		return errors.New("no owners found for expiration deposit")
 	}
 	firstOwner := msg.Scope.Owners[0].Address
 
@@ -92,9 +91,10 @@ func (k msgServer) createExpirationForScope(ctx sdk.Context, msg *types.MsgWrite
 		expDeposit, *wrapper)
 	expErr := k.expKeeper.SetExpiration(ctx, *expiration)
 	if expErr != nil {
-		return nil, expErr
+		return expErr
 	}
-	return expiration, nil
+
+	return nil
 }
 
 func (k msgServer) DeleteScope(
@@ -328,7 +328,7 @@ func (k msgServer) DeleteRecord(
 	goCtx context.Context,
 	msg *types.MsgDeleteRecordRequest,
 ) (*types.MsgDeleteRecordResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteExpiration")
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteRecord")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, _ := k.GetRecord(ctx, msg.RecordId)

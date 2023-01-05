@@ -21,9 +21,10 @@ service Msg {
 
 // MsgAddExpirationRequest represents a message to add an expiration
 message MsgAddExpirationRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.stringer)        = false;
-  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = true;
+  option (gogoproto.goproto_getters)  = false;
 
   // expiration is the Expiration you want to add
   Expiration expiration = 1 [(gogoproto.nullable) = false];
@@ -36,9 +37,10 @@ message MsgAddExpirationResponse {}
 
 // MsgExtendExpirationRequest represents a message to extend an expiration.
 message MsgExtendExpirationRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.stringer)        = false;
-  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = true;
+  option (gogoproto.goproto_getters)  = false;
 
   // the module asset identifier
   string module_asset_id = 1;
@@ -55,9 +57,10 @@ message MsgExtendExpirationResponse {}
 
 // MsgInvokeExpirationRequest represents a message to invoke expiration logic for an asset
 message MsgInvokeExpirationRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.stringer)        = false;
-  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = true;
+  option (gogoproto.goproto_getters)  = false;
 
   // Module asset ID which will have its expiration logic triggered
   string module_asset_id = 1;

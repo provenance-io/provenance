@@ -70,7 +70,7 @@ func NewKeeper(
 	}
 
 	// ensure expiration module account is set
-	if addr := acctKeeper.GetModuleAddress(types.ModuleName); addr == nil {
+	if acctKeeper.GetModuleAddress(types.ModuleName) == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 

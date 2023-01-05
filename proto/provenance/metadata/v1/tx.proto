@@ -148,7 +148,7 @@ message MsgDeleteScopeResponse {}
 message MsgExpireScopeRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
+  option (gogoproto.stringer)         = true;
   option (gogoproto.goproto_getters)  = false;
 
   // Unique ID for the scope to expire

@@ -2,8 +2,6 @@ package types
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v2"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -39,31 +37,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 // DefaultParams is the default parameter configuration for the bank module
 func DefaultParams() Params {
 	return NewParams(DefaultDeposit)
-}
-
-// String implements the Stringer interface.
-func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
-}
-
-// Equal returns true if the given value is equivalent to the current instance of params
-func (p *Params) Equal(that interface{}) bool {
-	if that == nil {
-		return p == nil
-	}
-
-	that1, ok := that.(*Params)
-	if !ok {
-		that2, ok := that.(Params)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-
-	return that1.Deposit.IsEqual(p.Deposit)
 }
 
 // Validate validates the deposit parameter

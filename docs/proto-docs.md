@@ -1311,9 +1311,9 @@ Query defines the gRPC querier service for expiration module.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [QueryParamsRequest](#provenance.expiration.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.expiration.v1.QueryParamsResponse) | Params queries the parameters for x/expiration | GET|/provenance/expiration/v1/params|
-| `Expiration` | [QueryExpirationRequest](#provenance.expiration.v1.QueryExpirationRequest) | [QueryExpirationResponse](#provenance.expiration.v1.QueryExpirationResponse) | Query Expiration | GET|/provenance/expiration/v1/{module_asset_id}|
+| `Expiration` | [QueryExpirationRequest](#provenance.expiration.v1.QueryExpirationRequest) | [QueryExpirationResponse](#provenance.expiration.v1.QueryExpirationResponse) | Query Expiration | GET|/provenance/expiration/v1/module/{module_asset_id}|
 | `AllExpirations` | [QueryAllExpirationsRequest](#provenance.expiration.v1.QueryAllExpirationsRequest) | [QueryAllExpirationsResponse](#provenance.expiration.v1.QueryAllExpirationsResponse) | Query all Expirations | GET|/provenance/expiration/v1/all|
-| `AllExpirationsByOwner` | [QueryAllExpirationsByOwnerRequest](#provenance.expiration.v1.QueryAllExpirationsByOwnerRequest) | [QueryAllExpirationsByOwnerResponse](#provenance.expiration.v1.QueryAllExpirationsByOwnerResponse) | Query Expirations by owner | GET|/provenance/expiration/v1/all/{owner}|
+| `AllExpirationsByOwner` | [QueryAllExpirationsByOwnerRequest](#provenance.expiration.v1.QueryAllExpirationsByOwnerRequest) | [QueryAllExpirationsByOwnerResponse](#provenance.expiration.v1.QueryAllExpirationsByOwnerResponse) | Query Expirations by owner | GET|/provenance/expiration/v1/all/owner/{owner}|
 | `AllExpiredExpirations` | [QueryAllExpiredExpirationsRequest](#provenance.expiration.v1.QueryAllExpiredExpirationsRequest) | [QueryAllExpiredExpirationsResponse](#provenance.expiration.v1.QueryAllExpiredExpirationsResponse) | Query all expired Expirations | GET|/provenance/expiration/v1/all/expired|
 
  <!-- end services -->
@@ -1356,13 +1356,13 @@ MsgAddExpirationResponse defines the MsgAddExpirationRequest response type
 <a name="provenance.expiration.v1.MsgExtendExpirationRequest"></a>
 
 ### MsgExtendExpirationRequest
-MsgExtendExpirationRequest represents a message to extend an expiration
+MsgExtendExpirationRequest represents a message to extend an expiration.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `module_asset_id` | [string](#string) |  | the module asset identifier |
-| `duration` | [string](#string) |  | the duration period for which to extend the asset to remain on chain |
+| `duration` | [string](#string) |  | the duration period by which to extend the existing expiration period the accepted values for a duration are n{h,d,w,y} where 1h = 60m, 1d = 24h, 1w = 7d (or 168h), 1y = 365d (or 8760h) |
 | `signers` | [string](#string) | repeated | signers is the list of addresses of those signing this request. |
 
 

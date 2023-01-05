@@ -13,7 +13,8 @@ option java_multiple_files = true;
 
 // Params defines the set of params for the expiration module.
 message Params {
-  option (gogoproto.equal)            = false;
+  option (gogoproto.equal)            = true;
+  option (gogoproto.stringer)         = true;
   option (gogoproto.goproto_stringer) = false;
 
   // the deposit amount for holding module assets on chain

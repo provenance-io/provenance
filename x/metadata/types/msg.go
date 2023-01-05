@@ -257,11 +257,6 @@ func NewMsgExpireScopeRequest(scopeID MetadataAddress, signers []string) *MsgExp
 	}
 }
 
-func (msg MsgExpireScopeRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
 // Route returns the module route
 func (msg MsgExpireScopeRequest) Route() string {
 	return ModuleName
