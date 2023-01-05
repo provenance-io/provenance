@@ -16,7 +16,7 @@ const (
 )
 
 // Compile time interface checks.
-var _, _ sdk.Msg = &MsgBindNameRequest{}, &MsgDeleteNameRequest{}, &MsgCreateRootNameRequest{}
+var _, _, _ sdk.Msg = &MsgBindNameRequest{}, &MsgDeleteNameRequest{}, &MsgCreateRootNameRequest{}
 
 // NewMsgBindNameRequest creates a new bind name request
 func NewMsgBindNameRequest(record, parent NameRecord) *MsgBindNameRequest {
@@ -156,4 +156,12 @@ func (msg MsgCreateRootNameRequest) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+func (msg MsgCreateRootNameRequest) ProposalRoute() string {
+	return ModuleName
+}
+
+func (msg MsgCreateRootNameRequest) ProposalType() string {
+	return TypeMsgCreateRootNameRequest
 }

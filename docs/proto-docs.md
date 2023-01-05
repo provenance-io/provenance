@@ -6005,7 +6005,7 @@ Msg defines the bank Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `BindName` | [MsgBindNameRequest](#provenance.name.v1.MsgBindNameRequest) | [MsgBindNameResponse](#provenance.name.v1.MsgBindNameResponse) | BindName binds a name to an address under a root name. | |
 | `DeleteName` | [MsgDeleteNameRequest](#provenance.name.v1.MsgDeleteNameRequest) | [MsgDeleteNameResponse](#provenance.name.v1.MsgDeleteNameResponse) | DeleteName defines a method to verify a particular invariance. | |
-| `CreateName` | [MsgCreateRootNameRequest](#provenance.name.v1.MsgCreateRootNameRequest) | [MsgCreateRootNameResponse](#provenance.name.v1.MsgCreateRootNameResponse) | CreateName defines a service for CreateRootNameProposal. | |
+| `CreateRootName` | [MsgCreateRootNameRequest](#provenance.name.v1.MsgCreateRootNameRequest) | [MsgCreateRootNameResponse](#provenance.name.v1.MsgCreateRootNameResponse) | CreateName defines a service for CreateRootNameProposal. | |
 
  <!-- end services -->
 
