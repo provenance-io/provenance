@@ -278,3 +278,18 @@ This service message is expected to fail if:
         - Any DenomUnit entries are removed.
         - DenomUnit Denom fields are modified.
         - Any aliases are removed from a DenomUnit.
+
+## Msg/AddFinalizeActivateMarkerRequest
+
+AddFinalizeActivate requested is used for adding, finalizing, and activating a marker in a single request.
+
+This service message is expected to fail if:
+
+- The given denom value is invalid or does not match an existing marker on the system
+- The marker is pending:
+  - And the request is not signed with an administrator address that matches the manager address or:
+  - The given administrator address does not currently have the "admin" access granted on the marker
+- The accesslist:
+  - Contains more than one entry for a given address
+  - Contains a grant with an invalid address
+  - Contains a grant with an invalid access enum value (Unspecified/0)

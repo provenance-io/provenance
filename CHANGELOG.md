@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Added support to set a list of specific recipients allowed for send authorizations in the marker module [#1237](https://github.com/provenance-io/provenance/issues/1237).
+* Added msg to add, finalize, and activate a marker in a single request [#770](https://github.com/provenance-io/provenance/issues/770).
 
 ### Improvements
 
