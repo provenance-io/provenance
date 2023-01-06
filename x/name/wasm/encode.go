@@ -23,7 +23,7 @@ type NameMsgParams struct {
 	// Encode a MsgUnBindName
 	Delete *DeleteNameParams `json:"delete_name,omitempty"`
 	// Encode a MsgCreateRootName
-	CreateRoot *CreateRootNameParams `json:create_root_name,omitempty`
+	CreateRoot *CreateRootNameParams `json:"create_root_name,omitempty"`
 }
 
 // BindNameParams are params for encoding a MsgBindName.
