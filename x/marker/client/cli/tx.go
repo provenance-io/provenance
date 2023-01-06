@@ -22,8 +22,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	channelutils "github.com/cosmos/ibc-go/v5/modules/core/04-channel/client/utils"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	channelutils "github.com/cosmos/ibc-go/v6/modules/core/04-channel/client/utils"
 
 	"github.com/spf13/cobra"
 )
@@ -42,6 +42,7 @@ const (
 	FlagPacketTimeoutHeight    = "packet-timeout-height"
 	FlagPacketTimeoutTimestamp = "packet-timeout-timestamp"
 	FlagAbsoluteTimeouts       = "absolute-timeouts"
+	FlagMemo                   = "memo"
 )
 
 // NewTxCmd returns the top-level command for marker CLI transactions.
@@ -589,6 +590,11 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 				return err
 			}
 
+			memo, err := cmd.Flags().GetString(FlagMemo)
+			if err != nil {
+				return err
+			}
+
 			// if the timeouts are not absolute, retrieve latest block height and block timestamp
 			// for the consensus state connected to the destination port/channel
 			if !absoluteTimeouts {
@@ -627,6 +633,7 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 				sourcePort, sourceChannel,
 				token, sender, receiver,
 				timeoutHeight, timeoutTimestamp,
+				memo,
 			)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -635,6 +642,7 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 	cmd.Flags().String(FlagPacketTimeoutHeight, "0-1000", "Packet timeout block height. The timeout is disabled when set to 0-0.")
 	cmd.Flags().Uint64(FlagPacketTimeoutTimestamp, uint64((time.Duration(10) * time.Minute).Nanoseconds()), "Packet timeout timestamp in nanoseconds from now. Default is 10 minutes. The timeout is disabled when set to 0.")
 	cmd.Flags().Bool(FlagAbsoluteTimeouts, false, "Timeout flags are used as absolute timeouts.")
+	cmd.Flags().String(FlagMemo, "", "Memo to be sent along with the packet.")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
