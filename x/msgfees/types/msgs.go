@@ -67,7 +67,7 @@ func (msg MsgAssessCustomMsgFeeRequest) GetBips() (uint32, error) {
 	if msg.RecipientBasisPoints == "" {
 		return AssessCustomMsgFeeBips, nil
 	}
-	bips, err := strconv.ParseUint(msg.RecipientBasisPoints, 10, 64)
+	bips, err := strconv.ParseUint(msg.RecipientBasisPoints, 10, 32)
 	if err == nil {
 		if bips > 10_000 {
 			return 0, fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", msg.RecipientBasisPoints)
