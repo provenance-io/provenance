@@ -65,7 +65,7 @@ func (msg MsgAssessCustomMsgFeeRequest) ValidateBasic() error {
 // GetBips returns converts the msg RecipientBasisPoints to a uint32 basis point value 0 - 10,000
 func (msg MsgAssessCustomMsgFeeRequest) GetBips() (uint32, error) {
 	if msg.RecipientBasisPoints == "" {
-		return DefaultMsgFeeBips, nil
+		return AssessCustomMsgFeeBips, nil
 	}
 	bips, err := strconv.ParseUint(msg.RecipientBasisPoints, 10, 64)
 	if err == nil {

@@ -685,7 +685,7 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 	stopIfFailed(tt)
 	tt.Run("assess custom msg fee", func(t *testing.T) {
 		msgFeeCoin := sdk.NewInt64Coin(msgfeestypes.UsdDenom, 7)
-		msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", msgFeeCoin, addr2.String(), addr1.String())
+		msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", msgFeeCoin, addr2.String(), addr1.String(), "")
 		fees := sdk.NewCoins(
 			sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000),
 			sdk.NewInt64Coin(NHash, 1_190_500_001),
@@ -760,7 +760,7 @@ func TestMsgServiceAssessMsgFeeNoRecipient(tt *testing.T) {
 	stopIfFailed(tt)
 	tt.Run("assess custom msg fee", func(t *testing.T) {
 		msgFeeCoin := sdk.NewInt64Coin(msgfeestypes.UsdDenom, 7)
-		msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", msgFeeCoin, "", addr1.String())
+		msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", msgFeeCoin, "", addr1.String(), "")
 		fees := sdk.NewCoins(
 			sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000),
 			sdk.NewInt64Coin(NHash, 1_190_500_001),
