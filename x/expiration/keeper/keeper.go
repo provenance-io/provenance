@@ -102,6 +102,13 @@ func (k Keeper) GetDeposit(ctx sdk.Context) sdk.Coin {
 	return *deposit
 }
 
+// GetDuration returns the duration used in setting module asset expirations.
+func (k Keeper) GetDuration(ctx sdk.Context) string {
+	duration := &types.DefaultDuration
+	k.paramSpace.GetIfExists(ctx, types.ParamStoreKeyDuration, duration)
+	return *duration
+}
+
 // GetExpiration returns the expiration with the given module asset id.
 // In case of not found, (nil, nil) is returned.
 func (k Keeper) GetExpiration(ctx sdk.Context, moduleAssetID string) (*types.Expiration, error) {
@@ -301,6 +308,9 @@ func (k Keeper) ValidateSetExpiration(
 	}
 	deposit := expiration.Deposit
 	defaultDeposit := types.DefaultDeposit
+	if deposit.IsZero() {
+		return types.ErrInvalidDeposit.Wrap("deposit amount cannot be zero")
+	}
 	if deposit.IsLT(defaultDeposit) {
 		return types.ErrInvalidDeposit.Wrapf("deposit amount %s is less than minimum deposit amount %s",
 			deposit.Amount.String(), defaultDeposit.Amount.String())

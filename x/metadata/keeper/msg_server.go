@@ -40,6 +40,7 @@ func (k msgServer) WriteScope(
 	msg.ConvertOptionalFields()
 
 	// temporarily only create expiration if an expiration value is specified
+	// see https://github.com/provenance-io/provenance/pull/1115#discussion_r987949444
 	if len(msg.Expiration) > 0 {
 		// attempt to create expiration metadata for scope
 		if err := k.setExpirationForScope(ctx, msg); err != nil {

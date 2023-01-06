@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/provenance-io/provenance/x/metadata/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // MetadataMsgParams are params for encoding []sdk.Msg types from the scope module.
@@ -23,6 +23,9 @@ type WriteScope struct {
 	Scope Scope `json:"scope"`
 	// The signers' addresses.
 	Signers []string `json:"signers"`
+	// Expiration is an optional expiration timespan string, e.g. "1y" (see expiration module for format)
+	// If provided, it overrides the default scope expiration with the given time period.
+	Expiration string
 }
 
 // Encoder returns a smart contract message encoder for the metadata module.
@@ -59,8 +62,10 @@ func (params *WriteScope) Encode() ([]sdk.Msg, error) {
 		return nil, err
 	}
 
-	// TODO: should the structures be updated with expiration settings?
-	msg := types.NewMsgWriteScopeRequest(*scope, params.Signers, "1y")
+	// set expiration to default value if one isn't provided
+	// see as to why this is not yet set https://github.com/provenance-io/provenance/pull/1115#discussion_r987949444
+	expiration := params.Expiration
+	msg := types.NewMsgWriteScopeRequest(*scope, params.Signers, expiration)
 
 	return []sdk.Msg{msg}, nil
 }

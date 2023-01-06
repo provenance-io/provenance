@@ -1094,6 +1094,9 @@ Params defines the set of params for the expiration module.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | the deposit amount for holding module assets on chain |
+| `duration` | [string](#string) |  | duration is the period upon which an expiration will stay on chain when the period elapses the module asset is up for extension or deletion
+
+the accepted values for a duration are n{h,d,w,y} where 1h = 60m, 1d = 24h, 1w = 7d (or 168h), 1y = 365d (or 8760h) |
 
 
 

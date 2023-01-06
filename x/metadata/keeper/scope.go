@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 
+	expirationtypes "github.com/provenance-io/provenance/x/expiration/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -137,8 +138,9 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 
 // GetDefaultScopeExpiration gets default expiration for scope.
 func (k Keeper) GetDefaultScopeExpiration(ctx sdk.Context, scope types.Scope) string {
-	// hard-coded value for now, but may be calculated in the future based on scope info..
-	return "1y"
+	// use default duration param value from expiration module now,
+	// but may be calculated in the future based on scope info.
+	return expirationtypes.DefaultDuration
 }
 
 // scopeIndexValues is a struct containing the values used to index a scope.

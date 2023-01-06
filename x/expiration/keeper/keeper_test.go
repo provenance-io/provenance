@@ -11,7 +11,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
@@ -80,6 +82,9 @@ func (s *KeeperTestSuite) SetupTest() {
 	var expirationData types.GenesisState
 	expirationData.Params = types.DefaultParams()
 	s.app.ExpirationKeeper.InitGenesis(s.ctx, &expirationData)
+
+	// set default deposit amount
+	types.DefaultDeposit = sdk.NewInt64Coin("nhash", 1000000000)
 
 	// expiration tests
 	s.moduleAssetID = "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
@@ -234,6 +239,13 @@ func (s *KeeperTestSuite) TestAddExpiration() {
 				assert.Equal(t, tc.expectedErr, err.Error(), "%s error", tc.name)
 			} else {
 				assert.NoError(t, err, "%s unexpected error", tc.name)
+				if !tc.expiration.Deposit.IsZero() {
+					priv, _, _ := testdata.KeyTestPubAddr()
+					addr, _ := sdk.AccAddressFromBech32(tc.expiration.Owner)
+					acct := cosmosauthtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+					err := testutil.FundAccount(s.app.BankKeeper, s.ctx, acct.GetAddress(), sdk.NewCoins(tc.expiration.Deposit))
+					s.Require().NoError(err, fmt.Sprintf("%s: fund owner account", tc.name))
+				}
 				if err := s.app.ExpirationKeeper.SetExpiration(s.ctx, tc.expiration); err != nil {
 					assert.Fail(t, err.Error())
 				}
