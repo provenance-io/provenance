@@ -29,6 +29,7 @@ func (m msgServer) AssessCustomMsgFee(goCtx context.Context, req *types.MsgAsses
 			sdk.NewAttribute(types.KeyAttributeName, req.Name),
 			sdk.NewAttribute(types.KeyAttributeAmount, req.Amount.String()),
 			sdk.NewAttribute(types.KeyAttributeRecipient, req.Recipient),
+			sdk.NewAttribute(types.KeyAttributeBips, req.RecipientBasisPoints),
 		),
 	)
 	return &types.MsgAssessCustomMsgFeeResponse{}, nil

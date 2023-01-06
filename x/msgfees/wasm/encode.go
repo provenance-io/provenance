@@ -30,6 +30,8 @@ type AssessCustomFeeParams struct {
 	Name string `json:"name,omitempty"`
 	// An optional address to receive the fees. if present, the total amount is sent to the address.
 	Recipient string `json:"recipient,omitempty"`
+	// An optional address to receive the fees. if present, the total amount is sent to the address.
+	RecipientBasisPoints string `recipient_basis_points:"recipient,omitempty"`
 }
 
 // Encoder returns a smart contract message encoder for the name module.
@@ -55,7 +57,7 @@ func Encoder(contract sdk.AccAddress, msg json.RawMessage, version string) ([]sd
 // Encode creates a MsgAssessCustomMsgFeeRequest.
 func (params *AssessCustomFeeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
 	// Create message request
-	msg := types.NewMsgAssessCustomMsgFeeRequest(params.Name, params.Amount, params.Recipient, params.From)
+	msg := types.NewMsgAssessCustomMsgFeeRequest(params.Name, params.Amount, params.Recipient, params.From, params.RecipientBasisPoints)
 	err := msg.ValidateBasic()
 	if err != nil {
 		return nil, err

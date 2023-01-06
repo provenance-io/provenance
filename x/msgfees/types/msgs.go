@@ -2,6 +2,8 @@ package types
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -27,15 +29,18 @@ func NewMsgAssessCustomMsgFeeRequest(
 	amount sdk.Coin,
 	recipient string,
 	from string,
+	recipientBasisPoints string,
 ) MsgAssessCustomMsgFeeRequest {
 	return MsgAssessCustomMsgFeeRequest{
-		Name:      name,
-		Amount:    amount,
-		Recipient: recipient,
-		From:      from,
+		Name:                 name,
+		Amount:               amount,
+		Recipient:            recipient,
+		From:                 from,
+		RecipientBasisPoints: recipientBasisPoints,
 	}
 }
 
+// ValidateBasic runs stateless validation checks on the message.
 func (msg MsgAssessCustomMsgFeeRequest) ValidateBasic() error {
 	if len(msg.Recipient) != 0 {
 		_, err := sdk.AccAddressFromBech32(msg.Recipient)
@@ -50,9 +55,29 @@ func (msg MsgAssessCustomMsgFeeRequest) ValidateBasic() error {
 	if !msg.Amount.IsPositive() {
 		return errors.New("amount must be greater than zero")
 	}
+	_, err = msg.GetBips()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
+// GetBips returns converts the msg RecipientBasisPoints to a uint32 basis point value 0 - 10,000
+func (msg MsgAssessCustomMsgFeeRequest) GetBips() (uint32, error) {
+	if msg.RecipientBasisPoints == "" {
+		return DefaultMsgFeeBips, nil
+	}
+	bips, err := strconv.ParseUint(msg.RecipientBasisPoints, 10, 64)
+	if err == nil {
+		if bips > 10_000 {
+			return 0, fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", msg.RecipientBasisPoints)
+		}
+	}
+
+	return uint32(bips), err
+}
+
+// GetSignBytes encodes the message for signing
 func (msg MsgAssessCustomMsgFeeRequest) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.From)
 	if err != nil {
@@ -61,6 +86,7 @@ func (msg MsgAssessCustomMsgFeeRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
+// GetSigners indicates that the message must have been signed by the address provided
 func (msg MsgAssessCustomMsgFeeRequest) GetSignerBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)

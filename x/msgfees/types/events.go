@@ -17,6 +17,8 @@ const (
 	KeyAttributeRecipient string = "recipient"
 	// KeyAttributeName is the key for the optional name for assess custom fee
 	KeyAttributeName string = "name"
+	// KeyAttributeBips is the bips value for recipient
+	KeyAttributeBips = "recipient_basis_points"
 )
 
 func NewEventMsgs(totalCalls map[string]uint64, totalFees map[string]sdk.Coins) *EventMsgFees {
