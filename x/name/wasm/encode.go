@@ -44,7 +44,6 @@ type DeleteNameParams struct {
 
 // CreateRootNameParams are params for encoding a MsgCreateRootNameRequest.
 type CreateRootNameParams struct {
-	// The name to unbind from the contract address.
 	Title       string         `json:"title"`
 	Description string         `json:"description"`
 	Metadata    types.Metadata `json:"metadata"`

@@ -152,7 +152,7 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 	return &types.MsgDeleteNameResponse{}, nil
 }
 
-// CreateRootName
+// CreateRootName binds a name to an address
 func (s msgServer) CreateRootName(goCtx context.Context, msg *types.MsgCreateRootNameRequest) (*types.MsgCreateRootNameResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
