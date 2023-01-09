@@ -67,8 +67,7 @@ message MsgCreateRootNameRequest {
 // MsgCreateRootNameProposalResponse defines Msg/CreateName response type.
 message MsgCreateRootNameResponse {}
 
-// Metadata represents a struct that describes
-// a basic token.
+// Metadata represents a struct containing proposal
 message Metadata {
   string name        = 1;
   string owner       = 2;
