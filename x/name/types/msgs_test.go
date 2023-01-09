@@ -11,26 +11,21 @@ import (
 func TestMsgCreateRootNameRequestGetSignBytes(t *testing.T) {
 	owner := sdk.AccAddress("input")
 	msg := MsgCreateRootNameRequest{
-		Title:       "title",
-		Description: "description",
-		Metadata: &Metadata{
-			Name:       "hooman",
-			Owner:      owner.String(),
-			Restricted: false,
-		},
+		Name:       "hooman",
+		Owner:      owner.String(),
+		Restricted: false,
 	}
 	res := msg.GetSignBytes()
 
-	expected := `{"type":"provenance/MsgCreateRootNameRequest","value":{"description":"description","metadata":{"name":"hooman","owner":"cosmos1d9h8qat57ljhcm"},"title":"title"}}`
+	expected := `{"type":"provenance/MsgCreateRootNameRequest","value":{"name":"hooman","owner":"cosmos1d9h8qat57ljhcm"}}`
 	require.Equal(t, expected, string(res))
 }
 
 func TestMsgCreateRootNameRequestGetSigners(t *testing.T) {
 	authority := sdk.AccAddress("input111111111111111")
-	title := "Proposal Title"
-	description := "Proposal description"
-	metadata := Metadata{}
-	msg := NewMsgCreateRootNameRequest(title, description, &metadata, authority.String())
+	name := "Proposal Title"
+	owner := "Proposal description"
+	msg := NewMsgCreateRootNameRequest(authority.String(), name, owner, false)
 	res := msg.GetSigners()
 	require.Equal(t, 1, len(res))
 	require.True(t, authority.Equals(res[0]))
