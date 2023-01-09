@@ -387,8 +387,11 @@
     - [Query](#provenance.name.v1.Query)
   
 - [provenance/name/v1/tx.proto](#provenance/name/v1/tx.proto)
+    - [Metadata](#provenance.name.v1.Metadata)
     - [MsgBindNameRequest](#provenance.name.v1.MsgBindNameRequest)
     - [MsgBindNameResponse](#provenance.name.v1.MsgBindNameResponse)
+    - [MsgCreateRootNameRequest](#provenance.name.v1.MsgCreateRootNameRequest)
+    - [MsgCreateRootNameResponse](#provenance.name.v1.MsgCreateRootNameResponse)
     - [MsgDeleteNameRequest](#provenance.name.v1.MsgDeleteNameRequest)
     - [MsgDeleteNameResponse](#provenance.name.v1.MsgDeleteNameResponse)
   
@@ -5934,6 +5937,24 @@ Query defines the gRPC querier service for distribution module.
 
 
 
+<a name="provenance.name.v1.Metadata"></a>
+
+### Metadata
+Metadata represents a struct that describes
+a basic token.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
+| `restricted` | [bool](#bool) |  |  |
+
+
+
+
+
+
 <a name="provenance.name.v1.MsgBindNameRequest"></a>
 
 ### MsgBindNameRequest
@@ -5956,6 +5977,36 @@ owner signing the request.
 
 ### MsgBindNameResponse
 MsgBindNameResponse defines the Msg/BindName response type.
+
+
+
+
+
+
+<a name="provenance.name.v1.MsgCreateRootNameRequest"></a>
+
+### MsgCreateRootNameRequest
+MsgCreateRootNameProposal defines an sdk.Msg type to create a new root name
+that is controlled by a given owner and optionally restricted to the owner
+for the sole creation of sub names.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `metadata` | [Metadata](#provenance.name.v1.Metadata) |  |  |
+| `authority` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.name.v1.MsgCreateRootNameResponse"></a>
+
+### MsgCreateRootNameResponse
+MsgCreateRootNameProposalResponse defines Msg/CreateName response type.
 
 
 
@@ -6003,6 +6054,7 @@ Msg defines the bank Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `BindName` | [MsgBindNameRequest](#provenance.name.v1.MsgBindNameRequest) | [MsgBindNameResponse](#provenance.name.v1.MsgBindNameResponse) | BindName binds a name to an address under a root name. | |
 | `DeleteName` | [MsgDeleteNameRequest](#provenance.name.v1.MsgDeleteNameRequest) | [MsgDeleteNameResponse](#provenance.name.v1.MsgDeleteNameResponse) | DeleteName defines a method to verify a particular invariance. | |
+| `CreateRootName` | [MsgCreateRootNameRequest](#provenance.name.v1.MsgCreateRootNameRequest) | [MsgCreateRootNameResponse](#provenance.name.v1.MsgCreateRootNameResponse) | CreateName defines a service for CreateRootNameProposal. | |
 
  <!-- end services -->
 

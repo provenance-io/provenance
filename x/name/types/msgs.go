@@ -9,12 +9,13 @@ import (
 
 // name message types
 const (
-	TypeMsgBindNameRequest   = "bind_name"
-	TypeMsgDeleteNameRequest = "delete_name"
+	TypeMsgBindNameRequest       = "bind_name"
+	TypeMsgDeleteNameRequest     = "delete_name"
+	TypeMsgCreateRootNameRequest = "create_root_name"
 )
 
 // Compile time interface checks.
-var _, _ sdk.Msg = &MsgBindNameRequest{}, &MsgDeleteNameRequest{}
+var _, _, _ sdk.Msg = &MsgBindNameRequest{}, &MsgDeleteNameRequest{}, &MsgCreateRootNameRequest{}
 
 // NewMsgBindNameRequest creates a new bind name request
 func NewMsgBindNameRequest(record, parent NameRecord) *MsgBindNameRequest {
@@ -48,11 +49,6 @@ func (msg MsgBindNameRequest) ValidateBasic() error {
 		return fmt.Errorf("address cannot be empty")
 	}
 	return nil
-}
-
-// GetSignBytes encodes the message for signing
-func (msg MsgBindNameRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners indicates that the message must have been signed by the parent.
@@ -100,4 +96,44 @@ func (msg MsgDeleteNameRequest) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{addr}
+}
+
+// NewMsgCreateRootNameRequest creates a new Create Root Name Request
+func NewMsgCreateRootNameRequest(title string, description string, metadata *Metadata, authority string) *MsgCreateRootNameRequest {
+	return &MsgCreateRootNameRequest{
+		Title:       title,
+		Description: description,
+		Authority:   authority,
+		Metadata:    metadata,
+	}
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgCreateRootNameRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgCreateRootNameRequest) ValidateBasic() error {
+	if strings.TrimSpace(msg.Metadata.Owner) != "" {
+		if _, err := sdk.AccAddressFromBech32(msg.Metadata.Owner); err != nil {
+			return ErrInvalidAddress
+		}
+	}
+
+	if strings.TrimSpace(msg.Metadata.Name) == "" {
+		return ErrInvalidLengthName
+	}
+
+	if strings.Contains(msg.Metadata.Name, ".") {
+		return ErrNameContainsSegments
+	}
+
+	return nil
+}
+
+// GetSigners Implements Msg.
+func (msg MsgCreateRootNameRequest) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{fromAddress}
 }

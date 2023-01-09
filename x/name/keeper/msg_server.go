@@ -2,7 +2,9 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/errors"
 	"fmt"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -147,4 +149,27 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 	)
 
 	return &types.MsgDeleteNameResponse{}, nil
+}
+
+// CreateRootName
+func (s msgServer) CreateRootName(goCtx context.Context, msg *types.MsgCreateRootNameRequest) (*types.MsgCreateRootNameResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if s.Keeper.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", s.Keeper.GetAuthority(), msg.Authority)
+	}
+
+	// Validate
+	if err := msg.ValidateBasic(); err != nil {
+		ctx.Logger().Error("unable to validate message", "err", err)
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	// Routes to legacy proposal handler to avoid code duplication
+	err := HandleCreateRootNameProposal(ctx, s.Keeper, types.NewCreateRootNameProposal(msg.Title, msg.Description, msg.Metadata.Name, sdk.AccAddress(msg.Metadata.Owner), msg.Metadata.Restricted))
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCreateRootNameResponse{}, nil
 }

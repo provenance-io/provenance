@@ -14,6 +14,7 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(MsgBindNameRequest{}, "provenance/MsgBindNameRequest", nil)
 	cdc.RegisterConcrete(MsgDeleteNameRequest{}, "provenance/MsgDeleteNameRequest", nil)
+	cdc.RegisterConcrete(MsgCreateRootNameRequest{}, "provenance/MsgCreateRootNameRequest", nil)
 	cdc.RegisterConcrete(CreateRootNameProposal{}, "provenance/CreateRootNameProposal", nil)
 }
 
@@ -23,6 +24,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgBindNameRequest{},
 		&MsgDeleteNameRequest{},
+		&MsgCreateRootNameRequest{},
 	)
 
 	registry.RegisterImplementations(
