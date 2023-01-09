@@ -2,9 +2,8 @@ package keeper
 
 import (
 	"context"
-	"fmt"
-
 	"cosmossdk.io/errors"
+	"fmt"
 	"github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 
@@ -19,7 +18,7 @@ type msgServer struct {
 	Keeper
 }
 
-// NewMsgServerImpl returns an implementation of the account MsgServer interface
+// NewMsgServerImpl returns an implementation of the name MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
@@ -168,7 +167,7 @@ func (s msgServer) CreateRootName(goCtx context.Context, msg *types.MsgCreateRoo
 
 	// Routes to legacy proposal handler to avoid code duplication
 	// Setting title and description to empty strings. These two fields are deprecated in the v1.
-	err := HandleCreateRootNameProposal(ctx, s.Keeper, types.NewCreateRootNameProposal("", "", msg.Metadata.Name, sdk.AccAddress(msg.Metadata.Owner), msg.Metadata.Restricted))
+	err := HandleCreateRootNameProposal(ctx, s.Keeper, types.NewCreateRootNameProposal("", "", msg.Name, sdk.AccAddress(msg.Owner), msg.Restricted))
 	if err != nil {
 		return nil, err
 	}

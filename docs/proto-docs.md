@@ -387,7 +387,6 @@
     - [Query](#provenance.name.v1.Query)
   
 - [provenance/name/v1/tx.proto](#provenance/name/v1/tx.proto)
-    - [Metadata](#provenance.name.v1.Metadata)
     - [MsgBindNameRequest](#provenance.name.v1.MsgBindNameRequest)
     - [MsgBindNameResponse](#provenance.name.v1.MsgBindNameResponse)
     - [MsgCreateRootNameRequest](#provenance.name.v1.MsgCreateRootNameRequest)
@@ -5937,23 +5936,6 @@ Query defines the gRPC querier service for distribution module.
 
 
 
-<a name="provenance.name.v1.Metadata"></a>
-
-### Metadata
-Metadata represents a struct containing proposal
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `name` | [string](#string) |  |  |
-| `owner` | [string](#string) |  |  |
-| `restricted` | [bool](#bool) |  |  |
-
-
-
-
-
-
 <a name="provenance.name.v1.MsgBindNameRequest"></a>
 
 ### MsgBindNameRequest
@@ -5992,8 +5974,10 @@ for the sole creation of sub names.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `metadata` | [Metadata](#provenance.name.v1.Metadata) |  |  |
 | `authority` | [string](#string) |  |  |
+| `name` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
+| `restricted` | [bool](#bool) |  |  |
 
 
 

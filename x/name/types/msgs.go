@@ -99,10 +99,12 @@ func (msg MsgDeleteNameRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgCreateRootNameRequest creates a new Create Root Name Request
-func NewMsgCreateRootNameRequest(title string, description string, metadata *Metadata, authority string) *MsgCreateRootNameRequest {
+func NewMsgCreateRootNameRequest(authority string, name string, owner string, restricted bool) *MsgCreateRootNameRequest {
 	return &MsgCreateRootNameRequest{
-		Authority: authority,
-		Metadata:  metadata,
+		Authority:  authority,
+		Name:       name,
+		Owner:      owner,
+		Restricted: restricted,
 	}
 }
 
@@ -113,17 +115,17 @@ func (msg MsgCreateRootNameRequest) GetSignBytes() []byte {
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgCreateRootNameRequest) ValidateBasic() error {
-	if strings.TrimSpace(msg.Metadata.Owner) != "" {
-		if _, err := sdk.AccAddressFromBech32(msg.Metadata.Owner); err != nil {
+	if strings.TrimSpace(msg.Owner) != "" {
+		if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
 			return ErrInvalidAddress
 		}
 	}
 
-	if strings.TrimSpace(msg.Metadata.Name) == "" {
+	if strings.TrimSpace(msg.Name) == "" {
 		return ErrInvalidLengthName
 	}
 
-	if strings.Contains(msg.Metadata.Name, ".") {
+	if strings.Contains(msg.Name, ".") {
 		return ErrNameContainsSegments
 	}
 

@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"fmt"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	"testing"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -30,6 +32,8 @@ type KeeperTestSuite struct {
 	pubkey2   cryptotypes.PubKey
 	user2     string
 	user2Addr sdk.AccAddress
+
+	msgSrvr v1.MsgServer
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -61,6 +65,8 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr))
+
+	s.msgSrvr = namekeeper.NewMsgServerImpl(app.NameKeeper)
 }
 
 func (s *KeeperTestSuite) TestSetup() {

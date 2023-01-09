@@ -44,8 +44,10 @@ type DeleteNameParams struct {
 
 // CreateRootNameParams are params for encoding a MsgCreateRootNameRequest.
 type CreateRootNameParams struct {
-	Metadata  types.Metadata `json:"metadata"`
-	Authority string         `json:"authority"`
+	Authority  string `json:"authority"`
+	Name       string `json:"name"`
+	Owner      string `json:"owner"`
+	Restricted bool   `json:"restricted"`
 }
 
 // Encoder returns a smart contract message encoder for the name module.
@@ -99,6 +101,6 @@ func (params *DeleteNameParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, erro
 
 // Encode creates a MsgCreateRootNameRequest.
 func (params *CreateRootNameParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
-	msg := types.NewMsgCreateRootNameRequest("", "", &params.Metadata, params.Authority)
+	msg := types.NewMsgCreateRootNameRequest(params.Authority, params.Name, params.Owner, params.Restricted)
 	return []sdk.Msg{msg}, nil
 }
