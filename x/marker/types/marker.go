@@ -183,9 +183,7 @@ func ValidateIbcDenom(ma MarkerAccount) error {
 		for _, access := range grant.Permissions {
 			if access.IsOneOf(Access_Burn, Access_Mint) {
 				return fmt.Errorf("%v is not supported for ibc marker", access)
-
 			}
-
 		}
 	}
 	return nil
