@@ -101,10 +101,8 @@ func (msg MsgDeleteNameRequest) GetSigners() []sdk.AccAddress {
 // NewMsgCreateRootNameRequest creates a new Create Root Name Request
 func NewMsgCreateRootNameRequest(title string, description string, metadata *Metadata, authority string) *MsgCreateRootNameRequest {
 	return &MsgCreateRootNameRequest{
-		Title:       title,
-		Description: description,
-		Authority:   authority,
-		Metadata:    metadata,
+		Authority: authority,
+		Metadata:  metadata,
 	}
 }
 

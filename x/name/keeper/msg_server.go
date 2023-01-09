@@ -167,7 +167,8 @@ func (s msgServer) CreateRootName(goCtx context.Context, msg *types.MsgCreateRoo
 	}
 
 	// Routes to legacy proposal handler to avoid code duplication
-	err := HandleCreateRootNameProposal(ctx, s.Keeper, types.NewCreateRootNameProposal(msg.Title, msg.Description, msg.Metadata.Name, sdk.AccAddress(msg.Metadata.Owner), msg.Metadata.Restricted))
+	// Setting title and description to empty strings. These two fields are deprecated in the v1.
+	err := HandleCreateRootNameProposal(ctx, s.Keeper, types.NewCreateRootNameProposal("", "", msg.Metadata.Name, sdk.AccAddress(msg.Metadata.Owner), msg.Metadata.Restricted))
 	if err != nil {
 		return nil, err
 	}

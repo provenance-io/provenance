@@ -5940,8 +5940,7 @@ Query defines the gRPC querier service for distribution module.
 <a name="provenance.name.v1.Metadata"></a>
 
 ### Metadata
-Metadata represents a struct that describes
-a basic token.
+Metadata represents a struct containing proposal
 
 
 | Field | Type | Label | Description |
@@ -5993,8 +5992,6 @@ for the sole creation of sub names.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
 | `metadata` | [Metadata](#provenance.name.v1.Metadata) |  |  |
 | `authority` | [string](#string) |  |  |
 

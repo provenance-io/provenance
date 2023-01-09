@@ -58,10 +58,8 @@ message MsgDeleteNameResponse {}
 message MsgCreateRootNameRequest {
   option (cosmos.msg.v1.signer)    = "authority";
 
-  string title          = 1;
-  string description    = 2;
-  Metadata metadata     = 3;
-  string authority      = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  Metadata metadata     = 1;
+  string authority      = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgCreateRootNameProposalResponse defines Msg/CreateName response type.
