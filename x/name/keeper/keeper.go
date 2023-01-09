@@ -30,7 +30,7 @@ type Keeper struct {
 	// Key to access the key-value store from sdk.Context.
 	storeKey storetypes.StoreKey
 
-	// The codec codec for binary encoding/decoding.
+	// The codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
 
 	// the signing authority for the gov proposals

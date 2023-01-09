@@ -65,7 +65,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr))
 
-	//s.msgSrvr = namekeeper.NewMsgServerImpl(app.NameKeeper)
+	s.msgSrvr = Keeper.NewMsgServerImpl(app.NameKeeper)
 }
 
 func (s *KeeperTestSuite) TestSetup() {
