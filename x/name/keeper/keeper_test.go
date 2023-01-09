@@ -2,18 +2,16 @@ package keeper_test
 
 import (
 	"fmt"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"testing"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/provenance-io/provenance/app"
+	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v2"
 
-	"github.com/provenance-io/provenance/app"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
@@ -32,7 +30,7 @@ type KeeperTestSuite struct {
 	user2     string
 	user2Addr sdk.AccAddress
 
-	msgSrvr v1.MsgServer
+	msgSrvr nametypes.MsgServer
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -65,7 +63,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr))
 
-	s.msgSrvr = Keeper.NewMsgServerImpl(app.NameKeeper)
 }
 
 func (s *KeeperTestSuite) TestSetup() {
