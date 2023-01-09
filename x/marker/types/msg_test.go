@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 )
 
 func TestMsgGrantAllowance(t *testing.T) {
@@ -113,6 +113,7 @@ func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 				validAddress,
 				clienttypes.NewHeight(1, 1),
 				1000,
+				"",
 			),
 			"decoding bech32 failed: invalid separator index -1",
 		},
@@ -127,6 +128,7 @@ func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 				validAddress,
 				clienttypes.NewHeight(1, 1),
 				1000,
+				"",
 			),
 			"string could not be parsed as address: decoding bech32 failed: invalid separator index -1: invalid address",
 		},
@@ -141,6 +143,7 @@ func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 				validAddress,
 				clienttypes.NewHeight(1, 1),
 				1000,
+				"",
 			),
 			"",
 		},

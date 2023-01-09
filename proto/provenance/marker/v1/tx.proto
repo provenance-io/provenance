@@ -179,7 +179,7 @@ message MsgTransferResponse {}
 message MsgIbcTransferRequest {
   ibc.applications.transfer.v1.MsgTransfer transfer = 1 [
     (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types.MsgTransfer"
+    (gogoproto.customtype) = "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types.MsgTransfer"
   ];
   string administrator = 2;
 }
@@ -200,7 +200,7 @@ message MsgSetDenomMetadataResponse {}
 // MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker request type
 message MsgAddFinalizeActivateMarkerRequest {
   cosmos.base.v1beta1.Coin amount = 1
-  [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
   string               manager                  = 3;
   string               from_address             = 4;
   MarkerType           marker_type              = 5;
