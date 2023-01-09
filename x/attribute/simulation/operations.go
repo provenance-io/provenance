@@ -318,5 +318,6 @@ func Dispatch(
 		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), err.Error()), nil, nil
 	}
 
-	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), nil, nil
+	bz := types.ModuleCdc.MustMarshalJSON(msg)
+	return simtypes.NewOperationMsgBasic(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "", true, bz), nil, nil
 }
