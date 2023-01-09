@@ -2,19 +2,19 @@ package keeper
 
 import (
 	"bytes"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"strings"
 	"unicode"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	uuid "github.com/google/uuid"
+	"github.com/google/uuid"
 
 	"github.com/provenance-io/provenance/x/name/types"
 )
@@ -33,7 +33,7 @@ type Keeper struct {
 	// The codec codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
 
-	// TODO: gov authority
+	// the signing authority for the gov proposals
 	authority string
 }
 
