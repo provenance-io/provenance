@@ -40,6 +40,7 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/handlers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/x/msgfees/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 )
@@ -701,6 +702,13 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 		assert.Equal(t, "175000000nhash", addr2AfterBalance, "addr2AfterBalance") // addr2 gets all the fee as recipient
 
 		expEvents := []abci.Event{
+			NewEvent(
+				types.EventTypeAssessCustomMsgFee,
+				NewAttribute(types.KeyAttributeName, "test"),
+				NewAttribute(types.KeyAttributeAmount, "7usd"),
+				NewAttribute(types.KeyAttributeRecipient, addr2.String()),
+				NewAttribute(types.KeyAttributeBips, "10000"),
+			),
 			NewEvent(sdk.EventTypeTx,
 				NewAttribute(sdk.AttributeKeyFee, "1190500001nhash,100000stake"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
@@ -775,6 +783,13 @@ func TestMsgServiceAssessMsgFeeWithBips(tt *testing.T) {
 		assert.Equal(t, "43750000nhash", addr2AfterBalance, "addr2AfterBalance") // addr2 gets all the fee as recipient
 
 		expEvents := []abci.Event{
+			NewEvent(
+				types.EventTypeAssessCustomMsgFee,
+				NewAttribute(types.KeyAttributeName, "test"),
+				NewAttribute(types.KeyAttributeAmount, "7usd"),
+				NewAttribute(types.KeyAttributeRecipient, addr2.String()),
+				NewAttribute(types.KeyAttributeBips, "2500"),
+			),
 			NewEvent(sdk.EventTypeTx,
 				NewAttribute(sdk.AttributeKeyFee, "1190500001nhash,100000stake"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
@@ -849,6 +864,13 @@ func TestMsgServiceAssessMsgFeeNoRecipient(tt *testing.T) {
 		assert.Equal(t, "1000hotdog,1000stake", addr1AfterBalance, "addr1AfterBalance")
 
 		expEvents := []abci.Event{
+			NewEvent(
+				types.EventTypeAssessCustomMsgFee,
+				NewAttribute(types.KeyAttributeName, "test"),
+				NewAttribute(types.KeyAttributeAmount, "7usd"),
+				NewAttribute(types.KeyAttributeRecipient, ""),
+				NewAttribute(types.KeyAttributeBips, ""),
+			),
 			NewEvent(sdk.EventTypeTx,
 				NewAttribute(sdk.AttributeKeyFee, "1190500001nhash,100000stake"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),

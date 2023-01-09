@@ -239,6 +239,20 @@ func (s *TestSuite) TestCalculateAdditionalFeesToBePaid() {
 		assertEqualDist(s.T(), expected, actual)
 	})
 
+	s.Run("send and custom with recipient and bips", func() {
+		expected := types.MsgFeesDistribution{
+			TotalAdditionalFees:  nhashCoins(2_000_000_000),
+			AdditionalModuleFees: nhashCoins(1_750_000_000),
+			RecipientDistributions: map[string]sdk.Coins{
+				"recipient1": nhashCoins(250_000_000),
+			},
+		}
+		assessFee := types.NewMsgAssessCustomMsgFeeRequest("", oneHash, "recipient1", someAddress.String(), "2500")
+		actual, err := s.app.MsgFeesKeeper.CalculateAdditionalFeesToBePaid(s.ctx, msgSend, &assessFee)
+		s.Require().NoError(err)
+		assertEqualDist(s.T(), expected, actual)
+	})
+
 	s.Run("send and custom without recipient", func() {
 		expected := types.MsgFeesDistribution{
 			TotalAdditionalFees:    nhashCoins(2_000_000_000),
