@@ -23,4 +23,5 @@ var (
 	ErrMsgHandler          = cerrs.Register(ModuleName, 18, "invalid message handler")
 	ErrSetExpiration       = cerrs.Register(ModuleName, 20, "failed set expiration")
 	ErrResolveDepositor    = cerrs.Register(ModuleName, 21, "failed to resolve depositor")
+	ErrRemoveExpiration    = cerrs.Register(ModuleName, 22, "failed to remove expiration")
 )

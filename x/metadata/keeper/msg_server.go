@@ -61,7 +61,7 @@ func (k msgServer) WriteScope(
 
 func (k msgServer) setExpirationForScope(ctx sdk.Context, msg *types.MsgWriteScopeRequest) error {
 	// create expire scope request.
-	expireMsg := types.NewMsgExpireScopeRequest(msg.Scope.ScopeId, msg.Signers)
+	expireMsg := types.NewMsgDeleteScopeRequest(msg.Scope.ScopeId, msg.Signers)
 	wrapper, anyErr := codec.NewAnyWithValue(expireMsg)
 	if anyErr != nil {
 		return anyErr
@@ -117,35 +117,23 @@ func (k msgServer) DeleteScope(
 		return nil, err
 	}
 
+	// use first owner for scope as expiration depositor
+	firstOwner := existing.Owners[0].Address
+	refundTo, err := sdk.AccAddressFromBech32(firstOwner)
+	if err != nil {
+		return nil, err
+	}
+
+	// remove expiration record
+	if err := k.expKeeper.RemoveExpiration(ctx, existing.ScopeId.String(), refundTo); err != nil {
+		return nil, err
+	}
+
+	// remove scope
 	k.RemoveScope(ctx, msg.ScopeId)
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScope, msg.GetSigners()))
 	return types.NewMsgDeleteScopeResponse(), nil
-}
-
-func (k msgServer) ExpireScope(
-	goCtx context.Context,
-	msg *types.MsgExpireScopeRequest,
-) (*types.MsgExpireScopeResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "ExpireScope")
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	if len(msg.ScopeId) == 0 {
-		return nil, errors.New("scope id cannot be empty")
-	}
-	existing, found := k.GetScope(ctx, msg.ScopeId)
-	if !found {
-		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
-	}
-
-	if err := k.ValidateScopeRemove(ctx, existing, msg.Signers, msg.MsgTypeURL()); err != nil {
-		return nil, err
-	}
-
-	k.RemoveScope(ctx, msg.ScopeId)
-
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_ExpireScope, msg.GetSigners()))
-	return types.NewMsgExpireScopeResponse(), nil
 }
 
 func (k msgServer) AddScopeDataAccess(

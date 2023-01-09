@@ -43,7 +43,6 @@ const (
 const (
 	TypeURLMsgWriteScopeRequest                      = "/provenance.metadata.v1.MsgWriteScopeRequest"
 	TypeURLMsgDeleteScopeRequest                     = "/provenance.metadata.v1.MsgDeleteScopeRequest"
-	TypeURLMsgExpireScopeRequest                     = "/provenance.metadata.v1.MsgExpireScopeRequest"
 	TypeURLMsgAddScopeDataAccessRequest              = "/provenance.metadata.v1.MsgAddScopeDataAccessRequest"
 	TypeURLMsgDeleteScopeDataAccessRequest           = "/provenance.metadata.v1.MsgDeleteScopeDataAccessRequest"
 	TypeURLMsgAddScopeOwnerRequest                   = "/provenance.metadata.v1.MsgAddScopeOwnerRequest"
@@ -238,51 +237,6 @@ func (msg MsgDeleteScopeRequest) GetSignBytes() []byte {
 
 // ValidateBasic performs a quick validity check
 func (msg MsgDeleteScopeRequest) ValidateBasic() error {
-	if len(msg.Signers) < 1 {
-		return fmt.Errorf("at least one signer is required")
-	}
-	if !msg.ScopeId.IsScopeAddress() {
-		return fmt.Errorf("invalid scope address")
-	}
-	return nil
-}
-
-// ------------------  NewMsgDeleteScopeRequest  ------------------
-
-// NewMsgExpireScopeRequest creates a new msg instance
-func NewMsgExpireScopeRequest(scopeID MetadataAddress, signers []string) *MsgExpireScopeRequest {
-	return &MsgExpireScopeRequest{
-		ScopeId: scopeID,
-		Signers: signers,
-	}
-}
-
-// Route returns the module route
-func (msg MsgExpireScopeRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgExpireScopeRequest) Type() string {
-	return TypeMsgExpireScopeRequest
-}
-
-func (msg MsgExpireScopeRequest) MsgTypeURL() string {
-	return TypeURLMsgExpireScopeRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgExpireScopeRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgExpireScopeRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-// ValidateBasic performs a quick validity check
-func (msg MsgExpireScopeRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
 	}
@@ -1460,10 +1414,6 @@ func NewMsgWriteScopeResponse(scopeID MetadataAddress) *MsgWriteScopeResponse {
 
 func NewMsgDeleteScopeResponse() *MsgDeleteScopeResponse {
 	return &MsgDeleteScopeResponse{}
-}
-
-func NewMsgExpireScopeResponse() *MsgExpireScopeResponse {
-	return &MsgExpireScopeResponse{}
 }
 
 func NewMsgAddScopeDataAccessResponse() *MsgAddScopeDataAccessResponse {

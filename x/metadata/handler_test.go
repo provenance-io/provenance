@@ -93,9 +93,8 @@ func createDefinitionSpec(name string, classname string, reference p8e.Provenanc
 }
 
 // TODO: WriteScope tests
-// TODO: DeleteScope tests
 
-func (s MetadataHandlerTestSuite) TestExpireScope() {
+func (s MetadataHandlerTestSuite) TestDeleteScope() {
 	cSpecUUID := uuid.New()
 	cSpec := types.ContractSpecification{
 		SpecificationId: types.ContractSpecMetadataAddress(cSpecUUID),
@@ -149,7 +148,7 @@ func (s MetadataHandlerTestSuite) TestExpireScope() {
 			fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
 		},
 		{
-			"successfully expires existing scope",
+			"successfully deletes expiring scope",
 			scope.ScopeId,
 			[]string{s.user1},
 			"",
@@ -170,7 +169,7 @@ func (s MetadataHandlerTestSuite) TestExpireScope() {
 
 	for _, tc := range cases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			msg := types.MsgExpireScopeRequest{
+			msg := types.MsgDeleteScopeRequest{
 				ScopeId: tc.scopeId,
 				Signers: tc.signers,
 			}

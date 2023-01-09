@@ -366,3 +366,79 @@ func (s *KeeperTestSuite) TestExtendExpiration() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestRemoveExpiration() {
+	cases := []struct {
+		name          string
+		moduleAssetId string
+		addRemove     bool
+		wantErr       bool
+		expectedErr   string
+	}{
+		{
+			name:          "should fail to validate due to empty module asset id",
+			moduleAssetId: "",
+			addRemove:     false,
+			wantErr:       true,
+			expectedErr:   "empty address string is not allowed: invalid key: failed to invoke expiration",
+		},
+		{
+			name:          "should succeed on no record found",
+			moduleAssetId: s.user2,
+			addRemove:     false,
+			wantErr:       false,
+			expectedErr:   "",
+		},
+		{
+			name:          "should successfully remove expiration",
+			moduleAssetId: s.validExpiration.ModuleAssetId,
+			addRemove:     true,
+			wantErr:       false,
+			expectedErr:   "",
+		},
+	}
+
+	now := s.ctx.BlockHeader().Time
+	s.Assert().NotNil(now)
+
+	for _, tc := range cases {
+		tc := tc
+
+		s.T().Run(tc.name, func(t *testing.T) {
+			if tc.addRemove {
+				// fund account
+				priv, _, _ := testdata.KeyTestPubAddr()
+				addr, _ := sdk.AccAddressFromBech32(s.validExpiration.Owner)
+				acct := cosmosauthtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+				err := testutil.FundAccount(s.app.BankKeeper, s.ctx, acct.GetAddress(), sdk.NewCoins(s.validExpiration.Deposit))
+				s.Require().NoError(err, fmt.Sprintf("%s: fund owner account", tc.name))
+
+				// add expiration
+				if err := s.app.ExpirationKeeper.SetExpiration(s.ctx, s.validExpiration); err != nil {
+					assert.Fail(t, err.Error())
+				}
+
+				// validate expiration exists
+				if exp, err := s.app.ExpirationKeeper.GetExpiration(s.ctx, tc.moduleAssetId); exp == nil {
+					assert.Fail(t, err.Error(), "%s unexpected error", tc.name)
+				}
+			}
+
+			refundTo, err := sdk.AccAddressFromBech32(s.validExpiration.Owner)
+			assert.NoError(t, err, "%s invalid address", tc.name)
+			err = s.app.ExpirationKeeper.RemoveExpiration(s.ctx, tc.moduleAssetId, refundTo)
+			if tc.wantErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expectedErr, err.Error(), "%s error", tc.name)
+			} else {
+				assert.NoError(t, err, "%s unexpected error", tc.name)
+				if tc.addRemove {
+					// validate expiration doesn't exist
+					exp, err := s.app.ExpirationKeeper.GetExpiration(s.ctx, tc.moduleAssetId)
+					assert.Empty(t, exp, "%s unexpected error", tc.name)
+					assert.NoError(t, err, "%s unexpected error", tc.name)
+				}
+			}
+		})
+	}
+}

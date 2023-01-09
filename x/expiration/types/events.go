@@ -23,3 +23,7 @@ func NewEventExpirationExtend(moduleAssetID string) *EventExpirationExtend {
 func NewEventExpirationInvoke(moduleAssetID string) *EventExpirationInvoke {
 	return &EventExpirationInvoke{moduleAssetID}
 }
+
+func NewEventExpirationRemove(moduleAssetID string) *EventExpirationRemove {
+	return &EventExpirationRemove{moduleAssetID}
+}

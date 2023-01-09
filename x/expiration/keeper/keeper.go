@@ -155,7 +155,7 @@ func (k Keeper) SetExpiration(ctx sdk.Context, expiration types.Expiration) erro
 	}
 
 	// emit event indicating that a deposit was collected
-	err = k.emitEvent(ctx, types.NewEventExpirationDeposit(expiration.ModuleAssetId, expiration.Owner, expiration.Deposit))
+	k.emitEvent(ctx, types.NewEventExpirationDeposit(expiration.ModuleAssetId, expiration.Owner, expiration.Deposit))
 	if err != nil {
 		return types.ErrSetExpiration.Wrapf(
 			"failed to emit EventExpirationDeposit for [%s]: %v", expiration.Owner, err)
@@ -170,12 +170,7 @@ func (k Keeper) SetExpiration(ctx sdk.Context, expiration types.Expiration) erro
 	store.Set(key, b)
 
 	// emit event indicating the expiration was added
-	addEvent := types.NewEventExpirationAdd(expiration.ModuleAssetId)
-	err = k.emitEvent(ctx, addEvent)
-	if err != nil {
-		return types.ErrSetExpiration.Wrapf(
-			"failed to emit EventExpirationAdd for [%s]: %v", expiration.ModuleAssetId, err)
-	}
+	k.emitEvent(ctx, types.NewEventExpirationAdd(expiration.ModuleAssetId))
 
 	return nil
 }
@@ -218,18 +213,17 @@ func (k Keeper) ExtendExpiration(ctx sdk.Context, expiration types.Expiration) e
 	store.Set(key, b)
 
 	// emit Extend event
-	extendEvent := types.NewEventExpirationExtend(expiration.ModuleAssetId)
-	err = k.emitEvent(ctx, extendEvent)
-	if err != nil {
-		return types.ErrExtendExpiration.Wrapf(
-			"failed to emit EventExpirationExtend for [%s]: %v", expiration.ModuleAssetId, err)
-	}
+	k.emitEvent(ctx, types.NewEventExpirationExtend(expiration.ModuleAssetId))
 
 	return nil
 }
 
 // InvokeExpiration invokes an expiration message through the MsgServiceRouter.
 // The expiration message is removed when the message invocation is successful.
+//
+// Caution: Do NOT call InvokeExpiration from within a module to delete a self-owned asset.
+// This will lead to an infinite loop as expiration messages in this method are routed through
+// the message router. Use RemoveExpiration instead.
 func (k Keeper) InvokeExpiration(ctx sdk.Context, moduleAssetID string, refundTo sdk.AccAddress) error {
 	// lookup expiration
 	expiration, err := k.GetExpiration(ctx, moduleAssetID)
@@ -264,28 +258,45 @@ func (k Keeper) InvokeExpiration(ctx sdk.Context, moduleAssetID string, refundTo
 	}
 
 	// refund deposit from expiration module account to depositor
-	refundErr := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, refundTo, sdk.NewCoins(expiration.Deposit))
-	if refundErr != nil {
-		return types.ErrInvokeExpiration.Wrapf("failed to refund deposit to [%s]: %v", refundTo, refundErr)
+	if err := k.refundDeposit(ctx, expiration.Deposit, refundTo); err != nil {
+		return types.ErrInvokeExpiration.Wrapf("failed to refund deposit to [%s]: %v", refundTo, err)
 	}
 
 	// remove record from store
-	key, err := types.GetModuleAssetKey(moduleAssetID)
-	if err != nil {
+	if err := k.removeExpiration(ctx, moduleAssetID); err != nil {
 		return types.ErrInvokeExpiration.Wrapf("failed to remove expiration: %v", err)
-	}
-	store := ctx.KVStore(k.storeKey)
-	if store.Has(key) {
-		store.Delete(key)
 	}
 
 	// emit Invoke event
-	invokeEvent := types.NewEventExpirationInvoke(moduleAssetID)
-	err = k.emitEvent(ctx, invokeEvent)
+	k.emitEvent(ctx, types.NewEventExpirationInvoke(moduleAssetID))
+
+	return nil
+}
+
+// RemoveExpiration removes an expiration message through calls from other modules.
+// Refunds deposit to original owner. In case of not found, nil is returned.
+func (k Keeper) RemoveExpiration(ctx sdk.Context, moduleAssetID string, refundTo sdk.AccAddress) error {
+	// lookup expiration
+	expiration, err := k.GetExpiration(ctx, moduleAssetID)
 	if err != nil {
-		return types.ErrInvokeExpiration.Wrapf(
-			"failed to emit EventExpirationInvoke for [%s]: %v", expiration.ModuleAssetId, err)
+		return types.ErrInvokeExpiration.Wrap(err.Error())
 	}
+	if expiration == nil {
+		return nil
+	}
+
+	// refund deposit from expiration module account to depositor
+	if err := k.refundDeposit(ctx, expiration.Deposit, refundTo); err != nil {
+		return types.ErrRemoveExpiration.Wrapf("failed to refund deposit to [%s]: %v", refundTo, err)
+	}
+
+	// remove record from store
+	if err := k.removeExpiration(ctx, moduleAssetID); err != nil {
+		return types.ErrRemoveExpiration.Wrapf("failed to remove expiration: %v", err)
+	}
+
+	// emit Remove event
+	k.emitEvent(ctx, types.NewEventExpirationRemove(moduleAssetID))
 
 	return nil
 }
@@ -467,12 +478,10 @@ func (k Keeper) hasSignerWithAuthz(
 }
 
 // Private helper method that emits events
-func (k Keeper) emitEvent(ctx sdk.Context, message proto.Message) error {
+func (k Keeper) emitEvent(ctx sdk.Context, message proto.Message) {
 	if err := ctx.EventManager().EmitTypedEvent(message); err != nil {
 		k.Logger(ctx).Error("unable to emit event", "error", err, "event", message)
-		return err
 	}
-	return nil
 }
 
 // IterateExpirations iterates over all the expiration records and passes them to a callback function.
@@ -495,6 +504,25 @@ func (k Keeper) IterateExpirations(ctx sdk.Context, prefix []byte, handle Handle
 		if err := handle(record); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (k Keeper) refundDeposit(ctx sdk.Context, deposit sdk.Coin, refundTo sdk.AccAddress) error {
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, refundTo, sdk.NewCoins(deposit)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (k Keeper) removeExpiration(ctx sdk.Context, moduleAssetID string) error {
+	key, err := types.GetModuleAssetKey(moduleAssetID)
+	if err != nil {
+		return err
+	}
+	store := ctx.KVStore(k.storeKey)
+	if store.Has(key) {
+		store.Delete(key)
 	}
 	return nil
 }
