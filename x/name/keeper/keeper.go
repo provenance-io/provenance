@@ -298,6 +298,6 @@ func isValidUUID(s string) bool {
 	return true
 }
 
-func (k Keeper) GetAuthority() string {
-	return k.authority
+func (keeper Keeper) GetAuthority() string {
+	return keeper.authority
 }
