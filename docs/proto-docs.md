@@ -5638,7 +5638,7 @@ MsgAssessCustomMsgFeeRequest defines an sdk.Msg type
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | amount of additional fee that must be paid |
 | `recipient` | [string](#string) |  | optional recipient address, the total amount is given to the recipient, if present. |
 | `from` | [string](#string) |  | the signer of the msg |
-| `recipient_basis_points` | [string](#string) |  | optional split of funds between the recipient and will default to 10,000 |
+| `recipient_basis_points` | [string](#string) |  | optional basis points 0 - 10,000 for recipient defaults to 10,000 |
 
 
 

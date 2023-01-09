@@ -28,9 +28,9 @@ type AssessCustomFeeParams struct {
 	From string `json:"from"`
 	// An optional short name
 	Name string `json:"name,omitempty"`
-	// An optional address to receive the fees. if present, the total amount is sent to the address.
+	// An optional address to receive the fees. if present, the split amount from basis points is sent to address.
 	Recipient string `json:"recipient,omitempty"`
-	// An optional address to receive the fees. if present, the total amount is sent to the address.
+	// An optional recipient basis points (0 - 10,000). if not present, defaults to 10,000
 	RecipientBasisPoints string `recipient_basis_points:"recipient,omitempty"`
 }
 
