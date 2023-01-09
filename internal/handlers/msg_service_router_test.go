@@ -730,6 +730,81 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 	})
 }
 
+func TestMsgServiceAssessMsgFeeWithBips(tt *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
+	pioconfig.ChangeMsgFeeFloorDenom(1, sdk.DefaultBondDenom)
+
+	encCfg := sdksim.MakeTestEncodingConfig()
+	priv, _, addr1 := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
+	acct1Balance := sdk.NewCoins(
+		sdk.NewInt64Coin("hotdog", 1000),
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 101000),
+		sdk.NewInt64Coin(NHash, 1_190_500_001),
+	)
+	app := piosimapp.SetupWithGenesisAccounts(tt, "msgfee-testing",
+		[]authtypes.GenesisAccount{acct1},
+		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
+	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
+
+	// Check both account balances before we start.
+	addr1beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
+	addr2beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
+	assert.Equal(tt, "1000hotdog,1190500001nhash,101000stake", addr1beforeBalance, "addr1beforeBalance")
+	assert.Equal(tt, "", addr2beforeBalance, "addr2beforeBalance")
+	stopIfFailed(tt)
+	tt.Run("assess custom msg fee", func(t *testing.T) {
+		msgFeeCoin := sdk.NewInt64Coin(msgfeestypes.UsdDenom, 7)
+		msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", msgFeeCoin, addr2.String(), addr1.String(), "2500")
+		fees := sdk.NewCoins(
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000),
+			sdk.NewInt64Coin(NHash, 1_190_500_001),
+		)
+		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &msg)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+		require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+
+		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
+		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
+		assert.Equal(t, "1000hotdog,1000stake", addr1AfterBalance, "addr1AfterBalance")
+		assert.Equal(t, "43750000nhash", addr2AfterBalance, "addr2AfterBalance") // addr2 gets all the fee as recipient
+
+		expEvents := []abci.Event{
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(sdk.AttributeKeyFee, "1190500001nhash,100000stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, "100000stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+			NewEvent(msgfeestypes.EventTypeAssessCustomMsgFee,
+				NewAttribute(msgfeestypes.KeyAttributeName, "test"),
+				NewAttribute(msgfeestypes.KeyAttributeAmount, "7usd"),
+				NewAttribute(msgfeestypes.KeyAttributeRecipient, addr2.String())),
+			NewEvent(sdk.EventTypeTx,
+				NewAttribute(antewrapper.AttributeKeyAdditionalFee, "175000000nhash"),
+				NewAttribute(antewrapper.AttributeKeyBaseFee, "1015500001nhash,100000stake"),
+				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
+			NewEvent("provenance.msgfees.v1.EventMsgFees",
+				NewAttribute("msg_fees", jsonArrayJoin(
+					msgFeesEventJSON("/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest", 1, 131250000, "nhash", ""),
+					msgFeesEventJSON("/provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest", 1, 43750000, "nhash", addr2.String())))),
+		}
+		// fee charge in antehandler
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
+		// fee charged for msg based fee to recipient from assess msg split
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), addr2.String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 43750000)))...)
+		// swept amount
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
+
+		assertEventsContains(t, res.Events, expEvents)
+	})
+}
+
 // TestMsgServiceAssessMsgFeeNoRecipient tests that if no recipient the full fee goes to the module account
 func TestMsgServiceAssessMsgFeeNoRecipient(tt *testing.T) {
 	pioconfig.SetProvenanceConfig("", 0)
