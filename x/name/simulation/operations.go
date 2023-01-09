@@ -25,8 +25,6 @@ const (
 	OpWeightMsgBindName = "op_weight_msg_bind_name"
 	//nolint:gosec // not credentials
 	OpWeightMsgDeleteName = "op_weight_msg_delete_name"
-	//nolint:gosec // not credentials
-	OpWeightMsgCreateRootName = "op_weight_msg_create_root_name"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -34,9 +32,8 @@ func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgBindName       int
-		weightMsgDeleteName     int
-		weightMsgCreateRootName int
+		weightMsgBindName   int
+		weightMsgDeleteName int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgBindName, &weightMsgBindName, nil,
@@ -51,12 +48,6 @@ func WeightedOperations(
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgCreateRootName, &weightMsgCreateRootName, nil,
-		func(_ *rand.Rand) {
-			weightMsgDeleteName = simappparams.DefaultWeightMsgDeleteName
-		},
-	)
-
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgBindName,
@@ -65,10 +56,6 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgDeleteName,
 			SimulateMsgDeleteName(k, ak, bk),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgCreateRootName,
-			SimulateMsgCreateRootName(k, ak, bk),
 		),
 	}
 }
@@ -141,11 +128,6 @@ func SimulateMsgDeleteName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk ban
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
 	}
-}
-
-// SimulateMsgCreateRootName will create a root NAME
-func SimulateMsgCreateRootName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
-	panic("implement me")
 }
 
 // Dispatch sends an operation to the chain using a given account/funds on account for fees.  Failures on the server side
