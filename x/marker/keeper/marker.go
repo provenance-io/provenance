@@ -9,9 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-
+	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -482,7 +481,7 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string
 	return nil
 }
 
-// ActivateMarker transistions a marker into the active status, enforcing permissions, supply constraints, and minting
+// ActivateMarker transitions a marker into the active status, enforcing permissions, supply constraints, and minting
 // any supply as required.
 func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "activate")
@@ -567,7 +566,8 @@ func (k Keeper) CancelMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		escrow := k.bankKeeper.GetBalance(ctx, m.GetAddress(), m.GetDenom())
 		inCirculation := totalSupply.Sub(escrow.Amount)
 		if inCirculation.GT(sdk.ZeroInt()) {
-			return fmt.Errorf("cannot cancel marker with %d minted coin in circulation out of %d total."+
+			// changing to %v
+			return fmt.Errorf("cannot cancel marker with %v minted coin in circulation out of %v total."+
 				" ensure marker account holds the entire supply of %s", inCirculation, totalSupply, denom)
 		}
 	case types.StatusProposed:
@@ -621,7 +621,8 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	escrow := k.bankKeeper.GetAllBalances(ctx, m.GetAddress())
 	inCirculation := totalSupply.Sub(escrow.AmountOf(denom))
 	if inCirculation.GT(sdk.ZeroInt()) {
-		return fmt.Errorf("cannot delete marker with %d minted coin in circulation out of %d total."+
+		// use %v since %d doesn't apply to Int (wraps big.Int)
+		return fmt.Errorf("cannot delete marker with %v minted coin in circulation out of %v total."+
 			" ensure marker account holds the entire supply of %s", inCirculation, totalSupply, denom)
 	}
 
@@ -635,7 +636,7 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		return fmt.Errorf("can not destroy marker due to balances in escrow: %s", escrow)
 	}
 
-	// get the updated state of the marker afer supply burn...
+	// get the updated state of the marker after supply burn...
 	m, err = k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %w", denom, err)
@@ -710,6 +711,7 @@ func (k Keeper) IbcTransferCoin(
 	receiver string,
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
+	memo string,
 	checkRestrictionsHandler ibckeeper.CheckRestrictionsHandler) error {
 	m, err := k.GetMarkerByDenom(ctx, token.Denom)
 	if err != nil {
@@ -732,7 +734,7 @@ func (k Keeper) IbcTransferCoin(
 		}
 	}
 
-	err = k.ibcKeeper.SendTransfer(
+	_, err = k.ibcKeeper.SendTransfer(
 		ctx,
 		sourcePort,
 		sourceChannel,
@@ -741,6 +743,7 @@ func (k Keeper) IbcTransferCoin(
 		receiver,
 		timeoutHeight,
 		timeoutTimestamp,
+		memo,
 		checkRestrictionsHandler,
 	)
 	if err != nil {
@@ -815,6 +818,26 @@ func (k Keeper) SetMarkerDenomMetadata(ctx sdk.Context, metadata banktypes.Metad
 		return err
 	}
 
+	return nil
+}
+
+// AddFinalizeAndActivateMarker adds marker, finalizes, and then activates it
+func (k Keeper) AddFinalizeAndActivateMarker(ctx sdk.Context, marker types.MarkerAccountI) error {
+	err := k.AddMarkerAccount(ctx, marker)
+	if err != nil {
+		return err
+	}
+
+	// Manager is the same as the manager in add marker request.
+	err = k.FinalizeMarker(ctx, marker.GetManager(), marker.GetDenom())
+	if err != nil {
+		return err
+	}
+
+	err = k.ActivateMarker(ctx, marker.GetManager(), marker.GetDenom())
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
