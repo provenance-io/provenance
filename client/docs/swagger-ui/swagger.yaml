@@ -67027,6 +67027,9 @@ definitions:
         description: |-
           Timeout timestamp in absolute nanoseconds since unix epoch.
           The timeout is disabled when set to 0.
+      memo:
+        type: string
+        title: optional memo
     title: >-
       MsgTransfer defines a msg to transfer fungible tokens (i.e Coins) between
 

@@ -13,8 +13,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant"
 
-	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 )
 
 const (
@@ -505,6 +505,7 @@ func NewIbcMsgTransferRequest(
 	receiver string,
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64, //nolint:interfacer
+	memo string,
 ) *MsgIbcTransferRequest {
 	return &MsgIbcTransferRequest{
 		Administrator: administrator,
@@ -516,6 +517,7 @@ func NewIbcMsgTransferRequest(
 			Receiver:         receiver,
 			TimeoutHeight:    timeoutHeight,
 			TimeoutTimestamp: timeoutTimestamp,
+			Memo:             memo,
 		},
 	}
 }

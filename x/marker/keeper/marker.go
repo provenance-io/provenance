@@ -9,9 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-
+	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -712,6 +711,7 @@ func (k Keeper) IbcTransferCoin(
 	receiver string,
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
+	memo string,
 	checkRestrictionsHandler ibckeeper.CheckRestrictionsHandler) error {
 	m, err := k.GetMarkerByDenom(ctx, token.Denom)
 	if err != nil {
@@ -734,7 +734,7 @@ func (k Keeper) IbcTransferCoin(
 		}
 	}
 
-	err = k.ibcKeeper.SendTransfer(
+	_, err = k.ibcKeeper.SendTransfer(
 		ctx,
 		sourcePort,
 		sourceChannel,
@@ -743,6 +743,7 @@ func (k Keeper) IbcTransferCoin(
 		receiver,
 		timeoutHeight,
 		timeoutTimestamp,
+		memo,
 		checkRestrictionsHandler,
 	)
 	if err != nil {

@@ -48,6 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Build dbmigrate and include it as an artifact with releases [#1264](https://github.com/provenance-io/provenance/issues/1264).
 * Removed, MsgFees Module 50/50 Fee Split on MsgAssessCustomMsgFeeRequest [#1263](https://github.com/provenance-io/provenance/issues/1263).
 * Add basis points field to MsgAssessCustomMsgFeeRequest for split of fee between Fee Module and Recipient [#1268](https://github.com/provenance-io/provenance/issues/1268).
+* Updated ibc-go to v6.1 [#1273](https://github.com/provenance-io/provenance/issues/1273).
 ---
 
 ## [v1.13.0](https://github.com/provenance-io/provenance/releases/tag/v1.13.0) - 2022-11-28
