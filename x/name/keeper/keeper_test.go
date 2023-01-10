@@ -302,13 +302,13 @@ func (s *KeeperTestSuite) TestCreateRecord() {
 	}
 
 	s.Run("create invalid name", func() {
-
 		_, err := s.msgSrvr.CreateRootName(s.ctx, &msg)
 		s.Require().Error(err)
-		s.Require().Equal("invalid name: \".\" is reserved", err.Error())
+		s.Require().Equal("invalid name: \".\" is reserved: invalid request", err.Error())
 	})
+
 	s.Run("create valid root name", func() {
-		msg.Name = "name"
+		msg.Name = "swampmonster"
 		_, err := s.msgSrvr.CreateRootName(s.ctx, &msg)
 		s.Require().NoError(err)
 	})
@@ -317,6 +317,6 @@ func (s *KeeperTestSuite) TestCreateRecord() {
 		msg.Authority = "..."
 		_, err := s.msgSrvr.CreateRootName(s.ctx, &msg)
 		s.Require().Error(err)
-		s.Require().Equal("expected gov account as only signer for proposal messaged", err.Error())
+		s.Require().Equal("expected cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn got ...: expected gov account as only signer for proposal message", err.Error())
 	})
 }
