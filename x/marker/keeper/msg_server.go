@@ -88,8 +88,9 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		manager,
 		msg.AccessList,
 		msg.Status,
-		msg.MarkerType)
-	ma.SupplyFixed = msg.SupplyFixed
+		msg.MarkerType,
+		msg.SupplyFixed,
+	)
 
 	if k.GetEnableGovernance(ctx) {
 		ma.AllowGovernanceControl = true
@@ -574,8 +575,9 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 		manager,
 		msg.AccessList,
 		types.StatusProposed,
-		msg.MarkerType)
-	ma.SupplyFixed = msg.SupplyFixed
+		msg.MarkerType,
+		msg.SupplyFixed,
+	)
 
 	if k.GetEnableGovernance(ctx) {
 		ma.AllowGovernanceControl = true
