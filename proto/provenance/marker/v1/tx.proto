@@ -222,7 +222,7 @@ message MsgSupplyIncreaseProposalRequest {
   cosmos.base.v1beta1.Coin amount      = 1
   [(gogoproto.nullable)                = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
   string target_address                = 2; // an optional target address for the minted coin from this request
-  string authority                     = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string authority                     = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"]; // signer of the proposal
 }
 
 // MsgSupplyIncreaseProposalResponse defines the Msg/SupplyIncreaseProposal response type

@@ -73,7 +73,6 @@ type Keeper struct {
 	// The codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
 
-	// TODO:
 	authority string
 }
 
@@ -186,6 +185,7 @@ func (k Keeper) GetEscrow(ctx sdk.Context, marker types.MarkerAccountI) sdk.Coin
 	return k.bankKeeper.GetAllBalances(ctx, marker.GetAddress())
 }
 
+// GetAuthority is signer of the proposal
 func (k Keeper) GetAuthority() string {
 	return k.authority
 }
