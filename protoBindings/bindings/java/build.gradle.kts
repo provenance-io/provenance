@@ -134,8 +134,7 @@ publishing {
             }
         }
     }
-
     signing {
-        sign(publishing.publications["mavenJava"])
+//        sign(publishing.publications["mavenJava"])
     }
 }

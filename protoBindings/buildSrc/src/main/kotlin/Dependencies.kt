@@ -23,7 +23,7 @@ object PluginVersions { // please keep this sorted in sections
     const val Kotlin = "1.5.30"
 
     // Protobuf
-    const val Protobuf = "0.8.18"
+    const val Protobuf = "0.8.19"
 
     // Publishing
     const val NexusPublish = "1.1.0"
@@ -35,11 +35,11 @@ object PluginVersions { // please keep this sorted in sections
 object Versions {
     // kotlin
     const val Kotlin = PluginVersions.Kotlin
-    const val KotlinXCoroutines = "1.5.2"
+    const val KotlinXCoroutines = "1.7.10"
 
     // Protobuf & gRPC
-    const val Protobuf = "3.19.1"
-    const val Grpc = "1.40.1"
+    const val Protobuf = "3.21.12"
+    const val Grpc = "1.51.1"
     const val KotlinGrpc = "1.2.0"
 
     // Testing
@@ -47,7 +47,7 @@ object Versions {
 }
 
 object Libraries {
-    // Kotlin
+    // Kotli
     const val KotlinReflect = "org.jetbrains.kotlin:kotlin-reflect:${Versions.Kotlin}"
     const val KotlinStdlib = "org.jetbrains.kotlin:kotlin-stdlib:${Versions.Kotlin}"
     const val KotlinXCoRoutinesCore = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.KotlinXCoroutines}"
