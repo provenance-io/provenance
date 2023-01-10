@@ -600,7 +600,7 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 	return &types.MsgAddFinalizeActivateMarkerResponse{}, nil
 }
 
-func (k msgServer) SupplyIncrease(goCtx context.Context, msg *types.MsgSupplyIncreaseProposalRequest) (*types.MsgSupplyIncreaseProposalResponse, error) {
+func (k msgServer) SupplyIncreaseProposal(goCtx context.Context, msg *types.MsgSupplyIncreaseProposalRequest) (*types.MsgSupplyIncreaseProposalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if k.GetAuthority() != msg.Authority {

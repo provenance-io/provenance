@@ -50,7 +50,7 @@ service Msg {
   // AddFinalizeActivateMarker
   rpc AddFinalizeActivateMarker(MsgAddFinalizeActivateMarkerRequest) returns (MsgAddFinalizeActivateMarkerResponse);
   // SupplyIncrease
-  rpc SupplyIncrease(MsgSupplyIncreaseProposalRequest) returns (MsgSupplyIncreaseProposalResponse);
+  rpc SupplyIncreaseProposal(MsgSupplyIncreaseProposalRequest) returns (MsgSupplyIncreaseProposalResponse);
 }
 
 // MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If
