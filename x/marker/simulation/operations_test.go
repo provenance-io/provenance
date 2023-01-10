@@ -71,7 +71,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simappparams.DefaultWeightMsgAddAccess, sdk.MsgTypeURL(&types.MsgAddAccessRequest{}), sdk.MsgTypeURL(&types.MsgAddAccessRequest{})},
 
 		{simappparams.DefaultWeightMsgAddFinalizeActivateMarker, sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{}), sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{})},
-
+	}
 	for i, w := range weightedOps {
 		operationMsg, _, _ := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
 		// the following checks are very much dependent from the ordering of the output given
