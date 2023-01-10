@@ -274,7 +274,8 @@ func Dispatch(
 		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), err.Error()), nil, nil
 	}
 
-	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), futures, nil
+	bz := types.ModuleCdc.MustMarshalJSON(msg)
+	return simtypes.NewOperationMsgBasic(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "", true, bz), nil, nil
 }
 
 func randomUnrestrictedDenom(r *rand.Rand, unrestrictedDenomExp string) string {
