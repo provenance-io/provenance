@@ -13,25 +13,26 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant"
 
-	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 )
 
 const (
-	TypeAddMarkerRequest    = "addmarker"
-	TypeAddAccessRequest    = "addaccess"
-	TypeDeleteAccessRequest = "deleteaccess"
-	TypeFinalizeRequest     = "finalize"
-	TypeActivateRequest     = "activate"
-	TypeCancelRequest       = "cancel"
-	TypeDeleteRequest       = "delete"
-	TypeMintRequest         = "mint"
-	TypeBurnRequest         = "burn"
-	TypeWithdrawRequest     = "withdraw"
-	TypeTransferRequest     = "transfer"
-	TypeIbcTransferRequest  = "ibctransfer"
-	TypeSetMetadataRequest  = "setmetadata"
-	TypeGrantAllowance      = "grantallowance"
+	TypeAddMarkerRequest                 = "addmarker"
+	TypeAddAccessRequest                 = "addaccess"
+	TypeDeleteAccessRequest              = "deleteaccess"
+	TypeFinalizeRequest                  = "finalize"
+	TypeActivateRequest                  = "activate"
+	TypeCancelRequest                    = "cancel"
+	TypeDeleteRequest                    = "delete"
+	TypeMintRequest                      = "mint"
+	TypeBurnRequest                      = "burn"
+	TypeWithdrawRequest                  = "withdraw"
+	TypeTransferRequest                  = "transfer"
+	TypeIbcTransferRequest               = "ibctransfer"
+	TypeSetMetadataRequest               = "setmetadata"
+	TypeGrantAllowance                   = "grantallowance"
+	TypeAddActivateFinalizeMarkerRequest = "addactivatefinalizemarker"
 )
 
 // Compile time interface check.
@@ -49,6 +50,7 @@ var (
 	_ sdk.Msg = &MsgTransferRequest{}
 	_ sdk.Msg = &MsgIbcTransferRequest{}
 	_ sdk.Msg = &MsgGrantAllowanceRequest{}
+	_ sdk.Msg = &MsgAddFinalizeActivateMarkerRequest{}
 )
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
@@ -356,6 +358,7 @@ func NewIbcMsgTransferRequest(
 	receiver string,
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64, //nolint:interfacer
+	memo string,
 ) *MsgIbcTransferRequest {
 	return &MsgIbcTransferRequest{
 		Administrator: administrator,
@@ -367,6 +370,7 @@ func NewIbcMsgTransferRequest(
 			Receiver:         receiver,
 			TimeoutHeight:    timeoutHeight,
 			TimeoutTimestamp: timeoutTimestamp,
+			Memo:             memo,
 		},
 	}
 }
@@ -473,4 +477,54 @@ func (msg MsgGrantAllowanceRequest) ValidateBasic() error {
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
+}
+
+func NewMsgAddFinalizeActivateMarkerRequest(denom string, totalSupply sdkmath.Int, fromAddress sdk.AccAddress, manager sdk.AccAddress, markerType MarkerType, supplyFixed bool, allowGovernanceControl bool, accessGrants []AccessGrant) *MsgAddFinalizeActivateMarkerRequest {
+	return &MsgAddFinalizeActivateMarkerRequest{
+		Amount:                 sdk.NewCoin(denom, totalSupply),
+		Manager:                manager.String(),
+		FromAddress:            fromAddress.String(),
+		MarkerType:             markerType,
+		SupplyFixed:            supplyFixed,
+		AllowGovernanceControl: allowGovernanceControl,
+		AccessList:             accessGrants,
+	}
+}
+
+// Route returns the name of the module.
+func (msg MsgAddFinalizeActivateMarkerRequest) Route() string { return ModuleName }
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
+	markerCoin := sdk.Coin{
+		Denom:  msg.Amount.Denom,
+		Amount: msg.Amount.Amount,
+	}
+	// IsValid validates denom and amount is not negative.
+	if !markerCoin.IsValid() {
+		return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
+	}
+
+	_, err := sdk.AccAddressFromBech32(msg.Manager)
+	if err != nil {
+		return err
+	}
+
+	// since this is a one shot process should have 1 access list member, to have any value for a marker
+	if msg.AccessList == nil || len(msg.AccessList) == 0 {
+		return fmt.Errorf("since this will activate the marker, must have access list defined")
+	}
+	return nil
+}
+
+// GetSignBytes encodes the message for signing.
+func (msg MsgAddFinalizeActivateMarkerRequest) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners indicates that the message must have been signed by the address provided.
+func (msg MsgAddFinalizeActivateMarkerRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.FromAddress)
+	return []sdk.AccAddress{addr}
 }

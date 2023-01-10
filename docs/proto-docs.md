@@ -112,6 +112,8 @@
     - [MsgActivateResponse](#provenance.marker.v1.MsgActivateResponse)
     - [MsgAddAccessRequest](#provenance.marker.v1.MsgAddAccessRequest)
     - [MsgAddAccessResponse](#provenance.marker.v1.MsgAddAccessResponse)
+    - [MsgAddFinalizeActivateMarkerRequest](#provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest)
+    - [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse)
     - [MsgAddMarkerRequest](#provenance.marker.v1.MsgAddMarkerRequest)
     - [MsgAddMarkerResponse](#provenance.marker.v1.MsgAddMarkerResponse)
     - [MsgBurnRequest](#provenance.marker.v1.MsgBurnRequest)
@@ -935,7 +937,7 @@ Msg defines the attribute module Msg service.
 <a name="provenance.marker.v1.AccessGrant"></a>
 
 ### AccessGrant
-AccessGrant associates a colelction of permisssions with an address for delegated marker account control.
+AccessGrant associates a collection of permissions with an address for delegated marker account control.
 
 
 | Field | Type | Label | Description |
@@ -1930,6 +1932,37 @@ MsgAddAccessResponse defines the Msg/AddAccess response type
 
 
 
+<a name="provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest"></a>
+
+### MsgAddFinalizeActivateMarkerRequest
+MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker request type
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `manager` | [string](#string) |  |  |
+| `from_address` | [string](#string) |  |  |
+| `marker_type` | [MarkerType](#provenance.marker.v1.MarkerType) |  |  |
+| `access_list` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
+| `supply_fixed` | [bool](#bool) |  |  |
+| `allow_governance_control` | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse"></a>
+
+### MsgAddFinalizeActivateMarkerResponse
+MsgAddFinalizeActivateMarkerResponse defines the Msg/AddFinalizeActivateMarker response type
+
+
+
+
+
+
 <a name="provenance.marker.v1.MsgAddMarkerRequest"></a>
 
 ### MsgAddMarkerRequest
@@ -2283,6 +2316,7 @@ Msg defines the Marker Msg service.
 | `IbcTransfer` | [MsgIbcTransferRequest](#provenance.marker.v1.MsgIbcTransferRequest) | [MsgIbcTransferResponse](#provenance.marker.v1.MsgIbcTransferResponse) | Transfer over ibc any marker(including restricted markers) between ibc accounts. The relayer is still needed to accomplish ibc middleware relays. | |
 | `SetDenomMetadata` | [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest) | [MsgSetDenomMetadataResponse](#provenance.marker.v1.MsgSetDenomMetadataResponse) | Allows Denom Metadata (see bank module) to be set for the Marker's Denom | |
 | `GrantAllowance` | [MsgGrantAllowanceRequest](#provenance.marker.v1.MsgGrantAllowanceRequest) | [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse) | GrantAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
+| `AddFinalizeActivateMarker` | [MsgAddFinalizeActivateMarkerRequest](#provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest) | [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse) | AddFinalizeActivateMarker | |
 
  <!-- end services -->
 
@@ -5604,8 +5638,9 @@ MsgAssessCustomMsgFeeRequest defines an sdk.Msg type
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  | optional short name for custom msg fee, this will be emitted as a property of the event |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | amount of additional fee that must be paid |
-| `recipient` | [string](#string) |  | optional recipient address, the total amount is given to the recipient, if present. |
+| `recipient` | [string](#string) |  | optional recipient address, the basis points amount is sent to the recipient |
 | `from` | [string](#string) |  | the signer of the msg |
+| `recipient_basis_points` | [string](#string) |  | optional basis points 0 - 10,000 for recipient defaults to 10,000 |
 
 
 

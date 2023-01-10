@@ -29,6 +29,8 @@ const (
 	OpWeightMsgChangeStatus = "op_weight_msg_change_status"
 	//nolint:gosec // not credentials
 	OpWeightMsgAddAccess = "op_weight_msg_add_access"
+	//nolint:gosec // not credentials
+	OpWeightMsgAddActivateFinalizeMarker = "op_weight_msg_add_finalize_activate_marker"
 )
 
 /*
@@ -50,9 +52,10 @@ func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgAddMarker    int
-		weightMsgChangeStatus int
-		weightMsgAddAccess    int
+		weightMsgAddMarker                 int
+		weightMsgChangeStatus              int
+		weightMsgAddAccess                 int
+		weightMsgAddFinalizeActivateMarker int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgAddMarker, &weightMsgAddMarker, nil,
@@ -73,6 +76,12 @@ func WeightedOperations(
 		},
 	)
 
+	appParams.GetOrGenerate(cdc, OpWeightMsgAddActivateFinalizeMarker, &weightMsgAddFinalizeActivateMarker, nil,
+		func(_ *rand.Rand) {
+			weightMsgAddFinalizeActivateMarker = simappparams.DefaultWeightMsgAddFinalizeActivateMarker
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgAddMarker,
@@ -85,6 +94,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgAddAccess,
 			SimulateMsgAddAccess(k, ak, bk),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgAddFinalizeActivateMarker,
+			SimulateMsgAddFinalizeActivateMarker(k, ak, bk),
 		),
 	}
 }
@@ -172,6 +185,31 @@ func SimulateMsgAddAccess(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 		}
 		grants := randomAccessGrants(r, accs, 100)
 		msg := types.NewMsgAddAccessRequest(m.GetDenom(), simAccount.Address, grants[0])
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
+	}
+}
+
+// SimulateMsgAddFinalizeActivateMarker will bind a NAME under an existing name using a 40% probability of restricting it.
+func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+		mgrAccount, _ := simtypes.RandomAcc(r, accs)
+		denom := randomUnrestrictedDenom(r, k.GetUnrestrictedDenomRegex(ctx))
+		// random access grants
+		grants := randomAccessGrants(r, accs, 100)
+		msg := types.NewMsgAddFinalizeActivateMarkerRequest(
+			denom,
+			sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx))),
+			simAccount.Address,
+			mgrAccount.Address,
+			types.MarkerType(r.Intn(2)+1), // coin or restricted_coin
+			r.Intn(2) > 0,                 // fixed supply
+			r.Intn(2) > 0,                 // allow gov
+			grants,
+		)
+
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
 	}
 }

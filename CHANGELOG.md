@@ -40,13 +40,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Added support to set a list of specific recipients allowed for send authorizations in the marker module [#1237](https://github.com/provenance-io/provenance/issues/1237).
-* Added a new name governance proposal that allows the fields of a name record to be updated. [#1266] (https://github.com/provenance-io/provenance/pull/1266)
-  The `restrict` flag has been changed to `unrestrict` in the `BindName` request and `CreateRootName` proposal.
+* Added msg to add, finalize, and activate a marker in a single request [#770](https://github.com/provenance-io/provenance/issues/770).
+
 ### Improvements
 
 * Added assess msg fees spec documentation [#1172](https://github.com/provenance-io/provenance/issues/1172).
 * Build dbmigrate and include it as an artifact with releases [#1264](https://github.com/provenance-io/provenance/issues/1264).
 * Removed, MsgFees Module 50/50 Fee Split on MsgAssessCustomMsgFeeRequest [#1263](https://github.com/provenance-io/provenance/issues/1263).
+* Add basis points field to MsgAssessCustomMsgFeeRequest for split of fee between Fee Module and Recipient [#1268](https://github.com/provenance-io/provenance/issues/1268).
+* Updated ibc-go to v6.1 [#1273](https://github.com/provenance-io/provenance/issues/1273).
+* Removed legacy-amino
 ---
 
 ## [v1.13.0](https://github.com/provenance-io/provenance/releases/tag/v1.13.0) - 2022-11-28

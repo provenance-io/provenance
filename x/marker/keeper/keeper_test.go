@@ -677,3 +677,146 @@ func testUserAddress(name string) sdk.AccAddress {
 	addr := types.MustGetMarkerAddress(name)
 	return addr
 }
+
+func TestAddFinalizeActivateMarker(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+
+	addr := types.MustGetMarkerAddress("testcoin")
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	user := testUserAddress("testcoin")
+	manager := testUserAddress("manager")
+	existingBalance := sdk.NewCoin("coin", sdk.NewInt(1000))
+
+	// prefund the marker address so an account gets created before the marker does.
+	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr, sdk.NewCoins(existingBalance)), "funding account")
+	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balance must be set")
+
+	// Creating a marker over an account with zero sequence is fine.
+	// One shot marker creation
+	_, err := server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
+		"testcoin",
+		sdk.NewInt(30),
+		user,
+		manager,
+		types.MarkerType_Coin,
+		true,
+		true,
+		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Mint, types.Access_Admin})},
+	))
+	require.NoError(t, err, "should allow a marker over existing account that has not signed anything.")
+
+	// existing coin balance must still be present
+	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balances must be preserved")
+
+	m, err := app.MarkerKeeper.GetMarkerByDenom(ctx, "testcoin")
+	require.NoError(t, err)
+	require.EqualValues(t, m.GetSupply(), sdk.NewInt64Coin("testcoin", 30))
+	require.EqualValues(t, m.GetStatus(), types.StatusActive)
+
+	m, err = app.MarkerKeeper.GetMarker(ctx, user)
+	require.NoError(t, err)
+	require.EqualValues(t, m.GetSupply(), sdk.NewInt64Coin("testcoin", 30))
+	require.EqualValues(t, m.GetStatus(), types.StatusActive)
+
+	// Creating a marker over an existing marker fails.
+	_, err = server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
+		"testcoin",
+		sdk.NewInt(30),
+		user,
+		manager,
+		types.MarkerType_Coin,
+		true,
+		true,
+		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Mint, types.Access_Admin})},
+	))
+	require.Error(t, err, "fails because marker already exists")
+
+	// Load the created marker
+	m, err = app.MarkerKeeper.GetMarker(ctx, user)
+	require.NoError(t, err)
+	require.EqualValues(t, m.GetSupply(), sdk.NewInt64Coin("testcoin", 30))
+	require.EqualValues(t, m.GetStatus(), types.StatusActive)
+
+	// entire supply should have been allocated to marker acount
+	require.EqualValues(t, app.MarkerKeeper.GetEscrow(ctx, m).AmountOf("testcoin"), sdk.NewInt(30))
+}
+
+// Creating a marker over an existing account with a positive sequence number fails.
+func TestInvalidAccount(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	user := testUserAddress("testcoin")
+	manager := testUserAddress("manager")
+	// replace existing test account with a new copy that has a positive sequence number
+	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 10))
+
+	_, err := server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
+		"testcoin",
+		sdk.NewInt(30),
+		user,
+		manager,
+		types.MarkerType_Coin,
+		true,
+		true,
+		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Mint, types.Access_Admin})},
+	))
+	require.Error(t, err, "should not allow creation over and existing account with a positive sequence number.")
+	require.Contains(t, err.Error(), "account at "+user.String()+" is not a marker account: invalid request")
+}
+
+func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+
+	user := testUserAddress("test")
+
+	// Require a long unrestricted denom
+	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: "[a-z]{12,20}"})
+
+	_, err := server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx),
+		types.NewMsgAddFinalizeActivateMarkerRequest(
+			"tooshort",
+			sdk.NewInt(30),
+			user,
+			user,
+			types.MarkerType_Coin,
+			true,
+			true,
+			[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})},
+		))
+	require.Error(t, err, "fails with unrestricted denom length fault")
+	require.Equal(t, fmt.Errorf("invalid denom [tooshort] (fails unrestricted marker denom validation [a-z]{12,20})"), err, "should fail with denom restriction")
+
+	_, err = server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
+		"itslongenough",
+		sdk.NewInt(30),
+		user,
+		user,
+		types.MarkerType_Coin,
+		true,
+		true,
+		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})},
+	))
+	require.NoError(t, err, "should allow a marker with a sufficiently long denom")
+
+	// Set to an empty string (returns to default expression)
+	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: ""})
+	_, err = server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
+		"short",
+		sdk.NewInt(30),
+		user,
+		user,
+		types.MarkerType_Coin,
+		true,
+		true,
+		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})},
+	))
+	// succeeds now as the default unrestricted denom expression allows any valid denom (minimum length is 2)
+	require.NoError(t, err, "should allow any valid denom with a min length of two")
+}

@@ -69,7 +69,8 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simappparams.DefaultWeightMsgChangeStatus, sdk.MsgTypeURL(&types.MsgActivateRequest{}), sdk.MsgTypeURL(&types.MsgActivateRequest{})},
 		// Possible names: types.TypeAddAccessRequest, fmt.Sprintf("%T", &types.MsgAddAccessRequest{})
 		{simappparams.DefaultWeightMsgAddAccess, sdk.MsgTypeURL(&types.MsgAddAccessRequest{}), sdk.MsgTypeURL(&types.MsgAddAccessRequest{})},
-	}
+
+		{simappparams.DefaultWeightMsgAddFinalizeActivateMarker, sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{}), sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{})},
 
 	for i, w := range weightedOps {
 		operationMsg, _, _ := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
@@ -82,15 +83,14 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}
 }
 
-// TestSimulateMsgBindName tests the normal scenario of a valid message of type TypeMsgBindName.
-// Abonormal scenarios, where the message is created by an errors, are not tested here.
+// TestSimulateMsgAddMarker tests the normal scenario of a valid message of type TypeAddMarkerRequest.
+// Abnormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgAddMarker() {
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
-	suite.app.NameKeeper.SetNameRecord(suite.ctx, "provenance", accounts[0].Address, false)
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
@@ -106,6 +106,32 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarker() {
 	suite.Require().True(operationMsg.OK, operationMsg.String())
 	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
 	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
+	suite.Require().Len(futureOperations, 0)
+}
+
+// TestSimulateMsgAddActivateFinalizeMarker tests the normal scenario of a valid message of type TypeAddActivateFinalizeMarkerRequest.
+// Abnormal scenarios, where the message is created by an errors, are not tested here.
+func (suite *SimTestSuite) TestSimulateMsgAddActivateFinalizeMarker() {
+
+	// setup 3 accounts
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, 3)
+
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+
+	// execute operation
+	op := simulation.SimulateMsgAddFinalizeActivateMarker(suite.app.MarkerKeeper, suite.app.AccountKeeper, suite.app.BankKeeper)
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().NoError(err)
+
+	var msg types.MsgAddFinalizeActivateMarkerRequest
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+
+	suite.Require().True(operationMsg.OK, operationMsg.String())
+	suite.Require().Equal(types.TypeAddActivateFinalizeMarkerRequest, msg.Type())
+	suite.Require().Equal(types.ModuleName, msg.Route())
 	suite.Require().Len(futureOperations, 0)
 }
 

@@ -597,3 +597,56 @@ func (s *HandlerTestSuite) TestMsgSetDenomMetadataRequest() {
 	}
 	s.runTests(cases)
 }
+func (s *HandlerTestSuite) TestMsgAddFinalizeActivateMarkerRequest() {
+	denom := "hotdog"
+	denomWithDashPeriod := fmt.Sprintf("%s-my.marker", denom)
+	activeStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})})
+
+	accessGrantWrongStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, nil)
+
+	cases := []CommonTest{
+		{
+			"should successfully ADD,FINALIZE,ACTIVATE new marker",
+			activeStatus,
+			[]string{s.user1},
+			"",
+			types.NewEventMarkerAdd(denom, "100", "proposed", s.user1, types.MarkerType_Coin.String()),
+		},
+		{
+			"should fail to ADD,FINALIZE,ACTIVATE new marker, validate basic failure",
+			accessGrantWrongStatus,
+			[]string{s.user1},
+			"since this will activate the marker, must have at least one access list defined: invalid request",
+			nil,
+		},
+		{
+			"should fail to ADD,FINALIZE,ACTIVATE new marker, marker already exists",
+			types.NewMsgAddMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			[]string{s.user1},
+			fmt.Sprintf("marker address already exists for %s: invalid request", types.MustGetMarkerAddress(denom)),
+			nil,
+		},
+		{
+			"should successfully add marker with dash and period",
+			types.NewMsgAddMarkerRequest(denomWithDashPeriod, sdk.NewInt(1000), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true),
+			[]string{s.user1},
+			"",
+			types.NewEventMarkerAdd(denomWithDashPeriod, "1000", "proposed", s.user1, types.MarkerType_Coin.String()),
+		},
+		{
+			"should successfully mint denom",
+			types.NewMsgMintRequest(s.user1Addr, sdk.NewInt64Coin(denom, 1000)),
+			[]string{s.user1},
+			"",
+			types.NewEventMarkerMint("1000", denom, s.user1),
+		},
+		{
+			"should fail to  burn denom, user doesn't have permissions",
+			types.NewMsgBurnRequest(s.user1Addr, sdk.NewInt64Coin(denom, 50)),
+			[]string{s.user1},
+			fmt.Sprintf("%s does not have ACCESS_BURN on hotdog markeraccount: invalid request", s.user1),
+			nil,
+		},
+	}
+	s.runTests(cases)
+}
