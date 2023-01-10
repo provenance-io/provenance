@@ -310,14 +310,13 @@ func Dispatch(
 		from.PrivKey,
 	)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
 	}
 
 	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), err.Error()), nil, nil
+		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), err.Error()), nil, nil
 	}
 
-	bz := types.ModuleCdc.MustMarshalJSON(msg)
-	return simtypes.NewOperationMsgBasic(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "", true, bz), nil, nil
+	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), nil, nil
 }
