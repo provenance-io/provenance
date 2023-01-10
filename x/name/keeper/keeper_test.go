@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	"github.com/stretchr/testify/require"
 	"testing"
 
@@ -14,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
@@ -292,6 +292,31 @@ func (s *KeeperTestSuite) TestAuthority() {
 	require.EqualValues(s.T(), s.app.NameKeeper.GetAuthority(), "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn")
 }
 
-func (s *KeeperTestSuite) TestCreateRootName() {
+func (s *KeeperTestSuite) TestCreateRecord() {
 	s.msgSrvr = namekeeper.NewMsgServerImpl(s.app.NameKeeper)
+	msg := nametypes.MsgCreateRootNameRequest{
+		Name:       "name.with.period",
+		Owner:      "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+		Restricted: false,
+		Authority:  "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+	}
+
+	s.Run("create invalid name", func() {
+
+		_, err := s.msgSrvr.CreateRootName(s.ctx, &msg)
+		s.Require().Error(err)
+		s.Require().Equal("invalid name: \".\" is reserved", err.Error())
+	})
+	s.Run("create valid root name", func() {
+		msg.Name = "name"
+		_, err := s.msgSrvr.CreateRootName(s.ctx, &msg)
+		s.Require().NoError(err)
+	})
+
+	s.Run("invalid authority", func() {
+		msg.Authority = "..."
+		_, err := s.msgSrvr.CreateRootName(s.ctx, &msg)
+		s.Require().Error(err)
+		s.Require().Equal("expected gov account as only signer for proposal messaged", err.Error())
+	})
 }
