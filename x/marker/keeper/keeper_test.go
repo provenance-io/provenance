@@ -831,7 +831,7 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 	invalidAuthority := testUserAddress("test")
 
 	// invalid authority
-	_, err := server.SupplyIncrease(sdk.WrapSDKContext(ctx),
+	_, err := server.SupplyIncreaseProposal(sdk.WrapSDKContext(ctx),
 		types.NewMsgSupplyIncreaseProposalRequest(
 			sdk.Coin{
 				Amount: math.NewInt(100),
@@ -843,7 +843,7 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 	require.Error(t, err, "expected cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn got cosmos1ppvtnfw30fvpdutnjzuavntqk0a34xfsrlnsg2: expected gov account as only signer for proposal message")
 
 	// marker does not exist
-	_, err = server.SupplyIncrease(sdk.WrapSDKContext(ctx),
+	_, err = server.SupplyIncreaseProposal(sdk.WrapSDKContext(ctx),
 		types.NewMsgSupplyIncreaseProposalRequest(
 			sdk.Coin{
 				Amount: math.NewInt(100),
@@ -864,7 +864,7 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 
 	_ = app.MarkerKeeper.AddMarkerAccount(ctx, cocoButter)
 
-	_, err = server.SupplyIncrease(sdk.WrapSDKContext(ctx),
+	_, err = server.SupplyIncreaseProposal(sdk.WrapSDKContext(ctx),
 		types.NewMsgSupplyIncreaseProposalRequest(
 			sdk.Coin{
 				Amount: math.NewInt(100),
@@ -883,7 +883,7 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 	inactiveDenom.Status = types.StatusDestroyed
 
 	_ = app.MarkerKeeper.AddMarkerAccount(ctx, inactiveDenom)
-	_, err = server.SupplyIncrease(sdk.WrapSDKContext(ctx),
+	_, err = server.SupplyIncreaseProposal(sdk.WrapSDKContext(ctx),
 		types.NewMsgSupplyIncreaseProposalRequest(
 			sdk.Coin{
 				Amount: math.NewInt(100),
@@ -902,7 +902,7 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 	inactiveDenom.Status = types.StatusProposed
 
 	_ = app.MarkerKeeper.AddMarkerAccount(ctx, beesKnees)
-	_, err = server.SupplyIncrease(sdk.WrapSDKContext(ctx),
+	_, err = server.SupplyIncreaseProposal(sdk.WrapSDKContext(ctx),
 		types.NewMsgSupplyIncreaseProposalRequest(
 			sdk.Coin{
 				Amount: math.NewInt(100),
