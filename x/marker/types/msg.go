@@ -51,6 +51,7 @@ var (
 	_ sdk.Msg = &MsgIbcTransferRequest{}
 	_ sdk.Msg = &MsgGrantAllowanceRequest{}
 	_ sdk.Msg = &MsgAddFinalizeActivateMarkerRequest{}
+	_ sdk.Msg = &MsgSupplyIncreaseProposalRequest{}
 )
 
 // Type returns the message action.
@@ -700,5 +701,23 @@ func (msg MsgAddFinalizeActivateMarkerRequest) GetSignBytes() []byte {
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgAddFinalizeActivateMarkerRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.FromAddress)
+	return []sdk.AccAddress{addr}
+}
+
+func NewMsgSupplyIncreaseProposalRequest(amount sdk.Coin, targetAddress string, authority string) *MsgSupplyIncreaseProposalRequest {
+	return &MsgSupplyIncreaseProposalRequest{
+		Amount:        amount,
+		TargetAddress: targetAddress,
+		Authority:     authority,
+	}
+}
+
+func (msg *MsgSupplyIncreaseProposalRequest) ValidateBasic() error {
+	// Validation is performed in HandleSupplyIncreaseProposal
+	return nil
+}
+
+func (msg *MsgSupplyIncreaseProposalRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Authority)
 	return []sdk.AccAddress{addr}
 }

@@ -148,7 +148,12 @@ func Setup(t *testing.T) *App {
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
 	}
 
-	app := SetupWithGenesisValSet(t, "", valSet, []authtypes.GenesisAccount{acc}, balance)
+	denomWithGovernanceDisabled := banktypes.Balance{
+		Address: acc.GetAddress().String(),
+		Coins:   sdk.NewCoins(sdk.NewCoin("chicken", sdk.NewInt(100000000000000))),
+	}
+
+	app := SetupWithGenesisValSet(t, "", valSet, []authtypes.GenesisAccount{acc}, balance, denomWithGovernanceDisabled, )
 
 	return app
 }

@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/errors"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/armon/go-metrics"
 
@@ -596,4 +598,24 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 	)
 
 	return &types.MsgAddFinalizeActivateMarkerResponse{}, nil
+}
+
+func (k msgServer) SupplyIncrease(goCtx context.Context, msg *types.MsgSupplyIncreaseProposalRequest) (*types.MsgSupplyIncreaseProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	proposal := types.SupplyIncreaseProposal{
+		Amount:        msg.Amount,
+		TargetAddress: msg.TargetAddress,
+	}
+
+	// HandleSupplyIncreaseProposal performs the basic validation
+	err := HandleSupplyIncreaseProposal(ctx, k.Keeper, &proposal)
+	if err != nil {
+		return nil, err
+	}
+	return &types.MsgSupplyIncreaseProposalResponse{}, nil
 }

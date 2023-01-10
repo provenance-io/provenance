@@ -134,6 +134,8 @@
     - [MsgMintResponse](#provenance.marker.v1.MsgMintResponse)
     - [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest)
     - [MsgSetDenomMetadataResponse](#provenance.marker.v1.MsgSetDenomMetadataResponse)
+    - [MsgSupplyIncreaseProposalRequest](#provenance.marker.v1.MsgSupplyIncreaseProposalRequest)
+    - [MsgSupplyIncreaseProposalResponse](#provenance.marker.v1.MsgSupplyIncreaseProposalResponse)
     - [MsgTransferRequest](#provenance.marker.v1.MsgTransferRequest)
     - [MsgTransferResponse](#provenance.marker.v1.MsgTransferResponse)
     - [MsgWithdrawRequest](#provenance.marker.v1.MsgWithdrawRequest)
@@ -2231,6 +2233,34 @@ MsgSetDenomMetadataResponse defines the Msg/SetDenomMetadata response type
 
 
 
+<a name="provenance.marker.v1.MsgSupplyIncreaseProposalRequest"></a>
+
+### MsgSupplyIncreaseProposalRequest
+MsgSupplyIncreaseProposalRequest defines a governance proposal to administer a marker and increase total supply of the marker
+through minting coin and placing it within the marker or assigning it directly to an account
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `target_address` | [string](#string) |  | an optional target address for the minted coin from this request |
+| `authority` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgSupplyIncreaseProposalResponse"></a>
+
+### MsgSupplyIncreaseProposalResponse
+MsgSupplyIncreaseProposalResponse defines the Msg/SupplyIncreaseProposal response type
+
+
+
+
+
+
 <a name="provenance.marker.v1.MsgTransferRequest"></a>
 
 ### MsgTransferRequest
@@ -2315,6 +2345,7 @@ Msg defines the Marker Msg service.
 | `SetDenomMetadata` | [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest) | [MsgSetDenomMetadataResponse](#provenance.marker.v1.MsgSetDenomMetadataResponse) | Allows Denom Metadata (see bank module) to be set for the Marker's Denom | |
 | `GrantAllowance` | [MsgGrantAllowanceRequest](#provenance.marker.v1.MsgGrantAllowanceRequest) | [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse) | GrantAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
 | `AddFinalizeActivateMarker` | [MsgAddFinalizeActivateMarkerRequest](#provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest) | [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse) | AddFinalizeActivateMarker | |
+| `SupplyIncrease` | [MsgSupplyIncreaseProposalRequest](#provenance.marker.v1.MsgSupplyIncreaseProposalRequest) | [MsgSupplyIncreaseProposalResponse](#provenance.marker.v1.MsgSupplyIncreaseProposalResponse) | SupplyIncrease | |
 
  <!-- end services -->
 
