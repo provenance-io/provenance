@@ -152,7 +152,7 @@ func TestNewMarkerValidate(t *testing.T) {
 			NewMarkerAccount(baseAcc, sdk.NewCoin("ibc/test", sdk.OneInt()), manager,
 				[]AccessGrant{{Address: MustGetMarkerAddress("foo").String(),
 					Permissions: []Access{Access_Admin, Access_Withdraw}}}, StatusActive, MarkerType_Coin, true),
-			fmt.Errorf("invalid ibc denom configuration: supply fixed is not supported for ibc marker"),
+			fmt.Errorf("invalid ibc denom configuration: fixed supply is not supported for ibc marker"),
 		},
 		{
 			"invalid marker ibc type has mint",

@@ -177,7 +177,7 @@ func ValidateIbcDenom(ma MarkerAccount) error {
 		return nil
 	}
 	if ma.SupplyFixed {
-		return errors.New("supply fixed is not supported for ibc marker")
+		return errors.New("fixed supply is not supported for ibc marker")
 	}
 	for _, grant := range ma.AccessControl {
 		for _, access := range grant.Permissions {
