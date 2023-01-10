@@ -10,13 +10,14 @@ import (
 const (
 	// EventTypeAssessCustomMsgFee is the event that is emitted when assess custom fee is submitted as msg
 	EventTypeAssessCustomMsgFee string = "assess_custom_msg_fee"
-
 	// KeyAttributeAmount is the key for the custom additional amount of fee
 	KeyAttributeAmount string = "amount"
 	// KeyAttributeRecipient is the key for the optional recipient of the request, if empty the full fee amount is sent to fee module
 	KeyAttributeRecipient string = "recipient"
 	// KeyAttributeName is the key for the optional name for assess custom fee
 	KeyAttributeName string = "name"
+	// KeyAttributeBips is the bips value for recipient
+	KeyAttributeBips = "recipient_basis_points"
 )
 
 func NewEventMsgs(totalCalls map[string]uint64, totalFees map[string]sdk.Coins) *EventMsgFees {
