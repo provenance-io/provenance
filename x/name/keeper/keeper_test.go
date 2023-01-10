@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -13,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
@@ -284,4 +286,12 @@ func (s *KeeperTestSuite) TestSecp256r1KeyAlgo() {
 		err := s.app.NameKeeper.SetNameRecord(s.ctx, "secp256r1.name", s.user2Addr, true)
 		s.NoError(err)
 	})
+}
+
+func (s *KeeperTestSuite) TestAuthority() {
+	require.EqualValues(s.T(), s.app.NameKeeper.GetAuthority(), "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn")
+}
+
+func (s *KeeperTestSuite) TestCreateRootName() {
+	s.msgSrvr = namekeeper.NewMsgServerImpl(s.app.NameKeeper)
 }
