@@ -172,6 +172,7 @@ func (ma MarkerAccount) Validate() error {
 	return ma.BaseAccount.Validate()
 }
 
+// ValidateIbcDenom if denom is ibc it that validates supply is not fixed and Mint/Burn is not allowed
 func ValidateIbcDenom(ma MarkerAccount) error {
 	if !strings.HasPrefix(ma.Denom, "ibc/") {
 		return nil
