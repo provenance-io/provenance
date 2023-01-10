@@ -49,7 +49,7 @@ spec_uuid: ""
 	require.Equal(t, yaml, msg.String())
 
 	bz, _ := ModuleCdc.MarshalJSON(msg)
-	require.Equal(t, "{\"scope\":{\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"owners\":[{\"address\":\"data_owner\",\"role\":5}],\"data_access\":[\"data_accessor\"],\"value_owner_address\":\"value_owner\"}}", string(bz))
+	require.Equal(t, "{\"scope\":{\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"owners\":[{\"address\":\"data_owner\",\"role\":\"PARTY_TYPE_OWNER\"}],\"data_access\":[\"data_accessor\"],\"value_owner_address\":\"value_owner\"},\"signers\":[],\"scope_uuid\":\"\",\"spec_uuid\":\"\"}", string(bz))
 }
 
 func TestWriteScopeValidation(t *testing.T) {
@@ -483,7 +483,7 @@ func TestBindOSLocator(t *testing.T) {
 	require.Equal(t, "/provenance.metadata.v1.MsgBindOSLocatorRequest", sdk.MsgTypeURL(bindRequestMsg))
 
 	bz, _ := ModuleCdc.MarshalJSON(bindRequestMsg)
-	require.Equal(t, "{\"locator\":{\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\",\"locator_uri\":\"http://foo.com\"}}", string(bz))
+	require.Equal(t, "{\"locator\":{\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\",\"locator_uri\":\"http://foo.com\",\"encryption_key\":\"\"}}", string(bz))
 }
 
 func TestModifyOSLocator(t *testing.T) {
@@ -496,7 +496,7 @@ func TestModifyOSLocator(t *testing.T) {
 	require.Equal(t, "/provenance.metadata.v1.MsgModifyOSLocatorRequest", sdk.MsgTypeURL(modifyRequest))
 
 	bz, _ := ModuleCdc.MarshalJSON(modifyRequest)
-	require.Equal(t, "{\"locator\":{\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\",\"locator_uri\":\"http://foo.com\"}}", string(bz))
+	require.Equal(t, "{\"locator\":{\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\",\"locator_uri\":\"http://foo.com\",\"encryption_key\":\"\"}}", string(bz))
 }
 
 func TestDeleteOSLocator(t *testing.T) {
@@ -510,7 +510,7 @@ func TestDeleteOSLocator(t *testing.T) {
 	require.Equal(t, "/provenance.metadata.v1.MsgDeleteOSLocatorRequest", sdk.MsgTypeURL(deleteRequest))
 
 	bz, _ := ModuleCdc.MarshalJSON(deleteRequest)
-	require.Equal(t, "{\"locator\":{\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\",\"locator_uri\":\"http://foo.com\"}}", string(bz))
+	require.Equal(t, "{\"locator\":{\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\",\"locator_uri\":\"http://foo.com\",\"encryption_key\":\"\"}}", string(bz))
 }
 
 func TestBindOSLocatorInvalid(t *testing.T) {
