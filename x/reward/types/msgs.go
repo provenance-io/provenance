@@ -51,12 +51,6 @@ func NewMsgCreateRewardProgramRequest(
 	}
 }
 
-// Route implements Msg
-func (msg MsgCreateRewardProgramRequest) Route() string { return ModuleName }
-
-// Type implements Msg
-func (msg MsgCreateRewardProgramRequest) Type() string { return TypeMsgCreateRewardProgramRequest }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgCreateRewardProgramRequest) ValidateBasic() error {
 	title := msg.GetTitle()
@@ -102,11 +96,6 @@ func (msg MsgCreateRewardProgramRequest) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes encodes the message for signing
-func (msg MsgCreateRewardProgramRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 // GetSigners indicates that the message must have been signed by the parent.
 func (msg MsgCreateRewardProgramRequest) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.DistributeFromAddress)
@@ -126,12 +115,6 @@ func NewMsgEndRewardProgramRequest(
 	}
 }
 
-// Route implements Msg
-func (msg MsgEndRewardProgramRequest) Route() string { return ModuleName }
-
-// Type implements Msg
-func (msg MsgEndRewardProgramRequest) Type() string { return TypeMsgEndRewardProgramRequest }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgEndRewardProgramRequest) ValidateBasic() error {
 	if msg.RewardProgramId < 1 {
@@ -141,11 +124,6 @@ func (msg MsgEndRewardProgramRequest) ValidateBasic() error {
 		return fmt.Errorf("invalid address for rewards program distribution from address: %w", err)
 	}
 	return nil
-}
-
-// GetSignBytes encodes the message for signing
-func (msg MsgEndRewardProgramRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners indicates that the message must have been signed by the parent.
@@ -168,12 +146,6 @@ func NewMsgClaimRewardsRequest(
 	}
 }
 
-// Route implements Msg
-func (msg MsgClaimRewardsRequest) Route() string { return ModuleName }
-
-// Type implements Msg
-func (msg MsgClaimRewardsRequest) Type() string { return TypeMsgClaimRewardsRequest }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgClaimRewardsRequest) ValidateBasic() error {
 	if msg.RewardProgramId < 1 {
@@ -183,11 +155,6 @@ func (msg MsgClaimRewardsRequest) ValidateBasic() error {
 		return fmt.Errorf("invalid reward address : %w", err)
 	}
 	return nil
-}
-
-// GetSignBytes encodes the message for signing
-func (msg MsgClaimRewardsRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners indicates that the message must have been signed by the parent.
@@ -208,23 +175,12 @@ func NewMsgClaimAllRewardsRequest(
 	}
 }
 
-// Route implements Msg
-func (msg MsgClaimAllRewardsRequest) Route() string { return ModuleName }
-
-// Type implements Msg
-func (msg MsgClaimAllRewardsRequest) Type() string { return TypeMsgClaimAllRewardRequest }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgClaimAllRewardsRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.RewardAddress); err != nil {
 		return fmt.Errorf("invalid reward address : %w", err)
 	}
 	return nil
-}
-
-// GetSignBytes encodes the message for signing
-func (msg MsgClaimAllRewardsRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners indicates that the message must have been signed by the parent.
