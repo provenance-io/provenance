@@ -32,8 +32,7 @@ func TestWriteScopeRoute(t *testing.T) {
 	)
 	var msg = NewMsgWriteScopeRequest(*scope, []string{})
 
-	require.Equal(t, msg.Route(), RouterKey)
-	require.Equal(t, msg.Type(), "write_scope_request")
+	require.Equal(t, sdk.MsgTypeURL(msg), "/provenance.metadata.v1.MsgWriteScopeRequest")
 	yaml := `scope:
   scope_id: scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp
   specification_id: scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3
@@ -48,7 +47,9 @@ scope_uuid: ""
 spec_uuid: ""
 `
 	require.Equal(t, yaml, msg.String())
-	require.Equal(t, "{\"type\":\"provenance/metadata/WriteScopeRequest\",\"value\":{\"scope\":{\"data_access\":[\"data_accessor\"],\"owners\":[{\"address\":\"data_owner\",\"role\":5}],\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"value_owner_address\":\"value_owner\"}}}", string(msg.GetSignBytes()))
+
+	bz, _ := ModuleCdc.MarshalJSON(msg)
+	require.Equal(t, "{\"scope\":{\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"owners\":[{\"address\":\"data_owner\",\"role\":5}],\"data_access\":[\"data_accessor\"],\"value_owner_address\":\"value_owner\"}}", string(bz))
 }
 
 func TestWriteScopeValidation(t *testing.T) {
@@ -478,11 +479,11 @@ func TestBindOSLocator(t *testing.T) {
 	err := bindRequestMsg.ValidateBasic()
 	require.NoError(t, err)
 	signers := bindRequestMsg.GetSigners()
-	route := bindRequestMsg.Route()
 	require.Equal(t, "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", signers[0].String())
-	require.Equal(t, ModuleName, route)
-	require.Equal(t, TypeMsgBindOSLocatorRequest, bindRequestMsg.Type())
-	require.Equal(t, "{\"type\":\"provenance/metadata/BindOSLocatorRequest\",\"value\":{\"locator\":{\"locator_uri\":\"http://foo.com\",\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\"}}}", string(bindRequestMsg.GetSignBytes()))
+	require.Equal(t, "/provenance.metadata.v1.MsgBindOSLocatorRequest", sdk.MsgTypeURL(bindRequestMsg))
+
+	bz, _ := ModuleCdc.MarshalJSON(bindRequestMsg)
+	require.Equal(t, "{\"locator\":{\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\",\"locator_uri\":\"http://foo.com\"}}", string(bz))
 }
 
 func TestModifyOSLocator(t *testing.T) {
@@ -492,9 +493,10 @@ func TestModifyOSLocator(t *testing.T) {
 	require.NoError(t, err)
 	signers := modifyRequest.GetSigners()
 	require.Equal(t, "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", signers[0].String())
-	require.Equal(t, ModuleName, modifyRequest.Route())
-	require.Equal(t, TypeMsgModifyOSLocatorRequest, modifyRequest.Type())
-	require.Equal(t, "{\"type\":\"provenance/metadata/ModifyOSLocatorRequest\",\"value\":{\"locator\":{\"locator_uri\":\"http://foo.com\",\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\"}}}", string(modifyRequest.GetSignBytes()))
+	require.Equal(t, "/provenance.metadata.v1.MsgModifyOSLocatorRequest", sdk.MsgTypeURL(modifyRequest))
+
+	bz, _ := ModuleCdc.MarshalJSON(modifyRequest)
+	require.Equal(t, "{\"locator\":{\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\",\"locator_uri\":\"http://foo.com\"}}", string(bz))
 }
 
 func TestDeleteOSLocator(t *testing.T) {
@@ -505,9 +507,10 @@ func TestDeleteOSLocator(t *testing.T) {
 
 	signers := deleteRequest.GetSigners()
 	require.Equal(t, "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", signers[0].String())
-	require.Equal(t, ModuleName, deleteRequest.Route())
-	require.Equal(t, TypeMsgDeleteOSLocatorRequest, deleteRequest.Type())
-	require.Equal(t, "{\"type\":\"provenance/metadata/DeleteOSLocatorRequest\",\"value\":{\"locator\":{\"locator_uri\":\"http://foo.com\",\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\"}}}", string(deleteRequest.GetSignBytes()))
+	require.Equal(t, "/provenance.metadata.v1.MsgDeleteOSLocatorRequest", sdk.MsgTypeURL(deleteRequest))
+
+	bz, _ := ModuleCdc.MarshalJSON(deleteRequest)
+	require.Equal(t, "{\"locator\":{\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\",\"locator_uri\":\"http://foo.com\"}}", string(bz))
 }
 
 func TestBindOSLocatorInvalid(t *testing.T) {
