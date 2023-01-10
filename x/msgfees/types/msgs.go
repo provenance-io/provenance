@@ -43,20 +43,17 @@ func NewMsgAssessCustomMsgFeeRequest(
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgAssessCustomMsgFeeRequest) ValidateBasic() error {
 	if len(msg.Recipient) != 0 {
-		_, err := sdk.AccAddressFromBech32(msg.Recipient)
-		if err != nil {
+		if _, err := sdk.AccAddressFromBech32(msg.Recipient); err != nil {
 			return err
 		}
 	}
-	_, err := sdk.AccAddressFromBech32(msg.From)
-	if err != nil {
+	if _, err := sdk.AccAddressFromBech32(msg.From); err != nil {
 		return err
 	}
 	if !msg.Amount.IsPositive() {
 		return errors.New("amount must be greater than zero")
 	}
-	_, err = msg.GetBips()
-	if err != nil {
+	if _, err := msg.GetBips(); err != nil {
 		return err
 	}
 	return nil
