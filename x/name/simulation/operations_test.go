@@ -49,8 +49,8 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simappparams.DefaultWeightMsgBindName, types.ModuleName, types.TypeMsgBindNameRequest},
-		{simappparams.DefaultWeightMsgDeleteName, types.ModuleName, types.TypeMsgDeleteNameRequest},
+		{simappparams.DefaultWeightMsgBindName, sdk.MsgTypeURL(&types.MsgBindNameRequest{}), sdk.MsgTypeURL(&types.MsgBindNameRequest{})},
+		{simappparams.DefaultWeightMsgDeleteName, sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), sdk.MsgTypeURL(&types.MsgDeleteNameRequest{})},
 	}
 
 	for i, w := range weightesOps {
