@@ -51,6 +51,11 @@ func (msg MsgBindNameRequest) ValidateBasic() error {
 	return nil
 }
 
+// GetSignBytes encodes the message for signing
+func (msg MsgBindNameRequest) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
 // GetSigners indicates that the message must have been signed by the parent.
 func (msg MsgBindNameRequest) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Parent.Address)
