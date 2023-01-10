@@ -14,7 +14,7 @@ import (
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 )
