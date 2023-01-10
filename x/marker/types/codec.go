@@ -11,38 +11,6 @@ import (
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-// RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
-// account module.
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	// // Register base marker account and access grants
-	// cdc.RegisterInterface((*AccessGrantI)(nil), nil)
-	// cdc.RegisterInterface((*MarkerAccountI)(nil), nil)
-	// cdc.RegisterConcrete(&MarkerAccount{}, "provenance/marker/Account", nil)
-	// cdc.RegisterConcrete(&AccessGrant{}, "provenance/marker/AcccessGrant", nil)
-
-	// // Register messages used to update and manage the markers
-	// cdc.RegisterConcrete(&MsgAddMarkerRequest{}, "provenance/marker/MsgAddMarkerRequest", nil)
-	// cdc.RegisterConcrete(&MsgAddAccessRequest{}, "provenance/marker/MsgAddAccessRequest", nil)
-	// cdc.RegisterConcrete(&MsgDeleteAccessRequest{}, "provenance/marker/MsgDeleteAccessRequest", nil)
-	// cdc.RegisterConcrete(&MsgFinalizeRequest{}, "provenance/marker/MsgFinalizeRequest", nil)
-	// cdc.RegisterConcrete(&MsgActivateRequest{}, "provenance/marker/MsgActivateRequest", nil)
-	// cdc.RegisterConcrete(&MsgCancelRequest{}, "provenance/marker/MsgCancelRequest", nil)
-	// cdc.RegisterConcrete(&MsgDeleteRequest{}, "provenance/marker/MsgDeleteRequest", nil)
-	// cdc.RegisterConcrete(&MsgMintRequest{}, "provenance/marker/MsgMintRequest", nil)
-	// cdc.RegisterConcrete(&MsgBurnRequest{}, "provenance/marker/MsgBurnRequest", nil)
-	// cdc.RegisterConcrete(&MsgWithdrawRequest{}, "provenance/marker/MsgWithdrawRequest", nil)
-	// cdc.RegisterConcrete(&MsgTransferRequest{}, "provenance/marker/MsgTransferRequest", nil)
-
-	// // Governance proposal types for marker management.
-	// cdc.RegisterConcrete(&SupplyIncreaseProposal{}, "provenance/marker/SupplyIncreaseProposal", nil)
-	// cdc.RegisterConcrete(&SupplyDecreaseProposal{}, "provenance/marker/SupplyDecreaseProposal", nil)
-	// cdc.RegisterConcrete(&SetAdministratorProposal{}, "provenance/marker/SetAdministratorProposal", nil)
-	// cdc.RegisterConcrete(&RemoveAdministratorProposal{}, "provenance/marker/RemoveAdministratorProposal", nil)
-	// cdc.RegisterConcrete(&ChangeStatusProposal{}, "provenance/marker/ChangeStatusProposal", nil)
-
-	// legacytx.RegisterLegacyAminoCodec(cdc)
-}
-
 // RegisterInterfaces registers implementations for the tx messages
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
@@ -118,7 +86,6 @@ var (
 )
 
 func init() {
-	RegisterLegacyAminoCodec(amino)
 	cryptocodec.RegisterCrypto(amino)
 	amino.Seal()
 }

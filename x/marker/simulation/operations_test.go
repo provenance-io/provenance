@@ -1,7 +1,6 @@
 package simulation_test
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 
@@ -61,15 +60,15 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgName  string
 	}{
 		// Possible names: types.TypeAddMarkerRequest, fmt.Sprintf("%T", &types.MsgAddMarkerRequest{})
-		{simappparams.DefaultWeightMsgAddMarker, types.ModuleName, types.TypeAddMarkerRequest},
+		{simappparams.DefaultWeightMsgAddMarker, sdk.MsgTypeURL(&types.MsgAddMarkerRequest{}), sdk.MsgTypeURL(&types.MsgAddMarkerRequest{})},
 		// Possible names: "ChangeStatus",
 		//	types.TypeActivateRequest, fmt.Sprintf("%T", &types.MsgActivateRequest{}),
 		//	types.TypeFinalizeRequest, fmt.Sprintf("%T", &types.MsgFinalizeRequest{}),
 		//	types.TypeCancelRequest, fmt.Sprintf("%T", &types.MsgCancelRequest{}),
 		//	types.TypeDeleteRequest, fmt.Sprintf("%T", &types.MsgDeleteRequest{}),
-		{simappparams.DefaultWeightMsgChangeStatus, types.ModuleName, fmt.Sprintf("%T", &types.MsgActivateRequest{})},
+		{simappparams.DefaultWeightMsgChangeStatus, sdk.MsgTypeURL(&types.MsgActivateRequest{}), sdk.MsgTypeURL(&types.MsgActivateRequest{})},
 		// Possible names: types.TypeAddAccessRequest, fmt.Sprintf("%T", &types.MsgAddAccessRequest{})
-		{simappparams.DefaultWeightMsgAddAccess, types.ModuleName, types.TypeAddAccessRequest},
+		{simappparams.DefaultWeightMsgAddAccess, sdk.MsgTypeURL(&types.MsgAddAccessRequest{}), sdk.MsgTypeURL(&types.MsgAddAccessRequest{})},
 	}
 
 	for i, w := range weightedOps {
@@ -105,8 +104,8 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarker() {
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK, operationMsg.String())
-	suite.Require().Equal(types.TypeAddMarkerRequest, msg.Type())
-	suite.Require().Equal(types.ModuleName, msg.Route())
+	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
+	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
 	suite.Require().Len(futureOperations, 0)
 }
 
