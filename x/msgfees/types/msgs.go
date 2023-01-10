@@ -82,19 +82,3 @@ func (msg MsgAssessCustomMsgFeeRequest) GetSigners() []sdk.AccAddress {
 	}
 	return []sdk.AccAddress{addr}
 }
-
-// GetSigners indicates that the message must have been signed by the address provided
-func (msg MsgAssessCustomMsgFeeRequest) GetSignerBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
-}
-
-// Route returns the module route
-func (msg MsgAssessCustomMsgFeeRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgAssessCustomMsgFeeRequest) Type() string {
-	return TypeAssessCustomMsgFee
-}
