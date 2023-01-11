@@ -997,7 +997,7 @@ EventExpirationDeposit is an event message indicating a deposit was collected fo
 | ----- | ---- | ----- | ----------- |
 | `module_asset_id` | [string](#string) |  | module_asset_id is the bech32 address string of the expiration id that was created. |
 | `depositor` | [string](#string) |  | bech32 address string of the account that provided the expiration deposit. |
-| `deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | deposit amount held until asset is expired |
+| `deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | deposit amount held until asset is expired |
 
 
 
@@ -1093,7 +1093,7 @@ Expiration holds a typed key/value structure for data associated with an expirin
 | `module_asset_id` | [string](#string) |  | the module asset identifier |
 | `owner` | [string](#string) |  | The bech32 address the expiration is bound to |
 | `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | The time the module asset expires |
-| `deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | The deposit amount held while module asset is in use |
+| `deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | The deposit amount held while module asset is in use |
 | `message` | [google.protobuf.Any](#google.protobuf.Any) |  | Message relating to the expiring module asset |
 
 

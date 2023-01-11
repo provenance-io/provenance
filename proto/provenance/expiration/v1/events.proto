@@ -32,7 +32,8 @@ message EventExpirationDeposit {
   // bech32 address string of the account that provided the expiration deposit.
   string depositor = 2;
   // deposit amount held until asset is expired
-  cosmos.base.v1beta1.Coin deposit = 3 [(gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin deposit = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 // EventExpirationExtend is an event message indicating an expiration has been extended

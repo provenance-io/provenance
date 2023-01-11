@@ -148,8 +148,7 @@ func (k Keeper) SetExpiration(ctx sdk.Context, expiration types.Expiration) erro
 	}
 
 	// attempt to send coins from owner account to expiration module account
-	depErr := k.bankKeeper.SendCoinsFromAccountToModule(ctx, ownerAddr,
-		types.ModuleName, sdk.NewCoins(expiration.Deposit))
+	depErr := k.bankKeeper.SendCoinsFromAccountToModule(ctx, ownerAddr, types.ModuleName, expiration.Deposit)
 	if depErr != nil {
 		return types.ErrInsufficientDeposit.Wrap(depErr.Error())
 	}
@@ -322,9 +321,9 @@ func (k Keeper) ValidateSetExpiration(
 	if deposit.IsZero() {
 		return types.ErrInvalidDeposit.Wrap("deposit amount cannot be zero")
 	}
-	if deposit.IsLT(defaultDeposit) {
+	if deposit.IsAllLT(sdk.NewCoins(defaultDeposit)) {
 		return types.ErrInvalidDeposit.Wrapf("deposit amount %s is less than minimum deposit amount %s",
-			deposit.Amount.String(), defaultDeposit.Amount.String())
+			deposit.String(), defaultDeposit.String())
 	}
 
 	// validate module asset id
@@ -508,8 +507,8 @@ func (k Keeper) IterateExpirations(ctx sdk.Context, prefix []byte, handle Handle
 	return nil
 }
 
-func (k Keeper) refundDeposit(ctx sdk.Context, deposit sdk.Coin, refundTo sdk.AccAddress) error {
-	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, refundTo, sdk.NewCoins(deposit)); err != nil {
+func (k Keeper) refundDeposit(ctx sdk.Context, deposit sdk.Coins, refundTo sdk.AccAddress) error {
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, refundTo, deposit); err != nil {
 		return err
 	}
 	return nil

@@ -89,7 +89,7 @@ func (k msgServer) setExpirationForScope(ctx sdk.Context, msg *types.MsgWriteSco
 	expTime := ctx.BlockTime().Add(*duration)
 	expDeposit := k.expKeeper.GetDeposit(ctx)
 	expiration := exptypes.NewExpiration(msg.Scope.ScopeId.String(), firstOwner, expTime,
-		expDeposit, *wrapper)
+		sdk.NewCoins(expDeposit), *wrapper)
 	expErr := k.expKeeper.SetExpiration(ctx, *expiration)
 	if expErr != nil {
 		return expErr

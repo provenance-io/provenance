@@ -46,7 +46,7 @@ type KeeperTestSuite struct {
 
 	moduleAssetID string
 	time          time.Time
-	deposit       sdk.Coin
+	deposit       sdk.Coins
 	signers       []string
 
 	validExpiration              types.Expiration
@@ -61,6 +61,9 @@ func (s *KeeperTestSuite) SetupTest() {
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.app.ExpirationKeeper)
 	s.queryClient = types.NewQueryClient(queryHelper)
+
+	// set default deposit amount
+	types.DefaultDeposit = sdk.NewInt64Coin("nhash", 1000000000)
 
 	// set up users
 	s.pubKey1 = secp256k1.GenPrivKey().PubKey()
@@ -83,13 +86,10 @@ func (s *KeeperTestSuite) SetupTest() {
 	expirationData.Params = types.DefaultParams()
 	s.app.ExpirationKeeper.InitGenesis(s.ctx, &expirationData)
 
-	// set default deposit amount
-	types.DefaultDeposit = sdk.NewInt64Coin("nhash", 1000000000)
-
 	// expiration tests
 	s.moduleAssetID = "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
 	s.time = s.ctx.BlockTime().AddDate(0, 0, 2)
-	s.deposit = types.DefaultDeposit
+	s.deposit = sdk.NewCoins(types.DefaultDeposit)
 	s.signers = []string{s.user1}
 
 	s.validExpiration = types.Expiration{
@@ -112,7 +112,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		ModuleAssetId: s.moduleAssetID,
 		Owner:         s.user1,
 		Time:          s.time,
-		Deposit:       sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1),
+		Deposit:       sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1)),
 	}
 }
 
@@ -184,7 +184,7 @@ func (s *KeeperTestSuite) TestAddExpiration() {
 			granter:     nil,
 			grantee:     nil,
 			wantErr:     true,
-			expectedErr: fmt.Sprintf("deposit amount %s is less than minimum deposit amount %s: invalid deposit amount", s.minDepositNotMetExpiration.Deposit.Amount, s.deposit.Amount),
+			expectedErr: fmt.Sprintf("deposit amount %s is less than minimum deposit amount %s: invalid deposit amount", s.minDepositNotMetExpiration.Deposit, s.deposit),
 		},
 		{
 			name:        "should fail to validate with authz",
@@ -239,13 +239,6 @@ func (s *KeeperTestSuite) TestAddExpiration() {
 				assert.Equal(t, tc.expectedErr, err.Error(), "%s error", tc.name)
 			} else {
 				assert.NoError(t, err, "%s unexpected error", tc.name)
-				if !tc.expiration.Deposit.IsZero() {
-					priv, _, _ := testdata.KeyTestPubAddr()
-					addr, _ := sdk.AccAddressFromBech32(tc.expiration.Owner)
-					acct := cosmosauthtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-					err := testutil.FundAccount(s.app.BankKeeper, s.ctx, acct.GetAddress(), sdk.NewCoins(tc.expiration.Deposit))
-					s.Require().NoError(err, fmt.Sprintf("%s: fund owner account", tc.name))
-				}
 				if err := s.app.ExpirationKeeper.SetExpiration(s.ctx, tc.expiration); err != nil {
 					assert.Fail(t, err.Error())
 				}
@@ -304,7 +297,7 @@ func (s *KeeperTestSuite) TestExtendExpiration() {
 			granter:     nil,
 			grantee:     nil,
 			wantErr:     true,
-			expectedErr: fmt.Sprintf("deposit amount %s is less than minimum deposit amount %s: invalid deposit amount", s.minDepositNotMetExpiration.Deposit.Amount, s.deposit.Amount),
+			expectedErr: fmt.Sprintf("deposit amount %s is less than minimum deposit amount %s: invalid deposit amount", s.minDepositNotMetExpiration.Deposit, s.deposit),
 		},
 		{
 			name:        "should fail to validate with authz",
@@ -410,7 +403,7 @@ func (s *KeeperTestSuite) TestRemoveExpiration() {
 				priv, _, _ := testdata.KeyTestPubAddr()
 				addr, _ := sdk.AccAddressFromBech32(s.validExpiration.Owner)
 				acct := cosmosauthtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
-				err := testutil.FundAccount(s.app.BankKeeper, s.ctx, acct.GetAddress(), sdk.NewCoins(s.validExpiration.Deposit))
+				err := testutil.FundAccount(s.app.BankKeeper, s.ctx, acct.GetAddress(), s.validExpiration.Deposit)
 				s.Require().NoError(err, fmt.Sprintf("%s: fund owner account", tc.name))
 
 				// add expiration

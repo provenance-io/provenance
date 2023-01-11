@@ -57,7 +57,7 @@ type GrpcQueryTestSuite struct {
 	user3Addr sdk.AccAddress
 
 	time    time.Time
-	deposit sdk.Coin
+	deposit sdk.Coins
 	signers []string
 }
 
@@ -81,6 +81,9 @@ func (s *GrpcQueryTestSuite) SetupTest() {
 	s.asset3Addr = sdk.AccAddress(s.asset3Key.Address())
 	s.asset3 = s.asset3Addr.String()
 
+	// set default deposit amount
+	types.DefaultDeposit = sdk.NewInt64Coin("nhash", 1000000000)
+
 	// set up users
 	s.pubKey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubKey1.Address())
@@ -96,7 +99,7 @@ func (s *GrpcQueryTestSuite) SetupTest() {
 	s.pubKey3 = secp256k1.GenPrivKey().PubKey()
 	s.user3Addr = sdk.AccAddress(s.pubKey3.Address())
 	s.user3 = s.user3Addr.String()
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, s.user3Addr, sdk.NewCoins(types.DefaultDeposit)), "funding account")
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, s.user3Addr, sdk.NewCoins(types.DefaultDeposit).Add(types.DefaultDeposit)), "funding account")
 
 	// setup up genesis
 	var expirationData types.GenesisState
@@ -105,7 +108,7 @@ func (s *GrpcQueryTestSuite) SetupTest() {
 
 	// expiration tests
 	s.time = s.ctx.BlockTime().AddDate(0, 0, 2)
-	s.deposit = types.DefaultDeposit
+	s.deposit = sdk.NewCoins(sdk.NewInt64Coin("nhash", 1000000000))
 	s.signers = []string{s.user1}
 }
 

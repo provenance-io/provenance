@@ -15,7 +15,7 @@ func NewExpiration(
 	moduleAssetID string,
 	owner string,
 	time time.Time,
-	deposit sdk.Coin,
+	deposit sdk.Coins,
 	message types.Any,
 ) *Expiration {
 	return &Expiration{
@@ -41,7 +41,7 @@ func (e *Expiration) ValidateBasic() error {
 	if e.Time.IsZero() {
 		return ErrExpirationTime
 	}
-	if !e.Deposit.IsValid() {
+	if e.Deposit.IsZero() || e.Deposit.IsAnyNil() || !e.Deposit.IsValid() {
 		return ErrInvalidDeposit
 	}
 	if err := e.validateMessage(); err != nil {

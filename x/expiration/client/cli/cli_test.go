@@ -87,7 +87,7 @@ type IntegrationCLITestSuite struct {
 	diffOwner string
 
 	time    time.Time
-	deposit sdk.Coin
+	deposit sdk.Coins
 	// signers []string
 
 	scopeID metadatatypes.MetadataAddress
@@ -181,6 +181,9 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	genesisState[authtypes.ModuleName] = authDataBz
 
+	// set default deposit amount
+	expirationtypes.DefaultDeposit = sdk.NewInt64Coin("nhash", 1000000000)
+
 	// Configure Genesis bank data for test accounts
 	var genBalances []banktypes.Balance
 	genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddrStr, Coins: sdk.NewCoins(
@@ -226,7 +229,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.diffOwner = s.user3AddrStr
 
 	s.time = time.Now().AddDate(0, 0, 5)
-	s.deposit = expirationtypes.DefaultDeposit
+	s.deposit = sdk.NewCoins(expirationtypes.DefaultDeposit)
 
 	s.scopeID = metadatatypes.ScopeMetadataAddress(uuid.New())
 	s.noExpScopeId = metadatatypes.ScopeMetadataAddress(uuid.New())
@@ -240,30 +243,30 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 
 	utcFormat := "2006-01-02T15:04:05.000000Z"
 	// expected expirations as JSON
-	s.expiration1AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"time\":\"%v\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":{\"@type\":\"/provenance.metadata.v1.MsgDeleteScopeRequest\",\"scope_id\":\"%s\",\"signers\":[\"%s\"]}}}",
+	s.expiration1AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"time\":\"%v\",\"deposit\":[{\"denom\":\"%s\",\"amount\":\"%v\"}],\"message\":{\"@type\":\"/provenance.metadata.v1.MsgDeleteScopeRequest\",\"scope_id\":\"%s\",\"signers\":[\"%s\"]}}}",
 		s.moduleAssetID1,
 		s.sameOwner,
 		s.time.UTC().Format(utcFormat),
-		s.deposit.Denom,
-		s.deposit.Amount,
+		s.deposit[0].Denom,
+		s.deposit[0].Amount,
 		s.scopeID.String(),
 		s.sameOwner,
 	)
-	s.expiration2AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"time\":\"%v\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":{\"@type\":\"/provenance.metadata.v1.MsgDeleteScopeRequest\",\"scope_id\":\"%s\",\"signers\":[\"%s\"]}}}",
+	s.expiration2AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"time\":\"%v\",\"deposit\":[{\"denom\":\"%s\",\"amount\":\"%v\"}],\"message\":{\"@type\":\"/provenance.metadata.v1.MsgDeleteScopeRequest\",\"scope_id\":\"%s\",\"signers\":[\"%s\"]}}}",
 		s.moduleAssetID2,
 		s.sameOwner,
 		s.time.UTC().Format(utcFormat),
-		s.deposit.Denom,
-		s.deposit.Amount,
+		s.deposit[0].Denom,
+		s.deposit[0].Amount,
 		s.scopeID.String(),
 		s.sameOwner,
 	)
-	s.expiration3AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"time\":\"%v\",\"deposit\":{\"denom\":\"%s\",\"amount\":\"%v\"},\"message\":{\"@type\":\"/provenance.metadata.v1.MsgDeleteScopeRequest\",\"scope_id\":\"%s\",\"signers\":[\"%s\"]}}}",
+	s.expiration3AsJson = fmt.Sprintf("{\"expiration\":{\"module_asset_id\":\"%s\",\"owner\":\"%s\",\"time\":\"%v\",\"deposit\":[{\"denom\":\"%s\",\"amount\":\"%v\"}],\"message\":{\"@type\":\"/provenance.metadata.v1.MsgDeleteScopeRequest\",\"scope_id\":\"%s\",\"signers\":[\"%s\"]}}}",
 		s.moduleAssetID3,
 		s.diffOwner,
 		s.time.UTC().Format(utcFormat),
-		s.deposit.Denom,
-		s.deposit.Amount,
+		s.deposit[0].Denom,
+		s.deposit[0].Amount,
 		s.scopeID.String(),
 		s.diffOwner,
 	)
@@ -271,7 +274,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	// expected expirations as text
 	s.expiration1AsText = fmt.Sprintf(`expiration:
   deposit:
-    amount: "%v"
+  - amount: "%v"
     denom: %s
   message:
     '@type': /provenance.metadata.v1.MsgDeleteScopeRequest
@@ -281,8 +284,8 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
   module_asset_id: %s
   owner: %s
   time: "%v"`,
-		s.deposit.Amount,
-		s.deposit.Denom,
+		s.deposit[0].Amount,
+		s.deposit[0].Denom,
 		s.scopeID.String(),
 		s.sameOwner,
 		s.moduleAssetID1,
@@ -291,7 +294,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	)
 	s.expiration2AsText = fmt.Sprintf(`expiration:
   deposit:
-    amount: "%v"
+  - amount: "%v"
     denom: %s
   message:
     '@type': /provenance.metadata.v1.MsgDeleteScopeRequest
@@ -301,8 +304,8 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
   module_asset_id: %s
   owner: %s
   time: "%v"`,
-		s.deposit.Amount,
-		s.deposit.Denom,
+		s.deposit[0].Amount,
+		s.deposit[0].Denom,
 		s.scopeID.String(),
 		s.sameOwner,
 		s.moduleAssetID2,
@@ -311,7 +314,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	)
 	s.expiration3AsText = fmt.Sprintf(`expiration:
   deposit:
-    amount: "%v"
+  - amount: "%v"
     denom: %s
   message:
     '@type': /provenance.metadata.v1.MsgDeleteScopeRequest
@@ -322,8 +325,8 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
   owner: %s
   time: "%v"`,
 		s.time.UTC().Format(utcFormat),
-		s.deposit.Amount,
-		s.deposit.Denom,
+		s.deposit[0].Amount,
+		s.deposit[0].Denom,
 		s.scopeID.String(),
 		s.diffOwner,
 		s.moduleAssetID3,

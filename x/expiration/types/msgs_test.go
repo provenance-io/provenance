@@ -24,7 +24,7 @@ type ExpirationTestSuite struct {
 	moduleAssetID string
 	owner         string
 	time          time.Time
-	deposit       sdk.Coin
+	deposit       sdk.Coins
 	message       types.Any
 
 	signers      []string
@@ -46,7 +46,7 @@ func (s *ExpirationTestSuite) SetupTest() {
 	s.moduleAssetID = "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
 	s.owner = "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
 	s.time = expirationTime
-	s.deposit = sdk.NewInt64Coin("testcoin", 1905)
+	s.deposit = sdk.NewCoins(sdk.NewInt64Coin("testcoin", 1905))
 
 	s.signers = []string{s.owner}
 	s.otherSigners = []string{"cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3"}
@@ -88,7 +88,7 @@ func (s *ExpirationTestSuite) SetupTest() {
 		ModuleAssetId: s.moduleAssetID,
 		Owner:         s.owner,
 		Time:          s.time,
-		Deposit:       sdk.Coin{Denom: "testcoin", Amount: sdk.NewInt(-1)},
+		Deposit:       sdk.Coins{sdk.Coin{Denom: "testcoin", Amount: sdk.NewInt(-1)}},
 		Message:       s.anyMsg(s.owner),
 	}
 	s.invalidMessageExpiration = Expiration{

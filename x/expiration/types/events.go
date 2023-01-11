@@ -8,7 +8,7 @@ func NewEventExpirationAdd(moduleAssetID string) *EventExpirationAdd {
 	return &EventExpirationAdd{moduleAssetID}
 }
 
-func NewEventExpirationDeposit(moduleAssetID string, depositor string, deposit sdk.Coin) *EventExpirationDeposit {
+func NewEventExpirationDeposit(moduleAssetID string, depositor string, deposit sdk.Coins) *EventExpirationDeposit {
 	return &EventExpirationDeposit{
 		ModuleAssetId: moduleAssetID,
 		Depositor:     depositor,
