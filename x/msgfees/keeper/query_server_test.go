@@ -166,7 +166,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFeesAuthz() {
 
 func (s *QueryServerTestSuite) TestCalculateTxFeesWithAssessCustomFees() {
 	additionalAccessedFeesCoin := sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 100)
-	assessCustomFeeMsg := types.NewMsgAssessCustomMsgFeeRequest("name", additionalAccessedFeesCoin, s.user2, s.user1)
+	assessCustomFeeMsg := types.NewMsgAssessCustomMsgFeeRequest("name", additionalAccessedFeesCoin, s.user2, s.user1, "")
 	simulateReq := s.createTxFeesRequest(s.pubkey1, s.privkey1, s.acct1, &assessCustomFeeMsg)
 
 	// do assessCustomFee

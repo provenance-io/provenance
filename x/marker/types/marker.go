@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -71,6 +72,7 @@ func NewMarkerAccount(
 	accessControls []AccessGrant,
 	status MarkerStatus,
 	markerType MarkerType,
+	supplyFixed bool,
 ) *MarkerAccount {
 	// clear marker manager for active or later status accounts.
 	if status >= StatusActive {
@@ -84,7 +86,7 @@ func NewMarkerAccount(
 		AccessControl:          accessControls,
 		Status:                 status,
 		MarkerType:             markerType,
-		SupplyFixed:            true,
+		SupplyFixed:            supplyFixed,
 		AllowGovernanceControl: true,
 	}
 }
@@ -151,6 +153,9 @@ func (ma MarkerAccount) Validate() error {
 	if err != nil {
 		return fmt.Errorf("marker denom is invalid: %w", err)
 	}
+	if err := ValidateIbcDenom(ma); err != nil {
+		return fmt.Errorf("invalid ibc denom configuration: %w", err)
+	}
 	if !ma.BaseAccount.GetAddress().Equals(markerAddress) {
 		return fmt.Errorf("address %s cannot be derived from the marker denom '%s'", ma.Address, ma.Denom)
 	}
@@ -165,6 +170,24 @@ func (ma MarkerAccount) Validate() error {
 		return fmt.Errorf("marker can not be self managed")
 	}
 	return ma.BaseAccount.Validate()
+}
+
+// ValidateIbcDenom if denom is ibc it that validates supply is not fixed and Mint/Burn is not allowed
+func ValidateIbcDenom(ma MarkerAccount) error {
+	if !strings.HasPrefix(ma.Denom, "ibc/") {
+		return nil
+	}
+	if ma.SupplyFixed {
+		return errors.New("fixed supply is not supported for ibc marker")
+	}
+	for _, grant := range ma.AccessControl {
+		for _, access := range grant.Permissions {
+			if access.IsOneOf(Access_Burn, Access_Mint) {
+				return fmt.Errorf("%v is not supported for ibc marker", access)
+			}
+		}
+	}
+	return nil
 }
 
 // ValidateGrantsForMarkerType checks a collection of grants and returns any errors encountered or nil

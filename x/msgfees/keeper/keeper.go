@@ -241,7 +241,11 @@ func (k Keeper) CalculateAdditionalFeesToBePaid(ctx sdk.Context, msgs ...sdk.Msg
 			if err != nil {
 				return msgFeesDistribution, err
 			}
-			if err := msgFeesDistribution.Increase(msgFeeCoin, types.AssessCustomMsgFeeBips, assessFee.Recipient); err != nil {
+			points, err := assessFee.GetBips()
+			if err != nil {
+				return msgFeesDistribution, err
+			}
+			if err := msgFeesDistribution.Increase(msgFeeCoin, points, assessFee.Recipient); err != nil {
 				return msgFeesDistribution, err
 			}
 		}
