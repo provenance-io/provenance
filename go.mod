@@ -182,7 +182,7 @@ replace github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.1.1
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
 // TODO: Required for v1.13.x: Remove this and update the require line above to have the new version once it's out. https://github.com/provenance-io/provenance/issues/1015
-replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-1-rc1
+replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-1-rc3
 
 // TODO: Required for IBC Transfer Module. Remove this when they patch it to include our changes. https://github.com/provenance-io/provenance/issues/1100
 replace github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.1.0-pio-1
