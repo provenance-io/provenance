@@ -420,7 +420,9 @@ enforced immediately.  An optional type flag can be provided or the default of C
 				managerAddr,
 				accessGrants,
 				markerStatus,
-				markertypes.MarkerType(markerType))
+				markertypes.MarkerType(markerType),
+				true,
+			)
 
 			if err = genAccount.Validate(); err != nil {
 				return fmt.Errorf("failed to validate new genesis account: %w", err)
