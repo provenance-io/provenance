@@ -49,6 +49,8 @@ service Msg {
   rpc GrantAllowance(MsgGrantAllowanceRequest) returns (MsgGrantAllowanceResponse);
   // AddFinalizeActivateMarker
   rpc AddFinalizeActivateMarker(MsgAddFinalizeActivateMarkerRequest) returns (MsgAddFinalizeActivateMarkerResponse);
+  // AddMarkers
+  rpc AddMarkers(MsgAddMarkersRequest) returns (MsgAddMarkersResponse);
 }
 
 // MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If
@@ -211,3 +213,11 @@ message MsgAddFinalizeActivateMarkerRequest {
 
 // MsgAddFinalizeActivateMarkerResponse defines the Msg/AddFinalizeActivateMarker response type
 message MsgAddFinalizeActivateMarkerResponse {}
+
+// MsgAddMarkerRequest defines the Msg/AddMarkers request type
+message MsgAddMarkersRequest {
+  repeated MsgAddMarkerRequest markers = 1;
+}
+
+// MsgAddMarkerResponse defines the Msg/AddMarkers response type
+message MsgAddMarkersResponse {}

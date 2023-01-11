@@ -57,17 +57,8 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *types.MsgGrantAllo
 func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerRequest) (*types.MsgAddMarkerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Validate transaction message.
-	err := msg.ValidateBasic()
+	err := k.addMarkerValidation(ctx, msg)
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	}
-	if msg.Status >= types.StatusActive {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap("a marker can not be created in an ACTIVE status")
-	}
-
-	// Add marker requests must pass extra validation for denom (in addition to regular coin validation expression)
-	if err = k.ValidateUnrestictedDenom(ctx, msg.Amount.Denom); err != nil {
 		return nil, err
 	}
 
@@ -81,6 +72,7 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 	if err != nil {
 		return nil, err
 	}
+
 	account := authtypes.NewBaseAccount(addr, nil, 0, 0)
 	ma := types.NewMarkerAccount(
 		account,
@@ -598,4 +590,79 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 	)
 
 	return &types.MsgAddFinalizeActivateMarkerResponse{}, nil
+}
+
+func (k msgServer) addMarkerValidation(ctx sdk.Context, msg *types.MsgAddMarkerRequest) error {
+	// Validate transaction message.
+	err := msg.ValidateBasic()
+	if err != nil {
+		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	if msg.Status >= types.StatusActive {
+		return sdkerrors.ErrInvalidRequest.Wrap("a marker can not be created in an ACTIVE status")
+	}
+
+	// Add marker requests must pass extra validation for denom (in addition to regular coin validation expression)
+	if err = k.ValidateUnrestictedDenom(ctx, msg.Amount.Denom); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (k msgServer) AddMarkers(goCtx context.Context, msg *types.MsgAddMarkersRequest) (*types.MsgAddMarkersResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// Perform validation on all markers before attempting to create any.
+	for _, m := range msg.Markers {
+		err := k.addMarkerValidation(ctx, m)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var err error
+	for _, m := range msg.Markers {
+		// TODO: refactor into common code
+		addr := types.MustGetMarkerAddress(m.Amount.Denom)
+		var manager sdk.AccAddress
+		if m.Manager != "" {
+			manager, err = sdk.AccAddressFromBech32(m.Manager)
+		} else {
+			manager, err = sdk.AccAddressFromBech32(m.FromAddress)
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		account := authtypes.NewBaseAccount(addr, nil, 0, 0)
+		ma := types.NewMarkerAccount(
+			account,
+			sdk.NewCoin(m.Amount.Denom, m.Amount.Amount),
+			manager,
+			m.AccessList,
+			m.Status,
+			m.MarkerType,
+			m.SupplyFixed,
+		)
+
+		if k.GetEnableGovernance(ctx) {
+			ma.AllowGovernanceControl = true
+		} else {
+			ma.AllowGovernanceControl = m.AllowGovernanceControl
+		}
+
+		if err := k.Keeper.AddMarkerAccount(ctx, ma); err != nil {
+			ctx.Logger().Error("unable to add marker", "err", err)
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		}
+
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				sdk.EventTypeMessage,
+				sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+			),
+		)
+	}
+
+	return &types.MsgAddMarkersResponse{}, nil
 }
