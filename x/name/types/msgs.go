@@ -101,3 +101,26 @@ func (msg MsgDeleteNameRequest) GetSigners() []sdk.AccAddress {
 	}
 	return []sdk.AccAddress{addr}
 }
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgModifyNameRequest) ValidateBasic() error {
+	if strings.TrimSpace(msg.Record.Name) == "" {
+		return fmt.Errorf("name cannot be empty")
+	}
+	if strings.TrimSpace(msg.Record.Address) == "" {
+		return fmt.Errorf("address cannot be empty")
+	}
+	if strings.TrimSpace(msg.GetAuthority()) == "" {
+		return fmt.Errorf("authority cannot be empty")
+	}
+	return nil
+}
+
+// GetSigners indicates that the message must have been signed by the gov module.
+func (msg MsgModifyNameRequest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.GetAuthority())
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}

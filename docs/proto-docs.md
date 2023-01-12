@@ -393,6 +393,8 @@
     - [MsgBindNameResponse](#provenance.name.v1.MsgBindNameResponse)
     - [MsgDeleteNameRequest](#provenance.name.v1.MsgDeleteNameRequest)
     - [MsgDeleteNameResponse](#provenance.name.v1.MsgDeleteNameResponse)
+    - [MsgModifyNameRequest](#provenance.name.v1.MsgModifyNameRequest)
+    - [MsgModifyNameResponse](#provenance.name.v1.MsgModifyNameResponse)
   
     - [Msg](#provenance.name.v1.Msg)
   
@@ -6027,6 +6029,32 @@ MsgDeleteNameResponse defines the Msg/DeleteName response type.
 
 
 
+
+<a name="provenance.name.v1.MsgModifyNameRequest"></a>
+
+### MsgModifyNameRequest
+MsgModifyNameRequest defines a governance method that is used to update an existing address/name binding.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | The address signing the message |
+| `record` | [NameRecord](#provenance.name.v1.NameRecord) |  | The record being updated |
+
+
+
+
+
+
+<a name="provenance.name.v1.MsgModifyNameResponse"></a>
+
+### MsgModifyNameResponse
+MsgModifyNameResponse defines the Msg/ModifyName response type.
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -6043,6 +6071,7 @@ Msg defines the bank Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `BindName` | [MsgBindNameRequest](#provenance.name.v1.MsgBindNameRequest) | [MsgBindNameResponse](#provenance.name.v1.MsgBindNameResponse) | BindName binds a name to an address under a root name. | |
 | `DeleteName` | [MsgDeleteNameRequest](#provenance.name.v1.MsgDeleteNameRequest) | [MsgDeleteNameResponse](#provenance.name.v1.MsgDeleteNameResponse) | DeleteName defines a method to verify a particular invariance. | |
+| `ModifyName` | [MsgModifyNameRequest](#provenance.name.v1.MsgModifyNameRequest) | [MsgModifyNameResponse](#provenance.name.v1.MsgModifyNameResponse) | ModifyName defines a method to modify the attributes of an existing name. | |
 
  <!-- end services -->
 

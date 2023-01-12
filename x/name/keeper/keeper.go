@@ -10,6 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	uuid "github.com/google/uuid"
@@ -28,8 +30,10 @@ type Keeper struct {
 	// Key to access the key-value store from sdk.Context.
 	storeKey storetypes.StoreKey
 
-	// The codec codec for binary encoding/decoding.
+	// The codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
+
+	authority string
 }
 
 // NewKeeper returns a name keeper. It handles:
@@ -51,6 +55,7 @@ func NewKeeper(
 		storeKey:   key,
 		paramSpace: paramSpace,
 		cdc:        cdc,
+		authority:  authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	}
 }
 
@@ -324,4 +329,8 @@ func (keeper Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress
 	store.Set(addrPrefix, bz)
 
 	return nil
+}
+
+func (keeper Keeper) GetAuthority() string {
+	return keeper.authority
 }

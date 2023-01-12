@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/errors"
 	"github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/x/name/types"
 )
@@ -147,4 +149,13 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 	)
 
 	return &types.MsgDeleteNameResponse{}, nil
+}
+
+// ModifyName updates an existing name
+func (s msgServer) ModifyName(goCtx context.Context, msg *types.MsgModifyNameRequest) (*types.MsgModifyNameResponse, error) {
+	if msg.GetAuthority() != s.Keeper.GetAuthority() {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", s.Keeper.GetAuthority(), msg.Authority)
+	}
+
+	return &types.MsgModifyNameResponse{}, nil
 }
