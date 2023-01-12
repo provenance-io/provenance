@@ -30,7 +30,7 @@ require (
 	github.com/tendermint/tendermint v0.34.24
 	github.com/tendermint/tm-db v0.6.7
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
-	golang.org/x/text v0.5.0
+	golang.org/x/text v0.6.0
 	google.golang.org/genproto v0.0.0-20221024183307-1bc688fe9f3e
 	google.golang.org/grpc v1.51.0
 	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8
@@ -182,7 +182,7 @@ replace github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.1.1
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
 // TODO: Required for v1.13.x: Remove this and update the require line above to have the new version once it's out. https://github.com/provenance-io/provenance/issues/1015
-replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-1-rc1
+replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-1-rc3
 
 // TODO: Required for IBC Transfer Module. Remove this when they patch it to include our changes. https://github.com/provenance-io/provenance/issues/1100
 replace github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.1.0-pio-1
