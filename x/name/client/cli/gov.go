@@ -131,7 +131,7 @@ $ %s tx gov submit-legacy-proposal \
 	modify-name-proposal \
 	<name> \
 	--unrestrict  \ 
-	--owner <key_or_address> \
+	--owner <address> \
 	--title "Proposal title" \
 	--description "Description of proposal" 
 	--from <key_or_address>
