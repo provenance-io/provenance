@@ -120,10 +120,8 @@ func (msg MsgCreateRootNameRequest) GetSignBytes() []byte {
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgCreateRootNameRequest) ValidateBasic() error {
-	if strings.TrimSpace(msg.Owner) != "" {
-		if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
-			return ErrInvalidAddress
-		}
+	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
+		return ErrInvalidAddress
 	}
 
 	if strings.TrimSpace(msg.Name) == "" {
