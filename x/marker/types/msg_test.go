@@ -264,11 +264,6 @@ func TestMsgSupplyIncreaseProposalRequestGetSigners(t *testing.T) {
 func TestMsgSupplyIncreaseProposalRequestValidateBasic(t *testing.T) {
 	authority := sdk.AccAddress("input111111111111111").String()
 	targetAddress := sdk.AccAddress("input22222222222").String()
-	amount :=
-		sdk.Coin{
-			Amount: math.NewInt(100),
-			Denom:  "chocolate",
-		}
 
 	testCases := []struct {
 		name          string
@@ -278,21 +273,21 @@ func TestMsgSupplyIncreaseProposalRequestValidateBasic(t *testing.T) {
 		shouldFail    bool
 		expectedError string
 	}{
-		//{ //TODO: how to declare negative int
-		//	name: "negative coin amount",
-		//	amount: sdk.Coin{
-		//		Amount: math.NewInt(-1),
-		//		Denom:  "invalid-denom",
-		//	},
-		//	targetAddress: targetAddress,
-		//	authority:     authority,
-		//	shouldFail:    true,
-		//	expectedError: "",
-		//},
+		{
+			name: "negative coin amount",
+			amount: sdk.Coin{
+				Amount: math.NewInt(-1),
+				Denom:  "invalid-denom",
+			},
+			targetAddress: targetAddress,
+			authority:     authority,
+			shouldFail:    true,
+			expectedError: "negative coin amount: -1",
+		},
 		{
 			name: "invalid target address",
 			amount: sdk.Coin{
-				Amount: math.NewInt(-100),
+				Amount: math.NewInt(100),
 				Denom:  "bbq-hotdog",
 			},
 			targetAddress: "",
@@ -303,7 +298,7 @@ func TestMsgSupplyIncreaseProposalRequestValidateBasic(t *testing.T) {
 		{
 			name: "invalid authority",
 			amount: sdk.Coin{
-				Amount: math.NewInt(-100),
+				Amount: math.NewInt(100),
 				Denom:  "bbq-hotdog",
 			},
 			targetAddress: targetAddress,
@@ -314,7 +309,7 @@ func TestMsgSupplyIncreaseProposalRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		msg := NewMsgSupplyIncreaseProposalRequest(amount, tc.targetAddress, tc.authority)
+		msg := NewMsgSupplyIncreaseProposalRequest(tc.amount, tc.targetAddress, tc.authority)
 		err := msg.ValidateBasic()
 
 		if tc.shouldFail {
