@@ -292,7 +292,7 @@ func (s *KeeperTestSuite) TestAuthority() {
 	require.EqualValues(s.T(), s.app.NameKeeper.GetAuthority(), "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn")
 }
 
-func (s *KeeperTestSuite) TestCreateRecord() {
+func (s *KeeperTestSuite) TestCreateRootName() {
 	s.msgSrvr = namekeeper.NewMsgServerImpl(s.app.NameKeeper)
 	msg := nametypes.MsgCreateRootNameRequest{
 		Name:       "name.with.period",
