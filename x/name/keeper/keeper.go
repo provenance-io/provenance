@@ -5,16 +5,15 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/google/uuid"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
-	"github.com/google/uuid"
 
 	"github.com/provenance-io/provenance/x/name/types"
 )
