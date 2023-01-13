@@ -218,6 +218,7 @@ message MsgAddFinalizeActivateMarkerResponse {}
 // through minting coin and placing it within the marker or assigning it directly to an account
 message MsgSupplyIncreaseProposalRequest {
   option (gogoproto.equal)            = true;
+  option (cosmos.msg.v1.signer)       = "authority";
 
   cosmos.base.v1beta1.Coin amount      = 1
   [(gogoproto.nullable)                = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
