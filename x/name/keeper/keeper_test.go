@@ -294,10 +294,12 @@ func (s *KeeperTestSuite) TestAuthority() {
 func (s *KeeperTestSuite) TestCreateRootName() {
 	s.msgSrvr = namekeeper.NewMsgServerImpl(s.app.NameKeeper)
 	msg := nametypes.MsgCreateRootNameRequest{
-		Name:       "name.with.period",
-		Owner:      "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
-		Restricted: false,
-		Authority:  "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+		Record: &nametypes.NameRecord{
+			Name:       "name.with.period",
+			Address:    "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+			Restricted: false,
+		},
+		Authority: "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
 	}
 
 	s.Run("create invalid name", func() {
