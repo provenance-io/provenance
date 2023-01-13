@@ -3,8 +3,6 @@ package types
 import (
 	"errors"
 	"fmt"
-	"strings"
-
 	"github.com/gogo/protobuf/proto"
 
 	sdkmath "cosmossdk.io/math"
@@ -724,8 +722,9 @@ func (msg *MsgSupplyIncreaseProposalRequest) ValidateBasic() error {
 		return err
 	}
 
-	if strings.TrimSpace(msg.Authority) != "" {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid 'authority' address: %s", err)
+	_, err = sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		return err
 	}
 
 	return nil
