@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -713,7 +714,20 @@ func NewMsgSupplyIncreaseProposalRequest(amount sdk.Coin, targetAddress string, 
 }
 
 func (msg *MsgSupplyIncreaseProposalRequest) ValidateBasic() error {
-	// Validation is performed in HandleSupplyIncreaseProposal
+	err := msg.Amount.Validate()
+	if err != nil {
+		return err
+	}
+
+	_, err = sdk.AccAddressFromBech32(msg.TargetAddress)
+	if err != nil {
+		return err
+	}
+
+	if strings.TrimSpace(msg.Authority) != "" {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid 'authority' address: %s", err)
+	}
+
 	return nil
 }
 
