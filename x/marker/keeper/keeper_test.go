@@ -829,87 +829,114 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 
 	authority := "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
 	invalidAuthority := testUserAddress("test")
+	targetAddress := "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3"
 
-	// invalid authority
-	_, err := server.SupplyIncreaseProposal(sdk.WrapSDKContext(ctx),
-		types.NewMsgSupplyIncreaseProposalRequest(
-			sdk.Coin{
-				Amount: math.NewInt(100),
-				Denom:  "denom",
-			},
-			invalidAuthority.String(),
-			invalidAuthority.String(),
-		))
-	require.Error(t, err, "expected cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn got cosmos1ppvtnfw30fvpdutnjzuavntqk0a34xfsrlnsg2: expected gov account as only signer for proposal message")
-
-	// marker does not exist
-	_, err = server.SupplyIncreaseProposal(sdk.WrapSDKContext(ctx),
-		types.NewMsgSupplyIncreaseProposalRequest(
-			sdk.Coin{
-				Amount: math.NewInt(100),
-				Denom:  "unknown-denom",
-			},
-			authority,
-			authority,
-		))
-	require.Error(t, err, "unknown-denom marker does not exist")
-
-	// marker with governance disabled
+	// add markers for test cases
 	user := testUserAddress("test")
-	cocoButter := types.NewEmptyMarkerAccount(
-		"coco-butter",
+	govDisabledDenom := types.NewEmptyMarkerAccount(
+		"denom-with-gov-disabled",
 		user.String(),
 		[]types.AccessGrant{})
-	cocoButter.AllowGovernanceControl = false
+	govDisabledDenom.AllowGovernanceControl = false
 
-	_ = app.MarkerKeeper.AddMarkerAccount(ctx, cocoButter)
+	err := app.MarkerKeeper.AddMarkerAccount(ctx, govDisabledDenom)
+	require.NoError(t, err)
 
-	_, err = server.SupplyIncreaseProposal(sdk.WrapSDKContext(ctx),
-		types.NewMsgSupplyIncreaseProposalRequest(
-			sdk.Coin{
-				Amount: math.NewInt(100),
-				Denom:  "coco-butter",
-			},
-			authority,
-			authority,
-		))
-	require.Error(t, err, "coco-butter marker does not allow governance control")
-
-	// marker status is not StatusActive
-	inactiveDenom := types.NewEmptyMarkerAccount(
-		"inactive-denom",
+	nonActiveDenom := types.NewEmptyMarkerAccount(
+		"denom-with-non-active-status",
 		user.String(),
 		[]types.AccessGrant{})
-	inactiveDenom.Status = types.StatusDestroyed
+	nonActiveDenom.Status = types.StatusDestroyed
 
-	_ = app.MarkerKeeper.AddMarkerAccount(ctx, inactiveDenom)
-	_, err = server.SupplyIncreaseProposal(sdk.WrapSDKContext(ctx),
-		types.NewMsgSupplyIncreaseProposalRequest(
-			sdk.Coin{
-				Amount: math.NewInt(100),
-				Denom:  "inactive-denom",
-			},
-			authority,
-			authority,
-		))
-	require.Error(t, err, "cannot mint coin for a marker that is not in Active status")
+	err = app.MarkerKeeper.AddMarkerAccount(ctx, nonActiveDenom)
+	require.NoError(t, err)
 
 	// all good
 	beesKnees := types.NewEmptyMarkerAccount(
 		"bees-knees",
 		user.String(),
 		[]types.AccessGrant{})
-	inactiveDenom.Status = types.StatusProposed
+	beesKnees.Status = types.StatusProposed
 
-	_ = app.MarkerKeeper.AddMarkerAccount(ctx, beesKnees)
-	_, err = server.SupplyIncreaseProposal(sdk.WrapSDKContext(ctx),
-		types.NewMsgSupplyIncreaseProposalRequest(
-			sdk.Coin{
-				Amount: math.NewInt(100),
-				Denom:  "bees-knees",
-			},
-			authority,
-			authority,
-		))
+	err = app.MarkerKeeper.AddMarkerAccount(ctx, beesKnees)
 	require.NoError(t, err)
+
+	testCases := []struct {
+		name          string
+		amount        sdk.Coin
+		targetAddress string
+		authority     string
+		shouldFail    bool
+		expectedError string
+	}{
+		{
+			name: "invalid authority",
+			amount: sdk.Coin{
+				Amount: math.NewInt(100),
+				Denom:  "invalid-authority-denom",
+			},
+			targetAddress: targetAddress,
+			authority:     invalidAuthority.String(),
+			shouldFail:    true,
+			expectedError: "expected cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn got cosmos1ppvtnfw30fvpdutnjzuavntqk0a34xfsrlnsg2: expected gov account as only signer for proposal message",
+		},
+		{
+			name: "marker does not exist",
+			amount: sdk.Coin{
+				Amount: math.NewInt(100),
+				Denom:  "unknown-denom",
+			},
+			targetAddress: authority,
+			authority:     authority,
+			shouldFail:    true,
+			expectedError: "unknown-denom marker does not exist",
+		},
+		{
+			name: "marker with governance disabled",
+			amount: sdk.Coin{
+				Amount: math.NewInt(100),
+				Denom:  govDisabledDenom.Denom,
+			},
+			targetAddress: authority,
+			authority:     authority,
+			shouldFail:    true,
+			expectedError: "denom-with-gov-disabled marker does not allow governance control",
+		},
+		{
+			name: "marker status is not StatusActive",
+			amount: sdk.Coin{
+				Amount: math.NewInt(100),
+				Denom:  nonActiveDenom.Denom,
+			},
+			targetAddress: authority,
+			authority:     authority,
+			shouldFail:    true,
+			expectedError: "cannot mint coin for a marker that is not in Active status",
+		},
+		{
+			name: "all good",
+			amount: sdk.Coin{
+				Amount: math.NewInt(100),
+				Denom:  beesKnees.Denom,
+			},
+			targetAddress: authority,
+			authority:     authority,
+			shouldFail:    false,
+			expectedError: "",
+		},
+	}
+
+	for _, tc := range testCases {
+		res, err := server.SupplyIncreaseProposal(sdk.WrapSDKContext(ctx),
+			types.NewMsgSupplyIncreaseProposalRequest(tc.amount, tc.targetAddress, tc.authority))
+
+		if tc.shouldFail {
+			require.Nil(t, res)
+			require.EqualError(t, err, tc.expectedError)
+
+		} else {
+			require.NoError(t, err)
+			require.Equal(t, res, &types.MsgSupplyIncreaseProposalResponse{})
+		}
+	}
 }
