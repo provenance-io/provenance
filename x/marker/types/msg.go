@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
+
 	"github.com/gogo/protobuf/proto"
 
 	sdkmath "cosmossdk.io/math"
