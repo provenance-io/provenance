@@ -9,9 +9,8 @@ import (
 
 // name message types
 const (
-	TypeMsgBindNameRequest       = "bind_name"
-	TypeMsgDeleteNameRequest     = "delete_name"
-	TypeMsgCreateRootNameRequest = "create_root_name"
+	TypeMsgBindNameRequest   = "bind_name"
+	TypeMsgDeleteNameRequest = "delete_name"
 )
 
 // Compile time interface checks.
@@ -104,12 +103,14 @@ func (msg MsgDeleteNameRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgCreateRootNameRequest creates a new Create Root Name Request
-func NewMsgCreateRootNameRequest(authority string, name string, owner string, restricted bool) *MsgCreateRootNameRequest {
+func NewMsgCreateRootNameRequest(authority string, name string, address string, restricted bool) *MsgCreateRootNameRequest {
 	return &MsgCreateRootNameRequest{
-		Authority:  authority,
-		Name:       name,
-		Owner:      owner,
-		Restricted: restricted,
+		Authority: authority,
+		Record: &NameRecord{
+			Name:       name,
+			Address:    address,
+			Restricted: restricted,
+		},
 	}
 }
 
@@ -119,15 +120,15 @@ func (msg MsgCreateRootNameRequest) ValidateBasic() error {
 		return ErrInvalidAddress
 	}
 
-	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
+	if _, err := sdk.AccAddressFromBech32(msg.Record.Address); err != nil {
 		return ErrInvalidAddress
 	}
 
-	if strings.TrimSpace(msg.Name) == "" {
+	if strings.TrimSpace(msg.Record.Name) == "" {
 		return ErrInvalidLengthName
 	}
 
-	if strings.Contains(msg.Name, ".") {
+	if strings.Contains(msg.Record.Name, ".") {
 		return ErrNameContainsSegments
 	}
 

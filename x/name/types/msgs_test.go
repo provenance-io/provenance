@@ -18,29 +18,57 @@ func TestMsgCreateRootNameRequestGetSigners(t *testing.T) {
 	require.True(t, authority.Equals(res[0]))
 }
 
-func TestMsgCreateRootNameRequestInvalidOwnerAddress(t *testing.T) {
-	authority := sdk.AccAddress("input111111111111111")
-	name := "human-readable-name"
-	owner := "..."
-	msg := NewMsgCreateRootNameRequest(authority.String(), name, owner, false)
-	res := msg.ValidateBasic()
-	require.EqualError(t, res, "invalid account address")
-}
+func TestMsgCreateRootNameRequestValidateBasic(t *testing.T) {
+	authority := sdk.AccAddress("input111111111111111").String()
+	address := "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"
 
-func TestMsgCreateRootNameRequestInvalidNameLength(t *testing.T) {
-	authority := sdk.AccAddress("input111111111111111")
-	name := ""
-	owner := "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"
-	msg := NewMsgCreateRootNameRequest(authority.String(), name, owner, false)
-	res := msg.ValidateBasic()
-	require.EqualError(t, res, "proto: negative length found during unmarshaling")
-}
+	testCases := []struct {
+		name        string
+		authority   string
+		recordName  string
+		address     string
+		shouldFail  bool
+		expectedErr string
+	}{
+		{
+			"invalid authority",
+			"",
+			"human-readable-name",
+			address,
+			true,
+			"invalid account address",
+		},
+		{
+			"invalid record address",
+			authority,
+			"human-readable-name",
+			"",
+			true,
+			"invalid account address",
+		},
+		{
+			"invalid record name length",
+			authority,
+			"",
+			address,
+			true,
+			"proto: negative length found during unmarshaling",
+		},
+		{
+			"record name contains segment",
+			authority,
+			"...",
+			address,
+			true,
+			"invalid name: \".\" is reserved",
+		},
+	}
 
-func TestMsgCreateRootNameRequestNameContainsSegments(t *testing.T) {
-	authority := sdk.AccAddress("input111111111111111")
-	name := "..."
-	owner := "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"
-	msg := NewMsgCreateRootNameRequest(authority.String(), name, owner, false)
-	res := msg.ValidateBasic()
-	require.EqualError(t, res, "invalid name: \".\" is reserved")
+	for _, tc := range testCases {
+		msg := NewMsgCreateRootNameRequest(tc.authority, tc.recordName, tc.address, false)
+		err := msg.ValidateBasic()
+		if tc.shouldFail {
+			require.EqualError(t, err, tc.expectedErr)
+		}
+	}
 }

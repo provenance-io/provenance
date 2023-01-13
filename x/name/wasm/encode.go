@@ -46,7 +46,7 @@ type DeleteNameParams struct {
 type CreateRootNameParams struct {
 	Authority  string `json:"authority"`
 	Name       string `json:"name"`
-	Owner      string `json:"owner"`
+	Address    string `json:"address"`
 	Restricted bool   `json:"restricted"`
 }
 
@@ -101,6 +101,6 @@ func (params *DeleteNameParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, erro
 
 // Encode creates a MsgCreateRootNameRequest.
 func (params *CreateRootNameParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
-	msg := types.NewMsgCreateRootNameRequest(params.Authority, params.Name, params.Owner, params.Restricted)
+	msg := types.NewMsgCreateRootNameRequest(params.Authority, params.Name, params.Address, params.Restricted)
 	return []sdk.Msg{msg}, nil
 }
