@@ -248,15 +248,15 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 
 func TestMsgSupplyIncreaseProposalRequestGetSigners(t *testing.T) {
 	authority := sdk.AccAddress("input111111111111111")
-	targetAddress := sdk.AccAddress("input111111111111111")
+	targetAddress := sdk.AccAddress("input22222222222")
 	amount :=
 		sdk.Coin{
 			Amount: math.NewInt(100),
-			Denom:  "",
+			Denom:  "chocolate",
 		}
 
 	msg := NewMsgSupplyIncreaseProposalRequest(amount, targetAddress.String(), authority.String())
 	res := msg.GetSigners()
-	require.Equal(t, 1, len(res))
-	require.True(t, authority.Equals(res[0]))
+	exp := []sdk.AccAddress{authority}
+	require.Equal(t, exp, res, "GetSigners")
 }
