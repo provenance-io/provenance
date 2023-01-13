@@ -19,7 +19,7 @@ service Msg {
   // DeleteName defines a method to verify a particular invariance.
   rpc DeleteName(MsgDeleteNameRequest) returns (MsgDeleteNameResponse);
 
-  // CreateName defines a service for CreateRootNameProposal.
+  // CreateRootName defines a governance method  for creating a root name.
   rpc CreateRootName(MsgCreateRootNameRequest) returns (MsgCreateRootNameResponse);
 }
 
