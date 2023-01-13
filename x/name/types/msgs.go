@@ -5,16 +5,18 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // name message types
 const (
 	TypeMsgBindNameRequest   = "bind_name"
 	TypeMsgDeleteNameRequest = "delete_name"
+	TypeMsgModifyNameRequest = "modify_name"
 )
 
 // Compile time interface checks.
-var _, _ sdk.Msg = &MsgBindNameRequest{}, &MsgDeleteNameRequest{}
+var _, _, _ sdk.Msg = &MsgBindNameRequest{}, &MsgDeleteNameRequest{}, &MsgModifyNameRequest{}
 
 // NewMsgBindNameRequest creates a new bind name request
 func NewMsgBindNameRequest(record, parent NameRecord) *MsgBindNameRequest {
@@ -102,6 +104,14 @@ func (msg MsgDeleteNameRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
+// NewMsgModifyNameRequest modifies an existing name record
+func NewMsgModifyNameRequest(authority string, name string, owner sdk.AccAddress, restricted bool) *MsgModifyNameRequest {
+	return &MsgModifyNameRequest{
+		Authority: authority,
+		Record:    NewNameRecord(name, owner, restricted),
+	}
+}
+
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgModifyNameRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Record.Name) == "" {
@@ -111,7 +121,7 @@ func (msg MsgModifyNameRequest) ValidateBasic() error {
 		return fmt.Errorf("address cannot be empty")
 	}
 	if strings.TrimSpace(msg.GetAuthority()) == "" {
-		return fmt.Errorf("authority cannot be empty")
+		return govtypes.ErrInvalidSigner
 	}
 	return nil
 }

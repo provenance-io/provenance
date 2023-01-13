@@ -52,6 +52,30 @@ This message is expected to fail if:
 - Any child records exist under the record being removed
 - The requestor does not match the owner listed on the record.
 
+## MsgModifyNameRequest
+
+A name record is modified by proposing the `MsgModifyNameRequest` message.
+
+```proto
+// MsgModifyNameRequest defines a governance method that is used to update an existing address/name binding.
+message MsgModifyNameRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // The address signing the message
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // The record being updated
+  NameRecord record = 2 [(gogoproto.nullable) = false];
+}
+```
+
+This message is expected to fail if:
+- Any components of the request do not pass basic integrity and format checks
+- The record to remove does not exist
+- The requestor does not match the owner listed on the record.
+- The authority does not match the gov module.
+
+If successful a name record will be updated with the new address and restriction.
+
 ## CreateRootNameProposal
 
 The create root name proposal is a governance proposal that allows new root level names to be established after the genesis of the blockchain.

@@ -24,6 +24,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgBindNameRequest{},
 		&MsgDeleteNameRequest{},
+		&MsgModifyNameRequest{},
 	)
 
 	registry.RegisterImplementations(
