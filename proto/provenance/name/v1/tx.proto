@@ -52,17 +52,17 @@ message MsgDeleteNameRequest {
 // MsgDeleteNameResponse defines the Msg/DeleteName response type.
 message MsgDeleteNameResponse {}
 
-// MsgCreateRootNameProposal defines an sdk.Msg type to create a new root name
+// MsgCreateRootNameRequest defines an sdk.Msg type to create a new root name
 // that is controlled by a given owner and optionally restricted to the owner
 // for the sole creation of sub names.
 message MsgCreateRootNameRequest {
   option (cosmos.msg.v1.signer)    = "authority";
 
+  // The signing authority for the request
   string authority   = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string name        = 2;
-  string owner       = 3;
-  bool   restricted  = 4;
+  // NameRecord is a structure used to bind ownership of a name hierarchy to a collection of addresses
+  NameRecord record  = 2;
 }
 
-// MsgCreateRootNameProposalResponse defines Msg/CreateName response type.
+// MsgCreateRootNameResponse defines Msg/CreateRootName response type.
 message MsgCreateRootNameResponse {}

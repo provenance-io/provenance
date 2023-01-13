@@ -161,12 +161,6 @@ func (s msgServer) CreateRootName(goCtx context.Context, msg *types.MsgCreateRoo
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", s.Keeper.GetAuthority(), msg.Authority)
 	}
 
-	// Validate
-	if err := msg.ValidateBasic(); err != nil {
-		ctx.Logger().Error("unable to validate message", "err", err)
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	}
-
 	// Routes to legacy proposal handler to avoid code duplication
 	// Setting title and description to empty strings. These two fields are deprecated in the v1.
 	err := HandleCreateRootNameProposal(ctx, s.Keeper, types.NewCreateRootNameProposal("", "", msg.Name, sdk.AccAddress(msg.Owner), msg.Restricted))

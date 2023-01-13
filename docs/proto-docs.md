@@ -5968,17 +5968,15 @@ MsgBindNameResponse defines the Msg/BindName response type.
 <a name="provenance.name.v1.MsgCreateRootNameRequest"></a>
 
 ### MsgCreateRootNameRequest
-MsgCreateRootNameProposal defines an sdk.Msg type to create a new root name
+MsgCreateRootNameRequest defines an sdk.Msg type to create a new root name
 that is controlled by a given owner and optionally restricted to the owner
 for the sole creation of sub names.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  |  |
-| `name` | [string](#string) |  |  |
-| `owner` | [string](#string) |  |  |
-| `restricted` | [bool](#bool) |  |  |
+| `authority` | [string](#string) |  | The signing authority for the request |
+| `record` | [NameRecord](#provenance.name.v1.NameRecord) |  | NameRecord is a structure used to bind ownership of a name hierarchy to a collection of addresses |
 
 
 
@@ -5988,7 +5986,7 @@ for the sole creation of sub names.
 <a name="provenance.name.v1.MsgCreateRootNameResponse"></a>
 
 ### MsgCreateRootNameResponse
-MsgCreateRootNameProposalResponse defines Msg/CreateName response type.
+MsgCreateRootNameResponse defines Msg/CreateRootName response type.
 
 
 
@@ -6036,7 +6034,7 @@ Msg defines the bank Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `BindName` | [MsgBindNameRequest](#provenance.name.v1.MsgBindNameRequest) | [MsgBindNameResponse](#provenance.name.v1.MsgBindNameResponse) | BindName binds a name to an address under a root name. | |
 | `DeleteName` | [MsgDeleteNameRequest](#provenance.name.v1.MsgDeleteNameRequest) | [MsgDeleteNameResponse](#provenance.name.v1.MsgDeleteNameResponse) | DeleteName defines a method to verify a particular invariance. | |
-| `CreateRootName` | [MsgCreateRootNameRequest](#provenance.name.v1.MsgCreateRootNameRequest) | [MsgCreateRootNameResponse](#provenance.name.v1.MsgCreateRootNameResponse) | CreateName defines a service for CreateRootNameProposal. | |
+| `CreateRootName` | [MsgCreateRootNameRequest](#provenance.name.v1.MsgCreateRootNameRequest) | [MsgCreateRootNameResponse](#provenance.name.v1.MsgCreateRootNameResponse) | CreateRootName defines a governance method for creating a root name. | |
 
  <!-- end services -->
 

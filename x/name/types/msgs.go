@@ -113,13 +113,12 @@ func NewMsgCreateRootNameRequest(authority string, name string, owner string, re
 	}
 }
 
-// GetSignBytes encodes the message for signing
-func (msg MsgCreateRootNameRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgCreateRootNameRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return ErrInvalidAddress
+	}
+
 	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
 		return ErrInvalidAddress
 	}
