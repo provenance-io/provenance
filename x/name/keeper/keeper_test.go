@@ -309,7 +309,7 @@ func (s *KeeperTestSuite) TestCreateRootName() {
 	})
 
 	s.Run("create valid root name", func() {
-		msg.Name = "swampmonster"
+		msg.Record.Name = "swampmonster"
 		_, err := s.msgSrvr.CreateRootName(s.ctx, &msg)
 		s.Require().NoError(err)
 	})
