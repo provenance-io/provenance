@@ -96,7 +96,7 @@ func TestNewMarkerValidate(t *testing.T) {
 	fmt.Printf("Marker address: %s", mAddr)
 	baseAcc := authtypes.NewBaseAccount(mAddr, nil, 0, 0)
 
-	ibcDenom := "transfer/channel-141/hotdog"
+	ibcDenom := "ibc/a80b0cda82187404160351a68d7a1bafe3af80cbe2c97dabc9ae545c3b8af7d3" // ibc/sha256(transfer/channel-141/hotdog)
 	ibcAddr := MustGetMarkerAddress(ibcDenom)
 	baseIbcAcc := authtypes.NewBaseAccount(ibcAddr, nil, 1, 0)
 
