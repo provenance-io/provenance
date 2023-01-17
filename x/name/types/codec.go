@@ -15,7 +15,6 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(MsgBindNameRequest{}, "provenance/MsgBindNameRequest", nil)
 	cdc.RegisterConcrete(MsgDeleteNameRequest{}, "provenance/MsgDeleteNameRequest", nil)
 	cdc.RegisterConcrete(CreateRootNameProposal{}, "provenance/CreateRootNameProposal", nil)
-	cdc.RegisterConcrete(ModifyNameProposal{}, "provenance/ModifyNameeProposal", nil)
 }
 
 // RegisterInterfaces registers concrete implentations for the given type names
@@ -30,7 +29,6 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*govtypesv1beta1.Content)(nil),
 		&CreateRootNameProposal{},
-		&ModifyNameProposal{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

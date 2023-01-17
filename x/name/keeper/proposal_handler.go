@@ -43,24 +43,3 @@ func HandleCreateRootNameProposal(ctx sdk.Context, k Keeper, p *types.CreateRoot
 
 	return nil
 }
-
-// HandleModifyNameProposal is a handler for executing a passed modify name proposal
-func HandleModifyNameProposal(ctx sdk.Context, k Keeper, p *types.ModifyNameProposal) error {
-	logger := k.Logger(ctx)
-	existing, _ := k.GetRecordByName(ctx, p.Name)
-	if existing == nil {
-		return types.ErrNameNotBound
-	}
-
-	addr, err := sdk.AccAddressFromBech32(p.Owner)
-	if err != nil {
-		return err
-	}
-
-	if err := k.UpdateNameRecord(ctx, p.Name, addr, p.Restricted); err != nil {
-		return err
-	}
-	logger.Info(fmt.Sprintf("modify name proposal: updated %s. Set the owner as %s and restricted to %t", p.Name, p.Owner, p.Restricted))
-
-	return nil
-}

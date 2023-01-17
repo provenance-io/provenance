@@ -38,12 +38,3 @@ The name module emits the following events:
 | name_bound            | name                  | {NameRecord|Name}         |
 | name_bound            | address               | {NameRecord|Address}      |
 | name_bound            | restricted            | {NameRecord|Restricted}   |
-
-
-### ModifyNameProposal
-
-| Type                  | Attribute Key         | Attribute Value           |
-| --------------------- | --------------------- | ------------------------- |
-| name_update           | name                  | {NameRecord|Name}         |
-| name_update           | address               | {NameRecord|Address}      |
-| name_update           | restricted            | {NameRecord|Restricted}   |

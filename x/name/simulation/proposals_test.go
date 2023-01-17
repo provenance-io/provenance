@@ -43,31 +43,3 @@ func TestCreateRootNameProposalContents(t *testing.T) {
 	require.Equal(t, "name", content.ProposalRoute())
 	require.Equal(t, "CreateRootName", content.ProposalType())
 }
-
-func TestModifyNameProposalContents(t *testing.T) {
-	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	// initialize parameters
-	s := rand.NewSource(1)
-	r := rand.New(s)
-
-	accounts := simtypes.RandomAccounts(r, 3)
-
-	// execute ProposalContents function
-	weightedProposalContent := simulation.ProposalContents(keeper.NewKeeper(app.AppCodec(), app.GetKey(types.ModuleName), app.GetSubspace(types.ModuleName)))
-	require.Len(t, weightedProposalContent, 2)
-
-	w1 := weightedProposalContent[1]
-
-	// tests w0 interface:
-	require.Equal(t, simulation.OpWeightSubmitModifyNameProposal, w1.AppParamsKey())
-	require.Equal(t, simappparams.DefaultWeightModifyNameProposal, w1.DefaultWeight())
-
-	content := w1.ContentSimulatorFn()(r, ctx, accounts)
-
-	require.Equal(t, "hPjMaxKlMIJMOXcnQfyzeOcbWwNbeHVIkPZBSpYuLyYggwexjxusrBqDOTtGTOWeLrQKjLxzIivHSlcxgdXhhuTSkuxKGLwQvuyN", content.GetDescription())
-	require.Equal(t, "eAerqyNEUz", content.GetTitle())
-	require.Equal(t, "name", content.ProposalRoute())
-	require.Equal(t, "ModifyName", content.ProposalType())
-}

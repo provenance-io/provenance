@@ -52,25 +52,6 @@ message CreateRootNameProposal {
   bool restricted = 5;
 }
 
-// ModifyNameProposal details a proposal to update the address
-// and/or the restricted flag of a name.
-message ModifyNameProposal {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
-
-  // proposal title
-  string title = 1;
-  // proposal description
-  string description = 2;
-  // the bound name to update
-  string name = 3;
-  // the new address that this name will resolve to
-  string owner = 4;
-  // a flag that indicates if an owner signature is required to add sub-names
-  bool restricted = 5;
-}
-
 // Event emitted when name is bound.
 message EventNameBound {
   string address    = 1;

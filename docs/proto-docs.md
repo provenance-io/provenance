@@ -371,7 +371,6 @@
     - [EventNameBound](#provenance.name.v1.EventNameBound)
     - [EventNameUnbound](#provenance.name.v1.EventNameUnbound)
     - [EventNameUpdate](#provenance.name.v1.EventNameUpdate)
-    - [ModifyNameProposal](#provenance.name.v1.ModifyNameProposal)
     - [NameRecord](#provenance.name.v1.NameRecord)
     - [Params](#provenance.name.v1.Params)
   
@@ -5751,26 +5750,6 @@ Event emitted when name is updated.
 | `address` | [string](#string) |  |  |
 | `name` | [string](#string) |  |  |
 | `restricted` | [bool](#bool) |  |  |
-
-
-
-
-
-
-<a name="provenance.name.v1.ModifyNameProposal"></a>
-
-### ModifyNameProposal
-ModifyNameProposal details a proposal to update the address
-and/or the restricted flag of a name.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `title` | [string](#string) |  | proposal title |
-| `description` | [string](#string) |  | proposal description |
-| `name` | [string](#string) |  | the bound name to update |
-| `owner` | [string](#string) |  | the new address that this name will resolve to |
-| `restricted` | [bool](#bool) |  | a flag that indicates if an owner signature is required to add sub-names |
 
 
 
