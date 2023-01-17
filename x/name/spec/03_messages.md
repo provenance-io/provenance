@@ -70,8 +70,7 @@ message MsgModifyNameRequest {
 
 This message is expected to fail if:
 - Any components of the request do not pass basic integrity and format checks
-- The record to remove does not exist
-- The requestor does not match the owner listed on the record.
+- The record to update does not exist
 - The authority does not match the gov module.
 
 If successful a name record will be updated with the new address and restriction.

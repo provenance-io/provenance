@@ -117,8 +117,8 @@ func (msg MsgModifyNameRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Record.Name) == "" {
 		return fmt.Errorf("name cannot be empty")
 	}
-	if strings.TrimSpace(msg.Record.Address) == "" {
-		return fmt.Errorf("address cannot be empty")
+	if _, err := sdk.AccAddressFromBech32(msg.Record.Address); err != nil {
+		return fmt.Errorf("invalid record address: %w", err)
 	}
 	if strings.TrimSpace(msg.GetAuthority()) == "" {
 		return govtypes.ErrInvalidSigner

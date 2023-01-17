@@ -19,7 +19,6 @@ var _ govtypesv1beta1.Content = &CreateRootNameProposal{}
 
 func init() {
 	govtypesv1beta1.RegisterProposalType(ProposalTypeCreateRootName)
-	govtypesv1beta1.RegisterProposalType(ProposalTypeModifyName)
 }
 
 // NewCreateRootNameProposal create a new governance proposal request to create a root name
