@@ -235,13 +235,13 @@ func TestModifyName(t *testing.T) {
 		{
 			name:          "modify name - fails with invalid authority",
 			msg:           nametypes.NewMsgModifyNameRequest("jackthecat", "name", addr1, true),
-			expectedError: sdkerrors.ErrInvalidRequest.Wrap(govtypes.ErrInvalidSigner.Error()),
+			expectedError: govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", authority, "jackthecat"),
 			expectedEvent: nil,
 		},
 		{
 			name:          "modify name - fails with empty authority",
 			msg:           nametypes.NewMsgModifyNameRequest("", "name", addr1, true),
-			expectedError: sdkerrors.ErrInvalidRequest.Wrap(govtypes.ErrInvalidSigner.Error()),
+			expectedError: govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", authority, ""),
 			expectedEvent: nil,
 		},
 	}

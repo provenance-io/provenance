@@ -155,7 +155,7 @@ func (s msgServer) ModifyName(goCtx context.Context, msg *types.MsgModifyNameReq
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if msg.GetAuthority() != s.Keeper.GetAuthority() {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", s.Keeper.GetAuthority(), msg.GetAuthority()))
+		return nil, govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", s.Keeper.GetAuthority(), msg.GetAuthority())
 	}
 
 	existing, _ := s.Keeper.GetRecordByName(ctx, msg.GetRecord().Name)
