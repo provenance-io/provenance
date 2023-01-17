@@ -24,18 +24,6 @@ func stringsToAccAddresses(signers []string) []sdk.AccAddress {
 	return addresses
 }
 
-// private method that does a simple validation check that
-// doesn't require access to any other information.
-func validateBasic(expiration Expiration, signers []string) error {
-	if err := expiration.ValidateBasic(); err != nil {
-		return err
-	}
-	if len(signers) == 0 {
-		return ErrMissingSigners
-	}
-	return nil
-}
-
 // private method that checks an address string is bech32 or MetadataAddress type
 func validateAddress(s string) error {
 	if _, err := sdk.AccAddressFromBech32(s); err != nil {
@@ -60,7 +48,13 @@ func NewMsgAddExpirationRequest(expiration Expiration, signers []string) *MsgAdd
 // ValidateBasic does a simple validation check that
 // doesn't require access to any other information.
 func (m *MsgAddExpirationRequest) ValidateBasic() error {
-	return validateBasic(m.Expiration, m.Signers)
+	if err := m.Expiration.ValidateBasic(); err != nil {
+		return err
+	}
+	if len(m.Signers) == 0 {
+		return ErrMissingSigners
+	}
+	return nil
 }
 
 // GetSigners returns the typed AccAddress of signers that must sign

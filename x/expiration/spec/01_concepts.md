@@ -41,15 +41,18 @@ The owner is a bech32 address string that determines the rightful owner to a par
 
 ### Expiration Time
 
-The expiration time determines when an asset on chain will expire and is up for removal.
+The expiration time determines when an asset on chain will expire and is ready for removal.
 
 ### Deposit
 
 When an expiration record is added to the system, funds, in the form of a deposit, will be moved from the owner address
 associated with the module asset and stored in the account associated with the expiration module. The deposit can be returned
-when the owner later executes the expiration logic which frees up the funds held for the underlying asset.Note that if the
-expiration logic is not triggered and the expiration time passes, external actors may take action to execute the expiration
-logic and collect the deposit (which offsets some gas fees required for processing the expiration logic).
+when the owner later executes the expiration logic which frees up the funds held for the underlying asset. 
+
+### Note
+
+If the expiration logic is not triggered and the expiration time passes, external actors may take action to execute
+the expiration logic and collect the deposit (which offsets some gas fees required for processing the expiration logic).
 
 ### Message
 
@@ -60,18 +63,24 @@ through the [Msg Service Router](https://docs.cosmos.network/main/core/baseapp.h
 
 Creating an expiration is done through the module that owns the asset. When a new asset is created for a particular module,
 the user creating the asset has the option to specify if the asset in question will expire at some time in the future.
-Note that certain module assets can never expire. Therefore, asset expiration is an opt-in feature that asset owners can
+
+### Note
+
+Certain module assets can never expire. Therefore, asset expiration is an opt-in feature that asset owners can
 leverage for their on-chain assets.
 
 ## Extending Expirations on Assets
 
 Extending an expiration can be done through the CLI or through auto-updates from the modules that own them. 
-Note that auto-updates are left up to the module that owns the asset.
 
 from the cmd line:
 ```shell
 provenanced tx expiration extend <required params>
 ```
+
+### Note
+
+Auto-updates are left up to the module that owns the asset.
 
 ## Owner Enforced Expiration
 

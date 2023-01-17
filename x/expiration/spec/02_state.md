@@ -1,7 +1,7 @@
 # State
 
 The expiration module maintains a simple state collection. The `Expiration` is the data structure stored on the blockchain.
-It consists of five parts.
+It consists of the following five parts:
 
 - the module asset ID
 - the owner of the expiration record
