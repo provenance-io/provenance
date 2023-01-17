@@ -8,6 +8,5 @@ import (
 
 // ProposalHandler is the create root name proposal handler.
 var (
-	RootNameProposalHandler   = govclient.NewProposalHandler(cli.GetRootNameProposalCmd)
-	ModifyNameProposalHandler = govclient.NewProposalHandler(cli.GetModifyNameProposalCmd)
+	RootNameProposalHandler = govclient.NewProposalHandler(cli.GetRootNameProposalCmd)
 )

@@ -176,7 +176,6 @@ var (
 			ibcclientclient.UpdateClientProposalHandler,
 			ibcclientclient.UpgradeProposalHandler,
 			nameclient.RootNameProposalHandler,
-			nameclient.ModifyNameProposalHandler,
 		),
 		),
 		params.AppModuleBasic{},
