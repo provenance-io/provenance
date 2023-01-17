@@ -28,7 +28,7 @@ func TestCreateRootNameProposalContents(t *testing.T) {
 
 	// execute ProposalContents function
 	weightedProposalContent := simulation.ProposalContents(keeper.NewKeeper(app.AppCodec(), app.GetKey(types.ModuleName), app.GetSubspace(types.ModuleName)))
-	require.Len(t, weightedProposalContent, 2)
+	require.Len(t, weightedProposalContent, 1)
 
 	w0 := weightedProposalContent[0]
 
