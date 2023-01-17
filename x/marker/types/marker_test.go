@@ -95,6 +95,11 @@ func TestNewMarkerValidate(t *testing.T) {
 	mAddr := MustGetMarkerAddress("test")
 	fmt.Printf("Marker address: %s", mAddr)
 	baseAcc := authtypes.NewBaseAccount(mAddr, nil, 0, 0)
+
+	ibcDenom := "transfer/channel-141/hotdog"
+	ibcAddr := MustGetMarkerAddress(ibcDenom)
+	baseIbcAcc := authtypes.NewBaseAccount(ibcAddr, nil, 1, 0)
+
 	tests := []struct {
 		name   string
 		acc    authtypes.GenesisAccount
@@ -149,9 +154,9 @@ func TestNewMarkerValidate(t *testing.T) {
 		},
 		{
 			"invalid marker ibc type fixed supply",
-			NewMarkerAccount(baseAcc, sdk.NewCoin("ibc/14F9BC3E44B8A9C1BE1FB08980FAB87034C9905EF17CF2F5008FC085218811CC", sdk.OneInt()), manager,
+			NewMarkerAccount(baseAcc, sdk.NewCoin("ibc/test", sdk.OneInt()), manager,
 				[]AccessGrant{{Address: MustGetMarkerAddress("foo").String(),
-					Permissions: []Access{Access_Admin, Access_Withdraw}}}, StatusActive, MarkerType_Coin, false),
+					Permissions: []Access{Access_Admin, Access_Withdraw}}}, StatusActive, MarkerType_Coin, true),
 			fmt.Errorf("invalid ibc denom configuration: fixed supply is not supported for ibc marker"),
 		},
 		{
@@ -176,6 +181,13 @@ func TestNewMarkerValidate(t *testing.T) {
 		{
 			"valid marker account",
 			NewMarkerAccount(baseAcc, sdk.NewCoin("test", sdk.OneInt()), manager, nil, StatusActive, MarkerType_Coin, true),
+			nil,
+		},
+		{
+			"valid ibc marker",
+			NewMarkerAccount(baseIbcAcc, sdk.NewCoin(ibcDenom, sdk.OneInt()), manager,
+				[]AccessGrant{{Address: MustGetMarkerAddress(ibcDenom).String(),
+					Permissions: []Access{}}}, StatusActive, MarkerType_RestrictedCoin, false),
 			nil,
 		},
 	}
