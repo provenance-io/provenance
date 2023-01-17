@@ -66,9 +66,11 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("a marker can not be created in an ACTIVE status")
 	}
 
-	// Add marker requests must pass extra validation for denom (in addition to regular coin validation expression)
-	if err = k.ValidateUnrestictedDenom(ctx, msg.Amount.Denom); err != nil {
-		return nil, err
+	if msg.MarkerType != types.MarkerType_RestrictedCoin {
+		// Add marker requests must pass extra validation for denom (in addition to regular coin validation expression)
+		if err = k.ValidateUnrestictedDenom(ctx, msg.Amount.Denom); err != nil {
+			return nil, err
+		}
 	}
 
 	addr := types.MustGetMarkerAddress(msg.Amount.Denom)
