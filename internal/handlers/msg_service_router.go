@@ -135,7 +135,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 				return handler(goCtx, req)
 			}
 
-			if err := req.ValidateBasic(); err != nil {
+			if err = req.ValidateBasic(); err != nil {
 				return nil, err
 			}
 
