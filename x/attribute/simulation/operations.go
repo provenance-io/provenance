@@ -99,11 +99,11 @@ func SimulateMsgAddAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 			records = append(records, record)
 			return nil
 		}); err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgAddAttribute, "iterator of existing name records failed"), nil, err
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), "iterator of existing name records failed"), nil, err
 		}
 
 		if len(records) == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgAddAttribute, "no name records available to create under"), nil, nil
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), "no name records available to create under"), nil, nil
 		}
 
 		found := false
@@ -138,11 +138,11 @@ func SimulateMsgUpdateAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 			attributes = append(attributes, attribute)
 			return nil
 		}); err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUpdateAttribute, "iterator of existing attributes failed"), nil, err
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), "iterator of existing attributes failed"), nil, err
 		}
 
 		if len(attributes) == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUpdateAttribute, "no attributes available to delete"), nil, nil
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), "no attributes available to delete"), nil, nil
 		}
 
 		randomAttribute := attributes[r.Intn(len(attributes))]
@@ -182,11 +182,11 @@ func SimulateMsgDeleteAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 			attributes = append(attributes, attribute)
 			return nil
 		}); err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeleteAttribute, "iterator of existing attributes failed"), nil, err
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), "iterator of existing attributes failed"), nil, err
 		}
 
 		if len(attributes) == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeleteAttribute, "no attributes available to delete"), nil, nil
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), "no attributes available to delete"), nil, nil
 		}
 
 		randomAttribute := attributes[r.Intn(len(attributes))]
@@ -217,11 +217,11 @@ func SimulateMsgDeleteDistinctAttribute(k keeper.Keeper, ak authkeeper.AccountKe
 			attributes = append(attributes, attribute)
 			return nil
 		}); err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeleteDistinctAttribute, "iterator of existing attributes failed"), nil, err
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), "iterator of existing attributes failed"), nil, err
 		}
 
 		if len(attributes) == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeleteDistinctAttribute, "no attributes available to delete distinct"), nil, nil
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), "no attributes available to delete distinct"), nil, nil
 		}
 
 		randomAttribute := attributes[r.Intn(len(attributes))]

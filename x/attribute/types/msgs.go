@@ -8,13 +8,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const (
-	TypeMsgAddAttribute            = "add_attribute"
-	TypeMsgUpdateAttribute         = "update_attribute"
-	TypeMsgDeleteAttribute         = "delete_attribute"
-	TypeMsgDeleteDistinctAttribute = "delete_distinct_attribute"
-)
-
 // Compile time interface checks.
 var (
 	_ sdk.Msg = &MsgAddAttributeRequest{}
