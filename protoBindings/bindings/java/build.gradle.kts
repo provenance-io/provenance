@@ -15,7 +15,7 @@ plugins {
 
 group = project.property("group.id") as String
 version = artifactVersion(rootProject)
-
+extra["isReleaseVersion"] = !version.toString().endsWith("SNAPSHOT")
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
@@ -135,6 +135,9 @@ publishing {
         }
     }
     signing {
-//        sign(publishing.publications["mavenJava"])
+        setRequired({
+            (project.extra["isReleaseVersion"] as Boolean) && gradle.taskGraph.hasTask("publish")
+        })
+        sign(publishing.publications["mavenJava"])
     }
 }
