@@ -15,8 +15,6 @@ const (
 	// or at the very least it can be a module param.
 	// for now i am hard coding it to avoid breaking any clients and because of this ticket https://github.com/provenance-io/provenance/issues/1263
 	AssessCustomMsgFeeBips = 10_000
-
-	TypeAssessCustomMsgFee = "assess_custom_msg_fee"
 )
 
 // Compile time interface checks.
