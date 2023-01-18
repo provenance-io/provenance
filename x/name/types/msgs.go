@@ -7,12 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// name message types
-const (
-	TypeMsgBindNameRequest   = "bind_name"
-	TypeMsgDeleteNameRequest = "delete_name"
-)
-
 // Compile time interface checks.
 var _, _ sdk.Msg = &MsgBindNameRequest{}, &MsgDeleteNameRequest{}
 
