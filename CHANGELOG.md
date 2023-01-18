@@ -51,6 +51,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Updated ibc-go to v6.1 [#1273](https://github.com/provenance-io/provenance/issues/1273).
 * Update adding of marker to do additional checks for ibc denoms [#1289](https://github.com/provenance-io/provenance/issues/1289).
 * Add validate basic check to msg router service [#1308](https://github.com/provenance-io/provenance/issues/1308).
+
+### Bug Fixes
+
+* Update Maven publishing email to provenance [#1270](https://github.com/provenance-io/provenance/issues/1270).
+
+>>>>>>> main
 ---
 
 ## [v1.13.0](https://github.com/provenance-io/provenance/releases/tag/v1.13.0) - 2022-11-28
