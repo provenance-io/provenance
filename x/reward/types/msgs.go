@@ -9,13 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const (
-	TypeMsgCreateRewardProgramRequest = "create_reward_program"
-	TypeMsgEndRewardProgramRequest    = "end_reward_program"
-	TypeMsgClaimRewardsRequest        = "claim_reward"
-	TypeMsgClaimAllRewardRequest      = "claim_all_rewards"
-)
-
 // Compile time interface checks.
 var _ sdk.Msg = &MsgCreateRewardProgramRequest{}
 var _ sdk.Msg = &MsgEndRewardProgramRequest{}
