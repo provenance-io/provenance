@@ -17,24 +17,6 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 )
 
-const (
-	TypeAddMarkerRequest                 = "addmarker"
-	TypeAddAccessRequest                 = "addaccess"
-	TypeDeleteAccessRequest              = "deleteaccess"
-	TypeFinalizeRequest                  = "finalize"
-	TypeActivateRequest                  = "activate"
-	TypeCancelRequest                    = "cancel"
-	TypeDeleteRequest                    = "delete"
-	TypeMintRequest                      = "mint"
-	TypeBurnRequest                      = "burn"
-	TypeWithdrawRequest                  = "withdraw"
-	TypeTransferRequest                  = "transfer"
-	TypeIbcTransferRequest               = "ibctransfer"
-	TypeSetMetadataRequest               = "setmetadata"
-	TypeGrantAllowance                   = "grantallowance"
-	TypeAddActivateFinalizeMarkerRequest = "addactivatefinalizemarker"
-)
-
 // Compile time interface check.
 var (
 	_ sdk.Msg = &MsgAddMarkerRequest{}
