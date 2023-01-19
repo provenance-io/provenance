@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"strings"
 	"unicode"
 
@@ -128,15 +127,6 @@ func (keeper Keeper) GetRecordByName(ctx sdk.Context, name string) (record *type
 	return getNameRecord(ctx, keeper, key)
 }
 
-// GetRecordByName resolves a record by name.
-func (keeper Keeper) GetRecordByNameLegacy(ctx sdk.Context, name string) (record *types.NameRecord, err error) {
-	key, err := types.GetNameKeyPrefixLegacyAmino(name)
-	if err != nil {
-		return nil, err
-	}
-	return getNameRecord(ctx, keeper, key)
-}
-
 func getNameRecord(ctx sdk.Context, keeper Keeper, key []byte) (record *types.NameRecord, err error) {
 	store := ctx.KVStore(keeper.storeKey)
 	if !store.Has(key) {
@@ -227,15 +217,8 @@ func (keeper Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handl
 	// Iterate over records, processing callbacks.
 	for ; iterator.Valid(); iterator.Next() {
 		record := types.NameRecord{}
-		// get proto objects for legacy prefix with legacy amino codec.
-		if bytes.Equal(prefix, types.NameKeyPrefixAmino) {
-			if err := types.ModuleCdc.Unmarshal(iterator.Value(), &record); err != nil {
-				return err
-			}
-		} else {
-			if err := keeper.cdc.Unmarshal(iterator.Value(), &record); err != nil {
-				return err
-			}
+		if err := keeper.cdc.Unmarshal(iterator.Value(), &record); err != nil {
+			return err
 		}
 		if err := handle(record); err != nil {
 			return err

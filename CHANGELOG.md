@@ -52,6 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add basis points field to MsgAssessCustomMsgFeeRequest for split of fee between Fee Module and Recipient [#1268](https://github.com/provenance-io/provenance/issues/1268).
 * Updated ibc-go to v6.1 [#1273](https://github.com/provenance-io/provenance/issues/1273).
 * Update adding of marker to do additional checks for ibc denoms [#1289](https://github.com/provenance-io/provenance/issues/1289).
+* Removed legacy-amino [#1275] (https://github.com/provenance-io/provenance/issues/1275).
 
 ### Bug Fixes
 

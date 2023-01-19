@@ -8,13 +8,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-// name message types
-const (
-	TypeMsgBindNameRequest   = "bind_name"
-	TypeMsgDeleteNameRequest = "delete_name"
-	TypeMsgModifyNameRequest = "modify_name"
-)
-
 // Compile time interface checks.
 var _, _, _ sdk.Msg = &MsgBindNameRequest{}, &MsgDeleteNameRequest{}, &MsgModifyNameRequest{}
 
@@ -25,12 +18,6 @@ func NewMsgBindNameRequest(record, parent NameRecord) *MsgBindNameRequest {
 		Record: record,
 	}
 }
-
-// Route implements Msg
-func (msg MsgBindNameRequest) Route() string { return ModuleName }
-
-// Type implements Msg
-func (msg MsgBindNameRequest) Type() string { return TypeMsgBindNameRequest }
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgBindNameRequest) ValidateBasic() error {
@@ -52,11 +39,6 @@ func (msg MsgBindNameRequest) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes encodes the message for signing
-func (msg MsgBindNameRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 // GetSigners indicates that the message must have been signed by the parent.
 func (msg MsgBindNameRequest) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Parent.Address)
@@ -73,12 +55,6 @@ func NewMsgDeleteNameRequest(record NameRecord) *MsgDeleteNameRequest {
 	}
 }
 
-// Route implements Msg
-func (msg MsgDeleteNameRequest) Route() string { return ModuleName }
-
-// Type implements Msg
-func (msg MsgDeleteNameRequest) Type() string { return TypeMsgDeleteNameRequest }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteNameRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Record.Name) == "" {
@@ -88,11 +64,6 @@ func (msg MsgDeleteNameRequest) ValidateBasic() error {
 		return fmt.Errorf("address cannot be empty")
 	}
 	return nil
-}
-
-// GetSignBytes encodes the message for signing
-func (msg MsgDeleteNameRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners indicates that the message must have been signed by the record owner.
