@@ -175,7 +175,7 @@ var (
 			upgradeclient.LegacyCancelProposalHandler,
 			ibcclientclient.UpdateClientProposalHandler,
 			ibcclientclient.UpgradeProposalHandler,
-			nameclient.ProposalHandler,
+			nameclient.RootNameProposalHandler,
 		),
 		),
 		params.AppModuleBasic{},

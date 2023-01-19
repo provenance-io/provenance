@@ -22,6 +22,7 @@ const (
 	MaxNameLevels          = "max_namne_levels"
 	AllowUnrestrictedNames = "allow_unrestricted_names"
 	RootNameSegment        = "root_name_segment"
+	ModifyName             = "jackthecat"
 )
 
 // GenMaxSegmentLength randomized Max Segment Length
@@ -90,6 +91,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		},
 		Bindings: []types.NameRecord{
 			types.NewNameRecord(rootNameSegment, simState.Accounts[0].Address, false),
+			types.NewNameRecord(ModifyName, simState.Accounts[0].Address, false),
 		},
 	}
 
