@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/x/name/types"
 )
@@ -147,4 +148,29 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 	)
 
 	return &types.MsgDeleteNameResponse{}, nil
+}
+
+// ModifyName updates an existing name
+func (s msgServer) ModifyName(goCtx context.Context, msg *types.MsgModifyNameRequest) (*types.MsgModifyNameResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if msg.GetAuthority() != s.Keeper.GetAuthority() {
+		return nil, govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", s.Keeper.GetAuthority(), msg.GetAuthority())
+	}
+
+	existing, _ := s.Keeper.GetRecordByName(ctx, msg.GetRecord().Name)
+	if existing == nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(types.ErrNameNotBound.Error())
+	}
+
+	addr, err := sdk.AccAddressFromBech32(msg.GetRecord().Address)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	if err := s.Keeper.UpdateNameRecord(ctx, msg.GetRecord().Name, addr, msg.GetRecord().Restricted); err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	return &types.MsgModifyNameResponse{}, nil
 }

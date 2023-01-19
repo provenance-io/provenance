@@ -5,10 +5,11 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // Compile time interface checks.
-var _, _ sdk.Msg = &MsgBindNameRequest{}, &MsgDeleteNameRequest{}
+var _, _, _ sdk.Msg = &MsgBindNameRequest{}, &MsgDeleteNameRequest{}, &MsgModifyNameRequest{}
 
 // NewMsgBindNameRequest creates a new bind name request
 func NewMsgBindNameRequest(record, parent NameRecord) *MsgBindNameRequest {
@@ -68,6 +69,37 @@ func (msg MsgDeleteNameRequest) ValidateBasic() error {
 // GetSigners indicates that the message must have been signed by the record owner.
 func (msg MsgDeleteNameRequest) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Record.Address)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+// NewMsgModifyNameRequest modifies an existing name record
+func NewMsgModifyNameRequest(authority string, name string, owner sdk.AccAddress, restricted bool) *MsgModifyNameRequest {
+	return &MsgModifyNameRequest{
+		Authority: authority,
+		Record:    NewNameRecord(name, owner, restricted),
+	}
+}
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgModifyNameRequest) ValidateBasic() error {
+	if strings.TrimSpace(msg.Record.Name) == "" {
+		return fmt.Errorf("name cannot be empty")
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.Record.Address); err != nil {
+		return fmt.Errorf("invalid record address: %w", err)
+	}
+	if strings.TrimSpace(msg.GetAuthority()) == "" {
+		return govtypes.ErrInvalidSigner
+	}
+	return nil
+}
+
+// GetSigners indicates that the message must have been signed by the gov module.
+func (msg MsgModifyNameRequest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.GetAuthority())
 	if err != nil {
 		panic(err)
 	}
