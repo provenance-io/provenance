@@ -15,8 +15,6 @@ const (
 	// or at the very least it can be a module param.
 	// for now i am hard coding it to avoid breaking any clients and because of this ticket https://github.com/provenance-io/provenance/issues/1263
 	AssessCustomMsgFeeBips = 10_000
-
-	TypeAssessCustomMsgFee = "assess_custom_msg_fee"
 )
 
 // Compile time interface checks.
@@ -81,20 +79,4 @@ func (msg MsgAssessCustomMsgFeeRequest) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{addr}
-}
-
-// GetSigners indicates that the message must have been signed by the address provided
-func (msg MsgAssessCustomMsgFeeRequest) GetSignerBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
-}
-
-// Route returns the module route
-func (msg MsgAssessCustomMsgFeeRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgAssessCustomMsgFeeRequest) Type() string {
-	return TypeAssessCustomMsgFee
 }
