@@ -32,6 +32,9 @@ type BindNameParams struct {
 	Address string `json:"address"`
 	// Whether to restrict binding child names to the owner
 	Restrict bool `json:"restrict"`
+	// expiration is an optional expiration timespan string, e.g. "1y" (see expiration module for format)
+	// If provided, it sets an expiration with the given time period for the bound name.
+	Expiration string `json:"expiration"`
 }
 
 // DeleteNameParams are params for encoding a MsgDeleteNameRequest.
@@ -78,7 +81,10 @@ func (params *BindNameParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error)
 	// Create message request
 	record := types.NewNameRecord(names[0], address, params.Restrict)
 	parent := types.NewNameRecord(names[1], contract, false)
-	msg := types.NewMsgBindNameRequest(record, parent)
+	// set expiration to default value if one isn't provided
+	// see as to why this is not yet set https://github.com/provenance-io/provenance/pull/1115#discussion_r987949444
+	expiration := params.Expiration
+	msg := types.NewMsgBindNameRequest(record, parent, expiration)
 	return []sdk.Msg{msg}, nil
 }
 

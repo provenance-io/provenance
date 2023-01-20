@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 	"fmt"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	exptypes "github.com/provenance-io/provenance/x/expiration/types"
 
 	"github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -73,6 +75,14 @@ func (s msgServer) BindName(goCtx context.Context, msg *types.MsgBindNameRequest
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
+	// create an expiration if an expiration value is specified
+	if len(msg.Expiration) > 0 {
+		// attempt to create expiration metadata for name
+		if err := s.setExpirationForNameRecord(ctx, msg); err != nil {
+			return nil, err
+		}
+	}
+
 	// key: modulename+name+bind
 	defer func() {
 		telemetry.IncrCounterWithLabels(
@@ -123,6 +133,12 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 		ctx.Logger().Error("msg sender cannot delete name", "name", name)
 		return nil, sdkerrors.ErrUnauthorized.Wrap("msg sender cannot delete name")
 	}
+
+	// remove expiration record
+	if err := s.expKeeper.RemoveExpiration(ctx, address.String(), address); err != nil {
+		return nil, err
+	}
+
 	// Delete
 	if err := s.Keeper.DeleteRecord(ctx, name); err != nil {
 		ctx.Logger().Error("error deleting name", "err", err)
@@ -147,4 +163,41 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 	)
 
 	return &types.MsgDeleteNameResponse{}, nil
+}
+
+// setExpirationForNameRecord registers an expiration record
+// with the expiration module for the supplied types.NameRecord
+func (s msgServer) setExpirationForNameRecord(ctx sdk.Context, msg *types.MsgBindNameRequest) error {
+	// create expire name request
+	expireMsg := types.NewMsgDeleteNameRequest(msg.Record)
+	wrapper, anyErr := codectypes.NewAnyWithValue(expireMsg)
+	if anyErr != nil {
+		return anyErr
+	}
+
+	// if an expiration period isn't provided, use default expiration period
+	expShort := msg.Expiration
+	if len(expShort) == 0 {
+		expShort = s.Keeper.GetDefaultNameExpiration(ctx, msg.Record)
+	}
+
+	// parse expiration into a duration
+	duration, durErr := exptypes.ParseDuration(expShort)
+	if durErr != nil {
+		return durErr
+	}
+
+	// use record address as owner for name as expiration depositor
+	owner := msg.Record.Address
+
+	// create expiration metadata that will expire scope when executed.
+	expTime := ctx.BlockTime().Add(*duration)
+	expDeposit := sdk.NewCoins(s.expKeeper.GetDeposit(ctx))
+	expiration := exptypes.NewExpiration(owner, owner, expTime, expDeposit, *wrapper)
+	expErr := s.expKeeper.SetExpiration(ctx, *expiration)
+	if expErr != nil {
+		return expErr
+	}
+
+	return nil
 }

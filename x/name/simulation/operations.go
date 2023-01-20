@@ -84,16 +84,23 @@ func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankk
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBindNameRequest, "parent name record is restricted, not current owner"), nil, nil
 		}
 
+		// expiration period for when the NameRecord will expire and is ready for removal
+		// see expiration module docs and specs acceptable values
+		expiration := ""
 		restrict := r.Intn(9) < 4
 		msg := types.NewMsgBindNameRequest(
 			types.NewNameRecord(
 				simtypes.RandStringOfLength(r, r.Intn(10)+2),
 				simAccount.Address,
-				restrict),
+				restrict,
+			),
 			types.NewNameRecord(
 				parent.Name,
 				simAccount.Address,
-				parent.Restricted))
+				parent.Restricted,
+			),
+			expiration,
+		)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
 	}

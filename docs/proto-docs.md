@@ -6484,6 +6484,7 @@ owner signing the request.
 | ----- | ---- | ----- | ----------- |
 | `parent` | [NameRecord](#provenance.name.v1.NameRecord) |  | The parent record to bind this name under. |
 | `record` | [NameRecord](#provenance.name.v1.NameRecord) |  | The name record to bind under the parent |
+| `expiration` | [string](#string) |  | expiration is an optional expiration timespan string, e.g. "1y" (see expiration module for format) If provided, it sets an expiration with the given time period for the bound name. |
 
 
 

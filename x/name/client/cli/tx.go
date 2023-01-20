@@ -16,8 +16,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-// The flag for created restricted names
-const flagRestricted = "restrict"
+const (
+	// The flag for created restricted names
+	flagRestricted = "restrict"
+	// FlagExpires is flag for setting expiration period on name
+	FlagExpires = "expires"
+)
 
 // NewTxCmd is the top-level command for name CLI transactions.
 func NewTxCmd() *cobra.Command {
@@ -51,6 +55,9 @@ func GetBindNameCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+
+			expiration := parseExpires(cmd)
+
 			msg := types.NewMsgBindNameRequest(
 				types.NewNameRecord(
 					strings.ToLower(args[0]),
@@ -62,13 +69,16 @@ func GetBindNameCmd() *cobra.Command {
 					clientCtx.FromAddress,
 					false,
 				),
+				expiration,
 			)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	cmd.Flags().BoolP(flagRestricted, "r", true, "Restrict creation of child names to owner only")
 
+	cmd.Flags().BoolP(flagRestricted, "r", true, "Restrict creation of child names to owner only")
+	addExpiresFlagCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }
 
@@ -96,4 +106,15 @@ func GetDeleteNameCmd() *cobra.Command {
 	}
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
+}
+
+func addExpiresFlagCmd(cmd *cobra.Command) {
+	cmd.Flags().String(FlagExpires, "", "expiration period (e.g. '1y')")
+}
+
+// parseExpires checks expires flag, else uses the default expiration period
+func parseExpires(cmd *cobra.Command) string {
+	flagSet := cmd.Flags()
+	expires, _ := flagSet.GetString(FlagExpires)
+	return expires
 }

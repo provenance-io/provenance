@@ -17,10 +17,11 @@ const (
 var _, _ sdk.Msg = &MsgBindNameRequest{}, &MsgDeleteNameRequest{}
 
 // NewMsgBindNameRequest creates a new bind name request
-func NewMsgBindNameRequest(record, parent NameRecord) *MsgBindNameRequest {
+func NewMsgBindNameRequest(record, parent NameRecord, expiration string) *MsgBindNameRequest {
 	return &MsgBindNameRequest{
-		Parent: parent,
-		Record: record,
+		Parent:     parent,
+		Record:     record,
+		Expiration: expiration,
 	}
 }
 

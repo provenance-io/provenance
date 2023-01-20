@@ -467,7 +467,7 @@ func New(
 	)
 
 	app.NameKeeper = namekeeper.NewKeeper(
-		appCodec, keys[nametypes.StoreKey], app.GetSubspace(nametypes.ModuleName),
+		appCodec, keys[nametypes.StoreKey], app.GetSubspace(nametypes.ModuleName), app.ExpirationKeeper,
 	)
 
 	app.AttributeKeeper = attributekeeper.NewKeeper(

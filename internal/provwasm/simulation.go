@@ -136,12 +136,18 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk 
 			panic("no records")
 		}
 
+		// expiration period for when the NameRecord will expire and is ready for removal
+		// see expiration module docs and specs acceptable values
+		expiration := ""
 		msg := nametypes.NewMsgBindNameRequest(
 			nametypes.NewNameRecord(
 				namePrefix,
 				node.Address,
-				false),
-			parent)
+				false,
+			),
+			parent,
+			expiration,
+		)
 
 		op, future, err2 := namesim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg)
 

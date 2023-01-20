@@ -14,6 +14,8 @@ import (
 
 	uuid "github.com/google/uuid"
 
+	expkeeper "github.com/provenance-io/provenance/x/expiration/keeper"
+	exptypes "github.com/provenance-io/provenance/x/expiration/types"
 	"github.com/provenance-io/provenance/x/name/types"
 )
 
@@ -30,6 +32,9 @@ type Keeper struct {
 
 	// The codec codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
+
+	// To support creating expiration metadata on scope creation.
+	expKeeper expkeeper.Keeper
 }
 
 // NewKeeper returns a name keeper. It handles:
@@ -41,6 +46,7 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	key storetypes.StoreKey,
 	paramSpace paramtypes.Subspace,
+	expKeeper expkeeper.Keeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
@@ -51,6 +57,7 @@ func NewKeeper(
 		storeKey:   key,
 		paramSpace: paramSpace,
 		cdc:        cdc,
+		expKeeper:  expKeeper,
 	}
 }
 
@@ -258,6 +265,12 @@ func (keeper Keeper) Normalize(ctx sdk.Context, name string) (string, error) {
 		return "", types.ErrNameHasTooManySegments
 	}
 	return strings.Join(comps, "."), nil
+}
+
+func (keeper Keeper) GetDefaultNameExpiration(ctx sdk.Context, record types.NameRecord) string {
+	// use default duration param value from expiration module now,
+	// but may be calculated in the future based on name info.
+	return exptypes.DefaultDuration
 }
 
 // Check whether a name component is valid

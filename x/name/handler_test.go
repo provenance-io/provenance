@@ -61,13 +61,13 @@ func TestCreateName(t *testing.T) {
 	}{
 		{
 			name:          "create name record",
-			msg:           nametypes.NewMsgBindNameRequest(nametypes.NewNameRecord("new", addr2, false), nametypes.NewNameRecord("example.name", addr1, false)),
+			msg:           nametypes.NewMsgBindNameRequest(nametypes.NewNameRecord("new", addr2, false), nametypes.NewNameRecord("example.name", addr1, false), ""),
 			expectedError: nil,
 			expectedEvent: nametypes.NewEventNameBound(addr2.String(), "new.example.name", false),
 		},
 		{
 			name:          "create bad name record",
-			msg:           nametypes.NewMsgBindNameRequest(nametypes.NewNameRecord("new", addr2, false), nametypes.NewNameRecord("foo.name", addr1, false)),
+			msg:           nametypes.NewMsgBindNameRequest(nametypes.NewNameRecord("new", addr2, false), nametypes.NewNameRecord("foo.name", addr1, false), ""),
 			expectedError: sdkerrors.ErrInvalidRequest.Wrap(nametypes.ErrNameNotBound.Error()),
 		},
 	}
@@ -92,7 +92,12 @@ func TestCreateName(t *testing.T) {
 
 	app.NameKeeper.InitGenesis(ctx, nameData)
 
-	app.NameKeeper = keeper.NewKeeper(app.AppCodec(), app.GetKey(nametypes.ModuleName), app.GetSubspace(nametypes.ModuleName))
+	app.NameKeeper = keeper.NewKeeper(
+		app.AppCodec(),
+		app.GetKey(nametypes.ModuleName),
+		app.GetSubspace(nametypes.ModuleName),
+		app.ExpirationKeeper,
+	)
 	handler := name.NewHandler(app.NameKeeper)
 
 	for _, tc := range tests {
@@ -152,7 +157,12 @@ func TestDeleteName(t *testing.T) {
 
 	app.NameKeeper.InitGenesis(ctx, nameData)
 
-	app.NameKeeper = keeper.NewKeeper(app.AppCodec(), app.GetKey(nametypes.ModuleName), app.GetSubspace(nametypes.ModuleName))
+	app.NameKeeper = keeper.NewKeeper(
+		app.AppCodec(),
+		app.GetKey(nametypes.ModuleName),
+		app.GetSubspace(nametypes.ModuleName),
+		app.ExpirationKeeper,
+	)
 	handler := name.NewHandler(app.NameKeeper)
 
 	for _, tc := range tests {
