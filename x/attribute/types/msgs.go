@@ -24,13 +24,21 @@ var (
 )
 
 // NewMsgAddAttributeRequest creates a new add attribute message
-func NewMsgAddAttributeRequest(account string, owner sdk.AccAddress, name string, attributeType AttributeType, value []byte) *MsgAddAttributeRequest { //nolint:interfacer
+func NewMsgAddAttributeRequest(
+	account string,
+	owner sdk.AccAddress,
+	name string,
+	attributeType AttributeType,
+	value []byte,
+	expiration string,
+) *MsgAddAttributeRequest { //nolint:interfacer
 	return &MsgAddAttributeRequest{
 		Account:       account,
 		Name:          strings.ToLower(strings.TrimSpace(name)),
 		Owner:         owner.String(),
 		AttributeType: attributeType,
 		Value:         value,
+		Expiration:    expiration,
 	}
 }
 

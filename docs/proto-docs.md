@@ -838,6 +838,7 @@ Attributes may only be set in an account by the account that the attribute name 
 | `attribute_type` | [AttributeType](#provenance.attribute.v1.AttributeType) |  | The attribute value type. |
 | `account` | [string](#string) |  | The account to add the attribute to. |
 | `owner` | [string](#string) |  | The address that the name must resolve to. |
+| `expiration` | [string](#string) |  | expiration is an optional expiration timespan string, e.g. "1y" (see expiration module for format) If provided, it sets an expiration with the given time period for the attribute. |
 
 
 

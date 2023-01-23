@@ -115,6 +115,7 @@ func SimulateMsgAddAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 			simAccount, found = simtypes.FindAccount(accs, mustGetAddress(randomRecord.Address))
 		}
 
+		expiration := ""
 		t := types.AttributeType(r.Intn(9))
 		msg := types.NewMsgAddAttributeRequest(
 			randomRecord.GetAddress(),
@@ -122,6 +123,7 @@ func SimulateMsgAddAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 			randomRecord.Name,
 			t,
 			getRandomValueOfType(r, t),
+			expiration,
 		)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)

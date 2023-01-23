@@ -8,13 +8,15 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/provenance-io/provenance/x/attribute/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	"github.com/provenance-io/provenance/x/attribute/types"
+	expkeeper "github.com/provenance-io/provenance/x/expiration/keeper"
+	exptypes "github.com/provenance-io/provenance/x/expiration/types"
 )
 
 // Handler is a name record handler function for use with IterateRecords.
@@ -29,6 +31,8 @@ type Keeper struct {
 	authKeeper types.AccountKeeper
 	// The keeper used for ensuring names resolve to owners.
 	nameKeeper types.NameKeeper
+	// To support creating expiration metadata on attribute creation.
+	expKeeper expkeeper.Keeper
 
 	// Key to access the key-value store from sdk.Context.
 	storeKey storetypes.StoreKey
@@ -45,7 +49,7 @@ type Keeper struct {
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace paramtypes.Subspace,
-	authKeeper types.AccountKeeper, nameKeeper types.NameKeeper,
+	authKeeper types.AccountKeeper, nameKeeper types.NameKeeper, expKeeper expkeeper.Keeper,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -56,6 +60,7 @@ func NewKeeper(
 		paramSpace: paramSpace,
 		authKeeper: authKeeper,
 		nameKeeper: nameKeeper,
+		expKeeper:  expKeeper,
 		cdc:        cdc,
 	}
 }
@@ -295,6 +300,12 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 		return fmt.Errorf("%s with name %s", errm, name)
 	}
 	return nil
+}
+
+func (k Keeper) GetDefaultAttributeExpiration(ctx sdk.Context, attr types.Attribute) string {
+	// use default duration param value from expiration module now,
+	// but may be calculated in the future based on attribute info.
+	return exptypes.DefaultDuration
 }
 
 // A predicate function for matching names

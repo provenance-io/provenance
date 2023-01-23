@@ -37,6 +37,9 @@ type AddAttributeParams struct {
 	Value []byte `json:"value"`
 	// The attribute value type.
 	ValueType string `json:"value_type"`
+	// expiration is an optional expiration timespan string, e.g. "1y" (see expiration module for format)
+	// If provided, it sets an expiration with the given time period for the attribute.
+	Expiration string `json:"expiration"`
 }
 
 // DeleteAttributeParams are params for encoding a MsgDeleteAttribute
@@ -105,12 +108,16 @@ func (params *AddAttributeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, er
 	if err := types.ValidateAttributeAddress(params.Address); err != nil {
 		return nil, fmt.Errorf("wasm: invalid address: %w", err)
 	}
+	// set expiration to default value if one isn't provided
+	// see as to why this is not yet set https://github.com/provenance-io/provenance/pull/1115#discussion_r987949444
+	expiration := params.Expiration
 	msg := types.NewMsgAddAttributeRequest(
 		params.Address,
 		contract,
 		params.Name,
 		encodeType(params.ValueType),
 		params.Value,
+		expiration,
 	)
 	return []sdk.Msg{msg}, nil
 }

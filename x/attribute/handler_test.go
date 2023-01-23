@@ -100,8 +100,14 @@ func (s HandlerTestSuite) TestMsgAddAttributeRequest() {
 	cases := []CommonTest{
 		{
 			"should successfully add new attribute",
-			types.NewMsgAddAttributeRequest(s.user1,
-				s.user1Addr, "example.name", types.AttributeType_String, []byte("value")),
+			types.NewMsgAddAttributeRequest(
+				s.user1,
+				s.user1Addr,
+				"example.name",
+				types.AttributeType_String,
+				[]byte("value"),
+				"",
+			),
 			[]string{s.user1},
 			"",
 			types.NewEventAttributeAdd(

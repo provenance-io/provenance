@@ -42,6 +42,9 @@ message MsgAddAttributeRequest {
   string account = 4;
   // The address that the name must resolve to.
   string owner = 5;
+  // expiration is an optional expiration timespan string, e.g. "1y" (see expiration module for format)
+  // If provided, it sets an expiration with the given time period for the attribute.
+  string expiration = 6;
 }
 
 // MsgAddAttributeResponse defines the Msg/Vote response type.

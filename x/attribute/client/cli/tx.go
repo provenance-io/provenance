@@ -16,6 +16,9 @@ import (
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
 
+// FlagExpires is flag for setting expiration period on name
+const FlagExpires = "expires"
+
 // NewTxCmd is the top-level command for attribute CLI transactions.
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
@@ -68,17 +71,21 @@ Refer to %s tx name bind --help for more information on how to do this.`, versio
 				return fmt.Errorf("error encoding value %s to type %s : %w", valueString, attributeType.String(), err)
 			}
 
+			expiration := parseExpires(cmd)
+
 			msg := types.NewMsgAddAttributeRequest(
 				account,
 				clientCtx.GetFromAddress(),
 				name,
 				attributeType,
 				value,
+				expiration,
 			)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
+	addExpiresFlagCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -221,4 +228,15 @@ func NewDeleteAccountAttributeCmd() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
+}
+
+func addExpiresFlagCmd(cmd *cobra.Command) {
+	cmd.Flags().String(FlagExpires, "", "expiration period (e.g. '1y')")
+}
+
+// parseExpires checks expires flag, else uses the default expiration period
+func parseExpires(cmd *cobra.Command) string {
+	flagSet := cmd.Flags()
+	expires, _ := flagSet.GetString(FlagExpires)
+	return expires
 }

@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 	"fmt"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	exptypes "github.com/provenance-io/provenance/x/expiration/types"
 
 	"github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -41,6 +43,13 @@ func (k msgServer) AddAttribute(goCtx context.Context, msg *types.MsgAddAttribut
 	err = k.Keeper.SetAttribute(ctx, attrib, ownerAddr)
 	if err != nil {
 		return nil, err
+	}
+
+	// create an expiration record if an expiration value is specified
+	if len(msg.Expiration) > 0 {
+		if err := k.setExpirationForAttribute(ctx, attrib, ownerAddr, msg.Expiration); err != nil {
+			return nil, err
+		}
 	}
 
 	defer func() {
@@ -139,6 +148,11 @@ func (k msgServer) DeleteAttribute(goCtx context.Context, msg *types.MsgDeleteAt
 		return nil, err
 	}
 
+	// remove expiration record
+	if err := k.expKeeper.RemoveExpiration(ctx, ownerAddr.String(), ownerAddr); err != nil {
+		return nil, err
+	}
+
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, types.EventTelemetryKeyDelete},
@@ -180,6 +194,11 @@ func (k msgServer) DeleteDistinctAttribute(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 
+	// remove expiration record
+	if err := k.expKeeper.RemoveExpiration(ctx, ownerAddr.String(), ownerAddr); err != nil {
+		return nil, err
+	}
+
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, types.EventTelemetryKeyDistinctDelete},
@@ -202,4 +221,43 @@ func (k msgServer) DeleteDistinctAttribute(goCtx context.Context, msg *types.Msg
 	)
 
 	return &types.MsgDeleteDistinctAttributeResponse{}, nil
+}
+
+// setExpirationForNameRecord registers an expiration record
+// with the expiration module for the supplied types.NameRecord
+func (k msgServer) setExpirationForAttribute(
+	ctx sdk.Context,
+	attr types.Attribute,
+	owner sdk.AccAddress,
+	expPeriod string,
+) error {
+	// create expire name request
+	expireMsg := types.NewMsgDeleteAttributeRequest(attr.Address, owner, attr.Name)
+	wrapper, anyErr := codectypes.NewAnyWithValue(expireMsg)
+	if anyErr != nil {
+		return anyErr
+	}
+
+	// if an expiration period isn't provided, use default expiration period
+	expShort := expPeriod
+	if len(expShort) == 0 {
+		expShort = k.Keeper.GetDefaultAttributeExpiration(ctx, attr)
+	}
+
+	// parse expiration into a duration
+	duration, durErr := exptypes.ParseDuration(expShort)
+	if durErr != nil {
+		return durErr
+	}
+
+	// create expiration metadata that will expire scope when executed.
+	expTime := ctx.BlockTime().Add(*duration)
+	expDeposit := sdk.NewCoins(k.expKeeper.GetDeposit(ctx))
+	expiration := exptypes.NewExpiration(owner.String(), owner.String(), expTime, expDeposit, *wrapper)
+	expErr := k.expKeeper.SetExpiration(ctx, *expiration)
+	if expErr != nil {
+		return expErr
+	}
+
+	return nil
 }

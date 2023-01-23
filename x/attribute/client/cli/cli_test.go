@@ -3,6 +3,8 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
+	expcli "github.com/provenance-io/provenance/x/expiration/client/cli"
+	exptypes "github.com/provenance-io/provenance/x/expiration/types"
 	"sort"
 	"strings"
 	"testing"
@@ -591,6 +593,83 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestAttributeTxCommands_WithExpiration() {
+
+	testCases := []struct {
+		name            string
+		cmd             *cobra.Command
+		args            []string
+		expectErr       bool
+		respType        proto.Message
+		expectedCode    uint32
+		expectExpRecord bool
+	}{
+		{
+			"bind a new attribute name for testing",
+			namecli.GetBindNameCmd(),
+			[]string{
+				"txtest",
+				s.testnet.Validators[0].Address.String(),
+				"attribute",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0, false,
+		},
+		{
+			"set attribute with expiration",
+			cli.NewAddAccountAttributeCmd(),
+			[]string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"string",
+				"test value",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagExpires, "1y"),
+			},
+			false, &sdk.TxResponse{}, 0, false,
+		},
+		{
+			"should find expiration record for attribute",
+			expcli.GetExpirationCmd(),
+			[]string{s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false, &exptypes.QueryExpirationResponse{}, 0, true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				switch t := tc.respType.(type) {
+				case *sdk.TxResponse:
+					s.Require().Equal(tc.expectedCode, t.Code)
+				case *exptypes.QueryExpirationResponse:
+					if tc.expectExpRecord {
+						s.Require().NotNil(t.Expiration, "nil expiration %v", t)
+					} else {
+						s.Require().Nil(t.Expiration, "non-nil expiration %v", t)
+					}
+				}
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 
 	testCases := []struct {
@@ -914,6 +993,115 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands_WithExpiration() {
+
+	testCases := []struct {
+		name            string
+		cmd             *cobra.Command
+		args            []string
+		expectErr       bool
+		respType        proto.Message
+		expectedCode    uint32
+		expectExpRecord bool
+	}{
+		{
+			"bind a new attribute name for delete testing",
+			namecli.GetBindNameCmd(),
+			[]string{
+				"deletetest",
+				s.testnet.Validators[0].Address.String(),
+				"attribute",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0, false,
+		},
+		{
+			"add new attribute for delete testing with expiration",
+			cli.NewAddAccountAttributeCmd(),
+			[]string{
+				"deletetest.attribute",
+				s.account2Addr.String(),
+				"string",
+				"test value",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagExpires, "1y"),
+			},
+			false, &sdk.TxResponse{}, 0, false,
+		},
+		{
+			"should find expiration record for attribute",
+			expcli.GetExpirationCmd(),
+			[]string{s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false, &exptypes.QueryExpirationResponse{}, 0, true,
+		},
+		{"delete attribute and expiration record",
+			cli.NewDeleteAccountAttributeCmd(),
+			[]string{
+				"deletetest.attribute",
+				s.account2Addr.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0, false,
+		},
+		{"delete attribute should fail to find txtest.attribute",
+			cli.NewDeleteAccountAttributeCmd(),
+			[]string{
+				"deletetest.attribute",
+				s.account2Addr.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 1, false,
+		},
+		{
+			"should fail to find expiration record for attribute",
+			expcli.GetExpirationCmd(),
+			[]string{s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false, &exptypes.QueryExpirationResponse{}, 0, false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				switch t := tc.respType.(type) {
+				case *sdk.TxResponse:
+					s.Require().Equal(tc.expectedCode, t.Code)
+				case *exptypes.QueryExpirationResponse:
+					if tc.expectExpRecord {
+						s.Require().NotNil(t.Expiration, "nil expiration %v", t)
+					} else {
+						s.Require().Nil(t.Expiration, "non-nil expiration %v", t)
+					}
+				}
 			}
 		})
 	}
