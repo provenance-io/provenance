@@ -368,12 +368,13 @@ func (s *IntegrationTestSuite) TestGetBindNameCommand() {
 func (s *IntegrationTestSuite) TestGetBindNameCommand_WithExpiration() {
 
 	testCases := []struct {
-		name         string
-		cmd          *cobra.Command
-		args         []string
-		expectErr    bool
-		respType     proto.Message
-		expectedCode uint32
+		name            string
+		cmd             *cobra.Command
+		args            []string
+		expectErr       bool
+		respType        proto.Message
+		expectedCode    uint32
+		expectExpRecord bool
 	}{
 		{
 			"should bind name to root name with expiration",
@@ -385,7 +386,7 @@ func (s *IntegrationTestSuite) TestGetBindNameCommand_WithExpiration() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=%s", namecli.FlagExpires, "1y"),
 			},
-			false, &sdk.TxResponse{}, 0,
+			false, &sdk.TxResponse{}, 0, false,
 		},
 		{
 			"should retrieve expiration record for bound name",
@@ -393,7 +394,7 @@ func (s *IntegrationTestSuite) TestGetBindNameCommand_WithExpiration() {
 			[]string{s.testnet.Validators[0].Address.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false, &exptypes.QueryExpirationResponse{}, 0,
+			false, &exptypes.QueryExpirationResponse{}, 0, true,
 		},
 	}
 
@@ -409,8 +410,12 @@ func (s *IntegrationTestSuite) TestGetBindNameCommand_WithExpiration() {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				switch t := tc.respType.(type) {
-				case *sdk.TxResponse:
-					s.Require().Equal(tc.expectedCode, t.Code)
+				case *exptypes.QueryExpirationResponse:
+					if tc.expectExpRecord {
+						s.Require().NotNil(t.Expiration, "nil expiration %v", t)
+					} else {
+						s.Require().Nil(t.Expiration, "non-nil expiration %v", t)
+					}
 				}
 			}
 		})
