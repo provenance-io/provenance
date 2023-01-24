@@ -26,11 +26,12 @@ func TestMsgAddAttribute(t *testing.T) {
 		name, proposalType string
 		proposalValue      string
 		expectPass         bool
+		expiration         string
 	}{
-		{"", addrs[1], "test", "string", "nil owner", false},
-		{addrs[0].String(), nil, "test", "string", "nil account", false},
-		{"", nil, "test", "string", "nil owner and account", false},
-		{addrs[0].String(), addrs[1], "test", "string", "valid attribute", true},
+		{"", addrs[1], "test", "string", "nil owner", false, ""},
+		{addrs[0].String(), nil, "test", "string", "nil account", false, ""},
+		{"", nil, "test", "string", "nil owner and account", false, ""},
+		{addrs[0].String(), addrs[1], "test", "string", "valid attribute", true, ""},
 	}
 
 	for i, tc := range tests {
@@ -42,6 +43,7 @@ func TestMsgAddAttribute(t *testing.T) {
 			tc.name,
 			at,
 			[]byte(tc.proposalValue),
+			tc.expiration,
 		)
 
 		if tc.expectPass {

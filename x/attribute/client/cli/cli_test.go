@@ -608,7 +608,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands_WithExpiration() {
 			"bind a new attribute name for testing",
 			namecli.GetBindNameCmd(),
 			[]string{
-				"txtest",
+				"txtestexp",
 				s.testnet.Validators[0].Address.String(),
 				"attribute",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -622,7 +622,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands_WithExpiration() {
 			"set attribute with expiration",
 			cli.NewAddAccountAttributeCmd(),
 			[]string{
-				"txtest.attribute",
+				"txtestexp.attribute",
 				s.testnet.Validators[0].Address.String(),
 				"string",
 				"test value",
@@ -1013,7 +1013,7 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands_WithExpirati
 			"bind a new attribute name for delete testing",
 			namecli.GetBindNameCmd(),
 			[]string{
-				"deletetest",
+				"deleteexp",
 				s.testnet.Validators[0].Address.String(),
 				"attribute",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -1027,7 +1027,7 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands_WithExpirati
 			"add new attribute for delete testing with expiration",
 			cli.NewAddAccountAttributeCmd(),
 			[]string{
-				"deletetest.attribute",
+				"deleteexp.attribute",
 				s.account2Addr.String(),
 				"string",
 				"test value",
@@ -1050,7 +1050,7 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands_WithExpirati
 		{"delete attribute and expiration record",
 			cli.NewDeleteAccountAttributeCmd(),
 			[]string{
-				"deletetest.attribute",
+				"deleteexp.attribute",
 				s.account2Addr.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -1059,10 +1059,10 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands_WithExpirati
 			},
 			false, &sdk.TxResponse{}, 0, false,
 		},
-		{"delete attribute should fail to find txtest.attribute",
+		{"delete attribute should fail to find attribute",
 			cli.NewDeleteAccountAttributeCmd(),
 			[]string{
-				"deletetest.attribute",
+				"deleteexp.attribute",
 				s.account2Addr.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),

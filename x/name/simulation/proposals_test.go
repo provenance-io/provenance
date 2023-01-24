@@ -16,7 +16,7 @@ import (
 	"github.com/provenance-io/provenance/x/name/types"
 )
 
-func TestProposalContents(t *testing.T) {
+func TestCreateRootNameProposalContents(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 

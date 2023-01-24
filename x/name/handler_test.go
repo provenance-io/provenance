@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/name"
 	"github.com/provenance-io/provenance/x/name/keeper"
@@ -164,6 +165,101 @@ func TestDeleteName(t *testing.T) {
 		app.ExpirationKeeper,
 	)
 	handler := name.NewHandler(app.NameKeeper)
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			response, err := handler(ctx, tc.msg)
+			if tc.expectedError != nil {
+				require.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+			}
+			if tc.expectedEvent != nil {
+				result := containsMessage(response, tc.expectedEvent)
+				require.True(t, result, fmt.Sprintf("Expected typed event was not found: %v", tc.expectedEvent))
+			}
+		})
+	}
+}
+
+func TestModifyName(t *testing.T) {
+	priv1 := secp256k1.GenPrivKey()
+	addr1 := sdk.AccAddress(priv1.PubKey().Address())
+
+	acc1 := &authtypes.BaseAccount{
+		Address: addr1.String(),
+	}
+	accs := authtypes.GenesisAccounts{acc1}
+	app := simapp.SetupWithGenesisAccounts(t, "", accs)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	var nameData nametypes.GenesisState
+	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("name", addr1, false))
+	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("example.name", addr1, false))
+	nameData.Params.AllowUnrestrictedNames = false
+	nameData.Params.MaxNameLevels = 16
+	nameData.Params.MinSegmentLength = 2
+	nameData.Params.MaxSegmentLength = 16
+	app.NameKeeper.InitGenesis(ctx, nameData)
+
+	app.NameKeeper = keeper.NewKeeper(
+		app.AppCodec(),
+		app.GetKey(nametypes.ModuleName),
+		app.GetSubspace(nametypes.ModuleName),
+		app.ExpirationKeeper,
+	)
+	handler := name.NewHandler(app.NameKeeper)
+	authority := app.NameKeeper.GetAuthority()
+
+	tests := []struct {
+		name          string
+		expectedError error
+		msg           *nametypes.MsgModifyNameRequest
+		expectedEvent proto.Message
+	}{
+		{
+			name:          "modify name record",
+			msg:           nametypes.NewMsgModifyNameRequest(authority, "name", addr1, true),
+			expectedError: nil,
+			expectedEvent: nametypes.NewEventNameUpdate(addr1.String(), "name", true),
+		},
+		{
+			name:          "modify name record with multi level",
+			msg:           nametypes.NewMsgModifyNameRequest(authority, "example.name", addr1, true),
+			expectedError: nil,
+			expectedEvent: nametypes.NewEventNameUpdate(addr1.String(), "example.name", true),
+		},
+		{
+			name:          "modify name - fails with invalid address",
+			msg:           nametypes.NewMsgModifyNameRequest(authority, "name", sdk.AccAddress{}, true),
+			expectedError: sdkerrors.ErrInvalidRequest.Wrap("empty address string is not allowed"),
+			expectedEvent: nil,
+		},
+		{
+			name:          "modify name - fails with non existant root record",
+			msg:           nametypes.NewMsgModifyNameRequest(authority, "jackthecat", addr1, true),
+			expectedError: sdkerrors.ErrInvalidRequest.Wrap(nametypes.ErrNameNotBound.Error()),
+			expectedEvent: nil,
+		},
+		{
+			name:          "modify name - fails with non existant subdomain record",
+			msg:           nametypes.NewMsgModifyNameRequest(authority, "jackthecat.name", addr1, true),
+			expectedError: sdkerrors.ErrInvalidRequest.Wrap(nametypes.ErrNameNotBound.Error()),
+			expectedEvent: nil,
+		},
+		{
+			name:          "modify name - fails with invalid authority",
+			msg:           nametypes.NewMsgModifyNameRequest("jackthecat", "name", addr1, true),
+			expectedError: govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", authority, "jackthecat"),
+			expectedEvent: nil,
+		},
+		{
+			name:          "modify name - fails with empty authority",
+			msg:           nametypes.NewMsgModifyNameRequest("", "name", addr1, true),
+			expectedError: govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", authority, ""),
+			expectedEvent: nil,
+		},
+	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

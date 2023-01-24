@@ -410,6 +410,7 @@
     - [CreateRootNameProposal](#provenance.name.v1.CreateRootNameProposal)
     - [EventNameBound](#provenance.name.v1.EventNameBound)
     - [EventNameUnbound](#provenance.name.v1.EventNameUnbound)
+    - [EventNameUpdate](#provenance.name.v1.EventNameUpdate)
     - [NameRecord](#provenance.name.v1.NameRecord)
     - [Params](#provenance.name.v1.Params)
   
@@ -431,6 +432,8 @@
     - [MsgBindNameResponse](#provenance.name.v1.MsgBindNameResponse)
     - [MsgDeleteNameRequest](#provenance.name.v1.MsgDeleteNameRequest)
     - [MsgDeleteNameResponse](#provenance.name.v1.MsgDeleteNameResponse)
+    - [MsgModifyNameRequest](#provenance.name.v1.MsgModifyNameRequest)
+    - [MsgModifyNameResponse](#provenance.name.v1.MsgModifyNameResponse)
   
     - [Msg](#provenance.name.v1.Msg)
   
@@ -6229,11 +6232,11 @@ for the sole creation of sub names.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `name` | [string](#string) |  |  |
-| `owner` | [string](#string) |  |  |
-| `restricted` | [bool](#bool) |  |  |
+| `title` | [string](#string) |  | proposal title |
+| `description` | [string](#string) |  | proposal description |
+| `name` | [string](#string) |  | the bound name |
+| `owner` | [string](#string) |  | the address the name will resolve to |
+| `restricted` | [bool](#bool) |  | a flag that indicates if an owner signature is required to add sub-names |
 
 
 
@@ -6274,6 +6277,23 @@ Event emitted when name is unbound.
 
 
 
+<a name="provenance.name.v1.EventNameUpdate"></a>
+
+### EventNameUpdate
+Event emitted when name is updated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `name` | [string](#string) |  |  |
+| `restricted` | [bool](#bool) |  |  |
+
+
+
+
+
+
 <a name="provenance.name.v1.NameRecord"></a>
 
 ### NameRecord
@@ -6282,9 +6302,9 @@ NameRecord is a structure used to bind ownership of a name hierarchy to a collec
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `name` | [string](#string) |  | The bound name |
-| `address` | [string](#string) |  | The address the name resolved to. |
-| `restricted` | [bool](#bool) |  | Whether owner signature is required to add sub-names. |
+| `name` | [string](#string) |  | the bound name |
+| `address` | [string](#string) |  | the address the name resolved to |
+| `restricted` | [bool](#bool) |  | whether owner signature is required to add sub-names |
 
 
 
@@ -6527,6 +6547,32 @@ MsgDeleteNameResponse defines the Msg/DeleteName response type.
 
 
 
+
+<a name="provenance.name.v1.MsgModifyNameRequest"></a>
+
+### MsgModifyNameRequest
+MsgModifyNameRequest defines a governance method that is used to update an existing address/name binding.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | The address signing the message |
+| `record` | [NameRecord](#provenance.name.v1.NameRecord) |  | The record being updated |
+
+
+
+
+
+
+<a name="provenance.name.v1.MsgModifyNameResponse"></a>
+
+### MsgModifyNameResponse
+MsgModifyNameResponse defines the Msg/ModifyName response type.
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -6543,6 +6589,7 @@ Msg defines the bank Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `BindName` | [MsgBindNameRequest](#provenance.name.v1.MsgBindNameRequest) | [MsgBindNameResponse](#provenance.name.v1.MsgBindNameResponse) | BindName binds a name to an address under a root name. | |
 | `DeleteName` | [MsgDeleteNameRequest](#provenance.name.v1.MsgDeleteNameRequest) | [MsgDeleteNameResponse](#provenance.name.v1.MsgDeleteNameResponse) | DeleteName defines a method to verify a particular invariance. | |
+| `ModifyName` | [MsgModifyNameRequest](#provenance.name.v1.MsgModifyNameRequest) | [MsgModifyNameResponse](#provenance.name.v1.MsgModifyNameResponse) | ModifyName defines a method to modify the attributes of an existing name. | |
 
  <!-- end services -->
 

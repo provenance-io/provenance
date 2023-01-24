@@ -128,16 +128,6 @@ func (msg MsgWriteScopeRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgWriteScopeRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgWriteScopeRequest) Type() string {
-	return TypeMsgWriteScopeRequest
-}
-
 func (msg MsgWriteScopeRequest) MsgTypeURL() string {
 	return TypeURLMsgWriteScopeRequest
 }
@@ -145,11 +135,6 @@ func (msg MsgWriteScopeRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgWriteScopeRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgWriteScopeRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -211,16 +196,6 @@ func (msg MsgDeleteScopeRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgDeleteScopeRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgDeleteScopeRequest) Type() string {
-	return TypeMsgDeleteScopeRequest
-}
-
 func (msg MsgDeleteScopeRequest) MsgTypeURL() string {
 	return TypeURLMsgDeleteScopeRequest
 }
@@ -228,11 +203,6 @@ func (msg MsgDeleteScopeRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgDeleteScopeRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgDeleteScopeRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -262,16 +232,6 @@ func (msg MsgAddScopeDataAccessRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgAddScopeDataAccessRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgAddScopeDataAccessRequest) Type() string {
-	return TypeMsgAddScopeDataAccessRequest
-}
-
 func (msg MsgAddScopeDataAccessRequest) MsgTypeURL() string {
 	return TypeURLMsgAddScopeDataAccessRequest
 }
@@ -279,11 +239,6 @@ func (msg MsgAddScopeDataAccessRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgAddScopeDataAccessRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgAddScopeDataAccessRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -322,16 +277,6 @@ func (msg MsgDeleteScopeDataAccessRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgDeleteScopeDataAccessRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgDeleteScopeDataAccessRequest) Type() string {
-	return TypeMsgDeleteScopeDataAccessRequest
-}
-
 func (msg MsgDeleteScopeDataAccessRequest) MsgTypeURL() string {
 	return TypeURLMsgDeleteScopeDataAccessRequest
 }
@@ -339,11 +284,6 @@ func (msg MsgDeleteScopeDataAccessRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgDeleteScopeDataAccessRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgDeleteScopeDataAccessRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -382,16 +322,6 @@ func (msg MsgAddScopeOwnerRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgAddScopeOwnerRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgAddScopeOwnerRequest) Type() string {
-	return TypeMsgAddScopeOwnerRequest
-}
-
 func (msg MsgAddScopeOwnerRequest) MsgTypeURL() string {
 	return TypeURLMsgAddScopeOwnerRequest
 }
@@ -399,11 +329,6 @@ func (msg MsgAddScopeOwnerRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgAddScopeOwnerRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgAddScopeOwnerRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -436,16 +361,6 @@ func (msg MsgDeleteScopeOwnerRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgDeleteScopeOwnerRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgDeleteScopeOwnerRequest) Type() string {
-	return TypeMsgDeleteScopeOwnerRequest
-}
-
 func (msg MsgDeleteScopeOwnerRequest) MsgTypeURL() string {
 	return TypeURLMsgDeleteScopeOwnerRequest
 }
@@ -453,11 +368,6 @@ func (msg MsgDeleteScopeOwnerRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgDeleteScopeOwnerRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgDeleteScopeOwnerRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -492,16 +402,6 @@ func (msg MsgWriteSessionRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgWriteSessionRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgWriteSessionRequest) Type() string {
-	return TypeMsgWriteSessionRequest
-}
-
 func (msg MsgWriteSessionRequest) MsgTypeURL() string {
 	return TypeURLMsgWriteSessionRequest
 }
@@ -509,11 +409,6 @@ func (msg MsgWriteSessionRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgWriteSessionRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgWriteSessionRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -573,16 +468,6 @@ func (msg MsgWriteRecordRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgWriteRecordRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgWriteRecordRequest) Type() string {
-	return TypeMsgWriteRecordRequest
-}
-
 func (msg MsgWriteRecordRequest) MsgTypeURL() string {
 	return TypeURLMsgWriteRecordRequest
 }
@@ -590,11 +475,6 @@ func (msg MsgWriteRecordRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgWriteRecordRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgWriteRecordRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -657,16 +537,6 @@ func (msg MsgDeleteRecordRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgDeleteRecordRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgDeleteRecordRequest) Type() string {
-	return TypeMsgDeleteRecordRequest
-}
-
 func (msg MsgDeleteRecordRequest) MsgTypeURL() string {
 	return TypeURLMsgDeleteRecordRequest
 }
@@ -674,11 +544,6 @@ func (msg MsgDeleteRecordRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgDeleteRecordRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgDeleteRecordRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -701,16 +566,6 @@ func (msg MsgWriteScopeSpecificationRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgWriteScopeSpecificationRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgWriteScopeSpecificationRequest) Type() string {
-	return TypeMsgWriteScopeSpecificationRequest
-}
-
 func (msg MsgWriteScopeSpecificationRequest) MsgTypeURL() string {
 	return TypeURLMsgWriteScopeSpecificationRequest
 }
@@ -718,11 +573,6 @@ func (msg MsgWriteScopeSpecificationRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgWriteScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgWriteScopeSpecificationRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -771,16 +621,6 @@ func (msg MsgWriteP8EContractSpecRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgWriteP8EContractSpecRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgWriteP8EContractSpecRequest) Type() string {
-	return TypeMsgWriteP8EContractSpecRequest
-}
-
 func (msg MsgWriteP8EContractSpecRequest) MsgTypeURL() string {
 	return TypeURLMsgWriteP8eContractSpecRequest
 }
@@ -788,11 +628,6 @@ func (msg MsgWriteP8EContractSpecRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgWriteP8EContractSpecRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgWriteP8EContractSpecRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -819,16 +654,6 @@ func (msg MsgDeleteScopeSpecificationRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgDeleteScopeSpecificationRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgDeleteScopeSpecificationRequest) Type() string {
-	return TypeMsgDeleteScopeSpecificationRequest
-}
-
 func (msg MsgDeleteScopeSpecificationRequest) MsgTypeURL() string {
 	return TypeURLMsgDeleteScopeSpecificationRequest
 }
@@ -836,11 +661,6 @@ func (msg MsgDeleteScopeSpecificationRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgDeleteScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgDeleteScopeSpecificationRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -863,16 +683,6 @@ func (msg MsgWriteContractSpecificationRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgWriteContractSpecificationRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgWriteContractSpecificationRequest) Type() string {
-	return TypeMsgWriteContractSpecificationRequest
-}
-
 func (msg MsgWriteContractSpecificationRequest) MsgTypeURL() string {
 	return TypeURLMsgWriteContractSpecificationRequest
 }
@@ -880,11 +690,6 @@ func (msg MsgWriteContractSpecificationRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgWriteContractSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgWriteContractSpecificationRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -930,16 +735,6 @@ func (msg MsgDeleteContractSpecificationRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgDeleteContractSpecificationRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgDeleteContractSpecificationRequest) Type() string {
-	return TypeMsgDeleteContractSpecificationRequest
-}
-
 func (msg MsgDeleteContractSpecificationRequest) MsgTypeURL() string {
 	return TypeURLMsgDeleteContractSpecificationRequest
 }
@@ -947,11 +742,6 @@ func (msg MsgDeleteContractSpecificationRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgDeleteContractSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgDeleteContractSpecificationRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -974,16 +764,6 @@ func (msg MsgAddContractSpecToScopeSpecRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgAddContractSpecToScopeSpecRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgAddContractSpecToScopeSpecRequest) Type() string {
-	return TypeMsgAddContractSpecToScopeSpecRequest
-}
-
 func (msg MsgAddContractSpecToScopeSpecRequest) MsgTypeURL() string {
 	return TypeURLMsgAddContractSpecToScopeSpecRequest
 }
@@ -991,11 +771,6 @@ func (msg MsgAddContractSpecToScopeSpecRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgAddContractSpecToScopeSpecRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgAddContractSpecToScopeSpecRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -1024,16 +799,6 @@ func (msg MsgDeleteContractSpecFromScopeSpecRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgDeleteContractSpecFromScopeSpecRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgDeleteContractSpecFromScopeSpecRequest) Type() string {
-	return TypeMsgDeleteContractSpecFromScopeSpecRequest
-}
-
 func (msg MsgDeleteContractSpecFromScopeSpecRequest) MsgTypeURL() string {
 	return TypeURLMsgDeleteContractSpecFromScopeSpecRequest
 }
@@ -1041,11 +806,6 @@ func (msg MsgDeleteContractSpecFromScopeSpecRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgDeleteContractSpecFromScopeSpecRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgDeleteContractSpecFromScopeSpecRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -1074,16 +834,6 @@ func (msg MsgWriteRecordSpecificationRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgWriteRecordSpecificationRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgWriteRecordSpecificationRequest) Type() string {
-	return TypeMsgWriteRecordSpecificationRequest
-}
-
 func (msg MsgWriteRecordSpecificationRequest) MsgTypeURL() string {
 	return TypeURLMsgWriteRecordSpecificationRequest
 }
@@ -1091,11 +841,6 @@ func (msg MsgWriteRecordSpecificationRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgWriteRecordSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgWriteRecordSpecificationRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -1144,16 +889,6 @@ func (msg MsgDeleteRecordSpecificationRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgDeleteRecordSpecificationRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgDeleteRecordSpecificationRequest) Type() string {
-	return TypeMsgDeleteRecordSpecificationRequest
-}
-
 func (msg MsgDeleteRecordSpecificationRequest) MsgTypeURL() string {
 	return TypeURLMsgDeleteRecordSpecificationRequest
 }
@@ -1161,11 +896,6 @@ func (msg MsgDeleteRecordSpecificationRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgDeleteRecordSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgDeleteRecordSpecificationRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -1188,16 +918,6 @@ func (msg MsgP8EMemorializeContractRequest) String() string {
 	return string(out)
 }
 
-// Route returns the module route
-func (msg MsgP8EMemorializeContractRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the type name for this msg
-func (msg MsgP8EMemorializeContractRequest) Type() string {
-	return TypeMsgP8eMemorializeContractRequest
-}
-
 func (msg MsgP8EMemorializeContractRequest) MsgTypeURL() string {
 	return TypeURLMsgP8eMemorializeContractRequest
 }
@@ -1205,11 +925,6 @@ func (msg MsgP8EMemorializeContractRequest) MsgTypeURL() string {
 // GetSigners returns the address(es) that must sign over msg.GetSignBytes()
 func (msg MsgP8EMemorializeContractRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{MustAccAddressFromBech32(msg.Invoker)}
-}
-
-// GetSignBytes gets the bytes for the message signer to sign on
-func (msg MsgP8EMemorializeContractRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic performs a quick validity check
@@ -1227,14 +942,6 @@ func NewMsgBindOSLocatorRequest(obj ObjectStoreLocator) *MsgBindOSLocatorRequest
 	}
 }
 
-func (msg MsgBindOSLocatorRequest) Route() string {
-	return ModuleName
-}
-
-func (msg MsgBindOSLocatorRequest) Type() string {
-	return TypeMsgBindOSLocatorRequest
-}
-
 func (msg MsgBindOSLocatorRequest) MsgTypeURL() string {
 	return TypeURLMsgBindOSLocatorRequest
 }
@@ -1245,10 +952,6 @@ func (msg MsgBindOSLocatorRequest) ValidateBasic() error {
 		return err
 	}
 	return nil
-}
-
-func (msg MsgBindOSLocatorRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgBindOSLocatorRequest) GetSigners() []sdk.AccAddress {
@@ -1262,13 +965,6 @@ func NewMsgDeleteOSLocatorRequest(obj ObjectStoreLocator) *MsgDeleteOSLocatorReq
 		Locator: obj,
 	}
 }
-func (msg MsgDeleteOSLocatorRequest) Route() string {
-	return ModuleName
-}
-
-func (msg MsgDeleteOSLocatorRequest) Type() string {
-	return TypeMsgDeleteOSLocatorRequest
-}
 
 func (msg MsgDeleteOSLocatorRequest) MsgTypeURL() string {
 	return TypeURLMsgDeleteOSLocatorRequest
@@ -1281,10 +977,6 @@ func (msg MsgDeleteOSLocatorRequest) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (msg MsgDeleteOSLocatorRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // Signers returns the addrs of signers that must sign.
@@ -1333,14 +1025,6 @@ func NewMsgModifyOSLocatorRequest(obj ObjectStoreLocator) *MsgModifyOSLocatorReq
 	}
 }
 
-func (msg MsgModifyOSLocatorRequest) Route() string {
-	return ModuleName
-}
-
-func (msg MsgModifyOSLocatorRequest) Type() string {
-	return TypeMsgModifyOSLocatorRequest
-}
-
 func (msg MsgModifyOSLocatorRequest) MsgTypeURL() string {
 	return TypeURLMsgModifyOSLocatorRequest
 }
@@ -1352,10 +1036,6 @@ func (msg MsgModifyOSLocatorRequest) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (msg MsgModifyOSLocatorRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgModifyOSLocatorRequest) GetSigners() []sdk.AccAddress {

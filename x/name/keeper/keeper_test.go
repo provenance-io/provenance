@@ -261,6 +261,43 @@ func (s *KeeperTestSuite) TestDeleteRecord() {
 
 }
 
+func (s *KeeperTestSuite) TestModifyRecord() {
+	s.Run("update adds new name", func() {
+		err := s.app.NameKeeper.UpdateNameRecord(s.ctx, "jackthecat", s.user2Addr, true)
+		s.Require().NoError(err)
+	})
+	s.Run("update has invalid address", func() {
+		err := s.app.NameKeeper.UpdateNameRecord(s.ctx, "jackthecat", sdk.AccAddress{}, true)
+		s.Require().Error(err)
+		s.Require().Equal("addresses cannot be empty: unknown address: invalid account address", err.Error())
+	})
+	s.Run("update valid root name", func() {
+		err := s.app.NameKeeper.UpdateNameRecord(s.ctx, "name", s.user2Addr, true)
+		s.Require().NoError(err)
+		record, err := s.app.NameKeeper.GetRecordByName(s.ctx, "name")
+		s.Require().NoError(err)
+		s.Require().Equal("name", record.Name)
+		s.Require().Equal(s.user2Addr.String(), record.GetAddress())
+		s.Require().Equal(true, record.Restricted)
+	})
+	s.Run("update valid root sub name", func() {
+		err := s.app.NameKeeper.UpdateNameRecord(s.ctx, "example.name", s.user2Addr, true)
+		s.Require().NoError(err)
+		record, err := s.app.NameKeeper.GetRecordByName(s.ctx, "example.name")
+		s.Require().NoError(err)
+		s.Require().Equal("example.name", record.Name)
+		s.Require().Equal(s.user2Addr.String(), record.GetAddress())
+		s.Require().Equal(true, record.Restricted)
+	})
+}
+
+func (s *KeeperTestSuite) TestGetAuthority() {
+	s.Run("has correct authority", func() {
+		authority := s.app.NameKeeper.GetAuthority()
+		s.Require().Equal("cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", authority)
+	})
+}
+
 func (s *KeeperTestSuite) TestIterateRecord() {
 	s.Run("iterate name's", func() {
 		records := nametypes.NameRecords{}

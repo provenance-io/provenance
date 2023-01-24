@@ -11,14 +11,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 const (
-	// The flag for created restricted names
-	flagRestricted = "restrict"
+	// The flag for creating unrestricted names
+	flagUnrestricted = "unrestrict"
 	// FlagExpires is flag for setting expiration period on name
 	FlagExpires = "expires"
 )
@@ -35,6 +38,7 @@ func NewTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		GetBindNameCmd(),
 		GetDeleteNameCmd(),
+		GetModifyNameProposalCmd(),
 	)
 	return txCmd
 }
@@ -62,7 +66,7 @@ func GetBindNameCmd() *cobra.Command {
 				types.NewNameRecord(
 					strings.ToLower(args[0]),
 					address,
-					viper.GetBool(flagRestricted),
+					!viper.GetBool(flagUnrestricted),
 				),
 				types.NewNameRecord(
 					strings.ToLower(args[2]),
@@ -74,8 +78,7 @@ func GetBindNameCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-
-	cmd.Flags().BoolP(flagRestricted, "r", true, "Restrict creation of child names to owner only")
+	cmd.Flags().BoolP(flagUnrestricted, "u", false, "Allow child name creation by everyone")
 	addExpiresFlagCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
@@ -104,6 +107,75 @@ func GetDeleteNameCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func GetModifyNameProposalCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "modify-name-proposal [name] [new_owner] (--unrestrict) [flags]",
+		Short: "Submit a modify name creation governance proposal",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a modify name governance proposal along with an initial deposit.
+
+IMPORTANT: The restricted creation of sub-names will be enabled by default unless the unrestricted flag is included.
+The owner must approve all child name creation unless an alterate owner is provided.
+
+Example:
+$ %s tx name modify-name-proposal \
+	<name> <new_owner> \
+	--unrestrict  \ 
+	--from <address>
+			`,
+				version.AppName)),
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			owner, err := sdk.AccAddressFromBech32(args[1])
+			if err != nil {
+				return err
+			}
+			depositArg, err := cmd.Flags().GetString(FlagDeposit)
+			if err != nil {
+				return err
+			}
+			deposit, err := sdk.ParseCoinsNormalized(depositArg)
+			if err != nil {
+				return err
+			}
+			metadata, err := cmd.Flags().GetString(FlagMetadata)
+			if err != nil {
+				return fmt.Errorf("name metadata: %w", err)
+			}
+
+			content := types.MsgModifyNameRequest{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Record:    types.NewNameRecord(strings.ToLower(args[0]), owner, !viper.GetBool(flagUnrestricted)),
+			}
+			if err = content.ValidateBasic(); err != nil {
+				return err
+			}
+
+			msg, err := govtypesv1.NewMsgSubmitProposal([]sdk.Msg{&content}, deposit, clientCtx.GetFromAddress().String(), metadata)
+			if err != nil {
+				return err
+			}
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().BoolP(flagUnrestricted, "u", false, "Allow child name creation by everyone")
+	// proposal flags
+	cmd.Flags().String(FlagMetadata, "", "Metadata of proposal")
+	cmd.Flags().String(FlagDeposit, "", "Deposit of proposal")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
