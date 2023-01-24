@@ -3,14 +3,14 @@ package keeper
 import (
 	"context"
 	"fmt"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	exptypes "github.com/provenance-io/provenance/x/expiration/types"
 
 	"github.com/armon/go-metrics"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/attribute/types"
+	exptypes "github.com/provenance-io/provenance/x/expiration/types"
 )
 
 type msgServer struct {
