@@ -9,6 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/quarantine"
+	"github.com/cosmos/cosmos-sdk/x/sanction"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	ica "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts"
@@ -65,7 +67,7 @@ var handlers = map[string]appUpgrade{
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
 	},
-	"ochre": {
+	"ochre": { // upgrade for v1.13.0
 		Added: []string{group.ModuleName, rewardtypes.ModuleName, icacontrollertypes.StoreKey, icahosttypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
@@ -76,6 +78,22 @@ var handlers = map[string]appUpgrade{
 
 			UpgradeICA(ctx, app, &versionMap)
 			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
+			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
+		},
+	},
+	"paua-rc1": { // upgrade for v1.14.0-rc1
+		Added: []string{quarantine.ModuleName, sanction.ModuleName},
+		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
+			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
+			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
+		},
+	},
+	"paua": { // upgrade for v1.14.0
+		Added: []string{quarantine.ModuleName, sanction.ModuleName},
+		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
+			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
+			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
 	},
