@@ -760,6 +760,8 @@ func New(
 		ibctransfertypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
+		quarantine.ModuleName,
+		sanction.ModuleName,
 
 		icatypes.ModuleName,
 		wasm.ModuleName,
@@ -794,6 +796,8 @@ func New(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
 
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper),
