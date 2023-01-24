@@ -36,8 +36,6 @@ type appUpgrade struct {
 }
 
 var handlers = map[string]appUpgrade{
-	"neoncarrot-rc1": {}, // upgrade for 1.12.0-rc1
-	"neoncarrot":     {}, // upgrade for 1.12.0
 	"ochre-rc1": { // upgrade for 1.13.0-rc3
 		Added: []string{group.ModuleName, rewardtypes.ModuleName, icacontrollertypes.StoreKey, icahosttypes.StoreKey},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
@@ -53,11 +51,11 @@ var handlers = map[string]appUpgrade{
 
 			// We need to run Migrate3_V046_4_To_V046_5 here because testnet already upgraded to v0.46.x.
 			// But we don't need to run it in the ochre upgrade plan because mainnet hasn't upgraded to v0.46.x yet, so it doesn't need fixing.
-			bankBaseKeeper, ok := app.BankKeeper.(bankkeeper.BaseKeeper)
+			bankBaseKeeper, ok := app.BankKeeper.(*bankkeeper.BaseKeeper)
 			if !ok {
 				return versionMap, fmt.Errorf("could not cast app.BankKeeper (type bankkeeper.Keeper) to bankkeeper.BaseKeeper")
 			}
-			bankMigrator := bankkeeper.NewMigrator(bankBaseKeeper)
+			bankMigrator := bankkeeper.NewMigrator(*bankBaseKeeper)
 			err := bankMigrator.Migrate3_V046_4_To_V046_5(ctx)
 			if err != nil {
 				return versionMap, err
