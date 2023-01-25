@@ -8,15 +8,6 @@ import (
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-// RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
-// name module.
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(MsgBindNameRequest{}, "provenance/MsgBindNameRequest", nil)
-	cdc.RegisterConcrete(MsgDeleteNameRequest{}, "provenance/MsgDeleteNameRequest", nil)
-	cdc.RegisterConcrete(MsgCreateRootNameRequest{}, "provenance/MsgCreateRootNameRequest", nil)
-	cdc.RegisterConcrete(CreateRootNameProposal{}, "provenance/CreateRootNameProposal", nil)
-}
-
 // RegisterInterfaces registers concrete implentations for the given type names
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
