@@ -49,7 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Bump Cosmos-SDK to [v0.46.8-pio-1](https://github.com/provenance-io/cosmos-sdk/tree/v0.46.8-pio-1) (from [v0.46.7-pio-1](https://github.com/provenance-io/cosmos-sdk/compare/v0.46.7-pio-1...v0.46.8-pio-1)) [#1317](https://github.com/provenance-io/provenance/pull/1317).
-  See its [RELEASE_NOTESg.md](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.8-pio-1/RELEASE_NOTES.md) for details.
+  See its [RELEASE_NOTES.md](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.8-pio-1/RELEASE_NOTES.md) for details.
 * Added assess msg fees spec documentation [#1172](https://github.com/provenance-io/provenance/issues/1172).
 * Build dbmigrate and include it as an artifact with releases [#1264](https://github.com/provenance-io/provenance/issues/1264).
 * Removed, MsgFees Module 50/50 Fee Split on MsgAssessCustomMsgFeeRequest [#1263](https://github.com/provenance-io/provenance/issues/1263).
