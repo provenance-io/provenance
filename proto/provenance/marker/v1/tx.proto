@@ -6,6 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
+import "cosmos/msg/v1/msg.proto";
 import "ibc/applications/transfer/v1/tx.proto";
 import "provenance/marker/v1/marker.proto";
 import "provenance/marker/v1/accessgrant.proto";
@@ -216,6 +217,8 @@ message MsgAddFinalizeActivateMarkerResponse {}
 
 // MsgAddUnrestrictedMarkerRequest defines the Msg/AddUnrestrictedMarker request type
 message MsgAddUnrestrictedMarkerRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
   cosmos.base.v1beta1.Coin   amount                   = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
   string                     manager                  = 3;
   string                     from_address             = 4;
