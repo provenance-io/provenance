@@ -51,8 +51,8 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simappparams.DefaultWeightSubmitCreateRewards, types.ModuleName, "create_reward_program"},
-		{simappparams.DefaultWeightSubmitEndRewards, types.ModuleName, "end_reward_program"},
+		{simappparams.DefaultWeightSubmitCreateRewards, sdk.MsgTypeURL(&types.MsgCreateRewardProgramRequest{}), sdk.MsgTypeURL(&types.MsgCreateRewardProgramRequest{})},
+		{simappparams.DefaultWeightSubmitEndRewards, sdk.MsgTypeURL(&types.MsgEndRewardProgramRequest{}), sdk.MsgTypeURL(&types.MsgEndRewardProgramRequest{})},
 	}
 
 	for i, w := range weightedOps {
@@ -85,8 +85,8 @@ func (s *SimTestSuite) TestSimulateMsgAddRewards() {
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	s.Require().True(operationMsg.OK, operationMsg.String())
-	s.Require().Equal(types.TypeMsgCreateRewardProgramRequest, msg.Type())
-	s.Require().Equal(types.ModuleName, msg.Route())
+	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
+	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
 	s.Require().Len(futureOperations, 0)
 }
 

@@ -33,13 +33,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.k = namekeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(nametypes.ModuleName), s.app.GetSubspace(nametypes.ModuleName))
 	s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	s.k.SetNameRecord(s.ctx, "test.root", s.accountAddr, false)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 }
 
-func (s *IntegrationTestSuite) TestNameProposals() {
+func (s *IntegrationTestSuite) TestCreateRootNameProposals() {
 
 	testCases := []struct {
 		name    string
@@ -49,55 +50,55 @@ func (s *IntegrationTestSuite) TestNameProposals() {
 	}{
 		// ADD ROOT NAME PROPOSALS
 		{
-			"add marker - valid",
+			"add root name - valid",
 			nametypes.NewCreateRootNameProposal("title", "description", "root", s.accountAddr, false),
 			false,
 			nil,
 		},
 		{
-			"add marker - valid full domain",
+			"add root name - valid full domain",
 			nametypes.NewCreateRootNameProposal("title", "description", "example.provenance.io", s.accountAddr, false),
 			false,
 			nil,
 		},
 		{
-			"add marker - valid new sub domain",
+			"add root name - valid new sub domain",
 			nametypes.NewCreateRootNameProposal("title", "description", "another.provenance.io", s.accountAddr, false),
 			false,
 			nil,
 		},
 		{
-			"add marker - invalid address",
+			"add root name - invalid address",
 			&nametypes.CreateRootNameProposal{Title: "title", Description: "description", Name: "badroot", Owner: "bad1address", Restricted: false},
 			true,
 			fmt.Errorf("decoding bech32 failed: invalid checksum (expected dpg8tu got ddress)"),
 		},
 		{
-			"add marker - fails duplicate",
+			"add root name - fails duplicate",
 			nametypes.NewCreateRootNameProposal("title", "description", "root", s.accountAddr, false),
 			true,
 			fmt.Errorf("name is already bound to an address"),
 		},
 		{
-			"add marker - fails duplicate sub domain",
+			"add root name - fails duplicate sub domain",
 			nametypes.NewCreateRootNameProposal("title", "description", "provenance.io", s.accountAddr, false),
 			true,
 			fmt.Errorf("name is already bound to an address"),
 		},
 		{
-			"add marker - fails duplicate third level domain",
+			"add root name - fails duplicate third level domain",
 			nametypes.NewCreateRootNameProposal("title", "description", "example.provenance.io", s.accountAddr, false),
 			true,
 			fmt.Errorf("name is already bound to an address"),
 		},
 		{
-			"add marker - fails another duplicate third level domain",
+			"add root name - fails another duplicate third level domain",
 			nametypes.NewCreateRootNameProposal("title", "description", "another.provenance.io", s.accountAddr, false),
 			true,
 			fmt.Errorf("name is already bound to an address"),
 		},
 		{
-			"add marker - fails invalid name",
+			"add root name - fails invalid name",
 			nametypes.NewCreateRootNameProposal("title", "description", "..badroot", s.accountAddr, false),
 			true,
 			fmt.Errorf("segment of name is too short"),

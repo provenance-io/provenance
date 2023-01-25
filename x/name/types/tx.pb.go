@@ -281,6 +281,98 @@ func (m *MsgCreateRootNameResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateRootNameResponse proto.InternalMessageInfo
 
+// MsgModifyNameRequest defines a governance method that is used to update an existing address/name binding.
+type MsgModifyNameRequest struct {
+	// The address signing the message
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// The record being updated
+	Record NameRecord `protobuf:"bytes,2,opt,name=record,proto3" json:"record"`
+}
+
+func (m *MsgModifyNameRequest) Reset()         { *m = MsgModifyNameRequest{} }
+func (m *MsgModifyNameRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgModifyNameRequest) ProtoMessage()    {}
+func (*MsgModifyNameRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eacf6cd967218635, []int{6}
+}
+func (m *MsgModifyNameRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgModifyNameRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgModifyNameRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgModifyNameRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgModifyNameRequest.Merge(m, src)
+}
+func (m *MsgModifyNameRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgModifyNameRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgModifyNameRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgModifyNameRequest proto.InternalMessageInfo
+
+func (m *MsgModifyNameRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgModifyNameRequest) GetRecord() NameRecord {
+	if m != nil {
+		return m.Record
+	}
+	return NameRecord{}
+}
+
+// MsgModifyNameResponse defines the Msg/ModifyName response type.
+type MsgModifyNameResponse struct {
+}
+
+func (m *MsgModifyNameResponse) Reset()         { *m = MsgModifyNameResponse{} }
+func (m *MsgModifyNameResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgModifyNameResponse) ProtoMessage()    {}
+func (*MsgModifyNameResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eacf6cd967218635, []int{7}
+}
+func (m *MsgModifyNameResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgModifyNameResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgModifyNameResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgModifyNameResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgModifyNameResponse.Merge(m, src)
+}
+func (m *MsgModifyNameResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgModifyNameResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgModifyNameResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgModifyNameResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgBindNameRequest)(nil), "provenance.name.v1.MsgBindNameRequest")
 	proto.RegisterType((*MsgBindNameResponse)(nil), "provenance.name.v1.MsgBindNameResponse")
@@ -288,40 +380,45 @@ func init() {
 	proto.RegisterType((*MsgDeleteNameResponse)(nil), "provenance.name.v1.MsgDeleteNameResponse")
 	proto.RegisterType((*MsgCreateRootNameRequest)(nil), "provenance.name.v1.MsgCreateRootNameRequest")
 	proto.RegisterType((*MsgCreateRootNameResponse)(nil), "provenance.name.v1.MsgCreateRootNameResponse")
+	proto.RegisterType((*MsgModifyNameRequest)(nil), "provenance.name.v1.MsgModifyNameRequest")
+	proto.RegisterType((*MsgModifyNameResponse)(nil), "provenance.name.v1.MsgModifyNameResponse")
 }
 
 func init() { proto.RegisterFile("provenance/name/v1/tx.proto", fileDescriptor_eacf6cd967218635) }
 
 var fileDescriptor_eacf6cd967218635 = []byte{
-	// 448 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x93, 0xbd, 0xae, 0xd3, 0x30,
-	0x1c, 0xc5, 0xe3, 0x0b, 0xba, 0xba, 0xd7, 0x48, 0x77, 0x30, 0xad, 0x9a, 0xa6, 0x22, 0x45, 0x19,
-	0xa0, 0x20, 0x9a, 0xd0, 0x22, 0x75, 0x40, 0x2c, 0x04, 0xd6, 0x20, 0x14, 0x36, 0x90, 0x40, 0x69,
-	0x62, 0xb9, 0x91, 0x48, 0x1c, 0x6c, 0xb7, 0x6a, 0x57, 0x26, 0x46, 0xe6, 0x4e, 0x7d, 0x04, 0x86,
-	0x3e, 0x44, 0xc7, 0x8a, 0x89, 0x09, 0xa1, 0x76, 0x80, 0xc7, 0x40, 0x89, 0x03, 0xe9, 0x47, 0x2a,
-	0x5a, 0xb1, 0xc5, 0x39, 0xe7, 0xfc, 0x7f, 0x27, 0x76, 0x0c, 0x1b, 0x09, 0xa3, 0x23, 0x1c, 0x7b,
-	0xb1, 0x8f, 0xad, 0xd8, 0x8b, 0xb0, 0x35, 0xea, 0x58, 0x62, 0x6c, 0x26, 0x8c, 0x0a, 0x8a, 0x50,
-	0x21, 0x9a, 0xa9, 0x68, 0x8e, 0x3a, 0x5a, 0x85, 0x50, 0x42, 0x33, 0xd9, 0x4a, 0x9f, 0xa4, 0x53,
-	0xab, 0xf9, 0x94, 0x47, 0x94, 0x5b, 0x11, 0x27, 0xe9, 0x84, 0x88, 0x93, 0x5c, 0xa8, 0x4b, 0xe1,
-	0x9d, 0x4c, 0xc8, 0x45, 0x2e, 0xdd, 0x2a, 0x41, 0x67, 0x94, 0x4c, 0x36, 0xa6, 0x00, 0x22, 0x87,
-	0x13, 0x3b, 0x8c, 0x83, 0x17, 0x5e, 0x84, 0x5d, 0xfc, 0x61, 0x88, 0xb9, 0x40, 0x4f, 0xe0, 0x79,
-	0xe2, 0x31, 0x1c, 0x0b, 0x15, 0xdc, 0x06, 0xad, 0x1b, 0x5d, 0xdd, 0xdc, 0x2f, 0x69, 0xca, 0x80,
-	0x4f, 0x59, 0x60, 0x5f, 0x5f, 0x7c, 0x6f, 0x2a, 0x6e, 0x9e, 0x49, 0xd3, 0x2c, 0x7b, 0xaf, 0x9e,
-	0x9d, 0x92, 0x96, 0x99, 0xc7, 0x17, 0x9f, 0x66, 0x4d, 0xe5, 0xd7, 0xac, 0xa9, 0x18, 0x55, 0x78,
-	0x73, 0xab, 0x1b, 0x4f, 0x68, 0xcc, 0xb1, 0xf1, 0x16, 0x56, 0x1c, 0x4e, 0x9e, 0xe3, 0xf7, 0x58,
-	0xe0, 0x9d, 0xd2, 0x39, 0x16, 0xfc, 0x17, 0xb6, 0x06, 0xab, 0x3b, 0xf3, 0x73, 0xf0, 0x14, 0x40,
-	0xd5, 0xe1, 0xe4, 0x19, 0xc3, 0x9e, 0xc0, 0x2e, 0xa5, 0x62, 0x93, 0xde, 0x83, 0x97, 0xde, 0x50,
-	0x0c, 0x28, 0x0b, 0xc5, 0x24, 0x2b, 0x70, 0x69, 0xab, 0x5f, 0xe7, 0xed, 0x4a, 0x7e, 0x1a, 0x4f,
-	0x83, 0x80, 0x61, 0xce, 0x5f, 0x09, 0x16, 0xc6, 0xc4, 0x2d, 0xac, 0xa8, 0x77, 0xda, 0x66, 0xfd,
-	0xed, 0x7b, 0xf5, 0xf1, 0xe7, 0x97, 0xfb, 0xc5, 0x1c, 0xa3, 0x01, 0xeb, 0x25, 0xdd, 0x64, 0xf3,
-	0xee, 0xfc, 0x0c, 0x5e, 0x73, 0x38, 0x41, 0x6f, 0xe0, 0xc5, 0x9f, 0xed, 0x44, 0x77, 0xca, 0x40,
-	0xfb, 0xff, 0x82, 0x76, 0xf7, 0x9f, 0x3e, 0x09, 0x41, 0x1e, 0x84, 0xc5, 0xa6, 0xa1, 0xd6, 0x81,
-	0xd8, 0xde, 0xb9, 0x69, 0xf7, 0x8e, 0x70, 0xe6, 0x88, 0x08, 0x5e, 0x6d, 0x7f, 0x21, 0x7a, 0x70,
-	0x20, 0x5c, 0x7a, 0x48, 0x5a, 0xfb, 0x48, 0xb7, 0xc4, 0xd9, 0xfe, 0x62, 0xa5, 0x83, 0xe5, 0x4a,
-	0x07, 0x3f, 0x56, 0x3a, 0xf8, 0xbc, 0xd6, 0x95, 0xe5, 0x5a, 0x57, 0xbe, 0xad, 0x75, 0x05, 0x56,
-	0x43, 0x5a, 0x32, 0xea, 0x25, 0x78, 0xfd, 0x90, 0x84, 0x62, 0x30, 0xec, 0x9b, 0x3e, 0x8d, 0xac,
-	0xc2, 0xd0, 0x0e, 0xe9, 0xc6, 0xca, 0x1a, 0xcb, 0xab, 0x28, 0x26, 0x09, 0xe6, 0xfd, 0xf3, 0xec,
-	0x26, 0x3e, 0xfa, 0x1d, 0x00, 0x00, 0xff, 0xff, 0xc8, 0xd5, 0xa3, 0x62, 0x25, 0x04, 0x00, 0x00,
+	// 487 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0x31, 0x6f, 0xd3, 0x40,
+	0x14, 0xf6, 0x51, 0x54, 0xb5, 0x87, 0xd4, 0xe1, 0x48, 0x54, 0xd7, 0x15, 0x0e, 0xf2, 0x00, 0x05,
+	0x11, 0x9b, 0x16, 0xa9, 0x03, 0x62, 0xc1, 0xb0, 0x1a, 0x21, 0xb3, 0x81, 0x04, 0x72, 0xed, 0xe3,
+	0x6a, 0x09, 0xfb, 0x99, 0xbb, 0x4b, 0xd4, 0xac, 0x4c, 0x8c, 0x6c, 0x48, 0x15, 0x43, 0x7f, 0x02,
+	0x03, 0x3f, 0xa2, 0x63, 0xc5, 0xc4, 0x84, 0x50, 0x32, 0xc0, 0xcf, 0x40, 0xf6, 0x19, 0x9c, 0xc4,
+	0xb6, 0x48, 0x14, 0x36, 0x9f, 0xbf, 0xef, 0x7b, 0xdf, 0x77, 0xef, 0x3d, 0x1d, 0xde, 0xcd, 0x38,
+	0x0c, 0x69, 0x1a, 0xa4, 0x21, 0x75, 0xd2, 0x20, 0xa1, 0xce, 0x70, 0xdf, 0x91, 0x27, 0x76, 0xc6,
+	0x41, 0x02, 0x21, 0x15, 0x68, 0xe7, 0xa0, 0x3d, 0xdc, 0x37, 0x3a, 0x0c, 0x18, 0x14, 0xb0, 0x93,
+	0x7f, 0x29, 0xa6, 0xb1, 0x1d, 0x82, 0x48, 0x40, 0x38, 0x89, 0x60, 0x79, 0x85, 0x44, 0xb0, 0x12,
+	0xd8, 0x51, 0xc0, 0x2b, 0xa5, 0x50, 0x87, 0x12, 0xba, 0xd6, 0x60, 0x5d, 0xb8, 0x14, 0xb0, 0x75,
+	0x8a, 0x30, 0xf1, 0x04, 0x73, 0xe3, 0x34, 0x7a, 0x12, 0x24, 0xd4, 0xa7, 0x6f, 0x07, 0x54, 0x48,
+	0xf2, 0x00, 0xaf, 0x67, 0x01, 0xa7, 0xa9, 0xd4, 0xd1, 0x75, 0xb4, 0x77, 0xe5, 0xc0, 0xb4, 0xeb,
+	0x21, 0x6d, 0x25, 0x08, 0x81, 0x47, 0xee, 0xe5, 0xf3, 0xef, 0x3d, 0xcd, 0x2f, 0x35, 0xb9, 0x9a,
+	0x17, 0xff, 0xf5, 0x4b, 0xcb, 0xa8, 0x95, 0xe6, 0xfe, 0xc6, 0xfb, 0xb3, 0x9e, 0xf6, 0xeb, 0xac,
+	0xa7, 0x59, 0x5d, 0x7c, 0x75, 0x26, 0x9b, 0xc8, 0x20, 0x15, 0xd4, 0x7a, 0x89, 0x3b, 0x9e, 0x60,
+	0x8f, 0xe9, 0x1b, 0x2a, 0xe9, 0x5c, 0xe8, 0xd2, 0x16, 0xad, 0x64, 0xbb, 0x8d, 0xbb, 0x73, 0xf5,
+	0x4b, 0xe3, 0x53, 0x84, 0x75, 0x4f, 0xb0, 0x47, 0x9c, 0x06, 0x92, 0xfa, 0x00, 0x72, 0xda, 0xfd,
+	0x10, 0x6f, 0x06, 0x03, 0x79, 0x0c, 0x3c, 0x96, 0xa3, 0x22, 0xc0, 0xa6, 0xab, 0x7f, 0xfd, 0xd2,
+	0xef, 0x94, 0xd3, 0x78, 0x18, 0x45, 0x9c, 0x0a, 0xf1, 0x4c, 0xf2, 0x38, 0x65, 0x7e, 0x45, 0x25,
+	0x87, 0xcb, 0x35, 0xeb, 0x6f, 0xde, 0xad, 0x77, 0x3f, 0x3f, 0xdf, 0xae, 0xea, 0x58, 0xbb, 0x78,
+	0xa7, 0x21, 0x5b, 0x99, 0xfc, 0x13, 0x2a, 0x7a, 0xe6, 0x41, 0x14, 0xbf, 0x1e, 0xfd, 0x8f, 0xd4,
+	0xab, 0x8d, 0x78, 0x3e, 0xbb, 0xea, 0xf8, 0x74, 0x3a, 0x95, 0xfb, 0xe0, 0xe3, 0x1a, 0x5e, 0xf3,
+	0x04, 0x23, 0x2f, 0xf0, 0xc6, 0x9f, 0x35, 0x20, 0x37, 0x9a, 0xac, 0xea, 0x3b, 0x6c, 0xdc, 0xfc,
+	0x27, 0x4f, 0x99, 0x90, 0x00, 0xe3, 0x6a, 0xd8, 0x64, 0xaf, 0x45, 0x56, 0xdb, 0x37, 0xe3, 0xd6,
+	0x02, 0xcc, 0xca, 0xa2, 0xba, 0x5d, 0xab, 0x45, 0x6d, 0x3c, 0xad, 0x16, 0xf5, 0x56, 0x91, 0x04,
+	0x6f, 0xcd, 0x0e, 0x9f, 0xdc, 0x69, 0x11, 0x37, 0xee, 0xaf, 0xd1, 0x5f, 0x90, 0xad, 0xec, 0xdc,
+	0xf0, 0x7c, 0x6c, 0xa2, 0x8b, 0xb1, 0x89, 0x7e, 0x8c, 0x4d, 0xf4, 0x61, 0x62, 0x6a, 0x17, 0x13,
+	0x53, 0xfb, 0x36, 0x31, 0x35, 0xdc, 0x8d, 0xa1, 0xa1, 0xd4, 0x53, 0xf4, 0xfc, 0x2e, 0x8b, 0xe5,
+	0xf1, 0xe0, 0xc8, 0x0e, 0x21, 0x71, 0x2a, 0x42, 0x3f, 0x86, 0xa9, 0x93, 0x73, 0xa2, 0x5e, 0x29,
+	0x39, 0xca, 0xa8, 0x38, 0x5a, 0x2f, 0x1e, 0xa9, 0x7b, 0xbf, 0x03, 0x00, 0x00, 0xff, 0xff, 0x16,
+	0xba, 0xe0, 0xa5, 0x40, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -340,6 +437,8 @@ type MsgClient interface {
 	BindName(ctx context.Context, in *MsgBindNameRequest, opts ...grpc.CallOption) (*MsgBindNameResponse, error)
 	// DeleteName defines a method to verify a particular invariance.
 	DeleteName(ctx context.Context, in *MsgDeleteNameRequest, opts ...grpc.CallOption) (*MsgDeleteNameResponse, error)
+	// ModifyName defines a method to modify the attributes of an existing name.
+	ModifyName(ctx context.Context, in *MsgModifyNameRequest, opts ...grpc.CallOption) (*MsgModifyNameResponse, error)
 	// CreateRootName defines a governance method  for creating a root name.
 	CreateRootName(ctx context.Context, in *MsgCreateRootNameRequest, opts ...grpc.CallOption) (*MsgCreateRootNameResponse, error)
 }
@@ -370,6 +469,15 @@ func (c *msgClient) DeleteName(ctx context.Context, in *MsgDeleteNameRequest, op
 	return out, nil
 }
 
+func (c *msgClient) ModifyName(ctx context.Context, in *MsgModifyNameRequest, opts ...grpc.CallOption) (*MsgModifyNameResponse, error) {
+	out := new(MsgModifyNameResponse)
+	err := c.cc.Invoke(ctx, "/provenance.name.v1.Msg/ModifyName", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) CreateRootName(ctx context.Context, in *MsgCreateRootNameRequest, opts ...grpc.CallOption) (*MsgCreateRootNameResponse, error) {
 	out := new(MsgCreateRootNameResponse)
 	err := c.cc.Invoke(ctx, "/provenance.name.v1.Msg/CreateRootName", in, out, opts...)
@@ -385,6 +493,8 @@ type MsgServer interface {
 	BindName(context.Context, *MsgBindNameRequest) (*MsgBindNameResponse, error)
 	// DeleteName defines a method to verify a particular invariance.
 	DeleteName(context.Context, *MsgDeleteNameRequest) (*MsgDeleteNameResponse, error)
+	// ModifyName defines a method to modify the attributes of an existing name.
+	ModifyName(context.Context, *MsgModifyNameRequest) (*MsgModifyNameResponse, error)
 	// CreateRootName defines a governance method  for creating a root name.
 	CreateRootName(context.Context, *MsgCreateRootNameRequest) (*MsgCreateRootNameResponse, error)
 }
@@ -398,6 +508,9 @@ func (*UnimplementedMsgServer) BindName(ctx context.Context, req *MsgBindNameReq
 }
 func (*UnimplementedMsgServer) DeleteName(ctx context.Context, req *MsgDeleteNameRequest) (*MsgDeleteNameResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteName not implemented")
+}
+func (*UnimplementedMsgServer) ModifyName(ctx context.Context, req *MsgModifyNameRequest) (*MsgModifyNameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ModifyName not implemented")
 }
 func (*UnimplementedMsgServer) CreateRootName(ctx context.Context, req *MsgCreateRootNameRequest) (*MsgCreateRootNameResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateRootName not implemented")
@@ -443,6 +556,24 @@ func _Msg_DeleteName_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_ModifyName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgModifyNameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ModifyName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.name.v1.Msg/ModifyName",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ModifyName(ctx, req.(*MsgModifyNameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_CreateRootName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgCreateRootNameRequest)
 	if err := dec(in); err != nil {
@@ -472,6 +603,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteName",
 			Handler:    _Msg_DeleteName_Handler,
+		},
+		{
+			MethodName: "ModifyName",
+			Handler:    _Msg_ModifyName_Handler,
 		},
 		{
 			MethodName: "CreateRootName",
@@ -669,6 +804,69 @@ func (m *MsgCreateRootNameResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgModifyNameRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgModifyNameRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgModifyNameRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Record.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgModifyNameResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgModifyNameResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgModifyNameResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -740,6 +938,30 @@ func (m *MsgCreateRootNameRequest) Size() (n int) {
 }
 
 func (m *MsgCreateRootNameResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgModifyNameRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.Record.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgModifyNameResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1198,6 +1420,171 @@ func (m *MsgCreateRootNameResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgCreateRootNameResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgModifyNameRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgModifyNameRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgModifyNameRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Record", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Record.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgModifyNameResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgModifyNameResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgModifyNameResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

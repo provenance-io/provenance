@@ -5,16 +5,11 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-// name message types
-const (
-	TypeMsgBindNameRequest   = "bind_name"
-	TypeMsgDeleteNameRequest = "delete_name"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // Compile time interface checks.
-var _, _, _ sdk.Msg = &MsgBindNameRequest{}, &MsgDeleteNameRequest{}, &MsgCreateRootNameRequest{}
+var _, _, _, _ sdk.Msg = &MsgBindNameRequest{}, &MsgDeleteNameRequest{}, &MsgModifyNameRequest{}, &MsgCreateRootNameRequest{}
 
 // NewMsgBindNameRequest creates a new bind name request
 func NewMsgBindNameRequest(record, parent NameRecord) *MsgBindNameRequest {
@@ -23,12 +18,6 @@ func NewMsgBindNameRequest(record, parent NameRecord) *MsgBindNameRequest {
 		Record: record,
 	}
 }
-
-// Route implements Msg
-func (msg MsgBindNameRequest) Route() string { return ModuleName }
-
-// Type implements Msg
-func (msg MsgBindNameRequest) Type() string { return TypeMsgBindNameRequest }
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgBindNameRequest) ValidateBasic() error {
@@ -50,11 +39,6 @@ func (msg MsgBindNameRequest) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes encodes the message for signing
-func (msg MsgBindNameRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 // GetSigners indicates that the message must have been signed by the parent.
 func (msg MsgBindNameRequest) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Parent.Address)
@@ -71,12 +55,6 @@ func NewMsgDeleteNameRequest(record NameRecord) *MsgDeleteNameRequest {
 	}
 }
 
-// Route implements Msg
-func (msg MsgDeleteNameRequest) Route() string { return ModuleName }
-
-// Type implements Msg
-func (msg MsgDeleteNameRequest) Type() string { return TypeMsgDeleteNameRequest }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteNameRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Record.Name) == "" {
@@ -86,11 +64,6 @@ func (msg MsgDeleteNameRequest) ValidateBasic() error {
 		return fmt.Errorf("address cannot be empty")
 	}
 	return nil
-}
-
-// GetSignBytes encodes the message for signing
-func (msg MsgDeleteNameRequest) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners indicates that the message must have been signed by the record owner.
@@ -111,6 +84,14 @@ func NewMsgCreateRootNameRequest(authority string, name string, address string, 
 			Address:    address,
 			Restricted: restricted,
 		},
+	}
+}
+
+// NewMsgModifyNameRequest modifies an existing name record
+func NewMsgModifyNameRequest(authority string, name string, owner sdk.AccAddress, restricted bool) *MsgModifyNameRequest {
+	return &MsgModifyNameRequest{
+		Authority: authority,
+		Record:    NewNameRecord(name, owner, restricted),
 	}
 }
 
@@ -139,4 +120,26 @@ func (msg MsgCreateRootNameRequest) ValidateBasic() error {
 func (msg MsgCreateRootNameRequest) GetSigners() []sdk.AccAddress {
 	fromAddress, _ := sdk.AccAddressFromBech32(msg.Authority)
 	return []sdk.AccAddress{fromAddress}
+}
+
+func (msg MsgModifyNameRequest) ValidateBasic() error {
+	if strings.TrimSpace(msg.Record.Name) == "" {
+		return fmt.Errorf("name cannot be empty")
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.Record.Address); err != nil {
+		return fmt.Errorf("invalid record address: %w", err)
+	}
+	if strings.TrimSpace(msg.GetAuthority()) == "" {
+		return govtypes.ErrInvalidSigner
+	}
+	return nil
+}
+
+// GetSigners indicates that the message must have been signed by the gov module.
+func (msg MsgModifyNameRequest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.GetAuthority())
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
 }

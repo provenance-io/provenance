@@ -19,6 +19,9 @@ service Msg {
   // DeleteName defines a method to verify a particular invariance.
   rpc DeleteName(MsgDeleteNameRequest) returns (MsgDeleteNameResponse);
 
+  // ModifyName defines a method to modify the attributes of an existing name.
+  rpc ModifyName(MsgModifyNameRequest) returns (MsgModifyNameResponse);
+
   // CreateRootName defines a governance method  for creating a root name.
   rpc CreateRootName(MsgCreateRootNameRequest) returns (MsgCreateRootNameResponse);
 }
@@ -66,3 +69,16 @@ message MsgCreateRootNameRequest {
 
 // MsgCreateRootNameResponse defines Msg/CreateRootName response type.
 message MsgCreateRootNameResponse {}
+
+// MsgModifyNameRequest defines a governance method that is used to update an existing address/name binding.
+message MsgModifyNameRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // The address signing the message
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // The record being updated
+  NameRecord record = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgModifyNameResponse defines the Msg/ModifyName response type.
+message MsgModifyNameResponse {}

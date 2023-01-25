@@ -154,14 +154,14 @@ func SimulateMsgChangeStatus(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 		case types.StatusActive:
 			accounts := m.AddressListForPermission(types.Access_Delete)
 			if len(accounts) < 1 {
-				return simtypes.NoOpMsg(types.ModuleName, types.TypeCancelRequest, "no account has cancel access"), nil, nil
+				return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgCancelRequest{}), sdk.MsgTypeURL(&types.MsgCancelRequest{}), "no account has cancel access"), nil, nil
 			}
 			simAccount, _ = simtypes.FindAccount(accs, accounts[0])
 			msg = types.NewMsgCancelRequest(m.GetDenom(), simAccount.Address)
 		case types.StatusCancelled:
 			accounts := m.AddressListForPermission(types.Access_Delete)
 			if len(accounts) < 1 {
-				return simtypes.NoOpMsg(types.ModuleName, types.TypeDeleteRequest, "no account has delete access"), nil, nil
+				return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteRequest{}), sdk.MsgTypeURL(&types.MsgDeleteRequest{}), "no account has delete access"), nil, nil
 			}
 			simAccount, _ = simtypes.FindAccount(accs, accounts[0])
 			msg = types.NewMsgDeleteRequest(m.GetDenom(), simAccount.Address)
@@ -178,7 +178,7 @@ func SimulateMsgAddAccess(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		m := randomMarker(r, ctx, k)
 		if m == nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeAddAccessRequest, "unable to get marker for access change"), nil, nil
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgAddAccessRequest{}), sdk.MsgTypeURL(&types.MsgAddAccessRequest{}), "unable to get marker for access change"), nil, nil
 		}
 		if !m.GetManager().Equals(sdk.AccAddress{}) {
 			simAccount, _ = simtypes.FindAccount(accs, m.GetManager())
@@ -236,7 +236,7 @@ func Dispatch(
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate fees"), nil, err
+		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
 	}
 	// fund account with nhash for additional fees, if the account exists (100m stake)
 	if sdk.MsgTypeURL(msg) == "/provenance.marker.v1.MsgAddMarkerRequest" && ak.GetAccount(ctx, account.GetAddress()) != nil {
@@ -249,7 +249,7 @@ func Dispatch(
 			Amount: sdk.NewInt(100_000_000_000_000),
 		})
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to fund account with additional fee"), nil, err
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to fund account with additional fee"), nil, err
 		}
 	}
 
@@ -266,12 +266,12 @@ func Dispatch(
 		from.PrivKey,
 	)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
 	}
 
 	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), err.Error()), nil, nil
+		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), err.Error()), nil, nil
 	}
 
 	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), futures, nil

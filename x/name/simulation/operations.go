@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -72,16 +71,16 @@ func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankk
 			records = append(records, record)
 			return nil
 		}); err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBindNameRequest, "iterator of existing records failed"), nil, err
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgBindNameRequest{}), sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "iterator of existing records failed"), nil, err
 		}
 
 		if len(records) == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBindNameRequest, "no name records available to create under"), nil, nil
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgBindNameRequest{}), sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "no name records available to create under"), nil, nil
 		}
 
 		parent := records[r.Intn(len(records))]
 		if parent.Restricted && parent.Address != simAccount.Address.String() {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBindNameRequest, "parent name record is restricted, not current owner"), nil, nil
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgBindNameRequest{}), sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "parent name record is restricted, not current owner"), nil, nil
 		}
 
 		restrict := r.Intn(9) < 4
@@ -111,17 +110,17 @@ func SimulateMsgDeleteName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk ban
 			records = append(records, record)
 			return nil
 		}); err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBindNameRequest, "iterator of existing records failed"), nil, err
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), "iterator of existing records failed"), nil, err
 		}
 
 		if len(records) == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeleteNameRequest, "no name records available to delete"), nil, nil
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), "no name records available to delete"), nil, nil
 		}
 
 		randomRecord := records[r.Intn(len(records))]
 
 		if simAccount.Address.String() != randomRecord.Address {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDeleteNameRequest, "name record does not belong to user"), nil, nil
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), "name record does not belong to user"), nil, nil
 		}
 
 		msg := types.NewMsgDeleteNameRequest(randomRecord)
@@ -151,7 +150,7 @@ func Dispatch(
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate fees"), nil, err
+		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -167,12 +166,12 @@ func Dispatch(
 		from.PrivKey,
 	)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
 	}
 
 	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), err.Error()), nil, nil
+		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), err.Error()), nil, nil
 	}
 
 	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), nil, nil
