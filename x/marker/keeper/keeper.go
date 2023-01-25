@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"fmt"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -38,6 +40,9 @@ type MarkerKeeperI interface {
 
 	// IterateMarker processes all markers with the given handler function.
 	IterateMarkers(sdk.Context, func(types.MarkerAccountI) bool)
+
+	// GetAuthority returns the signing authority
+	GetAuthority() string
 }
 
 // Keeper defines the name module Keeper
@@ -65,8 +70,11 @@ type Keeper struct {
 	// Key to access the key-value store from sdk.Context.
 	storeKey storetypes.StoreKey
 
-	// The codec codec for binary encoding/decoding.
+	// The codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
+
+	// the signing authority for the gov proposals
+	authority string
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -99,6 +107,7 @@ func NewKeeper(
 		storeKey:           key,
 		bankKeeperStoreKey: bankKey,
 		cdc:                cdc,
+		authority:          authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	}
 }
 
@@ -175,4 +184,8 @@ func (k Keeper) IterateMarkers(ctx sdk.Context, cb func(marker types.MarkerAccou
 // GetEscrow returns the balances of all coins held in escrow in the marker
 func (k Keeper) GetEscrow(ctx sdk.Context, marker types.MarkerAccountI) sdk.Coins {
 	return k.bankKeeper.GetAllBalances(ctx, marker.GetAddress())
+}
+
+func (keeper Keeper) GetAuthority() string {
+	return keeper.authority
 }

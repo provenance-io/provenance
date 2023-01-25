@@ -820,3 +820,62 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 	// succeeds now as the default unrestricted denom expression allows any valid denom (minimum length is 2)
 	require.NoError(t, err, "should allow any valid denom with a min length of two")
 }
+
+func TestAddUnrestrictedMarker(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+
+	addr := types.MustGetMarkerAddress("testcoin")
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	user := testUserAddress("testcoin")
+	manager := testUserAddress("manager")
+	existingBalance := sdk.NewCoin("coin", sdk.NewInt(1000))
+
+	// prefund the marker address so an account gets created before the marker does.
+	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr, sdk.NewCoins(existingBalance)), "funding account")
+	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balance must be set")
+
+	validAuthority := "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
+	invalidAuthority := "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"
+
+	// Invalid signing authority
+	_, err := server.AddUnrestrictedMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddUnrestrictedMarkerRequest("tooshort", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, invalidAuthority))
+	require.Error(t, err)
+	require.Equal(t, "expected cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn got cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r: expected gov account as only signer for proposal message", err.Error())
+
+	// Require a long unrestricted denom
+	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: "[a-z]{12,20}"})
+
+	_, err = server.AddUnrestrictedMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddUnrestrictedMarkerRequest("tooshort", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, validAuthority))
+	require.Error(t, err, "fails with unrestricted denom length fault")
+	require.Equal(t, fmt.Errorf("invalid denom [tooshort] (fails unrestricted marker denom validation [a-z]{12,20})"), err, "should fail with denom restriction")
+
+	_, err = server.AddUnrestrictedMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddUnrestrictedMarkerRequest("itslongenough", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, validAuthority))
+	require.NoError(t, err, "should allow a marker with a sufficiently long denom")
+
+	// Set to an empty string (returns to default expression)
+	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: ""})
+	_, err = server.AddUnrestrictedMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddUnrestrictedMarkerRequest("short", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, validAuthority))
+	// succeeds now as the default unrestricted denom expression allows any valid denom (minimum length is 2)
+	require.NoError(t, err, "should allow any valid denom with a min length of two")
+
+	// Creating a marker over an account with zero sequence is fine.
+	_, err = server.AddUnrestrictedMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddUnrestrictedMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, validAuthority))
+	require.NoError(t, err, "should allow a marker over existing account that has not signed anything.")
+
+	// existing coin balance must still be present
+	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balances must be preserved")
+
+	// Creating a marker over an existing marker fails.
+	_, err = server.AddUnrestrictedMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddUnrestrictedMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, validAuthority))
+	require.Error(t, err, "fails because marker already exists")
+
+	// replace existing test account with a new copy that has a positive sequence number
+	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 10))
+
+	// Creating a marker over an existing account with a positive sequence number fails.
+	_, err = server.AddUnrestrictedMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddUnrestrictedMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, validAuthority))
+	require.Error(t, err, "should not allow creation over and existing account with a positive sequence number.")
+}

@@ -116,6 +116,8 @@
     - [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse)
     - [MsgAddMarkerRequest](#provenance.marker.v1.MsgAddMarkerRequest)
     - [MsgAddMarkerResponse](#provenance.marker.v1.MsgAddMarkerResponse)
+    - [MsgAddUnrestrictedMarkerRequest](#provenance.marker.v1.MsgAddUnrestrictedMarkerRequest)
+    - [MsgAddUnrestrictedMarkerResponse](#provenance.marker.v1.MsgAddUnrestrictedMarkerResponse)
     - [MsgBurnRequest](#provenance.marker.v1.MsgBurnRequest)
     - [MsgBurnResponse](#provenance.marker.v1.MsgBurnResponse)
     - [MsgCancelRequest](#provenance.marker.v1.MsgCancelRequest)
@@ -1996,6 +1998,39 @@ MsgAddMarkerResponse defines the Msg/AddMarker response type
 
 
 
+<a name="provenance.marker.v1.MsgAddUnrestrictedMarkerRequest"></a>
+
+### MsgAddUnrestrictedMarkerRequest
+MsgAddUnrestrictedMarkerRequest defines the Msg/AddUnrestrictedMarker request type
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `manager` | [string](#string) |  |  |
+| `from_address` | [string](#string) |  |  |
+| `status` | [MarkerStatus](#provenance.marker.v1.MarkerStatus) |  |  |
+| `marker_type` | [MarkerType](#provenance.marker.v1.MarkerType) |  |  |
+| `access_list` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
+| `supply_fixed` | [bool](#bool) |  |  |
+| `allow_governance_control` | [bool](#bool) |  |  |
+| `authority` | [string](#string) |  | The signing authority for the request |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgAddUnrestrictedMarkerResponse"></a>
+
+### MsgAddUnrestrictedMarkerResponse
+MsgAddUnrestrictedMarkerResponse defines the Msg/AddUnrestrictedMarker response type
+
+
+
+
+
+
 <a name="provenance.marker.v1.MsgBurnRequest"></a>
 
 ### MsgBurnRequest
@@ -2318,6 +2353,7 @@ Msg defines the Marker Msg service.
 | `SetDenomMetadata` | [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest) | [MsgSetDenomMetadataResponse](#provenance.marker.v1.MsgSetDenomMetadataResponse) | Allows Denom Metadata (see bank module) to be set for the Marker's Denom | |
 | `GrantAllowance` | [MsgGrantAllowanceRequest](#provenance.marker.v1.MsgGrantAllowanceRequest) | [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse) | GrantAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
 | `AddFinalizeActivateMarker` | [MsgAddFinalizeActivateMarkerRequest](#provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest) | [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse) | AddFinalizeActivateMarker | |
+| `AddUnrestrictedMarker` | [MsgAddUnrestrictedMarkerRequest](#provenance.marker.v1.MsgAddUnrestrictedMarkerRequest) | [MsgAddUnrestrictedMarkerResponse](#provenance.marker.v1.MsgAddUnrestrictedMarkerResponse) | AddUnrestrictedMarker can only be called via gov proposal | |
 
  <!-- end services -->
 
