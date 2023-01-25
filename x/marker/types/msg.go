@@ -516,8 +516,8 @@ func (msg MsgAddMarkerProposalRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewAddMarkerProposal creates a new proposal
-func NewAddMarkerProposal(
+// NewMsgAddMarkerProposal creates a new proposal
+func NewMsgAddMarkerProposal(
 	denom string,
 	totalSupply sdkmath.Int,
 	manager sdk.AccAddress,

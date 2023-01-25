@@ -9,54 +9,6 @@ import (
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
-// HandleAddMarkerProposal handles an Add Marker governance proposal request
-func HandleAddMarkerProposal(ctx sdk.Context, k Keeper, c *types.MsgAddMarkerProposalRequest) error {
-	addr, err := types.MarkerAddress(c.Amount.Denom)
-	if err != nil {
-		return err
-	}
-	existing, err := k.GetMarker(ctx, addr)
-	if err != nil {
-		return err
-	}
-	if existing != nil {
-		return fmt.Errorf("%s marker already exists", c.Amount.Denom)
-	}
-
-	newMarker := types.NewEmptyMarkerAccount(c.Amount.Denom, c.Manager, c.AccessList)
-	newMarker.AllowGovernanceControl = c.AllowGovernanceControl
-	newMarker.SupplyFixed = c.SupplyFixed
-	newMarker.MarkerType = c.MarkerType
-
-	if err := newMarker.SetSupply(c.Amount); err != nil {
-		return err
-	}
-
-	if err := newMarker.SetStatus(c.Status); err != nil {
-		return err
-	}
-
-	if err := newMarker.Validate(); err != nil {
-		return err
-	}
-
-	if err := k.AddMarkerAccount(ctx, newMarker); err != nil {
-		return err
-	}
-
-	// active markers should have supply set.
-	if newMarker.Status == types.StatusActive {
-		if err := k.AdjustCirculation(ctx, newMarker, c.Amount); err != nil {
-			return err
-		}
-	}
-
-	logger := k.Logger(ctx)
-	logger.Info("a new marker was added", "marker", c.Amount.Denom, "supply", c.Amount.String())
-
-	return nil
-}
-
 // HandleSupplyIncreaseProposal handles a SupplyIncrease governance proposal request
 func HandleSupplyIncreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyIncreaseProposal) error {
 	logger := k.Logger(ctx)
