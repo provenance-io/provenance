@@ -295,7 +295,7 @@ func (s *KeeperTestSuite) TestCreateRootName() {
 	s.msgSrvr = namekeeper.NewMsgServerImpl(s.app.NameKeeper)
 	msg := nametypes.MsgCreateRootNameRequest{
 		Record: &nametypes.NameRecord{
-			Name:       "name.with.period",
+			Name:       "swampmonster",
 			Address:    "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
 			Restricted: false,
 		},
@@ -303,7 +303,6 @@ func (s *KeeperTestSuite) TestCreateRootName() {
 	}
 
 	s.Run("create valid root name", func() {
-		msg.Record.Name = "swampmonster"
 		_, err := s.msgSrvr.CreateRootName(s.ctx, &msg)
 		s.Require().NoError(err)
 	})
