@@ -74,7 +74,6 @@
     - [GenesisState](#provenance.marker.v1.GenesisState)
   
 - [provenance/marker/v1/proposals.proto](#provenance/marker/v1/proposals.proto)
-    - [AddMarkerProposal](#provenance.marker.v1.AddMarkerProposal)
     - [ChangeStatusProposal](#provenance.marker.v1.ChangeStatusProposal)
     - [RemoveAdministratorProposal](#provenance.marker.v1.RemoveAdministratorProposal)
     - [SetAdministratorProposal](#provenance.marker.v1.SetAdministratorProposal)
@@ -108,13 +107,14 @@
     - [SIPrefix](#provenance.marker.v1.SIPrefix)
   
 - [provenance/marker/v1/tx.proto](#provenance/marker/v1/tx.proto)
-    - [AddMarkerProposalResponse](#provenance.marker.v1.AddMarkerProposalResponse)
     - [MsgActivateRequest](#provenance.marker.v1.MsgActivateRequest)
     - [MsgActivateResponse](#provenance.marker.v1.MsgActivateResponse)
     - [MsgAddAccessRequest](#provenance.marker.v1.MsgAddAccessRequest)
     - [MsgAddAccessResponse](#provenance.marker.v1.MsgAddAccessResponse)
     - [MsgAddFinalizeActivateMarkerRequest](#provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest)
     - [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse)
+    - [MsgAddMarkerProposalRequest](#provenance.marker.v1.MsgAddMarkerProposalRequest)
+    - [MsgAddMarkerProposalResponse](#provenance.marker.v1.MsgAddMarkerProposalResponse)
     - [MsgAddMarkerRequest](#provenance.marker.v1.MsgAddMarkerRequest)
     - [MsgAddMarkerResponse](#provenance.marker.v1.MsgAddMarkerResponse)
     - [MsgBurnRequest](#provenance.marker.v1.MsgBurnRequest)
@@ -1378,28 +1378,6 @@ GenesisState defines the account module's genesis state.
 
 
 
-<a name="provenance.marker.v1.AddMarkerProposal"></a>
-
-### AddMarkerProposal
-AddMarkerProposal defines defines a governance proposal to create a new marker
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `manager` | [string](#string) |  |  |
-| `status` | [MarkerStatus](#provenance.marker.v1.MarkerStatus) |  |  |
-| `marker_type` | [MarkerType](#provenance.marker.v1.MarkerType) |  |  |
-| `access_list` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
-| `supply_fixed` | [bool](#bool) |  |  |
-| `allow_governance_control` | [bool](#bool) |  |  |
-| `authority` | [string](#string) |  | The signing authority for the request |
-
-
-
-
-
-
 <a name="provenance.marker.v1.ChangeStatusProposal"></a>
 
 ### ChangeStatusProposal
@@ -1880,16 +1858,6 @@ SIPrefix represents an International System of Units (SI) Prefix.
 
 
 
-<a name="provenance.marker.v1.AddMarkerProposalResponse"></a>
-
-### AddMarkerProposalResponse
-MsgAddUnrestrictedMarkerResponse defines the Msg/AddUnrestrictedMarker response type
-
-
-
-
-
-
 <a name="provenance.marker.v1.MsgActivateRequest"></a>
 
 ### MsgActivateRequest
@@ -1968,6 +1936,38 @@ MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker re
 
 ### MsgAddFinalizeActivateMarkerResponse
 MsgAddFinalizeActivateMarkerResponse defines the Msg/AddFinalizeActivateMarker response type
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgAddMarkerProposalRequest"></a>
+
+### MsgAddMarkerProposalRequest
+MsgAddMarkerProposalRequest defines the Msg/AddMarkerProposal request type
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `manager` | [string](#string) |  |  |
+| `status` | [MarkerStatus](#provenance.marker.v1.MarkerStatus) |  |  |
+| `marker_type` | [MarkerType](#provenance.marker.v1.MarkerType) |  |  |
+| `access_list` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
+| `supply_fixed` | [bool](#bool) |  |  |
+| `allow_governance_control` | [bool](#bool) |  |  |
+| `authority` | [string](#string) |  | The signing authority for the request |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgAddMarkerProposalResponse"></a>
+
+### MsgAddMarkerProposalResponse
+MsgAddMarkerProposalResponse defines the Msg/AddMarkerProposal response type
 
 
 
@@ -2328,7 +2328,7 @@ Msg defines the Marker Msg service.
 | `SetDenomMetadata` | [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest) | [MsgSetDenomMetadataResponse](#provenance.marker.v1.MsgSetDenomMetadataResponse) | Allows Denom Metadata (see bank module) to be set for the Marker's Denom | |
 | `GrantAllowance` | [MsgGrantAllowanceRequest](#provenance.marker.v1.MsgGrantAllowanceRequest) | [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse) | GrantAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
 | `AddFinalizeActivateMarker` | [MsgAddFinalizeActivateMarkerRequest](#provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest) | [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse) | AddFinalizeActivateMarker | |
-| `HandleAddMarkerProposal` | [AddMarkerProposal](#provenance.marker.v1.AddMarkerProposal) | [AddMarkerProposalResponse](#provenance.marker.v1.AddMarkerProposalResponse) | AddUnrestrictedMarker can only be called via gov proposal | |
+| `AddMarkerProposal` | [MsgAddMarkerProposalRequest](#provenance.marker.v1.MsgAddMarkerProposalRequest) | [MsgAddMarkerProposalResponse](#provenance.marker.v1.MsgAddMarkerProposalResponse) | AddMarkerProposal can only be called via gov proposal | |
 
  <!-- end services -->
 

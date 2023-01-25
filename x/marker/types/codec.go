@@ -30,7 +30,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 
 	registry.RegisterImplementations(
 		(*govtypesv1beta1.Content)(nil),
-		&AddMarkerProposal{},
+		&MsgAddMarkerProposalRequest{},
 		&SupplyIncreaseProposal{},
 		&SupplyDecreaseProposal{},
 		&SetAdministratorProposal{},

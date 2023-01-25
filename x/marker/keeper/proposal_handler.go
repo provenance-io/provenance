@@ -10,7 +10,7 @@ import (
 )
 
 // HandleAddMarkerProposal handles an Add Marker governance proposal request
-func HandleAddMarkerProposal(ctx sdk.Context, k Keeper, c *types.AddMarkerProposal) error {
+func HandleAddMarkerProposal(ctx sdk.Context, k Keeper, c *types.MsgAddMarkerProposalRequest) error {
 	addr, err := types.MarkerAddress(c.Amount.Denom)
 	if err != nil {
 		return err

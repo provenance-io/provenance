@@ -511,7 +511,7 @@ func (msg MsgAddFinalizeActivateMarkerRequest) GetSigners() []sdk.AccAddress {
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
-func (msg AddMarkerProposal) GetSigners() []sdk.AccAddress {
+func (msg MsgAddMarkerProposalRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Authority)
 	return []sdk.AccAddress{addr}
 }
@@ -527,8 +527,8 @@ func NewAddMarkerProposal(
 	fixed bool,
 	allowGov bool,
 	authority string, //nolint:interfacer
-) *AddMarkerProposal {
-	return &AddMarkerProposal{
+) *MsgAddMarkerProposalRequest {
+	return &MsgAddMarkerProposalRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
 		Manager:                manager.String(),
 		Status:                 status,
@@ -540,7 +540,7 @@ func NewAddMarkerProposal(
 	}
 }
 
-func (amp AddMarkerProposal) ValidateBasic() error {
+func (amp MsgAddMarkerProposalRequest) ValidateBasic() error {
 	if amp.Status == StatusUndefined {
 		return ErrInvalidMarkerStatus
 	}

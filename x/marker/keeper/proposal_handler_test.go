@@ -328,7 +328,7 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 
 			var err error
 			switch c := tc.prop.(type) {
-			case *markertypes.AddMarkerProposal:
+			case *markertypes.MsgAddMarkerProposalRequest:
 				err = markerkeeper.HandleAddMarkerProposal(s.ctx, s.k, c)
 			case *markertypes.SupplyIncreaseProposal:
 				err = markerkeeper.HandleSupplyIncreaseProposal(s.ctx, s.k, c)

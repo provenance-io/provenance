@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/armon/go-metrics"
 
@@ -10,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
 	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
@@ -601,8 +601,8 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 	return &types.MsgAddFinalizeActivateMarkerResponse{}, nil
 }
 
-// HandleAddMarkerProposal can only be submitted via gov proposal
-func (k msgServer) HandleAddMarkerProposal(goCtx context.Context, msg *types.AddMarkerProposal) (*types.AddMarkerProposalResponse, error) {
+// AddMarkerProposal can only be submitted via gov proposal
+func (k msgServer) AddMarkerProposal(goCtx context.Context, msg *types.MsgAddMarkerProposalRequest) (*types.MsgAddMarkerProposalResponse, error) {
 
 	if msg.GetAuthority() != k.Keeper.GetAuthority() {
 		return nil, govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", k.Keeper.GetAuthority(), msg.GetAuthority())
@@ -610,11 +610,11 @@ func (k msgServer) HandleAddMarkerProposal(goCtx context.Context, msg *types.Add
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// HandleSupplyIncreaseProposal performs the basic validation
+	// HandleAddMarkerProposal performs the basic validation
 	err := HandleAddMarkerProposal(ctx, k.Keeper, msg)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.AddMarkerProposalResponse{}, nil
+	return &types.MsgAddMarkerProposalResponse{}, nil
 }
