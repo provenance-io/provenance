@@ -82,8 +82,6 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 func NewProposalHandler(k keeper.Keeper) govtypesv1beta1.Handler {
 	return func(ctx sdk.Context, content govtypesv1beta1.Content) error {
 		switch c := content.(type) {
-		case *types.AddMarkerProposal:
-			return keeper.HandleAddMarkerProposal(ctx, k, c)
 		case *types.SupplyIncreaseProposal:
 			return keeper.HandleSupplyIncreaseProposal(ctx, k, c)
 		case *types.SupplyDecreaseProposal:

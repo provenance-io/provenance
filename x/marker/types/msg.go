@@ -3,7 +3,6 @@ package types
 import (
 	"errors"
 	"fmt"
-
 	"github.com/gogo/protobuf/proto"
 
 	sdkmath "cosmossdk.io/math"
@@ -515,4 +514,47 @@ func (msg MsgAddFinalizeActivateMarkerRequest) GetSigners() []sdk.AccAddress {
 func (msg AddMarkerProposal) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Authority)
 	return []sdk.AccAddress{addr}
+}
+
+// NewAddMarkerProposal creates a new proposal
+func NewAddMarkerProposal(
+	denom string,
+	totalSupply sdkmath.Int,
+	manager sdk.AccAddress,
+	status MarkerStatus,
+	markerType MarkerType,
+	access []AccessGrant,
+	fixed bool,
+	allowGov bool,
+	authority string, //nolint:interfacer
+) *AddMarkerProposal {
+	return &AddMarkerProposal{
+		Amount:                 sdk.NewCoin(denom, totalSupply),
+		Manager:                manager.String(),
+		Status:                 status,
+		MarkerType:             markerType,
+		AccessList:             access,
+		SupplyFixed:            fixed,
+		AllowGovernanceControl: allowGov,
+		Authority:              authority,
+	}
+}
+
+func (amp AddMarkerProposal) ValidateBasic() error {
+	if amp.Status == StatusUndefined {
+		return ErrInvalidMarkerStatus
+	}
+	// A proposed marker must have a manager assigned to allow updates to be made by the caller.
+	if len(amp.Manager) == 0 && amp.Status == StatusProposed {
+		return fmt.Errorf("marker manager cannot be empty when creating a proposed marker")
+	}
+	testCoin := sdk.Coin{
+		Denom:  amp.Amount.Denom,
+		Amount: amp.Amount.Amount,
+	}
+	if !testCoin.IsValid() {
+		return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
+	}
+
+	return nil
 }

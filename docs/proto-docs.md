@@ -1386,8 +1386,6 @@ AddMarkerProposal defines defines a governance proposal to create a new marker
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `manager` | [string](#string) |  |  |
 | `status` | [MarkerStatus](#provenance.marker.v1.MarkerStatus) |  |  |

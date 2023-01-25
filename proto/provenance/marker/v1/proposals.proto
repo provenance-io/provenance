@@ -17,12 +17,7 @@ option java_multiple_files = true;
 
 // AddMarkerProposal defines defines a governance proposal to create a new marker
 message AddMarkerProposal {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
   option (cosmos.msg.v1.signer) = "authority";
-
-  string title       = 1;
-  string description = 2;
 
   cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];

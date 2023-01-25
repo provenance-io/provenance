@@ -15,9 +15,6 @@ import (
 )
 
 const (
-	// OpWeightAddMarkerProposal app params key for add marker proposal
-	//nolint:gosec // not credentials
-	OpWeightAddMarkerProposal = "op_weight_add_marker_proposal"
 	// OpWeightSupplyIncreaseProposal app params key for supply increase proposal
 	OpWeightSupplyIncreaseProposal = "op_weight_supply_increase_proposal"
 	// OpWeightSupplyDecreaseProposal app params key for supply decrease proposal
@@ -37,11 +34,6 @@ const (
 // ProposalContents defines the module weighted proposals' contents
 func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
 	return []simtypes.WeightedProposalContent{
-		simulation.NewWeightedProposalContent(
-			OpWeightAddMarkerProposal,
-			simappparams.DefaultWeightAddMarkerProposalContent,
-			SimulateCreateAddMarkerProposalContent(k),
-		),
 		simulation.NewWeightedProposalContent(
 			OpWeightSupplyIncreaseProposal,
 			simappparams.DefaultWeightSupplyIncreaseProposalContent,
@@ -76,24 +68,23 @@ func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
 }
 
 // SimulateCreateAddMarkerProposalContent generates random create marker proposal content
-func SimulateCreateAddMarkerProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
-	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
-		simAccount, _ := simtypes.RandomAcc(r, accs)
-
-		return types.NewAddMarkerProposal(
-			simtypes.RandStringOfLength(r, 5),  // title
-			simtypes.RandStringOfLength(r, 10), // description
-			randomUnrestrictedDenom(r, k.GetUnrestrictedDenomRegex(ctx)),
-			sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx))), // initial supply
-			simAccount.Address,              // manager
-			types.MarkerStatus(r.Intn(3)+1), // initial status (proposed, finalized, active)
-			types.MarkerType(r.Intn(2)+1),   // coin or restricted_coin
-			[]types.AccessGrant{{Address: simAccount.Address.String(), Permissions: randomAccessTypes(r)}},
-			r.Intn(2) > 0, // fixed supply
-			r.Intn(2) > 0, // allow gov
-		)
-	}
-}
+//func SimulateCreateAddMarkerProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
+//	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
+//		simAccount, _ := simtypes.RandomAcc(r, accs)
+//
+//		return types.NewAddMarkerProposal(
+//			randomUnrestrictedDenom(r, k.GetUnrestrictedDenomRegex(ctx)),
+//			sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx))), // initial supply
+//			simAccount.Address,              // manager
+//			types.MarkerStatus(r.Intn(3)+1), // initial status (proposed, finalized, active)
+//			types.MarkerType(r.Intn(2)+1),   // coin or restricted_coin
+//			[]types.AccessGrant{{Address: simAccount.Address.String(), Permissions: randomAccessTypes(r)}},
+//			r.Intn(2) > 0, // fixed supply
+//			r.Intn(2) > 0, // allow gov
+//			"",            // authority
+//		)
+//	}
+//}
 
 // SimulateCreateSupplyIncreaseProposalContent generates random increase marker supply proposal content
 func SimulateCreateSupplyIncreaseProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {

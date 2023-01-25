@@ -154,8 +154,6 @@ Valid Proposal Types (and associated parameters):
 			var proposal govtypesv1beta1.Content
 
 			switch args[0] {
-			case types.ProposalTypeAddMarker:
-				proposal = &types.AddMarkerProposal{}
 			case types.ProposalTypeIncreaseSupply:
 				proposal = &types.SupplyIncreaseProposal{}
 			case types.ProposalTypeDecreaseSupply:

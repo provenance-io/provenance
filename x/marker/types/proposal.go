@@ -3,17 +3,13 @@ package types
 import (
 	"fmt"
 
-	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
-	// ProposalTypeAddMarker to add a new marker
-	ProposalTypeAddMarker string = "AddMarker"
 	// ProposalTypeIncreaseSupply to mint coins
 	ProposalTypeIncreaseSupply string = "IncreaseSupply"
 	// ProposalTypeDecreaseSupply to burn coins
@@ -31,7 +27,6 @@ const (
 )
 
 var (
-	_ govtypesv1beta1.Content = &AddMarkerProposal{}
 	_ govtypesv1beta1.Content = &SupplyIncreaseProposal{}
 	_ govtypesv1beta1.Content = &SupplyDecreaseProposal{}
 	_ govtypesv1beta1.Content = &SetAdministratorProposal{}
@@ -42,7 +37,6 @@ var (
 )
 
 func init() {
-	govtypesv1beta1.RegisterProposalType(ProposalTypeAddMarker)
 	govtypesv1beta1.RegisterProposalType(ProposalTypeIncreaseSupply)
 	govtypesv1beta1.RegisterProposalType(ProposalTypeDecreaseSupply)
 	govtypesv1beta1.RegisterProposalType(ProposalTypeSetAdministrator)
@@ -52,64 +46,7 @@ func init() {
 	govtypesv1beta1.RegisterProposalType(ProposalTypeSetDenomMetadata)
 }
 
-// NewAddMarkerProposal creates a new proposal
-func NewAddMarkerProposal(
-	title,
-	description string,
-	denom string,
-	totalSupply sdkmath.Int,
-	manager sdk.AccAddress,
-	status MarkerStatus,
-	markerType MarkerType,
-	access []AccessGrant,
-	fixed bool,
-	allowGov bool, //nolint:interfacer
-) *AddMarkerProposal {
-	return &AddMarkerProposal{
-		Title:                  title,
-		Description:            description,
-		Amount:                 sdk.NewCoin(denom, totalSupply),
-		Manager:                manager.String(),
-		Status:                 status,
-		MarkerType:             markerType,
-		AccessList:             access,
-		SupplyFixed:            fixed,
-		AllowGovernanceControl: allowGov,
-	}
-}
-
 // Implements Proposal Interface
-
-func (amp AddMarkerProposal) ProposalRoute() string { return RouterKey }
-func (amp AddMarkerProposal) ProposalType() string  { return ProposalTypeAddMarker }
-func (amp AddMarkerProposal) ValidateBasic() error {
-	if amp.Status == StatusUndefined {
-		return ErrInvalidMarkerStatus
-	}
-	// A proposed marker must have a manager assigned to allow updates to be made by the caller.
-	if len(amp.Manager) == 0 && amp.Status == StatusProposed {
-		return fmt.Errorf("marker manager cannot be empty when creating a proposed marker")
-	}
-	testCoin := sdk.Coin{
-		Denom:  amp.Amount.Denom,
-		Amount: amp.Amount.Amount,
-	}
-	if !testCoin.IsValid() {
-		return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
-	}
-	return govtypesv1beta1.ValidateAbstract(&amp)
-}
-
-func (amp AddMarkerProposal) String() string {
-	return fmt.Sprintf(`Add Marker Proposal:
-  Marker:      %s
-  Title:       %s
-  Description: %s
-  Supply:      %s
-  Status:      %s
-  Type:        %s
-`, amp.Amount.Denom, amp.Title, amp.Description, amp.Amount.Amount, amp.Status, amp.MarkerType)
-}
 
 // NewSupplyIncreaseProposal creates a new proposal
 func NewSupplyIncreaseProposal(title, description string, amount sdk.Coin, destination string) *SupplyIncreaseProposal {
