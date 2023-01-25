@@ -2,10 +2,13 @@ syntax = "proto3";
 package provenance.marker.v1;
 
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 import "cosmos/bank/v1beta1/bank.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
 import "provenance/marker/v1/marker.proto";
 import "provenance/marker/v1/accessgrant.proto";
+
 
 option go_package = "github.com/provenance-io/provenance/x/marker/types";
 
@@ -16,6 +19,7 @@ option java_multiple_files = true;
 message AddMarkerProposal {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
+  option (cosmos.msg.v1.signer) = "authority";
 
   string title       = 1;
   string description = 2;
@@ -28,6 +32,7 @@ message AddMarkerProposal {
   repeated AccessGrant access_list              = 7 [(gogoproto.nullable) = false];
   bool                 supply_fixed             = 8;
   bool                 allow_governance_control = 9;
+  string               authority                = 10 [(cosmos_proto.scalar) = "cosmos.AddressString"]; // The signing authority for the request
 }
 
 // SupplyIncreaseProposal defines a governance proposal to administer a marker and increase total supply of the marker

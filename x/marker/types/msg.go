@@ -511,45 +511,8 @@ func (msg MsgAddFinalizeActivateMarkerRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// NewMsgAddUnrestrictedMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
-func NewMsgAddUnrestrictedMarkerRequest(denom string, totalSupply sdkmath.Int, fromAddress sdk.AccAddress, manager sdk.AccAddress, markerType MarkerType, supplyFixed bool, allowGovernanceControl bool, authority string) *MsgAddUnrestrictedMarkerRequest {
-	return &MsgAddUnrestrictedMarkerRequest{
-		Amount:                 sdk.NewCoin(denom, totalSupply),
-		Manager:                manager.String(),
-		FromAddress:            fromAddress.String(),
-		Status:                 StatusProposed,
-		MarkerType:             markerType,
-		SupplyFixed:            supplyFixed,
-		AllowGovernanceControl: allowGovernanceControl,
-		Authority:              authority,
-	}
-}
-
-// ValidateBasic runs stateless validation checks on the message.
-func (msg MsgAddUnrestrictedMarkerRequest) ValidateBasic() error {
-	if msg.Status == StatusUndefined {
-		return ErrInvalidMarkerStatus
-	}
-	// A proposed marker must have a manager assigned to allow updates to be made by the caller.
-	if len(msg.Manager) == 0 && msg.Status == StatusProposed {
-		return fmt.Errorf("marker manager cannot be empty when creating a proposed marker")
-	}
-	if msg.Status != StatusFinalized && msg.Status != StatusProposed {
-		return fmt.Errorf("marker can only be created with a Proposed or Finalized status")
-	}
-	testCoin := sdk.Coin{
-		Denom:  msg.Amount.Denom,
-		Amount: msg.Amount.Amount,
-	}
-	if !testCoin.IsValid() {
-		return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
-	}
-
-	return nil
-}
-
 // GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgAddUnrestrictedMarkerRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.FromAddress)
+func (msg AddMarkerProposal) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Authority)
 	return []sdk.AccAddress{addr}
 }

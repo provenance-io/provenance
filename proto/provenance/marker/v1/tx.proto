@@ -10,6 +10,7 @@ import "cosmos/msg/v1/msg.proto";
 import "ibc/applications/transfer/v1/tx.proto";
 import "provenance/marker/v1/marker.proto";
 import "provenance/marker/v1/accessgrant.proto";
+import "provenance/marker/v1/proposals.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/marker/types";
 
@@ -51,7 +52,7 @@ service Msg {
   // AddFinalizeActivateMarker
   rpc AddFinalizeActivateMarker(MsgAddFinalizeActivateMarkerRequest) returns (MsgAddFinalizeActivateMarkerResponse);
   // AddUnrestrictedMarker can only be called via gov proposal
-  rpc AddUnrestrictedMarker(MsgAddUnrestrictedMarkerRequest) returns (MsgAddUnrestrictedMarkerResponse);
+  rpc HandleAddMarkerProposal(AddMarkerProposal) returns (AddMarkerProposalResponse);
 }
 
 // MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If
@@ -215,20 +216,5 @@ message MsgAddFinalizeActivateMarkerRequest {
 // MsgAddFinalizeActivateMarkerResponse defines the Msg/AddFinalizeActivateMarker response type
 message MsgAddFinalizeActivateMarkerResponse {}
 
-// MsgAddUnrestrictedMarkerRequest defines the Msg/AddUnrestrictedMarker request type
-message MsgAddUnrestrictedMarkerRequest {
-  option (cosmos.msg.v1.signer) = "authority";
-
-  cosmos.base.v1beta1.Coin   amount                   = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
-  string                     manager                  = 3;
-  string                     from_address             = 4;
-  MarkerStatus               status                   = 5;
-  MarkerType                 marker_type              = 6;
-  repeated AccessGrant       access_list              = 7 [(gogoproto.nullable) = false];
-  bool                       supply_fixed             = 8;
-  bool                       allow_governance_control = 9;
-  string                     authority                = 10 [(cosmos_proto.scalar) = "cosmos.AddressString"]; // The signing authority for the request
-}
-
 // MsgAddUnrestrictedMarkerResponse defines the Msg/AddUnrestrictedMarker response type
-message MsgAddUnrestrictedMarkerResponse {}
+message AddMarkerProposalResponse {}

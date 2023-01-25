@@ -601,70 +601,20 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 	return &types.MsgAddFinalizeActivateMarkerResponse{}, nil
 }
 
-// AddUnrestrictedMarker is similar to AddMarker except this request can only be submitted via gov proposal
-func (k msgServer) AddUnrestrictedMarker(goCtx context.Context, msg *types.MsgAddUnrestrictedMarkerRequest) (*types.MsgAddUnrestrictedMarkerResponse, error) {
+// HandleAddMarkerProposal can only be submitted via gov proposal
+func (k msgServer) HandleAddMarkerProposal(goCtx context.Context, msg *types.AddMarkerProposal) (*types.AddMarkerProposalResponse, error) {
 
 	if msg.GetAuthority() != k.Keeper.GetAuthority() {
 		return nil, govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", k.Keeper.GetAuthority(), msg.GetAuthority())
 	}
 
-	// TODO: copy paste of AddMarker
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Validate transaction message.
-	err := msg.ValidateBasic()
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	}
-	if msg.Status >= types.StatusActive {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap("a marker can not be created in an ACTIVE status")
-	}
-
-	// TODO: What to do here? For ibc markers, this validation will fail on the regex. This check should only be bypassed if the marker is restricted
-	if msg.MarkerType != types.MarkerType_RestrictedCoin {
-		// Add marker requests must pass extra validation for denom (in addition to regular coin validation expression)
-		if err = k.ValidateUnrestictedDenom(ctx, msg.Amount.Denom); err != nil {
-			return nil, err
-		}
-	}
-
-	addr := types.MustGetMarkerAddress(msg.Amount.Denom)
-	var manager sdk.AccAddress
-	if msg.Manager != "" {
-		manager, err = sdk.AccAddressFromBech32(msg.Manager)
-	} else {
-		manager, err = sdk.AccAddressFromBech32(msg.FromAddress)
-	}
+	// HandleSupplyIncreaseProposal performs the basic validation
+	err := HandleAddMarkerProposal(ctx, k.Keeper, msg)
 	if err != nil {
 		return nil, err
 	}
-	account := authtypes.NewBaseAccount(addr, nil, 0, 0)
-	ma := types.NewMarkerAccount(
-		account,
-		sdk.NewCoin(msg.Amount.Denom, msg.Amount.Amount),
-		manager,
-		msg.AccessList,
-		msg.Status,
-		msg.MarkerType,
-		msg.SupplyFixed,
-	)
 
-	if k.GetEnableGovernance(ctx) {
-		ma.AllowGovernanceControl = true
-	} else {
-		ma.AllowGovernanceControl = msg.AllowGovernanceControl
-	}
-
-	if err := k.Keeper.AddMarkerAccount(ctx, ma); err != nil {
-		ctx.Logger().Error("unable to add marker", "err", err)
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
-	return &types.MsgAddUnrestrictedMarkerResponse{}, nil
+	return &types.AddMarkerProposalResponse{}, nil
 }
