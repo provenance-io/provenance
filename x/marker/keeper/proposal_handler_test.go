@@ -43,6 +43,20 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestMarkerProposals() {
+	// Add markers for tests
+	validAuthority := "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
+	server := markerkeeper.NewMsgServerImpl(s.app.MarkerKeeper)
+	_, err := server.AddMarkerProposal(s.ctx, markertypes.NewMsgAddMarkerProposal("test1", sdk.NewInt(100), sdk.AccAddress{}, markertypes.StatusActive, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, true, validAuthority))
+	require.NoError(s.T(), err)
+
+	_, err = server.AddMarkerProposal(s.ctx, markertypes.NewMsgAddMarkerProposal("testnogov", sdk.NewInt(100), sdk.AccAddress{}, markertypes.StatusActive, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, false, validAuthority))
+	require.NoError(s.T(), err)
+
+	_, err = server.AddMarkerProposal(s.ctx, markertypes.NewMsgAddMarkerProposal("pending", sdk.NewInt(100), s.accountAddr, markertypes.StatusFinalized, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, true, validAuthority))
+	require.NoError(s.T(), err)
+
+	_, err = server.AddMarkerProposal(s.ctx, markertypes.NewMsgAddMarkerProposal("testrestricted", sdk.NewInt(100), s.accountAddr, markertypes.StatusFinalized, markertypes.MarkerType_RestrictedCoin, []markertypes.AccessGrant{}, true, true, validAuthority))
+	require.NoError(s.T(), err)
 
 	testCases := []struct {
 		name string

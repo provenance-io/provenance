@@ -604,7 +604,6 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 
 // AddMarkerProposal can only be submitted via gov proposal
 func (k msgServer) AddMarkerProposal(goCtx context.Context, msg *types.MsgAddMarkerProposalRequest) (*types.MsgAddMarkerProposalResponse, error) {
-
 	if msg.GetAuthority() != k.Keeper.GetAuthority() {
 		return nil, govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", k.Keeper.GetAuthority(), msg.GetAuthority())
 	}
