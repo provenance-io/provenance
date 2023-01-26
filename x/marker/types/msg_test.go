@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -243,5 +244,37 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				assert.NoError(t, err)
 			}
 		})
+	}
+}
+
+func TestMsgAddMarkerProposalRequestValidateBasic(t *testing.T) {
+
+	testCases := []struct {
+		name string
+		msg  *MsgAddMarkerProposalRequest
+		err  error
+	}{
+		{
+			"add marker - undefined status",
+			NewMsgAddMarkerProposalRequest("test1", sdk.NewInt(100), sdk.AccAddress{}, StatusUndefined, MarkerType_Coin, []AccessGrant{}, true, true, ""),
+			ErrInvalidMarkerStatus,
+		},
+		{
+			"add marker - invalid manager",
+			NewMsgAddMarkerProposalRequest("testinvalidmanager", sdk.NewInt(100), sdk.AccAddress{}, StatusProposed, MarkerType_RestrictedCoin, []AccessGrant{}, true, true, ""),
+			fmt.Errorf("marker manager cannot be empty when creating a proposed marker"),
+		},
+		{
+			"add marker - valid",
+			NewMsgAddMarkerProposalRequest("testvalid", sdk.NewInt(100), sdk.AccAddress{}, StatusProposed, MarkerType_RestrictedCoin, []AccessGrant{}, true, true, ""),
+			fmt.Errorf("marker manager cannot be empty when creating a proposed marker"),
+		},
+	}
+
+	for _, tc := range testCases {
+		err := tc.msg.ValidateBasic()
+		if tc.err != nil {
+			require.EqualError(t, err, tc.err.Error())
+		}
 	}
 }

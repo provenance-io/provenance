@@ -601,8 +601,8 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 	return &types.MsgAddFinalizeActivateMarkerResponse{}, nil
 }
 
-// HandleAddMarkerProposal can only be submitted via gov proposal
-func (k msgServer) HandleAddMarkerProposal(goCtx context.Context, msg *types.AddMarkerProposal) (*types.AddMarkerProposalResponse, error) {
+// AddMarkerProposal can only be submitted via gov proposal
+func (k msgServer) AddMarkerProposal(goCtx context.Context, msg *types.MsgAddMarkerProposalRequest) (*types.MsgAddMarkerProposalResponse, error) {
 
 	if msg.GetAuthority() != k.Keeper.GetAuthority() {
 		return nil, govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", k.Keeper.GetAuthority(), msg.GetAuthority())
@@ -610,11 +610,22 @@ func (k msgServer) HandleAddMarkerProposal(goCtx context.Context, msg *types.Add
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// HandleSupplyIncreaseProposal performs the basic validation
-	err := HandleAddMarkerProposal(ctx, k.Keeper, msg)
+	prop := &types.AddMarkerProposal{
+		Title:                  "",
+		Description:            "",
+		Amount:                 msg.Amount,
+		Manager:                msg.Manager,
+		Status:                 msg.Status,
+		MarkerType:             msg.MarkerType,
+		AccessList:             msg.AccessList,
+		SupplyFixed:            msg.SupplyFixed,
+		AllowGovernanceControl: msg.AllowGovernanceControl,
+	}
+
+	err := HandleAddMarkerProposal(ctx, k.Keeper, prop)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.AddMarkerProposalResponse{}, nil
+	return &types.MsgAddMarkerProposalResponse{}, nil
 }

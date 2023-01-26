@@ -65,12 +65,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		case *types.AddMarkerProposal:
-			err := keeper.HandleAddMarkerProposal(ctx, k, msg)
-			var res *types.AddMarkerProposalResponse
-			if err == nil {
-				res = &types.AddMarkerProposalResponse{}
-			}
+		case *types.MsgAddMarkerProposalRequest:
+			res, err := msgServer.AddMarkerProposal(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		default:

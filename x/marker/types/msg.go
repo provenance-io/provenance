@@ -511,13 +511,13 @@ func (msg MsgAddFinalizeActivateMarkerRequest) GetSigners() []sdk.AccAddress {
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
-func (msg AddMarkerProposal) GetSigners() []sdk.AccAddress {
+func (msg MsgAddMarkerProposalRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Authority)
 	return []sdk.AccAddress{addr}
 }
 
 // NewAddMarkerProposal creates a new proposal
-func NewAddMarkerProposal(
+func NewMsgAddMarkerProposalRequest(
 	denom string,
 	totalSupply sdkmath.Int,
 	manager sdk.AccAddress,
@@ -527,8 +527,8 @@ func NewAddMarkerProposal(
 	fixed bool,
 	allowGov bool,
 	authority string, //nolint:interfacer
-) *AddMarkerProposal {
-	return &AddMarkerProposal{
+) *MsgAddMarkerProposalRequest {
+	return &MsgAddMarkerProposalRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
 		Manager:                manager.String(),
 		Status:                 status,
@@ -540,17 +540,17 @@ func NewAddMarkerProposal(
 	}
 }
 
-func (amp AddMarkerProposal) ValidateBasic() error {
-	if amp.Status == StatusUndefined {
+func (msg MsgAddMarkerProposalRequest) ValidateBasic() error {
+	if msg.Status == StatusUndefined {
 		return ErrInvalidMarkerStatus
 	}
 	// A proposed marker must have a manager assigned to allow updates to be made by the caller.
-	if len(amp.Manager) == 0 && amp.Status == StatusProposed {
+	if len(msg.Manager) == 0 && msg.Status == StatusProposed {
 		return fmt.Errorf("marker manager cannot be empty when creating a proposed marker")
 	}
 	testCoin := sdk.Coin{
-		Denom:  amp.Amount.Denom,
-		Amount: amp.Amount.Amount,
+		Denom:  msg.Amount.Denom,
+		Amount: msg.Amount.Amount,
 	}
 	if !testCoin.IsValid() {
 		return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
