@@ -31,6 +31,8 @@ const (
 	OpWeightMsgAddAccess = "op_weight_msg_add_access"
 	//nolint:gosec // not credentials
 	OpWeightMsgAddActivateFinalizeMarker = "op_weight_msg_add_finalize_activate_marker"
+	//nolint:gosec // not credentials
+	OpWeightMsgAddMarkerProposal = "op_weight_msg_add_marker_proposal"
 )
 
 /*
@@ -56,6 +58,7 @@ func WeightedOperations(
 		weightMsgChangeStatus              int
 		weightMsgAddAccess                 int
 		weightMsgAddFinalizeActivateMarker int
+		weightMsgAddMarkerProposal         int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgAddMarker, &weightMsgAddMarker, nil,
@@ -82,6 +85,12 @@ func WeightedOperations(
 		},
 	)
 
+	appParams.GetOrGenerate(cdc, OpWeightMsgAddMarkerProposal, &weightMsgAddMarkerProposal, nil,
+		func(_ *rand.Rand) {
+			weightMsgAddMarkerProposal = simappparams.DefaultWeightMsgAddMarkerProposal
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgAddMarker,
@@ -98,6 +107,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgAddFinalizeActivateMarker,
 			SimulateMsgAddFinalizeActivateMarker(k, ak, bk),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgAddMarkerProposal,
+			SimulateMsgAddMarkerProposal(k, ak, bk),
 		),
 	}
 }
