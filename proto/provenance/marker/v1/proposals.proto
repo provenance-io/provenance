@@ -17,13 +17,13 @@ option java_multiple_files = true;
 // Deprecated since 1.14. Please use MsgAddMarkerProposalRequest.
 message AddMarkerProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   string title       = 1;
   string description = 2;
 
   cosmos.base.v1beta1.Coin amount = 3
-  [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+    [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
   string               manager                  = 4;
   MarkerStatus         status                   = 5;
   MarkerType           marker_type              = 6;
