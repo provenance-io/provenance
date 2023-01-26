@@ -134,7 +134,7 @@ func (suite *SimTestSuite) TestSimulateMsgAddActivateFinalizeMarker() {
 	suite.Require().Len(futureOperations, 0)
 }
 
-// TestSimulateMsgAddActivateFinalizeMarker tests the normal scenario of a valid message of type TypeAddActivateFinalizeMarkerRequest.
+// TestSimulateMsgAddMarkerProposal tests the normal scenario of a valid message of type MsgAddMarkerRequest.
 // Abnormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 

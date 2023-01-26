@@ -554,7 +554,7 @@ func (amp MsgAddMarkerProposalRequest) ValidateBasic() error {
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgAddMarkerProposalRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.Authority)
+func (amp MsgAddMarkerProposalRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(amp.Authority)
 	return []sdk.AccAddress{addr}
 }

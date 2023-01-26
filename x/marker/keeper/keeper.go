@@ -186,6 +186,6 @@ func (k Keeper) GetEscrow(ctx sdk.Context, marker types.MarkerAccountI) sdk.Coin
 	return k.bankKeeper.GetAllBalances(ctx, marker.GetAddress())
 }
 
-func (keeper Keeper) GetAuthority() string {
-	return keeper.authority
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }

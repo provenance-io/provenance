@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -254,24 +255,19 @@ func TestMsgAddMarkerProposalRequestValidateBasic(t *testing.T) {
 		err  error
 	}{
 		{
-			"add marker - valid",
-			NewMsgAddMarkerProposal("test1", sdk.NewInt(100), sdk.AccAddress{}, StatusActive, MarkerType_Coin, []AccessGrant{}, true, true, ""),
-			nil,
+			"add marker - undefined status",
+			NewMsgAddMarkerProposal("test1", sdk.NewInt(100), sdk.AccAddress{}, StatusUndefined, MarkerType_Coin, []AccessGrant{}, true, true, ""),
+			ErrInvalidMarkerStatus,
+		},
+		{
+			"add marker - invalid manager",
+			NewMsgAddMarkerProposal("testinvalidmanager", sdk.NewInt(100), sdk.AccAddress{}, StatusProposed, MarkerType_RestrictedCoin, []AccessGrant{}, true, true, ""),
+			fmt.Errorf("marker manager cannot be empty when creating a proposed marker"),
 		},
 		{
 			"add marker - valid",
-			NewMsgAddMarkerProposal("testrestricted", sdk.NewInt(100), sdk.AccAddress{}, StatusActive, MarkerType_RestrictedCoin, []AccessGrant{}, true, true, ""),
-			nil,
-		},
-		{
-			"add marker - valid no governance",
-			NewMsgAddMarkerProposal("testnogov", sdk.NewInt(100), sdk.AccAddress{}, StatusActive, MarkerType_Coin, []AccessGrant{}, true, false, ""),
-			nil,
-		},
-		{
-			"add marker - valid finalized",
-			NewMsgAddMarkerProposal("pending", sdk.NewInt(100), sdk.AccAddress{}, StatusFinalized, MarkerType_Coin, []AccessGrant{}, true, true, "''"),
-			nil,
+			NewMsgAddMarkerProposal("testvalid", sdk.NewInt(100), sdk.AccAddress{}, StatusProposed, MarkerType_RestrictedCoin, []AccessGrant{}, true, true, ""),
+			fmt.Errorf("marker manager cannot be empty when creating a proposed marker"),
 		},
 	}
 
