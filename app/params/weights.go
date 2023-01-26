@@ -13,7 +13,6 @@ const (
 	DefaultWeightMsgDeleteAttribute         int = 5
 	DefaultWeightMsgDeleteDistinctAttribute int = 5
 	// Marker
-	DefaultWeightAddMarkerProposalContent           int = 5
 	DefaultWeightSupplyIncreaseProposalContent      int = 5
 	DefaultWeightSupplyDecreaseProposalContent      int = 5
 	DefaultWeightSetAdministratorProposalContent    int = 5

@@ -12,7 +12,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	simapp "github.com/provenance-io/provenance/app"
-	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/simulation"
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -30,14 +29,11 @@ func TestProposalContents(t *testing.T) {
 
 	// execute ProposalContents function
 	weightedProposalContent := simulation.ProposalContents(keeper.NewKeeper(app.AppCodec(), app.GetKey(types.ModuleName), app.GetSubspace(types.ModuleName), app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper, app.TransferKeeper, app.GetKey(banktypes.StoreKey)))
-	require.Len(t, weightedProposalContent, 7)
+	require.Len(t, weightedProposalContent, 6)
 
 	w0 := weightedProposalContent[0]
 
 	// tests w0 interface:
-	require.Equal(t, simulation.OpWeightAddMarkerProposal, w0.AppParamsKey())
-	require.Equal(t, simappparams.DefaultWeightAddMarkerProposalContent, w0.DefaultWeight())
-
 	content := w0.ContentSimulatorFn()(r, ctx, accounts)
 
 	require.Equal(t, "eAerqyNEUz", content.GetDescription())

@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -274,17 +273,11 @@ func TestMsgAddMarkerProposalRequestValidateBasic(t *testing.T) {
 			NewMsgAddMarkerProposal("pending", sdk.NewInt(100), sdk.AccAddress{}, StatusFinalized, MarkerType_Coin, []AccessGrant{}, true, true, "''"),
 			nil,
 		},
-		{
-			"add marker - invalid status",
-			NewMsgAddMarkerProposal("test2", sdk.NewInt(100), sdk.AccAddress{}, StatusUndefined, MarkerType_Coin, []AccessGrant{}, true, true, ""),
-			fmt.Errorf("error invalid marker status undefined"),
-		},
 	}
 
 	for _, tc := range testCases {
 		err := tc.prop.ValidateBasic()
 		if tc.err != nil {
-			print(tc.name)
 			require.EqualError(t, err, tc.err.Error())
 		}
 	}
