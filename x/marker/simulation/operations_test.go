@@ -70,6 +70,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		// Possible names: types.TypeAddAccessRequest, fmt.Sprintf("%T", &types.MsgAddAccessRequest{})
 		{simappparams.DefaultWeightMsgAddAccess, sdk.MsgTypeURL(&types.MsgAddAccessRequest{}), sdk.MsgTypeURL(&types.MsgAddAccessRequest{})},
 		{simappparams.DefaultWeightMsgAddFinalizeActivateMarker, sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{}), sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{})},
+		{simappparams.DefaultWeightMsgAddMarkerProposal, sdk.MsgTypeURL(&types.MsgAddMarkerProposalRequest{}), sdk.MsgTypeURL(&types.MsgAddMarkerProposalRequest{})},
 	}
 	for i, w := range weightedOps {
 		operationMsg, _, _ := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
