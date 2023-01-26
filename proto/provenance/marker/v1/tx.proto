@@ -50,7 +50,7 @@ service Msg {
   rpc GrantAllowance(MsgGrantAllowanceRequest) returns (MsgGrantAllowanceResponse);
   // AddFinalizeActivateMarker
   rpc AddFinalizeActivateMarker(MsgAddFinalizeActivateMarkerRequest) returns (MsgAddFinalizeActivateMarkerResponse);
-  // AddMarkerProposal can only be called via gov proposal
+  // AddMarkerProposal defines a governance proposal to create a new marker
   rpc AddMarkerProposal(MsgAddMarkerProposalRequest) returns (MsgAddMarkerProposalResponse);
 }
 

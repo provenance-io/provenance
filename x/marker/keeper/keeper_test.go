@@ -820,3 +820,8 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 	// succeeds now as the default unrestricted denom expression allows any valid denom (minimum length is 2)
 	require.NoError(t, err, "should allow any valid denom with a min length of two")
 }
+
+func TestGetAuthority(t *testing.T) {
+	app := simapp.Setup(t)
+	require.Equal(t, "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", app.MarkerKeeper.GetAuthority())
+}

@@ -1493,7 +1493,7 @@ func (m *MsgAddFinalizeActivateMarkerResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddFinalizeActivateMarkerResponse proto.InternalMessageInfo
 
-// AddMarkerProposal defines defines a governance proposal to create a new marker
+// MsgAddMarkerProposalRequest defines the Msg/AddMarkerProposal request type
 type MsgAddMarkerProposalRequest struct {
 	Title                  string                                  `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description            string                                  `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
@@ -1873,7 +1873,7 @@ type MsgClient interface {
 	GrantAllowance(ctx context.Context, in *MsgGrantAllowanceRequest, opts ...grpc.CallOption) (*MsgGrantAllowanceResponse, error)
 	// AddFinalizeActivateMarker
 	AddFinalizeActivateMarker(ctx context.Context, in *MsgAddFinalizeActivateMarkerRequest, opts ...grpc.CallOption) (*MsgAddFinalizeActivateMarkerResponse, error)
-	// AddMarkerProposal can only be called via gov proposal
+	// AddMarkerProposal defines a governance proposal to create a new marker
 	AddMarkerProposal(ctx context.Context, in *MsgAddMarkerProposalRequest, opts ...grpc.CallOption) (*MsgAddMarkerProposalResponse, error)
 }
 
@@ -2063,7 +2063,7 @@ type MsgServer interface {
 	GrantAllowance(context.Context, *MsgGrantAllowanceRequest) (*MsgGrantAllowanceResponse, error)
 	// AddFinalizeActivateMarker
 	AddFinalizeActivateMarker(context.Context, *MsgAddFinalizeActivateMarkerRequest) (*MsgAddFinalizeActivateMarkerResponse, error)
-	// AddMarkerProposal can only be called via gov proposal
+	// AddMarkerProposal defines a governance proposal to create a new marker
 	AddMarkerProposal(context.Context, *MsgAddMarkerProposalRequest) (*MsgAddMarkerProposalResponse, error)
 }
 
