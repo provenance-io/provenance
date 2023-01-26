@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -243,5 +244,48 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				assert.NoError(t, err)
 			}
 		})
+	}
+}
+
+func TestMsgAddMarkerProposalRequestValidateBasic(t *testing.T) {
+
+	testCases := []struct {
+		name string
+		prop *MsgAddMarkerProposalRequest
+		err  error
+	}{
+		{
+			"add marker - valid",
+			NewMsgAddMarkerProposal("test1", sdk.NewInt(100), sdk.AccAddress{}, StatusActive, MarkerType_Coin, []AccessGrant{}, true, true, ""),
+			nil,
+		},
+		{
+			"add marker - valid",
+			NewMsgAddMarkerProposal("testrestricted", sdk.NewInt(100), sdk.AccAddress{}, StatusActive, MarkerType_RestrictedCoin, []AccessGrant{}, true, true, ""),
+			nil,
+		},
+		{
+			"add marker - valid no governance",
+			NewMsgAddMarkerProposal("testnogov", sdk.NewInt(100), sdk.AccAddress{}, StatusActive, MarkerType_Coin, []AccessGrant{}, true, false, ""),
+			nil,
+		},
+		{
+			"add marker - valid finalized",
+			NewMsgAddMarkerProposal("pending", sdk.NewInt(100), sdk.AccAddress{}, StatusFinalized, MarkerType_Coin, []AccessGrant{}, true, true, "''"),
+			nil,
+		},
+		{
+			"add marker - invalid status",
+			NewMsgAddMarkerProposal("test2", sdk.NewInt(100), sdk.AccAddress{}, StatusUndefined, MarkerType_Coin, []AccessGrant{}, true, true, ""),
+			fmt.Errorf("error invalid marker status undefined"),
+		},
+	}
+
+	for _, tc := range testCases {
+		err := tc.prop.ValidateBasic()
+		if tc.err != nil {
+			print(tc.name)
+			require.EqualError(t, err, tc.err.Error())
+		}
 	}
 }

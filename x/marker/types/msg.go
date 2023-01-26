@@ -510,12 +510,6 @@ func (msg MsgAddFinalizeActivateMarkerRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgAddMarkerProposalRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
-}
-
 // NewMsgAddMarkerProposal creates a new proposal
 func NewMsgAddMarkerProposal(
 	denom string,
@@ -557,4 +551,10 @@ func (amp MsgAddMarkerProposalRequest) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+// GetSigners indicates that the message must have been signed by the address provided.
+func (msg MsgAddMarkerProposalRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{addr}
 }
