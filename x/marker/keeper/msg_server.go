@@ -611,8 +611,8 @@ func (k msgServer) AddMarkerProposal(goCtx context.Context, msg *types.MsgAddMar
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	prop := &types.AddMarkerProposal{
-		Title:                  "",
-		Description:            "",
+		Title:                  "Add Marker", // hardcoded otherwise validation will fail
+		Description:            "Add marker",
 		Amount:                 msg.Amount,
 		Manager:                msg.Manager,
 		Status:                 msg.Status,
