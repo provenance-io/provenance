@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/armon/go-metrics"
 
@@ -10,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
 	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
