@@ -34,9 +34,10 @@ message MsgBindNameRequest {
   NameRecord parent = 1 [(gogoproto.nullable) = false];
   // The name record to bind under the parent
   NameRecord record = 2 [(gogoproto.nullable) = false];
-
-  // expiration is an optional expiration timespan string, e.g. "1y" (see expiration module for format)
-  // If provided, it sets an expiration with the given time period for the bound name.
+  // expiration is an optional expiration timespan string, e.g. "1y"
+  // If provided, it sets an expiration with the given time period for the attribute.
+  // accepted values are n{h,d,w,y}
+  // where 1h = 60m, 1d = 24h, 1w = 7d (or 168h), 1y = 365d (or 8760h)
   string expiration = 3;
 }
 

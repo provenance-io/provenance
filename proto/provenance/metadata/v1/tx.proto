@@ -112,8 +112,10 @@ message MsgWriteScopeRequest {
   // returned.
   string spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"spec_uuid\""];
 
-  // expiration is an optional expiration timespan string, e.g. "1y" (see expiration module for format)
-  // If provided, it overrides the default scope expiration with the given time period.
+  // expiration is an optional expiration timespan string, e.g. "1y"
+  // If provided, it sets an expiration with the given time period for the attribute.
+  // accepted values are n{h,d,w,y}
+  // where 1h = 60m, 1d = 24h, 1w = 7d (or 168h), 1y = 365d (or 8760h)
   string expiration = 5 [(gogoproto.moretags) = "yaml:\"expiration\""];
 }
 

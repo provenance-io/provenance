@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/libs/log"
@@ -20,7 +21,6 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/provenance-io/provenance/x/expiration/types"
-	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // Handler is a name record handler function for use with IterateExpirations.
@@ -134,6 +134,20 @@ func (k Keeper) GetExpiration(ctx sdk.Context, moduleAssetID string) (*types.Exp
 
 // SetExpiration creates an expiration record for a module asset.
 func (k Keeper) SetExpiration(ctx sdk.Context, expiration types.Expiration) error {
+	// when modules set expirations for their assets they call SetExpiration
+	// therefore, we need to check message is valid by running it through ValidateBasic
+	if err := expiration.ValidateBasic(); err != nil {
+		return types.ErrSetExpiration.Wrapf("failed ValidateBasic: %b", err)
+	}
+	// unpack expiration message
+	var msg sdk.Msg
+	if err := k.cdc.UnpackAny(&expiration.Message, &msg); err != nil {
+		return types.ErrInvalidMessage.Wrapf("failed to unpack msg: %v", err)
+	}
+	if err := msg.ValidateBasic(); err != nil {
+		return types.ErrInvalidMessage.Wrapf("failed ValidateBasic: %v", err)
+	}
+
 	// get store key prefix
 	store := ctx.KVStore(k.storeKey)
 	key, err := types.GetModuleAssetKey(expiration.ModuleAssetId)
@@ -307,7 +321,20 @@ func (k Keeper) ValidateSetExpiration(
 	signers []string,
 	msgTypeURL string,
 ) error {
-	// validate block height is in the future
+	// validate basic
+	if err := expiration.ValidateBasic(); err != nil {
+		return err
+	}
+
+	// validate module asset id
+	if _, err := sdk.AccAddressFromBech32(expiration.ModuleAssetId); err != nil {
+		// check if we're dealing with a MetadataAddress
+		if _, err2 := metadatatypes.MetadataAddressFromBech32(expiration.ModuleAssetId); err2 != nil {
+			return sdkerrors.ErrInvalidAddress.Wrapf("invalid module asset id: %v", err)
+		}
+	}
+
+	// validate block time is in the future
 	if expiration.Time.Before(ctx.BlockTime()) {
 		return types.ErrExpirationTime.Wrapf("expiration time %s must be in the future", expiration.Time)
 	}
@@ -326,12 +353,13 @@ func (k Keeper) ValidateSetExpiration(
 			deposit.String(), defaultDeposit.String())
 	}
 
-	// validate module asset id
-	if _, err := sdk.AccAddressFromBech32(expiration.ModuleAssetId); err != nil {
-		// check if we're dealing with a MetadataAddress
-		if _, err2 := metadatatypes.MetadataAddressFromBech32(expiration.ModuleAssetId); err2 != nil {
-			return sdkerrors.ErrInvalidAddress.Wrapf("invalid module asset id: %v", err)
-		}
+	// validate msg
+	var msg sdk.Msg
+	if err := k.cdc.UnpackAny(&expiration.Message, &msg); err != nil {
+		return types.ErrInvalidMessage.Wrapf("failed to unpack msg: %v", err)
+	}
+	if err := msg.ValidateBasic(); err != nil {
+		return types.ErrInvalidMessage.Wrapf("failed ValidateBasic: %v", err)
 	}
 
 	// validate signers
@@ -357,12 +385,22 @@ func (k Keeper) ValidateInvokeExpiration(
 		return expiration, types.ErrNotFound.Wrapf("module asset id [%s]", moduleAssetID)
 	}
 
+	// validate before routing as things may have
+	// changed from the time this was set to now
+	var msg sdk.Msg
+	if err := k.cdc.UnpackAny(&expiration.Message, &msg); err != nil {
+		return nil, types.ErrInvalidMessage.Wrapf("failed to unpack msg: %v", err)
+	}
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, types.ErrInvalidMessage.Wrapf("failed ValidateBasic: %v", err)
+	}
+
 	// anyone can delete an expired expiration
 	if ctx.BlockTime().After(expiration.Time) {
 		return expiration, nil
 	}
 
-	// validate signers
+	// validate signers and owner
 	if err := k.validateSigners(ctx, expiration.Owner, signers, msgTypeURL); err != nil {
 		return expiration, types.ErrInvalidSigners.Wrap(err.Error())
 	}
