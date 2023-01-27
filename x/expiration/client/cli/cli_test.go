@@ -335,6 +335,8 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 
 	var expirationData expirationtypes.GenesisState
 	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[expirationtypes.ModuleName], &expirationData))
+	expirationData.Params.Deposit = expirationtypes.DefaultDeposit
+	expirationData.Params.Duration = expirationtypes.DefaultDuration
 	expirationData.Expirations = append(expirationData.Expirations, s.expiration1)
 	expirationData.Expirations = append(expirationData.Expirations, s.expiration2)
 	expirationData.Expirations = append(expirationData.Expirations, s.expiration3)
