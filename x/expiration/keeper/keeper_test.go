@@ -2,9 +2,10 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"

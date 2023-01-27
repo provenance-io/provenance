@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/libs/log"
@@ -21,6 +20,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/provenance-io/provenance/x/expiration/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // Handler is a name record handler function for use with IterateExpirations.
