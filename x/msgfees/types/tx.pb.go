@@ -124,6 +124,7 @@ type MsgAddMsgFeeProposalRequest struct {
 	Authority string `protobuf:"bytes,5,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 
+
 func (m *MsgAddMsgFeeProposalRequest) Reset()         { *m = MsgAddMsgFeeProposalRequest{} }
 func (m *MsgAddMsgFeeProposalRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgAddMsgFeeProposalRequest) ProtoMessage()    {}
@@ -242,6 +243,8 @@ type MsgUpdateMsgFeeProposalRequest struct {
 	Authority string `protobuf:"bytes,5,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 
+
+
 func (m *MsgUpdateMsgFeeProposalRequest) Reset()         { *m = MsgUpdateMsgFeeProposalRequest{} }
 func (m *MsgUpdateMsgFeeProposalRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateMsgFeeProposalRequest) ProtoMessage()    {}
@@ -354,6 +357,7 @@ type MsgRemoveMsgFeeProposalRequest struct {
 	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 
+
 func (m *MsgRemoveMsgFeeProposalRequest) Reset()         { *m = MsgRemoveMsgFeeProposalRequest{} }
 func (m *MsgRemoveMsgFeeProposalRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgRemoveMsgFeeProposalRequest) ProtoMessage()    {}
@@ -444,6 +448,8 @@ type MsgUpdateNhashPerUsdMilProposalRequest struct {
 	// the signing authority for the proposal
 	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 }
+
+
 
 func (m *MsgUpdateNhashPerUsdMilProposalRequest) Reset() {
 	*m = MsgUpdateNhashPerUsdMilProposalRequest{}
@@ -539,6 +545,7 @@ type MsgUpdateConversionFeeDenomProposalRequest struct {
 	// the signing authority for the proposal
 	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 }
+
 
 func (m *MsgUpdateConversionFeeDenomProposalRequest) Reset() {
 	*m = MsgUpdateConversionFeeDenomProposalRequest{}

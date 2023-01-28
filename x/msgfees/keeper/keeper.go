@@ -39,7 +39,16 @@ type Keeper struct {
 
 // NewKeeper returns a AdditionalFeeKeeper. It handles:
 // CONTRACT: the parameter Subspace must have the param key table already initialized
-func NewKeeper(key storetypes.StoreKey, paramSpace paramtypes.Subspace, feeCollectorName string, defaultFeeDenom string, simulateFunc baseAppSimulateFunc, txDecoder sdk.TxDecoder, cdc codec.BinaryCodec, registry cdctypes.InterfaceRegistry) Keeper {
+func NewKeeper(
+	cdc codec.BinaryCodec,
+	key storetypes.StoreKey,
+	paramSpace paramtypes.Subspace,
+	feeCollectorName string,
+	defaultFeeDenom string,
+	simulateFunc baseAppSimulateFunc,
+	txDecoder sdk.TxDecoder,
+	registry cdctypes.InterfaceRegistry,
+) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
