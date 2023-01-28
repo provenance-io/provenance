@@ -940,3 +940,8 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 		}
 	}
 }
+
+func TestGetAuthority(t *testing.T) {
+	app := simapp.Setup(t)
+	require.Equal(t, "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", app.MarkerKeeper.GetAuthority())
+}
