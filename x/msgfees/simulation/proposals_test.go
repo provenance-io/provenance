@@ -29,8 +29,7 @@ func TestProposalContents(t *testing.T) {
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalContents function
-	weightedProposalContent := simulation.ProposalContents(keeper.NewKeeper(app.AppCodec(), app.GetKey(types.ModuleName),
-		app.GetSubspace(types.ModuleName), "", pioconfig.GetProvenanceConfig().FeeDenom, nil, nil))
+	weightedProposalContent := simulation.ProposalContents(keeper.NewKeeper(app.GetKey(types.ModuleName), app.GetSubspace(types.ModuleName), "", pioconfig.GetProvenanceConfig().FeeDenom, nil, nil, nil, app.InterfaceRegistry()))
 	require.Len(t, weightedProposalContent, 2)
 
 	w0 := weightedProposalContent[0]

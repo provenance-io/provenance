@@ -35,7 +35,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.app = provenance.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
-	s.k = msgfeeskeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(msgfeestypes.ModuleName), s.app.GetSubspace(msgfeestypes.ModuleName), "", pioconfig.GetProvenanceConfig().FeeDenom, nil, nil)
+	s.k = msgfeeskeeper.NewKeeper(s.app.GetKey(msgfeestypes.ModuleName), s.app.GetSubspace(msgfeestypes.ModuleName), "", pioconfig.GetProvenanceConfig().FeeDenom, nil, nil, nil, s.app.InterfaceRegistry())
 	s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 }
 
@@ -137,9 +137,9 @@ func (s *IntegrationTestSuite) TestMsgFeeProposals() {
 			case *msgfeestypes.RemoveMsgFeeProposal:
 				err = msgfeeskeeper.HandleRemoveMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
 			case *msgfeestypes.UpdateNhashPerUsdMilProposal:
-				err = msgfeeskeeper.HandleUpdateNhashPerUsdMilProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
+				err = msgfeeskeeper.HandleUpdateNhashPerUsdMilProposal(s.ctx, s.k, c)
 			case *msgfeestypes.UpdateConversionFeeDenomProposal:
-				err = msgfeeskeeper.HandleUpdateConversionFeeDenomProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
+				err = msgfeeskeeper.HandleUpdateConversionFeeDenomProposal(s.ctx, s.k, c)
 			default:
 				panic("invalid proposal type")
 			}

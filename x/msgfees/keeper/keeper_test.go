@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -385,4 +386,9 @@ func (s *TestSuite) TestCalculateAdditionalFeesToBePaid() {
 		s.Require().NoError(err)
 		assertEqualDist(s.T(), expected, actual)
 	})
+}
+
+func TestGetAuthority(t *testing.T) {
+	app := simapp.Setup(t)
+	require.Equal(t, "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", app.MsgFeesKeeper.GetAuthority())
 }

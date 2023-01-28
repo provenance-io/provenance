@@ -2,7 +2,9 @@ syntax = "proto3";
 package provenance.msgfees.v1;
 
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/msgfees/types";
 
@@ -16,6 +18,21 @@ service Msg {
   // Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient
   // for executing contracts
   rpc AssessCustomMsgFee(MsgAssessCustomMsgFeeRequest) returns (MsgAssessCustomMsgFeeResponse);
+
+  // AddMsgFeeProposal defines a governance proposal to add additional msg based fee
+  rpc AddMsgFeeProposal(MsgAddMsgFeeProposalRequest) returns (MsgAddMsgFeeProposalResponse);
+
+  // UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
+  rpc UpdateMsgFeeProposal(MsgUpdateMsgFeeProposalRequest) returns (MsgUpdateMsgFeeProposalResponse);
+
+  // RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
+  rpc RemoveMsgFeeProposal(MsgRemoveMsgFeeProposalRequest) returns (MsgRemoveMsgFeeProposalResponse);
+
+  // UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
+  rpc UpdateNhashPerUsdMilProposal(MsgUpdateNhashPerUsdMilProposalRequest) returns (MsgUpdateNhashPerUsdMilProposalResponse);
+
+  // UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
+  rpc UpdateConversionFeeDenomProposal(MsgUpdateConversionFeeDenomProposalRequest) returns (MsgUpdateConversionFeeDenomProposalResponse);
 }
 
 // MsgAssessCustomMsgFeeRequest defines an sdk.Msg type
@@ -33,3 +50,88 @@ message MsgAssessCustomMsgFeeRequest {
 
 // MsgAssessCustomMsgFeeResponse defines the Msg/AssessCustomMsgFeee response type.
 message MsgAssessCustomMsgFeeResponse {}
+
+// AddMsgFeeProposal defines a governance proposal to add additional msg based fee
+message MsgAddMsgFeeProposalRequest {
+  option (gogoproto.goproto_stringer) = true;
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // type url of msg to add fee
+  string msg_type_url = 1;
+
+  // additional fee for msg type
+  cosmos.base.v1beta1.Coin additional_fee = 2 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"additional_fee\""
+  ];
+
+  // optional recipient to receive basis points
+  string recipient = 3;
+  // basis points to use when recipient is present (1 - 10,000)
+  string recipient_basis_points = 4;
+  // the signing authority for the proposal
+  string authority = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message MsgAddMsgFeeProposalResponse {}
+
+// UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
+message MsgUpdateMsgFeeProposalRequest {
+  option (gogoproto.goproto_stringer) = true;
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // type url of msg to update fee
+  string msg_type_url = 1;
+
+  // additional fee for msg type
+  cosmos.base.v1beta1.Coin additional_fee = 2
+  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // optional recipient to recieve basis points
+  string recipient = 3;
+  // basis points to use when recipient is present (1 - 10,000)
+  string recipient_basis_points = 4;
+  // the signing authority for the proposal
+  string authority = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message MsgUpdateMsgFeeProposalResponse {}
+
+// RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
+message MsgRemoveMsgFeeProposalRequest {
+  option (gogoproto.goproto_stringer) = true;
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // type url of msg fee to remove
+  string msg_type_url = 1;
+  // the signing authority for the proposal
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"]; //
+}
+
+message MsgRemoveMsgFeeProposalResponse {}
+
+// UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
+message MsgUpdateNhashPerUsdMilProposalRequest {
+  option (gogoproto.goproto_stringer) = true;
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // nhash_per_usd_mil is number of nhash per usd mil
+  uint64 nhash_per_usd_mil = 1;
+  // the signing authority for the proposal
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"]; //
+}
+
+message MsgUpdateNhashPerUsdMilProposalResponse {}
+
+// UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
+message MsgUpdateConversionFeeDenomProposalRequest {
+  option (gogoproto.goproto_stringer) = true;
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // conversion_fee_denom is the denom that usd will be converted to
+  string conversion_fee_denom = 1;
+  // the signing authority for the proposal
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"]; //
+}
+
+message MsgUpdateConversionFeeDenomProposalResponse {}

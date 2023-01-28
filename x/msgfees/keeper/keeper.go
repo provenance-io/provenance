@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"sort"
 
 	"golang.org/x/exp/constraints"
@@ -11,6 +12,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -31,19 +33,13 @@ type Keeper struct {
 	defaultFeeDenom  string
 	simulateFunc     baseAppSimulateFunc
 	txDecoder        sdk.TxDecoder
+	registry         cdctypes.InterfaceRegistry
+	authority        string
 }
 
 // NewKeeper returns a AdditionalFeeKeeper. It handles:
 // CONTRACT: the parameter Subspace must have the param key table already initialized
-func NewKeeper(
-	cdc codec.BinaryCodec,
-	key storetypes.StoreKey,
-	paramSpace paramtypes.Subspace,
-	feeCollectorName string,
-	defaultFeeDenom string,
-	simulateFunc baseAppSimulateFunc,
-	txDecoder sdk.TxDecoder,
-) Keeper {
+func NewKeeper(key storetypes.StoreKey, paramSpace paramtypes.Subspace, feeCollectorName string, defaultFeeDenom string, simulateFunc baseAppSimulateFunc, txDecoder sdk.TxDecoder, cdc codec.BinaryCodec, registry cdctypes.InterfaceRegistry) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
@@ -56,6 +52,8 @@ func NewKeeper(
 		defaultFeeDenom:  defaultFeeDenom,
 		simulateFunc:     simulateFunc,
 		txDecoder:        txDecoder,
+		registry:         registry,
+		authority:        cosmosauthtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	}
 }
 
@@ -264,4 +262,9 @@ func sortedKeys[K constraints.Ordered, V any](m map[K]V) []K {
 		return keys[i] < keys[j]
 	})
 	return keys
+}
+
+// GetAuthority is signer of the proposal
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
