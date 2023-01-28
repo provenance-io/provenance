@@ -256,17 +256,17 @@ func TestMsgAddMarkerProposalRequestValidateBasic(t *testing.T) {
 	}{
 		{
 			"add marker - undefined status",
-			NewMsgAddMarkerProposal("test1", sdk.NewInt(100), sdk.AccAddress{}, StatusUndefined, MarkerType_Coin, []AccessGrant{}, true, true, ""),
+			NewMsgAddMarkerProposalRequest("test1", sdk.NewInt(100), sdk.AccAddress{}, StatusUndefined, MarkerType_Coin, []AccessGrant{}, true, true, ""),
 			ErrInvalidMarkerStatus,
 		},
 		{
 			"add marker - invalid manager",
-			NewMsgAddMarkerProposal("testinvalidmanager", sdk.NewInt(100), sdk.AccAddress{}, StatusProposed, MarkerType_RestrictedCoin, []AccessGrant{}, true, true, ""),
+			NewMsgAddMarkerProposalRequest("testinvalidmanager", sdk.NewInt(100), sdk.AccAddress{}, StatusProposed, MarkerType_RestrictedCoin, []AccessGrant{}, true, true, ""),
 			fmt.Errorf("marker manager cannot be empty when creating a proposed marker"),
 		},
 		{
 			"add marker - valid",
-			NewMsgAddMarkerProposal("testvalid", sdk.NewInt(100), sdk.AccAddress{}, StatusProposed, MarkerType_RestrictedCoin, []AccessGrant{}, true, true, ""),
+			NewMsgAddMarkerProposalRequest("testvalid", sdk.NewInt(100), sdk.AccAddress{}, StatusProposed, MarkerType_RestrictedCoin, []AccessGrant{}, true, true, ""),
 			fmt.Errorf("marker manager cannot be empty when creating a proposed marker"),
 		},
 	}

@@ -836,37 +836,37 @@ func TestAddMarkerProposal(t *testing.T) {
 	}{
 		{
 			"add marker - invalid authority",
-			types.NewMsgAddMarkerProposal("test1", sdk.NewInt(100), sdk.AccAddress{}, types.StatusActive, types.MarkerType_Coin, []types.AccessGrant{}, true, true, ""),
+			types.NewMsgAddMarkerProposalRequest("test1", sdk.NewInt(100), sdk.AccAddress{}, types.StatusActive, types.MarkerType_Coin, []types.AccessGrant{}, true, true, ""),
 			fmt.Errorf("expected cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn got : expected gov account as only signer for proposal message"),
 		},
 		{
 			"add marker - valid",
-			types.NewMsgAddMarkerProposal("test1", sdk.NewInt(100), sdk.AccAddress{}, types.StatusActive, types.MarkerType_Coin, []types.AccessGrant{}, true, true, validAuthority),
+			types.NewMsgAddMarkerProposalRequest("test1", sdk.NewInt(100), sdk.AccAddress{}, types.StatusActive, types.MarkerType_Coin, []types.AccessGrant{}, true, true, validAuthority),
 			nil,
 		},
 		{
 			"add marker - valid",
-			types.NewMsgAddMarkerProposal("testrestricted", sdk.NewInt(100), sdk.AccAddress{}, types.StatusActive, types.MarkerType_RestrictedCoin, []types.AccessGrant{}, true, true, validAuthority),
+			types.NewMsgAddMarkerProposalRequest("testrestricted", sdk.NewInt(100), sdk.AccAddress{}, types.StatusActive, types.MarkerType_RestrictedCoin, []types.AccessGrant{}, true, true, validAuthority),
 			nil,
 		},
 		{
 			"add marker - valid no governance",
-			types.NewMsgAddMarkerProposal("testnogov", sdk.NewInt(100), user, types.StatusActive, types.MarkerType_Coin, []types.AccessGrant{}, true, false, validAuthority),
+			types.NewMsgAddMarkerProposalRequest("testnogov", sdk.NewInt(100), user, types.StatusActive, types.MarkerType_Coin, []types.AccessGrant{}, true, false, validAuthority),
 			nil,
 		},
 		{
 			"add marker - valid finalized",
-			types.NewMsgAddMarkerProposal("pending", sdk.NewInt(100), user, types.StatusFinalized, types.MarkerType_Coin, []types.AccessGrant{}, true, true, validAuthority),
+			types.NewMsgAddMarkerProposalRequest("pending", sdk.NewInt(100), user, types.StatusFinalized, types.MarkerType_Coin, []types.AccessGrant{}, true, true, validAuthority),
 			nil,
 		},
 		{
 			"add marker - already exists",
-			types.NewMsgAddMarkerProposal("test1", sdk.NewInt(0), sdk.AccAddress{}, types.StatusActive, types.MarkerType_Coin, []types.AccessGrant{}, true, true, validAuthority),
+			types.NewMsgAddMarkerProposalRequest("test1", sdk.NewInt(0), sdk.AccAddress{}, types.StatusActive, types.MarkerType_Coin, []types.AccessGrant{}, true, true, validAuthority),
 			fmt.Errorf("test1 marker already exists"),
 		},
 		{
 			"add marker - invalid status",
-			types.NewMsgAddMarkerProposal("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, validAuthority),
+			types.NewMsgAddMarkerProposalRequest("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, validAuthority),
 			fmt.Errorf("error invalid marker status undefined"),
 		},
 	}
