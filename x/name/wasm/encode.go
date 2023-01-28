@@ -24,8 +24,6 @@ type NameMsgParams struct {
 	Delete *DeleteNameParams `json:"delete_name,omitempty"`
 	// Encode a MsgModifyName
 	Modify *ModifyNameParams `json:"modify_name,omitempty"`
-	// Encode a MsgCreateRootName
-	CreateRoot *CreateRootNameParams `json:"create_root_name,omitempty"`
 }
 
 // BindNameParams are params for encoding a MsgBindName.
@@ -42,14 +40,6 @@ type BindNameParams struct {
 type DeleteNameParams struct {
 	// The name to unbind from the contract address.
 	Name string `json:"name"`
-}
-
-// CreateRootNameParams are params for encoding a MsgCreateRootNameRequest.
-type CreateRootNameParams struct {
-	Authority  string `json:"authority"`
-	Name       string `json:"name"`
-	Address    string `json:"address"`
-	Restricted bool   `json:"restricted"`
 }
 
 // DeleteNameParams are params for encoding a MsgModifyNameRequest.
@@ -122,11 +112,5 @@ func (params *ModifyNameParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, erro
 		return nil, fmt.Errorf("wasm: invalid bind address: %w", err)
 	}
 	msg := types.NewMsgModifyNameRequest(params.Authority, params.Name, address, params.Restrict)
-	return []sdk.Msg{msg}, nil
-}
-
-// Encode creates a MsgCreateRootNameRequest.
-func (params *CreateRootNameParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
-	msg := types.NewMsgCreateRootNameRequest(params.Authority, params.Name, params.Address, params.Restricted)
 	return []sdk.Msg{msg}, nil
 }
