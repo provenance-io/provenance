@@ -135,7 +135,7 @@ func (suite *SimTestSuite) TestSimulateMsgAddActivateFinalizeMarker() {
 	suite.Require().Len(futureOperations, 0)
 }
 
-// TestSimulateMsgAddMarkerProposal tests the normal scenario of a valid message of type MsgAddMarkerRequest.
+// TestSimulateMsgAddMarkerProposal tests the normal scenario of a valid message of type MsgAddMarkerProposalRequest.
 // Abnormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 
@@ -152,7 +152,7 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg types.MsgAddMarkerRequest
+	var msg types.MsgAddMarkerProposalRequest
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK, operationMsg.String())

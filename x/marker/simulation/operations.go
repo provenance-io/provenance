@@ -236,21 +236,18 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, ak authkeeper.AccountKeeperI,
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
-		mgrAccount, _ := simtypes.RandomAcc(r, accs)
 		denom := randomUnrestrictedDenom(r, k.GetUnrestrictedDenomRegex(ctx))
-		// random access grants
-		grants := randomAccessGrants(r, accs, 100)
 
 		msg := types.NewMsgAddMarkerProposalRequest(
 			denom,
 			sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx))),
-			mgrAccount.Address,
-			types.MarkerStatus(r.Intn(5)+1), // marker status
+			simAccount.Address,              // manager
+			types.MarkerStatus(r.Intn(3)+1), // initial status (proposed, finalized, active)
 			types.MarkerType(r.Intn(2)+1),   // coin or restricted_coin
-			grants,                          // grants
-			r.Intn(2) > 0,                   // fixed supply
-			r.Intn(2) > 0,                   // allow gov
-			"",                              //
+			[]types.AccessGrant{{Address: simAccount.Address.String(), Permissions: randomAccessTypes(r)}},
+			r.Intn(2) > 0, // fixed supply
+			r.Intn(2) > 0, // allow gov
+			"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", // signing authority
 		)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)

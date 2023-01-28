@@ -23,7 +23,7 @@ const (
 	DefaultWeightMsgAddMarker                 int = 60
 	DefaultWeightMsgChangeStatus              int = 10
 	DefaultWeightMsgAddAccess                 int = 10
-	DefaultWeightMsgAddFinalizeActivateMarker int = 20
+	DefaultWeightMsgAddFinalizeActivateMarker int = 10
 	DefaultWeightMsgAddMarkerProposal         int = 10
 	// MsgFees
 	DefaultWeightAddMsgFeeProposalContent    int = 75
