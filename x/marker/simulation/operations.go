@@ -178,6 +178,10 @@ func SimulateMsgChangeStatus(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 			}
 			simAccount, _ = simtypes.FindAccount(accs, accounts[0])
 			msg = types.NewMsgDeleteRequest(m.GetDenom(), simAccount.Address)
+		case types.StatusDestroyed:
+			return simtypes.NoOpMsg(types.ModuleName, "ChangeStatus", "marker status is destroyed"), nil, nil
+		default:
+			return simtypes.NoOpMsg("marker", "", "unknown marker status"), nil, fmt.Errorf("unknown marker status: %#v", m)
 		}
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
