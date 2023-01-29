@@ -592,7 +592,7 @@ func (s MetadataHandlerTestSuite) TestAddP8EContractSpec() {
 			"should fail on converting contract validate basic",
 			createContractSpec([]*p8e.DefinitionSpec{&invalidDefSpec}, p8e.OutputSpec{Spec: &validDefSpec}, validDefSpec),
 			[]string{s.user1},
-			"input specification type name cannot be empty",
+			"input specification type name cannot be empty: invalid request",
 		},
 	}
 
@@ -651,13 +651,13 @@ func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeOwners() {
 			"should fail to ADD owners, msg validate basic failure",
 			types.NewMsgAddScopeOwnerRequest(scopeID, []types.Party{}, []string{s.user1}),
 			[]string{s.user1},
-			"invalid owners: at least one party is required",
+			"invalid owners: at least one party is required: invalid request",
 		},
 		{
 			"should fail to ADD owners, can not find scope",
 			types.NewMsgAddScopeOwnerRequest(dneScopeID, []types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER}}, []string{s.user1}),
 			[]string{s.user1},
-			fmt.Sprintf("scope not found with id %s", dneScopeID),
+			fmt.Sprintf("scope not found with id %s: invalid request", dneScopeID),
 		},
 		{
 			"should fail to ADD owners, validate add failure",
@@ -675,13 +675,13 @@ func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeOwners() {
 			"should fail to DELETE owners, msg validate basic failure",
 			types.NewMsgDeleteScopeOwnerRequest(scopeID, []string{}, []string{s.user1, s.user2}),
 			[]string{s.user1},
-			"at least one owner address is required",
+			"at least one owner address is required: invalid request",
 		},
 		{
 			"should fail to DELETE owners, validate add failure",
 			types.NewMsgDeleteScopeOwnerRequest(dneScopeID, []string{s.user1}, []string{s.user1, s.user2}),
 			[]string{s.user1},
-			fmt.Sprintf("scope not found with id %s", dneScopeID),
+			fmt.Sprintf("scope not found with id %s: invalid request", dneScopeID),
 		},
 		{
 			"should fail to DELETE owners, validate add failure",
@@ -815,19 +815,19 @@ func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
 			"should fail to ADD address to data access, msg validate basic failure",
 			types.NewMsgAddScopeDataAccessRequest(scopeID, []string{}, []string{s.user1}),
 			[]string{s.user1},
-			"data access list cannot be empty",
+			"data access list cannot be empty: invalid request",
 		},
 		{
 			"should fail to ADD address to data access, validate add failure",
 			types.NewMsgAddScopeDataAccessRequest(dneScopeID, []string{s.user1}, []string{s.user1}),
 			[]string{s.user1},
-			fmt.Sprintf("scope not found with id %s", dneScopeID),
+			fmt.Sprintf("scope not found with id %s: invalid request", dneScopeID),
 		},
 		{
 			"should fail to ADD address to data access, validate add failure",
 			types.NewMsgAddScopeDataAccessRequest(scopeID, []string{s.user1}, []string{s.user1}),
 			[]string{s.user1},
-			fmt.Sprintf("address already exists for data access %s", s.user1),
+			fmt.Sprintf("address already exists for data access %s: invalid request", s.user1),
 		},
 		{
 			"should successfully ADD address to data access",
@@ -839,19 +839,19 @@ func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
 			"should fail to DELETE address from data access, msg validate basic failure",
 			types.NewMsgDeleteScopeDataAccessRequest(scopeID, []string{}, []string{s.user1}),
 			[]string{s.user1},
-			"data access list cannot be empty",
+			"data access list cannot be empty: invalid request",
 		},
 		{
 			"should fail to DELETE address from data access, validate add failure",
 			types.NewMsgDeleteScopeDataAccessRequest(dneScopeID, []string{s.user1}, []string{s.user1}),
 			[]string{s.user1},
-			fmt.Sprintf("scope not found with id %s", dneScopeID),
+			fmt.Sprintf("scope not found with id %s: invalid request", dneScopeID),
 		},
 		{
 			"should fail to DELETE address from data access, validate add failure",
 			types.NewMsgDeleteScopeDataAccessRequest(scopeID, []string{user3}, []string{s.user1}),
 			[]string{s.user1},
-			fmt.Sprintf("address does not exist in scope data access: %s", user3),
+			fmt.Sprintf("address does not exist in scope data access: %s: invalid request", user3),
 		},
 		{
 			"should successfully DELETE address from data access",
