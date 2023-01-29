@@ -14,6 +14,4 @@ var (
 	ErrOSLocatorURIToolong = cerrs.Register(ModuleName, 5, "uri length greater than allowed")
 	ErrNoRecordsFound      = cerrs.Register(ModuleName, 6, "No records found.")
 	ErrOSLocatorURIInvalid = cerrs.Register(ModuleName, 7, "uri is invalid")
-	ErrScopeIdInvalid      = cerrs.Register(ModuleName, 8, "scope id cannot be empty")
-	ErrScopeNotFound       = cerrs.Register(ModuleName, 9, "scope not found with id ")
 )

@@ -54,7 +54,7 @@ func (k msgServer) DeleteScope(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if len(msg.ScopeId) == 0 {
-		return nil, types.ErrScopeIdInvalid
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("scope id cannot be empty")
 	}
 	existing, found := k.GetScope(ctx, msg.ScopeId)
 	if !found {
