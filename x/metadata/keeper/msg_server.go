@@ -309,7 +309,7 @@ func (k msgServer) DeleteScopeSpecification(
 	}
 
 	if err := k.RemoveScopeSpecification(ctx, msg.SpecificationId); err != nil {
-		return nil, sdkerrors.ErrNotFound.Wrapf("cannot delete scope specification with id %s: %w", msg.SpecificationId, err)
+		return nil, sdkerrors.ErrNotFound.Wrap(err.Error())
 	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeSpecification, msg.GetSigners()))
@@ -526,7 +526,7 @@ func (k msgServer) DeleteRecordSpecification(
 	}
 
 	if err := k.RemoveRecordSpecification(ctx, msg.SpecificationId); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf("cannot delete record specification with id %s: %w", msg.SpecificationId, err)
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteRecordSpecification, msg.GetSigners()))

@@ -586,7 +586,7 @@ func (s MetadataHandlerTestSuite) TestAddP8EContractSpec() {
 			"should fail to add due to invalid signers",
 			createContractSpec([]*p8e.DefinitionSpec{&validDefSpec}, p8e.OutputSpec{Spec: &validDefSpec}, validDefSpec),
 			[]string{s.user2},
-			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+			fmt.Sprintf("missing signature from existing owner %s; required for update: tx intended signer does not match the given signer", s.user1),
 		},
 		{
 			"should fail on converting contract validate basic",
