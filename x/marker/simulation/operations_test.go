@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -156,9 +157,9 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK, operationMsg.String())
-	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
-	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
-	suite.Require().Len(futureOperations, 0)
+	suite.Assert().Equal(sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{}), operationMsg.Name)
+	suite.Assert().Equal("gov", operationMsg.Route)
+	suite.Assert().Len(futureOperations, 0)
 }
 
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
