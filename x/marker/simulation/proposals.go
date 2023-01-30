@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -67,26 +68,30 @@ func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
 	}
 }
 
-// // SimulateCreateSupplyIncreaseProposalContent generates random increase marker supply proposal content
-// func SimulateCreateSupplyIncreaseProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
-// 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
-// 		dest := ""
-// 		if r.Intn(100) < 40 {
-// 			acc, _ := simtypes.RandomAcc(r, accs)
-// 			dest = acc.Address.String()
-// 		}
-// 		m := randomMarker(r, ctx, k)
-// 		if m == nil || !m.HasGovernanceEnabled() || m.GetStatus() > types.StatusActive {
-// 			return nil
-// 		}
-// 		return types.NewSupplyIncreaseProposal(
-// 			simtypes.RandStringOfLength(r, 10),
-// 			simtypes.RandStringOfLength(r, 100),
-// 			sdk.NewCoin(m.GetDenom(), sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx)-k.CurrentCirculation(ctx, m).Uint64()))),
-// 			dest,
-// 		)
-// 	}
-// }
+// SimulateCreateSupplyIncreaseProposalContent generates random increase marker supply proposal content
+func SimulateCreateSupplyIncreaseProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
+	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
+		dest := ""
+		if r.Intn(100) < 40 {
+			acc, _ := simtypes.RandomAcc(r, accs)
+			dest = acc.Address.String()
+		}
+		m := randomMarker(r, ctx, k)
+		if m == nil || !m.HasGovernanceEnabled() || m.GetStatus() > types.StatusActive {
+			return nil
+		}
+		if k.CurrentCirculation(ctx, m).Uint64() > k.GetMaxTotalSupply(ctx) {
+			panic(fmt.Errorf("wtf %v %v", k.CurrentCirculation(ctx, m), k.GetMaxTotalSupply(ctx)))
+		}
+
+		return types.NewSupplyIncreaseProposal(
+			simtypes.RandStringOfLength(r, 10),
+			simtypes.RandStringOfLength(r, 100),
+			sdk.NewCoin(m.GetDenom(), sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx)-k.CurrentCirculation(ctx, m).Uint64()))),
+			dest,
+		)
+	}
+}
 
 // SimulateCreateSupplyDecreaseProposalContent generates random create-root-name proposal content
 func SimulateCreateSupplyDecreaseProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
