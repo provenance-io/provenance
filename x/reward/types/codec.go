@@ -6,13 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
-// reward module.
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgCreateRewardProgramRequest{}, "provenance/reward/MsgCreateRewardProgramRequest", nil)
-	cdc.RegisterConcrete(&MsgEndRewardProgramRequest{}, "provenance/reward/MsgEndRewardProgramRequest", nil)
-}
-
 // ignoring RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
 // double check
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {

@@ -3,7 +3,6 @@ package simulation
 // DONTCOVER
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -127,14 +126,14 @@ func Dispatch(
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate fees"), nil, err
+		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
 	}
 	err = testutil.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 		Denom:  pioconfig.GetProvenanceConfig().BondDenom,
 		Amount: sdk.NewInt(1_000_000_000_000_000),
 	}))
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to fund account"), nil, err
+		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to fund account"), nil, err
 	}
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
 	tx, err := helpers.GenSignedMockTx(
@@ -149,12 +148,12 @@ func Dispatch(
 		from.PrivKey,
 	)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
 	}
 
 	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), err.Error()), nil, nil
+		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), err.Error()), nil, nil
 	}
 
 	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), futures, nil
@@ -167,7 +166,7 @@ func SimulateMsgEndRewardsProgram(k keeper.Keeper, ak authkeeper.AccountKeeperI,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		rewardProgram := randomRewardProgram(r, ctx, k)
 		if rewardProgram == nil {
-			return simtypes.NoOpMsg(types.ModuleName, "EndRewardProgram", "unable to find a valid reward program"), nil, nil
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgEndRewardProgramRequest{}), sdk.MsgTypeURL(&types.MsgEndRewardProgramRequest{}), "unable to find a valid reward program"), nil, nil
 		}
 		var simAccount simtypes.Account
 		var found bool
@@ -178,7 +177,7 @@ func SimulateMsgEndRewardsProgram(k keeper.Keeper, ak authkeeper.AccountKeeperI,
 		}
 		simAccount, found = simtypes.FindAccount(accs, addr)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, "EndRewardProgram", "creator of rewards program account does not exist"), nil, nil
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgEndRewardProgramRequest{}), sdk.MsgTypeURL(&types.MsgEndRewardProgramRequest{}), "creator of rewards program account does not exist"), nil, nil
 		}
 		msg := types.NewMsgEndRewardProgramRequest(rewardProgram.Id, rewardProgram.DistributeFromAddress)
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)

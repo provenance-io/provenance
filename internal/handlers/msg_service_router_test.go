@@ -1014,7 +1014,7 @@ func TestRewardsProgramStart(t *testing.T) {
 		NewEvent(rewardtypes.EventTypeRewardProgramCreated,
 			NewAttribute(rewardtypes.AttributeKeyRewardProgramID, "1")),
 		NewEvent(sdk.EventTypeMessage,
-			NewAttribute(sdk.AttributeKeyAction, rewardtypes.TypeMsgCreateRewardProgramRequest)),
+			NewAttribute(sdk.AttributeKeyAction, sdk.MsgTypeURL(&rewardtypes.MsgCreateRewardProgramRequest{}))),
 	}
 	assertEventsContains(t, res.Events, expEvents)
 }

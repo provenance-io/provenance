@@ -8,13 +8,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const (
-	TypeMsgAddAttribute            = "add_attribute"
-	TypeMsgUpdateAttribute         = "update_attribute"
-	TypeMsgDeleteAttribute         = "delete_attribute"
-	TypeMsgDeleteDistinctAttribute = "delete_distinct_attribute"
-)
-
 // Compile time interface checks.
 var (
 	_ sdk.Msg = &MsgAddAttributeRequest{}
@@ -34,14 +27,6 @@ func NewMsgAddAttributeRequest(account string, owner sdk.AccAddress, name string
 	}
 }
 
-// Route returns the name of the module.
-func (msg MsgAddAttributeRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the message action.
-func (msg MsgAddAttributeRequest) Type() string { return TypeMsgAddAttribute }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgAddAttributeRequest) ValidateBasic() error {
 	if len(msg.Owner) == 0 {
@@ -52,12 +37,6 @@ func (msg MsgAddAttributeRequest) ValidateBasic() error {
 	}
 	a := NewAttribute(msg.Name, msg.Account, msg.AttributeType, msg.Value)
 	return a.ValidateBasic()
-}
-
-// GetSignBytes encodes the message for signing
-func (msg MsgAddAttributeRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners indicates that the message must have been signed by the name owner.
@@ -88,14 +67,6 @@ func NewMsgUpdateAttributeRequest(account string, owner sdk.AccAddress, name str
 	}
 }
 
-// Route returns the name of the module.
-func (msg MsgUpdateAttributeRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the message action.
-func (msg MsgUpdateAttributeRequest) Type() string { return TypeMsgUpdateAttribute }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgUpdateAttributeRequest) ValidateBasic() error {
 	if len(msg.Owner) == 0 {
@@ -106,12 +77,6 @@ func (msg MsgUpdateAttributeRequest) ValidateBasic() error {
 	}
 	a := NewAttribute(msg.Name, msg.Account, msg.UpdateAttributeType, msg.UpdateValue)
 	return a.ValidateBasic()
-}
-
-// GetSignBytes encodes the message for signing
-func (msg MsgUpdateAttributeRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners indicates that the message must have been signed by the name owner.
@@ -138,14 +103,6 @@ func NewMsgDeleteAttributeRequest(account string, owner sdk.AccAddress, name str
 	}
 }
 
-// Route returns the name of the module.
-func (msg MsgDeleteAttributeRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the message action.
-func (msg MsgDeleteAttributeRequest) Type() string { return TypeMsgDeleteAttribute }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteAttributeRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Name) == "" {
@@ -169,12 +126,6 @@ func (msg MsgDeleteAttributeRequest) String() string {
 	return string(out)
 }
 
-// GetSignBytes encodes the message for signing
-func (msg MsgDeleteAttributeRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
-}
-
 // GetSigners indicates that the message must have been signed by the name owner.
 func (msg MsgDeleteAttributeRequest) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.Owner)
@@ -193,14 +144,6 @@ func NewMsgDeleteDistinctAttributeRequest(account string, owner sdk.AccAddress, 
 		Value:   value,
 	}
 }
-
-// Route returns the name of the module.
-func (msg MsgDeleteDistinctAttributeRequest) Route() string {
-	return ModuleName
-}
-
-// Type returns the message action.
-func (msg MsgDeleteDistinctAttributeRequest) Type() string { return TypeMsgDeleteDistinctAttribute }
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteDistinctAttributeRequest) ValidateBasic() error {
@@ -226,12 +169,6 @@ func (msg MsgDeleteDistinctAttributeRequest) ValidateBasic() error {
 func (msg MsgDeleteDistinctAttributeRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
-}
-
-// GetSignBytes encodes the message for signing
-func (msg MsgDeleteDistinctAttributeRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners indicates that the message must have been signed by the name owner.

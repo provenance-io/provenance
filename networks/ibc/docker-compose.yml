@@ -24,6 +24,7 @@ services:
     image: "provenance-io/blockchain-ibc"
     ports:
       - "26659-26660:26656-26657"
+      - "9091:9090"
     environment:
       - ID=1
       - LOG=${LOG:-provenanced.log}

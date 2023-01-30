@@ -24,12 +24,6 @@ const (
 )
 
 var (
-	// NameKeyPrefixAmino is a prefix added to keys for adding/querying names.
-	// This exists because we persisted some records with the legacy amino codec.
-	NameKeyPrefixAmino = []byte{0x01}
-	// AddressKeyPrefixAmino is a prefix added to keys for indexing name records by address.
-	// This exists because we persisted some records with the legacy amino codec.
-	AddressKeyPrefixAmino = []byte{0x02}
 	// NameKeyPrefix is a prefix added to keys for adding/querying names.
 	NameKeyPrefix = []byte{0x03}
 	// AddressKeyPrefix is a prefix added to keys for indexing name records by address.
@@ -39,12 +33,6 @@ var (
 // GetNameKeyPrefix converts a name into key format.
 func GetNameKeyPrefix(name string) (key []byte, err error) {
 	key = NameKeyPrefix
-	return getNamePrefixByType(name, key)
-}
-
-// GetNameKeyPrefixLegacyAmino converts a name into key format, using the NameKeyPrefixAmino key prefix.
-func GetNameKeyPrefixLegacyAmino(name string) (key []byte, err error) {
-	key = NameKeyPrefixAmino
 	return getNamePrefixByType(name, key)
 }
 

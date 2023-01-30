@@ -27,3 +27,11 @@ func NewEventNameUnbound(address string, name string, restricted bool) *EventNam
 		Restricted: restricted,
 	}
 }
+
+func NewEventNameUpdate(address string, name string, restricted bool) *EventNameUpdate {
+	return &EventNameUpdate{
+		Address:    address,
+		Name:       name,
+		Restricted: restricted,
+	}
+}

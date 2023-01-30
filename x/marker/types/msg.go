@@ -17,24 +17,6 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 )
 
-const (
-	TypeAddMarkerRequest                 = "addmarker"
-	TypeAddAccessRequest                 = "addaccess"
-	TypeDeleteAccessRequest              = "deleteaccess"
-	TypeFinalizeRequest                  = "finalize"
-	TypeActivateRequest                  = "activate"
-	TypeCancelRequest                    = "cancel"
-	TypeDeleteRequest                    = "delete"
-	TypeMintRequest                      = "mint"
-	TypeBurnRequest                      = "burn"
-	TypeWithdrawRequest                  = "withdraw"
-	TypeTransferRequest                  = "transfer"
-	TypeIbcTransferRequest               = "ibctransfer"
-	TypeSetMetadataRequest               = "setmetadata"
-	TypeGrantAllowance                   = "grantallowance"
-	TypeAddActivateFinalizeMarkerRequest = "addactivatefinalizemarker"
-)
-
 // Compile time interface check.
 var (
 	_ sdk.Msg = &MsgAddMarkerRequest{}
@@ -54,54 +36,6 @@ var (
 	_ sdk.Msg = &MsgSupplyIncreaseProposalRequest{}
 )
 
-// Type returns the message action.
-func (msg MsgAddMarkerRequest) Type() string { return TypeAddMarkerRequest }
-
-// Type returns the message action.
-func (msg MsgAddAccessRequest) Type() string { return TypeAddAccessRequest }
-
-// Type returns the message action.
-func (msg MsgDeleteAccessRequest) Type() string { return TypeDeleteAccessRequest }
-
-// Type returns the message action.
-func (msg MsgFinalizeRequest) Type() string { return TypeFinalizeRequest }
-
-// Type returns the message action.
-func (msg MsgActivateRequest) Type() string { return TypeActivateRequest }
-
-// Type returns the message action.
-func (msg MsgCancelRequest) Type() string { return TypeCancelRequest }
-
-// Type returns the message action.
-func (msg MsgDeleteRequest) Type() string { return TypeDeleteRequest }
-
-// Type returns the message action.
-func (msg MsgMintRequest) Type() string { return TypeMintRequest }
-
-// Type returns the message action.
-func (msg MsgBurnRequest) Type() string { return TypeBurnRequest }
-
-// Type returns the message action.
-func (msg MsgWithdrawRequest) Type() string { return TypeWithdrawRequest }
-
-// Type returns the message action.
-func (msg MsgTransferRequest) Type() string { return TypeTransferRequest }
-
-// Type returns the message action.
-func (msg MsgIbcTransferRequest) Type() string { return TypeIbcTransferRequest }
-
-// Type returns the message action.
-func (msg MsgSetDenomMetadataRequest) Type() string { return TypeSetMetadataRequest }
-
-// Type returns the message action.
-func (msg MsgGrantAllowanceRequest) Type() string { return TypeGrantAllowance }
-
-// Type returns the message action.
-// These legacyMsg support should probably be removed but adding new message to this for consistency for now.
-func (msg MsgAddFinalizeActivateMarkerRequest) Type() string {
-	return TypeAddActivateFinalizeMarkerRequest
-}
-
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
 func NewMsgAddMarkerRequest(
 	denom string, totalSupply sdkmath.Int, fromAddress sdk.AccAddress, manager sdk.AccAddress, markerType MarkerType, supplyFixed bool, allowGovernanceControl bool, //nolint:interfacer
@@ -116,9 +50,6 @@ func NewMsgAddMarkerRequest(
 		AllowGovernanceControl: allowGovernanceControl,
 	}
 }
-
-// Route returns the name of the module.
-func (msg MsgAddMarkerRequest) Route() string { return ModuleName }
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgAddMarkerRequest) ValidateBasic() error {
@@ -143,12 +74,6 @@ func (msg MsgAddMarkerRequest) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes encodes the message for signing.
-func (msg MsgAddMarkerRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
-}
-
 // GetSigners indicates that the message must have been signed by the address provided.
 func (msg MsgAddMarkerRequest) GetSigners() []sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(msg.FromAddress)
@@ -167,9 +92,6 @@ func NewMsgAddAccessRequest(denom string, admin sdk.AccAddress, access AccessGra
 	}
 }
 
-// Route returns the name of the module.
-func (msg MsgAddAccessRequest) Route() string { return ModuleName }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgAddAccessRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
@@ -179,12 +101,6 @@ func (msg MsgAddAccessRequest) ValidateBasic() error {
 		return fmt.Errorf(err.Error())
 	}
 	return nil
-}
-
-// GetSignBytes encodes the message for signing.
-func (msg MsgAddAccessRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -201,9 +117,6 @@ func NewDeleteAccessRequest(denom string, admin sdk.AccAddress, removed sdk.AccA
 	}
 }
 
-// Route returns the name of the module.
-func (msg MsgDeleteAccessRequest) Route() string { return ModuleName }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteAccessRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
@@ -211,12 +124,6 @@ func (msg MsgDeleteAccessRequest) ValidateBasic() error {
 	}
 	_, err := sdk.AccAddressFromBech32(msg.RemovedAddress)
 	return err
-}
-
-// GetSignBytes encodes the message for signing.
-func (msg MsgDeleteAccessRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -232,21 +139,12 @@ func NewMsgFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeReque
 	}
 }
 
-// Route returns the name of the module.
-func (msg MsgFinalizeRequest) Route() string { return ModuleName }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgFinalizeRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
 		return fmt.Errorf(err.Error())
 	}
 	return nil
-}
-
-// GetSignBytes encodes the message for signing.
-func (msg MsgFinalizeRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -262,21 +160,12 @@ func NewMsgActivateRequest(denom string, admin sdk.AccAddress) *MsgActivateReque
 	}
 }
 
-// Route returns the name of the module.
-func (msg MsgActivateRequest) Route() string { return ModuleName }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgActivateRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
 		return fmt.Errorf(err.Error())
 	}
 	return nil
-}
-
-// GetSignBytes encodes the message for signing.
-func (msg MsgActivateRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -292,21 +181,12 @@ func NewMsgCancelRequest(denom string, admin sdk.AccAddress) *MsgCancelRequest {
 	}
 }
 
-// Route returns the name of the module.
-func (msg MsgCancelRequest) Route() string { return ModuleName }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgCancelRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
 		return fmt.Errorf(err.Error())
 	}
 	return nil
-}
-
-// GetSignBytes encodes the message for signing.
-func (msg MsgCancelRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -322,21 +202,12 @@ func NewMsgDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest {
 	}
 }
 
-// Route returns the name of the module.
-func (msg MsgDeleteRequest) Route() string { return ModuleName }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
 		return fmt.Errorf(err.Error())
 	}
 	return nil
-}
-
-// GetSignBytes encodes the message for signing.
-func (msg MsgDeleteRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -352,21 +223,12 @@ func NewMsgMintRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgMintRequest { 
 	}
 }
 
-// Route returns the name of the module.
-func (msg MsgMintRequest) Route() string { return ModuleName }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgMintRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
 		return err
 	}
 	return msg.Amount.Validate()
-}
-
-// GetSignBytes encodes the message for signing.
-func (msg MsgMintRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -382,9 +244,6 @@ func NewMsgBurnRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgBurnRequest { 
 	}
 }
 
-// Route returns the name of the module.
-func (msg MsgBurnRequest) Route() string { return ModuleName }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgBurnRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
@@ -392,12 +251,6 @@ func (msg MsgBurnRequest) ValidateBasic() error {
 	}
 
 	return msg.Amount.Validate()
-}
-
-// GetSignBytes encodes the message for signing.
-func (msg MsgBurnRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -420,9 +273,6 @@ func NewMsgWithdrawRequest(
 	}
 }
 
-// Route returns the name of the module.
-func (msg MsgWithdrawRequest) Route() string { return ModuleName }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgWithdrawRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
@@ -438,12 +288,6 @@ func (msg MsgWithdrawRequest) ValidateBasic() error {
 	}
 
 	return msg.Amount.Validate()
-}
-
-// GetSignBytes encodes the message for signing.
-func (msg MsgWithdrawRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -463,9 +307,6 @@ func NewMsgTransferRequest(
 	}
 }
 
-// Route returns the name of the module.
-func (msg MsgTransferRequest) Route() string { return ModuleName }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgTransferRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
@@ -478,12 +319,6 @@ func (msg MsgTransferRequest) ValidateBasic() error {
 		return err
 	}
 	return msg.Amount.Validate()
-}
-
-// GetSignBytes encodes the message for signing.
-func (msg MsgTransferRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -523,21 +358,12 @@ func NewIbcMsgTransferRequest(
 	}
 }
 
-// Route returns the name of the module.
-func (msg MsgIbcTransferRequest) Route() string { return ModuleName }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgIbcTransferRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
 		return err
 	}
 	return msg.Transfer.ValidateBasic()
-}
-
-// GetSignBytes encodes the message for signing.
-func (msg MsgIbcTransferRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -555,9 +381,6 @@ func NewSetDenomMetadataRequest(
 	}
 }
 
-// Route returns the name of the module.
-func (msg MsgSetDenomMetadataRequest) Route() string { return ModuleName }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgSetDenomMetadataRequest) ValidateBasic() error {
 	if len(msg.Administrator) == 0 {
@@ -570,12 +393,6 @@ func (msg MsgSetDenomMetadataRequest) ValidateBasic() error {
 		return fmt.Errorf("invalid set denom metadata request: %w", err)
 	}
 	return nil
-}
-
-// GetSignBytes encodes the message for signing.
-func (msg MsgSetDenomMetadataRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -620,9 +437,6 @@ func (msg MsgGrantAllowanceRequest) UnpackInterfaces(unpacker codectypes.AnyUnpa
 	return unpacker.UnpackAny(msg.Allowance, &allowance)
 }
 
-// Route returns the name of the module.
-func (msg MsgGrantAllowanceRequest) Route() string { return ModuleName }
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgGrantAllowanceRequest) ValidateBasic() error {
 	if msg.Denom == "" {
@@ -641,12 +455,6 @@ func (msg MsgGrantAllowanceRequest) ValidateBasic() error {
 	}
 
 	return allowance.ValidateBasic()
-}
-
-// GetSignBytes encodes the message for signing.
-func (msg MsgGrantAllowanceRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.

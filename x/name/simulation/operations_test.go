@@ -49,8 +49,8 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simappparams.DefaultWeightMsgBindName, types.ModuleName, types.TypeMsgBindNameRequest},
-		{simappparams.DefaultWeightMsgDeleteName, types.ModuleName, types.TypeMsgDeleteNameRequest},
+		{simappparams.DefaultWeightMsgBindName, sdk.MsgTypeURL(&types.MsgBindNameRequest{}), sdk.MsgTypeURL(&types.MsgBindNameRequest{})},
+		{simappparams.DefaultWeightMsgDeleteName, sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), sdk.MsgTypeURL(&types.MsgDeleteNameRequest{})},
 	}
 
 	for i, w := range weightesOps {
@@ -84,12 +84,11 @@ func (suite *SimTestSuite) TestSimulateMsgBindName() {
 
 	var msg types.MsgBindNameRequest
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Record.Address)
 	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Parent.Address)
-	suite.Require().Equal(types.TypeMsgBindNameRequest, msg.Type())
-	suite.Require().Equal(types.ModuleName, msg.Route())
+	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
+	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -117,8 +116,8 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteName() {
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Record.Address)
 	suite.Require().Equal("deleteme", msg.Record.Name)
-	suite.Require().Equal(types.TypeMsgDeleteNameRequest, msg.Type())
-	suite.Require().Equal(types.ModuleName, msg.Route())
+	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
+	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
 	suite.Require().Len(futureOperations, 0)
 }
 

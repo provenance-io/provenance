@@ -22,6 +22,8 @@ type NameMsgParams struct {
 	Bind *BindNameParams `json:"bind_name,omitempty"`
 	// Encode a MsgUnBindName
 	Delete *DeleteNameParams `json:"delete_name,omitempty"`
+	// Encode a MsgModifyName
+	Modify *ModifyNameParams `json:"modify_name,omitempty"`
 }
 
 // BindNameParams are params for encoding a MsgBindName.
@@ -38,6 +40,18 @@ type BindNameParams struct {
 type DeleteNameParams struct {
 	// The name to unbind from the contract address.
 	Name string `json:"name"`
+}
+
+// DeleteNameParams are params for encoding a MsgModifyNameRequest.
+type ModifyNameParams struct {
+	// The existing name to modify
+	Authority string `json:"authority"`
+	// The existing name to modify
+	Name string `json:"name"`
+	// The address to bind
+	Address string `json:"address"`
+	// Whether to restrict binding child names to the owner
+	Restrict bool `json:"restrict"`
 }
 
 // Encoder returns a smart contract message encoder for the name module.
@@ -57,6 +71,8 @@ func Encoder(contract sdk.AccAddress, msg json.RawMessage, version string) ([]sd
 		return params.Bind.Encode(contract)
 	case params.Delete != nil:
 		return params.Delete.Encode(contract)
+	case params.Modify != nil:
+		return params.Modify.Encode(contract)
 	default:
 		return nil, fmt.Errorf("wasm: invalid name encode request: %s", string(msg))
 	}
@@ -86,5 +102,15 @@ func (params *BindNameParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error)
 func (params *DeleteNameParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
 	record := types.NewNameRecord(params.Name, contract, false)
 	msg := types.NewMsgDeleteNameRequest(record)
+	return []sdk.Msg{msg}, nil
+}
+
+// Encode creates a MsgModifyNameRequest.
+func (params *ModifyNameParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
+	address, err := sdk.AccAddressFromBech32(params.Address)
+	if err != nil {
+		return nil, fmt.Errorf("wasm: invalid bind address: %w", err)
+	}
+	msg := types.NewMsgModifyNameRequest(params.Authority, params.Name, address, params.Restrict)
 	return []sdk.Msg{msg}, nil
 }
