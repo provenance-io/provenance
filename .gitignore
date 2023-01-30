@@ -51,3 +51,7 @@ proto-tools-stamp
 
 # proto generated files
 proto/gen/
+
+# act - run GitHub workflows locally
+# https://github.com/nektos/act
+.secrets
