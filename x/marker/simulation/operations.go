@@ -245,9 +245,9 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, ak authkeeper.AccountKeeperI,
 			types.MarkerStatus(r.Intn(3)+1), // initial status (proposed, finalized, active)
 			types.MarkerType(r.Intn(2)+1),   // coin or restricted_coin
 			[]types.AccessGrant{{Address: simAccount.Address.String(), Permissions: randomAccessTypes(r)}},
-			r.Intn(2) > 0, // fixed supply
-			r.Intn(2) > 0, // allow gov
-			"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", // signing authority
+			r.Intn(2) > 0,               // fixed supply
+			r.Intn(2) > 0,               // allow gov
+			simAccount.Address.String(), // signing authority
 		)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
