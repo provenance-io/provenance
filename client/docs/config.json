@@ -10,6 +10,11 @@
       "url": "./client/docs/swagger_third_party.yaml",
       "dereference": {
         "circular": "ignore"
+      },
+      "paths": {
+          "exclude": [
+              "cosmos/nft/.*"
+          ]
       }
     },
     {
