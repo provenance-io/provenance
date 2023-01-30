@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
 	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
@@ -604,7 +605,7 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 // AddMarkerProposal can only be submitted via gov proposal
 func (k msgServer) AddMarkerProposal(goCtx context.Context, msg *types.MsgAddMarkerProposalRequest) (*types.MsgAddMarkerProposalResponse, error) {
 	if msg.GetAuthority() != k.Keeper.GetAuthority() {
-		//return nil, govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", k.Keeper.GetAuthority(), msg.GetAuthority())
+		return nil, govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", k.Keeper.GetAuthority(), msg.GetAuthority())
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

@@ -8,12 +8,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
@@ -245,12 +247,21 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, ak authkeeper.AccountKeeperI,
 			types.MarkerStatus(r.Intn(3)+1), // initial status (proposed, finalized, active)
 			types.MarkerType(r.Intn(2)+1),   // coin or restricted_coin
 			[]types.AccessGrant{{Address: simAccount.Address.String(), Permissions: randomAccessTypes(r)}},
-			r.Intn(2) > 0,               // fixed supply
-			r.Intn(2) > 0,               // allow gov
-			simAccount.Address.String(), // signing authority
+			r.Intn(2) > 0, // fixed supply
+			r.Intn(2) > 0, // allow gov
+			"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", // signing authority
 		)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
+		msgAny, _ := codectypes.NewAnyWithValue(msg)
+
+		govMsg := &govtypes.MsgSubmitProposal{
+			Messages:       []*codectypes.Any{msgAny},
+			InitialDeposit: sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10000))),
+			Proposer:       simAccount.Address.String(),
+			Metadata:       "",
+		}
+
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, govMsg, nil)
 	}
 }
 
