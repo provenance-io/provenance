@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -79,9 +78,6 @@ func SimulateCreateSupplyIncreaseProposalContent(k keeper.Keeper) simtypes.Conte
 		m := randomMarker(r, ctx, k)
 		if m == nil || !m.HasGovernanceEnabled() || m.GetStatus() > types.StatusActive {
 			return nil
-		}
-		if k.CurrentCirculation(ctx, m).Uint64() > k.GetMaxTotalSupply(ctx) {
-			panic(fmt.Errorf("wtf %v %v", k.CurrentCirculation(ctx, m), k.GetMaxTotalSupply(ctx)))
 		}
 
 		return types.NewSupplyIncreaseProposal(
