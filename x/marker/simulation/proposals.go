@@ -35,11 +35,11 @@ const (
 // ProposalContents defines the module weighted proposals' contents
 func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
 	return []simtypes.WeightedProposalContent{
-		// simulation.NewWeightedProposalContent(
-		// 	OpWeightSupplyIncreaseProposal,
-		// 	simappparams.DefaultWeightSupplyIncreaseProposalContent,
-		// 	SimulateCreateSupplyIncreaseProposalContent(k),
-		// ),
+		simulation.NewWeightedProposalContent(
+			OpWeightSupplyIncreaseProposal,
+			simappparams.DefaultWeightSupplyIncreaseProposalContent,
+			SimulateCreateSupplyIncreaseProposalContent(k),
+		),
 		simulation.NewWeightedProposalContent(
 			OpWeightSupplyDecreaseProposal,
 			simappparams.DefaultWeightSupplyDecreaseProposalContent,
