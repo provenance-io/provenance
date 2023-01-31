@@ -20,11 +20,11 @@ const (
 	DefaultWeightChangeStatusProposalContent        int = 5
 	DefaultWeightSetDenomMetadataProposalContent    int = 5
 	// Adjusted marker operations to a cumulative weight of 100
-	DefaultWeightMsgAddMarker                 int = 40
+	DefaultWeightMsgAddMarker                 int = 30
 	DefaultWeightMsgChangeStatus              int = 10
 	DefaultWeightMsgAddAccess                 int = 10
 	DefaultWeightMsgAddFinalizeActivateMarker int = 10
-	DefaultWeightMsgAddMarkerProposal         int = 30
+	DefaultWeightMsgAddMarkerProposal         int = 40
 	// MsgFees
 	DefaultWeightAddMsgFeeProposalContent    int = 75
 	DefaultWeightRemoveMsgFeeProposalContent int = 25
