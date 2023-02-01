@@ -153,8 +153,9 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg types.MsgAddMarkerProposalRequest
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	var msg govtypes.MsgSubmitProposal
+	err = types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.Require().NoError(err)
 
 	suite.Require().True(operationMsg.OK, operationMsg.String())
 	suite.Assert().Equal(sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{}), operationMsg.Name)
