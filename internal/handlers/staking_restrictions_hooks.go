@@ -57,13 +57,13 @@ func NewStakingRestrictionHooks(k *stakingkeeper.Keeper, opts RestrictionOptions
 func (h StakingRestrictionHooks) AfterDelegationModified(ctx sdktypes.Context, delAddr sdktypes.AccAddress, valAddr sdktypes.ValAddress) error {
 	valCount := len(h.k.GetLastValidators(ctx))
 
-	// bond limit is allowed to have a multiple of even shares of network bonded stake.
-	maxValidatorPercent := h.opts.MaxConcentrationMultiple * (1.0 / float32(valCount))
-
 	// do not bother with limits on networks this small (or under simulation).
 	if valCount < 4 || ctx.ChainID() == helpers.SimAppChainID {
 		return nil
 	}
+
+	// bond limit is allowed to have a multiple of even shares of network bonded stake.
+	maxValidatorPercent := h.opts.MaxConcentrationMultiple * (1.0 / float32(valCount))
 
 	// check the capped bond amount is within the overall range limits.
 	if maxValidatorPercent > h.opts.MaxBondedCapPercent {
