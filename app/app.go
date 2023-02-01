@@ -79,6 +79,12 @@ import (
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	"github.com/cosmos/cosmos-sdk/x/quarantine"
+	quarantinekeeper "github.com/cosmos/cosmos-sdk/x/quarantine/keeper"
+	quarantinemodule "github.com/cosmos/cosmos-sdk/x/quarantine/module"
+	"github.com/cosmos/cosmos-sdk/x/sanction"
+	sanctionkeeper "github.com/cosmos/cosmos-sdk/x/sanction/keeper"
+	sanctionmodule "github.com/cosmos/cosmos-sdk/x/sanction/module"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -187,6 +193,8 @@ var (
 		authzmodule.AppModuleBasic{},
 		groupmodule.AppModuleBasic{},
 		vesting.AppModuleBasic{},
+		quarantinemodule.AppModuleBasic{},
+		sanctionmodule.AppModuleBasic{},
 
 		ibc.AppModuleBasic{},
 		transfer.AppModuleBasic{},
@@ -270,6 +278,8 @@ type App struct {
 	FeeGrantKeeper   feegrantkeeper.Keeper
 	MsgFeesKeeper    msgfeeskeeper.Keeper
 	RewardKeeper     rewardkeeper.Keeper
+	QuarantineKeeper quarantinekeeper.Keeper
+	SanctionKeeper   sanctionkeeper.Keeper
 
 	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	ICAHostKeeper  icahostkeeper.Keeper
@@ -346,6 +356,8 @@ func New(
 		msgfeestypes.StoreKey,
 		wasm.StoreKey,
 		rewardtypes.StoreKey,
+		quarantine.StoreKey,
+		sanction.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -525,6 +537,15 @@ func New(
 		wasmkeeper.WithMessageEncoders(provwasm.MessageEncoders(encoderRegistry, logger)),
 	)
 
+	unsanctionableAddrs := make([]sdk.AccAddress, 0, len(maccPerms)+1)
+	for mName := range maccPerms {
+		unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(mName))
+	}
+	unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(quarantine.ModuleName))
+	app.SanctionKeeper = sanctionkeeper.NewKeeper(appCodec, keys[sanction.StoreKey],
+		app.BankKeeper, &app.GovKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(), unsanctionableAddrs)
+
 	// register the proposal types
 	govRouter := govtypesv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1beta1.ProposalHandler).
@@ -540,6 +561,7 @@ func New(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, govRouter, app.BaseApp.MsgServiceRouter(), govtypes.Config{MaxMetadataLen: 10000},
 	)
+	app.GovKeeper.SetHooks(govtypes.NewMultiGovHooks(app.SanctionKeeper))
 
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
@@ -557,6 +579,8 @@ func New(
 	)
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
+
+	app.QuarantineKeeper = quarantinekeeper.NewKeeper(appCodec, keys[quarantine.StoreKey], app.BankKeeper, authtypes.NewModuleAddress(quarantine.ModuleName))
 
 	/****  Module Options ****/
 
@@ -585,6 +609,8 @@ func New(
 		params.NewAppModule(app.ParamsKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
 
 		// PROVENANCE
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
@@ -635,6 +661,8 @@ func New(
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
 		vestingtypes.ModuleName,
+		quarantine.ModuleName,
+		sanction.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -667,6 +695,8 @@ func New(
 		markertypes.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
+		quarantine.ModuleName,
+		sanction.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -689,6 +719,8 @@ func New(
 		authz.ModuleName,
 		group.ModuleName,
 		feegrant.ModuleName,
+		quarantine.ModuleName,
+		sanction.ModuleName,
 
 		markertypes.ModuleName,
 		nametypes.ModuleName,
@@ -728,6 +760,8 @@ func New(
 		ibctransfertypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
+		quarantine.ModuleName,
+		sanction.ModuleName,
 
 		icatypes.ModuleName,
 		wasm.ModuleName,
@@ -762,6 +796,8 @@ func New(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
 
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper),

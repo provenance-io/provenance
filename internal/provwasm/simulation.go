@@ -261,7 +261,7 @@ func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKe
 			WASMByteCode: code,
 		}
 
-		msg2, ops, _, storeErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
+		msg2, ops, _, storeErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil, nil)
 
 		ops = append(ops, simtypes.FutureOperation{Op: SimulateMsgInstantiateContract(ak, bk, nk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
 
@@ -296,7 +296,7 @@ func SimulateMsgInstantiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.
 			Funds:  amount,
 		}
 
-		msg2, ops, sdkResponse, instantiateErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, nil)
+		msg2, ops, sdkResponse, instantiateErr := Dispatch(r, app, ctx, ak, bk, feebucket, chainID, msg, amount, nil)
 
 		// get the contract address for use when executing the contract
 		if len(sdkResponse.MsgResponses) == 0 {
@@ -350,7 +350,7 @@ func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.View
 			Msg:      []byte("{\"purchase\":{\"id\":\"12345\"}}"),
 		}
 
-		msg2, ops, _, err2 := Dispatch(r, app, ctx, ak, bk, consumer, chainID, msg, nil)
+		msg2, ops, _, err2 := Dispatch(r, app, ctx, ak, bk, consumer, chainID, msg, amount, nil)
 		return msg2, ops, err2
 	}
 }
@@ -367,6 +367,7 @@ func Dispatch(
 	from simtypes.Account,
 	chainID string,
 	msg sdk.Msg,
+	fundsInMsg sdk.Coins,
 	futures []simtypes.FutureOperation,
 ) (
 	simtypes.OperationMsg,
@@ -376,6 +377,9 @@ func Dispatch(
 ) {
 	account := ak.GetAccount(ctx, from.Address)
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
+	if !fundsInMsg.IsZero() {
+		spendable = spendable.Sub(fundsInMsg...)
+	}
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
 

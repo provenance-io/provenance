@@ -462,7 +462,8 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(1_000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000)))
+	gasAmt := NewTestGasLimit() + 20_000
+	acct1Balance := sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(1_000)), sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(gasAmt)))
 	app := piosimapp.SetupWithGenesisAccounts(t, "msgfee-testing",
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
@@ -474,18 +475,18 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 	// Check both account balances before transaction
 	addr1beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
 	addr2beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	assert.Equal(t, "1000hotdog,100000stake", addr1beforeBalance, "addr1beforeBalance")
+	assert.Equal(t, "1000hotdog,120000stake", addr1beforeBalance, "addr1beforeBalance")
 	assert.Equal(t, "", addr2beforeBalance, "addr2beforeBalance")
 	stopIfFailed(t)
 
 	// Sending 100hotdog coin from 1 to 2.
 	// Will have a msg fee of 800hotdog, 600 will go to 2, 200 to module.
 	msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
-	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000), sdk.NewInt64Coin("hotdog", 800))
+	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(gasAmt)), sdk.NewInt64Coin("hotdog", 800))
 	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)), addr2.String(), 7_500)
 	require.NoError(t, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 800hotdog addr2 75%")
 
-	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	txBytes, err := SignTxAndGetBytes(gasAmt, fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 	require.NoError(t, err, "SignTxAndGetBytes")
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
@@ -498,20 +499,20 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 
 	expEvents := []abci.Event{
 		NewEvent(sdk.EventTypeTx,
-			NewAttribute(sdk.AttributeKeyFee, "800hotdog,100000stake"),
+			NewAttribute(sdk.AttributeKeyFee, "800hotdog,120000stake"),
 			NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 		NewEvent(sdk.EventTypeTx,
 			NewAttribute(antewrapper.AttributeKeyAdditionalFee, "800hotdog"),
 			NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 		NewEvent(sdk.EventTypeTx,
-			NewAttribute(antewrapper.AttributeKeyBaseFee, "100000stake"),
+			NewAttribute(antewrapper.AttributeKeyBaseFee, "120000stake"),
 			NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 		NewEvent("provenance.msgfees.v1.EventMsgFees",
 			NewAttribute("msg_fees",
 				jsonArrayJoin(msgFeesMsgSendEventJSON(1, 200, "hotdog", ""), msgFeesMsgSendEventJSON(1, 600, "hotdog", addr2.String())))),
 	}
 	// fee charge in antehandler
-	expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
+	expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(gasAmt))))...)
 	// fee charged for msg based fee
 	expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 200)))...)
 	// fee charged for msg based fee
@@ -529,7 +530,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
 	acct2 := authtypes.NewBaseAccount(addr2, priv2.PubKey(), 1, 0)
 	acct3 := authtypes.NewBaseAccount(addr3, priv2.PubKey(), 2, 0)
-	initBalance := sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(10000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(401000)))
+	initBalance := sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(10000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(421000)))
 	app := piosimapp.SetupWithGenesisAccounts(tt, "msgfee-testing",
 		[]authtypes.GenesisAccount{acct1, acct2, acct3},
 		banktypes.Balance{Address: addr1.String(), Coins: initBalance},
@@ -552,8 +553,8 @@ func TestMsgServiceAuthz(tt *testing.T) {
 	addr1beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
 	addr2beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
 	addr3beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr3).String()
-	assert.Equal(tt, "10000hotdog,401000stake", addr1beforeBalance, "addr1beforeBalance")
-	assert.Equal(tt, "10000hotdog,401000stake", addr2beforeBalance, "addr2beforeBalance")
+	assert.Equal(tt, "10000hotdog,421000stake", addr1beforeBalance, "addr1beforeBalance")
+	assert.Equal(tt, "10000hotdog,421000stake", addr2beforeBalance, "addr2beforeBalance")
 	assert.Equal(tt, "", addr3beforeBalance, "addr3beforeBalance")
 	stopIfFailed(tt)
 
@@ -562,9 +563,10 @@ func TestMsgServiceAuthz(tt *testing.T) {
 
 		// tx authz send message with correct amount of fees associated
 		msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
-		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000), sdk.NewInt64Coin("hotdog", 800))
+		gasAmt := NewTestGasLimit() + 20_000
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(gasAmt)), sdk.NewInt64Coin("hotdog", 800))
 		acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
-		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
+		txBytes, err := SignTxAndGetBytes(gasAmt, fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
 		require.NoError(t, err, "SignTxAndGetBytes")
 		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 		require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
@@ -573,16 +575,16 @@ func TestMsgServiceAuthz(tt *testing.T) {
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
 		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
 		addr3AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr3).String()
-		assert.Equal(t, "9900hotdog,401000stake", addr1AfterBalance, "addr1AfterBalance")
+		assert.Equal(t, "9900hotdog,421000stake", addr1AfterBalance, "addr1AfterBalance")
 		assert.Equal(t, "9200hotdog,301000stake", addr2AfterBalance, "addr2AfterBalance")
 		assert.Equal(t, "100hotdog", addr3AfterBalance, "addr3AfterBalance")
 
 		expEvents := []abci.Event{
 			NewEvent(sdk.EventTypeTx,
-				NewAttribute(sdk.AttributeKeyFee, "800hotdog,100000stake"),
+				NewAttribute(sdk.AttributeKeyFee, "800hotdog,120000stake"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr2.String())),
 			NewEvent(sdk.EventTypeTx,
-				NewAttribute(antewrapper.AttributeKeyBaseFee, "100000stake"),
+				NewAttribute(antewrapper.AttributeKeyBaseFee, "120000stake"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr2.String())),
 			NewEvent(sdk.EventTypeTx,
 				NewAttribute(antewrapper.AttributeKeyAdditionalFee, "800hotdog"),
@@ -591,7 +593,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 				NewAttribute("msg_fees", jsonArrayJoin(msgFeesMsgSendEventJSON(1, 800, "hotdog", "")))),
 		}
 		// fee charge in antehandler
-		expEvents = append(expEvents, CreateSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(gasAmt))))...)
 		// fee charged for msg based fee
 		expEvents = append(expEvents, CreateSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 800)))...)
 		assertEventsContains(t, res.Events, expEvents)
@@ -612,7 +614,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
 		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
 		addr3AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr3).String()
-		assert.Equal(t, "9740hotdog,401000stake", addr1AfterBalance, "addr1AfterBalance")
+		assert.Equal(t, "9740hotdog,421000stake", addr1AfterBalance, "addr1AfterBalance")
 		assert.Equal(t, "7600hotdog,101000stake", addr2AfterBalance, "addr2AfterBalance")
 		assert.Equal(t, "260hotdog", addr3AfterBalance, "addr3AfterBalance")
 
@@ -651,7 +653,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
 		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
 		addr3AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr3).String()
-		assert.Equal(t, "9740hotdog,401000stake", addr1AfterBalance, "addr1AfterBalance")
+		assert.Equal(t, "9740hotdog,421000stake", addr1AfterBalance, "addr1AfterBalance")
 		assert.Equal(t, "7600hotdog,1000stake", addr2AfterBalance, "addr2AfterBalance")
 		assert.Equal(t, "260hotdog", addr3AfterBalance, "addr3AfterBalance")
 	})
