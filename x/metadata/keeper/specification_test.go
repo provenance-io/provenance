@@ -393,7 +393,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
 		user1SpecIDsIterated = append(user1SpecIDsIterated, specID)
 		return false
 	})
-	s.Nil(errUser1, "user1: should not have returned an error")
+	s.NoError(errUser1, "user1: should not have returned an error")
 	s.Equal(4, len(user1SpecIDsIterated), "user1: iteration count")
 	s.True(areEquivalentSetsOfMetaAddresses(user1SpecIDs, user1SpecIDsIterated),
 		"user1: iterated over unexpected record specs:\n  expected: %v\n    actual: %v\n",
@@ -405,7 +405,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
 		user2SpecIDsIterated = append(user2SpecIDsIterated, specID)
 		return false
 	})
-	s.Nil(errUser2, "user2: should not have returned an error")
+	s.NoError(errUser2, "user2: should not have returned an error")
 	s.Equal(4, len(user2SpecIDsIterated), "user2: iteration count")
 	s.True(areEquivalentSetsOfMetaAddresses(user2SpecIDs, user2SpecIDsIterated),
 		"user2: iterated over unexpected record specs:\n  expected: %v\n    actual: %v\n",
@@ -418,7 +418,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
 		user3Count++
 		return false
 	})
-	s.Nil(errUser3, "user3: should not have returned an error")
+	s.NoError(errUser3, "user3: should not have returned an error")
 	s.Equal(0, user3Count, "user3: iteration count")
 
 	// Make sure the stop bool is being recognized.
@@ -430,7 +430,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
 		}
 		return false
 	})
-	s.Nil(errStop, "stop bool: should not have returned an error")
+	s.NoError(errStop, "stop bool: should not have returned an error")
 	s.Equal(2, countStop, "stop bool: iteration count")
 }
 
