@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Added msg to add, finalize, and activate a marker in a single request [#770](https://github.com/provenance-io/provenance/issues/770).
 * Added the `x/quarantine` module [#1317](https://github.com/provenance-io/provenance/pull/1317).
 * Added the `x/sanction` module [#1317](https://github.com/provenance-io/provenance/pull/1317).
+* Staking concentration limit protection (prevents delegations to nodes with high voting power) [#1331](https://github.com/provenance-io/provenance/issues/1331).
 
 ### Improvements
 
