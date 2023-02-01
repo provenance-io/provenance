@@ -420,9 +420,17 @@ func New(
 	pioMsgFeesRouter := app.MsgServiceRouter().(*piohandlers.PioMsgServiceRouter)
 	pioMsgFeesRouter.SetMsgFeesKeeper(app.MsgFeesKeeper)
 
-	// register the staking hooks
+	// Enforce stake concentration limits on provenance networks but not one dev/simulation ones.
+	var limitOpts piohandlers.RestrictionOptions
+	chainId := cast.ToString(appOpts.Get("chain-id"))
+	if strings.Contains(chainId, "pio") {
+		limitOpts = *piohandlers.DefaultRestictionOptions
+	} else {
+		limitOpts = *piohandlers.UnlimitedRestrictionOptions
+	}
+
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
-	restrictHooks := piohandlers.NewStakingRestrictionHooks(&app.StakingKeeper)
+	restrictHooks := piohandlers.NewStakingRestrictionHooks(&app.StakingKeeper, limitOpts)
 	app.StakingKeeper = *stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(restrictHooks, app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)

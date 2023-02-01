@@ -8,24 +8,48 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Hooks wrapper struct for slashing keeper
-type StakingRestrictionHooks struct {
-	k *stakingkeeper.Keeper
-}
-
-const (
-	// The concentration of bonded tokens a validator is allowed as a multiple of equal shares
-	MaxConcentration = 8.0
-	// Maximum Allowed Cap for Bonded stake of any single validator
-	MaxBondedCapPercent = 0.33
-	// Minimum Allowed Cap for Bonded stake of any single validator
-	MinBondedCapPercent = 0.05
-)
-
+// Assert proper implementation of StakingRestrictions
 var _ stakingtypes.StakingHooks = StakingRestrictionHooks{}
 
-func NewStakingRestrictionHooks(k *stakingkeeper.Keeper) StakingRestrictionHooks {
-	return StakingRestrictionHooks{k}
+const (
+	// The default concentration of bonded tokens a validator is allowed as a multiple of equal shares
+	DefaultConcentration = 8.0
+	// Maximum Allowed Cap for Bonded stake of any single validator
+	DefaultMaxCapPercent = 0.33
+	// Minimum Allowed Cap for Bonded stake of any single validator
+	DefaultMinCapPercent = 0.05
+)
+
+type RestrictionOptions struct {
+	MaxConcentrationMultiple float32
+	MaxBondedCapPercent      float32
+	MinBondedCapPercent      float32
+}
+
+// DefaultRestictionOptions are default constraints that prevent single point of failure on validators
+var DefaultRestictionOptions = &RestrictionOptions{
+	MaxConcentrationMultiple: DefaultConcentration,
+	MaxBondedCapPercent:      DefaultMaxCapPercent,
+	MinBondedCapPercent:      DefaultMinCapPercent,
+}
+
+// UnlimitedRestrictionOptions are used to remove restrictions for validator staking limits from delegations
+var UnlimitedRestrictionOptions = &RestrictionOptions{
+	MaxConcentrationMultiple: 1.0,
+	MaxBondedCapPercent:      1.0,
+	MinBondedCapPercent:      1.0,
+}
+
+// Hooks wrapper struct for slashing keeper
+type StakingRestrictionHooks struct {
+	k    *stakingkeeper.Keeper
+	opts RestrictionOptions
+}
+
+// NewStakingRestrictionHooks configures a hook that validates changes to delegation modifications and
+// prevents concentration of voting power beyond configured limits on active validators.
+func NewStakingRestrictionHooks(k *stakingkeeper.Keeper, opts RestrictionOptions) StakingRestrictionHooks {
+	return StakingRestrictionHooks{k, opts}
 }
 
 // Verifies that the delegation would not cause the validator's voting power to exceed our staking distribution limits
@@ -34,7 +58,7 @@ func (h StakingRestrictionHooks) AfterDelegationModified(ctx sdktypes.Context, d
 	valCount := len(h.k.GetLastValidators(ctx))
 
 	// bond limit is allowed to have a multiple of even shares of network bonded stake.
-	maxValidatorPercent := MaxConcentration * (1.0 / float64(valCount))
+	maxValidatorPercent := h.opts.MaxConcentrationMultiple * (1.0 / float32(valCount))
 
 	// do not bother with limits on networks this small.
 	if valCount < 4 {
@@ -42,10 +66,10 @@ func (h StakingRestrictionHooks) AfterDelegationModified(ctx sdktypes.Context, d
 	}
 
 	// check the capped bond amount is within the overall range limits.
-	if maxValidatorPercent > MaxBondedCapPercent {
-		maxValidatorPercent = MaxBondedCapPercent
-	} else if maxValidatorPercent < MinBondedCapPercent {
-		maxValidatorPercent = MinBondedCapPercent
+	if maxValidatorPercent > h.opts.MaxBondedCapPercent {
+		maxValidatorPercent = h.opts.MaxBondedCapPercent
+	} else if maxValidatorPercent < h.opts.MinBondedCapPercent {
+		maxValidatorPercent = h.opts.MinBondedCapPercent
 	}
 
 	oldPower := h.k.GetLastValidatorPower(ctx, valAddr)
