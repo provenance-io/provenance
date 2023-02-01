@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -59,8 +60,8 @@ func (h StakingRestrictionHooks) AfterDelegationModified(ctx sdktypes.Context, d
 	// bond limit is allowed to have a multiple of even shares of network bonded stake.
 	maxValidatorPercent := h.opts.MaxConcentrationMultiple * (1.0 / float32(valCount))
 
-	// do not bother with limits on networks this small.
-	if valCount < 4 {
+	// do not bother with limits on networks this small (or under simulation).
+	if valCount < 4 || ctx.ChainID() == helpers.SimAppChainID {
 		return nil
 	}
 
@@ -83,8 +84,8 @@ func (h StakingRestrictionHooks) AfterDelegationModified(ctx sdktypes.Context, d
 			return sdkerrors.Wrapf(
 				sdkerrors.ErrInvalidRequest,
 				"validator bonded tokens of %d exceeds max of %d (%.1f%%) for %d validators",
-				currentBond.Int64(),
-				maxBond.Int64(),
+				currentBond.BigInt(),
+				maxBond.BigInt(),
 				maxValidatorPercent*100,
 				valCount,
 			)
