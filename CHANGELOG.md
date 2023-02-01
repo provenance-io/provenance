@@ -59,6 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add validate basic check to msg router service [#1308](https://github.com/provenance-io/provenance/issues/1308).
 * Removed legacy-amino [#1275] (https://github.com/provenance-io/provenance/issues/1275).
 * Opened port 9091 on ibcnet container ibc1 to allow for reaching GRPC [PR 1314](https://github.com/provenance-io/provenance/pull/1314).
+* Increase all validator's max commission to 100% [PR 1333](https://github.com/provenance-io/provenance/pull/1333).
 
 ### Bug Fixes
 
