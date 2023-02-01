@@ -434,8 +434,8 @@ func New(
 
 	// Enforce stake concentration limits on provenance networks but not one dev/simulation ones.
 	var limitOpts piohandlers.RestrictionOptions
-	chainId := cast.ToString(appOpts.Get("chain-id"))
-	if strings.Contains(chainId, "pio") {
+	chainID := cast.ToString(appOpts.Get("chain-id"))
+	if strings.Contains(chainID, "pio") {
 		limitOpts = *piohandlers.DefaultRestictionOptions
 	} else {
 		limitOpts = *piohandlers.UnlimitedRestrictionOptions

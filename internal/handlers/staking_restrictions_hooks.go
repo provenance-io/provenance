@@ -54,7 +54,6 @@ func NewStakingRestrictionHooks(k *stakingkeeper.Keeper, opts RestrictionOptions
 
 // Verifies that the delegation would not cause the validator's voting power to exceed our staking distribution limits
 func (h StakingRestrictionHooks) AfterDelegationModified(ctx sdktypes.Context, delAddr sdktypes.AccAddress, valAddr sdktypes.ValAddress) error {
-
 	valCount := len(h.k.GetLastValidators(ctx))
 
 	// bond limit is allowed to have a multiple of even shares of network bonded stake.
