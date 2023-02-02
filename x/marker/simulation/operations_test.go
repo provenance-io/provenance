@@ -2,14 +2,14 @@ package simulation_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
-	"math/rand"
-	"testing"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/sanction"
 	"github.com/stretchr/testify/suite"
+	"math/rand"
+	"testing"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -45,7 +45,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	r := rand.New(s)
 	accs := suite.getTestingAccounts(r, 3)
 
-	// Note: r is now passed around and used in several places, including in SDK functions.
+	// Note: r is now passed around and used in several places, including in SDK functionsuite.
 	//	Since we're seeding it, these tests are deterministic. However, if there are changes
 	//	made in the SDK or to the operations, these outcomes can change. To further confuse
 	//	things, the operation name is sometimes taken from msg.Type(), and sometimes from
@@ -61,7 +61,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		// Possible names: types.TypeAddMarkerRequest, fmt.Sprintf("%T", &types.MsgAddMarkerRequest{})
+		// Possible names: typesuite.TypeAddMarkerRequest, fmt.Sprintf("%T", &typesuite.MsgAddMarkerRequest{})
 		{simappparams.DefaultWeightMsgAddMarker, sdk.MsgTypeURL(&types.MsgAddMarkerRequest{}), sdk.MsgTypeURL(&types.MsgAddMarkerRequest{})},
 		// Possible names: "ChangeStatus",
 		//	types.TypeActivateRequest, fmt.Sprintf("%T", &types.MsgActivateRequest{}),
@@ -165,95 +165,147 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
-	wopArgs := s.getWeightedOpsArgs()
-	voteType := sdk.MsgTypeURL(&govv1.MsgVote{})
+
+	accounts := suite.createTestingAccounts(r, 10)
+
+	acctZero := accounts[len(accounts)-2]
+	acctOne := accounts[len(accounts)-1]
+	acctOneBalance := suite.app.BankKeeper.SpendableCoins(suite.ctx, acctOne.Address)
+	var acctOneBalancePlusOne sdk.Coins
+
+	tests := []struct {
+		name            string
+		sender          simtypes.Account
+		msg             sdk.Msg
+		deposit         sdk.Coins
+		comment         string
+		expSkip         bool
+		expOpMsgRoute   string
+		expOpMsgName    string
+		expOpMsgComment string
+		expInErr        []string
+	}{
+		{
+			name:   "no spendable coins",
+			sender: acctZero,
+			msg: &sanction.MsgSanction{
+				Addresses: []string{accounts[4].Address.String(), accounts[5].Address.String()},
+				Authority: suite.app.MarkerKeeper.GetAuthority(),
+			},
+			deposit:         sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
+			comment:         "should not matter",
+			expSkip:         true,
+			expOpMsgRoute:   "sanction",
+			expOpMsgName:    sdk.MsgTypeURL(&sanction.MsgSanction{}),
+			expOpMsgComment: "sender has no spendable coins",
+			expInErr:        nil,
+		},
+		{
+			name:   "not enough coins for deposit",
+			sender: acctOne,
+			msg: &sanction.MsgSanction{
+				Addresses: []string{accounts[5].Address.String(), accounts[6].Address.String()},
+				Authority: suite.app.MarkerKeeper.GetAuthority(),
+			},
+			deposit:         acctOneBalancePlusOne,
+			comment:         "should not be this",
+			expSkip:         true,
+			expOpMsgRoute:   "sanction",
+			expOpMsgName:    sdk.MsgTypeURL(&sanction.MsgSanction{}),
+			expOpMsgComment: "sender has insufficient balance to cover deposit",
+			expInErr:        nil,
+		},
+		{
+			name:            "nil msg",
+			sender:          accounts[0],
+			msg:             nil,
+			deposit:         sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
+			comment:         "will not get returned",
+			expSkip:         true,
+			expOpMsgRoute:   "sanction",
+			expOpMsgName:    "/",
+			expOpMsgComment: "wrapping MsgSanction as Any",
+			expInErr:        []string{"Expecting non nil value to create a new Any", "failed packing protobuf message to Any"},
+		},
+		{
+			name: "gen and deliver returns error",
+			sender: simtypes.Account{
+				PrivKey: accounts[0].PrivKey,
+				PubKey:  acctOne.PubKey,
+				Address: acctOne.Address,
+				ConsKey: accounts[0].ConsKey,
+			},
+			msg: &sanction.MsgSanction{
+				Addresses: []string{accounts[6].Address.String(), accounts[7].Address.String()},
+				Authority: suite.app.MarkerKeeper.GetAuthority(),
+			},
+			deposit:         acctOneBalance,
+			comment:         "this should be ignored",
+			expSkip:         true,
+			expOpMsgRoute:   "sanction",
+			expOpMsgName:    sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{}),
+			expOpMsgComment: "unable to deliver tx",
+			expInErr:        []string{"pubKey does not match signer address", "invalid pubkey"},
+		},
+		{
+			name:   "all good",
+			sender: accounts[1],
+			msg: &sanction.MsgSanction{
+				Addresses: []string{accounts[2].Address.String(), accounts[3].Address.String()},
+				Authority: suite.app.MarkerKeeper.GetAuthority(),
+			},
+			deposit:         sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
+			comment:         "this is a test comment",
+			expSkip:         false,
+			expOpMsgRoute:   "gov",
+			expOpMsgName:    sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{}),
+			expOpMsgComment: "this is a test comment",
+			expInErr:        nil,
+		},
+	}
 
 	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			var op simtypes.Operation
-			testFunc := func() {
-				op = simulation.SimulateGovMsgUpdateParams(&wopArgs)
+		suite.Run(tc.name, func() {
+			args := &simulation.SendGovMsgArgs{
+				WeightedOpsArgs: suite.getWeightedOpsArgs(),
+				R:               rand.New(rand.NewSource(1)),
+				App:             suite.app.BaseApp,
+				Ctx:             suite.ctx,
+				Accs:            accounts,
+				ChainID:         "send-gov-test",
+				Sender:          tc.sender,
+				Msg:             tc.msg,
+				Deposit:         tc.deposit,
+				Comment:         tc.comment,
 			}
-			s.Require().NotPanics(testFunc, "SimulateGovMsgUpdateParams")
+
+			var skip bool
 			var opMsg simtypes.OperationMsg
-			var fops []simtypes.FutureOperation
-			var err error
-			testOp := func() {
-				opMsg, fops, err = op(tc.r, s.app.BaseApp, s.ctx, tc.accs, chainID)
+
+			testFunc := func() {
+				skip, opMsg, _ = simulation.SendGovMsg(args)
 			}
-			s.Require().NotPanics(testOp, "SimulateGovMsgUpdateParams op execution")
-			testutil.AssertErrorContents(s.T(), err, tc.expInErr, "op error")
-			s.Assert().Equal(tc.expOpMsgOK, opMsg.OK, "op msg ok")
-			s.Assert().Equal(tc.expOpMsgRoute, opMsg.Route, "op msg route")
-			s.Assert().Equal(tc.expOpMsgName, opMsg.Name, "op msg name")
-			s.Assert().Equal(tc.expOpMsgComment, opMsg.Comment, "op msg comment")
-			if !tc.expOpMsgOK && !opMsg.OK {
-				s.Assert().Empty(fops, "future ops")
-			}
-			if tc.expOpMsgOK && opMsg.OK {
-				s.Assert().Equal(len(tc.accs), len(fops), "number of future ops")
-				// If we were expecting it to be okay, and it was, run all the future ops too.
-				// Some of them might fail (due to being sanctioned),
-				// but all the ones that went through should be YES votes.
-				maxBlockTime := s.ctx.BlockHeader().Time.Add(votingPeriod)
-				prop := s.getLastGovProp()
-				s.Assert().Equal(govMinDep.String(), sdk.NewCoins(prop.TotalDeposit...).String(), "prop deposit")
-				preVotes := s.app.GovKeeper.GetVotes(s.ctx, prop.Id)
-				// There shouldn't be any votes yet.
-				if !s.Assert().Empty(preVotes, "votes before running future ops") {
-					for i, fop := range fops {
-						s.Assert().LessOrEqual(fop.BlockTime, maxBlockTime, "future op %d block time", i+1)
-						s.Assert().Equal(0, fop.BlockHeight, "future op %d block height", i+1)
-						var fopMsg simtypes.OperationMsg
-						var ffops []simtypes.FutureOperation
-						testFop := func() {
-							fopMsg, ffops, err = fop.Op(rand.New(rand.NewSource(1)), s.app.BaseApp, s.ctx, tc.accs, chainID)
-						}
-						if !s.Assert().NotPanics(testFop, "future op %d execution", i+1) {
-							continue
-						}
-						if err != nil {
-							s.T().Logf("future op %d returned an error, but that's kind of expected: %v", i+1, err)
-							continue
-						}
-						if !fopMsg.OK {
-							s.T().Logf("future op %d returned not okay, but that's kind of expected: %q", i+1, fopMsg.Comment)
-							continue
-						}
-						s.Assert().Empty(ffops, "future ops returned by future op %d", i+1)
-						s.Assert().Equal(voteType, fopMsg.Name, "future op %d msg name", i+1)
-						s.Assert().Equal(tc.expOpMsgComment, fopMsg.Comment, "future op %d msg comment", i+1)
-					}
-					// Now there should be some votes.
-					postVotes := s.app.GovKeeper.GetVotes(s.ctx, prop.Id)
-					for i, vote := range postVotes {
-						if s.Assert().Len(vote.Options, 1, "vote %d options count", i+1) {
-							s.Assert().Equal(govv1.OptionYes, vote.Options[0].Option, "vote %d option", i+1)
-							s.Assert().Equal("1.000000000000000000", vote.Options[1].Weight, "vote %d weight", i+1)
-						}
-					}
-				}
-				// Now, get the message and check its content.
-				msgs, err := prop.GetMsgs()
-				if s.Assert().NoError(err, "getting messages from the proposal") {
-					if s.Assert().Len(msgs, 1, "number of messages in the proposal") {
-						msg, ok := msgs[0].(*sanction.MsgUpdateParams)
-						if s.Assert().True(ok, "could not cast prop msg to MsgUpdateParams") {
-							if !s.Assert().Equal(tc.expParams, msg.Params, "params in gov prop") && tc.expParams != nil && msg.Params != nil {
-								s.Assert().Equal(tc.expParams.ImmediateSanctionMinDeposit.String(),
-									msg.Params.ImmediateSanctionMinDeposit.String(),
-									"ImmediateSanctionMinDeposit")
-								s.Assert().Equal(tc.expParams.ImmediateUnsanctionMinDeposit.String(),
-									msg.Params.ImmediateUnsanctionMinDeposit.String(),
-									"ImmediateUnsanctionMinDeposit")
-							}
-						}
+			suite.Require().NotPanics(testFunc, "SendGovMsg")
+
+			suite.Assert().Equal(tc.expSkip, skip, "SendGovMsg result skip bool")
+			suite.Assert().Equal(tc.expOpMsgRoute, opMsg.Route, "SendGovMsg result op msg route")
+			suite.Assert().Equal(tc.expOpMsgName, opMsg.Name, "SendGovMsg result op msg name")
+			suite.Assert().Equal(tc.expOpMsgComment, opMsg.Comment, "SendGovMsg result op msg comment")
+			if !tc.expSkip && !skip {
+				// If we don't expect a skip, and we didn't get one,
+				// get the last gov prop and make sure it's the one we just sent.
+				expMsgs := []sdk.Msg{tc.msg}
+				prop := suite.getLastGovProp()
+				if suite.Assert().NotNil(prop, "last gov prop") {
+					msgs, err := prop.GetMsgs()
+					if suite.Assert().NoError(err, "error from prop.GetMsgs() on the last gov prop") {
+						suite.Assert().Equal(expMsgs, msgs, "messages in the last gov prop")
 					}
 				}
 			}
-			s.nextBlock()
 		})
 	}
+
 }
 
 // getWeightedOpsArgs creates a standard WeightedOpsArgs.
@@ -266,4 +318,57 @@ func (s *SimTestSuite) getWeightedOpsArgs() simulation.WeightedOpsArgs {
 		BK:         s.app.BankKeeper,
 		GK:         s.app.GovKeeper,
 	}
+}
+
+// getLastGovProp gets the last gov prop to be submitted.
+func (s *SimTestSuite) getLastGovProp() *govtypes.Proposal {
+	props := s.app.GovKeeper.GetProposals(s.ctx)
+	if len(props) == 0 {
+		return nil
+	}
+	return props[len(props)-1]
+}
+
+// nextBlock ends the current block, commits it, and starts a new one.
+// This is needed because some tests would run out of gas if all done in a single block.
+func (s *SimTestSuite) nextBlock() {
+	s.Require().NotPanics(func() { s.app.EndBlock(abci.RequestEndBlock{}) }, "app.EndBlock")
+	s.Require().NotPanics(func() { s.app.Commit() }, "app.Commit")
+	s.Require().NotPanics(func() {
+		s.app.BeginBlock(abci.RequestBeginBlock{
+			Header: tmproto.Header{
+				Height: s.app.LastBlockHeight() + 1,
+			},
+			LastCommitInfo:      abci.LastCommitInfo{},
+			ByzantineValidators: nil,
+		})
+	}, "app.BeginBlock")
+	s.freshCtx()
+}
+
+// freshCtx creates a new context and sets it to this SimTestSuite's ctx field.
+func (s *SimTestSuite) freshCtx() {
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+}
+
+// createTestingAccounts creates testing accounts with a default balance.
+func (s *SimTestSuite) createTestingAccounts(r *rand.Rand, count int) []simtypes.Account {
+	return s.createTestingAccountsWithPower(r, count, 200)
+}
+
+// createTestingAccountsWithPower creates new accounts with the specified power (coins amount).
+func (s *SimTestSuite) createTestingAccountsWithPower(r *rand.Rand, count int, power int64) []simtypes.Account {
+	accounts := simtypes.RandomAccounts(r, count)
+
+	initAmt := sdk.TokensFromConsensusPower(power, sdk.DefaultPowerReduction)
+	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
+
+	// add coins to the accounts
+	for _, account := range accounts {
+		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
+		s.app.AccountKeeper.SetAccount(s.ctx, acc)
+		s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, account.Address, initCoins))
+	}
+
+	return accounts
 }
