@@ -64,6 +64,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump Cosmos-SDK to v0.46.8-pio-2 (from [v0.46.8-pio-1](https://github.com/provenance-io/cosmos-sdk/compare/v0.46.8-pio-1...v0.46.8-pio-2)) [#1332](https://github.com/provenance-io/provenance/issues/1332).
   See its [RELEASE_NOTES.md](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.8-pio-2/RELEASE_NOTES.md) for details.
   * Enable ADR-038 State Listening in Provenance
+* Increase max gas per block to 120,000,000 (from 60,000,000) [PR 1335](https://github.com/provenance-io/provenance/pull/1335).
 
 ### Bug Fixes
 
