@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Added msg to add, finalize, and activate a marker in a single request [#770](https://github.com/provenance-io/provenance/issues/770).
 * Added the `x/quarantine` module [#1317](https://github.com/provenance-io/provenance/pull/1317).
 * Added the `x/sanction` module [#1317](https://github.com/provenance-io/provenance/pull/1317).
+* Staking concentration limit protection (prevents delegations to nodes with high voting power) [#1331](https://github.com/provenance-io/provenance/issues/1331).
 
 ### Improvements
 
@@ -59,6 +60,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add validate basic check to msg router service [#1308](https://github.com/provenance-io/provenance/issues/1308).
 * Removed legacy-amino [#1275] (https://github.com/provenance-io/provenance/issues/1275).
 * Opened port 9091 on ibcnet container ibc1 to allow for reaching GRPC [PR 1314](https://github.com/provenance-io/provenance/pull/1314).
+* Increase all validator's max commission to 100% [PR 1333](https://github.com/provenance-io/provenance/pull/1333).
+* Bump Cosmos-SDK to v0.46.8-pio-2 (from [v0.46.8-pio-1](https://github.com/provenance-io/cosmos-sdk/compare/v0.46.8-pio-1...v0.46.8-pio-2)) [#1332](https://github.com/provenance-io/provenance/issues/1332).
+  See its [RELEASE_NOTES.md](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.8-pio-2/RELEASE_NOTES.md) for details.
+  * Enable ADR-038 State Listening in Provenance
 
 ### Bug Fixes
 
