@@ -14,7 +14,7 @@ var _ stakingtypes.StakingHooks = StakingRestrictionHooks{}
 
 const (
 	// The default concentration of bonded tokens a validator is allowed as a multiple of equal shares
-	DefaultConcentration = 5.5 // Amounts to ~8% with 68 validators
+	DefaultConcentrationMultiple = 5.5 // Amounts to ~8% with 68 validators
 	// Maximum Allowed Cap for Bonded stake of any single validator
 	DefaultMaxCapPercent = 0.33
 	// Minimum Allowed Cap for Bonded stake of any single validator
