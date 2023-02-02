@@ -433,7 +433,7 @@ func New(
 	pioMsgFeesRouter.SetMsgFeesKeeper(app.MsgFeesKeeper)
 
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
-	restrictHooks := piohandlers.NewStakingRestrictionHooks(&app.StakingKeeper, *piohandlers.DefaultRestictionOptions)
+	restrictHooks := piohandlers.NewStakingRestrictionHooks(&app.StakingKeeper, *piohandlers.DefaultRestrictionOptions)
 	app.StakingKeeper = *stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(restrictHooks, app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
