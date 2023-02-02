@@ -1,0 +1,34 @@
+name: Proto Push Fix
+
+on:
+  pull_request:
+
+# Set concurrency for this workflow to cancel in-progress jobs if retriggered.
+# The github.ref is only available when triggered by a PR so fall back to github.run_id for other cases.
+# The github.run_id is unique for each run, giving each such invocation it's own unique concurrency group.
+# Basically, if you push to a PR branch, jobs that are still running for that PR will be cancelled.
+# But jobs started because of a merge to main or a release tag push are not cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  buf_push:
+    runs-on: ubuntu-latest
+    name: Protobuf Push
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Buf setup action
+        uses: bufbuild/buf-setup-action@v1.13.1
+      - name: Buf push 'third_party/proto'
+        uses: bufbuild/buf-push-action@v1
+        with:
+          input: 'third_party/proto'
+          buf_token: ${{ secrets.BUF_TOKEN }}
+      - name: Buf push 'proto/'
+        if: ${{ false }}
+        uses: bufbuild/buf-push-action@v1
+        with:
+          input: 'proto'
+          buf_token: ${{ secrets.BUF_TOKEN }}
