@@ -9,7 +9,7 @@ import (
 )
 
 // Compile time interface checks.
-var _, _, _ sdk.Msg = &MsgBindNameRequest{}, &MsgDeleteNameRequest{}, &MsgModifyNameRequest{}
+var _, _, _, _ sdk.Msg = &MsgBindNameRequest{}, &MsgDeleteNameRequest{}, &MsgModifyNameRequest{}, &MsgCreateRootNameRequest{}
 
 // NewMsgBindNameRequest creates a new bind name request
 func NewMsgBindNameRequest(record, parent NameRecord) *MsgBindNameRequest {
@@ -75,6 +75,18 @@ func (msg MsgDeleteNameRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
+// NewMsgCreateRootNameRequest creates a new Create Root Name Request
+func NewMsgCreateRootNameRequest(authority string, name string, address string, restricted bool) *MsgCreateRootNameRequest {
+	return &MsgCreateRootNameRequest{
+		Authority: authority,
+		Record: &NameRecord{
+			Name:       name,
+			Address:    address,
+			Restricted: restricted,
+		},
+	}
+}
+
 // NewMsgModifyNameRequest modifies an existing name record
 func NewMsgModifyNameRequest(authority string, name string, owner sdk.AccAddress, restricted bool) *MsgModifyNameRequest {
 	return &MsgModifyNameRequest{
@@ -84,6 +96,25 @@ func NewMsgModifyNameRequest(authority string, name string, owner sdk.AccAddress
 }
 
 // ValidateBasic runs stateless validation checks on the message.
+func (msg MsgCreateRootNameRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return ErrInvalidAddress
+	}
+
+	err := msg.Record.Validate()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetSigners Implements Msg.
+func (msg MsgCreateRootNameRequest) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{fromAddress}
+}
+
 func (msg MsgModifyNameRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Record.Name) == "" {
 		return fmt.Errorf("name cannot be empty")

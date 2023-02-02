@@ -21,6 +21,9 @@ service Msg {
 
   // ModifyName defines a method to modify the attributes of an existing name.
   rpc ModifyName(MsgModifyNameRequest) returns (MsgModifyNameResponse);
+
+  // CreateRootName defines a governance method for creating a root name.
+  rpc CreateRootName(MsgCreateRootNameRequest) returns (MsgCreateRootNameResponse);
 }
 
 // MsgBindNameRequest defines an sdk.Msg type that is used to add an address/name binding under an optional parent name.
@@ -51,6 +54,21 @@ message MsgDeleteNameRequest {
 
 // MsgDeleteNameResponse defines the Msg/DeleteName response type.
 message MsgDeleteNameResponse {}
+
+// MsgCreateRootNameRequest defines an sdk.Msg type to create a new root name
+// that is controlled by a given owner and optionally restricted to the owner
+// for the sole creation of sub names.
+message MsgCreateRootNameRequest {
+  option (cosmos.msg.v1.signer)    = "authority";
+
+  // The signing authority for the request
+  string authority   = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // NameRecord is a structure used to bind ownership of a name hierarchy to a collection of addresses
+  NameRecord record  = 2;
+}
+
+// MsgCreateRootNameResponse defines Msg/CreateRootName response type.
+message MsgCreateRootNameResponse {}
 
 // MsgModifyNameRequest defines a governance method that is used to update an existing address/name binding.
 message MsgModifyNameRequest {

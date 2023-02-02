@@ -19,6 +19,7 @@ Another challenge for users of a blockchain is establishing authority and delega
     - [MsgDeleteNameRequest](03_messages.md#msgdeletenamerequest)
     - [MsgModifyNameRequest](03_messages.md#msgmodifynamerequest)
     - [CreateRootNameProposal](03_messages.md#createrootnameproposal))
+    - [MsgCreateRootNameRequest](03_messages.md#msgcreaterootnamerequest))
 4. **[Events](04_events.md)**
     - [Handlers](04_events.md#handlers)
 5. **[Parameters](05_params.md)**
