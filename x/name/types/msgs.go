@@ -101,7 +101,7 @@ func (msg MsgCreateRootNameRequest) ValidateBasic() error {
 		return ErrInvalidAddress
 	}
 
-	err := msg.Record.ValidateBasic()
+	err := msg.Record.Validate()
 	if err != nil {
 		return err
 	}

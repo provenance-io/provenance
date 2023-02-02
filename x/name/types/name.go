@@ -24,8 +24,8 @@ func (nr NameRecord) String() string {
 	return strings.TrimSpace(fmt.Sprintf(`%s: %s`, nr.Name, nr.Address))
 }
 
-// ValidateBasic performs basic stateless validity checks.
-func (nr NameRecord) ValidateBasic() error {
+// Validate performs basic stateless validity checks.
+func (nr NameRecord) Validate() error {
 	if strings.TrimSpace(nr.Address) == "" {
 		return ErrInvalidAddress
 	}

@@ -295,7 +295,7 @@ func (keeper Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress
 	}
 
 	record := types.NewNameRecord(name, addr, restrict)
-	if err = record.ValidateBasic(); err != nil {
+	if err = record.Validate(); err != nil {
 		return err
 	}
 	bz, err := keeper.cdc.Marshal(&record)
