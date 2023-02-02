@@ -85,6 +85,8 @@ var handlers = map[string]appUpgrade{
 		Added: []string{quarantine.ModuleName, sanction.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
 			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
+			IncreaseMaxCommissions(ctx, app)
+			IncreaseMaxGas(ctx, app)
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
@@ -93,6 +95,8 @@ var handlers = map[string]appUpgrade{
 		Added: []string{quarantine.ModuleName, sanction.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
 			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
+			IncreaseMaxCommissions(ctx, app)
+			IncreaseMaxGas(ctx, app)
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
@@ -180,4 +184,21 @@ func UpgradeICA(ctx sdk.Context, app *App, versionMap *module.VersionMap) {
 	}
 	icamodule.InitModule(ctx, controllerParams, hostParams)
 	app.Logger().Info("Finished initializing ICA")
+}
+
+func IncreaseMaxCommissions(ctx sdk.Context, app *App) {
+	minMaxCom := sdk.OneDec()
+	validators := app.StakingKeeper.GetAllValidators(ctx)
+	ctx.Logger().Info("Increasing all validator's max commission to 100%", "count", len(validators))
+	for _, validator := range validators {
+		validator.Commission.MaxRate = minMaxCom
+		app.StakingKeeper.SetValidator(ctx, validator)
+	}
+}
+
+func IncreaseMaxGas(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Increasing max gas per block to 120,000,000")
+	params := app.GetConsensusParams(ctx)
+	params.Block.MaxGas = 120_000_000
+	app.StoreConsensusParams(ctx, params)
 }

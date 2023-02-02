@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/armon/go-metrics"
+
+	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -17,7 +19,7 @@ type msgServer struct {
 	Keeper
 }
 
-// NewMsgServerImpl returns an implementation of the account MsgServer interface
+// NewMsgServerImpl returns an implementation of the name MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
@@ -173,4 +175,22 @@ func (s msgServer) ModifyName(goCtx context.Context, msg *types.MsgModifyNameReq
 	}
 
 	return &types.MsgModifyNameResponse{}, nil
+}
+
+// CreateRootName binds a name to an address
+func (s msgServer) CreateRootName(goCtx context.Context, msg *types.MsgCreateRootNameRequest) (*types.MsgCreateRootNameResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if s.Keeper.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", s.Keeper.GetAuthority(), msg.Authority)
+	}
+
+	// Routes to legacy proposal handler to avoid code duplication
+	// Setting title and description to empty strings. These two fields are deprecated in the v1.
+	err := HandleCreateRootNameProposal(ctx, s.Keeper, types.NewCreateRootNameProposal("", "", msg.Record.Name, sdk.AccAddress(msg.Record.Address), msg.Record.Restricted))
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCreateRootNameResponse{}, nil
 }
