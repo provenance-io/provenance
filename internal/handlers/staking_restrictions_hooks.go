@@ -29,7 +29,7 @@ type RestrictionOptions struct {
 
 // DefaultRestictionOptions are default constraints that prevent single point of failure on validators
 var DefaultRestictionOptions = &RestrictionOptions{
-	MaxConcentrationMultiple: DefaultConcentration,
+	MaxConcentrationMultiple: DefaultConcentrationMultiple,
 	MaxBondedCapPercent:      DefaultMaxCapPercent,
 	MinBondedCapPercent:      DefaultMinCapPercent,
 }
