@@ -6,6 +6,7 @@ import (
 
 	"github.com/armon/go-metrics"
 
+	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -654,4 +655,24 @@ func (k msgServer) AddMarkerProposal(goCtx context.Context, msg *types.MsgAddMar
 	logger.Info("a new marker was added", "marker", msg.Amount.Denom, "supply", msg.Amount.String())
 
 	return &types.MsgAddMarkerProposalResponse{}, nil
+}
+
+func (k msgServer) SupplyIncreaseProposal(goCtx context.Context, msg *types.MsgSupplyIncreaseProposalRequest) (*types.MsgSupplyIncreaseProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	proposal := types.SupplyIncreaseProposal{
+		Amount:        msg.Amount,
+		TargetAddress: msg.TargetAddress,
+	}
+
+	// HandleSupplyIncreaseProposal performs the basic validation
+	err := HandleSupplyIncreaseProposal(ctx, k.Keeper, &proposal)
+	if err != nil {
+		return nil, err
+	}
+	return &types.MsgSupplyIncreaseProposalResponse{}, nil
 }

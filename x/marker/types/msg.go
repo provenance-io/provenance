@@ -33,6 +33,7 @@ var (
 	_ sdk.Msg = &MsgIbcTransferRequest{}
 	_ sdk.Msg = &MsgGrantAllowanceRequest{}
 	_ sdk.Msg = &MsgAddFinalizeActivateMarkerRequest{}
+	_ sdk.Msg = &MsgSupplyIncreaseProposalRequest{}
 )
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
@@ -511,6 +512,33 @@ func (msg MsgAddFinalizeActivateMarkerRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
+func (msg *MsgSupplyIncreaseProposalRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{addr}
+}
+
+func NewMsgSupplyIncreaseProposalRequest(amount sdk.Coin, targetAddress string, authority string) *MsgSupplyIncreaseProposalRequest {
+	return &MsgSupplyIncreaseProposalRequest{
+		Amount:        amount,
+		TargetAddress: targetAddress,
+		Authority:     authority,
+	}
+}
+
+func (msg *MsgSupplyIncreaseProposalRequest) ValidateBasic() error {
+	err := msg.Amount.Validate()
+	if err != nil {
+		return err
+	}
+
+	_, err = sdk.AccAddressFromBech32(msg.TargetAddress)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // NewMsgAddMarkerProposalRequest creates a new proposal request to add marker
 func NewMsgAddMarkerProposalRequest(
 	denom string,
@@ -535,6 +563,12 @@ func NewMsgAddMarkerProposalRequest(
 	}
 }
 
+// GetSigners indicates that the message must have been signed by the address provided.
+func (amp MsgAddMarkerProposalRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(amp.Authority)
+	return []sdk.AccAddress{addr}
+}
+
 func (amp MsgAddMarkerProposalRequest) ValidateBasic() error {
 	if amp.Status == StatusUndefined {
 		return ErrInvalidMarkerStatus
@@ -552,10 +586,4 @@ func (amp MsgAddMarkerProposalRequest) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// GetSigners indicates that the message must have been signed by the address provided.
-func (amp MsgAddMarkerProposalRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(amp.Authority)
-	return []sdk.AccAddress{addr}
 }

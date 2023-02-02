@@ -247,6 +247,80 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 	}
 }
 
+func TestMsgSupplyIncreaseProposalRequestGetSigners(t *testing.T) {
+	authority := sdk.AccAddress("input111111111111111")
+	targetAddress := sdk.AccAddress("input22222222222")
+	amount :=
+		sdk.Coin{
+			Amount: math.NewInt(100),
+			Denom:  "chocolate",
+		}
+
+	msg := NewMsgSupplyIncreaseProposalRequest(amount, targetAddress.String(), authority.String())
+	res := msg.GetSigners()
+	exp := []sdk.AccAddress{authority}
+	require.Equal(t, exp, res, "GetSigners")
+}
+
+func TestMsgSupplyIncreaseProposalRequestValidateBasic(t *testing.T) {
+	authority := sdk.AccAddress("input111111111111111").String()
+	targetAddress := sdk.AccAddress("input22222222222").String()
+
+	testCases := []struct {
+		name          string
+		amount        sdk.Coin
+		targetAddress string
+		authority     string
+		shouldFail    bool
+		expectedError string
+	}{
+		{
+			name: "negative coin amount",
+			amount: sdk.Coin{
+				Amount: math.NewInt(-1),
+				Denom:  "invalid-denom",
+			},
+			targetAddress: targetAddress,
+			authority:     authority,
+			shouldFail:    true,
+			expectedError: "negative coin amount: -1",
+		},
+		{
+			name: "invalid target address",
+			amount: sdk.Coin{
+				Amount: math.NewInt(100),
+				Denom:  "bbq-hotdog",
+			},
+			targetAddress: "",
+			authority:     authority,
+			shouldFail:    true,
+			expectedError: "empty address string is not allowed",
+		},
+		{
+			name: "invalid authority",
+			amount: sdk.Coin{
+				Amount: math.NewInt(100),
+				Denom:  "bbq-hotdog",
+			},
+			targetAddress: targetAddress,
+			authority:     "",
+			shouldFail:    true,
+			expectedError: "empty address string is not allowed",
+		},
+	}
+
+	for _, tc := range testCases {
+		msg := NewMsgSupplyIncreaseProposalRequest(tc.amount, tc.targetAddress, tc.authority)
+		err := msg.ValidateBasic()
+
+		if tc.shouldFail {
+			require.EqualError(t, err, tc.expectedError)
+		} else {
+			require.NoError(t, err)
+		}
+	}
+}
+
 func TestMsgAddMarkerProposalRequestValidateBasic(t *testing.T) {
 
 	testCases := []struct {

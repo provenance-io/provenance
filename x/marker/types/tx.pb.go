@@ -1370,129 +1370,6 @@ func (m *MsgSetDenomMetadataResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSetDenomMetadataResponse proto.InternalMessageInfo
 
-// MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker request type
-type MsgAddFinalizeActivateMarkerRequest struct {
-	Amount                 github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,1,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"amount"`
-	Manager                string                                  `protobuf:"bytes,3,opt,name=manager,proto3" json:"manager,omitempty"`
-	FromAddress            string                                  `protobuf:"bytes,4,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
-	MarkerType             MarkerType                              `protobuf:"varint,5,opt,name=marker_type,json=markerType,proto3,enum=provenance.marker.v1.MarkerType" json:"marker_type,omitempty"`
-	AccessList             []AccessGrant                           `protobuf:"bytes,6,rep,name=access_list,json=accessList,proto3" json:"access_list"`
-	SupplyFixed            bool                                    `protobuf:"varint,7,opt,name=supply_fixed,json=supplyFixed,proto3" json:"supply_fixed,omitempty"`
-	AllowGovernanceControl bool                                    `protobuf:"varint,8,opt,name=allow_governance_control,json=allowGovernanceControl,proto3" json:"allow_governance_control,omitempty"`
-}
-
-func (m *MsgAddFinalizeActivateMarkerRequest) Reset()         { *m = MsgAddFinalizeActivateMarkerRequest{} }
-func (m *MsgAddFinalizeActivateMarkerRequest) String() string { return proto.CompactTextString(m) }
-func (*MsgAddFinalizeActivateMarkerRequest) ProtoMessage()    {}
-func (*MsgAddFinalizeActivateMarkerRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcb203fb73175ed3, []int{28}
-}
-func (m *MsgAddFinalizeActivateMarkerRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgAddFinalizeActivateMarkerRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgAddFinalizeActivateMarkerRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgAddFinalizeActivateMarkerRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAddFinalizeActivateMarkerRequest.Merge(m, src)
-}
-func (m *MsgAddFinalizeActivateMarkerRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgAddFinalizeActivateMarkerRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAddFinalizeActivateMarkerRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgAddFinalizeActivateMarkerRequest proto.InternalMessageInfo
-
-func (m *MsgAddFinalizeActivateMarkerRequest) GetManager() string {
-	if m != nil {
-		return m.Manager
-	}
-	return ""
-}
-
-func (m *MsgAddFinalizeActivateMarkerRequest) GetFromAddress() string {
-	if m != nil {
-		return m.FromAddress
-	}
-	return ""
-}
-
-func (m *MsgAddFinalizeActivateMarkerRequest) GetMarkerType() MarkerType {
-	if m != nil {
-		return m.MarkerType
-	}
-	return MarkerType_Unknown
-}
-
-func (m *MsgAddFinalizeActivateMarkerRequest) GetAccessList() []AccessGrant {
-	if m != nil {
-		return m.AccessList
-	}
-	return nil
-}
-
-func (m *MsgAddFinalizeActivateMarkerRequest) GetSupplyFixed() bool {
-	if m != nil {
-		return m.SupplyFixed
-	}
-	return false
-}
-
-func (m *MsgAddFinalizeActivateMarkerRequest) GetAllowGovernanceControl() bool {
-	if m != nil {
-		return m.AllowGovernanceControl
-	}
-	return false
-}
-
-// MsgAddFinalizeActivateMarkerResponse defines the Msg/AddFinalizeActivateMarker response type
-type MsgAddFinalizeActivateMarkerResponse struct {
-}
-
-func (m *MsgAddFinalizeActivateMarkerResponse) Reset()         { *m = MsgAddFinalizeActivateMarkerResponse{} }
-func (m *MsgAddFinalizeActivateMarkerResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgAddFinalizeActivateMarkerResponse) ProtoMessage()    {}
-func (*MsgAddFinalizeActivateMarkerResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcb203fb73175ed3, []int{29}
-}
-func (m *MsgAddFinalizeActivateMarkerResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgAddFinalizeActivateMarkerResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgAddFinalizeActivateMarkerResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgAddFinalizeActivateMarkerResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAddFinalizeActivateMarkerResponse.Merge(m, src)
-}
-func (m *MsgAddFinalizeActivateMarkerResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgAddFinalizeActivateMarkerResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAddFinalizeActivateMarkerResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgAddFinalizeActivateMarkerResponse proto.InternalMessageInfo
-
 // MsgAddMarkerProposalRequest defines the Msg/AddMarkerProposal request type
 type MsgAddMarkerProposalRequest struct {
 	Amount                 github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"amount"`
@@ -1509,7 +1386,7 @@ func (m *MsgAddMarkerProposalRequest) Reset()         { *m = MsgAddMarkerProposa
 func (m *MsgAddMarkerProposalRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgAddMarkerProposalRequest) ProtoMessage()    {}
 func (*MsgAddMarkerProposalRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcb203fb73175ed3, []int{30}
+	return fileDescriptor_bcb203fb73175ed3, []int{28}
 }
 func (m *MsgAddMarkerProposalRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1595,7 +1472,7 @@ func (m *MsgAddMarkerProposalResponse) Reset()         { *m = MsgAddMarkerPropos
 func (m *MsgAddMarkerProposalResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgAddMarkerProposalResponse) ProtoMessage()    {}
 func (*MsgAddMarkerProposalResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcb203fb73175ed3, []int{31}
+	return fileDescriptor_bcb203fb73175ed3, []int{29}
 }
 func (m *MsgAddMarkerProposalResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1623,6 +1500,221 @@ func (m *MsgAddMarkerProposalResponse) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_MsgAddMarkerProposalResponse proto.InternalMessageInfo
+
+// MsgSupplyIncreaseProposalRequest defines a governance proposal to administer a marker and increase total supply of the marker
+// through minting coin and placing it within the marker or assigning it directly to an account
+type MsgSupplyIncreaseProposalRequest struct {
+	Amount        github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,1,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"amount"`
+	TargetAddress string                                  `protobuf:"bytes,2,opt,name=target_address,json=targetAddress,proto3" json:"target_address,omitempty"`
+	Authority     string                                  `protobuf:"bytes,3,opt,name=authority,proto3" json:"authority,omitempty"`
+}
+
+func (m *MsgSupplyIncreaseProposalRequest) Reset()         { *m = MsgSupplyIncreaseProposalRequest{} }
+func (m *MsgSupplyIncreaseProposalRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgSupplyIncreaseProposalRequest) ProtoMessage()    {}
+func (*MsgSupplyIncreaseProposalRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcb203fb73175ed3, []int{30}
+}
+func (m *MsgSupplyIncreaseProposalRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSupplyIncreaseProposalRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSupplyIncreaseProposalRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSupplyIncreaseProposalRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSupplyIncreaseProposalRequest.Merge(m, src)
+}
+func (m *MsgSupplyIncreaseProposalRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSupplyIncreaseProposalRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSupplyIncreaseProposalRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSupplyIncreaseProposalRequest proto.InternalMessageInfo
+
+func (m *MsgSupplyIncreaseProposalRequest) GetTargetAddress() string {
+	if m != nil {
+		return m.TargetAddress
+	}
+	return ""
+}
+
+func (m *MsgSupplyIncreaseProposalRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+// MsgSupplyIncreaseProposalResponse defines the Msg/SupplyIncreaseProposal response type
+type MsgSupplyIncreaseProposalResponse struct {
+}
+
+func (m *MsgSupplyIncreaseProposalResponse) Reset()         { *m = MsgSupplyIncreaseProposalResponse{} }
+func (m *MsgSupplyIncreaseProposalResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSupplyIncreaseProposalResponse) ProtoMessage()    {}
+func (*MsgSupplyIncreaseProposalResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcb203fb73175ed3, []int{31}
+}
+func (m *MsgSupplyIncreaseProposalResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSupplyIncreaseProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSupplyIncreaseProposalResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSupplyIncreaseProposalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSupplyIncreaseProposalResponse.Merge(m, src)
+}
+func (m *MsgSupplyIncreaseProposalResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSupplyIncreaseProposalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSupplyIncreaseProposalResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSupplyIncreaseProposalResponse proto.InternalMessageInfo
+
+// MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker request type
+type MsgAddFinalizeActivateMarkerRequest struct {
+	Amount                 github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,1,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"amount"`
+	Manager                string                                  `protobuf:"bytes,3,opt,name=manager,proto3" json:"manager,omitempty"`
+	FromAddress            string                                  `protobuf:"bytes,4,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+	MarkerType             MarkerType                              `protobuf:"varint,5,opt,name=marker_type,json=markerType,proto3,enum=provenance.marker.v1.MarkerType" json:"marker_type,omitempty"`
+	AccessList             []AccessGrant                           `protobuf:"bytes,6,rep,name=access_list,json=accessList,proto3" json:"access_list"`
+	SupplyFixed            bool                                    `protobuf:"varint,7,opt,name=supply_fixed,json=supplyFixed,proto3" json:"supply_fixed,omitempty"`
+	AllowGovernanceControl bool                                    `protobuf:"varint,8,opt,name=allow_governance_control,json=allowGovernanceControl,proto3" json:"allow_governance_control,omitempty"`
+}
+
+func (m *MsgAddFinalizeActivateMarkerRequest) Reset()         { *m = MsgAddFinalizeActivateMarkerRequest{} }
+func (m *MsgAddFinalizeActivateMarkerRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgAddFinalizeActivateMarkerRequest) ProtoMessage()    {}
+func (*MsgAddFinalizeActivateMarkerRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcb203fb73175ed3, []int{32}
+}
+func (m *MsgAddFinalizeActivateMarkerRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgAddFinalizeActivateMarkerRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgAddFinalizeActivateMarkerRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgAddFinalizeActivateMarkerRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddFinalizeActivateMarkerRequest.Merge(m, src)
+}
+func (m *MsgAddFinalizeActivateMarkerRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgAddFinalizeActivateMarkerRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddFinalizeActivateMarkerRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgAddFinalizeActivateMarkerRequest proto.InternalMessageInfo
+
+func (m *MsgAddFinalizeActivateMarkerRequest) GetManager() string {
+	if m != nil {
+		return m.Manager
+	}
+	return ""
+}
+
+func (m *MsgAddFinalizeActivateMarkerRequest) GetFromAddress() string {
+	if m != nil {
+		return m.FromAddress
+	}
+	return ""
+}
+
+func (m *MsgAddFinalizeActivateMarkerRequest) GetMarkerType() MarkerType {
+	if m != nil {
+		return m.MarkerType
+	}
+	return MarkerType_Unknown
+}
+
+func (m *MsgAddFinalizeActivateMarkerRequest) GetAccessList() []AccessGrant {
+	if m != nil {
+		return m.AccessList
+	}
+	return nil
+}
+
+func (m *MsgAddFinalizeActivateMarkerRequest) GetSupplyFixed() bool {
+	if m != nil {
+		return m.SupplyFixed
+	}
+	return false
+}
+
+func (m *MsgAddFinalizeActivateMarkerRequest) GetAllowGovernanceControl() bool {
+	if m != nil {
+		return m.AllowGovernanceControl
+	}
+	return false
+}
+
+// MsgAddFinalizeActivateMarkerResponse defines the Msg/AddFinalizeActivateMarker response type
+type MsgAddFinalizeActivateMarkerResponse struct {
+}
+
+func (m *MsgAddFinalizeActivateMarkerResponse) Reset()         { *m = MsgAddFinalizeActivateMarkerResponse{} }
+func (m *MsgAddFinalizeActivateMarkerResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAddFinalizeActivateMarkerResponse) ProtoMessage()    {}
+func (*MsgAddFinalizeActivateMarkerResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcb203fb73175ed3, []int{33}
+}
+func (m *MsgAddFinalizeActivateMarkerResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgAddFinalizeActivateMarkerResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgAddFinalizeActivateMarkerResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgAddFinalizeActivateMarkerResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddFinalizeActivateMarkerResponse.Merge(m, src)
+}
+func (m *MsgAddFinalizeActivateMarkerResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgAddFinalizeActivateMarkerResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddFinalizeActivateMarkerResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgAddFinalizeActivateMarkerResponse proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*MsgGrantAllowanceRequest)(nil), "provenance.marker.v1.MsgGrantAllowanceRequest")
@@ -1653,106 +1745,143 @@ func init() {
 	proto.RegisterType((*MsgIbcTransferResponse)(nil), "provenance.marker.v1.MsgIbcTransferResponse")
 	proto.RegisterType((*MsgSetDenomMetadataRequest)(nil), "provenance.marker.v1.MsgSetDenomMetadataRequest")
 	proto.RegisterType((*MsgSetDenomMetadataResponse)(nil), "provenance.marker.v1.MsgSetDenomMetadataResponse")
-	proto.RegisterType((*MsgAddFinalizeActivateMarkerRequest)(nil), "provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest")
-	proto.RegisterType((*MsgAddFinalizeActivateMarkerResponse)(nil), "provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse")
 	proto.RegisterType((*MsgAddMarkerProposalRequest)(nil), "provenance.marker.v1.MsgAddMarkerProposalRequest")
 	proto.RegisterType((*MsgAddMarkerProposalResponse)(nil), "provenance.marker.v1.MsgAddMarkerProposalResponse")
+	proto.RegisterType((*MsgSupplyIncreaseProposalRequest)(nil), "provenance.marker.v1.MsgSupplyIncreaseProposalRequest")
+	proto.RegisterType((*MsgSupplyIncreaseProposalResponse)(nil), "provenance.marker.v1.MsgSupplyIncreaseProposalResponse")
+	proto.RegisterType((*MsgAddFinalizeActivateMarkerRequest)(nil), "provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest")
+	proto.RegisterType((*MsgAddFinalizeActivateMarkerResponse)(nil), "provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse")
 }
 
 func init() { proto.RegisterFile("provenance/marker/v1/tx.proto", fileDescriptor_bcb203fb73175ed3) }
 
 var fileDescriptor_bcb203fb73175ed3 = []byte{
-	// 1425 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x58, 0xcf, 0x6f, 0x13, 0xc7,
-	0x17, 0xcf, 0x7e, 0x9d, 0x98, 0xf8, 0x19, 0x02, 0x19, 0x02, 0x6c, 0x96, 0x6f, 0x4c, 0x70, 0xf9,
-	0x61, 0x28, 0xd9, 0x25, 0xae, 0x84, 0xda, 0x5c, 0x2a, 0x3b, 0x14, 0x8a, 0x5a, 0x57, 0xc8, 0x41,
-	0xaa, 0xda, 0x8b, 0x35, 0x5e, 0x4f, 0x36, 0xab, 0x78, 0x77, 0xcc, 0xce, 0xd8, 0x24, 0x48, 0xbd,
-	0x54, 0xea, 0xa1, 0xb7, 0x8a, 0x63, 0xff, 0x84, 0x9e, 0x38, 0x20, 0x55, 0xfd, 0x0f, 0x50, 0x4f,
-	0x08, 0xf5, 0x50, 0x55, 0x15, 0x45, 0x70, 0xe8, 0xbf, 0x51, 0xed, 0xce, 0xac, 0xd7, 0xbb, 0xb6,
-	0x37, 0x4e, 0x6b, 0xd1, 0x56, 0xea, 0xc9, 0x9e, 0x79, 0x3f, 0x3f, 0xef, 0xbd, 0x9d, 0xf9, 0xec,
-	0xc2, 0x4a, 0xc7, 0xa3, 0x3d, 0xe2, 0x62, 0xd7, 0x24, 0x86, 0x83, 0xbd, 0x5d, 0xe2, 0x19, 0xbd,
-	0x75, 0x83, 0xef, 0xe9, 0x1d, 0x8f, 0x72, 0x8a, 0x96, 0x22, 0xb1, 0x2e, 0xc4, 0x7a, 0x6f, 0x5d,
-	0x5b, 0xb6, 0x28, 0xb5, 0xda, 0xc4, 0x08, 0x74, 0x9a, 0xdd, 0x6d, 0x03, 0xbb, 0xfb, 0xc2, 0x40,
-	0x5b, 0x36, 0x29, 0x73, 0x28, 0x6b, 0x04, 0x2b, 0x43, 0x2c, 0xa4, 0x68, 0xc9, 0xa2, 0x16, 0x15,
-	0xfb, 0xfe, 0x3f, 0xb9, 0x5b, 0x10, 0x3a, 0x46, 0x13, 0x33, 0x62, 0xf4, 0xd6, 0x9b, 0x84, 0xe3,
-	0x75, 0xc3, 0xa4, 0xb6, 0x3b, 0x24, 0x77, 0x77, 0xfb, 0x72, 0x7f, 0x21, 0xe5, 0x67, 0xa4, 0xdc,
-	0x61, 0x96, 0x9f, 0xb9, 0xc3, 0x2c, 0x29, 0xb8, 0x68, 0x37, 0x4d, 0x03, 0x77, 0x3a, 0x6d, 0xdb,
-	0xc4, 0xdc, 0xa6, 0x2e, 0x33, 0xb8, 0x87, 0x5d, 0xb6, 0x1d, 0x47, 0xa8, 0x9d, 0x1f, 0x59, 0x00,
-	0x89, 0x55, 0xa8, 0x5c, 0x1a, 0xa9, 0x82, 0x4d, 0x93, 0x30, 0x66, 0x79, 0xd8, 0xe5, 0x42, 0xaf,
-	0xf8, 0xbd, 0x02, 0x6a, 0x8d, 0x59, 0xb7, 0xfd, 0xad, 0x4a, 0xbb, 0x4d, 0x1f, 0xf8, 0x16, 0x75,
-	0x72, 0xbf, 0x4b, 0x18, 0x47, 0x4b, 0x30, 0xd7, 0x22, 0x2e, 0x75, 0x54, 0x65, 0x55, 0x29, 0xe5,
-	0xea, 0x62, 0x81, 0x2e, 0xc0, 0x31, 0xdc, 0x72, 0x6c, 0xd7, 0x66, 0xdc, 0xc3, 0x9c, 0x7a, 0xea,
-	0xff, 0x02, 0x69, 0x7c, 0x13, 0xa9, 0x70, 0x24, 0x88, 0x43, 0x88, 0x9a, 0x09, 0xe4, 0xe1, 0x12,
-	0x7d, 0x00, 0x39, 0x1c, 0x46, 0x52, 0x67, 0x57, 0x95, 0x52, 0xbe, 0xbc, 0xa4, 0x8b, 0xee, 0xe8,
-	0x61, 0x77, 0xf4, 0x8a, 0xbb, 0x5f, 0x5d, 0xfc, 0xf1, 0xc9, 0xda, 0xb1, 0x5b, 0x84, 0xf4, 0xf3,
-	0xba, 0x53, 0x8f, 0x2c, 0x8b, 0x67, 0x61, 0x79, 0x44, 0xe2, 0xac, 0x43, 0x5d, 0x46, 0x8a, 0xbf,
-	0x66, 0xe0, 0x64, 0x8d, 0x59, 0x95, 0x56, 0xab, 0x16, 0x80, 0x0f, 0x11, 0x35, 0x21, 0x8b, 0x1d,
-	0xda, 0x75, 0x79, 0x00, 0x29, 0x5f, 0x5e, 0xd6, 0x65, 0xbb, 0xfd, 0x56, 0xea, 0xb2, 0x55, 0xfa,
-	0x26, 0xb5, 0xdd, 0xaa, 0xf1, 0xf4, 0xc5, 0xb9, 0x99, 0x5f, 0x5e, 0x9c, 0xbb, 0x6c, 0xd9, 0x7c,
-	0xa7, 0xdb, 0xd4, 0x4d, 0xea, 0xc8, 0xd9, 0x90, 0x3f, 0x6b, 0xac, 0xb5, 0x6b, 0xf0, 0xfd, 0x0e,
-	0x61, 0x81, 0x41, 0x5d, 0x7a, 0xf6, 0x91, 0x3b, 0xd8, 0xc5, 0x16, 0xf1, 0x42, 0xe4, 0x72, 0x89,
-	0xce, 0xc3, 0xd1, 0x6d, 0x8f, 0x3a, 0x0d, 0xdc, 0x6a, 0x79, 0x84, 0xb1, 0x00, 0x7c, 0xae, 0x9e,
-	0xf7, 0xf7, 0x2a, 0x62, 0x0b, 0x6d, 0x40, 0x96, 0x71, 0xcc, 0xbb, 0x4c, 0x9d, 0x5b, 0x55, 0x4a,
-	0x0b, 0xe5, 0xa2, 0x3e, 0x6a, 0x9a, 0x75, 0x81, 0x6a, 0x2b, 0xd0, 0xac, 0x4b, 0x0b, 0x54, 0x81,
-	0xbc, 0xd0, 0x68, 0xf8, 0x59, 0xa9, 0xd9, 0xc0, 0xc1, 0x6a, 0x9a, 0x83, 0x7b, 0xfb, 0x1d, 0x52,
-	0x07, 0xa7, 0xff, 0x1f, 0x7d, 0x08, 0x79, 0x31, 0x23, 0x8d, 0xb6, 0xcd, 0xb8, 0x7a, 0x64, 0x35,
-	0x53, 0xca, 0x97, 0xcf, 0x8f, 0x76, 0x51, 0x09, 0x14, 0x83, 0x06, 0x54, 0x67, 0xfd, 0x62, 0xd5,
-	0x41, 0xd8, 0x7e, 0x6c, 0x33, 0xee, 0x63, 0x65, 0xdd, 0x4e, 0xa7, 0xbd, 0xdf, 0xd8, 0xb6, 0xf7,
-	0x48, 0x4b, 0x9d, 0x5f, 0x55, 0x4a, 0xf3, 0xf5, 0xbc, 0xd8, 0xbb, 0xe5, 0x6f, 0xa1, 0x77, 0x41,
-	0x0d, 0xda, 0xd9, 0xb0, 0x68, 0x8f, 0x78, 0x81, 0xfb, 0x86, 0x49, 0x5d, 0xee, 0xd1, 0xb6, 0x9a,
-	0x0b, 0xd4, 0x4f, 0x07, 0xf2, 0xdb, 0x7d, 0xf1, 0xa6, 0x90, 0x16, 0x4f, 0xc3, 0x52, 0xbc, 0xbb,
-	0xb2, 0xed, 0x8f, 0x94, 0xb0, 0xed, 0x22, 0xb9, 0x69, 0x0c, 0xf2, 0xfb, 0x90, 0x15, 0xb0, 0xd4,
-	0xcc, 0xe1, 0xaa, 0x21, 0xcd, 0xa2, 0x64, 0xc3, 0x9c, 0x64, 0xb2, 0x5f, 0xc0, 0xe9, 0x1a, 0xb3,
-	0x6e, 0x92, 0x36, 0xe1, 0x64, 0x7a, 0xe9, 0x5e, 0x86, 0xe3, 0x1e, 0x71, 0x68, 0x8f, 0xb4, 0xfa,
-	0x63, 0x26, 0xa6, 0x70, 0x41, 0x6e, 0xcb, 0x49, 0x2b, 0x2e, 0xc3, 0x99, 0xa1, 0xf0, 0x32, 0xb3,
-	0xbb, 0x80, 0x6a, 0xcc, 0xba, 0x65, 0xbb, 0xb8, 0x6d, 0x3f, 0x9c, 0xc6, 0x69, 0x50, 0x3c, 0x15,
-	0xf4, 0x25, 0xf2, 0x18, 0x0b, 0x54, 0x31, 0xb9, 0xdd, 0xc3, 0x7c, 0x8a, 0x81, 0x22, 0x8f, 0x32,
-	0xd0, 0x27, 0x70, 0xa2, 0xc6, 0xac, 0x4d, 0xbf, 0x67, 0xed, 0x69, 0x84, 0x39, 0x09, 0x8b, 0x03,
-	0xfe, 0x62, 0x41, 0x44, 0x45, 0xa7, 0x17, 0x24, 0xf4, 0x27, 0x83, 0x7c, 0xab, 0xc0, 0x42, 0x8d,
-	0x59, 0x35, 0xdb, 0xe5, 0x6f, 0xf2, 0x50, 0x9b, 0x2c, 0xe3, 0x45, 0x38, 0xde, 0xcf, 0x2d, 0x9e,
-	0x6f, 0xb5, 0xeb, 0xb9, 0xff, 0xd4, 0x7c, 0x45, 0x6e, 0x32, 0xdf, 0x9f, 0x94, 0x60, 0x26, 0x3f,
-	0xb5, 0xf9, 0x4e, 0xcb, 0xc3, 0x0f, 0xa6, 0xf1, 0x48, 0xae, 0x00, 0x70, 0x9a, 0x78, 0x1a, 0x73,
-	0x9c, 0x86, 0x47, 0xbe, 0xd9, 0x2f, 0xc7, 0x6c, 0x70, 0xc0, 0xa4, 0x94, 0xe3, 0xba, 0x5f, 0x8e,
-	0xef, 0x7e, 0x3b, 0x57, 0x9a, 0xb0, 0x1c, 0x2c, 0xac, 0x87, 0x7c, 0x2e, 0x22, 0x54, 0x12, 0xed,
-	0x4b, 0x81, 0xf6, 0x9e, 0x64, 0x19, 0x7f, 0x6b, 0x87, 0x32, 0xa3, 0x6a, 0x37, 0xc1, 0x95, 0x19,
-	0x2f, 0xef, 0x5c, 0xa2, 0xbc, 0x12, 0x79, 0x84, 0x50, 0x22, 0x7f, 0xae, 0xc0, 0xa9, 0x1a, 0xb3,
-	0xee, 0x34, 0xcd, 0x24, 0xf8, 0x47, 0x0a, 0xcc, 0x87, 0xb4, 0x4b, 0xe2, 0xbf, 0xa2, 0xdb, 0x4d,
-	0x53, 0x1f, 0x24, 0x66, 0x7a, 0xa8, 0x11, 0x5c, 0xa6, 0x91, 0xff, 0xea, 0x47, 0xb2, 0x1e, 0x9b,
-	0xc3, 0xf5, 0xb0, 0x9b, 0xe6, 0x9a, 0x45, 0x8d, 0xde, 0x0d, 0xc3, 0xa1, 0xad, 0x6e, 0x9b, 0x30,
-	0x9f, 0xea, 0x0d, 0x50, 0x3c, 0x51, 0xa4, 0xc1, 0x64, 0xfb, 0x79, 0x4c, 0x38, 0xcf, 0x6a, 0x70,
-	0xa5, 0xc4, 0x30, 0x49, 0xb8, 0x3f, 0x28, 0xa0, 0xd5, 0x98, 0xb5, 0x45, 0xf8, 0x4d, 0x7f, 0x72,
-	0x6b, 0x84, 0xe3, 0x16, 0xe6, 0x38, 0xc4, 0xdc, 0x85, 0x79, 0x47, 0x6e, 0x49, 0xc8, 0x2b, 0x51,
-	0xcb, 0xdd, 0xdd, 0x7e, 0xcb, 0x43, 0xbb, 0xea, 0x86, 0x84, 0x59, 0x4e, 0x6d, 0xfb, 0x9e, 0xa0,
-	0xc0, 0x12, 0x58, 0x18, 0xb3, 0x1f, 0x6a, 0x42, 0x54, 0x2b, 0x70, 0x76, 0x64, 0xea, 0x12, 0xda,
-	0xe3, 0x0c, 0xbc, 0x25, 0x2e, 0xd8, 0xf0, 0x7e, 0x09, 0x8f, 0xff, 0x7f, 0x19, 0xf7, 0x4b, 0xf0,
-	0xb7, 0xb9, 0xbf, 0xce, 0xdf, 0xb2, 0xd3, 0xe3, 0x6f, 0x47, 0x0e, 0xc7, 0xdf, 0xe6, 0x53, 0xf9,
-	0xdb, 0x25, 0xb8, 0x90, 0xde, 0x31, 0xd9, 0xda, 0xaf, 0x67, 0x83, 0xd6, 0xf7, 0x89, 0xde, 0x5d,
-	0x8f, 0x76, 0x28, 0xc3, 0xed, 0xe1, 0x96, 0x66, 0xde, 0x44, 0x4b, 0x67, 0xe3, 0x2d, 0xfd, 0x8f,
-	0xab, 0x4f, 0xc0, 0xd5, 0xd1, 0x0d, 0xc8, 0xe1, 0x2e, 0xdf, 0xa1, 0x9e, 0xcd, 0xf7, 0x55, 0xf0,
-	0x2b, 0x58, 0x55, 0x9f, 0x3f, 0x59, 0x5b, 0x92, 0x9d, 0x92, 0xc3, 0xbf, 0xc5, 0x3d, 0xdb, 0xb5,
-	0xea, 0x91, 0xea, 0xc6, 0xc2, 0x97, 0xbf, 0x3f, 0xbe, 0x1a, 0xad, 0x8b, 0x05, 0xf8, 0xff, 0xe8,
-	0x51, 0x10, 0xb3, 0x52, 0xfe, 0xea, 0x18, 0x64, 0x6a, 0xcc, 0x42, 0x0d, 0x98, 0x0f, 0xa7, 0x0a,
-	0x95, 0xc6, 0x14, 0x74, 0x88, 0xdc, 0x6a, 0x57, 0x26, 0xd0, 0x14, 0x81, 0xfc, 0x00, 0xe1, 0xb8,
-	0xa6, 0x04, 0x48, 0x90, 0xda, 0x94, 0x00, 0x49, 0xb2, 0x8a, 0x3e, 0x83, 0xac, 0x60, 0x96, 0xe8,
-	0xd2, 0x58, 0xa3, 0x18, 0x95, 0xd5, 0x2e, 0x1f, 0xa8, 0x17, 0xb9, 0x16, 0x7c, 0x32, 0xc5, 0x75,
-	0x8c, 0xc0, 0xa6, 0xb8, 0x8e, 0x13, 0x53, 0xb4, 0x05, 0xb3, 0x3e, 0xf1, 0x43, 0x17, 0xc6, 0x1a,
-	0x0c, 0x70, 0x56, 0xed, 0xe2, 0x01, 0x5a, 0x91, 0x53, 0x9f, 0x9d, 0xa5, 0x38, 0x1d, 0x20, 0x96,
-	0x29, 0x4e, 0x07, 0x29, 0x1e, 0x6a, 0x42, 0xae, 0xff, 0x36, 0x86, 0x52, 0xfa, 0x92, 0x78, 0x8b,
-	0xd4, 0xae, 0x4e, 0xa2, 0x2a, 0x63, 0xec, 0xc2, 0xd1, 0xc1, 0x57, 0x2b, 0x74, 0xed, 0x80, 0x32,
-	0xc6, 0x23, 0xad, 0x4d, 0xa8, 0x1d, 0x4d, 0x64, 0xc8, 0xec, 0x52, 0x26, 0x32, 0x41, 0x69, 0x53,
-	0x26, 0x32, 0x49, 0x13, 0x65, 0xc5, 0xc4, 0x83, 0x97, 0x5e, 0xb1, 0xd8, 0x95, 0x9b, 0x5e, 0xb1,
-	0xf8, 0x59, 0xef, 0x83, 0x08, 0x59, 0x4b, 0x0a, 0x88, 0x04, 0x59, 0x4b, 0x01, 0x91, 0xa4, 0x40,
-	0x68, 0x07, 0xf2, 0x03, 0xcc, 0x08, 0xbd, 0x3d, 0xd6, 0x72, 0x98, 0x13, 0x6a, 0xd7, 0x26, 0x53,
-	0x96, 0x91, 0x1e, 0xc0, 0x89, 0x24, 0x5b, 0x41, 0xd7, 0xc7, 0x7a, 0x18, 0xc3, 0xc9, 0xb4, 0xf5,
-	0x43, 0x58, 0xc8, 0xc0, 0xf7, 0x61, 0x21, 0xfe, 0x41, 0x0c, 0xe9, 0x63, 0x9d, 0x8c, 0xfc, 0xe4,
-	0xa7, 0x19, 0x13, 0xeb, 0xcb, 0x90, 0x8f, 0x14, 0x58, 0x1e, 0x7b, 0x91, 0xa3, 0xf7, 0xd2, 0x06,
-	0x20, 0x95, 0xae, 0x69, 0x1b, 0x7f, 0xc6, 0x54, 0x26, 0xf5, 0x10, 0x16, 0x87, 0x2e, 0x0a, 0xb4,
-	0x7e, 0xf0, 0x30, 0x26, 0xf8, 0x85, 0x56, 0x3e, 0x8c, 0x89, 0x88, 0x5d, 0xb5, 0x9e, 0xbe, 0x2a,
-	0x28, 0xcf, 0x5e, 0x15, 0x94, 0x97, 0xaf, 0x0a, 0xca, 0x37, 0xaf, 0x0b, 0x33, 0xcf, 0x5e, 0x17,
-	0x66, 0x7e, 0x7e, 0x5d, 0x98, 0x81, 0x33, 0x36, 0x1d, 0xe9, 0xef, 0xae, 0xf2, 0xf9, 0x20, 0x8d,
-	0x8e, 0x54, 0xd6, 0x6c, 0x3a, 0xb0, 0x32, 0xf6, 0xc2, 0x2f, 0xb9, 0x01, 0x4b, 0x69, 0x66, 0x83,
-	0x8f, 0xa5, 0xef, 0xfc, 0x11, 0x00, 0x00, 0xff, 0xff, 0x31, 0x24, 0x6b, 0x4d, 0x0f, 0x17, 0x00,
-	0x00,
+	// 1501 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x58, 0x4f, 0x6f, 0x1b, 0x45,
+	0x1b, 0xcf, 0xbe, 0x4e, 0xd2, 0xe4, 0x71, 0x9b, 0x36, 0xd3, 0x34, 0xdd, 0xb8, 0x6f, 0x1c, 0xc7,
+	0xfd, 0xe7, 0xf6, 0x6d, 0x76, 0x1b, 0xbf, 0x52, 0x81, 0x5c, 0x90, 0x9d, 0xd2, 0x52, 0x81, 0x51,
+	0xe5, 0x54, 0x42, 0x70, 0xb1, 0xc6, 0xeb, 0xc9, 0x66, 0x15, 0xef, 0x8e, 0xbb, 0x33, 0x76, 0x93,
+	0x4a, 0x5c, 0xb8, 0xf5, 0x06, 0x3d, 0x72, 0xe2, 0xcc, 0xa9, 0x87, 0x4a, 0x88, 0x6f, 0x50, 0x71,
+	0xaa, 0x2a, 0x0e, 0x08, 0xa1, 0x52, 0xb5, 0x07, 0xf8, 0x0a, 0xdc, 0xd0, 0xee, 0xcc, 0x7a, 0xbd,
+	0x6b, 0x7b, 0xe3, 0x80, 0x29, 0x20, 0x71, 0xb2, 0x67, 0x9e, 0xbf, 0xbf, 0xe7, 0x79, 0x66, 0xf6,
+	0xb7, 0x0b, 0xcb, 0x2d, 0x97, 0x76, 0x88, 0x83, 0x1d, 0x83, 0xe8, 0x36, 0x76, 0x77, 0x89, 0xab,
+	0x77, 0xd6, 0x75, 0xbe, 0xa7, 0xb5, 0x5c, 0xca, 0x29, 0x5a, 0x08, 0xc5, 0x9a, 0x10, 0x6b, 0x9d,
+	0xf5, 0xcc, 0x92, 0x49, 0xa9, 0xd9, 0x24, 0xba, 0xaf, 0x53, 0x6f, 0x6f, 0xeb, 0xd8, 0xd9, 0x17,
+	0x06, 0x99, 0x25, 0x83, 0x32, 0x9b, 0xb2, 0x9a, 0xbf, 0xd2, 0xc5, 0x42, 0x8a, 0x16, 0x4c, 0x6a,
+	0x52, 0xb1, 0xef, 0xfd, 0x93, 0xbb, 0x59, 0xa1, 0xa3, 0xd7, 0x31, 0x23, 0x7a, 0x67, 0xbd, 0x4e,
+	0x38, 0x5e, 0xd7, 0x0d, 0x6a, 0x39, 0x7d, 0x72, 0x67, 0xb7, 0x2b, 0xf7, 0x16, 0x52, 0x7e, 0x5a,
+	0xca, 0x6d, 0x66, 0x7a, 0x99, 0xdb, 0xcc, 0x94, 0x82, 0xf3, 0x56, 0xdd, 0xd0, 0x71, 0xab, 0xd5,
+	0xb4, 0x0c, 0xcc, 0x2d, 0xea, 0x30, 0x9d, 0xbb, 0xd8, 0x61, 0xdb, 0x51, 0x84, 0x99, 0xd5, 0x81,
+	0x05, 0x90, 0x58, 0x85, 0xca, 0x85, 0x81, 0x2a, 0xd8, 0x30, 0x08, 0x63, 0xa6, 0x8b, 0x1d, 0x2e,
+	0xf4, 0xf2, 0x5f, 0x2b, 0xa0, 0x56, 0x98, 0x79, 0xd3, 0xdb, 0x2a, 0x35, 0x9b, 0xf4, 0x9e, 0x67,
+	0x51, 0x25, 0x77, 0xdb, 0x84, 0x71, 0xb4, 0x00, 0x53, 0x0d, 0xe2, 0x50, 0x5b, 0x55, 0x72, 0x4a,
+	0x61, 0xb6, 0x2a, 0x16, 0xe8, 0x1c, 0x1c, 0xc3, 0x0d, 0xdb, 0x72, 0x2c, 0xc6, 0x5d, 0xcc, 0xa9,
+	0xab, 0xfe, 0xc7, 0x97, 0x46, 0x37, 0x91, 0x0a, 0x47, 0xfc, 0x38, 0x84, 0xa8, 0x29, 0x5f, 0x1e,
+	0x2c, 0xd1, 0x3b, 0x30, 0x8b, 0x83, 0x48, 0xea, 0x64, 0x4e, 0x29, 0xa4, 0x8b, 0x0b, 0x9a, 0xe8,
+	0x8e, 0x16, 0x74, 0x47, 0x2b, 0x39, 0xfb, 0xe5, 0xf9, 0x6f, 0x1f, 0xaf, 0x1d, 0xbb, 0x41, 0x48,
+	0x37, 0xaf, 0x5b, 0xd5, 0xd0, 0x32, 0x7f, 0x06, 0x96, 0x06, 0x24, 0xce, 0x5a, 0xd4, 0x61, 0x24,
+	0xff, 0x63, 0x0a, 0x4e, 0x56, 0x98, 0x59, 0x6a, 0x34, 0x2a, 0x3e, 0xf8, 0x00, 0x51, 0x1d, 0xa6,
+	0xb1, 0x4d, 0xdb, 0x0e, 0xf7, 0x21, 0xa5, 0x8b, 0x4b, 0x9a, 0x6c, 0xb7, 0xd7, 0x4a, 0x4d, 0xb6,
+	0x4a, 0xdb, 0xa4, 0x96, 0x53, 0xd6, 0x9f, 0x3c, 0x5f, 0x99, 0xf8, 0xe1, 0xf9, 0xca, 0x45, 0xd3,
+	0xe2, 0x3b, 0xed, 0xba, 0x66, 0x50, 0x5b, 0xce, 0x86, 0xfc, 0x59, 0x63, 0x8d, 0x5d, 0x9d, 0xef,
+	0xb7, 0x08, 0xf3, 0x0d, 0xaa, 0xd2, 0xb3, 0x87, 0xdc, 0xc6, 0x0e, 0x36, 0x89, 0x1b, 0x20, 0x97,
+	0x4b, 0xb4, 0x0a, 0x47, 0xb7, 0x5d, 0x6a, 0xd7, 0x70, 0xa3, 0xe1, 0x12, 0xc6, 0x7c, 0xf0, 0xb3,
+	0xd5, 0xb4, 0xb7, 0x57, 0x12, 0x5b, 0x68, 0x03, 0xa6, 0x19, 0xc7, 0xbc, 0xcd, 0xd4, 0xa9, 0x9c,
+	0x52, 0x98, 0x2b, 0xe6, 0xb5, 0x41, 0xd3, 0xac, 0x09, 0x54, 0x5b, 0xbe, 0x66, 0x55, 0x5a, 0xa0,
+	0x12, 0xa4, 0x85, 0x46, 0xcd, 0xcb, 0x4a, 0x9d, 0xf6, 0x1d, 0xe4, 0x92, 0x1c, 0xdc, 0xd9, 0x6f,
+	0x91, 0x2a, 0xd8, 0xdd, 0xff, 0xe8, 0x5d, 0x48, 0x8b, 0x19, 0xa9, 0x35, 0x2d, 0xc6, 0xd5, 0x23,
+	0xb9, 0x54, 0x21, 0x5d, 0x5c, 0x1d, 0xec, 0xa2, 0xe4, 0x2b, 0xfa, 0x0d, 0x28, 0x4f, 0x7a, 0xc5,
+	0xaa, 0x82, 0xb0, 0x7d, 0xdf, 0x62, 0xdc, 0xc3, 0xca, 0xda, 0xad, 0x56, 0x73, 0xbf, 0xb6, 0x6d,
+	0xed, 0x91, 0x86, 0x3a, 0x93, 0x53, 0x0a, 0x33, 0xd5, 0xb4, 0xd8, 0xbb, 0xe1, 0x6d, 0xa1, 0x37,
+	0x41, 0xf5, 0xdb, 0x59, 0x33, 0x69, 0x87, 0xb8, 0xbe, 0xfb, 0x9a, 0x41, 0x1d, 0xee, 0xd2, 0xa6,
+	0x3a, 0xeb, 0xab, 0x2f, 0xfa, 0xf2, 0x9b, 0x5d, 0xf1, 0xa6, 0x90, 0xe6, 0x17, 0x61, 0x21, 0xda,
+	0x5d, 0xd9, 0xf6, 0x87, 0x4a, 0xd0, 0x76, 0x91, 0xdc, 0x38, 0x06, 0xf9, 0x6d, 0x98, 0x16, 0xb0,
+	0xd4, 0xd4, 0xe1, 0xaa, 0x21, 0xcd, 0xc2, 0x64, 0x83, 0x9c, 0x64, 0xb2, 0x9f, 0xc0, 0x62, 0x85,
+	0x99, 0xd7, 0x49, 0x93, 0x70, 0x32, 0xbe, 0x74, 0x2f, 0xc2, 0x71, 0x97, 0xd8, 0xb4, 0x43, 0x1a,
+	0xdd, 0x31, 0x13, 0x53, 0x38, 0x27, 0xb7, 0xe5, 0xa4, 0xe5, 0x97, 0xe0, 0x74, 0x5f, 0x78, 0x99,
+	0xd9, 0x6d, 0x40, 0x15, 0x66, 0xde, 0xb0, 0x1c, 0xdc, 0xb4, 0xee, 0x8f, 0xe3, 0x36, 0xc8, 0x9f,
+	0xf2, 0xfb, 0x12, 0x7a, 0x8c, 0x04, 0x2a, 0x19, 0xdc, 0xea, 0x60, 0x3e, 0xc6, 0x40, 0xa1, 0x47,
+	0x19, 0xe8, 0x03, 0x38, 0x51, 0x61, 0xe6, 0xa6, 0xd7, 0xb3, 0xe6, 0x38, 0xc2, 0x9c, 0x84, 0xf9,
+	0x1e, 0x7f, 0x91, 0x20, 0xa2, 0xa2, 0xe3, 0x0b, 0x12, 0xf8, 0x93, 0x41, 0xbe, 0x50, 0x60, 0xae,
+	0xc2, 0xcc, 0x8a, 0xe5, 0xf0, 0xd7, 0x79, 0xa9, 0x8d, 0x96, 0xf1, 0x3c, 0x1c, 0xef, 0xe6, 0x16,
+	0xcd, 0xb7, 0xdc, 0x76, 0x9d, 0xbf, 0x6b, 0xbe, 0x22, 0x37, 0x99, 0xef, 0x77, 0x8a, 0x3f, 0x93,
+	0x1f, 0x5a, 0x7c, 0xa7, 0xe1, 0xe2, 0x7b, 0xe3, 0x38, 0x92, 0xcb, 0x00, 0x9c, 0xc6, 0x4e, 0xe3,
+	0x2c, 0xa7, 0xc1, 0x95, 0x6f, 0x74, 0xcb, 0x31, 0xe9, 0x5f, 0x30, 0x09, 0xe5, 0xb8, 0xea, 0x95,
+	0xe3, 0xab, 0x9f, 0x56, 0x0a, 0x23, 0x96, 0x83, 0x05, 0xf5, 0x90, 0xe7, 0x22, 0x44, 0x25, 0xd1,
+	0xbe, 0x10, 0x68, 0xef, 0x48, 0x96, 0xf1, 0x97, 0x76, 0x28, 0x35, 0xa8, 0x76, 0x23, 0x3c, 0x32,
+	0xa3, 0xe5, 0x9d, 0x8a, 0x95, 0x57, 0x22, 0x0f, 0x11, 0x4a, 0xe4, 0xcf, 0x14, 0x38, 0x55, 0x61,
+	0xe6, 0xad, 0xba, 0x11, 0x07, 0xff, 0x50, 0x81, 0x99, 0x80, 0x76, 0x49, 0xfc, 0x97, 0x34, 0xab,
+	0x6e, 0x68, 0xbd, 0xc4, 0x4c, 0x0b, 0x34, 0xfc, 0x87, 0x69, 0xe8, 0xbf, 0xfc, 0x9e, 0xac, 0xc7,
+	0x66, 0x7f, 0x3d, 0xac, 0xba, 0xb1, 0x66, 0x52, 0xbd, 0x73, 0x4d, 0xb7, 0x69, 0xa3, 0xdd, 0x24,
+	0xcc, 0xa3, 0x7a, 0x3d, 0x14, 0x4f, 0x14, 0xa9, 0x37, 0xd9, 0x6e, 0x1e, 0x23, 0xce, 0xb3, 0xea,
+	0x3f, 0x52, 0x22, 0x98, 0x24, 0xdc, 0x6f, 0x14, 0xc8, 0x54, 0x98, 0xb9, 0x45, 0xf8, 0x75, 0x6f,
+	0x72, 0x2b, 0x84, 0xe3, 0x06, 0xe6, 0x38, 0xc0, 0xdc, 0x86, 0x19, 0x5b, 0x6e, 0x49, 0xc8, 0xcb,
+	0x61, 0xcb, 0x9d, 0xdd, 0x6e, 0xcb, 0x03, 0xbb, 0xf2, 0x86, 0x84, 0x59, 0x4c, 0x6c, 0xfb, 0x9e,
+	0xa0, 0xc0, 0x12, 0x58, 0x10, 0xb3, 0x1b, 0x6a, 0x44, 0x54, 0xcb, 0x70, 0x66, 0x60, 0xea, 0x12,
+	0xda, 0x83, 0x49, 0x5f, 0xde, 0x65, 0x03, 0xb7, 0x5d, 0xda, 0xa2, 0x0c, 0x37, 0xfb, 0x87, 0x39,
+	0xf5, 0x3a, 0x38, 0xdf, 0x64, 0x94, 0xf3, 0xfd, 0x4b, 0xe8, 0x46, 0x20, 0x74, 0xe8, 0x1a, 0xcc,
+	0xe2, 0x36, 0xdf, 0xa1, 0xae, 0xc5, 0xf7, 0x55, 0xf0, 0x2a, 0x58, 0x56, 0x9f, 0x3d, 0x5e, 0x5b,
+	0x90, 0x9d, 0x92, 0x67, 0x79, 0x8b, 0xbb, 0x96, 0x63, 0x56, 0x43, 0xd5, 0x8d, 0xb9, 0x4f, 0x7f,
+	0x7e, 0x74, 0x39, 0x5c, 0xe7, 0xb3, 0xf0, 0xdf, 0xc1, 0xa3, 0x20, 0x67, 0xe5, 0x57, 0x05, 0x72,
+	0xde, 0x2c, 0xf9, 0x49, 0xdf, 0x72, 0x0c, 0x97, 0x60, 0x46, 0x86, 0x0f, 0xcc, 0x9f, 0x77, 0xfb,
+	0x9d, 0x87, 0x39, 0x8e, 0x5d, 0x93, 0xf0, 0xee, 0xc5, 0x25, 0x47, 0x5f, 0xec, 0x06, 0x77, 0x5b,
+	0xa4, 0x2e, 0xa9, 0xd1, 0xeb, 0x82, 0x7e, 0xf9, 0x72, 0x45, 0x89, 0xd5, 0xe6, 0x2c, 0xac, 0x26,
+	0x40, 0x97, 0x05, 0x7a, 0x94, 0x82, 0xb3, 0xa2, 0x82, 0x01, 0x59, 0x0b, 0xb8, 0xd4, 0x3f, 0xec,
+	0x45, 0x2a, 0x76, 0x76, 0xa6, 0xfe, 0xf8, 0xd9, 0x99, 0x1e, 0xdf, 0xd9, 0x39, 0x72, 0xb8, 0xb3,
+	0x33, 0x93, 0xf8, 0x32, 0x74, 0x01, 0xce, 0x25, 0x77, 0x4c, 0xb4, 0xb6, 0xf8, 0xf9, 0x1c, 0xa4,
+	0x2a, 0xcc, 0x44, 0x35, 0x98, 0x09, 0x34, 0x51, 0x61, 0x48, 0x41, 0xfa, 0xd8, 0x7f, 0xe6, 0xd2,
+	0x08, 0x9a, 0x22, 0x90, 0x17, 0x20, 0x48, 0x21, 0x21, 0x40, 0x8c, 0xf5, 0x27, 0x04, 0x88, 0xb3,
+	0x79, 0xf4, 0x11, 0x4c, 0x0b, 0xea, 0x8d, 0x2e, 0x0c, 0x35, 0x8a, 0x70, 0xfd, 0xcc, 0xc5, 0x03,
+	0xf5, 0x42, 0xd7, 0x82, 0x70, 0x27, 0xb8, 0x8e, 0x30, 0xfc, 0x04, 0xd7, 0x51, 0xe6, 0x8e, 0xb6,
+	0x60, 0xd2, 0x63, 0xc6, 0xe8, 0xdc, 0x50, 0x83, 0x1e, 0x52, 0x9f, 0x39, 0x7f, 0x80, 0x56, 0xe8,
+	0xd4, 0xa3, 0xaf, 0x09, 0x4e, 0x7b, 0x98, 0x77, 0x82, 0xd3, 0x5e, 0x0e, 0x8c, 0xea, 0x30, 0xdb,
+	0x7d, 0x5d, 0x45, 0x09, 0x7d, 0x89, 0xbd, 0x66, 0x67, 0x2e, 0x8f, 0xa2, 0x2a, 0x63, 0xec, 0xc2,
+	0xd1, 0xde, 0x77, 0x4f, 0x74, 0xe5, 0x80, 0x32, 0x46, 0x23, 0xad, 0x8d, 0xa8, 0x1d, 0x4e, 0x64,
+	0x40, 0x7d, 0x13, 0x26, 0x32, 0xc6, 0xf9, 0x13, 0x26, 0x32, 0xce, 0xa3, 0x65, 0xc5, 0xc4, 0x81,
+	0x4b, 0xae, 0x58, 0xe4, 0x1a, 0x4d, 0xae, 0x58, 0xf4, 0xfc, 0x7a, 0x20, 0x02, 0x5a, 0x97, 0x00,
+	0x22, 0xc6, 0x66, 0x13, 0x40, 0xc4, 0x39, 0x22, 0xda, 0x81, 0x74, 0x0f, 0x75, 0x44, 0xff, 0x1b,
+	0x6a, 0xd9, 0x4f, 0x9a, 0x33, 0x57, 0x46, 0x53, 0x96, 0x91, 0xee, 0xc1, 0x89, 0x38, 0x9d, 0x43,
+	0x57, 0x87, 0x7a, 0x18, 0x42, 0x5a, 0x33, 0xeb, 0x87, 0xb0, 0x90, 0x81, 0xef, 0xc2, 0x5c, 0xf4,
+	0x8b, 0x21, 0xd2, 0x86, 0x3a, 0x19, 0xf8, 0x4d, 0x34, 0xa3, 0x8f, 0xac, 0x2f, 0x43, 0x3e, 0x54,
+	0x60, 0x69, 0xe8, 0xe5, 0x8c, 0xde, 0x4a, 0x1a, 0x80, 0xc4, 0x47, 0x70, 0x66, 0xe3, 0xf7, 0x98,
+	0xca, 0xa4, 0x1e, 0x28, 0xb0, 0x38, 0x98, 0x09, 0xa0, 0x6b, 0xc3, 0xab, 0x9a, 0xc4, 0x9a, 0x32,
+	0x6f, 0x1c, 0xda, 0x4e, 0xe6, 0x72, 0x1f, 0xe6, 0xfb, 0x08, 0x1b, 0x5a, 0x3f, 0xf8, 0x60, 0xc4,
+	0x13, 0x28, 0x1e, 0xc6, 0x44, 0xc4, 0x2e, 0x9b, 0x4f, 0x5e, 0x66, 0x95, 0xa7, 0x2f, 0xb3, 0xca,
+	0x8b, 0x97, 0x59, 0xe5, 0xb3, 0x57, 0xd9, 0x89, 0xa7, 0xaf, 0xb2, 0x13, 0xdf, 0xbf, 0xca, 0x4e,
+	0xc0, 0x69, 0x8b, 0x0e, 0xf4, 0x77, 0x5b, 0xf9, 0xb8, 0xf7, 0x9d, 0x27, 0x54, 0x59, 0xb3, 0x68,
+	0xcf, 0x4a, 0xdf, 0x0b, 0x3e, 0xbb, 0xfb, 0xc4, 0xa6, 0x3e, 0xed, 0x7f, 0xd9, 0xfe, 0xff, 0x6f,
+	0x01, 0x00, 0x00, 0xff, 0xff, 0x1b, 0xee, 0xbf, 0xa3, 0xbc, 0x18, 0x00, 0x00,
+}
+
+func (this *MsgSupplyIncreaseProposalRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*MsgSupplyIncreaseProposalRequest)
+	if !ok {
+		that2, ok := that.(MsgSupplyIncreaseProposalRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Amount.Equal(that1.Amount) {
+		return false
+	}
+	if this.TargetAddress != that1.TargetAddress {
+		return false
+	}
+	if this.Authority != that1.Authority {
+		return false
+	}
+	return true
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1799,6 +1928,8 @@ type MsgClient interface {
 	GrantAllowance(ctx context.Context, in *MsgGrantAllowanceRequest, opts ...grpc.CallOption) (*MsgGrantAllowanceResponse, error)
 	// AddFinalizeActivateMarker
 	AddFinalizeActivateMarker(ctx context.Context, in *MsgAddFinalizeActivateMarkerRequest, opts ...grpc.CallOption) (*MsgAddFinalizeActivateMarkerResponse, error)
+	// SupplyIncreaseProposal can only be called via gov proposal
+	SupplyIncreaseProposal(ctx context.Context, in *MsgSupplyIncreaseProposalRequest, opts ...grpc.CallOption) (*MsgSupplyIncreaseProposalResponse, error)
 	// AddMarkerProposal defines a governance proposal to create a new marker
 	AddMarkerProposal(ctx context.Context, in *MsgAddMarkerProposalRequest, opts ...grpc.CallOption) (*MsgAddMarkerProposalResponse, error)
 }
@@ -1946,6 +2077,15 @@ func (c *msgClient) AddFinalizeActivateMarker(ctx context.Context, in *MsgAddFin
 	return out, nil
 }
 
+func (c *msgClient) SupplyIncreaseProposal(ctx context.Context, in *MsgSupplyIncreaseProposalRequest, opts ...grpc.CallOption) (*MsgSupplyIncreaseProposalResponse, error) {
+	out := new(MsgSupplyIncreaseProposalResponse)
+	err := c.cc.Invoke(ctx, "/provenance.marker.v1.Msg/SupplyIncreaseProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) AddMarkerProposal(ctx context.Context, in *MsgAddMarkerProposalRequest, opts ...grpc.CallOption) (*MsgAddMarkerProposalResponse, error) {
 	out := new(MsgAddMarkerProposalResponse)
 	err := c.cc.Invoke(ctx, "/provenance.marker.v1.Msg/AddMarkerProposal", in, out, opts...)
@@ -1989,6 +2129,8 @@ type MsgServer interface {
 	GrantAllowance(context.Context, *MsgGrantAllowanceRequest) (*MsgGrantAllowanceResponse, error)
 	// AddFinalizeActivateMarker
 	AddFinalizeActivateMarker(context.Context, *MsgAddFinalizeActivateMarkerRequest) (*MsgAddFinalizeActivateMarkerResponse, error)
+	// SupplyIncreaseProposal can only be called via gov proposal
+	SupplyIncreaseProposal(context.Context, *MsgSupplyIncreaseProposalRequest) (*MsgSupplyIncreaseProposalResponse, error)
 	// AddMarkerProposal defines a governance proposal to create a new marker
 	AddMarkerProposal(context.Context, *MsgAddMarkerProposalRequest) (*MsgAddMarkerProposalResponse, error)
 }
@@ -2041,6 +2183,9 @@ func (*UnimplementedMsgServer) GrantAllowance(ctx context.Context, req *MsgGrant
 }
 func (*UnimplementedMsgServer) AddFinalizeActivateMarker(ctx context.Context, req *MsgAddFinalizeActivateMarkerRequest) (*MsgAddFinalizeActivateMarkerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddFinalizeActivateMarker not implemented")
+}
+func (*UnimplementedMsgServer) SupplyIncreaseProposal(ctx context.Context, req *MsgSupplyIncreaseProposalRequest) (*MsgSupplyIncreaseProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SupplyIncreaseProposal not implemented")
 }
 func (*UnimplementedMsgServer) AddMarkerProposal(ctx context.Context, req *MsgAddMarkerProposalRequest) (*MsgAddMarkerProposalResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddMarkerProposal not implemented")
@@ -2320,6 +2465,24 @@ func _Msg_AddFinalizeActivateMarker_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SupplyIncreaseProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSupplyIncreaseProposalRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SupplyIncreaseProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.marker.v1.Msg/SupplyIncreaseProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SupplyIncreaseProposal(ctx, req.(*MsgSupplyIncreaseProposalRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_AddMarkerProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgAddMarkerProposalRequest)
 	if err := dec(in); err != nil {
@@ -2401,6 +2564,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddFinalizeActivateMarker",
 			Handler:    _Msg_AddFinalizeActivateMarker_Handler,
+		},
+		{
+			MethodName: "SupplyIncreaseProposal",
+			Handler:    _Msg_SupplyIncreaseProposal_Handler,
 		},
 		{
 			MethodName: "AddMarkerProposal",
@@ -3395,115 +3562,6 @@ func (m *MsgSetDenomMetadataResponse) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgAddFinalizeActivateMarkerRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgAddFinalizeActivateMarkerRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgAddFinalizeActivateMarkerRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.AllowGovernanceControl {
-		i--
-		if m.AllowGovernanceControl {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x40
-	}
-	if m.SupplyFixed {
-		i--
-		if m.SupplyFixed {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x38
-	}
-	if len(m.AccessList) > 0 {
-		for iNdEx := len(m.AccessList) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.AccessList[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintTx(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x32
-		}
-	}
-	if m.MarkerType != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.MarkerType))
-		i--
-		dAtA[i] = 0x28
-	}
-	if len(m.FromAddress) > 0 {
-		i -= len(m.FromAddress)
-		copy(dAtA[i:], m.FromAddress)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.FromAddress)))
-		i--
-		dAtA[i] = 0x22
-	}
-	if len(m.Manager) > 0 {
-		i -= len(m.Manager)
-		copy(dAtA[i:], m.Manager)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Manager)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	{
-		size := m.Amount.Size()
-		i -= size
-		if _, err := m.Amount.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0xa
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgAddFinalizeActivateMarkerResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgAddFinalizeActivateMarkerResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgAddFinalizeActivateMarkerResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
 func (m *MsgAddMarkerProposalRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -3611,6 +3669,185 @@ func (m *MsgAddMarkerProposalResponse) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *MsgAddMarkerProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSupplyIncreaseProposalRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSupplyIncreaseProposalRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSupplyIncreaseProposalRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.TargetAddress) > 0 {
+		i -= len(m.TargetAddress)
+		copy(dAtA[i:], m.TargetAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.TargetAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	{
+		size := m.Amount.Size()
+		i -= size
+		if _, err := m.Amount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSupplyIncreaseProposalResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSupplyIncreaseProposalResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSupplyIncreaseProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgAddFinalizeActivateMarkerRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgAddFinalizeActivateMarkerRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgAddFinalizeActivateMarkerRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.AllowGovernanceControl {
+		i--
+		if m.AllowGovernanceControl {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x40
+	}
+	if m.SupplyFixed {
+		i--
+		if m.SupplyFixed {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x38
+	}
+	if len(m.AccessList) > 0 {
+		for iNdEx := len(m.AccessList) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.AccessList[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x32
+		}
+	}
+	if m.MarkerType != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.MarkerType))
+		i--
+		dAtA[i] = 0x28
+	}
+	if len(m.FromAddress) > 0 {
+		i -= len(m.FromAddress)
+		copy(dAtA[i:], m.FromAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.FromAddress)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Manager) > 0 {
+		i -= len(m.Manager)
+		copy(dAtA[i:], m.Manager)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Manager)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	{
+		size := m.Amount.Size()
+		i -= size
+		if _, err := m.Amount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgAddFinalizeActivateMarkerResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgAddFinalizeActivateMarkerResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgAddFinalizeActivateMarkerResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -4039,49 +4276,6 @@ func (m *MsgSetDenomMetadataResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgAddFinalizeActivateMarkerRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = m.Amount.Size()
-	n += 1 + l + sovTx(uint64(l))
-	l = len(m.Manager)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.FromAddress)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	if m.MarkerType != 0 {
-		n += 1 + sovTx(uint64(m.MarkerType))
-	}
-	if len(m.AccessList) > 0 {
-		for _, e := range m.AccessList {
-			l = e.Size()
-			n += 1 + l + sovTx(uint64(l))
-		}
-	}
-	if m.SupplyFixed {
-		n += 2
-	}
-	if m.AllowGovernanceControl {
-		n += 2
-	}
-	return n
-}
-
-func (m *MsgAddFinalizeActivateMarkerResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
 func (m *MsgAddMarkerProposalRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -4120,6 +4314,77 @@ func (m *MsgAddMarkerProposalRequest) Size() (n int) {
 }
 
 func (m *MsgAddMarkerProposalResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgSupplyIncreaseProposalRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Amount.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = len(m.TargetAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgSupplyIncreaseProposalResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgAddFinalizeActivateMarkerRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Amount.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = len(m.Manager)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.FromAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.MarkerType != 0 {
+		n += 1 + sovTx(uint64(m.MarkerType))
+	}
+	if len(m.AccessList) > 0 {
+		for _, e := range m.AccessList {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if m.SupplyFixed {
+		n += 2
+	}
+	if m.AllowGovernanceControl {
+		n += 2
+	}
+	return n
+}
+
+func (m *MsgAddFinalizeActivateMarkerResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -6844,296 +7109,6 @@ func (m *MsgSetDenomMetadataResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgAddFinalizeActivateMarkerRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgAddFinalizeActivateMarkerRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgAddFinalizeActivateMarkerRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Manager", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Manager = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FromAddress", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.FromAddress = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MarkerType", wireType)
-			}
-			m.MarkerType = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.MarkerType |= MarkerType(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AccessList", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.AccessList = append(m.AccessList, AccessGrant{})
-			if err := m.AccessList[len(m.AccessList)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 7:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SupplyFixed", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.SupplyFixed = bool(v != 0)
-		case 8:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AllowGovernanceControl", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.AllowGovernanceControl = bool(v != 0)
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgAddFinalizeActivateMarkerResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgAddFinalizeActivateMarkerResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgAddFinalizeActivateMarkerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *MsgAddMarkerProposalRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -7420,6 +7395,493 @@ func (m *MsgAddMarkerProposalResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgAddMarkerProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSupplyIncreaseProposalRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSupplyIncreaseProposalRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSupplyIncreaseProposalRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TargetAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TargetAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSupplyIncreaseProposalResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSupplyIncreaseProposalResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSupplyIncreaseProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgAddFinalizeActivateMarkerRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgAddFinalizeActivateMarkerRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgAddFinalizeActivateMarkerRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Manager", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Manager = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FromAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FromAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarkerType", wireType)
+			}
+			m.MarkerType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MarkerType |= MarkerType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccessList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AccessList = append(m.AccessList, AccessGrant{})
+			if err := m.AccessList[len(m.AccessList)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SupplyFixed", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.SupplyFixed = bool(v != 0)
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AllowGovernanceControl", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.AllowGovernanceControl = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgAddFinalizeActivateMarkerResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgAddFinalizeActivateMarkerResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgAddFinalizeActivateMarkerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
