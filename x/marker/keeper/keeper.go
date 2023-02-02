@@ -9,9 +9,11 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
@@ -38,6 +40,9 @@ type MarkerKeeperI interface {
 
 	// IterateMarker processes all markers with the given handler function.
 	IterateMarkers(sdk.Context, func(types.MarkerAccountI) bool)
+
+	// GetAuthority returns signer of the proposal
+	GetAuthority() string
 }
 
 // Keeper defines the name module Keeper
@@ -65,8 +70,10 @@ type Keeper struct {
 	// Key to access the key-value store from sdk.Context.
 	storeKey storetypes.StoreKey
 
-	// The codec codec for binary encoding/decoding.
+	// The codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
+
+	authority string
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -99,6 +106,7 @@ func NewKeeper(
 		storeKey:           key,
 		bankKeeperStoreKey: bankKey,
 		cdc:                cdc,
+		authority:          authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	}
 }
 
@@ -175,4 +183,9 @@ func (k Keeper) IterateMarkers(ctx sdk.Context, cb func(marker types.MarkerAccou
 // GetEscrow returns the balances of all coins held in escrow in the marker
 func (k Keeper) GetEscrow(ctx sdk.Context, marker types.MarkerAccountI) sdk.Coins {
 	return k.bankKeeper.GetAllBalances(ctx, marker.GetAddress())
+}
+
+// GetAuthority is signer of the proposal
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
