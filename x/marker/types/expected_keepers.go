@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // AccountKeeper defines the expected account keeper (noalias)
@@ -52,4 +53,12 @@ type BankKeeper interface {
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+}
+
+// GovKeeper defines the gov functionality needed from within the sanction module.
+type GovKeeper interface {
+	GetProposal(ctx sdk.Context, proposalID uint64) (govtypes.Proposal, bool)
+	GetDepositParams(ctx sdk.Context) govtypes.DepositParams
+	GetVotingParams(ctx sdk.Context) govtypes.VotingParams
+	GetProposalID(ctx sdk.Context) (uint64, error)
 }

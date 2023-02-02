@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"math/rand"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -91,6 +92,8 @@ type AppModule struct {
 	accountKeeper  authkeeper.AccountKeeper
 	bankKeeper     bankkeeper.Keeper
 	feegrantKeeper feegrantkeeper.Keeper
+	govKeeper      govkeeper.Keeper
+	registry       cdctypes.InterfaceRegistry
 }
 
 // NewAppModule creates a new AppModule Object
@@ -188,7 +191,7 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 // WeightedOperations returns the all the marker module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, am.keeper, am.accountKeeper, am.bankKeeper,
+		simState.AppParams, simState.Cdc, codec.NewProtoCodec(am.registry), am.keeper, am.accountKeeper, am.bankKeeper, am.govKeeper,
 	)
 }
 
