@@ -97,3 +97,26 @@ This message is expected to fail if:
 - The name already exists
 - Insuffient length of name
 - Excessive length of name
+
+## MsgCreateRootNameRequest
+
+The `MsgCreateRootNameRequest` is a governance proposal that allows new root level names to be established after the genesis of the blockchain.
+
+```proto
+message MsgCreateRootNameRequest {
+  option (cosmos.msg.v1.signer)    = "authority";
+
+  // The signing authority for the request
+  string authority   = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // NameRecord is a structure used to bind ownership of a name hierarchy to a collection of addresses
+  NameRecord record  = 2;
+}
+```
+
+This message is expected to fail if:
+- The name already exists
+- Insuffient length of name
+- Excessive length of name
+- The authority does not match the gov module.
+
+If successful a name record will be created with the provided address and restriction.

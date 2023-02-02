@@ -392,6 +392,8 @@
 - [provenance/name/v1/tx.proto](#provenance/name/v1/tx.proto)
     - [MsgBindNameRequest](#provenance.name.v1.MsgBindNameRequest)
     - [MsgBindNameResponse](#provenance.name.v1.MsgBindNameResponse)
+    - [MsgCreateRootNameRequest](#provenance.name.v1.MsgCreateRootNameRequest)
+    - [MsgCreateRootNameResponse](#provenance.name.v1.MsgCreateRootNameResponse)
     - [MsgDeleteNameRequest](#provenance.name.v1.MsgDeleteNameRequest)
     - [MsgDeleteNameResponse](#provenance.name.v1.MsgDeleteNameResponse)
     - [MsgModifyNameRequest](#provenance.name.v1.MsgModifyNameRequest)
@@ -6014,6 +6016,34 @@ MsgBindNameResponse defines the Msg/BindName response type.
 
 
 
+<a name="provenance.name.v1.MsgCreateRootNameRequest"></a>
+
+### MsgCreateRootNameRequest
+MsgCreateRootNameRequest defines an sdk.Msg type to create a new root name
+that is controlled by a given owner and optionally restricted to the owner
+for the sole creation of sub names.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | The signing authority for the request |
+| `record` | [NameRecord](#provenance.name.v1.NameRecord) |  | NameRecord is a structure used to bind ownership of a name hierarchy to a collection of addresses |
+
+
+
+
+
+
+<a name="provenance.name.v1.MsgCreateRootNameResponse"></a>
+
+### MsgCreateRootNameResponse
+MsgCreateRootNameResponse defines Msg/CreateRootName response type.
+
+
+
+
+
+
 <a name="provenance.name.v1.MsgDeleteNameRequest"></a>
 
 ### MsgDeleteNameRequest
@@ -6082,6 +6112,7 @@ Msg defines the bank Msg service.
 | `BindName` | [MsgBindNameRequest](#provenance.name.v1.MsgBindNameRequest) | [MsgBindNameResponse](#provenance.name.v1.MsgBindNameResponse) | BindName binds a name to an address under a root name. | |
 | `DeleteName` | [MsgDeleteNameRequest](#provenance.name.v1.MsgDeleteNameRequest) | [MsgDeleteNameResponse](#provenance.name.v1.MsgDeleteNameResponse) | DeleteName defines a method to verify a particular invariance. | |
 | `ModifyName` | [MsgModifyNameRequest](#provenance.name.v1.MsgModifyNameRequest) | [MsgModifyNameResponse](#provenance.name.v1.MsgModifyNameResponse) | ModifyName defines a method to modify the attributes of an existing name. | |
+| `CreateRootName` | [MsgCreateRootNameRequest](#provenance.name.v1.MsgCreateRootNameRequest) | [MsgCreateRootNameResponse](#provenance.name.v1.MsgCreateRootNameResponse) | CreateRootName defines a governance method for creating a root name. | |
 
  <!-- end services -->
 
