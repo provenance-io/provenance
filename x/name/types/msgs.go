@@ -101,16 +101,9 @@ func (msg MsgCreateRootNameRequest) ValidateBasic() error {
 		return ErrInvalidAddress
 	}
 
-	if _, err := sdk.AccAddressFromBech32(msg.Record.Address); err != nil {
-		return ErrInvalidAddress
-	}
-
-	if strings.TrimSpace(msg.Record.Name) == "" {
-		return ErrInvalidLengthName
-	}
-
-	if strings.Contains(msg.Record.Name, ".") {
-		return ErrNameContainsSegments
+	err := msg.Record.ValidateBasic()
+	if err != nil {
+		return err
 	}
 
 	return nil

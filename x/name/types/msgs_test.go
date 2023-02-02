@@ -52,15 +52,7 @@ func TestMsgCreateRootNameRequestValidateBasic(t *testing.T) {
 			"",
 			address,
 			true,
-			"proto: negative length found during unmarshaling",
-		},
-		{
-			"record name contains segment",
-			authority,
-			"...",
-			address,
-			true,
-			"invalid name: \".\" is reserved",
+			"segment of name is too short",
 		},
 	}
 

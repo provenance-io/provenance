@@ -22,7 +22,7 @@ service Msg {
   // ModifyName defines a method to modify the attributes of an existing name.
   rpc ModifyName(MsgModifyNameRequest) returns (MsgModifyNameResponse);
 
-  // CreateRootName defines a governance method  for creating a root name.
+  // CreateRootName defines a governance method for creating a root name.
   rpc CreateRootName(MsgCreateRootNameRequest) returns (MsgCreateRootNameResponse);
 }
 
