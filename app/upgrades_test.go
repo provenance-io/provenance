@@ -1,46 +1,31 @@
-package app_test
+package app
 
 import (
-	"github.com/provenance-io/provenance/app"
 	"github.com/stretchr/testify/suite"
-	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-type UpgradeTestSuite struct {
+type IntegrationTestSuite struct {
 	suite.Suite
 
-	app *app.App
+	app *App
 	ctx sdk.Context
 }
 
-func TestDumbTestSuite(t *testing.T) {
-	suite.Run(t, new(UpgradeTestSuite))
-}
-
-func (s *UpgradeTestSuite) SetupTest() {
-	s.app = app.Setup(s.T())
+func (s *IntegrationTestSuite) SetupSuite() {
+	s.app = Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 }
 
-func (s *UpgradeTestSuite) TestIncreaseMaxCommissions() {
-	// make sure at least one doesn't have the new value so that there's something that's actually being tested.
-	expectedMaxRate := sdk.OneDec()
-	canTest := false
-	for i, validator := range s.app.StakingKeeper.GetAllValidators(s.ctx) {
-		s.T().Logf("Before: validator[%d] has Commission.MaxRate = %s", i, validator.Commission.MaxRate.String())
-		if !expectedMaxRate.Equal(validator.Commission.MaxRate) {
-			canTest = true
-		}
-	}
-	s.Require().True(canTest, "all validators already have Commission.MaxRate = %s", expectedMaxRate.String())
-
-	app.IncreaseMaxCommissions(s.ctx, s.app)
-
-	for i, validator := range s.app.StakingKeeper.GetAllValidators(s.ctx) {
-		s.T().Logf("After: validator[%d] has Commission.MaxRate = %s", i, validator.Commission.MaxRate.String())
-		s.Assert().Equal(expectedMaxRate, validator.Commission.MaxRate, "validator[%d].Commission.MaxRate", i)
-	}
+func (s *IntegrationTestSuite) TestUpgradeICA() {
+	s.SetupSuite()
+	versionMap := s.app.UpgradeKeeper.GetModuleVersionMap(s.ctx)
+	UpgradeICA(s.ctx, s.app, &versionMap)
+	s.Assert().Equal(s.app.mm.Modules[icatypes.ModuleName].ConsensusVersion(), versionMap[icatypes.ModuleName], "consensus version should be set to skip init genesis")
+	s.Assert().Equal([]string{"*"}, s.app.ICAHostKeeper.GetAllowMessages(s.ctx), "ica host should accept all messages")
+	s.Assert().True(s.app.ICAHostKeeper.IsHostEnabled(s.ctx), "ica host should be enabled")
 }
