@@ -104,9 +104,6 @@ var handlers = map[string]appUpgrade{
 			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
 			IncreaseMaxCommissions(ctx, app)
 			IncreaseMaxGas(ctx, app)
-			if err := SetSanctionParams(ctx, app); err != nil {
-				return nil, err
-			}
 			versionMap, err := app.mm.RunMigrations(ctx, app.configurator, app.UpgradeKeeper.GetModuleVersionMap(ctx))
 			if err != nil {
 				return nil, err
