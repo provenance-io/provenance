@@ -85,16 +85,16 @@ var handlers = map[string]appUpgrade{
 		Added: []string{quarantine.ModuleName, sanction.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
 			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
-			IncreaseMaxCommissions(ctx, app)
-			IncreaseMaxGas(ctx, app)
 			versionMap, err := app.mm.RunMigrations(ctx, app.configurator, app.UpgradeKeeper.GetModuleVersionMap(ctx))
 			if err != nil {
 				return nil, err
 			}
-			err = SetSanctionParams(ctx, app)
+			err = SetSanctionParams(ctx, app) // Needs to happen after RunMigrations adds the sanction module.
 			if err != nil {
 				return nil, err
 			}
+			IncreaseMaxCommissions(ctx, app)
+			IncreaseMaxGas(ctx, app)
 			return versionMap, err
 		},
 	},
@@ -102,16 +102,16 @@ var handlers = map[string]appUpgrade{
 		Added: []string{quarantine.ModuleName, sanction.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
 			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
-			IncreaseMaxCommissions(ctx, app)
-			IncreaseMaxGas(ctx, app)
 			versionMap, err := app.mm.RunMigrations(ctx, app.configurator, app.UpgradeKeeper.GetModuleVersionMap(ctx))
 			if err != nil {
 				return nil, err
 			}
-			err = SetSanctionParams(ctx, app)
+			err = SetSanctionParams(ctx, app) // Needs to happen after RunMigrations adds the sanction module.
 			if err != nil {
 				return nil, err
 			}
+			IncreaseMaxCommissions(ctx, app)
+			IncreaseMaxGas(ctx, app)
 			return versionMap, err
 		},
 	},
