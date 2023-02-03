@@ -87,6 +87,9 @@ var handlers = map[string]appUpgrade{
 			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
 			IncreaseMaxCommissions(ctx, app)
 			IncreaseMaxGas(ctx, app)
+			if err := SetSanctionParams(ctx, app); err != nil {
+				return nil, err
+			}
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
@@ -97,6 +100,9 @@ var handlers = map[string]appUpgrade{
 			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
 			IncreaseMaxCommissions(ctx, app)
 			IncreaseMaxGas(ctx, app)
+			if err := SetSanctionParams(ctx, app); err != nil {
+				return nil, err
+			}
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
@@ -201,4 +207,17 @@ func IncreaseMaxGas(ctx sdk.Context, app *App) {
 	params := app.GetConsensusParams(ctx)
 	params.Block.MaxGas = 120_000_000
 	app.StoreConsensusParams(ctx, params)
+}
+
+func SetSanctionParams(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Setting sanction params")
+	params := &sanction.Params{
+		ImmediateSanctionMinDeposit:   sdk.NewCoins(sdk.NewInt64Coin("nhash", 1_000_000_000_000_000)),
+		ImmediateUnsanctionMinDeposit: sdk.NewCoins(sdk.NewInt64Coin("nhash", 1_000_000_000_000_000)),
+	}
+	err := app.SanctionKeeper.SetParams(ctx, params)
+	if err != nil {
+		return fmt.Errorf("could not set sanction params: %w", err)
+	}
+	return nil
 }
