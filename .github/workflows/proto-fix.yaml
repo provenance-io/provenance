@@ -21,13 +21,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Buf setup action
         uses: bufbuild/buf-setup-action@v1.13.1
-      - name: Buf push 'third_party/proto'
-        uses: bufbuild/buf-push-action@v1
-        with:
-          input: 'third_party/proto'
-          buf_token: ${{ secrets.BUF_TOKEN }}
       - name: Buf push 'proto/'
-        if: ${{ false }}
         uses: bufbuild/buf-push-action@v1
         with:
           input: 'proto'
