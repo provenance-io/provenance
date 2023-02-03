@@ -1112,16 +1112,16 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 //
 // This function is for testing an upgrade against an existing chain's data (e.g. mainnet).
 // Here's how:
-// 	1. Run a node for the chain you want to test using its normal release.
-// 	2. In this provenance repo, check out the branch/version with the upgrade you want to test.
-// 	3. Add a call to this function as described above, e.g. injectUpgrade("ochre").
-// 	4. Compile it with `make build`.
-// 	5. I suggest renaming build/provenanced to something like provenanced-ochre-force-upgrade
-//	and moving it somewhere handier for your node.
-// 	6. Stop your node.
-// 	7. Back up your data directory because we're about to mess it up.
-// 	8. Seriously, your data directory will need to be thrown away after this.
-// 	9. Restart your node with `--log_level debug` using your new force-upgrade binary.
+//  1. Run a node for the chain you want to test using its normal release.
+//  2. In this provenance repo, check out the branch/version with the upgrade you want to test.
+//  3. Add a call to this function as described above, e.g. injectUpgrade("ochre").
+//  4. Compile it with `make build`.
+//  5. I suggest renaming build/provenanced to something like provenanced-ochre-force-upgrade
+//     and moving it somewhere handier for your node.
+//  6. Stop your node.
+//  7. Back up your data directory because we're about to mess it up.
+//  8. Seriously, your data directory will need to be thrown away after this.
+//  9. Restart your node with `--log_level debug` using your new force-upgrade binary.
 //
 // As the node starts, it should think that an upgrade is needed and attempt to execute it.
 // If the upgrade finishes successfully, your node will then try and fail to sync with the rest of the nodes.
@@ -1130,7 +1130,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 //
 // Deprecated:  This function should never be called in anything that gets merged into main or any sort of release branch.
 // It's marked as deprecated so that things can complain about its use (e.g. the linter).
-func (app *App) injectUpgrade(name string) {
+func (app *App) injectUpgrade(name string) { //nolint:unused // This is designed to only be used in unofficial code.
 	plan := upgradetypes.Plan{
 		Name:   name,
 		Height: app.LastBlockHeight() + 1,
