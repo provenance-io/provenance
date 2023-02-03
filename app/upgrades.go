@@ -91,7 +91,8 @@ var handlers = map[string]appUpgrade{
 			if err != nil {
 				return nil, err
 			}
-			if err := SetSanctionParams(ctx, app); err != nil {
+			err = SetSanctionParams(ctx, app)
+			if err != nil {
 				return nil, err
 			}
 			return versionMap, err
@@ -110,7 +111,8 @@ var handlers = map[string]appUpgrade{
 			if err != nil {
 				return nil, err
 			}
-			if err := SetSanctionParams(ctx, app); err != nil {
+			err = SetSanctionParams(ctx, app)
+			if err != nil {
 				return nil, err
 			}
 			return versionMap, err
