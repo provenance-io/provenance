@@ -87,11 +87,14 @@ var handlers = map[string]appUpgrade{
 			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
 			IncreaseMaxCommissions(ctx, app)
 			IncreaseMaxGas(ctx, app)
+			versionMap, err := app.mm.RunMigrations(ctx, app.configurator, app.UpgradeKeeper.GetModuleVersionMap(ctx))
+			if err != nil {
+				return nil, err
+			}
 			if err := SetSanctionParams(ctx, app); err != nil {
 				return nil, err
 			}
-			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
+			return versionMap, err
 		},
 	},
 	"paua": { // upgrade for v1.14.0
@@ -103,8 +106,14 @@ var handlers = map[string]appUpgrade{
 			if err := SetSanctionParams(ctx, app); err != nil {
 				return nil, err
 			}
-			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
+			versionMap, err := app.mm.RunMigrations(ctx, app.configurator, app.UpgradeKeeper.GetModuleVersionMap(ctx))
+			if err != nil {
+				return nil, err
+			}
+			if err := SetSanctionParams(ctx, app); err != nil {
+				return nil, err
+			}
+			return versionMap, err
 		},
 	},
 	// TODO - Add new upgrade definitions here.
