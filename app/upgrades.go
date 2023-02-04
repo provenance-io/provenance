@@ -111,7 +111,7 @@ var handlers = map[string]appUpgrade{
 				return nil, err
 			}
 			IncreaseMaxCommissions(ctx, app)
-			IncreaseMaxGas(ctx, app)
+			// Skipping IncreaseMaxGas(ctx, app) in mainnet for now.
 			return versionMap, err
 		},
 	},
