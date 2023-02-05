@@ -258,12 +258,12 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 			types.MarkerStatus(r.Intn(3)+1), // initial status (proposed, finalized, active)
 			types.MarkerType(r.Intn(2)+1),   // coin or restricted_coin
 			[]types.AccessGrant{{Address: simAccount.Address.String(), Permissions: randomAccessTypes(r)}},
-			r.Intn(2) > 0, // fixed supply
-			r.Intn(2) > 0, // allow gov
+			r.Intn(2) > 0,                                   // fixed supply
+			r.Intn(2) > 0,                                   // allow gov
 			"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", // signing authority
 		)
 
-		// Get the governance min deposit needed and immediate sanction min deposit needed.
+		// Get the governance min deposit needed
 		govMinDep := sdk.NewCoins(args.GK.GetDepositParams(ctx).MinDeposit...)
 
 		sender, _ := simtypes.RandomAcc(r, accs)
