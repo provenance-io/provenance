@@ -536,7 +536,6 @@ func (k Keeper) RecordsAll(c context.Context, req *types.RecordsAllRequest) (*ty
 		return nil // Still want to move on to the next.
 	})
 	if err != nil {
-		// TODO: what error to use
 		return &retval, status.Error(codes.Unavailable, err.Error())
 	}
 	retval.Pagination = pageRes
@@ -691,7 +690,6 @@ func (k Keeper) ScopeSpecificationsAll(c context.Context, req *types.ScopeSpecif
 		return nil // Still want to move on to the next.
 	})
 	if err != nil {
-		// TODO: what error to use
 		return &retval, status.Error(codes.Unavailable, err.Error())
 	}
 	retval.Pagination = pageRes
@@ -983,7 +981,6 @@ func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsR
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "OSAllLocators")
 	retval := types.OSAllLocatorsResponse{Request: request}
 	if request == nil {
-		// TODO
 		return &retval, sdkerrors.ErrInvalidRequest.Wrap(
 			"empty request")
 	}
