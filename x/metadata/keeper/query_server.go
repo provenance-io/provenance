@@ -5,18 +5,19 @@ import (
 	b64 "encoding/base64"
 	"errors"
 	"fmt"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"net/url"
 	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/google/uuid"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/google/uuid"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -712,7 +713,7 @@ func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpec
 
 	specAddr, addrErr := ParseContractSpecID(req.SpecificationId)
 	if addrErr != nil {
-		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("invalid specification id: %s", addrErr.Error())
+		return &retval, status.Errorf(codes.InvalidArgument, "invalid specification id: %s", addrErr.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
