@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -20,6 +21,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -28,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/streaming"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -79,6 +82,12 @@ import (
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	"github.com/cosmos/cosmos-sdk/x/quarantine"
+	quarantinekeeper "github.com/cosmos/cosmos-sdk/x/quarantine/keeper"
+	quarantinemodule "github.com/cosmos/cosmos-sdk/x/quarantine/module"
+	"github.com/cosmos/cosmos-sdk/x/sanction"
+	sanctionkeeper "github.com/cosmos/cosmos-sdk/x/sanction/keeper"
+	sanctionmodule "github.com/cosmos/cosmos-sdk/x/sanction/module"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -187,6 +196,8 @@ var (
 		authzmodule.AppModuleBasic{},
 		groupmodule.AppModuleBasic{},
 		vesting.AppModuleBasic{},
+		quarantinemodule.AppModuleBasic{},
+		sanctionmodule.AppModuleBasic{},
 
 		ibc.AppModuleBasic{},
 		transfer.AppModuleBasic{},
@@ -270,6 +281,8 @@ type App struct {
 	FeeGrantKeeper   feegrantkeeper.Keeper
 	MsgFeesKeeper    msgfeeskeeper.Keeper
 	RewardKeeper     rewardkeeper.Keeper
+	QuarantineKeeper quarantinekeeper.Keeper
+	SanctionKeeper   sanctionkeeper.Keeper
 
 	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	ICAHostKeeper  icahostkeeper.Keeper
@@ -346,6 +359,8 @@ func New(
 		msgfeestypes.StoreKey,
 		wasm.StoreKey,
 		rewardtypes.StoreKey,
+		quarantine.StoreKey,
+		sanction.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -360,6 +375,9 @@ func New(
 		tkeys:             tkeys,
 		memKeys:           memKeys,
 	}
+
+	// Register State listening services.
+	app.RegisterStreamingServices(appOpts)
 
 	// Register helpers for state-sync status.
 	statesync.RegisterSyncStatus()
@@ -420,10 +438,10 @@ func New(
 	pioMsgFeesRouter := app.MsgServiceRouter().(*piohandlers.PioMsgServiceRouter)
 	pioMsgFeesRouter.SetMsgFeesKeeper(app.MsgFeesKeeper)
 
-	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
+	restrictHooks := piohandlers.NewStakingRestrictionHooks(&app.StakingKeeper, *piohandlers.DefaultRestrictionOptions)
 	app.StakingKeeper = *stakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
+		stakingtypes.NewMultiStakingHooks(restrictHooks, app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
 
 	app.RewardKeeper = rewardkeeper.NewKeeper(appCodec, keys[rewardtypes.StoreKey], app.StakingKeeper, &app.GovKeeper, app.BankKeeper, app.AccountKeeper)
@@ -525,6 +543,15 @@ func New(
 		wasmkeeper.WithMessageEncoders(provwasm.MessageEncoders(encoderRegistry, logger)),
 	)
 
+	unsanctionableAddrs := make([]sdk.AccAddress, 0, len(maccPerms)+1)
+	for mName := range maccPerms {
+		unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(mName))
+	}
+	unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(quarantine.ModuleName))
+	app.SanctionKeeper = sanctionkeeper.NewKeeper(appCodec, keys[sanction.StoreKey],
+		app.BankKeeper, &app.GovKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(), unsanctionableAddrs)
+
 	// register the proposal types
 	govRouter := govtypesv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1beta1.ProposalHandler).
@@ -540,6 +567,7 @@ func New(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, govRouter, app.BaseApp.MsgServiceRouter(), govtypes.Config{MaxMetadataLen: 10000},
 	)
+	app.GovKeeper.SetHooks(govtypes.NewMultiGovHooks(app.SanctionKeeper))
 
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
@@ -557,6 +585,8 @@ func New(
 	)
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
+
+	app.QuarantineKeeper = quarantinekeeper.NewKeeper(appCodec, keys[quarantine.StoreKey], app.BankKeeper, authtypes.NewModuleAddress(quarantine.ModuleName))
 
 	/****  Module Options ****/
 
@@ -585,6 +615,8 @@ func New(
 		params.NewAppModule(app.ParamsKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
 
 		// PROVENANCE
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
@@ -635,6 +667,8 @@ func New(
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
 		vestingtypes.ModuleName,
+		quarantine.ModuleName,
+		sanction.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -667,6 +701,8 @@ func New(
 		markertypes.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
+		quarantine.ModuleName,
+		sanction.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -689,6 +725,8 @@ func New(
 		authz.ModuleName,
 		group.ModuleName,
 		feegrant.ModuleName,
+		quarantine.ModuleName,
+		sanction.ModuleName,
 
 		markertypes.ModuleName,
 		nametypes.ModuleName,
@@ -728,6 +766,8 @@ func New(
 		ibctransfertypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
+		quarantine.ModuleName,
+		sanction.ModuleName,
 
 		icatypes.ModuleName,
 		wasm.ModuleName,
@@ -762,6 +802,8 @@ func New(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
 
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper),
@@ -990,6 +1032,29 @@ func (app *App) RegisterTendermintService(clientCtx client.Context) {
 // RegisterNodeService registers the node query server.
 func (app *App) RegisterNodeService(clientCtx client.Context) {
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
+}
+
+// RegisterStreamingServices registers types.ABCIListener State Listening services with the App.
+func (app *App) RegisterStreamingServices(appOpts servertypes.AppOptions) {
+	// register streaming services
+	streamingCfg := cast.ToStringMap(appOpts.Get(baseapp.StreamingTomlKey))
+	for service := range streamingCfg {
+		pluginKey := fmt.Sprintf("%s.%s.%s", baseapp.StreamingTomlKey, service, baseapp.StreamingABCIPluginTomlKey)
+		pluginName := strings.TrimSpace(cast.ToString(appOpts.Get(pluginKey)))
+		if len(pluginName) > 0 {
+			logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
+			plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
+			if err != nil {
+				app.Logger().Error("failed to load streaming plugin: %s", err)
+				os.Exit(1)
+			}
+			if err := baseapp.RegisterStreamingPlugin(app.BaseApp, appOpts, app.keys, plugin); err != nil {
+				app.Logger().Error("failed to register streaming plugin: %s", err)
+				os.Exit(1)
+			}
+			app.Logger().Info("streaming service registered", "service", service, "plugin", pluginName)
+		}
+	}
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server

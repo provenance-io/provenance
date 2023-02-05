@@ -52,7 +52,7 @@ func (s *NameRecordTestSuite) TestNameRecordValidateBasic() {
 		tc := tc
 
 		s.Run(n, func() {
-			err := tc.name.ValidateBasic()
+			err := tc.name.Validate()
 			if tc.expectErr {
 				s.Error(err)
 				if s != nil {

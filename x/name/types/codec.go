@@ -15,6 +15,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgBindNameRequest{},
 		&MsgDeleteNameRequest{},
 		&MsgModifyNameRequest{},
+		&MsgCreateRootNameRequest{},
 	)
 
 	registry.RegisterImplementations(
