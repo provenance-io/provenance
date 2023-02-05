@@ -485,7 +485,7 @@ func SendGovMsg(args *SendGovMsgArgs) (bool, simtypes.OperationMsg, error) {
 
 	msgAny, err := codectypes.NewAnyWithValue(args.Msg)
 	if err != nil {
-		return true, simtypes.NoOpMsg(types.ModuleName, msgType, "wrapping MsgSanction as Any"), err
+		return true, simtypes.NoOpMsg(types.ModuleName, msgType, "wrapping MsgAddMarkerProposalRequest as Any"), err
 	}
 
 	govMsg := &govtypes.MsgSubmitProposal{

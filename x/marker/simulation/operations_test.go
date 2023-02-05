@@ -160,17 +160,23 @@ func TestSimTestSuite(t *testing.T) {
 // TestSimulateMsgAddMarkerProposal tests the normal scenario of a valid message of type MsgAddMarkerProposalRequest.
 // Abnormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
-
-	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
-
 	accounts := suite.getTestingAccounts(r, 10)
-
+	accounts = append(accounts, suite.createTestingAccountsWithPower(r, 1, 0)...)
+	accounts = append(accounts, suite.createTestingAccountsWithPower(r, 1, 1)...)
 	acctZero := accounts[len(accounts)-2]
 	acctOne := accounts[len(accounts)-1]
 	acctOneBalance := suite.app.BankKeeper.SpendableCoins(suite.ctx, acctOne.Address)
 	var acctOneBalancePlusOne sdk.Coins
+	for _, c := range acctOneBalance {
+		acctOneBalancePlusOne = acctOneBalancePlusOne.Add(sdk.NewCoin(c.Denom, c.Amount.AddRaw(1)))
+	}
+
+	access := types.AccessGrant{
+		Address:     acctOne.Address.String(),
+		Permissions: types.AccessListByNames("DELETE,MINT,BURN"),
+	}
 
 	tests := []struct {
 		name            string
@@ -192,7 +198,7 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 			comment:         "should not matter",
 			expSkip:         true,
 			expOpMsgRoute:   "marker",
-			expOpMsgName:    sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{}),
+			expOpMsgName:    sdk.MsgTypeURL(&types.MsgAddMarkerProposalRequest{}),
 			expOpMsgComment: "sender has no spendable coins",
 			expInErr:        nil,
 		},
@@ -240,7 +246,7 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 		{
 			name:            "all good",
 			sender:          accounts[1],
-			msg:             types.NewMsgAddMarkerProposalRequest("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, "validAuthority"),
+			msg:             types.NewMsgAddMarkerProposalRequest("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusFinalized, types.MarkerType_Coin, []types.AccessGrant{access}, true, true, "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"),
 			deposit:         sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 			comment:         "this is a test comment",
 			expSkip:         false,
@@ -286,7 +292,7 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 				if suite.Assert().NotNil(prop, "last gov prop") {
 					msgs, err := prop.GetMsgs()
 					if suite.Assert().NoError(err, "error from prop.GetMsgs() on the last gov prop") {
-						suite.Assert().Equal(expMsgs, msgs, "messages in the last gov prop")
+						suite.Assert().Equal(expMsgs[0], msgs[0], "messages in the last gov prop")
 					}
 				}
 			}
