@@ -141,9 +141,9 @@ func (msg *MsgAddMsgFeeProposalRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func NewMsgUpdateMsgFeeProposalRequest(msgTypeUrl string, additionalFee sdk.Coin, recipient string, recipientBasisPoints string, authority string) *MsgUpdateMsgFeeProposalRequest {
+func NewMsgUpdateMsgFeeProposalRequest(msgTypeURL string, additionalFee sdk.Coin, recipient string, recipientBasisPoints string, authority string) *MsgUpdateMsgFeeProposalRequest {
 	return &MsgUpdateMsgFeeProposalRequest{
-		MsgTypeUrl:           msgTypeUrl,
+		MsgTypeUrl:           msgTypeURL,
 		AdditionalFee:        additionalFee,
 		Recipient:            recipient,
 		RecipientBasisPoints: recipientBasisPoints,
