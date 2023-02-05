@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"math/rand"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -25,6 +24,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 
 	"github.com/spf13/cobra"
 )

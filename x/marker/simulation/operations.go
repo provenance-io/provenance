@@ -57,7 +57,6 @@ SetDenomMetadata
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, protoCodec *codec.ProtoCodec, k keeper.Keeper, ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, gk govkeeper.Keeper,
 ) simulation.WeightedOperations {
-
 	args := &WeightedOpsArgs{
 		AppParams:  appParams,
 		JSONCodec:  cdc,
