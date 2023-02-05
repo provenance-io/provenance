@@ -4,16 +4,18 @@ import (
 	"fmt"
 	"testing"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v2"
-
-	"github.com/provenance-io/provenance/app"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
 
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/provenance-io/provenance/app"
+	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
@@ -30,6 +32,8 @@ type KeeperTestSuite struct {
 	pubkey2   cryptotypes.PubKey
 	user2     string
 	user2Addr sdk.AccAddress
+
+	msgSrvr nametypes.MsgServer
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -318,5 +322,33 @@ func (s *KeeperTestSuite) TestSecp256r1KeyAlgo() {
 	s.Run("should successfully add name for account with secp256r1 key", func() {
 		err := s.app.NameKeeper.SetNameRecord(s.ctx, "secp256r1.name", s.user2Addr, true)
 		s.NoError(err)
+	})
+}
+
+func (s *KeeperTestSuite) TestAuthority() {
+	require.EqualValues(s.T(), s.app.NameKeeper.GetAuthority(), "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn")
+}
+
+func (s *KeeperTestSuite) TestCreateRootName() {
+	s.msgSrvr = namekeeper.NewMsgServerImpl(s.app.NameKeeper)
+	msg := nametypes.MsgCreateRootNameRequest{
+		Record: &nametypes.NameRecord{
+			Name:       "swampmonster",
+			Address:    "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+			Restricted: false,
+		},
+		Authority: "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+	}
+
+	s.Run("create valid root name", func() {
+		_, err := s.msgSrvr.CreateRootName(s.ctx, &msg)
+		s.Require().NoError(err)
+	})
+
+	s.Run("invalid authority", func() {
+		msg.Authority = "..."
+		_, err := s.msgSrvr.CreateRootName(s.ctx, &msg)
+		s.Require().Error(err)
+		s.Require().Equal("expected cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn got ...: expected gov account as only signer for proposal message", err.Error())
 	})
 }

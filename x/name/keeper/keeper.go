@@ -4,6 +4,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/google/uuid"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -12,8 +13,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
-	uuid "github.com/google/uuid"
 
 	"github.com/provenance-io/provenance/x/name/types"
 )
@@ -32,6 +31,7 @@ type Keeper struct {
 	// The codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
 
+	// the signing authority for the gov proposals
 	authority string
 }
 
@@ -295,7 +295,7 @@ func (keeper Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress
 	}
 
 	record := types.NewNameRecord(name, addr, restrict)
-	if err = record.ValidateBasic(); err != nil {
+	if err = record.Validate(); err != nil {
 		return err
 	}
 	bz, err := keeper.cdc.Marshal(&record)
