@@ -6,7 +6,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
 	"github.com/stretchr/testify/suite"
 	"math/rand"
 	"testing"
@@ -166,7 +165,7 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
-	accounts := suite.createTestingAccounts(r, 10)
+	accounts := suite.getTestingAccounts(r, 10)
 
 	acctZero := accounts[len(accounts)-2]
 	acctOne := accounts[len(accounts)-1]
@@ -186,32 +185,26 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 		expInErr        []string
 	}{
 		{
-			name:   "no spendable coins",
-			sender: acctZero,
-			msg: &sanction.MsgSanction{
-				Addresses: []string{accounts[4].Address.String(), accounts[5].Address.String()},
-				Authority: suite.app.MarkerKeeper.GetAuthority(),
-			},
+			name:            "no spendable coins",
+			sender:          acctZero,
+			msg:             types.NewMsgAddMarkerProposalRequest("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, "validAuthority"),
 			deposit:         sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 			comment:         "should not matter",
 			expSkip:         true,
-			expOpMsgRoute:   "sanction",
-			expOpMsgName:    sdk.MsgTypeURL(&sanction.MsgSanction{}),
+			expOpMsgRoute:   "marker",
+			expOpMsgName:    sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{}),
 			expOpMsgComment: "sender has no spendable coins",
 			expInErr:        nil,
 		},
 		{
-			name:   "not enough coins for deposit",
-			sender: acctOne,
-			msg: &sanction.MsgSanction{
-				Addresses: []string{accounts[5].Address.String(), accounts[6].Address.String()},
-				Authority: suite.app.MarkerKeeper.GetAuthority(),
-			},
+			name:            "not enough coins for deposit",
+			sender:          acctOne,
+			msg:             types.NewMsgAddMarkerProposalRequest("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, "validAuthority"),
 			deposit:         acctOneBalancePlusOne,
 			comment:         "should not be this",
 			expSkip:         true,
-			expOpMsgRoute:   "sanction",
-			expOpMsgName:    sdk.MsgTypeURL(&sanction.MsgSanction{}),
+			expOpMsgRoute:   "marker",
+			expOpMsgName:    sdk.MsgTypeURL(&types.MsgAddMarkerProposalRequest{}),
 			expOpMsgComment: "sender has insufficient balance to cover deposit",
 			expInErr:        nil,
 		},
@@ -222,9 +215,9 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 			deposit:         sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 			comment:         "will not get returned",
 			expSkip:         true,
-			expOpMsgRoute:   "sanction",
+			expOpMsgRoute:   "marker",
 			expOpMsgName:    "/",
-			expOpMsgComment: "wrapping MsgSanction as Any",
+			expOpMsgComment: "wrapping MsgAddMarkerProposalRequest as Any",
 			expInErr:        []string{"Expecting non nil value to create a new Any", "failed packing protobuf message to Any"},
 		},
 		{
@@ -235,25 +228,19 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 				Address: acctOne.Address,
 				ConsKey: accounts[0].ConsKey,
 			},
-			msg: &sanction.MsgSanction{
-				Addresses: []string{accounts[6].Address.String(), accounts[7].Address.String()},
-				Authority: suite.app.MarkerKeeper.GetAuthority(),
-			},
+			msg:             types.NewMsgAddMarkerProposalRequest("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, "validAuthority"),
 			deposit:         acctOneBalance,
 			comment:         "this should be ignored",
 			expSkip:         true,
-			expOpMsgRoute:   "sanction",
+			expOpMsgRoute:   "marker",
 			expOpMsgName:    sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{}),
 			expOpMsgComment: "unable to deliver tx",
 			expInErr:        []string{"pubKey does not match signer address", "invalid pubkey"},
 		},
 		{
-			name:   "all good",
-			sender: accounts[1],
-			msg: &sanction.MsgSanction{
-				Addresses: []string{accounts[2].Address.String(), accounts[3].Address.String()},
-				Authority: suite.app.MarkerKeeper.GetAuthority(),
-			},
+			name:            "all good",
+			sender:          accounts[1],
+			msg:             types.NewMsgAddMarkerProposalRequest("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, "validAuthority"),
 			deposit:         sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 			comment:         "this is a test comment",
 			expSkip:         false,
@@ -309,20 +296,20 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 }
 
 // getWeightedOpsArgs creates a standard WeightedOpsArgs.
-func (s *SimTestSuite) getWeightedOpsArgs() simulation.WeightedOpsArgs {
+func (suite *SimTestSuite) getWeightedOpsArgs() simulation.WeightedOpsArgs {
 	return simulation.WeightedOpsArgs{
 		AppParams:  make(simtypes.AppParams),
-		JSONCodec:  s.app.AppCodec(),
-		ProtoCodec: codec.NewProtoCodec(s.app.InterfaceRegistry()),
-		AK:         s.app.AccountKeeper,
-		BK:         s.app.BankKeeper,
-		GK:         s.app.GovKeeper,
+		JSONCodec:  suite.app.AppCodec(),
+		ProtoCodec: codec.NewProtoCodec(suite.app.InterfaceRegistry()),
+		AK:         suite.app.AccountKeeper,
+		BK:         suite.app.BankKeeper,
+		GK:         suite.app.GovKeeper,
 	}
 }
 
 // getLastGovProp gets the last gov prop to be submitted.
-func (s *SimTestSuite) getLastGovProp() *govtypes.Proposal {
-	props := s.app.GovKeeper.GetProposals(s.ctx)
+func (suite *SimTestSuite) getLastGovProp() *govtypes.Proposal {
+	props := suite.app.GovKeeper.GetProposals(suite.ctx)
 	if len(props) == 0 {
 		return nil
 	}
@@ -331,33 +318,28 @@ func (s *SimTestSuite) getLastGovProp() *govtypes.Proposal {
 
 // nextBlock ends the current block, commits it, and starts a new one.
 // This is needed because some tests would run out of gas if all done in a single block.
-func (s *SimTestSuite) nextBlock() {
-	s.Require().NotPanics(func() { s.app.EndBlock(abci.RequestEndBlock{}) }, "app.EndBlock")
-	s.Require().NotPanics(func() { s.app.Commit() }, "app.Commit")
-	s.Require().NotPanics(func() {
-		s.app.BeginBlock(abci.RequestBeginBlock{
+func (suite *SimTestSuite) nextBlock() {
+	suite.Require().NotPanics(func() { suite.app.EndBlock(abci.RequestEndBlock{}) }, "app.EndBlock")
+	suite.Require().NotPanics(func() { suite.app.Commit() }, "app.Commit")
+	suite.Require().NotPanics(func() {
+		suite.app.BeginBlock(abci.RequestBeginBlock{
 			Header: tmproto.Header{
-				Height: s.app.LastBlockHeight() + 1,
+				Height: suite.app.LastBlockHeight() + 1,
 			},
 			LastCommitInfo:      abci.LastCommitInfo{},
 			ByzantineValidators: nil,
 		})
 	}, "app.BeginBlock")
-	s.freshCtx()
+	suite.freshCtx()
 }
 
 // freshCtx creates a new context and sets it to this SimTestSuite's ctx field.
-func (s *SimTestSuite) freshCtx() {
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
-}
-
-// createTestingAccounts creates testing accounts with a default balance.
-func (s *SimTestSuite) createTestingAccounts(r *rand.Rand, count int) []simtypes.Account {
-	return s.createTestingAccountsWithPower(r, count, 200)
+func (suite *SimTestSuite) freshCtx() {
+	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
 }
 
 // createTestingAccountsWithPower creates new accounts with the specified power (coins amount).
-func (s *SimTestSuite) createTestingAccountsWithPower(r *rand.Rand, count int, power int64) []simtypes.Account {
+func (suite *SimTestSuite) createTestingAccountsWithPower(r *rand.Rand, count int, power int64) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, count)
 
 	initAmt := sdk.TokensFromConsensusPower(power, sdk.DefaultPowerReduction)
@@ -365,9 +347,9 @@ func (s *SimTestSuite) createTestingAccountsWithPower(r *rand.Rand, count int, p
 
 	// add coins to the accounts
 	for _, account := range accounts {
-		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
-		s.app.AccountKeeper.SetAccount(s.ctx, acc)
-		s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, account.Address, initCoins))
+		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
+		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+		suite.Require().NoError(testutil.FundAccount(suite.app.BankKeeper, suite.ctx, account.Address, initCoins))
 	}
 
 	return accounts

@@ -2,8 +2,6 @@ package simulation
 
 import (
 	"fmt"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
 	"math/rand"
 	"regexp"
 	"strconv"
@@ -18,6 +16,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
@@ -265,17 +264,8 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 			"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", // signing authority
 		)
 
-		//msgAny, _ := codectypes.NewAnyWithValue(msg)
-
 		// Get the governance min deposit needed and immediate sanction min deposit needed.
 		govMinDep := sdk.NewCoins(args.GK.GetDepositParams(ctx).MinDeposit...)
-
-		//govMsg := &govtypes.MsgSubmitProposal{
-		//	Messages:       []*codectypes.Any{msgAny},
-		//	InitialDeposit: sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10000))),
-		//	Proposer:       simAccount.Address.String(),
-		//	Metadata:       "",
-		//}
 
 		sender, _ := simtypes.RandomAcc(r, accs)
 
@@ -289,7 +279,7 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 			Sender:          sender,
 			Msg:             msg,
 			Deposit:         govMinDep,
-			Comment:         "unsanction",
+			Comment:         "marker",
 		}
 
 		skip, opMsg, err := SendGovMsg(msgArgs)
@@ -485,17 +475,17 @@ func SendGovMsg(args *SendGovMsgArgs) (bool, simtypes.OperationMsg, error) {
 
 	spendableCoins := args.BK.SpendableCoins(args.Ctx, args.Sender.Address)
 	if spendableCoins.Empty() {
-		return true, simtypes.NoOpMsg(sanction.ModuleName, msgType, "sender has no spendable coins"), nil
+		return true, simtypes.NoOpMsg(types.ModuleName, msgType, "sender has no spendable coins"), nil
 	}
 
 	_, hasNeg := spendableCoins.SafeSub(args.Deposit...)
 	if hasNeg {
-		return true, simtypes.NoOpMsg(sanction.ModuleName, msgType, "sender has insufficient balance to cover deposit"), nil
+		return true, simtypes.NoOpMsg(types.ModuleName, msgType, "sender has insufficient balance to cover deposit"), nil
 	}
 
 	msgAny, err := codectypes.NewAnyWithValue(args.Msg)
 	if err != nil {
-		return true, simtypes.NoOpMsg(sanction.ModuleName, msgType, "wrapping MsgSanction as Any"), err
+		return true, simtypes.NoOpMsg(types.ModuleName, msgType, "wrapping MsgSanction as Any"), err
 	}
 
 	govMsg := &govtypes.MsgSubmitProposal{
@@ -517,7 +507,7 @@ func SendGovMsg(args *SendGovMsgArgs) (bool, simtypes.OperationMsg, error) {
 		SimAccount:      args.Sender,
 		AccountKeeper:   args.AK,
 		Bankkeeper:      args.BK,
-		ModuleName:      sanction.ModuleName,
+		ModuleName:      types.ModuleName,
 	}
 
 	opMsg, _, err := simulation.GenAndDeliverTxWithRandFees(txCtx)
@@ -548,7 +538,7 @@ func OperationMsgVote(args *WeightedOpsArgs, voter simtypes.Account, govPropID u
 			SimAccount:      voter,
 			AccountKeeper:   args.AK,
 			Bankkeeper:      args.BK,
-			ModuleName:      sanction.ModuleName,
+			ModuleName:      types.ModuleName,
 		}
 
 		opMsg, fops, err := simulation.GenAndDeliverTxWithRandFees(txCtx)
