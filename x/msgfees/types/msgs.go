@@ -13,7 +13,7 @@ const (
 	// AssessCustomMsgFeeBips is the bips the recipient will get
 	// This should be a message level data (present in TypeAssessCustomMsgFee = "assess_custom_msg_fee") i think so that it can be defined by the smart contract writer
 	// or at the very least it can be a module param.
-	// for now i amsg hard coding it to avoid breaking any clients and because of this ticket https://github.com/provenance-io/provenance/issues/1263
+	// for now i am hard coding it to avoid breaking any clients and because of this ticket https://github.com/provenance-io/provenance/issues/1263
 	AssessCustomMsgFeeBips = 10_000
 )
 
@@ -86,9 +86,9 @@ func (msg MsgAssessCustomMsgFeeRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func NewMsgAddMsgFeeProposalRequest(msgTypeUrl string, additionalFee sdk.Coin, recipient string, recipientBasisPoints string, authority string) *MsgAddMsgFeeProposalRequest {
+func NewMsgAddMsgFeeProposalRequest(msgTypeURL string, additionalFee sdk.Coin, recipient string, recipientBasisPoints string, authority string) *MsgAddMsgFeeProposalRequest {
 	return &MsgAddMsgFeeProposalRequest{
-		MsgTypeUrl:           msgTypeUrl,
+		MsgTypeUrl:           msgTypeURL,
 		AdditionalFee:        additionalFee,
 		Recipient:            recipient,
 		RecipientBasisPoints: recipientBasisPoints,
@@ -188,9 +188,9 @@ func (msg *MsgUpdateMsgFeeProposalRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func NewMsgRemoveMsgFeeProposalRequest(msgTypeUrl string, authority string) *MsgRemoveMsgFeeProposalRequest {
+func NewMsgRemoveMsgFeeProposalRequest(msgTypeURL string, authority string) *MsgRemoveMsgFeeProposalRequest {
 	return &MsgRemoveMsgFeeProposalRequest{
-		MsgTypeUrl: msgTypeUrl,
+		MsgTypeUrl: msgTypeURL,
 		Authority:  authority,
 	}
 }
