@@ -41,6 +41,21 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
+## [v1.14.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.14.0-rc2) - 2023-02-06
+
+### Improvements
+
+* Bump tendermint to Notional's v0.34.25 (from base repo's v0.34.24) [PR 1348](https://github.com/provenance-io/provenance/pull/1348).
+* Bump Cosmos-SDK to v0.46.8-pio-3 (from [v0.46.7-pio-2](https://github.com/provenance-io/cosmos-sdk/compare/v0.46.7-pio-2...v0.46.8-pio-3)) [PR 1348](https://github.com/provenance-io/provenance/pull/1348).
+* Set the immediate sanction/unsanction min deposits to 1,000,000 hash in the `paua` upgrade [PR 1345](https://github.com/provenance-io/provenance/pull/1345).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.14.0-rc1...v1.14.0-rc2
+* https://github.com/provenance-io/provenance/compare/v1.13.1...v1.14.0-rc2
+
+---
+
 ## [v1.14.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.14.0-rc1) - 2023-02-02
 
 ### Features
