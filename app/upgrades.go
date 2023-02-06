@@ -85,20 +85,34 @@ var handlers = map[string]appUpgrade{
 		Added: []string{quarantine.ModuleName, sanction.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
 			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
+			versionMap, err := app.mm.RunMigrations(ctx, app.configurator, app.UpgradeKeeper.GetModuleVersionMap(ctx))
+			if err != nil {
+				return nil, err
+			}
+			err = SetSanctionParams(ctx, app) // Needs to happen after RunMigrations adds the sanction module.
+			if err != nil {
+				return nil, err
+			}
 			IncreaseMaxCommissions(ctx, app)
 			IncreaseMaxGas(ctx, app)
-			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
+			return versionMap, err
 		},
 	},
 	"paua": { // upgrade for v1.14.0
 		Added: []string{quarantine.ModuleName, sanction.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
 			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
+			versionMap, err := app.mm.RunMigrations(ctx, app.configurator, app.UpgradeKeeper.GetModuleVersionMap(ctx))
+			if err != nil {
+				return nil, err
+			}
+			err = SetSanctionParams(ctx, app) // Needs to happen after RunMigrations adds the sanction module.
+			if err != nil {
+				return nil, err
+			}
 			IncreaseMaxCommissions(ctx, app)
-			IncreaseMaxGas(ctx, app)
-			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
+			// Skipping IncreaseMaxGas(ctx, app) in mainnet for now.
+			return versionMap, err
 		},
 	},
 	// TODO - Add new upgrade definitions here.
@@ -201,4 +215,17 @@ func IncreaseMaxGas(ctx sdk.Context, app *App) {
 	params := app.GetConsensusParams(ctx)
 	params.Block.MaxGas = 120_000_000
 	app.StoreConsensusParams(ctx, params)
+}
+
+func SetSanctionParams(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Setting sanction params")
+	params := &sanction.Params{
+		ImmediateSanctionMinDeposit:   sdk.NewCoins(sdk.NewInt64Coin("nhash", 1_000_000_000_000_000)),
+		ImmediateUnsanctionMinDeposit: sdk.NewCoins(sdk.NewInt64Coin("nhash", 1_000_000_000_000_000)),
+	}
+	err := app.SanctionKeeper.SetParams(ctx, params)
+	if err != nil {
+		return fmt.Errorf("could not set sanction params: %w", err)
+	}
+	return nil
 }
