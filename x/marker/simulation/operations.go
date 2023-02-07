@@ -13,10 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
@@ -55,7 +51,7 @@ SetDenomMetadata
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, protoCodec *codec.ProtoCodec, k keeper.Keeper, ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, gk govkeeper.Keeper,
+	appParams simtypes.AppParams, cdc codec.JSONCodec, protoCodec *codec.ProtoCodec, k keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, gk types.GovKeeper,
 ) simulation.WeightedOperations {
 	args := &WeightedOpsArgs{
 		AppParams:  appParams,
@@ -129,7 +125,7 @@ func WeightedOperations(
 }
 
 // SimulateMsgAddMarker will bind a NAME under an existing name using a 40% probability of restricting it.
-func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+func SimulateMsgAddMarker(k keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -150,7 +146,7 @@ func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 	}
 }
 
-func SimulateMsgChangeStatus(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+func SimulateMsgChangeStatus(k keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -201,7 +197,7 @@ func SimulateMsgChangeStatus(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 	}
 }
 
-func SimulateMsgAddAccess(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+func SimulateMsgAddAccess(k keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -220,7 +216,7 @@ func SimulateMsgAddAccess(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 }
 
 // SimulateMsgAddFinalizeActivateMarker will bind a NAME under an existing name using a 40% probability of restricting it.
-func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -258,8 +254,8 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 			types.MarkerStatus(r.Intn(3)+1), // initial status (proposed, finalized, active)
 			types.MarkerType(r.Intn(2)+1),   // coin or restricted_coin
 			[]types.AccessGrant{{Address: simAccount.Address.String(), Permissions: randomAccessTypes(r)}},
-			r.Intn(2) > 0,                                   // fixed supply
-			r.Intn(2) > 0,                                   // allow gov
+			r.Intn(2) > 0, // fixed supply
+			r.Intn(2) > 0, // allow gov
 			"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", // signing authority
 		)
 
@@ -312,8 +308,8 @@ func Dispatch(
 	r *rand.Rand,
 	app *baseapp.BaseApp,
 	ctx sdk.Context,
-	ak authkeeper.AccountKeeperI,
-	bk bankkeeper.Keeper,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
 	from simtypes.Account,
 	chainID string,
 	msg sdk.Msg,
@@ -331,19 +327,19 @@ func Dispatch(
 		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
 	}
 	// fund account with nhash for additional fees, if the account exists (100m stake)
-	if sdk.MsgTypeURL(msg) == "/provenance.marker.v1.MsgAddMarkerRequest" && ak.GetAccount(ctx, account.GetAddress()) != nil {
-		err = testutil.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
-			Denom:  "stake",
-			Amount: sdk.NewInt(1_000_000_000_000_000),
-		}))
-		fees = fees.Add(sdk.Coin{
-			Denom:  "stake",
-			Amount: sdk.NewInt(100_000_000_000_000),
-		})
-		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to fund account with additional fee"), nil, err
-		}
-	}
+	//if sdk.MsgTypeURL(msg) == "/provenance.marker.v1.MsgAddMarkerRequest" && ak.GetAccount(ctx, account.GetAddress()) != nil {
+	//	err = testutil.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
+	//		Denom:  "stake",
+	//		Amount: sdk.NewInt(1_000_000_000_000_000),
+	//	}))
+	//	fees = fees.Add(sdk.Coin{
+	//		Denom:  "stake",
+	//		Amount: sdk.NewInt(100_000_000_000_000),
+	//	})
+	//	if err != nil {
+	//		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to fund account with additional fee"), nil, err
+	//	}
+	//}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
 	tx, err := helpers.GenSignedMockTx(
@@ -446,9 +442,9 @@ type WeightedOpsArgs struct {
 	AppParams  simtypes.AppParams
 	JSONCodec  codec.JSONCodec
 	ProtoCodec *codec.ProtoCodec
-	AK         authkeeper.AccountKeeper
-	BK         bankkeeper.Keeper
-	GK         govkeeper.Keeper
+	AK         types.AccountKeeper
+	BK         types.BankKeeper
+	GK         types.GovKeeper
 }
 
 // SendGovMsgArgs holds all the args available and needed for sending a gov msg.

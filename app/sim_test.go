@@ -168,7 +168,7 @@ func TestSimple(t *testing.T) {
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/provenance-io/provenance -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func TestAppImportExport(t *testing.T) {
 	// uncomment to run in ide without flags.
-	//sdksim.FlagEnabledValue = true
+	sdksim.FlagEnabledValue = true
 
 	config, db, dir, logger, skip, err := sdksim.SetupSimulation("leveldb-app-sim", "Simulation")
 	if skip {

@@ -5,6 +5,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,6 +39,10 @@ func GenUnrestrictedDenomRegex(r *rand.Rand) string {
 	return fmt.Sprintf(`[a-zA-Z][a-zA-Z0-9\\-\\.]{%d,%d}`, min, max)
 }
 
+func GetDepositParams() v1.DepositParams {
+	return v1.DefaultParams().DepositParams
+}
+
 // RandomizedGenState generates a random GenesisState for marker
 func RandomizedGenState(simState *module.SimulationState) {
 	var maxTotalSupply uint64
@@ -58,11 +63,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { unrestrictedDenomRegex = GenUnrestrictedDenomRegex(r) },
 	)
 
-	var depositParams string
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, depositParams, &depositParams, simState.Rand,
-		func(r *rand.Rand) { unrestrictedDenomRegex = GenUnrestrictedDenomRegex(r) },
-	)
+	//var depositParams string
+	//simState.AppParams.GetOrGenerate(
+	//	simState.Cdc, depositParams, &depositParams, simState.Rand,
+	//	func(r *rand.Rand) { depositParams = GetDepositParams() },
+	//)
 
 	markerGenesis := types.GenesisState{
 		Params: types.Params{
