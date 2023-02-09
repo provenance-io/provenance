@@ -10,7 +10,7 @@ import "gogoproto/gogo.proto";
 import "provenance/marker/v1/marker.proto";
 
 // GenesisState defines the account module's genesis state.
-message GenesisState {
+message xGenesisState {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 

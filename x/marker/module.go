@@ -97,13 +97,14 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule Object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, feegrantKeeper feegrantkeeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, feegrantKeeper feegrantkeeper.Keeper, govKeeper govkeeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
 		feegrantKeeper: feegrantKeeper,
+		govKeeper:      govKeeper,
 	}
 }
 

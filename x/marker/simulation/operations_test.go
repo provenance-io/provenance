@@ -1,16 +1,16 @@
 package simulation_test
 
 import (
-	"math/rand"
-	"testing"
-
-	"github.com/stretchr/testify/suite"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	"math/rand"
+	"testing"
+	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -175,6 +175,19 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 		acctOneBalancePlusOne = acctOneBalancePlusOne.Add(sdk.NewCoin(c.Denom, c.Amount.AddRaw(1)))
 	}
 
+	// Set default deposit params
+	govMinDep := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 3))
+	depositPeriod := 1 * time.Second
+
+	resetParams := func(t *testing.T, ctx sdk.Context) {
+		require.NotPanics(suite.T(), func() {
+			suite.app.GovKeeper.SetDepositParams(suite.ctx, govtypes.DepositParams{
+				MinDeposit:       govMinDep,
+				MaxDepositPeriod: &depositPeriod,
+			})
+		}, "gov SetDepositParams")
+	}
+
 	access := types.AccessGrant{
 		Address:     acctOne.Address.String(),
 		Permissions: types.AccessListByNames("DELETE,MINT,BURN"),
@@ -260,7 +273,9 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 	}
 
 	for _, tc := range tests {
+		resetParams(suite.T(), suite.ctx)
 		suite.Run(tc.name, func() {
+
 			args := &simulation.SendGovMsgArgs{
 				WeightedOpsArgs: suite.getWeightedOpsArgs(),
 				R:               rand.New(rand.NewSource(1)),
@@ -326,20 +341,20 @@ func (suite *SimTestSuite) getLastGovProp() *govtypes.Proposal {
 
 // nextBlock ends the current block, commits it, and starts a new one.
 // This is needed because some tests would run out of gas if all done in a single block.
-func (suite *SimTestSuite) nextBlock() {
-	suite.Require().NotPanics(func() { suite.app.EndBlock(abci.RequestEndBlock{}) }, "app.EndBlock")
-	suite.Require().NotPanics(func() { suite.app.Commit() }, "app.Commit")
-	suite.Require().NotPanics(func() {
-		suite.app.BeginBlock(abci.RequestBeginBlock{
-			Header: tmproto.Header{
-				Height: suite.app.LastBlockHeight() + 1,
-			},
-			LastCommitInfo:      abci.LastCommitInfo{},
-			ByzantineValidators: nil,
-		})
-	}, "app.BeginBlock")
-	suite.freshCtx()
-}
+//func (suite *SimTestSuite) nextBlock() {
+//	suite.Require().NotPanics(func() { suite.app.EndBlock(abci.RequestEndBlock{}) }, "app.EndBlock")
+//	suite.Require().NotPanics(func() { suite.app.Commit() }, "app.Commit")
+//	suite.Require().NotPanics(func() {
+//		suite.app.BeginBlock(abci.RequestBeginBlock{
+//			Header: tmproto.Header{
+//				Height: suite.app.LastBlockHeight() + 1,
+//			},
+//			LastCommitInfo:      abci.LastCommitInfo{},
+//			ByzantineValidators: nil,
+//		})
+//	}, "app.BeginBlock")
+//	suite.freshCtx()
+//}
 
 // freshCtx creates a new context and sets it to this SimTestSuite's ctx field.
 func (suite *SimTestSuite) freshCtx() {

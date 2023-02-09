@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 )
@@ -36,6 +37,14 @@ func GenUnrestrictedDenomRegex(r *rand.Rand) string {
 	min := r.Int31n(16) + 3
 	max := r.Int31n(64-min) + min
 	return fmt.Sprintf(`[a-zA-Z][a-zA-Z0-9\\-\\.]{%d,%d}`, min, max)
+}
+
+// DefaultDepositParams default parameters for deposits
+func DefaultDepositParams() govtypes.DepositParams {
+	return govtypes.NewDepositParams(
+		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, govtypes.DefaultMinDepositTokens)),
+		govtypes.DefaultPeriod,
+	)
 }
 
 // RandomizedGenState generates a random GenesisState for marker
