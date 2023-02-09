@@ -58,12 +58,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { unrestrictedDenomRegex = GenUnrestrictedDenomRegex(r) },
 	)
 
-	var depositParams string
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, depositParams, &depositParams, simState.Rand,
-		func(r *rand.Rand) { unrestrictedDenomRegex = GenUnrestrictedDenomRegex(r) },
-	)
-
 	markerGenesis := types.GenesisState{
 		Params: types.Params{
 			MaxTotalSupply:         maxTotalSupply,
