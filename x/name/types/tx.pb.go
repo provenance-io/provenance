@@ -439,7 +439,7 @@ type MsgClient interface {
 	DeleteName(ctx context.Context, in *MsgDeleteNameRequest, opts ...grpc.CallOption) (*MsgDeleteNameResponse, error)
 	// ModifyName defines a method to modify the attributes of an existing name.
 	ModifyName(ctx context.Context, in *MsgModifyNameRequest, opts ...grpc.CallOption) (*MsgModifyNameResponse, error)
-	// CreateRootName defines a governance method for creating a root name.
+	// CreateRootName defines a governance method  for creating a root name.
 	CreateRootName(ctx context.Context, in *MsgCreateRootNameRequest, opts ...grpc.CallOption) (*MsgCreateRootNameResponse, error)
 }
 
@@ -495,7 +495,7 @@ type MsgServer interface {
 	DeleteName(context.Context, *MsgDeleteNameRequest) (*MsgDeleteNameResponse, error)
 	// ModifyName defines a method to modify the attributes of an existing name.
 	ModifyName(context.Context, *MsgModifyNameRequest) (*MsgModifyNameResponse, error)
-	// CreateRootName defines a governance method for creating a root name.
+	// CreateRootName defines a governance method  for creating a root name.
 	CreateRootName(context.Context, *MsgCreateRootNameRequest) (*MsgCreateRootNameResponse, error)
 }
 
