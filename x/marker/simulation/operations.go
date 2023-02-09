@@ -263,8 +263,8 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 			"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", // signing authority
 		)
 
-		//// Get the governance min deposit needed
-		//govMinDep := sdk.NewCoins(args.GK.GetDepositParams(ctx).MinDeposit...)
+		// Get the governance min deposit needed
+		govMinDep := sdk.NewCoins(args.GK.GetDepositParams(ctx).MinDeposit...)
 
 		sender, _ := simtypes.RandomAcc(r, accs)
 
@@ -277,7 +277,7 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 			ChainID:         chainID,
 			Sender:          sender,
 			Msg:             msg,
-			Deposit:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, govtypes.DefaultMinDepositTokens)),
+			Deposit:         govMinDep,
 			Comment:         "marker",
 		}
 

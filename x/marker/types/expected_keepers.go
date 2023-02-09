@@ -55,7 +55,7 @@ type BankKeeper interface {
 	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 }
 
-// GovKeeper defines the gov functionality needed from within the sanction module.
+// GovKeeper defines the gov functionality needed from within the gov module.
 type GovKeeper interface {
 	GetProposal(ctx sdk.Context, proposalID uint64) (govtypes.Proposal, bool)
 	GetDepositParams(ctx sdk.Context) govtypes.DepositParams
