@@ -1,14 +1,16 @@
 package simulation_test
 
 import (
+	"math/rand"
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/stretchr/testify/suite"
-	"math/rand"
-	"testing"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -16,7 +18,7 @@ import (
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/x/marker/simulation"
-	types "github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/marker/types"
 )
 
 type SimTestSuite struct {
@@ -71,7 +73,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		// Possible names: types.TypeAddAccessRequest, fmt.Sprintf("%T", &types.MsgAddAccessRequest{})
 		{simappparams.DefaultWeightMsgAddAccess, sdk.MsgTypeURL(&types.MsgAddAccessRequest{}), sdk.MsgTypeURL(&types.MsgAddAccessRequest{})},
 		{simappparams.DefaultWeightMsgAddFinalizeActivateMarker, sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{}), sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{})},
-		{simappparams.DefaultWeightMsgAddMarkerProposal, sdk.MsgTypeURL(&types.MsgAddMarkerProposalRequest{}), sdk.MsgTypeURL(&types.MsgAddMarkerProposalRequest{})},
+		{simappparams.DefaultWeightMsgAddMarkerProposal, "gov", sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{})},
 	}
 	for i, w := range weightedOps {
 		operationMsg, _, _ := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")

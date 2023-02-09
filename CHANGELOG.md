@@ -37,7 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Improvements:
+* Migrate `AddMarkerProposal` to v1 message based gov proposal [PR 1321](https://github.com/provenance-io/provenance/pull/1321)
+
+### Client Breaking
+* Migrate `AddMarkerProposal` to v1 message based gov proposal [PR 1321](https://github.com/provenance-io/provenance/pull/1321)
 
 ---
 
@@ -48,6 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump tendermint to Notional's v0.34.25 (from base repo's v0.34.24) [PR 1348](https://github.com/provenance-io/provenance/pull/1348).
 * Bump Cosmos-SDK to v0.46.8-pio-3 (from [v0.46.7-pio-2](https://github.com/provenance-io/cosmos-sdk/compare/v0.46.7-pio-2...v0.46.8-pio-3)) [PR 1348](https://github.com/provenance-io/provenance/pull/1348).
 * Set the immediate sanction/unsanction min deposits to 1,000,000 hash in the `paua` upgrade [PR 1345](https://github.com/provenance-io/provenance/pull/1345).
+* Migrate `AddMarkerProposal` to v1 message based gov proposal [PR 1321](https://github.com/provenance-io/provenance/pull/1321)
 
 ### Full Commit History
 

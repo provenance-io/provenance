@@ -536,6 +536,11 @@ func (msg *MsgSupplyIncreaseProposalRequest) ValidateBasic() error {
 		return err
 	}
 
+	_, err = sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
