@@ -202,24 +202,6 @@ message MsgSetDenomMetadataRequest {
 // MsgSetDenomMetadataResponse defines the Msg/SetDenomMetadata response type
 message MsgSetDenomMetadataResponse {}
 
-// MsgAddMarkerProposalRequest defines the Msg/AddMarkerProposal request type
-message MsgAddMarkerProposalRequest {
-  option (cosmos.msg.v1.signer) = "authority";
-
-  cosmos.base.v1beta1.Coin amount = 1
-  [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
-  string               manager                  = 2;
-  MarkerStatus         status                   = 3;
-  MarkerType           marker_type              = 4;
-  repeated AccessGrant access_list              = 5 [(gogoproto.nullable) = false];
-  bool                 supply_fixed             = 6;
-  bool                 allow_governance_control = 7;
-  string               authority                = 8 [(cosmos_proto.scalar) = "cosmos.AddressString"]; // The signing authority for the request
-}
-
-// MsgAddMarkerProposalResponse defines the Msg/AddMarkerProposal response type
-message MsgAddMarkerProposalResponse {}
-
 // MsgSupplyIncreaseProposalRequest defines a governance proposal to administer a marker and increase total supply of the marker
 // through minting coin and placing it within the marker or assigning it directly to an account
 message MsgSupplyIncreaseProposalRequest {
@@ -249,3 +231,21 @@ message MsgAddFinalizeActivateMarkerRequest {
 
 // MsgAddFinalizeActivateMarkerResponse defines the Msg/AddFinalizeActivateMarker response type
 message MsgAddFinalizeActivateMarkerResponse {}
+
+// MsgAddMarkerProposalRequest defines the Msg/AddMarkerProposal request type
+message MsgAddMarkerProposalRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  cosmos.base.v1beta1.Coin amount = 1
+  [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+  string               manager                  = 2;
+  MarkerStatus         status                   = 3;
+  MarkerType           marker_type              = 4;
+  repeated AccessGrant access_list              = 5 [(gogoproto.nullable) = false];
+  bool                 supply_fixed             = 6;
+  bool                 allow_governance_control = 7;
+  string               authority                = 8 [(cosmos_proto.scalar) = "cosmos.AddressString"]; // The signing authority for the request
+}
+
+// MsgAddMarkerProposalResponse defines the Msg/AddMarkerProposal response type
+message MsgAddMarkerProposalResponse {}

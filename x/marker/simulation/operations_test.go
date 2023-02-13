@@ -46,7 +46,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	r := rand.New(s)
 	accs := suite.getTestingAccounts(r, 3)
 
-	// Note: r is now passed around and used in several places, including in SDK functionsuite.
+	// Note: r is now passed around and used in several places, including in SDK functions.
 	//	Since we're seeding it, these tests are deterministic. However, if there are changes
 	//	made in the SDK or to the operations, these outcomes can change. To further confuse
 	//	things, the operation name is sometimes taken from msg.Type(), and sometimes from
@@ -62,7 +62,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		// Possible names: typesuite.TypeAddMarkerRequest, fmt.Sprintf("%T", &typesuite.MsgAddMarkerRequest{})
+		// Possible names: types.TypeAddMarkerRequest, fmt.Sprintf("%T", &types.MsgAddMarkerRequest{})
 		{simappparams.DefaultWeightMsgAddMarker, sdk.MsgTypeURL(&types.MsgAddMarkerRequest{}), sdk.MsgTypeURL(&types.MsgAddMarkerRequest{})},
 		// Possible names: "ChangeStatus",
 		//	types.TypeActivateRequest, fmt.Sprintf("%T", &types.MsgActivateRequest{}),
@@ -338,23 +338,6 @@ func (suite *SimTestSuite) getLastGovProp() *govtypes.Proposal {
 	}
 	return props[len(props)-1]
 }
-
-// nextBlock ends the current block, commits it, and starts a new one.
-// This is needed because some tests would run out of gas if all done in a single block.
-//func (suite *SimTestSuite) nextBlock() {
-//	suite.Require().NotPanics(func() { suite.app.EndBlock(abci.RequestEndBlock{}) }, "app.EndBlock")
-//	suite.Require().NotPanics(func() { suite.app.Commit() }, "app.Commit")
-//	suite.Require().NotPanics(func() {
-//		suite.app.BeginBlock(abci.RequestBeginBlock{
-//			Header: tmproto.Header{
-//				Height: suite.app.LastBlockHeight() + 1,
-//			},
-//			LastCommitInfo:      abci.LastCommitInfo{},
-//			ByzantineValidators: nil,
-//		})
-//	}, "app.BeginBlock")
-//	suite.freshCtx()
-//}
 
 // freshCtx creates a new context and sets it to this SimTestSuite's ctx field.
 func (suite *SimTestSuite) freshCtx() {

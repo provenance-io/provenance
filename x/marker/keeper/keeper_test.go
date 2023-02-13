@@ -835,6 +835,7 @@ func TestAddMarkerProposal(t *testing.T) {
 		prop *types.MsgAddMarkerProposalRequest
 		err  error
 	}{
+
 		{
 			"add marker - invalid authority",
 			types.NewMsgAddMarkerProposalRequest("test1", sdk.NewInt(100), sdk.AccAddress{}, types.StatusActive, types.MarkerType_Coin, []types.AccessGrant{}, true, true, ""),
@@ -846,7 +847,7 @@ func TestAddMarkerProposal(t *testing.T) {
 			nil,
 		},
 		{
-			"add marker - valid",
+			"add marker - valid restricted marker",
 			types.NewMsgAddMarkerProposalRequest("testrestricted", sdk.NewInt(100), sdk.AccAddress{}, types.StatusActive, types.MarkerType_RestrictedCoin, []types.AccessGrant{}, true, true, validAuthority),
 			nil,
 		},

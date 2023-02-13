@@ -352,3 +352,11 @@ func TestMsgAddMarkerProposalRequestValidateBasic(t *testing.T) {
 		}
 	}
 }
+
+func TestMsgAddMarkerProposalRequestGetSigners(t *testing.T) {
+	authority := sdk.AccAddress("input111111111111111")
+	msg := NewMsgAddMarkerProposalRequest("test2", sdk.NewInt(100), sdk.AccAddress{}, StatusUndefined, MarkerType_Coin, []AccessGrant{}, true, true, authority.String())
+	res := msg.GetSigners()
+	exp := []sdk.AccAddress{authority}
+	require.Equal(t, exp, res, "GetSigners")
+}
