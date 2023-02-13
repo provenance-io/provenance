@@ -38,10 +38,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## Unreleased
 
 ### Improvements:
+
 * Migrate `AddMarkerProposal` to v1 message based gov proposal [PR 1321](https://github.com/provenance-io/provenance/pull/1321)
 
 ### Client Breaking
+
 * Migrate `AddMarkerProposal` to v1 message based gov proposal [PR 1321](https://github.com/provenance-io/provenance/pull/1321)
+
+### Improvements
+
+* Increase all validators' max commission change rate to 5% [PR 1360](https://github.com/provenance-io/provenance/pull/1360).
+
+### Bug Fixes
+
+* Correctly log streaming plugin loading errors [PR 1356](https://github.com/provenance-io/provenance/pull/1356).
 
 ---
 
@@ -52,7 +62,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump tendermint to Notional's v0.34.25 (from base repo's v0.34.24) [PR 1348](https://github.com/provenance-io/provenance/pull/1348).
 * Bump Cosmos-SDK to v0.46.8-pio-3 (from [v0.46.7-pio-2](https://github.com/provenance-io/cosmos-sdk/compare/v0.46.7-pio-2...v0.46.8-pio-3)) [PR 1348](https://github.com/provenance-io/provenance/pull/1348).
 * Set the immediate sanction/unsanction min deposits to 1,000,000 hash in the `paua` upgrade [PR 1345](https://github.com/provenance-io/provenance/pull/1345).
-* Migrate `AddMarkerProposal` to v1 message based gov proposal [PR 1321](https://github.com/provenance-io/provenance/pull/1321)
 
 ### Full Commit History
 
@@ -87,8 +96,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add validate basic check to msg router service [#1308](https://github.com/provenance-io/provenance/issues/1308).
 * Removed legacy-amino [#1275](https://github.com/provenance-io/provenance/issues/1275).
 * Opened port 9091 on ibcnet container ibc1 to allow for reaching GRPC [PR 1314](https://github.com/provenance-io/provenance/pull/1314).
-* Increase all validator's max commission to 100% [PR 1333](https://github.com/provenance-io/provenance/pull/1333).
-* Increase max gas per block to 120,000,000 (from 60,000,000) [PR 1335](https://github.com/provenance-io/provenance/pull/1335).
+* Increase all validators' max commission to 100% [PR 1333](https://github.com/provenance-io/provenance/pull/1333).
+* In testnet only, increase max gas per block to 120,000,000 (from 60,000,000) [PR 1335](https://github.com/provenance-io/provenance/pull/1335).
 
 ### Bug Fixes
 

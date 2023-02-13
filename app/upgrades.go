@@ -201,11 +201,18 @@ func UpgradeICA(ctx sdk.Context, app *App, versionMap *module.VersionMap) {
 }
 
 func IncreaseMaxCommissions(ctx sdk.Context, app *App) {
-	minMaxCom := sdk.OneDec()
+	oneHundredPct := sdk.OneDec()
+	fivePct := sdk.MustNewDecFromStr("0.05")
 	validators := app.StakingKeeper.GetAllValidators(ctx)
-	ctx.Logger().Info("Increasing all validator's max commission to 100%", "count", len(validators))
+	ctx.Logger().Info("Increasing all validator's max commission to 100% and max change rate to 5%", "count", len(validators))
 	for _, validator := range validators {
-		validator.Commission.MaxRate = minMaxCom
+		validator.Commission.MaxRate = oneHundredPct
+		// Note: This MaxChangeRate bump was added after paua-rc1 was run on testnet.
+		// So, even though it's called by the paua-rc1 upgrade handler now,
+		// it wasn't part of the actual paua-rc1 upgrade that was performed on testnet.
+		if validator.Commission.MaxChangeRate.LT(fivePct) {
+			validator.Commission.MaxChangeRate = fivePct
+		}
 		app.StakingKeeper.SetValidator(ctx, validator)
 	}
 }
