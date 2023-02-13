@@ -208,7 +208,8 @@ func IncreaseMaxCommissions(ctx sdk.Context, app *App) {
 	for _, validator := range validators {
 		validator.Commission.MaxRate = oneHundredPct
 		// Note: This MaxChangeRate bump was added after paua-rc1 was run on testnet.
-		// But it doesn't matter that much on testnet, so it won't be run there.
+		// So, even though it's called by the paua-rc1 upgrade handler now,
+		// it wasn't part of the actual paua-rc1 upgrade that was performed on testnet.
 		if validator.Commission.MaxChangeRate.LT(fivePct) {
 			validator.Commission.MaxChangeRate = fivePct
 		}
