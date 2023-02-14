@@ -24,8 +24,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-
 	"github.com/spf13/cobra"
 )
 
@@ -92,12 +90,12 @@ type AppModule struct {
 	accountKeeper  authkeeper.AccountKeeper
 	bankKeeper     bankkeeper.Keeper
 	feegrantKeeper feegrantkeeper.Keeper
-	govKeeper      govkeeper.Keeper
+	govKeeper      types.GovKeeper
 	registry       cdctypes.InterfaceRegistry
 }
 
 // NewAppModule creates a new AppModule Object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, feegrantKeeper feegrantkeeper.Keeper, govKeeper govkeeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, feegrantKeeper feegrantkeeper.Keeper, govKeeper types.GovKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,

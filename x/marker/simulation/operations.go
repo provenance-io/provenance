@@ -16,7 +16,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
@@ -55,7 +54,7 @@ SetDenomMetadata
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, protoCodec *codec.ProtoCodec, k keeper.Keeper, ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, gk govkeeper.Keeper,
+	appParams simtypes.AppParams, cdc codec.JSONCodec, protoCodec *codec.ProtoCodec, k keeper.Keeper, ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, gk types.GovKeeper,
 ) simulation.WeightedOperations {
 	args := &WeightedOpsArgs{
 		AppParams:  appParams,
@@ -448,7 +447,7 @@ type WeightedOpsArgs struct {
 	ProtoCodec *codec.ProtoCodec
 	AK         authkeeper.AccountKeeper
 	BK         bankkeeper.Keeper
-	GK         govkeeper.Keeper
+	GK         types.GovKeeper
 }
 
 // SendGovMsgArgs holds all the args available and needed for sending a gov msg.
