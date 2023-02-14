@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Increase all validators' max commission change rate to 5% [PR 1360](https://github.com/provenance-io/provenance/pull/1360).
+* Add the `gci` linter that enforces import group ordering. Create a 'lint-fix' make target [PR 1366](https://github.com/provenance-io/provenance/pull/1366).
 
 ### Bug Fixes
 
