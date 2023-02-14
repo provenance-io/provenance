@@ -5,11 +5,11 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/spf13/cobra"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )

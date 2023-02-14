@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/spf13/cobra"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )

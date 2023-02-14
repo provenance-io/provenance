@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"strings"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/internal/provwasm"
 	"github.com/provenance-io/provenance/x/name/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Compile time interface check

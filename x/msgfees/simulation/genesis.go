@@ -7,12 +7,11 @@ import (
 	"fmt"
 	"math/rand"
 
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
-
-	"github.com/provenance-io/provenance/x/msgfees/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // Simulation parameter constants

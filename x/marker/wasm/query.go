@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"strings"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/internal/provwasm"
 	"github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // MarkerQueryParams represent parameters used to query the marker module.

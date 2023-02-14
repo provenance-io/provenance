@@ -8,9 +8,8 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
 )

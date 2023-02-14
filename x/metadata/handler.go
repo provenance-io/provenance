@@ -1,11 +1,11 @@
 package metadata
 
 import (
-	"github.com/provenance-io/provenance/x/metadata/keeper"
-	"github.com/provenance-io/provenance/x/metadata/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/provenance-io/provenance/x/metadata/keeper"
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // NewHandler returns a handler for metadata messages.

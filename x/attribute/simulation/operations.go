@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/google/uuid"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
@@ -12,10 +14,8 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/google/uuid"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
-
 	keeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	types "github.com/provenance-io/provenance/x/attribute/types"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"

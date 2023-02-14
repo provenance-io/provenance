@@ -6,9 +6,11 @@ import (
 	"fmt"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+
+	"github.com/tendermint/tendermint/libs/log"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 // Encoder describes behavior for provenance smart contract message encoding.

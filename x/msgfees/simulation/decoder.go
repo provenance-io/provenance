@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/provenance-io/provenance/x/msgfees/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+
+	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // NewDecodeStore returns a decoder function closure that unmarshalls the KVPair's
