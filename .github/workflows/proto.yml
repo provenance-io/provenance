@@ -39,7 +39,8 @@ jobs:
             branch="$GITHUB_BASE_REF"
           fi
           echo "base-branch: [$branch]"
-          echo "::set-output name=base-branch::$branch"
+          echo "Setting output: base-branch=$branch"
+          echo "base-branch=$branch" >> "$GITHUB_OUTPUT"
       - uses: bufbuild/buf-setup-action@v1.14.0
       - uses: bufbuild/buf-lint-action@v1.0.3
         if: always()

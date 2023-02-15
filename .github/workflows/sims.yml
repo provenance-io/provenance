@@ -41,11 +41,9 @@ jobs:
           file_prefix="sim-test-${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
           echo "Setting output: file-prefix=$file_prefix"
           echo "file-prefix=$file_prefix" >> "$GITHUB_OUTPUT"
-
           db_cache_key_hash="${{ hashFiles('scripts/cleveldb_build_and_install.sh') }}"
           echo "Setting output: db-cache-key-hash=$db_cache_key_hash"
           echo "db-cache-key-hash=$db_cache_key_hash" >> "$GITHUB_OUTPUT"
-
           go_cache_key_hash="${{ hashFiles('go.sum') }}"
           echo "Setting output: go-cache-key-hash=$go_cache_key_hash"
           echo "go-cache-key-hash=$go_cache_key_hash" >> "$GITHUB_OUTPUT"

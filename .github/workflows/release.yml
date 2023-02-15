@@ -45,12 +45,12 @@ jobs:
           if [[ "$version" =~ -rc ]]; then
             prerelease=true
           fi
-          echo "version: '$version'"
-          echo "is_release: $is_release"
-          echo "prerelease: $prerelease"
-          echo "::set-output name=version::$version"
-          echo "::set-output name=is_release::$is_release"
-          echo "::set-output name=prerelease::$prerelease"
+          echo "Setting output: version=$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Setting output: is_release=$is_release"
+          echo "is_release=$is_release" >> "$GITHUB_OUTPUT"
+          echo "Setting output: prerelease=$prerelease"
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
     outputs:
       version: ${{ steps.vars.outputs.version }}
       is_release: ${{ steps.vars.outputs.is_release }}
