@@ -38,9 +38,17 @@ jobs:
       - name: Define Variables
         id: def-vars
         run: |
-          echo "::set-output name=file-prefix::sim-test-${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
-          echo "::set-output name=db-cache-key-hash::${{ hashFiles('scripts/cleveldb_build_and_install.sh') }}"
-          echo "::set-output name=go-cache-key-hash::${{ hashFiles('go.sum') }}"
+          file_prefix="sim-test-${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
+          echo "Setting output: file-prefix=$file_prefix"
+          echo "file-prefix=$file_prefix" >> "$GITHUB_OUTPUT"
+
+          db_cache_key_hash="${{ hashFiles('scripts/cleveldb_build_and_install.sh') }}"
+          echo "Setting output: db-cache-key-hash=$db_cache_key_hash"
+          echo "db-cache-key-hash=$db_cache_key_hash" >> "$GITHUB_OUTPUT"
+
+          go_cache_key_hash="${{ hashFiles('go.sum') }}"
+          echo "Setting output: go-cache-key-hash=$go_cache_key_hash"
+          echo "go-cache-key-hash=$go_cache_key_hash" >> "$GITHUB_OUTPUT"
     outputs:
       go-version: 1.18
       should-run: ${{ env.GIT_DIFF }}
@@ -144,7 +152,10 @@ jobs:
           path: ${{ needs.setup.outputs.go-cache-path }}
       - name: Define test-logs
         id: test-logs
-        run: echo "::set-output name=test-logs::${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
+        run: |
+          test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
+          echo "Setting output: test-logs=$test_logs"
+          echo "test-logs=$test_logs" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-go@v3
         with:
           go-version: ${{ needs.setup.outputs.go-version }}
@@ -205,7 +216,10 @@ jobs:
           path: ${{ needs.setup.outputs.go-cache-path }}
       - name: Define test-logs
         id: test-logs
-        run: echo "::set-output name=test-logs::${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
+        run: |
+          test-logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
+          echo "Setting output: test-logs=$test_logs"
+          echo "test-logs=$test_logs" >> "$GITHUB_OUTPUT"
       - name: Install cleveldb
         if: matrix.db-backend == 'cleveldb'
         run: |
@@ -254,7 +268,10 @@ jobs:
           path: ${{ needs.setup.outputs.go-cache-path }}
       - name: Define test-logs
         id: test-logs
-        run: echo "::set-output name=test-logs::${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.os }}"
+        run: |
+          test-logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.os }}"
+          echo "Setting output: test-logs=$test_logs"
+          echo "test-logs=$test_logs" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-go@v3
         with:
           go-version: ${{ needs.setup.outputs.go-version }}
