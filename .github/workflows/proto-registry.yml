@@ -48,9 +48,9 @@ jobs:
           git_commit_gpgsign: true
       - name: Update buf.lock
         run: |
-          cd third_party/proto
+          cd proto
           buf mod update
-          cd ../..
+          cd ..
           git add .
           git commit -S -m "Update buf.lock to latest commit hash"
       - name: Create Pull Request
