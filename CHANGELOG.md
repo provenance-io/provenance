@@ -37,7 +37,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Bug Fixes
+
+* Fix third party Protobuf workflow checks on Provenance release steps [#1339](https://github.com/provenance-io/provenance/issues/1339)
 
 ---
 
