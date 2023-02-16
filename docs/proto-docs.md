@@ -65,6 +65,7 @@
     - [EventMarkerTransfer](#provenance.marker.v1.EventMarkerTransfer)
     - [EventMarkerWithdraw](#provenance.marker.v1.EventMarkerWithdraw)
     - [MarkerAccount](#provenance.marker.v1.MarkerAccount)
+    - [NameValue](#provenance.marker.v1.NameValue)
     - [Params](#provenance.marker.v1.Params)
   
     - [MarkerStatus](#provenance.marker.v1.MarkerStatus)
@@ -1281,7 +1282,23 @@ MarkerAccount holds the marker configuration information in addition to a base a
 | `marker_type` | [MarkerType](#provenance.marker.v1.MarkerType) |  | Marker type information |
 | `supply_fixed` | [bool](#bool) |  | A fixed supply will mint additional coin automatically if the total supply decreases below a set value. This may occur if the coin is burned or an account holding the coin is slashed. (default: true) |
 | `allow_governance_control` | [bool](#bool) |  | indicates that governance based control is allowed for this marker |
-| `required_attributes` | [string](#string) | repeated | list of required attributes on restricted marker in order to send and receive transfers |
+| `required_attributes` | [NameValue](#provenance.marker.v1.NameValue) | repeated | list of required attributes on restricted marker in order to send and receive transfers |
+
+
+
+
+
+
+<a name="provenance.marker.v1.NameValue"></a>
+
+### NameValue
+NameValue defines a name/value pair
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `value` | [string](#string) |  |  |
 
 
 
