@@ -38,7 +38,6 @@ jobs:
           if [ -n "$GITHUB_BASE_REF" ]; then
             branch="$GITHUB_BASE_REF"
           fi
-          echo "base-branch: [$branch]"
           echo "Setting output: base-branch=$branch"
           echo "base-branch=$branch" >> "$GITHUB_OUTPUT"
       - uses: bufbuild/buf-setup-action@v1.14.0
