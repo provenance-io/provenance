@@ -571,6 +571,7 @@ proto-gen:
 		docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
 			sh ./scripts/protocgen.sh; \
 	fi
+	git checkout go.mod
 	go mod tidy
 
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed

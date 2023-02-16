@@ -177,8 +177,9 @@ type MarkerAccount struct {
 	// may occur if the coin is burned or an account holding the coin is slashed. (default: true)
 	SupplyFixed bool `protobuf:"varint,8,opt,name=supply_fixed,json=supplyFixed,proto3" json:"supply_fixed,omitempty"`
 	// indicates that governance based control is allowed for this marker
-	AllowGovernanceControl bool     `protobuf:"varint,9,opt,name=allow_governance_control,json=allowGovernanceControl,proto3" json:"allow_governance_control,omitempty"`
-	RequiredAttributes     []string `protobuf:"bytes,10,rep,name=required_attributes,json=requiredAttributes,proto3" json:"required_attributes,omitempty"`
+	AllowGovernanceControl bool `protobuf:"varint,9,opt,name=allow_governance_control,json=allowGovernanceControl,proto3" json:"allow_governance_control,omitempty"`
+	// list of required attributes on restricted marker in order to send and receive transfers
+	RequiredAttributes []string `protobuf:"bytes,10,rep,name=required_attributes,json=requiredAttributes,proto3" json:"required_attributes,omitempty"`
 }
 
 func (m *MarkerAccount) Reset()      { *m = MarkerAccount{} }
