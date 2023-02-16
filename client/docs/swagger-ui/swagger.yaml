@@ -80644,6 +80644,11 @@ definitions:
   provenance.marker.v1.MsgSetDenomMetadataResponse:
     type: object
     title: MsgSetDenomMetadataResponse defines the Msg/SetDenomMetadata response type
+  provenance.marker.v1.MsgSupplyIncreaseProposalResponse:
+    type: object
+    title: >-
+      MsgSupplyIncreaseProposalResponse defines the Msg/SupplyIncreaseProposal
+      response type
   provenance.marker.v1.MsgTransferResponse:
     type: object
     title: MsgTransferResponse defines the Msg/Transfer response type
@@ -91782,6 +91787,9 @@ definitions:
   provenance.name.v1.MsgBindNameResponse:
     type: object
     description: MsgBindNameResponse defines the Msg/BindName response type.
+  provenance.name.v1.MsgCreateRootNameResponse:
+    type: object
+    description: MsgCreateRootNameResponse defines Msg/CreateRootName response type.
   provenance.name.v1.MsgDeleteNameResponse:
     type: object
     description: MsgDeleteNameResponse defines the Msg/DeleteName response type.

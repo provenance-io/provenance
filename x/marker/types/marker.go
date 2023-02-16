@@ -216,6 +216,16 @@ func ValidateGrantsForMarkerType(markerType MarkerType, grants ...AccessGrant) e
 	return ValidateGrants(grants...)
 }
 
+// ValidateRequiredAttributes checks that required attributes are of the correct format
+func ValidateRequiredAttributes(requiredAttributes []string) error {
+	for _, attr := range requiredAttributes {
+		if strings.TrimSpace(attr) == "" {
+			return fmt.Errorf("invalid name: empty")
+		}
+	}
+	return nil
+}
+
 // GetPubKey implements authtypes.Account (but there are no public keys associated with the account for signing)
 func (ma MarkerAccount) GetPubKey() cryptotypes.PubKey {
 	return nil
