@@ -18,6 +18,7 @@ import (
 
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
 
+	attrkeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -64,6 +65,8 @@ type Keeper struct {
 
 	ibcKeeper ibckeeper.Keeper
 
+	attrKeeper attrkeeper.Keeper
+
 	// For access to bank keeper storage outside what their keeper provides.
 	bankKeeperStoreKey storetypes.StoreKey
 
@@ -90,6 +93,7 @@ func NewKeeper(
 	authzKeeper authzkeeper.Keeper,
 	feegrantKeeper feegrantkeeper.Keeper,
 	ibcKeeper ibckeeper.Keeper,
+	attrKeeper attrkeeper.Keeper,
 	bankKey storetypes.StoreKey,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
@@ -103,6 +107,7 @@ func NewKeeper(
 		bankKeeper:         bankKeeper,
 		feegrantKeeper:     feegrantKeeper,
 		ibcKeeper:          ibcKeeper,
+		attrKeeper:         attrKeeper,
 		storeKey:           key,
 		bankKeeperStoreKey: bankKey,
 		cdc:                cdc,
