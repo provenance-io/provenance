@@ -54,7 +54,9 @@ message MarkerAccount {
   // may occur if the coin is burned or an account holding the coin is slashed. (default: true)
   bool supply_fixed = 8;
   // indicates that governance based control is allowed for this marker
-  bool allow_governance_control = 9;
+  bool            allow_governance_control = 9;
+  // list of required attributes on restricted marker in order to send and receive transfers
+  repeated string required_attributes      = 10;
 }
 
 // MarkerType defines the types of marker
