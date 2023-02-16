@@ -26,7 +26,7 @@ on:
 # This helps avoid breaking changes when we cut new releases.
 jobs:
   push_third_party:
-#    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
