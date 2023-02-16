@@ -81,7 +81,7 @@ var handlers = map[string]appUpgrade{
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
 	},
-	"paua-rc1": { // upgrade for v1.14.0-rc1
+	"paua-rc1": { // upgrade for v1.14.0-rc2
 		Added: []string{quarantine.ModuleName, sanction.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
 			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
@@ -98,6 +98,14 @@ var handlers = map[string]appUpgrade{
 			return versionMap, err
 		},
 	},
+	"paua-rc2": { // upgrade for v1.14.0-rc3
+		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
+			// Reapply the max commissions thing again so testnet gets the max change rate bump too.
+			IncreaseMaxCommissions(ctx, app)
+			UndoMaxGasIncrease(ctx, app)
+			return app.UpgradeKeeper.GetModuleVersionMap(ctx), nil
+		},
+	},
 	"paua": { // upgrade for v1.14.0
 		Added: []string{quarantine.ModuleName, sanction.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
@@ -112,7 +120,7 @@ var handlers = map[string]appUpgrade{
 			}
 			IncreaseMaxCommissions(ctx, app)
 			// Skipping IncreaseMaxGas(ctx, app) in mainnet for now.
-			return versionMap, err
+			return versionMap, nil
 		},
 	},
 	// TODO - Add new upgrade definitions here.
@@ -221,6 +229,13 @@ func IncreaseMaxGas(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Increasing max gas per block to 120,000,000")
 	params := app.GetConsensusParams(ctx)
 	params.Block.MaxGas = 120_000_000
+	app.StoreConsensusParams(ctx, params)
+}
+
+func UndoMaxGasIncrease(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Setting max gas per block back to 60,000,000")
+	params := app.GetConsensusParams(ctx)
+	params.Block.MaxGas = 60_000_000
 	app.StoreConsensusParams(ctx, params)
 }
 
