@@ -46,6 +46,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Correctly log streaming plugin loading errors [PR 1356](https://github.com/provenance-io/provenance/pull/1356).
 
+### Client Breaking
+
+* No longer sign the mac binary, and stop including it in the release [PR 1367](https://github.com/provenance-io/provenance/pull/1367).
+
 ---
 
 ## [v1.14.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.14.0-rc2) - 2023-02-06
