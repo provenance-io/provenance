@@ -1,16 +1,13 @@
-name: Buf Push
+name: Third Party Proto Registry
 # Protobuf runs buf (https://buf.build/) push updated proto files to https://buf.build/provenance-io
-# This workflow is only run when a .proto file has been changed or when this workflow has been modifed.
+# This workflow pushes the third party protos to buf.build whenever any of them are updated in `main`.
 on:
   push:
     branches:
       - main
     paths:
-      - "**/**.proto"
+      - "third_party/**.proto"
       - ".github/workflows/proto-registry.yml"
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"     # Push events to matching v*, i.e. v1.0, v20.15.10
-      - "v[0-9]+.[0-9]+.[0-9]+-rc*" # Push events to matching v*, i.e. v1.0-rc1, v20.15.10-rc5
 
 # Concurrency is not defined in here because this job usually doesn't run
 # long enough to need cancelling, and it's okay for it to run multiple times.
@@ -18,12 +15,12 @@ on:
 # Provenance publishes Protobuf content (including third_party dependencies) to buf.build.
 # Because of third_party dependencies declared in buf.yml, a buf.lock will be generated
 # containing the dependency manifest. Among other things, the buf.lock contains the
-# latest commit hash of the third_party library in the buf.build Provenance repository.
+# latest buf.build commit hash of the third_party library in the https://buf.build/provenance-io.
 # When new files are added to the third_party library we need:
 #   1. publish the third_party library
 #   2. update buf.lock to point to the new commit hash
 #   3. sign and create a PR to commit buf.lock changes back to main
-# This helps avoid breaking changes when we cut new releases.
+# This helps avoid a buf push failure due to a new third party proto reference.
 jobs:
   push_third_party:
     if: github.ref == 'refs/heads/main'
@@ -75,18 +72,3 @@ jobs:
         run: |
           echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
           echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
-
-  push_proto:
-    if: github_ref_type == 'tag'
-    runs-on: ubuntu-latest
-    name: Protobuf Push
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Buf setup action
-        uses: bufbuild/buf-setup-action@v1.13.1
-      - name: Buf push 'proto/'
-        uses: bufbuild/buf-push-action@v1
-        with:
-          input: 'proto'
-          buf_token: ${{ secrets.BUF_TOKEN }}
