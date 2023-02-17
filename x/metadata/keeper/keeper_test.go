@@ -160,7 +160,7 @@ func (s *KeeperTestSuite) TestValidatePartiesInvolved() {
 		tc := tc
 
 		s.T().Run(n, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidatePartiesInvolved(tc.parties, tc.requiredParties)
+			err := s.app.MetadataKeeper.ValidatePartiesInvolved(s.ctx, tc.parties, tc.requiredParties)
 			if tc.wantErr {
 				assert.EqualError(t, err, tc.errorMsg)
 			} else {

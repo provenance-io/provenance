@@ -277,7 +277,7 @@ func (k Keeper) ValidateScopeUpdate(
 	if !found {
 		return fmt.Errorf("scope specification %s not found", proposed.SpecificationId)
 	}
-	if err := k.ValidatePartiesInvolved(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
+	if err := k.ValidatePartiesInvolved(ctx, proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 		return err
 	}
 
@@ -465,7 +465,7 @@ func (k Keeper) ValidateScopeUpdateOwners(
 	if !found {
 		return fmt.Errorf("scope specification %s not found", proposed.SpecificationId)
 	}
-	if err := k.ValidatePartiesInvolved(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
+	if err := k.ValidatePartiesInvolved(ctx, proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 		return err
 	}
 	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msgTypeURL); err != nil {

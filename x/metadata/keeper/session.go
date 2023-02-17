@@ -4,8 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -157,7 +158,7 @@ func (k Keeper) ValidateSessionUpdate(ctx sdk.Context, existing, proposed *types
 		proposed.Name = contractSpec.ClassName
 	}
 
-	if err = k.ValidatePartiesInvolved(proposed.Parties, contractSpec.PartiesInvolved); err != nil {
+	if err = k.ValidatePartiesInvolved(ctx, proposed.Parties, contractSpec.PartiesInvolved); err != nil {
 		return err
 	}
 

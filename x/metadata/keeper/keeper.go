@@ -312,7 +312,8 @@ func (k Keeper) ValidateAllPartiesAreSignersWithAuthz(ctx sdk.Context, parties [
 }
 
 // ValidatePartiesInvolved validate that all required parties are involved
-func (k Keeper) ValidatePartiesInvolved(parties []types.Party, requiredParties []types.PartyType) error {
+// Panics if any Party has an invalid Address bech32 string.
+func (k Keeper) ValidatePartiesInvolved(ctx sdk.Context, parties []types.Party, requiredParties []types.PartyType) error {
 	partyRoles := make([]string, len(parties))
 	reqRoles := make([]string, len(requiredParties))
 	for i, party := range parties {
@@ -329,6 +330,18 @@ func (k Keeper) ValidatePartiesInvolved(parties []types.Party, requiredParties [
 		}
 		return fmt.Errorf("missing party type%s required by spec: %v", pluralEnding(len(missing)), missing)
 	}
+
+	for i, party := range parties {
+		acct := k.authKeeper.GetAccount(ctx, sdk.MustAccAddressFromBech32(party.Address))
+		isWasmAcct := acct.GetSequence() == 0 && acct.GetPubKey() == nil
+		if isWasmAcct && party.Role != types.PartyType_PARTY_TYPE_PROVENANCE {
+			return fmt.Errorf("smart contract address %q must have role PROVENANCE: index %d", party.Address, i)
+		}
+		if !isWasmAcct && party.Role == types.PartyType_PARTY_TYPE_PROVENANCE {
+			return fmt.Errorf("role PROVENANCE must have a smart contract address, got %q: index %d", party.Address, i)
+		}
+	}
+
 	return nil
 }
 
