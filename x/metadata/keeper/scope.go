@@ -3,8 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -276,7 +277,7 @@ func (k Keeper) ValidateScopeUpdate(
 	if !found {
 		return fmt.Errorf("scope specification %s not found", proposed.SpecificationId)
 	}
-	if err := k.ValidateScopeOwners(proposed.Owners, scopeSpec); err != nil {
+	if err := k.ValidatePartiesInvolved(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 		return err
 	}
 
@@ -464,34 +465,11 @@ func (k Keeper) ValidateScopeUpdateOwners(
 	if !found {
 		return fmt.Errorf("scope specification %s not found", proposed.SpecificationId)
 	}
-	if err := k.ValidateScopeOwners(proposed.Owners, scopeSpec); err != nil {
+	if err := k.ValidatePartiesInvolved(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 		return err
 	}
 	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msgTypeURL); err != nil {
 		return err
-	}
-	return nil
-}
-
-// ValidateScopeOwners is stateful validation for scope owners against a scope specification.
-// This does NOT involve the Scope.ValidateOwnersBasic() function.
-func (k Keeper) ValidateScopeOwners(owners []types.Party, spec types.ScopeSpecification) error {
-	var missingPartyTypes []string
-	for _, pt := range spec.PartiesInvolved {
-		found := false
-		for _, o := range owners {
-			if o.Role == pt {
-				found = true
-				break
-			}
-		}
-		if !found {
-			// Get the party type without the "PARTY_TYPE_" prefix.
-			missingPartyTypes = append(missingPartyTypes, pt.String()[11:])
-		}
-	}
-	if len(missingPartyTypes) > 0 {
-		return fmt.Errorf("missing party type%s required by spec: %v", pluralEnding(len(missingPartyTypes)), missingPartyTypes)
 	}
 	return nil
 }
