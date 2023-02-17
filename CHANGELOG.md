@@ -42,6 +42,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Increase all validators' max commission change rate to 5% [PR 1360](https://github.com/provenance-io/provenance/pull/1360).
 * Bump Cosmos-SDK to v0.46.10-pio-1 (from [v0.46.8-pio-3](https://github.com/provenance-io/cosmos-sdk/compare/v0.46.8-pio-3...v0.46.10-pio-1)) [PR 1371](https://github.com/provenance-io/provenance/pull/1371).
   See its [RELEASE_NOTES.md](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.10-pio-1/RELEASE_NOTES.md) for details.
+* Create the `paua-rc2` upgrade handler that bumps validator max change rates and puts max gas back to what it used to be [PR 1373](https://github.com/provenance-io/provenance/pull/1373).
+  This will only be applied to `testnet`.
 
 ### Bug Fixes
 
