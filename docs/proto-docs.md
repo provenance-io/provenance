@@ -1416,7 +1416,7 @@ AddMarkerProposal defines defines a governance proposal to create a new marker
 | `access_list` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
 | `supply_fixed` | [bool](#bool) |  |  |
 | `allow_governance_control` | [bool](#bool) |  |  |
-| `required_attributes` | [string](#string) | repeated |  |
+| `required_attributes` | [NameValue](#provenance.marker.v1.NameValue) | repeated |  |
 
 
 
@@ -1971,7 +1971,7 @@ MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker re
 | `access_list` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
 | `supply_fixed` | [bool](#bool) |  |  |
 | `allow_governance_control` | [bool](#bool) |  |  |
-| `required_attributes` | [string](#string) | repeated |  |
+| `required_attributes` | [NameValue](#provenance.marker.v1.NameValue) | repeated |  |
 
 
 
@@ -2004,7 +2004,7 @@ MsgAddMarkerRequest defines the Msg/AddMarker request type
 | `access_list` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
 | `supply_fixed` | [bool](#bool) |  |  |
 | `allow_governance_control` | [bool](#bool) |  |  |
-| `required_attributes` | [string](#string) | repeated |  |
+| `required_attributes` | [NameValue](#provenance.marker.v1.NameValue) | repeated |  |
 
 
 

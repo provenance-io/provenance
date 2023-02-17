@@ -56,13 +56,7 @@ message MarkerAccount {
   // indicates that governance based control is allowed for this marker
   bool allow_governance_control = 9;
   // list of required attributes on restricted marker in order to send and receive transfers
-  repeated NameValue required_attributes = 10;
-}
-
-// NameValue defines a name/value pair
-message NameValue {
-  string name  = 1;
-  string value = 3;
+  repeated string required_attributes = 10;
 }
 
 // MarkerType defines the types of marker
