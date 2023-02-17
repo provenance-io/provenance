@@ -422,6 +422,7 @@ enforced immediately.  An optional type flag can be provided or the default of C
 				markerStatus,
 				markertypes.MarkerType(markerType),
 				true,
+				[]string{},
 			)
 
 			if err = genAccount.Validate(); err != nil {

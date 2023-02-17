@@ -73,6 +73,7 @@ func NewMarkerAccount(
 	status MarkerStatus,
 	markerType MarkerType,
 	supplyFixed bool,
+	requiredAttributes []string,
 ) *MarkerAccount {
 	// clear marker manager for active or later status accounts.
 	if status >= StatusActive {
@@ -88,6 +89,7 @@ func NewMarkerAccount(
 		MarkerType:             markerType,
 		SupplyFixed:            supplyFixed,
 		AllowGovernanceControl: true,
+		RequiredAttributes:     requiredAttributes,
 	}
 }
 
