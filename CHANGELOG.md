@@ -37,6 +37,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* nothing
+
+---
+
+## [v1.14.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.14.0-rc3) - 2023-02-17
+
 ### Improvements
 
 * Increase all validators' max commission change rate to 5% [PR 1360](https://github.com/provenance-io/provenance/pull/1360).
@@ -52,6 +58,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Client Breaking
 
 * No longer sign the mac binary, and stop including it in the release [PR 1367](https://github.com/provenance-io/provenance/pull/1367).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.14.0-rc2...v1.14.0-rc3
+* https://github.com/provenance-io/provenance/compare/v1.13.1...v1.14.0-rc3
 
 ---
 
