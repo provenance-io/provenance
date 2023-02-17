@@ -45,4 +45,7 @@ done
 
 # Formatted for gh workflow action
 echo
-echo "::set-output name=protos::$zip"
+echo "Setting output: protos=$zip"
+if [ -n "$GITHUB_OUTPUT" ]; then
+  echo "protos=$zip" >> "$GITHUB_OUTPUT"
+fi

@@ -34,8 +34,12 @@ jobs:
       - name: Define Variables
         id: def-vars
         run: |
-          echo "::set-output name=cache-key::${{ runner.os }}-unit-tests-${{ hashFiles('scripts/cleveldb_build_and_install.sh', '.github/workflows/test.yml') }}"
-          echo "::set-output name=file-prefix::${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
+          cache_key="${{ runner.os }}-unit-tests-${{ hashFiles('scripts/cleveldb_build_and_install.sh', '.github/workflows/test.yml') }}"
+          echo "Setting output: cache-key=$cache_key"
+          echo "cache-key=$cache_key" >> "$GITHUB_OUTPUT"
+          file_prefix="${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
+          echo "Setting output: file-prefix=$file_prefix"
+          echo "file-prefix=$file_prefix" >> "$GITHUB_OUTPUT"
       - name: Create a file with all the pkgs
         run: go list ./... > pkgs.txt
       - uses: actions/upload-artifact@v3
