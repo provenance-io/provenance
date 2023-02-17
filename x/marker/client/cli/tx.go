@@ -195,6 +195,7 @@ Valid Proposal Types (and associated parameters):
 	return cmd
 }
 
+// TODO: add required attrs
 // GetCmdAddMarker implements the create marker command
 func GetCmdAddMarker() *cobra.Command {
 	cmd := &cobra.Command{
@@ -914,6 +915,7 @@ Examples:
 	return cmd
 }
 
+// TODO: add required attrs
 // GetCmdAddFinalizeActivateMarker implements the add finalize activate marker command
 func GetCmdAddFinalizeActivateMarker() *cobra.Command {
 	cmd := &cobra.Command{
