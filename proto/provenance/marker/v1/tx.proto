@@ -81,7 +81,7 @@ message MsgAddMarkerRequest {
   repeated AccessGrant access_list              = 7 [(gogoproto.nullable) = false];
   bool                 supply_fixed             = 8;
   bool                 allow_governance_control = 9;
-  repeated NameValue   required_attributes      = 10;
+  repeated string      required_attributes      = 10;
 }
 
 // MsgAddMarkerResponse defines the Msg/AddMarker response type

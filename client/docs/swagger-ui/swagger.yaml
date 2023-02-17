@@ -80655,14 +80655,6 @@ definitions:
   provenance.marker.v1.MsgWithdrawResponse:
     type: object
     title: MsgWithdrawResponse defines the Msg/Withdraw response type
-  provenance.marker.v1.NameValue:
-    type: object
-    properties:
-      name:
-        type: string
-      value:
-        type: string
-    title: NameValue defines a name/value pair
   provenance.metadata.v1.AuditFields:
     type: object
     properties:
