@@ -333,7 +333,7 @@ func (k Keeper) ValidatePartiesInvolved(ctx sdk.Context, parties []types.Party, 
 
 	for i, party := range parties {
 		acct := k.authKeeper.GetAccount(ctx, sdk.MustAccAddressFromBech32(party.Address))
-		isWasmAcct := acct.GetSequence() == 0 && acct.GetPubKey() == nil
+		isWasmAcct := acct != nil && acct.GetSequence() == 0 && acct.GetPubKey() == nil
 		if isWasmAcct && party.Role != types.PartyType_PARTY_TYPE_PROVENANCE {
 			return fmt.Errorf("smart contract address %q must have role PROVENANCE: index %d", party.Address, i)
 		}
