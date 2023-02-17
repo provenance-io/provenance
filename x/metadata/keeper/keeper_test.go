@@ -134,19 +134,19 @@ func (s *KeeperTestSuite) TestValidatePartiesInvolved() {
 			parties:         []types.Party{},
 			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE},
 			wantErr:         true,
-			errorMsg:        "missing required party type [PARTY_TYPE_AFFILIATE] from parties",
+			errorMsg:        "missing party type required by spec: [AFFILIATE]",
 		},
 		"invalid, missing one required party": {
 			parties:         []types.Party{{Address: "address", Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
 			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE},
 			wantErr:         true,
-			errorMsg:        "missing required party type [PARTY_TYPE_AFFILIATE] from parties",
+			errorMsg:        "missing party type required by spec: [AFFILIATE]",
 		},
 		"invalid, missing twp required parties": {
 			parties:         []types.Party{{Address: "address", Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
 			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE, types.PartyType_PARTY_TYPE_INVESTOR},
 			wantErr:         true,
-			errorMsg:        "missing required party types [PARTY_TYPE_AFFILIATE PARTY_TYPE_INVESTOR] from parties",
+			errorMsg:        "missing party types required by spec: [AFFILIATE INVESTOR]",
 		},
 		"valid, required parties fulfilled": {
 			parties:         []types.Party{{Address: "address", Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},

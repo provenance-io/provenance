@@ -246,7 +246,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 			proposed: invalidPartiesSession,
 			signers:  []string{s.user1},
 			wantErr:  true,
-			errorMsg: "missing required party type [PARTY_TYPE_AFFILIATE] from parties",
+			errorMsg: "missing party type required by spec: [AFFILIATE]",
 		},
 		"invalid session update, missing required signers": {
 			existing: validSession,

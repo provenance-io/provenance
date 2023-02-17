@@ -3,6 +3,9 @@ package keeper
 import (
 	"fmt"
 	"net/url"
+	"strings"
+
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -12,7 +15,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzKeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -321,7 +323,11 @@ func (k Keeper) ValidatePartiesInvolved(parties []types.Party, requiredParties [
 	}
 	missing := FindMissing(reqRoles, partyRoles)
 	if len(missing) > 0 {
-		return fmt.Errorf("missing required party type%s %v from parties", pluralEnding(len(missing)), missing)
+		// Remove the "PARTY_TYPE_" from the front of each role for a cleaner error message.
+		for i, role := range missing {
+			missing[i] = strings.TrimPrefix(role, "PARTY_TYPE_")
+		}
+		return fmt.Errorf("missing party type%s required by spec: %v", pluralEnding(len(missing)), missing)
 	}
 	return nil
 }
