@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
 	simapp "github.com/provenance-io/provenance/app"
@@ -119,6 +120,24 @@ func ownerPartyList(addresses ...string) []types.Party {
 }
 
 func (s *KeeperTestSuite) TestValidatePartiesInvolved() {
+	wasmPubKey := secp256k1.GenPrivKey().PubKey()
+	wasmAddr := sdk.AccAddress(wasmPubKey.Address())
+	wasmAcct := authtypes.NewBaseAccount(wasmAddr, nil, s.app.AccountKeeper.GetNextAccountNumber(s.ctx), 0)
+	s.app.AccountKeeper.SetAccount(s.ctx, wasmAcct)
+	wasm := wasmAddr.String()
+
+	norm1PubKey := secp256k1.GenPrivKey().PubKey()
+	norm1Addr := sdk.AccAddress(norm1PubKey.Address())
+	norm1Acct := authtypes.NewBaseAccount(norm1Addr, norm1PubKey, s.app.AccountKeeper.GetNextAccountNumber(s.ctx), 1)
+	s.app.AccountKeeper.SetAccount(s.ctx, norm1Acct)
+	norm1 := norm1Addr.String()
+
+	norm2PubKey := secp256k1.GenPrivKey().PubKey()
+	norm2Addr := sdk.AccAddress(norm2PubKey.Address())
+	norm2Acct := authtypes.NewBaseAccount(norm2Addr, norm2PubKey, s.app.AccountKeeper.GetNextAccountNumber(s.ctx), 1)
+	s.app.AccountKeeper.SetAccount(s.ctx, norm2Acct)
+	norm2 := norm2Addr.String()
+
 	cases := []struct {
 		name            string
 		parties         []types.Party
@@ -155,7 +174,209 @@ func (s *KeeperTestSuite) TestValidatePartiesInvolved() {
 			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_CUSTODIAN},
 			errorMsg:        "",
 		},
-		// TODO[1381]: More ValidatePartiesInvolved unit test cases.
+		{
+			name:            "wasm acct without prov role",
+			parties:         []types.Party{{Address: wasm, Role: types.PartyType_PARTY_TYPE_OWNER}},
+			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+			errorMsg:        fmt.Sprintf("account %q is a smart contract but does not have the PROVENANCE role", wasm),
+		},
+		{
+			name:            "prov role with non-wasm account",
+			parties:         []types.Party{{Address: norm1, Role: types.PartyType_PARTY_TYPE_PROVENANCE}},
+			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_PROVENANCE},
+			errorMsg:        fmt.Sprintf("account %q has role PROVENANCE but is not a smart contract", norm1),
+		},
+		{
+			name: "wasm acct with two non-prov roles",
+			parties: []types.Party{
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_CONTROLLER},
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_OWNER},
+			},
+			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER, types.PartyType_PARTY_TYPE_CONTROLLER},
+			errorMsg:        fmt.Sprintf("account %q is a smart contract but does not have the PROVENANCE role", wasm),
+		},
+		{
+			name: "wasm acct with two roles first prov",
+			parties: []types.Party{
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_PROVENANCE},
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_CONTROLLER},
+			},
+			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_PROVENANCE, types.PartyType_PARTY_TYPE_CONTROLLER},
+			errorMsg:        "",
+		},
+		{
+			name: "wasm acct with two roles second prov",
+			parties: []types.Party{
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_PROVENANCE},
+			},
+			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_PROVENANCE, types.PartyType_PARTY_TYPE_OWNER},
+			errorMsg:        "",
+		},
+		{
+			name: "four parties two wasm one with prov",
+			parties: []types.Party{
+				{Address: norm1, Role: types.PartyType_PARTY_TYPE_CUSTODIAN},
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_PROVENANCE},
+				{Address: norm2, Role: types.PartyType_PARTY_TYPE_CONTROLLER},
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_OWNER},
+			},
+			requiredParties: []types.PartyType{
+				types.PartyType_PARTY_TYPE_PROVENANCE,
+				types.PartyType_PARTY_TYPE_OWNER,
+				types.PartyType_PARTY_TYPE_CONTROLLER,
+				types.PartyType_PARTY_TYPE_CUSTODIAN,
+			},
+			errorMsg: "",
+		},
+		{
+			name: "four parties one wasm prov",
+			parties: []types.Party{
+				{Address: norm1, Role: types.PartyType_PARTY_TYPE_CUSTODIAN},
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_PROVENANCE},
+				{Address: norm1, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: norm2, Role: types.PartyType_PARTY_TYPE_CONTROLLER},
+			},
+			requiredParties: []types.PartyType{
+				types.PartyType_PARTY_TYPE_PROVENANCE,
+				types.PartyType_PARTY_TYPE_OWNER,
+				types.PartyType_PARTY_TYPE_CONTROLLER,
+				types.PartyType_PARTY_TYPE_CUSTODIAN,
+			},
+			errorMsg: "",
+		},
+		{
+			name: "four parties one wasm non-prov",
+			parties: []types.Party{
+				{Address: norm1, Role: types.PartyType_PARTY_TYPE_CUSTODIAN},
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_INVESTOR},
+				{Address: norm1, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: norm2, Role: types.PartyType_PARTY_TYPE_CONTROLLER},
+			},
+			requiredParties: []types.PartyType{
+				types.PartyType_PARTY_TYPE_INVESTOR,
+				types.PartyType_PARTY_TYPE_OWNER,
+				types.PartyType_PARTY_TYPE_CONTROLLER,
+				types.PartyType_PARTY_TYPE_CUSTODIAN,
+			},
+			errorMsg: fmt.Sprintf("account %q is a smart contract but does not have the PROVENANCE role", wasm),
+		},
+		{
+			name: "four parties one prov non-wasm",
+			parties: []types.Party{
+				{Address: norm1, Role: types.PartyType_PARTY_TYPE_CUSTODIAN},
+				{Address: norm2, Role: types.PartyType_PARTY_TYPE_PROVENANCE},
+				{Address: norm1, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: norm2, Role: types.PartyType_PARTY_TYPE_CONTROLLER},
+			},
+			requiredParties: []types.PartyType{
+				types.PartyType_PARTY_TYPE_PROVENANCE,
+				types.PartyType_PARTY_TYPE_OWNER,
+				types.PartyType_PARTY_TYPE_CONTROLLER,
+				types.PartyType_PARTY_TYPE_CUSTODIAN,
+			},
+			errorMsg: fmt.Sprintf("account %q has role PROVENANCE but is not a smart contract", norm2),
+		},
+		{
+			name: "four parties all wasm no prov",
+			parties: []types.Party{
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_CUSTODIAN},
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_OMNIBUS},
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_CONTROLLER},
+			},
+			requiredParties: []types.PartyType{
+				types.PartyType_PARTY_TYPE_OMNIBUS,
+				types.PartyType_PARTY_TYPE_OWNER,
+				types.PartyType_PARTY_TYPE_CONTROLLER,
+				types.PartyType_PARTY_TYPE_CUSTODIAN,
+			},
+			errorMsg: fmt.Sprintf("account %q is a smart contract but does not have the PROVENANCE role", wasm),
+		},
+		{
+			name: "four parties all wasm third prov",
+			parties: []types.Party{
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_CUSTODIAN},
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_OMNIBUS},
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_PROVENANCE},
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_CONTROLLER},
+			},
+			requiredParties: []types.PartyType{
+				types.PartyType_PARTY_TYPE_OMNIBUS,
+				types.PartyType_PARTY_TYPE_PROVENANCE,
+				types.PartyType_PARTY_TYPE_CONTROLLER,
+				types.PartyType_PARTY_TYPE_CUSTODIAN,
+			},
+			errorMsg: "",
+		},
+		{
+			name: "four parties none wasm none prov",
+			parties: []types.Party{
+				{Address: norm1, Role: types.PartyType_PARTY_TYPE_CUSTODIAN},
+				{Address: norm2, Role: types.PartyType_PARTY_TYPE_OMNIBUS},
+				{Address: norm1, Role: types.PartyType_PARTY_TYPE_SERVICER},
+				{Address: norm2, Role: types.PartyType_PARTY_TYPE_CONTROLLER},
+			},
+			requiredParties: []types.PartyType{
+				types.PartyType_PARTY_TYPE_OMNIBUS,
+				types.PartyType_PARTY_TYPE_SERVICER,
+				types.PartyType_PARTY_TYPE_CONTROLLER,
+				types.PartyType_PARTY_TYPE_CUSTODIAN,
+			},
+			errorMsg: "",
+		},
+		{
+			name: "wasm prov present not required",
+			parties: []types.Party{
+				{Address: norm1, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: norm2, Role: types.PartyType_PARTY_TYPE_SERVICER},
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_PROVENANCE},
+			},
+			requiredParties: []types.PartyType{
+				types.PartyType_PARTY_TYPE_OWNER,
+				types.PartyType_PARTY_TYPE_SERVICER,
+			},
+			errorMsg: "",
+		},
+		{
+			name: "wasm non-prov present not required",
+			parties: []types.Party{
+				{Address: norm1, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: norm2, Role: types.PartyType_PARTY_TYPE_SERVICER},
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_CUSTODIAN},
+			},
+			requiredParties: []types.PartyType{
+				types.PartyType_PARTY_TYPE_OWNER,
+				types.PartyType_PARTY_TYPE_SERVICER,
+			},
+			errorMsg: fmt.Sprintf("account %q is a smart contract but does not have the PROVENANCE role", wasm),
+		},
+		{
+			name: "prov non-wasm present not required",
+			parties: []types.Party{
+				{Address: norm1, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: norm2, Role: types.PartyType_PARTY_TYPE_SERVICER},
+				{Address: norm1, Role: types.PartyType_PARTY_TYPE_PROVENANCE},
+			},
+			requiredParties: []types.PartyType{
+				types.PartyType_PARTY_TYPE_OWNER,
+				types.PartyType_PARTY_TYPE_SERVICER,
+			},
+			errorMsg: fmt.Sprintf("account %q has role PROVENANCE but is not a smart contract", norm1),
+		},
+		{
+			name: "wasm prov not required fills other role too",
+			parties: []types.Party{
+				{Address: norm1, Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_SERVICER},
+				{Address: wasm, Role: types.PartyType_PARTY_TYPE_PROVENANCE},
+			},
+			requiredParties: []types.PartyType{
+				types.PartyType_PARTY_TYPE_OWNER,
+				types.PartyType_PARTY_TYPE_SERVICER,
+			},
+			errorMsg: "",
+		},
 	}
 
 	for _, tc := range cases {
