@@ -24,6 +24,7 @@ on:
 # This helps avoid a buf push failure due to a new third party proto reference.
 jobs:
   push_third_party:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
