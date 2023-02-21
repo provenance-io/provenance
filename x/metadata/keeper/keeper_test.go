@@ -119,54 +119,52 @@ func ownerPartyList(addresses ...string) []types.Party {
 }
 
 func (s *KeeperTestSuite) TestValidatePartiesInvolved() {
-	cases := map[string]struct {
+	cases := []struct {
+		name            string
 		parties         []types.Party
 		requiredParties []types.PartyType
-		wantErr         bool
 		errorMsg        string
 	}{
-		"valid, matching no parties involved": {
+		{
+			name:            "matching no parties involved",
 			parties:         []types.Party{},
 			requiredParties: []types.PartyType{},
-			wantErr:         false,
 			errorMsg:        "",
 		},
-		"invalid, parties contain no required parties": {
+		{
+			name:            "parties contain no required parties",
 			parties:         []types.Party{},
 			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE},
-			wantErr:         true,
 			errorMsg:        "missing party type required by spec: [AFFILIATE]",
 		},
-		"invalid, missing one required party": {
+		{
+			name:            "missing one required party",
 			parties:         []types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
 			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE},
-			wantErr:         true,
 			errorMsg:        "missing party type required by spec: [AFFILIATE]",
 		},
-		"invalid, missing twp required parties": {
+		{
+			name:            "missing twp required parties",
 			parties:         []types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
 			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE, types.PartyType_PARTY_TYPE_INVESTOR},
-			wantErr:         true,
 			errorMsg:        "missing party types required by spec: [AFFILIATE INVESTOR]",
 		},
-		"valid, required parties fulfilled": {
+		{
+			name:            "required parties fulfilled",
 			parties:         []types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
 			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_CUSTODIAN},
-			wantErr:         false,
 			errorMsg:        "",
 		},
 		// TODO[1381]: More ValidatePartiesInvolved unit test cases.
 	}
 
-	for n, tc := range cases {
-		tc := tc
-
-		s.T().Run(n, func(t *testing.T) {
+	for _, tc := range cases {
+		s.Run(tc.name, func() {
 			err := s.app.MetadataKeeper.ValidatePartiesInvolved(s.ctx, tc.parties, tc.requiredParties)
-			if tc.wantErr {
-				assert.EqualError(t, err, tc.errorMsg)
+			if len(tc.errorMsg) > 0 {
+				s.Assert().EqualError(err, tc.errorMsg, "ValidatePartiesInvolved")
 			} else {
-				assert.NoError(t, err)
+				s.Assert().NoError(err, "ValidatePartiesInvolved")
 			}
 		})
 	}
