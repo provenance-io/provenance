@@ -147,7 +147,7 @@ func (s *HandlerTestSuite) TestMsgAddMarkerRequest() {
 			"should fail to ADD new marker, invalid status",
 			activeStatus,
 			[]string{s.user1},
-			"marker can only be created with a Proposed or Finalized status: invalid request",
+			"a marker can not be created in an ACTIVE status: invalid request",
 			nil,
 		},
 		{

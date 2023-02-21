@@ -300,6 +300,7 @@ func AddRootDomainAccountCmd(defaultNodeHome string) *cobra.Command {
 	return cmd
 }
 
+// TODO: add required attrs
 // AddGenesisMarkerCmd configures a marker account and adds it to the list of genesis accounts
 func AddGenesisMarkerCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
