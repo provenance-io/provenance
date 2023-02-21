@@ -573,6 +573,12 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 	if err != nil {
 		return nil, err
 	}
+
+	normalizedReqAttrs, err := k.NormalizeRequiredAttributes(ctx, msg.RequiredAttributes)
+	if err != nil {
+		return nil, err
+	}
+
 	account := authtypes.NewBaseAccount(addr, nil, 0, 0)
 	ma := types.NewMarkerAccount(
 		account,
@@ -582,7 +588,7 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 		types.StatusProposed,
 		msg.MarkerType,
 		msg.SupplyFixed,
-		msg.RequiredAttributes,
+		normalizedReqAttrs,
 	)
 
 	if k.GetEnableGovernance(ctx) {

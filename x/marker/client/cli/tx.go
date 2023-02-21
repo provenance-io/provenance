@@ -196,7 +196,6 @@ Valid Proposal Types (and associated parameters):
 	return cmd
 }
 
-// TODO: add required attrs
 // GetCmdAddMarker implements the create marker command
 func GetCmdAddMarker() *cobra.Command {
 	cmd := &cobra.Command{
@@ -243,11 +242,10 @@ with the given supply amount and denomination provided in the coin argument
 			if err != nil {
 				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagAllowGovernanceControl, err)
 			}
-			reqAttrString, err := cmd.Flags().GetString(FlagRequiredAttributes)
+			requiredAttributes, err := parseRestrictedAttributes(cmd)
 			if err != nil {
 				return err
 			}
-			requiredAttributes := strings.Split(reqAttrString, ",")
 			msg := types.NewMsgAddMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue, supplyFixed, allowGovernanceControl, requiredAttributes)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -927,7 +925,6 @@ Examples:
 	return cmd
 }
 
-// TODO: add required attrs
 // GetCmdAddFinalizeActivateMarker implements the add finalize activate marker command
 func GetCmdAddFinalizeActivateMarker() *cobra.Command {
 	cmd := &cobra.Command{
@@ -978,11 +975,10 @@ with the given supply amount and denomination provided in the coin argument
 			if len(accessGrants) == 0 {
 				panic("at least one access grant should be present.")
 			}
-			reqAttrString, err := cmd.Flags().GetString(FlagRequiredAttributes)
+			requiredAttributes, err := parseRestrictedAttributes(cmd)
 			if err != nil {
 				return err
 			}
-			requiredAttributes := strings.Split(reqAttrString, ",")
 			msg := types.NewMsgAddFinalizeActivateMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue, supplyFixed, allowGovernanceControl, accessGrants, requiredAttributes)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -1026,4 +1022,16 @@ func ParseAccessGrantFromString(addressPermissionString string) []types.AccessGr
 		grants = append(grants, *types.NewAccessGrant(address, permissions))
 	}
 	return grants
+}
+
+func parseRestrictedAttributes(cmd *cobra.Command) ([]string, error) {
+	reqAttrString, err := cmd.Flags().GetString(FlagRequiredAttributes)
+	if err != nil {
+		return nil, err
+	}
+	var requiredAttributes []string
+	if len(reqAttrString) > 1 {
+		requiredAttributes = strings.Split(reqAttrString, ",")
+	}
+	return requiredAttributes, nil
 }
