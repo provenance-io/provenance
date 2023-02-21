@@ -81,6 +81,10 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 	}
 
 	normalizedReqAttrs, err := k.NormalizeRequiredAttributes(ctx, msg.RequiredAttributes)
+	if err != nil {
+		return nil, err
+	}
+
 	account := authtypes.NewBaseAccount(addr, nil, 0, 0)
 	ma := types.NewMarkerAccount(
 		account,
