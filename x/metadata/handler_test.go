@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -53,8 +54,12 @@ func (s *MetadataHandlerTestSuite) SetupTest() {
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
 	s.user2 = s.user2Addr.String()
 
-	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
-	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr))
+	acct1 := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr)
+	s.Require().NoError(acct1.SetSequence(1), "setting account 1 sequence")
+	s.app.AccountKeeper.SetAccount(s.ctx, acct1)
+	acct2 := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr)
+	s.Require().NoError(acct2.SetSequence(1), "setting account 2 sequence")
+	s.app.AccountKeeper.SetAccount(s.ctx, acct2)
 }
 
 func TestMetadataHandlerTestSuite(t *testing.T) {

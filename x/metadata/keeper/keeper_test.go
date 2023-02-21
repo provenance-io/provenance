@@ -70,7 +70,9 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
-	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+	acct1 := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr)
+	s.Require().NoError(acct1.SetSequence(1), "setting sequence of account 1")
+	s.app.AccountKeeper.SetAccount(s.ctx, acct1)
 
 	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
@@ -117,7 +119,6 @@ func ownerPartyList(addresses ...string) []types.Party {
 }
 
 func (s *KeeperTestSuite) TestValidatePartiesInvolved() {
-
 	cases := map[string]struct {
 		parties         []types.Party
 		requiredParties []types.PartyType
@@ -137,23 +138,24 @@ func (s *KeeperTestSuite) TestValidatePartiesInvolved() {
 			errorMsg:        "missing party type required by spec: [AFFILIATE]",
 		},
 		"invalid, missing one required party": {
-			parties:         []types.Party{{Address: "address", Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
+			parties:         []types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
 			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE},
 			wantErr:         true,
 			errorMsg:        "missing party type required by spec: [AFFILIATE]",
 		},
 		"invalid, missing twp required parties": {
-			parties:         []types.Party{{Address: "address", Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
+			parties:         []types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
 			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE, types.PartyType_PARTY_TYPE_INVESTOR},
 			wantErr:         true,
 			errorMsg:        "missing party types required by spec: [AFFILIATE INVESTOR]",
 		},
 		"valid, required parties fulfilled": {
-			parties:         []types.Party{{Address: "address", Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
+			parties:         []types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
 			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_CUSTODIAN},
 			wantErr:         false,
 			errorMsg:        "",
 		},
+		// TODO[1381]: More ValidatePartiesInvolved unit test cases.
 	}
 
 	for n, tc := range cases {
