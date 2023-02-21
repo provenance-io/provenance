@@ -29,7 +29,20 @@ func TestProposalContents(t *testing.T) {
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalContents function
-	weightedProposalContent := simulation.ProposalContents(keeper.NewKeeper(app.AppCodec(), app.GetKey(types.ModuleName), app.GetSubspace(types.ModuleName), app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper, app.TransferKeeper, app.AttributeKeeper, app.GetKey(banktypes.StoreKey)))
+	weightedProposalContent := simulation.ProposalContents(
+		keeper.NewKeeper(
+			app.AppCodec(),
+			app.GetKey(types.ModuleName),
+			app.GetSubspace(types.ModuleName),
+			app.AccountKeeper,
+			app.BankKeeper,
+			app.AuthzKeeper,
+			app.FeeGrantKeeper,
+			app.TransferKeeper,
+			app.AttributeKeeper,
+			app.NameKeeper,
+			app.GetKey(banktypes.StoreKey)),
+	)
 	require.Len(t, weightedProposalContent, 7)
 
 	w0 := weightedProposalContent[0]

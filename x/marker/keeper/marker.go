@@ -863,3 +863,19 @@ func (k Keeper) ensureSendEnabledStatus(ctx sdk.Context, denom string, sendEnabl
 		}
 	}
 }
+
+func (k Keeper) NormalizeRequiredAttributes(ctx sdk.Context, requiredAttributes []string) ([]string, error) {
+	maxLength := int(k.attrKeeper.GetMaxValueLength(ctx))
+	result := make([]string, len(requiredAttributes))
+	for i, attr := range requiredAttributes {
+		if len(attr) > maxLength {
+			return nil, fmt.Errorf("required attribute %v length is too long %v : %v ", attr, len(attr), maxLength)
+		}
+		normalizedAttr, err := k.nameKeeper.Normalize(ctx, attr)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = normalizedAttr
+	}
+	return result, nil
+}

@@ -20,6 +20,7 @@ import (
 
 	attrkeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
+	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 )
 
 // Handler is a handler function for use with IterateRecords.
@@ -67,6 +68,7 @@ type Keeper struct {
 
 	attrKeeper attrkeeper.Keeper
 
+	nameKeeper namekeeper.Keeper
 	// For access to bank keeper storage outside what their keeper provides.
 	bankKeeperStoreKey storetypes.StoreKey
 
@@ -94,6 +96,7 @@ func NewKeeper(
 	feegrantKeeper feegrantkeeper.Keeper,
 	ibcKeeper ibckeeper.Keeper,
 	attrKeeper attrkeeper.Keeper,
+	nameKeeper namekeeper.Keeper,
 	bankKey storetypes.StoreKey,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
@@ -108,6 +111,7 @@ func NewKeeper(
 		feegrantKeeper:     feegrantKeeper,
 		ibcKeeper:          ibcKeeper,
 		attrKeeper:         attrKeeper,
+		nameKeeper:         nameKeeper,
 		storeKey:           key,
 		bankKeeperStoreKey: bankKey,
 		cdc:                cdc,
