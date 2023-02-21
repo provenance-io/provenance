@@ -49,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * Correctly log streaming plugin loading errors [PR 1356](https://github.com/provenance-io/provenance/pull/1356).
+* Fix third party Protobuf workflow checks on Provenance release steps [#1339](https://github.com/provenance-io/provenance/issues/1339)
 
 ### Client Breaking
 
