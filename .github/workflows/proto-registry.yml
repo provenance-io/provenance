@@ -8,6 +8,7 @@ on:
     paths:
       - "third_party/**.proto"
       - ".github/workflows/proto-registry.yml"
+  workflow_dispatch:
 
 # Concurrency is not defined in here because this job usually doesn't run
 # long enough to need cancelling, and it's okay for it to run multiple times.
@@ -23,7 +24,6 @@ on:
 # This helps avoid a buf push failure due to a new third party proto reference.
 jobs:
   push_third_party:
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
