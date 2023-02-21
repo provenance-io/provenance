@@ -9,11 +9,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
-
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/cmd/dbmigrate/utils"

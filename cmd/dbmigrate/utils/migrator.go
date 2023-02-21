@@ -12,6 +12,7 @@ import (
 	"time"
 
 	copier "github.com/otiai10/copy"
+
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	tmdb "github.com/tendermint/tm-db"
 )

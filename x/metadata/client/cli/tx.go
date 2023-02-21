@@ -11,11 +11,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (

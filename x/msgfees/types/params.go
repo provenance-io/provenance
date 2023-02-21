@@ -3,10 +3,10 @@ package types
 import (
 	"fmt"
 
-	"github.com/provenance-io/provenance/internal/pioconfig"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
 // DefaultFloorGasPrice to differentiate between base fee and additional fee when additional fee is in same denom as default base denom i.e nhash

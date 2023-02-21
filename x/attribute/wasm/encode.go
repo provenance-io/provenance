@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/internal/provwasm"
 	"github.com/provenance-io/provenance/x/attribute/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Compile time interface check

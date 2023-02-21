@@ -3,10 +3,10 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/provenance-io/provenance/x/marker/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
+	"github.com/provenance-io/provenance/x/marker/types"
 )
 
 // The name of the marker supply invariant

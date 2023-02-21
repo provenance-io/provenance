@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
-
 	"github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
