@@ -331,14 +331,23 @@ func (k Keeper) ValidatePartiesInvolved(ctx sdk.Context, parties []types.Party, 
 		return fmt.Errorf("missing party type%s required by spec: %v", pluralEnding(len(missing)), missing)
 	}
 
-	for i, party := range parties {
-		acct := k.authKeeper.GetAccount(ctx, sdk.MustAccAddressFromBech32(party.Address))
-		isWasmAcct := acct != nil && acct.GetSequence() == 0 && acct.GetPubKey() == nil
-		if isWasmAcct && party.Role != types.PartyType_PARTY_TYPE_PROVENANCE {
-			return fmt.Errorf("smart contract address %q must have role PROVENANCE: index %d", party.Address, i)
+	addrs := make([]string, 0, len(parties))
+	addrHasProvRole := make(map[string]bool)
+	for _, party := range parties {
+		if _, known := addrHasProvRole[party.Address]; !known {
+			addrs = append(addrs, party.Address)
 		}
-		if !isWasmAcct && party.Role == types.PartyType_PARTY_TYPE_PROVENANCE {
-			return fmt.Errorf("role PROVENANCE must have a smart contract address, got %q: index %d", party.Address, i)
+		addrHasProvRole[party.Address] = addrHasProvRole[party.Address] || party.Role == types.PartyType_PARTY_TYPE_PROVENANCE
+	}
+
+	for _, addr := range addrs {
+		acct := k.authKeeper.GetAccount(ctx, sdk.MustAccAddressFromBech32(addr))
+		isWasmAcct := acct != nil && acct.GetSequence() == 0 && acct.GetPubKey() == nil
+		if isWasmAcct && !addrHasProvRole[addr] {
+			return fmt.Errorf("account %q is a smart contract but does not have the PROVENANCE role", addr)
+		}
+		if !isWasmAcct && addrHasProvRole[addr] {
+			return fmt.Errorf("account %q has role PROVENANCE but is not a smart contract", addr)
 		}
 	}
 
