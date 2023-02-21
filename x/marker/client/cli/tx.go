@@ -43,6 +43,7 @@ const (
 	FlagPacketTimeoutTimestamp = "packet-timeout-timestamp"
 	FlagAbsoluteTimeouts       = "absolute-timeouts"
 	FlagMemo                   = "memo"
+	FlagRequiredAttributes     = "required-attributes"
 )
 
 // NewTxCmd returns the top-level command for marker CLI transactions.
@@ -206,7 +207,12 @@ func GetCmdAddMarker() *cobra.Command {
 		Long: strings.TrimSpace(`Creates a new marker in the Proposed state managed by the from address
 with the given supply amount and denomination provided in the coin argument
 `),
-		Example: fmt.Sprintf(`$ %s tx marker new 1000hotdogcoin --%s=false --%s=false --from=mykey`, FlagType, FlagSupplyFixed, FlagAllowGovernanceControl),
+		Example: fmt.Sprintf(`$ %s tx marker new 1000hotdogcoin --%s=false --%s=false --from=mykey --%s=attr.one,*.attr.two,...`,
+			FlagType,
+			FlagSupplyFixed,
+			FlagAllowGovernanceControl,
+			FlagRequiredAttributes,
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -237,7 +243,12 @@ with the given supply amount and denomination provided in the coin argument
 			if err != nil {
 				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagAllowGovernanceControl, err)
 			}
-			msg := types.NewMsgAddMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue, supplyFixed, allowGovernanceControl)
+			reqAttrString, err := cmd.Flags().GetString(FlagRequiredAttributes)
+			if err != nil {
+				return err
+			}
+			requiredAttributes := strings.Split(reqAttrString, ",")
+			msg := types.NewMsgAddMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue, supplyFixed, allowGovernanceControl, requiredAttributes)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -245,6 +256,7 @@ with the given supply amount and denomination provided in the coin argument
 	cmd.Flags().String(FlagType, "COIN", "a marker type to assign (default is COIN)")
 	cmd.Flags().Bool(FlagSupplyFixed, false, "a true or false value to denote if a supply is fixed (default is false)")
 	cmd.Flags().Bool(FlagAllowGovernanceControl, false, "a true or false value to denote if marker is allowed governance control (default is false)")
+	cmd.Flags().String(FlagRequiredAttributes, "", "comma delimited list of required attributes needed for a restricted marker to have send authority")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -926,7 +938,12 @@ func GetCmdAddFinalizeActivateMarker() *cobra.Command {
 		Long: strings.TrimSpace(`Creates a new marker, finalizes it and put's it ACTIVATED state managed by the from address
 with the given supply amount and denomination provided in the coin argument
 `),
-		Example: fmt.Sprintf(`$ %s tx marker create-finalize-activate 1000hotdogcoin address1,mint,admin;address2,burn --%s=false --%s=false --from=mykey`, FlagType, FlagSupplyFixed, FlagAllowGovernanceControl),
+		Example: fmt.Sprintf(`$ %s tx marker create-finalize-activate 1000hotdogcoin address1,mint,admin;address2,burn --%s=false --%s=false --%s=attr.one,*.attr.two,... --from=mykey`,
+			FlagType,
+			FlagSupplyFixed,
+			FlagAllowGovernanceControl,
+			FlagRequiredAttributes,
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -961,7 +978,12 @@ with the given supply amount and denomination provided in the coin argument
 			if len(accessGrants) == 0 {
 				panic("at least one access grant should be present.")
 			}
-			msg := types.NewMsgAddFinalizeActivateMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue, supplyFixed, allowGovernanceControl, accessGrants)
+			reqAttrString, err := cmd.Flags().GetString(FlagRequiredAttributes)
+			if err != nil {
+				return err
+			}
+			requiredAttributes := strings.Split(reqAttrString, ",")
+			msg := types.NewMsgAddFinalizeActivateMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue, supplyFixed, allowGovernanceControl, accessGrants, requiredAttributes)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -969,6 +991,7 @@ with the given supply amount and denomination provided in the coin argument
 	cmd.Flags().String(FlagType, "COIN", "a marker type to assign (default is COIN)")
 	cmd.Flags().Bool(FlagSupplyFixed, false, "a true or false value to denote if a supply is fixed (default is false)")
 	cmd.Flags().Bool(FlagAllowGovernanceControl, false, "a true or false value to denote if marker is allowed governance control (default is false)")
+	cmd.Flags().String(FlagRequiredAttributes, "", "comma delimited list of required attributes needed for a restricted marker to have send authority")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

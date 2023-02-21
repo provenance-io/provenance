@@ -164,6 +164,45 @@ func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 	}
 }
 
+func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
+	validAddress := sdk.MustAccAddressFromBech32("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck")
+
+	cases := []struct {
+		name     string
+		msg      MsgAddMarkerRequest
+		errorMsg string
+	}{
+		{
+			"should fail on attributes for non restricted coin",
+			*NewMsgAddMarkerRequest(
+				"hotdog",
+				sdk.NewInt(100),
+				validAddress,
+				validAddress,
+				MarkerType_Coin,
+				true,
+				true,
+				[]string{"blah"},
+			),
+			"required attributes are reserved for restricted markers",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.errorMsg) > 0 {
+				assert.Error(t, err)
+				assert.Equal(t, tc.errorMsg, err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 	validAddress := sdk.MustAccAddressFromBech32("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck")
 
@@ -212,8 +251,24 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				true,
 				[]AccessGrant{},
+				[]string{},
 			),
 			"since this will activate the marker, must have access list defined",
+		},
+		{
+			"should fail on attributes for non restricted coin",
+			*NewMsgAddFinalizeActivateMarkerRequest(
+				"hotdog",
+				sdk.NewInt(100),
+				validAddress,
+				validAddress,
+				MarkerType_Coin,
+				true,
+				true,
+				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				[]string{"blah"},
+			),
+			"required attributes are reserved for restricted markers",
 		},
 		{
 			"should succeed",
@@ -226,6 +281,22 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				true,
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				[]string{},
+			),
+			"",
+		},
+		{
+			"should succeed for restricted coin with required attributes",
+			*NewMsgAddFinalizeActivateMarkerRequest(
+				"hotdog",
+				sdk.NewInt(100),
+				validAddress,
+				validAddress,
+				MarkerType_RestrictedCoin,
+				true,
+				true,
+				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				[]string{"blah"},
 			),
 			"",
 		},

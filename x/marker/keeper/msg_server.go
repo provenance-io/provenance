@@ -59,15 +59,11 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *types.MsgGrantAllo
 func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerRequest) (*types.MsgAddMarkerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Validate transaction message.
-	err := msg.ValidateBasic()
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	}
 	if msg.Status >= types.StatusActive {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("a marker can not be created in an ACTIVE status")
 	}
 
+	var err error
 	// Add marker requests must pass extra validation for denom (in addition to regular coin validation expression)
 	if err = k.ValidateUnrestictedDenom(ctx, msg.Amount.Denom); err != nil {
 		return nil, err

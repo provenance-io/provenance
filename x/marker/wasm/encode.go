@@ -120,6 +120,7 @@ type TransferParams struct {
 	From string `json:"from"`
 }
 
+// TODO: add required attributes param
 // Encoder returns a smart contract message encoder for the name module.
 func Encoder(contract sdk.AccAddress, msg json.RawMessage, version string) ([]sdk.Msg, error) {
 	wrapper := struct {
@@ -173,8 +174,9 @@ func (params *CreateMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, er
 	if err != nil {
 		return nil, fmt.Errorf("wasm: invalid marker type in CreateMarkerParams: %w", err)
 	}
+	// TODO: add required attributes param
 	msg := types.NewMsgAddMarkerRequest(
-		params.Coin.Denom, params.Coin.Amount, contract, contract, markerType, false, false,
+		params.Coin.Denom, params.Coin.Amount, contract, contract, markerType, false, false, []string{},
 	)
 
 	return []sdk.Msg{msg}, nil

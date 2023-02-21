@@ -164,8 +164,9 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk
 			node.Address,
 			node.Address,
 			markertypes.MarkerType_Coin,
-			true, // fixed supply
-			true, // allow gov
+			true,       // fixed supply
+			true,       // allow gov
+			[]string{}, // required attributes
 		)
 
 		// fund the node account to do all of these txs
