@@ -353,6 +353,11 @@ lint:
 	scripts/no-now-lint.sh
 	$(GO) mod verify
 
+lint-fix:
+	$(GOLANGCI_LINT) run --fix
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "./client/*" -not -path "*.git*" -not -path "*.pb.go" | xargs gofmt -w -s
+	$(GO) mod tidy
+
 clean:
 	rm -rf $(BUILDDIR)/*
 

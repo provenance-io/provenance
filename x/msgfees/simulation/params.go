@@ -7,12 +7,10 @@ import (
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/provenance-io/provenance/x/msgfees/types"
-
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 const (

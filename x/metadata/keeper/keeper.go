@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/gogo/protobuf/proto"
+
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -12,8 +16,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzKeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/gogo/protobuf/proto"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
 )

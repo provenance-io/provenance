@@ -7,12 +7,9 @@ import (
 	"math/rand"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
 
-	"github.com/provenance-io/provenance/x/attribute/client/cli"
-	"github.com/provenance-io/provenance/x/attribute/keeper"
-	"github.com/provenance-io/provenance/x/attribute/simulation"
-	"github.com/provenance-io/provenance/x/attribute/types"
-	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -22,8 +19,12 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/provenance-io/provenance/x/attribute/client/cli"
+	"github.com/provenance-io/provenance/x/attribute/keeper"
+	"github.com/provenance-io/provenance/x/attribute/simulation"
+	"github.com/provenance-io/provenance/x/attribute/types"
+	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 )
 
 var (

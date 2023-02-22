@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/provenance-io/provenance/x/name/types"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -12,8 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/provenance-io/provenance/x/name/types"
 )
 
 const (

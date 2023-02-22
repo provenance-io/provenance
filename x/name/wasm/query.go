@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/internal/provwasm"
 	"github.com/provenance-io/provenance/x/name/keeper"
 	"github.com/provenance-io/provenance/x/name/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NameQueryParams represents the request type for the name module sent by a smart contracts.
