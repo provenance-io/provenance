@@ -1,9 +1,9 @@
 package keeper
 
 import (
-	types "github.com/provenance-io/provenance/x/name/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	types "github.com/provenance-io/provenance/x/name/types"
 )
 
 // InitGenesis creates the initial genesis state for the name module.

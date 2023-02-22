@@ -3,7 +3,7 @@ package keeper
 import (
 	"strings"
 
-	"github.com/provenance-io/provenance/x/metadata/types"
+	"github.com/google/uuid"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -11,7 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/google/uuid"
+
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // NewQuerier creates a querier for auth REST endpoints

@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/provenance-io/provenance/x/name/types"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -15,8 +16,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/provenance-io/provenance/x/name/types"
 )
 
 // The flag for creating unrestricted names

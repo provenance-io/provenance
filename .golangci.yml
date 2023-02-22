@@ -13,6 +13,7 @@ linters:
     - errcheck
     - errorlint
     - exportloopref
+    - gci
     - goconst
     - gocritic
     - gofmt
@@ -65,6 +66,17 @@ issues:
   max-same-issues: 10000
 
 linters-settings:
+  gci:
+    custom-order: true
+    sections:
+      - standard
+      - default
+      - prefix(github.com/tendermint)
+      - prefix(cosmossdk.io)
+      - prefix(github.com/cosmos)
+      - prefix(github.com/provenance-io)
+      - blank
+      - dot
   govet:
     check-shadowing: true
     settings:
@@ -80,7 +92,6 @@ linters-settings:
   #   min-complexity: 15
   dogsled:
     max-blank-identifiers: 3
-
   misspell:
     locale: US
     ignore-words:

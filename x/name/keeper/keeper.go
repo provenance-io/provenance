@@ -5,6 +5,7 @@ import (
 	"unicode"
 
 	"github.com/google/uuid"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"

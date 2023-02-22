@@ -1,10 +1,11 @@
 package statesync
 
 import (
-	"github.com/cosmos/cosmos-sdk/version"
 	tmrpccore "github.com/tendermint/tendermint/rpc/core"
 	tmrpc "github.com/tendermint/tendermint/rpc/jsonrpc/server"
 	tmrpctypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
+
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 func RegisterSyncStatus() {

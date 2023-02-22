@@ -2,13 +2,12 @@ package msgfees
 
 import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-
-	"github.com/provenance-io/provenance/x/msgfees/keeper"
-	"github.com/provenance-io/provenance/x/msgfees/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+
+	"github.com/provenance-io/provenance/x/msgfees/keeper"
+	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 func NewProposalHandler(k keeper.Keeper, registry cdctypes.InterfaceRegistry) govtypesv1beta1.Handler {
