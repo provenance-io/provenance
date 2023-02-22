@@ -41,17 +41,24 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
-## [v1.14.0](https://github.com/provenance-io/provenance/releases/tag/v1.14.0) - 2023-02-22
+## [v1.14.0](https://github.com/provenance-io/provenance/releases/tag/v1.14.0) - 2023-02-23
+
+The Provenance Blockchain `v1.14.0` release includes several new features, improvements and bug fixes.
+Noteably, support is added for state listing using plugins.
+Also, new limitations are put in place preventing the concentration of voting power.
+The `x/quarantine` and `x/sanction` modules have been added too.
+
+The `paua` upgrade will increase all validators' max commission to 100% and max change in commission to 5% (if currently less than that).
 
 ### Features
 
+* Enable ADR-038 State Listening in Provenance [PR 1334](https://github.com/provenance-io/provenance/pull/1334).
+* Added the `x/quarantine` module [PR 1317](https://github.com/provenance-io/provenance/pull/1317).
+* Added the `x/sanction` module [PR 1317](https://github.com/provenance-io/provenance/pull/1317).
 * Added support to set a list of specific recipients allowed for send authorizations in the marker module [#1237](https://github.com/provenance-io/provenance/issues/1237).
 * Added a new name governance proposal that allows the fields of a name record to be updated. [PR 1266](https://github.com/provenance-io/provenance/pull/1266).
 * Added msg to add, finalize, and activate a marker in a single request [#770](https://github.com/provenance-io/provenance/issues/770).
-* Added the `x/quarantine` module [PR 1317](https://github.com/provenance-io/provenance/pull/1317).
-* Added the `x/sanction` module [PR 1317](https://github.com/provenance-io/provenance/pull/1317).
 * Staking concentration limit protection (prevents delegations to nodes with high voting power) [#1331](https://github.com/provenance-io/provenance/issues/1331).
-* Enable ADR-038 State Listening in Provenance [PR 1334](https://github.com/provenance-io/provenance/pull/1334).
 
 ### Improvements
 
