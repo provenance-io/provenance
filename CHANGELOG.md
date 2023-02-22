@@ -37,7 +37,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Improvements
+
+* Add the `gci` linter that enforces import group ordering. Create a 'lint-fix' make target [PR 1366](https://github.com/provenance-io/provenance/pull/1366).
+
+### Bug Fixes
+
+* Fix third party Protobuf workflow checks on Provenance release steps [#1339](https://github.com/provenance-io/provenance/issues/1339)
 
 ---
 
@@ -50,12 +56,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
   See its [RELEASE_NOTES.md](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.10-pio-1/RELEASE_NOTES.md) for details.
 * Create the `paua-rc2` upgrade handler that bumps validator max change rates and puts max gas back to what it used to be [PR 1373](https://github.com/provenance-io/provenance/pull/1373).
   This will only be applied to `testnet`.
-* Add the `gci` linter that enforces import group ordering. Create a 'lint-fix' make target [PR 1366](https://github.com/provenance-io/provenance/pull/1366).
 
 ### Bug Fixes
 
 * Correctly log streaming plugin loading errors [PR 1356](https://github.com/provenance-io/provenance/pull/1356).
-* Fix third party Protobuf workflow checks on Provenance release steps [#1339](https://github.com/provenance-io/provenance/issues/1339)
 
 ### Client Breaking
 
