@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/provenance-io/provenance/x/marker/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/x/marker/types"
 )
 
 // MarkerMsgParams are params for encoding []sdk.Msg types from the marker module.

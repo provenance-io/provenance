@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/internal/provwasm"
 	"github.com/provenance-io/provenance/x/attribute/keeper"
 	"github.com/provenance-io/provenance/x/attribute/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // AttributeQueryParams represents the request type for the attribute module sent by a smart contracts.

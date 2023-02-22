@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
