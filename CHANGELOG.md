@@ -50,6 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Correctly log streaming plugin loading errors [PR 1356](https://github.com/provenance-io/provenance/pull/1356).
 * Fix third party Protobuf workflow checks on Provenance release steps [#1339](https://github.com/provenance-io/provenance/issues/1339)
+* Fix committer email format in third party Protobuf workflow (for [#1339](https://github.com/provenance-io/provenance/issues/1339)) [PR 1385](https://github.com/provenance-io/provenance/pull/1385)
 
 ### Client Breaking
 
