@@ -9,6 +9,7 @@ import (
 	attrTypes "github.com/provenance-io/provenance/x/attribute/types"
 )
 
+// NormalizeRequiredAttributes normalizes the required attribute names using name module's Normalize method
 func (k Keeper) NormalizeRequiredAttributes(ctx sdk.Context, requiredAttributes []string) ([]string, error) {
 	maxLength := int(k.attrKeeper.GetMaxValueLength(ctx))
 	result := make([]string, len(requiredAttributes))
@@ -32,6 +33,7 @@ func (k Keeper) NormalizeRequiredAttributes(ctx sdk.Context, requiredAttributes 
 	return result, nil
 }
 
+// ContainsRequiredAttributes retrieves the attributes from address and checks that all required attributes are present
 func (k Keeper) ContainsRequiredAttributes(ctx sdk.Context, requiredAttributes []string, address string) (bool, error) {
 	attributes, err := k.attrKeeper.GetAllAttributes(ctx, address)
 	if err != nil {
@@ -41,6 +43,7 @@ func (k Keeper) ContainsRequiredAttributes(ctx sdk.Context, requiredAttributes [
 	return EnsureAllRequiredAttributesExist(requiredAttributes, attributes), nil
 }
 
+// EnsureAllRequiredAttributesExist checks that all requiredAttributes are in attributes list
 func EnsureAllRequiredAttributesExist(requiredAttributes []string, attributes []attrTypes.Attribute) bool {
 	for _, reqAttr := range requiredAttributes {
 		var match bool
@@ -57,6 +60,7 @@ func EnsureAllRequiredAttributesExist(requiredAttributes []string, attributes []
 	return true
 }
 
+// MatchAttribute compares required attribute against attribute string
 func MatchAttribute(reqAttr string, attr string) bool {
 	if len(reqAttr) < 1 {
 		return false
@@ -68,6 +72,7 @@ func MatchAttribute(reqAttr string, attr string) bool {
 	return reqAttr == attr
 }
 
+// ContainsWildCard checks if attribute starts with wildcard
 func ContainsWildCard(attr string) bool {
 	segs := strings.Split(attr, ".")
 	return len(segs) > 1 && segs[0] == "*"
