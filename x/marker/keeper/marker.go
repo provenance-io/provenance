@@ -2,14 +2,13 @@ package keeper
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 
@@ -864,30 +863,4 @@ func (k Keeper) ensureSendEnabledStatus(ctx sdk.Context, denom string, sendEnabl
 			k.bankKeeper.SetSendEnabled(ctx, denom, sendEnabled)
 		}
 	}
-}
-
-func (k Keeper) NormalizeRequiredAttributes(ctx sdk.Context, requiredAttributes []string) ([]string, error) {
-	maxLength := int(k.attrKeeper.GetMaxValueLength(ctx))
-	result := make([]string, len(requiredAttributes))
-	for i, attr := range requiredAttributes {
-		if len(attr) > maxLength {
-			return nil, fmt.Errorf("required attribute %v length is too long %v : %v ", attr, len(attr), maxLength)
-		}
-		var prefix string
-		if containsWildCard(attr) {
-			prefix = attr[:2]
-			attr = attr[2:]
-		}
-		normalizedAttr, err := k.nameKeeper.Normalize(ctx, attr)
-		if err != nil {
-			return nil, err
-		}
-		result[i] = fmt.Sprintf("%s%s", prefix, normalizedAttr)
-	}
-	return result, nil
-}
-
-func containsWildCard(attr string) bool {
-	segs := strings.Split(attr, ".")
-	return len(segs) > 1 && segs[0] == "*"
 }
