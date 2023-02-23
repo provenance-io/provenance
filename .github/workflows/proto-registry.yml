@@ -60,7 +60,8 @@ jobs:
           delete-branch: true
           # GitHub Personal Access Token (from the same account where the GPG key is stored)
           token: ${{ secrets.CPR_PAT }}
-          committer: ${{ steps.import_gpg.outputs.email }}
+          committer: ${{ steps.import_gpg.outputs.name }} <${{ steps.import_gpg.outputs.email }}>
+          author: ${{ steps.import_gpg.outputs.name }} <${{ steps.import_gpg.outputs.email }}>
           signoff: true
           title: 'Update buf.lock'
           body: |
