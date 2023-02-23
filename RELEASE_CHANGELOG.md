@@ -1,60 +1,36 @@
-## [v1.14.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.14.0-rc3) - 2023-02-17
+## [v1.14.0](https://github.com/provenance-io/provenance/releases/tag/v1.14.0) - 2023-02-23
 
-### Improvements
+The Provenance Blockchain `v1.14.0` release includes several new features, improvements and bug fixes.
+Noteably, support is added for state listing using plugins.
+Also, new limitations are put in place preventing the concentration of voting power.
+The `x/quarantine` and `x/sanction` modules have been added too.
 
-* Increase all validators' max commission change rate to 5% [PR 1360](https://github.com/provenance-io/provenance/pull/1360).
-* Bump Cosmos-SDK to v0.46.10-pio-1 (from [v0.46.8-pio-3](https://github.com/provenance-io/cosmos-sdk/compare/v0.46.8-pio-3...v0.46.10-pio-1)) [PR 1371](https://github.com/provenance-io/provenance/pull/1371).
-  See its [RELEASE_NOTES.md](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.10-pio-1/RELEASE_NOTES.md) for details.
-* Create the `paua-rc2` upgrade handler that bumps validator max change rates and puts max gas back to what it used to be [PR 1373](https://github.com/provenance-io/provenance/pull/1373).
-  This will only be applied to `testnet`.
-
-### Bug Fixes
-
-* Correctly log streaming plugin loading errors [PR 1356](https://github.com/provenance-io/provenance/pull/1356).
-
-### Client Breaking
-
-* No longer sign the mac binary, and stop including it in the release [PR 1367](https://github.com/provenance-io/provenance/pull/1367).
-
-### Full Commit History
-
-* https://github.com/provenance-io/provenance/compare/v1.14.0-rc2...v1.14.0-rc3
-* https://github.com/provenance-io/provenance/compare/v1.13.1...v1.14.0-rc3
-
----
-
-## [v1.14.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.14.0-rc2) - 2023-02-06
-
-### Improvements
-
-* Bump tendermint to Notional's v0.34.25 (from base repo's v0.34.24) [PR 1348](https://github.com/provenance-io/provenance/pull/1348).
-* Bump Cosmos-SDK to v0.46.8-pio-3 (from [v0.46.7-pio-2](https://github.com/provenance-io/cosmos-sdk/compare/v0.46.7-pio-2...v0.46.8-pio-3)) [PR 1348](https://github.com/provenance-io/provenance/pull/1348).
-* Set the immediate sanction/unsanction min deposits to 1,000,000 hash in the `paua` upgrade [PR 1345](https://github.com/provenance-io/provenance/pull/1345).
-
-### Full Commit History
-
-* https://github.com/provenance-io/provenance/compare/v1.14.0-rc1...v1.14.0-rc2
-* https://github.com/provenance-io/provenance/compare/v1.13.1...v1.14.0-rc2
-
----
-
-## [v1.14.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.14.0-rc1) - 2023-02-02
+The `paua` upgrade will increase all validators' max commission to 100% and max change in commission to 5% (if currently less than that).
 
 ### Features
 
-* Added support to set a list of specific recipients allowed for send authorizations in the marker module [#1237](https://github.com/provenance-io/provenance/issues/1237).
-* Added a new name governance proposal that allows the fields of a name record to be updated. [PR 1266](https://github.com/provenance-io/provenance/pull/1266).
-  The `restrict` flag has been changed to `unrestrict` in the `BindName` request and `CreateRootName` proposal.
-* Added msg to add, finalize, and activate a marker in a single request [#770](https://github.com/provenance-io/provenance/issues/770).
+* Enable ADR-038 State Listening in Provenance [PR 1334](https://github.com/provenance-io/provenance/pull/1334).
 * Added the `x/quarantine` module [PR 1317](https://github.com/provenance-io/provenance/pull/1317).
 * Added the `x/sanction` module [PR 1317](https://github.com/provenance-io/provenance/pull/1317).
+* Added support to set a list of specific recipients allowed for send authorizations in the marker module [#1237](https://github.com/provenance-io/provenance/issues/1237).
+* Added a new name governance proposal that allows the fields of a name record to be updated. [PR 1266](https://github.com/provenance-io/provenance/pull/1266).
+* Added msg to add, finalize, and activate a marker in a single request [#770](https://github.com/provenance-io/provenance/issues/770).
 * Staking concentration limit protection (prevents delegations to nodes with high voting power) [#1331](https://github.com/provenance-io/provenance/issues/1331).
-* Enable ADR-038 State Listening in Provenance
 
 ### Improvements
 
-* Bump Cosmos-SDK to v0.46.8-pio-2 (from [v0.46.7-pio-1](https://github.com/provenance-io/cosmos-sdk/compare/v0.46.7-pio-1...v0.46.8-pio-2)) [#1332](https://github.com/provenance-io/provenance/issues/1332).
-  See its [RELEASE_NOTES.md](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.8-pio-2/RELEASE_NOTES.md) for details.
+* Bump Cosmos-SDK to `v0.46.10-pio-1` (from `v0.46.6-pio-1`).
+  [PR 1371](https://github.com/provenance-io/provenance/pull/1371),
+  [PR 1348](https://github.com/provenance-io/provenance/pull/1348),
+  [PR 1334](https://github.com/provenance-io/provenance/pull/1334),
+  [PR 1348](https://github.com/provenance-io/provenance/pull/1348),
+  [PR 1317](https://github.com/provenance-io/provenance/pull/1317),
+  [PR 1278](https://github.com/provenance-io/provenance/pull/1278).  
+  See the following `RELEASE_NOTES.md` for details:
+  [v0.46.10-pio-1](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.10-pio-1/RELEASE_NOTES.md),
+  [v0.46.8-pio-3](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.8-pio-3/RELEASE_NOTES.md),
+  [v0.46.7-pio-1](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.7-pio-1/RELEASE_NOTES.md).  
+  Full Commit History: https://github.com/provenance-io/cosmos-sdk/compare/v0.46.6-pio-1...v0.46.10-pio-1
 * Added assess msg fees spec documentation [#1172](https://github.com/provenance-io/provenance/issues/1172).
 * Build dbmigrate and include it as an artifact with releases [#1264](https://github.com/provenance-io/provenance/issues/1264).
 * Removed, MsgFees Module 50/50 Fee Split on MsgAssessCustomMsgFeeRequest [#1263](https://github.com/provenance-io/provenance/issues/1263).
@@ -65,13 +41,19 @@
 * Removed legacy-amino [#1275](https://github.com/provenance-io/provenance/issues/1275).
 * Opened port 9091 on ibcnet container ibc1 to allow for reaching GRPC [PR 1314](https://github.com/provenance-io/provenance/pull/1314).
 * Increase all validators' max commission to 100% [PR 1333](https://github.com/provenance-io/provenance/pull/1333).
-* In testnet only, increase max gas per block to 120,000,000 (from 60,000,000) [PR 1335](https://github.com/provenance-io/provenance/pull/1335).
+* Increase all validators' max commission change rate to 5% [PR 1360](https://github.com/provenance-io/provenance/pull/1360).
+* Set the immediate sanction/unsanction min deposits to 1,000,000 hash in the `paua` upgrade [PR 1345](https://github.com/provenance-io/provenance/pull/1345).
 
 ### Bug Fixes
 
 * Update Maven publishing email to provenance [#1270](https://github.com/provenance-io/provenance/issues/1270).
 
+### Client Breaking
+
+* No longer sign the mac binary, and stop including it in the release [PR 1367](https://github.com/provenance-io/provenance/pull/1367).
+* The `--restrict` flag has been replaced with an `--unrestrict` flag in the `tx name` commands `bind` and `root-name-proposal` [PR 1266](https://github.com/provenance-io/provenance/pull/1266).
+
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.13.1...v1.14.0-rc1
+* https://github.com/provenance-io/provenance/compare/v1.13.1...v1.14.0
 
