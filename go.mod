@@ -170,7 +170,7 @@ require (
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.10-pio-1
+replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.10-pio-2
 
 // use informal system fork of tendermint in the interim until comet is ready. This matches what the SDK is using.
 replace github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.26
