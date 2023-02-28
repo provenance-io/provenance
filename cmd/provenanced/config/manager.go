@@ -546,6 +546,14 @@ func addFieldMapToViper(vpr *viper.Viper, fvmap FieldValueMap) error {
 	if err != nil {
 		return err
 	}
+	// The TM BaseConfig struct has a RootDir field with the mapstruct name "home".
+	// So the fvmap created from a TM config struct will have a "home" entry with a value of "".
+	// If we were to then include that when calling MergeConfigMap, it would tell viper that the "home" value is "".
+	// This prevents the default value (defined with the --home flag) from being used.
+	// Since the "home" value defines where the config files are, it's safe to assume none of the config
+	// files will contain a "home" field that we need to pay attention to.
+	// So for this, remove the "home" field from the configMap before calling MergeConfigMap.
+	delete(configMap, flags.FlagHome)
 	return vpr.MergeConfigMap(configMap)
 }
 
