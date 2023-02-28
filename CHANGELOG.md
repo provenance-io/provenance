@@ -37,12 +37,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
-
----
-
-## [v1.14.1](https://github.com/provenance-io/provenance/releases/tag/v1.14.0) - 2023-02-28
-
 ### Improvements
 
 * Bump Cosmos-SDK to `v0.46.10-pio-2` (from `v0.46.10-pio-1`).
