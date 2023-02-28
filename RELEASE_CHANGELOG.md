@@ -4,7 +4,7 @@ The Provenance Blockchain `v1.14.1` release fixes a couple bugs.
 Notably, state listening now behaves as expected with `stop-node-on-err = true`.
 
 This release is state compatible with the `v1.14.0` release.
-Users should upgrade from `v1.14.0` at their convenience.
+Users may upgrade from `v1.14.0` at their convenience.
 
 ### Improvements
 
