@@ -41,6 +41,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
+## [v1.14.1](https://github.com/provenance-io/provenance/releases/tag/v1.14.0) - 2023-02-28
+
+### Improvements
+
+* Bump Cosmos-SDK to `v0.46.10-pio-2` (from `v0.46.10-pio-1`).
+  [PR 1396](https://github.com/provenance-io/provenance/pull/1396).  
+  See the following `RELEASE_NOTES.md` for details:
+  [v0.46.10-pio-2](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.10-pio-2/RELEASE_NOTES.md).  
+  Full Commit History: https://github.com/provenance-io/cosmos-sdk/compare/v0.46.10-pio-1...v0.46.10-pio-2
+
+---
+
 ## [v1.14.0](https://github.com/provenance-io/provenance/releases/tag/v1.14.0) - 2023-02-23
 
 The Provenance Blockchain `v1.14.0` release includes several new features, improvements and bug fixes.
