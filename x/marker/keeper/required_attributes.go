@@ -7,7 +7,28 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	attrTypes "github.com/provenance-io/provenance/x/attribute/types"
+	"github.com/provenance-io/provenance/x/marker/types"
 )
+
+func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) (bool, error) {
+	marker, err := k.GetMarkerByDenom(ctx, denom)
+	if err != nil {
+		return false, err
+	}
+	if marker.GetMarkerType() == types.MarkerType_Coin {
+		return true, nil
+	}
+
+	caller, err := sdk.AccAddressFromBech32(from)
+	if err != nil {
+		return false, err
+	}
+	if len(marker.GetRequiredAttributes()) == 0 && marker.AddressHasAccess(caller, types.Access_Withdraw) {
+		return true, nil
+	}
+
+	return k.ContainsRequiredAttributes(ctx, marker.GetRequiredAttributes(), to)
+}
 
 // NormalizeRequiredAttributes normalizes the required attribute names using name module's Normalize method
 func (k Keeper) NormalizeRequiredAttributes(ctx sdk.Context, requiredAttributes []string) ([]string, error) {

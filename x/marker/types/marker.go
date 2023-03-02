@@ -47,6 +47,8 @@ type MarkerAccountI interface {
 	AddressListForPermission(Access) []sdk.AccAddress
 
 	HasGovernanceEnabled() bool
+
+	GetRequiredAttributes() []string
 }
 
 // NewEmptyMarkerAccount creates a new empty marker account in a Proposed state
@@ -227,6 +229,10 @@ func ValidateRequiredAttributes(requiredAttributes []string) error {
 		}
 	}
 	return nil
+}
+
+func (ma *MarkerAccount) GetRequiredAttributes() []string {
+	return ma.RequiredAttributes
 }
 
 // GetPubKey implements authtypes.Account (but there are no public keys associated with the account for signing)
