@@ -157,6 +157,9 @@ service Query {
   //
   // The specification_id can either be a uuid, e.g. dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 or a bech32 scope
   // specification address, e.g. scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m.
+  //
+  // By default, the contract and record specifications are not included.
+  // Set include_contract_specs and/or include_record_specs to true to include contract and/or record specifications.
   rpc ScopeSpecification(ScopeSpecificationRequest) returns (ScopeSpecificationResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/scopespec/{specification_id}";
   }
@@ -468,12 +471,21 @@ message ScopeSpecificationRequest {
   // specification_id can either be a uuid, e.g. dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 or a bech32 scope specification
   // address, e.g. scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m.
   string specification_id = 1 [(gogoproto.moretags) = "yaml:\"specification_id\""];
+
+  // include_contract_specs is a flag for whether or not the contract specifications in the scope specification should be included.
+  bool include_contract_specs = 10 [(gogoproto.moretags) = "yaml:\"include_contract_specs\""];
+  // include_record_specs is a flag for whether or not the record specifications in the scope specification should be included.
+  bool include_record_specs = 11 [(gogoproto.moretags) = "yaml:\"include_record_specs\""];
 }
 
 // ScopeSpecificationResponse is the response type for the Query/ScopeSpecification RPC method.
 message ScopeSpecificationResponse {
   // scope_specification is the wrapped scope specification.
   ScopeSpecificationWrapper scope_specification = 1 [(gogoproto.moretags) = "yaml:\"scope_specification\""];
+  // contract_specs is any number of wrapped contract specifications in this scope specification (if requested).
+  repeated ContractSpecificationWrapper contract_specs = 2 [(gogoproto.moretags) = "yaml:\"contract_specs,omitempty\""];
+  // record_specs is any number of wrapped record specifications in this scope specification (if requested).
+  repeated RecordSpecificationWrapper record_specs = 3 [(gogoproto.moretags) = "yaml:\"record_specs,omitempty\""];
 
   // request is a copy of the request that generated these results.
   ScopeSpecificationRequest request = 98;
