@@ -11,10 +11,19 @@ import (
 )
 
 func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) (bool, error) {
-	marker, err := k.GetMarkerByDenom(ctx, denom)
+	// TODO: Do we want to eat the gas fees for all the reads going on here?
+	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+
+	markerAddr := types.MustGetMarkerAddress(denom)
+
+	marker, err := k.GetMarker(ctx, markerAddr)
 	if err != nil {
 		return false, err
 	}
+	if marker == nil { // this should only occur in tests
+		return true, nil
+	}
+
 	if marker.GetMarkerType() == types.MarkerType_Coin {
 		return true, nil
 	}
