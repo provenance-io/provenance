@@ -674,10 +674,7 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 					}
 					return false
 				})
-				if err != nil {
-					return true
-				}
-				return false
+				return err != nil
 			})
 			if err != nil {
 				return &retval, fmt.Errorf("error retrieving contract spec [%s] record specs: %w", id, err)
