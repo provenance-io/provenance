@@ -10,7 +10,7 @@ import (
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
-func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) (bool, error) {
+func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
 	// TODO: Do we want to eat the gas fees for all the reads going on here?
 	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 
@@ -18,25 +18,31 @@ func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) (bool, 
 
 	marker, err := k.GetMarker(ctx, markerAddr)
 	if err != nil {
-		return false, err
+		return err
 	}
 	if marker == nil { // this should only occur in tests
-		return true, nil
+		return nil
 	}
 
 	if marker.GetMarkerType() == types.MarkerType_Coin {
-		return true, nil
+		return nil
 	}
 
 	caller, err := sdk.AccAddressFromBech32(from)
 	if err != nil {
-		return false, err
+		return err
 	}
 	if len(marker.GetRequiredAttributes()) == 0 && marker.AddressHasAccess(caller, types.Access_Withdraw) {
-		return true, nil
+		return nil
 	}
-
-	return k.ContainsRequiredAttributes(ctx, marker.GetRequiredAttributes(), to)
+	contains, err := k.ContainsRequiredAttributes(ctx, marker.GetRequiredAttributes(), to)
+	if err != nil {
+		return err
+	}
+	if !contains {
+		return fmt.Errorf("address %s does not contain the required attributes %v", to, marker.GetRequiredAttributes())
+	}
+	return nil
 }
 
 // NormalizeRequiredAttributes normalizes the required attribute names using name module's Normalize method
@@ -69,7 +75,6 @@ func (k Keeper) ContainsRequiredAttributes(ctx sdk.Context, requiredAttributes [
 	if err != nil {
 		return false, err
 	}
-
 	return EnsureAllRequiredAttributesExist(requiredAttributes, attributes), nil
 }
 
