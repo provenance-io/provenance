@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
+	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
@@ -300,11 +301,10 @@ func AddRootDomainAccountCmd(defaultNodeHome string) *cobra.Command {
 	return cmd
 }
 
-// TODO: add required attrs
 // AddGenesisMarkerCmd configures a marker account and adds it to the list of genesis accounts
 func AddGenesisMarkerCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-genesis-marker [coin] --manager [address_or_key_name] --access [grant][,[grant]] --escrow [coin][, [coin]] --finalize --activate --type [COIN]",
+		Use:   "add-genesis-marker [coin] --manager [address_or_key_name] --access [grant][,[grant]] --escrow [coin][, [coin]] --finalize --activate --type [COIN] --required-attributes=attr.one,*.attr.two,...",
 		Short: "Adds a marker to genesis.json",
 		Long: `Adds a marker to genesis.json. The provided parameters must specify
 the marker supply and denom as a coin.  A managing account may be added as a key name or address. An accessgrant
@@ -313,7 +313,7 @@ a marker account is activated any unassigned marker supply must be provided as e
 a manager address assigned that can activate the marker after genesis.  Activated markers will have supply invariants
 enforced immediately.  An optional type flag can be provided or the default of COIN will be used.
 `,
-		Example: fmt.Sprintf(`$ %[1]s add-genesis-marker 1000000000funcoins --manager validator --access withdraw --escrow 100funcoins --finalize --type COIN`, version.AppName),
+		Example: fmt.Sprintf(`$ %[1]s add-genesis-marker 1000000000funcoins --manager validator --access withdraw --escrow 100funcoins --finalize --type COIN --required-attributes=attr.one,*.attr.two,...`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -415,6 +415,11 @@ enforced immediately.  An optional type flag can be provided or the default of C
 				panic(fmt.Sprintf("unknown marker type %s", markerFlagType))
 			}
 
+			requiredAttributes, err := markercli.ParseRestrictedAttributes(cmd)
+			if err != nil {
+				return err
+			}
+
 			genAccount := markertypes.NewMarkerAccount(
 				authtypes.NewBaseAccount(markertypes.MustGetMarkerAddress(markerCoin.Denom), nil, 0, 0),
 				markerCoin,
@@ -423,7 +428,7 @@ enforced immediately.  An optional type flag can be provided or the default of C
 				markerStatus,
 				markertypes.MarkerType(markerType),
 				true,
-				[]string{},
+				requiredAttributes,
 			)
 
 			if err = genAccount.Validate(); err != nil {
@@ -505,6 +510,7 @@ enforced immediately.  An optional type flag can be provided or the default of C
 	cmd.Flags().String(flagEscrow, "", "A list of coins held by the marker account instance.  Note: Any supply not allocated to other accounts should be assigned here.")
 	cmd.Flags().BoolP(flagFinalize, "f", false, "Set the marker status to finalized.  Requires manager to be specified. (recommended)")
 	cmd.Flags().BoolP(flagActivate, "a", false, "Set the marker status to active.  Total supply constraint will be enforced as invariant.")
+	cmd.Flags().String(markercli.FlagRequiredAttributes, "", "comma delimited list of required attributes needed for a restricted marker to have send authority")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

@@ -241,7 +241,7 @@ with the given supply amount and denomination provided in the coin argument
 			if err != nil {
 				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagAllowGovernanceControl, err)
 			}
-			requiredAttributes, err := parseRestrictedAttributes(cmd)
+			requiredAttributes, err := ParseRestrictedAttributes(cmd)
 			if err != nil {
 				return err
 			}
@@ -974,7 +974,7 @@ with the given supply amount and denomination provided in the coin argument
 			if len(accessGrants) == 0 {
 				panic("at least one access grant should be present.")
 			}
-			requiredAttributes, err := parseRestrictedAttributes(cmd)
+			requiredAttributes, err := ParseRestrictedAttributes(cmd)
 			if err != nil {
 				return err
 			}
@@ -1023,7 +1023,7 @@ func ParseAccessGrantFromString(addressPermissionString string) []types.AccessGr
 	return grants
 }
 
-func parseRestrictedAttributes(cmd *cobra.Command) ([]string, error) {
+func ParseRestrictedAttributes(cmd *cobra.Command) ([]string, error) {
 	reqAttrString, err := cmd.Flags().GetString(FlagRequiredAttributes)
 	if err != nil {
 		return nil, err
