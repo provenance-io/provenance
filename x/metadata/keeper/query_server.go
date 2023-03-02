@@ -651,83 +651,41 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 	}
 
 	if found && req.IncludeContractSpecs {
-		contractSpecs, err := k.getScopeSpecContractSpecs(ctx, spec.ContractSpecIds)
+		err := k.IterateContractSpecs(ctx, func(cs types.ContractSpecification) (stop bool) {
+			for _, id := range spec.ContractSpecIds {
+				if bytes.Equal(id, cs.SpecificationId) {
+					retval.ContractSpecs = append(retval.ContractSpecs, types.WrapContractSpec(&cs))
+				}
+			}
+			return false
+		})
 		if err != nil {
-			return &retval, fmt.Errorf("error iterating scope spec [%s] contrect specs: %w", spec.SpecificationId, err)
+			return &retval, fmt.Errorf("error iterating scope spec [%s] contract specs: %w", spec.SpecificationId, err)
 		}
-		retval.ContractSpecs = append(retval.ContractSpecs, contractSpecs...)
 	}
 
 	if found && req.IncludeRecordSpecs {
-		recordSpecs, err := k.getScopeSpecRecordSpecs(ctx, spec.SpecificationId)
-		if err != nil {
-			return &retval, fmt.Errorf("error retrieveing scope spec [%s] records: %w", spec.SpecificationId, err)
+		var err error
+		for _, id := range spec.ContractSpecIds {
+			err = k.IterateRecordSpecsForContractSpec(ctx, id, func(recordSpecID types.MetadataAddress) (stop bool) {
+				err = k.IterateRecordSpecs(ctx, func(recordSpec types.RecordSpecification) (stop bool) {
+					if bytes.Equal(recordSpecID, recordSpec.SpecificationId) {
+						retval.RecordSpecs = append(retval.RecordSpecs, types.WrapRecordSpec(&recordSpec))
+					}
+					return false
+				})
+				if err != nil {
+					return true
+				}
+				return false
+			})
+			if err != nil {
+				return &retval, fmt.Errorf("error retrieving contract spec [%s] record specs: %w", id, err)
+			}
 		}
-		retval.RecordSpecs = append(retval.RecordSpecs, recordSpecs...)
 	}
 
 	return &retval, nil
-}
-
-func (k Keeper) getScopeSpecContractSpecs(ctx sdk.Context, contractSpecIds []types.MetadataAddress) ([]*types.ContractSpecificationWrapper, error) {
-	var contractSpecs []*types.ContractSpecificationWrapper
-	err := k.IterateContractSpecs(ctx, func(cs types.ContractSpecification) (stop bool) {
-		for _, id := range contractSpecIds {
-			if bytes.Equal(id, cs.SpecificationId) {
-				contractSpecs = append(contractSpecs, types.WrapContractSpec(&cs))
-			}
-		}
-		return false
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return contractSpecs, nil
-}
-
-func (k Keeper) getScopeSpecRecordSpecs(ctx sdk.Context, scopeSpecId types.MetadataAddress) ([]*types.RecordSpecificationWrapper, error) {
-	var recordSpecs []*types.RecordSpecificationWrapper
-
-	// collect all scopes for this scope spec
-	var scopes []*types.Scope
-	err := k.IterateScopes(ctx, func(scope types.Scope) (stop bool) {
-		if bytes.Equal(scopeSpecId, scope.SpecificationId) {
-			scopes = append(scopes, &scope)
-		}
-		return false
-	})
-	if err != nil {
-		return nil, fmt.Errorf("error iterating scope spec [%s] scopes: %w", scopeSpecId, err)
-	}
-
-	// collect record specification ids for each scope record
-	var recordSpecIds []types.MetadataAddress
-	for _, scope := range scopes {
-		err := k.IterateRecords(ctx, scope.ScopeId, func(record types.Record) (stop bool) {
-			recordSpecIds = append(recordSpecIds, record.SpecificationId)
-
-			return false
-		})
-		if err != nil {
-			return nil, fmt.Errorf("error iterating scope [%s] records: %w", scope.ScopeId, err)
-		}
-	}
-
-	// collect record specifications for this scope spec
-	for _, id := range recordSpecIds {
-		err = k.IterateRecordSpecs(ctx, func(rs types.RecordSpecification) (stop bool) {
-			if bytes.Equal(id, rs.SpecificationId) {
-				recordSpecs = append(recordSpecs, types.WrapRecordSpec(&rs))
-			}
-			return false
-		})
-		if err != nil {
-			return nil, fmt.Errorf("error iterating scope spec [%s] record specs: %w", scopeSpecId, err)
-		}
-	}
-
-	return recordSpecs, nil
 }
 
 // ScopeSpecificationsAll returns all scope specifications (limited by pagination).
