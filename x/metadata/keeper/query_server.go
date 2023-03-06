@@ -653,7 +653,7 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 		for _, id := range spec.ContractSpecIds {
 			cs, ok := k.GetContractSpecification(ctx, id)
 			if !ok {
-				return &retval, fmt.Errorf("error getting contract spec [%s]: %w", spec.SpecificationId, err)
+				return &retval, fmt.Errorf("error getting scope spec [%s] contract spec [%s]: %w", spec.SpecificationId, id, err)
 			}
 			retval.ContractSpecs = append(retval.ContractSpecs, types.WrapContractSpec(&cs))
 		}
