@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -13,7 +14,126 @@ import (
 	simapp "github.com/provenance-io/provenance/app"
 	attrTypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/marker/keeper"
+	"github.com/provenance-io/provenance/x/marker/types"
 )
+
+func TestAllowMarkerSend(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	owner, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
+	acct := app.AccountKeeper.NewAccountWithAddress(ctx, owner)
+	app.AccountKeeper.SetAccount(ctx, acct)
+	app.NameKeeper.SetNameRecord(ctx, "kyc.provenance.io", owner, false)
+	app.NameKeeper.SetNameRecord(ctx, "not-kyc.provenance.io", owner, false)
+
+	acctWithAttrs := "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
+	app.AttributeKeeper.SetAttribute(ctx,
+		attrTypes.Attribute{
+			Name:          "kyc.provenance.io",
+			Value:         []byte("string value"),
+			Address:       acctWithAttrs,
+			AttributeType: attrTypes.AttributeType_String,
+		},
+		owner,
+	)
+	app.AttributeKeeper.SetAttribute(ctx,
+		attrTypes.Attribute{
+			Name:          "not-kyc.provenance.io",
+			Value:         []byte("string value"),
+			Address:       acctWithAttrs,
+			AttributeType: attrTypes.AttributeType_String,
+		},
+		owner,
+	)
+	nrMarkerDenom := "nonrestrictedmarker"
+	nrMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(nrMarkerDenom), nil, 0, 0)
+	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(nrMarkerAcct, sdk.NewInt64Coin(nrMarkerDenom, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_Coin, true, []string{}))
+
+	rMarkerDenom := "restrictedmarkernoreqattributes"
+	rMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom), nil, 1, 0)
+	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, []string{}))
+
+	rMarkerDenom2 := "restrictedmarkerreqattributes2"
+	rMarkerAcct2 := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom2), nil, 2, 0)
+	rMarker2 := types.NewMarkerAccount(rMarkerAcct2, sdk.NewInt64Coin(rMarkerDenom2, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, []string{"some.attribute.that.i.require"})
+	app.MarkerKeeper.SetMarker(ctx, rMarker2)
+
+	rMarkerDenom3 := "restrictedmarkerreqattributes3"
+	rMarkerAcct3 := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom3), nil, 3, 0)
+	rMarker3 := types.NewMarkerAccount(rMarkerAcct3, sdk.NewInt64Coin(rMarkerDenom3, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, []string{"kyc.provenance.io"})
+	app.MarkerKeeper.SetMarker(ctx, rMarker3)
+
+	rMarkerDenom4 := "restrictedmarkerreqattributes4"
+	rMarkerAcct4 := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom4), nil, 4, 0)
+	rMarker4 := types.NewMarkerAccount(rMarkerAcct4, sdk.NewInt64Coin(rMarkerDenom4, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, []string{"kyc.provenance.io", "not-kyc.provenance.io"})
+	app.MarkerKeeper.SetMarker(ctx, rMarker4)
+
+	rMarkerDenom5 := "restrictedmarkerreqattributes5"
+	rMarkerAcct5 := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom5), nil, 5, 0)
+	rMarker5 := types.NewMarkerAccount(rMarkerAcct5, sdk.NewInt64Coin(rMarkerDenom5, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, []string{"kyc.provenance.io", "not-kyc.provenance.io", "foo.provenance.io"})
+	app.MarkerKeeper.SetMarker(ctx, rMarker5)
+
+	testCases := []struct {
+		name          string
+		from          string
+		to            string
+		denom         string
+		expectedError string
+	}{
+		{
+			name:          "should succeed - non restricted marker",
+			from:          acct.GetAddress().String(),
+			to:            acctWithAttrs,
+			denom:         nrMarkerDenom,
+			expectedError: "",
+		},
+		{
+			name:          "should fail - restricted marker with empty required attributes and no transfer rights",
+			from:          acct.GetAddress().String(),
+			to:            acctWithAttrs,
+			denom:         rMarkerDenom,
+			expectedError: fmt.Sprintf("%s does not have transfer permissions", acct.GetAddress().String()),
+		},
+		{
+			name:          "should fail - restricted marker with required attributes but none match",
+			from:          acct.GetAddress().String(),
+			to:            acctWithAttrs,
+			denom:         rMarkerDenom2,
+			expectedError: fmt.Sprintf("address %s does not contain the required attributes %v", acctWithAttrs, rMarker2.GetRequiredAttributes()),
+		},
+		{
+			name:          "should succeed - account contains the needed attribute",
+			from:          acct.GetAddress().String(),
+			to:            acctWithAttrs,
+			denom:         rMarkerDenom3,
+			expectedError: "",
+		},
+		{
+			name:          "should succeed - account contains the both needed attribute",
+			from:          acct.GetAddress().String(),
+			to:            acctWithAttrs,
+			denom:         rMarkerDenom4,
+			expectedError: "",
+		},
+		{
+			name:          "should succeed - account contains the both needed attribute",
+			from:          acct.GetAddress().String(),
+			to:            acctWithAttrs,
+			denom:         rMarkerDenom5,
+			expectedError: fmt.Sprintf("address %s does not contain the required attributes %v", acctWithAttrs, rMarker5.GetRequiredAttributes()),
+		},
+	}
+	for _, tc := range testCases {
+		err := app.MarkerKeeper.AllowMarkerSend(ctx, tc.from, tc.to, tc.denom)
+		if len(tc.expectedError) > 0 {
+			assert.NotNil(t, err, tc.name)
+			assert.EqualError(t, err, tc.expectedError, tc.name)
+
+		} else {
+			assert.NoError(t, err, tc.name)
+		}
+	}
+}
 
 func TestNormalizeRequiredAttributes(t *testing.T) {
 	app := simapp.Setup(t)

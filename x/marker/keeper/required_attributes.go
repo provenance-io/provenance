@@ -15,7 +15,6 @@ func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
 	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 
 	markerAddr := types.MustGetMarkerAddress(denom)
-
 	marker, err := k.GetMarker(ctx, markerAddr)
 	if err != nil {
 		return err
@@ -24,7 +23,7 @@ func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
 		return nil
 	}
 
-	if marker.GetMarkerType() == types.MarkerType_Coin {
+	if marker.GetMarkerType() != types.MarkerType_RestrictedCoin {
 		return nil
 	}
 
@@ -32,8 +31,15 @@ func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
 	if err != nil {
 		return err
 	}
-	if len(marker.GetRequiredAttributes()) == 0 && marker.AddressHasAccess(caller, types.Access_Withdraw) {
+
+	// address used for adjusting circulation
+	moduleAdrr := k.authKeeper.GetModuleAddress(types.CoinPoolName)
+
+	if marker.AddressHasAccess(caller, types.Access_Transfer) || moduleAdrr.String() == from {
 		return nil
+	}
+	if len(marker.GetRequiredAttributes()) == 0 {
+		return fmt.Errorf("%s does not have transfer permissions", caller.String())
 	}
 	contains, err := k.ContainsRequiredAttributes(ctx, marker.GetRequiredAttributes(), to)
 	if err != nil {
