@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	b64 "encoding/base64"
 	"errors"
@@ -651,16 +650,12 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 	}
 
 	if found && req.IncludeContractSpecs {
-		err := k.IterateContractSpecs(ctx, func(cs types.ContractSpecification) (stop bool) {
-			for _, id := range spec.ContractSpecIds {
-				if bytes.Equal(id, cs.SpecificationId) {
-					retval.ContractSpecs = append(retval.ContractSpecs, types.WrapContractSpec(&cs))
-				}
+		for _, id := range spec.ContractSpecIds {
+			cs, ok := k.GetContractSpecification(ctx, id)
+			if !ok {
+				return &retval, fmt.Errorf("error iterating scope spec [%s] contract specs: %w", spec.SpecificationId, err)
 			}
-			return false
-		})
-		if err != nil {
-			return &retval, fmt.Errorf("error iterating scope spec [%s] contract specs: %w", spec.SpecificationId, err)
+			retval.ContractSpecs = append(retval.ContractSpecs, types.WrapContractSpec(&cs))
 		}
 	}
 
@@ -668,13 +663,14 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 		var err error
 		for _, id := range spec.ContractSpecIds {
 			err = k.IterateRecordSpecsForContractSpec(ctx, id, func(recordSpecID types.MetadataAddress) (stop bool) {
-				err = k.IterateRecordSpecs(ctx, func(recordSpec types.RecordSpecification) (stop bool) {
-					if bytes.Equal(recordSpecID, recordSpec.SpecificationId) {
-						retval.RecordSpecs = append(retval.RecordSpecs, types.WrapRecordSpec(&recordSpec))
-					}
-					return false
-				})
-				return err != nil
+				rs, ok := k.GetRecordSpecification(ctx, recordSpecID)
+				if !ok {
+					err = fmt.Errorf("error retrieving record spec [%s] for contract spec [%s]", recordSpecID, id)
+					return true
+				}
+				retval.RecordSpecs = append(retval.RecordSpecs, types.WrapRecordSpec(&rs))
+
+				return false
 			})
 			if err != nil {
 				return &retval, fmt.Errorf("error retrieving contract spec [%s] record specs: %w", id, err)
