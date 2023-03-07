@@ -1376,9 +1376,11 @@ type ScopeSpecificationRequest struct {
 	// specification_id can either be a uuid, e.g. dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 or a bech32 scope specification
 	// address, e.g. scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m.
 	SpecificationId string `protobuf:"bytes,1,opt,name=specification_id,json=specificationId,proto3" json:"specification_id,omitempty" yaml:"specification_id"`
-	// include_contract_specs is a flag for whether or not the contract specifications in the scope specification should be included.
+	// include_contract_specs is a flag for whether or not the contract specifications in the scope specification should
+	// be included.
 	IncludeContractSpecs bool `protobuf:"varint,10,opt,name=include_contract_specs,json=includeContractSpecs,proto3" json:"include_contract_specs,omitempty" yaml:"include_contract_specs"`
-	// include_record_specs is a flag for whether or not the record specifications in the scope specification should be included.
+	// include_record_specs is a flag for whether or not the record specifications in the scope specification should be
+	// included.
 	IncludeRecordSpecs bool `protobuf:"varint,11,opt,name=include_record_specs,json=includeRecordSpecs,proto3" json:"include_record_specs,omitempty" yaml:"include_record_specs"`
 }
 
