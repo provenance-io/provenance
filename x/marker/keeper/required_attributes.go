@@ -10,6 +10,8 @@ import (
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
+const SendGranterKey = "send.granter"
+
 func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
 	markerAddr := types.MustGetMarkerAddress(denom)
 	marker, err := k.GetMarker(ctx, markerAddr)
@@ -29,15 +31,23 @@ func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
 		return err
 	}
 
+	// granter address sent in from context
+	granter, err := SendGranter(ctx)
+	if err != nil {
+		return err
+	}
+
+	// address used for adjusting circulation
+	moduleAdrr := k.authKeeper.GetModuleAddress(types.CoinPoolName)
+
 	// if the marker has transfer authority it is allowed to send to receiver without checking of attributes
-	if marker.AddressHasAccess(caller, types.Access_Transfer) {
+	if marker.AddressHasAccess(caller, types.Access_Transfer) ||
+		(granter != nil && marker.AddressHasAccess(granter, types.Access_Transfer)) || moduleAdrr.String() == from {
 		return nil
 	}
-	// when marker does not have required attributes only senders with transfer authority can send funds
 	if len(marker.GetRequiredAttributes()) == 0 {
 		return fmt.Errorf("%s does not have transfer permissions", caller.String())
 	}
-	// checks that receiver of funds has ALL required attributes
 	contains, err := k.ContainsRequiredAttributes(ctx, marker.GetRequiredAttributes(), to)
 	if err != nil {
 		return err
@@ -96,6 +106,21 @@ func EnsureAllRequiredAttributesExist(requiredAttributes []string, attributes []
 		}
 	}
 	return true
+}
+
+func SendGranter(ctx sdk.Context) (sdk.AccAddress, error) {
+	if ctx.Value(SendGranterKey) == nil {
+		return nil, nil
+	}
+	granter := fmt.Sprintf("%s", ctx.Value(SendGranterKey))
+	if len(granter) == 0 {
+		return nil, nil
+	}
+	g, err := sdk.AccAddressFromBech32(granter)
+	if err != nil {
+		return nil, err
+	}
+	return g, nil
 }
 
 // MatchAttribute compares required attribute against attribute string

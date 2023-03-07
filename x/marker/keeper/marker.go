@@ -668,6 +668,7 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 		if err != nil {
 			return err
 		}
+		ctx = ctx.WithValue(SendGranterKey, admin.String())
 	}
 	if k.bankKeeper.BlockedAddr(to) {
 		return fmt.Errorf("%s is not allowed to receive funds", to)
