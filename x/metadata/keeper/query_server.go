@@ -652,10 +652,11 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 	if found && req.IncludeContractSpecs {
 		for _, id := range spec.ContractSpecIds {
 			cs, ok := k.GetContractSpecification(ctx, id)
-			if !ok {
-				return &retval, fmt.Errorf("error getting scope spec [%s] contract spec [%s]: %w", spec.SpecificationId, id, err)
+			if ok {
+				retval.ContractSpecs = append(retval.ContractSpecs, types.WrapContractSpec(&cs))
+			} else {
+				retval.ContractSpecs = append(retval.ContractSpecs, types.WrapContractSpecNotFound(id))
 			}
-			retval.ContractSpecs = append(retval.ContractSpecs, types.WrapContractSpec(&cs))
 		}
 	}
 
@@ -664,11 +665,11 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 		for _, id := range spec.ContractSpecIds {
 			err = k.IterateRecordSpecsForContractSpec(ctx, id, func(recordSpecID types.MetadataAddress) (stop bool) {
 				rs, ok := k.GetRecordSpecification(ctx, recordSpecID)
-				if !ok {
-					err = fmt.Errorf("error retrieving record spec [%s] for contract spec [%s]", recordSpecID, id)
-					return true
+				if ok {
+					retval.RecordSpecs = append(retval.RecordSpecs, types.WrapRecordSpec(&rs))
+				} else {
+					retval.RecordSpecs = append(retval.RecordSpecs, types.WrapRecordSpecNotFound(recordSpecID))
 				}
-				retval.RecordSpecs = append(retval.RecordSpecs, types.WrapRecordSpec(&rs))
 
 				return false
 			})
