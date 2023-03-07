@@ -2241,8 +2241,8 @@ MsgSetDenomMetadataResponse defines the Msg/SetDenomMetadata response type
 <a name="provenance.marker.v1.MsgSupplyIncreaseProposalRequest"></a>
 
 ### MsgSupplyIncreaseProposalRequest
-MsgSupplyIncreaseProposalRequest defines a governance proposal to administer a marker and increase total supply of the marker
-through minting coin and placing it within the marker or assigning it directly to an account
+MsgSupplyIncreaseProposalRequest defines a governance proposal to administer a marker and increase total supply of
+the marker through minting coin and placing it within the marker or assigning it directly to an account
 
 
 | Field | Type | Label | Description |
@@ -2350,7 +2350,7 @@ Msg defines the Marker Msg service.
 | `SetDenomMetadata` | [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest) | [MsgSetDenomMetadataResponse](#provenance.marker.v1.MsgSetDenomMetadataResponse) | Allows Denom Metadata (see bank module) to be set for the Marker's Denom | |
 | `GrantAllowance` | [MsgGrantAllowanceRequest](#provenance.marker.v1.MsgGrantAllowanceRequest) | [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse) | GrantAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
 | `AddFinalizeActivateMarker` | [MsgAddFinalizeActivateMarkerRequest](#provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest) | [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse) | AddFinalizeActivateMarker | |
-| `SupplyIncreaseProposal` | [MsgSupplyIncreaseProposalRequest](#provenance.marker.v1.MsgSupplyIncreaseProposalRequest) | [MsgSupplyIncreaseProposalResponse](#provenance.marker.v1.MsgSupplyIncreaseProposalResponse) | SupplyIncrease can only be called via gov proposal | |
+| `SupplyIncreaseProposal` | [MsgSupplyIncreaseProposalRequest](#provenance.marker.v1.MsgSupplyIncreaseProposalRequest) | [MsgSupplyIncreaseProposalResponse](#provenance.marker.v1.MsgSupplyIncreaseProposalResponse) | SupplyIncreaseProposal can only be called via gov proposal | |
 
  <!-- end services -->
 
@@ -3300,7 +3300,7 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.Condition"></a>
 
 ### Condition
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
@@ -3316,7 +3316,7 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.ConditionSpec"></a>
 
 ### ConditionSpec
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
@@ -3333,13 +3333,13 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.Consideration"></a>
 
 ### Consideration
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `consideration_name` | [string](#string) |  |  |
-| `inputs` | [ProposedFact](#provenance.metadata.v1.p8e.ProposedFact) | repeated | Data pushed to a consideration that will ultimately match the output_spec of the consideration |
+| `inputs` | [ProposedFact](#provenance.metadata.v1.p8e.ProposedFact) | repeated |  |
 | `result` | [ExecutionResult](#provenance.metadata.v1.p8e.ExecutionResult) |  |  |
 
 
@@ -3350,13 +3350,13 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.ConsiderationSpec"></a>
 
 ### ConsiderationSpec
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `func_name` | [string](#string) |  |  |
-| `responsible_party` | [PartyType](#provenance.metadata.v1.p8e.PartyType) |  | Invoking party |
+| `responsible_party` | [PartyType](#provenance.metadata.v1.p8e.PartyType) |  |  |
 | `input_specs` | [DefinitionSpec](#provenance.metadata.v1.p8e.DefinitionSpec) | repeated |  |
 | `output_spec` | [OutputSpec](#provenance.metadata.v1.p8e.OutputSpec) |  |  |
 
@@ -3368,20 +3368,20 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.Contract"></a>
 
 ### Contract
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `definition` | [DefinitionSpec](#provenance.metadata.v1.p8e.DefinitionSpec) |  |  |
-| `spec` | [Fact](#provenance.metadata.v1.p8e.Fact) |  | Points to the proto for the contractSpec |
-| `invoker` | [SigningAndEncryptionPublicKeys](#provenance.metadata.v1.p8e.SigningAndEncryptionPublicKeys) |  | Invoker of this contract |
-| `inputs` | [Fact](#provenance.metadata.v1.p8e.Fact) | repeated | Constructor arguments. These are always the output of a previously recorded consideration. |
-| `conditions` | [Condition](#provenance.metadata.v1.p8e.Condition) | repeated | **Deprecated.** conditions is a deprecated field that is not used at all anymore. |
+| `spec` | [Fact](#provenance.metadata.v1.p8e.Fact) |  |  |
+| `invoker` | [SigningAndEncryptionPublicKeys](#provenance.metadata.v1.p8e.SigningAndEncryptionPublicKeys) |  |  |
+| `inputs` | [Fact](#provenance.metadata.v1.p8e.Fact) | repeated |  |
+| `conditions` | [Condition](#provenance.metadata.v1.p8e.Condition) | repeated | **Deprecated.**  |
 | `considerations` | [Consideration](#provenance.metadata.v1.p8e.Consideration) | repeated |  |
 | `recitals` | [Recital](#provenance.metadata.v1.p8e.Recital) | repeated |  |
 | `times_executed` | [int32](#int32) |  |  |
-| `start_time` | [Timestamp](#provenance.metadata.v1.p8e.Timestamp) |  | This is only set once when the contract is initially executed |
+| `start_time` | [Timestamp](#provenance.metadata.v1.p8e.Timestamp) |  |  |
 | `context` | [bytes](#bytes) |  |  |
 
 
@@ -3392,7 +3392,7 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.ContractSpec"></a>
 
 ### ContractSpec
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
@@ -3411,7 +3411,7 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.DefinitionSpec"></a>
 
 ### DefinitionSpec
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
@@ -3429,7 +3429,7 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.ExecutionResult"></a>
 
 ### ExecutionResult
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
@@ -3447,7 +3447,7 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.Fact"></a>
 
 ### Fact
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
@@ -3463,7 +3463,7 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.Location"></a>
 
 ### Location
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
@@ -3479,7 +3479,7 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.OutputSpec"></a>
 
 ### OutputSpec
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
@@ -3494,7 +3494,7 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.ProposedFact"></a>
 
 ### ProposedFact
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
@@ -3512,15 +3512,15 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.ProvenanceReference"></a>
 
 ### ProvenanceReference
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `scope_uuid` | [UUID](#provenance.metadata.v1.p8e.UUID) |  | [Req] [Scope.uuid] Scope ID |
-| `group_uuid` | [UUID](#provenance.metadata.v1.p8e.UUID) |  | [Opt] [RecordGroup.group_uuid] require record to be within a specific group |
-| `hash` | [string](#string) |  | [Opt] [Record.result_hash] specify a specific record inside a scope (and group) by result-hash |
-| `name` | [string](#string) |  | [Opt] [Record.result_name] specify a result-name of a record within a scope |
+| `scope_uuid` | [UUID](#provenance.metadata.v1.p8e.UUID) |  |  |
+| `group_uuid` | [UUID](#provenance.metadata.v1.p8e.UUID) |  |  |
+| `hash` | [string](#string) |  |  |
+| `name` | [string](#string) |  |  |
 
 
 
@@ -3530,7 +3530,7 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.PublicKey"></a>
 
 ### PublicKey
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
@@ -3547,7 +3547,7 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.Recital"></a>
 
 ### Recital
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
@@ -3564,7 +3564,7 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.Recitals"></a>
 
 ### Recitals
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
@@ -3579,15 +3579,15 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.Signature"></a>
 
 ### Signature
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `algo` | [string](#string) |  | Signature Detail |
+| `algo` | [string](#string) |  |  |
 | `provider` | [string](#string) |  |  |
 | `signature` | [string](#string) |  |  |
-| `signer` | [SigningAndEncryptionPublicKeys](#provenance.metadata.v1.p8e.SigningAndEncryptionPublicKeys) |  | Identity of signer |
+| `signer` | [SigningAndEncryptionPublicKeys](#provenance.metadata.v1.p8e.SigningAndEncryptionPublicKeys) |  |  |
 
 
 
@@ -3597,7 +3597,7 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.SignatureSet"></a>
 
 ### SignatureSet
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
@@ -3612,7 +3612,7 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.SigningAndEncryptionPublicKeys"></a>
 
 ### SigningAndEncryptionPublicKeys
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
@@ -3628,13 +3628,13 @@ GenesisState defines the account module's genesis state.
 <a name="provenance.metadata.v1.p8e.Timestamp"></a>
 
 ### Timestamp
-A Timestamp represents a point in time using values relative to the epoch.
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `seconds` | [int64](#int64) |  | Represents seconds of UTC time since Unix epoch |
-| `nanos` | [int32](#int32) |  | Non-negative fractions of a second at nanosecond resolution. |
+| `seconds` | [int64](#int64) |  |  |
+| `nanos` | [int32](#int32) |  |  |
 
 
 
@@ -3644,7 +3644,7 @@ A Timestamp represents a point in time using values relative to the epoch.
 <a name="provenance.metadata.v1.p8e.UUID"></a>
 
 ### UUID
-
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
@@ -3661,7 +3661,7 @@ A Timestamp represents a point in time using values relative to the epoch.
 <a name="provenance.metadata.v1.p8e.DefinitionSpecType"></a>
 
 ### DefinitionSpecType
-
+Deprecated: Do not use.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
@@ -3675,13 +3675,13 @@ A Timestamp represents a point in time using values relative to the epoch.
 <a name="provenance.metadata.v1.p8e.ExecutionResultType"></a>
 
 ### ExecutionResultType
-
+Deprecated: Do not use.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
 | RESULT_TYPE_UNKNOWN | 0 |  |
 | RESULT_TYPE_PASS | 1 |  |
-| RESULT_TYPE_SKIP | 2 | Couldn't process the condition/consideration due to missing facts being generated by other considerations. |
+| RESULT_TYPE_SKIP | 2 |  |
 | RESULT_TYPE_FAIL | 3 |  |
 
 
@@ -3689,7 +3689,7 @@ A Timestamp represents a point in time using values relative to the epoch.
 <a name="provenance.metadata.v1.p8e.PartyType"></a>
 
 ### PartyType
-
+Deprecated: Do not use.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
@@ -3711,7 +3711,7 @@ A Timestamp represents a point in time using values relative to the epoch.
 <a name="provenance.metadata.v1.p8e.PublicKeyCurve"></a>
 
 ### PublicKeyCurve
-
+Deprecated: Do not use.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
@@ -3723,7 +3723,7 @@ A Timestamp represents a point in time using values relative to the epoch.
 <a name="provenance.metadata.v1.p8e.PublicKeyType"></a>
 
 ### PublicKeyType
-
+Deprecated: Do not use.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
@@ -4989,18 +4989,18 @@ MsgModifyOSLocatorResponse is the response type for the Msg/ModifyOSLocator RPC 
 <a name="provenance.metadata.v1.MsgP8eMemorializeContractRequest"></a>
 
 ### MsgP8eMemorializeContractRequest
-MsgP8eMemorializeContractRequest is the request type for the Msg/P8eMemorializeContract RPC method.
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `scope_id` | [string](#string) |  | The scope id of the object being add or modified on blockchain. |
-| `group_id` | [string](#string) |  | The uuid of the contract execution. |
-| `scope_specification_id` | [string](#string) |  | The scope specification id. |
-| `recitals` | [p8e.Recitals](#provenance.metadata.v1.p8e.Recitals) |  | The new recitals for the scope. Used in leu of Contract for direct ownership changes. |
-| `contract` | [p8e.Contract](#provenance.metadata.v1.p8e.Contract) |  | The executed contract. |
-| `signatures` | [p8e.SignatureSet](#provenance.metadata.v1.p8e.SignatureSet) |  | The contract signatures |
-| `invoker` | [string](#string) |  | The bech32 address of the notary (ie the broadcaster of this message). |
+| `scope_id` | [string](#string) |  |  |
+| `group_id` | [string](#string) |  |  |
+| `scope_specification_id` | [string](#string) |  |  |
+| `recitals` | [p8e.Recitals](#provenance.metadata.v1.p8e.Recitals) |  |  |
+| `contract` | [p8e.Contract](#provenance.metadata.v1.p8e.Contract) |  |  |
+| `signatures` | [p8e.SignatureSet](#provenance.metadata.v1.p8e.SignatureSet) |  |  |
+| `invoker` | [string](#string) |  |  |
 
 
 
@@ -5010,14 +5010,14 @@ MsgP8eMemorializeContractRequest is the request type for the Msg/P8eMemorializeC
 <a name="provenance.metadata.v1.MsgP8eMemorializeContractResponse"></a>
 
 ### MsgP8eMemorializeContractResponse
-MsgP8eMemorializeContractResponse is the response type for the Msg/P8eMemorializeContract RPC method.
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `scope_id_info` | [ScopeIdInfo](#provenance.metadata.v1.ScopeIdInfo) |  | scope_id_info contains information about the id/address of the scope that was added or updated. |
-| `session_id_info` | [SessionIdInfo](#provenance.metadata.v1.SessionIdInfo) |  | session_id_info contains information about the id/address of the session that was added or updated. |
-| `record_id_infos` | [RecordIdInfo](#provenance.metadata.v1.RecordIdInfo) | repeated | record_id_infos contains information about the ids/addresses of the records that were added or updated. |
+| `scope_id_info` | [ScopeIdInfo](#provenance.metadata.v1.ScopeIdInfo) |  |  |
+| `session_id_info` | [SessionIdInfo](#provenance.metadata.v1.SessionIdInfo) |  |  |
+| `record_id_infos` | [RecordIdInfo](#provenance.metadata.v1.RecordIdInfo) | repeated |  |
 
 
 
@@ -5059,12 +5059,12 @@ MsgWriteContractSpecificationResponse is the response type for the Msg/WriteCont
 <a name="provenance.metadata.v1.MsgWriteP8eContractSpecRequest"></a>
 
 ### MsgWriteP8eContractSpecRequest
-MsgWriteP8eContractSpecRequest is the request type for the Msg/WriteP8eContractSpec RPC method.
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `contractspec` | [p8e.ContractSpec](#provenance.metadata.v1.p8e.ContractSpec) |  | ContractSpec v39 p8e ContractSpect to be converted into a v40 |
+| `contractspec` | [p8e.ContractSpec](#provenance.metadata.v1.p8e.ContractSpec) |  |  |
 | `signers` | [string](#string) | repeated |  |
 
 
@@ -5075,13 +5075,13 @@ MsgWriteP8eContractSpecRequest is the request type for the Msg/WriteP8eContractS
 <a name="provenance.metadata.v1.MsgWriteP8eContractSpecResponse"></a>
 
 ### MsgWriteP8eContractSpecResponse
-MsgWriteP8eContractSpecResponse is the response type for the Msg/WriteP8eContractSpec RPC method.
+Deprecated: Do not use.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `contract_spec_id_info` | [ContractSpecIdInfo](#provenance.metadata.v1.ContractSpecIdInfo) |  | contract_spec_id_info contains information about the id/address of the contract specification that was added or updated. |
-| `record_spec_id_infos` | [RecordSpecIdInfo](#provenance.metadata.v1.RecordSpecIdInfo) | repeated | record_spec_id_infos contains information about the ids/addresses of the record specifications that were added or updated. |
+| `contract_spec_id_info` | [ContractSpecIdInfo](#provenance.metadata.v1.ContractSpecIdInfo) |  |  |
+| `record_spec_id_infos` | [RecordSpecIdInfo](#provenance.metadata.v1.RecordSpecIdInfo) | repeated |  |
 
 
 
@@ -5299,8 +5299,8 @@ Msg defines the Metadata Msg service.
 | `DeleteContractSpecFromScopeSpec` | [MsgDeleteContractSpecFromScopeSpecRequest](#provenance.metadata.v1.MsgDeleteContractSpecFromScopeSpecRequest) | [MsgDeleteContractSpecFromScopeSpecResponse](#provenance.metadata.v1.MsgDeleteContractSpecFromScopeSpecResponse) | DeleteContractSpecFromScopeSpec deletes a contract specification from a scope specification. | |
 | `WriteRecordSpecification` | [MsgWriteRecordSpecificationRequest](#provenance.metadata.v1.MsgWriteRecordSpecificationRequest) | [MsgWriteRecordSpecificationResponse](#provenance.metadata.v1.MsgWriteRecordSpecificationResponse) | WriteRecordSpecification adds or updates a record specification. | |
 | `DeleteRecordSpecification` | [MsgDeleteRecordSpecificationRequest](#provenance.metadata.v1.MsgDeleteRecordSpecificationRequest) | [MsgDeleteRecordSpecificationResponse](#provenance.metadata.v1.MsgDeleteRecordSpecificationResponse) | DeleteRecordSpecification deletes a record specification. | |
-| `WriteP8eContractSpec` | [MsgWriteP8eContractSpecRequest](#provenance.metadata.v1.MsgWriteP8eContractSpecRequest) | [MsgWriteP8eContractSpecResponse](#provenance.metadata.v1.MsgWriteP8eContractSpecResponse) | WriteP8eContractSpec adds a P8e v39 contract spec as a v40 ContractSpecification It only exists to help facilitate the transition. Users should transition to WriteContractSpecification. | |
-| `P8eMemorializeContract` | [MsgP8eMemorializeContractRequest](#provenance.metadata.v1.MsgP8eMemorializeContractRequest) | [MsgP8eMemorializeContractResponse](#provenance.metadata.v1.MsgP8eMemorializeContractResponse) | P8EMemorializeContract records the results of a P8e contract execution as a session and set of records in a scope It only exists to help facilitate the transition. Users should transition to calling the individual Write methods. | |
+| `WriteP8eContractSpec` | [MsgWriteP8eContractSpecRequest](#provenance.metadata.v1.MsgWriteP8eContractSpecRequest) | [MsgWriteP8eContractSpecResponse](#provenance.metadata.v1.MsgWriteP8eContractSpecResponse) | Deprecated: This endpoint will always return an error. Use WriteContractSpecification instead. | |
+| `P8eMemorializeContract` | [MsgP8eMemorializeContractRequest](#provenance.metadata.v1.MsgP8eMemorializeContractRequest) | [MsgP8eMemorializeContractResponse](#provenance.metadata.v1.MsgP8eMemorializeContractResponse) | Deprecated: This endpoint will always return an error. Use individual Write endpoints instead. | |
 | `BindOSLocator` | [MsgBindOSLocatorRequest](#provenance.metadata.v1.MsgBindOSLocatorRequest) | [MsgBindOSLocatorResponse](#provenance.metadata.v1.MsgBindOSLocatorResponse) | BindOSLocator binds an owner address to a uri. | |
 | `DeleteOSLocator` | [MsgDeleteOSLocatorRequest](#provenance.metadata.v1.MsgDeleteOSLocatorRequest) | [MsgDeleteOSLocatorResponse](#provenance.metadata.v1.MsgDeleteOSLocatorResponse) | DeleteOSLocator deletes an existing ObjectStoreLocator record. | |
 | `ModifyOSLocator` | [MsgModifyOSLocatorRequest](#provenance.metadata.v1.MsgModifyOSLocatorRequest) | [MsgModifyOSLocatorResponse](#provenance.metadata.v1.MsgModifyOSLocatorResponse) | ModifyOSLocator updates an ObjectStoreLocator record by the current owner. | |

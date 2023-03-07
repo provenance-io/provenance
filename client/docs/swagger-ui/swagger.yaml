@@ -80644,6 +80644,11 @@ definitions:
   provenance.marker.v1.MsgSetDenomMetadataResponse:
     type: object
     title: MsgSetDenomMetadataResponse defines the Msg/SetDenomMetadata response type
+  provenance.marker.v1.MsgSupplyIncreaseProposalResponse:
+    type: object
+    title: >-
+      MsgSupplyIncreaseProposalResponse defines the Msg/SupplyIncreaseProposal
+      response type
   provenance.marker.v1.MsgTransferResponse:
     type: object
     title: MsgTransferResponse defines the Msg/Transfer response type
@@ -88597,9 +88602,6 @@ definitions:
     type: object
     properties:
       scope_id_info:
-        description: >-
-          scope_id_info contains information about the id/address of the scope
-          that was added or updated.
         type: object
         properties:
           scope_id:
@@ -88620,10 +88622,8 @@ definitions:
           scope_uuid:
             type: string
             description: scope_uuid is the uuid hex string of the scope_id_scope_uuid.
+        description: ScopeIdInfo contains various info regarding a scope id.
       session_id_info:
-        description: >-
-          session_id_info contains information about the id/address of the
-          session that was added or updated.
         type: object
         properties:
           session_id:
@@ -88653,9 +88653,6 @@ definitions:
               session_uuid is the uuid hex string of the
               session_id_session_uuid.
           scope_id_info:
-            description: >-
-              scope_id_info is information about the scope id referenced in the
-              session_id.
             type: object
             properties:
               scope_id:
@@ -88676,6 +88673,8 @@ definitions:
               scope_uuid:
                 type: string
                 description: scope_uuid is the uuid hex string of the scope_id_scope_uuid.
+            description: ScopeIdInfo contains various info regarding a scope id.
+        description: SessionIdInfo contains various info regarding a session id.
       record_id_infos:
         type: array
         items:
@@ -88703,9 +88702,6 @@ definitions:
               type: string
               description: record_addr is the bech32 string version of the record_id.
             scope_id_info:
-              description: >-
-                scope_id_info is information about the scope id referenced in
-                the record_id.
               type: object
               properties:
                 scope_id:
@@ -88730,13 +88726,9 @@ definitions:
                   description: >-
                     scope_uuid is the uuid hex string of the
                     scope_id_scope_uuid.
+              description: ScopeIdInfo contains various info regarding a scope id.
           description: RecordIdInfo contains various info regarding a record id.
-        description: >-
-          record_id_infos contains information about the ids/addresses of the
-          records that were added or updated.
-    description: >-
-      MsgP8eMemorializeContractResponse is the response type for the
-      Msg/P8eMemorializeContract RPC method.
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.MsgWriteContractSpecificationResponse:
     type: object
     properties:
@@ -88783,11 +88775,6 @@ definitions:
     type: object
     properties:
       contract_spec_id_info:
-        description: >-
-          contract_spec_id_info contains information about the id/address of the
-          contract specification that was added or
-
-          updated.
         type: object
         properties:
           contract_spec_id:
@@ -88818,6 +88805,9 @@ definitions:
             description: >-
               contract_spec_uuid is the uuid hex string of the
               contract_spec_id_contract_spec_uuid.
+        description: >-
+          ContractSpecIdInfo contains various info regarding a contract
+          specification id.
       record_spec_id_infos:
         type: array
         items:
@@ -88853,9 +88843,6 @@ definitions:
                 record_spec_addr is the bech32 string version of the
                 record_spec_id.
             contract_spec_id_info:
-              description: >-
-                contract_spec_id_info is information about the contract spec id
-                referenced in the record_spec_id.
               type: object
               properties:
                 contract_spec_id:
@@ -88886,17 +88873,13 @@ definitions:
                   description: >-
                     contract_spec_uuid is the uuid hex string of the
                     contract_spec_id_contract_spec_uuid.
+              description: >-
+                ContractSpecIdInfo contains various info regarding a contract
+                specification id.
           description: >-
             RecordSpecIdInfo contains various info regarding a record
             specification id.
-        description: >-
-          record_spec_id_infos contains information about the ids/addresses of
-          the record specifications that were added or
-
-          updated.
-    description: >-
-      MsgWriteP8eContractSpecResponse is the response type for the
-      Msg/WriteP8eContractSpec RPC method.
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.MsgWriteRecordResponse:
     type: object
     properties:
@@ -88923,9 +88906,6 @@ definitions:
             type: string
             description: record_addr is the bech32 string version of the record_id.
           scope_id_info:
-            description: >-
-              scope_id_info is information about the scope id referenced in the
-              record_id.
             type: object
             properties:
               scope_id:
@@ -88946,6 +88926,7 @@ definitions:
               scope_uuid:
                 type: string
                 description: scope_uuid is the uuid hex string of the scope_id_scope_uuid.
+            description: ScopeIdInfo contains various info regarding a scope id.
         description: RecordIdInfo contains various info regarding a record id.
     description: >-
       MsgWriteRecordResponse is the response type for the Msg/WriteRecord RPC
@@ -88984,9 +88965,6 @@ definitions:
               record_spec_addr is the bech32 string version of the
               record_spec_id.
           contract_spec_id_info:
-            description: >-
-              contract_spec_id_info is information about the contract spec id
-              referenced in the record_spec_id.
             type: object
             properties:
               contract_spec_id:
@@ -89017,6 +88995,9 @@ definitions:
                 description: >-
                   contract_spec_uuid is the uuid hex string of the
                   contract_spec_id_contract_spec_uuid.
+            description: >-
+              ContractSpecIdInfo contains various info regarding a contract
+              specification id.
         description: >-
           RecordSpecIdInfo contains various info regarding a record
           specification id.
@@ -89027,9 +89008,6 @@ definitions:
     type: object
     properties:
       scope_id_info:
-        description: >-
-          scope_id_info contains information about the id/address of the scope
-          that was added or updated.
         type: object
         properties:
           scope_id:
@@ -89050,6 +89028,7 @@ definitions:
           scope_uuid:
             type: string
             description: scope_uuid is the uuid hex string of the scope_id_scope_uuid.
+        description: ScopeIdInfo contains various info regarding a scope id.
     description: >-
       MsgWriteScopeResponse is the response type for the Msg/WriteScope RPC
       method.
@@ -89091,9 +89070,6 @@ definitions:
     type: object
     properties:
       session_id_info:
-        description: >-
-          session_id_info contains information about the id/address of the
-          session that was added or updated.
         type: object
         properties:
           session_id:
@@ -89123,9 +89099,6 @@ definitions:
               session_uuid is the uuid hex string of the
               session_id_session_uuid.
           scope_id_info:
-            description: >-
-              scope_id_info is information about the scope id referenced in the
-              session_id.
             type: object
             properties:
               scope_id:
@@ -89146,6 +89119,8 @@ definitions:
               scope_uuid:
                 type: string
                 description: scope_uuid is the uuid hex string of the scope_id_scope_uuid.
+            description: ScopeIdInfo contains various info regarding a scope id.
+        description: SessionIdInfo contains various info regarding a session id.
     description: >-
       MsgWriteSessionResponse is the response type for the Msg/WriteSession RPC
       method.
@@ -89191,33 +89166,23 @@ definitions:
                 type: object
                 properties:
                   scope_uuid:
-                    title: |-
-                      [Req] [Scope.uuid]
-                      Scope ID
                     type: object
                     properties:
                       value:
                         type: string
+                    description: 'Deprecated: Do not use.'
                   group_uuid:
-                    title: |-
-                      [Opt] [RecordGroup.group_uuid]
-                      require record to be within a specific group
                     type: object
                     properties:
                       value:
                         type: string
+                    description: 'Deprecated: Do not use.'
                   hash:
                     type: string
-                    title: >-
-                      [Opt] [Record.result_hash]
-
-                      specify a specific record inside a scope (and group) by
-                      result-hash
                   name:
                     type: string
-                    title: |-
-                      [Opt] [Record.result_name]
-                      specify a result-name of a record within a scope
+                description: 'Deprecated: Do not use.'
+            description: 'Deprecated: Do not use.'
           result:
             type: string
             enum:
@@ -89226,23 +89191,21 @@ definitions:
               - RESULT_TYPE_SKIP
               - RESULT_TYPE_FAIL
             default: RESULT_TYPE_UNKNOWN
-            description: ' - RESULT_TYPE_SKIP: Couldn''t process the condition/consideration due to missing facts being generated by other considerations.'
+            description: 'Deprecated: Do not use.'
           recorded_at:
             type: object
             properties:
               seconds:
                 type: string
                 format: int64
-                title: Represents seconds of UTC time since Unix epoch
               nanos:
                 type: integer
                 format: int32
-                description: Non-negative fractions of a second at nanosecond resolution.
-            description: >-
-              A Timestamp represents a point in time using values relative to
-              the epoch.
+            description: 'Deprecated: Do not use.'
           error_message:
             type: string
+        description: 'Deprecated: Do not use.'
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.ConditionSpec:
     type: object
     properties:
@@ -89262,47 +89225,35 @@ definitions:
                   type: object
                   properties:
                     scope_uuid:
-                      title: |-
-                        [Req] [Scope.uuid]
-                        Scope ID
                       type: object
                       properties:
                         value:
                           type: string
+                      description: 'Deprecated: Do not use.'
                     group_uuid:
-                      title: |-
-                        [Opt] [RecordGroup.group_uuid]
-                        require record to be within a specific group
                       type: object
                       properties:
                         value:
                           type: string
+                      description: 'Deprecated: Do not use.'
                     hash:
                       type: string
-                      title: >-
-                        [Opt] [Record.result_hash]
-
-                        specify a specific record inside a scope (and group) by
-                        result-hash
                     name:
                       type: string
-                      title: |-
-                        [Opt] [Record.result_name]
-                        specify a result-name of a record within a scope
+                  description: 'Deprecated: Do not use.'
                 classname:
                   type: string
+              description: 'Deprecated: Do not use.'
             signature:
               type: object
               properties:
                 algo:
                   type: string
-                  title: Signature Detail
                 provider:
                   type: string
                 signature:
                   type: string
                 signer:
-                  title: Identity of signer
                   type: object
                   properties:
                     signing_public_key:
@@ -89316,12 +89267,15 @@ definitions:
                           enum:
                             - ELLIPTIC
                           default: ELLIPTIC
+                          description: 'Deprecated: Do not use.'
                         curve:
                           type: string
                           enum:
                             - SECP256K1
                             - P256
                           default: SECP256K1
+                          description: 'Deprecated: Do not use.'
+                      description: 'Deprecated: Do not use.'
                     encryption_public_key:
                       type: object
                       properties:
@@ -89333,12 +89287,17 @@ definitions:
                           enum:
                             - ELLIPTIC
                           default: ELLIPTIC
+                          description: 'Deprecated: Do not use.'
                         curve:
                           type: string
                           enum:
                             - SECP256K1
                             - P256
                           default: SECP256K1
+                          description: 'Deprecated: Do not use.'
+                      description: 'Deprecated: Do not use.'
+                  description: 'Deprecated: Do not use.'
+              description: 'Deprecated: Do not use.'
             type:
               type: string
               enum:
@@ -89347,6 +89306,8 @@ definitions:
                 - DEFINITION_SPEC_TYPE_FACT
                 - DEFINITION_SPEC_TYPE_FACT_LIST
               default: DEFINITION_SPEC_TYPE_UNKNOWN
+              description: 'Deprecated: Do not use.'
+          description: 'Deprecated: Do not use.'
       output_spec:
         type: object
         properties:
@@ -89362,47 +89323,35 @@ definitions:
                     type: object
                     properties:
                       scope_uuid:
-                        title: |-
-                          [Req] [Scope.uuid]
-                          Scope ID
                         type: object
                         properties:
                           value:
                             type: string
+                        description: 'Deprecated: Do not use.'
                       group_uuid:
-                        title: |-
-                          [Opt] [RecordGroup.group_uuid]
-                          require record to be within a specific group
                         type: object
                         properties:
                           value:
                             type: string
+                        description: 'Deprecated: Do not use.'
                       hash:
                         type: string
-                        title: >-
-                          [Opt] [Record.result_hash]
-
-                          specify a specific record inside a scope (and group)
-                          by result-hash
                       name:
                         type: string
-                        title: |-
-                          [Opt] [Record.result_name]
-                          specify a result-name of a record within a scope
+                    description: 'Deprecated: Do not use.'
                   classname:
                     type: string
+                description: 'Deprecated: Do not use.'
               signature:
                 type: object
                 properties:
                   algo:
                     type: string
-                    title: Signature Detail
                   provider:
                     type: string
                   signature:
                     type: string
                   signer:
-                    title: Identity of signer
                     type: object
                     properties:
                       signing_public_key:
@@ -89416,12 +89365,15 @@ definitions:
                             enum:
                               - ELLIPTIC
                             default: ELLIPTIC
+                            description: 'Deprecated: Do not use.'
                           curve:
                             type: string
                             enum:
                               - SECP256K1
                               - P256
                             default: SECP256K1
+                            description: 'Deprecated: Do not use.'
+                        description: 'Deprecated: Do not use.'
                       encryption_public_key:
                         type: object
                         properties:
@@ -89433,12 +89385,17 @@ definitions:
                             enum:
                               - ELLIPTIC
                             default: ELLIPTIC
+                            description: 'Deprecated: Do not use.'
                           curve:
                             type: string
                             enum:
                               - SECP256K1
                               - P256
                             default: SECP256K1
+                            description: 'Deprecated: Do not use.'
+                        description: 'Deprecated: Do not use.'
+                    description: 'Deprecated: Do not use.'
+                description: 'Deprecated: Do not use.'
               type:
                 type: string
                 enum:
@@ -89447,6 +89404,10 @@ definitions:
                   - DEFINITION_SPEC_TYPE_FACT
                   - DEFINITION_SPEC_TYPE_FACT_LIST
                 default: DEFINITION_SPEC_TYPE_UNKNOWN
+                description: 'Deprecated: Do not use.'
+            description: 'Deprecated: Do not use.'
+        description: 'Deprecated: Do not use.'
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.Consideration:
     type: object
     properties:
@@ -89467,36 +89428,23 @@ definitions:
               type: object
               properties:
                 scope_uuid:
-                  title: |-
-                    [Req] [Scope.uuid]
-                    Scope ID
                   type: object
                   properties:
                     value:
                       type: string
+                  description: 'Deprecated: Do not use.'
                 group_uuid:
-                  title: |-
-                    [Opt] [RecordGroup.group_uuid]
-                    require record to be within a specific group
                   type: object
                   properties:
                     value:
                       type: string
+                  description: 'Deprecated: Do not use.'
                 hash:
                   type: string
-                  title: >-
-                    [Opt] [Record.result_hash]
-
-                    specify a specific record inside a scope (and group) by
-                    result-hash
                 name:
                   type: string
-                  title: |-
-                    [Opt] [Record.result_name]
-                    specify a result-name of a record within a scope
-        title: >-
-          Data pushed to a consideration that will ultimately match the
-          output_spec of the consideration
+              description: 'Deprecated: Do not use.'
+          description: 'Deprecated: Do not use.'
       result:
         type: object
         properties:
@@ -89513,33 +89461,23 @@ definitions:
                 type: object
                 properties:
                   scope_uuid:
-                    title: |-
-                      [Req] [Scope.uuid]
-                      Scope ID
                     type: object
                     properties:
                       value:
                         type: string
+                    description: 'Deprecated: Do not use.'
                   group_uuid:
-                    title: |-
-                      [Opt] [RecordGroup.group_uuid]
-                      require record to be within a specific group
                     type: object
                     properties:
                       value:
                         type: string
+                    description: 'Deprecated: Do not use.'
                   hash:
                     type: string
-                    title: >-
-                      [Opt] [Record.result_hash]
-
-                      specify a specific record inside a scope (and group) by
-                      result-hash
                   name:
                     type: string
-                    title: |-
-                      [Opt] [Record.result_name]
-                      specify a result-name of a record within a scope
+                description: 'Deprecated: Do not use.'
+            description: 'Deprecated: Do not use.'
           result:
             type: string
             enum:
@@ -89548,30 +89486,27 @@ definitions:
               - RESULT_TYPE_SKIP
               - RESULT_TYPE_FAIL
             default: RESULT_TYPE_UNKNOWN
-            description: ' - RESULT_TYPE_SKIP: Couldn''t process the condition/consideration due to missing facts being generated by other considerations.'
+            description: 'Deprecated: Do not use.'
           recorded_at:
             type: object
             properties:
               seconds:
                 type: string
                 format: int64
-                title: Represents seconds of UTC time since Unix epoch
               nanos:
                 type: integer
                 format: int32
-                description: Non-negative fractions of a second at nanosecond resolution.
-            description: >-
-              A Timestamp represents a point in time using values relative to
-              the epoch.
+            description: 'Deprecated: Do not use.'
           error_message:
             type: string
+        description: 'Deprecated: Do not use.'
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.ConsiderationSpec:
     type: object
     properties:
       func_name:
         type: string
       responsible_party:
-        title: Invoking party
         type: string
         enum:
           - PARTY_TYPE_UNKNOWN
@@ -89587,6 +89522,7 @@ definitions:
           - PARTY_TYPE_CONTROLLER
           - PARTY_TYPE_VALIDATOR
         default: PARTY_TYPE_UNKNOWN
+        description: 'Deprecated: Do not use.'
       input_specs:
         type: array
         items:
@@ -89601,47 +89537,35 @@ definitions:
                   type: object
                   properties:
                     scope_uuid:
-                      title: |-
-                        [Req] [Scope.uuid]
-                        Scope ID
                       type: object
                       properties:
                         value:
                           type: string
+                      description: 'Deprecated: Do not use.'
                     group_uuid:
-                      title: |-
-                        [Opt] [RecordGroup.group_uuid]
-                        require record to be within a specific group
                       type: object
                       properties:
                         value:
                           type: string
+                      description: 'Deprecated: Do not use.'
                     hash:
                       type: string
-                      title: >-
-                        [Opt] [Record.result_hash]
-
-                        specify a specific record inside a scope (and group) by
-                        result-hash
                     name:
                       type: string
-                      title: |-
-                        [Opt] [Record.result_name]
-                        specify a result-name of a record within a scope
+                  description: 'Deprecated: Do not use.'
                 classname:
                   type: string
+              description: 'Deprecated: Do not use.'
             signature:
               type: object
               properties:
                 algo:
                   type: string
-                  title: Signature Detail
                 provider:
                   type: string
                 signature:
                   type: string
                 signer:
-                  title: Identity of signer
                   type: object
                   properties:
                     signing_public_key:
@@ -89655,12 +89579,15 @@ definitions:
                           enum:
                             - ELLIPTIC
                           default: ELLIPTIC
+                          description: 'Deprecated: Do not use.'
                         curve:
                           type: string
                           enum:
                             - SECP256K1
                             - P256
                           default: SECP256K1
+                          description: 'Deprecated: Do not use.'
+                      description: 'Deprecated: Do not use.'
                     encryption_public_key:
                       type: object
                       properties:
@@ -89672,12 +89599,17 @@ definitions:
                           enum:
                             - ELLIPTIC
                           default: ELLIPTIC
+                          description: 'Deprecated: Do not use.'
                         curve:
                           type: string
                           enum:
                             - SECP256K1
                             - P256
                           default: SECP256K1
+                          description: 'Deprecated: Do not use.'
+                      description: 'Deprecated: Do not use.'
+                  description: 'Deprecated: Do not use.'
+              description: 'Deprecated: Do not use.'
             type:
               type: string
               enum:
@@ -89686,6 +89618,8 @@ definitions:
                 - DEFINITION_SPEC_TYPE_FACT
                 - DEFINITION_SPEC_TYPE_FACT_LIST
               default: DEFINITION_SPEC_TYPE_UNKNOWN
+              description: 'Deprecated: Do not use.'
+          description: 'Deprecated: Do not use.'
       output_spec:
         type: object
         properties:
@@ -89701,47 +89635,35 @@ definitions:
                     type: object
                     properties:
                       scope_uuid:
-                        title: |-
-                          [Req] [Scope.uuid]
-                          Scope ID
                         type: object
                         properties:
                           value:
                             type: string
+                        description: 'Deprecated: Do not use.'
                       group_uuid:
-                        title: |-
-                          [Opt] [RecordGroup.group_uuid]
-                          require record to be within a specific group
                         type: object
                         properties:
                           value:
                             type: string
+                        description: 'Deprecated: Do not use.'
                       hash:
                         type: string
-                        title: >-
-                          [Opt] [Record.result_hash]
-
-                          specify a specific record inside a scope (and group)
-                          by result-hash
                       name:
                         type: string
-                        title: |-
-                          [Opt] [Record.result_name]
-                          specify a result-name of a record within a scope
+                    description: 'Deprecated: Do not use.'
                   classname:
                     type: string
+                description: 'Deprecated: Do not use.'
               signature:
                 type: object
                 properties:
                   algo:
                     type: string
-                    title: Signature Detail
                   provider:
                     type: string
                   signature:
                     type: string
                   signer:
-                    title: Identity of signer
                     type: object
                     properties:
                       signing_public_key:
@@ -89755,12 +89677,15 @@ definitions:
                             enum:
                               - ELLIPTIC
                             default: ELLIPTIC
+                            description: 'Deprecated: Do not use.'
                           curve:
                             type: string
                             enum:
                               - SECP256K1
                               - P256
                             default: SECP256K1
+                            description: 'Deprecated: Do not use.'
+                        description: 'Deprecated: Do not use.'
                       encryption_public_key:
                         type: object
                         properties:
@@ -89772,12 +89697,17 @@ definitions:
                             enum:
                               - ELLIPTIC
                             default: ELLIPTIC
+                            description: 'Deprecated: Do not use.'
                           curve:
                             type: string
                             enum:
                               - SECP256K1
                               - P256
                             default: SECP256K1
+                            description: 'Deprecated: Do not use.'
+                        description: 'Deprecated: Do not use.'
+                    description: 'Deprecated: Do not use.'
+                description: 'Deprecated: Do not use.'
               type:
                 type: string
                 enum:
@@ -89786,6 +89716,10 @@ definitions:
                   - DEFINITION_SPEC_TYPE_FACT
                   - DEFINITION_SPEC_TYPE_FACT_LIST
                 default: DEFINITION_SPEC_TYPE_UNKNOWN
+                description: 'Deprecated: Do not use.'
+            description: 'Deprecated: Do not use.'
+        description: 'Deprecated: Do not use.'
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.Contract:
     type: object
     properties:
@@ -89801,47 +89735,35 @@ definitions:
                 type: object
                 properties:
                   scope_uuid:
-                    title: |-
-                      [Req] [Scope.uuid]
-                      Scope ID
                     type: object
                     properties:
                       value:
                         type: string
+                    description: 'Deprecated: Do not use.'
                   group_uuid:
-                    title: |-
-                      [Opt] [RecordGroup.group_uuid]
-                      require record to be within a specific group
                     type: object
                     properties:
                       value:
                         type: string
+                    description: 'Deprecated: Do not use.'
                   hash:
                     type: string
-                    title: >-
-                      [Opt] [Record.result_hash]
-
-                      specify a specific record inside a scope (and group) by
-                      result-hash
                   name:
                     type: string
-                    title: |-
-                      [Opt] [Record.result_name]
-                      specify a result-name of a record within a scope
+                description: 'Deprecated: Do not use.'
               classname:
                 type: string
+            description: 'Deprecated: Do not use.'
           signature:
             type: object
             properties:
               algo:
                 type: string
-                title: Signature Detail
               provider:
                 type: string
               signature:
                 type: string
               signer:
-                title: Identity of signer
                 type: object
                 properties:
                   signing_public_key:
@@ -89855,12 +89777,15 @@ definitions:
                         enum:
                           - ELLIPTIC
                         default: ELLIPTIC
+                        description: 'Deprecated: Do not use.'
                       curve:
                         type: string
                         enum:
                           - SECP256K1
                           - P256
                         default: SECP256K1
+                        description: 'Deprecated: Do not use.'
+                    description: 'Deprecated: Do not use.'
                   encryption_public_key:
                     type: object
                     properties:
@@ -89872,12 +89797,17 @@ definitions:
                         enum:
                           - ELLIPTIC
                         default: ELLIPTIC
+                        description: 'Deprecated: Do not use.'
                       curve:
                         type: string
                         enum:
                           - SECP256K1
                           - P256
                         default: SECP256K1
+                        description: 'Deprecated: Do not use.'
+                    description: 'Deprecated: Do not use.'
+                description: 'Deprecated: Do not use.'
+            description: 'Deprecated: Do not use.'
           type:
             type: string
             enum:
@@ -89886,8 +89816,9 @@ definitions:
               - DEFINITION_SPEC_TYPE_FACT
               - DEFINITION_SPEC_TYPE_FACT_LIST
             default: DEFINITION_SPEC_TYPE_UNKNOWN
+            description: 'Deprecated: Do not use.'
+        description: 'Deprecated: Do not use.'
       spec:
-        title: Points to the proto for the contractSpec
         type: object
         properties:
           name:
@@ -89899,37 +89830,27 @@ definitions:
                 type: object
                 properties:
                   scope_uuid:
-                    title: |-
-                      [Req] [Scope.uuid]
-                      Scope ID
                     type: object
                     properties:
                       value:
                         type: string
+                    description: 'Deprecated: Do not use.'
                   group_uuid:
-                    title: |-
-                      [Opt] [RecordGroup.group_uuid]
-                      require record to be within a specific group
                     type: object
                     properties:
                       value:
                         type: string
+                    description: 'Deprecated: Do not use.'
                   hash:
                     type: string
-                    title: >-
-                      [Opt] [Record.result_hash]
-
-                      specify a specific record inside a scope (and group) by
-                      result-hash
                   name:
                     type: string
-                    title: |-
-                      [Opt] [Record.result_name]
-                      specify a result-name of a record within a scope
+                description: 'Deprecated: Do not use.'
               classname:
                 type: string
+            description: 'Deprecated: Do not use.'
+        description: 'Deprecated: Do not use.'
       invoker:
-        title: Invoker of this contract
         type: object
         properties:
           signing_public_key:
@@ -89943,12 +89864,15 @@ definitions:
                 enum:
                   - ELLIPTIC
                 default: ELLIPTIC
+                description: 'Deprecated: Do not use.'
               curve:
                 type: string
                 enum:
                   - SECP256K1
                   - P256
                 default: SECP256K1
+                description: 'Deprecated: Do not use.'
+            description: 'Deprecated: Do not use.'
           encryption_public_key:
             type: object
             properties:
@@ -89960,12 +89884,16 @@ definitions:
                 enum:
                   - ELLIPTIC
                 default: ELLIPTIC
+                description: 'Deprecated: Do not use.'
               curve:
                 type: string
                 enum:
                   - SECP256K1
                   - P256
                 default: SECP256K1
+                description: 'Deprecated: Do not use.'
+            description: 'Deprecated: Do not use.'
+        description: 'Deprecated: Do not use.'
       inputs:
         type: array
         items:
@@ -89980,38 +89908,26 @@ definitions:
                   type: object
                   properties:
                     scope_uuid:
-                      title: |-
-                        [Req] [Scope.uuid]
-                        Scope ID
                       type: object
                       properties:
                         value:
                           type: string
+                      description: 'Deprecated: Do not use.'
                     group_uuid:
-                      title: |-
-                        [Opt] [RecordGroup.group_uuid]
-                        require record to be within a specific group
                       type: object
                       properties:
                         value:
                           type: string
+                      description: 'Deprecated: Do not use.'
                     hash:
                       type: string
-                      title: >-
-                        [Opt] [Record.result_hash]
-
-                        specify a specific record inside a scope (and group) by
-                        result-hash
                     name:
                       type: string
-                      title: |-
-                        [Opt] [Record.result_name]
-                        specify a result-name of a record within a scope
+                  description: 'Deprecated: Do not use.'
                 classname:
                   type: string
-        description: |-
-          Constructor arguments.
-          These are always the output of a previously recorded consideration.
+              description: 'Deprecated: Do not use.'
+          description: 'Deprecated: Do not use.'
       conditions:
         type: array
         items:
@@ -90035,33 +89951,23 @@ definitions:
                       type: object
                       properties:
                         scope_uuid:
-                          title: |-
-                            [Req] [Scope.uuid]
-                            Scope ID
                           type: object
                           properties:
                             value:
                               type: string
+                          description: 'Deprecated: Do not use.'
                         group_uuid:
-                          title: |-
-                            [Opt] [RecordGroup.group_uuid]
-                            require record to be within a specific group
                           type: object
                           properties:
                             value:
                               type: string
+                          description: 'Deprecated: Do not use.'
                         hash:
                           type: string
-                          title: >-
-                            [Opt] [Record.result_hash]
-
-                            specify a specific record inside a scope (and group)
-                            by result-hash
                         name:
                           type: string
-                          title: |-
-                            [Opt] [Record.result_name]
-                            specify a result-name of a record within a scope
+                      description: 'Deprecated: Do not use.'
+                  description: 'Deprecated: Do not use.'
                 result:
                   type: string
                   enum:
@@ -90070,26 +89976,21 @@ definitions:
                     - RESULT_TYPE_SKIP
                     - RESULT_TYPE_FAIL
                   default: RESULT_TYPE_UNKNOWN
-                  description: ' - RESULT_TYPE_SKIP: Couldn''t process the condition/consideration due to missing facts being generated by other considerations.'
+                  description: 'Deprecated: Do not use.'
                 recorded_at:
                   type: object
                   properties:
                     seconds:
                       type: string
                       format: int64
-                      title: Represents seconds of UTC time since Unix epoch
                     nanos:
                       type: integer
                       format: int32
-                      description: >-
-                        Non-negative fractions of a second at nanosecond
-                        resolution.
-                  description: >-
-                    A Timestamp represents a point in time using values relative
-                    to the epoch.
+                  description: 'Deprecated: Do not use.'
                 error_message:
                   type: string
-        description: conditions is a deprecated field that is not used at all anymore.
+              description: 'Deprecated: Do not use.'
+          description: 'Deprecated: Do not use.'
       considerations:
         type: array
         items:
@@ -90112,36 +90013,23 @@ definitions:
                     type: object
                     properties:
                       scope_uuid:
-                        title: |-
-                          [Req] [Scope.uuid]
-                          Scope ID
                         type: object
                         properties:
                           value:
                             type: string
+                        description: 'Deprecated: Do not use.'
                       group_uuid:
-                        title: |-
-                          [Opt] [RecordGroup.group_uuid]
-                          require record to be within a specific group
                         type: object
                         properties:
                           value:
                             type: string
+                        description: 'Deprecated: Do not use.'
                       hash:
                         type: string
-                        title: >-
-                          [Opt] [Record.result_hash]
-
-                          specify a specific record inside a scope (and group)
-                          by result-hash
                       name:
                         type: string
-                        title: |-
-                          [Opt] [Record.result_name]
-                          specify a result-name of a record within a scope
-              title: >-
-                Data pushed to a consideration that will ultimately match the
-                output_spec of the consideration
+                    description: 'Deprecated: Do not use.'
+                description: 'Deprecated: Do not use.'
             result:
               type: object
               properties:
@@ -90158,33 +90046,23 @@ definitions:
                       type: object
                       properties:
                         scope_uuid:
-                          title: |-
-                            [Req] [Scope.uuid]
-                            Scope ID
                           type: object
                           properties:
                             value:
                               type: string
+                          description: 'Deprecated: Do not use.'
                         group_uuid:
-                          title: |-
-                            [Opt] [RecordGroup.group_uuid]
-                            require record to be within a specific group
                           type: object
                           properties:
                             value:
                               type: string
+                          description: 'Deprecated: Do not use.'
                         hash:
                           type: string
-                          title: >-
-                            [Opt] [Record.result_hash]
-
-                            specify a specific record inside a scope (and group)
-                            by result-hash
                         name:
                           type: string
-                          title: |-
-                            [Opt] [Record.result_name]
-                            specify a result-name of a record within a scope
+                      description: 'Deprecated: Do not use.'
+                  description: 'Deprecated: Do not use.'
                 result:
                   type: string
                   enum:
@@ -90193,25 +90071,21 @@ definitions:
                     - RESULT_TYPE_SKIP
                     - RESULT_TYPE_FAIL
                   default: RESULT_TYPE_UNKNOWN
-                  description: ' - RESULT_TYPE_SKIP: Couldn''t process the condition/consideration due to missing facts being generated by other considerations.'
+                  description: 'Deprecated: Do not use.'
                 recorded_at:
                   type: object
                   properties:
                     seconds:
                       type: string
                       format: int64
-                      title: Represents seconds of UTC time since Unix epoch
                     nanos:
                       type: integer
                       format: int32
-                      description: >-
-                        Non-negative fractions of a second at nanosecond
-                        resolution.
-                  description: >-
-                    A Timestamp represents a point in time using values relative
-                    to the epoch.
+                  description: 'Deprecated: Do not use.'
                 error_message:
                   type: string
+              description: 'Deprecated: Do not use.'
+          description: 'Deprecated: Do not use.'
       recitals:
         type: array
         items:
@@ -90233,6 +90107,7 @@ definitions:
                 - PARTY_TYPE_CONTROLLER
                 - PARTY_TYPE_VALIDATOR
               default: PARTY_TYPE_UNKNOWN
+              description: 'Deprecated: Do not use.'
             signer:
               type: object
               properties:
@@ -90247,12 +90122,15 @@ definitions:
                       enum:
                         - ELLIPTIC
                       default: ELLIPTIC
+                      description: 'Deprecated: Do not use.'
                     curve:
                       type: string
                       enum:
                         - SECP256K1
                         - P256
                       default: SECP256K1
+                      description: 'Deprecated: Do not use.'
+                  description: 'Deprecated: Do not use.'
                 encryption_public_key:
                   type: object
                   properties:
@@ -90264,15 +90142,20 @@ definitions:
                       enum:
                         - ELLIPTIC
                       default: ELLIPTIC
+                      description: 'Deprecated: Do not use.'
                     curve:
                       type: string
                       enum:
                         - SECP256K1
                         - P256
                       default: SECP256K1
+                      description: 'Deprecated: Do not use.'
+                  description: 'Deprecated: Do not use.'
+              description: 'Deprecated: Do not use.'
             address:
               type: string
               format: byte
+          description: 'Deprecated: Do not use.'
       times_executed:
         type: integer
         format: int32
@@ -90282,18 +90165,14 @@ definitions:
           seconds:
             type: string
             format: int64
-            title: Represents seconds of UTC time since Unix epoch
           nanos:
             type: integer
             format: int32
-            description: Non-negative fractions of a second at nanosecond resolution.
-        description: >-
-          A Timestamp represents a point in time using values relative to the
-          epoch.
-        title: This is only set once when the contract is initially executed
+        description: 'Deprecated: Do not use.'
       context:
         type: string
         format: byte
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.ContractSpec:
     type: object
     properties:
@@ -90309,47 +90188,35 @@ definitions:
                 type: object
                 properties:
                   scope_uuid:
-                    title: |-
-                      [Req] [Scope.uuid]
-                      Scope ID
                     type: object
                     properties:
                       value:
                         type: string
+                    description: 'Deprecated: Do not use.'
                   group_uuid:
-                    title: |-
-                      [Opt] [RecordGroup.group_uuid]
-                      require record to be within a specific group
                     type: object
                     properties:
                       value:
                         type: string
+                    description: 'Deprecated: Do not use.'
                   hash:
                     type: string
-                    title: >-
-                      [Opt] [Record.result_hash]
-
-                      specify a specific record inside a scope (and group) by
-                      result-hash
                   name:
                     type: string
-                    title: |-
-                      [Opt] [Record.result_name]
-                      specify a result-name of a record within a scope
+                description: 'Deprecated: Do not use.'
               classname:
                 type: string
+            description: 'Deprecated: Do not use.'
           signature:
             type: object
             properties:
               algo:
                 type: string
-                title: Signature Detail
               provider:
                 type: string
               signature:
                 type: string
               signer:
-                title: Identity of signer
                 type: object
                 properties:
                   signing_public_key:
@@ -90363,12 +90230,15 @@ definitions:
                         enum:
                           - ELLIPTIC
                         default: ELLIPTIC
+                        description: 'Deprecated: Do not use.'
                       curve:
                         type: string
                         enum:
                           - SECP256K1
                           - P256
                         default: SECP256K1
+                        description: 'Deprecated: Do not use.'
+                    description: 'Deprecated: Do not use.'
                   encryption_public_key:
                     type: object
                     properties:
@@ -90380,12 +90250,17 @@ definitions:
                         enum:
                           - ELLIPTIC
                         default: ELLIPTIC
+                        description: 'Deprecated: Do not use.'
                       curve:
                         type: string
                         enum:
                           - SECP256K1
                           - P256
                         default: SECP256K1
+                        description: 'Deprecated: Do not use.'
+                    description: 'Deprecated: Do not use.'
+                description: 'Deprecated: Do not use.'
+            description: 'Deprecated: Do not use.'
           type:
             type: string
             enum:
@@ -90394,6 +90269,8 @@ definitions:
               - DEFINITION_SPEC_TYPE_FACT
               - DEFINITION_SPEC_TYPE_FACT_LIST
             default: DEFINITION_SPEC_TYPE_UNKNOWN
+            description: 'Deprecated: Do not use.'
+        description: 'Deprecated: Do not use.'
       input_specs:
         type: array
         items:
@@ -90408,47 +90285,35 @@ definitions:
                   type: object
                   properties:
                     scope_uuid:
-                      title: |-
-                        [Req] [Scope.uuid]
-                        Scope ID
                       type: object
                       properties:
                         value:
                           type: string
+                      description: 'Deprecated: Do not use.'
                     group_uuid:
-                      title: |-
-                        [Opt] [RecordGroup.group_uuid]
-                        require record to be within a specific group
                       type: object
                       properties:
                         value:
                           type: string
+                      description: 'Deprecated: Do not use.'
                     hash:
                       type: string
-                      title: >-
-                        [Opt] [Record.result_hash]
-
-                        specify a specific record inside a scope (and group) by
-                        result-hash
                     name:
                       type: string
-                      title: |-
-                        [Opt] [Record.result_name]
-                        specify a result-name of a record within a scope
+                  description: 'Deprecated: Do not use.'
                 classname:
                   type: string
+              description: 'Deprecated: Do not use.'
             signature:
               type: object
               properties:
                 algo:
                   type: string
-                  title: Signature Detail
                 provider:
                   type: string
                 signature:
                   type: string
                 signer:
-                  title: Identity of signer
                   type: object
                   properties:
                     signing_public_key:
@@ -90462,12 +90327,15 @@ definitions:
                           enum:
                             - ELLIPTIC
                           default: ELLIPTIC
+                          description: 'Deprecated: Do not use.'
                         curve:
                           type: string
                           enum:
                             - SECP256K1
                             - P256
                           default: SECP256K1
+                          description: 'Deprecated: Do not use.'
+                      description: 'Deprecated: Do not use.'
                     encryption_public_key:
                       type: object
                       properties:
@@ -90479,12 +90347,17 @@ definitions:
                           enum:
                             - ELLIPTIC
                           default: ELLIPTIC
+                          description: 'Deprecated: Do not use.'
                         curve:
                           type: string
                           enum:
                             - SECP256K1
                             - P256
                           default: SECP256K1
+                          description: 'Deprecated: Do not use.'
+                      description: 'Deprecated: Do not use.'
+                  description: 'Deprecated: Do not use.'
+              description: 'Deprecated: Do not use.'
             type:
               type: string
               enum:
@@ -90493,6 +90366,8 @@ definitions:
                 - DEFINITION_SPEC_TYPE_FACT
                 - DEFINITION_SPEC_TYPE_FACT_LIST
               default: DEFINITION_SPEC_TYPE_UNKNOWN
+              description: 'Deprecated: Do not use.'
+          description: 'Deprecated: Do not use.'
       parties_involved:
         type: array
         items:
@@ -90511,6 +90386,7 @@ definitions:
             - PARTY_TYPE_CONTROLLER
             - PARTY_TYPE_VALIDATOR
           default: PARTY_TYPE_UNKNOWN
+          description: 'Deprecated: Do not use.'
       condition_specs:
         type: array
         items:
@@ -90532,47 +90408,35 @@ definitions:
                         type: object
                         properties:
                           scope_uuid:
-                            title: |-
-                              [Req] [Scope.uuid]
-                              Scope ID
                             type: object
                             properties:
                               value:
                                 type: string
+                            description: 'Deprecated: Do not use.'
                           group_uuid:
-                            title: |-
-                              [Opt] [RecordGroup.group_uuid]
-                              require record to be within a specific group
                             type: object
                             properties:
                               value:
                                 type: string
+                            description: 'Deprecated: Do not use.'
                           hash:
                             type: string
-                            title: >-
-                              [Opt] [Record.result_hash]
-
-                              specify a specific record inside a scope (and
-                              group) by result-hash
                           name:
                             type: string
-                            title: |-
-                              [Opt] [Record.result_name]
-                              specify a result-name of a record within a scope
+                        description: 'Deprecated: Do not use.'
                       classname:
                         type: string
+                    description: 'Deprecated: Do not use.'
                   signature:
                     type: object
                     properties:
                       algo:
                         type: string
-                        title: Signature Detail
                       provider:
                         type: string
                       signature:
                         type: string
                       signer:
-                        title: Identity of signer
                         type: object
                         properties:
                           signing_public_key:
@@ -90586,12 +90450,15 @@ definitions:
                                 enum:
                                   - ELLIPTIC
                                 default: ELLIPTIC
+                                description: 'Deprecated: Do not use.'
                               curve:
                                 type: string
                                 enum:
                                   - SECP256K1
                                   - P256
                                 default: SECP256K1
+                                description: 'Deprecated: Do not use.'
+                            description: 'Deprecated: Do not use.'
                           encryption_public_key:
                             type: object
                             properties:
@@ -90603,12 +90470,17 @@ definitions:
                                 enum:
                                   - ELLIPTIC
                                 default: ELLIPTIC
+                                description: 'Deprecated: Do not use.'
                               curve:
                                 type: string
                                 enum:
                                   - SECP256K1
                                   - P256
                                 default: SECP256K1
+                                description: 'Deprecated: Do not use.'
+                            description: 'Deprecated: Do not use.'
+                        description: 'Deprecated: Do not use.'
+                    description: 'Deprecated: Do not use.'
                   type:
                     type: string
                     enum:
@@ -90617,6 +90489,8 @@ definitions:
                       - DEFINITION_SPEC_TYPE_FACT
                       - DEFINITION_SPEC_TYPE_FACT_LIST
                     default: DEFINITION_SPEC_TYPE_UNKNOWN
+                    description: 'Deprecated: Do not use.'
+                description: 'Deprecated: Do not use.'
             output_spec:
               type: object
               properties:
@@ -90632,47 +90506,35 @@ definitions:
                           type: object
                           properties:
                             scope_uuid:
-                              title: |-
-                                [Req] [Scope.uuid]
-                                Scope ID
                               type: object
                               properties:
                                 value:
                                   type: string
+                              description: 'Deprecated: Do not use.'
                             group_uuid:
-                              title: |-
-                                [Opt] [RecordGroup.group_uuid]
-                                require record to be within a specific group
                               type: object
                               properties:
                                 value:
                                   type: string
+                              description: 'Deprecated: Do not use.'
                             hash:
                               type: string
-                              title: >-
-                                [Opt] [Record.result_hash]
-
-                                specify a specific record inside a scope (and
-                                group) by result-hash
                             name:
                               type: string
-                              title: |-
-                                [Opt] [Record.result_name]
-                                specify a result-name of a record within a scope
+                          description: 'Deprecated: Do not use.'
                         classname:
                           type: string
+                      description: 'Deprecated: Do not use.'
                     signature:
                       type: object
                       properties:
                         algo:
                           type: string
-                          title: Signature Detail
                         provider:
                           type: string
                         signature:
                           type: string
                         signer:
-                          title: Identity of signer
                           type: object
                           properties:
                             signing_public_key:
@@ -90686,12 +90548,15 @@ definitions:
                                   enum:
                                     - ELLIPTIC
                                   default: ELLIPTIC
+                                  description: 'Deprecated: Do not use.'
                                 curve:
                                   type: string
                                   enum:
                                     - SECP256K1
                                     - P256
                                   default: SECP256K1
+                                  description: 'Deprecated: Do not use.'
+                              description: 'Deprecated: Do not use.'
                             encryption_public_key:
                               type: object
                               properties:
@@ -90703,12 +90568,17 @@ definitions:
                                   enum:
                                     - ELLIPTIC
                                   default: ELLIPTIC
+                                  description: 'Deprecated: Do not use.'
                                 curve:
                                   type: string
                                   enum:
                                     - SECP256K1
                                     - P256
                                   default: SECP256K1
+                                  description: 'Deprecated: Do not use.'
+                              description: 'Deprecated: Do not use.'
+                          description: 'Deprecated: Do not use.'
+                      description: 'Deprecated: Do not use.'
                     type:
                       type: string
                       enum:
@@ -90717,6 +90587,10 @@ definitions:
                         - DEFINITION_SPEC_TYPE_FACT
                         - DEFINITION_SPEC_TYPE_FACT_LIST
                       default: DEFINITION_SPEC_TYPE_UNKNOWN
+                      description: 'Deprecated: Do not use.'
+                  description: 'Deprecated: Do not use.'
+              description: 'Deprecated: Do not use.'
+          description: 'Deprecated: Do not use.'
       consideration_specs:
         type: array
         items:
@@ -90725,7 +90599,6 @@ definitions:
             func_name:
               type: string
             responsible_party:
-              title: Invoking party
               type: string
               enum:
                 - PARTY_TYPE_UNKNOWN
@@ -90741,6 +90614,7 @@ definitions:
                 - PARTY_TYPE_CONTROLLER
                 - PARTY_TYPE_VALIDATOR
               default: PARTY_TYPE_UNKNOWN
+              description: 'Deprecated: Do not use.'
             input_specs:
               type: array
               items:
@@ -90755,47 +90629,35 @@ definitions:
                         type: object
                         properties:
                           scope_uuid:
-                            title: |-
-                              [Req] [Scope.uuid]
-                              Scope ID
                             type: object
                             properties:
                               value:
                                 type: string
+                            description: 'Deprecated: Do not use.'
                           group_uuid:
-                            title: |-
-                              [Opt] [RecordGroup.group_uuid]
-                              require record to be within a specific group
                             type: object
                             properties:
                               value:
                                 type: string
+                            description: 'Deprecated: Do not use.'
                           hash:
                             type: string
-                            title: >-
-                              [Opt] [Record.result_hash]
-
-                              specify a specific record inside a scope (and
-                              group) by result-hash
                           name:
                             type: string
-                            title: |-
-                              [Opt] [Record.result_name]
-                              specify a result-name of a record within a scope
+                        description: 'Deprecated: Do not use.'
                       classname:
                         type: string
+                    description: 'Deprecated: Do not use.'
                   signature:
                     type: object
                     properties:
                       algo:
                         type: string
-                        title: Signature Detail
                       provider:
                         type: string
                       signature:
                         type: string
                       signer:
-                        title: Identity of signer
                         type: object
                         properties:
                           signing_public_key:
@@ -90809,12 +90671,15 @@ definitions:
                                 enum:
                                   - ELLIPTIC
                                 default: ELLIPTIC
+                                description: 'Deprecated: Do not use.'
                               curve:
                                 type: string
                                 enum:
                                   - SECP256K1
                                   - P256
                                 default: SECP256K1
+                                description: 'Deprecated: Do not use.'
+                            description: 'Deprecated: Do not use.'
                           encryption_public_key:
                             type: object
                             properties:
@@ -90826,12 +90691,17 @@ definitions:
                                 enum:
                                   - ELLIPTIC
                                 default: ELLIPTIC
+                                description: 'Deprecated: Do not use.'
                               curve:
                                 type: string
                                 enum:
                                   - SECP256K1
                                   - P256
                                 default: SECP256K1
+                                description: 'Deprecated: Do not use.'
+                            description: 'Deprecated: Do not use.'
+                        description: 'Deprecated: Do not use.'
+                    description: 'Deprecated: Do not use.'
                   type:
                     type: string
                     enum:
@@ -90840,6 +90710,8 @@ definitions:
                       - DEFINITION_SPEC_TYPE_FACT
                       - DEFINITION_SPEC_TYPE_FACT_LIST
                     default: DEFINITION_SPEC_TYPE_UNKNOWN
+                    description: 'Deprecated: Do not use.'
+                description: 'Deprecated: Do not use.'
             output_spec:
               type: object
               properties:
@@ -90855,47 +90727,35 @@ definitions:
                           type: object
                           properties:
                             scope_uuid:
-                              title: |-
-                                [Req] [Scope.uuid]
-                                Scope ID
                               type: object
                               properties:
                                 value:
                                   type: string
+                              description: 'Deprecated: Do not use.'
                             group_uuid:
-                              title: |-
-                                [Opt] [RecordGroup.group_uuid]
-                                require record to be within a specific group
                               type: object
                               properties:
                                 value:
                                   type: string
+                              description: 'Deprecated: Do not use.'
                             hash:
                               type: string
-                              title: >-
-                                [Opt] [Record.result_hash]
-
-                                specify a specific record inside a scope (and
-                                group) by result-hash
                             name:
                               type: string
-                              title: |-
-                                [Opt] [Record.result_name]
-                                specify a result-name of a record within a scope
+                          description: 'Deprecated: Do not use.'
                         classname:
                           type: string
+                      description: 'Deprecated: Do not use.'
                     signature:
                       type: object
                       properties:
                         algo:
                           type: string
-                          title: Signature Detail
                         provider:
                           type: string
                         signature:
                           type: string
                         signer:
-                          title: Identity of signer
                           type: object
                           properties:
                             signing_public_key:
@@ -90909,12 +90769,15 @@ definitions:
                                   enum:
                                     - ELLIPTIC
                                   default: ELLIPTIC
+                                  description: 'Deprecated: Do not use.'
                                 curve:
                                   type: string
                                   enum:
                                     - SECP256K1
                                     - P256
                                   default: SECP256K1
+                                  description: 'Deprecated: Do not use.'
+                              description: 'Deprecated: Do not use.'
                             encryption_public_key:
                               type: object
                               properties:
@@ -90926,12 +90789,17 @@ definitions:
                                   enum:
                                     - ELLIPTIC
                                   default: ELLIPTIC
+                                  description: 'Deprecated: Do not use.'
                                 curve:
                                   type: string
                                   enum:
                                     - SECP256K1
                                     - P256
                                   default: SECP256K1
+                                  description: 'Deprecated: Do not use.'
+                              description: 'Deprecated: Do not use.'
+                          description: 'Deprecated: Do not use.'
+                      description: 'Deprecated: Do not use.'
                     type:
                       type: string
                       enum:
@@ -90940,6 +90808,11 @@ definitions:
                         - DEFINITION_SPEC_TYPE_FACT
                         - DEFINITION_SPEC_TYPE_FACT_LIST
                       default: DEFINITION_SPEC_TYPE_UNKNOWN
+                      description: 'Deprecated: Do not use.'
+                  description: 'Deprecated: Do not use.'
+              description: 'Deprecated: Do not use.'
+          description: 'Deprecated: Do not use.'
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.DefinitionSpec:
     type: object
     properties:
@@ -90952,47 +90825,35 @@ definitions:
             type: object
             properties:
               scope_uuid:
-                title: |-
-                  [Req] [Scope.uuid]
-                  Scope ID
                 type: object
                 properties:
                   value:
                     type: string
+                description: 'Deprecated: Do not use.'
               group_uuid:
-                title: |-
-                  [Opt] [RecordGroup.group_uuid]
-                  require record to be within a specific group
                 type: object
                 properties:
                   value:
                     type: string
+                description: 'Deprecated: Do not use.'
               hash:
                 type: string
-                title: >-
-                  [Opt] [Record.result_hash]
-
-                  specify a specific record inside a scope (and group) by
-                  result-hash
               name:
                 type: string
-                title: |-
-                  [Opt] [Record.result_name]
-                  specify a result-name of a record within a scope
+            description: 'Deprecated: Do not use.'
           classname:
             type: string
+        description: 'Deprecated: Do not use.'
       signature:
         type: object
         properties:
           algo:
             type: string
-            title: Signature Detail
           provider:
             type: string
           signature:
             type: string
           signer:
-            title: Identity of signer
             type: object
             properties:
               signing_public_key:
@@ -91006,12 +90867,15 @@ definitions:
                     enum:
                       - ELLIPTIC
                     default: ELLIPTIC
+                    description: 'Deprecated: Do not use.'
                   curve:
                     type: string
                     enum:
                       - SECP256K1
                       - P256
                     default: SECP256K1
+                    description: 'Deprecated: Do not use.'
+                description: 'Deprecated: Do not use.'
               encryption_public_key:
                 type: object
                 properties:
@@ -91023,12 +90887,17 @@ definitions:
                     enum:
                       - ELLIPTIC
                     default: ELLIPTIC
+                    description: 'Deprecated: Do not use.'
                   curve:
                     type: string
                     enum:
                       - SECP256K1
                       - P256
                     default: SECP256K1
+                    description: 'Deprecated: Do not use.'
+                description: 'Deprecated: Do not use.'
+            description: 'Deprecated: Do not use.'
+        description: 'Deprecated: Do not use.'
       type:
         type: string
         enum:
@@ -91037,6 +90906,8 @@ definitions:
           - DEFINITION_SPEC_TYPE_FACT
           - DEFINITION_SPEC_TYPE_FACT_LIST
         default: DEFINITION_SPEC_TYPE_UNKNOWN
+        description: 'Deprecated: Do not use.'
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.DefinitionSpecType:
     type: string
     enum:
@@ -91045,6 +90916,7 @@ definitions:
       - DEFINITION_SPEC_TYPE_FACT
       - DEFINITION_SPEC_TYPE_FACT_LIST
     default: DEFINITION_SPEC_TYPE_UNKNOWN
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.ExecutionResult:
     type: object
     properties:
@@ -91061,33 +90933,23 @@ definitions:
             type: object
             properties:
               scope_uuid:
-                title: |-
-                  [Req] [Scope.uuid]
-                  Scope ID
                 type: object
                 properties:
                   value:
                     type: string
+                description: 'Deprecated: Do not use.'
               group_uuid:
-                title: |-
-                  [Opt] [RecordGroup.group_uuid]
-                  require record to be within a specific group
                 type: object
                 properties:
                   value:
                     type: string
+                description: 'Deprecated: Do not use.'
               hash:
                 type: string
-                title: >-
-                  [Opt] [Record.result_hash]
-
-                  specify a specific record inside a scope (and group) by
-                  result-hash
               name:
                 type: string
-                title: |-
-                  [Opt] [Record.result_name]
-                  specify a result-name of a record within a scope
+            description: 'Deprecated: Do not use.'
+        description: 'Deprecated: Do not use.'
       result:
         type: string
         enum:
@@ -91096,23 +90958,20 @@ definitions:
           - RESULT_TYPE_SKIP
           - RESULT_TYPE_FAIL
         default: RESULT_TYPE_UNKNOWN
-        description: ' - RESULT_TYPE_SKIP: Couldn''t process the condition/consideration due to missing facts being generated by other considerations.'
+        description: 'Deprecated: Do not use.'
       recorded_at:
         type: object
         properties:
           seconds:
             type: string
             format: int64
-            title: Represents seconds of UTC time since Unix epoch
           nanos:
             type: integer
             format: int32
-            description: Non-negative fractions of a second at nanosecond resolution.
-        description: >-
-          A Timestamp represents a point in time using values relative to the
-          epoch.
+        description: 'Deprecated: Do not use.'
       error_message:
         type: string
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.ExecutionResultType:
     type: string
     enum:
@@ -91121,7 +90980,7 @@ definitions:
       - RESULT_TYPE_SKIP
       - RESULT_TYPE_FAIL
     default: RESULT_TYPE_UNKNOWN
-    description: ' - RESULT_TYPE_SKIP: Couldn''t process the condition/consideration due to missing facts being generated by other considerations.'
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.Fact:
     type: object
     properties:
@@ -91134,35 +90993,26 @@ definitions:
             type: object
             properties:
               scope_uuid:
-                title: |-
-                  [Req] [Scope.uuid]
-                  Scope ID
                 type: object
                 properties:
                   value:
                     type: string
+                description: 'Deprecated: Do not use.'
               group_uuid:
-                title: |-
-                  [Opt] [RecordGroup.group_uuid]
-                  require record to be within a specific group
                 type: object
                 properties:
                   value:
                     type: string
+                description: 'Deprecated: Do not use.'
               hash:
                 type: string
-                title: >-
-                  [Opt] [Record.result_hash]
-
-                  specify a specific record inside a scope (and group) by
-                  result-hash
               name:
                 type: string
-                title: |-
-                  [Opt] [Record.result_name]
-                  specify a result-name of a record within a scope
+            description: 'Deprecated: Do not use.'
           classname:
             type: string
+        description: 'Deprecated: Do not use.'
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.Location:
     type: object
     properties:
@@ -91170,35 +91020,25 @@ definitions:
         type: object
         properties:
           scope_uuid:
-            title: |-
-              [Req] [Scope.uuid]
-              Scope ID
             type: object
             properties:
               value:
                 type: string
+            description: 'Deprecated: Do not use.'
           group_uuid:
-            title: |-
-              [Opt] [RecordGroup.group_uuid]
-              require record to be within a specific group
             type: object
             properties:
               value:
                 type: string
+            description: 'Deprecated: Do not use.'
           hash:
             type: string
-            title: >-
-              [Opt] [Record.result_hash]
-
-              specify a specific record inside a scope (and group) by
-              result-hash
           name:
             type: string
-            title: |-
-              [Opt] [Record.result_name]
-              specify a result-name of a record within a scope
+        description: 'Deprecated: Do not use.'
       classname:
         type: string
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.OutputSpec:
     type: object
     properties:
@@ -91214,47 +91054,35 @@ definitions:
                 type: object
                 properties:
                   scope_uuid:
-                    title: |-
-                      [Req] [Scope.uuid]
-                      Scope ID
                     type: object
                     properties:
                       value:
                         type: string
+                    description: 'Deprecated: Do not use.'
                   group_uuid:
-                    title: |-
-                      [Opt] [RecordGroup.group_uuid]
-                      require record to be within a specific group
                     type: object
                     properties:
                       value:
                         type: string
+                    description: 'Deprecated: Do not use.'
                   hash:
                     type: string
-                    title: >-
-                      [Opt] [Record.result_hash]
-
-                      specify a specific record inside a scope (and group) by
-                      result-hash
                   name:
                     type: string
-                    title: |-
-                      [Opt] [Record.result_name]
-                      specify a result-name of a record within a scope
+                description: 'Deprecated: Do not use.'
               classname:
                 type: string
+            description: 'Deprecated: Do not use.'
           signature:
             type: object
             properties:
               algo:
                 type: string
-                title: Signature Detail
               provider:
                 type: string
               signature:
                 type: string
               signer:
-                title: Identity of signer
                 type: object
                 properties:
                   signing_public_key:
@@ -91268,12 +91096,15 @@ definitions:
                         enum:
                           - ELLIPTIC
                         default: ELLIPTIC
+                        description: 'Deprecated: Do not use.'
                       curve:
                         type: string
                         enum:
                           - SECP256K1
                           - P256
                         default: SECP256K1
+                        description: 'Deprecated: Do not use.'
+                    description: 'Deprecated: Do not use.'
                   encryption_public_key:
                     type: object
                     properties:
@@ -91285,12 +91116,17 @@ definitions:
                         enum:
                           - ELLIPTIC
                         default: ELLIPTIC
+                        description: 'Deprecated: Do not use.'
                       curve:
                         type: string
                         enum:
                           - SECP256K1
                           - P256
                         default: SECP256K1
+                        description: 'Deprecated: Do not use.'
+                    description: 'Deprecated: Do not use.'
+                description: 'Deprecated: Do not use.'
+            description: 'Deprecated: Do not use.'
           type:
             type: string
             enum:
@@ -91299,6 +91135,9 @@ definitions:
               - DEFINITION_SPEC_TYPE_FACT
               - DEFINITION_SPEC_TYPE_FACT_LIST
             default: DEFINITION_SPEC_TYPE_UNKNOWN
+            description: 'Deprecated: Do not use.'
+        description: 'Deprecated: Do not use.'
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.PartyType:
     type: string
     enum:
@@ -91315,6 +91154,7 @@ definitions:
       - PARTY_TYPE_CONTROLLER
       - PARTY_TYPE_VALIDATOR
     default: PARTY_TYPE_UNKNOWN
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.ProposedFact:
     type: object
     properties:
@@ -91328,62 +91168,43 @@ definitions:
         type: object
         properties:
           scope_uuid:
-            title: |-
-              [Req] [Scope.uuid]
-              Scope ID
             type: object
             properties:
               value:
                 type: string
+            description: 'Deprecated: Do not use.'
           group_uuid:
-            title: |-
-              [Opt] [RecordGroup.group_uuid]
-              require record to be within a specific group
             type: object
             properties:
               value:
                 type: string
+            description: 'Deprecated: Do not use.'
           hash:
             type: string
-            title: >-
-              [Opt] [Record.result_hash]
-
-              specify a specific record inside a scope (and group) by
-              result-hash
           name:
             type: string
-            title: |-
-              [Opt] [Record.result_name]
-              specify a result-name of a record within a scope
+        description: 'Deprecated: Do not use.'
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.ProvenanceReference:
     type: object
     properties:
       scope_uuid:
-        title: |-
-          [Req] [Scope.uuid]
-          Scope ID
         type: object
         properties:
           value:
             type: string
+        description: 'Deprecated: Do not use.'
       group_uuid:
-        title: |-
-          [Opt] [RecordGroup.group_uuid]
-          require record to be within a specific group
         type: object
         properties:
           value:
             type: string
+        description: 'Deprecated: Do not use.'
       hash:
         type: string
-        title: |-
-          [Opt] [Record.result_hash]
-          specify a specific record inside a scope (and group) by result-hash
       name:
         type: string
-        title: |-
-          [Opt] [Record.result_name]
-          specify a result-name of a record within a scope
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.PublicKey:
     type: object
     properties:
@@ -91395,23 +91216,28 @@ definitions:
         enum:
           - ELLIPTIC
         default: ELLIPTIC
+        description: 'Deprecated: Do not use.'
       curve:
         type: string
         enum:
           - SECP256K1
           - P256
         default: SECP256K1
+        description: 'Deprecated: Do not use.'
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.PublicKeyCurve:
     type: string
     enum:
       - SECP256K1
       - P256
     default: SECP256K1
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.PublicKeyType:
     type: string
     enum:
       - ELLIPTIC
     default: ELLIPTIC
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.Recital:
     type: object
     properties:
@@ -91431,6 +91257,7 @@ definitions:
           - PARTY_TYPE_CONTROLLER
           - PARTY_TYPE_VALIDATOR
         default: PARTY_TYPE_UNKNOWN
+        description: 'Deprecated: Do not use.'
       signer:
         type: object
         properties:
@@ -91445,12 +91272,15 @@ definitions:
                 enum:
                   - ELLIPTIC
                 default: ELLIPTIC
+                description: 'Deprecated: Do not use.'
               curve:
                 type: string
                 enum:
                   - SECP256K1
                   - P256
                 default: SECP256K1
+                description: 'Deprecated: Do not use.'
+            description: 'Deprecated: Do not use.'
           encryption_public_key:
             type: object
             properties:
@@ -91462,15 +91292,20 @@ definitions:
                 enum:
                   - ELLIPTIC
                 default: ELLIPTIC
+                description: 'Deprecated: Do not use.'
               curve:
                 type: string
                 enum:
                   - SECP256K1
                   - P256
                 default: SECP256K1
+                description: 'Deprecated: Do not use.'
+            description: 'Deprecated: Do not use.'
+        description: 'Deprecated: Do not use.'
       address:
         type: string
         format: byte
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.Recitals:
     type: object
     properties:
@@ -91495,6 +91330,7 @@ definitions:
                 - PARTY_TYPE_CONTROLLER
                 - PARTY_TYPE_VALIDATOR
               default: PARTY_TYPE_UNKNOWN
+              description: 'Deprecated: Do not use.'
             signer:
               type: object
               properties:
@@ -91509,12 +91345,15 @@ definitions:
                       enum:
                         - ELLIPTIC
                       default: ELLIPTIC
+                      description: 'Deprecated: Do not use.'
                     curve:
                       type: string
                       enum:
                         - SECP256K1
                         - P256
                       default: SECP256K1
+                      description: 'Deprecated: Do not use.'
+                  description: 'Deprecated: Do not use.'
                 encryption_public_key:
                   type: object
                   properties:
@@ -91526,27 +91365,31 @@ definitions:
                       enum:
                         - ELLIPTIC
                       default: ELLIPTIC
+                      description: 'Deprecated: Do not use.'
                     curve:
                       type: string
                       enum:
                         - SECP256K1
                         - P256
                       default: SECP256K1
+                      description: 'Deprecated: Do not use.'
+                  description: 'Deprecated: Do not use.'
+              description: 'Deprecated: Do not use.'
             address:
               type: string
               format: byte
+          description: 'Deprecated: Do not use.'
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.Signature:
     type: object
     properties:
       algo:
         type: string
-        title: Signature Detail
       provider:
         type: string
       signature:
         type: string
       signer:
-        title: Identity of signer
         type: object
         properties:
           signing_public_key:
@@ -91560,12 +91403,15 @@ definitions:
                 enum:
                   - ELLIPTIC
                 default: ELLIPTIC
+                description: 'Deprecated: Do not use.'
               curve:
                 type: string
                 enum:
                   - SECP256K1
                   - P256
                 default: SECP256K1
+                description: 'Deprecated: Do not use.'
+            description: 'Deprecated: Do not use.'
           encryption_public_key:
             type: object
             properties:
@@ -91577,12 +91423,17 @@ definitions:
                 enum:
                   - ELLIPTIC
                 default: ELLIPTIC
+                description: 'Deprecated: Do not use.'
               curve:
                 type: string
                 enum:
                   - SECP256K1
                   - P256
                 default: SECP256K1
+                description: 'Deprecated: Do not use.'
+            description: 'Deprecated: Do not use.'
+        description: 'Deprecated: Do not use.'
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.SignatureSet:
     type: object
     properties:
@@ -91593,13 +91444,11 @@ definitions:
           properties:
             algo:
               type: string
-              title: Signature Detail
             provider:
               type: string
             signature:
               type: string
             signer:
-              title: Identity of signer
               type: object
               properties:
                 signing_public_key:
@@ -91613,12 +91462,15 @@ definitions:
                       enum:
                         - ELLIPTIC
                       default: ELLIPTIC
+                      description: 'Deprecated: Do not use.'
                     curve:
                       type: string
                       enum:
                         - SECP256K1
                         - P256
                       default: SECP256K1
+                      description: 'Deprecated: Do not use.'
+                  description: 'Deprecated: Do not use.'
                 encryption_public_key:
                   type: object
                   properties:
@@ -91630,12 +91482,18 @@ definitions:
                       enum:
                         - ELLIPTIC
                       default: ELLIPTIC
+                      description: 'Deprecated: Do not use.'
                     curve:
                       type: string
                       enum:
                         - SECP256K1
                         - P256
                       default: SECP256K1
+                      description: 'Deprecated: Do not use.'
+                  description: 'Deprecated: Do not use.'
+              description: 'Deprecated: Do not use.'
+          description: 'Deprecated: Do not use.'
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.SigningAndEncryptionPublicKeys:
     type: object
     properties:
@@ -91650,12 +91508,15 @@ definitions:
             enum:
               - ELLIPTIC
             default: ELLIPTIC
+            description: 'Deprecated: Do not use.'
           curve:
             type: string
             enum:
               - SECP256K1
               - P256
             default: SECP256K1
+            description: 'Deprecated: Do not use.'
+        description: 'Deprecated: Do not use.'
       encryption_public_key:
         type: object
         properties:
@@ -91667,29 +91528,32 @@ definitions:
             enum:
               - ELLIPTIC
             default: ELLIPTIC
+            description: 'Deprecated: Do not use.'
           curve:
             type: string
             enum:
               - SECP256K1
               - P256
             default: SECP256K1
+            description: 'Deprecated: Do not use.'
+        description: 'Deprecated: Do not use.'
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.Timestamp:
     type: object
     properties:
       seconds:
         type: string
         format: int64
-        title: Represents seconds of UTC time since Unix epoch
       nanos:
         type: integer
         format: int32
-        description: Non-negative fractions of a second at nanosecond resolution.
-    description: A Timestamp represents a point in time using values relative to the epoch.
+    description: 'Deprecated: Do not use.'
   provenance.metadata.v1.p8e.UUID:
     type: object
     properties:
       value:
         type: string
+    description: 'Deprecated: Do not use.'
   provenance.name.v1.Params:
     type: object
     properties:
@@ -91782,6 +91646,9 @@ definitions:
   provenance.name.v1.MsgBindNameResponse:
     type: object
     description: MsgBindNameResponse defines the Msg/BindName response type.
+  provenance.name.v1.MsgCreateRootNameResponse:
+    type: object
+    description: MsgCreateRootNameResponse defines Msg/CreateRootName response type.
   provenance.name.v1.MsgDeleteNameResponse:
     type: object
     description: MsgDeleteNameResponse defines the Msg/DeleteName response type.
