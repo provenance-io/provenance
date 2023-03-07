@@ -501,16 +501,6 @@ func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string
 		return fmt.Errorf("can only activate markeraccounts in the Finalized status")
 	}
 
-	// Verify the send_enabled status of this coin denom matches the marker types
-	switch m.GetMarkerType() {
-	case types.MarkerType_Coin:
-		k.ensureSendEnabledStatus(ctx, denom, true)
-	case types.MarkerType_RestrictedCoin:
-		k.ensureSendEnabledStatus(ctx, denom, false)
-	default:
-		return fmt.Errorf("marker of %s type can not be activated", m.GetMarkerType())
-	}
-
 	// Amount to mint is typically the defined supply however...
 	supplyRequest := m.GetSupply()
 
@@ -852,6 +842,7 @@ func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress,
 	return m.GetSupply().IsEqual(sdk.NewCoin(m.GetDenom(), balance.Amount))
 }
 
+// TODO: maybe we can remove this?
 // ensureSendEnabledStatus checks to see if the configuration of SendEnabled for the current network matches
 // the requested value, sets
 func (k Keeper) ensureSendEnabledStatus(ctx sdk.Context, denom string, sendEnabled bool) {
