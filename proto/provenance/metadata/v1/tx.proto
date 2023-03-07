@@ -66,13 +66,11 @@ service Msg {
 
   // ---- Deprecated Transition Endpoints -----
 
-  // WriteP8eContractSpec adds a P8e v39 contract spec as a v40 ContractSpecification
-  // It only exists to help facilitate the transition. Users should transition to WriteContractSpecification.
+  // Deprecated: This endpoint will always return an error. Use WriteContractSpecification instead.
   rpc WriteP8eContractSpec(MsgWriteP8eContractSpecRequest) returns (MsgWriteP8eContractSpecResponse) {
     option deprecated = true;
   };
-  // P8EMemorializeContract records the results of a P8e contract execution as a session and set of records in a scope
-  // It only exists to help facilitate the transition. Users should transition to calling the individual Write methods.
+  // Deprecated: This endpoint will always return an error. Use individual Write endpoints instead.
   rpc P8eMemorializeContract(MsgP8eMemorializeContractRequest) returns (MsgP8eMemorializeContractResponse) {
     option deprecated = true;
   };
@@ -527,58 +525,46 @@ message MsgDeleteRecordSpecificationRequest {
 // MsgDeleteRecordSpecificationResponse is the response type for the Msg/DeleteRecordSpecification RPC method.
 message MsgDeleteRecordSpecificationResponse {}
 
-// MsgWriteP8eContractSpecRequest is the request type for the Msg/WriteP8eContractSpec RPC method.
+// Deprecated: Do not use.
 message MsgWriteP8eContractSpecRequest {
+  option deprecated                   = true;
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
-
-  // ContractSpec v39 p8e ContractSpect to be converted into a v40
-  p8e.ContractSpec contractspec = 1 [(gogoproto.nullable) = false];
-  repeated string  signers      = 2;
+  p8e.ContractSpec contractspec       = 1 [(gogoproto.nullable) = false];
+  repeated string  signers            = 2;
 }
 
-// MsgWriteP8eContractSpecResponse is the response type for the Msg/WriteP8eContractSpec RPC method.
+// Deprecated: Do not use.
 message MsgWriteP8eContractSpecResponse {
-  // contract_spec_id_info contains information about the id/address of the contract specification that was added or
-  // updated.
-  ContractSpecIdInfo contract_spec_id_info = 1 [(gogoproto.moretags) = "yaml:\"contract_spec_id_info\""];
-  // record_spec_id_infos contains information about the ids/addresses of the record specifications that were added or
-  // updated.
-  repeated RecordSpecIdInfo record_spec_id_infos = 2 [(gogoproto.moretags) = "yaml:\"record_spec_id_infos\""];
+  option                    deprecated            = true;
+  ContractSpecIdInfo        contract_spec_id_info = 1 [(gogoproto.moretags) = "yaml:\"contract_spec_id_info\""];
+  repeated RecordSpecIdInfo record_spec_id_infos  = 2 [(gogoproto.moretags) = "yaml:\"record_spec_id_infos\""];
 }
 
-// MsgP8eMemorializeContractRequest is the request type for the Msg/P8eMemorializeContract RPC method.
+// Deprecated: Do not use.
 message MsgP8eMemorializeContractRequest {
+  option deprecated                   = true;
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  // The scope id of the object being add or modified on blockchain.
-  string scope_id = 1;
-  // The uuid of the contract execution.
-  string group_id = 2;
-  // The scope specification id.
-  string scope_specification_id = 3;
-  // The new recitals for the scope.  Used in leu of Contract for direct ownership changes.
-  provenance.metadata.v1.p8e.Recitals recitals = 4;
-  // The executed contract.
-  provenance.metadata.v1.p8e.Contract contract = 5;
-  // The contract signatures
-  provenance.metadata.v1.p8e.SignatureSet signatures = 6;
-  // The bech32 address of the notary (ie the broadcaster of this message).
-  string invoker = 7;
+  string                                  scope_id               = 1;
+  string                                  group_id               = 2;
+  string                                  scope_specification_id = 3;
+  provenance.metadata.v1.p8e.Recitals     recitals               = 4;
+  provenance.metadata.v1.p8e.Contract     contract               = 5;
+  provenance.metadata.v1.p8e.SignatureSet signatures             = 6;
+  string                                  invoker                = 7;
 }
 
-// MsgP8eMemorializeContractResponse is the response type for the Msg/P8eMemorializeContract RPC method.
+// Deprecated: Do not use.
 message MsgP8eMemorializeContractResponse {
-  // scope_id_info contains information about the id/address of the scope that was added or updated.
-  ScopeIdInfo scope_id_info = 1 [(gogoproto.moretags) = "yaml:\"scope_id_info\""];
-  // session_id_info contains information about the id/address of the session that was added or updated.
-  SessionIdInfo session_id_info = 2 [(gogoproto.moretags) = "yaml:\"session_id_info\""];
-  // record_id_infos contains information about the ids/addresses of the records that were added or updated.
+  option                deprecated      = true;
+  ScopeIdInfo           scope_id_info   = 1 [(gogoproto.moretags) = "yaml:\"scope_id_info\""];
+  SessionIdInfo         session_id_info = 2 [(gogoproto.moretags) = "yaml:\"session_id_info\""];
   repeated RecordIdInfo record_id_infos = 3 [(gogoproto.moretags) = "yaml:\"record_id_infos\""];
 }
 
