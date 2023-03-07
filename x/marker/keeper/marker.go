@@ -841,17 +841,3 @@ func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress,
 	// the operations as an admin on the marker.
 	return m.GetSupply().IsEqual(sdk.NewCoin(m.GetDenom(), balance.Amount))
 }
-
-// TODO: maybe we can remove this?
-// ensureSendEnabledStatus checks to see if the configuration of SendEnabled for the current network matches
-// the requested value, sets
-func (k Keeper) ensureSendEnabledStatus(ctx sdk.Context, denom string, sendEnabled bool) {
-	if k.bankKeeper.IsSendEnabledDenom(ctx, denom) != sendEnabled {
-		switch k.bankKeeper.GetParams(ctx).DefaultSendEnabled {
-		case sendEnabled:
-			k.bankKeeper.DeleteSendEnabled(ctx, denom)
-		default:
-			k.bankKeeper.SetSendEnabled(ctx, denom, sendEnabled)
-		}
-	}
-}
