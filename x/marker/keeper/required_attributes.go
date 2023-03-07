@@ -11,9 +11,6 @@ import (
 )
 
 func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
-	// TODO: Do we want to eat the gas fees for all the reads going on here?
-	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
-
 	markerAddr := types.MustGetMarkerAddress(denom)
 	marker, err := k.GetMarker(ctx, markerAddr)
 	if err != nil {
@@ -32,15 +29,15 @@ func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
 		return err
 	}
 
-	// address used for adjusting circulation
-	moduleAdrr := k.authKeeper.GetModuleAddress(types.CoinPoolName)
-
-	if marker.AddressHasAccess(caller, types.Access_Transfer) || moduleAdrr.String() == from {
+	// if the marker has transfer authority it is allowed to send to receiver without checking of attributes
+	if marker.AddressHasAccess(caller, types.Access_Transfer) {
 		return nil
 	}
+	// when marker does not have required attributes only senders with transfer authority can send funds
 	if len(marker.GetRequiredAttributes()) == 0 {
 		return fmt.Errorf("%s does not have transfer permissions", caller.String())
 	}
+	// checks that receiver of funds has ALL required attributes
 	contains, err := k.ContainsRequiredAttributes(ctx, marker.GetRequiredAttributes(), to)
 	if err != nil {
 		return err
