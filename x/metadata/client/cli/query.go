@@ -23,11 +23,12 @@ import (
 var (
 	cmdStart = fmt.Sprintf("%s query metadata", version.AppName)
 
-	includeScope       bool
-	includeSessions    bool
-	includeRecords     bool
-	includeRecordSpecs bool
-	includeRequest     bool
+	includeScope         bool
+	includeSessions      bool
+	includeRecords       bool
+	includeRecordSpecs   bool
+	includeRequest       bool
+	includeContractSpecs bool
 )
 
 const all = "all"
@@ -389,6 +390,8 @@ func GetMetadataScopeSpecCmd() *cobra.Command {
 		},
 	}
 
+	addIncludeContractSpecsFlag(cmd)
+	addIncludeRecordSpecsFlag(cmd)
 	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "scope specifications (all)")
@@ -828,7 +831,9 @@ func outputScopeSpec(cmd *cobra.Command, specificationID string) error {
 	}
 
 	req := types.ScopeSpecificationRequest{
-		SpecificationId: specificationID,
+		SpecificationId:      specificationID,
+		IncludeContractSpecs: includeContractSpecs,
+		IncludeRecordSpecs:   includeRecordSpecs,
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
@@ -1155,6 +1160,12 @@ func addIncludeRecordSpecsFlag(cmd *cobra.Command) {
 // The flag value is tied to the includeRequest variable.
 func addIncludeRequestFlag(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&includeRequest, "include-request", false, "include the query request in the output")
+}
+
+// addIncludeContractSpecsFlag sets up a command to look for an --include-contract-specs.
+// The flag value is tied to the includeContractSpecs variable.
+func addIncludeContractSpecsFlag(cmd *cobra.Command) {
+	cmd.Flags().BoolVar(&includeContractSpecs, "include-contract-specs", false, "include contract specs in the output")
 }
 
 // sdk ReadPageRequest expects binary but we encoded to base64 in our marshaller
