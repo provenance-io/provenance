@@ -7,9 +7,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	p8e "github.com/provenance-io/provenance/x/metadata/types/p8e"
 )
@@ -460,15 +461,24 @@ func TestWriteP8eContractSpecValidation(t *testing.T) {
 		PartiesInvolved: []p8e.PartyType{p8e.PartyType_PARTY_TYPE_AFFILIATE},
 	}
 
-	msg := NewMsgWriteP8EContractSpecRequest(validContractSpec, []string{})
+	msg := &MsgWriteP8EContractSpecRequest{
+		Contractspec: validContractSpec,
+		Signers:      []string{},
+	}
 	err := msg.ValidateBasic()
 	require.Error(t, err, "should fail due to signatures < 1")
 
-	msg = NewMsgWriteP8EContractSpecRequest(validContractSpec, []string{"invalid"})
+	msg = &MsgWriteP8EContractSpecRequest{
+		Contractspec: validContractSpec,
+		Signers:      []string{"invalid"},
+	}
 	err = msg.ValidateBasic()
 	require.Error(t, err, "should fail in convert validation due to address not being valid")
 
-	msg = NewMsgWriteP8EContractSpecRequest(validContractSpec, []string{"cosmos1s0kcwmhstu6urpp4080qjzatta02y0rarrcgrp"})
+	msg = &MsgWriteP8EContractSpecRequest{
+		Contractspec: validContractSpec,
+		Signers:      []string{"cosmos1s0kcwmhstu6urpp4080qjzatta02y0rarrcgrp"},
+	}
 	err = msg.ValidateBasic()
 	require.NoError(t, err)
 }

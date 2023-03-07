@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -20,7 +21,6 @@ import (
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/metadata"
 	"github.com/provenance-io/provenance/x/metadata/types"
-	"github.com/provenance-io/provenance/x/metadata/types/p8e"
 )
 
 type MetadataHandlerTestSuite struct {
@@ -61,34 +61,10 @@ func TestMetadataHandlerTestSuite(t *testing.T) {
 	suite.Run(t, new(MetadataHandlerTestSuite))
 }
 
-func createContractSpec(inputSpecs []*p8e.DefinitionSpec, outputSpec p8e.OutputSpec, definitionSpec p8e.DefinitionSpec) p8e.ContractSpec {
-	return p8e.ContractSpec{ConsiderationSpecs: []*p8e.ConsiderationSpec{
-		{FuncName: "additionalParties",
-			InputSpecs:       inputSpecs,
-			OutputSpec:       &outputSpec,
-			ResponsibleParty: 1,
-		},
-	},
-		Definition:      &definitionSpec,
-		InputSpecs:      inputSpecs,
-		PartiesInvolved: []p8e.PartyType{p8e.PartyType_PARTY_TYPE_AFFILIATE},
-	}
-}
-
-func createDefinitionSpec(name string, classname string, reference p8e.ProvenanceReference, defType int) p8e.DefinitionSpec {
-	return p8e.DefinitionSpec{
-		Name: name,
-		ResourceLocation: &p8e.Location{Classname: classname,
-			Ref: &reference,
-		},
-		Type: 1,
-	}
-}
-
 // TODO: WriteScope tests
 // TODO: DeleteScope tests
 
-func (s MetadataHandlerTestSuite) TestWriteSession() {
+func (s *MetadataHandlerTestSuite) TestWriteSession() {
 	cSpec := types.ContractSpecification{
 		SpecificationId: types.ContractSpecMetadataAddress(uuid.New()),
 		Description:     nil,
@@ -175,7 +151,7 @@ func (s MetadataHandlerTestSuite) TestWriteSession() {
 	}
 }
 
-func (s MetadataHandlerTestSuite) TestWriteDeleteRecord() {
+func (s *MetadataHandlerTestSuite) TestWriteDeleteRecord() {
 	cSpecUUID := uuid.New()
 	cSpec := types.ContractSpecification{
 		SpecificationId: types.ContractSpecMetadataAddress(cSpecUUID),
@@ -386,7 +362,7 @@ func (s MetadataHandlerTestSuite) TestWriteDeleteRecord() {
 // TODO: WriteContractSpecification tests
 // TODO: DeleteContractSpecification tests
 
-func (s MetadataHandlerTestSuite) TestAddContractSpecToScopeSpec() {
+func (s *MetadataHandlerTestSuite) TestAddContractSpecToScopeSpec() {
 	cSpec := types.ContractSpecification{
 		SpecificationId: types.ContractSpecMetadataAddress(uuid.New()),
 		Description:     nil,
@@ -472,7 +448,7 @@ func (s MetadataHandlerTestSuite) TestAddContractSpecToScopeSpec() {
 	}
 }
 
-func (s MetadataHandlerTestSuite) TestDeleteContractSpecFromScopeSpec() {
+func (s *MetadataHandlerTestSuite) TestDeleteContractSpecFromScopeSpec() {
 	cSpec := types.ContractSpecification{
 		SpecificationId: types.ContractSpecMetadataAddress(uuid.New()),
 		Description:     nil,
@@ -560,55 +536,6 @@ func (s MetadataHandlerTestSuite) TestDeleteContractSpecFromScopeSpec() {
 // TODO: WriteRecordSpecification tests
 // TODO: DeleteRecordSpecification tests
 
-func (s MetadataHandlerTestSuite) TestAddP8EContractSpec() {
-	validDefSpec := createDefinitionSpec("perform_input_checks", "io.provenance.loan.LoanProtos$PartiesList", p8e.ProvenanceReference{Hash: "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="}, 1)
-	invalidDefSpec := createDefinitionSpec("perform_action", "", p8e.ProvenanceReference{Hash: "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="}, 1)
-
-	cases := []struct {
-		name     string
-		v39CSpec p8e.ContractSpec
-		signers  []string
-		errorMsg string
-	}{
-		{
-			"should successfully ADD contract spec in from v38 to v40",
-			createContractSpec([]*p8e.DefinitionSpec{&validDefSpec}, p8e.OutputSpec{Spec: &validDefSpec}, validDefSpec),
-			[]string{s.user1},
-			"",
-		},
-		{
-			"should successfully UPDATE contract spec in from v38 to v40",
-			createContractSpec([]*p8e.DefinitionSpec{&validDefSpec}, p8e.OutputSpec{Spec: &validDefSpec}, validDefSpec),
-			[]string{s.user1},
-			"",
-		},
-		{
-			"should fail to add due to invalid signers",
-			createContractSpec([]*p8e.DefinitionSpec{&validDefSpec}, p8e.OutputSpec{Spec: &validDefSpec}, validDefSpec),
-			[]string{s.user2},
-			fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
-		},
-		{
-			"should fail on converting contract validate basic",
-			createContractSpec([]*p8e.DefinitionSpec{&invalidDefSpec}, p8e.OutputSpec{Spec: &validDefSpec}, validDefSpec),
-			[]string{s.user1},
-			"input specification type name cannot be empty",
-		},
-	}
-
-	for _, tc := range cases {
-		s.T().Run(tc.name, func(t *testing.T) {
-			_, err := s.handler(s.ctx, &types.MsgWriteP8EContractSpecRequest{Contractspec: tc.v39CSpec, Signers: tc.signers})
-			if len(tc.errorMsg) > 0 {
-				assert.EqualError(t, err, tc.errorMsg)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
-// TODO: P8EMemorializeContract tests
 // TODO: BindOSLocator tests
 // TODO: DeleteOSLocator tests
 // TODO: ModifyOSLocator tests
@@ -621,7 +548,7 @@ func ownerPartyList(addresses ...string) []types.Party {
 	return retval
 }
 
-func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeOwners() {
+func (s *MetadataHandlerTestSuite) TestAddAndDeleteScopeOwners() {
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
 	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
 	scopeID := types.ScopeMetadataAddress(uuid.New())
@@ -785,7 +712,7 @@ func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeOwners() {
 	})
 }
 
-func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
+func (s *MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
 	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
 	scopeID := types.ScopeMetadataAddress(uuid.New())
@@ -945,7 +872,7 @@ func (s MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
 	})
 }
 
-func (s MetadataHandlerTestSuite) TestIssue412WriteScopeOptionalField() {
+func (s *MetadataHandlerTestSuite) TestIssue412WriteScopeOptionalField() {
 	ownerAddress := "cosmos1vz99nyd2er8myeugsr4xm5duwhulhp5ae4dvpa"
 	specIDStr := "scopespec1qjkyp28sldx5r9ueaxqc5adrc5wszy6nsh"
 	specUUIDStr := "ac40a8f0-fb4d-4197-99e9-818a75a3c51d"
