@@ -40,11 +40,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Add the `gci` linter that enforces import group ordering. Create a 'lint-fix' make target [PR 1366](https://github.com/provenance-io/provenance/pull/1366).
+* Add gRPC query to get all contract specs and record specs for a scope spec [#677](https://github.com/provenance-io/provenance/issues/677).
 
 ### Bug Fixes
 
 * Fix third party Protobuf workflow checks on Provenance release steps [#1339](https://github.com/provenance-io/provenance/issues/1339)
 * Fix committer email format in third party Protobuf workflow (for [#1339](https://github.com/provenance-io/provenance/issues/1339)) [PR 1385](https://github.com/provenance-io/provenance/pull/1385)
+* Fix `start` using default home directory [PR 1393](https://github.com/provenance-io/provenance/pull/1393).
+* Fix `make proto-gen` [PR 1404](https://github.com/provenance-io/provenance/pull/1404).
 
 ---
 
@@ -75,11 +78,11 @@ The `paua` upgrade will increase all validators' max commission to 100% and max 
   [PR 1334](https://github.com/provenance-io/provenance/pull/1334),
   [PR 1348](https://github.com/provenance-io/provenance/pull/1348),
   [PR 1317](https://github.com/provenance-io/provenance/pull/1317),
-  [PR 1278](https://github.com/provenance-io/provenance/pull/1278).  
+  [PR 1278](https://github.com/provenance-io/provenance/pull/1278). \
   See the following `RELEASE_NOTES.md` for details:
   [v0.46.10-pio-1](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.10-pio-1/RELEASE_NOTES.md),
   [v0.46.8-pio-3](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.8-pio-3/RELEASE_NOTES.md),
-  [v0.46.7-pio-1](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.7-pio-1/RELEASE_NOTES.md).  
+  [v0.46.7-pio-1](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.7-pio-1/RELEASE_NOTES.md). \
   Full Commit History: https://github.com/provenance-io/cosmos-sdk/compare/v0.46.6-pio-1...v0.46.10-pio-1
 * Added assess msg fees spec documentation [#1172](https://github.com/provenance-io/provenance/issues/1172).
 * Build dbmigrate and include it as an artifact with releases [#1264](https://github.com/provenance-io/provenance/issues/1264).

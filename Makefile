@@ -570,12 +570,14 @@ containerProtoFmt=prov-proto-fmt-$(containerProtoVer)
 
 proto-gen:
 	@echo "Generating Protobuf files"
+	cp go.mod .go.mod.bak
 	if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then \
 		docker start -a $(containerProtoGen); \
 	else \
 		docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
 			sh ./scripts/protocgen.sh; \
 	fi
+	mv .go.mod.bak go.mod
 	go mod tidy
 
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
