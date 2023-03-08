@@ -826,7 +826,82 @@ func (s *QueryServerTestSuite) TestRecordsQuery() {
 // TODO: RecordsAll tests
 // TODO: Ownership tests
 // TODO: ValueOwnership tests
-// TODO: ScopeSpecification tests
+
+func (s *QueryServerTestSuite) TestScopeSpecificationQuery() {
+	app, ctx, queryClient := s.app, s.ctx, s.queryClient
+
+	scopeSpec := types.NewScopeSpecification(
+		s.scopeSpecID,
+		types.NewDescription("test-scope-spec", "testing", "https://provenance.io", ""),
+		[]string{s.user1},
+		[]types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE},
+		[]types.MetadataAddress{s.cSpecID},
+	)
+	app.MetadataKeeper.SetScopeSpecification(ctx, *scopeSpec)
+
+	contractSpec := types.NewContractSpecification(
+		s.cSpecID,
+		types.NewDescription("test-contract-spec", "testing", "https://provenance.io", ""),
+		[]string{s.user1},
+		[]types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE},
+		types.NewContractSpecificationSourceHash("hash"),
+		"",
+	)
+	app.MetadataKeeper.SetContractSpecification(ctx, *contractSpec)
+
+	recordSpec := types.NewRecordSpecification(
+		s.recSpecID,
+		"test-record-spec",
+		[]*types.InputSpecification{
+			types.NewInputSpecification(
+				"record-name",
+				"type-name",
+				types.NewInputSpecificationSourceHash("hash"),
+			),
+		},
+		"type-name",
+		1,
+		[]types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE},
+	)
+	app.MetadataKeeper.SetRecordSpecification(ctx, *recordSpec)
+
+	// Run a couple tests on the Include* flags.
+	s.T().Run("include contract specs", func(t *testing.T) {
+		req := types.ScopeSpecificationRequest{SpecificationId: s.scopeSpecID.String(), IncludeContractSpecs: true}
+		res, err := queryClient.ScopeSpecification(ctx, &req)
+		require.NoErrorf(t, err, "unexpected error: %s", err)
+		require.NotNil(t, res, "result of Scope Specification query")
+		assert.Equal(t, 1, len(res.ContractSpecs), "number of contract specs")
+		assert.Equal(t, s.cSpecID, res.ContractSpecs[0].Specification.SpecificationId, "contract spec id")
+		assert.Equal(t, "test-contract-spec", res.ContractSpecs[0].Specification.Description.Name, "contract spec name")
+		assert.Equal(t, 0, len(res.RecordSpecs), "number of record specs")
+	})
+	s.T().Run("include record specs", func(t *testing.T) {
+		req := types.ScopeSpecificationRequest{SpecificationId: s.scopeSpecID.String(), IncludeRecordSpecs: true}
+		res, err := queryClient.ScopeSpecification(ctx, &req)
+		require.NoErrorf(t, err, "unexpected error: %s", err)
+		require.NotNil(t, res, "result of Scope Specification query")
+		assert.Equal(t, 1, len(res.RecordSpecs), "number of record specs")
+		assert.Equal(t, s.recSpecID, res.RecordSpecs[0].Specification.SpecificationId, "record spec id")
+		assert.Equal(t, "test-record-spec", res.RecordSpecs[0].Specification.Name, "record spec name")
+		assert.Equal(t, 0, len(res.ContractSpecs), "number of contract specs")
+	})
+	s.T().Run("include both contract and record specs", func(t *testing.T) {
+		req := types.ScopeSpecificationRequest{SpecificationId: s.scopeSpecID.String(), IncludeContractSpecs: true, IncludeRecordSpecs: true}
+		res, err := queryClient.ScopeSpecification(ctx, &req)
+		require.NoErrorf(t, err, "unexpected error: %s", err)
+		require.NotNil(t, res, "result of Scope Specification query")
+		// contract spec assertions
+		assert.Equal(t, 1, len(res.ContractSpecs), "number of contract specs")
+		assert.Equal(t, s.cSpecID, res.ContractSpecs[0].Specification.SpecificationId, "contract spec id")
+		assert.Equal(t, "test-contract-spec", res.ContractSpecs[0].Specification.Description.Name, "contract spec name")
+		// record spec assertions
+		assert.Equal(t, 1, len(res.RecordSpecs), "number of record specs")
+		assert.Equal(t, s.recSpecID, res.RecordSpecs[0].Specification.SpecificationId, "record spec id")
+		assert.Equal(t, "test-record-spec", res.RecordSpecs[0].Specification.Name, "record spec name")
+	})
+}
+
 // TODO: ScopeSpecificationsAll tests
 // TODO: ContractSpecification tests
 // TODO: ContractSpecificationsAll tests
