@@ -46,7 +46,7 @@
         "rename": {
           "Params": "MetadataParams"
         }
-      },
+      }
     },
     {
       "url": "./tmp-swagger-gen/provenance/metadata/v1/tx.swagger.json"
