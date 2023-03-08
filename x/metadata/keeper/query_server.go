@@ -649,6 +649,36 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 		retval.ScopeSpecification = types.WrapScopeSpecNotFound(specAddr)
 	}
 
+	if found && req.IncludeContractSpecs {
+		for _, id := range spec.ContractSpecIds {
+			cs, ok := k.GetContractSpecification(ctx, id)
+			if ok {
+				retval.ContractSpecs = append(retval.ContractSpecs, types.WrapContractSpec(&cs))
+			} else {
+				retval.ContractSpecs = append(retval.ContractSpecs, types.WrapContractSpecNotFound(id))
+			}
+		}
+	}
+
+	if found && req.IncludeRecordSpecs {
+		var err error
+		for _, id := range spec.ContractSpecIds {
+			err = k.IterateRecordSpecsForContractSpec(ctx, id, func(recordSpecID types.MetadataAddress) (stop bool) {
+				rs, ok := k.GetRecordSpecification(ctx, recordSpecID)
+				if ok {
+					retval.RecordSpecs = append(retval.RecordSpecs, types.WrapRecordSpec(&rs))
+				} else {
+					retval.RecordSpecs = append(retval.RecordSpecs, types.WrapRecordSpecNotFound(recordSpecID))
+				}
+
+				return false
+			})
+			if err != nil {
+				return &retval, fmt.Errorf("error retrieving contract spec [%s] record specs: %w", id, err)
+			}
+		}
+	}
+
 	return &retval, nil
 }
 

@@ -4286,6 +4286,8 @@ ScopeSpecificationRequest is the request type for the Query/ScopeSpecification R
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `specification_id` | [string](#string) |  | specification_id can either be a uuid, e.g. dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 or a bech32 scope specification address, e.g. scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m. |
+| `include_contract_specs` | [bool](#bool) |  | include_contract_specs is a flag for whether or not the contract specifications in the scope specification should be included. |
+| `include_record_specs` | [bool](#bool) |  | include_record_specs is a flag for whether or not the record specifications in the scope specification should be included. |
 
 
 
@@ -4301,6 +4303,8 @@ ScopeSpecificationResponse is the response type for the Query/ScopeSpecification
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `scope_specification` | [ScopeSpecificationWrapper](#provenance.metadata.v1.ScopeSpecificationWrapper) |  | scope_specification is the wrapped scope specification. |
+| `contract_specs` | [ContractSpecificationWrapper](#provenance.metadata.v1.ContractSpecificationWrapper) | repeated | contract_specs is any number of wrapped contract specifications in this scope specification (if requested). |
+| `record_specs` | [RecordSpecificationWrapper](#provenance.metadata.v1.RecordSpecificationWrapper) | repeated | record_specs is any number of wrapped record specifications in this scope specification (if requested). |
 | `request` | [ScopeSpecificationRequest](#provenance.metadata.v1.ScopeSpecificationRequest) |  | request is a copy of the request that generated these results. |
 
 
@@ -4573,7 +4577,9 @@ By default, the scope and sessions are not included. Set include_scope and/or in
 | `ValueOwnership` | [ValueOwnershipRequest](#provenance.metadata.v1.ValueOwnershipRequest) | [ValueOwnershipResponse](#provenance.metadata.v1.ValueOwnershipResponse) | ValueOwnership returns the scope identifiers that list the given address as the value owner. | GET|/provenance/metadata/v1/valueownership/{address}|
 | `ScopeSpecification` | [ScopeSpecificationRequest](#provenance.metadata.v1.ScopeSpecificationRequest) | [ScopeSpecificationResponse](#provenance.metadata.v1.ScopeSpecificationResponse) | ScopeSpecification returns a scope specification for the given specification id.
 
-The specification_id can either be a uuid, e.g. dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 or a bech32 scope specification address, e.g. scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m. | GET|/provenance/metadata/v1/scopespec/{specification_id}|
+The specification_id can either be a uuid, e.g. dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 or a bech32 scope specification address, e.g. scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m.
+
+By default, the contract and record specifications are not included. Set include_contract_specs and/or include_record_specs to true to include contract and/or record specifications. | GET|/provenance/metadata/v1/scopespec/{specification_id}|
 | `ScopeSpecificationsAll` | [ScopeSpecificationsAllRequest](#provenance.metadata.v1.ScopeSpecificationsAllRequest) | [ScopeSpecificationsAllResponse](#provenance.metadata.v1.ScopeSpecificationsAllResponse) | ScopeSpecificationsAll retrieves all scope specifications. | GET|/provenance/metadata/v1/scopespecs/all|
 | `ContractSpecification` | [ContractSpecificationRequest](#provenance.metadata.v1.ContractSpecificationRequest) | [ContractSpecificationResponse](#provenance.metadata.v1.ContractSpecificationResponse) | ContractSpecification returns a contract specification for the given specification id.
 
