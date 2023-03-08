@@ -899,7 +899,7 @@ func (s *MetadataHandlerTestSuite) TestIssue412WriteScopeOptionalField() {
 			Specification: types.ScopeSpecification{
 				SpecificationId: specID,
 				Description: &types.Description{
-					Name:        "io.p8e.contracts.examplekotlin.helloWorld",
+					Name:        "io.prov.contracts.examplekotlin.helloWorld",
 					Description: "A generic scope that allows for a lot of example hello world contracts.",
 				},
 				OwnerAddresses:  []string{ownerAddress},
@@ -919,7 +919,7 @@ func (s *MetadataHandlerTestSuite) TestIssue412WriteScopeOptionalField() {
 			Specification: types.ScopeSpecification{
 				SpecificationId: nil,
 				Description: &types.Description{
-					Name:        "io.p8e.contracts.examplekotlin.helloWorld",
+					Name:        "io.prov.contracts.examplekotlin.helloWorld",
 					Description: "A generic scope that allows for a lot of example hello world contracts.",
 				},
 				OwnerAddresses:  []string{ownerAddress},
@@ -939,7 +939,7 @@ func (s *MetadataHandlerTestSuite) TestIssue412WriteScopeOptionalField() {
 			Specification: types.ScopeSpecification{
 				SpecificationId: specID,
 				Description: &types.Description{
-					Name:        "io.p8e.contracts.examplekotlin.helloWorld",
+					Name:        "io.prov.contracts.examplekotlin.helloWorld",
 					Description: "A generic scope that allows for a lot of example hello world contracts.",
 				},
 				OwnerAddresses:  []string{ownerAddress},

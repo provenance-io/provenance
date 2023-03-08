@@ -539,7 +539,7 @@ func (k msgServer) WriteP8EContractSpec(
 	goCtx context.Context,
 	msg *types.MsgWriteP8EContractSpecRequest,
 ) (*types.MsgWriteP8EContractSpecResponse, error) {
-	return nil, sdkerrors.ErrNotSupported.Wrap("p8e endpoints deactivated")
+	return nil, sdkerrors.ErrNotSupported.Wrap("p8e endpoints no longer usable")
 }
 
 //nolint:staticcheck // The P8E stuff is deprecated but not yet removed.
@@ -547,7 +547,7 @@ func (k msgServer) P8EMemorializeContract(
 	goCtx context.Context,
 	msg *types.MsgP8EMemorializeContractRequest,
 ) (*types.MsgP8EMemorializeContractResponse, error) {
-	return nil, sdkerrors.ErrNotSupported.Wrap("p8e endpoints deactivated")
+	return nil, sdkerrors.ErrNotSupported.Wrap("p8e endpoints no longer usable")
 }
 
 func (k msgServer) BindOSLocator(

@@ -1107,32 +1107,6 @@ func NewMsgDeleteRecordSpecificationResponse() *MsgDeleteRecordSpecificationResp
 	return &MsgDeleteRecordSpecificationResponse{}
 }
 
-func NewMsgWriteP8EContractSpecResponse(
-	contractSpecID MetadataAddress,
-	recordSpecIDs ...MetadataAddress,
-) *MsgWriteP8EContractSpecResponse {
-	retval := &MsgWriteP8EContractSpecResponse{
-		ContractSpecIdInfo: GetContractSpecIDInfo(contractSpecID),
-		RecordSpecIdInfos:  make([]*RecordSpecIdInfo, len(recordSpecIDs)),
-	}
-	for i, rid := range recordSpecIDs {
-		retval.RecordSpecIdInfos[i] = GetRecordSpecIDInfo(rid)
-	}
-	return retval
-}
-
-func NewMsgP8EMemorializeContractResponse(
-	scopeIDInfo *ScopeIdInfo,
-	sessionIDInfo *SessionIdInfo,
-	recordIDInfos []*RecordIdInfo,
-) *MsgP8EMemorializeContractResponse {
-	return &MsgP8EMemorializeContractResponse{
-		ScopeIdInfo:   scopeIDInfo,
-		SessionIdInfo: sessionIDInfo,
-		RecordIdInfos: recordIDInfos,
-	}
-}
-
 func NewMsgBindOSLocatorResponse(objectStoreLocator ObjectStoreLocator) *MsgBindOSLocatorResponse {
 	return &MsgBindOSLocatorResponse{
 		Locator: objectStoreLocator,
