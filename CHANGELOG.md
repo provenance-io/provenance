@@ -52,6 +52,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Client Breaking
 
 * Removed the `WriteP8eContractSpec` and `P8eMemorializeContract` endpoints [#1402](https://github.com/provenance-io/provenance/issues/1402).
+* Removed the `github.com/provenance-io/provenance/x/metadata/types/p8e` proto package [#1402](https://github.com/provenance-io/provenance/issues/1402).
+  Users that generate code from the Provenance protos might need to delete their `p8e/` directory.
 
 ### API Breaking
 
