@@ -29,9 +29,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgWriteRecordSpecificationRequest{},
 		&MsgDeleteRecordSpecificationRequest{},
 
-		&MsgWriteP8EContractSpecRequest{},
-		&MsgP8EMemorializeContractRequest{},
-
 		&MsgBindOSLocatorRequest{},
 		&MsgModifyOSLocatorRequest{},
 		&MsgDeleteOSLocatorRequest{},

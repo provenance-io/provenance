@@ -4,7 +4,6 @@ package provenance.metadata.v1;
 import "gogoproto/gogo.proto";
 import "provenance/metadata/v1/metadata.proto";
 import "provenance/metadata/v1/objectstore.proto";
-import "provenance/metadata/v1/p8e/p8e.proto";
 import "provenance/metadata/v1/scope.proto";
 import "provenance/metadata/v1/specification.proto";
 
@@ -63,17 +62,6 @@ service Msg {
   rpc WriteRecordSpecification(MsgWriteRecordSpecificationRequest) returns (MsgWriteRecordSpecificationResponse);
   // DeleteRecordSpecification deletes a record specification.
   rpc DeleteRecordSpecification(MsgDeleteRecordSpecificationRequest) returns (MsgDeleteRecordSpecificationResponse);
-
-  // ---- Deprecated Transition Endpoints -----
-
-  // Deprecated: This endpoint will always return an error. Use WriteContractSpecification instead.
-  rpc WriteP8eContractSpec(MsgWriteP8eContractSpecRequest) returns (MsgWriteP8eContractSpecResponse) {
-    option deprecated = true;
-  };
-  // Deprecated: This endpoint will always return an error. Use individual Write endpoints instead.
-  rpc P8eMemorializeContract(MsgP8eMemorializeContractRequest) returns (MsgP8eMemorializeContractResponse) {
-    option deprecated = true;
-  };
 
   // ---- Object Store Locator Management -----
 
@@ -524,49 +512,6 @@ message MsgDeleteRecordSpecificationRequest {
 
 // MsgDeleteRecordSpecificationResponse is the response type for the Msg/DeleteRecordSpecification RPC method.
 message MsgDeleteRecordSpecificationResponse {}
-
-// Deprecated: Do not use.
-message MsgWriteP8eContractSpecRequest {
-  option deprecated                   = true;
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
-  p8e.ContractSpec contractspec       = 1 [(gogoproto.nullable) = false];
-  repeated string  signers            = 2;
-}
-
-// Deprecated: Do not use.
-message MsgWriteP8eContractSpecResponse {
-  option                    deprecated            = true;
-  ContractSpecIdInfo        contract_spec_id_info = 1 [(gogoproto.moretags) = "yaml:\"contract_spec_id_info\""];
-  repeated RecordSpecIdInfo record_spec_id_infos  = 2 [(gogoproto.moretags) = "yaml:\"record_spec_id_infos\""];
-}
-
-// Deprecated: Do not use.
-message MsgP8eMemorializeContractRequest {
-  option deprecated                   = true;
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
-
-  string                                  scope_id               = 1;
-  string                                  group_id               = 2;
-  string                                  scope_specification_id = 3;
-  provenance.metadata.v1.p8e.Recitals     recitals               = 4;
-  provenance.metadata.v1.p8e.Contract     contract               = 5;
-  provenance.metadata.v1.p8e.SignatureSet signatures             = 6;
-  string                                  invoker                = 7;
-}
-
-// Deprecated: Do not use.
-message MsgP8eMemorializeContractResponse {
-  option                deprecated      = true;
-  ScopeIdInfo           scope_id_info   = 1 [(gogoproto.moretags) = "yaml:\"scope_id_info\""];
-  SessionIdInfo         session_id_info = 2 [(gogoproto.moretags) = "yaml:\"session_id_info\""];
-  repeated RecordIdInfo record_id_infos = 3 [(gogoproto.moretags) = "yaml:\"record_id_infos\""];
-}
 
 // MsgBindOSLocatorRequest is the request type for the Msg/BindOSLocator RPC method.
 message MsgBindOSLocatorRequest {

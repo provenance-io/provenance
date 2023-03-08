@@ -70,13 +70,6 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.DeleteRecordSpecification(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		case *types.MsgWriteP8EContractSpecRequest: //nolint:staticcheck // The P8E stuff is deprecated but not yet removed.
-			res, err := msgServer.WriteP8EContractSpec(sdk.WrapSDKContext(ctx), msg)
-			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgP8EMemorializeContractRequest: //nolint:staticcheck // The P8E stuff is deprecated but not yet removed.
-			res, err := msgServer.P8EMemorializeContract(sdk.WrapSDKContext(ctx), msg)
-			return sdk.WrapServiceResult(ctx, res, err)
-
 		case *types.MsgBindOSLocatorRequest:
 			res, err := msgServer.BindOSLocator(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)

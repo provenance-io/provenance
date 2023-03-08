@@ -58,8 +58,6 @@ var (
 	_ sdk.Msg = &MsgBindOSLocatorRequest{}
 	_ sdk.Msg = &MsgDeleteOSLocatorRequest{}
 	_ sdk.Msg = &MsgModifyOSLocatorRequest{}
-	_ sdk.Msg = &MsgWriteP8EContractSpecRequest{}
-	_ sdk.Msg = &MsgP8EMemorializeContractRequest{}
 )
 
 // private method to convert an array of strings into an array of Acc Addresses.
@@ -576,23 +574,6 @@ func (msg *MsgWriteScopeSpecificationRequest) ConvertOptionalFields() error {
 	return nil
 }
 
-// ------------------  MsgWriteP8EContractSpecRequest  ------------------
-
-func (msg MsgWriteP8EContractSpecRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgWriteP8EContractSpecRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
-}
-
-// ValidateBasic performs a quick validity check
-func (msg MsgWriteP8EContractSpecRequest) ValidateBasic() error {
-	return fmt.Errorf("msg type no longer usable")
-}
-
 // ------------------  MsgDeleteScopeSpecificationRequest  ------------------
 
 // NewMsgDeleteScopeSpecificationRequest creates a new msg instance
@@ -855,23 +836,6 @@ func (msg MsgDeleteRecordSpecificationRequest) ValidateBasic() error {
 		return fmt.Errorf("at least one signer is required")
 	}
 	return nil
-}
-
-// ------------------  MsgP8EMemorializeContractRequest  ------------------
-
-func (msg MsgP8EMemorializeContractRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
-func (msg MsgP8EMemorializeContractRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{MustAccAddressFromBech32(msg.Invoker)}
-}
-
-// ValidateBasic performs a quick validity check
-func (msg MsgP8EMemorializeContractRequest) ValidateBasic() error {
-	return fmt.Errorf("msg type no longer usable")
 }
 
 // ------------------  MsgBindOSLocatorRequest  ------------------
