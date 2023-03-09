@@ -112,8 +112,8 @@ func GetAddressHasAccess(ctx sdk.Context) (bool, error) {
 	if hasAccess == nil {
 		return false, nil
 	}
-	accessAllowed, can := hasAccess.(bool)
-	if can == false {
+	accessAllowed, success := hasAccess.(bool)
+	if !success {
 		return false, fmt.Errorf("incorrect type for context %s value", AddressHasAccessKey)
 	}
 	return accessAllowed, nil
