@@ -26,7 +26,6 @@ import (
 
 func TestBankSend(tt *testing.T) {
 	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1) // set denom as stake and floor gas price as 1 stake.
-	// encCfg := sdksim.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	priv2, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
@@ -86,14 +85,20 @@ func TestBankSend(tt *testing.T) {
 	addr2afterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
 	assert.Equal(tt, "100restrictedmarker,1000000000stake", addr2afterBalance, "addr2beforeBalance")
 
-	// send restricted marker from account without transfer rights and no required attributes, expect failure
-	expectedError := fmt.Sprintf("%s does not have transfer permissions", addr2.String())
-	sendRMarker = banktypes.NewMsgSend(addr2, addr1, sdk.NewCoins(sdk.NewInt64Coin(rMarkerDenom, 100)))
-	ConstructAndSendTx(tt, *app, ctx, acct2, priv2, sendRMarker, 1, expectedError)
+	// send non restricted marker, expect success
+	sendRMarker = banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewInt64Coin(nrMarkerDenom, 100)))
+	ConstructAndSendTx(tt, *app, ctx, acct1, priv, sendRMarker, abci.CodeTypeOK, "")
 	addr1afterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	assert.Equal(tt, "1000nonrestrictedmarker,900restrictedmarker,999700000stake", addr1afterBalance, "addr1afterBalance")
+	assert.Equal(tt, "900nonrestrictedmarker,900restrictedmarker,999600000stake", addr1afterBalance, "addr1afterBalance")
 	addr2afterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	assert.Equal(tt, "100restrictedmarker,999900000stake", addr2afterBalance, "addr2beforeBalance")
+	assert.Equal(tt, "100nonrestrictedmarker,100restrictedmarker,1000000000stake", addr2afterBalance, "addr2beforeBalance")
+
+	sendRMarker = banktypes.NewMsgSend(addr2, addr1, sdk.NewCoins(sdk.NewInt64Coin(nrMarkerDenom, 50)))
+	ConstructAndSendTx(tt, *app, ctx, acct2, priv2, sendRMarker, abci.CodeTypeOK, "")
+	addr1afterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
+	assert.Equal(tt, "950nonrestrictedmarker,900restrictedmarker,999600000stake", addr1afterBalance, "addr1afterBalance")
+	addr2afterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
+	assert.Equal(tt, "50nonrestrictedmarker,100restrictedmarker,999900000stake", addr2afterBalance, "addr2beforeBalance")
 
 	stopIfFailed(tt)
 }
