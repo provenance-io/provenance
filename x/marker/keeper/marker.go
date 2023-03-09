@@ -216,9 +216,8 @@ func (k Keeper) WithdrawCoins(
 		recipient = caller
 	}
 
-	ctx = SetAddressHasAccess(ctx, true)
-	if err := k.bankKeeper.InputOutputCoins(ctx, []banktypes.Input{banktypes.NewInput(m.GetAddress(), coins)},
-		[]banktypes.Output{banktypes.NewOutput(recipient, coins)}); err != nil {
+	ctx = WithAddressHasAccess(ctx, true)
+	if err := k.bankKeeper.SendCoins(ctx, m.GetAddress(), recipient, coins); err != nil {
 		return err
 	}
 
@@ -335,7 +334,7 @@ func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI, 
 	if desiredSupply.Denom != marker.GetDenom() {
 		return fmt.Errorf("invalid denom for desired supply")
 	}
-	ctx = SetAddressHasAccess(ctx, true)
+	ctx = WithAddressHasAccess(ctx, true)
 	if desiredSupply.Amount.GT(currentSupply) { // not enough coin in circulation, mint more.
 		offset := sdk.NewCoin(marker.GetDenom(), desiredSupply.Amount.Sub(currentSupply))
 		ctx.Logger().Info(
@@ -675,7 +674,7 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 		return fmt.Errorf("%s is not allowed to receive funds", to)
 	}
 	// set context to having access to bypass attribute restriction test
-	ctx = SetAddressHasAccess(ctx, true)
+	ctx = WithAddressHasAccess(ctx, true)
 	// send the coins between accounts (does not check send_enabled on coin denom)
 	if err = k.bankKeeper.SendCoins(ctx, from, to, sdk.NewCoins(amount)); err != nil {
 		return err

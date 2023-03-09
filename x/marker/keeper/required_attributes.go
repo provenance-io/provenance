@@ -36,13 +36,8 @@ func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
 		return err
 	}
 
-	// address used for adjusting circulation
-	moduleAdrr := k.authKeeper.GetModuleAddress(types.CoinPoolName)
-
 	// if the marker has authority it is allowed to send to receiver without checking of attributes
-	if hasAccess ||
-		marker.AddressHasAccess(caller, types.Access_Transfer) ||
-		moduleAdrr.String() == from {
+	if hasAccess || marker.AddressHasAccess(caller, types.Access_Transfer) {
 		return nil
 	}
 
@@ -109,6 +104,7 @@ func EnsureAllRequiredAttributesExist(requiredAttributes []string, attributes []
 	return true
 }
 
+// GetAddressHasAccess returns the bool value of address has access defaults to false if not set
 func GetAddressHasAccess(ctx sdk.Context) (bool, error) {
 	hasAccess := ctx.Value(AddressHasAccessKey)
 	if hasAccess == nil {
@@ -121,7 +117,8 @@ func GetAddressHasAccess(ctx sdk.Context) (bool, error) {
 	return accessAllowed, nil
 }
 
-func SetAddressHasAccess(ctx sdk.Context, hasAccess bool) sdk.Context {
+// WithAddressHasAccess returns the context with the address has access set used for allowing address to send restricted markers
+func WithAddressHasAccess(ctx sdk.Context, hasAccess bool) sdk.Context {
 	return ctx.WithValue(AddressHasAccessKey, hasAccess)
 }
 

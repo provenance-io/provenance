@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 )
@@ -102,12 +101,10 @@ func HandleSupplyIncreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyIncr
 		if err != nil {
 			return err
 		}
-		ctx = SetAddressHasAccess(ctx, true)
-		if err := k.bankKeeper.InputOutputCoins(ctx, []banktypes.Input{banktypes.NewInput(addr, sdk.NewCoins(c.Amount))},
-			[]banktypes.Output{banktypes.NewOutput(recipient, sdk.NewCoins(c.Amount))}); err != nil {
+		ctx = WithAddressHasAccess(ctx, true)
+		if err := k.bankKeeper.SendCoins(ctx, addr, recipient, sdk.NewCoins(c.Amount)); err != nil {
 			return err
 		}
-
 		logger.Info("transferred escrowed coin from marker", "marker", c.Amount.Denom, "amount", c.Amount.String(), "recipient", c.TargetAddress)
 	}
 
@@ -289,12 +286,10 @@ func HandleWithdrawEscrowProposal(ctx sdk.Context, k Keeper, c *types.WithdrawEs
 	if err != nil {
 		return err
 	}
-
-	if err := k.bankKeeper.InputOutputCoins(ctx, []banktypes.Input{banktypes.NewInput(addr, c.Amount)},
-		[]banktypes.Output{banktypes.NewOutput(recipient, c.Amount)}); err != nil {
+	ctx = WithAddressHasAccess(ctx, true)
+	if err := k.bankKeeper.SendCoins(ctx, addr, recipient, c.Amount); err != nil {
 		return err
 	}
-
 	logger := k.Logger(ctx)
 	logger.Info("transferred escrowed coin from marker", "marker", c.Denom, "amount", c.Amount.String(), "recipient", c.TargetAddress)
 
