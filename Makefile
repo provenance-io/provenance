@@ -6,7 +6,7 @@ BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 
 WITH_LEDGER ?= true
-WITH_CLEVELDB ?= true
+WITH_CLEVELDB ?= false
 WITH_ROCKSDB ?= false
 WITH_BADGERDB ?= true
 
