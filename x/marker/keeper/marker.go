@@ -205,6 +205,7 @@ func (k Keeper) WithdrawCoins(
 	if !m.AddressHasAccess(caller, types.Access_Withdraw) {
 		return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Withdraw, m.GetDenom())
 	}
+	ctx = SetAddressHasAccess(ctx, true)
 	// check to see if marker is active (the coins created by a marker can only be withdrawn when it is active)
 	// any other coins that may be present (collateralized assets?) can be transferred
 	if m.GetStatus() != types.StatusActive {
@@ -668,12 +669,12 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 		if err != nil {
 			return err
 		}
-		ctx = ctx.WithValue(SendGranterKey, admin.String())
 	}
 	if k.bankKeeper.BlockedAddr(to) {
 		return fmt.Errorf("%s is not allowed to receive funds", to)
 	}
-
+	// set context to having access to bypass attribute restriction test
+	ctx = SetAddressHasAccess(ctx, true)
 	// send the coins between accounts (does not check send_enabled on coin denom)
 	if err = k.bankKeeper.SendCoins(ctx, from, to, sdk.NewCoins(amount)); err != nil {
 		return err

@@ -10,7 +10,7 @@ import (
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
-const SendGranterKey = "send.granter"
+const AddressHasAccessKey = "address_has_access"
 
 func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
 	markerAddr := types.MustGetMarkerAddress(denom)
@@ -31,8 +31,7 @@ func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
 		return err
 	}
 
-	// granter address sent in from context
-	granter, err := SendGranter(ctx)
+	hasAccess, err := GetAddressHasAccess(ctx)
 	if err != nil {
 		return err
 	}
@@ -40,11 +39,11 @@ func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
 	// address used for adjusting circulation
 	moduleAdrr := k.authKeeper.GetModuleAddress(types.CoinPoolName)
 
-	// if the marker has transfer authority it is allowed to send to receiver without checking of attributes
-	if marker.AddressHasAccess(caller, types.Access_Transfer) ||
-		(granter != nil && marker.AddressHasAccess(granter, types.Access_Transfer)) || moduleAdrr.String() == from {
+	// if the marker has authority it is allowed to send to receiver without checking of attributes
+	if hasAccess || marker.AddressHasAccess(caller, types.Access_Transfer) || moduleAdrr.String() == from {
 		return nil
 	}
+
 	if len(marker.GetRequiredAttributes()) == 0 {
 		return fmt.Errorf("%s does not have transfer permissions", caller.String())
 	}
@@ -108,19 +107,20 @@ func EnsureAllRequiredAttributesExist(requiredAttributes []string, attributes []
 	return true
 }
 
-func SendGranter(ctx sdk.Context) (sdk.AccAddress, error) {
-	if ctx.Value(SendGranterKey) == nil {
-		return nil, nil
+func GetAddressHasAccess(ctx sdk.Context) (bool, error) {
+	hasAccess := ctx.Value(AddressHasAccessKey)
+	if hasAccess == nil {
+		return false, nil
 	}
-	granter := fmt.Sprintf("%s", ctx.Value(SendGranterKey))
-	if len(granter) == 0 {
-		return nil, nil
+	accessAllowed, can := hasAccess.(bool)
+	if can == false {
+		return false, fmt.Errorf("incorrect type for context %s value", AddressHasAccessKey)
 	}
-	g, err := sdk.AccAddressFromBech32(granter)
-	if err != nil {
-		return nil, err
-	}
-	return g, nil
+	return accessAllowed, nil
+}
+
+func SetAddressHasAccess(ctx sdk.Context, hasAccess bool) sdk.Context {
+	return ctx.WithValue(AddressHasAccessKey, hasAccess)
 }
 
 // MatchAttribute compares required attribute against attribute string
