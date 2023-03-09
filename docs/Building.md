@@ -25,8 +25,8 @@ Building `provenanced` requires [Go 1.18+](https://golang.org/dl/) (or higher).
 
 ### CLevelDB
 
-By default, `provenanced` is built with CLevelDB support.
-Building without CLevelDB support is also possible. See `WITH_CLEVELDB` in [Build Options](#build-options) below.
+By default, `provenanced` is built with without CLevelDB support.
+Building with CLevelDB support is also possible. See `WITH_CLEVELDB` in [Build Options](#build-options) below.
 
 To download, build, and install the C LevelDB library on your system:
 ```console
@@ -119,7 +119,7 @@ $ make install
 A few aspects of `make build` and `make install` can be controlled through environment variables.
 
 * `WITH_CLEVELDB`: Enables/Disables building with CLevelDB support.
-  The default is `true`.
+  The default is `false`.
   If this is not `true` the built `provenanced`, executable will not be able to use CLevelDB as a database backend.
 * `LEVELDB_PATH`: Defines the location of the leveldb library and includes.
   This is only used if compiling with CLevelDB support on a Mac.
