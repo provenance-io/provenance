@@ -102,7 +102,7 @@ func HandleSupplyIncreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyIncr
 		if err != nil {
 			return err
 		}
-
+		ctx = SetAddressHasAccess(ctx, true)
 		if err := k.bankKeeper.InputOutputCoins(ctx, []banktypes.Input{banktypes.NewInput(addr, sdk.NewCoins(c.Amount))},
 			[]banktypes.Output{banktypes.NewOutput(recipient, sdk.NewCoins(c.Amount))}); err != nil {
 			return err

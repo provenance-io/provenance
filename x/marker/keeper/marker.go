@@ -205,7 +205,7 @@ func (k Keeper) WithdrawCoins(
 	if !m.AddressHasAccess(caller, types.Access_Withdraw) {
 		return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Withdraw, m.GetDenom())
 	}
-	ctx = SetAddressHasAccess(ctx, true)
+
 	// check to see if marker is active (the coins created by a marker can only be withdrawn when it is active)
 	// any other coins that may be present (collateralized assets?) can be transferred
 	if m.GetStatus() != types.StatusActive {
@@ -216,6 +216,7 @@ func (k Keeper) WithdrawCoins(
 		recipient = caller
 	}
 
+	ctx = SetAddressHasAccess(ctx, true)
 	if err := k.bankKeeper.InputOutputCoins(ctx, []banktypes.Input{banktypes.NewInput(m.GetAddress(), coins)},
 		[]banktypes.Output{banktypes.NewOutput(recipient, coins)}); err != nil {
 		return err

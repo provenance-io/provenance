@@ -40,7 +40,9 @@ func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
 	moduleAdrr := k.authKeeper.GetModuleAddress(types.CoinPoolName)
 
 	// if the marker has authority it is allowed to send to receiver without checking of attributes
-	if hasAccess || marker.AddressHasAccess(caller, types.Access_Transfer) || moduleAdrr.String() == from {
+	if hasAccess ||
+		marker.AddressHasAccess(caller, types.Access_Transfer) ||
+		moduleAdrr.String() == from {
 		return nil
 	}
 
