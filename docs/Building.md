@@ -128,7 +128,7 @@ A few aspects of `make build` and `make install` can be controlled through envir
   The default is `false`.
   If this is not `true` the built `provenanced`, executable will not be able to use RocksDB as a database backend.
 * `WITH_BADGERDB`: Enables/Disables building with BadgerDB support.
-  The default is `true`.
+  The default is `false`.
   If this is not `true` the built `provenanced`, executable will not be able to use BadgerDB as a database backend.
 * `WITH_LEDGER`: Enables/Disables building with Ledger hardware wallet support.
   The default is `true`.

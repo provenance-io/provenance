@@ -8,7 +8,7 @@ BUILDDIR ?= $(CURDIR)/build
 WITH_LEDGER ?= true
 WITH_CLEVELDB ?= false
 WITH_ROCKSDB ?= false
-WITH_BADGERDB ?= true
+WITH_BADGERDB ?= false
 
 # We used to use 'yes' on these flags, so at least for now, change 'yes' into 'true'
 ifeq ($(WITH_LEDGER),yes)
