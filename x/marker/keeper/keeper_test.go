@@ -1,10 +1,11 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
 	"testing"
 	"time"
+
+	"cosmossdk.io/math"
 
 	"github.com/stretchr/testify/require"
 
@@ -630,6 +631,18 @@ func TestAccountImplictControl(t *testing.T) {
 	// succeeds when admin user (grantee with authz permissions) has transfer authority with receiver is on allowed list
 	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
 
+}
+
+func TestClawback(t *testing.T) {
+	// TODO[1368]: Test clawback.
+
+	// Create two new markers:
+	// restricted - no clawback
+	// restricted - clawback
+
+	// Have the admin send funds of each to a 3rd account.
+	// Have the admin try a transfer of the no-clawback from that 3rd account back to itself. It should fail.
+	// Have the admin try a transfer of the w/clawback from that 3rd account back to itself. It should go through.
 }
 
 func TestMarkerFeeGrant(t *testing.T) {
