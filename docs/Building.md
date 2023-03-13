@@ -25,7 +25,7 @@ Building `provenanced` requires [Go 1.18+](https://golang.org/dl/) (or higher).
 
 ### CLevelDB
 
-By default, `provenanced` is built with without CLevelDB support.
+By default, `provenanced` is built without CLevelDB support.
 Building with CLevelDB support is also possible. See `WITH_CLEVELDB` in [Build Options](#build-options) below.
 
 To download, build, and install the C LevelDB library on your system:
