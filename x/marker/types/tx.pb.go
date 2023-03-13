@@ -1493,8 +1493,8 @@ func (m *MsgAddFinalizeActivateMarkerResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddFinalizeActivateMarkerResponse proto.InternalMessageInfo
 
-// MsgSupplyIncreaseProposalRequest defines a governance proposal to administer a marker and increase total supply of the marker
-// through minting coin and placing it within the marker or assigning it directly to an account
+// MsgSupplyIncreaseProposalRequest defines a governance proposal to administer a marker and increase total supply of
+// the marker through minting coin and placing it within the marker or assigning it directly to an account
 type MsgSupplyIncreaseProposalRequest struct {
 	Amount        github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,1,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"amount"`
 	TargetAddress string                                  `protobuf:"bytes,2,opt,name=target_address,json=targetAddress,proto3" json:"target_address,omitempty"`
@@ -1791,7 +1791,7 @@ type MsgClient interface {
 	GrantAllowance(ctx context.Context, in *MsgGrantAllowanceRequest, opts ...grpc.CallOption) (*MsgGrantAllowanceResponse, error)
 	// AddFinalizeActivateMarker
 	AddFinalizeActivateMarker(ctx context.Context, in *MsgAddFinalizeActivateMarkerRequest, opts ...grpc.CallOption) (*MsgAddFinalizeActivateMarkerResponse, error)
-	// SupplyIncrease can only be called via gov proposal
+	// SupplyIncreaseProposal can only be called via gov proposal
 	SupplyIncreaseProposal(ctx context.Context, in *MsgSupplyIncreaseProposalRequest, opts ...grpc.CallOption) (*MsgSupplyIncreaseProposalResponse, error)
 }
 
@@ -1981,7 +1981,7 @@ type MsgServer interface {
 	GrantAllowance(context.Context, *MsgGrantAllowanceRequest) (*MsgGrantAllowanceResponse, error)
 	// AddFinalizeActivateMarker
 	AddFinalizeActivateMarker(context.Context, *MsgAddFinalizeActivateMarkerRequest) (*MsgAddFinalizeActivateMarkerResponse, error)
-	// SupplyIncrease can only be called via gov proposal
+	// SupplyIncreaseProposal can only be called via gov proposal
 	SupplyIncreaseProposal(context.Context, *MsgSupplyIncreaseProposalRequest) (*MsgSupplyIncreaseProposalResponse, error)
 }
 

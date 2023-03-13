@@ -557,7 +557,7 @@ indexer-db-down:
 ##############################
 # Proto -> golang compilation
 ##############################
-proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-gen proto-swagger-gen
+proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-gen update-swagger-docs
 
 containerProtoVer=v0.2
 containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
