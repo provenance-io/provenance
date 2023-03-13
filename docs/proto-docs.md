@@ -1281,6 +1281,7 @@ MarkerAccount holds the marker configuration information in addition to a base a
 | `marker_type` | [MarkerType](#provenance.marker.v1.MarkerType) |  | Marker type information |
 | `supply_fixed` | [bool](#bool) |  | A fixed supply will mint additional coin automatically if the total supply decreases below a set value. This may occur if the coin is burned or an account holding the coin is slashed. (default: true) |
 | `allow_governance_control` | [bool](#bool) |  | indicates that governance based control is allowed for this marker |
+| `clawback_enabled` | [bool](#bool) |  | Whether an admin can transfer restricted coins from a 3rd-party account without their signature. |
 
 
 
@@ -1952,6 +1953,7 @@ MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker re
 | `access_list` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
 | `supply_fixed` | [bool](#bool) |  |  |
 | `allow_governance_control` | [bool](#bool) |  |  |
+| `clawback_enabled` | [bool](#bool) |  |  |
 
 
 
@@ -1984,6 +1986,7 @@ MsgAddMarkerRequest defines the Msg/AddMarker request type
 | `access_list` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
 | `supply_fixed` | [bool](#bool) |  |  |
 | `allow_governance_control` | [bool](#bool) |  |  |
+| `clawback_enabled` | [bool](#bool) |  |  |
 
 
 
@@ -2241,8 +2244,8 @@ MsgSetDenomMetadataResponse defines the Msg/SetDenomMetadata response type
 <a name="provenance.marker.v1.MsgSupplyIncreaseProposalRequest"></a>
 
 ### MsgSupplyIncreaseProposalRequest
-MsgSupplyIncreaseProposalRequest defines a governance proposal to administer a marker and increase total supply of the marker
-through minting coin and placing it within the marker or assigning it directly to an account
+MsgSupplyIncreaseProposalRequest defines a governance proposal to administer a marker and increase total supply of
+the marker through minting coin and placing it within the marker or assigning it directly to an account
 
 
 | Field | Type | Label | Description |
@@ -2350,7 +2353,7 @@ Msg defines the Marker Msg service.
 | `SetDenomMetadata` | [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest) | [MsgSetDenomMetadataResponse](#provenance.marker.v1.MsgSetDenomMetadataResponse) | Allows Denom Metadata (see bank module) to be set for the Marker's Denom | |
 | `GrantAllowance` | [MsgGrantAllowanceRequest](#provenance.marker.v1.MsgGrantAllowanceRequest) | [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse) | GrantAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
 | `AddFinalizeActivateMarker` | [MsgAddFinalizeActivateMarkerRequest](#provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest) | [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse) | AddFinalizeActivateMarker | |
-| `SupplyIncreaseProposal` | [MsgSupplyIncreaseProposalRequest](#provenance.marker.v1.MsgSupplyIncreaseProposalRequest) | [MsgSupplyIncreaseProposalResponse](#provenance.marker.v1.MsgSupplyIncreaseProposalResponse) | SupplyIncrease can only be called via gov proposal | |
+| `SupplyIncreaseProposal` | [MsgSupplyIncreaseProposalRequest](#provenance.marker.v1.MsgSupplyIncreaseProposalRequest) | [MsgSupplyIncreaseProposalResponse](#provenance.marker.v1.MsgSupplyIncreaseProposalResponse) | SupplyIncreaseProposal can only be called via gov proposal | |
 
  <!-- end services -->
 
