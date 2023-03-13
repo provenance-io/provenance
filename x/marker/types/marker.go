@@ -47,6 +47,7 @@ type MarkerAccountI interface {
 	AddressListForPermission(Access) []sdk.AccAddress
 
 	HasGovernanceEnabled() bool
+	HasClawbackEnabled() bool
 }
 
 // NewEmptyMarkerAccount creates a new empty marker account in a Proposed state
@@ -62,6 +63,7 @@ func NewEmptyMarkerAccount(denom, manager string, grants []AccessGrant) *MarkerA
 		MarkerType:             MarkerType_Coin,
 		SupplyFixed:            true,
 		AllowGovernanceControl: true,
+		ClawbackEnabled:        false,
 	}
 }
 
@@ -74,6 +76,7 @@ func NewMarkerAccount(
 	status MarkerStatus,
 	markerType MarkerType,
 	supplyFixed bool,
+	clawbackEnabled bool,
 ) *MarkerAccount {
 	// clear marker manager for active or later status accounts.
 	if status >= StatusActive {
@@ -89,6 +92,7 @@ func NewMarkerAccount(
 		MarkerType:             markerType,
 		SupplyFixed:            supplyFixed,
 		AllowGovernanceControl: true,
+		ClawbackEnabled:        clawbackEnabled,
 	}
 }
 
@@ -106,6 +110,11 @@ func (ma MarkerAccount) HasFixedSupply() bool { return ma.SupplyFixed }
 
 // HasGovernanceEnabled returns true if this marker allows governance proposals to control this marker
 func (ma MarkerAccount) HasGovernanceEnabled() bool { return ma.AllowGovernanceControl }
+
+// HasClawbackEnabled returns true if clawback is enabled for this marker.
+func (ma MarkerAccount) HasClawbackEnabled() bool {
+	return ma.ClawbackEnabled
+}
 
 // AddressHasAccess returns true if the provided address has been assigned the provided
 // role within the current MarkerAccount AccessControl

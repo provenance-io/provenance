@@ -13,17 +13,18 @@ import (
 
 // Marker represents a marker account in provwasm supported format.
 type Marker struct {
-	AccountNumber uint64         `json:"account_number"`
-	Address       string         `json:"address"`
-	Coins         sdk.Coins      `json:"coins"`
-	Denom         string         `json:"denom"`
-	Manager       string         `json:"manager"`
-	MarkerType    MarkerType     `json:"marker_type"`
-	Permissions   []*AccessGrant `json:"permissions,omitempty"`
-	Sequence      uint64         `json:"sequence"`
-	Status        MarkerStatus   `json:"status"`
-	TotalSupply   string         `json:"total_supply"`
-	SupplyFixed   bool           `json:"supply_fixed"`
+	AccountNumber   uint64         `json:"account_number"`
+	Address         string         `json:"address"`
+	Coins           sdk.Coins      `json:"coins"`
+	Denom           string         `json:"denom"`
+	Manager         string         `json:"manager"`
+	MarkerType      MarkerType     `json:"marker_type"`
+	Permissions     []*AccessGrant `json:"permissions,omitempty"`
+	Sequence        uint64         `json:"sequence"`
+	Status          MarkerStatus   `json:"status"`
+	TotalSupply     string         `json:"total_supply"`
+	SupplyFixed     bool           `json:"supply_fixed"`
+	ClawbackEnabled bool           `json:"clawback_enabled"`
 }
 
 // AccessGrant are marker permissions granted to an account.
@@ -87,16 +88,17 @@ const (
 // Convert a core marker type to provwasm supported format.
 func createResponseType(input *types.MarkerAccount, balance sdk.Coins) *Marker {
 	marker := &Marker{
-		AccountNumber: input.GetAccountNumber(),
-		Address:       input.GetAddress().String(),
-		Coins:         balance,
-		Denom:         input.GetDenom(),
-		Manager:       input.GetManager().String(),
-		MarkerType:    markerTypeFor(input.GetMarkerType()),
-		Sequence:      input.GetSequence(),
-		Status:        markerStatusFor(input.GetStatus()),
-		TotalSupply:   input.GetSupply().Amount.String(),
-		SupplyFixed:   input.SupplyFixed,
+		AccountNumber:   input.GetAccountNumber(),
+		Address:         input.GetAddress().String(),
+		Coins:           balance,
+		Denom:           input.GetDenom(),
+		Manager:         input.GetManager().String(),
+		MarkerType:      markerTypeFor(input.GetMarkerType()),
+		Sequence:        input.GetSequence(),
+		Status:          markerStatusFor(input.GetStatus()),
+		TotalSupply:     input.GetSupply().Amount.String(),
+		SupplyFixed:     input.SupplyFixed,
+		ClawbackEnabled: input.ClawbackEnabled,
 	}
 	for _, ag := range input.GetAccessList() {
 		marker.Permissions = append(marker.Permissions, accessGrantFor(ag))

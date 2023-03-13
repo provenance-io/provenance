@@ -149,6 +149,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			AllowGovernanceControl: false,
 			Supply:                 sdk.NewInt(1000),
 			Denom:                  "testcoin",
+			ClawbackEnabled:        false,
 		},
 		{
 			BaseAccount: &authtypes.BaseAccount{
@@ -162,6 +163,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			AllowGovernanceControl: false,
 			Supply:                 sdk.NewInt(1000),
 			Denom:                  "lockedcoin",
+			ClawbackEnabled:        false,
 		},
 		{
 			BaseAccount: &authtypes.BaseAccount{
@@ -175,6 +177,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			AllowGovernanceControl: true,
 			Supply:                 sdk.NewInt(1000),
 			Denom:                  "propcoin",
+			ClawbackEnabled:        false,
 		},
 		{
 			BaseAccount: &authtypes.BaseAccount{
@@ -188,6 +191,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			AllowGovernanceControl: true,
 			Supply:                 cfg.BondedTokens.Mul(sdk.NewInt(int64(cfg.NumValidators))),
 			Denom:                  cfg.BondDenom,
+			ClawbackEnabled:        false,
 		},
 		{
 			BaseAccount: &authtypes.BaseAccount{
@@ -206,6 +210,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				*markertypes.NewAccessGrant(s.accountAddresses[1], []markertypes.Access{markertypes.Access_Transfer, markertypes.Access_Admin}),
 				*markertypes.NewAccessGrant(s.accountAddresses[2], []markertypes.Access{markertypes.Access_Transfer, markertypes.Access_Admin}),
 			},
+			ClawbackEnabled: false,
 		},
 		{
 			BaseAccount: &authtypes.BaseAccount{
@@ -219,6 +224,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			AllowGovernanceControl: false,
 			Supply:                 sdk.NewInt(3000),
 			Denom:                  "hodlercoin",
+			ClawbackEnabled:        true,
 		},
 	}
 	for i := len(markerData.Markers); i < s.markerCount; i++ {
@@ -236,6 +242,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				AllowGovernanceControl: true,
 				Supply:                 sdk.NewInt(int64(i * 100000)),
 				Denom:                  denom,
+				ClawbackEnabled:        false,
 			},
 		)
 	}

@@ -113,6 +113,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 			MarkerType:             markertypes.MarkerType_RestrictedCoin,
 			SupplyFixed:            true,
 			AllowGovernanceControl: true,
+			ClawbackEnabled:        false,
 		}), "adding %q account", denom)
 		markerToAddr[denom] = markerAddr
 	}
