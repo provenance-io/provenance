@@ -17,6 +17,7 @@ blockade.yaml
 keyring-*
 vendor/
 *.account
+.go.mod.bak
 
 # VS Code
 .history/
