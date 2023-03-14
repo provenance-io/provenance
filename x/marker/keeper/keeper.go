@@ -78,6 +78,8 @@ type Keeper struct {
 	cdc codec.BinaryCodec
 
 	authority string
+
+	markerModuleAddr sdk.AccAddress
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -115,6 +117,7 @@ func NewKeeper(
 		bankKeeperStoreKey: bankKey,
 		cdc:                cdc,
 		authority:          authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		markerModuleAddr:   authtypes.NewModuleAddress(types.CoinPoolName),
 	}
 }
 

@@ -15,7 +15,10 @@ const AddressHasAccessKey = "address_has_access"
 func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
 	markerAddr := types.MustGetMarkerAddress(denom)
 	marker, err := k.GetMarker(ctx, markerAddr)
-	if err != nil || marker == nil { // this should only occur in tests
+	if err != nil {
+		return err
+	}
+	if marker == nil { // this should only occur in tests
 		return nil
 	}
 
@@ -33,10 +36,8 @@ func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
 		return err
 	}
 
-	moduleAdrr := k.authKeeper.GetModuleAddress(types.CoinPoolName)
-
 	// if the marker has authority it is allowed to send to receiver without checking of attributes
-	if hasAccess || marker.AddressHasAccess(caller, types.Access_Transfer) || caller.Equals(moduleAdrr) {
+	if hasAccess || marker.AddressHasAccess(caller, types.Access_Transfer) || caller.Equals(k.markerModuleAddr) {
 		return nil
 	}
 
