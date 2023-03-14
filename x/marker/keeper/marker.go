@@ -72,7 +72,7 @@ func (k Keeper) AddMarkerAccount(ctx sdk.Context, marker types.MarkerAccountI) e
 			return fmt.Errorf("marker address already exists for %s", markerAddress)
 		} else if mac.GetSequence() > 0 {
 			// account exists, is not a marker, and has been signed for
-			return fmt.Errorf("account at %s is not a marker account", markerAddress.String())
+			return fmt.Errorf("account at %s is not a marker account %s", markerAddress.String(), marker.GetDenom())
 		}
 	}
 
