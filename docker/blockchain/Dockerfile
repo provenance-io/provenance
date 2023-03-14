@@ -23,7 +23,7 @@ COPY Makefile sims.mk ./
 
 # Build and install provenanced
 ENV VERSION=$VERSION
-RUN make VERSION=${VERSION} install
+RUN make VERSION=${VERSION} WITH_CLEVELDB=true install
 
 ###
 FROM debian:bullseye-slim as run
