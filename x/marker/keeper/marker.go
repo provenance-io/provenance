@@ -502,6 +502,9 @@ func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string
 		return fmt.Errorf("can only activate markeraccounts in the Finalized status")
 	}
 
+	// Verify the send_enabled status of this coin
+	k.ensureSendEnabledStatus(ctx, denom, true)
+
 	// Amount to mint is typically the defined supply however...
 	supplyRequest := m.GetSupply()
 
@@ -842,4 +845,17 @@ func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress,
 	// if the given account is currently holding 100% of the supply of a marker then it should be able to invoke
 	// the operations as an admin on the marker.
 	return m.GetSupply().IsEqual(sdk.NewCoin(m.GetDenom(), balance.Amount))
+}
+
+// ensureSendEnabledStatus checks to see if the configuration of SendEnabled for the current network matches
+// the requested value, sets
+func (k Keeper) ensureSendEnabledStatus(ctx sdk.Context, denom string, sendEnabled bool) {
+	if k.bankKeeper.IsSendEnabledDenom(ctx, denom) != sendEnabled {
+		switch k.bankKeeper.GetParams(ctx).DefaultSendEnabled {
+		case sendEnabled:
+			k.bankKeeper.DeleteSendEnabled(ctx, denom)
+		default:
+			k.bankKeeper.SetSendEnabled(ctx, denom, sendEnabled)
+		}
+	}
 }

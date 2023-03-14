@@ -68,20 +68,20 @@ func TestBankSend(tt *testing.T) {
 	ConstructAndSendTx(tt, *app, ctx, acct1, priv, withdrawMsg, abci.CodeTypeOK, "")
 	// Check both account balances before we begin.
 	addr1afterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	assert.Equal(tt, "1000nonrestrictedmarker,999900000stake", addr1afterBalance, "addr1afterBalance")
+	assert.Equal(tt, "1000nonrestrictedmarker,999850000stake", addr1afterBalance, "addr1afterBalance")
 
 	// send withdraw for coins
 	withdrawMsg = markertypes.NewMsgWithdrawRequest(addr1, addr1, rMarkerDenom,
 		sdk.NewCoins(sdk.NewInt64Coin(rMarkerDenom, 1000)))
 	ConstructAndSendTx(tt, *app, ctx, acct1, priv, withdrawMsg, abci.CodeTypeOK, "")
 	addr1afterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	assert.Equal(tt, "1000nonrestrictedmarker,1000restrictedmarker,999800000stake", addr1afterBalance, "addr1afterBalance")
+	assert.Equal(tt, "1000nonrestrictedmarker,1000restrictedmarker,999700000stake", addr1afterBalance, "addr1afterBalance")
 
 	// send restricted marker from account with transfer rights and no required attributes, expect success
 	sendRMarker := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewInt64Coin(rMarkerDenom, 100)))
 	ConstructAndSendTx(tt, *app, ctx, acct1, priv, sendRMarker, abci.CodeTypeOK, "")
 	addr1afterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	assert.Equal(tt, "1000nonrestrictedmarker,900restrictedmarker,999700000stake", addr1afterBalance, "addr1afterBalance")
+	assert.Equal(tt, "1000nonrestrictedmarker,900restrictedmarker,999550000stake", addr1afterBalance, "addr1afterBalance")
 	addr2afterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
 	assert.Equal(tt, "100restrictedmarker,1000000000stake", addr2afterBalance, "addr2beforeBalance")
 
@@ -89,23 +89,23 @@ func TestBankSend(tt *testing.T) {
 	sendRMarker = banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewInt64Coin(nrMarkerDenom, 100)))
 	ConstructAndSendTx(tt, *app, ctx, acct1, priv, sendRMarker, abci.CodeTypeOK, "")
 	addr1afterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	assert.Equal(tt, "900nonrestrictedmarker,900restrictedmarker,999600000stake", addr1afterBalance, "addr1afterBalance")
+	assert.Equal(tt, "900nonrestrictedmarker,900restrictedmarker,999400000stake", addr1afterBalance, "addr1afterBalance")
 	addr2afterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
 	assert.Equal(tt, "100nonrestrictedmarker,100restrictedmarker,1000000000stake", addr2afterBalance, "addr2beforeBalance")
 
 	sendRMarker = banktypes.NewMsgSend(addr2, addr1, sdk.NewCoins(sdk.NewInt64Coin(nrMarkerDenom, 50)))
 	ConstructAndSendTx(tt, *app, ctx, acct2, priv2, sendRMarker, abci.CodeTypeOK, "")
 	addr1afterBalance = app.BankKeeper.GetAllBalances(ctx, addr1).String()
-	assert.Equal(tt, "950nonrestrictedmarker,900restrictedmarker,999600000stake", addr1afterBalance, "addr1afterBalance")
+	assert.Equal(tt, "950nonrestrictedmarker,900restrictedmarker,999400000stake", addr1afterBalance, "addr1afterBalance")
 	addr2afterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
-	assert.Equal(tt, "50nonrestrictedmarker,100restrictedmarker,999900000stake", addr2afterBalance, "addr2beforeBalance")
+	assert.Equal(tt, "50nonrestrictedmarker,100restrictedmarker,999850000stake", addr2afterBalance, "addr2beforeBalance")
 
 	stopIfFailed(tt)
 }
 
 func ConstructAndSendTx(tt *testing.T, app piosimapp.App, ctx sdk.Context, acct *authtypes.BaseAccount, priv cryptotypes.PrivKey, msg sdk.Msg, expectedCode uint32, expectedError string) {
 	encCfg := sdksim.MakeTestEncodingConfig()
-	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000))
+	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())))
 	acct = app.AccountKeeper.GetAccount(ctx, acct.GetAddress()).(*authtypes.BaseAccount)
 	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct, ctx.ChainID(), msg)
 	require.NoError(tt, err, "SignTxAndGetBytes")

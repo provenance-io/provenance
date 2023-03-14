@@ -153,6 +153,7 @@ func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) {
 	}
 	k.authKeeper.SetAccount(ctx, marker)
 	store.Set(types.MarkerStoreKey(marker.GetAddress()), marker.GetAddress())
+	k.ensureSendEnabledStatus(ctx, marker.GetDenom(), true)
 }
 
 // RemoveMarker removes a marker from the auth account store. Note: if the account holds coins this will
