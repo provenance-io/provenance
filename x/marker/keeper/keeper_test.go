@@ -5,9 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
-
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -634,15 +635,94 @@ func TestAccountImplictControl(t *testing.T) {
 }
 
 func TestClawback(t *testing.T) {
-	// TODO[1368]: Test clawback.
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	admin := sdk.AccAddress("admin_account_______")
+	other := sdk.AccAddress("other_account_______")
 
-	// Create two new markers:
-	// restricted - no clawback
-	// restricted - clawback
+	// Shorten up the lines making Coins.
+	cz := func(coins ...sdk.Coin) sdk.Coins {
+		return sdk.NewCoins(coins...)
+	}
 
-	// Have the admin send funds of each to a 3rd account.
-	// Have the admin try a transfer of the no-clawback from that 3rd account back to itself. It should fail.
-	// Have the admin try a transfer of the w/clawback from that 3rd account back to itself. It should go through.
+	accessList := []types.AccessGrant{{
+		Address: admin.String(),
+		Permissions: []types.Access{
+			types.Access_Transfer,
+			types.Access_Mint, types.Access_Burn, types.Access_Deposit,
+			types.Access_Withdraw, types.Access_Delete, types.Access_Admin,
+		},
+	}}
+
+	noClawDenom := "noclawbackcoin"
+	noClawCoin := func(amt int64) sdk.Coin {
+		return sdk.NewInt64Coin(noClawDenom, amt)
+	}
+	noClawAddr := types.MustGetMarkerAddress(noClawDenom)
+	noClawMac := types.NewMarkerAccount(
+		authtypes.NewBaseAccount(noClawAddr, nil, 0, 0),
+		noClawCoin(1111),
+		admin,
+		accessList,
+		types.StatusProposed,
+		types.MarkerType_RestrictedCoin,
+		true,
+		false,
+	)
+	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, noClawMac),
+		"AddFinalizeAndActivateMarker without clawback")
+
+	wClawDenom := "withclawbackcoin"
+	wClawCoin := func(amt int64) sdk.Coin {
+		return sdk.NewInt64Coin(wClawDenom, amt)
+	}
+	wClawAddr := types.MustGetMarkerAddress(wClawDenom)
+	wClawMac := types.NewMarkerAccount(
+		authtypes.NewBaseAccount(wClawAddr, nil, 0, 0),
+		wClawCoin(2222),
+		admin,
+		accessList,
+		types.StatusProposed,
+		types.MarkerType_RestrictedCoin,
+		true,
+		true,
+	)
+	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, wClawMac),
+		"AddFinalizeAndActivateMarker with clawback")
+
+	requireBalances := func(tt *testing.T, desc string, noClawBal, wClawBal, adminBal, otherBal sdk.Coins) {
+		tt.Helper()
+		ok := assert.Equal(tt, noClawBal, app.BankKeeper.GetAllBalances(ctx, noClawAddr),
+			"%s no-clawback marker balance", desc)
+		ok = assert.Equal(tt, wClawBal, app.BankKeeper.GetAllBalances(ctx, wClawAddr),
+			"%s with clawback marker balance", desc) && ok
+		ok = assert.Equal(tt, adminBal, app.BankKeeper.GetAllBalances(ctx, admin),
+			"%s admin balance", desc) && ok
+		ok = assert.Equal(tt, otherBal, app.BankKeeper.GetAllBalances(ctx, other),
+			"%s other balance", desc) && ok
+		if !ok {
+			tt.FailNow()
+		}
+	}
+	requireBalances(t, "starting", cz(noClawCoin(1111)), cz(wClawCoin(2222)), cz(), cz())
+
+	// Have the admin withdraw funds of each to the other account.
+	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, admin, other, noClawDenom, cz(noClawCoin(111))),
+		"withdraw 500noclawback to other")
+	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, admin, other, wClawDenom, cz(wClawCoin(222))),
+		"withdraw 500wclawback to other")
+	requireBalances(t, "after withdraws", cz(noClawCoin(1000)), cz(wClawCoin(2000)), cz(), cz(noClawCoin(111), wClawCoin(222)))
+
+	// Have the admin try a transfer of the no-clawback from that other account to itself. It should fail.
+	assert.EqualError(t, app.MarkerKeeper.TransferCoin(ctx, other, admin, admin, noClawCoin(11)),
+		fmt.Sprintf("%s account has not been granted authority to withdraw from %s account", admin, other),
+		"transfer of non-clawback coin from other account back to admin")
+	requireBalances(t, "after failed transfer", cz(noClawCoin(1000)), cz(wClawCoin(2000)), cz(), cz(noClawCoin(111), wClawCoin(222)))
+
+	// Have the admin try a transfer of the w/clawback from that other account to itself. It should go through.
+	assert.NoError(t, app.MarkerKeeper.TransferCoin(ctx, other, admin, admin, wClawCoin(22)),
+		"transfer of clawbackable coin from other account back to admin")
+	requireBalances(t, "after successful transfer", cz(noClawCoin(1000)), cz(wClawCoin(2000)), cz(wClawCoin(22)), cz(noClawCoin(111), wClawCoin(200)))
 }
 
 func TestMarkerFeeGrant(t *testing.T) {
