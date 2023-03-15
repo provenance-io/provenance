@@ -41,6 +41,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add the `gci` linter that enforces import group ordering. Create a 'lint-fix' make target [PR 1366](https://github.com/provenance-io/provenance/pull/1366).
 * Add gRPC query to get all contract specs and record specs for a scope spec [#677](https://github.com/provenance-io/provenance/issues/677).
+* Disable `cleveldb` and `badgerdb` by default [#1411](https://github.com/provenance-io/provenance/issues/1411).
+  Official builds still have `cleveldb` support though.
 
 ### Bug Fixes
 

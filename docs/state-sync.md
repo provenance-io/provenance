@@ -37,9 +37,6 @@ curl https://raw.githubusercontent.com/provenance-io/mainnet/main/pio-mainnet-1/
 # backup config
 cp $PIO_HOME/config/config.toml $PIO_HOME/config/config.toml.orig
 
-# update config to use 'cleveldb'
-provenanced config set db_backend "cleveldb"
-
 # setup sync node
 PIO_RPC="$( host rpc-$(( $RANDOM % 3 )).provenance.io | awk '{print $4}' ):26657"
 
@@ -75,9 +72,6 @@ curl https://raw.githubusercontent.com/provenance-io/testnet/main/pio-testnet-1/
 
 # backup config
 cp $PIO_HOME/config/config.toml $PIO_HOME/config/config.toml.orig
-
-# update config to use 'cleveldb'
-provenanced config set db_backend "cleveldb"
 
 # setup sync node
 # PIO_RPC="$( host rpc.test.provenance.io | awk '{print $4}' ):26657"
