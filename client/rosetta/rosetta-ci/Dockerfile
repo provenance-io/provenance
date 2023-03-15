@@ -3,7 +3,7 @@ ARG VERSION
 
 WORKDIR /go/src/github.com/provenance-io/provenance
 ENV GOPRIVATE=github.com/provenance-io
-RUN apt-get update && apt-get upgrade -y && apt-get install -y libleveldb-dev
+RUN apt-get update && apt-get upgrade -y
 
 COPY client/ ./client/
 COPY app/ ./app/
@@ -15,7 +15,6 @@ COPY vendor/ ./vendor/
 
 # Build the binaries
 RUN go build -mod vendor \
-    -tags cleveldb \
     -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/version.Name=Provenance-Blockchain' \
     -o /go/bin/ ./cmd/...
 RUN echo "Completed go build"
@@ -32,7 +31,7 @@ ENV LOCALNET=1
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y curl jq libleveldb-dev && \
+    apt-get install -y curl jq && \
     apt-get clean && \
     apt-get install -y python3 && \
     rm -rf /var/lib/apt/lists/

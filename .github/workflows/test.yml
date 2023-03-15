@@ -34,9 +34,6 @@ jobs:
       - name: Define Variables
         id: def-vars
         run: |
-          cache_key="${{ runner.os }}-unit-tests-${{ hashFiles('scripts/cleveldb_build_and_install.sh', '.github/workflows/test.yml') }}"
-          echo "Setting output: cache-key=$cache_key"
-          echo "cache-key=$cache_key" >> "$GITHUB_OUTPUT"
           file_prefix="${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
           echo "Setting output: file-prefix=$file_prefix"
           echo "file-prefix=$file_prefix" >> "$GITHUB_OUTPUT"
@@ -71,29 +68,10 @@ jobs:
         with:
           name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.03"
           path: ./pkgs.txt.part.03
-      - uses: actions/cache@v3
-        id: cache-setup
-        with:
-          # In order:
-          # * The leveldb repo tarball
-          # * The directory extracted from the leveldb tarball
-          # Note: this needs to match the cache-path: entries in the outputs below.
-          path: |
-            leveldb*.tar.gz
-            leveldb-*
-          key: ${{ steps.def-vars.outputs.cache-key }}
-      - name: Build Cache
-        if: steps.cache-setup.outputs.cache-hit != 'true'
-        run: CLEVELDB_DO_CLEANUP=false make cleveldb
     outputs:
       should-run: ${{ env.GIT_DIFF }}
       go-version: 1.18
-      cache-key: ${{ steps.def-vars.outputs.cache-key }}
       file-prefix: ${{ steps.def-vars.outputs.file-prefix }}
-      # Note: this needs to match the path: entries in the actions/cache step above.
-      cache-path: |
-        leveldb*.tar.gz
-        leveldb-*
 
 
   tests:
@@ -113,14 +91,6 @@ jobs:
         with:
           # CodeCov requires fetch-depth > 1
           fetch-depth: 2
-      - uses: actions/cache@v3
-        if: needs.setup-tests.outputs.should-run
-        with:
-          path: ${{ needs.setup-tests.outputs.cache-path }}
-          key: ${{ needs.setup-tests.outputs.cache-key }}
-      - name: Build and install cleveldb
-        if: needs.setup-tests.outputs.should-run
-        run: CLEVELDB_DO_CLEANUP=false make cleveldb
       - uses: actions/setup-go@v3
         if: needs.setup-tests.outputs.should-run
         with:
@@ -132,7 +102,7 @@ jobs:
       - name: test & coverage report creation
         if: needs.setup-tests.outputs.should-run
         run: |
-          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='norace ledger test_ledger_mock cleveldb'
+          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='norace ledger test_ledger_mock'
       - uses: actions/upload-artifact@v3
         if: needs.setup-tests.outputs.should-run
         with:
@@ -205,14 +175,6 @@ jobs:
       LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        if: needs.setup-tests.outputs.should-run
-        with:
-          path: ${{ needs.setup-tests.outputs.cache-path }}
-          key: ${{ needs.setup-tests.outputs.cache-key }}
-      - name: Build and install cleveldb
-        if: needs.setup-tests.outputs.should-run
-        run: CLEVELDB_DO_CLEANUP=false make cleveldb
       - uses: actions/setup-go@v3
         if: needs.setup-tests.outputs.should-run
         with:
@@ -224,7 +186,7 @@ jobs:
       - name: test & coverage report creation
         if: needs.setup-tests.outputs.should-run
         run: |
-          xargs --arg-file=pkgs.txt.part.${{ matrix.part }} go test -mod=readonly -timeout 30m -race -tags='cgo ledger test_ledger_mock cleveldb' | tee ${{ matrix.part }}-race-output.txt
+          xargs --arg-file=pkgs.txt.part.${{ matrix.part }} go test -mod=readonly -timeout 30m -race -tags='cgo ledger test_ledger_mock' | tee ${{ matrix.part }}-race-output.txt
           exit "${PIPESTATUS[0]}"
       - uses: actions/upload-artifact@v3
         if: needs.setup-tests.outputs.should-run

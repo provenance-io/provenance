@@ -115,6 +115,7 @@ jobs:
           export CLEVELDB_SUDO='true'
           export CLEVELDB_DO_CLEANUP='false'
           make cleveldb
+          echo 'WITH_CLEVELDB=true' >> "$GITHUB_ENV"
       - uses: actions/setup-go@v3
         with:
           go-version: ${{ needs.setup.outputs.go-version }}
@@ -226,6 +227,7 @@ jobs:
           export CLEVELDB_SUDO='true'
           export CLEVELDB_DO_CLEANUP='false'
           make cleveldb
+          echo 'WITH_CLEVELDB=true' >> "$GITHUB_ENV"
       - uses: actions/setup-go@v3
         with:
           go-version: ${{ needs.setup.outputs.go-version }}
