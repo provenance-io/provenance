@@ -472,9 +472,11 @@ message ScopeSpecificationRequest {
   // address, e.g. scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m.
   string specification_id = 1 [(gogoproto.moretags) = "yaml:\"specification_id\""];
 
-  // include_contract_specs is a flag for whether or not the contract specifications in the scope specification should be included.
+  // include_contract_specs is a flag for whether or not the contract specifications in the scope specification should
+  // be included.
   bool include_contract_specs = 10 [(gogoproto.moretags) = "yaml:\"include_contract_specs\""];
-  // include_record_specs is a flag for whether or not the record specifications in the scope specification should be included.
+  // include_record_specs is a flag for whether or not the record specifications in the scope specification should be
+  // included.
   bool include_record_specs = 11 [(gogoproto.moretags) = "yaml:\"include_record_specs\""];
 }
 

@@ -710,6 +710,7 @@ func New(
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
+		markertypes.ModuleName,
 		distrtypes.ModuleName,
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
@@ -724,7 +725,6 @@ func New(
 		quarantine.ModuleName,
 		sanction.ModuleName,
 
-		markertypes.ModuleName,
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
 		metadatatypes.ModuleName,

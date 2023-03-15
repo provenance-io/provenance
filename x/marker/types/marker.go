@@ -232,6 +232,9 @@ func ValidateRequiredAttributes(requiredAttributes []string) error {
 }
 
 func (ma *MarkerAccount) GetRequiredAttributes() []string {
+	if ma.RequiredAttributes == nil {
+		return []string{}
+	}
 	return ma.RequiredAttributes
 }
 
