@@ -180,22 +180,22 @@ func TestNewMarkerValidate(t *testing.T) {
 			nil,
 		},
 		{
-			"coin type with clawback is ok",
+			"coin type with forced transfer is invalid",
 			NewMarkerAccount(baseAcc, sdk.NewCoin("test", sdk.OneInt()), manager, nil, StatusActive, MarkerType_Coin, true, true),
-			nil,
+			fmt.Errorf("TODO"),
 		},
 		{
-			"coin type without clawback is ok",
+			"coin type without forced transfer is ok",
 			NewMarkerAccount(baseAcc, sdk.NewCoin("test", sdk.OneInt()), manager, nil, StatusActive, MarkerType_Coin, true, false),
 			nil,
 		},
 		{
-			"restricted type with clawback is ok",
+			"restricted type with froced transfer is ok",
 			NewMarkerAccount(baseAcc, sdk.NewCoin("test", sdk.OneInt()), manager, nil, StatusActive, MarkerType_RestrictedCoin, true, true),
 			nil,
 		},
 		{
-			"restricted type without clawback is ok",
+			"restricted type without forced transfer is ok",
 			NewMarkerAccount(baseAcc, sdk.NewCoin("test", sdk.OneInt()), manager, nil, StatusActive, MarkerType_RestrictedCoin, true, false),
 			nil,
 		},

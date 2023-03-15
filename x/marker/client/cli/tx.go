@@ -42,7 +42,7 @@ const (
 	FlagPacketTimeoutTimestamp = "packet-timeout-timestamp"
 	FlagAbsoluteTimeouts       = "absolute-timeouts"
 	FlagMemo                   = "memo"
-	FlagClawbackEnabled        = "clawback-enabled"
+	FlagAllowForceTransfer     = "allow-force-transfer"
 )
 
 // NewTxCmd returns the top-level command for marker CLI transactions.
@@ -225,7 +225,7 @@ with the given supply amount and denomination provided in the coin argument
 
 			msg := types.NewMsgAddMarkerRequest(
 				coin.Denom, coin.Amount, callerAddr, callerAddr, flagVals.markerType,
-				flagVals.supplyFixed, flagVals.allowGovControl, flagVals.clawbackEnabled,
+				flagVals.supplyFixed, flagVals.allowGovControl, flagVals.allowForceTransfer,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -937,7 +937,7 @@ with the given supply amount and denomination provided in the coin argument
 
 			msg := types.NewMsgAddFinalizeActivateMarkerRequest(
 				coin.Denom, coin.Amount, callerAddr, callerAddr, flagVals.markerType,
-				flagVals.supplyFixed, flagVals.allowGovControl, flagVals.clawbackEnabled,
+				flagVals.supplyFixed, flagVals.allowGovControl, flagVals.allowForceTransfer,
 				accessGrants,
 			)
 
@@ -985,14 +985,14 @@ func addNewMarkerFlags(cmd *cobra.Command) {
 	cmd.Flags().String(FlagType, "COIN", "a marker type to assign (default is COIN)")
 	cmd.Flags().Bool(FlagSupplyFixed, false, "Indicates that the supply is fixed")
 	cmd.Flags().Bool(FlagAllowGovernanceControl, false, "Indicates that governance control is allowed")
-	cmd.Flags().Bool(FlagClawbackEnabled, false, "Indicates that clawback is enabled")
+	cmd.Flags().Bool(FlagAllowForceTransfer, false, "Indicates that force transfer is allowed")
 }
 
 type newMarkerFlagValues struct {
-	markerType      types.MarkerType
-	supplyFixed     bool
-	allowGovControl bool
-	clawbackEnabled bool
+	markerType         types.MarkerType
+	supplyFixed        bool
+	allowGovControl    bool
+	allowForceTransfer bool
 }
 
 func parseNewMarkerFlags(cmd *cobra.Command) (*newMarkerFlagValues, error) {
@@ -1021,9 +1021,9 @@ func parseNewMarkerFlags(cmd *cobra.Command) (*newMarkerFlagValues, error) {
 		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagAllowGovernanceControl, err)
 	}
 
-	rv.clawbackEnabled, err = cmd.Flags().GetBool(FlagClawbackEnabled)
+	rv.allowForceTransfer, err = cmd.Flags().GetBool(FlagAllowForceTransfer)
 	if err != nil {
-		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagClawbackEnabled, err)
+		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagAllowForceTransfer, err)
 	}
 
 	return rv, nil

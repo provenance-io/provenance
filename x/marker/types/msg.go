@@ -41,7 +41,7 @@ func NewMsgAddMarkerRequest(
 	denom string, totalSupply sdkmath.Int,
 	fromAddress, manager sdk.AccAddress,
 	markerType MarkerType,
-	supplyFixed, allowGovernanceControl, clawbackEnabled bool,
+	supplyFixed, allowGovernanceControl, allowForcedTransfer bool,
 ) *MsgAddMarkerRequest {
 	return &MsgAddMarkerRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
@@ -51,7 +51,7 @@ func NewMsgAddMarkerRequest(
 		MarkerType:             markerType,
 		SupplyFixed:            supplyFixed,
 		AllowGovernanceControl: allowGovernanceControl,
-		ClawbackEnabled:        clawbackEnabled,
+		AllowForcedTransfer:    allowForcedTransfer,
 	}
 }
 
@@ -470,7 +470,7 @@ func NewMsgAddFinalizeActivateMarkerRequest(
 	denom string, totalSupply sdkmath.Int,
 	fromAddress, manager sdk.AccAddress,
 	markerType MarkerType,
-	supplyFixed, allowGovernanceControl, clawbackEnabled bool,
+	supplyFixed, allowGovernanceControl, allowForcedTransfer bool,
 	accessGrants []AccessGrant,
 ) *MsgAddFinalizeActivateMarkerRequest {
 	return &MsgAddFinalizeActivateMarkerRequest{
@@ -481,7 +481,7 @@ func NewMsgAddFinalizeActivateMarkerRequest(
 		SupplyFixed:            supplyFixed,
 		AllowGovernanceControl: allowGovernanceControl,
 		AccessList:             accessGrants,
-		ClawbackEnabled:        clawbackEnabled,
+		AllowForcedTransfer:    allowForcedTransfer,
 	}
 }
 

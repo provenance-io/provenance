@@ -80,7 +80,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 				MarkerType:             types.MarkerType_Coin,
 				SupplyFixed:            false,
 				AllowGovernanceControl: true,
-				ClawbackEnabled:        false,
+				AllowForcedTransfer:    false,
 			},
 		},
 	}

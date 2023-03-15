@@ -149,7 +149,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			AllowGovernanceControl: false,
 			Supply:                 sdk.NewInt(1000),
 			Denom:                  "testcoin",
-			ClawbackEnabled:        false,
+			AllowForcedTransfer:    false,
 		},
 		{
 			BaseAccount: &authtypes.BaseAccount{
@@ -163,7 +163,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			AllowGovernanceControl: false,
 			Supply:                 sdk.NewInt(1000),
 			Denom:                  "lockedcoin",
-			ClawbackEnabled:        false,
+			AllowForcedTransfer:    false,
 		},
 		{
 			BaseAccount: &authtypes.BaseAccount{
@@ -177,7 +177,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			AllowGovernanceControl: true,
 			Supply:                 sdk.NewInt(1000),
 			Denom:                  "propcoin",
-			ClawbackEnabled:        false,
+			AllowForcedTransfer:    false,
 		},
 		{
 			BaseAccount: &authtypes.BaseAccount{
@@ -191,7 +191,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			AllowGovernanceControl: true,
 			Supply:                 cfg.BondedTokens.Mul(sdk.NewInt(int64(cfg.NumValidators))),
 			Denom:                  cfg.BondDenom,
-			ClawbackEnabled:        false,
+			AllowForcedTransfer:    false,
 		},
 		{
 			BaseAccount: &authtypes.BaseAccount{
@@ -210,7 +210,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				*markertypes.NewAccessGrant(s.accountAddresses[1], []markertypes.Access{markertypes.Access_Transfer, markertypes.Access_Admin}),
 				*markertypes.NewAccessGrant(s.accountAddresses[2], []markertypes.Access{markertypes.Access_Transfer, markertypes.Access_Admin}),
 			},
-			ClawbackEnabled: false,
+			AllowForcedTransfer: false,
 		},
 		{
 			BaseAccount: &authtypes.BaseAccount{
@@ -224,7 +224,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			AllowGovernanceControl: false,
 			Supply:                 sdk.NewInt(3000),
 			Denom:                  "hodlercoin",
-			ClawbackEnabled:        true,
+			AllowForcedTransfer:    true,
 		},
 	}
 	for i := len(markerData.Markers); i < s.markerCount; i++ {
@@ -242,7 +242,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				AllowGovernanceControl: true,
 				Supply:                 sdk.NewInt(int64(i * 100000)),
 				Denom:                  denom,
-				ClawbackEnabled:        false,
+				AllowForcedTransfer:    false,
 			},
 		)
 	}
@@ -419,7 +419,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 				"testcoin",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"13","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false,"clawback_enabled":false}}`,
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"13","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false,"allow_forced_transfer":false}}`,
 		},
 		{
 			"get testcoin marker test",
@@ -431,13 +431,13 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 			`marker:
   '@type': /provenance.marker.v1.MarkerAccount
   access_control: []
+  allow_forced_transfer: false
   allow_governance_control: false
   base_account:
     account_number: "13"
     address: cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq
     pub_key: null
     sequence: "0"
-  clawback_enabled: false
   denom: testcoin
   manager: ""
   marker_type: MARKER_TYPE_COIN
@@ -460,7 +460,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 				"lockedcoin",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"14","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false,"clawback_enabled":false}}`,
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"14","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false,"allow_forced_transfer":false}}`,
 		},
 		{
 			"query access",

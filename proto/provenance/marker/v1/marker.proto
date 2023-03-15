@@ -56,7 +56,7 @@ message MarkerAccount {
   // indicates that governance based control is allowed for this marker
   bool allow_governance_control = 9;
   // Whether an admin can transfer restricted coins from a 3rd-party account without their signature.
-  bool clawback_enabled = 10;
+  bool allow_forced_transfer = 10;
 }
 
 // MarkerType defines the types of marker

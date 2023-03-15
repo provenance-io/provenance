@@ -673,7 +673,7 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	if !m.AddressHasAccess(admin, types.Access_Transfer) {
 		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
 	}
-	if !admin.Equals(from) && !m.HasClawbackEnabled() {
+	if !admin.Equals(from) && !m.AllowsForcedTransfer() {
 		err = k.authzHandler(ctx, admin, from, to, amount)
 		if err != nil {
 			return err

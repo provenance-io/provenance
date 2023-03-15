@@ -81,7 +81,7 @@ message MsgAddMarkerRequest {
   repeated AccessGrant access_list              = 7 [(gogoproto.nullable) = false];
   bool                 supply_fixed             = 8;
   bool                 allow_governance_control = 9;
-  bool                 clawback_enabled         = 10;
+  bool                 allow_forced_transfer    = 10;
 }
 
 // MsgAddMarkerResponse defines the Msg/AddMarker response type
@@ -211,7 +211,7 @@ message MsgAddFinalizeActivateMarkerRequest {
   repeated AccessGrant access_list              = 6 [(gogoproto.nullable) = false];
   bool                 supply_fixed             = 7;
   bool                 allow_governance_control = 8;
-  bool                 clawback_enabled         = 9;
+  bool                 allow_forced_transfer    = 9;
 }
 
 // MsgAddFinalizeActivateMarkerResponse defines the Msg/AddFinalizeActivateMarker response type

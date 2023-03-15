@@ -168,7 +168,7 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk
 			markertypes.MarkerType_Coin,
 			true,  // fixed supply
 			true,  // allow gov
-			false, // don't allow clawback
+			false, // don't allow forced transfer
 		)
 
 		// fund the node account to do all of these txs

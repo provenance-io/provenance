@@ -47,7 +47,7 @@ type MarkerAccountI interface {
 	AddressListForPermission(Access) []sdk.AccAddress
 
 	HasGovernanceEnabled() bool
-	HasClawbackEnabled() bool
+	AllowsForcedTransfer() bool
 }
 
 // NewEmptyMarkerAccount creates a new empty marker account in a Proposed state
@@ -63,7 +63,7 @@ func NewEmptyMarkerAccount(denom, manager string, grants []AccessGrant) *MarkerA
 		MarkerType:             MarkerType_Coin,
 		SupplyFixed:            true,
 		AllowGovernanceControl: true,
-		ClawbackEnabled:        false,
+		AllowForcedTransfer:    false,
 	}
 }
 
@@ -76,7 +76,7 @@ func NewMarkerAccount(
 	status MarkerStatus,
 	markerType MarkerType,
 	supplyFixed bool,
-	clawbackEnabled bool,
+	allowForcedTransfer bool,
 ) *MarkerAccount {
 	// clear marker manager for active or later status accounts.
 	if status >= StatusActive {
@@ -92,7 +92,7 @@ func NewMarkerAccount(
 		MarkerType:             markerType,
 		SupplyFixed:            supplyFixed,
 		AllowGovernanceControl: true,
-		ClawbackEnabled:        clawbackEnabled,
+		AllowForcedTransfer:    allowForcedTransfer,
 	}
 }
 
@@ -111,9 +111,9 @@ func (ma MarkerAccount) HasFixedSupply() bool { return ma.SupplyFixed }
 // HasGovernanceEnabled returns true if this marker allows governance proposals to control this marker
 func (ma MarkerAccount) HasGovernanceEnabled() bool { return ma.AllowGovernanceControl }
 
-// HasClawbackEnabled returns true if clawback is enabled for this marker.
-func (ma MarkerAccount) HasClawbackEnabled() bool {
-	return ma.ClawbackEnabled
+// AllowsForcedTransfer returns true if force transfer is allowed for this marker.
+func (ma MarkerAccount) AllowsForcedTransfer() bool {
+	return ma.AllowForcedTransfer
 }
 
 // AddressHasAccess returns true if the provided address has been assigned the provided

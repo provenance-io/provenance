@@ -93,7 +93,7 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		msg.Status,
 		msg.MarkerType,
 		msg.SupplyFixed,
-		msg.ClawbackEnabled,
+		msg.AllowForcedTransfer,
 	)
 
 	if k.GetEnableGovernance(ctx) {
@@ -581,7 +581,7 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 		types.StatusProposed,
 		msg.MarkerType,
 		msg.SupplyFixed,
-		msg.ClawbackEnabled,
+		msg.AllowForcedTransfer,
 	)
 
 	if k.GetEnableGovernance(ctx) {

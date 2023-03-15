@@ -634,7 +634,7 @@ func TestAccountImplictControl(t *testing.T) {
 
 }
 
-func TestClawback(t *testing.T) {
+func TestForceTransfer(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	admin := sdk.AccAddress("admin_account_______")
@@ -654,14 +654,14 @@ func TestClawback(t *testing.T) {
 		},
 	}}
 
-	noClawDenom := "noclawbackcoin"
-	noClawCoin := func(amt int64) sdk.Coin {
-		return sdk.NewInt64Coin(noClawDenom, amt)
+	noForceDenom := "noforcecoin"
+	noForceCoin := func(amt int64) sdk.Coin {
+		return sdk.NewInt64Coin(noForceDenom, amt)
 	}
-	noClawAddr := types.MustGetMarkerAddress(noClawDenom)
-	noClawMac := types.NewMarkerAccount(
-		authtypes.NewBaseAccount(noClawAddr, nil, 0, 0),
-		noClawCoin(1111),
+	noForceAddr := types.MustGetMarkerAddress(noForceDenom)
+	noForceMac := types.NewMarkerAccount(
+		authtypes.NewBaseAccount(noForceAddr, nil, 0, 0),
+		noForceCoin(1111),
 		admin,
 		accessList,
 		types.StatusProposed,
@@ -669,17 +669,17 @@ func TestClawback(t *testing.T) {
 		true,
 		false,
 	)
-	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, noClawMac),
-		"AddFinalizeAndActivateMarker without clawback")
+	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, noForceMac),
+		"AddFinalizeAndActivateMarker without force transfer")
 
-	wClawDenom := "withclawbackcoin"
-	wClawCoin := func(amt int64) sdk.Coin {
-		return sdk.NewInt64Coin(wClawDenom, amt)
+	wForceDenom := "withforcecoin"
+	wForceCoin := func(amt int64) sdk.Coin {
+		return sdk.NewInt64Coin(wForceDenom, amt)
 	}
-	wClawAddr := types.MustGetMarkerAddress(wClawDenom)
-	wClawMac := types.NewMarkerAccount(
-		authtypes.NewBaseAccount(wClawAddr, nil, 0, 0),
-		wClawCoin(2222),
+	wForceAddr := types.MustGetMarkerAddress(wForceDenom)
+	wForceMac := types.NewMarkerAccount(
+		authtypes.NewBaseAccount(wForceAddr, nil, 0, 0),
+		wForceCoin(2222),
 		admin,
 		accessList,
 		types.StatusProposed,
@@ -687,15 +687,15 @@ func TestClawback(t *testing.T) {
 		true,
 		true,
 	)
-	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, wClawMac),
-		"AddFinalizeAndActivateMarker with clawback")
+	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, wForceMac),
+		"AddFinalizeAndActivateMarker with force transfer")
 
-	requireBalances := func(tt *testing.T, desc string, noClawBal, wClawBal, adminBal, otherBal sdk.Coins) {
+	requireBalances := func(tt *testing.T, desc string, noForceBal, wForceBal, adminBal, otherBal sdk.Coins) {
 		tt.Helper()
-		ok := assert.Equal(tt, noClawBal, app.BankKeeper.GetAllBalances(ctx, noClawAddr),
-			"%s no-clawback marker balance", desc)
-		ok = assert.Equal(tt, wClawBal, app.BankKeeper.GetAllBalances(ctx, wClawAddr),
-			"%s with clawback marker balance", desc) && ok
+		ok := assert.Equal(tt, noForceBal, app.BankKeeper.GetAllBalances(ctx, noForceAddr),
+			"%s no-force-transfer marker balance", desc)
+		ok = assert.Equal(tt, wForceBal, app.BankKeeper.GetAllBalances(ctx, wForceAddr),
+			"%s with-force-transfer marker balance", desc) && ok
 		ok = assert.Equal(tt, adminBal, app.BankKeeper.GetAllBalances(ctx, admin),
 			"%s admin balance", desc) && ok
 		ok = assert.Equal(tt, otherBal, app.BankKeeper.GetAllBalances(ctx, other),
@@ -704,25 +704,25 @@ func TestClawback(t *testing.T) {
 			tt.FailNow()
 		}
 	}
-	requireBalances(t, "starting", cz(noClawCoin(1111)), cz(wClawCoin(2222)), cz(), cz())
+	requireBalances(t, "starting", cz(noForceCoin(1111)), cz(wForceCoin(2222)), cz(), cz())
 
 	// Have the admin withdraw funds of each to the other account.
-	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, admin, other, noClawDenom, cz(noClawCoin(111))),
-		"withdraw 500noclawback to other")
-	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, admin, other, wClawDenom, cz(wClawCoin(222))),
-		"withdraw 500wclawback to other")
-	requireBalances(t, "after withdraws", cz(noClawCoin(1000)), cz(wClawCoin(2000)), cz(), cz(noClawCoin(111), wClawCoin(222)))
+	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, admin, other, noForceDenom, cz(noForceCoin(111))),
+		"withdraw 500noforceback to other")
+	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, admin, other, wForceDenom, cz(wForceCoin(222))),
+		"withdraw 500wforceback to other")
+	requireBalances(t, "after withdraws", cz(noForceCoin(1000)), cz(wForceCoin(2000)), cz(), cz(noForceCoin(111), wForceCoin(222)))
 
-	// Have the admin try a transfer of the no-clawback from that other account to itself. It should fail.
-	assert.EqualError(t, app.MarkerKeeper.TransferCoin(ctx, other, admin, admin, noClawCoin(11)),
+	// Have the admin try a transfer of the no-force-transfer from that other account to itself. It should fail.
+	assert.EqualError(t, app.MarkerKeeper.TransferCoin(ctx, other, admin, admin, noForceCoin(11)),
 		fmt.Sprintf("%s account has not been granted authority to withdraw from %s account", admin, other),
-		"transfer of non-clawback coin from other account back to admin")
-	requireBalances(t, "after failed transfer", cz(noClawCoin(1000)), cz(wClawCoin(2000)), cz(), cz(noClawCoin(111), wClawCoin(222)))
+		"transfer of non-force-transfer coin from other account back to admin")
+	requireBalances(t, "after failed transfer", cz(noForceCoin(1000)), cz(wForceCoin(2000)), cz(), cz(noForceCoin(111), wForceCoin(222)))
 
-	// Have the admin try a transfer of the w/clawback from that other account to itself. It should go through.
-	assert.NoError(t, app.MarkerKeeper.TransferCoin(ctx, other, admin, admin, wClawCoin(22)),
-		"transfer of clawbackable coin from other account back to admin")
-	requireBalances(t, "after successful transfer", cz(noClawCoin(1000)), cz(wClawCoin(2000)), cz(wClawCoin(22)), cz(noClawCoin(111), wClawCoin(200)))
+	// Have the admin try a transfer of the w/force transfer from that other account to itself. It should go through.
+	assert.NoError(t, app.MarkerKeeper.TransferCoin(ctx, other, admin, admin, wForceCoin(22)),
+		"transfer of force-transferrable coin from other account back to admin")
+	requireBalances(t, "after successful transfer", cz(noForceCoin(1000)), cz(wForceCoin(2000)), cz(wForceCoin(22)), cz(noForceCoin(111), wForceCoin(200)))
 }
 
 func TestMarkerFeeGrant(t *testing.T) {
