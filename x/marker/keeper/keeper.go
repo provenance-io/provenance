@@ -139,7 +139,7 @@ func (k Keeper) GetMarker(ctx sdk.Context, address sdk.AccAddress) (types.Marker
 	if mac != nil {
 		macc, ok := mac.(types.MarkerAccountI)
 		if !ok {
-			return nil, fmt.Errorf("account at %s is not a marker accountt", address.String())
+			return nil, fmt.Errorf("account at %s is not a marker account", address.String())
 		}
 		return macc, nil
 	}
