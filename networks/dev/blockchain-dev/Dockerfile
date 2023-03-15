@@ -5,7 +5,7 @@
 FROM golang:1.18-bullseye as build-x86_64
 WORKDIR /go/src/github.com/provenance-io/provenance
 ENV GOPRIVATE=github.com/provenance-io
-RUN apt-get update && apt-get upgrade -y && apt-get install -y libleveldb-dev
+RUN apt-get update && apt-get upgrade -y
 
 COPY client/ ./client/
 COPY app/ ./app/
@@ -16,7 +16,7 @@ COPY x/ ./x/
 COPY vendor/ ./vendor/
 
 # Build the binaries
-RUN go build -mod vendor -tags=cleveldb -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/version.Name=Provenance-Blockchain' -o /go/bin/ ./cmd/...
+RUN go build -mod vendor -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/version.Name=Provenance-Blockchain' -o /go/bin/ ./cmd/...
 
 ## Run provenance for x86_64
 FROM debian:bullseye-slim as provenance-x86_64
@@ -25,7 +25,7 @@ ENV LD_LIBRARY_PATH="/usr/local/lib"
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y curl jq libleveldb-dev && \
+    apt-get install -y curl jq && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/
 
@@ -51,7 +51,7 @@ CMD ["start"]
 FROM golang:1.18-bullseye as build-arm64
 WORKDIR /go/src/github.com/provenance-io/provenance
 ENV GOPRIVATE=github.com/provenance-io
-RUN apt-get update && apt-get upgrade -y && apt-get install -y libleveldb-dev
+RUN apt-get update && apt-get upgrade -y
 
 COPY client/ ./client/
 COPY app/ ./app/
@@ -62,7 +62,7 @@ COPY x/ ./x/
 COPY vendor/ ./vendor/
 
 # Build the binaries
-RUN go build -mod vendor -tags=cleveldb -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/version.Name=Provenance-Blockchain' -o /go/bin/ ./cmd/...
+RUN go build -mod vendor -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/version.Name=Provenance-Blockchain' -o /go/bin/ ./cmd/...
 
 ## Run provenance for ARM
 FROM debian:bullseye-slim as provenance-arm64
@@ -71,7 +71,7 @@ ENV LD_LIBRARY_PATH="/usr/local/lib"
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y curl jq libleveldb-dev && \
+    apt-get install -y curl jq && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/
 
