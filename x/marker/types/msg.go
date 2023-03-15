@@ -38,7 +38,10 @@ var (
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
 func NewMsgAddMarkerRequest(
-	denom string, totalSupply sdkmath.Int, fromAddress sdk.AccAddress, manager sdk.AccAddress, markerType MarkerType, supplyFixed bool, allowGovernanceControl bool, //nolint:interfacer
+	denom string, totalSupply sdkmath.Int,
+	fromAddress, manager sdk.AccAddress,
+	markerType MarkerType,
+	supplyFixed, allowGovernanceControl, clawbackEnabled bool,
 ) *MsgAddMarkerRequest {
 	return &MsgAddMarkerRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
@@ -48,6 +51,7 @@ func NewMsgAddMarkerRequest(
 		MarkerType:             markerType,
 		SupplyFixed:            supplyFixed,
 		AllowGovernanceControl: allowGovernanceControl,
+		ClawbackEnabled:        clawbackEnabled,
 	}
 }
 
@@ -462,7 +466,13 @@ func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
-func NewMsgAddFinalizeActivateMarkerRequest(denom string, totalSupply sdkmath.Int, fromAddress sdk.AccAddress, manager sdk.AccAddress, markerType MarkerType, supplyFixed bool, allowGovernanceControl bool, accessGrants []AccessGrant) *MsgAddFinalizeActivateMarkerRequest {
+func NewMsgAddFinalizeActivateMarkerRequest(
+	denom string, totalSupply sdkmath.Int,
+	fromAddress, manager sdk.AccAddress,
+	markerType MarkerType,
+	supplyFixed, allowGovernanceControl, clawbackEnabled bool,
+	accessGrants []AccessGrant,
+) *MsgAddFinalizeActivateMarkerRequest {
 	return &MsgAddFinalizeActivateMarkerRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
 		Manager:                manager.String(),
@@ -471,6 +481,7 @@ func NewMsgAddFinalizeActivateMarkerRequest(denom string, totalSupply sdkmath.In
 		SupplyFixed:            supplyFixed,
 		AllowGovernanceControl: allowGovernanceControl,
 		AccessList:             accessGrants,
+		ClawbackEnabled:        clawbackEnabled,
 	}
 }
 
