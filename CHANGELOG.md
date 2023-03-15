@@ -43,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add gRPC query to get all contract specs and record specs for a scope spec [#677](https://github.com/provenance-io/provenance/issues/677).
 * Disable `cleveldb` and `badgerdb` by default [#1411](https://github.com/provenance-io/provenance/issues/1411).
   Official builds still have `cleveldb` support though.
+* Expand the `additional_bindings` gRPC tag to use object form to allow for Typescript transpiling [#1405](https://github.com/provenance-io/provenance/issues/1405).
 
 ### Bug Fixes
 
