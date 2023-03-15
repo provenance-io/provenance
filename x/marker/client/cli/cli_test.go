@@ -122,6 +122,20 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
 		sdk.NewCoin(s.holderDenom, sdk.NewInt(456)),
 	).Sort()})
+
+	genBalances = append(genBalances, banktypes.Balance{Address: markertypes.MustGetMarkerAddress("testcoin").String(), Coins: sdk.NewCoins(
+		sdk.NewCoin("testcoin", sdk.NewInt(1000)),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: markertypes.MustGetMarkerAddress("lockedcoin").String(), Coins: sdk.NewCoins(
+		sdk.NewCoin("lockedcoin", sdk.NewInt(1000)),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: markertypes.MustGetMarkerAddress("propcoin").String(), Coins: sdk.NewCoins(
+		sdk.NewCoin("propcoin", sdk.NewInt(1000)),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: markertypes.MustGetMarkerAddress("authzhotdog").String(), Coins: sdk.NewCoins(
+		sdk.NewCoin("authzhotdog", sdk.NewInt(800)),
+	).Sort()})
+
 	var bankGenState banktypes.GenesisState
 	bankGenState.Params = banktypes.DefaultParams()
 	bankGenState.Balances = genBalances
@@ -412,7 +426,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 				"testcoin",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"13","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false,"required_attributes":[]}}`,
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"8","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false,"required_attributes":[]}}`,
 		},
 		{
 			"get testcoin marker test",
@@ -426,7 +440,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
   access_control: []
   allow_governance_control: false
   base_account:
-    account_number: "13"
+    account_number: "8"
     address: cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq
     pub_key: null
     sequence: "0"
@@ -453,7 +467,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 				"lockedcoin",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"14","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false,"required_attributes":[]}}`,
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"9","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false,"required_attributes":[]}}`,
 		},
 		{
 			"query access",
