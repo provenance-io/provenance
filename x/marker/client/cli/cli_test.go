@@ -464,6 +464,30 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"14","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false,"allow_forced_transfer":false}}`,
 		},
 		{
+			"get restricted coin marker with forced transfer",
+			markercli.MarkerCmd(),
+			[]string{
+				s.holderDenom,
+			},
+
+			`marker:
+  '@type': /provenance.marker.v1.MarkerAccount
+  access_control: []
+  allow_forced_transfer: true
+  allow_governance_control: false
+  base_account:
+    account_number: "18"
+    address: cosmos1ae2206l700zfkxyqvd6cwn3gddas3rjy6z6g4u
+    pub_key: null
+    sequence: "0"
+  denom: hodlercoin
+  manager: ""
+  marker_type: MARKER_TYPE_RESTRICTED
+  status: MARKER_STATUS_ACTIVE
+  supply: "3000"
+  supply_fixed: false`,
+		},
+		{
 			"query access",
 			markercli.MarkerAccessCmd(),
 			[]string{
