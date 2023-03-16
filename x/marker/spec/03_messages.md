@@ -229,14 +229,12 @@ This service message is expected to fail if:
 
 ## Msg/TransferRequest
 
-TODO[1388]: Update Msg/TransferRequest.
-
 Transfer Request defines the Msg/Transfer request type.  A transfer request is used to transfer coin between two
-accounts for `RESTRICTED_COIN` type markers that have `send_enabled=false` configured with the `bank` module and thus
-can not be sent using a normal `send_coin` operation.  A transfer request requires a signature from an account with
-the transfer permission as well as approval from the account the funds will be withdrawn from.
-
-NOTE: the withdraw approval has been suspended pending integration with the `auth` module.  See [Issue #262](https://github.com/provenance-io/provenance/issues/262)
+accounts for `RESTRICTED_COIN` type markers. Such markers have `send_enabled=false` configured with the `x/bank` module,
+and thus cannot be sent using a normal `MsgSend` operation.  A transfer request requires a signature from an account
+with `TRANSFER` access. If force transfer is not enabled for the marker, the source account must have granted the admin
+permission (via `authz`) to do the transfer. If force transfer is allowed for the marker, the source account does not
+need to approve of the transfer.
 
 +++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L171-L177
 
