@@ -156,7 +156,10 @@ func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) {
 	}
 	k.authKeeper.SetAccount(ctx, marker)
 	store.Set(types.MarkerStoreKey(marker.GetAddress()), marker.GetAddress())
-	k.ensureSendEnabledStatus(ctx, marker.GetDenom(), true)
+	// If Set Marker is called on an Active Marker then ensure the send_enabled configuration is also correct.
+	if marker.GetStatus() == types.StatusActive {
+		k.ensureSendEnabledStatus(ctx, marker.GetDenom(), true)
+	}
 }
 
 // RemoveMarker removes a marker from the auth account store. Note: if the account holds coins this will

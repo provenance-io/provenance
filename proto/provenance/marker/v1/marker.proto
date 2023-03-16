@@ -55,7 +55,8 @@ message MarkerAccount {
   bool supply_fixed = 8;
   // indicates that governance based control is allowed for this marker
   bool allow_governance_control = 9;
-  // list of required attributes on restricted marker in order to send and receive transfers
+  // list of required attributes on restricted marker in order to send and receive transfers if sender does not have
+  // transfer authority
   repeated string required_attributes = 10;
 }
 
