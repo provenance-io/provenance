@@ -31,7 +31,6 @@ type appUpgrade struct {
 
 var handlers = map[string]appUpgrade{
 	"quicksilver-rc1": { // upgrade for v1.15.0-rc1
-		Added: []string{},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
 			RemoveIsSendEnabledEntries(ctx, app)
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
@@ -54,6 +53,14 @@ var handlers = map[string]appUpgrade{
 			IncreaseMaxCommissions(ctx, app)
 			// Skipping IncreaseMaxGas(ctx, app) in mainnet for now.
 			return versionMap, nil
+		},
+	},
+	"paua-rc2": { // upgrade for v1.14.0-rc3
+		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
+			// Reapply the max commissions thing again so testnet gets the max change rate bump too.
+			IncreaseMaxCommissions(ctx, app)
+			UndoMaxGasIncrease(ctx, app)
+			return app.UpgradeKeeper.GetModuleVersionMap(ctx), nil
 		},
 	},
 
@@ -130,6 +137,13 @@ func IncreaseMaxCommissions(ctx sdk.Context, app *App) {
 		}
 		app.StakingKeeper.SetValidator(ctx, validator)
 	}
+}
+
+func UndoMaxGasIncrease(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Setting max gas per block back to 60,000,000")
+	params := app.GetConsensusParams(ctx)
+	params.Block.MaxGas = 60_000_000
+	app.StoreConsensusParams(ctx, params)
 }
 
 func SetSanctionParams(ctx sdk.Context, app *App) error {
