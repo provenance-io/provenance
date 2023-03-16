@@ -163,7 +163,6 @@ func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) {
 func (k Keeper) RemoveMarker(ctx sdk.Context, marker types.MarkerAccountI) {
 	store := ctx.KVStore(k.storeKey)
 	k.authKeeper.RemoveAccount(ctx, marker)
-	k.bankKeeper.DeleteSendEnabled(ctx, marker.GetDenom())
 
 	store.Delete(types.MarkerStoreKey(marker.GetAddress()))
 }

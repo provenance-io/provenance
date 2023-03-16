@@ -512,48 +512,6 @@ func TestAccountInsufficientExisting(t *testing.T) {
 	require.EqualValues(t, 10001, m.GetSupply().Amount.Int64())
 }
 
-func TestAccountRemoveDeletesSendEnabled(t *testing.T) {
-	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	pubkey := secp256k1.GenPrivKey().PubKey()
-	user := sdk.AccAddress(pubkey.Address())
-
-	// setup an existing account with an existing balance (and matching supply)
-	existingSupply := sdk.NewCoin("testcoin", sdk.NewInt(10000))
-	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
-
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, user, sdk.NewCoins(existingSupply)), "funding account")
-
-	// create account and check default values
-	mac := types.NewEmptyMarkerAccount("testcoin", user.String(), []types.AccessGrant{*types.NewAccessGrant(user,
-		[]types.Access{types.Access_Mint, types.Access_Burn, types.Access_Withdraw, types.Access_Delete})})
-	mac.MarkerType = types.MarkerType_RestrictedCoin
-	require.NoError(t, mac.SetManager(user))
-	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(10000))))
-
-	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
-
-	var err error
-	var m types.MarkerAccountI
-	m, err = app.MarkerKeeper.GetMarkerByDenom(ctx, "testcoin")
-	require.NoError(t, err)
-	require.NotNil(t, m)
-
-	// Make sure "send enabled" are initially empty.
-	allSendEnabled := app.BankKeeper.GetAllSendEnabledEntries(ctx)
-	require.Len(t, allSendEnabled, 0, "initial send enabled count")
-
-	// Finalize and activate, which will add "send enabled" metadata.
-	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"), "finalizing marker")
-	require.NoError(t, app.MarkerKeeper.ActivateMarker(ctx, user, "testcoin"), "activating marker")
-
-	// Make sure "send enabled" has 0 items
-	allSendEnabled = app.BankKeeper.GetAllSendEnabledEntries(ctx)
-	require.Len(t, allSendEnabled, 0, "send enabled count before removal")
-
-}
-
 func TestAccountImplictControl(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
