@@ -108,7 +108,7 @@ func TestNewMarkerValidate(t *testing.T) {
 		},
 		{
 			"insufficient supply",
-			NewMarkerAccount(baseAcc, sdk.NewCoin("test", sdk.ZeroInt()), manager, nil, StatusFinalized, MarkerType_Coin, true, true),
+			NewMarkerAccount(baseAcc, sdk.NewCoin("test", sdk.ZeroInt()), manager, nil, StatusFinalized, MarkerType_Coin, true, false),
 			fmt.Errorf("cannot create a marker with zero total supply and no authorization for minting more"),
 		},
 		{
@@ -118,7 +118,7 @@ func TestNewMarkerValidate(t *testing.T) {
 		},
 		{
 			"invalid name and address pair",
-			NewMarkerAccount(baseAcc, sdk.NewCoin("nottest", sdk.OneInt()), manager, nil, StatusProposed, MarkerType_Coin, true, true),
+			NewMarkerAccount(baseAcc, sdk.NewCoin("nottest", sdk.OneInt()), manager, nil, StatusProposed, MarkerType_Coin, true, false),
 			fmt.Errorf("address %s cannot be derived from the marker denom 'nottest'", baseAcc.GetAddress()),
 		},
 		{
@@ -132,7 +132,7 @@ func TestNewMarkerValidate(t *testing.T) {
 			"invalid restricted marker account permissions",
 			NewMarkerAccount(baseAcc, sdk.NewCoin("test", sdk.OneInt()), manager,
 				[]AccessGrant{{Address: MustGetMarkerAddress("foo").String(),
-					Permissions: []Access{Access_Unknown}}}, StatusProposed, MarkerType_RestrictedCoin, true, true),
+					Permissions: []Access{Access_Unknown}}}, StatusProposed, MarkerType_RestrictedCoin, true, false),
 			fmt.Errorf("invalid access privileges granted: ACCESS_UNSPECIFIED is not supported for marker type MARKER_TYPE_RESTRICTED"),
 		},
 		{
@@ -145,7 +145,7 @@ func TestNewMarkerValidate(t *testing.T) {
 			"invalid marker account permissions for type",
 			NewMarkerAccount(baseAcc, sdk.NewCoin("test", sdk.OneInt()), manager,
 				[]AccessGrant{{Address: MustGetMarkerAddress("foo").String(),
-					Permissions: []Access{Access_Mint, Access_Admin, Access_Transfer}}}, StatusActive, MarkerType_Coin, true, true),
+					Permissions: []Access{Access_Mint, Access_Admin, Access_Transfer}}}, StatusActive, MarkerType_Coin, true, false),
 			fmt.Errorf("invalid access privileges granted: ACCESS_TRANSFER is not supported for marker type MARKER_TYPE_COIN"),
 		},
 		{
@@ -159,7 +159,7 @@ func TestNewMarkerValidate(t *testing.T) {
 			"invalid marker ibc type has mint",
 			NewMarkerAccount(baseAcc, sdk.NewCoin("ibc/test", sdk.OneInt()), manager,
 				[]AccessGrant{{Address: MustGetMarkerAddress("foo").String(),
-					Permissions: []Access{Access_Mint, Access_Admin, Access_Withdraw}}}, StatusActive, MarkerType_Coin, false, true),
+					Permissions: []Access{Access_Mint, Access_Admin, Access_Withdraw}}}, StatusActive, MarkerType_Coin, false, false),
 			fmt.Errorf("invalid ibc denom configuration: ACCESS_MINT is not supported for ibc marker"),
 		},
 		{
@@ -171,7 +171,7 @@ func TestNewMarkerValidate(t *testing.T) {
 		},
 		{
 			"valid marker account",
-			NewMarkerAccount(baseAcc, sdk.NewCoin("test", sdk.OneInt()), manager, nil, StatusProposed, MarkerType_Coin, true, true),
+			NewMarkerAccount(baseAcc, sdk.NewCoin("test", sdk.OneInt()), manager, nil, StatusProposed, MarkerType_Coin, true, false),
 			nil,
 		},
 		{
@@ -182,7 +182,7 @@ func TestNewMarkerValidate(t *testing.T) {
 		{
 			"coin type with forced transfer is invalid",
 			NewMarkerAccount(baseAcc, sdk.NewCoin("test", sdk.OneInt()), manager, nil, StatusActive, MarkerType_Coin, true, true),
-			fmt.Errorf("TODO"),
+			fmt.Errorf("forced transfers can only be allowed on restricted markers"),
 		},
 		{
 			"coin type without forced transfer is ok",

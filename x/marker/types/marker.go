@@ -179,6 +179,9 @@ func (ma MarkerAccount) Validate() error {
 	if ma.Manager == ma.GetAddress().String() {
 		return fmt.Errorf("marker can not be self managed")
 	}
+	if ma.AllowForcedTransfer && ma.MarkerType != MarkerType_RestrictedCoin {
+		return fmt.Errorf("forced transfers can only be allowed on restricted markers")
+	}
 	return ma.BaseAccount.Validate()
 }
 
