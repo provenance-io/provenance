@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
+* Allow markers to be configured to allow forced transfers [#1368](https://github.com/provenance-io/provenance/issues/1368).
+
 ### Improvements
 
 * Add the `gci` linter that enforces import group ordering. Create a 'lint-fix' make target [PR 1366](https://github.com/provenance-io/provenance/pull/1366).
