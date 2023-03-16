@@ -163,7 +163,6 @@ func TestAccountKeeperReader(t *testing.T) {
 	require.EqualValues(t, count, 1)
 }
 
-// nolint:funlen
 func TestAccountKeeperManageAccess(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -312,7 +311,6 @@ func TestAccountKeeperCancelProposedByManager(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.DeleteMarker(ctx, user1, "testcoin"))
 }
 
-// nolint:funlen
 func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
