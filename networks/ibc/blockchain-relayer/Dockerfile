@@ -2,7 +2,7 @@
 FROM golang:1.18-bullseye as build
 WORKDIR /
 ARG VERSION
-RUN apt-get update && apt-get upgrade -y && apt-get install -y libleveldb-dev && apt-get install -y git
+RUN apt-get update && apt-get upgrade -y && apt-get install -y git
 RUN git clone https://github.com/cosmos/relayer.git /relayer && cd /relayer && git checkout "$VERSION" && make install && cd / && rm -rf /relayer
 
 ## Run provenance for ARM

@@ -7,11 +7,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
-	p8e "github.com/provenance-io/provenance/x/metadata/types/p8e"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func ownerPartyList(addresses ...string) []Party {
@@ -418,61 +417,6 @@ func TestMsgDeleteContractSpecFromScopeSpecRequestValidateBasic(t *testing.T) {
 	}
 }
 
-func TestWriteP8eContractSpecValidation(t *testing.T) {
-
-	validInputSpec := p8e.DefinitionSpec{
-		Name: "perform_input_checks",
-		ResourceLocation: &p8e.Location{Classname: "io.provenance.loan.LoanProtos$PartiesList",
-			Ref: &p8e.ProvenanceReference{Hash: "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw=="},
-		},
-		Type: 1,
-	}
-
-	validOutputSpec := p8e.OutputSpec{Spec: &p8e.DefinitionSpec{
-		Name: "additional_parties",
-		ResourceLocation: &p8e.Location{
-			Classname: "io.provenance.loan.LoanProtos$PartiesList",
-			Ref: &p8e.ProvenanceReference{
-				Hash: "Adv+huolGTKofYCR0dw5GHm/R7sUWOwF32XR8r8r9kDy4il5U/LApxOWYHb05jhK4+eY4YzRMRiWcxU3Lx0+Mw==",
-			},
-		},
-		Type: 1,
-	},
-	}
-
-	validDefinition := p8e.DefinitionSpec{
-		Name: "ExampleContract",
-		ResourceLocation: &p8e.Location{Classname: "io.provenance.contracts.ExampleContract",
-			Ref: &p8e.ProvenanceReference{Hash: "E36eeTUk8GYXGXjIbZTm4s/Dw3G1e42SinH1195t4ekgcXXPhfIpfQaEJ21PTzKhdv6JjhzQJ2kAJXK+TRXmeQ=="},
-		},
-		Type: 1,
-	}
-
-	validContractSpec := p8e.ContractSpec{ConsiderationSpecs: []*p8e.ConsiderationSpec{
-		{FuncName: "additionalParties",
-			InputSpecs:       []*p8e.DefinitionSpec{&validInputSpec},
-			OutputSpec:       &validOutputSpec,
-			ResponsibleParty: 1,
-		},
-	},
-		Definition:      &validDefinition,
-		InputSpecs:      []*p8e.DefinitionSpec{&validInputSpec},
-		PartiesInvolved: []p8e.PartyType{p8e.PartyType_PARTY_TYPE_AFFILIATE},
-	}
-
-	msg := NewMsgWriteP8EContractSpecRequest(validContractSpec, []string{})
-	err := msg.ValidateBasic()
-	require.Error(t, err, "should fail due to signatures < 1")
-
-	msg = NewMsgWriteP8EContractSpecRequest(validContractSpec, []string{"invalid"})
-	err = msg.ValidateBasic()
-	require.Error(t, err, "should fail in convert validation due to address not being valid")
-
-	msg = NewMsgWriteP8EContractSpecRequest(validContractSpec, []string{"cosmos1s0kcwmhstu6urpp4080qjzatta02y0rarrcgrp"})
-	err = msg.ValidateBasic()
-	require.NoError(t, err)
-}
-
 func TestBindOSLocator(t *testing.T) {
 	var bindRequestMsg = NewMsgBindOSLocatorRequest(ObjectStoreLocator{Owner: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", LocatorUri: "http://foo.com"})
 
@@ -560,8 +504,6 @@ func TestPrintMessageTypeStrings(t *testing.T) {
 		&MsgBindOSLocatorRequest{},
 		&MsgDeleteOSLocatorRequest{},
 		&MsgModifyOSLocatorRequest{},
-		&MsgWriteP8EContractSpecRequest{},
-		&MsgP8EMemorializeContractRequest{},
 		// add  any new messages here
 	}
 
