@@ -54,6 +54,9 @@ type MarkerAccount struct {
 
 	// indicates that governance based control is allowed for this marker
 	AllowGovernanceControl bool
+
+	// Whether an admin can transfer restricted coins from a 3rd-party account without their signature.
+	AllowForcedTransfer bool
 }
 ```
 
