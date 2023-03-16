@@ -71,7 +71,7 @@ func NewEmptyMarkerAccount(denom, manager string, grants []AccessGrant) *MarkerA
 func NewMarkerAccount(
 	baseAcc *authtypes.BaseAccount,
 	totalSupply sdk.Coin,
-	manager sdk.AccAddress, //nolint:interfacer
+	manager sdk.AccAddress,
 	accessControls []AccessGrant,
 	status MarkerStatus,
 	markerType MarkerType,

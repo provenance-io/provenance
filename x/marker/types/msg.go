@@ -88,7 +88,7 @@ func (msg MsgAddMarkerRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewAddAccessRequest
-func NewMsgAddAccessRequest(denom string, admin sdk.AccAddress, access AccessGrant) *MsgAddAccessRequest { //nolint:interfacer
+func NewMsgAddAccessRequest(denom string, admin sdk.AccAddress, access AccessGrant) *MsgAddAccessRequest {
 	return &MsgAddAccessRequest{
 		Denom:         denom,
 		Administrator: admin.String(),
@@ -113,7 +113,7 @@ func (msg MsgAddAccessRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewDeleteAccessRequest
-func NewDeleteAccessRequest(denom string, admin sdk.AccAddress, removed sdk.AccAddress) *MsgDeleteAccessRequest { //nolint:interfacer
+func NewDeleteAccessRequest(denom string, admin sdk.AccAddress, removed sdk.AccAddress) *MsgDeleteAccessRequest {
 	return &MsgDeleteAccessRequest{
 		Denom:          denom,
 		Administrator:  admin.String(),
@@ -136,7 +136,7 @@ func (msg MsgDeleteAccessRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgFinalizeRequest
-func NewMsgFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeRequest { //nolint:interfacer
+func NewMsgFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeRequest {
 	return &MsgFinalizeRequest{
 		Denom:         denom,
 		Administrator: admin.String(),
@@ -157,7 +157,7 @@ func (msg MsgFinalizeRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgActivateRequest
-func NewMsgActivateRequest(denom string, admin sdk.AccAddress) *MsgActivateRequest { //nolint:interfacer
+func NewMsgActivateRequest(denom string, admin sdk.AccAddress) *MsgActivateRequest {
 	return &MsgActivateRequest{
 		Denom:         denom,
 		Administrator: admin.String(),
@@ -178,7 +178,7 @@ func (msg MsgActivateRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgCancelRequest
-func NewMsgCancelRequest(denom string, admin sdk.AccAddress) *MsgCancelRequest { //nolint:interfacer
+func NewMsgCancelRequest(denom string, admin sdk.AccAddress) *MsgCancelRequest {
 	return &MsgCancelRequest{
 		Denom:         denom,
 		Administrator: admin.String(),
@@ -199,7 +199,7 @@ func (msg MsgCancelRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgDeleteRequest
-func NewMsgDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest { //nolint:interfacer
+func NewMsgDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest {
 	return &MsgDeleteRequest{
 		Denom:         denom,
 		Administrator: admin.String(),
@@ -220,7 +220,7 @@ func (msg MsgDeleteRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgMintRequest creates a mint supply message
-func NewMsgMintRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgMintRequest { //nolint:interfacer
+func NewMsgMintRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgMintRequest {
 	return &MsgMintRequest{
 		Administrator: admin.String(),
 		Amount:        amount,
@@ -241,7 +241,7 @@ func (msg MsgMintRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgBurnRequest creates a burn supply message
-func NewMsgBurnRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgBurnRequest { //nolint:interfacer
+func NewMsgBurnRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgBurnRequest {
 	return &MsgBurnRequest{
 		Administrator: admin.String(),
 		Amount:        amount,
@@ -301,7 +301,7 @@ func (msg MsgWithdrawRequest) GetSigners() []sdk.AccAddress {
 
 // NewMsgTransferRequest
 func NewMsgTransferRequest(
-	admin, fromAddress, toAddress sdk.AccAddress, amount sdk.Coin, //nolint:interfacer
+	admin, fromAddress, toAddress sdk.AccAddress, amount sdk.Coin,
 ) *MsgTransferRequest {
 	return &MsgTransferRequest{
 		Administrator: admin.String(),
@@ -344,7 +344,7 @@ func NewIbcMsgTransferRequest(
 	sender,
 	receiver string,
 	timeoutHeight clienttypes.Height,
-	timeoutTimestamp uint64, //nolint:interfacer
+	timeoutTimestamp uint64,
 	memo string,
 ) *MsgIbcTransferRequest {
 	return &MsgIbcTransferRequest{
@@ -377,7 +377,7 @@ func (msg MsgIbcTransferRequest) GetSigners() []sdk.AccAddress {
 
 // NewSetDenomMetadataRequest  creates a new marker in a proposed state with a given total supply a denomination
 func NewSetDenomMetadataRequest(
-	metadata banktypes.Metadata, admin sdk.AccAddress, //nolint:interfacer
+	metadata banktypes.Metadata, admin sdk.AccAddress,
 ) *MsgSetDenomMetadataRequest {
 	return &MsgSetDenomMetadataRequest{
 		Metadata:      metadata,
@@ -416,7 +416,7 @@ func (msg MsgGrantAllowanceRequest) GetFeeAllowanceI() (feegranttypes.FeeAllowan
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
 func NewMsgGrantAllowance(
-	denom string, admin sdk.AccAddress, grantee sdk.AccAddress, allowance feegranttypes.FeeAllowanceI, //nolint:interfacer
+	denom string, admin sdk.AccAddress, grantee sdk.AccAddress, allowance feegranttypes.FeeAllowanceI,
 ) (*MsgGrantAllowanceRequest, error) {
 	msg, ok := allowance.(proto.Message)
 	if !ok {
