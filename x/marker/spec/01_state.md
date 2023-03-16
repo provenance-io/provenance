@@ -136,7 +136,7 @@ chain and a slash penalty is assessed resulting in the burning of a portion of c
 
 ### Forced Transfers
 
-A marker with the **Restricted Coin** type, can be configured to allow forced transfer of funds for that marker's denom.
+A marker with the **Restricted Coin** type can be configured to allow forced transfer of funds for that marker's denom.
 A forced transfer is one where the `admin` (with `TRANSFER` access) is different than the `from` address. In such cases,
 if the marker allows forced transfers, the transfer is allowed. If forced transfers are not allowed, an `admin` cannot
 transfer the marker's coins from another account unless granted permission to do so via `authz`.
