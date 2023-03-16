@@ -118,9 +118,6 @@ const (
 	TxEndpoint_WriteRecordSpecification  TxEndpoint = "WriteRecordSpecification"
 	TxEndpoint_DeleteRecordSpecification TxEndpoint = "DeleteRecordSpecification"
 
-	TxEndpoint_WriteP8eContractSpec   TxEndpoint = "WriteP8eContractSpec"
-	TxEndpoint_P8eMemorializeContract TxEndpoint = "P8eMemorializeContract"
-
 	TxEndpoint_BindOSLocator   TxEndpoint = "BindOSLocator"
 	TxEndpoint_DeleteOSLocator TxEndpoint = "DeleteOSLocator"
 	TxEndpoint_ModifyOSLocator TxEndpoint = "ModifyOSLocator"

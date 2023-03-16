@@ -43,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add gRPC query to get all contract specs and record specs for a scope spec [#677](https://github.com/provenance-io/provenance/issues/677).
 * Disable `cleveldb` and `badgerdb` by default [#1411](https://github.com/provenance-io/provenance/issues/1411).
   Official builds still have `cleveldb` support though.
+* Expand the `additional_bindings` gRPC tag to use object form to allow for Typescript transpiling [#1405](https://github.com/provenance-io/provenance/issues/1405).
 
 ### Bug Fixes
 
@@ -50,6 +51,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix committer email format in third party Protobuf workflow (for [#1339](https://github.com/provenance-io/provenance/issues/1339)) [PR 1385](https://github.com/provenance-io/provenance/pull/1385)
 * Fix `start` using default home directory [PR 1393](https://github.com/provenance-io/provenance/pull/1393).
 * Fix `make proto-gen` [PR 1404](https://github.com/provenance-io/provenance/pull/1404).
+
+### Client Breaking
+
+* Removed the `WriteP8eContractSpec` and `P8eMemorializeContract` endpoints [#1402](https://github.com/provenance-io/provenance/issues/1402).
+* Removed the `github.com/provenance-io/provenance/x/metadata/types/p8e` proto package [#1402](https://github.com/provenance-io/provenance/issues/1402).
+  Users that generate code from the Provenance protos might need to delete their `p8e/` directory.
+
+### API Breaking
+
+* Removed the `WriteP8eContractSpec` and `P8eMemorializeContract` endpoints [#1402](https://github.com/provenance-io/provenance/issues/1402).
 
 ---
 
