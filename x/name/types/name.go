@@ -8,7 +8,7 @@ import (
 )
 
 // NewNameRecord creates a name record binding that is restricted for child updates to the owner.
-func NewNameRecord(name string, address sdk.AccAddress, restricted bool) NameRecord { //nolint:interfacer
+func NewNameRecord(name string, address sdk.AccAddress, restricted bool) NameRecord {
 	return NameRecord{
 		Name:       name,
 		Address:    address.String(),

@@ -49,7 +49,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 // Binds viper flags using the PIO ENV prefix.
 func bindFlagsAndEnv(cmd *cobra.Command, v *viper.Viper) (err error) {
 	defer func() {
-		recover() //nolint:errcheck
+		recover() //nolint:errcheck // err already set to needed return value.
 	}()
 
 	replacer := strings.NewReplacer(".", "_", "-", "_")
