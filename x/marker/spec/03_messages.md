@@ -305,8 +305,32 @@ This service message is expected to fail if:
 
 ## Msg/GrantAllowanceRequest
 
-TODO[1368]: MsgGrantAllowanceRequest documentation
+GrantAllowance grants a fee allowance to the grantee on the granter's account.
+
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L59-L68
+
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L71
+
+This service message is expected to fail if:
+
+- Any field is empty.
+- The allowance is invalid
+- The given denom value is invalid or does not match an existing marker on the system
+- The administrator or grantee are invalid addresses
+- The administrator does not have `ADMIN` access on the marker.
 
 ## Msg/SupplyIncreaseProposalRequest
 
-TODO[1368]: MsgSupplyIncreaseProposalRequest documentation
+SupplyIncreaseProposal is a governance-only message for increasing the supply of a marker.
+
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L222-L230
+
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L233
+
+This service message is expected to fail if:
+
+- The authority is not the address of the governance module's account.
+- The governance proposal format (title, description, etc) is invalid
+- The requested supply exceeds the configuration parameter for `MaxTotalSupply`
+
+See also: [Governance: Supply Increase Proposal](./10_governance.md#supply-increase-proposal)
