@@ -57,11 +57,6 @@ issues:
     - text: "don't use leading k in Go names"
       linters:
         - revive
-    # removed due to the upstream legacy amino deprecation while still required for ledger signing
-    # TODO: Restore this check when Amino support is removed.
-    - text: "SA1019:"
-      linters:
-        - staticcheck
   max-issues-per-linter: 10000
   max-same-issues: 10000
 

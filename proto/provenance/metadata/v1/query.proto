@@ -44,10 +44,8 @@ service Query {
   rpc Scope(ScopeRequest) returns (ScopeResponse) {
     option (google.api.http) = {
       get: "/provenance/metadata/v1/scope/{scope_id}"
-      additional_bindings: [
-        {get: "/provenance/metadata/v1/session/{session_addr}/scope"},
-        {get: "/provenance/metadata/v1/record/{record_addr}/scope"}
-      ]
+      additional_bindings: {get: "/provenance/metadata/v1/session/{session_addr}/scope"}
+      additional_bindings: {get: "/provenance/metadata/v1/record/{record_addr}/scope"}
     };
   }
 
@@ -85,13 +83,11 @@ service Query {
   // Set include_scope and/or include_records to true to include the scope and/or records.
   rpc Sessions(SessionsRequest) returns (SessionsResponse) {
     option (google.api.http) = {
-      get: "/provenance/metadata/v1/session/{session_id}",
-      additional_bindings: [
-        {get: "/provenance/metadata/v1/scope/{scope_id}/sessions"},
-        {get: "/provenance/metadata/v1/scope/{scope_id}/session/{session_id}"},
-        {get: "/provenance/metadata/v1/record/{record_addr}/session"},
-        {get: "/provenance/metadata/v1/scope/{scope_id}/record/{record_name}/session"}
-      ]
+      get: "/provenance/metadata/v1/session/{session_id}"
+      additional_bindings: {get: "/provenance/metadata/v1/scope/{scope_id}/sessions"}
+      additional_bindings: {get: "/provenance/metadata/v1/scope/{scope_id}/session/{session_id}"}
+      additional_bindings: {get: "/provenance/metadata/v1/record/{record_addr}/session"}
+      additional_bindings: {get: "/provenance/metadata/v1/scope/{scope_id}/record/{record_name}/session"}
     };
   }
 
@@ -124,15 +120,13 @@ service Query {
   // Set include_scope and/or include_sessions to true to include the scope and/or sessions.
   rpc Records(RecordsRequest) returns (RecordsResponse) {
     option (google.api.http) = {
-      get: "/provenance/metadata/v1/record/{record_addr}",
-      additional_bindings: [
-        {get: "/provenance/metadata/v1/scope/{scope_id}/records"},
-        {get: "/provenance/metadata/v1/scope/{scope_id}/record/{name}"},
-        {get: "/provenance/metadata/v1/scope/{scope_id}/session/{session_id}/records"},
-        {get: "/provenance/metadata/v1/scope/{scope_id}/session/{session_id}/record/{name}"},
-        {get: "/provenance/metadata/v1/session/{session_id}/records"},
-        {get: "/provenance/metadata/v1/session/{session_id}/record/{name}"}
-      ]
+      get: "/provenance/metadata/v1/record/{record_addr}"
+      additional_bindings: {get: "/provenance/metadata/v1/scope/{scope_id}/records"}
+      additional_bindings: {get: "/provenance/metadata/v1/scope/{scope_id}/record/{name}"}
+      additional_bindings: {get: "/provenance/metadata/v1/scope/{scope_id}/session/{session_id}/records"}
+      additional_bindings: {get: "/provenance/metadata/v1/scope/{scope_id}/session/{session_id}/record/{name}"}
+      additional_bindings: {get: "/provenance/metadata/v1/session/{session_id}/records"}
+      additional_bindings: {get: "/provenance/metadata/v1/session/{session_id}/record/{name}"}
     };
   }
 
@@ -202,7 +196,7 @@ service Query {
   rpc RecordSpecification(RecordSpecificationRequest) returns (RecordSpecificationResponse) {
     option (google.api.http) = {
       get: "/provenance/metadata/v1/recordspec/{specification_id}"
-      additional_bindings: [{get: "/provenance/metadata/v1/contractspec/{specification_id}/recordspec/{name}"}]
+      additional_bindings: {get: "/provenance/metadata/v1/contractspec/{specification_id}/recordspec/{name}"}
     };
   }
 
@@ -472,9 +466,11 @@ message ScopeSpecificationRequest {
   // address, e.g. scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m.
   string specification_id = 1 [(gogoproto.moretags) = "yaml:\"specification_id\""];
 
-  // include_contract_specs is a flag for whether or not the contract specifications in the scope specification should be included.
+  // include_contract_specs is a flag for whether or not the contract specifications in the scope specification should
+  // be included.
   bool include_contract_specs = 10 [(gogoproto.moretags) = "yaml:\"include_contract_specs\""];
-  // include_record_specs is a flag for whether or not the record specifications in the scope specification should be included.
+  // include_record_specs is a flag for whether or not the record specifications in the scope specification should be
+  // included.
   bool include_record_specs = 11 [(gogoproto.moretags) = "yaml:\"include_record_specs\""];
 }
 
