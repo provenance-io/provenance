@@ -1,11 +1,12 @@
 package app
 
 import (
+	"fmt"
+
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
@@ -21,11 +22,22 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 }
 
-func (s *IntegrationTestSuite) TestUpgradeICA() {
+func (s *IntegrationTestSuite) TestRemoveIsSendEnabledEntries() {
 	s.SetupSuite()
-	versionMap := s.app.UpgradeKeeper.GetModuleVersionMap(s.ctx)
-	UpgradeICA(s.ctx, s.app, &versionMap)
-	s.Assert().Equal(s.app.mm.Modules[icatypes.ModuleName].ConsensusVersion(), versionMap[icatypes.ModuleName], "consensus version should be set to skip init genesis")
-	s.Assert().Equal([]string{"*"}, s.app.ICAHostKeeper.GetAllowMessages(s.ctx), "ica host should accept all messages")
-	s.Assert().True(s.app.ICAHostKeeper.IsHostEnabled(s.ctx), "ica host should be enabled")
+	for i := 0; i < 50; i++ {
+		denom := fmt.Sprintf("denom%v", i)
+		rdenom := fmt.Sprintf("rdenom%v", i)
+		s.app.BankKeeper.SetSendEnabled(s.ctx, denom, true)
+		s.app.BankKeeper.SetSendEnabled(s.ctx, rdenom, false)
+	}
+	RemoveIsSendEnabledEntries(s.ctx, s.app)
+	sendEnabledItems := s.app.BankKeeper.GetAllSendEnabledEntries(s.ctx)
+	s.Assert().Equal(s, sendEnabledItems, 0, "all items should have been removed from table")
+	// probably overkill here.
+	for i := 0; i < 50; i++ {
+		denom := fmt.Sprintf("denom%v", i)
+		rdenom := fmt.Sprintf("rdenom%v", i)
+		s.Assert().True(s.app.BankKeeper.IsSendEnabledCoin(s.ctx, sdk.NewInt64Coin(denom, 1)))
+		s.Assert().True(s.app.BankKeeper.IsSendEnabledCoin(s.ctx, sdk.NewInt64Coin(rdenom, 1)))
+	}
 }
