@@ -10,7 +10,7 @@ type AttributeTestSuite struct {
 	suite.Suite
 }
 
-func TestP8eTestSuite(t *testing.T) {
+func TestAttributeTestSuite(t *testing.T) {
 	suite.Run(t, new(AttributeTestSuite))
 }
 
