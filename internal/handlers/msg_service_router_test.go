@@ -233,6 +233,7 @@ func TestFailedTx(tt *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
+	gasFeesString := fmt.Sprintf("%v%s", (NewTestGasLimit()), sdk.DefaultBondDenom)
 
 	// Check both account balances before we begin.
 	addr1beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
@@ -251,7 +252,7 @@ func TestFailedTx(tt *testing.T) {
 		assert.Equal(t, 5, int(res.Code), "res=%+v", res)
 
 		// Check both account balances after transaction
-		// the 100000 should have been deducted from account 1, and the send should have failed.
+		// the 150000stake should have been deducted from account 1, and the send should have failed.
 		// So account 2 should still be empty, and account 1 should only have 1 left.
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
 		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
@@ -261,10 +262,10 @@ func TestFailedTx(tt *testing.T) {
 		// Make sure a couple events are in the list.
 		expEvents := []abci.Event{
 			NewEvent(sdk.EventTypeTx,
-				NewAttribute(sdk.AttributeKeyFee, "150000stake"),
+				NewAttribute(sdk.AttributeKeyFee, gasFeesString),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 			NewEvent(sdk.EventTypeTx,
-				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, "150000stake"),
+				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, gasFeesString),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 		}
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150000)))...)
@@ -272,10 +273,10 @@ func TestFailedTx(tt *testing.T) {
 		assertEventsContains(t, res.Events, expEvents)
 	})
 
-	// Give acct1 100000stake back.
+	// Give acct1 150000stake back.
 	require.NoError(tt, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(),
 		sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())))),
-		"funding acct1 with 100000stake")
+		fmt.Sprintf("funding acct1 with %s", gasFeesString))
 
 	tt.Run("10stake fee associated with msg type", func(t *testing.T) {
 		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2))))
@@ -290,7 +291,7 @@ func TestFailedTx(tt *testing.T) {
 		assert.Equal(t, 5, int(res.Code), "res=%+v", res)
 
 		// Check both account balances after transaction
-		// the 100000 should have been deducted from account 1, and the send should have failed.
+		// the 150000 should have been deducted from account 1, and the send should have failed.
 		// So account 2 should still be empty, and account 1 should only have 1 left.
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
 		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
@@ -300,13 +301,13 @@ func TestFailedTx(tt *testing.T) {
 		// Make sure a couple events are in the list.
 		expEvents := []abci.Event{
 			NewEvent(sdk.EventTypeTx,
-				NewAttribute(sdk.AttributeKeyFee, "150000stake"),
+				NewAttribute(sdk.AttributeKeyFee, gasFeesString),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 			NewEvent(sdk.EventTypeTx,
-				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, "150000stake"),
+				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, gasFeesString),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 		}
-		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150000)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit()))))...)
 
 		assertEventsContains(t, res.Events, expEvents)
 	})
@@ -326,6 +327,7 @@ func TestMsgService(tt *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
+	gasFeesString := fmt.Sprintf("%v%s", (NewTestGasLimit()), sdk.DefaultBondDenom)
 
 	// Check both account balances before we begin.
 	addr1beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
@@ -356,25 +358,25 @@ func TestMsgService(tt *testing.T) {
 		// Make sure a couple events are in the list.
 		expEvents := []abci.Event{
 			NewEvent(sdk.EventTypeTx,
-				NewAttribute(sdk.AttributeKeyFee, "150000stake"),
+				NewAttribute(sdk.AttributeKeyFee, gasFeesString),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 			NewEvent(sdk.EventTypeTx,
-				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, "150000stake"),
+				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, gasFeesString),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 		}
 		// fee charge in antehandler
-		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150000)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit()))))...)
 
 		assertEventsContains(t, res.Events, expEvents)
 	})
 
 	tt.Run("800hotdog fee associated with msg type", func(t *testing.T) {
-		// Sending 50hotdog with fees of 100100stake,800hotdog.
+		// Sending 50hotdog with fees of 150100stake,800hotdog.
 		// The send message will have a fee of 800hotdog.
 		// account 1 will lose 100100stake,800hotdog.
 		// account 2 will gain 50hotdog.
 		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(50))))
-		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150100), sdk.NewInt64Coin("hotdog", 800))
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())+100), sdk.NewInt64Coin("hotdog", 800))
 		msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)), "", 0)
 		require.NoError(t, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 800hotdog")
 		acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
@@ -394,7 +396,7 @@ func TestMsgService(tt *testing.T) {
 				NewAttribute(sdk.AttributeKeyFee, "800hotdog,150100stake"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 			NewEvent(sdk.EventTypeTx,
-				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, "150000stake"),
+				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, gasFeesString),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 			NewEvent(sdk.EventTypeTx,
 				NewAttribute(antewrapper.AttributeKeyAdditionalFee, "800hotdog"),
@@ -404,7 +406,7 @@ func TestMsgService(tt *testing.T) {
 				NewAttribute("msg_fees", jsonArrayJoin(msgFeesMsgSendEventJSON(1, 800, "hotdog", "")))),
 		}
 		// fee charge in antehandler
-		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150000)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit()))))...)
 		// fee charged for msg based fee
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 800)))...)
 		// swept fee amount
@@ -418,7 +420,7 @@ func TestMsgService(tt *testing.T) {
 		msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin(sdk.DefaultBondDenom, 10), "", 0)
 		require.NoError(t, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 10stake")
 
-		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150111))
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())+111))
 		acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err, "SignTxAndGetBytes")
@@ -436,7 +438,7 @@ func TestMsgService(tt *testing.T) {
 				NewAttribute(sdk.AttributeKeyFee, "150111stake"),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 			NewEvent(sdk.EventTypeTx,
-				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, "150000stake"),
+				NewAttribute(antewrapper.AttributeKeyMinFeeCharged, gasFeesString),
 				NewAttribute(sdk.AttributeKeyFeePayer, addr1.String())),
 			NewEvent(sdk.EventTypeTx,
 				NewAttribute(antewrapper.AttributeKeyAdditionalFee, "10stake"),
@@ -446,7 +448,7 @@ func TestMsgService(tt *testing.T) {
 				NewAttribute("msg_fees", jsonArrayJoin(msgFeesMsgSendEventJSON(1, 10, "stake", "")))),
 		}
 		// fee charge in antehandler
-		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150000)))...)
+		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit()))))...)
 		// fee charged for msg based fee
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)))...)
 		// swept fee amount
@@ -854,7 +856,7 @@ func TestMsgServiceAssessMsgFeeNoRecipient(tt *testing.T) {
 		msgFeeCoin := sdk.NewInt64Coin(msgfeestypes.UsdDenom, 7)
 		msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", msgFeeCoin, "", addr1.String(), "")
 		fees := sdk.NewCoins(
-			sdk.NewInt64Coin(sdk.DefaultBondDenom, 150000),
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())),
 			sdk.NewInt64Coin(NHash, 1_190_500_001),
 		)
 		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &msg)

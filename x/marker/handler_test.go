@@ -121,6 +121,7 @@ func (s *HandlerTestSuite) runTests(cases []CommonTest) {
 
 func (s *HandlerTestSuite) TestMsgAddMarkerRequest() {
 	denom := "hotdog"
+	rdenom := "restrictedhotdog"
 	denomWithDashPeriod := fmt.Sprintf("%s-my.marker", denom)
 	activeStatus := types.NewMsgAddMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, []string{})
 	activeStatus.Status = types.StatusActive
@@ -163,6 +164,13 @@ func (s *HandlerTestSuite) TestMsgAddMarkerRequest() {
 			[]string{s.user1},
 			"",
 			types.NewEventMarkerAdd(denomWithDashPeriod, "1000", "proposed", s.user1, types.MarkerType_Coin.String()),
+		},
+		{
+			"should successfully ADD new marker with required attributes",
+			types.NewMsgAddMarkerRequest(rdenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true, []string{"attribute.one.com", "attribute.two.com"}),
+			[]string{s.user1},
+			"",
+			types.NewEventMarkerAdd(rdenom, "100", "proposed", s.user1, types.MarkerType_RestrictedCoin.String()),
 		},
 	}
 	s.runTests(cases)
@@ -597,20 +605,30 @@ func (s *HandlerTestSuite) TestMsgSetDenomMetadataRequest() {
 	}
 	s.runTests(cases)
 }
+
 func (s *HandlerTestSuite) TestMsgAddFinalizeActivateMarkerRequest() {
 	denom := "hotdog"
+	rdenom := "restrictedhotdog"
 	denomWithDashPeriod := fmt.Sprintf("%s-my.marker", denom)
-	activeStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})}, []string{})
+	msgWithActiveStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})}, []string{})
+	msgWithActiveStatusAttr := types.NewMsgAddFinalizeActivateMarkerRequest(rdenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})}, []string{"attributes.one.com", "attributes.two.com"})
 
 	accessGrantWrongStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, nil, []string{})
 
 	cases := []CommonTest{
 		{
 			"should successfully ADD,FINALIZE,ACTIVATE new marker",
-			activeStatus,
+			msgWithActiveStatus,
 			[]string{s.user1},
 			"",
 			types.NewEventMarkerAdd(denom, "100", "proposed", s.user1, types.MarkerType_Coin.String()),
+		},
+		{
+			"should successfully ADD,FINALIZE,ACTIVATE new marker with attributes",
+			msgWithActiveStatusAttr,
+			[]string{s.user1},
+			"",
+			types.NewEventMarkerAdd(rdenom, "100", "proposed", s.user1, types.MarkerType_RestrictedCoin.String()),
 		},
 		{
 			"should fail to ADD,FINALIZE,ACTIVATE new marker, validate basic failure",

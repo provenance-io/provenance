@@ -164,6 +164,20 @@ func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 	}
 }
 
+// if len(msg.Manager) == 0 && msg.Status == StatusProposed {
+// 	return fmt.Errorf("marker manager cannot be empty when creating a proposed marker")
+// }
+// if msg.Status != StatusFinalized && msg.Status != StatusProposed {
+// 	return fmt.Errorf("marker can only be created with a Proposed or Finalized status")
+// }
+// testCoin := sdk.Coin{
+// 	Denom:  msg.Amount.Denom,
+// 	Amount: msg.Amount.Amount,
+// }
+// if !testCoin.IsValid() {
+// 	return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
+// }
+
 func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 	validAddress := sdk.MustAccAddressFromBech32("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck")
 
@@ -185,6 +199,48 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				[]string{"blah"},
 			),
 			"required attributes are reserved for restricted markers",
+		},
+		{
+			"should succeed on attributes for restricted coin",
+			*NewMsgAddMarkerRequest(
+				"hotdog",
+				sdk.NewInt(100),
+				validAddress,
+				validAddress,
+				MarkerType_RestrictedCoin,
+				true,
+				true,
+				[]string{"blah"},
+			),
+			"",
+		},
+		{
+			"should succeed on for restricted coin",
+			*NewMsgAddMarkerRequest(
+				"hotdog",
+				sdk.NewInt(100),
+				validAddress,
+				validAddress,
+				MarkerType_RestrictedCoin,
+				true,
+				true,
+				[]string{},
+			),
+			"",
+		},
+		{
+			"should succeed on for non-restricted coin",
+			*NewMsgAddMarkerRequest(
+				"hotdog",
+				sdk.NewInt(100),
+				validAddress,
+				validAddress,
+				MarkerType_Coin,
+				true,
+				true,
+				[]string{},
+			),
+			"",
 		},
 	}
 

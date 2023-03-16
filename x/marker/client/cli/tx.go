@@ -1029,7 +1029,7 @@ func ParseRestrictedAttributes(cmd *cobra.Command) ([]string, error) {
 		return nil, err
 	}
 	var requiredAttributes []string
-	if len(reqAttrString) > 1 {
+	if len(reqAttrString) > 0 {
 		requiredAttributes = strings.Split(reqAttrString, ",")
 	}
 	return requiredAttributes, nil
