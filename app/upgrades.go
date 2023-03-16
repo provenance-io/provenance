@@ -149,6 +149,9 @@ func SetSanctionParams(ctx sdk.Context, app *App) error {
 func RemoveIsSendEnabledEntries(ctx sdk.Context, app *App) {
 	sendEnabledItems := app.BankKeeper.GetAllSendEnabledEntries(ctx)
 	for _, item := range sendEnabledItems {
-		app.BankKeeper.DeleteSendEnabled(ctx, item.Denom)
+		marker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, item.Denom)
+		if err == nil {
+			app.BankKeeper.DeleteSendEnabled(ctx, marker.GetDenom())
+		}
 	}
 }
