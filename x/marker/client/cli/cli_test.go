@@ -12,6 +12,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -1472,6 +1473,217 @@ func (s *IntegrationTestSuite) TestParseAccessGrantFromString() {
 			} else {
 				result := markercli.ParseAccessGrantFromString(tc.accessGrantString)
 				s.Assert().ElementsMatch(result, tc.expectedResult)
+			}
+		})
+	}
+}
+
+//func (s *IntegrationTestSuite) TestParseNewMarkerFlags() {
+func TestParseNewMarkerFlags(t *testing.T) {
+	getTestCmd := func() *cobra.Command {
+		cmd := &cobra.Command{
+			Use: "testing",
+			Run: func(cmd *cobra.Command, args []string) {
+				t.Logf("test command called with args: '%s'", strings.Join(args, "', '"))
+			},
+		}
+		markercli.AddNewMarkerFlags(cmd)
+		return cmd
+	}
+
+	argType := "--" + markercli.FlagType
+	argFixed := "--" + markercli.FlagSupplyFixed
+	argGov := "--" + markercli.FlagAllowGovernanceControl
+	argForce := "--" + markercli.FlagAllowForceTransfer
+
+	tests := []struct {
+		name   string
+		cmd    *cobra.Command
+		args   []string
+		exp    *markercli.NewMarkerFlagValues
+		expErr []string
+	}{
+		{
+			name: "no args",
+			cmd:  getTestCmd(),
+			args: []string{},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_Coin,
+				SupplyFixed:        false,
+				AllowGovControl:    false,
+				AllowForceTransfer: false,
+			},
+		},
+		{
+			name: "coin type",
+			cmd:  getTestCmd(),
+			args: []string{argType, "COIN"},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_Coin,
+				SupplyFixed:        false,
+				AllowGovControl:    false,
+				AllowForceTransfer: false,
+			},
+		},
+		{
+			name: "restricted type upper",
+			cmd:  getTestCmd(),
+			args: []string{argType, "RESTRICTED"},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_RestrictedCoin,
+				SupplyFixed:        false,
+				AllowGovControl:    false,
+				AllowForceTransfer: false,
+			},
+		},
+		{
+			name: "restricted type lower",
+			cmd:  getTestCmd(),
+			args: []string{argType, "restricted"},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_RestrictedCoin,
+				SupplyFixed:        false,
+				AllowGovControl:    false,
+				AllowForceTransfer: false,
+			},
+		},
+		{
+			name:   "other type",
+			cmd:    getTestCmd(),
+			args:   []string{argType, "OOPS"},
+			expErr: []string{"invalid marker type", "OOPS", "COIN", "RESTRICTED"},
+		},
+		{
+			name: "supply fixed flag no value",
+			cmd:  getTestCmd(),
+			args: []string{argFixed},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_Coin,
+				SupplyFixed:        true,
+				AllowGovControl:    false,
+				AllowForceTransfer: false,
+			},
+		},
+		{
+			name: "supply fixed true",
+			cmd:  getTestCmd(),
+			args: []string{argFixed + "=true"},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_Coin,
+				SupplyFixed:        true,
+				AllowGovControl:    false,
+				AllowForceTransfer: false,
+			},
+		},
+		{
+			name: "supply fixed false",
+			cmd:  getTestCmd(),
+			args: []string{argFixed + "=false"},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_Coin,
+				SupplyFixed:        false,
+				AllowGovControl:    false,
+				AllowForceTransfer: false,
+			},
+		},
+		{
+			name: "gov control flag no value",
+			cmd:  getTestCmd(),
+			args: []string{argGov},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_Coin,
+				SupplyFixed:        false,
+				AllowGovControl:    true,
+				AllowForceTransfer: false,
+			},
+		},
+		{
+			name: "gov control true",
+			cmd:  getTestCmd(),
+			args: []string{argGov + "=true"},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_Coin,
+				SupplyFixed:        false,
+				AllowGovControl:    true,
+				AllowForceTransfer: false,
+			},
+			expErr: nil,
+		},
+		{
+			name: "gov control false",
+			cmd:  getTestCmd(),
+			args: []string{argGov + "=false"},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_Coin,
+				SupplyFixed:        false,
+				AllowGovControl:    false,
+				AllowForceTransfer: false,
+			},
+			expErr: nil,
+		},
+		{
+			name: "force transfer flag no value",
+			cmd:  getTestCmd(),
+			args: []string{argForce},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_Coin,
+				SupplyFixed:        false,
+				AllowGovControl:    false,
+				AllowForceTransfer: true,
+			},
+		},
+		{
+			name: "force transfer true",
+			cmd:  getTestCmd(),
+			args: []string{argForce + "=true"},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_Coin,
+				SupplyFixed:        false,
+				AllowGovControl:    false,
+				AllowForceTransfer: true,
+			},
+		},
+		{
+			name: "force transfer false",
+			cmd:  getTestCmd(),
+			args: []string{argForce + "=false"},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_Coin,
+				SupplyFixed:        false,
+				AllowGovControl:    false,
+				AllowForceTransfer: false,
+			},
+		},
+		{
+			name: "everything",
+			cmd:  getTestCmd(),
+			args: []string{argForce, argGov, argType, "RESTRICTED", argFixed},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_RestrictedCoin,
+				SupplyFixed:        true,
+				AllowGovControl:    true,
+				AllowForceTransfer: true,
+			},
+		},
+		// Note: I can't figure out a way to make cmd.Flags().GetBool return an error.
+		// If someone provides an invalid value, e.g. --supplyFixed=bananas, it will fail
+		// when the flags are being parsed by cobra, which is before they'd be accessed in ParseFlags.
+		// That's why such test cases have been omitted.
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			require.NoError(t, tc.cmd.ParseFlags(tc.args), "applying args to command")
+			actual, err := markercli.ParseNewMarkerFlags(tc.cmd)
+			if len(tc.expErr) != 0 {
+				if assert.Error(t, err, "ParseNewMarkerFlags") {
+					for _, exp := range tc.expErr {
+						assert.ErrorContainsf(t, err, exp, "ParseNewMarkerFlags")
+					}
+				}
+			} else {
+				require.NoError(t, err, "ParseNewMarkerFlags")
+				assert.Equal(t, tc.exp, actual, "NewMarkerFlagValues from '%s'", strings.Join(tc.args, "', '"))
 			}
 		})
 	}
