@@ -44,8 +44,8 @@ type CreateMarkerParams struct {
 	Coin sdk.Coin `json:"coin"`
 	// The marker type
 	Type string `json:"marker_type,omitempty"`
-
-	RestrictedAttributes []string `json:restricted_attributes,omitempty`
+	// list of restricted attributes
+	RestrictedAttributes []string `json:"restricted_attributes,omitempty"`
 }
 
 // GrantAccessParams are params for encoding a MsgAddAccessRequest.
