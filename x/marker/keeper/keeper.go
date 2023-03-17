@@ -98,26 +98,24 @@ func NewKeeper(
 	ibcKeeper ibckeeper.Keeper,
 	attrKeeper attrkeeper.Keeper,
 	nameKeeper namekeeper.Keeper,
-	bankKey storetypes.StoreKey,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
 	return Keeper{
-		paramSpace:         paramSpace,
-		authKeeper:         authKeeper,
-		authzKeeper:        authzKeeper,
-		bankKeeper:         bankKeeper,
-		feegrantKeeper:     feegrantKeeper,
-		ibcKeeper:          ibcKeeper,
-		attrKeeper:         attrKeeper,
-		nameKeeper:         nameKeeper,
-		storeKey:           key,
-		bankKeeperStoreKey: bankKey,
-		cdc:                cdc,
-		authority:          authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		markerModuleAddr:   authtypes.NewModuleAddress(types.CoinPoolName),
+		paramSpace:       paramSpace,
+		authKeeper:       authKeeper,
+		authzKeeper:      authzKeeper,
+		bankKeeper:       bankKeeper,
+		feegrantKeeper:   feegrantKeeper,
+		ibcKeeper:        ibcKeeper,
+		attrKeeper:       attrKeeper,
+		nameKeeper:       nameKeeper,
+		storeKey:         key,
+		cdc:              cdc,
+		authority:        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		markerModuleAddr: authtypes.NewModuleAddress(types.CoinPoolName),
 	}
 }
 

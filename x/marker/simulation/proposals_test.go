@@ -4,8 +4,6 @@ import (
 	"math/rand"
 	"testing"
 
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -41,7 +39,7 @@ func TestProposalContents(t *testing.T) {
 			app.TransferKeeper,
 			app.AttributeKeeper,
 			app.NameKeeper,
-			app.GetKey(banktypes.StoreKey)),
+		),
 	)
 	require.Len(t, weightedProposalContent, 7)
 
