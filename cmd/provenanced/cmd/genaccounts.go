@@ -21,8 +21,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 
+	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
@@ -40,7 +40,6 @@ const (
 	flagEscrow   = "escrow"
 	flagActivate = "activate"
 	flagFinalize = "finalize"
-	flagType     = "type"
 )
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
@@ -333,7 +332,6 @@ enforced immediately.  An optional type flag can be provided or the default of C
 			var managerAddr sdk.AccAddress
 			var accessGrants []markertypes.AccessGrant
 			markerStatus := markertypes.StatusProposed
-			markerFlagType := ""
 
 			mgr, err := cmd.Flags().GetString(flagManager)
 			if err != nil {
@@ -399,15 +397,6 @@ enforced immediately.  An optional type flag can be provided or the default of C
 					return fmt.Errorf("only one of --finalize, --activate maybe used")
 				}
 				markerStatus = markertypes.StatusActive
-			}
-
-			markerFlagType, err = cmd.Flags().GetString(flagType)
-			if err != nil {
-				return err
-			}
-
-			if len(markerFlagType) == 0 {
-				markerFlagType = "COIN"
 			}
 
 			newMarkerFlags, err := markercli.ParseNewMarkerFlags(cmd)

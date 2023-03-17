@@ -1502,7 +1502,6 @@ func (s *IntegrationTestSuite) TestParseAccessGrantFromString() {
 	}
 }
 
-//func (s *IntegrationTestSuite) TestParseNewMarkerFlags() {
 func TestParseNewMarkerFlags(t *testing.T) {
 	getTestCmd := func() *cobra.Command {
 		cmd := &cobra.Command{
