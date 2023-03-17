@@ -864,3 +864,15 @@ func (k Keeper) ensureSendEnabledStatus(ctx sdk.Context, denom string, sendEnabl
 		}
 	}
 }
+
+// RemoveIsSendEnabledEntries removes all entries in the bankkeepers send enabled table
+// TODO: remove after v1.15.0 upgrade handler is removed
+func (k Keeper) RemoveIsSendEnabledEntries(ctx sdk.Context) {
+	sendEnabledItems := k.bankKeeper.GetAllSendEnabledEntries(ctx)
+	for _, item := range sendEnabledItems {
+		marker, err := k.GetMarkerByDenom(ctx, item.Denom)
+		if err == nil {
+			k.bankKeeper.DeleteSendEnabled(ctx, marker.GetDenom())
+		}
+	}
+}

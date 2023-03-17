@@ -1,11 +1,13 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
+
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -19,6 +21,7 @@ import (
 	simapp "github.com/provenance-io/provenance/app"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 func TestAccountMapperGetSet(t *testing.T) {
@@ -942,4 +945,41 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 func TestGetAuthority(t *testing.T) {
 	app := simapp.Setup(t)
 	require.Equal(t, "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", app.MarkerKeeper.GetAuthority())
+}
+
+func TestRemoveIsSendEnabledEntries(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	markerAddr := markertypes.MustGetMarkerAddress("testcoin").String()
+
+	err := app.MarkerKeeper.AddMarkerAccount(ctx, &markertypes.MarkerAccount{
+		BaseAccount: &authtypes.BaseAccount{
+			Address:       markerAddr,
+			AccountNumber: 23,
+		},
+		AccessControl: []markertypes.AccessGrant{
+			{
+				Address:     "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+				Permissions: markertypes.AccessListByNames("deposit,withdraw"),
+			},
+		},
+		Denom:      "testcoin",
+		Supply:     sdk.NewInt(1000),
+		MarkerType: markertypes.MarkerType_Coin,
+		Status:     markertypes.StatusActive,
+	})
+	require.NoError(t, err, "should have added marker")
+	app.BankKeeper.SetSendEnabled(ctx, "testcoin", false)
+	app.BankKeeper.SetSendEnabled(ctx, "nonmarkercoin", false)
+
+	sendEnabledItems := app.BankKeeper.GetAllSendEnabledEntries(ctx)
+	assert.Equal(t, len(sendEnabledItems), 2, "should have 2 items before removal")
+
+	app.MarkerKeeper.RemoveIsSendEnabledEntries(ctx)
+	sendEnabledItems = app.BankKeeper.GetAllSendEnabledEntries(ctx)
+	assert.Equal(t, len(sendEnabledItems), 1, "denom without a marker should only exist")
+	assert.Equal(t, sendEnabledItems[0].Denom, "nonmarkercoin", "denom without a marker should only exist")
+	assert.False(t, app.BankKeeper.IsSendEnabledDenom(ctx, "nonmarkercoin"), "should be in table as false since there is not a marker associated with it")
+	assert.True(t, app.BankKeeper.IsSendEnabledDenom(ctx, "testcoin"), "should not exist in table therefore default to true")
+
 }

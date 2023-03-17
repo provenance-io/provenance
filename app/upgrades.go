@@ -32,7 +32,7 @@ type appUpgrade struct {
 var handlers = map[string]appUpgrade{
 	"quicksilver-rc1": { // upgrade for v1.15.0-rc1
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
-			RemoveIsSendEnabledEntries(ctx, app)
+			app.MarkerKeeper.RemoveIsSendEnabledEntries(ctx)
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
 			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
@@ -157,15 +157,4 @@ func SetSanctionParams(ctx sdk.Context, app *App) error {
 		return fmt.Errorf("could not set sanction params: %w", err)
 	}
 	return nil
-}
-
-// RemoveIsSendEnabledEntries removes all entries in the bankkeepers send enabled table
-func RemoveIsSendEnabledEntries(ctx sdk.Context, app *App) {
-	sendEnabledItems := app.BankKeeper.GetAllSendEnabledEntries(ctx)
-	for _, item := range sendEnabledItems {
-		marker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, item.Denom)
-		if err == nil {
-			app.BankKeeper.DeleteSendEnabled(ctx, marker.GetDenom())
-		}
-	}
 }
