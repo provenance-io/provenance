@@ -5,7 +5,7 @@ import (
 )
 
 // NewOSLocatorRecord creates a oslocator for a given address.
-func NewOSLocatorRecord(ownerAddr, encryptionKey sdk.AccAddress, uri string) ObjectStoreLocator { //nolint:interfacer
+func NewOSLocatorRecord(ownerAddr, encryptionKey sdk.AccAddress, uri string) ObjectStoreLocator {
 	return ObjectStoreLocator{
 		Owner:         ownerAddr.String(),
 		LocatorUri:    uri,
