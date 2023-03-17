@@ -38,6 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## Unreleased
 
 ### Features
+
 * Add support for tokens restricted marker sends with required attributes [#1256](https://github.com/provenance-io/provenance/issues/1256))
 
 ### Improvements
