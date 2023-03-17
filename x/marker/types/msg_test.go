@@ -232,6 +232,21 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 			),
 			"",
 		},
+		{
+			"should fail when forced tranfers allowed with coin type",
+			*NewMsgAddFinalizeActivateMarkerRequest(
+				"banana",
+				sdk.NewInt(500),
+				validAddress,
+				validAddress,
+				MarkerType_Coin,
+				true,
+				true,
+				true,
+				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+			),
+			"forced transfer is only available for restricted coins",
+		},
 	}
 
 	for _, tc := range cases {

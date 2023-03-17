@@ -74,6 +74,9 @@ func (msg MsgAddMarkerRequest) ValidateBasic() error {
 	if !testCoin.IsValid() {
 		return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
 	}
+	if msg.AllowForcedTransfer && msg.MarkerType != MarkerType_RestrictedCoin {
+		return fmt.Errorf("forced transfer is only available for restricted coins")
+	}
 
 	return nil
 }
@@ -508,6 +511,11 @@ func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
 	if msg.AccessList == nil || len(msg.AccessList) == 0 {
 		return fmt.Errorf("since this will activate the marker, must have access list defined")
 	}
+
+	if msg.AllowForcedTransfer && msg.MarkerType != MarkerType_RestrictedCoin {
+		return fmt.Errorf("forced transfer is only available for restricted coins")
+	}
+
 	return nil
 }
 
