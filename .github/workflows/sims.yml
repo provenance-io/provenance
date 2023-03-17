@@ -116,7 +116,7 @@ jobs:
           export CLEVELDB_DO_CLEANUP='false'
           make cleveldb
           echo 'WITH_CLEVELDB=true' >> "$GITHUB_ENV"
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
           go-version: ${{ needs.setup.outputs.go-version }}
       - name: Display go version
@@ -155,7 +155,7 @@ jobs:
           test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
           echo "Setting output: test-logs=$test_logs"
           echo "test-logs=$test_logs" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
           go-version: ${{ needs.setup.outputs.go-version }}
       - name: Display go version
@@ -228,7 +228,7 @@ jobs:
           export CLEVELDB_DO_CLEANUP='false'
           make cleveldb
           echo 'WITH_CLEVELDB=true' >> "$GITHUB_ENV"
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
           go-version: ${{ needs.setup.outputs.go-version }}
       - name: Display go version
@@ -272,7 +272,7 @@ jobs:
           test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.os }}"
           echo "Setting output: test-logs=$test_logs"
           echo "test-logs=$test_logs" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
           go-version: ${{ needs.setup.outputs.go-version }}
       - name: Display go version
