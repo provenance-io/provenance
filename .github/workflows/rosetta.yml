@@ -29,7 +29,7 @@ jobs:
             go.sum
             client/rosetta/**
             .github/workflows/rosetta.yml
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         if: ${{ env.GIT_DIFF }}
         with:
           go-version: 1.18

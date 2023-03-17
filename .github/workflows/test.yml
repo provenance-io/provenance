@@ -91,7 +91,7 @@ jobs:
         with:
           # CodeCov requires fetch-depth > 1
           fetch-depth: 2
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         if: needs.setup-tests.outputs.should-run
         with:
           go-version: ${{ needs.setup-tests.outputs.go-version }}
@@ -175,7 +175,7 @@ jobs:
       LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         if: needs.setup-tests.outputs.should-run
         with:
           go-version: ${{ needs.setup-tests.outputs.go-version }}
