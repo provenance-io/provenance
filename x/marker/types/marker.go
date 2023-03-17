@@ -75,8 +75,7 @@ func NewMarkerAccount(
 	accessControls []AccessGrant,
 	status MarkerStatus,
 	markerType MarkerType,
-	supplyFixed bool,
-	allowForcedTransfer bool,
+	supplyFixed, allowGovernanceControl, allowForcedTransfer bool,
 ) *MarkerAccount {
 	// clear marker manager for active or later status accounts.
 	if status >= StatusActive {
@@ -91,7 +90,7 @@ func NewMarkerAccount(
 		Status:                 status,
 		MarkerType:             markerType,
 		SupplyFixed:            supplyFixed,
-		AllowGovernanceControl: true,
+		AllowGovernanceControl: allowGovernanceControl,
 		AllowForcedTransfer:    allowForcedTransfer,
 	}
 }

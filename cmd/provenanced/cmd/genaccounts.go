@@ -21,6 +21,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
@@ -409,9 +410,9 @@ enforced immediately.  An optional type flag can be provided or the default of C
 				markerFlagType = "COIN"
 			}
 
-			markerType := markertypes.MarkerType_value["MARKER_TYPE_"+strings.ToUpper(markerFlagType)]
-			if markerType == int32(markertypes.MarkerType_Unknown) {
-				panic(fmt.Sprintf("unknown marker type %s", markerFlagType))
+			newMarkerFlags, err := markercli.ParseNewMarkerFlags(cmd)
+			if err != nil {
+				return err
 			}
 
 			genAccount := markertypes.NewMarkerAccount(
@@ -420,9 +421,10 @@ enforced immediately.  An optional type flag can be provided or the default of C
 				managerAddr,
 				accessGrants,
 				markerStatus,
-				markertypes.MarkerType(markerType),
-				true,
-				false,
+				newMarkerFlags.MarkerType,
+				newMarkerFlags.SupplyFixed,
+				newMarkerFlags.AllowGovControl,
+				newMarkerFlags.AllowForceTransfer,
 			)
 
 			if err = genAccount.Validate(); err != nil {
@@ -498,7 +500,7 @@ enforced immediately.  An optional type flag can be provided or the default of C
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
 
-	cmd.Flags().String(flagType, "", "a marker type to assign (default is COIN)")
+	markercli.AddNewMarkerFlags(cmd)
 	cmd.Flags().String(flagManager, "", "a key name or address to assign as the token manager")
 	cmd.Flags().String(flagAccess, "", "A comma separated list of access to grant to the manager account. [mint,burn,deposit,withdraw,delete,grant]")
 	cmd.Flags().String(flagEscrow, "", "A list of coins held by the marker account instance.  Note: Any supply not allocated to other accounts should be assigned here.")

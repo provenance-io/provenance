@@ -665,6 +665,7 @@ func TestForceTransfer(t *testing.T) {
 		types.StatusProposed,
 		types.MarkerType_RestrictedCoin,
 		true,
+		true,
 		false,
 	)
 	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, noForceMac),
@@ -682,6 +683,7 @@ func TestForceTransfer(t *testing.T) {
 		accessList,
 		types.StatusProposed,
 		types.MarkerType_RestrictedCoin,
+		true,
 		true,
 		true,
 	)
