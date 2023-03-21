@@ -87,7 +87,6 @@ $PROV_CMD add-genesis-msg-fee /provenance.name.v1.MsgBindNameRequest "1000000000
 $PROV_CMD add-genesis-msg-fee /provenance.marker.v1.MsgAddMarkerRequest "100000000000$DENOM"
 $PROV_CMD add-genesis-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest "10000000000$DENOM"
 $PROV_CMD add-genesis-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest "10000000000$DENOM"
-$PROV_CMD add-genesis-msg-fee /provenance.metadata.v1.MsgP8eMemorializeContractRequest "10000000000$DENOM"
 $PROV_CMD add-genesis-custom-floor "${MIN_FLOOR_PRICE}${DENOM}"
 $PROV_CMD collect-gentxs
 $PROV_CMD config set minimum-gas-prices "${MIN_FLOOR_PRICE}${DENOM}"
