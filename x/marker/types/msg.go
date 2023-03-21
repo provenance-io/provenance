@@ -38,7 +38,10 @@ var (
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
 func NewMsgAddMarkerRequest(
-	denom string, totalSupply sdkmath.Int, fromAddress sdk.AccAddress, manager sdk.AccAddress, markerType MarkerType, supplyFixed bool, allowGovernanceControl bool,
+	denom string, totalSupply sdkmath.Int,
+	fromAddress, manager sdk.AccAddress,
+	markerType MarkerType,
+	supplyFixed, allowGovernanceControl, allowForcedTransfer bool,
 ) *MsgAddMarkerRequest {
 	return &MsgAddMarkerRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
@@ -48,6 +51,7 @@ func NewMsgAddMarkerRequest(
 		MarkerType:             markerType,
 		SupplyFixed:            supplyFixed,
 		AllowGovernanceControl: allowGovernanceControl,
+		AllowForcedTransfer:    allowForcedTransfer,
 	}
 }
 
@@ -69,6 +73,9 @@ func (msg MsgAddMarkerRequest) ValidateBasic() error {
 	}
 	if !testCoin.IsValid() {
 		return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
+	}
+	if msg.AllowForcedTransfer && msg.MarkerType != MarkerType_RestrictedCoin {
+		return fmt.Errorf("forced transfer is only available for restricted coins")
 	}
 
 	return nil
@@ -462,7 +469,13 @@ func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
-func NewMsgAddFinalizeActivateMarkerRequest(denom string, totalSupply sdkmath.Int, fromAddress sdk.AccAddress, manager sdk.AccAddress, markerType MarkerType, supplyFixed bool, allowGovernanceControl bool, accessGrants []AccessGrant) *MsgAddFinalizeActivateMarkerRequest {
+func NewMsgAddFinalizeActivateMarkerRequest(
+	denom string, totalSupply sdkmath.Int,
+	fromAddress, manager sdk.AccAddress,
+	markerType MarkerType,
+	supplyFixed, allowGovernanceControl, allowForcedTransfer bool,
+	accessGrants []AccessGrant,
+) *MsgAddFinalizeActivateMarkerRequest {
 	return &MsgAddFinalizeActivateMarkerRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
 		Manager:                manager.String(),
@@ -471,6 +484,7 @@ func NewMsgAddFinalizeActivateMarkerRequest(denom string, totalSupply sdkmath.In
 		SupplyFixed:            supplyFixed,
 		AllowGovernanceControl: allowGovernanceControl,
 		AccessList:             accessGrants,
+		AllowForcedTransfer:    allowForcedTransfer,
 	}
 }
 
@@ -497,6 +511,11 @@ func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
 	if msg.AccessList == nil || len(msg.AccessList) == 0 {
 		return fmt.Errorf("since this will activate the marker, must have access list defined")
 	}
+
+	if msg.AllowForcedTransfer && msg.MarkerType != MarkerType_RestrictedCoin {
+		return fmt.Errorf("forced transfer is only available for restricted coins")
+	}
+
 	return nil
 }
 
