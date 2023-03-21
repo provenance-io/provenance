@@ -65,11 +65,10 @@ type Keeper struct {
 
 	ibcKeeper ibckeeper.Keeper
 
+	// To access attributes for addresses
 	attrKeeper attrkeeper.Keeper
-
+	// To access names and normalize required attributes
 	nameKeeper namekeeper.Keeper
-	// For access to bank keeper storage outside what their keeper provides.
-	bankKeeperStoreKey storetypes.StoreKey
 
 	// Key to access the key-value store from sdk.Context.
 	storeKey storetypes.StoreKey
