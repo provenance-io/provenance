@@ -415,7 +415,7 @@ enforced immediately.  An optional type flag can be provided or the default of C
 				panic(fmt.Sprintf("unknown marker type %s", markerFlagType))
 			}
 
-			requiredAttributes, err := markercli.ParseRestrictedAttributes(cmd)
+			requiredAttributes, err := cmd.Flags().GetStringSlice(markercli.FlagRequiredAttributes)
 			if err != nil {
 				return err
 			}
@@ -510,7 +510,7 @@ enforced immediately.  An optional type flag can be provided or the default of C
 	cmd.Flags().String(flagEscrow, "", "A list of coins held by the marker account instance.  Note: Any supply not allocated to other accounts should be assigned here.")
 	cmd.Flags().BoolP(flagFinalize, "f", false, "Set the marker status to finalized.  Requires manager to be specified. (recommended)")
 	cmd.Flags().BoolP(flagActivate, "a", false, "Set the marker status to active.  Total supply constraint will be enforced as invariant.")
-	cmd.Flags().String(markercli.FlagRequiredAttributes, "", "comma delimited list of required attributes needed for a restricted marker to have send authority")
+	cmd.Flags().StringSlice(markercli.FlagRequiredAttributes, []string{}, "comma delimited list of required attributes needed for a restricted marker to have send authority")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

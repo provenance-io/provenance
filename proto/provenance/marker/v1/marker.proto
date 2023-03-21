@@ -57,7 +57,7 @@ message MarkerAccount {
   bool allow_governance_control = 9;
   // list of required attributes on restricted marker in order to send and receive transfers if sender does not have
   // transfer authority
-  repeated string required_attributes = 10;
+  repeated string required_attributes = 11;
 }
 
 // MarkerType defines the types of marker

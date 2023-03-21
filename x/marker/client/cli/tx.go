@@ -241,7 +241,7 @@ with the given supply amount and denomination provided in the coin argument
 			if err != nil {
 				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagAllowGovernanceControl, err)
 			}
-			requiredAttributes, err := ParseRestrictedAttributes(cmd)
+			requiredAttributes, err := cmd.Flags().GetStringSlice(FlagRequiredAttributes)
 			if err != nil {
 				return err
 			}
@@ -253,7 +253,7 @@ with the given supply amount and denomination provided in the coin argument
 	cmd.Flags().String(FlagType, "COIN", "a marker type to assign (default is COIN)")
 	cmd.Flags().Bool(FlagSupplyFixed, false, "a true or false value to denote if a supply is fixed (default is false)")
 	cmd.Flags().Bool(FlagAllowGovernanceControl, false, "a true or false value to denote if marker is allowed governance control (default is false)")
-	cmd.Flags().String(FlagRequiredAttributes, "", "comma delimited list of required attributes needed for a restricted marker to have send authority")
+	cmd.Flags().StringSlice(FlagRequiredAttributes, []string{}, "comma delimited list of required attributes needed for a restricted marker to have send authority")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -974,7 +974,7 @@ with the given supply amount and denomination provided in the coin argument
 			if len(accessGrants) == 0 {
 				panic("at least one access grant should be present.")
 			}
-			requiredAttributes, err := ParseRestrictedAttributes(cmd)
+			requiredAttributes, err := cmd.Flags().GetStringSlice(FlagRequiredAttributes)
 			if err != nil {
 				return err
 			}
@@ -986,7 +986,7 @@ with the given supply amount and denomination provided in the coin argument
 	cmd.Flags().String(FlagType, "COIN", "a marker type to assign (default is COIN)")
 	cmd.Flags().Bool(FlagSupplyFixed, false, "a true or false value to denote if a supply is fixed (default is false)")
 	cmd.Flags().Bool(FlagAllowGovernanceControl, false, "a true or false value to denote if marker is allowed governance control (default is false)")
-	cmd.Flags().String(FlagRequiredAttributes, "", "comma delimited list of required attributes needed for a restricted marker to have send authority")
+	cmd.Flags().StringSlice(FlagRequiredAttributes, []string{}, "comma delimited list of required attributes needed for a restricted marker to have send authority")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -1021,16 +1021,4 @@ func ParseAccessGrantFromString(addressPermissionString string) []types.AccessGr
 		grants = append(grants, *types.NewAccessGrant(address, permissions))
 	}
 	return grants
-}
-
-func ParseRestrictedAttributes(cmd *cobra.Command) ([]string, error) {
-	reqAttrString, err := cmd.Flags().GetString(FlagRequiredAttributes)
-	if err != nil {
-		return nil, err
-	}
-	var requiredAttributes []string
-	if len(reqAttrString) > 0 {
-		requiredAttributes = strings.Split(reqAttrString, ",")
-	}
-	return requiredAttributes, nil
 }

@@ -101,7 +101,7 @@ func HandleSupplyIncreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyIncr
 		if err != nil {
 			return err
 		}
-		ctx = WithAddressHasAccess(ctx, true)
+		ctx = WithMarkerSendRestrictionBypass(ctx, true)
 		if err := k.bankKeeper.SendCoins(ctx, addr, recipient, sdk.NewCoins(c.Amount)); err != nil {
 			return err
 		}
@@ -286,7 +286,7 @@ func HandleWithdrawEscrowProposal(ctx sdk.Context, k Keeper, c *types.WithdrawEs
 	if err != nil {
 		return err
 	}
-	ctx = WithAddressHasAccess(ctx, true)
+	ctx = WithMarkerSendRestrictionBypass(ctx, true)
 	if err := k.bankKeeper.SendCoins(ctx, addr, recipient, c.Amount); err != nil {
 		return err
 	}

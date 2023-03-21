@@ -13,6 +13,18 @@ import (
 const AddressHasAccessKey = "address_has_access"
 
 func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
+	if HasMarkerSendRestrictionBypass(ctx) {
+		return nil
+	}
+
+	caller, err := sdk.AccAddressFromBech32(from)
+	if err != nil {
+		return err
+	}
+	if caller.Equals(k.markerModuleAddr) {
+		return nil
+	}
+
 	markerAddr := types.MustGetMarkerAddress(denom)
 	marker, err := k.GetMarker(ctx, markerAddr)
 	if err != nil {
@@ -26,18 +38,8 @@ func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
 		return nil
 	}
 
-	caller, err := sdk.AccAddressFromBech32(from)
-	if err != nil {
-		return err
-	}
-
-	hasAccess, err := GetAddressHasAccess(ctx)
-	if err != nil {
-		return err
-	}
-
 	// if the marker has authority it is allowed to send to receiver without checking of attributes
-	if hasAccess || marker.AddressHasAccess(caller, types.Access_Transfer) || caller.Equals(k.markerModuleAddr) {
+	if marker.AddressHasAccess(caller, types.Access_Transfer) {
 		return nil
 	}
 
@@ -104,21 +106,21 @@ func EnsureAllRequiredAttributesExist(requiredAttributes []string, attributes []
 	return true
 }
 
-// GetAddressHasAccess returns the bool value of address has access defaults to false if not set
-func GetAddressHasAccess(ctx sdk.Context) (bool, error) {
+// HasMarkerSendRestrictionBypass returns the bool value of address has access defaults to false if not set
+func HasMarkerSendRestrictionBypass(ctx sdk.Context) bool {
 	hasAccess := ctx.Value(AddressHasAccessKey)
 	if hasAccess == nil {
-		return false, nil
+		return false
 	}
 	accessAllowed, success := hasAccess.(bool)
 	if !success {
-		return false, fmt.Errorf("incorrect type for context %s value", AddressHasAccessKey)
+		return false
 	}
-	return accessAllowed, nil
+	return accessAllowed
 }
 
-// WithAddressHasAccess returns the context with the address has access set used for allowing address to send restricted markers
-func WithAddressHasAccess(ctx sdk.Context, hasAccess bool) sdk.Context {
+// WithMarkerSendRestrictionBypass returns the context with the address has access set used for allowing address to send restricted markers
+func WithMarkerSendRestrictionBypass(ctx sdk.Context, hasAccess bool) sdk.Context {
 	return ctx.WithValue(AddressHasAccessKey, hasAccess)
 }
 
