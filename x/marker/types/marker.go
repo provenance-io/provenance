@@ -48,6 +48,8 @@ type MarkerAccountI interface {
 
 	HasGovernanceEnabled() bool
 
+	AllowsForcedTransfer() bool
+
 	GetRequiredAttributes() []string
 }
 
@@ -64,6 +66,7 @@ func NewEmptyMarkerAccount(denom, manager string, grants []AccessGrant) *MarkerA
 		MarkerType:             MarkerType_Coin,
 		SupplyFixed:            true,
 		AllowGovernanceControl: true,
+		AllowForcedTransfer:    false,
 	}
 }
 
@@ -75,7 +78,7 @@ func NewMarkerAccount(
 	accessControls []AccessGrant,
 	status MarkerStatus,
 	markerType MarkerType,
-	supplyFixed bool,
+	supplyFixed, allowGovernanceControl, allowForcedTransfer bool,
 	requiredAttributes []string,
 ) *MarkerAccount {
 	// clear marker manager for active or later status accounts.
@@ -91,7 +94,8 @@ func NewMarkerAccount(
 		Status:                 status,
 		MarkerType:             markerType,
 		SupplyFixed:            supplyFixed,
-		AllowGovernanceControl: true,
+		AllowGovernanceControl: allowGovernanceControl,
+		AllowForcedTransfer:    allowForcedTransfer,
 		RequiredAttributes:     requiredAttributes,
 	}
 }
@@ -110,6 +114,11 @@ func (ma MarkerAccount) HasFixedSupply() bool { return ma.SupplyFixed }
 
 // HasGovernanceEnabled returns true if this marker allows governance proposals to control this marker
 func (ma MarkerAccount) HasGovernanceEnabled() bool { return ma.AllowGovernanceControl }
+
+// AllowsForcedTransfer returns true if force transfer is allowed for this marker.
+func (ma MarkerAccount) AllowsForcedTransfer() bool {
+	return ma.AllowForcedTransfer
+}
 
 // AddressHasAccess returns true if the provided address has been assigned the provided
 // role within the current MarkerAccount AccessControl
@@ -173,6 +182,9 @@ func (ma MarkerAccount) Validate() error {
 	}
 	if ma.Manager == ma.GetAddress().String() {
 		return fmt.Errorf("marker can not be self managed")
+	}
+	if ma.AllowForcedTransfer && ma.MarkerType != MarkerType_RestrictedCoin {
+		return fmt.Errorf("forced transfers can only be allowed on restricted markers")
 	}
 	return ma.BaseAccount.Validate()
 }

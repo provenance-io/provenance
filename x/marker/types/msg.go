@@ -45,6 +45,7 @@ func NewMsgAddMarkerRequest(
 	markerType MarkerType,
 	supplyFixed bool,
 	allowGovernanceControl bool,
+	allowForcedTransfer bool,
 	requiredAttributes []string,
 ) *MsgAddMarkerRequest {
 	return &MsgAddMarkerRequest{
@@ -55,6 +56,7 @@ func NewMsgAddMarkerRequest(
 		MarkerType:             markerType,
 		SupplyFixed:            supplyFixed,
 		AllowGovernanceControl: allowGovernanceControl,
+		AllowForcedTransfer:    allowForcedTransfer,
 		RequiredAttributes:     requiredAttributes,
 	}
 }
@@ -75,6 +77,11 @@ func (msg MsgAddMarkerRequest) ValidateBasic() error {
 	if !testCoin.IsValid() {
 		return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
 	}
+
+	if msg.AllowForcedTransfer && msg.MarkerType != MarkerType_RestrictedCoin {
+		return fmt.Errorf("forced transfer is only available for restricted coins")
+	}
+
 	if len(msg.RequiredAttributes) > 0 && msg.MarkerType != MarkerType_RestrictedCoin {
 		return fmt.Errorf("required attributes are reserved for restricted markers")
 	}
@@ -479,6 +486,7 @@ func NewMsgAddFinalizeActivateMarkerRequest(
 	supplyFixed bool,
 	allowGovernanceControl bool,
 	accessGrants []AccessGrant,
+	allowForcedTransfer bool,
 	requiredAttributes []string,
 ) *MsgAddFinalizeActivateMarkerRequest {
 	return &MsgAddFinalizeActivateMarkerRequest{
@@ -489,6 +497,7 @@ func NewMsgAddFinalizeActivateMarkerRequest(
 		SupplyFixed:            supplyFixed,
 		AllowGovernanceControl: allowGovernanceControl,
 		AccessList:             accessGrants,
+		AllowForcedTransfer:    allowForcedTransfer,
 		RequiredAttributes:     requiredAttributes,
 	}
 }
@@ -516,6 +525,11 @@ func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
 	if msg.AccessList == nil || len(msg.AccessList) == 0 {
 		return fmt.Errorf("since this will activate the marker, must have access list defined")
 	}
+
+	if msg.AllowForcedTransfer && msg.MarkerType != MarkerType_RestrictedCoin {
+		return fmt.Errorf("forced transfer is only available for restricted coins")
+	}
+
 	if len(msg.RequiredAttributes) > 0 && msg.MarkerType != MarkerType_RestrictedCoin {
 		return fmt.Errorf("required attributes are reserved for restricted markers")
 	}

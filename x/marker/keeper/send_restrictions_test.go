@@ -47,30 +47,30 @@ func TestAllowMarkerSend(t *testing.T) {
 	)
 	nrMarkerDenom := "nonrestrictedmarker"
 	nrMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(nrMarkerDenom), nil, 0, 0)
-	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(nrMarkerAcct, sdk.NewInt64Coin(nrMarkerDenom, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_Coin, true, []string{}))
+	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(nrMarkerAcct, sdk.NewInt64Coin(nrMarkerDenom, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_Coin, true, true, false, []string{}))
 
 	rMarkerDenom := "restrictedmarkernoreqattributes"
 	rMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom), nil, 1, 0)
-	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, []string{}))
+	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{}))
 
 	rMarkerDenom2 := "restrictedmarkerreqattributes2"
 	rMarkerAcct2 := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom2), nil, 2, 0)
-	rMarker2 := types.NewMarkerAccount(rMarkerAcct2, sdk.NewInt64Coin(rMarkerDenom2, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, []string{"some.attribute.that.i.require"})
+	rMarker2 := types.NewMarkerAccount(rMarkerAcct2, sdk.NewInt64Coin(rMarkerDenom2, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{"some.attribute.that.i.require"})
 	app.MarkerKeeper.SetMarker(ctx, rMarker2)
 
 	rMarkerDenom3 := "restrictedmarkerreqattributes3"
 	rMarkerAcct3 := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom3), nil, 3, 0)
-	rMarker3 := types.NewMarkerAccount(rMarkerAcct3, sdk.NewInt64Coin(rMarkerDenom3, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, []string{"kyc.provenance.io"})
+	rMarker3 := types.NewMarkerAccount(rMarkerAcct3, sdk.NewInt64Coin(rMarkerDenom3, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{"kyc.provenance.io"})
 	app.MarkerKeeper.SetMarker(ctx, rMarker3)
 
 	rMarkerDenom4 := "restrictedmarkerreqattributes4"
 	rMarkerAcct4 := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom4), nil, 4, 0)
-	rMarker4 := types.NewMarkerAccount(rMarkerAcct4, sdk.NewInt64Coin(rMarkerDenom4, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, []string{"kyc.provenance.io", "not-kyc.provenance.io"})
+	rMarker4 := types.NewMarkerAccount(rMarkerAcct4, sdk.NewInt64Coin(rMarkerDenom4, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{"kyc.provenance.io", "not-kyc.provenance.io"})
 	app.MarkerKeeper.SetMarker(ctx, rMarker4)
 
 	rMarkerDenom5 := "restrictedmarkerreqattributes5"
 	rMarkerAcct5 := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom5), nil, 5, 0)
-	rMarker5 := types.NewMarkerAccount(rMarkerAcct5, sdk.NewInt64Coin(rMarkerDenom5, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, []string{"kyc.provenance.io", "not-kyc.provenance.io", "foo.provenance.io"})
+	rMarker5 := types.NewMarkerAccount(rMarkerAcct5, sdk.NewInt64Coin(rMarkerDenom5, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{"kyc.provenance.io", "not-kyc.provenance.io", "foo.provenance.io"})
 	app.MarkerKeeper.SetMarker(ctx, rMarker5)
 
 	testCases := []struct {

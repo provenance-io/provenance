@@ -168,6 +168,7 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk
 			markertypes.MarkerType_Coin,
 			true,       // fixed supply
 			true,       // allow gov
+			false,      // don't allow forced transfer
 			[]string{}, // required attributes
 		)
 

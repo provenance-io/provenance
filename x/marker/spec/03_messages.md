@@ -18,6 +18,9 @@ All created/modified state objects specified by each message are defined within 
   - [Msg/TransferRequest](#msg-transferrequest)
   - [Msg/IbcTransferRequest](#msg-ibctransferrequest)
   - [Msg/SetDenomMetadataRequest](#msg-setdenommetadatarequest)
+  - [Msg/AddFinalizeActivateMarkerRequest](#msg-addfinalizeactivatemarkerrequest)
+  - [Msg/GrantAllowanceRequest](#msg-grantallowancerequest)
+  - [Msg/SupplyIncreaseProposalRequest](#msg-supplyincreaseproposalrequest)
 
 
 
@@ -27,9 +30,9 @@ A marker is created using the Add Marker service message.
 The created marker can not be directly added in an Active (or Cancelled/Destroyed) status.  Markers
 must have a valid supply and denomination value.
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L44-L54
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L74-L85
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L57
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L88
 
 This service message is expected to fail if:
 - The Denom string:
@@ -52,9 +55,9 @@ or disbursed as a result of adding a marker using this endpoint.
 
 Add Access Request is used to add permissions to a marker that allow the specified accounts to perform the specified actions.
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L60-L64
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L91-L95
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L67
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L98
 
 This service message is expected to fail if:
 
@@ -75,9 +78,9 @@ and `Active` markers when the caller is currently assigned the `Admin` access ty
 
 DeleteAccess Request defines the Msg/DeleteAccess request type
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L70-L74
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L101-L105
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L76
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L107
 
 This service message is expected to fail if:
 
@@ -94,9 +97,9 @@ and `Active` markers when the caller is currently assigned the `Admin` access ty
 
 Finalize Request defines the Msg/Finalize request type
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L79-L82
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L110-L113
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L84
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L115
 
 This service message is expected to fail if:
 
@@ -112,9 +115,9 @@ serve as an intermediate step prior to activation that indicates marker configur
 
 Activate Request defines the Msg/Activate request type
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L87-L90
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L118-L121
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L92
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L123
 
 This service message is expected to fail if:
 
@@ -135,9 +138,9 @@ float then the `total_supply` value will be set to zero upon activation.
 
 Cancel Request defines the Msg/Cancel request type
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L95-L98
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L126-L129
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L100
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L131
 
 This service message is expected to fail if:
 
@@ -155,9 +158,9 @@ This service message is expected to fail if:
 
 Delete Request defines the Msg/Delete request type
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L103-L106
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L134-L137
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L108
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L139
 
 This service message is expected to fail if:
 
@@ -173,9 +176,9 @@ This service message is expected to fail if:
 
 Mint Request defines the Msg/Mint request type
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L111-L115
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L142-L146
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L117
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L148
 
 This service message is expected to fail if:
 
@@ -191,9 +194,9 @@ This service message is expected to fail if:
 Burn Request defines the Msg/Burn request type that is used to remove supply of the marker coin from circulation.  In
 order to successfully burn supply the amount to burn must be held by the marker account itself (in escrow).
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L120-L124
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L151-L155
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L126
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L157
 
 This service message is expected to fail if:
 
@@ -210,9 +213,9 @@ Withdraw Request defines the Msg/Withdraw request type and is used to withdraw c
 NOTE: any denom coin can be held within a marker "in escrow", these values are not restricted to just the denom of the
 marker itself.
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L129-L135
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L160-L166
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L137
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L168
 
 This service message is expected to fail if:
 
@@ -227,15 +230,15 @@ This service message is expected to fail if:
 ## Msg/TransferRequest
 
 Transfer Request defines the Msg/Transfer request type.  A transfer request is used to transfer coin between two
-accounts for `RESTRICTED_COIN` type markers that have `send_enabled=false` configured with the `bank` module and thus
-can not be sent using a normal `send_coin` operation.  A transfer request requires a signature from an account with
-the transfer permission as well as approval from the account the funds will be withdrawn from.
+accounts for `RESTRICTED_COIN` type markers. Such markers have `send_enabled=false` configured with the `x/bank` module,
+and thus cannot be sent using a normal `MsgSend` operation.  A transfer request requires a signature from an account
+with `TRANSFER` access. If force transfer is not enabled for the marker, the source account must have granted the admin
+permission (via `authz`) to do the transfer. If force transfer is allowed for the marker, the source account does not
+need to approve of the transfer.
 
-NOTE: the withdraw approval has been suspended pending integration with the `auth` module.  See [Issue #262](https://github.com/provenance-io/provenance/issues/262)
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L171-L177
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L140-L146
-
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L149
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L180
 
 This service message is expected to fail if:
 
@@ -250,9 +253,9 @@ Ibc transfer Request defines the Msg/IbcTransfer request type.  The `IbcTransfer
 
 NOTE: A transfer request also requires a signature from an account with the transfer permission as well as approval from the account the funds will be withdrawn from.
 
-+++ https://github.com/provenance-io/provenance/blob/80a02497023b22c7b0ee21c84e07315060bd0f8a/proto/provenance/marker/v1/tx.proto#L177-L183
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L183-L189
 
-+++ https://github.com/provenance-io/provenance/blob/80a02497023b22c7b0ee21c84e07315060bd0f8a/proto/provenance/marker/v1/tx.proto#L186
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L192
 
 ## Msg/SetDenomMetadataRequest
 
@@ -260,9 +263,9 @@ SetDenomMetadata Request defines the Msg/SetDenomMetadata request type.  This re
 denom metadata held within the bank module.  Denom metadata can be used to provide a more streamlined user experience
 within block explorers or similar applications.
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L152-L156
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L195-L199
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/tx.proto#L159
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L202
 
 This service message is expected to fail if:
 
@@ -283,6 +286,10 @@ This service message is expected to fail if:
 
 AddFinalizeActivate requested is used for adding, finalizing, and activating a marker in a single request.
 
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L205-L215
+
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L218
+
 This service message is expected to fail if:
 
 - The given denom value is invalid or does not match an existing marker on the system
@@ -293,3 +300,35 @@ This service message is expected to fail if:
   - Contains more than one entry for a given address
   - Contains a grant with an invalid address
   - Contains a grant with an invalid access enum value (Unspecified/0)
+
+## Msg/GrantAllowanceRequest
+
+GrantAllowance grants a fee allowance to the grantee on the granter's account.
+
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L59-L68
+
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L71
+
+This service message is expected to fail if:
+
+- Any field is empty.
+- The allowance is invalid
+- The given denom value is invalid or does not match an existing marker on the system
+- The administrator or grantee are invalid addresses
+- The administrator does not have `ADMIN` access on the marker.
+
+## Msg/SupplyIncreaseProposalRequest
+
+SupplyIncreaseProposal is a governance-only message for increasing the supply of a marker.
+
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L222-L230
+
++++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L233
+
+This service message is expected to fail if:
+
+- The authority is not the address of the governance module's account.
+- The governance proposal format (title, description, etc) is invalid
+- The requested supply exceeds the configuration parameter for `MaxTotalSupply`
+
+See also: [Governance: Supply Increase Proposal](./10_governance.md#supply-increase-proposal)

@@ -40,7 +40,6 @@ const (
 	flagEscrow   = "escrow"
 	flagActivate = "activate"
 	flagFinalize = "finalize"
-	flagType     = "type"
 )
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
@@ -333,7 +332,6 @@ enforced immediately.  An optional type flag can be provided or the default of C
 			var managerAddr sdk.AccAddress
 			var accessGrants []markertypes.AccessGrant
 			markerStatus := markertypes.StatusProposed
-			markerFlagType := ""
 
 			mgr, err := cmd.Flags().GetString(flagManager)
 			if err != nil {
@@ -401,21 +399,7 @@ enforced immediately.  An optional type flag can be provided or the default of C
 				markerStatus = markertypes.StatusActive
 			}
 
-			markerFlagType, err = cmd.Flags().GetString(flagType)
-			if err != nil {
-				return err
-			}
-
-			if len(markerFlagType) == 0 {
-				markerFlagType = "COIN"
-			}
-
-			markerType := markertypes.MarkerType_value["MARKER_TYPE_"+strings.ToUpper(markerFlagType)]
-			if markerType == int32(markertypes.MarkerType_Unknown) {
-				panic(fmt.Sprintf("unknown marker type %s", markerFlagType))
-			}
-
-			requiredAttributes, err := cmd.Flags().GetStringSlice(markercli.FlagRequiredAttributes)
+			newMarkerFlags, err := markercli.ParseNewMarkerFlags(cmd)
 			if err != nil {
 				return err
 			}
@@ -426,9 +410,11 @@ enforced immediately.  An optional type flag can be provided or the default of C
 				managerAddr,
 				accessGrants,
 				markerStatus,
-				markertypes.MarkerType(markerType),
-				true,
-				requiredAttributes,
+				newMarkerFlags.MarkerType,
+				newMarkerFlags.SupplyFixed,
+				newMarkerFlags.AllowGovControl,
+				newMarkerFlags.AllowForceTransfer,
+				newMarkerFlags.RequiredAttributes,
 			)
 
 			if err = genAccount.Validate(); err != nil {
@@ -504,13 +490,12 @@ enforced immediately.  An optional type flag can be provided or the default of C
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
 
-	cmd.Flags().String(flagType, "", "a marker type to assign (default is COIN)")
+	markercli.AddNewMarkerFlags(cmd)
 	cmd.Flags().String(flagManager, "", "a key name or address to assign as the token manager")
 	cmd.Flags().String(flagAccess, "", "A comma separated list of access to grant to the manager account. [mint,burn,deposit,withdraw,delete,grant]")
 	cmd.Flags().String(flagEscrow, "", "A list of coins held by the marker account instance.  Note: Any supply not allocated to other accounts should be assigned here.")
 	cmd.Flags().BoolP(flagFinalize, "f", false, "Set the marker status to finalized.  Requires manager to be specified. (recommended)")
 	cmd.Flags().BoolP(flagActivate, "a", false, "Set the marker status to active.  Total supply constraint will be enforced as invariant.")
-	cmd.Flags().StringSlice(markercli.FlagRequiredAttributes, []string{}, "comma delimited list of required attributes needed for a restricted marker to have send authority")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

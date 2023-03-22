@@ -4,9 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -196,6 +197,7 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				MarkerType_Coin,
 				true,
 				true,
+				false,
 				[]string{"blah"},
 			),
 			"required attributes are reserved for restricted markers",
@@ -210,6 +212,7 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				MarkerType_RestrictedCoin,
 				true,
 				true,
+				false,
 				[]string{"blah"},
 			),
 			"",
@@ -224,6 +227,7 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				MarkerType_RestrictedCoin,
 				true,
 				true,
+				false,
 				[]string{},
 			),
 			"",
@@ -238,6 +242,7 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				MarkerType_Coin,
 				true,
 				true,
+				false,
 				[]string{},
 			),
 			"",
@@ -307,6 +312,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				true,
 				[]AccessGrant{},
+				false,
 				[]string{},
 			),
 			"since this will activate the marker, must have access list defined",
@@ -322,6 +328,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				true,
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				false,
 				[]string{"blah"},
 			),
 			"required attributes are reserved for restricted markers",
@@ -337,6 +344,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				true,
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				false,
 				[]string{},
 			),
 			"",
@@ -352,9 +360,26 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				true,
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				false,
 				[]string{"blah"},
 			),
 			"",
+		},
+		{
+			"should fail when forced tranfers allowed with coin type",
+			*NewMsgAddFinalizeActivateMarkerRequest(
+				"banana",
+				sdk.NewInt(500),
+				validAddress,
+				validAddress,
+				MarkerType_Coin,
+				true,
+				true,
+				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				true,
+				[]string{},
+			),
+			"forced transfer is only available for restricted coins",
 		},
 	}
 

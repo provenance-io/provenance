@@ -95,14 +95,10 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		msg.Status,
 		msg.MarkerType,
 		msg.SupplyFixed,
+		msg.AllowGovernanceControl || k.GetEnableGovernance(ctx),
+		msg.AllowForcedTransfer,
 		normalizedReqAttrs,
 	)
-
-	if k.GetEnableGovernance(ctx) {
-		ma.AllowGovernanceControl = true
-	} else {
-		ma.AllowGovernanceControl = msg.AllowGovernanceControl
-	}
 
 	if err := k.Keeper.AddMarkerAccount(ctx, ma); err != nil {
 		ctx.Logger().Error("unable to add marker", "err", err)
@@ -589,14 +585,10 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 		types.StatusProposed,
 		msg.MarkerType,
 		msg.SupplyFixed,
+		msg.AllowGovernanceControl || k.GetEnableGovernance(ctx),
+		msg.AllowForcedTransfer,
 		normalizedReqAttrs,
 	)
-
-	if k.GetEnableGovernance(ctx) {
-		ma.AllowGovernanceControl = true
-	} else {
-		ma.AllowGovernanceControl = msg.AllowGovernanceControl
-	}
 
 	if err := k.Keeper.AddFinalizeAndActivateMarker(ctx, ma); err != nil {
 		ctx.Logger().Error("unable to add, finalize and activate marker", "err", err)

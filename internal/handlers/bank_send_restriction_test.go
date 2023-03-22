@@ -44,17 +44,17 @@ func TestBankSend(tt *testing.T) {
 	nrMarkerDenom := "nonrestrictedmarker"
 	nrMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(nrMarkerDenom), nil, 200, 0)
 	require.NoError(tt, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, markertypes.NewMarkerAccount(nrMarkerAcct, sdk.NewInt64Coin(nrMarkerDenom, 10_000), addr1, []markertypes.AccessGrant{{Address: acct1.Address,
-		Permissions: []markertypes.Access{markertypes.Access_Withdraw}}}, markertypes.StatusProposed, markertypes.MarkerType_Coin, true, []string{})), "")
+		Permissions: []markertypes.Access{markertypes.Access_Withdraw}}}, markertypes.StatusProposed, markertypes.MarkerType_Coin, true, true, false, []string{})), "")
 
 	rMarkerDenom := "restrictedmarker"
 	rMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom), nil, 300, 0)
 	require.NoError(tt, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, markertypes.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 10_000), addr1, []markertypes.AccessGrant{{Address: acct1.Address,
-		Permissions: []markertypes.Access{markertypes.Access_Withdraw, markertypes.Access_Transfer}}}, markertypes.StatusProposed, markertypes.MarkerType_RestrictedCoin, true, []string{})), "")
+		Permissions: []markertypes.Access{markertypes.Access_Withdraw, markertypes.Access_Transfer}}}, markertypes.StatusProposed, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{})), "")
 
 	raMarkerDenom := "restrictedmarkerattr"
 	raMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(raMarkerDenom), nil, 400, 0)
 	require.NoError(tt, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, markertypes.NewMarkerAccount(raMarkerAcct, sdk.NewInt64Coin(raMarkerDenom, 10_000), addr1, []markertypes.AccessGrant{{Address: acct1.Address,
-		Permissions: []markertypes.Access{markertypes.Access_Withdraw, markertypes.Access_Transfer}}}, markertypes.StatusProposed, markertypes.MarkerType_RestrictedCoin, true, []string{"some.kyc.provenance.io"})), "")
+		Permissions: []markertypes.Access{markertypes.Access_Withdraw, markertypes.Access_Transfer}}}, markertypes.StatusProposed, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{"some.kyc.provenance.io"})), "")
 
 	// Check both account balances before we begin.
 	addr1beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()

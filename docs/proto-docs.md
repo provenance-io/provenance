@@ -1248,6 +1248,7 @@ MarkerAccount holds the marker configuration information in addition to a base a
 | `marker_type` | [MarkerType](#provenance.marker.v1.MarkerType) |  | Marker type information |
 | `supply_fixed` | [bool](#bool) |  | A fixed supply will mint additional coin automatically if the total supply decreases below a set value. This may occur if the coin is burned or an account holding the coin is slashed. (default: true) |
 | `allow_governance_control` | [bool](#bool) |  | indicates that governance based control is allowed for this marker |
+| `allow_forced_transfer` | [bool](#bool) |  | Whether an admin can transfer restricted coins from a 3rd-party account without their signature. |
 | `required_attributes` | [string](#string) | repeated | list of required attributes on restricted marker in order to send and receive transfers if sender does not have transfer authority |
 
 
@@ -1921,6 +1922,7 @@ MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker re
 | `access_list` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
 | `supply_fixed` | [bool](#bool) |  |  |
 | `allow_governance_control` | [bool](#bool) |  |  |
+| `allow_forced_transfer` | [bool](#bool) |  |  |
 | `required_attributes` | [string](#string) | repeated |  |
 
 
@@ -1954,6 +1956,7 @@ MsgAddMarkerRequest defines the Msg/AddMarker request type
 | `access_list` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
 | `supply_fixed` | [bool](#bool) |  |  |
 | `allow_governance_control` | [bool](#bool) |  |  |
+| `allow_forced_transfer` | [bool](#bool) |  |  |
 | `required_attributes` | [string](#string) | repeated |  |
 
 
