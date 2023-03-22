@@ -396,9 +396,27 @@ func TestMatchAttribute(t *testing.T) {
 			expectedResult: false,
 		},
 		{
-			name:           "should fail - empty required attr and attr ",
+			name:           "should fail - empty required attr and attr",
 			reqAttr:        "",
 			attr:           "",
+			expectedResult: false,
+		},
+		{
+			name:           "should fail - extra ending",
+			reqAttr:        "test.provenance.io",
+			attr:           "test.provenance.iox",
+			expectedResult: false,
+		},
+		{
+			name:           "should fail - wildcard extra ending",
+			reqAttr:        "*.provenance.io",
+			attr:           "test.provenance.iox",
+			expectedResult: false,
+		},
+		{
+			name:           "should fail - wildcard extra beginning",
+			reqAttr:        "*.provenance.io",
+			attr:           "test.xprovenance.io",
 			expectedResult: false,
 		},
 	}

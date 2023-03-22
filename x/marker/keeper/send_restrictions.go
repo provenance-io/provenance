@@ -130,7 +130,7 @@ func MatchAttribute(reqAttr string, attr string) bool {
 		return false
 	}
 	if strings.HasPrefix(reqAttr, "*.") {
-		return strings.HasSuffix(attr, reqAttr[2:])
+		return strings.HasSuffix(attr, reqAttr[1:])
 	}
 	return reqAttr == attr
 }
