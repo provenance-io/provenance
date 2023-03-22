@@ -108,7 +108,7 @@ func TestNewMarkerValidate(t *testing.T) {
 		},
 		{
 			"insufficient supply",
-			NewMarkerAccount(baseAcc, sdk.NewCoin("test", sdk.ZeroInt()), manager, nil, StatusFinalized, MarkerType_Coin, true, false, false, []string{}),
+			NewMarkerAccount(baseAcc, sdk.NewCoin("test", sdk.ZeroInt()), manager, nil, StatusFinalized, MarkerType_Coin, true, true, false, []string{}),
 			fmt.Errorf("cannot create a marker with zero total supply and no authorization for minting more"),
 		},
 		{

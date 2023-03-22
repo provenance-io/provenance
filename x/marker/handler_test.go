@@ -611,10 +611,10 @@ func (s *HandlerTestSuite) TestMsgAddFinalizeActivateMarkerRequest() {
 	denom := "hotdog"
 	rdenom := "restrictedhotdog"
 	denomWithDashPeriod := fmt.Sprintf("%s-my.marker", denom)
-	msgWithActiveStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})}, false, []string{})
-	msgWithActiveStatusAttr := types.NewMsgAddFinalizeActivateMarkerRequest(rdenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})}, false, []string{"attributes.one.com", "attributes.two.com"})
+	msgWithActiveStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})})
+	msgWithActiveStatusAttr := types.NewMsgAddFinalizeActivateMarkerRequest(rdenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true, false, []string{"attributes.one.com", "attributes.two.com"}, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})})
 
-	accessGrantWrongStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, nil, false, []string{})
+	accessGrantWrongStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, nil)
 
 	cases := []CommonTest{
 		{

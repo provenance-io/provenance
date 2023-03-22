@@ -485,9 +485,9 @@ func NewMsgAddFinalizeActivateMarkerRequest(
 	markerType MarkerType,
 	supplyFixed bool,
 	allowGovernanceControl bool,
-	accessGrants []AccessGrant,
 	allowForcedTransfer bool,
 	requiredAttributes []string,
+	accessGrants []AccessGrant,
 ) *MsgAddFinalizeActivateMarkerRequest {
 	return &MsgAddFinalizeActivateMarkerRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
