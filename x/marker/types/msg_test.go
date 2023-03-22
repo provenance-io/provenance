@@ -165,20 +165,6 @@ func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 	}
 }
 
-// if len(msg.Manager) == 0 && msg.Status == StatusProposed {
-// 	return fmt.Errorf("marker manager cannot be empty when creating a proposed marker")
-// }
-// if msg.Status != StatusFinalized && msg.Status != StatusProposed {
-// 	return fmt.Errorf("marker can only be created with a Proposed or Finalized status")
-// }
-// testCoin := sdk.Coin{
-// 	Denom:  msg.Amount.Denom,
-// 	Amount: msg.Amount.Amount,
-// }
-// if !testCoin.IsValid() {
-// 	return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
-// }
-
 func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 	validAddress := sdk.MustAccAddressFromBech32("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck")
 
@@ -188,8 +174,8 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		{
-			"should fail on attributes for non restricted coin",
-			*NewMsgAddMarkerRequest(
+			name: "should fail on attributes for non restricted coin",
+			msg: *NewMsgAddMarkerRequest(
 				"hotdog",
 				sdk.NewInt(100),
 				validAddress,
@@ -200,11 +186,11 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{"blah"},
 			),
-			"required attributes are reserved for restricted markers",
+			errorMsg: "required attributes are reserved for restricted markers",
 		},
 		{
-			"should succeed on attributes for restricted coin",
-			*NewMsgAddMarkerRequest(
+			name: "should succeed on attributes for restricted coin",
+			msg: *NewMsgAddMarkerRequest(
 				"hotdog",
 				sdk.NewInt(100),
 				validAddress,
@@ -215,11 +201,11 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{"blah"},
 			),
-			"",
+			errorMsg: "",
 		},
 		{
-			"should succeed on for restricted coin",
-			*NewMsgAddMarkerRequest(
+			name: "should succeed on for restricted coin",
+			msg: *NewMsgAddMarkerRequest(
 				"hotdog",
 				sdk.NewInt(100),
 				validAddress,
@@ -230,11 +216,11 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{},
 			),
-			"",
+			errorMsg: "",
 		},
 		{
-			"should succeed on for non-restricted coin",
-			*NewMsgAddMarkerRequest(
+			name: "should succeed on for non-restricted coin",
+			msg: *NewMsgAddMarkerRequest(
 				"hotdog",
 				sdk.NewInt(100),
 				validAddress,
@@ -245,7 +231,7 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{},
 			),
-			"",
+			errorMsg: "",
 		},
 	}
 
@@ -273,8 +259,8 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		{
-			"should fail on invalid marker",
-			MsgAddFinalizeActivateMarkerRequest{
+			name: "should fail on invalid marker",
+			msg: MsgAddFinalizeActivateMarkerRequest{
 				Amount: sdk.Coin{
 					Amount: math.NewInt(100),
 					Denom:  "",
@@ -286,11 +272,11 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				AllowGovernanceControl: true,
 				AccessList:             []AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
 			},
-			"invalid marker denom/total supply: invalid coins",
+			errorMsg: "invalid marker denom/total supply: invalid coins",
 		},
 		{
-			"should fail on invalid manager address",
-			MsgAddFinalizeActivateMarkerRequest{
+			name: "should fail on invalid manager address",
+			msg: MsgAddFinalizeActivateMarkerRequest{
 				Amount:                 sdk.NewInt64Coin("hotdog", 100),
 				Manager:                "",
 				FromAddress:            "",
@@ -299,11 +285,11 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				AllowGovernanceControl: true,
 				AccessList:             []AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
 			},
-			"empty address string is not allowed",
+			errorMsg: "empty address string is not allowed",
 		},
 		{
-			"should fail on empty access list",
-			*NewMsgAddFinalizeActivateMarkerRequest(
+			name: "should fail on empty access list",
+			msg: *NewMsgAddFinalizeActivateMarkerRequest(
 				"hotdog",
 				sdk.NewInt(100),
 				validAddress,
@@ -315,11 +301,11 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				[]string{},
 				[]AccessGrant{},
 			),
-			"since this will activate the marker, must have access list defined",
+			errorMsg: "since this will activate the marker, must have access list defined",
 		},
 		{
-			"should fail on attributes for non restricted coin",
-			*NewMsgAddFinalizeActivateMarkerRequest(
+			name: "should fail on attributes for non restricted coin",
+			msg: *NewMsgAddFinalizeActivateMarkerRequest(
 				"hotdog",
 				sdk.NewInt(100),
 				validAddress,
@@ -331,11 +317,11 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				[]string{"blah"},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
 			),
-			"required attributes are reserved for restricted markers",
+			errorMsg: "required attributes are reserved for restricted markers",
 		},
 		{
-			"should succeed",
-			*NewMsgAddFinalizeActivateMarkerRequest(
+			name: "should succeed",
+			msg: *NewMsgAddFinalizeActivateMarkerRequest(
 				"hotdog",
 				sdk.NewInt(100),
 				validAddress,
@@ -347,11 +333,11 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				[]string{},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
 			),
-			"",
+			errorMsg: "",
 		},
 		{
-			"should succeed for restricted coin with required attributes",
-			*NewMsgAddFinalizeActivateMarkerRequest(
+			name: "should succeed for restricted coin with required attributes",
+			msg: *NewMsgAddFinalizeActivateMarkerRequest(
 				"hotdog",
 				sdk.NewInt(100),
 				validAddress,
@@ -363,11 +349,11 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				[]string{"blah"},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
 			),
-			"",
+			errorMsg: "",
 		},
 		{
-			"should fail when forced tranfers allowed with coin type",
-			*NewMsgAddFinalizeActivateMarkerRequest(
+			name: "should fail when forced tranfers allowed with coin type",
+			msg: *NewMsgAddFinalizeActivateMarkerRequest(
 				"banana",
 				sdk.NewInt(500),
 				validAddress,
@@ -379,7 +365,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				[]string{},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
 			),
-			"forced transfer is only available for restricted coins",
+			errorMsg: "forced transfer is only available for restricted coins",
 		},
 	}
 
