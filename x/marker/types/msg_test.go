@@ -242,7 +242,7 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if len(tc.errorMsg) > 0 {
 				assert.Error(t, err)
-				assert.Equal(t, tc.errorMsg, err.Error())
+				assert.EqualError(t, err, tc.errorMsg)
 			} else {
 				assert.NoError(t, err)
 			}
@@ -376,7 +376,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if len(tc.errorMsg) > 0 {
 				assert.Error(t, err)
-				assert.Equal(t, tc.errorMsg, err.Error())
+				assert.EqualError(t, err, tc.errorMsg)
 			} else {
 				assert.NoError(t, err)
 			}
