@@ -2,59 +2,129 @@ package keeper_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
-func (s *KeeperTestSuite) TestGetMsgTypeURLs() {
+type AuthzTestSuite struct {
+	suite.Suite
 
-	expected := []string{types.TypeURLMsgAddScopeDataAccessRequest, types.TypeURLMsgWriteScopeRequest}
-	urls := s.app.MetadataKeeper.GetMessageTypeURLs(types.TypeURLMsgAddScopeDataAccessRequest)
-	assert.Equal(s.T(), expected, urls)
+	app *simapp.App
+	ctx sdk.Context
 
-	expected = []string{types.TypeURLMsgDeleteScopeDataAccessRequest, types.TypeURLMsgWriteScopeRequest}
-	urls = s.app.MetadataKeeper.GetMessageTypeURLs(types.TypeURLMsgDeleteScopeDataAccessRequest)
-	assert.Equal(s.T(), expected, urls)
+	pubkey1   cryptotypes.PubKey
+	user1     string
+	user1Addr sdk.AccAddress
 
-	expected = []string{types.TypeURLMsgDeleteScopeOwnerRequest, types.TypeURLMsgWriteScopeRequest}
-	urls = s.app.MetadataKeeper.GetMessageTypeURLs(types.TypeURLMsgDeleteScopeOwnerRequest)
-	assert.Equal(s.T(), expected, urls)
+	pubkey2   cryptotypes.PubKey
+	user2     string
+	user2Addr sdk.AccAddress
 
-	expected = []string{types.TypeURLMsgWriteRecordRequest, types.TypeURLMsgWriteSessionRequest}
-	urls = s.app.MetadataKeeper.GetMessageTypeURLs(types.TypeURLMsgWriteRecordRequest)
-	assert.Equal(s.T(), expected, urls)
-
-	expected = []string{types.TypeURLMsgAddContractSpecToScopeSpecRequest, types.TypeURLMsgWriteScopeSpecificationRequest}
-	urls = s.app.MetadataKeeper.GetMessageTypeURLs(types.TypeURLMsgAddContractSpecToScopeSpecRequest)
-	assert.Equal(s.T(), expected, urls)
-
-	expected = []string{types.TypeURLMsgDeleteContractSpecFromScopeSpecRequest, types.TypeURLMsgWriteScopeSpecificationRequest}
-	urls = s.app.MetadataKeeper.GetMessageTypeURLs(types.TypeURLMsgDeleteContractSpecFromScopeSpecRequest)
-	assert.Equal(s.T(), expected, urls)
-
-	expected = []string{types.TypeURLMsgAddContractSpecToScopeSpecRequest, types.TypeURLMsgWriteScopeSpecificationRequest}
-	urls = s.app.MetadataKeeper.GetMessageTypeURLs(types.TypeURLMsgAddContractSpecToScopeSpecRequest)
-	assert.Equal(s.T(), expected, urls)
-
-	expected = []string{types.TypeURLMsgWriteRecordSpecificationRequest, types.TypeURLMsgWriteContractSpecificationRequest}
-	urls = s.app.MetadataKeeper.GetMessageTypeURLs(types.TypeURLMsgWriteRecordSpecificationRequest)
-	assert.Equal(s.T(), expected, urls)
-
-	expected = []string{types.TypeURLMsgDeleteRecordSpecificationRequest, types.TypeURLMsgDeleteContractSpecificationRequest}
-	urls = s.app.MetadataKeeper.GetMessageTypeURLs(types.TypeURLMsgDeleteRecordSpecificationRequest)
-	assert.Equal(s.T(), expected, urls)
+	pubkey3   cryptotypes.PubKey
+	user3     string
+	user3Addr sdk.AccAddress
 }
 
-func (s *KeeperTestSuite) TestValidateAllOwnersAreSigners() {
+func (s *AuthzTestSuite) SetupTest() {
+	pioconfig.SetProvenanceConfig("atom", 0)
+	s.app = simapp.Setup(s.T())
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
+
+	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
+	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
+	s.user1 = s.user1Addr.String()
+	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+
+	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
+	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
+	s.user2 = s.user2Addr.String()
+
+	s.pubkey3 = secp256k1.GenPrivKey().PubKey()
+	s.user3Addr = sdk.AccAddress(s.pubkey3.Address())
+	s.user3 = s.user3Addr.String()
+}
+
+func TestAuthzTestSuite(t *testing.T) {
+	suite.Run(t, new(AuthzTestSuite))
+}
+
+func (s *AuthzTestSuite) TestGetMsgTypeURLs() {
+	tests := []struct {
+		name     string // defaults to the url if not defined.
+		url      string
+		expected []string
+	}{
+		{
+			url:      types.TypeURLMsgAddScopeDataAccessRequest,
+			expected: []string{types.TypeURLMsgAddScopeDataAccessRequest, types.TypeURLMsgWriteScopeRequest},
+		},
+		{
+			url:      types.TypeURLMsgDeleteScopeDataAccessRequest,
+			expected: []string{types.TypeURLMsgDeleteScopeDataAccessRequest, types.TypeURLMsgWriteScopeRequest},
+		},
+		{
+			url:      types.TypeURLMsgAddScopeOwnerRequest,
+			expected: []string{types.TypeURLMsgAddScopeOwnerRequest, types.TypeURLMsgWriteScopeRequest},
+		},
+		{
+			url:      types.TypeURLMsgDeleteScopeOwnerRequest,
+			expected: []string{types.TypeURLMsgDeleteScopeOwnerRequest, types.TypeURLMsgWriteScopeRequest},
+		},
+		{
+			url:      types.TypeURLMsgWriteRecordRequest,
+			expected: []string{types.TypeURLMsgWriteRecordRequest, types.TypeURLMsgWriteSessionRequest},
+		},
+		{
+			url:      types.TypeURLMsgAddContractSpecToScopeSpecRequest,
+			expected: []string{types.TypeURLMsgAddContractSpecToScopeSpecRequest, types.TypeURLMsgWriteScopeSpecificationRequest},
+		},
+		{
+			url:      types.TypeURLMsgDeleteContractSpecFromScopeSpecRequest,
+			expected: []string{types.TypeURLMsgDeleteContractSpecFromScopeSpecRequest, types.TypeURLMsgWriteScopeSpecificationRequest},
+		},
+		{
+			url:      types.TypeURLMsgWriteRecordSpecificationRequest,
+			expected: []string{types.TypeURLMsgWriteRecordSpecificationRequest, types.TypeURLMsgWriteContractSpecificationRequest},
+		},
+		{
+			url:      types.TypeURLMsgDeleteRecordSpecificationRequest,
+			expected: []string{types.TypeURLMsgDeleteRecordSpecificationRequest, types.TypeURLMsgDeleteContractSpecificationRequest},
+		},
+	}
+
+	for _, tc := range tests {
+		name := tc.name
+		if name == "" {
+			name = tc.url
+			lastDot := strings.LastIndex(tc.url, ".")
+			if lastDot >= 0 && lastDot+1 < len(tc.url) {
+				name = tc.url[lastDot+1:]
+			}
+		}
+		s.Run(name, func() {
+			actual := s.app.MetadataKeeper.GetMessageTypeURLs(tc.url)
+			s.Assert().Equal(tc.expected, actual, "GetMessageTypeURLs(%q)", tc.url)
+		})
+	}
+}
+
+func (s *AuthzTestSuite) TestValidateAllOwnersAreSigners() {
 	tests := map[string]struct {
 		owners     []string
 		signers    []string
@@ -202,7 +272,7 @@ func (s *KeeperTestSuite) TestValidateAllOwnersAreSigners() {
 	}
 }
 
-func (s *KeeperTestSuite) TestValidateAllOwnersAreSignersWithCountAuthorization() {
+func (s *AuthzTestSuite) TestValidateAllOwnersAreSignersWithCountAuthorization() {
 
 	oneAllowedAuthorizations := int32(1)
 	manyAllowedAuthorizations := int32(10)
@@ -347,7 +417,7 @@ func (s *KeeperTestSuite) TestValidateAllOwnersAreSignersWithCountAuthorization(
 	})
 }
 
-func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
+func (s *AuthzTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 
 	cases := map[string]struct {
 		owners     []types.Party
@@ -498,7 +568,7 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 	}
 }
 
-func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSignersWithCountAuthorization() {
+func (s *AuthzTestSuite) TestValidateAllOwnerPartiesAreSignersWithCountAuthorization() {
 
 	oneAllowedAuthorizations := int32(1)
 	manyAllowedAuthorizations := int32(10)
@@ -646,7 +716,7 @@ func (s *KeeperTestSuite) TestValidateAllOwnerPartiesAreSignersWithCountAuthoriz
 	})
 }
 
-func (s *KeeperTestSuite) TestValidatePartiesInvolved() {
+func (s *AuthzTestSuite) TestValidatePartiesInvolved() {
 
 	cases := map[string]struct {
 		parties         []types.Party
@@ -700,7 +770,7 @@ func (s *KeeperTestSuite) TestValidatePartiesInvolved() {
 	}
 }
 
-func (s *KeeperTestSuite) TestFindMissing() {
+func (s *AuthzTestSuite) TestFindMissing() {
 	tests := map[string]struct {
 		required []string
 		entries  []string
