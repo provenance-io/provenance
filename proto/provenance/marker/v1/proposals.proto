@@ -28,6 +28,7 @@ message AddMarkerProposal {
   repeated AccessGrant access_list              = 7 [(gogoproto.nullable) = false];
   bool                 supply_fixed             = 8;
   bool                 allow_governance_control = 9;
+  repeated string      required_attributes      = 10;
 }
 
 // SupplyIncreaseProposal defines a governance proposal to administer a marker and increase total supply of the marker

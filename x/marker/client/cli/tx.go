@@ -42,6 +42,7 @@ const (
 	FlagPacketTimeoutTimestamp = "packet-timeout-timestamp"
 	FlagAbsoluteTimeouts       = "absolute-timeouts"
 	FlagMemo                   = "memo"
+	FlagRequiredAttributes     = "required-attributes"
 	FlagAllowForceTransfer     = "allow-force-transfer"
 )
 
@@ -205,7 +206,12 @@ func GetCmdAddMarker() *cobra.Command {
 		Long: strings.TrimSpace(`Creates a new marker in the Proposed state managed by the from address
 with the given supply amount and denomination provided in the coin argument
 `),
-		Example: fmt.Sprintf(`$ %s tx marker new 1000hotdogcoin --%s=false --%s=false --from=mykey`, FlagType, FlagSupplyFixed, FlagAllowGovernanceControl),
+		Example: fmt.Sprintf(`$ %s tx marker new 1000hotdogcoin --%s=false --%s=false --from=mykey --%s=attr.one,*.attr.two,...`,
+			FlagType,
+			FlagSupplyFixed,
+			FlagAllowGovernanceControl,
+			FlagRequiredAttributes,
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -225,7 +231,7 @@ with the given supply amount and denomination provided in the coin argument
 
 			msg := types.NewMsgAddMarkerRequest(
 				coin.Denom, coin.Amount, callerAddr, callerAddr, flagVals.MarkerType,
-				flagVals.SupplyFixed, flagVals.AllowGovControl, flagVals.AllowForceTransfer,
+				flagVals.SupplyFixed, flagVals.AllowGovControl, flagVals.AllowForceTransfer, flagVals.RequiredAttributes,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -912,7 +918,12 @@ func GetCmdAddFinalizeActivateMarker() *cobra.Command {
 		Long: strings.TrimSpace(`Creates a new marker, finalizes it and put's it ACTIVATED state managed by the from address
 with the given supply amount and denomination provided in the coin argument
 `),
-		Example: fmt.Sprintf(`$ %s tx marker create-finalize-activate 1000hotdogcoin address1,mint,admin;address2,burn --%s=false --%s=false --from=mykey`, FlagType, FlagSupplyFixed, FlagAllowGovernanceControl),
+		Example: fmt.Sprintf(`$ %s tx marker create-finalize-activate 1000hotdogcoin address1,mint,admin;address2,burn --%s=false --%s=false --%s=attr.one,*.attr.two,... --from=mykey`,
+			FlagType,
+			FlagSupplyFixed,
+			FlagAllowGovernanceControl,
+			FlagRequiredAttributes,
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -937,8 +948,8 @@ with the given supply amount and denomination provided in the coin argument
 
 			msg := types.NewMsgAddFinalizeActivateMarkerRequest(
 				coin.Denom, coin.Amount, callerAddr, callerAddr, flagVals.MarkerType,
-				flagVals.SupplyFixed, flagVals.AllowGovControl, flagVals.AllowForceTransfer,
-				accessGrants,
+				flagVals.SupplyFixed, flagVals.AllowGovControl,
+				flagVals.AllowForceTransfer, flagVals.RequiredAttributes, accessGrants,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -988,6 +999,7 @@ func AddNewMarkerFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool(FlagSupplyFixed, false, "Indicates that the supply is fixed")
 	cmd.Flags().Bool(FlagAllowGovernanceControl, false, "Indicates that governance control is allowed")
 	cmd.Flags().Bool(FlagAllowForceTransfer, false, "Indicates that force transfer is allowed")
+	cmd.Flags().StringSlice(FlagRequiredAttributes, []string{}, "comma delimited list of required attributes needed for a restricted marker to have send authority")
 }
 
 // NewMarkerFlagValues represents the values provided in the flags added by AddNewMarkerFlags.
@@ -996,6 +1008,7 @@ type NewMarkerFlagValues struct {
 	SupplyFixed        bool
 	AllowGovControl    bool
 	AllowForceTransfer bool
+	RequiredAttributes []string
 }
 
 // ParseNewMarkerFlags reads the flags added by AddNewMarkerFlags.
@@ -1028,6 +1041,11 @@ func ParseNewMarkerFlags(cmd *cobra.Command) (*NewMarkerFlagValues, error) {
 	rv.AllowForceTransfer, err = cmd.Flags().GetBool(FlagAllowForceTransfer)
 	if err != nil {
 		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagAllowForceTransfer, err)
+	}
+
+	rv.RequiredAttributes, err = cmd.Flags().GetStringSlice(FlagRequiredAttributes)
+	if err != nil {
+		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: comma delimited list of attributes Error: %w", FlagRequiredAttributes, err)
 	}
 
 	return rv, nil

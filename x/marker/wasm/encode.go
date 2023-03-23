@@ -44,6 +44,8 @@ type CreateMarkerParams struct {
 	Coin sdk.Coin `json:"coin"`
 	// The marker type
 	Type string `json:"marker_type,omitempty"`
+	// list of restricted attributes
+	RestrictedAttributes []string `json:"restricted_attributes,omitempty"`
 }
 
 // GrantAccessParams are params for encoding a MsgAddAccessRequest.
@@ -174,7 +176,7 @@ func (params *CreateMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, er
 		return nil, fmt.Errorf("wasm: invalid marker type in CreateMarkerParams: %w", err)
 	}
 	msg := types.NewMsgAddMarkerRequest(
-		params.Coin.Denom, params.Coin.Amount, contract, contract, markerType, false, false, false,
+		params.Coin.Denom, params.Coin.Amount, contract, contract, markerType, false, false, false, params.RestrictedAttributes,
 	)
 
 	return []sdk.Msg{msg}, nil

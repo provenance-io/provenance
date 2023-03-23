@@ -123,6 +123,20 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		sdk.NewCoin(cfg.BondDenom, cfg.StakingTokens),
 		sdk.NewCoin(s.holderDenom, sdk.NewInt(456)),
 	).Sort()})
+
+	genBalances = append(genBalances, banktypes.Balance{Address: markertypes.MustGetMarkerAddress("testcoin").String(), Coins: sdk.NewCoins(
+		sdk.NewCoin("testcoin", sdk.NewInt(1000)),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: markertypes.MustGetMarkerAddress("lockedcoin").String(), Coins: sdk.NewCoins(
+		sdk.NewCoin("lockedcoin", sdk.NewInt(1000)),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: markertypes.MustGetMarkerAddress("propcoin").String(), Coins: sdk.NewCoins(
+		sdk.NewCoin("propcoin", sdk.NewInt(1000)),
+	).Sort()})
+	genBalances = append(genBalances, banktypes.Balance{Address: markertypes.MustGetMarkerAddress("authzhotdog").String(), Coins: sdk.NewCoins(
+		sdk.NewCoin("authzhotdog", sdk.NewInt(800)),
+	).Sort()})
+
 	var bankGenState banktypes.GenesisState
 	bankGenState.Params = banktypes.DefaultParams()
 	bankGenState.Balances = genBalances
@@ -420,7 +434,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 				"testcoin",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"13","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false,"allow_forced_transfer":false}}`,
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"8","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false,"allow_forced_transfer":false,"required_attributes":[]}}`,
 		},
 		{
 			"get testcoin marker test",
@@ -435,13 +449,14 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
   allow_forced_transfer: false
   allow_governance_control: false
   base_account:
-    account_number: "13"
+    account_number: "8"
     address: cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq
     pub_key: null
     sequence: "0"
   denom: testcoin
   manager: ""
   marker_type: MARKER_TYPE_COIN
+  required_attributes: []
   status: MARKER_STATUS_ACTIVE
   supply: "1000"
   supply_fixed: true`,
@@ -461,7 +476,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 				"lockedcoin",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"14","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false,"allow_forced_transfer":false}}`,
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"9","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false,"allow_forced_transfer":false,"required_attributes":[]}}`,
 		},
 		{
 			"get restricted coin marker with forced transfer",
@@ -476,13 +491,14 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
   allow_forced_transfer: true
   allow_governance_control: false
   base_account:
-    account_number: "18"
+    account_number: "13"
     address: cosmos1ae2206l700zfkxyqvd6cwn3gddas3rjy6z6g4u
     pub_key: null
     sequence: "0"
   denom: hodlercoin
   manager: ""
   marker_type: MARKER_TYPE_RESTRICTED
+  required_attributes: []
   status: MARKER_STATUS_ACTIVE
   supply: "3000"
   supply_fixed: false`,
@@ -1485,6 +1501,12 @@ func (s *IntegrationTestSuite) TestParseAccessGrantFromString() {
 			false,
 			[]types.AccessGrant{markertypes.AccessGrant{Address: s.accountAddresses[0].String(), Permissions: []markertypes.Access{markertypes.Access_Mint}}},
 		},
+		{
+			"should succeed to add access type",
+			fmt.Sprintf("%s,mint;", s.accountAddresses[0].String()),
+			false,
+			[]types.AccessGrant{markertypes.AccessGrant{Address: s.accountAddresses[0].String(), Permissions: []markertypes.Access{markertypes.Access_Mint}}},
+		},
 	}
 	for _, tc := range testCases {
 		tc := tc
@@ -1518,6 +1540,7 @@ func TestParseNewMarkerFlags(t *testing.T) {
 	argFixed := "--" + markercli.FlagSupplyFixed
 	argGov := "--" + markercli.FlagAllowGovernanceControl
 	argForce := "--" + markercli.FlagAllowForceTransfer
+	argRequiredAtt := "--" + markercli.FlagRequiredAttributes
 
 	tests := []struct {
 		name   string
@@ -1535,6 +1558,7 @@ func TestParseNewMarkerFlags(t *testing.T) {
 				SupplyFixed:        false,
 				AllowGovControl:    false,
 				AllowForceTransfer: false,
+				RequiredAttributes: []string{},
 			},
 		},
 		{
@@ -1546,6 +1570,7 @@ func TestParseNewMarkerFlags(t *testing.T) {
 				SupplyFixed:        false,
 				AllowGovControl:    false,
 				AllowForceTransfer: false,
+				RequiredAttributes: []string{},
 			},
 		},
 		{
@@ -1557,6 +1582,7 @@ func TestParseNewMarkerFlags(t *testing.T) {
 				SupplyFixed:        false,
 				AllowGovControl:    false,
 				AllowForceTransfer: false,
+				RequiredAttributes: []string{},
 			},
 		},
 		{
@@ -1568,6 +1594,7 @@ func TestParseNewMarkerFlags(t *testing.T) {
 				SupplyFixed:        false,
 				AllowGovControl:    false,
 				AllowForceTransfer: false,
+				RequiredAttributes: []string{},
 			},
 		},
 		{
@@ -1585,6 +1612,7 @@ func TestParseNewMarkerFlags(t *testing.T) {
 				SupplyFixed:        true,
 				AllowGovControl:    false,
 				AllowForceTransfer: false,
+				RequiredAttributes: []string{},
 			},
 		},
 		{
@@ -1596,6 +1624,7 @@ func TestParseNewMarkerFlags(t *testing.T) {
 				SupplyFixed:        true,
 				AllowGovControl:    false,
 				AllowForceTransfer: false,
+				RequiredAttributes: []string{},
 			},
 		},
 		{
@@ -1607,6 +1636,7 @@ func TestParseNewMarkerFlags(t *testing.T) {
 				SupplyFixed:        false,
 				AllowGovControl:    false,
 				AllowForceTransfer: false,
+				RequiredAttributes: []string{},
 			},
 		},
 		{
@@ -1618,6 +1648,7 @@ func TestParseNewMarkerFlags(t *testing.T) {
 				SupplyFixed:        false,
 				AllowGovControl:    true,
 				AllowForceTransfer: false,
+				RequiredAttributes: []string{},
 			},
 		},
 		{
@@ -1629,6 +1660,7 @@ func TestParseNewMarkerFlags(t *testing.T) {
 				SupplyFixed:        false,
 				AllowGovControl:    true,
 				AllowForceTransfer: false,
+				RequiredAttributes: []string{},
 			},
 			expErr: nil,
 		},
@@ -1641,6 +1673,7 @@ func TestParseNewMarkerFlags(t *testing.T) {
 				SupplyFixed:        false,
 				AllowGovControl:    false,
 				AllowForceTransfer: false,
+				RequiredAttributes: []string{},
 			},
 			expErr: nil,
 		},
@@ -1653,6 +1686,7 @@ func TestParseNewMarkerFlags(t *testing.T) {
 				SupplyFixed:        false,
 				AllowGovControl:    false,
 				AllowForceTransfer: true,
+				RequiredAttributes: []string{},
 			},
 		},
 		{
@@ -1664,6 +1698,7 @@ func TestParseNewMarkerFlags(t *testing.T) {
 				SupplyFixed:        false,
 				AllowGovControl:    false,
 				AllowForceTransfer: true,
+				RequiredAttributes: []string{},
 			},
 		},
 		{
@@ -1675,17 +1710,31 @@ func TestParseNewMarkerFlags(t *testing.T) {
 				SupplyFixed:        false,
 				AllowGovControl:    false,
 				AllowForceTransfer: false,
+				RequiredAttributes: []string{},
+			},
+		},
+		{
+			name: "required attributes present",
+			cmd:  getTestCmd(),
+			args: []string{argRequiredAtt + "=jack.the.cat.io,george.the.dog.io"},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_Coin,
+				SupplyFixed:        false,
+				AllowGovControl:    false,
+				AllowForceTransfer: false,
+				RequiredAttributes: []string{"jack.the.cat.io", "george.the.dog.io"},
 			},
 		},
 		{
 			name: "everything",
 			cmd:  getTestCmd(),
-			args: []string{argForce, argGov, argType, "RESTRICTED", argFixed},
+			args: []string{argForce, argGov, argType, "RESTRICTED", argFixed, argRequiredAtt, "jack.the.cat.io,george.the.dog.io"},
 			exp: &markercli.NewMarkerFlagValues{
 				MarkerType:         types.MarkerType_RestrictedCoin,
 				SupplyFixed:        true,
 				AllowGovControl:    true,
 				AllowForceTransfer: true,
+				RequiredAttributes: []string{"jack.the.cat.io", "george.the.dog.io"},
 			},
 		},
 		// Note: I can't figure out a way to make cmd.Flags().GetBool return an error.
