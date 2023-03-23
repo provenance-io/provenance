@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -1850,4 +1851,150 @@ func (s *SpecKeeperTestSuite) TestScopeSpecIndexing() {
 			assert.False(t, store.Has(unexpected.key), unexpected.name)
 		}
 	})
+}
+
+func (s *SpecKeeperTestSuite) TestFindMissingMdAddr() {
+	tests := map[string]struct {
+		required []string
+		entries  []string
+		expected []string
+	}{
+		"empty required - empty entries - empty out": {
+			[]string{},
+			[]string{},
+			[]string{},
+		},
+		"empty required - 2 entries - empty out": {
+			[]string{},
+			[]string{"one", "two"},
+			[]string{},
+		},
+		"one required - is only entry - empty out": {
+			[]string{"one"},
+			[]string{"one"},
+			[]string{},
+		},
+		"one required - is first of two entries - empty out": {
+			[]string{"one"},
+			[]string{"one", "two"},
+			[]string{},
+		},
+		"one required - is second of two entries - empty out": {
+			[]string{"one"},
+			[]string{"two", "one"},
+			[]string{},
+		},
+		"one required - empty entries - required out": {
+			[]string{"one"},
+			[]string{},
+			[]string{"one"},
+		},
+		"one required - one other in entries - required out": {
+			[]string{"one"},
+			[]string{"two"},
+			[]string{"one"},
+		},
+		"one required - two other in entries - required out": {
+			[]string{"one"},
+			[]string{"two", "three"},
+			[]string{"one"},
+		},
+		"two required - both in entries - empty out": {
+			[]string{"one", "two"},
+			[]string{"one", "two"},
+			[]string{},
+		},
+		"two required - reversed in entries - empty out": {
+			[]string{"one", "two"},
+			[]string{"two", "one"},
+			[]string{},
+		},
+		"two required - only first in entries - second out": {
+			[]string{"one", "two"},
+			[]string{"one"},
+			[]string{"two"},
+		},
+		"two required - only second in entries - first out": {
+			[]string{"one", "two"},
+			[]string{"two"},
+			[]string{"one"},
+		},
+		"two required - first and other in entries - second out": {
+			[]string{"one", "two"},
+			[]string{"one", "other"},
+			[]string{"two"},
+		},
+		"two required - second and other in entries - first out": {
+			[]string{"one", "two"},
+			[]string{"two", "other"},
+			[]string{"one"},
+		},
+		"two required - empty entries - required out": {
+			[]string{"one", "two"},
+			[]string{},
+			[]string{"one", "two"},
+		},
+		"two required - neither in one entries - required out": {
+			[]string{"one", "two"},
+			[]string{"neither"},
+			[]string{"one", "two"},
+		},
+		"two required - neither in three entries - required out": {
+			[]string{"one", "two"},
+			[]string{"neither", "nor", "nothing"},
+			[]string{"one", "two"},
+		},
+		"two required - first not in three entries 0 - first out": {
+			[]string{"one", "two"},
+			[]string{"two", "nor", "nothing"},
+			[]string{"one"},
+		},
+		"two required - first not in three entries 1 - first out": {
+			[]string{"one", "two"},
+			[]string{"neither", "two", "nothing"},
+			[]string{"one"},
+		},
+		"two required - first not in three entries 2 - first out": {
+			[]string{"one", "two"},
+			[]string{"neither", "nor", "two"},
+			[]string{"one"},
+		},
+		"two required - second not in three entries 0 - second out": {
+			[]string{"one", "two"},
+			[]string{"one", "nor", "nothing"},
+			[]string{"two"},
+		},
+		"two required - second not in three entries 1 - second out": {
+			[]string{"one", "two"},
+			[]string{"neither", "one", "nothing"},
+			[]string{"two"},
+		},
+		"two required - second not in three entries 2 - second out": {
+			[]string{"one", "two"},
+			[]string{"neither", "nor", "one"},
+			[]string{"two"},
+		},
+	}
+
+	// For these tests, we shouldn't need valid metadata addresses.
+	// So just convert the strings into byte arrays and use those
+	// as MetadataAddresses. That way, I can just use the same tests
+	// as the ones from TestFindMissing()
+	stringsToAddrs := func(vals []string) []types.MetadataAddress {
+		rv := make([]types.MetadataAddress, len(vals))
+		for i, val := range vals {
+			rv[i] = types.MetadataAddress(val)
+		}
+		return rv
+	}
+
+	for n, tc := range tests {
+		s.T().Run(n, func(t *testing.T) {
+			required := stringsToAddrs(tc.required)
+			entries := stringsToAddrs(tc.entries)
+			expected := stringsToAddrs(tc.expected)
+			actual := keeper.FindMissingMdAddr(required, entries)
+			assert.Equal(t, expected, actual)
+		})
+	}
 }

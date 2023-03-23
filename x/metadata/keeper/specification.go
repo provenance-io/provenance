@@ -524,6 +524,25 @@ func getMissingScopeSpecIndexValues(required, found *scopeSpecIndexValues) scope
 	return rv
 }
 
+// FindMissingMdAddr returns all elements of the required list that are not found in the entries list
+// It is exported only so that it can be unit tested.
+func FindMissingMdAddr(required, entries []types.MetadataAddress) []types.MetadataAddress {
+	retval := []types.MetadataAddress{}
+	for _, req := range required {
+		found := false
+		for _, entry := range entries {
+			if req.Equals(entry) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			retval = append(retval, req)
+		}
+	}
+	return retval
+}
+
 // IndexKeys creates all of the index key byte arrays that this scopeSpecIndexValues represents.
 func (v scopeSpecIndexValues) IndexKeys() [][]byte {
 	rv := make([][]byte, 0)
