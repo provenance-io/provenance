@@ -65,11 +65,45 @@ func TestAuthzTestSuite(t *testing.T) {
 }
 
 func (s *AuthzTestSuite) TestGetMsgTypeURLs() {
-	tests := []struct {
-		name     string // defaults to the url if not defined.
+	type testCase struct {
+		name     string // defaults to the msg name (from the url) if not defined.
 		url      string
 		expected []string
-	}{
+	}
+	getMsgName := func(url string) string {
+		lastDot := strings.LastIndex(url, ".")
+		if lastDot < 0 || lastDot+1 >= len(url) {
+			return url
+		}
+		return url[lastDot+1:]
+	}
+	getName := func(tc testCase) string {
+		if tc.name != "" {
+			return tc.name
+		}
+		return getMsgName(tc.url)
+	}
+	boringCase := func(url string) testCase {
+		return testCase{
+			name:     "boring " + getMsgName(url),
+			url:      url,
+			expected: []string{url},
+		}
+	}
+
+	tests := []testCase{
+		{
+			name:     "empty",
+			url:      "",
+			expected: []string{},
+		},
+		{
+			name:     "random",
+			url:      "random",
+			expected: []string{"random"},
+		},
+		boringCase(types.TypeURLMsgWriteScopeRequest),
+		boringCase(types.TypeURLMsgDeleteScopeRequest),
 		{
 			url:      types.TypeURLMsgAddScopeDataAccessRequest,
 			expected: []string{types.TypeURLMsgAddScopeDataAccessRequest, types.TypeURLMsgWriteScopeRequest},
@@ -86,10 +120,16 @@ func (s *AuthzTestSuite) TestGetMsgTypeURLs() {
 			url:      types.TypeURLMsgDeleteScopeOwnerRequest,
 			expected: []string{types.TypeURLMsgDeleteScopeOwnerRequest, types.TypeURLMsgWriteScopeRequest},
 		},
+		boringCase(types.TypeURLMsgWriteSessionRequest),
 		{
 			url:      types.TypeURLMsgWriteRecordRequest,
 			expected: []string{types.TypeURLMsgWriteRecordRequest, types.TypeURLMsgWriteSessionRequest},
 		},
+		boringCase(types.TypeURLMsgDeleteRecordRequest),
+		boringCase(types.TypeURLMsgWriteScopeSpecificationRequest),
+		boringCase(types.TypeURLMsgDeleteScopeSpecificationRequest),
+		boringCase(types.TypeURLMsgWriteContractSpecificationRequest),
+		boringCase(types.TypeURLMsgDeleteContractSpecificationRequest),
 		{
 			url:      types.TypeURLMsgAddContractSpecToScopeSpecRequest,
 			expected: []string{types.TypeURLMsgAddContractSpecToScopeSpecRequest, types.TypeURLMsgWriteScopeSpecificationRequest},
@@ -106,18 +146,13 @@ func (s *AuthzTestSuite) TestGetMsgTypeURLs() {
 			url:      types.TypeURLMsgDeleteRecordSpecificationRequest,
 			expected: []string{types.TypeURLMsgDeleteRecordSpecificationRequest, types.TypeURLMsgDeleteContractSpecificationRequest},
 		},
+		boringCase(types.TypeURLMsgBindOSLocatorRequest),
+		boringCase(types.TypeURLMsgDeleteOSLocatorRequest),
+		boringCase(types.TypeURLMsgModifyOSLocatorRequest),
 	}
 
 	for _, tc := range tests {
-		name := tc.name
-		if name == "" {
-			name = tc.url
-			lastDot := strings.LastIndex(tc.url, ".")
-			if lastDot >= 0 && lastDot+1 < len(tc.url) {
-				name = tc.url[lastDot+1:]
-			}
-		}
-		s.Run(name, func() {
+		s.Run(getName(tc), func() {
 			actual := s.app.MetadataKeeper.GetMessageTypeURLs(tc.url)
 			s.Assert().Equal(tc.expected, actual, "GetMessageTypeURLs(%q)", tc.url)
 		})
