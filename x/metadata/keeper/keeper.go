@@ -166,9 +166,6 @@ func (k Keeper) CreateAccountForKey(ctx sdk.Context, addr sdk.AccAddress, pubKey
 	return nil
 }
 
-// GetMessageTypeURLs return a hierarchical list of message type urls.
-// For example passing in `/provenance.metadata.v1.MsgAddScopeDataAccessRequest` would return a list containing
-// ("/provenance.metadata.v1.MsgAddScopeDataAccessRequest", "/provenance.metadata.v1.MsgWriteScopeRequest")
 // VerifyCorrectOwner to determines whether the signer resolves to the owner of the OSLocator record.
 func (k Keeper) VerifyCorrectOwner(ctx sdk.Context, ownerAddr sdk.AccAddress) bool {
 	stored, found := k.GetOsLocatorRecord(ctx, ownerAddr)
