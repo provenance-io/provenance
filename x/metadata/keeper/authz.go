@@ -7,7 +7,11 @@ import (
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
-func (k Keeper) GetMessageTypeURLs(msgTypeURL string) []string {
+// GetAuthzMessageTypeURLs gets all msg type URLs that authz authorizations might
+// be under for the provided msg type URL. It basicallly allows a single authorization
+// be usable from multiple related endpoints. E.g. a MsgWriteScopeRequest authorization
+// is usable for the MsgAddScopeDataAccessRequest endpoint as well.
+func (k Keeper) GetAuthzMessageTypeURLs(msgTypeURL string) []string {
 	urls := []string{}
 	if len(msgTypeURL) > 0 {
 		urls = append(urls, msgTypeURL)
@@ -38,7 +42,7 @@ func (k Keeper) checkAuthzForMissing(
 	stillMissing := []string{}
 	// return as a list this message type and its parent
 	// type if it is a message belonging to a hierarchy
-	msgTypeURLs := k.GetMessageTypeURLs(msgTypeURL)
+	msgTypeURLs := k.GetAuthzMessageTypeURLs(msgTypeURL)
 
 	for _, addr := range addrs {
 		found := false

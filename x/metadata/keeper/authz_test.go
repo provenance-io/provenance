@@ -64,7 +64,7 @@ func TestAuthzTestSuite(t *testing.T) {
 	suite.Run(t, new(AuthzTestSuite))
 }
 
-func (s *AuthzTestSuite) TestGetMsgTypeURLs() {
+func (s *AuthzTestSuite) TestGetAuthzMessageTypeURLs() {
 	type testCase struct {
 		name     string // defaults to the msg name (from the url) if not defined.
 		url      string
@@ -153,8 +153,8 @@ func (s *AuthzTestSuite) TestGetMsgTypeURLs() {
 
 	for _, tc := range tests {
 		s.Run(getName(tc), func() {
-			actual := s.app.MetadataKeeper.GetMessageTypeURLs(tc.url)
-			s.Assert().Equal(tc.expected, actual, "GetMessageTypeURLs(%q)", tc.url)
+			actual := s.app.MetadataKeeper.GetAuthzMessageTypeURLs(tc.url)
+			s.Assert().Equal(tc.expected, actual, "GetAuthzMessageTypeURLs(%q)", tc.url)
 		})
 	}
 }
