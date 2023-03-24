@@ -463,10 +463,6 @@ func New(
 		appCodec, keys[metadatatypes.StoreKey], app.GetSubspace(metadatatypes.ModuleName), app.AccountKeeper, app.AuthzKeeper,
 	)
 
-	app.MarkerKeeper = markerkeeper.NewKeeper(
-		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper, app.TransferKeeper, keys[banktypes.StoreKey],
-	)
-
 	app.NameKeeper = namekeeper.NewKeeper(
 		appCodec, keys[nametypes.StoreKey], app.GetSubspace(nametypes.ModuleName),
 	)
@@ -474,6 +470,11 @@ func New(
 	app.AttributeKeeper = attributekeeper.NewKeeper(
 		appCodec, keys[attributetypes.StoreKey], app.GetSubspace(attributetypes.ModuleName), app.AccountKeeper, app.NameKeeper,
 	)
+
+	app.MarkerKeeper = markerkeeper.NewKeeper(
+		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper, app.TransferKeeper, app.AttributeKeeper, app.NameKeeper,
+	)
+	app.BankKeeper.SetSendRestrictionsFunc(app.MarkerKeeper.AllowMarkerSend)
 
 	pioMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
 		return pioMsgFeesRouter.Handler(msg)
@@ -709,6 +710,7 @@ func New(
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
+		markertypes.ModuleName,
 		distrtypes.ModuleName,
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
@@ -723,7 +725,6 @@ func New(
 		quarantine.ModuleName,
 		sanction.ModuleName,
 
-		markertypes.ModuleName,
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
 		metadatatypes.ModuleName,

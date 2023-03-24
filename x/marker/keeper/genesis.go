@@ -67,6 +67,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 			SupplyFixed:            marker.HasFixedSupply(),
 			AllowGovernanceControl: marker.HasGovernanceEnabled(),
 			AllowForcedTransfer:    marker.AllowsForcedTransfer(),
+			RequiredAttributes:     marker.GetRequiredAttributes(),
 		})
 		return false
 	}

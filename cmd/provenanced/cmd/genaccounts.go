@@ -303,7 +303,7 @@ func AddRootDomainAccountCmd(defaultNodeHome string) *cobra.Command {
 // AddGenesisMarkerCmd configures a marker account and adds it to the list of genesis accounts
 func AddGenesisMarkerCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-genesis-marker [coin] --manager [address_or_key_name] --access [grant][,[grant]] --escrow [coin][, [coin]] --finalize --activate --type [COIN]",
+		Use:   "add-genesis-marker [coin] --manager [address_or_key_name] --access [grant][,[grant]] --escrow [coin][, [coin]] --finalize --activate --type [COIN] --required-attributes=attr.one,*.attr.two,...",
 		Short: "Adds a marker to genesis.json",
 		Long: `Adds a marker to genesis.json. The provided parameters must specify
 the marker supply and denom as a coin.  A managing account may be added as a key name or address. An accessgrant
@@ -312,7 +312,7 @@ a marker account is activated any unassigned marker supply must be provided as e
 a manager address assigned that can activate the marker after genesis.  Activated markers will have supply invariants
 enforced immediately.  An optional type flag can be provided or the default of COIN will be used.
 `,
-		Example: fmt.Sprintf(`$ %[1]s add-genesis-marker 1000000000funcoins --manager validator --access withdraw --escrow 100funcoins --finalize --type COIN`, version.AppName),
+		Example: fmt.Sprintf(`$ %[1]s add-genesis-marker 1000000000funcoins --manager validator --access withdraw --escrow 100funcoins --finalize --type COIN --required-attributes=attr.one,*.attr.two,...`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -414,6 +414,7 @@ enforced immediately.  An optional type flag can be provided or the default of C
 				newMarkerFlags.SupplyFixed,
 				newMarkerFlags.AllowGovControl,
 				newMarkerFlags.AllowForceTransfer,
+				newMarkerFlags.RequiredAttributes,
 			)
 
 			if err = genAccount.Validate(); err != nil {

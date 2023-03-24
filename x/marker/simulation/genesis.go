@@ -81,6 +81,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 				SupplyFixed:            false,
 				AllowGovernanceControl: true,
 				AllowForcedTransfer:    false,
+				RequiredAttributes:     []string{},
 			},
 		},
 	}

@@ -114,6 +114,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 			SupplyFixed:            true,
 			AllowGovernanceControl: true,
 			AllowForcedTransfer:    false,
+			RequiredAttributes:     []string{},
 		}), "adding %q account", denom)
 		markerToAddr[denom] = markerAddr
 	}

@@ -47,7 +47,10 @@ type MarkerAccountI interface {
 	AddressListForPermission(Access) []sdk.AccAddress
 
 	HasGovernanceEnabled() bool
+
 	AllowsForcedTransfer() bool
+
+	GetRequiredAttributes() []string
 }
 
 // NewEmptyMarkerAccount creates a new empty marker account in a Proposed state
@@ -76,6 +79,7 @@ func NewMarkerAccount(
 	status MarkerStatus,
 	markerType MarkerType,
 	supplyFixed, allowGovernanceControl, allowForcedTransfer bool,
+	requiredAttributes []string,
 ) *MarkerAccount {
 	// clear marker manager for active or later status accounts.
 	if status >= StatusActive {
@@ -92,6 +96,7 @@ func NewMarkerAccount(
 		SupplyFixed:            supplyFixed,
 		AllowGovernanceControl: allowGovernanceControl,
 		AllowForcedTransfer:    allowForcedTransfer,
+		RequiredAttributes:     requiredAttributes,
 	}
 }
 
@@ -226,6 +231,20 @@ func ValidateGrantsForMarkerType(markerType MarkerType, grants ...AccessGrant) e
 		}
 	}
 	return ValidateGrants(grants...)
+}
+
+// ValidateRequiredAttributes checks that required attributes are of the correct format
+func ValidateRequiredAttributes(requiredAttributes []string) error {
+	for _, attr := range requiredAttributes {
+		if strings.TrimSpace(attr) == "" {
+			return fmt.Errorf("invalid name: empty")
+		}
+	}
+	return nil
+}
+
+func (ma *MarkerAccount) GetRequiredAttributes() []string {
+	return ma.RequiredAttributes
 }
 
 // GetPubKey implements authtypes.Account (but there are no public keys associated with the account for signing)

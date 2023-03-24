@@ -165,6 +165,91 @@ func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 	}
 }
 
+func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
+	validAddress := sdk.MustAccAddressFromBech32("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck")
+
+	cases := []struct {
+		name     string
+		msg      MsgAddMarkerRequest
+		errorMsg string
+	}{
+		{
+			name: "should fail on attributes for non restricted coin",
+			msg: *NewMsgAddMarkerRequest(
+				"hotdog",
+				sdk.NewInt(100),
+				validAddress,
+				validAddress,
+				MarkerType_Coin,
+				true,
+				true,
+				false,
+				[]string{"blah"},
+			),
+			errorMsg: "required attributes are reserved for restricted markers",
+		},
+		{
+			name: "should succeed on attributes for restricted coin",
+			msg: *NewMsgAddMarkerRequest(
+				"hotdog",
+				sdk.NewInt(100),
+				validAddress,
+				validAddress,
+				MarkerType_RestrictedCoin,
+				true,
+				true,
+				false,
+				[]string{"blah"},
+			),
+			errorMsg: "",
+		},
+		{
+			name: "should succeed on for restricted coin",
+			msg: *NewMsgAddMarkerRequest(
+				"hotdog",
+				sdk.NewInt(100),
+				validAddress,
+				validAddress,
+				MarkerType_RestrictedCoin,
+				true,
+				true,
+				false,
+				[]string{},
+			),
+			errorMsg: "",
+		},
+		{
+			name: "should succeed on for non-restricted coin",
+			msg: *NewMsgAddMarkerRequest(
+				"hotdog",
+				sdk.NewInt(100),
+				validAddress,
+				validAddress,
+				MarkerType_Coin,
+				true,
+				true,
+				false,
+				[]string{},
+			),
+			errorMsg: "",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.errorMsg) > 0 {
+				assert.Error(t, err)
+				assert.EqualError(t, err, tc.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 	validAddress := sdk.MustAccAddressFromBech32("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck")
 
@@ -174,8 +259,8 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		{
-			"should fail on invalid marker",
-			MsgAddFinalizeActivateMarkerRequest{
+			name: "should fail on invalid marker",
+			msg: MsgAddFinalizeActivateMarkerRequest{
 				Amount: sdk.Coin{
 					Amount: math.NewInt(100),
 					Denom:  "",
@@ -187,11 +272,11 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				AllowGovernanceControl: true,
 				AccessList:             []AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
 			},
-			"invalid marker denom/total supply: invalid coins",
+			errorMsg: "invalid marker denom/total supply: invalid coins",
 		},
 		{
-			"should fail on invalid manager address",
-			MsgAddFinalizeActivateMarkerRequest{
+			name: "should fail on invalid manager address",
+			msg: MsgAddFinalizeActivateMarkerRequest{
 				Amount:                 sdk.NewInt64Coin("hotdog", 100),
 				Manager:                "",
 				FromAddress:            "",
@@ -200,11 +285,11 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				AllowGovernanceControl: true,
 				AccessList:             []AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
 			},
-			"empty address string is not allowed",
+			errorMsg: "empty address string is not allowed",
 		},
 		{
-			"should fail on empty access list",
-			*NewMsgAddFinalizeActivateMarkerRequest(
+			name: "should fail on empty access list",
+			msg: *NewMsgAddFinalizeActivateMarkerRequest(
 				"hotdog",
 				sdk.NewInt(100),
 				validAddress,
@@ -213,13 +298,14 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				true,
 				false,
+				[]string{},
 				[]AccessGrant{},
 			),
-			"since this will activate the marker, must have access list defined",
+			errorMsg: "since this will activate the marker, must have access list defined",
 		},
 		{
-			"should succeed",
-			*NewMsgAddFinalizeActivateMarkerRequest(
+			name: "should fail on attributes for non restricted coin",
+			msg: *NewMsgAddFinalizeActivateMarkerRequest(
 				"hotdog",
 				sdk.NewInt(100),
 				validAddress,
@@ -228,13 +314,46 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				true,
 				false,
+				[]string{"blah"},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
 			),
-			"",
+			errorMsg: "required attributes are reserved for restricted markers",
 		},
 		{
-			"should fail when forced tranfers allowed with coin type",
-			*NewMsgAddFinalizeActivateMarkerRequest(
+			name: "should succeed",
+			msg: *NewMsgAddFinalizeActivateMarkerRequest(
+				"hotdog",
+				sdk.NewInt(100),
+				validAddress,
+				validAddress,
+				MarkerType_Coin,
+				true,
+				true,
+				false,
+				[]string{},
+				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+			),
+			errorMsg: "",
+		},
+		{
+			name: "should succeed for restricted coin with required attributes",
+			msg: *NewMsgAddFinalizeActivateMarkerRequest(
+				"hotdog",
+				sdk.NewInt(100),
+				validAddress,
+				validAddress,
+				MarkerType_RestrictedCoin,
+				true,
+				true,
+				false,
+				[]string{"blah"},
+				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+			),
+			errorMsg: "",
+		},
+		{
+			name: "should fail when forced tranfers allowed with coin type",
+			msg: *NewMsgAddFinalizeActivateMarkerRequest(
 				"banana",
 				sdk.NewInt(500),
 				validAddress,
@@ -243,9 +362,10 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				true,
 				true,
+				[]string{},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
 			),
-			"forced transfer is only available for restricted coins",
+			errorMsg: "forced transfer is only available for restricted coins",
 		},
 	}
 
@@ -256,7 +376,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if len(tc.errorMsg) > 0 {
 				assert.Error(t, err)
-				assert.Equal(t, tc.errorMsg, err.Error())
+				assert.EqualError(t, err, tc.errorMsg)
 			} else {
 				assert.NoError(t, err)
 			}

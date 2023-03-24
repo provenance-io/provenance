@@ -60,15 +60,11 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *types.MsgGrantAllo
 func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerRequest) (*types.MsgAddMarkerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Validate transaction message.
-	err := msg.ValidateBasic()
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	}
 	if msg.Status >= types.StatusActive {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("a marker can not be created in an ACTIVE status")
 	}
 
+	var err error
 	// Add marker requests must pass extra validation for denom (in addition to regular coin validation expression)
 	if err = k.ValidateUnrestictedDenom(ctx, msg.Amount.Denom); err != nil {
 		return nil, err
@@ -84,6 +80,12 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 	if err != nil {
 		return nil, err
 	}
+
+	normalizedReqAttrs, err := k.NormalizeRequiredAttributes(ctx, msg.RequiredAttributes)
+	if err != nil {
+		return nil, err
+	}
+
 	account := authtypes.NewBaseAccount(addr, nil, 0, 0)
 	ma := types.NewMarkerAccount(
 		account,
@@ -95,6 +97,7 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		msg.SupplyFixed,
 		msg.AllowGovernanceControl || k.GetEnableGovernance(ctx),
 		msg.AllowForcedTransfer,
+		normalizedReqAttrs,
 	)
 
 	if err := k.Keeper.AddMarkerAccount(ctx, ma); err != nil {
@@ -567,6 +570,12 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 	if err != nil {
 		return nil, err
 	}
+
+	normalizedReqAttrs, err := k.NormalizeRequiredAttributes(ctx, msg.RequiredAttributes)
+	if err != nil {
+		return nil, err
+	}
+
 	account := authtypes.NewBaseAccount(addr, nil, 0, 0)
 	ma := types.NewMarkerAccount(
 		account,
@@ -578,6 +587,7 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 		msg.SupplyFixed,
 		msg.AllowGovernanceControl || k.GetEnableGovernance(ctx),
 		msg.AllowForcedTransfer,
+		normalizedReqAttrs,
 	)
 
 	if err := k.Keeper.AddFinalizeAndActivateMarker(ctx, ma); err != nil {

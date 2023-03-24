@@ -82,6 +82,7 @@ message MsgAddMarkerRequest {
   bool                 supply_fixed             = 8;
   bool                 allow_governance_control = 9;
   bool                 allow_forced_transfer    = 10;
+  repeated string      required_attributes      = 11;
 }
 
 // MsgAddMarkerResponse defines the Msg/AddMarker response type
@@ -212,6 +213,7 @@ message MsgAddFinalizeActivateMarkerRequest {
   bool                 supply_fixed             = 7;
   bool                 allow_governance_control = 8;
   bool                 allow_forced_transfer    = 9;
+  repeated string      required_attributes      = 10;
 }
 
 // MsgAddFinalizeActivateMarkerResponse defines the Msg/AddFinalizeActivateMarker response type
