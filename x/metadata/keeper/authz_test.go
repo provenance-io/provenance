@@ -10,14 +10,17 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -932,6 +935,126 @@ func (s *AuthzTestSuite) TestFindMissing() {
 		s.T().Run(n, func(t *testing.T) {
 			actual := keeper.FindMissing(tc.required, tc.entries)
 			assert.Equal(t, tc.expected, actual)
+		})
+	}
+}
+
+func (s *AuthzTestSuite) TestIsMarkerAndHasAuthority_IsMarker() {
+	markerAddr := markertypes.MustGetMarkerAddress("testcoin").String()
+	err := s.app.MarkerKeeper.AddMarkerAccount(s.ctx, &markertypes.MarkerAccount{
+		BaseAccount: &authtypes.BaseAccount{
+			Address:       markerAddr,
+			AccountNumber: 23,
+		},
+		AccessControl: []markertypes.AccessGrant{
+			{
+				Address:     s.user1,
+				Permissions: markertypes.AccessListByNames("deposit,withdraw"),
+			},
+		},
+		Denom:      "testcoin",
+		Supply:     sdk.NewInt(1000),
+		MarkerType: markertypes.MarkerType_Coin,
+		Status:     markertypes.StatusActive,
+	})
+	s.Require().NoError(err, "AddMarkerAccount")
+	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+
+	tests := []struct {
+		name     string
+		addr     string
+		expected bool
+	}{
+		{name: "is a marker", addr: markerAddr, expected: true},
+		{name: "exists but is a user not a marker", addr: s.user1, expected: false},
+		{name: "does not exist", addr: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", expected: false},
+		{name: "invalid address", addr: "invalid", expected: false},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			isMarker, _ := s.app.MetadataKeeper.IsMarkerAndHasAuthority(s.ctx, tc.addr, []string{}, markertypes.Access_Unknown)
+			s.Assert().Equal(tc.expected, isMarker, "IsMarkerAndHasAuthority first result bool")
+		})
+	}
+}
+
+func (s *AuthzTestSuite) TestIsMarkerAndHasAuthority_HasAuth() {
+	markerAddr := markertypes.MustGetMarkerAddress("testcoin").String()
+	err := s.app.MarkerKeeper.AddMarkerAccount(s.ctx, &markertypes.MarkerAccount{
+		BaseAccount: &authtypes.BaseAccount{
+			Address:       markerAddr,
+			AccountNumber: 23,
+		},
+		AccessControl: []markertypes.AccessGrant{
+			{
+				Address:     s.user1,
+				Permissions: markertypes.AccessListByNames("deposit,withdraw"),
+			},
+		},
+		Denom:      "testcoin",
+		Supply:     sdk.NewInt(1000),
+		MarkerType: markertypes.MarkerType_Coin,
+		Status:     markertypes.StatusActive,
+	})
+	s.Require().NoError(err, "AddMarkerAccount")
+	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+
+	tests := []struct {
+		name     string
+		addr     string
+		signers  []string
+		role     markertypes.Access
+		expected bool
+	}{
+		{
+			name:     "invalid value owner",
+			addr:     "invalid",
+			signers:  []string{s.user1},
+			role:     markertypes.Access_Deposit,
+			expected: false,
+		},
+		{
+			name:     "value owner does not exist",
+			addr:     "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
+			signers:  []string{s.user1},
+			role:     markertypes.Access_Deposit,
+			expected: false,
+		},
+		{
+			name:     "addr is not a marker",
+			addr:     s.user1,
+			signers:  []string{s.user1},
+			role:     markertypes.Access_Deposit,
+			expected: false,
+		},
+		{
+			name:     "user has access",
+			addr:     markerAddr,
+			signers:  []string{s.user1},
+			role:     markertypes.Access_Deposit,
+			expected: true,
+		},
+		{
+			name:     "user has access even with invalid signer",
+			addr:     markerAddr,
+			signers:  []string{"invalidaddress", s.user1},
+			role:     markertypes.Access_Deposit,
+			expected: true,
+		},
+		{
+			name:     "user does not have this access",
+			addr:     markerAddr,
+			signers:  []string{s.user1},
+			role:     markertypes.Access_Burn,
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			_, hasAuth := s.app.MetadataKeeper.IsMarkerAndHasAuthority(s.ctx, tc.addr, tc.signers, tc.role)
+			s.Assert().Equal(tc.expected, hasAuth, "IsMarkerAndHasAuthority second result bool")
 		})
 	}
 }

@@ -4,24 +4,17 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	simapp "github.com/provenance-io/provenance/app"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -143,91 +136,4 @@ func sigV2ToDescriptors(sigs []signingtypes.SignatureV2) ([]*signingtypes.Signat
 		}
 	}
 	return descs, nil
-}
-
-func TestIsMarkerAndHasAuthority_IsMarker(t *testing.T) {
-	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	pubkey := secp256k1.GenPrivKey().PubKey()
-	userAddr := sdk.AccAddress(pubkey.Address().Bytes())
-	user := userAddr.String()
-	randomUser := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
-
-	markerAddr := markertypes.MustGetMarkerAddress("testcoin").String()
-	err := app.MarkerKeeper.AddMarkerAccount(ctx, &markertypes.MarkerAccount{
-		BaseAccount: &authtypes.BaseAccount{
-			Address:       markerAddr,
-			AccountNumber: 23,
-		},
-		AccessControl: []markertypes.AccessGrant{
-			{
-				Address:     user,
-				Permissions: markertypes.AccessListByNames("deposit,withdraw"),
-			},
-		},
-		Denom:      "testcoin",
-		Supply:     sdk.NewInt(1000),
-		MarkerType: markertypes.MarkerType_Coin,
-		Status:     markertypes.StatusActive,
-	})
-	require.NoError(t, err)
-	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, userAddr))
-
-	isMarker, _ := app.MetadataKeeper.IsMarkerAndHasAuthority(ctx, markerAddr, []string{}, markertypes.Access_Unknown)
-	assert.True(t, isMarker, "is a marker")
-	isMarker, _ = app.MetadataKeeper.IsMarkerAndHasAuthority(ctx, user, []string{}, markertypes.Access_Unknown)
-	assert.False(t, isMarker, "exists, is a user, not a marker")
-	isMarker, _ = app.MetadataKeeper.IsMarkerAndHasAuthority(ctx, randomUser, []string{}, markertypes.Access_Unknown)
-	assert.False(t, isMarker, "doesn't exist, not a marker")
-	isMarker, _ = app.MetadataKeeper.IsMarkerAndHasAuthority(ctx, "invalid", []string{}, markertypes.Access_Unknown)
-	assert.False(t, isMarker, "invalid address not a marker")
-}
-
-func TestIsMarkerAndHasAuthority_HasAuth(t *testing.T) {
-	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	pubkey := secp256k1.GenPrivKey().PubKey()
-	userAddr := sdk.AccAddress(pubkey.Address().Bytes())
-	user := userAddr.String()
-	randomUser := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
-
-	markerAddr := markertypes.MustGetMarkerAddress("testcoin").String()
-	err := app.MarkerKeeper.AddMarkerAccount(ctx, &markertypes.MarkerAccount{
-		BaseAccount: &authtypes.BaseAccount{
-			Address:       markerAddr,
-			AccountNumber: 23,
-		},
-		AccessControl: []markertypes.AccessGrant{
-			{
-				Address:     user,
-				Permissions: markertypes.AccessListByNames("deposit,withdraw"),
-			},
-		},
-		Denom:      "testcoin",
-		Supply:     sdk.NewInt(1000),
-		MarkerType: markertypes.MarkerType_Coin,
-		Status:     markertypes.StatusActive,
-	})
-	require.NoError(t, err)
-	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, userAddr))
-
-	_, hasAuth := app.MetadataKeeper.IsMarkerAndHasAuthority(ctx, "invalid", []string{user}, markertypes.Access_Deposit)
-	assert.False(t, hasAuth, "invalid value owner")
-
-	_, hasAuth = app.MetadataKeeper.IsMarkerAndHasAuthority(ctx, randomUser, []string{user}, markertypes.Access_Deposit)
-	assert.False(t, hasAuth, "value owner doesn't exist")
-
-	_, hasAuth = app.MetadataKeeper.IsMarkerAndHasAuthority(ctx, user, []string{user}, markertypes.Access_Deposit)
-	assert.False(t, hasAuth, "user isn't a marker")
-
-	_, hasAuth = app.MetadataKeeper.IsMarkerAndHasAuthority(ctx, markerAddr, []string{user}, markertypes.Access_Deposit)
-	assert.True(t, hasAuth, "user has access")
-
-	_, hasAuth = app.MetadataKeeper.IsMarkerAndHasAuthority(ctx, markerAddr, []string{"invalidaddress", user}, markertypes.Access_Deposit)
-	assert.True(t, hasAuth, "user has access even with invalid signer")
-
-	_, hasAuth = app.MetadataKeeper.IsMarkerAndHasAuthority(ctx, markerAddr, []string{user}, markertypes.Access_Burn)
-	assert.False(t, hasAuth, "user doesn't have this access")
 }

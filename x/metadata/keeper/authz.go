@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -208,6 +210,38 @@ func FindMissing(required []string, entries []string) []string {
 		}
 	}
 	return retval
+}
+
+// IsMarkerAndHasAuthority checks that the address is a marker addr and that one of the signers has the given role.
+// First return boolean is whether the address is a marker.
+// Second return boolean is whether one of the signers has the given role on that marker.
+// If the first return boolean is false, they'll both be false.
+func (k Keeper) IsMarkerAndHasAuthority(ctx sdk.Context, address string, signers []string, role markertypes.Access) (isMarker bool, hasAuth bool) {
+	addr, err := sdk.AccAddressFromBech32(address)
+	// if the address is invalid then it is not possible for it to be a marker.
+	if err != nil {
+		return false, false
+	}
+
+	acc := k.authKeeper.GetAccount(ctx, addr)
+	if acc == nil {
+		return false, false
+	}
+
+	// Convert over to the actual underlying marker type, or not.
+	marker, isMarker := acc.(*markertypes.MarkerAccount)
+	if !isMarker {
+		return false, false
+	}
+
+	// Check if any of the signers have the desired role.
+	for _, signer := range signers {
+		if marker.HasAccess(signer, role) {
+			return true, true
+		}
+	}
+
+	return true, false
 }
 
 // pluralEnding returns "" if i == 1, or "s" otherwise.
