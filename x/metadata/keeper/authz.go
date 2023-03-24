@@ -168,6 +168,29 @@ func (k Keeper) ValidatePartiesInvolved(parties []types.Party, requiredParties [
 	return nil
 }
 
+// ValidateScopeOwners is stateful validation for scope owners against a scope specification.
+// This does NOT involve the Scope.ValidateOwnersBasic() function.
+func (k Keeper) ValidateScopeOwners(owners []types.Party, spec types.ScopeSpecification) error {
+	var missingPartyTypes []string
+	for _, pt := range spec.PartiesInvolved {
+		found := false
+		for _, o := range owners {
+			if o.Role == pt {
+				found = true
+				break
+			}
+		}
+		if !found {
+			// Get the party type without the "PARTY_TYPE_" prefix.
+			missingPartyTypes = append(missingPartyTypes, pt.String()[11:])
+		}
+	}
+	if len(missingPartyTypes) > 0 {
+		return fmt.Errorf("missing party type%s required by spec: %v", pluralEnding(len(missingPartyTypes)), missingPartyTypes)
+	}
+	return nil
+}
+
 // FindMissing returns all elements of the required list that are not found in the entries list
 // It is exported only so that it can be unit tested.
 func FindMissing(required []string, entries []string) []string {
