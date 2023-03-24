@@ -45,11 +45,11 @@ func (k Keeper) checkAuthzForMissing(
 
 	for _, addr := range addrs {
 		found := false
-		granter := types.MustAccAddressFromBech32(addr)
+		granter := sdk.MustAccAddressFromBech32(addr)
 
 		// loop through all the signers
 		for _, signer := range msg.GetSignersStr() {
-			grantee := types.MustAccAddressFromBech32(signer)
+			grantee := sdk.MustAccAddressFromBech32(signer)
 
 			for _, msgType := range msgTypeURLs {
 				authorization, exp := k.authzKeeper.GetAuthorization(ctx, grantee, granter, msgType)
