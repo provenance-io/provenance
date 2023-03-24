@@ -3,9 +3,8 @@ package types
 import (
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
@@ -478,10 +477,8 @@ func TestBindOSLocatorInvalidURI(t *testing.T) {
 	require.Error(t, err)
 }
 
-type MsgTypeURL interface {
-	MsgTypeURL() string
-}
-
+// TestPrintMessageTypeStrings just prints out all the MsgTypeURLs.
+// The output can be copy/pasted into the const area in msg.go
 func TestPrintMessageTypeStrings(t *testing.T) {
 	messageTypes := []sdk.Msg{
 		&MsgWriteScopeRequest{},
@@ -507,14 +504,16 @@ func TestPrintMessageTypeStrings(t *testing.T) {
 		// add  any new messages here
 	}
 
+	fmt.Println("const (")
 	for _, msg := range messageTypes {
-		expected := sdk.MsgTypeURL(msg)
-		// compare to what we currently have in msg.go
-		mtu, ok := msg.(MsgTypeURL)
-		if assert.True(t, ok, "MsgTypeURL function for %s is not defined.", expected) {
-			actual := mtu.MsgTypeURL()
-			assert.Equal(t, expected, actual)
+		varname := fmt.Sprintf("%T", msg)
+		lastDot := strings.LastIndex(varname, ".")
+		if lastDot >= 0 && lastDot+1 < len(varname) {
+			varname = varname[lastDot+1:]
 		}
-		fmt.Println(expected)
+		expected := sdk.MsgTypeURL(msg)
+		// Note: 41 comes from the length of the longest Msg name: MsgDeleteContractSpecFromScopeSpecRequest
+		fmt.Printf("\tTypeURL%-41s = %q\n", varname, expected)
 	}
+	fmt.Println(")")
 }
