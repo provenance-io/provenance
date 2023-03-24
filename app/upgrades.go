@@ -7,17 +7,9 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/quarantine"
 	"github.com/cosmos/cosmos-sdk/x/sanction"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	ica "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts"
-	icacontrollertypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller/types"
-	icahosttypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/host/types"
-	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
-
-	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 )
 
 var (
@@ -38,74 +30,6 @@ type appUpgrade struct {
 }
 
 var handlers = map[string]appUpgrade{
-	"ochre-rc1": { // upgrade for 1.13.0-rc3
-		Added: []string{group.ModuleName, rewardtypes.ModuleName, icacontrollertypes.StoreKey, icahosttypes.StoreKey},
-		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
-			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			UpgradeICA(ctx, app, &versionMap)
-			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
-			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
-		},
-	},
-	"ochre-rc2": { // upgrade for 1.13.0-rc5
-		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
-			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-
-			// We need to run Migrate3_V046_4_To_V046_5 here because testnet already upgraded to v0.46.x.
-			// But we don't need to run it in the ochre upgrade plan because mainnet hasn't upgraded to v0.46.x yet, so it doesn't need fixing.
-			bankBaseKeeper, ok := app.BankKeeper.(*bankkeeper.BaseKeeper)
-			if !ok {
-				return versionMap, fmt.Errorf("could not cast app.BankKeeper (type bankkeeper.Keeper) to bankkeeper.BaseKeeper")
-			}
-			bankMigrator := bankkeeper.NewMigrator(*bankBaseKeeper)
-			err := bankMigrator.Migrate3_V046_4_To_V046_5(ctx)
-			if err != nil {
-				return versionMap, err
-			}
-
-			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
-			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
-		},
-	},
-	"ochre": { // upgrade for v1.13.0
-		Added: []string{group.ModuleName, rewardtypes.ModuleName, icacontrollertypes.StoreKey, icahosttypes.StoreKey},
-		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
-			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-
-			// This params fix was handled in testnet via gov prop. For mainnet, we want it done in here though.
-			params := app.MsgFeesKeeper.GetParams(ctx)
-			app.MsgFeesKeeper.SetParams(ctx, params)
-
-			UpgradeICA(ctx, app, &versionMap)
-			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
-			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
-		},
-	},
-	"paua-rc1": { // upgrade for v1.14.0-rc2
-		Added: []string{quarantine.ModuleName, sanction.ModuleName},
-		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
-			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
-			versionMap, err := app.mm.RunMigrations(ctx, app.configurator, app.UpgradeKeeper.GetModuleVersionMap(ctx))
-			if err != nil {
-				return nil, err
-			}
-			err = SetSanctionParams(ctx, app) // Needs to happen after RunMigrations adds the sanction module.
-			if err != nil {
-				return nil, err
-			}
-			IncreaseMaxCommissions(ctx, app)
-			IncreaseMaxGas(ctx, app)
-			return versionMap, err
-		},
-	},
-	"paua-rc2": { // upgrade for v1.14.0-rc3
-		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
-			// Reapply the max commissions thing again so testnet gets the max change rate bump too.
-			IncreaseMaxCommissions(ctx, app)
-			UndoMaxGasIncrease(ctx, app)
-			return app.UpgradeKeeper.GetModuleVersionMap(ctx), nil
-		},
-	},
 	"paua": { // upgrade for v1.14.0
 		Added: []string{quarantine.ModuleName, sanction.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
@@ -121,6 +45,22 @@ var handlers = map[string]appUpgrade{
 			IncreaseMaxCommissions(ctx, app)
 			// Skipping IncreaseMaxGas(ctx, app) in mainnet for now.
 			return versionMap, nil
+		},
+	},
+	"paua-rc2": { // upgrade for v1.14.0-rc3
+		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
+			// Reapply the max commissions thing again so testnet gets the max change rate bump too.
+			IncreaseMaxCommissions(ctx, app)
+			UndoMaxGasIncrease(ctx, app)
+			return app.UpgradeKeeper.GetModuleVersionMap(ctx), nil
+		},
+	},
+	"quicksilver-rc1": { // upgrade for v1.15.0-rc1
+		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
+			app.MarkerKeeper.RemoveIsSendEnabledEntries(ctx)
+			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
+			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
 		},
 	},
 	// TODO - Add new upgrade definitions here.
@@ -181,33 +121,6 @@ func GetUpgradeStoreLoader(app *App, info upgradetypes.Plan) baseapp.StoreLoader
 	return upgradetypes.UpgradeStoreLoader(info.Height, &storeUpgrades)
 }
 
-func UpgradeICA(ctx sdk.Context, app *App, versionMap *module.VersionMap) {
-	app.Logger().Info("Initializing ICA")
-
-	// Set the consensus version so InitGenesis is not ran
-	// We are configuring the module here
-	(*versionMap)[icatypes.ModuleName] = app.mm.Modules[icatypes.ModuleName].ConsensusVersion()
-
-	// create ICS27 Controller submodule params
-	controllerParams := icacontrollertypes.Params{
-		ControllerEnabled: false,
-	}
-
-	// create ICS27 Host submodule params
-	hostParams := icahosttypes.Params{
-		HostEnabled:   true,
-		AllowMessages: []string{},
-	}
-
-	// initialize ICS27 module
-	icamodule, correctTypecast := app.mm.Modules[icatypes.ModuleName].(ica.AppModule)
-	if !correctTypecast {
-		panic("mm.Modules[icatypes.ModuleName] is not of type ica.AppModule")
-	}
-	icamodule.InitModule(ctx, controllerParams, hostParams)
-	app.Logger().Info("Finished initializing ICA")
-}
-
 func IncreaseMaxCommissions(ctx sdk.Context, app *App) {
 	oneHundredPct := sdk.OneDec()
 	fivePct := sdk.MustNewDecFromStr("0.05")
@@ -223,13 +136,6 @@ func IncreaseMaxCommissions(ctx sdk.Context, app *App) {
 		}
 		app.StakingKeeper.SetValidator(ctx, validator)
 	}
-}
-
-func IncreaseMaxGas(ctx sdk.Context, app *App) {
-	ctx.Logger().Info("Increasing max gas per block to 120,000,000")
-	params := app.GetConsensusParams(ctx)
-	params.Block.MaxGas = 120_000_000
-	app.StoreConsensusParams(ctx, params)
 }
 
 func UndoMaxGasIncrease(ctx sdk.Context, app *App) {
