@@ -386,11 +386,11 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 
 	for _, tc := range cases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			err = s.app.MetadataKeeper.ValidateScopeUpdate(s.ctx, tc.existing, tc.proposed, tc.signers, types.TypeURLMsgWriteScopeRequest)
+			err = s.app.MetadataKeeper.ValidateWriteScope(s.ctx, tc.existing, tc.proposed, tc.signers, types.TypeURLMsgWriteScopeRequest)
 			if len(tc.errorMsg) > 0 {
-				assert.EqualError(t, err, tc.errorMsg, "ValidateScopeUpdate expected error")
+				assert.EqualError(t, err, tc.errorMsg, "ValidateWriteScope expected error")
 			} else {
-				assert.NoError(t, err, "ValidateScopeUpdate unexpected error")
+				assert.NoError(t, err, "ValidateWriteScope unexpected error")
 			}
 		})
 	}
@@ -549,7 +549,7 @@ func (s ScopeKeeperTestSuite) TestValidateScopeRemove() {
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			actual := s.app.MetadataKeeper.ValidateScopeRemove(s.ctx, tc.scope, tc.signers, types.TypeURLMsgDeleteScopeRequest)
+			actual := s.app.MetadataKeeper.ValidateDeleteScope(s.ctx, tc.scope, tc.signers, types.TypeURLMsgDeleteScopeRequest)
 			if len(tc.expected) > 0 {
 				require.EqualError(t, actual, tc.expected)
 			} else {
@@ -610,7 +610,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeAddDataAccess() {
 		tc := tc
 
 		s.Run(n, func() {
-			err := s.app.MetadataKeeper.ValidateScopeAddDataAccess(s.ctx, tc.dataAccessAddrs, tc.existing, tc.signers, types.TypeURLMsgAddScopeDataAccessRequest)
+			err := s.app.MetadataKeeper.ValidateAddScopeDataAccess(s.ctx, tc.dataAccessAddrs, tc.existing, tc.signers, types.TypeURLMsgAddScopeDataAccessRequest)
 			if tc.wantErr {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())
@@ -672,7 +672,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeDeleteDataAccess() {
 		tc := tc
 
 		s.Run(n, func() {
-			err := s.app.MetadataKeeper.ValidateScopeDeleteDataAccess(s.ctx, tc.dataAccessAddrs, tc.existing, tc.signers, types.TypeURLMsgDeleteScopeDataAccessRequest)
+			err := s.app.MetadataKeeper.ValidateDeleteScopeDataAccess(s.ctx, tc.dataAccessAddrs, tc.existing, tc.signers, types.TypeURLMsgDeleteScopeDataAccessRequest)
 			if tc.wantErr {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())
@@ -770,11 +770,11 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
 
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateScopeUpdateOwners(s.ctx, tc.existing, tc.proposed, tc.signers, types.TypeURLMsgAddScopeOwnerRequest)
+			err := s.app.MetadataKeeper.ValidateUpdateScopeOwners(s.ctx, tc.existing, tc.proposed, tc.signers, types.TypeURLMsgAddScopeOwnerRequest)
 			if len(tc.errorMsg) > 0 {
-				assert.EqualError(t, err, tc.errorMsg, "ValidateScopeUpdateOwners expected error")
+				assert.EqualError(t, err, tc.errorMsg, "ValidateUpdateScopeOwners expected error")
 			} else {
-				assert.NoError(t, err, "ValidateScopeUpdateOwners unexpected error")
+				assert.NoError(t, err, "ValidateUpdateScopeOwners unexpected error")
 			}
 		})
 	}

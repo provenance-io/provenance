@@ -37,7 +37,7 @@ func (k msgServer) WriteScope(
 	msg.ConvertOptionalFields()
 
 	existing, _ := k.GetScope(ctx, msg.Scope.ScopeId)
-	if err := k.ValidateScopeUpdate(ctx, existing, msg.Scope, msg); err != nil {
+	if err := k.ValidateWriteScope(ctx, existing, msg.Scope, msg); err != nil {
 		return nil, err
 	}
 
@@ -62,7 +62,7 @@ func (k msgServer) DeleteScope(
 		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
 
-	if err := k.ValidateScopeRemove(ctx, existing, msg); err != nil {
+	if err := k.ValidateDeleteScope(ctx, existing, msg); err != nil {
 		return nil, err
 	}
 
@@ -84,7 +84,7 @@ func (k msgServer) AddScopeDataAccess(
 		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
 
-	if err := k.ValidateScopeAddDataAccess(ctx, msg.DataAccess, existing, msg); err != nil {
+	if err := k.ValidateAddScopeDataAccess(ctx, msg.DataAccess, existing, msg); err != nil {
 		return nil, err
 	}
 
@@ -108,7 +108,7 @@ func (k msgServer) DeleteScopeDataAccess(
 		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
 
-	if err := k.ValidateScopeDeleteDataAccess(ctx, msg.DataAccess, existing, msg); err != nil {
+	if err := k.ValidateDeleteScopeDataAccess(ctx, msg.DataAccess, existing, msg); err != nil {
 		return nil, err
 	}
 
@@ -142,7 +142,7 @@ func (k msgServer) AddScopeOwner(
 		return nil, addErr
 	}
 
-	if err := k.ValidateScopeUpdateOwners(ctx, existing, proposed, msg); err != nil {
+	if err := k.ValidateUpdateScopeOwners(ctx, existing, proposed, msg); err != nil {
 		return nil, err
 	}
 
@@ -174,7 +174,7 @@ func (k msgServer) DeleteScopeOwner(
 		return nil, rmErr
 	}
 
-	if err := k.ValidateScopeUpdateOwners(ctx, existing, proposed, msg); err != nil {
+	if err := k.ValidateUpdateScopeOwners(ctx, existing, proposed, msg); err != nil {
 		return nil, err
 	}
 
@@ -200,7 +200,7 @@ func (k msgServer) WriteSession(
 		existing = &e
 		existingAudit = existing.Audit
 	}
-	if err := k.ValidateSessionUpdate(ctx, existing, &msg.Session, msg); err != nil {
+	if err := k.ValidateWriteSession(ctx, existing, &msg.Session, msg); err != nil {
 		return nil, err
 	}
 
@@ -233,7 +233,7 @@ func (k msgServer) WriteRecord(
 	if e, found := k.GetRecord(ctx, recordID); found {
 		existing = &e
 	}
-	if err := k.ValidateRecordUpdate(ctx, existing, &msg.Record, msg.Parties, msg); err != nil {
+	if err := k.ValidateWriteRecord(ctx, existing, &msg.Record, msg.Parties, msg); err != nil {
 		return nil, err
 	}
 
@@ -257,7 +257,7 @@ func (k msgServer) DeleteRecord(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	existing, _ := k.GetRecord(ctx, msg.RecordId)
-	if err := k.ValidateRecordRemove(ctx, existing, msg.RecordId, msg); err != nil {
+	if err := k.ValidateDeleteRecord(ctx, existing, msg.RecordId, msg); err != nil {
 		return nil, err
 	}
 
@@ -284,7 +284,7 @@ func (k msgServer) WriteScopeSpecification(
 			return nil, err
 		}
 	}
-	if err := k.ValidateScopeSpecUpdate(ctx, existing, msg.Specification); err != nil {
+	if err := k.ValidateWriteScopeSpecification(ctx, existing, msg.Specification); err != nil {
 		return nil, err
 	}
 
@@ -334,7 +334,7 @@ func (k msgServer) WriteContractSpecification(
 			return nil, err
 		}
 	}
-	if err := k.ValidateContractSpecUpdate(ctx, existing, msg.Specification); err != nil {
+	if err := k.ValidateWriteContractSpecification(ctx, existing, msg.Specification); err != nil {
 		return nil, err
 	}
 
@@ -484,7 +484,7 @@ func (k msgServer) WriteRecordSpecification(
 		return nil, fmt.Errorf("contract specification not found with id %s (uuid %s) required for adding or updating record specification with id %s",
 			contractSpecID, contractSpecUUID, msg.Specification.SpecificationId)
 	}
-	if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, contractSpec.OwnerAddresses, msg); err != nil {
+	if err = k.ValidateAllOwnersAreSignersWithAuthz(ctx, contractSpec.OwnerAddresses, msg); err != nil {
 		return nil, err
 	}
 
@@ -492,7 +492,7 @@ func (k msgServer) WriteRecordSpecification(
 	if e, found := k.GetRecordSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
 	}
-	if err := k.ValidateRecordSpecUpdate(ctx, existing, msg.Specification); err != nil {
+	if err = k.ValidateWriteRecordSpecification(ctx, existing, msg.Specification); err != nil {
 		return nil, err
 	}
 

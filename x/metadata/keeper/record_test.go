@@ -193,7 +193,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 		tc := tc
 
 		s.Run(n, func() {
-			err := s.app.MetadataKeeper.ValidateRecordRemove(s.ctx, tc.existing, tc.proposed, tc.signers, types.TypeURLMsgDeleteRecordRequest)
+			err := s.app.MetadataKeeper.ValidateDeleteRecord(s.ctx, tc.existing, tc.proposed, tc.signers, types.TypeURLMsgDeleteRecordRequest)
 			if tc.wantErr {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())
@@ -568,12 +568,12 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 
 	for n, tc := range cases {
 		s.T().Run(n, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateRecordUpdate(s.ctx, tc.existing, tc.proposed, tc.signers, tc.partiesInvolved, types.TypeURLMsgWriteRecordRequest)
+			err := s.app.MetadataKeeper.ValidateWriteRecord(s.ctx, tc.existing, tc.proposed, tc.signers, tc.partiesInvolved, types.TypeURLMsgWriteRecordRequest)
 			if len(tc.errorMsg) != 0 {
-				assert.EqualError(t, err, tc.errorMsg, "ValidateRecordUpdate expected error")
+				assert.EqualError(t, err, tc.errorMsg, "ValidateWriteRecord expected error")
 			} else {
-				assert.NoError(t, err, "ValidateRecordUpdate unexpected error")
-				assert.NotEmpty(t, tc.proposed.SpecificationId, "proposed.SpecificationId after ValidateRecordUpdate")
+				assert.NoError(t, err, "ValidateWriteRecord unexpected error")
+				assert.NotEmpty(t, tc.proposed.SpecificationId, "proposed.SpecificationId after ValidateWriteRecord")
 			}
 		})
 	}

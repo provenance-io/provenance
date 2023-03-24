@@ -839,17 +839,17 @@ func (s *SpecKeeperTestSuite) TestValidateRecordSpecUpdate() {
 		},
 		// Names must match - cannot be tested. A changed name will change the spec id.
 		// So either ValidateBasic will catch that the hashed name doesn't match its part in the ID,
-		// or the ValidateRecordSpecUpdate will catch the changing specification id.
+		// or the ValidateWriteRecordSpecification will catch the changing specification id.
 	}
 
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateRecordSpecUpdate(s.ctx, tt.existing, *tt.proposed)
+			err := s.app.MetadataKeeper.ValidateWriteRecordSpecification(s.ctx, tt.existing, *tt.proposed)
 			if err != nil {
-				require.Equal(t, tt.want, err.Error(), "RecordSpec Keeper ValidateRecordSpecUpdate error")
+				require.Equal(t, tt.want, err.Error(), "RecordSpec Keeper ValidateWriteRecordSpecification error")
 			} else if len(tt.want) > 0 {
-				t.Errorf("RecordSpec Keeper ValidateRecordSpecUpdate error = nil, expected: %s", tt.want)
+				t.Errorf("RecordSpec Keeper ValidateWriteRecordSpecification error = nil, expected: %s", tt.want)
 			}
 		})
 	}
@@ -1178,11 +1178,11 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateContractSpecUpdate(s.ctx, tt.existing, *tt.proposed)
+			err := s.app.MetadataKeeper.ValidateWriteContractSpecification(s.ctx, tt.existing, *tt.proposed)
 			if err != nil {
-				require.Equal(t, tt.want, err.Error(), "ContractSpec Keeper ValidateContractSpecUpdate error")
+				require.Equal(t, tt.want, err.Error(), "ContractSpec Keeper ValidateWriteContractSpecification error")
 			} else if len(tt.want) > 0 {
-				t.Errorf("ContractSpec Keeper ValidateContractSpecUpdate error = nil, expected: %s", tt.want)
+				t.Errorf("ContractSpec Keeper ValidateWriteContractSpecification error = nil, expected: %s", tt.want)
 			}
 		})
 	}
@@ -1738,11 +1738,11 @@ func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateScopeSpecUpdate(s.ctx, tt.existing, *tt.proposed)
+			err := s.app.MetadataKeeper.ValidateWriteScopeSpecification(s.ctx, tt.existing, *tt.proposed)
 			if err != nil {
-				require.Equal(t, tt.want, err.Error(), "ScopeSpec Keeper ValidateScopeSpecUpdate error")
+				require.Equal(t, tt.want, err.Error(), "ScopeSpec Keeper ValidateWriteScopeSpecification error")
 			} else if len(tt.want) > 0 {
-				t.Errorf("ScopeSpec Keeper ValidateScopeSpecUpdate error = nil, expected: %s", tt.want)
+				t.Errorf("ScopeSpec Keeper ValidateWriteScopeSpecification error = nil, expected: %s", tt.want)
 			}
 		})
 	}

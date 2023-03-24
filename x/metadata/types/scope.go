@@ -307,7 +307,7 @@ func (r Record) ValidateBasic() error {
 		return fmt.Errorf("invalid record identifier (expected: %s, got %s)", PrefixSession, prefix)
 	}
 	if !r.SpecificationId.Empty() {
-		// For now, we'll allow an empty specification id and set it appropriately during ValidateRecordUpdate if it's missing.
+		// For now, we'll allow an empty specification id and set it appropriately during ValidateWriteRecord if it's missing.
 		// But if we've got it, we should make sure it's okay.
 		specPrefix, e := VerifyMetadataAddressFormat(r.SpecificationId)
 		if e != nil {

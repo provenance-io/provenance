@@ -115,10 +115,10 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 	return nil
 }
 
-// ValidateRecordUpdate checks the current record and the proposed record to determine if the proposed changes are valid
+// ValidateWriteRecord checks the current record and the proposed record to determine if the proposed changes are valid
 // based on the existing state
 // Note: The proposed parameter is a reference here so that the SpecificationId can be set in cases when it's not provided.
-func (k Keeper) ValidateRecordUpdate(
+func (k Keeper) ValidateWriteRecord(
 	ctx sdk.Context,
 	existing, proposed *types.Record,
 	partiesInvolved []types.Party,
@@ -290,9 +290,9 @@ func (k Keeper) ValidateRecordUpdate(
 	return nil
 }
 
-// ValidateRecordRemove checks the current record and the proposed removal scope to determine if the proposed remove is valid
+// ValidateDeleteRecord checks the current record and the proposed removal scope to determine if the proposed remove is valid
 // based on the existing state
-func (k Keeper) ValidateRecordRemove(
+func (k Keeper) ValidateDeleteRecord(
 	ctx sdk.Context,
 	existing types.Record,
 	proposedID types.MetadataAddress,

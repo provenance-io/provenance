@@ -246,9 +246,9 @@ func (k Keeper) indexScope(ctx sdk.Context, newScope, oldScope *types.Scope) {
 	}
 }
 
-// ValidateScopeUpdate checks the current scope and the proposed scope to determine if the proposed changes are valid
+// ValidateWriteScope checks the current scope and the proposed scope to determine if the proposed changes are valid
 // based on the existing state
-func (k Keeper) ValidateScopeUpdate(
+func (k Keeper) ValidateWriteScope(
 	ctx sdk.Context,
 	existing,
 	proposed types.Scope,
@@ -305,9 +305,9 @@ func (k Keeper) ValidateScopeUpdate(
 	return nil
 }
 
-// ValidateScopeRemove checks the current scope and the proposed removal scope to determine if the proposed remove is valid
+// ValidateDeleteScope checks the current scope and the proposed removal scope to determine if the proposed remove is valid
 // based on the existing state
-func (k Keeper) ValidateScopeRemove(ctx sdk.Context, scope types.Scope, msg types.MetadataMsg) error {
+func (k Keeper) ValidateDeleteScope(ctx sdk.Context, scope types.Scope, msg types.MetadataMsg) error {
 	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, scope.Owners, msg); err != nil {
 		return err
 	}
@@ -382,8 +382,8 @@ func (k Keeper) validateScopeUpdateValueOwner(
 	return nil
 }
 
-// ValidateScopeAddDataAccess checks the current scope and the proposed
-func (k Keeper) ValidateScopeAddDataAccess(
+// ValidateAddScopeDataAccess checks the current scope and the proposed
+func (k Keeper) ValidateAddScopeDataAccess(
 	ctx sdk.Context,
 	dataAccessAddrs []string,
 	existing types.Scope,
@@ -412,8 +412,8 @@ func (k Keeper) ValidateScopeAddDataAccess(
 	return nil
 }
 
-// ValidateScopeDeleteDataAccess checks the current scope data access and the proposed removed items
-func (k Keeper) ValidateScopeDeleteDataAccess(
+// ValidateDeleteScopeDataAccess checks the current scope data access and the proposed removed items
+func (k Keeper) ValidateDeleteScopeDataAccess(
 	ctx sdk.Context,
 	dataAccessAddrs []string,
 	existing types.Scope,
@@ -446,8 +446,8 @@ func (k Keeper) ValidateScopeDeleteDataAccess(
 	return nil
 }
 
-// ValidateScopeUpdateOwners checks the current scopes owners and the proposed update
-func (k Keeper) ValidateScopeUpdateOwners(
+// ValidateUpdateScopeOwners checks the current scopes owners and the proposed update
+func (k Keeper) ValidateUpdateScopeOwners(
 	ctx sdk.Context,
 	existing,
 	proposed types.Scope,

@@ -310,7 +310,7 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 		tc := tc
 
 		s.Run(n, func() {
-			err := s.app.MetadataKeeper.ValidateSessionUpdate(s.ctx, tc.existing, tc.proposed, tc.signers, types.TypeURLMsgWriteSessionRequest)
+			err := s.app.MetadataKeeper.ValidateWriteSession(s.ctx, tc.existing, tc.proposed, tc.signers, types.TypeURLMsgWriteSessionRequest)
 			if tc.wantErr {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())

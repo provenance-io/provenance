@@ -103,9 +103,9 @@ func (k Keeper) IterateSessions(ctx sdk.Context, scopeID types.MetadataAddress, 
 	return nil
 }
 
-// ValidateSessionUpdate checks the current session and the proposed session to determine if the proposed changes are valid
+// ValidateWriteSession checks the current session and the proposed session to determine if the proposed changes are valid
 // based on the existing state
-func (k Keeper) ValidateSessionUpdate(ctx sdk.Context, existing, proposed *types.Session, msg types.MetadataMsg) error {
+func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing, proposed *types.Session, msg types.MetadataMsg) error {
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
 	}
