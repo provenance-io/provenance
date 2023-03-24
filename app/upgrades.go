@@ -30,14 +30,6 @@ type appUpgrade struct {
 }
 
 var handlers = map[string]appUpgrade{
-	"quicksilver-rc1": { // upgrade for v1.15.0-rc1
-		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
-			app.MarkerKeeper.RemoveIsSendEnabledEntries(ctx)
-			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
-			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
-		},
-	},
 	"paua": { // upgrade for v1.14.0
 		Added: []string{quarantine.ModuleName, sanction.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
@@ -63,7 +55,14 @@ var handlers = map[string]appUpgrade{
 			return app.UpgradeKeeper.GetModuleVersionMap(ctx), nil
 		},
 	},
-
+	"quicksilver-rc1": { // upgrade for v1.15.0-rc1
+		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
+			app.MarkerKeeper.RemoveIsSendEnabledEntries(ctx)
+			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
+			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
+		},
+	},
 	// TODO - Add new upgrade definitions here.
 }
 
