@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -106,12 +105,6 @@ func NewMsgWriteScopeRequest(scope Scope, signers []string) *MsgWriteScopeReques
 		Scope:   scope,
 		Signers: signers,
 	}
-}
-
-// String returns a yaml representation of this. Implements the sdk.Msg interface.
-func (msg MsgWriteScopeRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
 }
 
 // GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
@@ -224,12 +217,6 @@ func NewMsgDeleteScopeRequest(scopeID MetadataAddress, signers []string) *MsgDel
 	}
 }
 
-// String returns a yaml representation of this. Implements the sdk.Msg interface.
-func (msg MsgDeleteScopeRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
 // GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgDeleteScopeRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
@@ -265,12 +252,6 @@ func NewMsgAddScopeDataAccessRequest(scopeID MetadataAddress, dataAccessAddrs []
 		DataAccess: dataAccessAddrs,
 		Signers:    signers,
 	}
-}
-
-// String returns a yaml representation of this. Implements the sdk.Msg interface.
-func (msg MsgAddScopeDataAccessRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
 }
 
 // GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
@@ -319,12 +300,6 @@ func NewMsgDeleteScopeDataAccessRequest(scopeID MetadataAddress, dataAccessAddrs
 	}
 }
 
-// String returns a yaml representation of this. Implements the sdk.Msg interface.
-func (msg MsgDeleteScopeDataAccessRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
 // GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgDeleteScopeDataAccessRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
@@ -371,12 +346,6 @@ func NewMsgAddScopeOwnerRequest(scopeID MetadataAddress, owners []Party, signers
 	}
 }
 
-// String returns a yaml representation of this. Implements the sdk.Msg interface.
-func (msg MsgAddScopeOwnerRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
 // GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgAddScopeOwnerRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
@@ -415,12 +384,6 @@ func NewMsgDeleteScopeOwnerRequest(scopeID MetadataAddress, owners []string, sig
 		Owners:  owners,
 		Signers: signers,
 	}
-}
-
-// String returns a yaml representation of this. Implements the sdk.Msg interface.
-func (msg MsgDeleteScopeOwnerRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
 }
 
 // GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
@@ -463,12 +426,6 @@ func (msg MsgDeleteScopeOwnerRequest) GetID() MetadataAddress {
 // NewMsgWriteSessionRequest creates a new msg instance
 func NewMsgWriteSessionRequest(session Session, signers []string) *MsgWriteSessionRequest {
 	return &MsgWriteSessionRequest{Session: session, Signers: signers}
-}
-
-// String returns a yaml representation of this. Implements the sdk.Msg interface.
-func (msg MsgWriteSessionRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
 }
 
 // GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
@@ -565,12 +522,6 @@ func (msg MsgWriteSessionRequest) GetSpecID() MetadataAddress {
 // NewMsgWriteRecordRequest creates a new msg instance
 func NewMsgWriteRecordRequest(record Record, sessionIDComponents *SessionIdComponents, contractSpecUUID string, signers []string, parties []Party) *MsgWriteRecordRequest {
 	return &MsgWriteRecordRequest{Record: record, Parties: parties, Signers: signers, SessionIdComponents: sessionIDComponents, ContractSpecUuid: contractSpecUUID}
-}
-
-// String returns a yaml representation of this. Implements the sdk.Msg interface.
-func (msg MsgWriteRecordRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
 }
 
 // GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
@@ -675,12 +626,6 @@ func NewMsgDeleteRecordRequest(recordID MetadataAddress, signers []string) *MsgD
 	return &MsgDeleteRecordRequest{RecordId: recordID, Signers: signers}
 }
 
-// String returns a yaml representation of this. Implements the sdk.Msg interface.
-func (msg MsgDeleteRecordRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
 // GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgDeleteRecordRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
@@ -709,12 +654,6 @@ func (msg MsgDeleteRecordRequest) GetID() MetadataAddress {
 // NewMsgWriteScopeSpecificationRequest creates a new msg instance
 func NewMsgWriteScopeSpecificationRequest(specification ScopeSpecification, signers []string) *MsgWriteScopeSpecificationRequest {
 	return &MsgWriteScopeSpecificationRequest{Specification: specification, Signers: signers}
-}
-
-// String returns a yaml representation of this. Implements the sdk.Msg interface.
-func (msg MsgWriteScopeSpecificationRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
 }
 
 // GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
@@ -793,12 +732,6 @@ func NewMsgDeleteScopeSpecificationRequest(specificationID MetadataAddress, sign
 	return &MsgDeleteScopeSpecificationRequest{SpecificationId: specificationID, Signers: signers}
 }
 
-// String returns a yaml representation of this. Implements the sdk.Msg interface.
-func (msg MsgDeleteScopeSpecificationRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
 // GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgDeleteScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
@@ -832,12 +765,6 @@ func (msg MsgDeleteScopeSpecificationRequest) GetSpecID() MetadataAddress {
 // NewMsgWriteContractSpecificationRequest creates a new msg instance
 func NewMsgWriteContractSpecificationRequest(specification ContractSpecification, signers []string) *MsgWriteContractSpecificationRequest {
 	return &MsgWriteContractSpecificationRequest{Specification: specification, Signers: signers}
-}
-
-// String returns a yaml representation of this. Implements the sdk.Msg interface.
-func (msg MsgWriteContractSpecificationRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
 }
 
 // GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
@@ -916,12 +843,6 @@ func NewMsgDeleteContractSpecificationRequest(specificationID MetadataAddress, s
 	return &MsgDeleteContractSpecificationRequest{SpecificationId: specificationID, Signers: signers}
 }
 
-// String returns a yaml representation of this. Implements the sdk.Msg interface.
-func (msg MsgDeleteContractSpecificationRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
 // GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgDeleteContractSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
@@ -955,12 +876,6 @@ func (msg MsgDeleteContractSpecificationRequest) GetSpecID() MetadataAddress {
 // NewMsgAddContractSpecToScopeSpecRequest creates a new msg instance
 func NewMsgAddContractSpecToScopeSpecRequest(contractSpecID MetadataAddress, scopeSpecID MetadataAddress, signers []string) *MsgAddContractSpecToScopeSpecRequest {
 	return &MsgAddContractSpecToScopeSpecRequest{ContractSpecificationId: contractSpecID, ScopeSpecificationId: scopeSpecID, Signers: signers}
-}
-
-// String returns a yaml representation of this. Implements the sdk.Msg interface.
-func (msg MsgAddContractSpecToScopeSpecRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
 }
 
 // GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
@@ -1004,12 +919,6 @@ func NewMsgDeleteContractSpecFromScopeSpecRequest(contractSpecID MetadataAddress
 	return &MsgDeleteContractSpecFromScopeSpecRequest{ContractSpecificationId: contractSpecID, ScopeSpecificationId: scopeSpecID, Signers: signers}
 }
 
-// String returns a yaml representation of this. Implements the sdk.Msg interface.
-func (msg MsgDeleteContractSpecFromScopeSpecRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
 // GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgDeleteContractSpecFromScopeSpecRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
@@ -1049,12 +958,6 @@ func (msg MsgDeleteContractSpecFromScopeSpecRequest) GetSpecID() MetadataAddress
 // NewMsgWriteRecordSpecificationRequest creates a new msg instance
 func NewMsgWriteRecordSpecificationRequest(recordSpecification RecordSpecification, signers []string) *MsgWriteRecordSpecificationRequest {
 	return &MsgWriteRecordSpecificationRequest{Specification: recordSpecification, Signers: signers}
-}
-
-// String returns a yaml representation of this. Implements the sdk.Msg interface.
-func (msg MsgWriteRecordSpecificationRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
 }
 
 // GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
@@ -1134,12 +1037,6 @@ func (msg MsgWriteRecordSpecificationRequest) GetSpecID() MetadataAddress {
 // NewMsgDeleteRecordSpecificationRequest creates a new msg instance
 func NewMsgDeleteRecordSpecificationRequest(specificationID MetadataAddress, signers []string) *MsgDeleteRecordSpecificationRequest {
 	return &MsgDeleteRecordSpecificationRequest{SpecificationId: specificationID, Signers: signers}
-}
-
-// String returns a yaml representation of this. Implements the sdk.Msg interface.
-func (msg MsgDeleteRecordSpecificationRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
 }
 
 // GetSigners returns the address(es) that signed. Implements sdk.Msg interface.

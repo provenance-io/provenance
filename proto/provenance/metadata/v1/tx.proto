@@ -76,8 +76,7 @@ service Msg {
 // MsgWriteScopeRequest is the request type for the Msg/WriteScope RPC method.
 message MsgWriteScopeRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
 
   // scope is the Scope you want added or updated.
@@ -108,8 +107,7 @@ message MsgWriteScopeResponse {
 // MsgDeleteScopeRequest is the request type for the Msg/DeleteScope RPC method.
 message MsgDeleteScopeRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
 
   // Unique ID for the scope to delete
@@ -127,8 +125,7 @@ message MsgDeleteScopeResponse {}
 // MsgAddScopeDataAccessRequest is the request to add data access AccAddress to scope
 message MsgAddScopeDataAccessRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
 
   // scope MetadataAddress for updating data access
@@ -150,8 +147,7 @@ message MsgAddScopeDataAccessResponse {}
 // MsgDeleteScopeDataAccessRequest is the request to remove data access AccAddress to scope
 message MsgDeleteScopeDataAccessRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
 
   // scope MetadataAddress for removing data access
@@ -173,8 +169,7 @@ message MsgDeleteScopeDataAccessResponse {}
 // MsgAddScopeOwnerRequest is the request to add owner AccAddress to scope
 message MsgAddScopeOwnerRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
 
   // scope MetadataAddress for updating data access
@@ -196,8 +191,7 @@ message MsgAddScopeOwnerResponse {}
 // MsgDeleteScopeOwnerRequest is the request to remove owner AccAddresses to scope
 message MsgDeleteScopeOwnerRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
 
   // scope MetadataAddress for removing data access
@@ -219,8 +213,7 @@ message MsgDeleteScopeOwnerResponse {}
 // MsgWriteSessionRequest is the request type for the Msg/WriteSession RPC method.
 message MsgWriteSessionRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
 
   // session is the Session you want added or updated.
@@ -266,8 +259,7 @@ message MsgWriteSessionResponse {
 // MsgWriteRecordRequest is the request type for the Msg/WriteRecord RPC method.
 message MsgWriteRecordRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
 
   // record is the Record you want added or updated.
@@ -304,8 +296,7 @@ message MsgWriteRecordResponse {
 // MsgDeleteRecordRequest is the request type for the Msg/DeleteRecord RPC method.
 message MsgDeleteRecordRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
 
   bytes record_id = 1 [
@@ -323,8 +314,7 @@ message MsgDeleteRecordResponse {}
 // MsgWriteScopeSpecificationRequest is the request type for the Msg/WriteScopeSpecification RPC method.
 message MsgWriteScopeSpecificationRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
 
   // specification is the ScopeSpecification you want added or updated.
@@ -350,8 +340,7 @@ message MsgWriteScopeSpecificationResponse {
 // MsgDeleteScopeSpecificationRequest is the request type for the Msg/DeleteScopeSpecification RPC method.
 message MsgDeleteScopeSpecificationRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
 
   // MetadataAddress for the scope specification to delete.
@@ -369,8 +358,7 @@ message MsgDeleteScopeSpecificationResponse {}
 // MsgWriteContractSpecificationRequest is the request type for the Msg/WriteContractSpecification RPC method.
 message MsgWriteContractSpecificationRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
 
   // specification is the ContractSpecification you want added or updated.
@@ -397,8 +385,7 @@ message MsgWriteContractSpecificationResponse {
 // MsgAddContractSpecToScopeSpecRequest is the request type for the Msg/AddContractSpecToScopeSpec RPC method.
 message MsgAddContractSpecToScopeSpecRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
 
   // MetadataAddress for the contract specification to add.
@@ -423,8 +410,7 @@ message MsgAddContractSpecToScopeSpecResponse {}
 // MsgDeleteContractSpecFromScopeSpecRequest is the request type for the Msg/DeleteContractSpecFromScopeSpec RPC method.
 message MsgDeleteContractSpecFromScopeSpecRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
 
   // MetadataAddress for the contract specification to add.
@@ -450,8 +436,7 @@ message MsgDeleteContractSpecFromScopeSpecResponse {}
 // MsgDeleteContractSpecificationRequest is the request type for the Msg/DeleteContractSpecification RPC method.
 message MsgDeleteContractSpecificationRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
 
   // MetadataAddress for the contract specification to delete.
@@ -469,8 +454,7 @@ message MsgDeleteContractSpecificationResponse {}
 // MsgWriteRecordSpecificationRequest is the request type for the Msg/WriteRecordSpecification RPC method.
 message MsgWriteRecordSpecificationRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
 
   // specification is the RecordSpecification you want added or updated.
@@ -497,8 +481,7 @@ message MsgWriteRecordSpecificationResponse {
 // MsgDeleteRecordSpecificationRequest is the request type for the Msg/DeleteRecordSpecification RPC method.
 message MsgDeleteRecordSpecificationRequest {
   option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
 
   // MetadataAddress for the record specification to delete.
