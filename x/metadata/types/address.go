@@ -772,3 +772,14 @@ func (ma MetadataAddress) GetDetails() MetadataAddressDetails {
 	}
 	return retval
 }
+
+// MetadataAddressable is an interface indicating that a thing has a metadata address.
+type MetadataAddressable interface {
+	GetID() MetadataAddress
+}
+
+// MetadataSpecAddressable is an interface indicating that a thing has a metadata specification address.
+type MetadataSpecAddressable interface {
+	MetadataAddressable
+	GetSpecID() MetadataAddress
+}

@@ -39,6 +39,12 @@ var (
 	}
 )
 
+var (
+	_ MetadataSpecAddressable = (*ScopeSpecification)(nil)
+	_ MetadataSpecAddressable = (*ContractSpecification)(nil)
+	_ MetadataSpecAddressable = (*RecordSpecification)(nil)
+)
+
 // NewScopeSpecification creates a new ScopeSpecification instance.
 func NewScopeSpecification(
 	specificationID MetadataAddress,
@@ -99,6 +105,17 @@ func (s ScopeSpecification) ValidateBasic() error {
 func (s ScopeSpecification) String() string {
 	out, _ := yaml.Marshal(s)
 	return string(out)
+}
+
+// GetID get this scope spec's metadata address. Satisfies the MetadataAddressable interface.
+func (s ScopeSpecification) GetID() MetadataAddress {
+	return s.SpecificationId
+}
+
+// GetSpecID get this scope spec's metadata address. Satisfies the MetadataSpecAddressable interface.
+// It returns the same thing as the GetID.
+func (s ScopeSpecification) GetSpecID() MetadataAddress {
+	return s.SpecificationId
 }
 
 // NewScopeSpecification creates a new ScopeSpecification instance.
@@ -188,6 +205,17 @@ func (s ContractSpecification) String() string {
 	return string(out)
 }
 
+// GetID get this contract spec's metadata address. Satisfies the MetadataAddressable interface.
+func (s ContractSpecification) GetID() MetadataAddress {
+	return s.SpecificationId
+}
+
+// GetSpecID get this contract spec's metadata address. Satisfies the MetadataSpecAddressable interface.
+// It returns the same thing as the GetID.
+func (s ContractSpecification) GetSpecID() MetadataAddress {
+	return s.SpecificationId
+}
+
 // NewRecordSpecification creates a new RecordSpecification instance
 func NewRecordSpecification(
 	specificationID MetadataAddress,
@@ -257,6 +285,17 @@ func (s RecordSpecification) ValidateBasic() error {
 func (s RecordSpecification) String() string {
 	out, _ := yaml.Marshal(s)
 	return string(out)
+}
+
+// GetID get this record spec's metadata address. Satisfies the MetadataAddressable interface.
+func (s RecordSpecification) GetID() MetadataAddress {
+	return s.SpecificationId
+}
+
+// GetSpecID get this record spec's metadata address. Satisfies the MetadataSpecAddressable interface.
+// It returns the same thing as the GetID.
+func (s RecordSpecification) GetSpecID() MetadataAddress {
+	return s.SpecificationId
 }
 
 // NewInputSpecification creates a new InputSpecification instance
