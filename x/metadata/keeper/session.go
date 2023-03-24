@@ -103,9 +103,9 @@ func (k Keeper) IterateSessions(ctx sdk.Context, scopeID types.MetadataAddress, 
 	return nil
 }
 
-// ValidateSessionUpdate checks the current session and the proposed session to determine if the the proposed changes are valid
+// ValidateSessionUpdate checks the current session and the proposed session to determine if the proposed changes are valid
 // based on the existing state
-func (k Keeper) ValidateSessionUpdate(ctx sdk.Context, existing, proposed *types.Session, signers []string, msgTypeURL string) error {
+func (k Keeper) ValidateSessionUpdate(ctx sdk.Context, existing, proposed *types.Session, signers []string, msg sdk.Msg) error {
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
 	}
@@ -162,7 +162,7 @@ func (k Keeper) ValidateSessionUpdate(ctx sdk.Context, existing, proposed *types
 		return err
 	}
 
-	if err = k.ValidateAllPartiesAreSignersWithAuthz(ctx, scope.Owners, signers, msgTypeURL); err != nil {
+	if err = k.ValidateAllPartiesAreSignersWithAuthz(ctx, scope.Owners, signers, msg); err != nil {
 		return err
 	}
 

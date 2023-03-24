@@ -115,7 +115,7 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 	return nil
 }
 
-// ValidateRecordUpdate checks the current record and the proposed record to determine if the the proposed changes are valid
+// ValidateRecordUpdate checks the current record and the proposed record to determine if the proposed changes are valid
 // based on the existing state
 // Note: The proposed parameter is a reference here so that the SpecificationId can be set in cases when it's not provided.
 func (k Keeper) ValidateRecordUpdate(
@@ -123,7 +123,7 @@ func (k Keeper) ValidateRecordUpdate(
 	existing, proposed *types.Record,
 	signers []string,
 	partiesInvolved []types.Party,
-	msgTypeURL string,
+	msg sdk.Msg,
 ) error {
 	if proposed == nil {
 		return errors.New("missing required proposed record")
@@ -143,7 +143,7 @@ func (k Keeper) ValidateRecordUpdate(
 			if !found {
 				return fmt.Errorf("original session %s not found for existing record", existing.SessionId)
 			}
-			if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, session.Parties, signers, msgTypeURL); err != nil {
+			if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, session.Parties, signers, msg); err != nil {
 				return fmt.Errorf("missing signer from original session %s: %w", session.SessionId, err)
 			}
 		}
@@ -172,7 +172,7 @@ func (k Keeper) ValidateRecordUpdate(
 	}
 
 	// Make sure all the session parties have signed.
-	if signErr := k.ValidateAllPartiesAreSignersWithAuthz(ctx, session.Parties, signers, msgTypeURL); signErr != nil {
+	if signErr := k.ValidateAllPartiesAreSignersWithAuthz(ctx, session.Parties, signers, msg); signErr != nil {
 		return signErr
 	}
 
@@ -291,14 +291,14 @@ func (k Keeper) ValidateRecordUpdate(
 	return nil
 }
 
-// ValidateRecordRemove checks the current record and the proposed removal scope to determine if the the proposed remove is valid
+// ValidateRecordRemove checks the current record and the proposed removal scope to determine if the proposed remove is valid
 // based on the existing state
 func (k Keeper) ValidateRecordRemove(
 	ctx sdk.Context,
 	existing types.Record,
 	proposedID types.MetadataAddress,
 	signers []string,
-	msgTypeURL string,
+	msg sdk.Msg,
 ) error {
 	scopeUUID, err := existing.SessionId.ScopeUUID()
 	if err != nil {
@@ -313,7 +313,7 @@ func (k Keeper) ValidateRecordRemove(
 	if !recordID.Equals(proposedID) {
 		return fmt.Errorf("cannot remove record. expected %s, got %s", recordID, proposedID)
 	}
-	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, scope.Owners, signers, msgTypeURL); err != nil {
+	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, scope.Owners, signers, msg); err != nil {
 		return err
 	}
 	return nil

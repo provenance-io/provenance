@@ -37,12 +37,12 @@ func (k Keeper) checkAuthzForMissing(
 	ctx sdk.Context,
 	addrs []string,
 	signers []string,
-	msgTypeURL string,
+	msg sdk.Msg,
 ) ([]string, error) {
 	stillMissing := []string{}
 	// return as a list this message type and its parent
 	// type if it is a message belonging to a hierarchy
-	msgTypeURLs := k.GetAuthzMessageTypeURLs(msgTypeURL)
+	msgTypeURLs := k.GetAuthzMessageTypeURLs(sdk.MsgTypeURL(msg))
 
 	for _, addr := range addrs {
 		found := false
@@ -55,7 +55,7 @@ func (k Keeper) checkAuthzForMissing(
 			for _, msgType := range msgTypeURLs {
 				authorization, exp := k.authzKeeper.GetAuthorization(ctx, grantee, granter, msgType)
 				if authorization != nil {
-					resp, err := authorization.Accept(ctx, nil)
+					resp, err := authorization.Accept(ctx, msg)
 					if err == nil && resp.Accept {
 						switch {
 						case resp.Delete:
@@ -93,15 +93,15 @@ func (k Keeper) ValidateAllOwnersAreSignersWithAuthz(
 	ctx sdk.Context,
 	existingOwners []string,
 	signers []string,
-	msgTypeURL string,
+	msg sdk.Msg,
 ) error {
 	missing := FindMissing(existingOwners, signers)
 	stillMissing := missing
 	var err error
 	// Authz grants rights to address on specific message types.
-	// If no message type URL is provided, skip the Authz check.
-	if len(msgTypeURL) > 0 {
-		stillMissing, err = k.checkAuthzForMissing(ctx, missing, signers, msgTypeURL)
+	// If no message is provided, skip the Authz check.
+	if msg != nil {
+		stillMissing, err = k.checkAuthzForMissing(ctx, missing, signers, msg)
 		if err != nil {
 			return fmt.Errorf("error validating signers: %w", err)
 		}
@@ -118,7 +118,7 @@ func (k Keeper) ValidateAllOwnersAreSignersWithAuthz(
 }
 
 // ValidateAllPartiesAreSignersWithAuthz validate all parties are signers with authz module
-func (k Keeper) ValidateAllPartiesAreSignersWithAuthz(ctx sdk.Context, parties []types.Party, signers []string, msgTypeURL string) error {
+func (k Keeper) ValidateAllPartiesAreSignersWithAuthz(ctx sdk.Context, parties []types.Party, signers []string, msg sdk.Msg) error {
 	addresses := make([]string, len(parties))
 	for i, party := range parties {
 		addresses[i] = party.Address
@@ -128,9 +128,9 @@ func (k Keeper) ValidateAllPartiesAreSignersWithAuthz(ctx sdk.Context, parties [
 	stillMissing := missing
 	var err error
 	// Authz grants rights to address on specific message types.
-	// If no message type URL is provided, skip the Authz check.
-	if len(msgTypeURL) > 0 {
-		stillMissing, err = k.checkAuthzForMissing(ctx, missing, signers, msgTypeURL)
+	// If no message is provided, skip the Authz check.
+	if msg != nil {
+		stillMissing, err = k.checkAuthzForMissing(ctx, missing, signers, msg)
 		if err != nil {
 			return fmt.Errorf("error validating signers: %w", err)
 		}
