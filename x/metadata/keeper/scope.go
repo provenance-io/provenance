@@ -252,8 +252,7 @@ func (k Keeper) ValidateScopeUpdate(
 	ctx sdk.Context,
 	existing,
 	proposed types.Scope,
-	signers []string,
-	msg sdk.Msg,
+	msg types.MetadataMsg,
 ) error {
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
@@ -292,14 +291,14 @@ func (k Keeper) ValidateScopeUpdate(
 			proposedCopy.ValueOwnerAddress = existing.ValueOwnerAddress
 		}
 		if !existing.Equals(proposedCopy) {
-			if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msg); err != nil {
+			if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, msg); err != nil {
 				return err
 			}
 			validatedParties = existing.Owners
 		}
 	}
 
-	if err := k.validateScopeUpdateValueOwner(ctx, existing.ValueOwnerAddress, proposed.ValueOwnerAddress, validatedParties, signers, msg); err != nil {
+	if err := k.validateScopeUpdateValueOwner(ctx, existing.ValueOwnerAddress, proposed.ValueOwnerAddress, validatedParties, msg); err != nil {
 		return err
 	}
 
@@ -308,12 +307,12 @@ func (k Keeper) ValidateScopeUpdate(
 
 // ValidateScopeRemove checks the current scope and the proposed removal scope to determine if the proposed remove is valid
 // based on the existing state
-func (k Keeper) ValidateScopeRemove(ctx sdk.Context, scope types.Scope, signers []string, msg sdk.Msg) error {
-	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, scope.Owners, signers, msg); err != nil {
+func (k Keeper) ValidateScopeRemove(ctx sdk.Context, scope types.Scope, msg types.MetadataMsg) error {
+	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, scope.Owners, msg); err != nil {
 		return err
 	}
 
-	if err := k.validateScopeUpdateValueOwner(ctx, scope.ValueOwnerAddress, "", scope.Owners, signers, msg); err != nil {
+	if err := k.validateScopeUpdateValueOwner(ctx, scope.ValueOwnerAddress, "", scope.Owners, msg); err != nil {
 		return err
 	}
 
@@ -325,13 +324,13 @@ func (k Keeper) validateScopeUpdateValueOwner(
 	existing,
 	proposed string,
 	validatedParties []types.Party,
-	signers []string,
-	msg sdk.Msg,
+	msg types.MetadataMsg,
 ) error {
 	// If they're the same, we don't need to do anything.
 	if existing == proposed {
 		return nil
 	}
+	signers := msg.GetSignersStr()
 	if len(existing) > 0 {
 		isMarker, hasAuth := k.IsMarkerAndHasAuthority(ctx, existing, signers, markertypes.Access_Withdraw)
 		if isMarker {
@@ -359,7 +358,7 @@ func (k Keeper) validateScopeUpdateValueOwner(
 				}
 			}
 			if !found {
-				stillMissing, err := k.checkAuthzForMissing(ctx, []string{existing}, signers, msg)
+				stillMissing, err := k.checkAuthzForMissing(ctx, []string{existing}, msg)
 				if err != nil {
 					return fmt.Errorf("error validating signers: %w", err)
 				}
@@ -388,8 +387,7 @@ func (k Keeper) ValidateScopeAddDataAccess(
 	ctx sdk.Context,
 	dataAccessAddrs []string,
 	existing types.Scope,
-	signers []string,
-	msg sdk.Msg,
+	msg types.MetadataMsg,
 ) error {
 	if len(dataAccessAddrs) < 1 {
 		return fmt.Errorf("data access list cannot be empty")
@@ -407,7 +405,7 @@ func (k Keeper) ValidateScopeAddDataAccess(
 		}
 	}
 
-	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msg); err != nil {
+	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, msg); err != nil {
 		return err
 	}
 
@@ -419,8 +417,7 @@ func (k Keeper) ValidateScopeDeleteDataAccess(
 	ctx sdk.Context,
 	dataAccessAddrs []string,
 	existing types.Scope,
-	signers []string,
-	msg sdk.Msg,
+	msg types.MetadataMsg,
 ) error {
 	if len(dataAccessAddrs) < 1 {
 		return fmt.Errorf("data access list cannot be empty")
@@ -442,7 +439,7 @@ func (k Keeper) ValidateScopeDeleteDataAccess(
 		}
 	}
 
-	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msg); err != nil {
+	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, msg); err != nil {
 		return err
 	}
 
@@ -454,8 +451,7 @@ func (k Keeper) ValidateScopeUpdateOwners(
 	ctx sdk.Context,
 	existing,
 	proposed types.Scope,
-	signers []string,
-	msg sdk.Msg,
+	msg types.MetadataMsg,
 ) error {
 	if err := proposed.ValidateOwnersBasic(); err != nil {
 		return err
@@ -468,7 +464,7 @@ func (k Keeper) ValidateScopeUpdateOwners(
 	if err := k.ValidateScopeOwners(proposed.Owners, scopeSpec); err != nil {
 		return err
 	}
-	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msg); err != nil {
+	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, msg); err != nil {
 		return err
 	}
 	return nil
