@@ -36,8 +36,11 @@ func (k msgServer) WriteScope(
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
-	existing, _ := k.GetScope(ctx, msg.Scope.ScopeId)
-	if err := k.ValidateWriteScope(ctx, existing, msg.Scope, msg); err != nil {
+	var existing *types.Scope
+	if e, found := k.GetScope(ctx, msg.Scope.ScopeId); found {
+		existing = &e
+	}
+	if err := k.ValidateWriteScope(ctx, existing, msg); err != nil {
 		return nil, err
 	}
 

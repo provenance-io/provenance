@@ -250,16 +250,16 @@ func (k Keeper) indexScope(ctx sdk.Context, newScope, oldScope *types.Scope) {
 // based on the existing state
 func (k Keeper) ValidateWriteScope(
 	ctx sdk.Context,
-	existing,
-	proposed types.Scope,
-	msg types.MetadataMsg,
+	existing *types.Scope,
+	msg *types.MsgWriteScopeRequest,
 ) error {
+	proposed := msg.Scope
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
 	}
 
 	// IDs must match
-	if len(existing.ScopeId) > 0 {
+	if existing != nil {
 		if !proposed.ScopeId.Equals(existing.ScopeId) {
 			return fmt.Errorf("cannot update scope identifier. expected %s, got %s", existing.ScopeId, proposed.ScopeId)
 		}
@@ -281,8 +281,9 @@ func (k Keeper) ValidateWriteScope(
 	}
 
 	var validatedParties []types.Party
+	var existingValueOwner string
 
-	if len(existing.Owners) > 0 {
+	if existing != nil {
 		// Existing owners are not required to sign when the ONLY change is from one value owner to another.
 		// If the value owner wasn't previously set, and is being set now, existing owners must sign.
 		// If anything else is changing, the existing owners must sign.
@@ -296,9 +297,10 @@ func (k Keeper) ValidateWriteScope(
 			}
 			validatedParties = existing.Owners
 		}
+		existingValueOwner = existing.ValueOwnerAddress
 	}
 
-	if err := k.validateScopeUpdateValueOwner(ctx, existing.ValueOwnerAddress, proposed.ValueOwnerAddress, validatedParties, msg); err != nil {
+	if err := k.validateScopeUpdateValueOwner(ctx, existingValueOwner, proposed.ValueOwnerAddress, validatedParties, msg); err != nil {
 		return err
 	}
 
