@@ -1032,7 +1032,7 @@ func TestRemoveIsSendEnabledEntries(t *testing.T) {
 	app.BankKeeper.SetSendEnabled(ctx, "nonmarkercoin", false)
 
 	sendEnabledItems := app.BankKeeper.GetAllSendEnabledEntries(ctx)
-	assert.Equal(t, len(sendEnabledItems), 2, "should have 2 items before removal")
+	assert.Len(t, sendEnabledItems, 2, "before removal")
 
 	app.MarkerKeeper.RemoveIsSendEnabledEntries(ctx)
 	sendEnabledItems = app.BankKeeper.GetAllSendEnabledEntries(ctx)
