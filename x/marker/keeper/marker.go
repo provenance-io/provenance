@@ -844,19 +844,6 @@ func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress,
 	return m.GetSupply().IsEqual(sdk.NewCoin(m.GetDenom(), balance.Amount))
 }
 
-// ensureSendEnabledStatus checks to see if the configuration of SendEnabled for the current network matches
-// the requested value, sets
-func (k Keeper) ensureSendEnabledStatus(ctx sdk.Context, denom string, sendEnabled bool) {
-	if k.bankKeeper.IsSendEnabledDenom(ctx, denom) != sendEnabled {
-		switch k.bankKeeper.GetParams(ctx).DefaultSendEnabled {
-		case sendEnabled:
-			k.bankKeeper.DeleteSendEnabled(ctx, denom)
-		default:
-			k.bankKeeper.SetSendEnabled(ctx, denom, sendEnabled)
-		}
-	}
-}
-
 // RemoveIsSendEnabledEntries removes all entries in the bankkeepers send enabled table
 // TODO: remove after v1.15.0 upgrade handler is removed
 func (k Keeper) RemoveIsSendEnabledEntries(ctx sdk.Context) {
