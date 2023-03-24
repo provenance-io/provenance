@@ -166,9 +166,13 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk
 			node.Address,
 			node.Address,
 			markertypes.MarkerType_Coin,
-			true, // fixed supply
-			true, // allow gov
+			true,       // fixed supply
+			true,       // allow gov
+			false,      // don't allow forced transfer
+			[]string{}, // required attributes
 		)
+
+		bk.SetSendEnabled(ctx, denom, true)
 
 		// fund the node account to do all of these txs
 		fundErr := testutil.FundAccount(bk, ctx, node.Address, sdk.NewCoins(sdk.Coin{

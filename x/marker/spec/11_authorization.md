@@ -19,5 +19,7 @@ message MarkerTransferAuthorization {
 }
 ```
 
-With the `MarkerTransferAuthorization` a `granter` can a allow a `grantee` to do transfers on their behalf.
-A transfer limit is required to be set for the `grantee` and an optional list of allowed recipients.
+With the `MarkerTransferAuthorization` a `granter` can allow a `grantee` to do transfers on their behalf.
+A `transfer_limit` is required to be set for the `grantee`.
+The `allow_list` is optional.
+An empty list means any destination address is allowed, otherwise, the destination must be in the `allow_list`.

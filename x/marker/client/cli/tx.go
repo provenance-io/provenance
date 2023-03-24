@@ -42,6 +42,8 @@ const (
 	FlagPacketTimeoutTimestamp = "packet-timeout-timestamp"
 	FlagAbsoluteTimeouts       = "absolute-timeouts"
 	FlagMemo                   = "memo"
+	FlagRequiredAttributes     = "required-attributes"
+	FlagAllowForceTransfer     = "allow-force-transfer"
 )
 
 // NewTxCmd returns the top-level command for marker CLI transactions.
@@ -204,45 +206,38 @@ func GetCmdAddMarker() *cobra.Command {
 		Long: strings.TrimSpace(`Creates a new marker in the Proposed state managed by the from address
 with the given supply amount and denomination provided in the coin argument
 `),
-		Example: fmt.Sprintf(`$ %s tx marker new 1000hotdogcoin --%s=false --%s=false --from=mykey`, FlagType, FlagSupplyFixed, FlagAllowGovernanceControl),
+		Example: fmt.Sprintf(`$ %s tx marker new 1000hotdogcoin --%s=false --%s=false --from=mykey --%s=attr.one,*.attr.two,...`,
+			FlagType,
+			FlagSupplyFixed,
+			FlagAllowGovernanceControl,
+			FlagRequiredAttributes,
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			markerType := ""
+
 			coin, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
 				return fmt.Errorf("invalid coin %s", args[0])
 			}
 			callerAddr := clientCtx.GetFromAddress()
-			markerType, err = cmd.Flags().GetString(FlagType)
+
+			flagVals, err := ParseNewMarkerFlags(cmd)
 			if err != nil {
-				return fmt.Errorf("invalid marker type: %w", err)
+				return err
 			}
-			typeValue := types.MarkerType_Coin
-			if len(markerType) > 0 {
-				typeValue = types.MarkerType(types.MarkerType_value["MARKER_TYPE_"+markerType])
-				if typeValue < 1 {
-					return fmt.Errorf("invalid marker type: %s; expected COIN|RESTRICTED", markerType)
-				}
-			}
-			supplyFixed, err := cmd.Flags().GetBool(FlagSupplyFixed)
-			if err != nil {
-				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagSupplyFixed, err)
-			}
-			allowGovernanceControl, err := cmd.Flags().GetBool(FlagAllowGovernanceControl)
-			if err != nil {
-				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagAllowGovernanceControl, err)
-			}
-			msg := types.NewMsgAddMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue, supplyFixed, allowGovernanceControl)
+
+			msg := types.NewMsgAddMarkerRequest(
+				coin.Denom, coin.Amount, callerAddr, callerAddr, flagVals.MarkerType,
+				flagVals.SupplyFixed, flagVals.AllowGovControl, flagVals.AllowForceTransfer, flagVals.RequiredAttributes,
+			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	cmd.Flags().String(FlagType, "COIN", "a marker type to assign (default is COIN)")
-	cmd.Flags().Bool(FlagSupplyFixed, false, "a true or false value to denote if a supply is fixed (default is false)")
-	cmd.Flags().Bool(FlagAllowGovernanceControl, false, "a true or false value to denote if marker is allowed governance control (default is false)")
+	AddNewMarkerFlags(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -923,49 +918,44 @@ func GetCmdAddFinalizeActivateMarker() *cobra.Command {
 		Long: strings.TrimSpace(`Creates a new marker, finalizes it and put's it ACTIVATED state managed by the from address
 with the given supply amount and denomination provided in the coin argument
 `),
-		Example: fmt.Sprintf(`$ %s tx marker create-finalize-activate 1000hotdogcoin address1,mint,admin;address2,burn --%s=false --%s=false --from=mykey`, FlagType, FlagSupplyFixed, FlagAllowGovernanceControl),
+		Example: fmt.Sprintf(`$ %s tx marker create-finalize-activate 1000hotdogcoin address1,mint,admin;address2,burn --%s=false --%s=false --%s=attr.one,*.attr.two,... --from=mykey`,
+			FlagType,
+			FlagSupplyFixed,
+			FlagAllowGovernanceControl,
+			FlagRequiredAttributes,
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			markerType := ""
+
 			coin, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
 				return fmt.Errorf("invalid coin %s", args[0])
 			}
 			callerAddr := clientCtx.GetFromAddress()
-			markerType, err = cmd.Flags().GetString(FlagType)
+
+			flagVals, err := ParseNewMarkerFlags(cmd)
 			if err != nil {
-				return fmt.Errorf("invalid marker type: %w", err)
+				return err
 			}
-			typeValue := types.MarkerType_Coin
-			if len(markerType) > 0 {
-				typeValue = types.MarkerType(types.MarkerType_value["MARKER_TYPE_"+markerType])
-				if typeValue < 1 {
-					return fmt.Errorf("invalid marker type: %s; expected COIN|RESTRICTED", markerType)
-				}
-			}
-			supplyFixed, err := cmd.Flags().GetBool(FlagSupplyFixed)
-			if err != nil {
-				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagSupplyFixed, err)
-			}
-			allowGovernanceControl, err := cmd.Flags().GetBool(FlagAllowGovernanceControl)
-			if err != nil {
-				return fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagAllowGovernanceControl, err)
-			}
+
 			accessGrants := ParseAccessGrantFromString(args[1])
 			if len(accessGrants) == 0 {
 				panic("at least one access grant should be present.")
 			}
-			msg := types.NewMsgAddFinalizeActivateMarkerRequest(coin.Denom, coin.Amount, callerAddr, callerAddr, typeValue, supplyFixed, allowGovernanceControl, accessGrants)
+
+			msg := types.NewMsgAddFinalizeActivateMarkerRequest(
+				coin.Denom, coin.Amount, callerAddr, callerAddr, flagVals.MarkerType,
+				flagVals.SupplyFixed, flagVals.AllowGovControl,
+				flagVals.AllowForceTransfer, flagVals.RequiredAttributes, accessGrants,
+			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	cmd.Flags().String(FlagType, "COIN", "a marker type to assign (default is COIN)")
-	cmd.Flags().Bool(FlagSupplyFixed, false, "a true or false value to denote if a supply is fixed (default is false)")
-	cmd.Flags().Bool(FlagAllowGovernanceControl, false, "a true or false value to denote if marker is allowed governance control (default is false)")
+	AddNewMarkerFlags(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -1000,4 +990,63 @@ func ParseAccessGrantFromString(addressPermissionString string) []types.AccessGr
 		grants = append(grants, *types.NewAccessGrant(address, permissions))
 	}
 	return grants
+}
+
+// AddNewMarkerFlags adds the flags needed when defining a new marker.
+// The provided values can be retrieved using ParseNewMarkerFlags.
+func AddNewMarkerFlags(cmd *cobra.Command) {
+	cmd.Flags().String(FlagType, "COIN", "a marker type to assign (default is COIN)")
+	cmd.Flags().Bool(FlagSupplyFixed, false, "Indicates that the supply is fixed")
+	cmd.Flags().Bool(FlagAllowGovernanceControl, false, "Indicates that governance control is allowed")
+	cmd.Flags().Bool(FlagAllowForceTransfer, false, "Indicates that force transfer is allowed")
+	cmd.Flags().StringSlice(FlagRequiredAttributes, []string{}, "comma delimited list of required attributes needed for a restricted marker to have send authority")
+}
+
+// NewMarkerFlagValues represents the values provided in the flags added by AddNewMarkerFlags.
+type NewMarkerFlagValues struct {
+	MarkerType         types.MarkerType
+	SupplyFixed        bool
+	AllowGovControl    bool
+	AllowForceTransfer bool
+	RequiredAttributes []string
+}
+
+// ParseNewMarkerFlags reads the flags added by AddNewMarkerFlags.
+func ParseNewMarkerFlags(cmd *cobra.Command) (*NewMarkerFlagValues, error) {
+	rv := &NewMarkerFlagValues{}
+
+	markerType, err := cmd.Flags().GetString(FlagType)
+	if err != nil {
+		return nil, fmt.Errorf("invalid marker type: %w", err)
+	}
+	if len(markerType) > 0 {
+		rv.MarkerType = types.MarkerType(types.MarkerType_value["MARKER_TYPE_"+strings.ToUpper(markerType)])
+		if rv.MarkerType < 1 {
+			return nil, fmt.Errorf("invalid marker type: %s; expected COIN|RESTRICTED", markerType)
+		}
+	} else {
+		rv.MarkerType = types.MarkerType_Coin
+	}
+
+	rv.SupplyFixed, err = cmd.Flags().GetBool(FlagSupplyFixed)
+	if err != nil {
+		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagSupplyFixed, err)
+	}
+
+	rv.AllowGovControl, err = cmd.Flags().GetBool(FlagAllowGovernanceControl)
+	if err != nil {
+		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagAllowGovernanceControl, err)
+	}
+
+	rv.AllowForceTransfer, err = cmd.Flags().GetBool(FlagAllowForceTransfer)
+	if err != nil {
+		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagAllowForceTransfer, err)
+	}
+
+	rv.RequiredAttributes, err = cmd.Flags().GetStringSlice(FlagRequiredAttributes)
+	if err != nil {
+		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: comma delimited list of attributes Error: %w", FlagRequiredAttributes, err)
+	}
+
+	return rv, nil
 }

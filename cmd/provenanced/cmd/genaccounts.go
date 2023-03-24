@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
+	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
@@ -39,7 +40,6 @@ const (
 	flagEscrow   = "escrow"
 	flagActivate = "activate"
 	flagFinalize = "finalize"
-	flagType     = "type"
 )
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
@@ -303,7 +303,7 @@ func AddRootDomainAccountCmd(defaultNodeHome string) *cobra.Command {
 // AddGenesisMarkerCmd configures a marker account and adds it to the list of genesis accounts
 func AddGenesisMarkerCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-genesis-marker [coin] --manager [address_or_key_name] --access [grant][,[grant]] --escrow [coin][, [coin]] --finalize --activate --type [COIN]",
+		Use:   "add-genesis-marker [coin] --manager [address_or_key_name] --access [grant][,[grant]] --escrow [coin][, [coin]] --finalize --activate --type [COIN] --required-attributes=attr.one,*.attr.two,...",
 		Short: "Adds a marker to genesis.json",
 		Long: `Adds a marker to genesis.json. The provided parameters must specify
 the marker supply and denom as a coin.  A managing account may be added as a key name or address. An accessgrant
@@ -312,7 +312,7 @@ a marker account is activated any unassigned marker supply must be provided as e
 a manager address assigned that can activate the marker after genesis.  Activated markers will have supply invariants
 enforced immediately.  An optional type flag can be provided or the default of COIN will be used.
 `,
-		Example: fmt.Sprintf(`$ %[1]s add-genesis-marker 1000000000funcoins --manager validator --access withdraw --escrow 100funcoins --finalize --type COIN`, version.AppName),
+		Example: fmt.Sprintf(`$ %[1]s add-genesis-marker 1000000000funcoins --manager validator --access withdraw --escrow 100funcoins --finalize --type COIN --required-attributes=attr.one,*.attr.two,...`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -332,7 +332,6 @@ enforced immediately.  An optional type flag can be provided or the default of C
 			var managerAddr sdk.AccAddress
 			var accessGrants []markertypes.AccessGrant
 			markerStatus := markertypes.StatusProposed
-			markerFlagType := ""
 
 			mgr, err := cmd.Flags().GetString(flagManager)
 			if err != nil {
@@ -400,18 +399,9 @@ enforced immediately.  An optional type flag can be provided or the default of C
 				markerStatus = markertypes.StatusActive
 			}
 
-			markerFlagType, err = cmd.Flags().GetString(flagType)
+			newMarkerFlags, err := markercli.ParseNewMarkerFlags(cmd)
 			if err != nil {
 				return err
-			}
-
-			if len(markerFlagType) == 0 {
-				markerFlagType = "COIN"
-			}
-
-			markerType := markertypes.MarkerType_value["MARKER_TYPE_"+strings.ToUpper(markerFlagType)]
-			if markerType == int32(markertypes.MarkerType_Unknown) {
-				panic(fmt.Sprintf("unknown marker type %s", markerFlagType))
 			}
 
 			genAccount := markertypes.NewMarkerAccount(
@@ -420,8 +410,11 @@ enforced immediately.  An optional type flag can be provided or the default of C
 				managerAddr,
 				accessGrants,
 				markerStatus,
-				markertypes.MarkerType(markerType),
-				true,
+				newMarkerFlags.MarkerType,
+				newMarkerFlags.SupplyFixed,
+				newMarkerFlags.AllowGovControl,
+				newMarkerFlags.AllowForceTransfer,
+				newMarkerFlags.RequiredAttributes,
 			)
 
 			if err = genAccount.Validate(); err != nil {
@@ -497,7 +490,7 @@ enforced immediately.  An optional type flag can be provided or the default of C
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
 
-	cmd.Flags().String(flagType, "", "a marker type to assign (default is COIN)")
+	markercli.AddNewMarkerFlags(cmd)
 	cmd.Flags().String(flagManager, "", "a key name or address to assign as the token manager")
 	cmd.Flags().String(flagAccess, "", "A comma separated list of access to grant to the manager account. [mint,burn,deposit,withdraw,delete,grant]")
 	cmd.Flags().String(flagEscrow, "", "A list of coins held by the marker account instance.  Note: Any supply not allocated to other accounts should be assigned here.")

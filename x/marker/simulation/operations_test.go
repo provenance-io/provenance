@@ -4,10 +4,11 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/stretchr/testify/suite"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -51,7 +52,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	//	part of the Msg interface (though it is part of LegacyMsg). But depending on how the
 	//	randomness plays out, it can be either of those. If one of these starts failing on
 	//	the operation name, and the actual value is one of the other possibilities for that
-	//	operation, it's probably just do to a change in the number of times r is used before
+	//	operation, it's probably just due to a change in the number of times r is used before
 	//	getting to that operation.
 
 	expected := []struct {
@@ -66,7 +67,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		//	types.TypeFinalizeRequest, fmt.Sprintf("%T", &types.MsgFinalizeRequest{}),
 		//	types.TypeCancelRequest, fmt.Sprintf("%T", &types.MsgCancelRequest{}),
 		//	types.TypeDeleteRequest, fmt.Sprintf("%T", &types.MsgDeleteRequest{}),
-		{simappparams.DefaultWeightMsgChangeStatus, sdk.MsgTypeURL(&types.MsgActivateRequest{}), sdk.MsgTypeURL(&types.MsgActivateRequest{})},
+		{simappparams.DefaultWeightMsgChangeStatus, sdk.MsgTypeURL(&types.MsgCancelRequest{}), sdk.MsgTypeURL(&types.MsgCancelRequest{})},
 		// Possible names: types.TypeAddAccessRequest, fmt.Sprintf("%T", &types.MsgAddAccessRequest{})
 		{simappparams.DefaultWeightMsgAddAccess, sdk.MsgTypeURL(&types.MsgAddAccessRequest{}), sdk.MsgTypeURL(&types.MsgAddAccessRequest{})},
 		{simappparams.DefaultWeightMsgAddFinalizeActivateMarker, sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{}), sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{})},

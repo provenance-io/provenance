@@ -130,7 +130,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFeesAuthz() {
 	server := markerkeeper.NewMsgServerImpl(s.app.MarkerKeeper)
 
 	hotdogDenom := "hotdog"
-	_, err := server.AddMarker(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, markertypes.MarkerType_RestrictedCoin, true, true))
+	_, err := server.AddMarker(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{}))
 	s.Require().NoError(err)
 	access := markertypes.AccessGrant{
 		Address:     s.user1,

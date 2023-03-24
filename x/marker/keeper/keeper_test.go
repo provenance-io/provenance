@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -88,21 +89,21 @@ func TestExistingAccounts(t *testing.T) {
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balance must be set")
 
 	// Creating a marker over an account with zero sequence is fine.
-	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true))
+	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}))
 	require.NoError(t, err, "should allow a marker over existing account that has not signed anything.")
 
 	// existing coin balance must still be present
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balances must be preserved")
 
 	// Creating a marker over an existing marker fails.
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true))
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}))
 	require.Error(t, err, "fails because marker already exists")
 
 	// replace existing test account with a new copy that has a positive sequence number
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 10))
 
 	// Creating a marker over an existing account with a positive sequence number fails.
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true))
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}))
 	require.Error(t, err, "should not allow creation over and existing account with a positive sequence number.")
 }
 
@@ -115,17 +116,16 @@ func TestAccountUnrestrictedDenoms(t *testing.T) {
 
 	// Require a long unrestricted denom
 	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: "[a-z]{12,20}"})
-
-	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("tooshort", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true))
+	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("tooshort", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}))
 	require.Error(t, err, "fails with unrestricted denom length fault")
 	require.Equal(t, fmt.Errorf("invalid denom [tooshort] (fails unrestricted marker denom validation [a-z]{12,20})"), err, "should fail with denom restriction")
 
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("itslongenough", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true))
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("itslongenough", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}))
 	require.NoError(t, err, "should allow a marker with a sufficiently long denom")
 
 	// Set to an empty string (returns to default expression)
 	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: ""})
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("short", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true))
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("short", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}))
 	// succeeds now as the default unrestricted denom expression allows any valid denom (minimum length is 2)
 	require.NoError(t, err, "should allow any valid denom with a min length of two")
 }
@@ -512,55 +512,6 @@ func TestAccountInsufficientExisting(t *testing.T) {
 	require.EqualValues(t, 10001, m.GetSupply().Amount.Int64())
 }
 
-func TestAccountRemoveDeletesSendEnabled(t *testing.T) {
-	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	pubkey := secp256k1.GenPrivKey().PubKey()
-	user := sdk.AccAddress(pubkey.Address())
-
-	// setup an existing account with an existing balance (and matching supply)
-	existingSupply := sdk.NewCoin("testcoin", sdk.NewInt(10000))
-	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
-
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, user, sdk.NewCoins(existingSupply)), "funding account")
-
-	// create account and check default values
-	mac := types.NewEmptyMarkerAccount("testcoin", user.String(), []types.AccessGrant{*types.NewAccessGrant(user,
-		[]types.Access{types.Access_Mint, types.Access_Burn, types.Access_Withdraw, types.Access_Delete})})
-	mac.MarkerType = types.MarkerType_RestrictedCoin
-	require.NoError(t, mac.SetManager(user))
-	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(10000))))
-
-	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
-
-	var err error
-	var m types.MarkerAccountI
-	m, err = app.MarkerKeeper.GetMarkerByDenom(ctx, "testcoin")
-	require.NoError(t, err)
-	require.NotNil(t, m)
-
-	// Make sure "send enabled" are initially empty.
-	allSendEnabled := app.BankKeeper.GetAllSendEnabledEntries(ctx)
-	require.Len(t, allSendEnabled, 0, "initial send enabled count")
-
-	// Finalize and activate, which will add "send enabled" metadata.
-	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"), "finalizing marker")
-	require.NoError(t, app.MarkerKeeper.ActivateMarker(ctx, user, "testcoin"), "activating marker")
-
-	// Make sure "send enabled" are at 1 item.
-	allSendEnabled = app.BankKeeper.GetAllSendEnabledEntries(ctx)
-	require.Len(t, allSendEnabled, 1, "send enabled count before removal")
-	require.Equal(t, "testcoin", allSendEnabled[0].Denom, "send enabled denom")
-
-	// Remove marker which removes "send enabled".
-	app.MarkerKeeper.RemoveMarker(ctx, m)
-
-	// Make sure "send enabled" are empty again.
-	allSendEnabled = app.BankKeeper.GetAllSendEnabledEntries(ctx)
-	require.Len(t, allSendEnabled, 0, "send enabled count after removal")
-}
-
 func TestAccountImplictControl(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -582,8 +533,9 @@ func TestAccountImplictControl(t *testing.T) {
 	// No send enabled flag enforced yet, default is allowed
 	require.True(t, app.BankKeeper.IsSendEnabledDenom(ctx, "testcoin"))
 	require.NoError(t, app.MarkerKeeper.ActivateMarker(ctx, user, "testcoin"))
-	// Activated restricted coins can not be sent directly, verify is false now
-	require.False(t, app.BankKeeper.IsSendEnabledDenom(ctx, "testcoin"))
+
+	// Activated restricted coins should be added to send enable, restriction checks are verified further in the stack, verify is true now
+	require.True(t, app.BankKeeper.IsSendEnabledDenom(ctx, "testcoin"))
 
 	// Must fail because user2 does not have any access
 	require.Error(t, app.MarkerKeeper.AddAccess(ctx, user2, "testcoin", types.NewAccessGrant(user2,
@@ -631,6 +583,101 @@ func TestAccountImplictControl(t *testing.T) {
 	// succeeds when admin user (grantee with authz permissions) has transfer authority with receiver is on allowed list
 	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
 
+}
+
+func TestForceTransfer(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	admin := sdk.AccAddress("admin_account_______")
+	other := sdk.AccAddress("other_account_______")
+
+	// Shorten up the lines making Coins.
+	cz := func(coins ...sdk.Coin) sdk.Coins {
+		return sdk.NewCoins(coins...)
+	}
+
+	accessList := []types.AccessGrant{{
+		Address: admin.String(),
+		Permissions: []types.Access{
+			types.Access_Transfer,
+			types.Access_Mint, types.Access_Burn, types.Access_Deposit,
+			types.Access_Withdraw, types.Access_Delete, types.Access_Admin,
+		},
+	}}
+
+	noForceDenom := "noforcecoin"
+	noForceCoin := func(amt int64) sdk.Coin {
+		return sdk.NewInt64Coin(noForceDenom, amt)
+	}
+	noForceAddr := types.MustGetMarkerAddress(noForceDenom)
+	noForceMac := types.NewMarkerAccount(
+		authtypes.NewBaseAccount(noForceAddr, nil, 0, 0),
+		noForceCoin(1111),
+		admin,
+		accessList,
+		types.StatusProposed,
+		types.MarkerType_RestrictedCoin,
+		true,
+		true,
+		false,
+		[]string{},
+	)
+	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, noForceMac),
+		"AddFinalizeAndActivateMarker without force transfer")
+
+	wForceDenom := "withforcecoin"
+	wForceCoin := func(amt int64) sdk.Coin {
+		return sdk.NewInt64Coin(wForceDenom, amt)
+	}
+	wForceAddr := types.MustGetMarkerAddress(wForceDenom)
+	wForceMac := types.NewMarkerAccount(
+		authtypes.NewBaseAccount(wForceAddr, nil, 0, 0),
+		wForceCoin(2222),
+		admin,
+		accessList,
+		types.StatusProposed,
+		types.MarkerType_RestrictedCoin,
+		true,
+		true,
+		true,
+		[]string{},
+	)
+	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, wForceMac),
+		"AddFinalizeAndActivateMarker with force transfer")
+
+	requireBalances := func(tt *testing.T, desc string, noForceBal, wForceBal, adminBal, otherBal sdk.Coins) {
+		tt.Helper()
+		ok := assert.Equal(tt, noForceBal, app.BankKeeper.GetAllBalances(ctx, noForceAddr),
+			"%s no-force-transfer marker balance", desc)
+		ok = assert.Equal(tt, wForceBal, app.BankKeeper.GetAllBalances(ctx, wForceAddr),
+			"%s with-force-transfer marker balance", desc) && ok
+		ok = assert.Equal(tt, adminBal, app.BankKeeper.GetAllBalances(ctx, admin),
+			"%s admin balance", desc) && ok
+		ok = assert.Equal(tt, otherBal, app.BankKeeper.GetAllBalances(ctx, other),
+			"%s other balance", desc) && ok
+		if !ok {
+			tt.FailNow()
+		}
+	}
+	requireBalances(t, "starting", cz(noForceCoin(1111)), cz(wForceCoin(2222)), cz(), cz())
+
+	// Have the admin withdraw funds of each to the other account.
+	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, admin, other, noForceDenom, cz(noForceCoin(111))),
+		"withdraw 500noforceback to other")
+	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, admin, other, wForceDenom, cz(wForceCoin(222))),
+		"withdraw 500wforceback to other")
+	requireBalances(t, "after withdraws", cz(noForceCoin(1000)), cz(wForceCoin(2000)), cz(), cz(noForceCoin(111), wForceCoin(222)))
+
+	// Have the admin try a transfer of the no-force-transfer from that other account to itself. It should fail.
+	assert.EqualError(t, app.MarkerKeeper.TransferCoin(ctx, other, admin, admin, noForceCoin(11)),
+		fmt.Sprintf("%s account has not been granted authority to withdraw from %s account", admin, other),
+		"transfer of non-force-transfer coin from other account back to admin")
+	requireBalances(t, "after failed transfer", cz(noForceCoin(1000)), cz(wForceCoin(2000)), cz(), cz(noForceCoin(111), wForceCoin(222)))
+
+	// Have the admin try a transfer of the w/force transfer from that other account to itself. It should go through.
+	assert.NoError(t, app.MarkerKeeper.TransferCoin(ctx, other, admin, admin, wForceCoin(22)),
+		"transfer of force-transferrable coin from other account back to admin")
+	requireBalances(t, "after successful transfer", cz(noForceCoin(1000)), cz(wForceCoin(2000)), cz(wForceCoin(22)), cz(noForceCoin(111), wForceCoin(200)))
 }
 
 func TestMarkerFeeGrant(t *testing.T) {
@@ -706,6 +753,8 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 		types.MarkerType_Coin,
 		true,
 		true,
+		false,
+		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Mint, types.Access_Admin})},
 	))
 	require.NoError(t, err, "should allow a marker over existing account that has not signed anything.")
@@ -732,6 +781,8 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 		types.MarkerType_Coin,
 		true,
 		true,
+		false,
+		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Mint, types.Access_Admin})},
 	))
 	require.Error(t, err, "fails because marker already exists")
@@ -765,6 +816,8 @@ func TestInvalidAccount(t *testing.T) {
 		types.MarkerType_Coin,
 		true,
 		true,
+		false,
+		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Mint, types.Access_Admin})},
 	))
 	require.Error(t, err, "should not allow creation over and existing account with a positive sequence number.")
@@ -790,6 +843,8 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 			types.MarkerType_Coin,
 			true,
 			true,
+			false,
+			[]string{},
 			[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})},
 		))
 	require.Error(t, err, "fails with unrestricted denom length fault")
@@ -803,6 +858,8 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 		types.MarkerType_Coin,
 		true,
 		true,
+		false,
+		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})},
 	))
 	require.NoError(t, err, "should allow a marker with a sufficiently long denom")
@@ -817,6 +874,8 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 		types.MarkerType_Coin,
 		true,
 		true,
+		false,
+		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})},
 	))
 	// succeeds now as the default unrestricted denom expression allows any valid denom (minimum length is 2)

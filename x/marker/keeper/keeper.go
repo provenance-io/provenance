@@ -17,7 +17,9 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
 
+	attrkeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
+	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 )
 
 // Handler is a handler function for use with IterateRecords.
@@ -63,8 +65,10 @@ type Keeper struct {
 
 	ibcKeeper ibckeeper.Keeper
 
-	// For access to bank keeper storage outside what their keeper provides.
-	bankKeeperStoreKey storetypes.StoreKey
+	// To access attributes for addresses
+	attrKeeper attrkeeper.Keeper
+	// To access names and normalize required attributes
+	nameKeeper namekeeper.Keeper
 
 	// Key to access the key-value store from sdk.Context.
 	storeKey storetypes.StoreKey
@@ -73,6 +77,8 @@ type Keeper struct {
 	cdc codec.BinaryCodec
 
 	authority string
+
+	markerModuleAddr sdk.AccAddress
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -89,23 +95,26 @@ func NewKeeper(
 	authzKeeper authzkeeper.Keeper,
 	feegrantKeeper feegrantkeeper.Keeper,
 	ibcKeeper ibckeeper.Keeper,
-	bankKey storetypes.StoreKey,
+	attrKeeper attrkeeper.Keeper,
+	nameKeeper namekeeper.Keeper,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
 	return Keeper{
-		paramSpace:         paramSpace,
-		authKeeper:         authKeeper,
-		authzKeeper:        authzKeeper,
-		bankKeeper:         bankKeeper,
-		feegrantKeeper:     feegrantKeeper,
-		ibcKeeper:          ibcKeeper,
-		storeKey:           key,
-		bankKeeperStoreKey: bankKey,
-		cdc:                cdc,
-		authority:          authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		paramSpace:       paramSpace,
+		authKeeper:       authKeeper,
+		authzKeeper:      authzKeeper,
+		bankKeeper:       bankKeeper,
+		feegrantKeeper:   feegrantKeeper,
+		ibcKeeper:        ibcKeeper,
+		attrKeeper:       attrKeeper,
+		nameKeeper:       nameKeeper,
+		storeKey:         key,
+		cdc:              cdc,
+		authority:        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		markerModuleAddr: authtypes.NewModuleAddress(types.CoinPoolName),
 	}
 }
 
@@ -144,11 +153,6 @@ func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) {
 	}
 	k.authKeeper.SetAccount(ctx, marker)
 	store.Set(types.MarkerStoreKey(marker.GetAddress()), marker.GetAddress())
-
-	// If Set Marker is called on an Active Marker then ensure the send_enabled configuration is also correct.
-	if marker.GetStatus() == types.StatusActive {
-		k.ensureSendEnabledStatus(ctx, marker.GetDenom(), marker.GetMarkerType() == types.MarkerType_Coin)
-	}
 }
 
 // RemoveMarker removes a marker from the auth account store. Note: if the account holds coins this will
@@ -156,7 +160,6 @@ func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) {
 func (k Keeper) RemoveMarker(ctx sdk.Context, marker types.MarkerAccountI) {
 	store := ctx.KVStore(k.storeKey)
 	k.authKeeper.RemoveAccount(ctx, marker)
-	k.bankKeeper.DeleteSendEnabled(ctx, marker.GetDenom())
 
 	store.Delete(types.MarkerStoreKey(marker.GetAddress()))
 }

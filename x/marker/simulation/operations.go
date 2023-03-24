@@ -118,6 +118,8 @@ func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 			types.MarkerType(r.Intn(2)+1), // coin or restricted_coin
 			r.Intn(2) > 0,                 // fixed supply
 			r.Intn(2) > 0,                 // allow gov
+			r.Intn(2) > 0,                 // allow forced transfer
+			[]string{},
 		)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
@@ -210,7 +212,9 @@ func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, ak authkeeper.Account
 			mgrAccount.Address,
 			types.MarkerType(r.Intn(2)+1), // coin or restricted_coin
 			r.Intn(2) > 0,                 // fixed supply
-			r.Intn(2) > 0,                 // allow gov
+			r.Intn(2) > 0,                 // allow gov            // allow forced transfer
+			r.Intn(2) > 0,
+			[]string{},
 			grants,
 		)
 

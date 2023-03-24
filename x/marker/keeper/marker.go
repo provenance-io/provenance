@@ -205,6 +205,7 @@ func (k Keeper) WithdrawCoins(
 	if !m.AddressHasAccess(caller, types.Access_Withdraw) {
 		return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Withdraw, m.GetDenom())
 	}
+
 	// check to see if marker is active (the coins created by a marker can only be withdrawn when it is active)
 	// any other coins that may be present (collateralized assets?) can be transferred
 	if m.GetStatus() != types.StatusActive {
@@ -215,8 +216,8 @@ func (k Keeper) WithdrawCoins(
 		recipient = caller
 	}
 
-	if err := k.bankKeeper.InputOutputCoins(ctx, []banktypes.Input{banktypes.NewInput(m.GetAddress(), coins)},
-		[]banktypes.Output{banktypes.NewOutput(recipient, coins)}); err != nil {
+	ctx = WithMarkerSendRestrictionBypass(ctx, true)
+	if err := k.bankKeeper.SendCoins(ctx, m.GetAddress(), recipient, coins); err != nil {
 		return err
 	}
 
@@ -333,7 +334,7 @@ func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI, 
 	if desiredSupply.Denom != marker.GetDenom() {
 		return fmt.Errorf("invalid denom for desired supply")
 	}
-
+	ctx = WithMarkerSendRestrictionBypass(ctx, true)
 	if desiredSupply.Amount.GT(currentSupply) { // not enough coin in circulation, mint more.
 		offset := sdk.NewCoin(marker.GetDenom(), desiredSupply.Amount.Sub(currentSupply))
 		ctx.Logger().Info(
@@ -501,16 +502,6 @@ func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string
 		return fmt.Errorf("can only activate markeraccounts in the Finalized status")
 	}
 
-	// Verify the send_enabled status of this coin denom matches the marker types
-	switch m.GetMarkerType() {
-	case types.MarkerType_Coin:
-		k.ensureSendEnabledStatus(ctx, denom, true)
-	case types.MarkerType_RestrictedCoin:
-		k.ensureSendEnabledStatus(ctx, denom, false)
-	default:
-		return fmt.Errorf("marker of %s type can not be activated", m.GetMarkerType())
-	}
-
 	// Amount to mint is typically the defined supply however...
 	supplyRequest := m.GetSupply()
 
@@ -673,7 +664,7 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	if !m.AddressHasAccess(admin, types.Access_Transfer) {
 		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
 	}
-	if !admin.Equals(from) {
+	if !admin.Equals(from) && !m.AllowsForcedTransfer() {
 		err = k.authzHandler(ctx, admin, from, to, amount)
 		if err != nil {
 			return err
@@ -682,7 +673,8 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	if k.bankKeeper.BlockedAddr(to) {
 		return fmt.Errorf("%s is not allowed to receive funds", to)
 	}
-
+	// set context to having access to bypass attribute restriction test
+	ctx = WithMarkerSendRestrictionBypass(ctx, true)
 	// send the coins between accounts (does not check send_enabled on coin denom)
 	if err = k.bankKeeper.SendCoins(ctx, from, to, sdk.NewCoins(amount)); err != nil {
 		return err
