@@ -36,34 +36,36 @@ const (
 	TypeURLMsgModifyOSLocatorRequest                 = "/provenance.metadata.v1.MsgModifyOSLocatorRequest"
 )
 
+// MetadataMsg extends the sdk.Msg interface with functions common to x/metadata messages.
 type MetadataMsg interface {
 	sdk.Msg
 
+	// GetSignersStr returns the bech32 address(es) that signed.
 	GetSignersStr() []string
 }
 
 // Compile time interface checks.
 var (
-	_ MetadataMsg = &MsgWriteScopeRequest{}
-	_ MetadataMsg = &MsgDeleteScopeRequest{}
-	_ MetadataMsg = &MsgAddScopeDataAccessRequest{}
-	_ MetadataMsg = &MsgDeleteScopeDataAccessRequest{}
-	_ MetadataMsg = &MsgAddScopeOwnerRequest{}
-	_ MetadataMsg = &MsgDeleteScopeOwnerRequest{}
-	_ MetadataMsg = &MsgWriteSessionRequest{}
-	_ MetadataMsg = &MsgWriteRecordRequest{}
-	_ MetadataMsg = &MsgDeleteRecordRequest{}
-	_ MetadataMsg = &MsgWriteScopeSpecificationRequest{}
-	_ MetadataMsg = &MsgDeleteScopeSpecificationRequest{}
-	_ MetadataMsg = &MsgWriteContractSpecificationRequest{}
-	_ MetadataMsg = &MsgDeleteContractSpecificationRequest{}
-	_ MetadataMsg = &MsgAddContractSpecToScopeSpecRequest{}
-	_ MetadataMsg = &MsgDeleteContractSpecFromScopeSpecRequest{}
-	_ MetadataMsg = &MsgWriteRecordSpecificationRequest{}
-	_ MetadataMsg = &MsgDeleteRecordSpecificationRequest{}
-	_ MetadataMsg = &MsgBindOSLocatorRequest{}
-	_ MetadataMsg = &MsgDeleteOSLocatorRequest{}
-	_ MetadataMsg = &MsgModifyOSLocatorRequest{}
+	_ MetadataMsg = (*MsgWriteScopeRequest)(nil)
+	_ MetadataMsg = (*MsgDeleteScopeRequest)(nil)
+	_ MetadataMsg = (*MsgAddScopeDataAccessRequest)(nil)
+	_ MetadataMsg = (*MsgDeleteScopeDataAccessRequest)(nil)
+	_ MetadataMsg = (*MsgAddScopeOwnerRequest)(nil)
+	_ MetadataMsg = (*MsgDeleteScopeOwnerRequest)(nil)
+	_ MetadataMsg = (*MsgWriteSessionRequest)(nil)
+	_ MetadataMsg = (*MsgWriteRecordRequest)(nil)
+	_ MetadataMsg = (*MsgDeleteRecordRequest)(nil)
+	_ MetadataMsg = (*MsgWriteScopeSpecificationRequest)(nil)
+	_ MetadataMsg = (*MsgDeleteScopeSpecificationRequest)(nil)
+	_ MetadataMsg = (*MsgWriteContractSpecificationRequest)(nil)
+	_ MetadataMsg = (*MsgDeleteContractSpecificationRequest)(nil)
+	_ MetadataMsg = (*MsgAddContractSpecToScopeSpecRequest)(nil)
+	_ MetadataMsg = (*MsgDeleteContractSpecFromScopeSpecRequest)(nil)
+	_ MetadataMsg = (*MsgWriteRecordSpecificationRequest)(nil)
+	_ MetadataMsg = (*MsgDeleteRecordSpecificationRequest)(nil)
+	_ MetadataMsg = (*MsgBindOSLocatorRequest)(nil)
+	_ MetadataMsg = (*MsgDeleteOSLocatorRequest)(nil)
+	_ MetadataMsg = (*MsgModifyOSLocatorRequest)(nil)
 
 	_ MetadataSpecAddressable = (*MsgWriteScopeRequest)(nil)
 	_ MetadataAddressable     = (*MsgDeleteScopeRequest)(nil)
@@ -84,25 +86,16 @@ var (
 	_ MetadataSpecAddressable = (*MsgDeleteRecordSpecificationRequest)(nil)
 )
 
-// private method to convert an array of strings into an array of Acc Addresses.
+// stringsToAccAddresses converts an array of strings into an array of Acc Addresses.
+// Panics if it can't convert one.
 func stringsToAccAddresses(strings []string) []sdk.AccAddress {
 	retval := make([]sdk.AccAddress, len(strings))
 
 	for i, str := range strings {
-		retval[i] = MustAccAddressFromBech32(str)
+		retval[i] = sdk.MustAccAddressFromBech32(str)
 	}
 
 	return retval
-}
-
-// MustAccAddressFromBech32 converts a Bech32 address to sdk.AccAddress
-// Panics on error
-func MustAccAddressFromBech32(s string) sdk.AccAddress {
-	accAddress, err := sdk.AccAddressFromBech32(s)
-	if err != nil {
-		panic(err)
-	}
-	return accAddress
 }
 
 // ------------------  MsgWriteScopeRequest  ------------------
@@ -115,16 +108,13 @@ func NewMsgWriteScopeRequest(scope Scope, signers []string) *MsgWriteScopeReques
 	}
 }
 
+// String returns a yaml representation of this. Implements the sdk.Msg interface.
 func (msg MsgWriteScopeRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-func (msg MsgWriteScopeRequest) MsgTypeURL() string {
-	return TypeURLMsgWriteScopeRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgWriteScopeRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
@@ -134,7 +124,7 @@ func (msg MsgWriteScopeRequest) GetSignersStr() []string {
 	return msg.Signers
 }
 
-// ValidateBasic performs a quick validity check
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgWriteScopeRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
@@ -176,6 +166,8 @@ func (msg *MsgWriteScopeRequest) ConvertOptionalFields() error {
 	return nil
 }
 
+// getIDFromOptionalUUID gets the scope metadata address from the optional scope uuid.
+// returns nil, nil if this doesn't have an optional scope uuid.
 func (msg *MsgWriteScopeRequest) getIDFromOptionalUUID() (MetadataAddress, error) {
 	if len(msg.ScopeUuid) > 0 {
 		uid, err := uuid.Parse(msg.ScopeUuid)
@@ -187,6 +179,8 @@ func (msg *MsgWriteScopeRequest) getIDFromOptionalUUID() (MetadataAddress, error
 	return nil, nil
 }
 
+// getSpecIDFromOptionalSpecUUID gets the scope spec metadata address from the optional spec uuid.
+// returns nil, nil if this doesn't have an optional spec uuid.
 func (msg *MsgWriteScopeRequest) getSpecIDFromOptionalSpecUUID() (MetadataAddress, error) {
 	if len(msg.SpecUuid) > 0 {
 		uid, err := uuid.Parse(msg.SpecUuid)
@@ -230,16 +224,13 @@ func NewMsgDeleteScopeRequest(scopeID MetadataAddress, signers []string) *MsgDel
 	}
 }
 
+// String returns a yaml representation of this. Implements the sdk.Msg interface.
 func (msg MsgDeleteScopeRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-func (msg MsgDeleteScopeRequest) MsgTypeURL() string {
-	return TypeURLMsgDeleteScopeRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgDeleteScopeRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
@@ -249,7 +240,7 @@ func (msg MsgDeleteScopeRequest) GetSignersStr() []string {
 	return msg.Signers
 }
 
-// ValidateBasic performs a quick validity check
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgDeleteScopeRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
@@ -276,16 +267,13 @@ func NewMsgAddScopeDataAccessRequest(scopeID MetadataAddress, dataAccessAddrs []
 	}
 }
 
+// String returns a yaml representation of this. Implements the sdk.Msg interface.
 func (msg MsgAddScopeDataAccessRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-func (msg MsgAddScopeDataAccessRequest) MsgTypeURL() string {
-	return TypeURLMsgAddScopeDataAccessRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgAddScopeDataAccessRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
@@ -295,7 +283,7 @@ func (msg MsgAddScopeDataAccessRequest) GetSignersStr() []string {
 	return msg.Signers
 }
 
-// ValidateBasic performs a quick validity check
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgAddScopeDataAccessRequest) ValidateBasic() error {
 	if !msg.ScopeId.IsScopeAddress() {
 		return fmt.Errorf("address is not a scope id: %v", msg.ScopeId.String())
@@ -331,16 +319,13 @@ func NewMsgDeleteScopeDataAccessRequest(scopeID MetadataAddress, dataAccessAddrs
 	}
 }
 
+// String returns a yaml representation of this. Implements the sdk.Msg interface.
 func (msg MsgDeleteScopeDataAccessRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-func (msg MsgDeleteScopeDataAccessRequest) MsgTypeURL() string {
-	return TypeURLMsgDeleteScopeDataAccessRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgDeleteScopeDataAccessRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
@@ -350,7 +335,7 @@ func (msg MsgDeleteScopeDataAccessRequest) GetSignersStr() []string {
 	return msg.Signers
 }
 
-// ValidateBasic performs a quick validity check
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgDeleteScopeDataAccessRequest) ValidateBasic() error {
 	if !msg.ScopeId.IsScopeAddress() {
 		return fmt.Errorf("address is not a scope id: %v", msg.ScopeId.String())
@@ -386,16 +371,13 @@ func NewMsgAddScopeOwnerRequest(scopeID MetadataAddress, owners []Party, signers
 	}
 }
 
+// String returns a yaml representation of this. Implements the sdk.Msg interface.
 func (msg MsgAddScopeOwnerRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-func (msg MsgAddScopeOwnerRequest) MsgTypeURL() string {
-	return TypeURLMsgAddScopeOwnerRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgAddScopeOwnerRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
@@ -405,7 +387,7 @@ func (msg MsgAddScopeOwnerRequest) GetSignersStr() []string {
 	return msg.Signers
 }
 
-// ValidateBasic performs a quick validity check
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgAddScopeOwnerRequest) ValidateBasic() error {
 	if !msg.ScopeId.IsScopeAddress() {
 		return fmt.Errorf("address is not a scope id: %v", msg.ScopeId.String())
@@ -435,16 +417,13 @@ func NewMsgDeleteScopeOwnerRequest(scopeID MetadataAddress, owners []string, sig
 	}
 }
 
+// String returns a yaml representation of this. Implements the sdk.Msg interface.
 func (msg MsgDeleteScopeOwnerRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-func (msg MsgDeleteScopeOwnerRequest) MsgTypeURL() string {
-	return TypeURLMsgDeleteScopeOwnerRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgDeleteScopeOwnerRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
@@ -454,7 +433,7 @@ func (msg MsgDeleteScopeOwnerRequest) GetSignersStr() []string {
 	return msg.Signers
 }
 
-// ValidateBasic performs a quick validity check
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgDeleteScopeOwnerRequest) ValidateBasic() error {
 	if !msg.ScopeId.IsScopeAddress() {
 		return fmt.Errorf("address is not a scope id: %v", msg.ScopeId.String())
@@ -486,16 +465,13 @@ func NewMsgWriteSessionRequest(session Session, signers []string) *MsgWriteSessi
 	return &MsgWriteSessionRequest{Session: session, Signers: signers}
 }
 
+// String returns a yaml representation of this. Implements the sdk.Msg interface.
 func (msg MsgWriteSessionRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-func (msg MsgWriteSessionRequest) MsgTypeURL() string {
-	return TypeURLMsgWriteSessionRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgWriteSessionRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
@@ -505,7 +481,7 @@ func (msg MsgWriteSessionRequest) GetSignersStr() []string {
 	return msg.Signers
 }
 
-// ValidateBasic performs a quick validity check
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgWriteSessionRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
@@ -549,6 +525,8 @@ func (msg *MsgWriteSessionRequest) ConvertOptionalFields() error {
 	return nil
 }
 
+// getSpecIDFromOptionalSpecUUID gets the contract spec metadata address from the optional spec uuid.
+// returns nil, nil if this doesn't have an optional spec uuid.
 func (msg MsgWriteSessionRequest) getSpecIDFromOptionalSpecUUID() (MetadataAddress, error) {
 	if len(msg.SpecUuid) > 0 {
 		uid, err := uuid.Parse(msg.SpecUuid)
@@ -563,7 +541,7 @@ func (msg MsgWriteSessionRequest) getSpecIDFromOptionalSpecUUID() (MetadataAddre
 // GetID gets the session's id. Implements MetadataAddressable interface.
 func (msg MsgWriteSessionRequest) GetID() MetadataAddress {
 	rv := msg.Session.GetID()
-	if len(rv) == 0 {
+	if len(rv) == 0 && msg.SessionIdComponents != nil {
 		// No id yet, try to get it from the uuid.
 		// If it errors, we don't care in here, just return the empty address.
 		rv, _ = msg.SessionIdComponents.GetSessionAddr()
@@ -589,16 +567,13 @@ func NewMsgWriteRecordRequest(record Record, sessionIDComponents *SessionIdCompo
 	return &MsgWriteRecordRequest{Record: record, Parties: parties, Signers: signers, SessionIdComponents: sessionIDComponents, ContractSpecUuid: contractSpecUUID}
 }
 
+// String returns a yaml representation of this. Implements the sdk.Msg interface.
 func (msg MsgWriteRecordRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-func (msg MsgWriteRecordRequest) MsgTypeURL() string {
-	return TypeURLMsgWriteRecordRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgWriteRecordRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
@@ -608,7 +583,7 @@ func (msg MsgWriteRecordRequest) GetSignersStr() []string {
 	return msg.Signers
 }
 
-// ValidateBasic performs a quick validity check
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgWriteRecordRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
@@ -652,6 +627,8 @@ func (msg *MsgWriteRecordRequest) ConvertOptionalFields() error {
 	return nil
 }
 
+// getSpecIDFromOptionalSpecUUID gets the record spec metadata address from the optional contract spec uuid and record name.
+// returns nil, nil if this doesn't have an optional contract spec uuid.
 func (msg MsgWriteRecordRequest) getSpecIDFromOptionalSpecUUID() (MetadataAddress, error) {
 	if len(msg.ContractSpecUuid) > 0 {
 		uid, err := uuid.Parse(msg.ContractSpecUuid)
@@ -669,7 +646,7 @@ func (msg MsgWriteRecordRequest) getSpecIDFromOptionalSpecUUID() (MetadataAddres
 // GetID gets the record's id. Implements MetadataAddressable interface.
 func (msg MsgWriteRecordRequest) GetID() MetadataAddress {
 	rv := msg.Record.GetID()
-	if len(rv) == 0 {
+	if len(rv) == 0 && msg.SessionIdComponents != nil {
 		// No id yet, try to get it from the uuid.
 		// If it errors, we don't care in here, just return the empty address.
 		sessionAddr, _ := msg.SessionIdComponents.GetSessionAddr()
@@ -693,21 +670,18 @@ func (msg MsgWriteRecordRequest) GetSpecID() MetadataAddress {
 
 // ------------------  MsgDeleteRecordRequest  ------------------
 
-// NewMsgDeleteScopeSpecificationRequest creates a new msg instance
+// NewMsgDeleteRecordRequest creates a new msg instance
 func NewMsgDeleteRecordRequest(recordID MetadataAddress, signers []string) *MsgDeleteRecordRequest {
 	return &MsgDeleteRecordRequest{RecordId: recordID, Signers: signers}
 }
 
+// String returns a yaml representation of this. Implements the sdk.Msg interface.
 func (msg MsgDeleteRecordRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-func (msg MsgDeleteRecordRequest) MsgTypeURL() string {
-	return TypeURLMsgDeleteRecordRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgDeleteRecordRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
@@ -717,7 +691,7 @@ func (msg MsgDeleteRecordRequest) GetSignersStr() []string {
 	return msg.Signers
 }
 
-// ValidateBasic performs a quick validity check
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgDeleteRecordRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
@@ -732,21 +706,18 @@ func (msg MsgDeleteRecordRequest) GetID() MetadataAddress {
 
 // ------------------  MsgWriteScopeSpecificationRequest  ------------------
 
-// NewMsgAddScopeSpecificationRequest creates a new msg instance
+// NewMsgWriteScopeSpecificationRequest creates a new msg instance
 func NewMsgWriteScopeSpecificationRequest(specification ScopeSpecification, signers []string) *MsgWriteScopeSpecificationRequest {
 	return &MsgWriteScopeSpecificationRequest{Specification: specification, Signers: signers}
 }
 
+// String returns a yaml representation of this. Implements the sdk.Msg interface.
 func (msg MsgWriteScopeSpecificationRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-func (msg MsgWriteScopeSpecificationRequest) MsgTypeURL() string {
-	return TypeURLMsgWriteScopeSpecificationRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgWriteScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
@@ -756,7 +727,7 @@ func (msg MsgWriteScopeSpecificationRequest) GetSignersStr() []string {
 	return msg.Signers
 }
 
-// ValidateBasic performs a quick validity check
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgWriteScopeSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
@@ -786,6 +757,8 @@ func (msg *MsgWriteScopeSpecificationRequest) ConvertOptionalFields() error {
 	return nil
 }
 
+// getSpecIDFromOptionalSpecUUID gets the scope spec metadata address from the optional spec uuid.
+// returns nil, nil if this doesn't have an optional spec uuid.
 func (msg MsgWriteScopeSpecificationRequest) getSpecIDFromOptionalSpecUUID() (MetadataAddress, error) {
 	if len(msg.SpecUuid) > 0 {
 		uid, err := uuid.Parse(msg.SpecUuid)
@@ -820,16 +793,13 @@ func NewMsgDeleteScopeSpecificationRequest(specificationID MetadataAddress, sign
 	return &MsgDeleteScopeSpecificationRequest{SpecificationId: specificationID, Signers: signers}
 }
 
+// String returns a yaml representation of this. Implements the sdk.Msg interface.
 func (msg MsgDeleteScopeSpecificationRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-func (msg MsgDeleteScopeSpecificationRequest) MsgTypeURL() string {
-	return TypeURLMsgDeleteScopeSpecificationRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgDeleteScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
@@ -839,7 +809,7 @@ func (msg MsgDeleteScopeSpecificationRequest) GetSignersStr() []string {
 	return msg.Signers
 }
 
-// ValidateBasic performs a quick validity check
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgDeleteScopeSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
@@ -864,16 +834,13 @@ func NewMsgWriteContractSpecificationRequest(specification ContractSpecification
 	return &MsgWriteContractSpecificationRequest{Specification: specification, Signers: signers}
 }
 
+// String returns a yaml representation of this. Implements the sdk.Msg interface.
 func (msg MsgWriteContractSpecificationRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-func (msg MsgWriteContractSpecificationRequest) MsgTypeURL() string {
-	return TypeURLMsgWriteContractSpecificationRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgWriteContractSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
@@ -883,7 +850,7 @@ func (msg MsgWriteContractSpecificationRequest) GetSignersStr() []string {
 	return msg.Signers
 }
 
-// ValidateBasic performs a quick validity check
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgWriteContractSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
@@ -913,6 +880,8 @@ func (msg *MsgWriteContractSpecificationRequest) ConvertOptionalFields() error {
 	return nil
 }
 
+// getSpecIDFromOptionalSpecUUID gets the contract spec metadata address from the optional spec uuid.
+// returns nil, nil if this doesn't have an optional spec uuid.
 func (msg MsgWriteContractSpecificationRequest) getSpecIDFromOptionalSpecUUID() (MetadataAddress, error) {
 	if len(msg.SpecUuid) > 0 {
 		uid, err := uuid.Parse(msg.SpecUuid)
@@ -947,16 +916,13 @@ func NewMsgDeleteContractSpecificationRequest(specificationID MetadataAddress, s
 	return &MsgDeleteContractSpecificationRequest{SpecificationId: specificationID, Signers: signers}
 }
 
+// String returns a yaml representation of this. Implements the sdk.Msg interface.
 func (msg MsgDeleteContractSpecificationRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-func (msg MsgDeleteContractSpecificationRequest) MsgTypeURL() string {
-	return TypeURLMsgDeleteContractSpecificationRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgDeleteContractSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
@@ -966,7 +932,7 @@ func (msg MsgDeleteContractSpecificationRequest) GetSignersStr() []string {
 	return msg.Signers
 }
 
-// ValidateBasic performs a quick validity check
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgDeleteContractSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
@@ -991,16 +957,13 @@ func NewMsgAddContractSpecToScopeSpecRequest(contractSpecID MetadataAddress, sco
 	return &MsgAddContractSpecToScopeSpecRequest{ContractSpecificationId: contractSpecID, ScopeSpecificationId: scopeSpecID, Signers: signers}
 }
 
+// String returns a yaml representation of this. Implements the sdk.Msg interface.
 func (msg MsgAddContractSpecToScopeSpecRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-func (msg MsgAddContractSpecToScopeSpecRequest) MsgTypeURL() string {
-	return TypeURLMsgAddContractSpecToScopeSpecRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgAddContractSpecToScopeSpecRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
@@ -1010,7 +973,7 @@ func (msg MsgAddContractSpecToScopeSpecRequest) GetSignersStr() []string {
 	return msg.Signers
 }
 
-// ValidateBasic performs a quick validity check
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgAddContractSpecToScopeSpecRequest) ValidateBasic() error {
 	if !msg.ContractSpecificationId.IsContractSpecificationAddress() {
 		return fmt.Errorf("address is not a contract specification id: %s", msg.ContractSpecificationId.String())
@@ -1041,16 +1004,13 @@ func NewMsgDeleteContractSpecFromScopeSpecRequest(contractSpecID MetadataAddress
 	return &MsgDeleteContractSpecFromScopeSpecRequest{ContractSpecificationId: contractSpecID, ScopeSpecificationId: scopeSpecID, Signers: signers}
 }
 
+// String returns a yaml representation of this. Implements the sdk.Msg interface.
 func (msg MsgDeleteContractSpecFromScopeSpecRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-func (msg MsgDeleteContractSpecFromScopeSpecRequest) MsgTypeURL() string {
-	return TypeURLMsgDeleteContractSpecFromScopeSpecRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgDeleteContractSpecFromScopeSpecRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
@@ -1060,7 +1020,7 @@ func (msg MsgDeleteContractSpecFromScopeSpecRequest) GetSignersStr() []string {
 	return msg.Signers
 }
 
-// ValidateBasic performs a quick validity check
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgDeleteContractSpecFromScopeSpecRequest) ValidateBasic() error {
 	if !msg.ContractSpecificationId.IsContractSpecificationAddress() {
 		return fmt.Errorf("address is not a contract specification id: %s", msg.ContractSpecificationId.String())
@@ -1086,21 +1046,18 @@ func (msg MsgDeleteContractSpecFromScopeSpecRequest) GetSpecID() MetadataAddress
 
 // ------------------  MsgWriteRecordSpecificationRequest  ------------------
 
-// NewMsgAddRecordSpecificationRequest creates a new msg instance
+// NewMsgWriteRecordSpecificationRequest creates a new msg instance
 func NewMsgWriteRecordSpecificationRequest(recordSpecification RecordSpecification, signers []string) *MsgWriteRecordSpecificationRequest {
 	return &MsgWriteRecordSpecificationRequest{Specification: recordSpecification, Signers: signers}
 }
 
+// String returns a yaml representation of this. Implements the sdk.Msg interface.
 func (msg MsgWriteRecordSpecificationRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-func (msg MsgWriteRecordSpecificationRequest) MsgTypeURL() string {
-	return TypeURLMsgWriteRecordSpecificationRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgWriteRecordSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
@@ -1110,7 +1067,7 @@ func (msg MsgWriteRecordSpecificationRequest) GetSignersStr() []string {
 	return msg.Signers
 }
 
-// ValidateBasic performs a quick validity check
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgWriteRecordSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
@@ -1140,6 +1097,8 @@ func (msg *MsgWriteRecordSpecificationRequest) ConvertOptionalFields() error {
 	return nil
 }
 
+// getSpecIDFromOptionalSpecUUID gets the record spec metadata address from the optional contract spec uuid and record name.
+// returns nil, nil if this doesn't have an optional contract spec uuid.
 func (msg MsgWriteRecordSpecificationRequest) getSpecIDFromOptionalSpecUUID() (MetadataAddress, error) {
 	if len(msg.ContractSpecUuid) > 0 {
 		uid, err := uuid.Parse(msg.ContractSpecUuid)
@@ -1177,16 +1136,13 @@ func NewMsgDeleteRecordSpecificationRequest(specificationID MetadataAddress, sig
 	return &MsgDeleteRecordSpecificationRequest{SpecificationId: specificationID, Signers: signers}
 }
 
+// String returns a yaml representation of this. Implements the sdk.Msg interface.
 func (msg MsgDeleteRecordSpecificationRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-func (msg MsgDeleteRecordSpecificationRequest) MsgTypeURL() string {
-	return TypeURLMsgDeleteRecordSpecificationRequest
-}
-
-// GetSigners returns the address(es) that must sign over msg.GetSignBytes()
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgDeleteRecordSpecificationRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.Signers)
 }
@@ -1196,7 +1152,7 @@ func (msg MsgDeleteRecordSpecificationRequest) GetSignersStr() []string {
 	return msg.Signers
 }
 
-// ValidateBasic performs a quick validity check
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgDeleteRecordSpecificationRequest) ValidateBasic() error {
 	if len(msg.Signers) < 1 {
 		return fmt.Errorf("at least one signer is required")
@@ -1223,10 +1179,7 @@ func NewMsgBindOSLocatorRequest(obj ObjectStoreLocator) *MsgBindOSLocatorRequest
 	}
 }
 
-func (msg MsgBindOSLocatorRequest) MsgTypeURL() string {
-	return TypeURLMsgBindOSLocatorRequest
-}
-
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgBindOSLocatorRequest) ValidateBasic() error {
 	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.EncryptionKey, msg.Locator.LocatorUri)
 	if err != nil {
@@ -1235,8 +1188,9 @@ func (msg MsgBindOSLocatorRequest) ValidateBasic() error {
 	return nil
 }
 
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgBindOSLocatorRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{MustAccAddressFromBech32(msg.Locator.Owner)}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Locator.Owner)}
 }
 
 // GetSignersStr returns the bech32 address(es) that signed. Implements MetadataMsg interface.
@@ -1252,10 +1206,7 @@ func NewMsgDeleteOSLocatorRequest(obj ObjectStoreLocator) *MsgDeleteOSLocatorReq
 	}
 }
 
-func (msg MsgDeleteOSLocatorRequest) MsgTypeURL() string {
-	return TypeURLMsgDeleteOSLocatorRequest
-}
-
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgDeleteOSLocatorRequest) ValidateBasic() error {
 	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.EncryptionKey, msg.Locator.LocatorUri)
 	if err != nil {
@@ -1265,13 +1216,9 @@ func (msg MsgDeleteOSLocatorRequest) ValidateBasic() error {
 	return nil
 }
 
-// Signers returns the addrs of signers that must sign.
-// CONTRACT: All signatures must be present to be valid.
-// CONTRACT: Returns addrs in some deterministic order.
-// here we assume msg for delete request has the right address
-// should be verified later in the keeper?
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgDeleteOSLocatorRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{MustAccAddressFromBech32(msg.Locator.Owner)}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Locator.Owner)}
 }
 
 // GetSignersStr returns the bech32 address(es) that signed. Implements MetadataMsg interface.
@@ -1316,10 +1263,7 @@ func NewMsgModifyOSLocatorRequest(obj ObjectStoreLocator) *MsgModifyOSLocatorReq
 	}
 }
 
-func (msg MsgModifyOSLocatorRequest) MsgTypeURL() string {
-	return TypeURLMsgModifyOSLocatorRequest
-}
-
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgModifyOSLocatorRequest) ValidateBasic() error {
 	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.EncryptionKey, msg.Locator.LocatorUri)
 	if err != nil {
@@ -1329,8 +1273,9 @@ func (msg MsgModifyOSLocatorRequest) ValidateBasic() error {
 	return nil
 }
 
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
 func (msg MsgModifyOSLocatorRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{MustAccAddressFromBech32(msg.Locator.Owner)}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Locator.Owner)}
 }
 
 // GetSignersStr returns the bech32 address(es) that signed. Implements MetadataMsg interface.
