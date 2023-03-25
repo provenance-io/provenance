@@ -223,6 +223,8 @@ message Party {
   string address = 1;
   // a role for this account within the context of the processes used
   PartyType role = 2;
+  // whether this party's signature is optional
+  bool optional = 3;
 }
 
 // AuditFields capture information about the last account to make modifications and when they were made

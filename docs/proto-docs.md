@@ -3018,6 +3018,7 @@ A Party is an address with/in a given role associated with a contract
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | address of the account (on chain) |
 | `role` | [PartyType](#provenance.metadata.v1.PartyType) |  | a role for this account within the context of the processes used |
+| `optional` | [bool](#bool) |  | whether this party's signature is optional |
 
 
 
