@@ -90,7 +90,7 @@ func TestSessionKeeperTestSuite(t *testing.T) {
 
 // func ownerPartyList defined in keeper_test.go
 
-func (s *SessionKeeperTestSuite) TestMetadataSessionGetSetRemove() {
+func (s *SessionKeeperTestSuite) TestSessionGetSetRemove() {
 
 	r, found := s.app.MetadataKeeper.GetSession(s.ctx, s.sessionID)
 	s.Empty(r)
@@ -130,7 +130,7 @@ func (s *SessionKeeperTestSuite) TestMetadataSessionGetSetRemove() {
 	s.NotEmpty(sess)
 }
 
-func (s *SessionKeeperTestSuite) TestMetadataSessionIterator() {
+func (s *SessionKeeperTestSuite) TestSessionIterator() {
 	for i := 1; i <= 10; i++ {
 		sessionID := types.SessionMetadataAddress(s.scopeUUID, uuid.New())
 		session := types.NewSession("name", sessionID, s.contractSpecID, []types.Party{
@@ -142,14 +142,15 @@ func (s *SessionKeeperTestSuite) TestMetadataSessionIterator() {
 		s.app.MetadataKeeper.SetSession(s.ctx, *session)
 	}
 	count := 0
-	s.app.MetadataKeeper.IterateSessions(s.ctx, s.scopeID, func(s types.Session) (stop bool) {
+	err := s.app.MetadataKeeper.IterateSessions(s.ctx, s.scopeID, func(s types.Session) (stop bool) {
 		count++
 		return false
 	})
+	s.Require().NoError(err, "IterateSessions")
 	s.Equal(10, count, "iterator should return a full list of sessions")
 }
 
-func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
+func (s *SessionKeeperTestSuite) TestValidateSessionUpdate() {
 	scope := types.NewScope(s.scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
 	s.app.MetadataKeeper.SetScope(s.ctx, *scope)
 
@@ -306,16 +307,17 @@ func (s *SessionKeeperTestSuite) TestMetadataValidateSessionUpdate() {
 		},
 	}
 
-	for n, tc := range cases {
-		tc := tc
-
-		s.Run(n, func() {
-			err := s.app.MetadataKeeper.ValidateWriteSession(s.ctx, tc.existing, tc.proposed, tc.signers, types.TypeURLMsgWriteSessionRequest)
+	for name, tc := range cases {
+		s.Run(name, func() {
+			msg := &types.MsgWriteSessionRequest{
+				Session: *tc.proposed,
+				Signers: tc.signers,
+			}
+			err := s.app.MetadataKeeper.ValidateWriteSession(s.ctx, tc.existing, msg)
 			if tc.wantErr {
-				s.Error(err)
-				s.Equal(tc.errorMsg, err.Error())
+				s.Assert().EqualError(err, tc.errorMsg, "ValidateWriteSession")
 			} else {
-				s.NoError(err)
+				s.Assert().NoError(err, "ValidateWriteSession")
 			}
 		})
 	}

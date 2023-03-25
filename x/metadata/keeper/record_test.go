@@ -17,7 +17,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -126,11 +125,12 @@ func (s *RecordKeeperTestSuite) TestMetadataRecordIterator() {
 		s.app.MetadataKeeper.SetRecord(s.ctx, *record)
 	}
 	count := 0
-	s.app.MetadataKeeper.IterateRecords(s.ctx, s.scopeID, func(s types.Record) (stop bool) {
+	err := s.app.MetadataKeeper.IterateRecords(s.ctx, s.scopeID, func(s types.Record) (stop bool) {
 		count++
 		return false
 	})
-	s.Equal(10, count, "iterator should return a full list of records")
+	s.Require().NoError(err, "IterateRecords")
+	s.Assert().Equal(10, count, "iterator should return a full list of records")
 
 }
 
@@ -189,16 +189,14 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 		},
 	}
 
-	for n, tc := range cases {
-		tc := tc
-
-		s.Run(n, func() {
-			err := s.app.MetadataKeeper.ValidateDeleteRecord(s.ctx, tc.existing, tc.proposed, tc.signers, types.TypeURLMsgDeleteRecordRequest)
+	for name, tc := range cases {
+		s.Run(name, func() {
+			msg := &types.MsgDeleteRecordRequest{Signers: tc.signers}
+			err := s.app.MetadataKeeper.ValidateDeleteRecord(s.ctx, tc.existing, tc.proposed, msg)
 			if tc.wantErr {
-				s.Error(err)
-				s.Equal(tc.errorMsg, err.Error())
+				s.Assert().EqualError(err, tc.errorMsg, "ValidateDeleteRecord")
 			} else {
-				s.NoError(err)
+				s.Assert().NoError(err, "ValidateDeleteRecord")
 			}
 		})
 	}
@@ -566,14 +564,19 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 		},
 	}
 
-	for n, tc := range cases {
-		s.T().Run(n, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateWriteRecord(s.ctx, tc.existing, tc.proposed, tc.signers, tc.partiesInvolved, types.TypeURLMsgWriteRecordRequest)
+	for name, tc := range cases {
+		s.Run(name, func() {
+			msg := &types.MsgWriteRecordRequest{
+				Record:  *tc.proposed,
+				Signers: tc.signers,
+				Parties: tc.partiesInvolved,
+			}
+			err := s.app.MetadataKeeper.ValidateWriteRecord(s.ctx, tc.existing, msg)
 			if len(tc.errorMsg) != 0 {
-				assert.EqualError(t, err, tc.errorMsg, "ValidateWriteRecord expected error")
+				s.Assert().EqualError(err, tc.errorMsg, "ValidateWriteRecord expected error")
 			} else {
-				assert.NoError(t, err, "ValidateWriteRecord unexpected error")
-				assert.NotEmpty(t, tc.proposed.SpecificationId, "proposed.SpecificationId after ValidateWriteRecord")
+				s.Assert().NoError(err, "ValidateWriteRecord unexpected error")
+				s.Assert().NotEmpty(msg.Record.SpecificationId, "proposed.SpecificationId after ValidateWriteRecord")
 			}
 		})
 	}
