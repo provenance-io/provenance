@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -31,7 +32,7 @@ func TestWriteScopeRoute(t *testing.T) {
 	var msg = NewMsgWriteScopeRequest(*scope, []string{})
 
 	require.Equal(t, sdk.MsgTypeURL(msg), "/provenance.metadata.v1.MsgWriteScopeRequest")
-	yaml := `scope:
+	expectedYaml := `scope:
   scope_id: scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp
   specification_id: scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3
   owners:
@@ -44,9 +45,12 @@ signers: []
 scope_uuid: ""
 spec_uuid: ""
 `
-	require.Equal(t, yaml, msg.String())
+	bz, err := yaml.Marshal(msg)
+	require.NoError(t, err, "yaml.Marshal(msg)")
+	require.Equal(t, expectedYaml, string(bz), "scope as yaml")
 
-	bz, _ := ModuleCdc.MarshalJSON(msg)
+	bz, err = ModuleCdc.MarshalJSON(msg)
+	require.NoError(t, err, "ModuleCdc.MarshalJSON(msg)")
 	require.Equal(t, "{\"scope\":{\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"owners\":[{\"address\":\"data_owner\",\"role\":\"PARTY_TYPE_OWNER\"}],\"data_access\":[\"data_accessor\"],\"value_owner_address\":\"value_owner\"},\"signers\":[],\"scope_uuid\":\"\",\"spec_uuid\":\"\"}", string(bz))
 }
 
