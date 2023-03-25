@@ -782,9 +782,9 @@ func (s *SpecKeeperTestSuite) TestValidateRecordSpecUpdate() {
 		want     string
 	}{
 		{
-			"validate basic called on proposed",
-			nil,
-			types.NewRecordSpecification(
+			name: "validate basic called on proposed",
+			existing: nil,
+			proposed: types.NewRecordSpecification(
 				types.RecordSpecMetadataAddress(s.contractSpecUUID1, "name"),
 				"name",
 				[]*types.InputSpecification{},
@@ -792,11 +792,11 @@ func (s *SpecKeeperTestSuite) TestValidateRecordSpecUpdate() {
 				types.DefinitionType_DEFINITION_TYPE_RECORD,
 				[]types.PartyType{types.PartyType_PARTY_TYPE_SERVICER},
 			),
-			"record specification type name cannot be empty",
+			want: "record specification type name cannot be empty",
 		},
 		{
-			"validate basic not called on existing",
-			types.NewRecordSpecification(
+			name: "validate basic not called on existing",
+			existing: types.NewRecordSpecification(
 				types.RecordSpecMetadataAddress(s.contractSpecUUID1, "name"),
 				"name",
 				[]*types.InputSpecification{},
@@ -804,7 +804,7 @@ func (s *SpecKeeperTestSuite) TestValidateRecordSpecUpdate() {
 				types.DefinitionType_DEFINITION_TYPE_RECORD,
 				[]types.PartyType{types.PartyType_PARTY_TYPE_SERVICER},
 			),
-			types.NewRecordSpecification(
+			proposed: types.NewRecordSpecification(
 				types.RecordSpecMetadataAddress(s.contractSpecUUID1, "name"),
 				"name",
 				[]*types.InputSpecification{},
@@ -812,11 +812,11 @@ func (s *SpecKeeperTestSuite) TestValidateRecordSpecUpdate() {
 				types.DefinitionType_DEFINITION_TYPE_RECORD,
 				[]types.PartyType{types.PartyType_PARTY_TYPE_SERVICER},
 			),
-			"",
+			want: "",
 		},
 		{
-			"SpecificationIDs must match",
-			types.NewRecordSpecification(
+			name: "SpecificationIDs must match",
+			existing: types.NewRecordSpecification(
 				types.RecordSpecMetadataAddress(s.contractSpecUUID1, "foo"),
 				"foo",
 				[]*types.InputSpecification{},
@@ -824,7 +824,7 @@ func (s *SpecKeeperTestSuite) TestValidateRecordSpecUpdate() {
 				types.DefinitionType_DEFINITION_TYPE_RECORD,
 				[]types.PartyType{types.PartyType_PARTY_TYPE_SERVICER},
 			),
-			types.NewRecordSpecification(
+			proposed: types.NewRecordSpecification(
 				types.RecordSpecMetadataAddress(contractSpecUUIDOther, "foo"),
 				"foo",
 				[]*types.InputSpecification{},
@@ -832,7 +832,7 @@ func (s *SpecKeeperTestSuite) TestValidateRecordSpecUpdate() {
 				types.DefinitionType_DEFINITION_TYPE_RECORD,
 				[]types.PartyType{types.PartyType_PARTY_TYPE_SERVICER},
 			),
-			fmt.Sprintf("cannot update record spec identifier. expected %s, got %s",
+			want: fmt.Sprintf("cannot update record spec identifier. expected %s, got %s",
 				types.RecordSpecMetadataAddress(s.contractSpecUUID1, "foo"),
 				types.RecordSpecMetadataAddress(contractSpecUUIDOther, "foo")),
 		},
@@ -1091,10 +1091,10 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 					"http://test.net",
 					"http://test.net/ico.png",
 				),
-				[]string{s.user1Addr.String()},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				types.NewContractSpecificationSourceHash("somehash"),
-				"someclass",
+			name: 	[]string{s.user1Addr.String()},
+			existing: 	[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+			proposed: 	types.NewContractSpecificationSourceHash("somehash"),
+			want: 	"someclass",
 			),
 			types.NewContractSpecification(
 				otherContractSpecID,
@@ -1104,10 +1104,10 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 					"http://test.net",
 					"http://test.net/ico.png",
 				),
-				[]string{s.user1Addr.String()},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				types.NewContractSpecificationSourceHash("somehash"),
-				"someclass",
+				name: []string{s.user1Addr.String()},
+				existing: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				proposed: types.NewContractSpecificationSourceHash("somehash"),
+				want: "someclass",
 			),
 			fmt.Sprintf("cannot update contract spec identifier. expected %s, got %s",
 				s.contractSpecID1, otherContractSpecID),
@@ -1122,10 +1122,10 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 					"http://test.net",
 					"http://test.net/ico.png",
 				),
-				[]string{s.user1Addr.String()},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				types.NewContractSpecificationSourceHash("somehash"),
-				"someclass",
+				name: []string{s.user1Addr.String()},
+				existing: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				proposed: types.NewContractSpecificationSourceHash("somehash"),
+				want: "someclass",
 			),
 			types.NewContractSpecification(
 				s.contractSpecID1,
@@ -1135,10 +1135,10 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 					"http://test.net",
 					"http://test.net/ico.png",
 				),
-				[]string{},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				types.NewContractSpecificationSourceHash("somehash"),
-				"someclass",
+				name: []string{},
+				existing: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				proposed: types.NewContractSpecificationSourceHash("somehash"),
+				want: "someclass",
 			),
 			"invalid owner addresses count (expected > 0 got: 0)",
 		},
@@ -1152,10 +1152,10 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 					"http://test.net",
 					"http://test.net/ico.png",
 				),
-				[]string{},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				types.NewContractSpecificationSourceHash("somehash"),
-				"someclass",
+				name: []string{},
+				existing: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				proposed: types.NewContractSpecificationSourceHash("somehash"),
+				want: "someclass",
 			),
 			types.NewContractSpecification(
 				s.contractSpecID1,
@@ -1165,10 +1165,10 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 					"http://test.net",
 					"http://test.net/ico.png",
 				),
-				[]string{s.user1Addr.String()},
-				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				types.NewContractSpecificationSourceHash("somehash"),
-				"someclass",
+				name: []string{s.user1Addr.String()},
+				existing: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				proposed: types.NewContractSpecificationSourceHash("somehash"),
+				want: "someclass",
 			),
 			"",
 		},
@@ -1624,113 +1624,113 @@ func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 		want     string
 	}{
 		{
-			"existing specificationID does not match proposed specificationID causes error",
-			types.NewScopeSpecification(
+			name: "existing specificationID does not match proposed specificationID causes error",
+			existing: types.NewScopeSpecification(
 				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
-			types.NewScopeSpecification(
+			proposed: types.NewScopeSpecification(
 				otherScopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
-			fmt.Sprintf("cannot update scope spec identifier. expected %s, got %s",
+			want: fmt.Sprintf("cannot update scope spec identifier. expected %s, got %s",
 				s.scopeSpecID, otherScopeSpecID),
 		},
 		{
-			"proposed basic validation causes error",
-			types.NewScopeSpecification(
+			name: "proposed basic validation causes error",
+			existing: types.NewScopeSpecification(
 				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
-			types.NewScopeSpecification(
+			proposed: types.NewScopeSpecification(
 				s.scopeSpecID,
 				nil,
 				[]string{},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
-			"the ScopeSpecification must have at least one owner",
+			want: "the ScopeSpecification must have at least one owner",
 		},
 		{
-			"basic validation not done on existing",
-			types.NewScopeSpecification(
+			name: "basic validation not done on existing",
+			existing: types.NewScopeSpecification(
 				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
-			types.NewScopeSpecification(
+			proposed: types.NewScopeSpecification(
 				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
-			"",
+			want: "",
 		},
 		{
-			"adding unknown contract spec - error",
-			types.NewScopeSpecification(
+			name: "adding unknown contract spec - error",
+			existing: types.NewScopeSpecification(
 				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
-			types.NewScopeSpecification(
+			proposed: types.NewScopeSpecification(
 				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1, otherContractSpecID},
 			),
-			fmt.Sprintf("no contract spec exists with id %s", otherContractSpecID),
+			want: fmt.Sprintf("no contract spec exists with id %s", otherContractSpecID),
 		},
 		{
-			"adding known contract spec - ok",
-			types.NewScopeSpecification(
+			name: "adding known contract spec - ok",
+			existing: types.NewScopeSpecification(
 				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
-			types.NewScopeSpecification(
+			proposed: types.NewScopeSpecification(
 				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1, s.contractSpecID2},
 			),
-			"",
+			want: "",
 		},
 		{
-			"changing to known contract spec - ok",
-			types.NewScopeSpecification(
+			name: "changing to known contract spec - ok",
+			existing: types.NewScopeSpecification(
 				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
-			types.NewScopeSpecification(
+			proposed: types.NewScopeSpecification(
 				s.scopeSpecID,
 				nil,
 				[]string{s.user1Addr.String()},
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID2},
 			),
-			"",
+			want: "",
 		},
 	}
 

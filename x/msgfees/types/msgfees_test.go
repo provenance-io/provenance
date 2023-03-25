@@ -16,34 +16,34 @@ func TestMsgFeeValidate(t *testing.T) {
 		errorMsg string
 	}{
 		{
-			"should succeed to validate with no recipient",
-			NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), "", DefaultMsgFeeBips),
-			"",
+		    name: 	"should succeed to validate with no recipient",
+		    msg: 	NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), "", DefaultMsgFeeBips),
+		    errorMsg: 	"",
 		},
 		{
-			"should succeed to validate with a recipient and valid split",
-			NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), validAddress, DefaultMsgFeeBips),
-			"",
+			name:"should succeed to validate with a recipient and valid split",
+			msg:NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), validAddress, DefaultMsgFeeBips),
+			errorMsg:"",
 		},
 		{
-			"should fail to validate from invalid recipient address",
-			NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), "invalid", DefaultMsgFeeBips),
-			"decoding bech32 failed: invalid bech32 string length 7",
+			name:"should fail to validate from invalid recipient address",
+			msg:NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), "invalid", DefaultMsgFeeBips),
+			errorMsg:"decoding bech32 failed: invalid bech32 string length 7",
 		},
 		{
-			"should fail to validate from invalid bip point amount too large",
-			NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), validAddress, 10_001),
-			"recipient basis points can only be between 0 and 10,000 : 10001",
+			name: "should fail to validate from invalid bip point amount too large",
+			msg: NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), validAddress, 10_001),
+			errorMsg: "recipient basis points can only be between 0 and 10,000 : 10001",
 		},
 		{
-			"should fail to validate from invalid msg type url",
-			NewMsgFee("", sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), validAddress, DefaultMsgFeeBips),
-			"invalid msg type url",
+			name: "should fail to validate from invalid msg type url",
+			msg: NewMsgFee("", sdk.NewInt64Coin(sdk.DefaultBondDenom, 100), validAddress, DefaultMsgFeeBips),
+			errorMsg: "invalid msg type url",
 		},
 		{
-			"should succeed to validate with no recipient",
-			NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 0), "", DefaultMsgFeeBips),
-			"invalid fee amount",
+			name: "should succeed to validate with no recipient",
+			msg: NewMsgFee(sdk.MsgTypeURL(&MsgAssessCustomMsgFeeRequest{}), sdk.NewInt64Coin(sdk.DefaultBondDenom, 0), "", DefaultMsgFeeBips),
+			errorMsg: "invalid fee amount",
 		},
 	}
 

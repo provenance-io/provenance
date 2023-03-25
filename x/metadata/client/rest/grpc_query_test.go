@@ -162,27 +162,27 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 		expected proto.Message
 	}{
 		{
-			"Get metadata params",
-			fmt.Sprintf("%s/provenance/metadata/v1/params", baseURL),
-			map[string]string{
+			name: "Get metadata params",
+			url : fmt.Sprintf("%s/provenance/metadata/v1/params", baseURL),
+			headers : map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
-			false,
-			&types.QueryParamsResponse{},
-			&types.QueryParamsResponse{
+			expErr: false,
+			respType: &types.QueryParamsResponse{},
+			expected: &types.QueryParamsResponse{
 				Params:  types.DefaultParams(),
 				Request: &types.QueryParamsRequest{},
 			},
 		},
 		{
-			"Get metadata scope by id",
-			fmt.Sprintf("%s/provenance/metadata/v1/scope/%s", baseURL, suite.scopeUUID),
-			map[string]string{
+			name: "Get metadata scope by id",
+			url : fmt.Sprintf("%s/provenance/metadata/v1/scope/%s", baseURL, suite.scopeUUID),
+			headers :map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
-			false,
-			&types.ScopeResponse{},
-			&types.ScopeResponse{
+			expErr: false,
+			respType : &types.ScopeResponse{},
+			expected: &types.ScopeResponse{
 				Scope: &types.ScopeWrapper{
 					Scope:           &suite.scope,
 					ScopeIdInfo:     types.GetScopeIDInfo(suite.scopeID),
@@ -192,37 +192,37 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 			},
 		},
 		{
-			"Unknown metadata scope id",
-			fmt.Sprintf("%s/provenance/metadata/v1/scope/%s", baseURL, uuid.New()),
-			map[string]string{
+			name: "Unknown metadata scope id",
+			url: fmt.Sprintf("%s/provenance/metadata/v1/scope/%s", baseURL, uuid.New()),
+			headers: map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
-			true,
-			&status.Status{},
-			&status.Status{},
+			expErr: true,
+			respType : &status.Status{},
+			expected : &status.Status{},
 		},
 		{
-			"Get metadata os locator params",
-			fmt.Sprintf("%s/provenance/metadata/v1/locator/params", baseURL),
-			map[string]string{
+			name: "Get metadata os locator params",
+			url : fmt.Sprintf("%s/provenance/metadata/v1/locator/params", baseURL),
+			headers : map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
-			false,
-			&types.OSLocatorParamsResponse{},
-			&types.OSLocatorParamsResponse{
+			expErr: false,
+			respType: &types.OSLocatorParamsResponse{},
+			expected: &types.OSLocatorParamsResponse{
 				Params:  types.DefaultOSLocatorParams(),
 				Request: &types.OSLocatorParamsRequest{},
 			},
 		},
 		{
-			"Get os locator from owner address.",
-			fmt.Sprintf("%s/provenance/metadata/v1/locator/%s", baseURL, suite.ownerAddr.String()),
-			map[string]string{
+			name : "Get os locator from owner address.",
+			url : fmt.Sprintf("%s/provenance/metadata/v1/locator/%s", baseURL, suite.ownerAddr.String()),
+			headers : map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
-			false,
-			&types.OSLocatorResponse{},
-			&types.OSLocatorResponse{
+			expErr : false,
+			respType : &types.OSLocatorResponse{},
+			expected : &types.OSLocatorResponse{
 				Locator: &suite.objectLocator,
 				Request: &types.OSLocatorRequest{
 					Owner: suite.ownerAddr.String(),
@@ -230,17 +230,17 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 			},
 		},
 		{
-			"Get os locator from owner uri.",
+			name : "Get os locator from owner uri.",
 			// only way i could get around http url parse isseus for rest
 			// This encodes/decodes using a URL-compatible base64
 			// format.
-			fmt.Sprintf("%s/provenance/metadata/v1/locator/uri/%s", baseURL, b64.StdEncoding.EncodeToString([]byte(suite.uri))),
-			map[string]string{
+			url : fmt.Sprintf("%s/provenance/metadata/v1/locator/uri/%s", baseURL, b64.StdEncoding.EncodeToString([]byte(suite.uri))),
+			headers : map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
-			false,
-			&types.OSLocatorsByURIResponse{},
-			&types.OSLocatorsByURIResponse{
+			expErr : false,
+			respType : &types.OSLocatorsByURIResponse{},
+			expected : &types.OSLocatorsByURIResponse{
 				Locators: []types.ObjectStoreLocator{{
 					Owner:         suite.ownerAddr.String(),
 					LocatorUri:    suite.uri,
@@ -257,17 +257,17 @@ func (suite *IntegrationGRPCTestSuite) TestGRPCQueries() {
 			},
 		},
 		{
-			"Get os locator's for given scope.",
+			name : "Get os locator's for given scope.",
 			// only way i could get around http url parse issues for rest
 			// This encodes/decodes using a URL-compatible base64
 			// format.
-			fmt.Sprintf("%s/provenance/metadata/v1/locator/scope/%s", baseURL, suite.scopeUUID),
-			map[string]string{
+			url : fmt.Sprintf("%s/provenance/metadata/v1/locator/scope/%s", baseURL, suite.scopeUUID),
+			headers : map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
-			false,
-			&types.OSLocatorsByScopeResponse{},
-			&types.OSLocatorsByScopeResponse{
+			expErr : false,
+			respType : &types.OSLocatorsByScopeResponse{},
+			expected : &types.OSLocatorsByScopeResponse{
 				Locators: []types.ObjectStoreLocator{{
 					Owner:         suite.ownerAddr1.String(),
 					LocatorUri:    suite.uri1,
@@ -311,17 +311,17 @@ func (suite *IntegrationGRPCTestSuite) TestAllOSLocator() {
 	}{
 
 		{
-			"Get all os locator.",
+			name : "Get all os locator.",
 			// only way i could get around http url parse issues for rest
 			// This encodes/decodes using a URL-compatible base64
 			// format.
-			fmt.Sprintf("%s/provenance/metadata/v1/locators/all", baseURL),
-			map[string]string{
+			url : fmt.Sprintf("%s/provenance/metadata/v1/locators/all", baseURL),
+			headers : map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
-			false,
-			&types.OSAllLocatorsResponse{},
-			&types.OSAllLocatorsResponse{
+			expErr : false,
+			respType : &types.OSAllLocatorsResponse{},
+			expected : &types.OSAllLocatorsResponse{
 				Locators: []types.ObjectStoreLocator{{
 					Owner:         suite.ownerAddr1.String(),
 					EncryptionKey: suite.encryptionKey1.String(),

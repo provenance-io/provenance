@@ -111,22 +111,22 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 		expected proto.Message
 	}{
 		{
-			"get attribute params",
-			fmt.Sprintf("%s/provenance/attribute/v1/params", baseURL),
-			map[string]string{
+			name: "get attribute params",
+			url: fmt.Sprintf("%s/provenance/attribute/v1/params", baseURL),
+			headers: map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
-			false,
-			&attributetypes.QueryParamsResponse{},
-			&attributetypes.QueryParamsResponse{Params: attributetypes.NewParams(32)},
+			expErr: false,
+			respType: &attributetypes.QueryParamsResponse{},
+			expected: &attributetypes.QueryParamsResponse{Params: attributetypes.NewParams(32)},
 		},
 		{
-			"get account attributes",
-			fmt.Sprintf("%s/provenance/attribute/v1/attributes/%s", baseURL, s.accountAddr),
-			map[string]string{},
-			false,
-			&attributetypes.QueryAttributesResponse{},
-			&attributetypes.QueryAttributesResponse{
+			name: "get account attributes",
+			url: fmt.Sprintf("%s/provenance/attribute/v1/attributes/%s", baseURL, s.accountAddr),
+			headers: map[string]string{},
+			expErr: false,
+			respType: &attributetypes.QueryAttributesResponse{},
+			expected: &attributetypes.QueryAttributesResponse{
 				Account: s.accountAddr.String(),
 				Attributes: []attributetypes.Attribute{
 					attributetypes.NewAttribute("example.attribute",
@@ -138,12 +138,12 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 			},
 		},
 		{
-			"get account attribute by name",
-			fmt.Sprintf("%s/provenance/attribute/v1/attribute/%s/%s", baseURL, s.accountAddr, "example.attribute"),
-			map[string]string{},
-			false,
-			&attributetypes.QueryAttributeResponse{},
-			&attributetypes.QueryAttributeResponse{
+			name: "get account attribute by name",
+			url: fmt.Sprintf("%s/provenance/attribute/v1/attribute/%s/%s", baseURL, s.accountAddr, "example.attribute"),
+			headers: map[string]string{},
+			expErr: false,
+			respType: &attributetypes.QueryAttributeResponse{},
+			expected: &attributetypes.QueryAttributeResponse{
 				Account: s.accountAddr.String(),
 				Attributes: []attributetypes.Attribute{
 					attributetypes.NewAttribute("example.attribute",
@@ -155,24 +155,24 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 			},
 		},
 		{
-			"get non existint account attribute by name",
-			fmt.Sprintf("%s/provenance/attribute/v1/attribute/%s/%s", baseURL, s.accountAddr, "im.not.here.attribute"),
-			map[string]string{},
-			false,
-			&attributetypes.QueryAttributeResponse{},
-			&attributetypes.QueryAttributeResponse{
+			name: "get non existint account attribute by name",
+			url: fmt.Sprintf("%s/provenance/attribute/v1/attribute/%s/%s", baseURL, s.accountAddr, "im.not.here.attribute"),
+			headers: map[string]string{},
+			expErr: false,
+			respType: &attributetypes.QueryAttributeResponse{},
+			expected: &attributetypes.QueryAttributeResponse{
 				Account:    s.accountAddr.String(),
 				Attributes: nil,
 				Pagination: &query.PageResponse{},
 			},
 		},
 		{
-			"scan account attribute by suffix",
-			fmt.Sprintf("%s/provenance/attribute/v1/attribute/%s/scan/%s", baseURL, s.accountAddr, "attribute"),
-			map[string]string{},
-			false,
-			&attributetypes.QueryScanResponse{},
-			&attributetypes.QueryScanResponse{
+			name: "scan account attribute by suffix",
+			url: fmt.Sprintf("%s/provenance/attribute/v1/attribute/%s/scan/%s", baseURL, s.accountAddr, "attribute"),
+			headers: map[string]string{},
+			expErr: false,
+			respType: &attributetypes.QueryScanResponse{},
+			expected: &attributetypes.QueryScanResponse{
 				Account: s.accountAddr.String(),
 				Attributes: []attributetypes.Attribute{
 					attributetypes.NewAttribute("example.attribute",
@@ -184,12 +184,12 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 			},
 		},
 		{
-			"scan account attribute by suffix but send prefix",
-			fmt.Sprintf("%s/provenance/attribute/v1/attribute/%s/scan/%s", baseURL, s.accountAddr, "example"),
-			map[string]string{},
-			false,
-			&attributetypes.QueryScanResponse{},
-			&attributetypes.QueryScanResponse{
+			name: "scan account attribute by suffix but send prefix",
+			url: fmt.Sprintf("%s/provenance/attribute/v1/attribute/%s/scan/%s", baseURL, s.accountAddr, "example"),
+			headers: map[string]string{},
+			expErr: false,
+			respType: &attributetypes.QueryScanResponse{},
+			expected: &attributetypes.QueryScanResponse{
 				Account:    s.accountAddr.String(),
 				Attributes: nil,
 				Pagination: &query.PageResponse{},

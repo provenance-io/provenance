@@ -53,8 +53,8 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 		wantInErr                 []string
 	}{
 		{
-			"fails basic validation",
-			banktypes.Metadata{
+			name: "fails basic validation",
+			proposed: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
@@ -66,14 +66,14 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Name:    "invalid",
 				Symbol:  "INV",
 			},
-			nil,
-			types.StatusUndefined,
-			types.DefaultUnrestrictedDenomRegex,
-			[]string{"invalid proposed metadata", "invalid metadata base denom"},
+			existing: nil,
+			markerStatus: types.StatusUndefined,
+			denomValidationExpression: types.DefaultUnrestrictedDenomRegex,
+			wantInErr: []string{"invalid proposed metadata", "invalid metadata base denom"},
 		},
 		{
-			"marker status undefined",
-			banktypes.Metadata{
+			name: "marker status undefined",
+			proposed: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
@@ -85,14 +85,14 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			nil,
-			types.StatusUndefined,
-			types.DefaultUnrestrictedDenomRegex,
-			[]string{"cannot add or update denom metadata", "undefined"},
+			existing: nil,
+			markerStatus: types.StatusUndefined,
+			denomValidationExpression: types.DefaultUnrestrictedDenomRegex,
+			wantInErr: []string{"cannot add or update denom metadata", "undefined"},
 		},
 		{
-			"marker status destroyed",
-			banktypes.Metadata{
+			name: "marker status destroyed",
+			proposed: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
@@ -104,14 +104,14 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			nil,
-			types.StatusDestroyed,
-			types.DefaultUnrestrictedDenomRegex,
-			[]string{"cannot add or update denom metadata", "destroyed"},
+			existing: nil,
+			markerStatus: types.StatusDestroyed,
+			denomValidationExpression: types.DefaultUnrestrictedDenomRegex,
+			wantInErr: []string{"cannot add or update denom metadata", "destroyed"},
 		},
 		{
-			"marker status cancelled",
-			banktypes.Metadata{
+			name: "marker status cancelled",
+			proposed: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
@@ -123,14 +123,14 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			nil,
-			types.StatusCancelled,
-			types.DefaultUnrestrictedDenomRegex,
-			[]string{"cannot add or update denom metadata", "cancelled"},
+			existing: nil,
+			markerStatus: types.StatusCancelled,
+			denomValidationExpression: types.DefaultUnrestrictedDenomRegex,
+			wantInErr: []string{"cannot add or update denom metadata", "cancelled"},
 		},
 		{
-			"denom fails extra regex",
-			banktypes.Metadata{
+			name: "denom fails extra regex",
+			proposed: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
@@ -142,14 +142,14 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			nil,
-			types.StatusProposed,
-			`[nu]hash`,
-			[]string{"fails unrestricted marker denom validation", "hash"},
+			existing: nil,
+			markerStatus: types.StatusProposed,
+			denomValidationExpression: `[nu]hash`,
+			wantInErr: []string{"fails unrestricted marker denom validation", "hash"},
 		},
 		{
-			"alias fails extra regex",
-			banktypes.Metadata{
+			name: "alias fails extra regex",
+			proposed: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -161,14 +161,14 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			nil,
-			types.StatusProposed,
-			`[nu]?hash`,
-			[]string{"fails unrestricted marker denom validation", "nanohash"},
+			existing: nil,
+			markerStatus: types.StatusProposed,
+			denomValidationExpression: `[nu]?hash`,
+			wantInErr: []string{"fails unrestricted marker denom validation", "nanohash"},
 		},
 		{
-			"base changed",
-			banktypes.Metadata{
+			name: "base changed",
+			proposed: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -180,7 +180,7 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			&banktypes.Metadata{
+			existing: &banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -190,13 +190,13 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Base:    "uhash",
 				Display: "hash",
 			},
-			types.StatusProposed,
-			types.DefaultUnrestrictedDenomRegex,
-			[]string{"denom metadata base value cannot be changed"},
+			markerStatus: types.StatusProposed,
+			denomValidationExpression: types.DefaultUnrestrictedDenomRegex,
+			wantInErr: []string{"denom metadata base value cannot be changed"},
 		},
 		{
-			"active denom unit removed",
-			banktypes.Metadata{
+			name: "active denom unit removed",
+			proposed: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -207,7 +207,7 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			&banktypes.Metadata{
+			existing: &banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -217,13 +217,13 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Base:    "nhash",
 				Display: "hash",
 			},
-			types.StatusActive,
-			types.DefaultUnrestrictedDenomRegex,
-			[]string{"cannot remove denom unit", "uhash"},
+			markerStatus: types.StatusActive,
+			denomValidationExpression: types.DefaultUnrestrictedDenomRegex,
+			wantInErr: []string{"cannot remove denom unit", "uhash"},
 		},
 		{
-			"finalized denom unit removed",
-			banktypes.Metadata{
+			name: "finalized denom unit removed",
+			proposed: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -234,7 +234,7 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			&banktypes.Metadata{
+			existing: &banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -244,13 +244,13 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Base:    "nhash",
 				Display: "hash",
 			},
-			types.StatusFinalized,
-			types.DefaultUnrestrictedDenomRegex,
-			[]string{"cannot remove denom unit", "uhash"},
+			markerStatus: types.StatusFinalized,
+			denomValidationExpression: types.DefaultUnrestrictedDenomRegex,
+			wantInErr: []string{"cannot remove denom unit", "uhash"},
 		},
 		{
-			"proposed denom unit removed",
-			banktypes.Metadata{
+			name: "proposed denom unit removed",
+			proposed: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -261,7 +261,7 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			&banktypes.Metadata{
+			existing: &banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -271,13 +271,13 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Base:    "nhash",
 				Display: "hash",
 			},
-			types.StatusProposed,
-			types.DefaultUnrestrictedDenomRegex,
-			[]string{},
+			markerStatus: types.StatusProposed,
+			denomValidationExpression: types.DefaultUnrestrictedDenomRegex,
+			wantInErr: []string{},
 		},
 		{
-			"active denom unit denom changed",
-			banktypes.Metadata{
+			name: "active denom unit denom changed",
+			proposed: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -289,7 +289,7 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			&banktypes.Metadata{
+			existing: &banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -299,13 +299,13 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Base:    "nhash",
 				Display: "hash",
 			},
-			types.StatusActive,
-			types.DefaultUnrestrictedDenomRegex,
-			[]string{"denom unit Denom", "uhash", "microhash"},
+			markerStatus: types.StatusActive,
+			denomValidationExpression: types.DefaultUnrestrictedDenomRegex,
+			wantInErr: []string{"denom unit Denom", "uhash", "microhash"},
 		},
 		{
-			"finalized denom unit denom changed",
-			banktypes.Metadata{
+			name: "finalized denom unit denom changed",
+			proposed: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -317,7 +317,7 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			&banktypes.Metadata{
+			existing: &banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -327,13 +327,13 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Base:    "nhash",
 				Display: "hash",
 			},
-			types.StatusFinalized,
-			types.DefaultUnrestrictedDenomRegex,
-			[]string{"denom unit Denom", "uhash", "microhash"},
+			markerStatus: types.StatusFinalized,
+			denomValidationExpression: types.DefaultUnrestrictedDenomRegex,
+			wantInErr: []string{"denom unit Denom", "uhash", "microhash"},
 		},
 		{
-			"proposed denom unit denom changed",
-			banktypes.Metadata{
+			name: "proposed denom unit denom changed",
+			proposed: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -345,7 +345,7 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			&banktypes.Metadata{
+			existing: &banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -355,13 +355,13 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Base:    "nhash",
 				Display: "hash",
 			},
-			types.StatusProposed,
-			types.DefaultUnrestrictedDenomRegex,
-			[]string{},
+			markerStatus: types.StatusProposed,
+			denomValidationExpression: types.DefaultUnrestrictedDenomRegex,
+			wantInErr: []string{},
 		},
 		{
-			"active denom unit alias removed",
-			banktypes.Metadata{
+			name: "active denom unit alias removed",
+			proposed: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
@@ -373,7 +373,7 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			&banktypes.Metadata{
+			existing: &banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -383,13 +383,13 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Base:    "nhash",
 				Display: "hash",
 			},
-			types.StatusActive,
-			types.DefaultUnrestrictedDenomRegex,
-			[]string{"cannot remove alias", "nanohash", "nhash"},
+			markerStatus: types.StatusActive,
+			denomValidationExpression: types.DefaultUnrestrictedDenomRegex,
+			wantInErr: []string{"cannot remove alias", "nanohash", "nhash"},
 		},
 		{
-			"finalized denom unit alias removed",
-			banktypes.Metadata{
+			name: "finalized denom unit alias removed",
+			proposed: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
@@ -401,7 +401,7 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			&banktypes.Metadata{
+			existing: &banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -411,13 +411,13 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Base:    "nhash",
 				Display: "hash",
 			},
-			types.StatusFinalized,
-			types.DefaultUnrestrictedDenomRegex,
-			[]string{"cannot remove alias", "nanohash", "nhash"},
+			markerStatus: types.StatusFinalized,
+			denomValidationExpression: types.DefaultUnrestrictedDenomRegex,
+			wantInErr: []string{"cannot remove alias", "nanohash", "nhash"},
 		},
 		{
-			"proposed denom unit alias removed",
-			banktypes.Metadata{
+			name: "proposed denom unit alias removed",
+			proposed: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
@@ -429,7 +429,7 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			&banktypes.Metadata{
+			existing: &banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -441,9 +441,9 @@ func (s *DenomTestSuite) TestValidateDenomMetadataExtended() {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			types.StatusProposed,
-			types.DefaultUnrestrictedDenomRegex,
-			[]string{},
+			markerStatus: types.StatusProposed,
+			denomValidationExpression: types.DefaultUnrestrictedDenomRegex,
+			wantInErr: []string{},
 		},
 	}
 

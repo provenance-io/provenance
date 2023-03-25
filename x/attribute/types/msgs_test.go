@@ -27,10 +27,39 @@ func TestMsgAddAttribute(t *testing.T) {
 		proposalValue      string
 		expectPass         bool
 	}{
-		{"", addrs[1], "test", "string", "nil owner", false},
-		{addrs[0].String(), nil, "test", "string", "nil account", false},
-		{"", nil, "test", "string", "nil owner and account", false},
-		{addrs[0].String(), addrs[1], "test", "string", "valid attribute", true},
+		{
+		    account: "",
+		    owner: addrs[1],
+		    name: "test",
+		    proposalType: "string",
+		    proposalValue: "nil owner",
+		    expectPass: false
+		},
+		{
+		    account: addrs[0].String(),
+		    owner: nil,
+		    name: "test",
+		    proposalType: "string",
+		    proposalValue: "nil account",
+		    expectPass: false
+		},
+		{
+		    account: "",
+		    owner: nil,
+		    name: "test",
+		    proposalType: "string",
+		    proposalValue: "nil owner and account",
+		    expectPass: false
+
+		},
+		{
+            account: addrs[0].String(),
+            owner: addrs[1],
+            name: "test",
+            proposalType: "string",
+            proposalValue: "valid attribute",
+            expectPass:  true
+        },
 	}
 
 	for i, tc := range tests {
@@ -65,10 +94,38 @@ func TestMsgUpdateAttribute(t *testing.T) {
 		expectPass    bool
 		expectedError string
 	}{
-		{addrs[0].String(), addrs[1], "example", []byte("original"), AttributeType_String, []byte("update"), AttributeType_Bytes, true, ""},
-		{"", addrs[1], "example", []byte("original"), AttributeType_String, []byte("update"), AttributeType_Bytes, false, ""},
-		{addrs[0].String(), nil, "example", []byte(""), AttributeType_String, []byte("update"), AttributeType_Bytes, false, ""},
+		{
+        account: addrs[0].String(),
+        owner:  addrs[1],
+        name:   "example",
+        originalValue:    []byte("original"),
+        originalType:     AttributeType_String,
+        updateValue:      []byte("update"),
+        updateType:       AttributeType_Bytes,
+        expectPass:        true,
+        expectedError:         ""},
+		{
+		account: "",
+		owner:  addrs[1],
+		name:   "example",
+		originalValue:    []byte("original"),
+		originalType:     AttributeType_String,
+		updateValue:      []byte("update"),
+		updateType:       AttributeType_Bytes,
+		expectPass:        false,
+		expectedError:         ""},
+		{
+		account: addrs[0].String(),
+		owner:  nil,
+		name:   "example",
+		originalValue:    []byte(""),
+		originalType:     AttributeType_String,
+		updateValue:      []byte("update"),
+		updateType:       AttributeType_Bytes,
+		expectPass:        false,
+		expectedError:         ""},
 	}
+
 
 	for _, tc := range tests {
 		msg := NewMsgUpdateAttributeRequest(tc.account, tc.owner, tc.name, tc.originalValue, tc.updateValue, tc.originalType, tc.updateType)
@@ -91,9 +148,27 @@ func TestMsgDeleteDistinctAttribute(t *testing.T) {
 		attrType   AttributeType
 		expectPass bool
 	}{
-		{addrs[0].String(), addrs[1], "example", []byte("original"), AttributeType_String, true},
-		{"", addrs[1], "example", []byte("original"), AttributeType_String, false},
-		{addrs[0].String(), nil, "example", []byte(""), AttributeType_String, false},
+		{
+		account: addrs[0].String(),
+		owner:  addrs[1],
+		name:   "example",
+		value:    []byte("original"),
+		attrType:     AttributeType_String,
+		expectPass:      true},
+		{
+		account: "",
+		owner:  addrs[1],
+		name:   "example",
+		value:    []byte("original"),
+		attrType:     AttributeType_String,
+		expectPass:      false},
+		{
+		account: addrs[0].String(),
+		owner:  nil,
+		name:   "example",
+		value:    []byte(""),
+		attrType:     AttributeType_String,
+		expectPass:      false},
 	}
 
 	for _, tc := range tests {

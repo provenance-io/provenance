@@ -65,13 +65,45 @@ func TestAccessByString(t *testing.T) {
 		expectEqual bool
 		expectValid bool
 	}{
-		{"Single value", "mint", AccessList{Access_Mint}, true, true},
-		{"Single unknown value", "foo", AccessList{Access_Unknown}, true, false},
-		{"Single explicit value", "ACCESS_MINT", AccessList{Access_Mint}, true, true},
+		{
+            name: "Single value",
+            accessNames:  "mint",
+            permissions:   AccessList{Access_Mint},
+            expectEqual:    true,
+            expectValid:     true},
+		{
+            name: "Single unknown value",
+            accessNames: "foo",
+            permissions:  AccessList{Access_Unknown},
+            expectEqual:   true,
+            expectValid:    false},
+		{
+            name: "Single explicit value",
+            accessNames:  "ACCESS_MINT",
+            permissions:   AccessList{Access_Mint},
+            expectEqual:    true,
+            expectValid:     true
+            },
 
-		{"Multiple values", "mint,burn", AccessList{Access_Mint, Access_Burn}, true, true},
-		{"Multiple values spaced", " mint, burn ", AccessList{Access_Mint, Access_Burn}, true, true},
-		{"Multiple unknown values", "foo,bar,baz", AccessList{Access_Unknown, Access_Unknown, Access_Unknown}, true, false},
+		{
+            name: "Multiple values",
+            accessNames:  "mint,burn",
+            permissions:   AccessList{Access_Mint, Access_Burn},
+            expectEqual:    true,
+            expectValid:    true},
+		{
+            name: "Multiple values spaced",
+            accessNames:  " mint, burn ",
+            permissions:   AccessList{Access_Mint,  Access_Burn},
+            expectEqual:    true,
+            expectValid:     true},
+		{
+            name: "Multiple unknown values",
+            accessNames: "foo,bar,baz",
+            permissions:  AccessList{Access_Unknown, Access_Unknown, Access_Unknown},
+            expectEqual:  true,
+            expectValid:  false
+        },
 	}
 	for i, tc := range cases {
 		i, tc := i, tc
@@ -98,11 +130,31 @@ func TestAccessOneOf(t *testing.T) {
 		permissions AccessList
 		expectPass  bool
 	}{
-		{"no permissions", Access_Burn, AccessList{}, false},
-		{"valid permission single", Access_Mint, AccessList{Access_Mint}, true},
-		{"invalid permission single", Access_Mint, AccessList{Access_Burn}, false},
-		{"valid permission many", Access_Mint, AccessList{Access_Mint, Access_Deposit, Access_Admin}, true},
-		{"invalid permission many", Access_Unknown, AccessList{Access_Mint, Access_Deposit}, false},
+		{
+            name: "no permissions",
+            permission:  Access_Burn,
+            permissions:   AccessList{},
+            expectPass:    false},
+		{
+            name: "valid permission single",
+            permission:  Access_Mint,
+            permissions:   AccessList{Access_Mint},
+            expectPass:    true},
+		{
+            name: "invalid permission single",
+            permission:  Access_Mint,
+            permissions:   AccessList{Access_Burn},
+            expectPass:    false},
+		{
+            name: "valid permission many",
+            permission:  Access_Mint,
+            permissions:   AccessList{Access_Mint, Access_Deposit, Access_Admin},
+            expectPass:    true},
+		{
+            name: "invalid permission many",
+            permission:  Access_Unknown,
+            permissions:   AccessList{Access_Mint, Access_Deposit},
+            expectPass:    false},
 	}
 
 	for _, tc := range cases {
@@ -121,9 +173,18 @@ func TestValidatePermissions(t *testing.T) {
 		permissions AccessList
 		expectPass  bool
 	}{
-		{"no permissions", AccessList{}, true},
-		{"valid permission", AccessList{Access_Mint}, true},
-		{"invalid and valid permission", AccessList{Access_Deposit, Access_Unknown}, false},
+		{
+		name: "no permissions",
+		permissions:  AccessList{},
+		expectPass:   true},
+		{
+		name: "valid permission",
+		permissions:  AccessList{Access_Mint},
+		expectPass:   true},
+		{
+		name: "invalid and valid permission",
+		permissions: AccessList{Access_Deposit,
+		expectPass:  Access_Unknown}, false},
 	}
 
 	for i, tc := range cases {

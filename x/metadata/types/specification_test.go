@@ -46,130 +46,130 @@ func (s *SpecificationTestSuite) TestScopeSpecValidateBasic() {
 	}{
 		// SpecificationId tests.
 		{
-			"invalid scope specification id - wrong address type",
-			NewScopeSpecification(
+			name: "invalid scope specification id - wrong address type",
+			spec: NewScopeSpecification(
 				MetadataAddress(specTestAddr),
 				nil, []string{}, []PartyType{}, []MetadataAddress{},
 			),
-			"invalid scope specification id: invalid metadata address type: 133",
+			want: "invalid scope specification id: invalid metadata address type: 133",
 		},
 		{
-			"invalid scope specification id - identifier",
-			NewScopeSpecification(
+			name: "invalid scope specification id - identifier",
+			spec: NewScopeSpecification(
 				ScopeMetadataAddress(uuid.New()),
 				nil, []string{}, []PartyType{}, []MetadataAddress{},
 			),
-			"invalid scope specification id prefix (expected: scopespec, got scope)",
+			want: "invalid scope specification id prefix (expected: scopespec, got scope)",
 		},
 		// Description test to make sure Description.ValidateBasic is being used.
 		{
-			"invalid description name - too long",
-			NewScopeSpecification(
+			name: "invalid description name - too long",
+			spec: NewScopeSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
 				NewDescription(strings.Repeat("x", maxDescriptionNameLength+1), "", "", ""),
 				[]string{}, []PartyType{}, []MetadataAddress{},
 			),
-			fmt.Sprintf("description (ScopeSpecification.Description) Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength+1),
+			want: fmt.Sprintf("description (ScopeSpecification.Description) Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength+1),
 		},
 		// OwnerAddresses tests
 		{
-			"owner addresses - cannot be empty",
-			NewScopeSpecification(
+			name: "owner addresses - cannot be empty",
+			spec: NewScopeSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{},
 				[]PartyType{}, []MetadataAddress{},
 			),
-			"the ScopeSpecification must have at least one owner",
+			want: "the ScopeSpecification must have at least one owner",
 		},
 		{
-			"owner addresses - invalid address at index 0",
-			NewScopeSpecification(
+			name: "owner addresses - invalid address at index 0",
+			spec: NewScopeSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{":invalid", specTestBech32},
 				[]PartyType{}, []MetadataAddress{},
 			),
-			"invalid owner address at index 0 on ScopeSpecification: decoding bech32 failed: invalid separator index -1",
+			want: "invalid owner address at index 0 on ScopeSpecification: decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			"owner addresses - invalid address at index 3",
-			NewScopeSpecification(
+			name: "owner addresses - invalid address at index 3",
+			spec: NewScopeSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{specTestBech32, specTestBech32, specTestBech32, ":invalid"},
 				[]PartyType{}, []MetadataAddress{},
 			),
-			"invalid owner address at index 3 on ScopeSpecification: decoding bech32 failed: invalid separator index -1",
+			want: "invalid owner address at index 3 on ScopeSpecification: decoding bech32 failed: invalid separator index -1",
 		},
 		// parties involved - cannot be empty
 		{
-			"parties involved - cannot be empty",
-			NewScopeSpecification(
+			name: "parties involved - cannot be empty",
+			spec: NewScopeSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{},
 				[]MetadataAddress{},
 			),
-			"the ScopeSpecification must have at least one party involved",
+			want: "the ScopeSpecification must have at least one party involved",
 		},
 		// contract spec ids - must all pass same tests as scope spec id (contractspec prefix)
 		{
-			"contract spec ids - wrong address type at index 0",
-			NewScopeSpecification(
+			name: "contract spec ids - wrong address type at index 0",
+			spec: NewScopeSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				[]MetadataAddress{MetadataAddress(specTestAddr)},
 			),
-			"invalid contract specification id at index 0: invalid metadata address type: 133",
+			want: "invalid contract specification id at index 0: invalid metadata address type: 133",
 		},
 		{
-			"contract spec ids - wrong prefix at index 0",
-			NewScopeSpecification(
+			name: "contract spec ids - wrong prefix at index 0",
+			spec: NewScopeSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				[]MetadataAddress{ScopeMetadataAddress(uuid.New())},
 			),
-			"invalid contract specification id prefix at index 0 (expected: contractspec, got scope)",
+			want: "invalid contract specification id prefix at index 0 (expected: contractspec, got scope)",
 		},
 		{
-			"contract spec ids - wrong address type at index 2",
-			NewScopeSpecification(
+			name: "contract spec ids - wrong address type at index 2",
+			spec: NewScopeSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				[]MetadataAddress{ContractSpecMetadataAddress(uuid.New()), ContractSpecMetadataAddress(uuid.New()), MetadataAddress(specTestAddr)},
 			),
-			"invalid contract specification id at index 2: invalid metadata address type: 133",
+			want: "invalid contract specification id at index 2: invalid metadata address type: 133",
 		},
 		{
-			"contract spec ids - wrong prefix at index 2",
-			NewScopeSpecification(
+			name: "contract spec ids - wrong prefix at index 2",
+			spec: NewScopeSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				[]MetadataAddress{ContractSpecMetadataAddress(uuid.New()), ContractSpecMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New())},
 			),
-			"invalid contract specification id prefix at index 2 (expected: contractspec, got scope)",
+			want: "invalid contract specification id prefix at index 2 (expected: contractspec, got scope)",
 		},
 		// Simple valid case
 		{
-			"simple valid case",
-			NewScopeSpecification(
+			name: "simple valid case",
+			spec: NewScopeSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
 				[]MetadataAddress{ContractSpecMetadataAddress(uuid.New())},
 			),
-			"",
+			want: "",
 		},
 	}
 
@@ -242,8 +242,8 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 	}{
 		// SpecificationID tests
 		{
-			"SpecificationID - invalid format",
-			NewContractSpecification(
+			name: "SpecificationID - invalid format",
+			spec: NewContractSpecification(
 				MetadataAddress(specTestAddr),
 				nil,
 				[]string{specTestBech32},
@@ -251,11 +251,11 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				NewContractSpecificationSourceHash("somehash"),
 				"someclass",
 			),
-			"invalid contract specification id: invalid metadata address type: 133",
+			want: "invalid contract specification id: invalid metadata address type: 133",
 		},
 		{
-			"SpecificationID - invalid prefix",
-			NewContractSpecification(
+			name: "SpecificationID - invalid prefix",
+			spec: NewContractSpecification(
 				ScopeSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{specTestBech32},
@@ -263,13 +263,13 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				NewContractSpecificationSourceHash("somehash"),
 				"someclass",
 			),
-			"invalid contract specification id prefix (expected: contractspec, got scopespec)",
+			want: "invalid contract specification id prefix (expected: contractspec, got scopespec)",
 		},
 
 		// description - just make sure one of the Description.ValidateBasic pieces fails.
 		{
-			"Description - name too long",
-			NewContractSpecification(
+			name: "Description - name too long",
+			spec: NewContractSpecification(
 				ContractSpecMetadataAddress(uuid.New()),
 				NewDescription(strings.Repeat("x", maxDescriptionNameLength+1), "", "", ""),
 				[]string{specTestBech32},
@@ -277,13 +277,13 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				NewContractSpecificationSourceHash("somehash"),
 				"someclass",
 			),
-			fmt.Sprintf("description (ContractSpecification.Description) Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength+1),
+			want: fmt.Sprintf("description (ContractSpecification.Description) Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength+1),
 		},
 
 		// OwnerAddresses tests
 		{
-			"OwnerAddresses - empty",
-			NewContractSpecification(
+			name: "OwnerAddresses - empty",
+			spec: NewContractSpecification(
 				ContractSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{},
@@ -291,11 +291,11 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				NewContractSpecificationSourceHash("somehash"),
 				"someclass",
 			),
-			"invalid owner addresses count (expected > 0 got: 0)",
+			want: "invalid owner addresses count (expected > 0 got: 0)",
 		},
 		{
-			"OwnerAddresses - invalid address at index 0",
-			NewContractSpecification(
+			name: "OwnerAddresses - invalid address at index 0",
+			spec: NewContractSpecification(
 				ContractSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{":invalid"},
@@ -303,12 +303,12 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				NewContractSpecificationSourceHash("somehash"),
 				"someclass",
 			),
-			fmt.Sprintf("invalid owner address at index %d: %s",
+			want: fmt.Sprintf("invalid owner address at index %d: %s",
 				0, "decoding bech32 failed: invalid separator index -1"),
 		},
 		{
-			"OwnerAddresses - invalid address at index 2",
-			NewContractSpecification(
+			name: "OwnerAddresses - invalid address at index 2",
+			spec: NewContractSpecification(
 				ContractSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{specTestBech32, specTestBech32, ":invalid"},
@@ -316,14 +316,14 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				NewContractSpecificationSourceHash("somehash"),
 				"someclass",
 			),
-			fmt.Sprintf("invalid owner address at index %d: %s",
+			want: fmt.Sprintf("invalid owner address at index %d: %s",
 				2, "decoding bech32 failed: invalid separator index -1"),
 		},
 
 		// PartiesInvolved tests
 		{
-			"PartiesInvolved - empty",
-			NewContractSpecification(
+			name: "PartiesInvolved - empty",
+			spec: NewContractSpecification(
 				ContractSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{specTestBech32},
@@ -331,13 +331,13 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				NewContractSpecificationSourceHash("somehash"),
 				"someclass",
 			),
-			"invalid parties involved count (expected > 0 got: 0)",
+			want: "invalid parties involved count (expected > 0 got: 0)",
 		},
 
 		// Source tests
 		{
-			"Source - nil",
-			NewContractSpecification(
+			name: "Source - nil",
+			spec: NewContractSpecification(
 				ContractSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{specTestBech32},
@@ -345,11 +345,11 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				nil,
 				"someclass",
 			),
-			"a source is required",
+			want: "a source is required",
 		},
 		{
-			"Source - ResourceID - invalid",
-			NewContractSpecification(
+			name: "Source - ResourceID - invalid",
+			spec: NewContractSpecification(
 				ContractSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{specTestBech32},
@@ -357,11 +357,11 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				NewContractSpecificationSourceResourceID(MetadataAddress(specTestAddr)),
 				"someclass",
 			),
-			fmt.Sprintf("invalid source resource id: %s", "invalid metadata address type: 133"),
+			want: fmt.Sprintf("invalid source resource id: %s", "invalid metadata address type: 133"),
 		},
 		{
-			"Source - Hash - empty",
-			NewContractSpecification(
+			name: "Source - Hash - empty",
+			spec: NewContractSpecification(
 				ContractSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{specTestBech32},
@@ -369,11 +369,11 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				NewContractSpecificationSourceHash(""),
 				"someclass",
 			),
-			"source hash cannot be empty",
+			want: "source hash cannot be empty",
 		},
 		{
-			"Source - unknown type",
-			NewContractSpecification(
+			name: "Source - unknown type",
+			spec: NewContractSpecification(
 				ContractSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{specTestBech32},
@@ -381,13 +381,13 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				NewWeirdSource(3),
 				"someclass",
 			),
-			"unknown source type",
+			want: "unknown source type",
 		},
 
 		// ClassName tests
 		{
-			"ClassName - empty",
-			NewContractSpecification(
+			name: "ClassName - empty",
+			spec: NewContractSpecification(
 				ContractSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{specTestBech32},
@@ -395,11 +395,11 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				NewContractSpecificationSourceHash("somehash"),
 				"",
 			),
-			"class name cannot be empty",
+			want: "class name cannot be empty",
 		},
 		{
-			"ClassName - just over max length",
-			NewContractSpecification(
+			name: "ClassName - just over max length",
+			spec: NewContractSpecification(
 				ContractSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{specTestBech32},
@@ -407,12 +407,12 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				NewContractSpecificationSourceHash("somehash"),
 				strings.Repeat("l", maxContractSpecificationClassNameLength+1),
 			),
-			fmt.Sprintf("class name exceeds maximum length (expected <= %d got: %d)",
+			want: fmt.Sprintf("class name exceeds maximum length (expected <= %d got: %d)",
 				maxContractSpecificationClassNameLength, maxContractSpecificationClassNameLength+1),
 		},
 		{
-			"ClassName - at max length",
-			NewContractSpecification(
+			name: "ClassName - at max length",
+			spec: NewContractSpecification(
 				ContractSpecMetadataAddress(uuid.New()),
 				nil,
 				[]string{specTestBech32},
@@ -420,13 +420,13 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				NewContractSpecificationSourceHash("somehash"),
 				strings.Repeat("m", maxContractSpecificationClassNameLength),
 			),
-			"",
+			want: "",
 		},
 
 		// A simple valid ContractSpecification
 		{
-			"simple valid test case",
-			NewContractSpecification(
+			name: "simple valid test case",
+			spec: NewContractSpecification(
 				ContractSpecMetadataAddress(contractSpecUuid1),
 				nil,
 				[]string{specTestBech32},
@@ -434,7 +434,7 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				NewContractSpecificationSourceHash("somehash"),
 				"someclass",
 			),
-			"",
+			want: "",
 		},
 	}
 
@@ -853,270 +853,270 @@ func (s *SpecificationTestSuite) TestDescriptionValidateBasic() {
 	}{
 		// Name tests
 		{
-			"invalid name - empty",
-			NewDescription(
+			name: "invalid name - empty",
+			desc: NewDescription(
 				"",
 				"",
 				"",
 				"",
 			),
-			fmt.Sprintf("description Name cannot be empty"),
+			want: fmt.Sprintf("description Name cannot be empty"),
 		},
 		{
-			"invalid name - too long",
-			NewDescription(
+			name: "invalid name - too long",
+			desc: NewDescription(
 				strings.Repeat("x", maxDescriptionNameLength+1),
 				"",
 				"",
 				"",
 			),
-			fmt.Sprintf("description Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength+1),
+			want: fmt.Sprintf("description Name exceeds maximum length (expected <= %d got: %d)", maxDescriptionNameLength, maxDescriptionNameLength+1),
 		},
 		{
-			"valid name - 1 char",
-			NewDescription(
+			name: "valid name - 1 char",
+			desc: NewDescription(
 				"x",
 				"",
 				"",
 				"",
 			),
-			"",
+			want: "",
 		},
 		{
-			"valid name - exactly max length",
-			NewDescription(
+			name: "valid name - exactly max length",
+			desc: NewDescription(
 				strings.Repeat("y", maxDescriptionNameLength),
 				"",
 				"",
 				"",
 			),
-			"",
+			want: "",
 		},
 
 		// Description tests
 		{
-			"invalid description - too long",
-			NewDescription(
+			name: "invalid description - too long",
+			desc: NewDescription(
 				"Unit Tests",
 				strings.Repeat("z", maxDescriptionDescriptionLength+1),
 				"",
 				"",
 			),
-			fmt.Sprintf("description Description exceeds maximum length (expected <= %d got: %d)", maxDescriptionDescriptionLength, maxDescriptionDescriptionLength+1),
+			want: fmt.Sprintf("description Description exceeds maximum length (expected <= %d got: %d)", maxDescriptionDescriptionLength, maxDescriptionDescriptionLength+1),
 		},
 		{
-			"valid description - empty",
-			NewDescription(
+			name: "valid description - empty",
+			desc: NewDescription(
 				"Unit Tests",
 				"",
 				"",
 				"",
 			),
-			"",
+			want: "",
 		},
 		{
-			"valid description - 1 char",
-			NewDescription(
+			name: "valid description - 1 char",
+			desc: NewDescription(
 				"Unit Tests",
 				"z",
 				"",
 				"",
 			),
-			"",
+			want: "",
 		},
 		{
-			"valid description - exactly max length",
-			NewDescription(
+			name: "valid description - exactly max length",
+			desc: NewDescription(
 				"Unit Tests",
 				strings.Repeat("z", maxDescriptionDescriptionLength),
 				"",
 				"",
 			),
-			"",
+			want: "",
 		},
 
 		// Website url tests
 		{
-			"invalid website url - too long",
-			NewDescription(
+			name: "invalid website url - too long",
+			desc: NewDescription(
 				"Unit Tests",
 				"",
 				strings.Repeat("h", maxURLLength+1),
 				"",
 			),
-			fmt.Sprintf("url WebsiteUrl exceeds maximum length (expected <= %d got: %d)", maxURLLength, maxURLLength+1),
+			want: fmt.Sprintf("url WebsiteUrl exceeds maximum length (expected <= %d got: %d)", maxURLLength, maxURLLength+1),
 		},
 		{
-			"invalid website url - no protocol",
-			NewDescription(
+			name: "invalid website url - no protocol",
+			desc: NewDescription(
 				"Unit Tests",
 				"",
 				"www.test.com",
 				"",
 			),
-			fmt.Sprintf("url WebsiteUrl must use the http, https, or data protocol"),
+			want: fmt.Sprintf("url WebsiteUrl must use the http, https, or data protocol"),
 		},
 		{
-			"valid website url - http",
-			NewDescription(
+			name: "valid website url - http",
+			desc: NewDescription(
 				"Unit Tests",
 				"",
 				"http://www.test.com",
 				"",
 			),
-			"",
+			want: "",
 		},
 		{
-			"valid website url - http at max length",
-			NewDescription(
+			name: "valid website url - http at max length",
+			desc: NewDescription(
 				"Unit Tests",
 				"",
 				"http://"+strings.Repeat("f", maxURLLength-7),
 				"",
 			),
-			"",
+			want: "",
 		},
 		{
-			"valid website url - https",
-			NewDescription(
+			name: "valid website url - https",
+			desc: NewDescription(
 				"Unit Tests",
 				"",
 				"https://www.test.com",
 				"",
 			),
-			"",
+			want: "",
 		},
 		{
-			"valid website url - https at max length",
-			NewDescription(
+		name: 	"valid website url - https at max length",
+		desc: 	NewDescription(
 				"Unit Tests",
 				"",
 				"https://"+strings.Repeat("s", maxURLLength-8),
 				"",
 			),
-			"",
+		want: 	"",
 		},
 		{
-			"valid website url - data",
-			NewDescription(
+		name: 	"valid website url - data",
+		desc: 	NewDescription(
 				"Unit Tests",
 				"",
 				"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==",
 				"",
 			),
-			"",
+		want: 	"",
 		},
 		{
-			"valid website url - data minimal",
-			NewDescription(
+		name: 	"valid website url - data minimal",
+		desc: 	NewDescription(
 				"Unit Tests",
 				"",
 				"data:,",
 				"",
 			),
-			"",
+		want: 	"",
 		},
 		{
-			"valid website url - data at max length",
-			NewDescription(
+		name: 	"valid website url - data at max length",
+		desc: 	NewDescription(
 				"Unit Tests",
 				"",
 				"data:image/png;base64,"+strings.Repeat("d", maxURLLength-22),
 				"",
 			),
-			"",
+		want: 	"",
 		},
 
 		// Icon url tests
 		{
-			"invalid icon url - too long",
-			NewDescription(
+		name: 	"invalid icon url - too long",
+		desc: 	NewDescription(
 				"Unit Tests",
 				"",
 				"",
 				strings.Repeat("h", maxURLLength+1),
 			),
-			fmt.Sprintf("url IconUrl exceeds maximum length (expected <= %d got: %d)", maxURLLength, maxURLLength+1),
+		want: 	fmt.Sprintf("url IconUrl exceeds maximum length (expected <= %d got: %d)", maxURLLength, maxURLLength+1),
 		},
 		{
-			"invalid icon url - no protocol",
-			NewDescription(
+		name: 	"invalid icon url - no protocol",
+		desc: 	NewDescription(
 				"Unit Tests",
 				"",
 				"",
 				"www.test.com",
 			),
-			fmt.Sprintf("url IconUrl must use the http, https, or data protocol"),
+		want: 	fmt.Sprintf("url IconUrl must use the http, https, or data protocol"),
 		},
 		{
-			"valid icon url - http",
-			NewDescription(
+		name: 	"valid icon url - http",
+		desc: 	NewDescription(
 				"Unit Tests",
 				"",
 				"",
 				"http://www.test.com",
 			),
-			"",
+		want: 	"",
 		},
 		{
-			"valid icon url - http at max length",
-			NewDescription(
+		name: 	"valid icon url - http at max length",
+		desc: 	NewDescription(
 				"Unit Tests",
 				"",
 				"",
 				"http://"+strings.Repeat("f", maxURLLength-7),
 			),
-			"",
+		want: 	"",
 		},
 		{
-			"valid icon url - https",
-			NewDescription(
+		name: 	"valid icon url - https",
+		desc: 	NewDescription(
 				"Unit Tests",
 				"",
 				"",
 				"https://www.test.com",
 			),
-			"",
+		want: 	"",
 		},
 		{
-			"valid icon url - https at max length",
-			NewDescription(
+		name: 	"valid icon url - https at max length",
+		desc: 	NewDescription(
 				"Unit Tests",
 				"",
 				"",
 				"https://"+strings.Repeat("s", maxURLLength-8),
 			),
-			"",
+		want: 	"",
 		},
 		{
-			"valid website url - data",
-			NewDescription(
+		name: 	"valid website url - data",
+		desc: 	NewDescription(
 				"Unit Tests",
 				"",
 				"",
 				"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==",
 			),
-			"",
+		want: 	"",
 		},
 		{
-			"valid website url - data minimal",
-			NewDescription(
+		name: 	"valid website url - data minimal",
+		desc: 	NewDescription(
 				"Unit Tests",
 				"",
 				"",
 				"data:,",
 			),
-			"",
+		want: 	"",
 		},
 		{
-			"valid website url - data at max length",
-			NewDescription(
+		name: 	"valid website url - data at max length",
+		desc: 	NewDescription(
 				"Unit Tests",
 				"",
 				"",
 				"data:image/png;base64,"+strings.Repeat("d", maxURLLength-22),
 			),
-			"",
+		want: 	"",
 		},
 	}
 
@@ -1207,14 +1207,14 @@ func (s *SpecificationTestSuite) TestRecordSpecString() {
 		recordName,
 		[]*InputSpecification{
 			{
-				"inputSpecName1",
-				"inputSpecTypeName1",
-				NewInputSpecificationSourceHash("inputSpecSourceHash1"),
+				Name: "inputSpecName1",
+				TypeName: "inputSpecTypeName1",
+				Source: NewInputSpecificationSourceHash("inputSpecSourceHash1"),
 			},
 			{
-				"inputSpecName2",
-				"inputSpecTypeName2",
-				NewInputSpecificationSourceRecordID(RecordMetadataAddress(
+				Name: "inputSpecName2",
+				TypeName: "inputSpecTypeName2",
+				Source: NewInputSpecificationSourceRecordID(RecordMetadataAddress(
 					uuid.MustParse("1784AE79-77F1-421C-AAF9-ECA4DD79E571"),
 					"inputSpecRecordIdSource",
 				)),
@@ -1254,9 +1254,9 @@ func (s *SpecificationTestSuite) TestInputSpecString() {
 		expected     string
 	}{
 		{
-			"source is record id",
-			false,
-			NewInputSpecification(
+			name: "source is record id",
+			outputActual: false,
+			spec: NewInputSpecification(
 				"inputSpecRecordIdSource",
 				"inputSpecRecordIdSourceTypeName",
 				NewInputSpecificationSourceRecordID(RecordMetadataAddress(
@@ -1264,21 +1264,21 @@ func (s *SpecificationTestSuite) TestInputSpecString() {
 					"inputSpecRecordIdSource",
 				)),
 			),
-			`name: inputSpecRecordIdSource
+			expected: `name: inputSpecRecordIdSource
 type_name: inputSpecRecordIdSourceTypeName
 source:
   record_id: record1qgtcftnewlc5y892l8k2fhteu4ceth857yw3fprr4lvhfptn5gg4cv4ure3
 `,
 		},
 		{
-			"source is hash",
-			false,
-			NewInputSpecification(
+			name: "source is hash",
+			outputActual: false,
+			spec: NewInputSpecification(
 				"inputSpecHashSource",
 				"inputSpecHashSourceTypeName",
 				NewInputSpecificationSourceHash("somehash"),
 			),
-			`name: inputSpecHashSource
+			expected: `name: inputSpecHashSource
 type_name: inputSpecHashSourceTypeName
 source:
   hash: somehash

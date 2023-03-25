@@ -33,19 +33,19 @@ func (s *NameRecordTestSuite) TestNameRecordValidateBasic() {
 		errValue  string
 	}{
 		"valid name": {
-			NewNameRecord("example", s.addr, true),
-			false,
-			"",
+		    name: 	NewNameRecord("example", s.addr, true),
+		    expectErr: 	false,
+		    errValue: 	"",
 		},
 		"should fail to validate basic empty name": {
-			NewNameRecord("", s.addr, true),
-			true,
-			"segment of name is too short",
+			name: NewNameRecord("", s.addr, true),
+			expectErr: true,
+			errValue: "segment of name is too short",
 		},
 		"should fail to validate basic empty addr": {
-			NewNameRecord("example", sdk.AccAddress{}, true),
-			true,
-			"invalid account address",
+			name: NewNameRecord("example", sdk.AccAddress{}, true),
+			expectErr: true,
+			errValue: "invalid account address",
 		},
 	}
 	for n, tc := range cases {

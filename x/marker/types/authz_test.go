@@ -64,19 +64,19 @@ func TestMarkerTransferAuthorizationValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		{
-			"valid msg with empty allow list",
-			NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{}),
-			"",
+		name: 	"valid msg with empty allow list",
+		msg: 	NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{}),
+		errorMsg: 	"",
 		},
 		{
-			"valid msg without non-empty allow list",
-			NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{addr1}),
-			"",
+		    name: 	"valid msg without non-empty allow list",
+		    msg: 	NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{addr1}),
+		    errorMsg: 	"",
 		},
 		{
-			"invalid msg with duplicate allow list",
-			NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{addr1, addr1}),
-			"all allow list addresses must be unique: duplicate entry",
+			name: "invalid msg with duplicate allow list",
+			msg: NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{addr1, addr1}),
+			errorMsg: "all allow list addresses must be unique: duplicate entry",
 		},
 	}
 	for _, tc := range cases {

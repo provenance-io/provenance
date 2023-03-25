@@ -310,14 +310,14 @@ func (s *IntegrationTestSuite) TestGetAccountAttributeCmd() {
 		expectedOutput string
 	}{
 		{
-			"should get attribute by name with json output",
-			[]string{s.account1Addr.String(), "example.attribute", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s"}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String()),
+			name: "should get attribute by name with json output",
+			args: []string{s.account1Addr.String(), "example.attribute", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s"}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String()),
 		},
 		{
-			"should get attribute by name with text output",
-			[]string{s.account1Addr.String(), "example.attribute", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			fmt.Sprintf(`account: %s
+			name: "should get attribute by name with text output",
+			args: []string{s.account1Addr.String(), "example.attribute", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			expectedOutput: fmt.Sprintf(`account: %s
 attributes:
 - address: %s
   attribute_type: ATTRIBUTE_TYPE_STRING
@@ -328,18 +328,18 @@ pagination:
   total: "0"`, s.account1Addr.String(), s.account1Addr.String()),
 		},
 		{
-			"should fail to find unknown attribute output",
-			[]string{s.account1Addr.String(), "example.none", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			fmt.Sprintf(`account: %s
+			name: "should fail to find unknown attribute output",
+			args: []string{s.account1Addr.String(), "example.none", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			expectedOutput: fmt.Sprintf(`account: %s
 attributes: []
 pagination:
   next_key: null
   total: "0"`, s.account1Addr.String()),
 		},
 		{
-			"should fail to find unknown attribute by name with json output",
-			[]string{s.account1Addr.String(), "example.none", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			fmt.Sprintf(`{"account":"%s","attributes":[],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String()),
+			name: "should fail to find unknown attribute by name with json output",
+			args: []string{s.account1Addr.String(), "example.none", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String()),
 		},
 	}
 
@@ -364,14 +364,14 @@ func (s *IntegrationTestSuite) TestScanAccountAttributesCmd() {
 		expectedOutput string
 	}{
 		{
-			"should get attribute by suffix with json output",
-			[]string{s.account1Addr.String(), "attribute", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s"}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String()),
+			name: "should get attribute by suffix with json output",
+			args: []string{s.account1Addr.String(), "attribute", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s"}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String()),
 		},
 		{
-			"should get attribute by suffix with text output",
-			[]string{s.account1Addr.String(), "attribute", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			fmt.Sprintf(`account: %s
+			name: "should get attribute by suffix with text output",
+			args: []string{s.account1Addr.String(), "attribute", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			expectedOutput: fmt.Sprintf(`account: %s
 attributes:
 - address: %s
   attribute_type: ATTRIBUTE_TYPE_STRING
@@ -382,18 +382,18 @@ pagination:
   total: "0"`, s.account1Addr.String(), s.account1Addr.String()),
 		},
 		{
-			"should fail to find unknown attribute suffix text output",
-			[]string{s.account1Addr.String(), "none", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			fmt.Sprintf(`account: %s
+			name: "should fail to find unknown attribute suffix text output",
+			args: []string{s.account1Addr.String(), "none", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			expectedOutput: fmt.Sprintf(`account: %s
 attributes: []
 pagination:
   next_key: null
   total: "0"`, s.account1Addr.String()),
 		},
 		{
-			"should get attribute by suffix with json output",
-			[]string{s.account1Addr.String(), "none", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			fmt.Sprintf(`{"account":"%s","attributes":[],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String()),
+			name: "should get attribute by suffix with json output",
+			args: []string{s.account1Addr.String(), "none", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String()),
 		},
 	}
 
@@ -418,14 +418,14 @@ func (s *IntegrationTestSuite) TestListAccountAttributesCmd() {
 		expectedOutput string
 	}{
 		{
-			"should list all attributes for account with json output",
-			[]string{s.account1Addr.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute.count","value":"Mg==","attribute_type":"ATTRIBUTE_TYPE_INT","address":"%s"},{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s"}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String(), s.account1Addr.String()),
+			name: "should list all attributes for account with json output",
+			args: []string{s.account1Addr.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute.count","value":"Mg==","attribute_type":"ATTRIBUTE_TYPE_INT","address":"%s"},{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s"}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String(), s.account1Addr.String()),
 		},
 		{
-			"should list all attributes for account text output",
-			[]string{s.account1Addr.String(), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			fmt.Sprintf(`account: %s
+			name: "should list all attributes for account text output",
+			args: []string{s.account1Addr.String(), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			expectedOutput: fmt.Sprintf(`account: %s
 attributes:
 - address: %s
   attribute_type: ATTRIBUTE_TYPE_INT
@@ -462,14 +462,14 @@ func (s *IntegrationTestSuite) TestGetAttributeParamsCmd() {
 		expectedOutput string
 	}{
 		{
-			"json output",
-			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			"{\"max_value_length\":128}",
+			name: "json output",
+			args: []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			expectedOutput: "{\"max_value_length\":128}",
 		},
 		{
-			"text output",
-			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			"max_value_length: 128",
+			name: "text output",
+			args: []string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			expectedOutput: "max_value_length: 128",
 		},
 	}
 
@@ -498,9 +498,9 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 		expectedCode uint32
 	}{
 		{
-			"bind a new attribute name for testing",
-			namecli.GetBindNameCmd(),
-			[]string{
+			name: "bind a new attribute name for testing",
+			cmd: namecli.GetBindNameCmd(),
+			args: []string{
 				"txtest",
 				s.testnet.Validators[0].Address.String(),
 				"attribute",
@@ -509,12 +509,14 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			expectErr: false,
+			respType: &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"set attribute, valid string",
-			cli.NewAddAccountAttributeCmd(),
-			[]string{
+			name: "set attribute, valid string",
+			cmd: cli.NewAddAccountAttributeCmd(),
+			args: []string{
 				"txtest.attribute",
 				s.testnet.Validators[0].Address.String(),
 				"string",
@@ -524,12 +526,14 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			expectErr: false,
+			respType: &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"set attribute, invalid bech32 address",
-			cli.NewAddAccountAttributeCmd(),
-			[]string{
+			name: "set attribute, invalid bech32 address",
+			cmd: cli.NewAddAccountAttributeCmd(),
+			args: []string{
 				"txtest.attribute",
 				"invalidbech32",
 				"string",
@@ -539,12 +543,14 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 0,
+			expectErr: true,
+			respType: &sdk.TxResponse{},
+			expectedCode:  0,
 		},
 		{
-			"set attribute, invalid type",
-			cli.NewAddAccountAttributeCmd(),
-			[]string{
+			name:"set attribute, invalid type",
+			cmd:cli.NewAddAccountAttributeCmd(),
+			args:[]string{
 				"txtest.attribute",
 				s.account2Addr.String(),
 				"blah",
@@ -554,12 +560,14 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 1,
+			expectErr:true,
+			respType: &sdk.TxResponse{},
+			expectedCode: 1,
 		},
 		{
-			"set attribute, cannot encode",
-			cli.NewAddAccountAttributeCmd(),
-			[]string{
+			name: "set attribute, cannot encode",
+			cmd: cli.NewAddAccountAttributeCmd(),
+			args: []string{
 				"txtest.attribute",
 				s.testnet.Validators[0].Address.String(),
 				"bytes",
@@ -569,7 +577,9 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 1,
+			expectErr: true,
+			respType: &sdk.TxResponse{},
+			expectedCode: 1,
 		},
 	}
 
@@ -602,9 +612,9 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 		expectedCode uint32
 	}{
 		{
-			"bind a new attribute name for delete testing",
-			namecli.GetBindNameCmd(),
-			[]string{
+			name: "bind a new attribute name for delete testing",
+			cmd: namecli.GetBindNameCmd(),
+			args: []string{
 				"updatetest",
 				s.testnet.Validators[0].Address.String(),
 				"attribute",
@@ -613,12 +623,14 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			expectErr: false,
+			respType:  &sdk.TxResponse{},
+			expectedCode:  0,
 		},
 		{
-			"add new attribute for updating",
-			cli.NewAddAccountAttributeCmd(),
-			[]string{
+			name: "add new attribute for updating",
+			cmd: cli.NewAddAccountAttributeCmd(),
+			args: []string{
 				"updatetest.attribute",
 				s.account2Addr.String(),
 				"string",
@@ -628,12 +640,14 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			expectErr: false,
+			respType: &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"fail to update attribute, account address failure",
-			cli.NewUpdateAccountAttributeCmd(),
-			[]string{
+			name: "fail to update attribute, account address failure",
+			cmd: cli.NewUpdateAccountAttributeCmd(),
+			args: []string{
 				"updatetest.attribute",
 				"not-an-address",
 				"string",
@@ -645,12 +659,14 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 0,
+			expectErr: true,
+		    respType: &sdk.TxResponse{},
+		    expectedCode: 0,
 		},
 		{
-			"fail to update attribute, incorrect original type",
-			cli.NewUpdateAccountAttributeCmd(),
-			[]string{
+			name: "fail to update attribute, incorrect original type",
+			cmd: cli.NewUpdateAccountAttributeCmd(),
+			args: []string{
 				"updatetest.attribute",
 				s.account2Addr.String(),
 				"invalid",
@@ -662,12 +678,14 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 0,
+			expectErr: true,
+			respType:  &sdk.TxResponse{},
+			expectedCode:  0,
 		},
 		{
-			"fail to update attribute, incorrect update type",
-			cli.NewUpdateAccountAttributeCmd(),
-			[]string{
+			name: "fail to update attribute, incorrect update type",
+			cmd: cli.NewUpdateAccountAttributeCmd(),
+			args: []string{
 				"updatetest.attribute",
 				s.account2Addr.String(),
 				"string",
@@ -679,12 +697,14 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 0,
+			expectErr: true,
+			respType:  &sdk.TxResponse{},
+			expectedCode:  0,
 		},
 		{
-			"fail to update attribute, validate basic fail",
-			cli.NewUpdateAccountAttributeCmd(),
-			[]string{
+			name: "fail to update attribute, validate basic fail",
+			cmd: cli.NewUpdateAccountAttributeCmd(),
+			args: []string{
 				"updatetest.attribute",
 				s.account2Addr.String(),
 				"string",
@@ -696,12 +716,14 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 0,
+			expectErr: true,
+			respType:  &sdk.TxResponse{},
+			expectedCode:  0,
 		},
 		{
-			"successful update of attribute",
-			cli.NewUpdateAccountAttributeCmd(),
-			[]string{
+			name: "successful update of attribute",
+			cmd: cli.NewUpdateAccountAttributeCmd(),
+			args: []string{
 				"updatetest.attribute",
 				s.account2Addr.String(),
 				"string",
@@ -713,7 +735,9 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			expectErr: false,
+			respType: &sdk.TxResponse{},
+			 expectedCode: 0,
 		},
 	}
 
@@ -746,9 +770,9 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 		expectedCode uint32
 	}{
 		{
-			"bind a new attribute name for delete testing",
-			namecli.GetBindNameCmd(),
-			[]string{
+			name: "bind a new attribute name for delete testing",
+			cmd: namecli.GetBindNameCmd(),
+			args: []string{
 				"distinct",
 				s.testnet.Validators[0].Address.String(),
 				"attribute",
@@ -757,12 +781,12 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			expectErr: false,respType:  &sdk.TxResponse{},expectedCode: 0,
 		},
 		{
-			"add new attribute for delete testing",
-			cli.NewAddAccountAttributeCmd(),
-			[]string{
+			name: "add new attribute for delete testing",
+			cmd: cli.NewAddAccountAttributeCmd(),
+			args: []string{
 				"distinct.attribute",
 				s.account2Addr.String(),
 				"string",
@@ -772,11 +796,14 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			expectErr: false,
+			respType: &sdk.TxResponse{},
+			expectedCode:  0,
 		},
-		{"delete distinct attribute, should fail incorrect address",
-			cli.NewDeleteDistinctAccountAttributeCmd(),
-			[]string{
+		{
+		    name: "delete distinct attribute, should fail incorrect address",
+			cmd: cli.NewDeleteDistinctAccountAttributeCmd(),
+			args: []string{
 				"distinct.attribute",
 				"not-a-address",
 				"string",
@@ -786,11 +813,14 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 0,
+			expectErr: true,
+			respType:  &sdk.TxResponse{},
+			expectedCode:  0,
 		},
-		{"delete distinct attribute, should fail incorrect type",
-			cli.NewDeleteDistinctAccountAttributeCmd(),
-			[]string{
+		{
+		    name: "delete distinct attribute, should fail incorrect type",
+			cmd: cli.NewDeleteDistinctAccountAttributeCmd(),
+			args: []string{
 				"distinct.attribute",
 				s.account2Addr.String(),
 				"invalid",
@@ -800,11 +830,14 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 0,
+			expectErr: true,
+			respType:  &sdk.TxResponse{},
+			expectedCode:  0,
 		},
-		{"delete distinct attribute, should successfully delete",
-			cli.NewDeleteDistinctAccountAttributeCmd(),
-			[]string{
+		{
+		    name: "delete distinct attribute, should successfully delete",
+			cmd: cli.NewDeleteDistinctAccountAttributeCmd(),
+			args: []string{
 				"distinct.attribute",
 				s.account2Addr.String(),
 				"string",
@@ -814,7 +847,9 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			expectErr: false,
+			respType:  &sdk.TxResponse{},
+			expectedCode:  0,
 		},
 	}
 
@@ -847,9 +882,9 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 		expectedCode uint32
 	}{
 		{
-			"bind a new attribute name for delete testing",
-			namecli.GetBindNameCmd(),
-			[]string{
+			name: "bind a new attribute name for delete testing",
+			cmd: namecli.GetBindNameCmd(),
+			args: []string{
 				"deletetest",
 				s.testnet.Validators[0].Address.String(),
 				"attribute",
@@ -858,12 +893,14 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			expectErr: false,
+			respType: &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"add new attribute for delete testing",
-			cli.NewAddAccountAttributeCmd(),
-			[]string{
+			name: "add new attribute for delete testing",
+			cmd: cli.NewAddAccountAttributeCmd(),
+			args: []string{
 				"deletetest.attribute",
 				s.account2Addr.String(),
 				"string",
@@ -873,11 +910,14 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			expectErr: false,
+			respType: &sdk.TxResponse{},
+			expectedCode:  0,
 		},
-		{"delete attribute, should delete txtest.attribute",
-			cli.NewDeleteAccountAttributeCmd(),
-			[]string{
+		{
+		    name: "delete attribute, should delete txtest.attribute",
+			cmd: cli.NewDeleteAccountAttributeCmd(),
+			args: []string{
 				"deletetest.attribute",
 				s.account2Addr.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -885,11 +925,14 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			expectErr: false,
+			respType:  &sdk.TxResponse{},
+			expectedCode:  0,
 		},
-		{"delete attribute, should fail to find txtest.attribute",
-			cli.NewDeleteAccountAttributeCmd(),
-			[]string{
+		{
+		    name:"delete attribute, should fail to find txtest.attribute",
+			cmd:cli.NewDeleteAccountAttributeCmd(),
+			args:[]string{
 				"deletetest.attribute",
 				s.account2Addr.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -897,7 +940,9 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 1,
+			expectErr:false,
+			respType:&sdk.TxResponse{},
+			expectedCode: 1,
 		},
 	}
 

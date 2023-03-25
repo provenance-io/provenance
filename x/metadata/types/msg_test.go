@@ -106,29 +106,29 @@ func TestAddScopeDataAccessValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		"should fail to validate basic, incorrect scope id type": {
-			NewMsgAddScopeDataAccessRequest(notAScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			true,
-			fmt.Sprintf("address is not a scope id: %v", notAScopeId.String()),
+			msg: NewMsgAddScopeDataAccessRequest(notAScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			wantErr: true,
+			errorMsg: fmt.Sprintf("address is not a scope id: %v", notAScopeId.String()),
 		},
 		"should fail to validate basic, requires at least one data access address": {
-			NewMsgAddScopeDataAccessRequest(actualScopeId, []string{}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			true,
-			"at least one data access address is required",
+			msg: NewMsgAddScopeDataAccessRequest(actualScopeId, []string{}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			wantErr: true,
+			errorMsg: "at least one data access address is required",
 		},
 		"should fail to validate basic, incorrect data access address format": {
-			NewMsgAddScopeDataAccessRequest(actualScopeId, []string{"notabech32address"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			true,
-			"data access address is invalid: notabech32address",
+			msg: NewMsgAddScopeDataAccessRequest(actualScopeId, []string{"notabech32address"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			wantErr: true,
+			errorMsg: "data access address is invalid: notabech32address",
 		},
 		"should fail to validate basic, requires at least one signer": {
-			NewMsgAddScopeDataAccessRequest(actualScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{}),
-			true,
-			"at least one signer is required",
+			msg: NewMsgAddScopeDataAccessRequest(actualScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{}),
+			wantErr: true,
+			errorMsg: "at least one signer is required",
 		},
 		"should successfully validate basic": {
-			NewMsgAddScopeDataAccessRequest(actualScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			false,
-			"",
+			msg: NewMsgAddScopeDataAccessRequest(actualScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			wantErr: false,
+			errorMsg: "",
 		},
 	}
 
@@ -157,29 +157,29 @@ func TestDeleteScopeDataAccessValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		"should fail to validate basic, incorrect scope id type": {
-			NewMsgDeleteScopeDataAccessRequest(notAScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			true,
-			fmt.Sprintf("address is not a scope id: %v", notAScopeId.String()),
+			msg: NewMsgDeleteScopeDataAccessRequest(notAScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			wantErr: true,
+			errorMsg: fmt.Sprintf("address is not a scope id: %v", notAScopeId.String()),
 		},
 		"should fail to validate basic, requires at least one data access address": {
-			NewMsgDeleteScopeDataAccessRequest(actualScopeId, []string{}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			true,
-			"at least one data access address is required",
+			msg: NewMsgDeleteScopeDataAccessRequest(actualScopeId, []string{}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			wantErr: true,
+			errorMsg: "at least one data access address is required",
 		},
 		"should fail to validate basic, incorrect data access address format": {
-			NewMsgDeleteScopeDataAccessRequest(actualScopeId, []string{"notabech32address"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			true,
-			"data access address is invalid: notabech32address",
+			msg: NewMsgDeleteScopeDataAccessRequest(actualScopeId, []string{"notabech32address"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			wantErr: true,
+			errorMsg: "data access address is invalid: notabech32address",
 		},
 		"should fail to validate basic, requires at least one signer": {
-			NewMsgDeleteScopeDataAccessRequest(actualScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{}),
-			true,
-			"at least one signer is required",
+			msg: NewMsgDeleteScopeDataAccessRequest(actualScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{}),
+			wantErr: true,
+			errorMsg: "at least one signer is required",
 		},
 		"should successfully validate basic": {
-			NewMsgDeleteScopeDataAccessRequest(actualScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			false,
-			"",
+			msg: NewMsgDeleteScopeDataAccessRequest(actualScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			wantErr: false,
+			errorMsg: "",
 		},
 	}
 
@@ -208,57 +208,57 @@ func TestAddScopeOwnersValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		{
-			"should fail to validate basic, incorrect scope id type",
-			NewMsgAddScopeOwnerRequest(
+			name: "should fail to validate basic, incorrect scope id type",
+			msg: NewMsgAddScopeOwnerRequest(
 				notAScopeId,
 				[]Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_OWNER}},
 				[]string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			fmt.Sprintf("address is not a scope id: %v", notAScopeId.String()),
+			errorMsg: fmt.Sprintf("address is not a scope id: %v", notAScopeId.String()),
 		},
 		{
-			"should fail to validate basic, requires at least one owner address",
-			NewMsgAddScopeOwnerRequest(
+			name: "should fail to validate basic, requires at least one owner address",
+			msg: NewMsgAddScopeOwnerRequest(
 				actualScopeId,
 				[]Party{},
 				[]string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"},
 			),
-			"invalid owners: at least one party is required",
+			errorMsg: "invalid owners: at least one party is required",
 		},
 		{
-			"should fail to validate basic, incorrect owner address format",
-			NewMsgAddScopeOwnerRequest(
+			name: "should fail to validate basic, incorrect owner address format",
+			msg: NewMsgAddScopeOwnerRequest(
 				actualScopeId,
 				[]Party{{Address: "notabech32address", Role: PartyType_PARTY_TYPE_OWNER}},
 				[]string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"},
 			),
-			"invalid owners: invalid party address [notabech32address]: decoding bech32 failed: invalid separator index -1",
+			errorMsg: "invalid owners: invalid party address [notabech32address]: decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			"should fail to validate basic, incorrect party type",
-			NewMsgAddScopeOwnerRequest(
+			name: "should fail to validate basic, incorrect party type",
+			msg: NewMsgAddScopeOwnerRequest(
 				actualScopeId,
 				[]Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_UNSPECIFIED}},
 				[]string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"},
 			),
-			"invalid owners: invalid party type for party cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
+			errorMsg: "invalid owners: invalid party type for party cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
 		},
 		{
-			"should fail to validate basic, requires at least one signer",
-			NewMsgAddScopeOwnerRequest(
+			name: "should fail to validate basic, requires at least one signer",
+			msg: NewMsgAddScopeOwnerRequest(
 				actualScopeId,
 				[]Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_OWNER}},
 				[]string{},
 			),
-			"at least one signer is required",
+			errorMsg: "at least one signer is required",
 		},
 		{
-			"should successfully validate basic",
-			NewMsgAddScopeOwnerRequest(
+			name: "should successfully validate basic",
+			msg: NewMsgAddScopeOwnerRequest(
 				actualScopeId,
 				[]Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_OWNER}},
 				[]string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"},
 			),
-			"",
+			errorMsg: "",
 		},
 	}
 
@@ -284,29 +284,29 @@ func TestDeleteScopeOwnerValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		"should fail to validate basic, incorrect scope id type": {
-			NewMsgDeleteScopeOwnerRequest(notAScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			true,
-			fmt.Sprintf("address is not a scope id: %v", notAScopeId.String()),
+			msg: NewMsgDeleteScopeOwnerRequest(notAScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			wantErr: true,
+			errorMsg: fmt.Sprintf("address is not a scope id: %v", notAScopeId.String()),
 		},
 		"should fail to validate basic, requires at least one owner address": {
-			NewMsgDeleteScopeOwnerRequest(actualScopeId, []string{}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			true,
-			"at least one owner address is required",
+			msg: NewMsgDeleteScopeOwnerRequest(actualScopeId, []string{}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			wantErr: true,
+			errorMsg: "at least one owner address is required",
 		},
 		"should fail to validate basic, incorrect data access address format": {
-			NewMsgDeleteScopeOwnerRequest(actualScopeId, []string{"notabech32address"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			true,
-			"owner address is invalid: notabech32address",
+			msg: NewMsgDeleteScopeOwnerRequest(actualScopeId, []string{"notabech32address"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			wantErr: true,
+			errorMsg: "owner address is invalid: notabech32address",
 		},
 		"should fail to validate basic, requires at least one signer": {
-			NewMsgDeleteScopeOwnerRequest(actualScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{}),
-			true,
-			"at least one signer is required",
+			msg: NewMsgDeleteScopeOwnerRequest(actualScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{}),
+			wantErr: true,
+			errorMsg: "at least one signer is required",
 		},
 		"should successfully validate basic": {
-			NewMsgDeleteScopeOwnerRequest(actualScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			false,
-			"",
+			msg: NewMsgDeleteScopeOwnerRequest(actualScopeId, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			wantErr: false,
+			errorMsg: "",
 		},
 	}
 
@@ -335,24 +335,24 @@ func TestMsgAddContractSpecToScopeSpecRequestValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		"should fail to validate basic, incorrect contract spec id type": {
-			NewMsgAddContractSpecToScopeSpecRequest(scopeSpecID, scopeSpecID, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			true,
-			fmt.Sprintf("address is not a contract specification id: %v", scopeSpecID.String()),
+			msg: NewMsgAddContractSpecToScopeSpecRequest(scopeSpecID, scopeSpecID, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			wantErr: true,
+			errorMsg: fmt.Sprintf("address is not a contract specification id: %v", scopeSpecID.String()),
 		},
 		"should fail to validate basic, incorrect scope spec id type": {
-			NewMsgAddContractSpecToScopeSpecRequest(contractSpecID, contractSpecID, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			true,
-			fmt.Sprintf("address is not a scope specification id: %v", contractSpecID.String()),
+			msg: NewMsgAddContractSpecToScopeSpecRequest(contractSpecID, contractSpecID, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			wantErr: true,
+			errorMsg: fmt.Sprintf("address is not a scope specification id: %v", contractSpecID.String()),
 		},
 		"should fail to validate basic, requires at least one signer": {
-			NewMsgAddContractSpecToScopeSpecRequest(contractSpecID, scopeSpecID, []string{}),
-			true,
-			"at least one signer is required",
+			msg: NewMsgAddContractSpecToScopeSpecRequest(contractSpecID, scopeSpecID, []string{}),
+			wantErr: true,
+			errorMsg: "at least one signer is required",
 		},
 		"should successfully validate basic": {
-			NewMsgAddContractSpecToScopeSpecRequest(contractSpecID, scopeSpecID, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			false,
-			"",
+			msg: NewMsgAddContractSpecToScopeSpecRequest(contractSpecID, scopeSpecID, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			wantErr: false,
+			errorMsg: "",
 		},
 	}
 
@@ -381,24 +381,24 @@ func TestMsgDeleteContractSpecFromScopeSpecRequestValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		"should fail to validate basic, incorrect contract spec id type": {
-			NewMsgDeleteContractSpecFromScopeSpecRequest(scopeSpecID, scopeSpecID, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			true,
-			fmt.Sprintf("address is not a contract specification id: %v", scopeSpecID.String()),
+			msg: NewMsgDeleteContractSpecFromScopeSpecRequest(scopeSpecID, scopeSpecID, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			wantErr: true,
+			errorMsg: fmt.Sprintf("address is not a contract specification id: %v", scopeSpecID.String()),
 		},
 		"should fail to validate basic, incorrect scope spec id type": {
-			NewMsgDeleteContractSpecFromScopeSpecRequest(contractSpecID, contractSpecID, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			true,
-			fmt.Sprintf("address is not a scope specification id: %v", contractSpecID.String()),
+			msg: NewMsgDeleteContractSpecFromScopeSpecRequest(contractSpecID, contractSpecID, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			wantErr: true,
+			errorMsg: fmt.Sprintf("address is not a scope specification id: %v", contractSpecID.String()),
 		},
 		"should fail to validate basic, requires at least one signer": {
-			NewMsgDeleteContractSpecFromScopeSpecRequest(contractSpecID, scopeSpecID, []string{}),
-			true,
-			"at least one signer is required",
+			msg: NewMsgDeleteContractSpecFromScopeSpecRequest(contractSpecID, scopeSpecID, []string{}),
+			wantErr: true,
+			errorMsg: "at least one signer is required",
 		},
 		"should successfully validate basic": {
-			NewMsgDeleteContractSpecFromScopeSpecRequest(contractSpecID, scopeSpecID, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
-			false,
-			"",
+			msg: NewMsgDeleteContractSpecFromScopeSpecRequest(contractSpecID, scopeSpecID, []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}),
+			wantErr: false,
+			errorMsg: "",
 		},
 	}
 

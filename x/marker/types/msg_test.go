@@ -104,8 +104,8 @@ func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		{
-			"should fail to validate basic, invalid admin address",
-			*NewIbcMsgTransferRequest(
+			package: "should fail to validate basic, invalid admin address",
+			name: *NewIbcMsgTransferRequest(
 				"notvalidaddress",
 				"transfer",
 				"channel-1",
@@ -116,11 +116,11 @@ func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 				1000,
 				"",
 			),
-			"decoding bech32 failed: invalid separator index -1",
+			msg: "decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			"should fail to validate basic, invalid ibctransfertypes.MsgTransfer ",
-			*NewIbcMsgTransferRequest(
+			package: "should fail to validate basic, invalid ibctransfertypes.MsgTransfer ",
+			name: *NewIbcMsgTransferRequest(
 				validAddress,
 				"transfer",
 				"channel-1",
@@ -131,11 +131,11 @@ func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 				1000,
 				"",
 			),
-			"string could not be parsed as address: decoding bech32 failed: invalid separator index -1: invalid address",
+			msg: "string could not be parsed as address: decoding bech32 failed: invalid separator index -1: invalid address",
 		},
 		{
-			"should succeed",
-			*NewIbcMsgTransferRequest(
+			package: "should succeed",
+			name: *NewIbcMsgTransferRequest(
 				validAddress,
 				"transfer",
 				"channel-1",
@@ -146,7 +146,7 @@ func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 				1000,
 				"",
 			),
-			"",
+			msg: "",
 		},
 	}
 

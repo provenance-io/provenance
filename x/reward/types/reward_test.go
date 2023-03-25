@@ -260,24 +260,24 @@ func (s *RewardTypesTestSuite) TestEpochRewardDistributionValidate() {
 		want          string
 	}{
 		{
-			"invalid -  claim period id",
-			NewClaimPeriodRewardDistribution(0, 1, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 0, false),
-			"claim reward distribution has invalid claim id",
+		    name: 	"invalid -  claim period id",
+		    rewardProgram: 	NewClaimPeriodRewardDistribution(0, 1, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 0, false),
+		    want: 	"claim reward distribution has invalid claim id",
 		},
 		{
-			"invalid - reward program id",
-			NewClaimPeriodRewardDistribution(1, 0, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 0, false),
-			"claim reward distribution must have a valid reward program id",
+			name: "invalid - reward program id",
+			rewardProgram: NewClaimPeriodRewardDistribution(1, 0, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 100), 0, false),
+			want: "claim reward distribution must have a valid reward program id",
 		},
 		{
-			"invalid - total rewards needs to be positive",
-			NewClaimPeriodRewardDistribution(1, 1, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 0), 0, false),
-			"",
+			name: "invalid - total rewards needs to be positive",
+			rewardProgram: NewClaimPeriodRewardDistribution(1, 1, sdk.NewInt64Coin("nhash", 100), sdk.NewInt64Coin("nhash", 0), 0, false),
+			want: "",
 		},
 		{
-			"invalid - total rewards needs to be positive",
-			NewClaimPeriodRewardDistribution(1, 1, sdk.NewInt64Coin("nhash", 0), sdk.NewInt64Coin("nhash", 100), 0, false),
-			"claim reward distribution must have a reward pool which is positive",
+			name: "invalid - total rewards needs to be positive",
+			rewardProgram: NewClaimPeriodRewardDistribution(1, 1, sdk.NewInt64Coin("nhash", 0), sdk.NewInt64Coin("nhash", 100), 0, false),
+			want: "claim reward distribution must have a reward pool which is positive",
 		},
 		{
 			"should succeed validate basic",
@@ -306,37 +306,37 @@ func (s *RewardTypesTestSuite) TesRewardAccountStateValidate() {
 		want               string
 	}{
 		{
-			"valid",
-			NewRewardAccountState(
+		name: 	"valid",
+		RewardAccountState: 	NewRewardAccountState(
 				1,
 				2,
 				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 				0,
 				[]*ActionCounter{},
 			),
-			"",
+			want: "",
 		},
 		{
-			"invalid reward id",
-			NewRewardAccountState(
+			name: "invalid reward id",
+			RewardAccountState: NewRewardAccountState(
 				0,
 				2,
 				"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 				0,
 				[]*ActionCounter{},
 			),
-			"reward program id must be greater than 0",
+			want: "reward program id must be greater than 0",
 		},
 		{
-			"invalid - address is incorrect",
-			NewRewardAccountState(
+			name: "invalid - address is incorrect",
+			RewardAccountState: NewRewardAccountState(
 				1,
 				2,
 				"test",
 				0,
 				[]*ActionCounter{},
 			),
-			"invalid address for reward program balance: decoding bech32 failed: invalid bech32 string length 7",
+			want: "invalid address for reward program balance: decoding bech32 failed: invalid bech32 string length 7",
 		},
 	}
 

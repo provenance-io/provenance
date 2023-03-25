@@ -30,8 +30,8 @@ type denomMetadataTestCase struct {
 func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 	return []denomMetadataTestCase{
 		{
-			"base is not a valid coin denomination",
-			banktypes.Metadata{
+			name: "base is not a valid coin denomination",
+			md: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits:  nil,
 				Base:        "x",
@@ -39,11 +39,11 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 				Name:        "Hash",
 				Symbol:      "HASH",
 			},
-			[]string{"denom metadata"},
+			wantInErr: []string{"denom metadata"},
 		},
 		{
-			"display is not a valid coin denomination",
-			banktypes.Metadata{
+			name: "display is not a valid coin denomination",
+			md: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits:  nil,
 				Base:        "hash",
@@ -51,11 +51,11 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 				Name:        "Hash",
 				Symbol:      "HASH",
 			},
-			[]string{"denom metadata"},
+			wantInErr: []string{"denom metadata"},
 		},
 		{
-			"first denom unit is not exponent 0",
-			banktypes.Metadata{
+			name: "first denom unit is not exponent 0",
+			md: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "hash", Exponent: 1, Aliases: nil},
@@ -65,11 +65,11 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			[]string{"denom metadata"},
+			wantInErr: []string{"denom metadata"},
 		},
 		{
-			"first denom unit is not base",
-			banktypes.Metadata{
+			name: "first denom unit is not base",
+			md: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
@@ -80,11 +80,11 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			[]string{"denom metadata"},
+			wantInErr: []string{"denom metadata"},
 		},
 		{
-			"denom units not ordered",
-			banktypes.Metadata{
+			name: "denom units not ordered",
+			md: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
@@ -96,11 +96,11 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			[]string{"denom metadata"},
+			wantInErr: []string{"denom metadata"},
 		},
 		{
-			"description too long",
-			banktypes.Metadata{
+			name: "description too long",
+			md: banktypes.Metadata{
 				Description: strings.Repeat("d", maxDenomMetadataDescriptionLength+1),
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
@@ -112,11 +112,11 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			[]string{"description", fmt.Sprint(maxDenomMetadataDescriptionLength), fmt.Sprint(maxDenomMetadataDescriptionLength + 1)},
+			wantInErr: []string{"description", fmt.Sprint(maxDenomMetadataDescriptionLength), fmt.Sprint(maxDenomMetadataDescriptionLength + 1)},
 		},
 		{
-			"no root coin name",
-			banktypes.Metadata{
+			name: "no root coin name",
+			md: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
@@ -128,11 +128,11 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			[]string{"root coin name"},
+			wantInErr: []string{"root coin name"},
 		},
 		{
-			"base prefix not SI",
-			banktypes.Metadata{
+			name: "base prefix not SI",
+			md: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "xhash", Exponent: 0, Aliases: nil},
@@ -144,11 +144,11 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			[]string{"root coin name", "is not a SI prefix"},
+			wantInErr: []string{"root coin name", "is not a SI prefix"},
 		},
 		{
-			"alias duplicates other name",
-			banktypes.Metadata{
+			name: "alias duplicates other name",
+			md: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
@@ -160,11 +160,11 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			[]string{"denom or alias", "is not unique", "uhash"},
+			wantInErr: []string{"denom or alias", "is not unique", "uhash"},
 		},
 		{
-			"denom duplicates other name",
-			banktypes.Metadata{
+			name: "denom duplicates other name",
+			md: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -177,11 +177,11 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			[]string{"denom or alias", "is not unique", "nanohash"},
+			wantInErr: []string{"denom or alias", "is not unique", "nanohash"},
 		},
 		{
-			"denom unit denom is not valid a coin denomination",
-			banktypes.Metadata{
+			name: "denom unit denom is not valid a coin denomination",
+			md: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
@@ -193,11 +193,11 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			[]string{"denom metadata"},
+			wantInErr: []string{"denom metadata"},
 		},
 		{
-			"denom unit denom exponent is incorrect",
-			banktypes.Metadata{
+			name: "denom unit denom exponent is incorrect",
+			md: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
@@ -209,11 +209,11 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			[]string{"exponent", "hash", "0", "-9", "= 9", "8"},
+			wantInErr: []string{"exponent", "hash", "0", "-9", "= 9", "8"},
 		},
 		{
-			"denom unit alias is not valid a coin denomination",
-			banktypes.Metadata{
+			name: "denom unit alias is not valid a coin denomination",
+			md: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
@@ -225,11 +225,11 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			[]string{"invalid alias", "x"},
+			wantInErr: []string{"invalid alias", "x"},
 		},
 		{
-			"denom unit denom alias prefix mismatch",
-			banktypes.Metadata{
+			name: "denom unit denom alias prefix mismatch",
+			md: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: nil},
@@ -242,11 +242,11 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			[]string{"SI prefix", "mhash", "megahash"},
+			wantInErr: []string{"SI prefix", "mhash", "megahash"},
 		},
 		{
-			"should successfully validate metadata",
-			banktypes.Metadata{
+			name: "should successfully validate metadata",
+			md: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits: []*banktypes.DenomUnit{
 					{Denom: "nhash", Exponent: 0, Aliases: []string{"nanohash"}},
@@ -259,11 +259,11 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 				Name:    "Hash",
 				Symbol:  "HASH",
 			},
-			[]string{},
+			wantInErr: []string{},
 		},
 		{
-			"base denom is not valid has a slash coin denomination",
-			banktypes.Metadata{
+			name: "base denom is not valid has a slash coin denomination",
+			md: banktypes.Metadata{
 				Description: "a description",
 				DenomUnits:  nil,
 				Base:        "my/hash",
@@ -271,7 +271,7 @@ func getValidateDenomMetadataTestCases() []denomMetadataTestCase {
 				Name:        "Hash",
 				Symbol:      "HASH",
 			},
-			[]string{"denom metadata"},
+			wantInErr: []string{"denom metadata"},
 		},
 	}
 }
@@ -301,13 +301,13 @@ func (s *DenomTestSuite) TestGetRootCoinName() {
 		expected string
 	}{
 		{
-			"empty metadata",
-			banktypes.Metadata{},
-			"",
+			name: "empty metadata",
+			md: banktypes.Metadata{},
+			expected: "",
 		},
 		{
-			"only one name",
-			banktypes.Metadata{
+			name: "only one name",
+			md: banktypes.Metadata{
 				DenomUnits: []*banktypes.DenomUnit{
 					{
 						Denom:   "onename",
@@ -315,11 +315,11 @@ func (s *DenomTestSuite) TestGetRootCoinName() {
 					},
 				},
 			},
-			"",
+			expected: "",
 		},
 		{
-			"no common root",
-			banktypes.Metadata{
+			name: "no common root",
+			md: banktypes.Metadata{
 				DenomUnits: []*banktypes.DenomUnit{
 					{
 						Denom:   "onename",
@@ -327,11 +327,11 @@ func (s *DenomTestSuite) TestGetRootCoinName() {
 					},
 				},
 			},
-			"",
+			expected: "",
 		},
 		{
-			"simple test",
-			banktypes.Metadata{
+			name: "simple test",
+			md: banktypes.Metadata{
 				DenomUnits: []*banktypes.DenomUnit{
 					{
 						Denom:   "onename",
@@ -339,11 +339,11 @@ func (s *DenomTestSuite) TestGetRootCoinName() {
 					},
 				},
 			},
-			"name",
+			expected: "name",
 		},
 		{
-			"real-use test",
-			banktypes.Metadata{
+			name: "real-use test",
+			md: banktypes.Metadata{
 				DenomUnits: []*banktypes.DenomUnit{
 					{
 						Denom:   "nanohash",
@@ -359,7 +359,7 @@ func (s *DenomTestSuite) TestGetRootCoinName() {
 					},
 				},
 			},
-			"hash",
+			expected: "hash",
 		},
 	}
 

@@ -19,7 +19,11 @@ func TestParamChanges(t *testing.T) {
 		simValue    string
 		subspace    string
 	}{
-		{"attribute/MaxValueLength", "MaxValueLength", "2596996162", "attribute"},
+		{
+		composedKey: "attribute/MaxValueLength",
+		key:  "MaxValueLength",
+		simValue:   "2596996162",
+		subspace:    "attribute"},
 	}
 
 	paramChanges := simulation.ParamChanges(r)

@@ -451,41 +451,41 @@ func (s *KeeperTestSuite) TestClaimAllRewardsExpiredTransaction() {
 
 func (s *KeeperTestSuite) TestEndRewardProgramRequest() {
 	testCases := []struct {
-		name         string
-		id           uint64
-		address      string
-		expectErr    bool
-		expectErrMsg string
+		name          string
+		id            uint64
+		address       string
+		expectErr     bool
+		expectErrMsg  string
 	}{
-		{"end reward program request - invalid reward program id",
-			88,
-			s.accountAddresses[0].String(),
-			true,
-			"reward program not found",
+		{name: "end reward program request - invalid reward program id",
+		id: 	88,
+		address: 	s.accountAddresses[0].String(),
+		expectErr: 	true,
+		expectErrMsg: 	"reward program not found",
 		},
-		{"end reward program request - invalid executor",
-			1,
-			s.accountAddresses[1].String(),
-			true,
-			"not authorized to end the reward program",
+		{name: "end reward program request - invalid executor",
+			id: 1,
+			address: s.accountAddresses[1].String(),
+			expectErr: true,
+			expectErrMsg: "not authorized to end the reward program",
 		},
-		{"end reward program request - invalid state for reward program",
-			3,
-			s.accountAddresses[0].String(),
-			true,
-			"unable to end a reward program that is finished or expired",
+		{name: "end reward program request - invalid state for reward program",
+			id: 3,
+			address: s.accountAddresses[0].String(),
+			expectErr: true,
+			expectErrMsg: "unable to end a reward program that is finished or expired",
 		},
-		{"end reward program request - valid request in pending state",
-			1,
-			s.accountAddresses[0].String(),
-			false,
-			"",
+		{name: "end reward program request - valid request in pending state",
+			id: 1,
+			address: s.accountAddresses[0].String(),
+			expectErr: false,
+			expectErrMsg: "",
 		},
-		{"end reward program request - valid requested in started state",
-			2,
-			s.accountAddresses[0].String(),
-			false,
-			"",
+		{name: "end reward program request - valid requested in started state",
+			id: 2,
+			address: s.accountAddresses[0].String(),
+			expectErr: false,
+			expectErrMsg: "",
 		},
 	}
 

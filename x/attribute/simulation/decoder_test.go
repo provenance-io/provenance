@@ -30,8 +30,12 @@ func TestDecodeStore(t *testing.T) {
 		attribute   string
 		expectedLog string
 	}{
-		{"Attribute Record", fmt.Sprintf("%v\n%v", testAttributeRecord, testAttributeRecord)},
-		{"other", ""},
+		{
+		    attribute: "Attribute Record",
+		    expectedLog: fmt.Sprintf("%v\n%v", testAttributeRecord, testAttributeRecord)},
+		{
+		attribute: "other",
+		 expectedLog: ""},
 	}
 
 	for i, tt := range tests {
