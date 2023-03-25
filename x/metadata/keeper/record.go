@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -120,14 +119,10 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 // Note: The proposed parameter is a reference here so that the SpecificationId can be set in cases when it's not provided.
 func (k Keeper) ValidateWriteRecord(
 	ctx sdk.Context,
-	existing, proposed *types.Record,
-	partiesInvolved []types.Party,
-	msg types.MetadataMsg,
+	existing *types.Record,
+	msg *types.MsgWriteRecordRequest,
 ) error {
-	if proposed == nil {
-		return errors.New("missing required proposed record")
-	}
-
+	proposed := &msg.Record
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
 	}

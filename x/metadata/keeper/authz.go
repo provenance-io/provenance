@@ -34,49 +34,68 @@ func (k Keeper) GetAuthzMessageTypeURLs(msgTypeURL string) []string {
 	return urls
 }
 
-// checkAuthZForMissing checks to see if the missing types.Party have an assigned grantee that can sing on their behalf
+// checkAuthzForMissing returns any of the provided addrs that have not been granted an authz authorization by one of the msg signers.
+// An error is returned if there was a problem updating an authorization.
 func (k Keeper) checkAuthzForMissing(
 	ctx sdk.Context,
 	addrs []string,
 	msg types.MetadataMsg,
 ) ([]string, error) {
 	stillMissing := []string{}
+	if len(addrs) == 0 {
+		return stillMissing, nil
+	}
+
+	signers := msg.GetSignersStr()
+	signerAddrs := make([]sdk.AccAddress, 0, len(signers))
+	for _, signer := range signers {
+		signerAddr, err := sdk.AccAddressFromBech32(signer)
+		// If it's not an address, there's no way there's an authorization for them.
+		// This is mostly allowed for unit tests.
+		// In actual usage, there's very little chance of it not being an address here.
+		if err == nil {
+			signerAddrs = append(signerAddrs, signerAddr)
+		}
+	}
+
 	// return as a list this message type and its parent
 	// type if it is a message belonging to a hierarchy
 	msgTypeURLs := k.GetAuthzMessageTypeURLs(sdk.MsgTypeURL(msg))
 
 	for _, addr := range addrs {
+		granter, addrErr := sdk.AccAddressFromBech32(addr)
 		found := false
-		granter := sdk.MustAccAddressFromBech32(addr)
 
-		// loop through all the signers
-		for _, signer := range msg.GetSignersStr() {
-			grantee := sdk.MustAccAddressFromBech32(signer)
-
-			for _, msgType := range msgTypeURLs {
-				authorization, exp := k.authzKeeper.GetAuthorization(ctx, grantee, granter, msgType)
-				if authorization != nil {
-					resp, err := authorization.Accept(ctx, msg)
-					if err == nil && resp.Accept {
-						switch {
-						case resp.Delete:
-							err = k.authzKeeper.DeleteGrant(ctx, grantee, granter, msgType)
-							if err != nil {
-								return stillMissing, err
+		// if the addr wasn't an AccAddress, authz isn't going to help.
+		// This is mostly allowed for unit tests.
+		// In actual usage, there's very little chance of it not being an address here.
+		if addrErr == nil {
+			// loop through all the signers
+			for _, grantee := range signerAddrs {
+				for _, msgType := range msgTypeURLs {
+					authorization, exp := k.authzKeeper.GetAuthorization(ctx, grantee, granter, msgType)
+					if authorization != nil {
+						resp, err := authorization.Accept(ctx, msg)
+						if err == nil && resp.Accept {
+							switch {
+							case resp.Delete:
+								err = k.authzKeeper.DeleteGrant(ctx, grantee, granter, msgType)
+								if err != nil {
+									return stillMissing, err
+								}
+							case resp.Updated != nil:
+								if err = k.authzKeeper.SaveGrant(ctx, grantee, granter, resp.Updated, exp); err != nil {
+									return stillMissing, err
+								}
 							}
-						case resp.Updated != nil:
-							if err = k.authzKeeper.SaveGrant(ctx, grantee, granter, resp.Updated, exp); err != nil {
-								return stillMissing, err
-							}
+							found = true
+							break
 						}
-						found = true
-						break
 					}
 				}
-			}
-
-			if found {
-				break
+				if found {
+					break
+				}
 			}
 		}
 

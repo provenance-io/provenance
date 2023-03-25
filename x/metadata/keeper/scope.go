@@ -387,15 +387,14 @@ func (k Keeper) validateScopeUpdateValueOwner(
 // ValidateAddScopeDataAccess checks the current scope and the proposed
 func (k Keeper) ValidateAddScopeDataAccess(
 	ctx sdk.Context,
-	dataAccessAddrs []string,
 	existing types.Scope,
-	msg types.MetadataMsg,
+	msg *types.MsgAddScopeDataAccessRequest,
 ) error {
-	if len(dataAccessAddrs) < 1 {
+	if len(msg.DataAccess) < 1 {
 		return fmt.Errorf("data access list cannot be empty")
 	}
 
-	for _, da := range dataAccessAddrs {
+	for _, da := range msg.DataAccess {
 		_, err := sdk.AccAddressFromBech32(da)
 		if err != nil {
 			return fmt.Errorf("failed to decode data access address %s : %w", da, err)
@@ -417,14 +416,13 @@ func (k Keeper) ValidateAddScopeDataAccess(
 // ValidateDeleteScopeDataAccess checks the current scope data access and the proposed removed items
 func (k Keeper) ValidateDeleteScopeDataAccess(
 	ctx sdk.Context,
-	dataAccessAddrs []string,
 	existing types.Scope,
-	msg types.MetadataMsg,
+	msg *types.MsgDeleteScopeDataAccessRequest,
 ) error {
-	if len(dataAccessAddrs) < 1 {
+	if len(msg.DataAccess) < 1 {
 		return fmt.Errorf("data access list cannot be empty")
 	}
-	for _, da := range dataAccessAddrs {
+	for _, da := range msg.DataAccess {
 		_, err := sdk.AccAddressFromBech32(da)
 		if err != nil {
 			return fmt.Errorf("failed to decode data access address %s : %w", da, err)

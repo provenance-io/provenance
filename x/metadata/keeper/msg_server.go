@@ -87,7 +87,7 @@ func (k msgServer) AddScopeDataAccess(
 		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
 
-	if err := k.ValidateAddScopeDataAccess(ctx, msg.DataAccess, existing, msg); err != nil {
+	if err := k.ValidateAddScopeDataAccess(ctx, existing, msg); err != nil {
 		return nil, err
 	}
 
@@ -111,7 +111,7 @@ func (k msgServer) DeleteScopeDataAccess(
 		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
 
-	if err := k.ValidateDeleteScopeDataAccess(ctx, msg.DataAccess, existing, msg); err != nil {
+	if err := k.ValidateDeleteScopeDataAccess(ctx, existing, msg); err != nil {
 		return nil, err
 	}
 
@@ -203,7 +203,7 @@ func (k msgServer) WriteSession(
 		existing = &e
 		existingAudit = existing.Audit
 	}
-	if err := k.ValidateWriteSession(ctx, existing, &msg.Session, msg); err != nil {
+	if err := k.ValidateWriteSession(ctx, existing, msg); err != nil {
 		return nil, err
 	}
 
@@ -236,7 +236,7 @@ func (k msgServer) WriteRecord(
 	if e, found := k.GetRecord(ctx, recordID); found {
 		existing = &e
 	}
-	if err := k.ValidateWriteRecord(ctx, existing, &msg.Record, msg.Parties, msg); err != nil {
+	if err = k.ValidateWriteRecord(ctx, existing, msg); err != nil {
 		return nil, err
 	}
 
