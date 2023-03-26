@@ -75,3 +75,26 @@ jobs:
           BASE_BRANCH="..origin/${{ steps.setup.outputs.base-branch }}"
           export BASE_BRANCH
           make proto-update-check
+      - name: Proto-format check
+      run: |
+        make proto-format
+        if [ -n "$( git status --porcelain )" ]; then
+          git diff
+          exit 1
+        fi
+      - name: Proto-gen check
+      run: |
+        make proto-gen
+        if [ -n "$( git status --porcelain )" ]; then
+          git diff
+          exit 1
+        fi
+      - name: Swagger update check
+          run: |
+            make update-swagger-docs
+            if [ -n "$( git status --porcelain )" ]; then
+              git diff
+              exit 1
+            fi
+
+     
