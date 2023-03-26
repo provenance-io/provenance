@@ -462,8 +462,8 @@ func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
 		{
 			name: "should modify name",
 			cmd: namecli.GetModifyNameProposalCmd(),
-			[]string{"tomodify",
-			args: 	s.testnet.Validators[0].Address.String(),
+			args: []string{"tomodify",
+			 	s.testnet.Validators[0].Address.String(),
 				"--unrestrict",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),

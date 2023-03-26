@@ -2180,7 +2180,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr: true,expectErrMsg:  fmt.Sprintf("meta address is not a scope: %s",respType:  scopeSpecID),expectedCode:  &sdk.TxResponse{}, 0,
+			expectErr: true,expectErrMsg:  fmt.Sprintf("meta address is not a scope: %s",  scopeSpecID),respType:  &sdk.TxResponse{},expectedCode: 0,
 		},
 		{
 			name: "should fail to add/remove metadata scope owner, validatebasic fails",

@@ -70,19 +70,19 @@ func TestAccessByString(t *testing.T) {
             accessNames:  "mint",
             permissions:   AccessList{Access_Mint},
             expectEqual:    true,
-            expectValid:     true},
+            expectValid:     true,},
 		{
             name: "Single unknown value",
             accessNames: "foo",
             permissions:  AccessList{Access_Unknown},
             expectEqual:   true,
-            expectValid:    false},
+            expectValid:    false,},
 		{
             name: "Single explicit value",
             accessNames:  "ACCESS_MINT",
             permissions:   AccessList{Access_Mint},
             expectEqual:    true,
-            expectValid:     true
+            expectValid:     true,
             },
 
 		{
@@ -90,19 +90,21 @@ func TestAccessByString(t *testing.T) {
             accessNames:  "mint,burn",
             permissions:   AccessList{Access_Mint, Access_Burn},
             expectEqual:    true,
-            expectValid:    true},
+            expectValid:    true,
+            },
 		{
             name: "Multiple values spaced",
             accessNames:  " mint, burn ",
             permissions:   AccessList{Access_Mint,  Access_Burn},
             expectEqual:    true,
-            expectValid:     true},
+            expectValid:     true,
+            },
 		{
             name: "Multiple unknown values",
             accessNames: "foo,bar,baz",
             permissions:  AccessList{Access_Unknown, Access_Unknown, Access_Unknown},
             expectEqual:  true,
-            expectValid:  false
+            expectValid:  false,
         },
 	}
 	for i, tc := range cases {
@@ -134,27 +136,27 @@ func TestAccessOneOf(t *testing.T) {
             name: "no permissions",
             permission:  Access_Burn,
             permissions:   AccessList{},
-            expectPass:    false},
+            expectPass:    false,},
 		{
             name: "valid permission single",
             permission:  Access_Mint,
             permissions:   AccessList{Access_Mint},
-            expectPass:    true},
+            expectPass:    true,},
 		{
             name: "invalid permission single",
             permission:  Access_Mint,
             permissions:   AccessList{Access_Burn},
-            expectPass:    false},
+            expectPass:    false,},
 		{
             name: "valid permission many",
             permission:  Access_Mint,
             permissions:   AccessList{Access_Mint, Access_Deposit, Access_Admin},
-            expectPass:    true},
+            expectPass:    true,},
 		{
             name: "invalid permission many",
             permission:  Access_Unknown,
             permissions:   AccessList{Access_Mint, Access_Deposit},
-            expectPass:    false},
+            expectPass:    false,},
 	}
 
 	for _, tc := range cases {
@@ -176,15 +178,15 @@ func TestValidatePermissions(t *testing.T) {
 		{
 		name: "no permissions",
 		permissions:  AccessList{},
-		expectPass:   true},
+		expectPass:   true,},
 		{
 		name: "valid permission",
 		permissions:  AccessList{Access_Mint},
-		expectPass:   true},
+		expectPass:   true,},
 		{
 		name: "invalid and valid permission",
-		permissions: AccessList{Access_Deposit,
-		expectPass:  Access_Unknown}, false},
+		permissions: AccessList{Access_Deposit, Access_Unknown},
+		expectPass: false,},
 	}
 
 	for i, tc := range cases {

@@ -1082,8 +1082,8 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 		want     string
 	}{
 		{
-			"existing specificationID does not match proposed specificationID causes error",
-			types.NewContractSpecification(
+			name:"existing specificationID does not match proposed specificationID causes error",
+			existing:types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
 					"TestValidateContractSpecUpdate",
@@ -1091,12 +1091,12 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 					"http://test.net",
 					"http://test.net/ico.png",
 				),
-			name: 	[]string{s.user1Addr.String()},
-			existing: 	[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-			proposed: 	types.NewContractSpecificationSourceHash("somehash"),
-			want: 	"someclass",
+			 	[]string{s.user1Addr.String()},
+			 	[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+			 	types.NewContractSpecificationSourceHash("somehash"),
+				"someclass",
 			),
-			types.NewContractSpecification(
+			proposed: types.NewContractSpecification(
 				otherContractSpecID,
 				types.NewDescription(
 					"TestValidateContractSpecUpdate",
@@ -1109,12 +1109,12 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				proposed: types.NewContractSpecificationSourceHash("somehash"),
 				want: "someclass",
 			),
-			fmt.Sprintf("cannot update contract spec identifier. expected %s, got %s",
+			fwant: mt.Sprintf("cannot update contract spec identifier. expected %s, got %s",
 				s.contractSpecID1, otherContractSpecID),
 		},
 		{
-			"proposed basic validation causes error",
-			types.NewContractSpecification(
+			name: "proposed basic validation causes error",
+			existing: types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
 					"TestValidateContractSpecUpdate",
@@ -1122,12 +1122,12 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 					"http://test.net",
 					"http://test.net/ico.png",
 				),
-				name: []string{s.user1Addr.String()},
-				existing: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				proposed: types.NewContractSpecificationSourceHash("somehash"),
-				want: "someclass",
+				 []string{s.user1Addr.String()},
+				 []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				 types.NewContractSpecificationSourceHash("somehash"),
+				 "someclass",
 			),
-			types.NewContractSpecification(
+			proposed: types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
 					"TestValidateContractSpecUpdate",
@@ -1140,11 +1140,11 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				proposed: types.NewContractSpecificationSourceHash("somehash"),
 				want: "someclass",
 			),
-			"invalid owner addresses count (expected > 0 got: 0)",
+			want: "invalid owner addresses count (expected > 0 got: 0)",
 		},
 		{
-			"basic validation not done on existing",
-			types.NewContractSpecification(
+			name: "basic validation not done on existing",
+			existing: types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
 					"TestValidateContractSpecUpdate",
@@ -1152,12 +1152,12 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 					"http://test.net",
 					"http://test.net/ico.png",
 				),
-				name: []string{},
-				existing: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-				proposed: types.NewContractSpecificationSourceHash("somehash"),
-				want: "someclass",
+				[]string{},
+				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+				types.NewContractSpecificationSourceHash("somehash"),
+				"someclass",
 			),
-			types.NewContractSpecification(
+			proposed: types.NewContractSpecification(
 				s.contractSpecID1,
 				types.NewDescription(
 					"TestValidateContractSpecUpdate",
@@ -1170,7 +1170,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				proposed: types.NewContractSpecificationSourceHash("somehash"),
 				want: "someclass",
 			),
-			"",
+			want: "",
 		},
 	}
 
