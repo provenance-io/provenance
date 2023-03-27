@@ -26,9 +26,9 @@ service Msg {
   // DeleteScopeDataAccess removes data access AccAddress from scope
   rpc DeleteScopeDataAccess(MsgDeleteScopeDataAccessRequest) returns (MsgDeleteScopeDataAccessResponse);
 
-  // AddScopeOwner adds new owner AccAddress to scope
+  // AddScopeOwner adds new owner parties to a scope
   rpc AddScopeOwner(MsgAddScopeOwnerRequest) returns (MsgAddScopeOwnerResponse);
-  // DeleteScopeOwner removes data access AccAddress from scope
+  // DeleteScopeOwner removes owner parties (by addresses) from a scope
   rpc DeleteScopeOwner(MsgDeleteScopeOwnerRequest) returns (MsgDeleteScopeOwnerResponse);
 
   // WriteSession adds or updates a session context.
@@ -179,7 +179,7 @@ message MsgAddScopeOwnerRequest {
     (gogoproto.moretags)   = "yaml:\"scope_id\""
   ];
 
-  // AccAddress owner addresses to be added to scope
+  // owner parties to add to the scope
   repeated Party owners = 2 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"owners\""];
   // signers is the list of address of those signing this request.
   repeated string signers = 3;
@@ -284,6 +284,7 @@ message MsgWriteRecordRequest {
   string contract_spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"contract_spec_uuid\""];
 
   // parties is the list of parties involved with this record.
+  // Deprecated: This field is ignored. The parties are identified in the session and as signers.
   repeated Party parties = 5 [(gogoproto.nullable) = false];
 }
 

@@ -367,7 +367,7 @@ var xxx_messageInfo_MsgDeleteScopeDataAccessResponse proto.InternalMessageInfo
 type MsgAddScopeOwnerRequest struct {
 	// scope MetadataAddress for updating data access
 	ScopeId MetadataAddress `protobuf:"bytes,1,opt,name=scope_id,json=scopeId,proto3,customtype=MetadataAddress" json:"scope_id" yaml:"scope_id"`
-	// AccAddress owner addresses to be added to scope
+	// owner parties to add to the scope
 	Owners []Party `protobuf:"bytes,2,rep,name=owners,proto3" json:"owners" yaml:"owners"`
 	// signers is the list of address of those signing this request.
 	Signers []string `protobuf:"bytes,3,rep,name=signers,proto3" json:"signers,omitempty"`
@@ -741,6 +741,7 @@ type MsgWriteRecordRequest struct {
 	// record.name, an error is returned.
 	ContractSpecUuid string `protobuf:"bytes,4,opt,name=contract_spec_uuid,json=contractSpecUuid,proto3" json:"contract_spec_uuid,omitempty" yaml:"contract_spec_uuid"`
 	// parties is the list of parties involved with this record.
+	// Deprecated: This field is ignored. The parties are identified in the session and as signers.
 	Parties []Party `protobuf:"bytes,5,rep,name=parties,proto3" json:"parties"`
 }
 
@@ -2014,9 +2015,9 @@ type MsgClient interface {
 	AddScopeDataAccess(ctx context.Context, in *MsgAddScopeDataAccessRequest, opts ...grpc.CallOption) (*MsgAddScopeDataAccessResponse, error)
 	// DeleteScopeDataAccess removes data access AccAddress from scope
 	DeleteScopeDataAccess(ctx context.Context, in *MsgDeleteScopeDataAccessRequest, opts ...grpc.CallOption) (*MsgDeleteScopeDataAccessResponse, error)
-	// AddScopeOwner adds new owner AccAddress to scope
+	// AddScopeOwner adds new owner parties to a scope
 	AddScopeOwner(ctx context.Context, in *MsgAddScopeOwnerRequest, opts ...grpc.CallOption) (*MsgAddScopeOwnerResponse, error)
-	// DeleteScopeOwner removes data access AccAddress from scope
+	// DeleteScopeOwner removes owner parties (by addresses) from a scope
 	DeleteScopeOwner(ctx context.Context, in *MsgDeleteScopeOwnerRequest, opts ...grpc.CallOption) (*MsgDeleteScopeOwnerResponse, error)
 	// WriteSession adds or updates a session context.
 	WriteSession(ctx context.Context, in *MsgWriteSessionRequest, opts ...grpc.CallOption) (*MsgWriteSessionResponse, error)
@@ -2246,9 +2247,9 @@ type MsgServer interface {
 	AddScopeDataAccess(context.Context, *MsgAddScopeDataAccessRequest) (*MsgAddScopeDataAccessResponse, error)
 	// DeleteScopeDataAccess removes data access AccAddress from scope
 	DeleteScopeDataAccess(context.Context, *MsgDeleteScopeDataAccessRequest) (*MsgDeleteScopeDataAccessResponse, error)
-	// AddScopeOwner adds new owner AccAddress to scope
+	// AddScopeOwner adds new owner parties to a scope
 	AddScopeOwner(context.Context, *MsgAddScopeOwnerRequest) (*MsgAddScopeOwnerResponse, error)
-	// DeleteScopeOwner removes data access AccAddress from scope
+	// DeleteScopeOwner removes owner parties (by addresses) from a scope
 	DeleteScopeOwner(context.Context, *MsgDeleteScopeOwnerRequest) (*MsgDeleteScopeOwnerResponse, error)
 	// WriteSession adds or updates a session context.
 	WriteSession(context.Context, *MsgWriteSessionRequest) (*MsgWriteSessionResponse, error)

@@ -4199,7 +4199,7 @@ MsgAddScopeOwnerRequest is the request to add owner AccAddress to scope
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `scope_id` | [bytes](#bytes) |  | scope MetadataAddress for updating data access |
-| `owners` | [Party](#provenance.metadata.v1.Party) | repeated | AccAddress owner addresses to be added to scope |
+| `owners` | [Party](#provenance.metadata.v1.Party) | repeated | owner parties to add to the scope |
 | `signers` | [string](#string) | repeated | signers is the list of address of those signing this request. |
 
 
@@ -4563,7 +4563,7 @@ MsgWriteRecordRequest is the request type for the Msg/WriteRecord RPC method.
 | `signers` | [string](#string) | repeated | signers is the list of address of those signing this request. |
 | `session_id_components` | [SessionIdComponents](#provenance.metadata.v1.SessionIdComponents) |  | SessionIDComponents is an optional (alternate) way of defining what the session_id should be in the provided record. If provided, it must have both a scope and session_uuid. Those components will be used to create the MetadataAddress for the session which will override the session_id in the provided record. If not provided (or all empty), nothing special happens. If there is a value in record.session_id that is different from the one created from these components, an error is returned. |
 | `contract_spec_uuid` | [string](#string) |  | contract_spec_uuid is an optional contract specification uuid string, e.g. "def6bc0a-c9dd-4874-948f-5206e6060a84" If provided, it will be combined with the record name to generate the MetadataAddress for the record specification which will override the specification_id in the provided record. If not provided (or it is an empty string), nothing special happens. If there is a value in record.specification_id that is different from the one created from this uuid and record.name, an error is returned. |
-| `parties` | [Party](#provenance.metadata.v1.Party) | repeated | parties is the list of parties involved with this record. |
+| `parties` | [Party](#provenance.metadata.v1.Party) | repeated | parties is the list of parties involved with this record. Deprecated: This field is ignored. The parties are identified in the session and as signers. |
 
 
 
@@ -4749,8 +4749,8 @@ Msg defines the Metadata Msg service.
 | `DeleteScope` | [MsgDeleteScopeRequest](#provenance.metadata.v1.MsgDeleteScopeRequest) | [MsgDeleteScopeResponse](#provenance.metadata.v1.MsgDeleteScopeResponse) | DeleteScope deletes a scope and all associated Records, Sessions. | |
 | `AddScopeDataAccess` | [MsgAddScopeDataAccessRequest](#provenance.metadata.v1.MsgAddScopeDataAccessRequest) | [MsgAddScopeDataAccessResponse](#provenance.metadata.v1.MsgAddScopeDataAccessResponse) | AddScopeDataAccess adds data access AccAddress to scope | |
 | `DeleteScopeDataAccess` | [MsgDeleteScopeDataAccessRequest](#provenance.metadata.v1.MsgDeleteScopeDataAccessRequest) | [MsgDeleteScopeDataAccessResponse](#provenance.metadata.v1.MsgDeleteScopeDataAccessResponse) | DeleteScopeDataAccess removes data access AccAddress from scope | |
-| `AddScopeOwner` | [MsgAddScopeOwnerRequest](#provenance.metadata.v1.MsgAddScopeOwnerRequest) | [MsgAddScopeOwnerResponse](#provenance.metadata.v1.MsgAddScopeOwnerResponse) | AddScopeOwner adds new owner AccAddress to scope | |
-| `DeleteScopeOwner` | [MsgDeleteScopeOwnerRequest](#provenance.metadata.v1.MsgDeleteScopeOwnerRequest) | [MsgDeleteScopeOwnerResponse](#provenance.metadata.v1.MsgDeleteScopeOwnerResponse) | DeleteScopeOwner removes data access AccAddress from scope | |
+| `AddScopeOwner` | [MsgAddScopeOwnerRequest](#provenance.metadata.v1.MsgAddScopeOwnerRequest) | [MsgAddScopeOwnerResponse](#provenance.metadata.v1.MsgAddScopeOwnerResponse) | AddScopeOwner adds new owner parties to a scope | |
+| `DeleteScopeOwner` | [MsgDeleteScopeOwnerRequest](#provenance.metadata.v1.MsgDeleteScopeOwnerRequest) | [MsgDeleteScopeOwnerResponse](#provenance.metadata.v1.MsgDeleteScopeOwnerResponse) | DeleteScopeOwner removes owner parties (by addresses) from a scope | |
 | `WriteSession` | [MsgWriteSessionRequest](#provenance.metadata.v1.MsgWriteSessionRequest) | [MsgWriteSessionResponse](#provenance.metadata.v1.MsgWriteSessionResponse) | WriteSession adds or updates a session context. | |
 | `WriteRecord` | [MsgWriteRecordRequest](#provenance.metadata.v1.MsgWriteRecordRequest) | [MsgWriteRecordResponse](#provenance.metadata.v1.MsgWriteRecordResponse) | WriteRecord adds or updates a record. | |
 | `DeleteRecord` | [MsgDeleteRecordRequest](#provenance.metadata.v1.MsgDeleteRecordRequest) | [MsgDeleteRecordResponse](#provenance.metadata.v1.MsgDeleteRecordResponse) | DeleteRecord deletes a record. | |
