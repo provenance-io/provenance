@@ -287,7 +287,7 @@ func getMissingContractSpecIndexValues(required, found *contractSpecIndexValues)
 		return *required
 	}
 	rv.SpecificationID = required.SpecificationID
-	rv.OwnerAddresses = FindMissing(required.OwnerAddresses, found.OwnerAddresses)
+	rv.OwnerAddresses = findMissing(required.OwnerAddresses, found.OwnerAddresses)
 	return rv
 }
 
@@ -519,7 +519,7 @@ func getMissingScopeSpecIndexValues(required, found *scopeSpecIndexValues) scope
 		return *required
 	}
 	rv.SpecificationID = required.SpecificationID
-	rv.OwnerAddresses = FindMissing(required.OwnerAddresses, found.OwnerAddresses)
+	rv.OwnerAddresses = findMissing(required.OwnerAddresses, found.OwnerAddresses)
 	rv.ContractSpecIDs = FindMissingMdAddr(required.ContractSpecIDs, found.ContractSpecIDs)
 	return rv
 }

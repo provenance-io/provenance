@@ -138,27 +138,20 @@ func (s *Scope) GetOwnerIndexWithAddress(address string) (int, bool) {
 	return -1, false
 }
 
-// AddOwners will append new owners or overwrite existing if address exists
+// AddOwners will add new owners to this scope.
 // If a scope owner already exists that's equal to a provided owner, an error is returned.
 func (s *Scope) AddOwners(owners []Party) error {
 	if len(owners) == 0 {
 		return nil
 	}
-	newOwners := make([]Party, 0, len(owners))
-	for _, owner := range owners {
-		i, found := s.GetOwnerIndexWithAddress(owner.Address)
-		if found {
-			if s.Owners[i].Equals(owner) {
-				return fmt.Errorf("party already exists with address %s and role %s", owner.Address, owner.Role)
+	for _, newOwner := range owners {
+		for _, scopeOwner := range s.Owners {
+			if newOwner.Equals(scopeOwner) {
+				return fmt.Errorf("party already exists with address %s and role %s", newOwner.Address, newOwner.Role)
 			}
-			s.Owners[i] = owner
-		} else {
-			newOwners = append(newOwners, owner)
 		}
 	}
-	if len(newOwners) > 0 {
-		s.Owners = append(s.Owners, newOwners...)
-	}
+	s.Owners = append(s.Owners, owners...)
 	return nil
 }
 
@@ -497,25 +490,30 @@ func (p Party) ValidateBasic() error {
 	return nil
 }
 
+// ValidatePartiesAreUnique makes sure that no two provided parties are equal.
+func ValidatePartiesAreUnique(parties []Party) error {
+	for i := 0; i < len(parties)-1; i++ {
+		for j := i + 1; j < len(parties); j++ {
+			if parties[i].Equals(parties[j]) {
+				return fmt.Errorf("duplicate parties not allowed: address = %s, role = %s, indexes: %d, %d",
+					parties[i].Address, parties[i].Role, j, i)
+			}
+		}
+	}
+	return nil
+}
+
 // ValidatePartiesBasic validates a required list of parties.
 func ValidatePartiesBasic(parties []Party) error {
 	if len(parties) < 1 {
 		return errors.New("at least one party is required")
 	}
-	for i, p := range parties {
+	for _, p := range parties {
 		if err := p.ValidateBasic(); err != nil {
 			return err
 		}
-		for j, o2 := range parties {
-			if i == j {
-				continue
-			}
-			if p.Equals(o2) {
-				return fmt.Errorf("duplicate owners not allowed: address = %s, role = %s", p.Address, p.Role)
-			}
-		}
 	}
-	return nil
+	return ValidatePartiesAreUnique(parties)
 }
 
 // String implements stringer interface
@@ -524,8 +522,18 @@ func (p Party) String() string {
 }
 
 // Equals returns true if this party is equal to the provided party.
+// This comparison only checks the address and role. Any other fields are ignored.
 func (p Party) Equals(p2 Party) bool {
 	return p.Address == p2.Address && p.Role == p2.Role
+}
+
+// ConcatParties creates a new slice containing both slices of parties.
+func ConcatParties(partySets ...[]Party) []Party {
+	rv := make([]Party, 0)
+	for _, parties := range partySets {
+		rv = append(rv, parties...)
+	}
+	return rv
 }
 
 // EqualParties returns true if the two provided sets of parties contain the same entries.

@@ -66,6 +66,11 @@ func TestAuthzTestSuite(t *testing.T) {
 	suite.Run(t, new(AuthzTestSuite))
 }
 
+// TODO[1438]: AssociateSigners
+// TODO[1438]: FindMissingRequired
+// TODO[1438]: AssociateRequiredRoles
+// TODO[1438]: MissingRolesError
+
 func (s *AuthzTestSuite) TestGetAuthzMessageTypeURLs() {
 	type testCase struct {
 		name     string // defaults to the msg name (from the url) if not defined.
@@ -156,10 +161,15 @@ func (s *AuthzTestSuite) TestGetAuthzMessageTypeURLs() {
 	for _, tc := range tests {
 		s.Run(getName(tc), func() {
 			actual := s.app.MetadataKeeper.GetAuthzMessageTypeURLs(tc.url)
-			s.Assert().Equal(tc.expected, actual, "GetAuthzMessageTypeURLs(%q)", tc.url)
+			s.Assert().Equal(tc.expected, actual, "getAuthzMessageTypeURLs(%q)", tc.url)
 		})
 	}
 }
+
+// TODO[1438]: FindAuthzGrantee
+// TODO[1438]: AssociateAuthorizations
+// TODO[1438]: AssociateAuthorizationsForRoles
+// TODO[1438]: ValidateProvenanceRole
 
 func (s *AuthzTestSuite) TestValidateAllOwnersAreSigners() {
 	// Add a few authorizations
@@ -329,7 +339,7 @@ func (s *AuthzTestSuite) TestValidateAllOwnersAreSigners() {
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateAllOwnersAreSignersWithAuthz(s.ctx, tc.owners, tc.msg)
+			err := s.app.MetadataKeeper.ValidateAllOwnersAreSigners(s.ctx, tc.owners, tc.msg)
 			if len(tc.errorMsg) == 0 {
 				assert.NoError(t, err, "ValidateAllOwnersAreSigners unexpected error")
 			} else {
@@ -411,11 +421,11 @@ func (s *AuthzTestSuite) TestValidateAllOwnersAreSignersWithCountAuthorization()
 				s.Require().NoError(err, "SaveGrant")
 			}
 
-			err := s.app.MetadataKeeper.ValidateAllOwnersAreSignersWithAuthz(s.ctx, tc.owners, tc.msg)
+			err := s.app.MetadataKeeper.ValidateAllOwnersAreSigners(s.ctx, tc.owners, tc.msg)
 			if len(tc.errorMsg) == 0 {
-				s.Assert().NoError(err, "ValidateAllOwnersAreSignersWithAuthz error")
+				s.Assert().NoError(err, "validateAllOwnersAreSigners error")
 			} else {
-				s.Assert().EqualError(err, tc.errorMsg, "ValidateAllOwnersAreSignersWithAuthz error")
+				s.Assert().EqualError(err, tc.errorMsg, "validateAllOwnersAreSigners error")
 			}
 
 			// validate allowedAuthorizations
@@ -459,7 +469,7 @@ func (s *AuthzTestSuite) TestValidateAllOwnersAreSignersWithCountAuthorization()
 		msg.Signers = []string{s.user3}
 
 		// Validate signatures. This should also use both count authorizations.
-		err = s.app.MetadataKeeper.ValidateAllOwnersAreSignersWithAuthz(s.ctx, owners, msg)
+		err = s.app.MetadataKeeper.ValidateAllOwnersAreSigners(s.ctx, owners, msg)
 		s.Assert().NoError(err, "ValidateAllOwnersAreSigners")
 
 		// first grant should be deleted because it used its last use.

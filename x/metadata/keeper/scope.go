@@ -184,7 +184,7 @@ func getMissingScopeIndexValues(required, found *scopeIndexValues) scopeIndexVal
 		return *required
 	}
 	rv.ScopeID = required.ScopeID
-	rv.Addresses = FindMissing(required.Addresses, found.Addresses)
+	rv.Addresses = findMissing(required.Addresses, found.Addresses)
 	if required.ValueOwner != found.ValueOwner {
 		rv.ValueOwner = required.ValueOwner
 	}
@@ -332,7 +332,7 @@ func (k Keeper) validateScopeUpdateValueOwner(
 	if existing == proposed {
 		return nil
 	}
-	signers := msg.GetSignersStr()
+	signers := msg.GetSignerStrs()
 	if len(existing) > 0 {
 		isMarker, hasAuth := k.IsMarkerAndHasAuthority(ctx, existing, signers, markertypes.Access_Withdraw)
 		if isMarker {
@@ -342,7 +342,7 @@ func (k Keeper) validateScopeUpdateValueOwner(
 			}
 		} else {
 			// If the existing isn't a marker, make sure they're one of the signers.
-			// Not using ValidateAllOwnersAreSignersWithAuthz here because we want a slightly different error message.
+			// Not using validateAllOwnersAreSigners here because we want a slightly different error message.
 			// Not using ValidateAllPartiesAreSignersWithAuthz here because of the error message and also it wants parties.
 			found := false
 			for _, party := range validatedParties {
@@ -406,6 +406,9 @@ func (k Keeper) ValidateAddScopeDataAccess(
 		}
 	}
 
+	if err := k.ValidateSignersWithParties(ctx, nil, existing.Owners, nil, msg); err != nil {
+		return err
+	}
 	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, msg); err != nil {
 		return err
 	}
