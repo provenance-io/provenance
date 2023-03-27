@@ -127,19 +127,18 @@ func (k Keeper) ValidateWriteRecord(
 		return err
 	}
 
+	var reqParties []types.Party
 	if existing != nil {
 		if existing.Name != proposed.Name {
 			return fmt.Errorf("the Name field of records cannot be changed")
 		}
 		if !existing.SessionId.Equals(proposed.SessionId) {
-			// Make sure the original session parties are signers.
-			session, found := k.GetSession(ctx, existing.SessionId)
+			// If the session is changing, add the original session's parties to the required parties list.
+			oldSession, found := k.GetSession(ctx, existing.SessionId)
 			if !found {
 				return fmt.Errorf("original session %s not found for existing record", existing.SessionId)
 			}
-			if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, session.Parties, msg); err != nil {
-				return fmt.Errorf("missing signer from original session %s: %w", session.SessionId, err)
-			}
+			reqParties = append(reqParties, oldSession.Parties...)
 		}
 		// The existing specification id might be empty for old stuff.
 		// And for now, we'll allow the proposed specification id to be missing and set it appropriately below.
@@ -154,40 +153,36 @@ func (k Keeper) ValidateWriteRecord(
 		return scopeIDErr
 	}
 
-	// Make sure the scope exists.
-	if _, found := k.GetScope(ctx, scopeID); !found {
+	// Get the scope, session, and record spec.
+	scope, found := k.GetScope(ctx, scopeID)
+	if !found {
 		return fmt.Errorf("scope not found with id %s", scopeID)
 	}
-
-	// Get the session.
 	session, found := k.GetSession(ctx, proposed.SessionId)
 	if !found {
 		return fmt.Errorf("session not found for session id %s", proposed.SessionId)
 	}
-
-	// Make sure all the session parties have signed.
-	if signErr := k.ValidateAllPartiesAreSignersWithAuthz(ctx, session.Parties, msg); signErr != nil {
-		return signErr
+	recSpecID, err := session.SpecificationId.AsRecordSpecAddress(proposed.Name)
+	if err != nil {
+		return fmt.Errorf("could not create record specification id from contract spec id %s and record name %q",
+			session.SpecificationId, proposed.Name)
 	}
-
-	// Get the record specification
-	contractSpecUUID, cSpecUUIDErr := session.SpecificationId.ContractSpecUUID()
-	if cSpecUUIDErr != nil {
-		return cSpecUUIDErr
-	}
-	recSpecID := types.RecordSpecMetadataAddress(contractSpecUUID, proposed.Name)
-
 	if proposed.SpecificationId.Empty() {
 		proposed.SpecificationId = recSpecID
 	} else if !proposed.SpecificationId.Equals(recSpecID) {
 		return fmt.Errorf("proposed specification id %s does not match expected specification id %s",
 			proposed.SpecificationId, recSpecID)
 	}
+	recSpec, found := k.GetRecordSpecification(ctx, recSpecID)
+	if !found {
+		return fmt.Errorf("record specification not found for record specification id %s (contract spec id %s and record name %s)",
+			recSpecID, session.SpecificationId, proposed.Name)
+	}
 
-	recSpec, recSpecFound := k.GetRecordSpecification(ctx, recSpecID)
-	if !recSpecFound {
-		return fmt.Errorf("record specification not found for record specification id %s (contract spec uuid %s and record name %s)",
-			recSpecID, contractSpecUUID, proposed.Name)
+	// Make sure all the session parties have signed.
+	reqParties = append(reqParties, scope.Owners...)
+	if err := k.ValidateSignersWithParties(ctx, reqParties, session.Parties, recSpec.ResponsibleParties, msg); err != nil {
+		return err
 	}
 
 	// Make sure all input specs are present as inputs.
@@ -206,11 +201,11 @@ func (k Keeper) ValidateWriteRecord(
 		inputSpecNames[i] = inputSpec.Name
 		inputSpecMap[inputSpec.Name] = *inputSpec
 	}
-	missingInputNames := FindMissing(inputSpecNames, inputNames)
+	missingInputNames := findMissing(inputSpecNames, inputNames)
 	if len(missingInputNames) > 0 {
 		return fmt.Errorf("missing input%s %v", pluralEnding(len(missingInputNames)), missingInputNames)
 	}
-	extraInputNames := FindMissing(inputNames, inputSpecNames)
+	extraInputNames := findMissing(inputNames, inputSpecNames)
 	if len(extraInputNames) > 0 {
 		return fmt.Errorf("extra input%s %v", pluralEnding(len(extraInputNames)), extraInputNames)
 	}
@@ -287,26 +282,33 @@ func (k Keeper) ValidateWriteRecord(
 
 // ValidateDeleteRecord checks the current record and the proposed removal scope to determine if the proposed remove is valid
 // based on the existing state
-func (k Keeper) ValidateDeleteRecord(
-	ctx sdk.Context,
-	existing types.Record,
-	proposedID types.MetadataAddress,
-	msg types.MetadataMsg,
-) error {
-	scopeUUID, err := existing.SessionId.ScopeUUID()
-	if err != nil {
-		return fmt.Errorf("cannot get scope uuid: %w", err)
-	}
-	scopeID := types.ScopeMetadataAddress(scopeUUID)
-	scope, found := k.GetScope(ctx, scopeID)
+func (k Keeper) ValidateDeleteRecord(ctx sdk.Context, proposedID types.MetadataAddress, msg types.MetadataMsg) error {
+	record, found := k.GetRecord(ctx, proposedID)
 	if !found {
-		return fmt.Errorf("unable to find scope %s", scope.ScopeId)
+		return fmt.Errorf("record does not exist to delete: %s", proposedID)
 	}
-	recordID := types.RecordMetadataAddress(scopeUUID, existing.Name)
-	if !recordID.Equals(proposedID) {
-		return fmt.Errorf("cannot remove record. expected %s, got %s", recordID, proposedID)
+	var scopeOwners []types.Party
+	var sessionParties []types.Party
+	var reqRoles []types.PartyType
+	// Ignoring the error from AsScopeAddress because we know it'll be nil
+	// because GetRecord found a record, so it's a record address.
+	scopeID, _ := proposedID.AsScopeAddress()
+	if scope, found := k.GetScope(ctx, scopeID); found {
+		scopeOwners = scope.Owners
 	}
-	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, scope.Owners, msg); err != nil {
+	if session, found := k.GetSession(ctx, record.SessionId); found {
+		sessionParties = session.Parties
+	}
+	if len(sessionParties) > 0 {
+		// If there aren't any session parties, there's nothing to compare roles with.
+		// Assume things have gone wrong somewhere else and let the delete happen
+		// without checking the spec's required roles.
+		recordSpec, found := k.GetRecordSpecification(ctx, record.SpecificationId)
+		if found {
+			reqRoles = recordSpec.ResponsibleParties
+		}
+	}
+	if err := k.ValidateSignersWithParties(ctx, scopeOwners, sessionParties, reqRoles, msg); err != nil {
 		return err
 	}
 	return nil

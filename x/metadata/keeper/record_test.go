@@ -64,7 +64,9 @@ func (s *RecordKeeperTestSuite) SetupTest() {
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
-	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+	user1Acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr)
+	s.Require().NoError(user1Acc.SetPubKey(s.pubkey1), "SetPubKey user1")
+	s.app.AccountKeeper.SetAccount(s.ctx, user1Acc)
 
 	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
@@ -135,66 +137,208 @@ func (s *RecordKeeperTestSuite) TestMetadataRecordIterator() {
 }
 
 func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
+	dneScopeUUID := uuid.New()
+	dneSessionUUID := uuid.New()
+	dneContractSpecUUID := uuid.New()
+	dneRecordID := types.RecordMetadataAddress(s.scopeUUID, "does-not-exist")
+	user3 := sdk.AccAddress("user_3______________").String()
+
 	scope := types.NewScope(s.scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
 	s.app.MetadataKeeper.SetScope(s.ctx, *scope)
 
-	process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
-	record := types.NewRecord(s.recordName, s.sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID)
-	recordID := types.RecordMetadataAddress(s.scopeUUID, s.recordName)
+	auditFields := &types.AuditFields{
+		CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
+		UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", UpdatedDate: time.Now(),
+		Message: "message",
+	}
+	sessionParties := []types.Party{
+		{Address: s.user1, Role: types.PartyType_PARTY_TYPE_INVESTOR, Optional: true},
+		{Address: s.user2, Role: types.PartyType_PARTY_TYPE_SERVICER, Optional: false},
+		{Address: user3, Role: types.PartyType_PARTY_TYPE_AFFILIATE, Optional: true},
+		{Address: user3, Role: types.PartyType_PARTY_TYPE_INVESTOR, Optional: true},
+	}
+	session := types.NewSession(s.sessionName, s.sessionID, s.contractSpecID, sessionParties, auditFields)
+	s.app.MetadataKeeper.SetSession(s.ctx, *session)
+
+	sessionWOScopeID := types.SessionMetadataAddress(uuid.New(), s.sessionUUID)
+	sessionWOScope := types.NewSession(s.sessionName, sessionWOScopeID, s.contractSpecID, sessionParties, auditFields)
+	s.app.MetadataKeeper.SetSession(s.ctx, *sessionWOScope)
+
+	newRecord := func(name string, sessionID types.MetadataAddress, specID types.MetadataAddress) *types.Record {
+		return types.NewRecord(
+			name,
+			sessionID,
+			*types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method"),
+			[]types.RecordInput{},
+			[]types.RecordOutput{},
+			specID,
+		)
+	}
+
+	// record without a scope, session, or spec.
+	recordLone := newRecord("so-alone",
+		types.SessionMetadataAddress(dneScopeUUID, dneSessionUUID),
+		types.RecordSpecMetadataAddress(dneContractSpecUUID, "so-alone"))
+	s.app.MetadataKeeper.SetRecord(s.ctx, *recordLone)
+
+	// record where scope exists, but session and spec do not.
+	recordOnlyScope := newRecord("scope-only",
+		types.SessionMetadataAddress(s.scopeUUID, dneSessionUUID),
+		types.RecordSpecMetadataAddress(dneContractSpecUUID, "scope-only"))
+	s.app.MetadataKeeper.SetRecord(s.ctx, *recordOnlyScope)
+
+	// record where session exists, but scope and spec do not.
+	recordOnlySession := newRecord("session-only",
+		sessionWOScopeID,
+		types.RecordSpecMetadataAddress(dneContractSpecUUID, "session-only"))
+	s.app.MetadataKeeper.SetRecord(s.ctx, *recordOnlySession)
+
+	// record where spec exists, but scope and session do not.
+	reqRoles := []types.PartyType{types.PartyType_PARTY_TYPE_INVESTOR, types.PartyType_PARTY_TYPE_AFFILIATE}
+	recSpecOnly := types.NewRecordSpecification(
+		types.RecordSpecMetadataAddress(s.contractSpecUUID, "rec-spec-only"),
+		"rec-spec-only",
+		[]*types.InputSpecification{},
+		"type-name",
+		types.DefinitionType_DEFINITION_TYPE_RECORD,
+		reqRoles,
+	)
+	s.app.MetadataKeeper.SetRecordSpecification(s.ctx, *recSpecOnly)
+	recordOnlySpec := newRecord(recSpecOnly.Name,
+		types.SessionMetadataAddress(dneScopeUUID, dneSessionUUID),
+		recSpecOnly.SpecificationId)
+	s.app.MetadataKeeper.SetRecord(s.ctx, *recordOnlySpec)
+
+	// record where session and spec exist, but scope does not.
+	recSpecNoScope := types.NewRecordSpecification(
+		types.RecordSpecMetadataAddress(s.contractSpecUUID, "no-scope"),
+		"no-scope",
+		[]*types.InputSpecification{},
+		"type-name",
+		types.DefinitionType_DEFINITION_TYPE_RECORD,
+		reqRoles,
+	)
+	s.app.MetadataKeeper.SetRecordSpecification(s.ctx, *recSpecNoScope)
+	recordNoScope := newRecord(recSpecNoScope.Name,
+		sessionWOScopeID,
+		recSpecNoScope.SpecificationId)
+	s.app.MetadataKeeper.SetRecord(s.ctx, *recordNoScope)
+
+	// record where scope, session, and spec exist.
+	recSpec := types.NewRecordSpecification(
+		s.recordSpecID,
+		s.recordName,
+		[]*types.InputSpecification{},
+		"type-name",
+		types.DefinitionType_DEFINITION_TYPE_RECORD,
+		reqRoles,
+	)
+	s.app.MetadataKeeper.SetRecordSpecification(s.ctx, *recSpec)
+	record := newRecord(s.recordName, s.sessionID, s.recordSpecID)
 	s.app.MetadataKeeper.SetRecord(s.ctx, *record)
 
-	dneRecordID := types.RecordMetadataAddress(s.scopeUUID, "does-not-exist")
-
-	cases := map[string]struct {
-		existing types.Record
-		proposed types.MetadataAddress
-		signers  []string
-		wantErr  bool
-		errorMsg string
+	cases := []struct {
+		name       string
+		proposedID types.MetadataAddress
+		signers    []string
+		expected   []string
 	}{
-		"invalid, existing record doesn't have scope": {
-			existing: types.Record{},
-			proposed: types.MetadataAddress{},
-			signers:  []string{s.user1},
-			wantErr:  true,
-			errorMsg: "cannot get scope uuid: this metadata address () does not contain a scope uuid",
+		{
+			name:       "record does not exist",
+			proposedID: dneRecordID,
+			signers:    []string{s.user1},
+			expected:   []string{"record does not exist to delete", dneRecordID.String()},
 		},
-		"invalid, unable to find scope": {
-			existing: *record,
-			proposed: types.MetadataAddress{},
-			signers:  []string{s.user1},
-			wantErr:  true,
-			errorMsg: fmt.Sprintf("cannot remove record. expected %s, got ", recordID),
+		{
+			name:       "no scope session or spec",
+			proposedID: recordLone.GetRecordAddress(),
+			signers:    []string{},
+			expected:   nil,
 		},
-		"invalid, record ids do not match": {
-			existing: *record,
-			proposed: dneRecordID,
-			signers:  []string{s.user1},
-			wantErr:  true,
-			errorMsg: fmt.Sprintf("cannot remove record. expected %s, got %s", recordID, dneRecordID),
+		{
+			name:       "has scope but not session or spec, req signer is signer",
+			proposedID: recordOnlyScope.GetRecordAddress(),
+			signers:    []string{s.user1},
+			expected:   nil,
 		},
-		"Invalid, missing signature": {
-			existing: *record,
-			proposed: recordID,
-			signers:  []string{},
-			wantErr:  true,
-			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
+		{
+			name:       "has scope but not session or spec, req signer not signer",
+			proposedID: recordOnlyScope.GetRecordAddress(),
+			signers:    []string{s.user2},
+			expected:   []string{"missing required signature", s.user1},
 		},
-		"valid, passed all validation": {
-			existing: *record,
-			proposed: recordID,
-			signers:  []string{s.user1},
-			wantErr:  false,
-			errorMsg: "",
+		{
+			name:       "has session but not scope or spec, req signer is signer",
+			proposedID: recordOnlySession.GetRecordAddress(),
+			signers:    []string{s.user2},
+			expected:   nil,
+		},
+		{
+			name:       "has session but not scope or spec, req signer not signer",
+			proposedID: recordOnlySession.GetRecordAddress(),
+			signers:    []string{s.user1},
+			expected:   []string{"missing required signature", s.user2},
+		},
+		{
+			name:       "has spec, no scope or session",
+			proposedID: recordOnlySpec.GetRecordAddress(),
+			signers:    nil,
+			expected:   nil,
+		},
+		{
+			name:       "has session and spec, reqRoles fulfilled",
+			proposedID: recordNoScope.GetRecordAddress(),
+			signers:    []string{s.user2, user3},
+			expected:   nil,
+		},
+		{
+			name:       "has session and spec, missing both req roles",
+			proposedID: recordNoScope.GetRecordAddress(),
+			signers:    []string{s.user2},
+			expected:   []string{"missing signers for roles required by spec", "INVESTOR need 1 have 0", "AFFILIATE need 1 have 0"},
+		},
+		{
+			name:       "has session and spec, missing one req roles",
+			proposedID: recordNoScope.GetRecordAddress(),
+			signers:    []string{s.user2, s.user1},
+			expected:   []string{"missing signers for roles required by spec", "AFFILIATE need 1 have 0"},
+		},
+		{
+			name:       "control",
+			proposedID: s.recordID,
+			signers:    []string{s.user1, s.user2, user3},
+			expected:   nil,
+		},
+		{
+			name:       "missing scope required signer",
+			proposedID: s.recordID,
+			signers:    []string{s.user2, user3},
+			expected:   []string{"missing required signature", s.user1},
+		},
+		{
+			name:       "missing session required signer",
+			proposedID: s.recordID,
+			signers:    []string{s.user1, user3},
+			expected:   []string{"missing required signature", s.user2},
+		},
+		{
+			name:       "missing required role",
+			proposedID: s.recordID,
+			signers:    []string{s.user1, s.user2},
+			expected:   []string{"missing signers for roles required by spec", "AFFILIATE need 1 have 0"},
 		},
 	}
 
-	for name, tc := range cases {
-		s.Run(name, func() {
+	for _, tc := range cases {
+		s.Run(tc.name, func() {
 			msg := &types.MsgDeleteRecordRequest{Signers: tc.signers}
-			err := s.app.MetadataKeeper.ValidateDeleteRecord(s.ctx, tc.existing, tc.proposed, msg)
-			if tc.wantErr {
-				s.Assert().EqualError(err, tc.errorMsg, "ValidateDeleteRecord")
+			err := s.app.MetadataKeeper.ValidateDeleteRecord(s.ctx, tc.proposedID, msg)
+			if len(tc.expected) > 0 {
+				if s.Assert().Error(err, "ValidateDeleteRecord") {
+					for _, exp := range tc.expected {
+						s.Assert().ErrorContains(err, exp, "ValidateDeleteRecord")
+					}
+				}
 			} else {
 				s.Assert().NoError(err, "ValidateDeleteRecord")
 			}

@@ -155,15 +155,8 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 		return fmt.Errorf("contract spec %s not listed in scope spec %s", proposed.SpecificationId, scopeSpec.SpecificationId)
 	}
 
-	if len(proposed.GetName()) == 0 && existing == nil {
-		proposed.Name = contractSpec.ClassName
-	}
-
-	if err = k.ValidatePartiesInvolved(proposed.Parties, contractSpec.PartiesInvolved); err != nil {
-		return err
-	}
-
-	if err = k.ValidateAllPartiesAreSignersWithAuthz(ctx, scope.Owners, msg); err != nil {
+	reqParties := types.ConcatParties(scope.Owners, existing.Parties)
+	if err = k.ValidateSignersWithParties(ctx, reqParties, proposed.Parties, contractSpec.PartiesInvolved, msg); err != nil {
 		return err
 	}
 
@@ -171,6 +164,10 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 		if err = k.ValidateAuditUpdate(ctx, existing.Audit, proposed.Audit); err != nil {
 			return err
 		}
+	}
+
+	if len(proposed.GetName()) == 0 && existing == nil {
+		proposed.Name = contractSpec.ClassName
 	}
 
 	return nil
