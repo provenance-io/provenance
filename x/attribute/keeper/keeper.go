@@ -51,13 +51,15 @@ func NewKeeper(
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return Keeper{
+	keeper := Keeper{
 		storeKey:   key,
 		paramSpace: paramSpace,
 		authKeeper: authKeeper,
 		nameKeeper: nameKeeper,
 		cdc:        cdc,
 	}
+	nameKeeper.SetAttributeKeeper(keeper)
+	return keeper
 }
 
 // Logger returns a module-specific logger.

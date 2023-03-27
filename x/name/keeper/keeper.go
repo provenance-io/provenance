@@ -15,6 +15,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/name/types"
 )
 
@@ -34,6 +35,8 @@ type Keeper struct {
 
 	// the signing authority for the gov proposals
 	authority string
+
+	attrKeeper types.AttributeKeeper
 }
 
 // NewKeeper returns a name keeper. It handles:
@@ -60,13 +63,21 @@ func NewKeeper(
 }
 
 // Logger returns a module-specific logger.
-func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
+// SetAttributeKeeper sets the attribute keeper
+func (k Keeper) SetAttributeKeeper(ak attrtypes.AttributeKeeper) {
+	if k.attrKeeper != nil && ak != nil && k.attrKeeper != ak {
+		panic("the attribute keeper has already been set")
+	}
+	k.attrKeeper = ak
+}
+
 // ResolvesTo to determines whether a name resolves to a given address.
-func (keeper Keeper) ResolvesTo(ctx sdk.Context, name string, addr sdk.AccAddress) bool {
-	stored, err := keeper.GetRecordByName(ctx, name)
+func (k Keeper) ResolvesTo(ctx sdk.Context, name string, addr sdk.AccAddress) bool {
+	stored, err := k.GetRecordByName(ctx, name)
 	if err != nil {
 		return false
 	}
@@ -74,16 +85,16 @@ func (keeper Keeper) ResolvesTo(ctx sdk.Context, name string, addr sdk.AccAddres
 }
 
 // SetNameRecord binds a name to an address.
-func (keeper Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error {
+func (k Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error {
 	var err error
-	if name, err = keeper.Normalize(ctx, name); err != nil {
+	if name, err = k.Normalize(ctx, name); err != nil {
 		return err
 	}
 	if err = types.ValidateAddress(addr); err != nil {
 		return types.ErrInvalidAddress.Wrap(err.Error())
 	}
 
-	if err = keeper.addRecord(ctx, name, addr, restrict, false); err != nil {
+	if err = k.addRecord(ctx, name, addr, restrict, false); err != nil {
 		return err
 	}
 
@@ -97,16 +108,16 @@ func (keeper Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAdd
 }
 
 // UpdateNameRecord updates the owner address and restricted flag on a name.
-func (keeper Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error {
+func (k Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error {
 	var err error
-	if name, err = keeper.Normalize(ctx, name); err != nil {
+	if name, err = k.Normalize(ctx, name); err != nil {
 		return err
 	}
 	if err = types.ValidateAddress(addr); err != nil {
 		return types.ErrInvalidAddress.Wrap(err.Error())
 	}
 
-	if err = keeper.addRecord(ctx, name, addr, restrict, true); err != nil {
+	if err = k.addRecord(ctx, name, addr, restrict, true); err != nil {
 		return err
 	}
 
@@ -120,12 +131,12 @@ func (keeper Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.Acc
 }
 
 // GetRecordByName resolves a record by name.
-func (keeper Keeper) GetRecordByName(ctx sdk.Context, name string) (record *types.NameRecord, err error) {
+func (k Keeper) GetRecordByName(ctx sdk.Context, name string) (record *types.NameRecord, err error) {
 	key, err := types.GetNameKeyPrefix(name)
 	if err != nil {
 		return nil, err
 	}
-	return getNameRecord(ctx, keeper, key)
+	return getNameRecord(ctx, k, key)
 }
 
 func getNameRecord(ctx sdk.Context, keeper Keeper, key []byte) (record *types.NameRecord, err error) {
@@ -140,17 +151,17 @@ func getNameRecord(ctx sdk.Context, keeper Keeper, key []byte) (record *types.Na
 }
 
 // NameExists returns true if store contains a record for the given name.
-func (keeper Keeper) NameExists(ctx sdk.Context, name string) bool {
+func (k Keeper) NameExists(ctx sdk.Context, name string) bool {
 	key, err := types.GetNameKeyPrefix(name)
 	if err != nil {
 		return false
 	}
-	store := ctx.KVStore(keeper.storeKey)
+	store := ctx.KVStore(k.storeKey)
 	return store.Has(key)
 }
 
 // GetRecordsByAddress looks up all names bound to an address.
-func (keeper Keeper) GetRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (types.NameRecords, error) {
+func (k Keeper) GetRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (types.NameRecords, error) {
 	// Return value data structure.
 	records := types.NameRecords{}
 	// Handler that adds records if account address matches.
@@ -166,16 +177,16 @@ func (keeper Keeper) GetRecordsByAddress(ctx sdk.Context, address sdk.AccAddress
 		return nil, err
 	}
 	// Collect and return all names that match.
-	if err := keeper.IterateRecords(ctx, addrPrefix, appendToRecords); err != nil {
+	if err := k.IterateRecords(ctx, addrPrefix, appendToRecords); err != nil {
 		return records, err
 	}
 	return records, nil
 }
 
 // DeleteRecord removes a name record from the kvstore.
-func (keeper Keeper) DeleteRecord(ctx sdk.Context, name string) error {
+func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 	// Need the record to clear the address index
-	record, err := keeper.GetRecordByName(ctx, name)
+	record, err := k.GetRecordByName(ctx, name)
 	if err != nil {
 		return err
 	}
@@ -188,7 +199,7 @@ func (keeper Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 	if err != nil {
 		return err
 	}
-	store := ctx.KVStore(keeper.storeKey)
+	store := ctx.KVStore(k.storeKey)
 	store.Delete(key)
 	// Delete the address index record
 	addrPrefix, err := types.GetAddressKeyPrefix(address)
@@ -210,15 +221,15 @@ func (keeper Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 }
 
 // IterateRecords iterates over all the stored name records and passes them to a callback function.
-func (keeper Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handler) error {
+func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handler) error {
 	// Init a name record iterator
-	store := ctx.KVStore(keeper.storeKey)
+	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
 	// Iterate over records, processing callbacks.
 	for ; iterator.Valid(); iterator.Next() {
 		record := types.NameRecord{}
-		if err := keeper.cdc.Unmarshal(iterator.Value(), &record); err != nil {
+		if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {
 			return err
 		}
 		if err := handle(record); err != nil {
@@ -229,16 +240,16 @@ func (keeper Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handl
 }
 
 // Normalize returns a name is storage format.
-func (keeper Keeper) Normalize(ctx sdk.Context, name string) (string, error) {
+func (k Keeper) Normalize(ctx sdk.Context, name string) (string, error) {
 	comps := make([]string, 0)
 	for _, comp := range strings.Split(name, ".") {
 		comp = strings.ToLower(strings.TrimSpace(comp))
 		lenComp := uint32(len(comp))
 		isUUID := isValidUUID(comp)
-		if lenComp < keeper.GetMinSegmentLength(ctx) {
+		if lenComp < k.GetMinSegmentLength(ctx) {
 			return "", types.ErrNameSegmentTooShort
 		}
-		if lenComp > keeper.GetMaxSegmentLength(ctx) && !isUUID {
+		if lenComp > k.GetMaxSegmentLength(ctx) && !isUUID {
 			return "", types.ErrNameSegmentTooLong
 		}
 		if !isValid(comp) {
@@ -246,7 +257,7 @@ func (keeper Keeper) Normalize(ctx sdk.Context, name string) (string, error) {
 		}
 		comps = append(comps, comp)
 	}
-	if uint32(len(comps)) > keeper.GetMaxNameLevels(ctx) {
+	if uint32(len(comps)) > k.GetMaxNameLevels(ctx) {
 		return "", types.ErrNameHasTooManySegments
 	}
 	return strings.Join(comps, "."), nil
@@ -284,13 +295,13 @@ func isValidUUID(s string) bool {
 	return true
 }
 
-func (keeper Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict, isModifiable bool) error {
+func (k Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict, isModifiable bool) error {
 	key, err := types.GetNameKeyPrefix(name)
 	if err != nil {
 		return err
 	}
 
-	store := ctx.KVStore(keeper.storeKey)
+	store := ctx.KVStore(k.storeKey)
 	if store.Has(key) && !isModifiable {
 		return types.ErrNameAlreadyBound
 	}
@@ -299,7 +310,7 @@ func (keeper Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress
 	if err = record.Validate(); err != nil {
 		return err
 	}
-	bz, err := keeper.cdc.Marshal(&record)
+	bz, err := k.cdc.Marshal(&record)
 	if err != nil {
 		return err
 	}
@@ -315,6 +326,6 @@ func (keeper Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress
 	return nil
 }
 
-func (keeper Keeper) GetAuthority() string {
-	return keeper.authority
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
