@@ -127,8 +127,8 @@ func (s *Scope) AddDataAccess(addresses []string) {
 	}
 }
 
-// GetOwnerIndexWithAddress gets the index of this scopes owners list that has the provided address,
-// and a boolean for whether or not it's found.
+// GetOwnerIndexWithAddress gets the index of this scope's owners list that has the provided address,
+// and a boolean for whether it's found.
 func (s *Scope) GetOwnerIndexWithAddress(address string) (int, bool) {
 	for i, owner := range s.Owners {
 		if owner.Address == address {
@@ -350,13 +350,13 @@ func (r Record) GetRecordAddress() MetadataAddress {
 }
 
 // GetID get this record's metadata address. Satisfies the MetadataAddressable interface.
-func (s Record) GetID() MetadataAddress {
-	return s.GetRecordAddress()
+func (r Record) GetID() MetadataAddress {
+	return r.GetRecordAddress()
 }
 
 // GetSpecID get this record's specification address. Satisfies the MetadataSpecAddressable interface.
-func (s Record) GetSpecID() MetadataAddress {
-	return s.SpecificationId
+func (r Record) GetSpecID() MetadataAddress {
+	return r.SpecificationId
 }
 
 // NewRecordInput creates new instance of RecordInput
@@ -537,7 +537,7 @@ func ConcatParties(partySets ...[]Party) []Party {
 }
 
 // EqualParties returns true if the two provided sets of parties contain the same entries.
-// This assumes that duplicates are not allowed in a party set.
+// This assumes that duplicates are not allowed in a set of parties.
 func EqualParties(p1, p2 []Party) bool {
 	if len(p1) != len(p2) {
 		return false
