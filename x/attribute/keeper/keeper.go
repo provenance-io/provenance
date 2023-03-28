@@ -151,6 +151,7 @@ func (k Keeper) SetAttribute(
 
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
+	store.Set(types.AttributeNameAddrPrefix(attr), []byte{})
 
 	attributeAddEvent := types.NewEventAttributeAdd(attr, owner.String())
 	if err := ctx.EventManager().EmitTypedEvent(attributeAddEvent); err != nil {
@@ -225,6 +226,9 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			updatedKey := types.AddrAttributeKey(addrBz, updateAttribute)
 			store.Set(updatedKey, bz)
 
+			store.Delete(types.AttributeNameAddrPrefix(originalAttribute))
+			store.Set(types.AttributeNameAddrPrefix(updateAttribute), []byte{})
+
 			attributeUpdateEvent := types.NewEventAttributeUpdate(originalAttribute, updateAttribute, owner.String())
 			if err := ctx.EventManager().EmitTypedEvent(attributeUpdateEvent); err != nil {
 				return err
@@ -274,11 +278,13 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 			store.Delete(it.Key())
 
 			if !deleteDistinct {
+				store.Delete(types.AttributeNameAddrKeyPrefix(attr.Name, attr.GetAddressBytes()))
 				deleteEvent := types.NewEventAttributeDelete(name, addr, owner.String())
 				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
 					return err
 				}
 			} else {
+				store.Delete(types.AttributeNameAddrPrefix(attr))
 				deleteEvent := types.NewEventDistinctAttributeDelete(name, string(*value), addr, owner.String())
 				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
 					return err

@@ -24,8 +24,9 @@ const (
 
 var (
 	// Legacy amino encoded objects use this key prefix
-	AttributeKeyPrefixAmino = []byte{0x00}
-	AttributeKeyPrefix      = []byte{0x02}
+	AttributeKeyPrefixAmino      = []byte{0x00}
+	AttributeKeyPrefix           = []byte{0x02}
+	AttributeKeyPrefixAddrLookup = []byte{0x03}
 )
 
 // AddrAttributeKey creates a key for an account attribute
@@ -56,6 +57,27 @@ func AddrAttributesNameKeyPrefix(addr []byte, attributeName string) []byte {
 // AddrStrAttributesNameKeyPrefix is the same as AddrAttributesNameKeyPrefix but takes in the address as a string.
 func AddrStrAttributesNameKeyPrefix(addr string, attributeName string) []byte {
 	return AddrAttributesNameKeyPrefix(GetAttributeAddressBytes(addr), attributeName)
+}
+
+// AttributeNameKeyPrefix returns a prefix key for all addresses with attribute name
+func AttributeNameKeyPrefix(attributeName string) []byte {
+	key := AttributeKeyPrefixAddrLookup
+	return append(key, GetNameKeyBytes(attributeName)...)
+}
+
+// AttributeNameAddrKeyPrefix returns a prefix key for attribute and address
+func AttributeNameAddrKeyPrefix(attributeName string, addr []byte) []byte {
+	key := AttributeKeyPrefixAddrLookup
+	key = append(key, GetNameKeyBytes(attributeName)...)
+	return append(key, address.MustLengthPrefix(addr)...)
+}
+
+// AttributeNameAddrPrefix creates a key for address lookup [prefix][attribute name][address][attribute hash]
+func AttributeNameAddrPrefix(attribute Attribute) []byte {
+	key := AttributeKeyPrefixAddrLookup
+	key = append(key, GetNameKeyBytes(attribute.Address)...)
+	key = append(key, address.MustLengthPrefix(attribute.GetAddressBytes())...)
+	return append(key, attribute.Hash()...)
 }
 
 // GetNameKeyBytes returns a set of bytes that uniquely identifies the given name
