@@ -27,8 +27,8 @@ type PartyDetails struct {
 	usedBySpec      bool
 }
 
-// WrapPartyInDetails creates a PartyDetails from the provided Party.
-func WrapPartyInDetails(party types.Party) *PartyDetails {
+// WrapRequiredParty creates a PartyDetails from the provided Party.
+func WrapRequiredParty(party types.Party) *PartyDetails {
 	return &PartyDetails{
 		address:  party.Address,
 		role:     party.Role,
@@ -36,12 +36,12 @@ func WrapPartyInDetails(party types.Party) *PartyDetails {
 	}
 }
 
-// WrapPartyInUsableDetails creates a PartyDetails from the provided Party and marks it as usable.
-func WrapPartyInUsableDetails(party types.Party) *PartyDetails {
+// WrapAvailableParty creates a PartyDetails from the provided Party and marks it as usable.
+func WrapAvailableParty(party types.Party) *PartyDetails {
 	return &PartyDetails{
 		address:         party.Address,
 		role:            party.Role,
-		optional:        party.Optional,
+		optional:        true, // An available party is optional unless something else says otherwise.
 		canBeUsedBySpec: true,
 	}
 }
@@ -52,7 +52,7 @@ func BuildPartyDetails(reqParties, availableParties []types.Party) []*PartyDetai
 
 	// Start with creating details for each available party.
 	for i, party := range availableParties {
-		details[i] = WrapPartyInUsableDetails(party)
+		details[i] = WrapAvailableParty(party)
 	}
 
 	// Now update the details to include optional=false required parties.
@@ -67,7 +67,7 @@ reqPartiesLoop:
 					continue reqPartiesLoop
 				}
 			}
-			details = append(details, WrapPartyInDetails(reqParty))
+			details = append(details, WrapRequiredParty(reqParty))
 		}
 	}
 
@@ -210,7 +210,7 @@ func (s *SignersWrapper) Accs() []sdk.AccAddress {
 }
 
 // ValidateSignersWithParties ensures the following:
-// * All optional=false reqParties and availableParties parties have signed.
+// * All optional=false reqParties have signed.
 // * All required roles are present in availableParties and are signers.
 // * All parties with the PROVENANCE role are a smart contract account.
 // * All parties with a smart contract account have the PROVENANCE role.
@@ -223,52 +223,58 @@ func (s *SignersWrapper) Accs() []sdk.AccAddress {
 // in availableParties. Parties in reqParties with optional=true, are ignored.
 // Parties in reqParties with optional=false are required to be in the msg signers.
 // * availableParties are the parties available to fulfill required roles. These
-// usually come from the proposed entry.
+// usually come from the proposed entry. Entries in here with optional=false are
+// NOT required to sign (unless they're in reqParties like that too).
 // * reqRoles are all the roles that are required. These usually come from a spec.
 //
 // If a party is in both reqParties and availableParties, they are only optional
 // if both have optional=true.
 // Only parties in availableParties that are in the msg signers list are able to
 // fulfill an entry in reqRoles, and each such party can each only fulfill one entry.
+//
+// Party details are returned containing information on which parties were signers and
+// which were used to fulfill required roles.
+//
+// When parties and roles aren't involved, use ValidateSignersWithoutParties.
 func (k Keeper) ValidateSignersWithParties(
 	ctx sdk.Context,
 	reqParties, availableParties []types.Party,
 	reqRoles []types.PartyType,
 	msg types.MetadataMsg,
-) error {
+) ([]*PartyDetails, error) {
 	parties := BuildPartyDetails(reqParties, availableParties)
 	signers := NewSignersWrapper(msg.GetSignerStrs())
 
 	// Make sure all required parties are signers.
 	associateSigners(parties, signers)
 	if err := k.associateAuthorizations(ctx, findMissingRequired(parties), signers, msg, nil); err != nil {
-		return err
+		return nil, err
 	}
 	if missingReqParties := findMissingRequired(parties); len(missingReqParties) > 0 {
 		missing := make([]string, len(missingReqParties))
 		for i, party := range missingReqParties {
-			missing[i] = party.GetAddress()
+			missing[i] = fmt.Sprintf("%s (%s)", party.GetAddress(), party.GetRole().SimpleString())
 		}
-		return fmt.Errorf("missing required signature%s: %s", pluralEnding(len(missing)), strings.Join(missing, ", "))
+		return nil, fmt.Errorf("missing required signature%s: %s", pluralEnding(len(missing)), strings.Join(missing, ", "))
 	}
 
 	// Make sure all required roles are present as signers.
 	missingRoles := associateRequiredRoles(parties, reqRoles)
 	rolesAreMissing, err := k.associateAuthorizationsForRoles(ctx, missingRoles, parties, signers, msg)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if rolesAreMissing {
-		return missingRolesError(parties, reqRoles)
+		return nil, missingRolesError(parties, reqRoles)
 	}
 
 	// Make sure all smart contract accounts have the PROVENANCE role,
 	// and all parties with the PROVENANCE role have smart contract accounts.
 	if err = k.validateProvenanceRole(ctx, parties); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return parties, nil
 }
 
 // associateSigners updates each PartyDetails to indicate there's a signer if its
@@ -341,7 +347,7 @@ func missingRolesError(parties []*PartyDetails, reqRoles []types.PartyType) erro
 // be under for the provided msg type URL. It basically allows a single authorization
 // to be usable from multiple related endpoints. E.g. a MsgWriteScopeRequest authorization
 // is usable for the MsgAddScopeDataAccessRequest endpoint as well.
-func (k Keeper) getAuthzMessageTypeURLs(msgTypeURL string) []string {
+func getAuthzMessageTypeURLs(msgTypeURL string) []string {
 	urls := make([]string, 0, 2)
 	if len(msgTypeURL) > 0 {
 		urls = append(urls, msgTypeURL)
@@ -372,7 +378,7 @@ func (k Keeper) findAuthzGrantee(
 	grantees []sdk.AccAddress,
 	msg types.MetadataMsg,
 ) (sdk.AccAddress, error) {
-	msgTypes := k.getAuthzMessageTypeURLs(sdk.MsgTypeURL(msg))
+	msgTypes := getAuthzMessageTypeURLs(sdk.MsgTypeURL(msg))
 	for _, grantee := range grantees {
 		for _, msgType := range msgTypes {
 			authorization, exp := k.authzKeeper.GetAuthorization(ctx, grantee, granter, msgType)
@@ -489,9 +495,91 @@ func (k Keeper) validateProvenanceRole(ctx sdk.Context, parties []*PartyDetails)
 	return nil
 }
 
-// checkAuthzForMissing returns any of the provided addrs that have not been granted an authz authorization by one of the msg signers.
+// ValidateScopeValueOwnerUpdate verifies that it's okay for the msg signers to
+// to change a scope's value owner from existing to proposed.
+// If some parties have already been validated (possibly utilizaing authz), they
+// can be provided in order to prevent an authorization from being used twice during
+// a single Tx.
+func (k Keeper) ValidateScopeValueOwnerUpdate(
+	ctx sdk.Context,
+	existing,
+	proposed string,
+	validatedParties []*PartyDetails,
+	msg types.MetadataMsg,
+) error {
+	if existing == proposed {
+		return nil
+	}
+	signers := msg.GetSignerStrs()
+	if len(existing) > 0 {
+		marker, hasAuth := k.GetMarkerAndCheckAuthority(ctx, existing, signers, markertypes.Access_Withdraw)
+		if marker != nil {
+			// If the existing is a marker, make sure a signer has withdraw authority on it.
+			if !hasAuth {
+				return fmt.Errorf("missing signature for %s (%s) with authority to withdraw/remove it as scope value owner", existing, marker.GetDenom())
+			}
+		} else {
+			// If the existing isn't a marker, make sure they're one of the signers or
+			// have an authorization grant for one of the signers.
+			found := false
+
+			// First just check the list of signers.
+			for _, signer := range signers {
+				if existing == signer {
+					found = true
+					break
+				}
+			}
+
+			// If not yet found, check the validated parties for one with this address
+			// that also has an associated signer.
+			// This way, if it does exist, the authorization is only used once during a single call.
+			if !found {
+				for _, party := range validatedParties {
+					if party.GetAddress() == existing && party.HasSigner() {
+						found = true
+						break
+					}
+				}
+			}
+
+			// If still not found, directly check with authz for help.
+			if !found {
+				// If existing isn't a bech32, we just skip the authz check. Should only happen in unit tests.
+				granter, err := sdk.AccAddressFromBech32(existing)
+				if err == nil {
+					grantees := safeBech32ToAccAddresses(signers)
+					grantee, err := k.findAuthzGrantee(ctx, granter, grantees, msg)
+					if err != nil {
+						return fmt.Errorf("authz error with existing value owner %q: %w", existing, err)
+					}
+					if len(grantee) > 0 {
+						found = true
+					}
+				}
+			}
+
+			if !found {
+				return fmt.Errorf("missing signature from existing value owner %s", existing)
+			}
+		}
+	}
+
+	if len(proposed) > 0 {
+		// If the proposed is a marker, make sure a signer has deposit authority on it.
+		marker, hasAuth := k.GetMarkerAndCheckAuthority(ctx, proposed, signers, markertypes.Access_Deposit)
+		if marker != nil && !hasAuth {
+			return fmt.Errorf("missing signature for %s (%s) with authority to deposit/add it as scope value owner", proposed, marker.GetDenom())
+		}
+		// If it's not a marker, we don't really care what it's being set to.
+	}
+
+	return nil
+}
+
+// TODELETEcheckAuthzForMissing returns any of the provided addrs that have not been granted an authz authorization by one of the msg signers.
 // An error is returned if there was a problem updating an authorization.
-func (k Keeper) checkAuthzForMissing(
+func (k Keeper) TODELETEcheckAuthzForMissing(
 	ctx sdk.Context,
 	addrs []string,
 	msg types.MetadataMsg,
@@ -515,7 +603,7 @@ func (k Keeper) checkAuthzForMissing(
 
 	// return as a list this message type and its parent
 	// type if it is a message belonging to a hierarchy
-	msgTypeURLs := k.getAuthzMessageTypeURLs(sdk.MsgTypeURL(msg))
+	msgTypeURLs := getAuthzMessageTypeURLs(sdk.MsgTypeURL(msg))
 
 	for _, addr := range addrs {
 		granter, addrErr := sdk.AccAddressFromBech32(addr)
@@ -562,15 +650,17 @@ func (k Keeper) checkAuthzForMissing(
 	return stillMissing, nil
 }
 
-// validateAllOwnersAreSigners makes sure that all entries in the existingOwners list
-// are contained in the signers list and checks to see if any missing entries have an assigned grantee
-func (k Keeper) validateAllOwnersAreSigners(
+// ValidateSignersWithoutParties makes sure that each entry in the required list are either signers of the msg,
+// or have granted an authz authorization to one of the signers.
+//
+// When parties (and/or roles) are involved, use ValidateSignersWithParties.
+func (k Keeper) ValidateSignersWithoutParties(
 	ctx sdk.Context,
-	existingOwners []string,
+	required []string,
 	msg types.MetadataMsg,
 ) error {
 	signers := msg.GetSignerStrs()
-	missing := findMissing(existingOwners, signers)
+	missing := findMissing(required, signers)
 
 	// Check authz for any authorizations on missing signers.
 	// If there isn't a message, skip this check (should only happen in unit tests).
@@ -578,7 +668,7 @@ func (k Keeper) validateAllOwnersAreSigners(
 		var err error
 		var granter, grantee sdk.AccAddress
 		possibleGrantees := safeBech32ToAccAddresses(signers)
-		stillMissing := make([]string, 0, len(missing))
+		var stillMissing []string
 		for _, addr := range missing {
 			granter, err = sdk.AccAddressFromBech32(addr)
 			if err == nil {
@@ -601,8 +691,8 @@ func (k Keeper) validateAllOwnersAreSigners(
 	return nil
 }
 
-// ValidateAllPartiesAreSignersWithAuthz validate all parties are signers with authz module
-func (k Keeper) ValidateAllPartiesAreSignersWithAuthz(ctx sdk.Context, parties []types.Party, msg types.MetadataMsg) error {
+// TODELETEValidateAllPartiesAreSignersWithAuthz validate all parties are signers with authz module
+func (k Keeper) TODELETEValidateAllPartiesAreSignersWithAuthz(ctx sdk.Context, parties []types.Party, msg types.MetadataMsg) error {
 	addresses := make([]string, len(parties))
 	for i, party := range parties {
 		addresses[i] = party.Address
@@ -614,7 +704,7 @@ func (k Keeper) ValidateAllPartiesAreSignersWithAuthz(ctx sdk.Context, parties [
 	// Authz grants rights to address on specific message types.
 	// If no message is provided, skip the Authz check.
 	if msg != nil {
-		stillMissing, err = k.checkAuthzForMissing(ctx, missing, msg)
+		stillMissing, err = k.TODELETEcheckAuthzForMissing(ctx, missing, msg)
 		if err != nil {
 			return fmt.Errorf("error validating signers: %w", err)
 		}
@@ -633,46 +723,6 @@ func (k Keeper) ValidateAllPartiesAreSignersWithAuthz(ctx sdk.Context, parties [
 		return fmt.Errorf("missing signature%s from %v", pluralEnding(len(missing)), missingWithRoles)
 	}
 
-	return nil
-}
-
-// ValidatePartiesInvolved validate that all required parties are involved
-func (k Keeper) ValidatePartiesInvolved(parties []types.Party, requiredParties []types.PartyType) error {
-	partyRoles := make([]string, len(parties))
-	reqRoles := make([]string, len(requiredParties))
-	for i, party := range parties {
-		partyRoles[i] = party.Role.String()
-	}
-	for i, req := range requiredParties {
-		reqRoles[i] = req.String()
-	}
-	missing := findMissing(reqRoles, partyRoles)
-	if len(missing) > 0 {
-		return fmt.Errorf("missing required party type%s %v from parties", pluralEnding(len(missing)), missing)
-	}
-	return nil
-}
-
-// ValidateScopeOwners is stateful validation for scope owners against a scope specification.
-// This does NOT involve the Scope.ValidateOwnersBasic() function.
-func (k Keeper) ValidateScopeOwners(owners []types.Party, spec types.ScopeSpecification) error {
-	var missingPartyTypes []string
-	for _, pt := range spec.PartiesInvolved {
-		found := false
-		for _, o := range owners {
-			if o.Role == pt {
-				found = true
-				break
-			}
-		}
-		if !found {
-			// Get the party type without the "PARTY_TYPE_" prefix.
-			missingPartyTypes = append(missingPartyTypes, pt.String()[11:])
-		}
-	}
-	if len(missingPartyTypes) > 0 {
-		return fmt.Errorf("missing party type%s required by spec: %v", pluralEnding(len(missingPartyTypes)), missingPartyTypes)
-	}
 	return nil
 }
 
@@ -695,36 +745,39 @@ func findMissing(required []string, entries []string) []string {
 	return retval
 }
 
-// IsMarkerAndHasAuthority checks that the address is a marker addr and that one of the signers has the given role.
-// First return boolean is whether the address is a marker.
-// Second return boolean is whether one of the signers has the given role on that marker.
-// If the first return boolean is false, they'll both be false.
-func (k Keeper) IsMarkerAndHasAuthority(ctx sdk.Context, address string, signers []string, role markertypes.Access) (isMarker bool, hasAuth bool) {
+// GetMarkerAndCheckAuthority gets a marker by address and checks if one of the signers has the provided role.
+// If the address isn't a marker, nil, false is returned.
+func (k Keeper) GetMarkerAndCheckAuthority(
+	ctx sdk.Context,
+	address string,
+	signers []string,
+	role markertypes.Access,
+) (markertypes.MarkerAccountI, bool) {
 	addr, err := sdk.AccAddressFromBech32(address)
 	// if the address is invalid then it is not possible for it to be a marker.
 	if err != nil {
-		return false, false
+		return nil, false
 	}
 
 	acc := k.authKeeper.GetAccount(ctx, addr)
 	if acc == nil {
-		return false, false
+		return nil, false
 	}
 
 	// Convert over to the actual underlying marker type, or not.
 	marker, isMarker := acc.(*markertypes.MarkerAccount)
 	if !isMarker {
-		return false, false
+		return nil, false
 	}
 
 	// Check if any of the signers have the desired role.
 	for _, signer := range signers {
 		if marker.HasAccess(signer, role) {
-			return true, true
+			return marker, true
 		}
 	}
 
-	return true, false
+	return marker, false
 }
 
 // pluralEnding returns "" if i == 1, or "s" otherwise.

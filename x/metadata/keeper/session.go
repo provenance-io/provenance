@@ -156,7 +156,7 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 	}
 
 	reqParties := types.ConcatParties(scope.Owners, existing.Parties)
-	if err = k.ValidateSignersWithParties(ctx, reqParties, proposed.Parties, contractSpec.PartiesInvolved, msg); err != nil {
+	if _, err = k.ValidateSignersWithParties(ctx, reqParties, proposed.Parties, contractSpec.PartiesInvolved, msg); err != nil {
 		return err
 	}
 

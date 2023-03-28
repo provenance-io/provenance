@@ -139,14 +139,14 @@ func (s *Scope) GetOwnerIndexWithAddress(address string) (int, bool) {
 }
 
 // AddOwners will add new owners to this scope.
-// If a scope owner already exists that's equal to a provided owner, an error is returned.
+// If an owner already exists that's equal to a provided owner, an error is returned.
 func (s *Scope) AddOwners(owners []Party) error {
 	if len(owners) == 0 {
 		return nil
 	}
 	for _, newOwner := range owners {
 		for _, scopeOwner := range s.Owners {
-			if newOwner.Equals(scopeOwner) {
+			if newOwner.IsSameAs(scopeOwner) {
 				return fmt.Errorf("party already exists with address %s and role %s", newOwner.Address, newOwner.Role)
 			}
 		}
@@ -494,9 +494,9 @@ func (p Party) ValidateBasic() error {
 func ValidatePartiesAreUnique(parties []Party) error {
 	for i := 0; i < len(parties)-1; i++ {
 		for j := i + 1; j < len(parties); j++ {
-			if parties[i].Equals(parties[j]) {
+			if parties[i].IsSameAs(parties[j]) {
 				return fmt.Errorf("duplicate parties not allowed: address = %s, role = %s, indexes: %d, %d",
-					parties[i].Address, parties[i].Role, j, i)
+					parties[i].Address, parties[i].Role, i, j)
 			}
 		}
 	}
@@ -522,8 +522,14 @@ func (p Party) String() string {
 }
 
 // Equals returns true if this party is equal to the provided party.
-// This comparison only checks the address and role. Any other fields are ignored.
+// See also: IsSameAs for a comparison that ignores the Optional field.
 func (p Party) Equals(p2 Party) bool {
+	return p.Address == p2.Address && p.Role == p2.Role && p.Optional == p2.Optional
+}
+
+// IsSameAs returns true if this party's address and role are the same as the provided party's.
+// See also: Equals for a more thorough comparison.
+func (p Party) IsSameAs(p2 Party) bool {
 	return p.Address == p2.Address && p.Role == p2.Role
 }
 

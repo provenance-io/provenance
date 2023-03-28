@@ -51,7 +51,9 @@ func (s *AuthzTestSuite) SetupTest() {
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
-	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+	user1Acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr)
+	s.Require().NoError(user1Acc.SetPubKey(s.pubkey1), "SetPubKey user1")
+	s.app.AccountKeeper.SetAccount(s.ctx, user1Acc)
 
 	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
@@ -66,12 +68,41 @@ func TestAuthzTestSuite(t *testing.T) {
 	suite.Run(t, new(AuthzTestSuite))
 }
 
-// TODO[1438]: AssociateSigners
-// TODO[1438]: FindMissingRequired
-// TODO[1438]: AssociateRequiredRoles
-// TODO[1438]: MissingRolesError
+// TODO[1438]: func TestWrapRequiredParty(t *testing.T) {}
+// TODO[1438]: func TestWrapAvailableParty(t *testing.T) {}
+// TODO[1438]: func TestBuildPartyDetails(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_SetAddress(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_GetAddress(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_SetAcc(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_GetAcc(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_SetRole(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_GetRole(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_SetOptional(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_MakeRequired(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_IsOptional(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_IsRequired(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_SetSigner(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_GetSigner(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_SetSignerAcc(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_GetSignerAcc(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_HasSigner(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_CanBeUsed(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_MarkAsUsed(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_IsUsed(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_IsStillUsableAs(t *testing.T) {}
+// TODO[1438]: func TestPartyDetails_EqualsParty(t *testing.T) {}
 
-func (s *AuthzTestSuite) TestGetAuthzMessageTypeURLs() {
+// TODO[1438]: func TestNewSignersWrapper(t *testing.T) {}
+// TODO[1438]: func TestSignersWrapper_Strings(t *testing.T) {}
+// TODO[1438]: func TestSignersWrapper_Accs(t *testing.T) {}
+
+// TODO[1438]: func (s *AuthzTestSuite) TestValidateSignersWithParties() {}
+// TODO[1438]: func TestAssociateSigners(t *testing.T) {}
+// TODO[1438]: func TestFindMissingRequired(t *testing.T) {}
+// TODO[1438]: func TestAssociateRequiredRoles(t *testing.T) {}
+// TODO[1438]: func TestMissingRolesError(t *testing.T) {}
+
+func TestGetAuthzMessageTypeURLs(t *testing.T) {
 	type testCase struct {
 		name     string // defaults to the msg name (from the url) if not defined.
 		url      string
@@ -159,19 +190,20 @@ func (s *AuthzTestSuite) TestGetAuthzMessageTypeURLs() {
 	}
 
 	for _, tc := range tests {
-		s.Run(getName(tc), func() {
-			actual := s.app.MetadataKeeper.GetAuthzMessageTypeURLs(tc.url)
-			s.Assert().Equal(tc.expected, actual, "getAuthzMessageTypeURLs(%q)", tc.url)
+		t.Run(getName(tc), func(t *testing.T) {
+			actual := keeper.GetAuthzMessageTypeURLs(tc.url)
+			assert.Equal(t, tc.expected, actual, "getAuthzMessageTypeURLs(%q)", tc.url)
 		})
 	}
 }
 
-// TODO[1438]: FindAuthzGrantee
-// TODO[1438]: AssociateAuthorizations
-// TODO[1438]: AssociateAuthorizationsForRoles
-// TODO[1438]: ValidateProvenanceRole
+// TODO[1438]: func (s *AuthzTestSuite) TestFindAuthzGrantee() {}
+// TODO[1438]: func (s *AuthzTestSuite) TestAssociateAuthorizations() {}
+// TODO[1438]: func (s *AuthzTestSuite) TestAssociateAuthorizationsForRoles() {}
+// TODO[1438]: func (s *AuthzTestSuite) TestValidateProvenanceRole() {}
+// TODO[1438]: func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {}
 
-func (s *AuthzTestSuite) TestValidateAllOwnersAreSigners() {
+func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
 	// Add a few authorizations
 
 	// User3 can sign for User2 on MsgAddScopeDataAccessRequest.
@@ -206,13 +238,13 @@ func (s *AuthzTestSuite) TestValidateAllOwnersAreSigners() {
 			name:     "1 owner no signers",
 			owners:   []string{s.user1},
 			msg:      &types.MsgWriteSessionRequest{Signers: []string{}},
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+			errorMsg: fmt.Sprintf("missing signature: %s", s.user1),
 		},
 		{
 			name:     "1 owner not in signers list",
 			owners:   []string{s.user1},
 			msg:      &types.MsgWriteSessionRequest{Signers: []string{randAddr1, randAddr2}},
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+			errorMsg: fmt.Sprintf("missing signature: %s", s.user1),
 		},
 		{
 			name:     "1 owner in signers list with non-owners",
@@ -227,30 +259,28 @@ func (s *AuthzTestSuite) TestValidateAllOwnersAreSigners() {
 			errorMsg: "",
 		},
 		{
-			name:   "2 owners no signers",
-			owners: []string{s.user1, s.user2},
-			msg:    &types.MsgWriteSessionRequest{Signers: []string{}},
-			errorMsg: fmt.Sprintf("missing signatures from existing owners %v; required for update",
-				[]string{s.user1, s.user2}),
+			name:     "2 owners no signers",
+			owners:   []string{s.user1, s.user2},
+			msg:      &types.MsgWriteSessionRequest{Signers: []string{}},
+			errorMsg: fmt.Sprintf("missing signatures: %s, %s", s.user1, s.user2),
 		},
 		{
-			name:   "2 owners - neither in signers list",
-			owners: []string{s.user1, s.user2},
-			msg:    &types.MsgWriteSessionRequest{Signers: []string{randAddr1, randAddr2, randAddr3}},
-			errorMsg: fmt.Sprintf("missing signatures from existing owners %v; required for update",
-				[]string{s.user1, s.user2}),
+			name:     "2 owners - neither in signers list",
+			owners:   []string{s.user1, s.user2},
+			msg:      &types.MsgWriteSessionRequest{Signers: []string{randAddr1, randAddr2, randAddr3}},
+			errorMsg: fmt.Sprintf("missing signatures: %s, %s", s.user1, s.user2),
 		},
 		{
 			name:     "2 owners - first in signers list with non-owners",
 			owners:   []string{s.user1, s.user2},
 			msg:      &types.MsgWriteSessionRequest{Signers: []string{randAddr1, s.user1, randAddr3}},
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user2),
+			errorMsg: fmt.Sprintf("missing signature: %s", s.user2),
 		},
 		{
 			name:     "2 owners - second in signers list with non-owners",
 			owners:   []string{s.user1, s.user2},
 			msg:      &types.MsgWriteSessionRequest{Signers: []string{randAddr1, s.user2, randAddr3}},
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+			errorMsg: fmt.Sprintf("missing signature: %s", s.user1),
 		},
 		{
 			name:     "2 owners - both in signers list with non-owners",
@@ -283,21 +313,21 @@ func (s *AuthzTestSuite) TestValidateAllOwnersAreSigners() {
 			// 3 has not granted anything to 2 (it's the other way around).
 			owners:   []string{s.user2, s.user3},
 			msg:      &types.MsgAddScopeDataAccessRequest{Signers: []string{s.user2}},
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user3),
+			errorMsg: fmt.Sprintf("missing signature: %s", s.user3),
 		},
 		{
 			name: "authz - 2 owners - 1 signer - grant on child msg",
 			// User3 can sign for User2 on MsgAddScopeDataAccessRequest, but not MsgWriteScopeRequest
 			owners:   []string{s.user2, s.user3},
 			msg:      &types.MsgWriteScopeRequest{Signers: []string{s.user3}},
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user2),
+			errorMsg: fmt.Sprintf("missing signature: %s", s.user2),
 		},
 		{
 			name: "authz - 2 owners - 1 signer - grant on sibling msg",
 			// User3 can sign for User2 on MsgAddScopeDataAccessRequest, but not MsgAddScopeOwnerRequest
 			owners:   []string{s.user2, s.user3},
 			msg:      &types.MsgAddScopeOwnerRequest{Signers: []string{s.user3}},
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user2),
+			errorMsg: fmt.Sprintf("missing signature: %s", s.user2),
 		},
 		{
 			name: "authz - 2 owners - 1 signer - with grant",
@@ -333,23 +363,23 @@ func (s *AuthzTestSuite) TestValidateAllOwnersAreSigners() {
 			// User3 can sign for User2 on MsgWriteScopeSpecificationRequest, but not user 1.
 			owners:   []string{s.user1, s.user2, s.user3},
 			msg:      &types.MsgWriteScopeSpecificationRequest{Signers: []string{s.user3}},
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user1),
+			errorMsg: fmt.Sprintf("missing signature: %s", s.user1),
 		},
 	}
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateAllOwnersAreSigners(s.ctx, tc.owners, tc.msg)
+			err := s.app.MetadataKeeper.ValidateSignersWithoutParties(s.ctx, tc.owners, tc.msg)
 			if len(tc.errorMsg) == 0 {
-				assert.NoError(t, err, "ValidateAllOwnersAreSigners unexpected error")
+				assert.NoError(t, err, "ValidateSignersWithoutParties unexpected error")
 			} else {
-				assert.EqualError(t, err, tc.errorMsg, "ValidateAllOwnersAreSigners error")
+				assert.EqualError(t, err, tc.errorMsg, "ValidateSignersWithoutParties error")
 			}
 		})
 	}
 }
 
-func (s *AuthzTestSuite) TestValidateAllOwnersAreSignersWithCountAuthorization() {
+func (s *AuthzTestSuite) TestValidateSignersWithoutPartiesWithCountAuthorization() {
 
 	oneAllowedAuthorizations := int32(1)
 	manyAllowedAuthorizations := int32(10)
@@ -380,7 +410,7 @@ func (s *AuthzTestSuite) TestValidateAllOwnersAreSignersWithCountAuthorization()
 			count:    manyAllowedAuthorizations,
 			granter:  s.user2Addr,
 			grantee:  s.user3Addr,
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user3),
+			errorMsg: fmt.Sprintf("missing signature: %s", s.user3),
 		},
 		{
 			name:     "Scope Spec with 3 owners - one signer with a special case message type - with grant - authz",
@@ -407,7 +437,7 @@ func (s *AuthzTestSuite) TestValidateAllOwnersAreSignersWithCountAuthorization()
 			count:    manyAllowedAuthorizations,
 			granter:  nil,
 			grantee:  nil,
-			errorMsg: fmt.Sprintf("missing signature from existing owner %s; required for update", s.user2),
+			errorMsg: fmt.Sprintf("missing signature: %s", s.user2),
 		},
 	}
 
@@ -421,11 +451,11 @@ func (s *AuthzTestSuite) TestValidateAllOwnersAreSignersWithCountAuthorization()
 				s.Require().NoError(err, "SaveGrant")
 			}
 
-			err := s.app.MetadataKeeper.ValidateAllOwnersAreSigners(s.ctx, tc.owners, tc.msg)
+			err := s.app.MetadataKeeper.ValidateSignersWithoutParties(s.ctx, tc.owners, tc.msg)
 			if len(tc.errorMsg) == 0 {
-				s.Assert().NoError(err, "validateAllOwnersAreSigners error")
+				s.Assert().NoError(err, "ValidateSignersWithoutParties error")
 			} else {
-				s.Assert().EqualError(err, tc.errorMsg, "validateAllOwnersAreSigners error")
+				s.Assert().EqualError(err, tc.errorMsg, "ValidateSignersWithoutParties error")
 			}
 
 			// validate allowedAuthorizations
@@ -469,8 +499,8 @@ func (s *AuthzTestSuite) TestValidateAllOwnersAreSignersWithCountAuthorization()
 		msg.Signers = []string{s.user3}
 
 		// Validate signatures. This should also use both count authorizations.
-		err = s.app.MetadataKeeper.ValidateAllOwnersAreSigners(s.ctx, owners, msg)
-		s.Assert().NoError(err, "ValidateAllOwnersAreSigners")
+		err = s.app.MetadataKeeper.ValidateSignersWithoutParties(s.ctx, owners, msg)
+		s.Assert().NoError(err, "ValidateSignersWithoutParties")
 
 		// first grant should be deleted because it used its last use.
 		auth, _ := s.app.AuthzKeeper.GetAuthorization(s.ctx, s.user3Addr, s.user1Addr, msgTypeUrl)
@@ -484,7 +514,7 @@ func (s *AuthzTestSuite) TestValidateAllOwnersAreSignersWithCountAuthorization()
 	})
 }
 
-func (s *AuthzTestSuite) TestValidateAllOwnerPartiesAreSigners() {
+func (s *AuthzTestSuite) TestTODELETEValidateAllPartiesAreSignersWithAuthz() {
 	// A missing signature with an authz grant on MsgAddScopeOwnerRequest
 	a := authz.NewGenericAuthorization(types.TypeURLMsgWriteScopeRequest)
 	err := s.app.AuthzKeeper.SaveGrant(s.ctx, s.user3Addr, s.user1Addr, a, nil)
@@ -613,7 +643,7 @@ func (s *AuthzTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 	// Test cases
 	for _, tc := range cases {
 		s.Run(tc.name, func() {
-			err = s.app.MetadataKeeper.ValidateAllPartiesAreSignersWithAuthz(s.ctx, tc.owners, tc.msg)
+			err = s.app.MetadataKeeper.TODELETEValidateAllPartiesAreSignersWithAuthz(s.ctx, tc.owners, tc.msg)
 			if len(tc.errorMsg) == 0 {
 				s.Assert().NoError(err, "ValidateAllPartiesAreSignersWithAuthz")
 			} else {
@@ -623,7 +653,7 @@ func (s *AuthzTestSuite) TestValidateAllOwnerPartiesAreSigners() {
 	}
 }
 
-func (s *AuthzTestSuite) TestValidateAllOwnerPartiesAreSignersWithCountAuthorization() {
+func (s *AuthzTestSuite) TestTODELETEValidateAllPartiesAreSignersWithAuthzWithCountAuthorization() {
 
 	oneAllowedAuthorizations := int32(1)
 	manyAllowedAuthorizations := int32(10)
@@ -697,7 +727,7 @@ func (s *AuthzTestSuite) TestValidateAllOwnerPartiesAreSignersWithCountAuthoriza
 				s.Require().NoError(err, "SaveGrant")
 			}
 
-			err := s.app.MetadataKeeper.ValidateAllPartiesAreSignersWithAuthz(s.ctx, tc.owners, tc.msg)
+			err := s.app.MetadataKeeper.TODELETEValidateAllPartiesAreSignersWithAuthz(s.ctx, tc.owners, tc.msg)
 			if len(tc.errorMsg) == 0 {
 				s.Assert().NoError(err, "ValidateAllPartiesAreSignersWithAuthz error")
 			} else {
@@ -747,7 +777,7 @@ func (s *AuthzTestSuite) TestValidateAllOwnerPartiesAreSignersWithCountAuthoriza
 		msg.Signers = []string{s.user3}
 
 		// validate signatures
-		err = s.app.MetadataKeeper.ValidateAllPartiesAreSignersWithAuthz(s.ctx, parties, msg)
+		err = s.app.MetadataKeeper.TODELETEValidateAllPartiesAreSignersWithAuthz(s.ctx, parties, msg)
 		s.Assert().NoError(err, "ValidateAllPartiesAreSigners")
 
 		// first grant should be deleted because it used its last use.
@@ -762,194 +792,164 @@ func (s *AuthzTestSuite) TestValidateAllOwnerPartiesAreSignersWithCountAuthoriza
 	})
 }
 
-func (s *AuthzTestSuite) TestValidatePartiesInvolved() {
-
-	cases := map[string]struct {
-		parties         []types.Party
-		requiredParties []types.PartyType
-		wantErr         bool
-		errorMsg        string
-	}{
-		"valid, matching no parties involved": {
-			parties:         []types.Party{},
-			requiredParties: []types.PartyType{},
-			wantErr:         false,
-			errorMsg:        "",
-		},
-		"invalid, parties contain no required parties": {
-			parties:         []types.Party{},
-			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE},
-			wantErr:         true,
-			errorMsg:        "missing required party type [PARTY_TYPE_AFFILIATE] from parties",
-		},
-		"invalid, missing one required party": {
-			parties:         []types.Party{{Address: "address", Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
-			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE},
-			wantErr:         true,
-			errorMsg:        "missing required party type [PARTY_TYPE_AFFILIATE] from parties",
-		},
-		"invalid, missing twp required parties": {
-			parties:         []types.Party{{Address: "address", Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
-			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE, types.PartyType_PARTY_TYPE_INVESTOR},
-			wantErr:         true,
-			errorMsg:        "missing required party types [PARTY_TYPE_AFFILIATE PARTY_TYPE_INVESTOR] from parties",
-		},
-		"valid, required parties fulfilled": {
-			parties:         []types.Party{{Address: "address", Role: types.PartyType_PARTY_TYPE_CUSTODIAN}},
-			requiredParties: []types.PartyType{types.PartyType_PARTY_TYPE_CUSTODIAN},
-			wantErr:         false,
-			errorMsg:        "",
-		},
-	}
-
-	for n, tc := range cases {
-		tc := tc
-
-		s.T().Run(n, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidatePartiesInvolved(tc.parties, tc.requiredParties)
-			if tc.wantErr {
-				assert.EqualError(t, err, tc.errorMsg)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
-func (s *AuthzTestSuite) TestFindMissing() {
-	tests := map[string]struct {
+func TestFindMissing(t *testing.T) {
+	tests := []struct {
+		name     string
 		required []string
 		entries  []string
 		expected []string
 	}{
-		"empty required - empty entries - empty out": {
-			[]string{},
-			[]string{},
-			[]string{},
+		{
+			name:     "empty required - empty entries - empty out",
+			required: []string{},
+			entries:  []string{},
+			expected: []string{},
 		},
-		"empty required - 2 entries - empty out": {
-			[]string{},
-			[]string{"one", "two"},
-			[]string{},
+		{
+			name:     "empty required - 2 entries - empty out",
+			required: []string{},
+			entries:  []string{"one", "two"},
+			expected: []string{},
 		},
-		"one required - is only entry - empty out": {
-			[]string{"one"},
-			[]string{"one"},
-			[]string{},
+		{
+			name:     "one required - is only entry - empty out",
+			required: []string{"one"},
+			entries:  []string{"one"},
+			expected: []string{},
 		},
-		"one required - is first of two entries - empty out": {
-			[]string{"one"},
-			[]string{"one", "two"},
-			[]string{},
+		{
+			name:     "one required - is first of two entries - empty out",
+			required: []string{"one"},
+			entries:  []string{"one", "two"},
+			expected: []string{},
 		},
-		"one required - is second of two entries - empty out": {
-			[]string{"one"},
-			[]string{"two", "one"},
-			[]string{},
+		{
+			name:     "one required - is second of two entries - empty out",
+			required: []string{"one"},
+			entries:  []string{"two", "one"},
+			expected: []string{},
 		},
-		"one required - empty entries - required out": {
-			[]string{"one"},
-			[]string{},
-			[]string{"one"},
+		{
+			name:     "one required - empty entries - required out",
+			required: []string{"one"},
+			entries:  []string{},
+			expected: []string{"one"},
 		},
-		"one required - one other in entries - required out": {
-			[]string{"one"},
-			[]string{"two"},
-			[]string{"one"},
+		{
+			name:     "one required - one other in entries - required out",
+			required: []string{"one"},
+			entries:  []string{"two"},
+			expected: []string{"one"},
 		},
-		"one required - two other in entries - required out": {
-			[]string{"one"},
-			[]string{"two", "three"},
-			[]string{"one"},
+		{
+			name:     "one required - two other in entries - required out",
+			required: []string{"one"},
+			entries:  []string{"two", "three"},
+			expected: []string{"one"},
 		},
-		"two required - both in entries - empty out": {
-			[]string{"one", "two"},
-			[]string{"one", "two"},
-			[]string{},
+		{
+			name:     "two required - both in entries - empty out",
+			required: []string{"one", "two"},
+			entries:  []string{"one", "two"},
+			expected: []string{},
 		},
-		"two required - reversed in entries - empty out": {
-			[]string{"one", "two"},
-			[]string{"two", "one"},
-			[]string{},
+		{
+			name:     "two required - reversed in entries - empty out",
+			required: []string{"one", "two"},
+			entries:  []string{"two", "one"},
+			expected: []string{},
 		},
-		"two required - only first in entries - second out": {
-			[]string{"one", "two"},
-			[]string{"one"},
-			[]string{"two"},
+		{
+			name:     "two required - only first in entries - second out",
+			required: []string{"one", "two"},
+			entries:  []string{"one"},
+			expected: []string{"two"},
 		},
-		"two required - only second in entries - first out": {
-			[]string{"one", "two"},
-			[]string{"two"},
-			[]string{"one"},
+		{
+			name:     "two required - only second in entries - first out",
+			required: []string{"one", "two"},
+			entries:  []string{"two"},
+			expected: []string{"one"},
 		},
-		"two required - first and other in entries - second out": {
-			[]string{"one", "two"},
-			[]string{"one", "other"},
-			[]string{"two"},
+		{
+			name:     "two required - first and other in entries - second out",
+			required: []string{"one", "two"},
+			entries:  []string{"one", "other"},
+			expected: []string{"two"},
 		},
-		"two required - second and other in entries - first out": {
-			[]string{"one", "two"},
-			[]string{"two", "other"},
-			[]string{"one"},
+		{
+			name:     "two required - second and other in entries - first out",
+			required: []string{"one", "two"},
+			entries:  []string{"two", "other"},
+			expected: []string{"one"},
 		},
-		"two required - empty entries - required out": {
-			[]string{"one", "two"},
-			[]string{},
-			[]string{"one", "two"},
+		{
+			name:     "two required - empty entries - required out",
+			required: []string{"one", "two"},
+			entries:  []string{},
+			expected: []string{"one", "two"},
 		},
-		"two required - neither in one entries - required out": {
-			[]string{"one", "two"},
-			[]string{"neither"},
-			[]string{"one", "two"},
+		{
+			name:     "two required - neither in one entries - required out",
+			required: []string{"one", "two"},
+			entries:  []string{"neither"},
+			expected: []string{"one", "two"},
 		},
-		"two required - neither in three entries - required out": {
-			[]string{"one", "two"},
-			[]string{"neither", "nor", "nothing"},
-			[]string{"one", "two"},
+		{
+			name:     "two required - neither in three entries - required out",
+			required: []string{"one", "two"},
+			entries:  []string{"neither", "nor", "nothing"},
+			expected: []string{"one", "two"},
 		},
-		"two required - first not in three entries 0 - first out": {
-			[]string{"one", "two"},
-			[]string{"two", "nor", "nothing"},
-			[]string{"one"},
+		{
+			name:     "two required - first not in three entries 0 - first out",
+			required: []string{"one", "two"},
+			entries:  []string{"two", "nor", "nothing"},
+			expected: []string{"one"},
 		},
-		"two required - first not in three entries 1 - first out": {
-			[]string{"one", "two"},
-			[]string{"neither", "two", "nothing"},
-			[]string{"one"},
+		{
+			name:     "two required - first not in three entries 1 - first out",
+			required: []string{"one", "two"},
+			entries:  []string{"neither", "two", "nothing"},
+			expected: []string{"one"},
 		},
-		"two required - first not in three entries 2 - first out": {
-			[]string{"one", "two"},
-			[]string{"neither", "nor", "two"},
-			[]string{"one"},
+		{
+			name:     "two required - first not in three entries 2 - first out",
+			required: []string{"one", "two"},
+			entries:  []string{"neither", "nor", "two"},
+			expected: []string{"one"},
 		},
-		"two required - second not in three entries 0 - second out": {
-			[]string{"one", "two"},
-			[]string{"one", "nor", "nothing"},
-			[]string{"two"},
+		{
+			name:     "two required - second not in three entries 0 - second out",
+			required: []string{"one", "two"},
+			entries:  []string{"one", "nor", "nothing"},
+			expected: []string{"two"},
 		},
-		"two required - second not in three entries 1 - second out": {
-			[]string{"one", "two"},
-			[]string{"neither", "one", "nothing"},
-			[]string{"two"},
+		{
+			name:     "two required - second not in three entries 1 - second out",
+			required: []string{"one", "two"},
+			entries:  []string{"neither", "one", "nothing"},
+			expected: []string{"two"},
 		},
-		"two required - second not in three entries 2 - second out": {
-			[]string{"one", "two"},
-			[]string{"neither", "nor", "one"},
-			[]string{"two"},
+		{
+			name:     "two required - second not in three entries 2 - second out",
+			required: []string{"one", "two"},
+			entries:  []string{"neither", "nor", "one"},
+			expected: []string{"two"},
 		},
 	}
 
-	for n, tc := range tests {
-		s.T().Run(n, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			actual := keeper.FindMissing(tc.required, tc.entries)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }
 
-func (s *AuthzTestSuite) TestIsMarkerAndHasAuthority_IsMarker() {
+func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 	markerAddr := markertypes.MustGetMarkerAddress("testcoin").String()
-	err := s.app.MarkerKeeper.AddMarkerAccount(s.ctx, &markertypes.MarkerAccount{
+	marker := markertypes.MarkerAccount{
 		BaseAccount: &authtypes.BaseAccount{
 			Address:       markerAddr,
 			AccountNumber: 23,
@@ -959,110 +959,148 @@ func (s *AuthzTestSuite) TestIsMarkerAndHasAuthority_IsMarker() {
 				Address:     s.user1,
 				Permissions: markertypes.AccessListByNames("deposit,withdraw"),
 			},
-		},
-		Denom:      "testcoin",
-		Supply:     sdk.NewInt(1000),
-		MarkerType: markertypes.MarkerType_Coin,
-		Status:     markertypes.StatusActive,
-	})
-	s.Require().NoError(err, "AddMarkerAccount")
-	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
-
-	tests := []struct {
-		name     string
-		addr     string
-		expected bool
-	}{
-		{name: "is a marker", addr: markerAddr, expected: true},
-		{name: "exists but is a user not a marker", addr: s.user1, expected: false},
-		{name: "does not exist", addr: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", expected: false},
-		{name: "invalid address", addr: "invalid", expected: false},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			isMarker, _ := s.app.MetadataKeeper.IsMarkerAndHasAuthority(s.ctx, tc.addr, []string{}, markertypes.Access_Unknown)
-			s.Assert().Equal(tc.expected, isMarker, "IsMarkerAndHasAuthority first result bool")
-		})
-	}
-}
-
-func (s *AuthzTestSuite) TestIsMarkerAndHasAuthority_HasAuth() {
-	markerAddr := markertypes.MustGetMarkerAddress("testcoin").String()
-	err := s.app.MarkerKeeper.AddMarkerAccount(s.ctx, &markertypes.MarkerAccount{
-		BaseAccount: &authtypes.BaseAccount{
-			Address:       markerAddr,
-			AccountNumber: 23,
-		},
-		AccessControl: []markertypes.AccessGrant{
 			{
-				Address:     s.user1,
-				Permissions: markertypes.AccessListByNames("deposit,withdraw"),
+				Address:     s.user2,
+				Permissions: markertypes.AccessListByNames("burn,mint"),
 			},
 		},
 		Denom:      "testcoin",
 		Supply:     sdk.NewInt(1000),
 		MarkerType: markertypes.MarkerType_Coin,
 		Status:     markertypes.StatusActive,
-	})
-	s.Require().NoError(err, "AddMarkerAccount")
-	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+	}
+	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, &marker), "AddMarkerAccount")
+	// s.user1 has an account created in TestSetup.
 
 	tests := []struct {
-		name     string
-		addr     string
-		signers  []string
-		role     markertypes.Access
-		expected bool
+		name      string
+		addr      string
+		signers   []string
+		role      markertypes.Access
+		expMarker markertypes.MarkerAccountI
+		expHasAcc bool
 	}{
+		{name: "invalid address", addr: "invalid", expMarker: nil},
+		{name: "account does not exist", addr: sdk.AccAddress("does-not-exist").String(), expMarker: nil},
+		{name: "account exists but is not marker", addr: s.user1, expMarker: nil},
 		{
-			name:     "invalid value owner",
-			addr:     "invalid",
-			signers:  []string{s.user1},
-			role:     markertypes.Access_Deposit,
-			expected: false,
+			name:      "is marker does not have signer",
+			addr:      markerAddr,
+			signers:   []string{s.user3},
+			expMarker: &marker,
+			expHasAcc: false,
 		},
 		{
-			name:     "value owner does not exist",
-			addr:     "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
-			signers:  []string{s.user1},
-			role:     markertypes.Access_Deposit,
-			expected: false,
+			name:      "is marker with signer 1 but not role",
+			addr:      markerAddr,
+			signers:   []string{s.user1},
+			role:      markertypes.Access_Transfer,
+			expMarker: &marker,
+			expHasAcc: false,
 		},
 		{
-			name:     "addr is not a marker",
-			addr:     s.user1,
-			signers:  []string{s.user1},
-			role:     markertypes.Access_Deposit,
-			expected: false,
+			name:      "is marker with signer 1 with role other user has",
+			addr:      markerAddr,
+			signers:   []string{s.user1},
+			role:      markertypes.Access_Burn,
+			expMarker: &marker,
+			expHasAcc: false,
 		},
 		{
-			name:     "user has access",
-			addr:     markerAddr,
-			signers:  []string{s.user1},
-			role:     markertypes.Access_Deposit,
-			expected: true,
+			name:      "is marker with signer 1 and role 1",
+			addr:      markerAddr,
+			signers:   []string{s.user1},
+			role:      markertypes.Access_Deposit,
+			expMarker: &marker,
+			expHasAcc: true,
 		},
 		{
-			name:     "user has access even with invalid signer",
-			addr:     markerAddr,
-			signers:  []string{"invalidaddress", s.user1},
-			role:     markertypes.Access_Deposit,
-			expected: true,
+			name:      "is marker with signer 1 and role 2",
+			addr:      markerAddr,
+			signers:   []string{s.user1},
+			role:      markertypes.Access_Withdraw,
+			expMarker: &marker,
+			expHasAcc: true,
 		},
 		{
-			name:     "user does not have this access",
-			addr:     markerAddr,
-			signers:  []string{s.user1},
-			role:     markertypes.Access_Burn,
-			expected: false,
+			name:      "is marker with signer 2 but not role",
+			addr:      markerAddr,
+			signers:   []string{s.user2},
+			role:      markertypes.Access_Transfer,
+			expMarker: &marker,
+			expHasAcc: false,
+		},
+		{
+			name:      "is marker with signer 2 with role other user has",
+			addr:      markerAddr,
+			signers:   []string{s.user2},
+			role:      markertypes.Access_Deposit,
+			expMarker: &marker,
+			expHasAcc: false,
+		},
+		{
+			name:      "is marker with signer 2 and role 1",
+			addr:      markerAddr,
+			signers:   []string{s.user2},
+			role:      markertypes.Access_Burn,
+			expMarker: &marker,
+			expHasAcc: true,
+		},
+		{
+			name:      "is marker with signer 2 and role 2",
+			addr:      markerAddr,
+			signers:   []string{s.user2},
+			role:      markertypes.Access_Mint,
+			expMarker: &marker,
+			expHasAcc: true,
+		},
+		{
+			name:      "is marker both signers role from first",
+			addr:      markerAddr,
+			signers:   []string{s.user1, s.user2},
+			role:      markertypes.Access_Withdraw,
+			expMarker: &marker,
+			expHasAcc: true,
+		},
+		{
+			name:      "is marker both signers role from second",
+			addr:      markerAddr,
+			signers:   []string{s.user1, s.user2},
+			role:      markertypes.Access_Mint,
+			expMarker: &marker,
+			expHasAcc: true,
+		},
+		{
+			name:      "is marker both signers neither have role",
+			addr:      markerAddr,
+			signers:   []string{s.user1, s.user2},
+			role:      markertypes.Access_Transfer,
+			expMarker: &marker,
+			expHasAcc: false,
+		},
+		{
+			name:      "is marker two signers first has role",
+			addr:      markerAddr,
+			signers:   []string{s.user1, s.user3},
+			role:      markertypes.Access_Withdraw,
+			expMarker: &marker,
+			expHasAcc: true,
+		},
+		{
+			name:      "is marker two signers second has role",
+			addr:      markerAddr,
+			signers:   []string{s.user3, s.user2},
+			role:      markertypes.Access_Burn,
+			expMarker: &marker,
+			expHasAcc: true,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			_, hasAuth := s.app.MetadataKeeper.IsMarkerAndHasAuthority(s.ctx, tc.addr, tc.signers, tc.role)
-			s.Assert().Equal(tc.expected, hasAuth, "IsMarkerAndHasAuthority second result bool")
+			actualMarker, actualHasAcc := s.app.MetadataKeeper.GetMarkerAndCheckAuthority(s.ctx, tc.addr, tc.signers, tc.role)
+			s.Assert().Equal(tc.expMarker, actualMarker, "GetMarkerAndCheckAuthority marker")
+			s.Assert().Equal(tc.expHasAcc, actualHasAcc, "GetMarkerAndCheckAuthority has access")
 		})
 	}
 }

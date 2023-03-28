@@ -220,15 +220,8 @@ func (s *ScopeTestSuite) TestScopeAddOwners() {
 			"should successfully update owner address with new role",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{}, ""),
 			[]Party{user1Investor},
-			[]Party{user1Investor},
+			[]Party{user1Owner, user1Investor},
 			"",
-		},
-		{
-			"should fail to add same new owner twice",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
-			[]Party{user1Investor, user1Investor},
-			[]Party{user1Investor},
-			"party already exists with address cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck and role PARTY_TYPE_INVESTOR",
 		},
 		{
 			"should fail to add duplicate owner",
@@ -261,7 +254,7 @@ func (s *ScopeTestSuite) TestScopeAddOwners() {
 			} else {
 				require.NoError(t, err, "AddOwners unexpected error")
 			}
-			require.Equal(t, tc.scope.Owners, tc.expected, "new scope owners value")
+			require.Equal(t, tc.expected, tc.scope.Owners, "new scope owners value")
 		})
 	}
 }
@@ -327,6 +320,7 @@ specification_id: scopespec1qnp9c775ccu5xeaggtmylf0uesvsqyrkq8
 owners:
 - address: cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
   role: 5
+  optional: false
 data_access: []
 value_owner_address: ""
 `,
@@ -614,6 +608,7 @@ specification_id: %s
 parties:
 - address: cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
   role: 6
+  optional: false
 type: name
 context: []
 audit:
@@ -661,68 +656,86 @@ func (s *ScopeTestSuite) TestEqualParties() {
 		},
 		{
 			name:     "one party in each that is equal",
-			p1:       []Party{{"abc", 3}},
-			p2:       []Party{{"abc", 3}},
+			p1:       []Party{{Address: "abc", Role: 3}},
+			p2:       []Party{{Address: "abc", Role: 3}},
 			expected: true,
 		},
 		{
 			name:     "one party in each different addresses",
-			p1:       []Party{{"abc", 3}},
-			p2:       []Party{{"abcd", 3}},
+			p1:       []Party{{Address: "abc", Role: 3}},
+			p2:       []Party{{Address: "abcd", Role: 3}},
 			expected: false,
 		},
 		{
 			name:     "one party in each different roles",
-			p1:       []Party{{"abc", 3}},
-			p2:       []Party{{"abc", 4}},
+			p1:       []Party{{Address: "abc", Role: 3}},
+			p2:       []Party{{Address: "abc", Role: 4}},
 			expected: false,
 		},
 		{
 			name:     "both have 3 equal elements in same order",
-			p1:       []Party{{"abc", 3}, {"def", 4}, {"ghi", 5}},
-			p2:       []Party{{"abc", 3}, {"def", 4}, {"ghi", 5}},
+			p1:       []Party{{Address: "abc", Role: 3}, {Address: "def", Role: 4}, {Address: "ghi", Role: 5}},
+			p2:       []Party{{Address: "abc", Role: 3}, {Address: "def", Role: 4}, {Address: "ghi", Role: 5}},
 			expected: true,
 		},
 		{
 			name:     "both have 3 equal elements in different order",
-			p1:       []Party{{"abc", 3}, {"def", 4}, {"ghi", 5}},
-			p2:       []Party{{"def", 4}, {"ghi", 5}, {"abc", 3}},
+			p1:       []Party{{Address: "abc", Role: 3}, {Address: "def", Role: 4}, {Address: "ghi", Role: 5}},
+			p2:       []Party{{Address: "def", Role: 4}, {Address: "ghi", Role: 5}, {Address: "abc", Role: 3}},
 			expected: true,
 		},
 		{
 			name:     "one missing from p1",
-			p1:       []Party{{"abc", 3}, {"ghi", 5}},
-			p2:       []Party{{"abc", 3}, {"def", 4}, {"ghi", 5}},
+			p1:       []Party{{Address: "abc", Role: 3}, {Address: "ghi", Role: 5}},
+			p2:       []Party{{Address: "abc", Role: 3}, {Address: "def", Role: 4}, {Address: "ghi", Role: 5}},
 			expected: false,
 		},
 		{
 			name:     "one missing from p2",
-			p1:       []Party{{"abc", 3}, {"def", 4}, {"ghi", 5}},
-			p2:       []Party{{"abc", 3}, {"ghi", 5}},
+			p1:       []Party{{Address: "abc", Role: 3}, {Address: "def", Role: 4}, {Address: "ghi", Role: 5}},
+			p2:       []Party{{Address: "abc", Role: 3}, {Address: "ghi", Role: 5}},
 			expected: false,
 		},
 		{
 			name:     "two equal parties reverse order",
-			p1:       []Party{{"aaa", 3}, {"bbb", 5}},
-			p2:       []Party{{"bbb", 5}, {"aaa", 3}},
+			p1:       []Party{{Address: "aaa", Role: 3}, {Address: "bbb", Role: 5}},
+			p2:       []Party{{Address: "bbb", Role: 5}, {Address: "aaa", Role: 3}},
 			expected: true,
 		},
 		{
 			name:     "three equal parties random order",
-			p1:       []Party{{"aaa", 3}, {"bbb", 5}, {"ccc", 4}},
-			p2:       []Party{{"bbb", 5}, {"ccc", 4}, {"aaa", 3}},
+			p1:       []Party{{Address: "aaa", Role: 3}, {Address: "bbb", Role: 5}, {Address: "ccc", Role: 4}},
+			p2:       []Party{{Address: "bbb", Role: 5}, {Address: "ccc", Role: 4}, {Address: "aaa", Role: 3}},
 			expected: true,
 		},
 		{
 			name:     "1 equal and 1 diff addr",
-			p1:       []Party{{"aaa", 3}, {"bba", 4}},
-			p2:       []Party{{"aaa", 3}, {"bbb", 4}},
+			p1:       []Party{{Address: "aaa", Role: 3}, {Address: "bba", Role: 4}},
+			p2:       []Party{{Address: "aaa", Role: 3}, {Address: "bbb", Role: 4}},
 			expected: false,
 		},
 		{
 			name:     "1 equal and 1 diff role",
-			p1:       []Party{{"aaa", 3}, {"bbb", 3}},
-			p2:       []Party{{"aaa", 4}, {"bbb", 3}},
+			p1:       []Party{{Address: "aaa", Role: 3}, {Address: "bbb", Role: 3}},
+			p2:       []Party{{Address: "aaa", Role: 4}, {Address: "bbb", Role: 3}},
+			expected: false,
+		},
+		{
+			name:     "one party different optional",
+			p1:       []Party{{Address: "AAA", Role: 1, Optional: true}},
+			p2:       []Party{{Address: "AAA", Role: 1, Optional: false}},
+			expected: false,
+		},
+		{
+			name:     "two parties first with different optional",
+			p1:       []Party{{Address: "AAA", Role: 1, Optional: true}, {Address: "BBB", Role: 2, Optional: true}},
+			p2:       []Party{{Address: "AAA", Role: 1, Optional: false}, {Address: "BBB", Role: 2, Optional: true}},
+			expected: false,
+		},
+		{
+			name:     "two parties second with different optional",
+			p1:       []Party{{Address: "AAA", Role: 1, Optional: true}, {Address: "BBB", Role: 2, Optional: false}},
+			p2:       []Party{{Address: "AAA", Role: 1, Optional: true}, {Address: "BBB", Role: 2, Optional: true}},
 			expected: false,
 		},
 	}
@@ -737,6 +750,58 @@ func (s *ScopeTestSuite) TestEqualParties() {
 			assert.Equal(t, tc.expected, actual, "result")
 			assert.Equal(t, op1, tc.p1, "p1")
 			assert.Equal(t, op2, tc.p2, "p2")
+		})
+	}
+}
+
+func (s *ScopeTestSuite) TestParty_Equals() {
+	tests := []struct {
+		name string
+		p1   Party
+		p2   Party
+		exp  bool
+	}{
+		{name: "different addresses", p1: Party{Address: "123"}, p2: Party{Address: "456"}, exp: false},
+		{name: "different roles", p1: Party{Role: 1}, p2: Party{Role: 2}, exp: false},
+		{name: "different optional", p1: Party{Optional: true}, p2: Party{Optional: false}, exp: false},
+		{
+			name: "all same",
+			p1:   Party{Address: "1", Role: 1, Optional: true},
+			p2:   Party{Address: "1", Role: 1, Optional: true},
+			exp:  true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			actual := tc.p1.Equals(tc.p2)
+			s.Assert().Equal(tc.exp, actual, "%v.Equals(%v)", tc.p1, tc.p2)
+		})
+	}
+}
+
+func (s *ScopeTestSuite) TestParty_IsSameAs() {
+	tests := []struct {
+		name string
+		p1   Party
+		p2   Party
+		exp  bool
+	}{
+		{name: "different addresses", p1: Party{Address: "123"}, p2: Party{Address: "456"}, exp: false},
+		{name: "different roles", p1: Party{Role: 1}, p2: Party{Role: 2}, exp: false},
+		{name: "different optional", p1: Party{Optional: true}, p2: Party{Optional: false}, exp: true},
+		{
+			name: "all same",
+			p1:   Party{Address: "1", Role: 1, Optional: true},
+			p2:   Party{Address: "1", Role: 1, Optional: true},
+			exp:  true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			actual := tc.p1.IsSameAs(tc.p2)
+			s.Assert().Equal(tc.exp, actual, "%v.IsSameAs(%v)", tc.p1, tc.p2)
 		})
 	}
 }

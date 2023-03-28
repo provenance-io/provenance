@@ -7,7 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -276,12 +275,9 @@ func (k Keeper) ValidateWriteScope(
 	if !found {
 		return fmt.Errorf("scope specification %s not found", proposed.SpecificationId)
 	}
-	if err := k.ValidateScopeOwners(proposed.Owners, scopeSpec); err != nil {
-		return err
-	}
 
-	var validatedParties []types.Party
 	var existingValueOwner string
+	var validatedParties []*PartyDetails
 
 	if existing != nil {
 		// Existing owners are not required to sign when the ONLY change is from one value owner to another.
@@ -292,15 +288,16 @@ func (k Keeper) ValidateWriteScope(
 			proposedCopy.ValueOwnerAddress = existing.ValueOwnerAddress
 		}
 		if !existing.Equals(proposedCopy) {
-			if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, msg); err != nil {
+			var err error
+			validatedParties, err = k.ValidateSignersWithParties(ctx, existing.Owners, proposed.Owners, scopeSpec.PartiesInvolved, msg)
+			if err != nil {
 				return err
 			}
-			validatedParties = existing.Owners
 		}
 		existingValueOwner = existing.ValueOwnerAddress
 	}
 
-	if err := k.validateScopeUpdateValueOwner(ctx, existingValueOwner, proposed.ValueOwnerAddress, validatedParties, msg); err != nil {
+	if err := k.ValidateScopeValueOwnerUpdate(ctx, existingValueOwner, proposed.ValueOwnerAddress, validatedParties, msg); err != nil {
 		return err
 	}
 
@@ -309,78 +306,26 @@ func (k Keeper) ValidateWriteScope(
 
 // ValidateDeleteScope checks the current scope and the proposed removal scope to determine if the proposed remove is valid
 // based on the existing state
-func (k Keeper) ValidateDeleteScope(ctx sdk.Context, scope types.Scope, msg types.MetadataMsg) error {
-	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, scope.Owners, msg); err != nil {
+func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRequest) error {
+	scope, found := k.GetScope(ctx, msg.ScopeId)
+	if !found {
+		return fmt.Errorf("scope not found with id %s", msg.ScopeId)
+	}
+
+	var reqRoles []types.PartyType
+	scopeSpec, found := k.GetScopeSpecification(ctx, scope.SpecificationId)
+	if found {
+		reqRoles = scopeSpec.PartiesInvolved
+	}
+	parties, err := k.ValidateSignersWithParties(ctx, scope.Owners, scope.Owners, reqRoles, msg)
+	if err != nil {
 		return err
 	}
 
-	if err := k.validateScopeUpdateValueOwner(ctx, scope.ValueOwnerAddress, "", scope.Owners, msg); err != nil {
+	if err = k.ValidateScopeValueOwnerUpdate(ctx, scope.ValueOwnerAddress, "", parties, msg); err != nil {
 		return err
 	}
 
-	return nil
-}
-
-func (k Keeper) validateScopeUpdateValueOwner(
-	ctx sdk.Context,
-	existing,
-	proposed string,
-	validatedParties []types.Party,
-	msg types.MetadataMsg,
-) error {
-	// If they're the same, we don't need to do anything.
-	if existing == proposed {
-		return nil
-	}
-	signers := msg.GetSignerStrs()
-	if len(existing) > 0 {
-		isMarker, hasAuth := k.IsMarkerAndHasAuthority(ctx, existing, signers, markertypes.Access_Withdraw)
-		if isMarker {
-			// If the existing is a marker, make sure a signer has withdraw authority on it.
-			if !hasAuth {
-				return fmt.Errorf("missing signature for %s with authority to withdraw/remove existing value owner", existing)
-			}
-		} else {
-			// If the existing isn't a marker, make sure they're one of the signers.
-			// Not using validateAllOwnersAreSigners here because we want a slightly different error message.
-			// Not using ValidateAllPartiesAreSignersWithAuthz here because of the error message and also it wants parties.
-			found := false
-			for _, party := range validatedParties {
-				if existing == party.Address {
-					found = true
-					break
-				}
-			}
-			if !found {
-				for _, signer := range signers {
-					if existing == signer {
-						found = true
-						break
-					}
-				}
-			}
-			if !found {
-				stillMissing, err := k.checkAuthzForMissing(ctx, []string{existing}, msg)
-				if err != nil {
-					return fmt.Errorf("error validating signers: %w", err)
-				}
-				if len(stillMissing) == 0 {
-					found = true
-				}
-			}
-			if !found {
-				return fmt.Errorf("missing signature from existing value owner %s", existing)
-			}
-		}
-	}
-	if len(proposed) > 0 {
-		isMarker, hasAuth := k.IsMarkerAndHasAuthority(ctx, proposed, signers, markertypes.Access_Deposit)
-		// If the proposed is a marker, make sure a signer has deposit authority on it.
-		if isMarker && !hasAuth {
-			return fmt.Errorf("no signatures present with authority to add scope to marker %s", proposed)
-		}
-		// If it's not a marker, we don't really care what it's being set to.
-	}
 	return nil
 }
 
@@ -406,10 +351,8 @@ func (k Keeper) ValidateAddScopeDataAccess(
 		}
 	}
 
-	if err := k.ValidateSignersWithParties(ctx, nil, existing.Owners, nil, msg); err != nil {
-		return err
-	}
-	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, msg); err != nil {
+	// Since the owners aren't changing, assume all spec roles are fulfilled.
+	if _, err := k.ValidateSignersWithParties(ctx, existing.Owners, nil, nil, msg); err != nil {
 		return err
 	}
 
@@ -442,7 +385,7 @@ func (k Keeper) ValidateDeleteScopeDataAccess(
 		}
 	}
 
-	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, msg); err != nil {
+	if _, err := k.ValidateSignersWithParties(ctx, existing.Owners, nil, nil, msg); err != nil {
 		return err
 	}
 
@@ -464,10 +407,8 @@ func (k Keeper) ValidateUpdateScopeOwners(
 	if !found {
 		return fmt.Errorf("scope specification %s not found", proposed.SpecificationId)
 	}
-	if err := k.ValidateScopeOwners(proposed.Owners, scopeSpec); err != nil {
-		return err
-	}
-	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, msg); err != nil {
+
+	if _, err := k.ValidateSignersWithParties(ctx, existing.Owners, proposed.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
 		return err
 	}
 	return nil

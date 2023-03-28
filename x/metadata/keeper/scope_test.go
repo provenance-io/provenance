@@ -58,7 +58,9 @@ func (s *ScopeKeeperTestSuite) SetupTest() {
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
-	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+	user1Acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr)
+	s.Require().NoError(user1Acc.SetPubKey(s.pubkey1), "SetPubKey user1")
+	s.app.AccountKeeper.SetAccount(s.ctx, user1Acc)
 
 	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
@@ -398,7 +400,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 	}
 }
 
-func (s *ScopeKeeperTestSuite) TestValidateScopeRemove() {
+func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 	markerDenom := "testcoins2"
 	markerAddr := markertypes.MustGetMarkerAddress(markerDenom).String()
 	err := s.app.MarkerKeeper.AddMarkerAccount(s.ctx, &markertypes.MarkerAccount{
@@ -426,6 +428,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeRemove() {
 		DataAccess:        nil,
 		ValueOwnerAddress: "",
 	}
+	s.app.MetadataKeeper.SetScope(s.ctx, scopeNoValueOwner)
 
 	scopeMarkerValueOwner := types.Scope{
 		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
@@ -434,6 +437,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeRemove() {
 		DataAccess:        nil,
 		ValueOwnerAddress: markerAddr,
 	}
+	s.app.MetadataKeeper.SetScope(s.ctx, scopeMarkerValueOwner)
 
 	scopeUserValueOwner := types.Scope{
 		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
@@ -442,13 +446,16 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeRemove() {
 		DataAccess:        nil,
 		ValueOwnerAddress: s.user1,
 	}
+	s.app.MetadataKeeper.SetScope(s.ctx, scopeUserValueOwner)
+
+	dneScopeID := types.ScopeMetadataAddress(uuid.New())
 
 	missing1Sig := func(addr string) string {
-		return fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", addr)
+		return fmt.Sprintf("missing required signature: %s (OWNER)", addr)
 	}
 
 	missing2Sigs := func(addr1, addr2 string) string {
-		return fmt.Sprintf("missing signatures from [%s (PARTY_TYPE_OWNER) %s (PARTY_TYPE_OWNER)]", addr1, addr2)
+		return fmt.Sprintf("missing required signatures: %s (OWNER), %s (OWNER)", addr1, addr2)
 	}
 
 	tests := []struct {
@@ -521,7 +528,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeRemove() {
 			name:     "marker value owner not signed by user with auth",
 			scope:    scopeMarkerValueOwner,
 			signers:  []string{s.user2},
-			expected: fmt.Sprintf("missing signature for %s with authority to withdraw/remove existing value owner", markerAddr),
+			expected: fmt.Sprintf("missing signature for %s (testcoins2) with authority to withdraw/remove it as scope value owner", markerAddr),
 		},
 		{
 			name:     "user value owner signed by owner and value owner",
@@ -547,12 +554,21 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeRemove() {
 			signers:  []string{s.user2},
 			expected: fmt.Sprintf("missing signature from existing value owner %s", s.user1),
 		},
+		{
+			name:     "scope does not exist",
+			scope:    types.Scope{ScopeId: dneScopeID},
+			signers:  []string{},
+			expected: fmt.Sprintf("scope not found with id %s", dneScopeID),
+		},
 	}
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			msg := &types.MsgDeleteScopeRequest{Signers: tc.signers}
-			actual := s.app.MetadataKeeper.ValidateDeleteScope(s.ctx, tc.scope, msg)
+			msg := &types.MsgDeleteScopeRequest{
+				ScopeId: tc.scope.ScopeId,
+				Signers: tc.signers,
+			}
+			actual := s.app.MetadataKeeper.ValidateDeleteScope(s.ctx, msg)
 			if len(tc.expected) > 0 {
 				require.EqualError(t, actual, tc.expected)
 			} else {
@@ -595,7 +611,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeAddDataAccess() {
 			existing:        scope,
 			signers:         []string{s.user2},
 			wantErr:         true,
-			errorMsg:        fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
+			errorMsg:        fmt.Sprintf("missing required signature: %s (OWNER)", s.user1),
 		},
 		{
 			name:            "should fail to validate add scope data access, incorrect address type",

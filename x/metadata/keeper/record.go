@@ -7,7 +7,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -179,9 +178,9 @@ func (k Keeper) ValidateWriteRecord(
 			recSpecID, session.SpecificationId, proposed.Name)
 	}
 
-	// Make sure all the session parties have signed.
+	// Make sure everyone has signed.
 	reqParties = append(reqParties, scope.Owners...)
-	if err := k.ValidateSignersWithParties(ctx, reqParties, session.Parties, recSpec.ResponsibleParties, msg); err != nil {
+	if _, err = k.ValidateSignersWithParties(ctx, reqParties, session.Parties, recSpec.ResponsibleParties, msg); err != nil {
 		return err
 	}
 
@@ -308,7 +307,9 @@ func (k Keeper) ValidateDeleteRecord(ctx sdk.Context, proposedID types.MetadataA
 			reqRoles = recordSpec.ResponsibleParties
 		}
 	}
-	if err := k.ValidateSignersWithParties(ctx, scopeOwners, sessionParties, reqRoles, msg); err != nil {
+
+	reqParties := types.ConcatParties(scopeOwners, sessionParties)
+	if _, err := k.ValidateSignersWithParties(ctx, reqParties, sessionParties, reqRoles, msg); err != nil {
 		return err
 	}
 	return nil

@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -57,15 +56,7 @@ func (k msgServer) DeleteScope(
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScope")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if len(msg.ScopeId) == 0 {
-		return nil, errors.New("scope id cannot be empty")
-	}
-	existing, found := k.GetScope(ctx, msg.ScopeId)
-	if !found {
-		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
-	}
-
-	if err := k.ValidateDeleteScope(ctx, existing, msg); err != nil {
+	if err := k.ValidateDeleteScope(ctx, msg); err != nil {
 		return nil, err
 	}
 
@@ -282,7 +273,7 @@ func (k msgServer) WriteScopeSpecification(
 	var existing *types.ScopeSpecification
 	if e, found := k.GetScopeSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
-		if err := k.validateAllOwnersAreSigners(ctx, existing.OwnerAddresses, msg); err != nil {
+		if err := k.ValidateSignersWithoutParties(ctx, existing.OwnerAddresses, msg); err != nil {
 			return nil, err
 		}
 	}
@@ -307,7 +298,7 @@ func (k msgServer) DeleteScopeSpecification(
 	if !found {
 		return nil, fmt.Errorf("scope specification not found with id %s", msg.SpecificationId)
 	}
-	if err := k.validateAllOwnersAreSigners(ctx, existing.OwnerAddresses, msg); err != nil {
+	if err := k.ValidateSignersWithoutParties(ctx, existing.OwnerAddresses, msg); err != nil {
 		return nil, err
 	}
 
@@ -332,7 +323,7 @@ func (k msgServer) WriteContractSpecification(
 	var existing *types.ContractSpecification
 	if e, found := k.GetContractSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
-		if err := k.validateAllOwnersAreSigners(ctx, existing.OwnerAddresses, msg); err != nil {
+		if err := k.ValidateSignersWithoutParties(ctx, existing.OwnerAddresses, msg); err != nil {
 			return nil, err
 		}
 	}
@@ -357,7 +348,7 @@ func (k msgServer) DeleteContractSpecification(
 	if !found {
 		return nil, fmt.Errorf("contract specification not found with id %s", msg.SpecificationId)
 	}
-	if err := k.validateAllOwnersAreSigners(ctx, existing.OwnerAddresses, msg); err != nil {
+	if err := k.ValidateSignersWithoutParties(ctx, existing.OwnerAddresses, msg); err != nil {
 		return nil, err
 	}
 
@@ -409,7 +400,7 @@ func (k msgServer) AddContractSpecToScopeSpec(
 	if !found {
 		return nil, fmt.Errorf("scope specification not found with id %s", msg.ScopeSpecificationId)
 	}
-	if err := k.validateAllOwnersAreSigners(ctx, scopeSpec.OwnerAddresses, msg); err != nil {
+	if err := k.ValidateSignersWithoutParties(ctx, scopeSpec.OwnerAddresses, msg); err != nil {
 		return nil, err
 	}
 
@@ -441,7 +432,7 @@ func (k msgServer) DeleteContractSpecFromScopeSpec(
 	if !found {
 		return nil, fmt.Errorf("scope specification not found with id %s", msg.ScopeSpecificationId)
 	}
-	if err := k.validateAllOwnersAreSigners(ctx, scopeSpec.OwnerAddresses, msg); err != nil {
+	if err := k.ValidateSignersWithoutParties(ctx, scopeSpec.OwnerAddresses, msg); err != nil {
 		return nil, err
 	}
 
@@ -486,7 +477,7 @@ func (k msgServer) WriteRecordSpecification(
 		return nil, fmt.Errorf("contract specification not found with id %s (uuid %s) required for adding or updating record specification with id %s",
 			contractSpecID, contractSpecUUID, msg.Specification.SpecificationId)
 	}
-	if err = k.validateAllOwnersAreSigners(ctx, contractSpec.OwnerAddresses, msg); err != nil {
+	if err = k.ValidateSignersWithoutParties(ctx, contractSpec.OwnerAddresses, msg); err != nil {
 		return nil, err
 	}
 
@@ -524,7 +515,7 @@ func (k msgServer) DeleteRecordSpecification(
 		return nil, fmt.Errorf("contract specification not found with id %s required for deleting record specification with id %s",
 			contractSpecID, msg.SpecificationId)
 	}
-	if err := k.validateAllOwnersAreSigners(ctx, contractSpec.OwnerAddresses, msg); err != nil {
+	if err := k.ValidateSignersWithoutParties(ctx, contractSpec.OwnerAddresses, msg); err != nil {
 		return nil, err
 	}
 
