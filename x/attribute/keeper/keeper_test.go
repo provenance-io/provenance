@@ -161,14 +161,14 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 		s.Run(tc.name, func() {
 			err := s.app.AttributeKeeper.SetAttribute(s.ctx, tc.attr, tc.ownerAddr)
 			if len(tc.errorMsg) > 0 {
-				s.Error(err)
-				s.Equal(tc.errorMsg, err.Error())
+				s.Assert().Error(err)
+				s.Assert().Equal(tc.errorMsg, err.Error())
 			} else {
-				s.NoError(err)
+				s.Assert().NoError(err)
 				lookup, err := s.app.AttributeKeeper.AccountsByAttribute(s.ctx, tc.attr.Name)
-				s.NoError(err, "should have attribute in lookup table")
-				s.Len(lookup, 1)
-				s.Equal(tc.attr.GetAddressBytes(), lookup[0].Bytes())
+				s.Assert().NoError(err, "should have attribute in lookup table")
+				s.Assert().Len(lookup, 1)
+				s.Assert().Equal(tc.attr.GetAddressBytes(), lookup[0].Bytes())
 			}
 		})
 	}
@@ -183,7 +183,7 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 		AttributeType: types.AttributeType_String,
 		Address:       s.user1,
 	}
-	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
 
 	cases := []struct {
 		name       string
@@ -351,10 +351,10 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 		s.Run(tc.name, func() {
 			err := s.app.AttributeKeeper.UpdateAttribute(s.ctx, tc.origAttr, tc.updateAttr, tc.ownerAddr)
 			if len(tc.errorMsg) > 0 {
-				s.Error(err)
-				s.Equal(tc.errorMsg, err.Error())
+				s.Assert().Error(err)
+				s.Assert().Equal(tc.errorMsg, err.Error())
 			} else {
-				s.NoError(err)
+				s.Assert().NoError(err)
 			}
 		})
 	}
@@ -369,12 +369,12 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 		Address:       s.user1,
 		AttributeType: types.AttributeType_String,
 	}
-	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
 
 	// Create a name, make an attribute under it, then remove the name leaving an orphan attribute.
-	s.NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "deleted", s.user1Addr, false), "name record should save successfully")
-	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, types.NewAttribute("deleted", s.user1, types.AttributeType_String, []byte("test")), s.user1Addr), "should save successfully")
-	s.NoError(s.app.NameKeeper.DeleteRecord(s.ctx, "deleted"), "name record should be removed successfully")
+	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "deleted", s.user1Addr, false), "name record should save successfully")
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, types.NewAttribute("deleted", s.user1, types.AttributeType_String, []byte("test")), s.user1Addr), "should save successfully")
+	s.Assert().NoError(s.app.NameKeeper.DeleteRecord(s.ctx, "deleted"), "name record should be removed successfully")
 
 	cases := []struct {
 		name      string
@@ -416,10 +416,10 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 		s.Run(tc.name, func() {
 			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.attrName, nil, tc.ownerAddr)
 			if len(tc.errorMsg) > 0 {
-				s.Error(err)
-				s.Equal(tc.errorMsg, err.Error())
+				s.Assert().Error(err)
+				s.Assert().Equal(tc.errorMsg, err.Error())
 			} else {
-				s.NoError(err)
+				s.Assert().NoError(err)
 			}
 		})
 	}
@@ -443,13 +443,14 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrValue, s.user1Addr), "should save successfully")
 
 	cases := []struct {
-		testName  string
-		name      string
-		value     []byte
-		attrType  types.AttributeType
-		accAddr   string
-		ownerAddr sdk.AccAddress
-		errorMsg  string
+		testName     string
+		name         string
+		value        []byte
+		attrType     types.AttributeType
+		accAddr      string
+		ownerAddr    sdk.AccAddress
+		expectlookup bool
+		errorMsg     string
 	}{
 		{
 			testName:  "should fail to delete, cant resolve name wrong owner",
@@ -466,12 +467,13 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 			errorMsg:  "no keys deleted with name dne value 123456789",
 		},
 		{
-			testName:  "should successfully delete attribute",
-			name:      "example.attribute",
-			value:     []byte("123456789"),
-			accAddr:   s.user1,
-			ownerAddr: s.user1Addr,
-			errorMsg:  "",
+			testName:     "should successfully delete attribute",
+			name:         "example.attribute",
+			value:        []byte("123456789"),
+			accAddr:      s.user1,
+			ownerAddr:    s.user1Addr,
+			expectlookup: true,
+			errorMsg:     "",
 		},
 		{
 			testName:  "should fail to delete attribute, was already deleted",
@@ -482,12 +484,13 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 			errorMsg:  "no keys deleted with name example.attribute value 123456789",
 		},
 		{
-			testName:  "should successfully delete attribute, with same key but different value",
-			name:      "example.attribute",
-			value:     []byte("diff value"),
-			accAddr:   s.user1,
-			ownerAddr: s.user1Addr,
-			errorMsg:  "",
+			testName:     "should successfully delete attribute, with same key but different value",
+			name:         "example.attribute",
+			value:        []byte("diff value"),
+			accAddr:      s.user1,
+			ownerAddr:    s.user1Addr,
+			expectlookup: false,
+			errorMsg:     "",
 		},
 	}
 	for _, tc := range cases {
@@ -496,10 +499,17 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 		s.Run(tc.testName, func() {
 			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.name, &tc.value, tc.ownerAddr)
 			if len(tc.errorMsg) > 0 {
-				s.Error(err)
-				s.Equal(tc.errorMsg, err.Error())
+				s.Assert().Error(err)
+				s.Assert().Equal(tc.errorMsg, err.Error())
 			} else {
-				s.NoError(err)
+				s.Assert().NoError(err)
+				lookupAccts, err := s.app.AttributeKeeper.AccountsByAttribute(s.ctx, tc.name)
+				s.Assert().NoError(err)
+				if tc.expectlookup {
+					s.Assert().ElementsMatch([]sdk.AccAddress{tc.ownerAddr}, lookupAccts)
+				} else {
+					s.Assert().Len(lookupAccts, 0)
+				}
 			}
 		})
 	}
@@ -508,8 +518,8 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 func (s *KeeperTestSuite) TestGetAllAttributes() {
 
 	attributes, err := s.app.AttributeKeeper.GetAllAttributes(s.ctx, s.user1)
-	s.NoError(err)
-	s.Equal(0, len(attributes))
+	s.Assert().NoError(err)
+	s.Assert().Equal(0, len(attributes))
 
 	attr := types.Attribute{
 		Name:          "example.attribute",
@@ -517,12 +527,12 @@ func (s *KeeperTestSuite) TestGetAllAttributes() {
 		Address:       s.user1,
 		AttributeType: types.AttributeType_String,
 	}
-	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
 	attributes, err = s.app.AttributeKeeper.GetAllAttributes(s.ctx, s.user1)
-	s.NoError(err)
-	s.Equal(attr.Name, attributes[0].Name)
-	s.Equal(attr.Address, attributes[0].Address)
-	s.Equal(attr.Value, attributes[0].Value)
+	s.Assert().NoError(err)
+	s.Assert().Equal(attr.Name, attributes[0].Name)
+	s.Assert().Equal(attr.Address, attributes[0].Address)
+	s.Assert().Equal(attr.Value, attributes[0].Value)
 }
 
 func (s *KeeperTestSuite) TestGetAttributesByName() {
@@ -533,29 +543,63 @@ func (s *KeeperTestSuite) TestGetAttributesByName() {
 		Address:       s.user1,
 		AttributeType: types.AttributeType_String,
 	}
-	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
 	_, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1, "blah")
-	s.Error(err)
-	s.Equal("no address bound to name", err.Error())
+	s.Assert().Error(err)
+	s.Assert().Equal("no address bound to name", err.Error())
 	attributes, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1, "example.attribute")
-	s.NoError(err)
-	s.Equal(1, len(attributes))
-	s.Equal(attr.Name, attributes[0].Name)
-	s.Equal(attr.Address, attributes[0].Address)
-	s.Equal(attr.Value, attributes[0].Value)
+	s.Assert().NoError(err)
+	s.Assert().Equal(1, len(attributes))
+	s.Assert().Equal(attr.Name, attributes[0].Name)
+	s.Assert().Equal(attr.Address, attributes[0].Address)
+	s.Assert().Equal(attr.Value, attributes[0].Value)
 }
 
-func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
-	var attributeData types.GenesisState
-	attributeData.Attributes = append(attributeData.Attributes, types.Attribute{
+func (s *KeeperTestSuite) TestGetAddressesByName() {
+
+	attr := types.Attribute{
 		Name:          "example.attribute",
 		Value:         []byte("0123456789"),
 		Address:       s.user1,
 		AttributeType: types.AttributeType_String,
-	})
-	s.Assert().NotPanics(func() { s.app.AttributeKeeper.InitGenesis(s.ctx, &attributeData) })
-	s.Assert().NotPanics(func() { s.app.AttributeKeeper.ExportGenesis(s.ctx) })
+	}
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
+	addrs, err := s.app.AttributeKeeper.AccountsByAttribute(s.ctx, attr.Name)
+	s.Assert().NoError(err)
+	s.Assert().ElementsMatch([]sdk.AccAddress{s.user1Addr}, addrs)
 
+	attr.Address = s.user2
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
+	addrs, err = s.app.AttributeKeeper.AccountsByAttribute(s.ctx, attr.Name)
+	s.Assert().NoError(err)
+	s.Assert().ElementsMatch([]sdk.AccAddress{s.user1Addr, s.user2Addr}, addrs)
+
+	attr.AttributeType = types.AttributeType_Int
+	attr.Value = []byte("1")
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
+	addrs, err = s.app.AttributeKeeper.AccountsByAttribute(s.ctx, attr.Name)
+	s.Assert().NoError(err)
+	s.Assert().ElementsMatch([]sdk.AccAddress{s.user1Addr, s.user2Addr}, addrs)
+}
+
+func (s *KeeperTestSuite) TestInitGenesisAddingAttributes() {
+	genAttr := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("0123456789"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+	}
+	var attributeData types.GenesisState
+	attributeData.Attributes = append(attributeData.Attributes, genAttr)
+	s.Assert().NotPanics(func() { s.app.AttributeKeeper.InitGenesis(s.ctx, &attributeData) })
+	attrs, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1, genAttr.Name)
+	s.Assert().NoError(err)
+	s.Assert().Contains(attrs, genAttr)
+	accts, err := s.app.AttributeKeeper.AccountsByAttribute(s.ctx, genAttr.Name)
+	s.Assert().NoError(err)
+	s.Assert().ElementsMatch([]sdk.AccAddress{s.user1Addr}, accts)
+
+	s.Assert().NotPanics(func() { s.app.AttributeKeeper.ExportGenesis(s.ctx) })
 	attributeData.Attributes = append(attributeData.Attributes, types.Attribute{
 		Name:          "",
 		Value:         []byte("0123456789"),
@@ -574,7 +618,7 @@ func (s *KeeperTestSuite) TestIterateRecord() {
 			Address:       s.user1,
 			AttributeType: types.AttributeType_String,
 		}
-		s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
+		s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
 		records := []types.Attribute{}
 		// Callback func that adds records to genesis state.
 		appendToRecords := func(record types.Attribute) error {
