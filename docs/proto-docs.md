@@ -18,6 +18,8 @@
     - [GenesisState](#provenance.attribute.v1.GenesisState)
   
 - [provenance/attribute/v1/query.proto](#provenance/attribute/v1/query.proto)
+    - [QueryAttributeAccountsRequest](#provenance.attribute.v1.QueryAttributeAccountsRequest)
+    - [QueryAttributeAccountsResponse](#provenance.attribute.v1.QueryAttributeAccountsResponse)
     - [QueryAttributeRequest](#provenance.attribute.v1.QueryAttributeRequest)
     - [QueryAttributeResponse](#provenance.attribute.v1.QueryAttributeResponse)
     - [QueryAttributesRequest](#provenance.attribute.v1.QueryAttributesRequest)
@@ -603,6 +605,36 @@ GenesisState defines the attribute module's genesis state.
 
 
 
+<a name="provenance.attribute.v1.QueryAttributeAccountsRequest"></a>
+
+### QueryAttributeAccountsRequest
+QueryAttributeAccountsRequest is the response type for the Query/AccountsByAttribute method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `attribute_name` | [string](#string) |  | name is the attribute name to query for |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.QueryAttributeAccountsResponse"></a>
+
+### QueryAttributeAccountsResponse
+QueryAttributeAccountsResponse is the response type for the Query/AccountsByAttribute method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `accounts` | [string](#string) | repeated | list of account addresses that have attributes of request name |
+
+
+
+
+
+
 <a name="provenance.attribute.v1.QueryAttributeRequest"></a>
 
 ### QueryAttributeRequest
@@ -746,6 +778,7 @@ Query defines the gRPC querier service for attribute module.
 | `Attribute` | [QueryAttributeRequest](#provenance.attribute.v1.QueryAttributeRequest) | [QueryAttributeResponse](#provenance.attribute.v1.QueryAttributeResponse) | Attribute queries attributes on a given account (address) for one (or more) with the given name | GET|/provenance/attribute/v1/attribute/{account}/{name}|
 | `Attributes` | [QueryAttributesRequest](#provenance.attribute.v1.QueryAttributesRequest) | [QueryAttributesResponse](#provenance.attribute.v1.QueryAttributesResponse) | Attributes queries attributes on a given account (address) for any defined attributes | GET|/provenance/attribute/v1/attributes/{account}|
 | `Scan` | [QueryScanRequest](#provenance.attribute.v1.QueryScanRequest) | [QueryScanResponse](#provenance.attribute.v1.QueryScanResponse) | Scan queries attributes on a given account (address) for any that match the provided suffix | GET|/provenance/attribute/v1/attribute/{account}/scan/{suffix}|
+| `AttributeAccounts` | [QueryAttributeAccountsRequest](#provenance.attribute.v1.QueryAttributeAccountsRequest) | [QueryAttributeAccountsResponse](#provenance.attribute.v1.QueryAttributeAccountsResponse) | AttributeAccounts queries accounts on a given attribute name | GET|/provenance/attribute/v1/accounts/{attribute_name}|
 
  <!-- end services -->
 

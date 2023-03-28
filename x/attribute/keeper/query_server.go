@@ -123,3 +123,8 @@ func (k Keeper) Scan(c context.Context, req *types.QueryScanRequest) (*types.Que
 
 	return &types.QueryScanResponse{Account: req.Account, Attributes: attributes, Pagination: pageRes}, nil
 }
+
+// AttributeAccounts queries for all accounts that have a specific attribute
+func (k Keeper) AttributeAccounts(c context.Context, req *types.QueryAttributeAccountsRequest) (*types.QueryAttributeAccountsResponse, error) {
+	return &types.QueryAttributeAccountsResponse{}, nil
+}

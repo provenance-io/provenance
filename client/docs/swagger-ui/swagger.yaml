@@ -32923,6 +32923,54 @@ paths:
           type: boolean
       tags:
         - Query
+  '/provenance/attribute/v1/accounts/{attribute_name}':
+    get:
+      summary: AttributeAccounts queries accounts on a given attribute name
+      operationId: AttributeAccounts
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              accounts:
+                type: array
+                items:
+                  type: string
+                title: list of account addresses that have attributes of request name
+            description: >-
+              QueryAttributeAccountsResponse is the response type for the
+              Query/AccountsByAttribute method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: attribute_name
+          description: name is the attribute name to query for
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   '/provenance/attribute/v1/attribute/{account}/scan/{suffix}':
     get:
       summary: >-
@@ -79914,6 +79962,17 @@ definitions:
         format: int64
         title: maximum length of data to allow in an attribute value
     description: Params defines the set of params for the attribute module.
+  provenance.attribute.v1.QueryAttributeAccountsResponse:
+    type: object
+    properties:
+      accounts:
+        type: array
+        items:
+          type: string
+        title: list of account addresses that have attributes of request name
+    description: >-
+      QueryAttributeAccountsResponse is the response type for the
+      Query/AccountsByAttribute method.
   provenance.attribute.v1.QueryAttributeResponse:
     type: object
     properties:
