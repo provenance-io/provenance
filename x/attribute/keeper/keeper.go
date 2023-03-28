@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"fmt"
 	"strings"
 	"time"
@@ -151,7 +152,8 @@ func (k Keeper) SetAttribute(
 
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
-	store.Set(types.AttributeNameAddrPrefix(attr), []byte{})
+	nameKey := types.AttributeNameAddrPrefix(attr)
+	store.Set(nameKey, []byte{})
 
 	attributeAddEvent := types.NewEventAttributeAdd(attr, owner.String())
 	if err := ctx.EventManager().EmitTypedEvent(attributeAddEvent); err != nil {
@@ -242,6 +244,43 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 		return fmt.Errorf("%s with name \"%s\" : value \"%s\" : type: %s", errorMessage, originalAttribute.Name, string(originalAttribute.Value), originalAttribute.AttributeType.String())
 	}
 	return nil
+}
+
+func (k Keeper) AccountsByAttribute(ctx sdk.Context, name string) (addresses []sdk.AccAddress, err error) {
+	store := ctx.KVStore(k.storeKey)
+	keyPrefix := types.AttributeNameKeyPrefix(name)
+	it := sdk.KVStorePrefixIterator(store, keyPrefix)
+	for ; it.Valid(); it.Next() {
+		key := it.Key()
+		addressBytes := key[len(keyPrefix)+1 : len(key)-sha256.Size]
+		if err = sdk.VerifyAddressFormat(addressBytes); err != nil {
+			return
+		}
+
+		addresses = append(addresses, sdk.AccAddress(addressBytes))
+	}
+	addresses = UnionDistinct(addresses)
+	return
+}
+
+// unionUnique gets a union of the provided sdk.AccAddress's without any duplicates.
+func UnionDistinct(sets ...[]sdk.AccAddress) []sdk.AccAddress {
+	retval := []sdk.AccAddress{}
+	for _, s := range sets {
+		for _, v := range s {
+			f := false
+			for _, r := range retval {
+				if r.Equals(v) {
+					f = true
+					break
+				}
+			}
+			if !f {
+				retval = append(retval, v)
+			}
+		}
+	}
+	return retval
 }
 
 // DeleteAttribute removes attributes under the given account from the state store.
@@ -342,5 +381,6 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	key := types.AddrAttributeKey(attr.GetAddressBytes(), attr)
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
+	store.Set(types.AttributeNameAddrPrefix(attr), []byte{})
 	return nil
 }

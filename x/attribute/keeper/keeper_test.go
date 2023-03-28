@@ -71,13 +71,14 @@ func (s *KeeperTestSuite) SetupTest() {
 
 func (s *KeeperTestSuite) TestSetAttribute() {
 
-	cases := map[string]struct {
+	cases := []struct {
+		name      string
 		attr      types.Attribute
 		ownerAddr sdk.AccAddress
-		wantErr   bool
 		errorMsg  string
 	}{
-		"should successfully add attribute": {
+		{
+			name: "should successfully add attribute",
 			attr: types.Attribute{
 				Name:          "example.attribute",
 				Value:         []byte("0123456789"),
@@ -85,10 +86,21 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 				AttributeType: types.AttributeType_String,
 			},
 			ownerAddr: s.user1Addr,
-			wantErr:   false,
 			errorMsg:  "",
 		},
-		"should fail due to validate basic error": {
+		{
+			name: "should successfully add attribute with same name but different type",
+			attr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("1"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_Int,
+			},
+			ownerAddr: s.user1Addr,
+			errorMsg:  "",
+		},
+		{
+			name: "should fail due to validate basic error",
 			attr: types.Attribute{
 				Name:          "",
 				Value:         []byte("01234567891"),
@@ -96,10 +108,10 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 				AttributeType: types.AttributeType_String,
 			},
 			ownerAddr: s.user1Addr,
-			wantErr:   true,
 			errorMsg:  "invalid name: empty",
 		},
-		"should fail due to attribute length too long": {
+		{
+			name: "should fail due to attribute length too long",
 			attr: types.Attribute{
 				Name:          "name",
 				Value:         []byte("01234567891"),
@@ -107,10 +119,10 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 				AttributeType: types.AttributeType_String,
 			},
 			ownerAddr: s.user1Addr,
-			wantErr:   true,
 			errorMsg:  "attribute value length of 11 exceeds max length 10",
 		},
-		"should fail unable to find owner": {
+		{
+			name: "should fail unable to find owner",
 			attr: types.Attribute{
 				Name:          "example.attribute",
 				Value:         []byte("0123456789"),
@@ -118,10 +130,10 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 				AttributeType: types.AttributeType_String,
 			},
 			ownerAddr: s.user2Addr,
-			wantErr:   true,
 			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2),
 		},
-		"should fail unable to normalize segment length too short": {
+		{
+			name: "should fail unable to normalize segment length too short",
 			attr: types.Attribute{
 				Name:          "example.cant.normalize.me",
 				Value:         []byte("0123456789"),
@@ -129,10 +141,10 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 				AttributeType: types.AttributeType_String,
 			},
 			ownerAddr: s.user2Addr,
-			wantErr:   true,
 			errorMsg:  "unable to normalize attribute name \"example.cant.normalize.me\": segment of name is too short",
 		},
-		"should fail unable to resolve name to user": {
+		{
+			name: "should fail unable to resolve name to user",
 			attr: types.Attribute{
 				Name:          "example.not.found",
 				Value:         []byte("0123456789"),
@@ -140,20 +152,23 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 				AttributeType: types.AttributeType_String,
 			},
 			ownerAddr: s.user1Addr,
-			wantErr:   true,
 			errorMsg:  fmt.Sprintf("\"example.not.found\" does not resolve to address \"%s\"", s.user1),
 		},
 	}
-	for n, tc := range cases {
+	for _, tc := range cases {
 		tc := tc
 
-		s.Run(n, func() {
+		s.Run(tc.name, func() {
 			err := s.app.AttributeKeeper.SetAttribute(s.ctx, tc.attr, tc.ownerAddr)
-			if tc.wantErr {
+			if len(tc.errorMsg) > 0 {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())
 			} else {
 				s.NoError(err)
+				lookup, err := s.app.AttributeKeeper.AccountsByAttribute(s.ctx, tc.attr.Name)
+				s.NoError(err, "should have attribute in lookup table")
+				s.Len(lookup, 1)
+				s.Equal(tc.attr.GetAddressBytes(), lookup[0].Bytes())
 			}
 		})
 	}
@@ -175,7 +190,6 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 		origAttr   types.Attribute
 		updateAttr types.Attribute
 		ownerAddr  sdk.AccAddress
-		wantErr    bool
 		errorMsg   string
 	}{
 		{
@@ -193,7 +207,6 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 				AttributeType: types.AttributeType_Int,
 			},
 			ownerAddr: s.user1Addr,
-			wantErr:   true,
 			errorMsg:  "invalid name: empty",
 		}, {
 			name: "should fail to update attribute, validatebasic update attr",
@@ -210,7 +223,6 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 				AttributeType: types.AttributeType_Int,
 			},
 			ownerAddr: s.user1Addr,
-			wantErr:   true,
 			errorMsg:  "invalid name: empty",
 		},
 		{
@@ -228,7 +240,6 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 				AttributeType: types.AttributeType_Int,
 			},
 			ownerAddr: s.user1Addr,
-			wantErr:   true,
 			errorMsg:  "update and original names must match example.noteq : example.attribute",
 		},
 		{
@@ -246,7 +257,6 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 				AttributeType: types.AttributeType_String,
 			},
 			ownerAddr: s.user1Addr,
-			wantErr:   true,
 			errorMsg:  "update attribute value length of 13 exceeds max length 10",
 		},
 		{
@@ -264,7 +274,6 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 				AttributeType: types.AttributeType_String,
 			},
 			ownerAddr: s.user2Addr,
-			wantErr:   true,
 			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
 		},
 		{
@@ -282,7 +291,6 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 				AttributeType: types.AttributeType_String,
 			},
 			ownerAddr: s.user1Addr,
-			wantErr:   true,
 			errorMsg:  fmt.Sprintf("\"example.not.found\" does not resolve to address \"%s\"", s.user1Addr),
 		},
 		{
@@ -300,7 +308,6 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 				AttributeType: types.AttributeType_String,
 			},
 			ownerAddr: s.user1Addr,
-			wantErr:   true,
 			errorMsg:  "no attributes updated with name \"example.attribute\" : value \"not original value\" : type: ATTRIBUTE_TYPE_STRING",
 		},
 		{
@@ -318,7 +325,6 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 				AttributeType: types.AttributeType_String,
 			},
 			ownerAddr: s.user1Addr,
-			wantErr:   true,
 			errorMsg:  "no attributes updated with name \"example.attribute\" : value \"my-value\" : type: ATTRIBUTE_TYPE_BYTES",
 		},
 		{
@@ -336,7 +342,6 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 				AttributeType: types.AttributeType_Int,
 			},
 			ownerAddr: s.user1Addr,
-			wantErr:   false,
 			errorMsg:  "",
 		},
 	}
@@ -345,7 +350,7 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 
 		s.Run(tc.name, func() {
 			err := s.app.AttributeKeeper.UpdateAttribute(s.ctx, tc.origAttr, tc.updateAttr, tc.ownerAddr)
-			if tc.wantErr {
+			if len(tc.errorMsg) > 0 {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())
 			} else {
@@ -371,46 +376,46 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 	s.NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, types.NewAttribute("deleted", s.user1, types.AttributeType_String, []byte("test")), s.user1Addr), "should save successfully")
 	s.NoError(s.app.NameKeeper.DeleteRecord(s.ctx, "deleted"), "name record should be removed successfully")
 
-	cases := map[string]struct {
+	cases := []struct {
 		name      string
+		attrName  string
 		accAddr   string
 		ownerAddr sdk.AccAddress
-		wantErr   bool
 		errorMsg  string
 	}{
-		"should fail to delete, cant resolve name wrong owner": {
-			name:      "example.attribute",
+		{
+			name:      "should fail to delete, cant resolve name wrong owner",
+			attrName:  "example.attribute",
 			ownerAddr: s.user2Addr,
-			wantErr:   true,
 			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
 		},
-		"no keys will be deleted with unknown name": {
-			name:      "dne",
+		{
+			name:      "no keys will be deleted with unknown name",
+			attrName:  "dne",
 			ownerAddr: s.user1Addr,
-			wantErr:   true,
 			errorMsg:  "no keys deleted with name dne",
 		},
-		"attribute will be removed without error when name has been removed": {
-			name:      "deleted",
+		{
+			name:      "attribute will be removed without error when name has been removed",
+			attrName:  "deleted",
 			accAddr:   s.user1,
 			ownerAddr: s.user1Addr,
-			wantErr:   false,
 			errorMsg:  "",
 		},
-		"should successfully delete attribute": {
-			name:      "example.attribute",
+		{
+			name:      "should successfully delete attribute",
+			attrName:  "example.attribute",
 			accAddr:   s.user1,
 			ownerAddr: s.user1Addr,
-			wantErr:   false,
 			errorMsg:  "",
 		},
 	}
-	for n, tc := range cases {
+	for _, tc := range cases {
 		tc := tc
 
-		s.Run(n, func() {
-			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.name, nil, tc.ownerAddr)
-			if tc.wantErr {
+		s.Run(tc.name, func() {
+			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.attrName, nil, tc.ownerAddr)
+			if len(tc.errorMsg) > 0 {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())
 			} else {
@@ -444,7 +449,6 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 		attrType  types.AttributeType
 		accAddr   string
 		ownerAddr sdk.AccAddress
-		wantErr   bool
 		errorMsg  string
 	}{
 		{
@@ -452,7 +456,6 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 			name:      "example.attribute",
 			value:     []byte("123456789"),
 			ownerAddr: s.user2Addr,
-			wantErr:   true,
 			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
 		},
 		{
@@ -460,7 +463,6 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 			name:      "dne",
 			value:     []byte("123456789"),
 			ownerAddr: s.user1Addr,
-			wantErr:   true,
 			errorMsg:  "no keys deleted with name dne value 123456789",
 		},
 		{
@@ -469,7 +471,6 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 			value:     []byte("123456789"),
 			accAddr:   s.user1,
 			ownerAddr: s.user1Addr,
-			wantErr:   false,
 			errorMsg:  "",
 		},
 		{
@@ -478,7 +479,6 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 			value:     []byte("123456789"),
 			accAddr:   s.user1,
 			ownerAddr: s.user1Addr,
-			wantErr:   true,
 			errorMsg:  "no keys deleted with name example.attribute value 123456789",
 		},
 		{
@@ -487,7 +487,6 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 			value:     []byte("diff value"),
 			accAddr:   s.user1,
 			ownerAddr: s.user1Addr,
-			wantErr:   false,
 			errorMsg:  "",
 		},
 	}
@@ -496,7 +495,7 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 
 		s.Run(tc.testName, func() {
 			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.name, &tc.value, tc.ownerAddr)
-			if tc.wantErr {
+			if len(tc.errorMsg) > 0 {
 				s.Error(err)
 				s.Equal(tc.errorMsg, err.Error())
 			} else {

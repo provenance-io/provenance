@@ -75,7 +75,7 @@ func AttributeNameAddrKeyPrefix(attributeName string, addr []byte) []byte {
 // AttributeNameAddrPrefix creates a key for address lookup [prefix][attribute name][address][attribute hash]
 func AttributeNameAddrPrefix(attribute Attribute) []byte {
 	key := AttributeKeyPrefixAddrLookup
-	key = append(key, GetNameKeyBytes(attribute.Address)...)
+	key = append(key, GetNameKeyBytes(attribute.Name)...)
 	key = append(key, address.MustLengthPrefix(attribute.GetAddressBytes())...)
 	return append(key, attribute.Hash()...)
 }
