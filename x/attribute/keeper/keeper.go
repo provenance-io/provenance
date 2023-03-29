@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"fmt"
 	"strings"
 	"time"
@@ -152,7 +151,7 @@ func (k Keeper) SetAttribute(
 
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
-	nameKey := types.AttributeNameAddrPrefix(attr)
+	nameKey := types.AttributeNameAttrKeyPrefix(attr)
 	store.Set(nameKey, []byte{})
 
 	attributeAddEvent := types.NewEventAttributeAdd(attr, owner.String())
@@ -228,8 +227,8 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			updatedKey := types.AddrAttributeKey(addrBz, updateAttribute)
 			store.Set(updatedKey, bz)
 
-			store.Delete(types.AttributeNameAddrPrefix(originalAttribute))
-			store.Set(types.AttributeNameAddrPrefix(updateAttribute), []byte{})
+			store.Delete(types.AttributeNameAttrKeyPrefix(originalAttribute))
+			store.Set(types.AttributeNameAttrKeyPrefix(updateAttribute), []byte{})
 
 			attributeUpdateEvent := types.NewEventAttributeUpdate(originalAttribute, updateAttribute, owner.String())
 			if err := ctx.EventManager().EmitTypedEvent(attributeUpdateEvent); err != nil {
@@ -251,13 +250,12 @@ func (k Keeper) AccountsByAttribute(ctx sdk.Context, name string) (addresses []s
 	keyPrefix := types.AttributeNameKeyPrefix(name)
 	it := sdk.KVStorePrefixIterator(store, keyPrefix)
 	for ; it.Valid(); it.Next() {
-		key := it.Key()
-		addressBytes := key[len(keyPrefix)+1 : len(key)-sha256.Size]
-		if err = sdk.VerifyAddressFormat(addressBytes); err != nil {
-			return
+		addressBytes, err := types.GetAddressFromKey(it.Key())
+		if err != nil {
+			return nil, err
 		}
 
-		addresses = append(addresses, sdk.AccAddress(addressBytes))
+		addresses = append(addresses, addressBytes)
 	}
 	addresses = UnionDistinct(addresses)
 	return
@@ -323,7 +321,7 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 					return err
 				}
 			} else {
-				store.Delete(types.AttributeNameAddrPrefix(attr))
+				store.Delete(types.AttributeNameAttrKeyPrefix(attr))
 				deleteEvent := types.NewEventDistinctAttributeDelete(name, string(*value), addr, owner.String())
 				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
 					return err
@@ -381,6 +379,6 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	key := types.AddrAttributeKey(attr.GetAddressBytes(), attr)
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
-	store.Set(types.AttributeNameAddrPrefix(attr), []byte{})
+	store.Set(types.AttributeNameAttrKeyPrefix(attr), []byte{})
 	return nil
 }

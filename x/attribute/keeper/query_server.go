@@ -132,21 +132,19 @@ func (k Keeper) AttributeAccounts(c context.Context, req *types.QueryAttributeAc
 	ctx := sdk.UnwrapSDKContext(c)
 	accounts := make([]string, 0)
 	store := ctx.KVStore(k.storeKey)
-	attributeStore := prefix.NewStore(store, types.AttributeNameKeyPrefix(req.AttributeName))
+	keyPrefix := types.AttributeNameKeyPrefix(req.AttributeName)
+	attributeStore := prefix.NewStore(store, keyPrefix)
 
 	pageRes, err := query.FilteredPaginate(attributeStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var result types.Attribute
-		err := k.cdc.Unmarshal(value, &result)
-		if err != nil {
-			return false, err
-		}
+		addressLength := int32(key[0])
+		address := sdk.AccAddress(key[1 : addressLength+1])
 		for _, account := range accounts {
-			if account == result.Address {
+			if account == address.String() {
 				return false, nil
 			}
 		}
 		if accumulate {
-			accounts = append(accounts, result.Address)
+			accounts = append(accounts, address.String())
 		}
 		return true, nil
 	})
