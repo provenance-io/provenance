@@ -614,6 +614,7 @@ QueryAttributeAccountsRequest is the response type for the Query/AccountsByAttri
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `attribute_name` | [string](#string) |  | name is the attribute name to query for |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
 
 
 
@@ -629,6 +630,7 @@ QueryAttributeAccountsResponse is the response type for the Query/AccountsByAttr
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `accounts` | [string](#string) | repeated | list of account addresses that have attributes of request name |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the request. |
 
 
 

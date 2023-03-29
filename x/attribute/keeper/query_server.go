@@ -126,5 +126,34 @@ func (k Keeper) Scan(c context.Context, req *types.QueryScanRequest) (*types.Que
 
 // AttributeAccounts queries for all accounts that have a specific attribute
 func (k Keeper) AttributeAccounts(c context.Context, req *types.QueryAttributeAccountsRequest) (*types.QueryAttributeAccountsResponse, error) {
-	return &types.QueryAttributeAccountsResponse{}, nil
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	accounts := make([]string, 0)
+	store := ctx.KVStore(k.storeKey)
+	attributeStore := prefix.NewStore(store, types.AttributeNameKeyPrefix(req.AttributeName))
+
+	pageRes, err := query.FilteredPaginate(attributeStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var result types.Attribute
+		err := k.cdc.Unmarshal(value, &result)
+		if err != nil {
+			return false, err
+		}
+		for _, account := range accounts {
+			if account == result.Address {
+				return false, nil
+			}
+		}
+		if accumulate {
+			accounts = append(accounts, result.Address)
+		}
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryAttributeAccountsResponse{Accounts: accounts, Pagination: pageRes}, nil
 }

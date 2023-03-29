@@ -12,3 +12,7 @@ func TestAttributeNameProcessing(t *testing.T) {
 	require.Equal(t, "root", reverse("root"), "a root name reversed is a root name")
 	require.Equal(t, "root.domain.sub", reverse("sub.domain.root"), "a domain name can be reversed correctly")
 }
+
+// func TestAttributeNameAddrPrefix(t *testing.T) {
+// 	attr :=
+// }

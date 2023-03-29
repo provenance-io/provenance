@@ -123,10 +123,16 @@ message QueryScanResponse {
 message QueryAttributeAccountsRequest {
   // name is the attribute name to query for
   string attribute_name = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
 // QueryAttributeAccountsResponse is the response type for the Query/AccountsByAttribute method.
 message QueryAttributeAccountsResponse {
   // list of account addresses that have attributes of request name
   repeated string accounts = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
