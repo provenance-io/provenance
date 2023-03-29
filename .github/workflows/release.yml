@@ -308,3 +308,19 @@ jobs:
             -Psigning.password="${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}" \
             -Psigning.secretKeyRingFile=$GITHUB_WORKSPACE/release.gpg \
             --info
+
+  npm_release:
+    needs:
+      - build_init
+    if: needs.build_init.outputs.is_release == 'true'
+    runs-on: ubuntu-latest
+    name: NPM Proto Publishing
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Publish
+        uses: provenance-io/npm-publish-action@v1
+        with:
+          api-version: ${{ needs.build_init.outputs.version }}
+          npm-token: ${{ secrets.NPM_TOKEN }}
+          tag: alpha
