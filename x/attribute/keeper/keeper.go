@@ -246,6 +246,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 
 // AccountsByAttribute returns a list of sdk.AccAddress that have attribute name assigned
 func (k Keeper) AccountsByAttribute(ctx sdk.Context, name string) (addresses []sdk.AccAddress, err error) {
+	addressSet := make(map[string]bool)
 	store := ctx.KVStore(k.storeKey)
 	keyPrefix := types.AttributeNameKeyPrefix(name)
 	it := sdk.KVStorePrefixIterator(store, keyPrefix)
@@ -254,31 +255,12 @@ func (k Keeper) AccountsByAttribute(ctx sdk.Context, name string) (addresses []s
 		if err != nil {
 			return nil, err
 		}
-
-		addresses = append(addresses, addressBytes)
-	}
-	addresses = UnionDistinct(addresses)
-	return
-}
-
-// unionUnique gets a union of the provided sdk.AccAddress's without any duplicates.
-func UnionDistinct(sets ...[]sdk.AccAddress) []sdk.AccAddress {
-	retval := []sdk.AccAddress{}
-	for _, s := range sets {
-		for _, v := range s {
-			f := false
-			for _, r := range retval {
-				if r.Equals(v) {
-					f = true
-					break
-				}
-			}
-			if !f {
-				retval = append(retval, v)
-			}
+		if !addressSet[string(addressBytes)] {
+			addressSet[string(addressBytes)] = true
+			addresses = append(addresses, addressBytes)
 		}
 	}
-	return retval
+	return
 }
 
 // DeleteAttribute removes attributes under the given account from the state store.
