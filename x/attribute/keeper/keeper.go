@@ -151,8 +151,7 @@ func (k Keeper) SetAttribute(
 
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
-	nameKey := types.AttributeNameAttrKeyPrefix(attr)
-	store.Set(nameKey, []byte{})
+	store.Set(types.AttributeNameAttrKeyPrefix(attr), []byte{})
 
 	attributeAddEvent := types.NewEventAttributeAdd(attr, owner.String())
 	if err := ctx.EventManager().EmitTypedEvent(attributeAddEvent); err != nil {
@@ -245,6 +244,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 	return nil
 }
 
+// AccountsByAttribute returns a list of sdk.AccAddress that have attribute name assigned
 func (k Keeper) AccountsByAttribute(ctx sdk.Context, name string) (addresses []sdk.AccAddress, err error) {
 	store := ctx.KVStore(k.storeKey)
 	keyPrefix := types.AttributeNameKeyPrefix(name)
@@ -315,7 +315,10 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 			store.Delete(it.Key())
 
 			if !deleteDistinct {
-				store.Delete(types.AttributeNameAddrKeyPrefix(attr.Name, attr.GetAddressBytes()))
+				lookupIt := sdk.KVStorePrefixIterator(store, types.AttributeNameAddrKeyPrefix(attr.Name, attr.GetAddressBytes()))
+				for ; lookupIt.Valid(); lookupIt.Next() {
+					store.Delete(lookupIt.Key())
+				}
 				deleteEvent := types.NewEventAttributeDelete(name, addr, owner.String())
 				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
 					return err

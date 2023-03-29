@@ -355,6 +355,9 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 				s.Assert().Equal(tc.errorMsg, err.Error())
 			} else {
 				s.Assert().NoError(err)
+				attrStore := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+				s.Assert().False(attrStore.Has(types.AttributeNameAttrKeyPrefix(tc.origAttr)), "original key should have been removed")
+				s.Assert().True(attrStore.Has(types.AttributeNameAttrKeyPrefix(tc.updateAttr)), "updated key should have been added")
 			}
 		})
 	}
@@ -371,15 +374,17 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 	}
 	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
 
+	deletedAttr := types.NewAttribute("deleted", s.user1, types.AttributeType_String, []byte("test"))
 	// Create a name, make an attribute under it, then remove the name leaving an orphan attribute.
 	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "deleted", s.user1Addr, false), "name record should save successfully")
-	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, types.NewAttribute("deleted", s.user1, types.AttributeType_String, []byte("test")), s.user1Addr), "should save successfully")
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedAttr, s.user1Addr), "should save successfully")
 	s.Assert().NoError(s.app.NameKeeper.DeleteRecord(s.ctx, "deleted"), "name record should be removed successfully")
 
 	cases := []struct {
 		name      string
 		attrName  string
 		accAddr   string
+		lookupKey []byte
 		ownerAddr sdk.AccAddress
 		errorMsg  string
 	}{
@@ -397,14 +402,16 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 		},
 		{
 			name:      "attribute will be removed without error when name has been removed",
-			attrName:  "deleted",
+			attrName:  deletedAttr.Name,
+			lookupKey: types.AttributeNameAttrKeyPrefix(deletedAttr),
 			accAddr:   s.user1,
 			ownerAddr: s.user1Addr,
 			errorMsg:  "",
 		},
 		{
 			name:      "should successfully delete attribute",
-			attrName:  "example.attribute",
+			attrName:  attr.Name,
+			lookupKey: types.AttributeNameAttrKeyPrefix(attr),
 			accAddr:   s.user1,
 			ownerAddr: s.user1Addr,
 			errorMsg:  "",
@@ -414,12 +421,17 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			attrStore := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+			if len(tc.lookupKey) > 0 {
+				s.Assert().True(attrStore.Has(tc.lookupKey), "should have attribute key before deletion")
+			}
 			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.attrName, nil, tc.ownerAddr)
 			if len(tc.errorMsg) > 0 {
 				s.Assert().Error(err)
 				s.Assert().Equal(tc.errorMsg, err.Error())
 			} else {
 				s.Assert().NoError(err)
+				s.Assert().False(attrStore.Has(tc.lookupKey), "should not have attribute key after deletion")
 			}
 		})
 	}
