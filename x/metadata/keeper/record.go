@@ -126,18 +126,18 @@ func (k Keeper) ValidateWriteRecord(
 		return err
 	}
 
-	var reqParties []types.Party
+	var oldSession *types.Session
 	if existing != nil {
 		if existing.Name != proposed.Name {
 			return fmt.Errorf("the Name field of records cannot be changed")
 		}
 		if !existing.SessionId.Equals(proposed.SessionId) {
 			// If the session is changing, add the original session's parties to the required parties list.
-			oldSession, found := k.GetSession(ctx, existing.SessionId)
-			if !found {
-				return fmt.Errorf("original session %s not found for existing record", existing.SessionId)
+			// If it's somehow not found, just ignore that and let the record be updated as normal.
+			os, found := k.GetSession(ctx, existing.SessionId)
+			if found {
+				oldSession = &os
 			}
-			reqParties = append(reqParties, oldSession.Parties...)
 		}
 		// The existing specification id might be empty for old stuff.
 		// And for now, we'll allow the proposed specification id to be missing and set it appropriately below.
@@ -178,36 +178,36 @@ func (k Keeper) ValidateWriteRecord(
 			recSpecID, session.SpecificationId, proposed.Name)
 	}
 
-	// TODO[1438]: Update to handle both new and old ways.
-	// Old:
-	//   on initial write:
-	//     All session parties must sign.
-	//   on update:
-	//     if changing to new session:
-	//       all previous session owners must sign
-	//       all session owners must sign
-	//     if staying in same session:
-	//       all session owners must sign
-	// New:
-	//   on initial write:
-	//     There must be a signer for each role required by the record spec in the session parties.
-	//     All optional=false scope owners must sign.
-	//     All optional=false session parties must sign.
-	//   on update:
-	//     if changing to a new session:
-	//       There must be a signer for each role required by the record spec in the new session parties.
-	//       All optional=false scope owners must sign.
-	//       All optional=false previous session parties must sign.
-	//       All optional=false new session parties must sign.
-	//     if staying in the same session:
-	//       There must be a signer for each role required by the record spec in the session parties.
-	//       All optional=false scope owners must sign.
-	//       All optional=false session parties must sign.
-
 	// Make sure everyone has signed.
-	reqParties = append(reqParties, scope.Owners...)
-	if _, err = k.ValidateSignersWithParties(ctx, reqParties, session.Parties, recSpec.ResponsibleParties, msg); err != nil {
-		return err
+	if !scope.GetRequirePartyRollup() {
+		// Old:
+		//   - All roles required by the record spec must have a party in the session parties.
+		//   - All session parties must sign.
+		//   - If the record is being updated to a new session, all previous session parties must sign.
+		if err = validateRolesPresent(session.Parties, recSpec.ResponsibleParties); err != nil {
+			return err
+		}
+		reqSigs := session.GetAllPartyAddresses()
+		if oldSession != nil {
+			reqSigs = append(reqSigs, oldSession.GetAllPartyAddresses()...)
+		}
+		if err = k.ValidateSignersWithoutParties(ctx, reqSigs, msg); err != nil {
+			return err
+		}
+	} else {
+		// New:
+		//   - All roles required by the record spec must have a signer and associated party in the session.
+		//   - All optional=false parties in the scope owners and session parties must be signers.
+		//   - If the record is changing sessions, all optional=false parties in the previous session must be signers.
+		var reqParties []types.Party
+		reqParties = append(reqParties, scope.Owners...)
+		reqParties = append(reqParties, session.Parties...)
+		if oldSession != nil {
+			reqParties = append(reqParties, oldSession.Parties...)
+		}
+		if _, err = k.ValidateSignersWithParties(ctx, reqParties, session.Parties, recSpec.ResponsibleParties, msg); err != nil {
+			return err
+		}
 	}
 
 	// Make sure all input specs are present as inputs.

@@ -175,15 +175,7 @@ ownersLoop:
 
 // GetAllOwnerAddresses gets the addresses of all of the owners. Each address can only appear once in the return value.
 func (s Scope) GetAllOwnerAddresses() []string {
-	var rv []string
-	have := make(map[string]bool)
-	for _, party := range s.Owners {
-		if !party.Optional && !have[party.Address] {
-			rv = append(rv, party.Address)
-			have[party.Address] = true
-		}
-	}
-	return rv
+	return GetPartyAddresses(s.Owners)
 }
 
 // GetID get this scope's metadata address. Satisfies the MetadataAddressable interface.
@@ -262,6 +254,11 @@ func (s Session) ValidateBasic() error {
 func (s Session) String() string {
 	out, _ := yaml.Marshal(s)
 	return string(out)
+}
+
+// GetAllPartyAddresses gets the addresses of all of the parties. Each address can only appear once in the return value.
+func (s Session) GetAllPartyAddresses() []string {
+	return GetPartyAddresses(s.Parties)
 }
 
 // GetID get this session's metadata address. Satisfies the MetadataAddressable interface.
@@ -581,6 +578,19 @@ p1Loop:
 		return false
 	}
 	return true
+}
+
+// GetPartyAddresses gets the addresses of all of the parties. Each address can only appear once in the return value.
+func GetPartyAddresses(parties []Party) []string {
+	var rv []string
+	have := make(map[string]bool)
+	for _, party := range parties {
+		if !party.Optional && !have[party.Address] {
+			rv = append(rv, party.Address)
+			have[party.Address] = true
+		}
+	}
+	return rv
 }
 
 // equivalentDataAssessors returns true if all the entries in s1 are in s2, and vice versa.

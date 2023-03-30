@@ -155,6 +155,7 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 		return fmt.Errorf("contract spec %s not listed in scope spec %s", proposed.SpecificationId, scopeSpec.SpecificationId)
 	}
 
+	// Make sure everyone has signed.
 	if !scope.GetRequirePartyRollup() {
 		// Old:
 		//   - All roles required by the contract spec must have a party in the session parties.
