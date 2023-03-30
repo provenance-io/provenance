@@ -66,7 +66,7 @@ type ResultStatus int32
 const (
 	// RESULT_STATUS_UNSPECIFIED indicates an unset condition
 	ResultStatus_RESULT_STATUS_UNSPECIFIED ResultStatus = 0
-	// RESULT_STATUS_PASS indicates the execution was successfult
+	// RESULT_STATUS_PASS indicates the execution was successful
 	ResultStatus_RESULT_STATUS_PASS ResultStatus = 1
 	// RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
 	ResultStatus_RESULT_STATUS_SKIP ResultStatus = 2
@@ -105,7 +105,7 @@ type Scope struct {
 	// These parties represent top level owners of the records within.  These parties must sign any requests that modify
 	// the data within the scope.  These addresses are in union with parties listed on the sessions.
 	Owners []Party `protobuf:"bytes,3,rep,name=owners,proto3" json:"owners"`
-	// Addessses in this list are authorized to recieve off-chain data associated with this scope.
+	// Addresses in this list are authorized to receive off-chain data associated with this scope.
 	DataAccess []string `protobuf:"bytes,4,rep,name=data_access,json=dataAccess,proto3" json:"data_access,omitempty" yaml:"data_access"`
 	// An address that controls the value associated with this scope.  Standard blockchain accounts and marker accounts
 	// are supported for this value.  This attribute may only be changed by the entity indicated once it is set.
@@ -115,23 +115,22 @@ type Scope struct {
 	//
 	// If true:
 	// * In order to write this scope:
-	//   - All roles required by the scope spec must have a signer and an associated party in the scope.
+	//   - All roles required by the scope spec must have a party in the owners.
 	//   - All required=false owners must be signers.
-	//   - If the scope is being updated, existing owners are used for role/signer fulfillment, but all required roles
-	//     must still have parties in the proposed scope.
+	//   - If the scope is being updated, all roles required by the scope spec must have a signer and associated party
+	//     from the existing scope.
 	//
 	// * In order to write sessions in this scope:
 	//   - All roles required by the contract spec must have a signer and associated party in the session.
 	//   - All session parties must be present in this scope's owners.
 	//   - All optional=false parties in the scope owners and session parties must be signers.
 	//   - If the session is being updated, existing parties are used for role/signer fulfillment, but all required roles
-	//     must still have parties in the proposed session.
+	//     must still have a party in the proposed session.
 	//
 	// * In order to write records in this scope:
 	//   - All roles required by the record spec must have a signer and associated party in the session.
 	//   - All optional=false parties in the scope owners and session parties must be signers.
-	//   - If the record is being updated to a new session, all optional=false parties in the previous session must be
-	//     signers.
+	//   - If the record is changing sessions, all optional=false parties in the previous session must be signers.
 	//
 	// If false:
 	// * In order to write this scope:

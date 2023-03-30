@@ -3109,15 +3109,15 @@ Scope defines a root reference for a collection of records owned by one or more 
 | `scope_id` | [bytes](#bytes) |  | Unique ID for this scope. Implements sdk.Address interface for use where addresses are required in Cosmos |
 | `specification_id` | [bytes](#bytes) |  | the scope specification that contains the specifications for data elements allowed within this scope |
 | `owners` | [Party](#provenance.metadata.v1.Party) | repeated | These parties represent top level owners of the records within. These parties must sign any requests that modify the data within the scope. These addresses are in union with parties listed on the sessions. |
-| `data_access` | [string](#string) | repeated | Addessses in this list are authorized to recieve off-chain data associated with this scope. |
+| `data_access` | [string](#string) | repeated | Addresses in this list are authorized to receive off-chain data associated with this scope. |
 | `value_owner_address` | [string](#string) |  | An address that controls the value associated with this scope. Standard blockchain accounts and marker accounts are supported for this value. This attribute may only be changed by the entity indicated once it is set. |
 | `require_party_rollup` | [bool](#bool) |  | Whether all parties in this scope and its sessions must be present in this scope's owners field. This also enables use of optional=true scope owners and session parties.
 
-If true: * In order to write this scope: - All roles required by the scope spec must have a signer and an associated party in the scope. - All required=false owners must be signers. - If the scope is being updated, existing owners are used for role/signer fulfillment, but all required roles must still have parties in the proposed scope.
+If true: * In order to write this scope: - All roles required by the scope spec must have a party in the owners. - All required=false owners must be signers. - If the scope is being updated, all roles required by the scope spec must have a signer and associated party from the existing scope.
 
-* In order to write sessions in this scope: - All roles required by the contract spec must have a signer and associated party in the session. - All session parties must be present in this scope's owners. - All optional=false parties in the scope owners and session parties must be signers. - If the session is being updated, existing parties are used for role/signer fulfillment, but all required roles must still have parties in the proposed session.
+* In order to write sessions in this scope: - All roles required by the contract spec must have a signer and associated party in the session. - All session parties must be present in this scope's owners. - All optional=false parties in the scope owners and session parties must be signers. - If the session is being updated, existing parties are used for role/signer fulfillment, but all required roles must still have a party in the proposed session.
 
-* In order to write records in this scope: - All roles required by the record spec must have a signer and associated party in the session. - All optional=false parties in the scope owners and session parties must be signers. - If the record is being updated to a new session, all optional=false parties in the previous session must be signers.
+* In order to write records in this scope: - All roles required by the record spec must have a signer and associated party in the session. - All optional=false parties in the scope owners and session parties must be signers. - If the record is changing sessions, all optional=false parties in the previous session must be signers.
 
 If false: * In order to write this scope: - All roles required by the scope spec must have a party in the owners. - If being updated, all existing owners must sign.
 
@@ -3177,7 +3177,7 @@ ResultStatus indicates the various states of execution of a record
 | Name | Number | Description |
 | ---- | ------ | ----------- |
 | RESULT_STATUS_UNSPECIFIED | 0 | RESULT_STATUS_UNSPECIFIED indicates an unset condition |
-| RESULT_STATUS_PASS | 1 | RESULT_STATUS_PASS indicates the execution was successfult |
+| RESULT_STATUS_PASS | 1 | RESULT_STATUS_PASS indicates the execution was successful |
 | RESULT_STATUS_SKIP | 2 | RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution |
 | RESULT_STATUS_FAIL | 3 | RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed. |
 
