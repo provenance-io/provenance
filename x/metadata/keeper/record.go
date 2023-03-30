@@ -178,6 +178,32 @@ func (k Keeper) ValidateWriteRecord(
 			recSpecID, session.SpecificationId, proposed.Name)
 	}
 
+	// TODO[1438]: Update to handle both new and old ways.
+	// Old:
+	//   on initial write:
+	//     All session parties must sign.
+	//   on update:
+	//     if changing to new session:
+	//       all previous session owners must sign
+	//       all session owners must sign
+	//     if staying in same session:
+	//       all session owners must sign
+	// New:
+	//   on initial write:
+	//     There must be a signer for each role required by the record spec in the session parties.
+	//     All optional=false scope owners must sign.
+	//     All optional=false session parties must sign.
+	//   on update:
+	//     if changing to a new session:
+	//       There must be a signer for each role required by the record spec in the new session parties.
+	//       All optional=false scope owners must sign.
+	//       All optional=false previous session parties must sign.
+	//       All optional=false new session parties must sign.
+	//     if staying in the same session:
+	//       There must be a signer for each role required by the record spec in the session parties.
+	//       All optional=false scope owners must sign.
+	//       All optional=false session parties must sign.
+
 	// Make sure everyone has signed.
 	reqParties = append(reqParties, scope.Owners...)
 	if _, err = k.ValidateSignersWithParties(ctx, reqParties, session.Parties, recSpec.ResponsibleParties, msg); err != nil {
@@ -308,6 +334,32 @@ func (k Keeper) ValidateDeleteRecord(ctx sdk.Context, proposedID types.MetadataA
 			reqRoles = recordSpec.ResponsibleParties
 		}
 	}
+
+	// TODO[1438]: Update to handle both new and old ways.
+	// Old:
+	//   on initial write:
+	//     All session parties must sign.
+	//   on update:
+	//     if changing to new session:
+	//       all previous session owners must sign
+	//       all session owners must sign
+	//     if staying in same session:
+	//       all session owners must sign
+	// New:
+	//   on initial write:
+	//     There must be a signer for each role required by the record spec in the session parties.
+	//     All optional=false scope owners must sign.
+	//     All optional=false session parties must sign.
+	//   on update:
+	//     if changing to a new session:
+	//       There must be a signer for each role required by the record spec in the new session parties.
+	//       All optional=false scope owners must sign.
+	//       All optional=false previous session parties must sign.
+	//       All optional=false new session parties must sign.
+	//     if staying in the same session:
+	//       There must be a signer for each role required by the record spec in the session parties.
+	//       All optional=false scope owners must sign.
+	//       All optional=false session parties must sign.
 
 	if _, err := k.ValidateSignersWithParties(ctx, reqParties, sessionParties, reqRoles, msg); err != nil {
 		return err

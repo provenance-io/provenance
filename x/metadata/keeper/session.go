@@ -157,6 +157,22 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 		return fmt.Errorf("contract spec %s not listed in scope spec %s", proposed.SpecificationId, scopeSpec.SpecificationId)
 	}
 
+	// TODO[1438]: Update to handle both new and old ways.
+	// Old:
+	//   on initial write:
+	//     all scope owners must sign
+	//   on update:
+	//     all scope owners must sign
+	// New:
+	//   on initial write:
+	//     There must be a signer for each role required by the contract spec in the proposed session parties.
+	//     All optional=false scope owners must sign.
+	//   on update:
+	//     There must be a signer for each role required by the contract spec in the existing session parties.
+	//     All roles in the contract spec need to be present in the proposed session.
+	//     All optional=false scope owners must sign.
+	//     All optional=false existing session parties must sign.
+
 	reqParties = append(reqParties, scope.Owners...)
 	if _, err = k.ValidateSignersWithParties(ctx, reqParties, proposed.Parties, contractSpec.PartiesInvolved, msg); err != nil {
 		return err
