@@ -184,9 +184,7 @@ func (k Keeper) DecAddNameAddressLookup(ctx sdk.Context, attr types.Attribute) {
 	if bz != nil {
 		value := binary.BigEndian.Uint64(bz)
 		if value <= uint64(1) {
-			if store.Has(key) {
-				store.Delete(key)
-			}
+			store.Delete(key)
 		} else {
 			id = binary.BigEndian.Uint64(bz) - uint64(1)
 			store.Set(key, sdk.Uint64ToBigEndian(id-1))
