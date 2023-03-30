@@ -1610,5 +1610,115 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 	}
 }
 
-// TODO[1438]: func TestPluralEnding(t *testing.T) {}
-// TODO[1438]: func TestSafeBech32ToAccAddresses(t *testing.T) {}
+func TestPluralEnding(t *testing.T) {
+	tests := []struct {
+		i   int
+		exp string
+	}{
+		{i: 0, exp: "s"},
+		{i: 1, exp: ""},
+		{i: -1, exp: "s"},
+		{i: 2, exp: "s"},
+		{i: 3, exp: "s"},
+		{i: 5, exp: "s"},
+		{i: 50, exp: "s"},
+		{i: -100, exp: "s"},
+	}
+
+	for _, tc := range tests {
+		t.Run(fmt.Sprintf("%d", tc.i), func(t *testing.T) {
+			actual := keeper.PluralEnding(tc.i)
+			assert.Equal(t, tc.exp, actual, "PluralEnding(%d)", tc.i)
+		})
+	}
+}
+
+func TestSafeBech32ToAccAddresses(t *testing.T) {
+	tests := []struct {
+		name    string
+		bech32s []string
+		exp     []sdk.AccAddress
+	}{
+		{
+			name:    "nil",
+			bech32s: nil,
+			exp:     []sdk.AccAddress{},
+		},
+		{
+			name:    "empty",
+			bech32s: []string{},
+			exp:     []sdk.AccAddress{},
+		},
+		{
+			name:    "one good",
+			bech32s: []string{sdk.AccAddress("one_good_one________").String()},
+			exp:     []sdk.AccAddress{sdk.AccAddress("one_good_one________")},
+		},
+		{
+			name:    "one bad",
+			bech32s: []string{"one_bad_one_________"},
+			exp:     []sdk.AccAddress{},
+		},
+		{
+			name:    "one empty",
+			bech32s: []string{""},
+			exp:     []sdk.AccAddress{},
+		},
+		{
+			name: "three good",
+			bech32s: []string{
+				sdk.AccAddress("first_is_good_______").String(),
+				sdk.AccAddress("second_is_good______").String(),
+				sdk.AccAddress("third_is_good_______").String(),
+			},
+			exp: []sdk.AccAddress{
+				sdk.AccAddress("first_is_good_______"),
+				sdk.AccAddress("second_is_good______"),
+				sdk.AccAddress("third_is_good_______"),
+			},
+		},
+		{
+			name: "three with first bad",
+			bech32s: []string{
+				"bad_first___________",
+				sdk.AccAddress("second_is_good______").String(),
+				sdk.AccAddress("third_is_good_______").String(),
+			},
+			exp: []sdk.AccAddress{
+				sdk.AccAddress("second_is_good______"),
+				sdk.AccAddress("third_is_good_______"),
+			},
+		},
+		{
+			name: "three with bad second",
+			bech32s: []string{
+				sdk.AccAddress("first_is_good_______").String(),
+				"bad_second__________",
+				sdk.AccAddress("third_is_good_______").String(),
+			},
+			exp: []sdk.AccAddress{
+				sdk.AccAddress("first_is_good_______"),
+				sdk.AccAddress("third_is_good_______"),
+			},
+		},
+		{
+			name: "three with bad third",
+			bech32s: []string{
+				sdk.AccAddress("first_is_good_______").String(),
+				sdk.AccAddress("second_is_good______").String(),
+				"bad_third___________",
+			},
+			exp: []sdk.AccAddress{
+				sdk.AccAddress("first_is_good_______"),
+				sdk.AccAddress("second_is_good______"),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := keeper.SafeBech32ToAccAddresses(tc.bech32s)
+			assert.Equal(t, tc.exp, actual, "SafeBech32ToAccAddresses")
+		})
+	}
+}
