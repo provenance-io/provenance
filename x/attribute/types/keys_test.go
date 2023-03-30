@@ -28,12 +28,11 @@ func TestGetAddressFromKey(t *testing.T) {
 		AttributeType: AttributeType_String,
 	}
 
-	longKey, err := GetAddressFromKey(AttributeNameAttrKeyPrefix(attr1))
+	longKey, err := GetAddressFromKey(AttributeNameAddrKeyPrefix(attr1.Name, attr1.GetAddressBytes()))
 	assert.NoError(t, err)
 	assert.Equal(t, attr1.GetAddressBytes(), longKey.Bytes())
 
-	shortKey, err := GetAddressFromKey(AttributeNameAttrKeyPrefix(attr2))
+	shortKey, err := GetAddressFromKey(AttributeNameAddrKeyPrefix(attr2.Name, attr2.GetAddressBytes()))
 	assert.NoError(t, err)
 	assert.Equal(t, attr2.GetAddressBytes(), shortKey.Bytes())
-
 }

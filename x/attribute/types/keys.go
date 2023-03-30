@@ -60,14 +60,6 @@ func AddrStrAttributesNameKeyPrefix(addr string, attributeName string) []byte {
 	return AddrAttributesNameKeyPrefix(GetAttributeAddressBytes(addr), attributeName)
 }
 
-// AttributeNameAttrKeyPrefix creates a key for address lookup [prefix][attribute name][address][attribute hash]
-func AttributeNameAttrKeyPrefix(attribute Attribute) []byte {
-	key := AttributeKeyPrefixAddrLookup
-	key = append(key, GetNameKeyBytes(attribute.Name)...)
-	key = append(key, address.MustLengthPrefix(attribute.GetAddressBytes())...)
-	return append(key, attribute.Hash()...)
-}
-
 // AttributeNameKeyPrefix returns a prefix key for all addresses with attribute name
 func AttributeNameKeyPrefix(attributeName string) []byte {
 	key := AttributeKeyPrefixAddrLookup
@@ -83,7 +75,8 @@ func AttributeNameAddrKeyPrefix(attributeName string, addr []byte) []byte {
 
 // GetAddressFromKey returns the AccAddress from full attribute address key ([prefix][name hash][length + AccAddress bytes][attribute hash])
 func GetAddressFromKey(nameAddrKey []byte) (sdk.AccAddress, error) {
-	addressBytes := nameAddrKey[sha256.Size+2 : len(nameAddrKey)-sha256.Size]
+	// start index of slice is [prefix (1)] + [name hash (32)] + [address len prefix (1)]
+	addressBytes := nameAddrKey[34:]
 	if err := sdk.VerifyAddressFormat(addressBytes); err != nil {
 		return nil, err
 	}

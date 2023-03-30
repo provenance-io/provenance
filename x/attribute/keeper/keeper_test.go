@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/binary"
 	"fmt"
 	"testing"
 
@@ -72,21 +73,23 @@ func (s *KeeperTestSuite) SetupTest() {
 func (s *KeeperTestSuite) TestSetAttribute() {
 
 	cases := []struct {
-		name      string
-		attr      types.Attribute
-		ownerAddr sdk.AccAddress
-		errorMsg  string
+		name        string
+		attr        types.Attribute
+		ownerAddr   sdk.AccAddress
+		errorMsg    string
+		lookupCount uint64
 	}{
 		{
 			name: "should successfully add attribute",
 			attr: types.Attribute{
 				Name:          "example.attribute",
-				Value:         []byte("0123456789"),
+				Value:         []byte("1"),
 				Address:       s.user1,
 				AttributeType: types.AttributeType_String,
 			},
-			ownerAddr: s.user1Addr,
-			errorMsg:  "",
+			ownerAddr:   s.user1Addr,
+			errorMsg:    "",
+			lookupCount: 1,
 		},
 		{
 			name: "should successfully add attribute with same name but different type",
@@ -96,8 +99,21 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 				Address:       s.user1,
 				AttributeType: types.AttributeType_Int,
 			},
-			ownerAddr: s.user1Addr,
-			errorMsg:  "",
+			ownerAddr:   s.user1Addr,
+			errorMsg:    "",
+			lookupCount: 2,
+		},
+		{
+			name: "should successfully add attribute with same name and type but diff value",
+			attr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("2"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_Int,
+			},
+			ownerAddr:   s.user1Addr,
+			errorMsg:    "",
+			lookupCount: 3,
 		},
 		{
 			name: "should fail due to validate basic error",
@@ -169,6 +185,9 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 				s.Assert().NoError(err, "should have attribute in lookup table")
 				s.Assert().Len(lookup, 1)
 				s.Assert().Equal(tc.attr.GetAddressBytes(), lookup[0].Bytes())
+				attrStore := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+				value := attrStore.Get(types.AttributeNameAddrKeyPrefix(tc.attr.Name, tc.attr.GetAddressBytes()))
+				s.Assert().Equal(tc.lookupCount, binary.BigEndian.Uint64(value))
 			}
 		})
 	}
@@ -344,6 +363,23 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 			ownerAddr: s.user1Addr,
 			errorMsg:  "",
 		},
+		{
+			name: "should successfully update attribute changing user address",
+			origAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("10"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_Int,
+			},
+			updateAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("10"),
+				Address:       s.user2,
+				AttributeType: types.AttributeType_Int,
+			},
+			ownerAddr: s.user1Addr,
+			errorMsg:  "",
+		},
 	}
 	for _, tc := range cases {
 		tc := tc
@@ -356,8 +392,10 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 			} else {
 				s.Assert().NoError(err)
 				attrStore := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
-				s.Assert().False(attrStore.Has(types.AttributeNameAttrKeyPrefix(tc.origAttr)), "original key should have been removed")
-				s.Assert().True(attrStore.Has(types.AttributeNameAttrKeyPrefix(tc.updateAttr)), "updated key should have been added")
+				if tc.origAttr.Address != tc.updateAttr.Address {
+					s.Assert().False(attrStore.Has(types.AttributeNameAddrKeyPrefix(tc.origAttr.Name, tc.origAttr.GetAddressBytes())), "original key should have been removed")
+				}
+				s.Assert().True(attrStore.Has(types.AttributeNameAddrKeyPrefix(tc.updateAttr.Name, tc.updateAttr.GetAddressBytes())), "updated key should have been added")
 			}
 		})
 	}
@@ -403,7 +441,7 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 		{
 			name:      "attribute will be removed without error when name has been removed",
 			attrName:  deletedAttr.Name,
-			lookupKey: types.AttributeNameAttrKeyPrefix(deletedAttr),
+			lookupKey: types.AttributeNameAddrKeyPrefix(deletedAttr.Name, deletedAttr.GetAddressBytes()),
 			accAddr:   s.user1,
 			ownerAddr: s.user1Addr,
 			errorMsg:  "",
@@ -411,7 +449,7 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 		{
 			name:      "should successfully delete attribute",
 			attrName:  attr.Name,
-			lookupKey: types.AttributeNameAttrKeyPrefix(attr),
+			lookupKey: types.AttributeNameAddrKeyPrefix(attr.Name, attr.GetAddressBytes()),
 			accAddr:   s.user1,
 			ownerAddr: s.user1Addr,
 			errorMsg:  "",
@@ -528,7 +566,6 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 }
 
 func (s *KeeperTestSuite) TestGetAllAttributes() {
-
 	attributes, err := s.app.AttributeKeeper.GetAllAttributes(s.ctx, s.user1)
 	s.Assert().NoError(err)
 	s.Assert().Equal(0, len(attributes))
@@ -545,6 +582,40 @@ func (s *KeeperTestSuite) TestGetAllAttributes() {
 	s.Assert().Equal(attr.Name, attributes[0].Name)
 	s.Assert().Equal(attr.Address, attributes[0].Address)
 	s.Assert().Equal(attr.Value, attributes[0].Value)
+}
+
+func (s *KeeperTestSuite) InAndDecAddNameAddressLookup() {
+	attr := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("0123456789"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+	}
+	lookupKey := types.AttributeNameAddrKeyPrefix(attr.Name, attr.GetAddressBytes())
+
+	s.app.AttributeKeeper.IncAddNameAddressLookup(s.ctx, attr)
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	bz := store.Get(lookupKey)
+	s.Assert().NotNil(bz)
+	s.Assert().Equal(uint64(1), binary.BigEndian.Uint64(bz))
+
+	s.app.AttributeKeeper.IncAddNameAddressLookup(s.ctx, attr)
+	store = s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	bz = store.Get(lookupKey)
+	s.Assert().NotNil(bz)
+	s.Assert().Equal(uint64(2), binary.BigEndian.Uint64(bz))
+
+	s.app.AttributeKeeper.DecAddNameAddressLookup(s.ctx, attr)
+	store = s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	bz = store.Get(lookupKey)
+	s.Assert().NotNil(bz)
+	s.Assert().Equal(uint64(1), binary.BigEndian.Uint64(bz))
+
+	s.app.AttributeKeeper.DecAddNameAddressLookup(s.ctx, attr)
+	store = s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	bz = store.Get(lookupKey)
+	s.Assert().Nil(bz)
+
 }
 
 func (s *KeeperTestSuite) TestGetAttributesByName() {
