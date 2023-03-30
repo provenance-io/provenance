@@ -418,13 +418,24 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedAttr, s.user1Addr), "should save successfully")
 	s.Assert().NoError(s.app.NameKeeper.DeleteRecord(s.ctx, "deleted"), "name record should be removed successfully")
 
+	// Create multiple attributes for a address with same name, to test the delete counter
+	deleteCounterName := "deleted2"
+	deletedCounterAttr1 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test1"))
+	deletedCounterAttr2 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test2"))
+	deletedCounterAttr3 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test3"))
+	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, deleteCounterName, s.user1Addr, false), "name record should save successfully")
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedCounterAttr1, s.user1Addr), "should save successfully")
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedCounterAttr2, s.user1Addr), "should save successfully")
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedCounterAttr3, s.user1Addr), "should save successfully")
+
 	cases := []struct {
-		name      string
-		attrName  string
-		accAddr   string
-		lookupKey []byte
-		ownerAddr sdk.AccAddress
-		errorMsg  string
+		name        string
+		attrName    string
+		accAddr     string
+		beforeCount uint64
+		lookupKey   []byte
+		ownerAddr   sdk.AccAddress
+		errorMsg    string
 	}{
 		{
 			name:      "should fail to delete, cant resolve name wrong owner",
@@ -439,20 +450,31 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 			errorMsg:  "no keys deleted with name dne",
 		},
 		{
-			name:      "attribute will be removed without error when name has been removed",
-			attrName:  deletedAttr.Name,
-			lookupKey: types.AttributeNameAddrKeyPrefix(deletedAttr.Name, deletedAttr.GetAddressBytes()),
-			accAddr:   s.user1,
-			ownerAddr: s.user1Addr,
-			errorMsg:  "",
+			name:        "attribute will be removed without error when name has been removed",
+			attrName:    deletedAttr.Name,
+			beforeCount: 1,
+			lookupKey:   types.AttributeNameAddrKeyPrefix(deletedAttr.Name, deletedAttr.GetAddressBytes()),
+			accAddr:     s.user1,
+			ownerAddr:   s.user1Addr,
+			errorMsg:    "",
 		},
 		{
-			name:      "should successfully delete attribute",
-			attrName:  attr.Name,
-			lookupKey: types.AttributeNameAddrKeyPrefix(attr.Name, attr.GetAddressBytes()),
-			accAddr:   s.user1,
-			ownerAddr: s.user1Addr,
-			errorMsg:  "",
+			name:        "should successfully delete attribute",
+			attrName:    attr.Name,
+			beforeCount: 1,
+			lookupKey:   types.AttributeNameAddrKeyPrefix(attr.Name, attr.GetAddressBytes()),
+			accAddr:     s.user1,
+			ownerAddr:   s.user1Addr,
+			errorMsg:    "",
+		},
+		{
+			name:        "should successfully delete multiple attributes",
+			attrName:    deleteCounterName,
+			beforeCount: 3,
+			lookupKey:   types.AttributeNameAddrKeyPrefix(deleteCounterName, deletedCounterAttr1.GetAddressBytes()),
+			accAddr:     s.user1,
+			ownerAddr:   s.user1Addr,
+			errorMsg:    "",
 		},
 	}
 	for _, tc := range cases {
@@ -461,7 +483,8 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 		s.Run(tc.name, func() {
 			attrStore := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
 			if len(tc.lookupKey) > 0 {
-				s.Assert().True(attrStore.Has(tc.lookupKey), "should have attribute key before deletion")
+				count := binary.BigEndian.Uint64(attrStore.Get(tc.lookupKey))
+				s.Assert().Equal(tc.beforeCount, count, "should have correct count in lookup table")
 			}
 			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.attrName, nil, tc.ownerAddr)
 			if len(tc.errorMsg) > 0 {
@@ -584,7 +607,7 @@ func (s *KeeperTestSuite) TestGetAllAttributes() {
 	s.Assert().Equal(attr.Value, attributes[0].Value)
 }
 
-func (s *KeeperTestSuite) InAndDecAddNameAddressLookup() {
+func (s *KeeperTestSuite) TestIncAndDecAddNameAddressLookup() {
 	attr := types.Attribute{
 		Name:          "example.attribute",
 		Value:         []byte("0123456789"),
@@ -593,25 +616,27 @@ func (s *KeeperTestSuite) InAndDecAddNameAddressLookup() {
 	}
 	lookupKey := types.AttributeNameAddrKeyPrefix(attr.Name, attr.GetAddressBytes())
 
-	s.app.AttributeKeeper.IncAddNameAddressLookup(s.ctx, attr)
 	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
 	bz := store.Get(lookupKey)
-	s.Assert().NotNil(bz)
-	s.Assert().Equal(uint64(1), binary.BigEndian.Uint64(bz))
+	s.Assert().Nil(bz)
 
-	s.app.AttributeKeeper.IncAddNameAddressLookup(s.ctx, attr)
-	store = s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	for i := 1; i <= 100; i++ {
+		s.app.AttributeKeeper.IncAddNameAddressLookup(s.ctx, attr)
+		bz := store.Get(lookupKey)
+		s.Assert().NotNil(bz)
+		s.Assert().Equal(uint64(i), binary.BigEndian.Uint64(bz))
+	}
+
 	bz = store.Get(lookupKey)
-	s.Assert().NotNil(bz)
-	s.Assert().Equal(uint64(2), binary.BigEndian.Uint64(bz))
+	s.Assert().Equal(uint64(100), binary.BigEndian.Uint64(bz))
 
-	s.app.AttributeKeeper.DecAddNameAddressLookup(s.ctx, attr)
-	store = s.ctx.KVStore(s.app.GetKey(types.StoreKey))
-	bz = store.Get(lookupKey)
-	s.Assert().NotNil(bz)
-	s.Assert().Equal(uint64(1), binary.BigEndian.Uint64(bz))
+	for i := 100; i > 0; i-- {
+		bz := store.Get(lookupKey)
+		s.Assert().NotNil(bz)
+		s.Assert().Equal(uint64(i), binary.BigEndian.Uint64(bz))
+		s.app.AttributeKeeper.DecAddNameAddressLookup(s.ctx, attr)
+	}
 
-	s.app.AttributeKeeper.DecAddNameAddressLookup(s.ctx, attr)
 	store = s.ctx.KVStore(s.app.GetKey(types.StoreKey))
 	bz = store.Get(lookupKey)
 	s.Assert().Nil(bz)
