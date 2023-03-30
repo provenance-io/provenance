@@ -45,12 +45,12 @@ func (p TestablePartyDetails) Real() *PartyDetails {
 var (
 	// AssociateSigners is a TEST ONLY exposure of associateSigners.
 	AssociateSigners = associateSigners
-	// FindMissingRequired is a TEST ONLY exposure of findMissingRequired.
-	FindMissingRequired = findMissingRequired
+	// FindUnsignedRequired is a TEST ONLY exposure of findUnsignedRequired.
+	FindUnsignedRequired = findUnsignedRequired
 	// AssociateRequiredRoles is a TEST ONLY exposure of associateRequiredRoles.
 	AssociateRequiredRoles = associateRequiredRoles
-	// MissingRolesError is a TEST ONLY exposure of missingRolesError.
-	MissingRolesError = missingRolesError
+	// MissingRolesString is a TEST ONLY exposure of missingRolesString.
+	MissingRolesString = missingRolesString
 	// GetAuthzMessageTypeURLs is a TEST ONLY exposure of getAuthzMessageTypeURLs.
 	GetAuthzMessageTypeURLs = getAuthzMessageTypeURLs
 )
@@ -93,8 +93,22 @@ func (k Keeper) ValidateProvenanceRole(ctx sdk.Context, parties []*PartyDetails)
 }
 
 var (
+	// ValidateRolesPresent is a TEST ONLY exposure of validateRolesPresent.
+	ValidateRolesPresent = validateRolesPresent
 	// FindMissing is a TEST ONLY exposure of findMissing.
 	FindMissing = findMissing
+	// FindMissingParties is a TEST ONLY exposure of findMissingParties.
+	FindMissingParties = findMissingParties
+)
+
+// FindMissingComp is a TEST ONLY exposure of findMissingComp.
+func FindMissingComp[R any, C any](required []R, toCheck []C, comp func(R, C) bool) []R {
+	return findMissingComp(required, toCheck, comp)
+}
+
+var (
+	// PluralEnding is a TEST ONLY exposure of pluralEnding.
+	PluralEnding = pluralEnding
 	// SafeBech32ToAccAddresses is a TEST ONLY exposure of safeBech32ToAccAddresses.
 	SafeBech32ToAccAddresses = safeBech32ToAccAddresses
 )

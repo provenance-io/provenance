@@ -146,7 +146,7 @@ func (s *Scope) AddOwners(owners []Party) error {
 	}
 	for _, newOwner := range owners {
 		for _, scopeOwner := range s.Owners {
-			if newOwner.IsSameAs(scopeOwner) {
+			if newOwner.IsSameAs(&scopeOwner) {
 				return fmt.Errorf("party already exists with address %s and role %s", newOwner.Address, newOwner.Role)
 			}
 		}
@@ -494,7 +494,7 @@ func (p Party) ValidateBasic() error {
 func ValidatePartiesAreUnique(parties []Party) error {
 	for i := 0; i < len(parties)-1; i++ {
 		for j := i + 1; j < len(parties); j++ {
-			if parties[i].IsSameAs(parties[j]) {
+			if parties[i].IsSameAs(&parties[j]) {
 				return fmt.Errorf("duplicate parties not allowed: address = %s, role = %s, indexes: %d, %d",
 					parties[i].Address, parties[i].Role, i, j)
 			}
@@ -521,25 +521,45 @@ func (p Party) String() string {
 	return fmt.Sprintf("%s - %s", p.Address, p.Role)
 }
 
+// Partier is an interface with the getter methods of a Party.
+type Partier interface {
+	GetAddress() string
+	GetRole() PartyType
+	GetOptional() bool
+}
+
+// EqualPartiers returns true if p1 and p2 are equivalent.
+func EqualPartiers(p1, p2 Partier) bool {
+	if p1 == p2 {
+		return true
+	}
+	if p1 == nil || p2 == nil {
+		return false
+	}
+	return p1.GetAddress() == p2.GetAddress() && p1.GetRole() == p2.GetRole() && p1.GetOptional() == p2.GetOptional()
+}
+
+// SamePartiers returns true if p1 and p2 are have the same address and role.
+func SamePartiers(p1, p2 Partier) bool {
+	if p1 == p2 {
+		return true
+	}
+	if p1 == nil || p2 == nil {
+		return false
+	}
+	return p1.GetAddress() == p2.GetAddress() && p1.GetRole() == p2.GetRole()
+}
+
 // Equals returns true if this party is equal to the provided party.
 // See also: IsSameAs for a comparison that ignores the Optional field.
-func (p Party) Equals(p2 Party) bool {
-	return p.Address == p2.Address && p.Role == p2.Role && p.Optional == p2.Optional
+func (p Party) Equals(p2 Partier) bool {
+	return EqualPartiers(&p, p2)
 }
 
 // IsSameAs returns true if this party's address and role are the same as the provided party's.
 // See also: Equals for a more thorough comparison.
-func (p Party) IsSameAs(p2 Party) bool {
-	return p.Address == p2.Address && p.Role == p2.Role
-}
-
-// ConcatParties creates a new slice containing both slices of parties.
-func ConcatParties(partySets ...[]Party) []Party {
-	rv := make([]Party, 0)
-	for _, parties := range partySets {
-		rv = append(rv, parties...)
-	}
-	return rv
+func (p Party) IsSameAs(p2 Partier) bool {
+	return SamePartiers(&p, p2)
 }
 
 // EqualParties returns true if the two provided sets of parties contain the same entries.
@@ -551,7 +571,7 @@ func EqualParties(p1, p2 []Party) bool {
 p1Loop:
 	for _, p1p := range p1 {
 		for _, p2p := range p2 {
-			if p1p.Equals(p2p) {
+			if p1p.Equals(&p2p) {
 				continue p1Loop
 			}
 		}

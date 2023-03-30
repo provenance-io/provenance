@@ -47,14 +47,18 @@ func (s *MetadataHandlerTestSuite) SetupTest() {
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
+	user1Acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr)
+	s.Require().NoError(user1Acc.SetPubKey(s.pubkey1), "SetPubKey user1")
 
 	privKey, _ := secp256r1.GenPrivKey()
 	s.pubkey2 = privKey.PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
 	s.user2 = s.user2Addr.String()
+	user2Acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr)
+	s.Require().NoError(user2Acc.SetPubKey(s.pubkey1), "SetPubKey user2")
 
-	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
-	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr))
+	s.app.AccountKeeper.SetAccount(s.ctx, user1Acc)
+	s.app.AccountKeeper.SetAccount(s.ctx, user2Acc)
 }
 
 func TestMetadataHandlerTestSuite(t *testing.T) {
@@ -694,7 +698,7 @@ func (s *MetadataHandlerTestSuite) TestAddAndDeleteScopeOwners() {
 
 		msgAdd := types.NewMsgAddScopeOwnerRequest(
 			scopeA.ScopeId,
-			[]types.Party{{addrServicer, types.PartyType_PARTY_TYPE_SERVICER}},
+			[]types.Party{{Address: addrServicer, Role: types.PartyType_PARTY_TYPE_SERVICER}},
 			[]string{addrOriginator},
 		)
 

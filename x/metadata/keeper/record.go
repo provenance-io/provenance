@@ -174,7 +174,7 @@ func (k Keeper) ValidateWriteRecord(
 	}
 	recSpec, found := k.GetRecordSpecification(ctx, recSpecID)
 	if !found {
-		return fmt.Errorf("record specification not found for record specification id %s (contract spec id %s and record name %s)",
+		return fmt.Errorf("record specification not found for record specification id %s (contract spec id %s and record name %q)",
 			recSpecID, session.SpecificationId, proposed.Name)
 	}
 
@@ -286,17 +286,18 @@ func (k Keeper) ValidateDeleteRecord(ctx sdk.Context, proposedID types.MetadataA
 	if !found {
 		return fmt.Errorf("record does not exist to delete: %s", proposedID)
 	}
-	var scopeOwners []types.Party
+	var reqParties []types.Party
 	var sessionParties []types.Party
 	var reqRoles []types.PartyType
 	// Ignoring the error from AsScopeAddress because we know it'll be nil
 	// because GetRecord found a record, so it's a record address.
 	scopeID, _ := proposedID.AsScopeAddress()
 	if scope, found := k.GetScope(ctx, scopeID); found {
-		scopeOwners = scope.Owners
+		reqParties = append(reqParties, scope.Owners...)
 	}
 	if session, found := k.GetSession(ctx, record.SessionId); found {
 		sessionParties = session.Parties
+		reqParties = append(reqParties, session.Parties...)
 	}
 	if len(sessionParties) > 0 {
 		// If there aren't any session parties, there's nothing to compare roles with.
@@ -308,7 +309,6 @@ func (k Keeper) ValidateDeleteRecord(ctx sdk.Context, proposedID types.MetadataA
 		}
 	}
 
-	reqParties := types.ConcatParties(scopeOwners, sessionParties)
 	if _, err := k.ValidateSignersWithParties(ctx, reqParties, sessionParties, reqRoles, msg); err != nil {
 		return err
 	}

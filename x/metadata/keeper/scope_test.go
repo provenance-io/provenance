@@ -226,14 +226,14 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 			existing: types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, ""),
 			signers:  []string{s.user2},
-			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
+			errorMsg: fmt.Sprintf("missing required signature: %s (OWNER)", s.user1),
 		},
 		{
 			name:     "missing existing owner signer on update fails",
 			existing: types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, ""),
 			signers:  []string{s.user2},
-			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
+			errorMsg: fmt.Sprintf("missing required signature: %s (OWNER)", s.user1),
 		},
 		{
 			name:     "no error when update includes existing owner signer",
@@ -261,7 +261,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 			existing: types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{},
-			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
+			errorMsg: fmt.Sprintf("missing required signature: %s (OWNER)", s.user1),
 		},
 		{
 			name:     "setting value owner to user does not require their signature",
@@ -296,14 +296,14 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 			existing: types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, markerAddr),
 			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, s.user2),
 			signers:  []string{s.user2},
-			errorMsg: fmt.Sprintf("missing signature for %s with authority to withdraw/remove existing value owner", markerAddr),
+			errorMsg: fmt.Sprintf("missing signature for %s (testcoin) with authority to withdraw/remove it as scope value owner", markerAddr),
 		},
 		{
 			name:     "setting a new value owner fails if missing deposit permission",
 			existing: types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, ""),
 			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, markerAddr),
 			signers:  []string{s.user2},
-			errorMsg: fmt.Sprintf("no signatures present with authority to add scope to marker %s", markerAddr),
+			errorMsg: fmt.Sprintf("missing signature for %s (testcoin) with authority to deposit/add it as scope value owner", markerAddr),
 		},
 		{
 			name:     "setting a new value owner fails for scope owner when value owner signature is missing",
@@ -380,7 +380,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 			existing: types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			proposed: *types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2),
 			signers:  []string{s.user2},
-			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
+			errorMsg: fmt.Sprintf("missing required signature: %s (OWNER)", s.user1),
 		},
 	}
 
@@ -681,7 +681,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeDeleteDataAccess() {
 			existing:        scope,
 			signers:         []string{s.user2},
 			wantErr:         true,
-			errorMsg:        fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
+			errorMsg:        fmt.Sprintf("missing required signature: %s (OWNER)", s.user1),
 		},
 		{
 			name:            "should fail to validate delete scope data access, incorrect address type",
@@ -754,7 +754,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
 			existing: scopeWithOwners(originalOwners),
 			proposed: scopeWithOwners([]types.Party{{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER}}),
 			signers:  []string{s.user2},
-			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
+			errorMsg: fmt.Sprintf("missing required signature: %s (OWNER)", s.user1),
 		},
 		{
 			name:     "should successfully validate update scope owner, same owner different role",
@@ -778,7 +778,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
 			existing: scopeWithOwners(originalOwners),
 			proposed: scopeWithOwners([]types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_CUSTODIAN}}),
 			signers:  []string{s.user1},
-			errorMsg: "missing party type required by spec: [OWNER]",
+			errorMsg: "missing signers for roles required by spec: OWNER need 1 have 0",
 		},
 		{
 			name:     "should fail to validate update scope owner, empty list",

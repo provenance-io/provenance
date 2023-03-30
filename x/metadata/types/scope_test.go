@@ -754,6 +754,216 @@ func (s *ScopeTestSuite) TestEqualParties() {
 	}
 }
 
+type otherParty struct {
+	address  string
+	role     PartyType
+	optional bool
+}
+
+var _ Partier = (*otherParty)(nil)
+
+func (p otherParty) GetAddress() string {
+	return p.address
+}
+
+func (p otherParty) GetRole() PartyType {
+	return p.role
+}
+
+func (p otherParty) GetOptional() bool {
+	return p.optional
+}
+
+func (s *ScopeTestSuite) TestEqualPartiers() {
+	aParty := Party{
+		Address:  "123",
+		Role:     88,
+		Optional: true,
+	}
+
+	tests := []struct {
+		name string
+		p1   Partier
+		p2   Partier
+		exp  bool
+	}{
+		{
+			name: "nil nil",
+			p1:   nil,
+			p2:   nil,
+			exp:  true,
+		},
+		{
+			name: "nil party",
+			p1:   nil,
+			p2:   &aParty,
+			exp:  false,
+		},
+		{
+			name: "party nil",
+			p1:   &aParty,
+			p2:   nil,
+			exp:  false,
+		},
+		{
+			name: "same references",
+			p1:   &aParty,
+			p2:   &aParty,
+			exp:  true,
+		},
+		{
+			name: "equal parties same type",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &Party{Address: "333", Role: 3, Optional: false},
+			exp:  true,
+		},
+		{
+			name: "equal parties different types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &otherParty{address: "333", role: 3, optional: false},
+			exp:  true,
+		},
+		{
+			name: "different addresses same types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &Party{Address: "444", Role: 3, Optional: false},
+			exp:  false,
+		},
+		{
+			name: "different roles same types",
+			p1:   &Party{Address: "333", Role: 4, Optional: false},
+			p2:   &Party{Address: "333", Role: 3, Optional: false},
+			exp:  false,
+		},
+		{
+			name: "different optionals same types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &Party{Address: "333", Role: 3, Optional: true},
+			exp:  false,
+		},
+		{
+			name: "different addresses different types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &otherParty{address: "444", role: 3, optional: false},
+			exp:  false,
+		},
+		{
+			name: "different roles different types",
+			p1:   &Party{Address: "333", Role: 4, Optional: false},
+			p2:   &otherParty{address: "333", role: 3, optional: false},
+			exp:  false,
+		},
+		{
+			name: "different optionals different types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &otherParty{address: "333", role: 3, optional: true},
+			exp:  false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			actual := EqualPartiers(tc.p1, tc.p2)
+			s.Assert().Equal(tc.exp, actual, "EqualPartiers")
+		})
+	}
+}
+
+func (s *ScopeTestSuite) TestSamePartiers() {
+	aParty := Party{
+		Address:  "123",
+		Role:     88,
+		Optional: true,
+	}
+
+	tests := []struct {
+		name string
+		p1   Partier
+		p2   Partier
+		exp  bool
+	}{
+		{
+			name: "nil nil",
+			p1:   nil,
+			p2:   nil,
+			exp:  true,
+		},
+		{
+			name: "nil party",
+			p1:   nil,
+			p2:   &aParty,
+			exp:  false,
+		},
+		{
+			name: "party nil",
+			p1:   &aParty,
+			p2:   nil,
+			exp:  false,
+		},
+		{
+			name: "same references",
+			p1:   &aParty,
+			p2:   &aParty,
+			exp:  true,
+		},
+		{
+			name: "equal parties same type",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &Party{Address: "333", Role: 3, Optional: false},
+			exp:  true,
+		},
+		{
+			name: "equal parties different types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &otherParty{address: "333", role: 3, optional: false},
+			exp:  true,
+		},
+		{
+			name: "different addresses same types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &Party{Address: "444", Role: 3, Optional: false},
+			exp:  false,
+		},
+		{
+			name: "different roles same types",
+			p1:   &Party{Address: "333", Role: 4, Optional: false},
+			p2:   &Party{Address: "333", Role: 3, Optional: false},
+			exp:  false,
+		},
+		{
+			name: "different optionals same types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &Party{Address: "333", Role: 3, Optional: true},
+			exp:  true,
+		},
+		{
+			name: "different addresses different types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &otherParty{address: "444", role: 3, optional: false},
+			exp:  false,
+		},
+		{
+			name: "different roles different types",
+			p1:   &Party{Address: "333", Role: 4, Optional: false},
+			p2:   &otherParty{address: "333", role: 3, optional: false},
+			exp:  false,
+		},
+		{
+			name: "different optionals different types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &otherParty{address: "333", role: 3, optional: true},
+			exp:  true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			actual := SamePartiers(tc.p1, tc.p2)
+			s.Assert().Equal(tc.exp, actual, "EqualPartiers")
+		})
+	}
+}
+
 func (s *ScopeTestSuite) TestParty_Equals() {
 	tests := []struct {
 		name string
@@ -774,7 +984,7 @@ func (s *ScopeTestSuite) TestParty_Equals() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			actual := tc.p1.Equals(tc.p2)
+			actual := tc.p1.Equals(&tc.p2)
 			s.Assert().Equal(tc.exp, actual, "%v.Equals(%v)", tc.p1, tc.p2)
 		})
 	}
@@ -800,7 +1010,7 @@ func (s *ScopeTestSuite) TestParty_IsSameAs() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			actual := tc.p1.IsSameAs(tc.p2)
+			actual := tc.p1.IsSameAs(&tc.p2)
 			s.Assert().Equal(tc.exp, actual, "%v.IsSameAs(%v)", tc.p1, tc.p2)
 		})
 	}

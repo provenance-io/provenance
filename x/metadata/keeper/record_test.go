@@ -528,7 +528,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 			proposed:        types.NewRecord(s.recordName, sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
 			signers:         []string{},
 			partiesInvolved: ownerPartyList(s.user1),
-			errorMsg:        fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
+			errorMsg:        fmt.Sprintf("missing required signature: %s (OWNER)", s.user1),
 		},
 		"session not found": {
 			existing:        nil,
@@ -542,8 +542,8 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 			proposed:        types.NewRecord(missingRecordSpecName, sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, missingRecordSpecID),
 			signers:         []string{s.user1},
 			partiesInvolved: ownerPartyList(s.user1),
-			errorMsg: fmt.Sprintf("record specification not found for record specification id %s (contract spec uuid %s and record name %s)",
-				missingRecordSpecID, s.contractSpecUUID, missingRecordSpecName),
+			errorMsg: fmt.Sprintf("record specification not found for record specification id %s (contract spec id %s and record name %q)",
+				missingRecordSpecID, s.contractSpecID, missingRecordSpecName),
 		},
 		"missing input": {
 			existing:        nil,

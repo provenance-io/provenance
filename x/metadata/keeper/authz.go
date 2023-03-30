@@ -48,7 +48,7 @@ func WrapAvailableParty(party types.Party) *PartyDetails {
 
 // BuildPartyDetails creates the list of PartyDetails to be used in party/signer/role validation.
 func BuildPartyDetails(reqParties, availableParties []types.Party) []*PartyDetails {
-	details := make([]*PartyDetails, len(availableParties), len(availableParties)+len(reqParties))
+	details := make([]*PartyDetails, len(availableParties))
 
 	// Start with creating details for each available party.
 	for i, party := range availableParties {
@@ -62,7 +62,7 @@ reqPartiesLoop:
 	for _, reqParty := range reqParties {
 		if !reqParty.Optional {
 			for _, party := range details {
-				if party.EqualsParty(reqParty) {
+				if party.IsSameAs(&reqParty) {
 					party.MakeRequired()
 					continue reqPartiesLoop
 				}
@@ -118,7 +118,7 @@ func (p *PartyDetails) MakeRequired() {
 	p.optional = false
 }
 
-func (p *PartyDetails) IsOptional() bool {
+func (p *PartyDetails) GetOptional() bool {
 	return p.optional
 }
 
@@ -175,9 +175,10 @@ func (p *PartyDetails) IsStillUsableAs(role types.PartyType) bool {
 	return p.CanBeUsed() && !p.IsUsed() && p.GetRole() == role
 }
 
-// EqualsParty is the same as the Party.Equals method.
-func (p *PartyDetails) EqualsParty(p2 types.Party) bool {
-	return p.GetAddress() == p2.Address && p.GetRole() == p2.Role
+// IsSameAs returns true if this is the same as the provided Party or PartyDetails.
+// Only the address and role are considered for this test.
+func (p *PartyDetails) IsSameAs(p2 types.Partier) bool {
+	return types.SamePartiers(p, p2)
 }
 
 // SignersWrapper is a thing that holds the signers as strings and acc addresses.
@@ -247,10 +248,10 @@ func (k Keeper) ValidateSignersWithParties(
 
 	// Make sure all required parties are signers.
 	associateSigners(parties, signers)
-	if err := k.associateAuthorizations(ctx, findMissingRequired(parties), signers, msg, nil); err != nil {
+	if err := k.associateAuthorizations(ctx, findUnsignedRequired(parties), signers, msg, nil); err != nil {
 		return nil, err
 	}
-	if missingReqParties := findMissingRequired(parties); len(missingReqParties) > 0 {
+	if missingReqParties := findUnsignedRequired(parties); len(missingReqParties) > 0 {
 		missing := make([]string, len(missingReqParties))
 		for i, party := range missingReqParties {
 			missing[i] = fmt.Sprintf("%s (%s)", party.GetAddress(), party.GetRole().SimpleString())
@@ -265,7 +266,7 @@ func (k Keeper) ValidateSignersWithParties(
 		return nil, err
 	}
 	if rolesAreMissing {
-		return nil, missingRolesError(parties, reqRoles)
+		return nil, fmt.Errorf("missing signers for roles required by spec: %s", missingRolesString(parties, reqRoles))
 	}
 
 	// Make sure all smart contract accounts have the PROVENANCE role,
@@ -291,9 +292,9 @@ func associateSigners(parties []*PartyDetails, signers *SignersWrapper) {
 	}
 }
 
-// findMissingRequired returns a list of parties that are required (optional=false)
+// findUnsignedRequired returns a list of parties that are required (optional=false)
 // and don't have a signer.
-func findMissingRequired(parties []*PartyDetails) []*PartyDetails {
+func findUnsignedRequired(parties []*PartyDetails) []*PartyDetails {
 	var rv []*PartyDetails
 	for _, party := range parties {
 		if party.IsRequired() && !party.HasSigner() {
@@ -305,6 +306,9 @@ func findMissingRequired(parties []*PartyDetails) []*PartyDetails {
 
 // associateRequiredRoles goes through the required roles, marking parties as used
 // when possible. Returns a list of required role entries that haven't yet been fulfilled.
+//
+// This is similar to validateRolesPresent except this requires a role to have a signer
+// in order for it to fulfill a required role.
 func associateRequiredRoles(parties []*PartyDetails, reqRoles []types.PartyType) []types.PartyType {
 	var missingRoles []types.PartyType
 reqRolesLoop:
@@ -320,27 +324,30 @@ reqRolesLoop:
 	return missingRoles
 }
 
-// missingRolesError generates and returns an error message indicating that
+// missingRolesString generates and returns an error message indicating that
 // some required roles don't have signers.
-func missingRolesError(parties []*PartyDetails, reqRoles []types.PartyType) error {
+func missingRolesString(parties []*PartyDetails, reqRoles []types.PartyType) string {
 	reqCountByRole := make(map[types.PartyType]int)
-	haveCountByRole := make(map[types.PartyType]int)
 	for _, role := range reqRoles {
 		reqCountByRole[role]++
 	}
+
+	haveCountByRole := make(map[types.PartyType]int)
 	for _, party := range parties {
 		if party.IsUsed() {
 			haveCountByRole[party.role]++
 		}
 	}
-	var parts []string
+
+	var missing []string
 	for _, role := range types.GetAllPartyTypes() {
 		if reqCountByRole[role] > haveCountByRole[role] {
-			parts = append(parts, fmt.Sprintf("%s need %d have %d",
+			missing = append(missing, fmt.Sprintf("%s need %d have %d",
 				role.SimpleString(), reqCountByRole[role], haveCountByRole[role]))
 		}
 	}
-	return fmt.Errorf("missing signers for roles required by spec: %s", strings.Join(parts, ", "))
+
+	return strings.Join(missing, ", ")
 }
 
 // getAuthzMessageTypeURLs gets all msg type URLs that authz authorizations might
@@ -691,6 +698,28 @@ func (k Keeper) ValidateSignersWithoutParties(
 	return nil
 }
 
+// validateRolesPresent returns an error if one or more required roles are not present in the parties.
+//
+// This is similar to associateRequiredRoles, except this one doesn't require the party to have a signer.
+func validateRolesPresent(parties []types.Party, reqRoles []types.PartyType) error {
+	details := BuildPartyDetails(nil, parties)
+	roleMissing := false
+reqRolesLoop:
+	for _, role := range reqRoles {
+		for _, party := range details {
+			if party.IsStillUsableAs(role) {
+				party.MarkAsUsed()
+				continue reqRolesLoop
+			}
+		}
+		roleMissing = true
+	}
+	if roleMissing {
+		return fmt.Errorf("missing roles required by spec: %s", missingRolesString(details, reqRoles))
+	}
+	return nil
+}
+
 // TODELETEValidateAllPartiesAreSignersWithAuthz validate all parties are signers with authz module
 func (k Keeper) TODELETEValidateAllPartiesAreSignersWithAuthz(ctx sdk.Context, parties []types.Party, msg types.MetadataMsg) error {
 	addresses := make([]string, len(parties))
@@ -726,23 +755,36 @@ func (k Keeper) TODELETEValidateAllPartiesAreSignersWithAuthz(ctx sdk.Context, p
 	return nil
 }
 
-// findMissing returns all elements of the required list that are not found in the entries list
-// It is exported only so that it can be unit tested.
-func findMissing(required []string, entries []string) []string {
-	retval := []string{}
+// findMissing returns all elements of the required list that are not found in the entries list.
+//
+// See also: findMissingComp
+func findMissing(required, toCheck []string) []string {
+	return findMissingComp(required, toCheck, func(r, c string) bool { return r == c })
+}
+
+// findMissingParties returns all parties from the required list that don't have a same party in the toCheck list.
+//
+// See also: findMissingComp
+func findMissingParties(required, toCheck []types.Party) []types.Party {
+	return findMissingComp(required, toCheck, func(r, c types.Party) bool { return types.SamePartiers(&r, &c) })
+}
+
+// findMissingComp returns all entries in required where an entry does not exist in toCheck
+// such that the provided comp function returns true.
+// Duplicate entries in required do not require duplicate entries in toCheck.
+// E.g. findMissingComp([a, b, a], [a]) => [b], and findMissingComp([a, b, a], [b]) => [a, a].
+func findMissingComp[R any, C any](required []R, toCheck []C, comp func(R, C) bool) []R {
+	var rv []R
+reqLoop:
 	for _, req := range required {
-		found := false
-		for _, entry := range entries {
-			if req == entry {
-				found = true
-				break
+		for _, entry := range toCheck {
+			if comp(req, entry) {
+				continue reqLoop
 			}
 		}
-		if !found {
-			retval = append(retval, req)
-		}
+		rv = append(rv, req)
 	}
-	return retval
+	return rv
 }
 
 // GetMarkerAndCheckAuthority gets a marker by address and checks if one of the signers has the provided role.

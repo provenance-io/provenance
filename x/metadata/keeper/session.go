@@ -111,6 +111,7 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 		return err
 	}
 
+	var reqParties []types.Party
 	if existing != nil {
 		if !proposed.SessionId.Equals(existing.SessionId) {
 			return fmt.Errorf("cannot update session identifier. expected %s, got %s", existing.SessionId, proposed.SessionId)
@@ -121,6 +122,7 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 		if len(proposed.GetName()) == 0 {
 			return errors.New("proposed name to existing session must not be empty")
 		}
+		reqParties = append(reqParties, existing.Parties...)
 	}
 
 	scopeUUID, err := proposed.SessionId.ScopeUUID()
@@ -155,7 +157,7 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 		return fmt.Errorf("contract spec %s not listed in scope spec %s", proposed.SpecificationId, scopeSpec.SpecificationId)
 	}
 
-	reqParties := types.ConcatParties(scope.Owners, existing.Parties)
+	reqParties = append(reqParties, scope.Owners...)
 	if _, err = k.ValidateSignersWithParties(ctx, reqParties, proposed.Parties, contractSpec.PartiesInvolved, msg); err != nil {
 		return err
 	}
