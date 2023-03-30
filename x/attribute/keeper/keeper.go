@@ -180,14 +180,12 @@ func (k Keeper) DecAddNameAddressLookup(ctx sdk.Context, attr types.Attribute) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.AttributeNameAddrKeyPrefix(attr.Name, attr.GetAddressBytes())
 	bz := store.Get(key)
-	id := uint64(0)
 	if bz != nil {
 		value := binary.BigEndian.Uint64(bz)
 		if value <= uint64(1) {
 			store.Delete(key)
 		} else {
-			id = binary.BigEndian.Uint64(bz) - uint64(1)
-			store.Set(key, sdk.Uint64ToBigEndian(id-1))
+			store.Set(key, sdk.Uint64ToBigEndian(value-1))
 		}
 	}
 }
