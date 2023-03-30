@@ -423,11 +423,6 @@ func (k msgServer) DeleteContractSpecFromScopeSpec(
 ) (*types.MsgDeleteContractSpecFromScopeSpecResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteContractSpecFromScopeSpec")
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	_, found := k.GetContractSpecification(ctx, msg.ContractSpecificationId)
-	if !found {
-		return nil, fmt.Errorf("contract specification not found with id %s", msg.ContractSpecificationId)
-	}
-
 	scopeSpec, found := k.GetScopeSpecification(ctx, msg.ScopeSpecificationId)
 	if !found {
 		return nil, fmt.Errorf("scope specification not found with id %s", msg.ScopeSpecificationId)
