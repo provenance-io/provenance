@@ -211,27 +211,27 @@ func (s *SignersWrapper) Accs() []sdk.AccAddress {
 }
 
 // ValidateSignersWithParties ensures the following:
-// * All optional=false reqParties have signed.
-// * All required roles are present in availableParties and are signers.
-// * All parties with the PROVENANCE role are a smart contract account.
-// * All parties with a smart contract account have the PROVENANCE role.
+//   - All optional=false reqParties have signed.
+//   - All required roles are present in availableParties and are signers.
+//   - All parties with the PROVENANCE role are a smart contract account.
+//   - All parties with a smart contract account have the PROVENANCE role.
 //
 // The x/authz module is utilized to help facilitate signer checking.
 //
-// * reqParties are the parties that might be required to sign, but might not
-// necessarily fulfill a required role. This usually comes from a parent entry
-// and/or existing entry. They can only fulfill a required role if also provided
-// in availableParties. Parties in reqParties with optional=true, are ignored.
-// Parties in reqParties with optional=false are required to be in the msg signers.
-// * availableParties are the parties available to fulfill required roles. These
-// usually come from the proposed entry. Entries in here with optional=false are
-// NOT required to sign (unless they're in reqParties like that too).
-// * reqRoles are all the roles that are required. These usually come from a spec.
+//   - reqParties are the parties that might be required to sign, but might not
+//     necessarily fulfill a required role. They can only fulfill a required
+//     role if also provided in availableParties. Parties in reqParties with
+//     optional=true, are ignored. Parties in reqParties with optional=false are
+//     required to be in the msg signers.
+//   - availableParties are the parties available to fulfill required roles.
+//     Entries in here with optional=false are NOT required to sign (unless
+//     they're in reqParties like that too).
+//   - reqRoles are all the roles that are required.
 //
 // If a party is in both reqParties and availableParties, they are only optional
-// if both have optional=true.
-// Only parties in availableParties that are in the msg signers list are able to
-// fulfill an entry in reqRoles, and each such party can each only fulfill one entry.
+// if both have optional=true. Only parties in availableParties that are in the msg
+// signers list are able to fulfill an entry in reqRoles, and each such party can
+// only fulfill one required role entry.
 //
 // Party details are returned containing information on which parties were signers and
 // which were used to fulfill required roles.
@@ -718,6 +718,22 @@ reqRolesLoop:
 		return fmt.Errorf("missing roles required by spec: %s", missingRolesString(details, reqRoles))
 	}
 	return nil
+}
+
+func validatePartiesArePresent(required, available []types.Party) error {
+	missing := findMissingParties(required, available)
+	if len(missing) == 0 {
+		return nil
+	}
+	parts := make([]string, len(missing))
+	for i, party := range missing {
+		parts[i] = fmt.Sprintf("%s (%s)", party.Address, party.Role.SimpleString())
+	}
+	word := "party"
+	if len(missing) != 1 {
+		word = "parties"
+	}
+	return fmt.Errorf("missing %s: %s", word, strings.Join(parts, ", "))
 }
 
 // TODELETEValidateAllPartiesAreSignersWithAuthz validate all parties are signers with authz module

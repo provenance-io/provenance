@@ -111,7 +111,6 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 		return err
 	}
 
-	var reqParties []types.Party
 	if existing != nil {
 		if !proposed.SessionId.Equals(existing.SessionId) {
 			return fmt.Errorf("cannot update session identifier. expected %s, got %s", existing.SessionId, proposed.SessionId)
@@ -122,7 +121,6 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 		if len(proposed.GetName()) == 0 {
 			return errors.New("proposed name to existing session must not be empty")
 		}
-		reqParties = append(reqParties, existing.Parties...)
 	}
 
 	scopeUUID, err := proposed.SessionId.ScopeUUID()
@@ -157,25 +155,43 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 		return fmt.Errorf("contract spec %s not listed in scope spec %s", proposed.SpecificationId, scopeSpec.SpecificationId)
 	}
 
-	// TODO[1438]: Update to handle both new and old ways.
-	// Old:
-	//   on initial write:
-	//     all scope owners must sign
-	//   on update:
-	//     all scope owners must sign
-	// New:
-	//   on initial write:
-	//     There must be a signer for each role required by the contract spec in the proposed session parties.
-	//     All optional=false scope owners must sign.
-	//   on update:
-	//     There must be a signer for each role required by the contract spec in the existing session parties.
-	//     All roles in the contract spec need to be present in the proposed session.
-	//     All optional=false scope owners must sign.
-	//     All optional=false existing session parties must sign.
-
-	reqParties = append(reqParties, scope.Owners...)
-	if _, err = k.ValidateSignersWithParties(ctx, reqParties, proposed.Parties, contractSpec.PartiesInvolved, msg); err != nil {
-		return err
+	if !scope.GetRequirePartyRollup() {
+		// Old:
+		//   - All roles required by the contract spec must have a party in the session parties.
+		//   - All scope owners must sign.
+		if err = validateRolesPresent(proposed.Parties, contractSpec.PartiesInvolved); err != nil {
+			return err
+		}
+		if err = k.ValidateSignersWithoutParties(ctx, scope.GetAllOwnerAddresses(), msg); err != nil {
+			return err
+		}
+	} else {
+		// New:
+		//   - All session parties must be present in this scope's owners.
+		//   - All roles required by the contract spec must have a signer and associated party in the session.
+		//   - All optional=false parties in the scope owners must be signers.
+		//   - If the session is being updated, existing parties are used for role/signer fulfillment, but all required roles
+		//     must still have a party in the proposed session.
+		if err = validatePartiesArePresent(proposed.Parties, scope.Owners); err != nil {
+			return fmt.Errorf("not all session parties in scope owners: %w", err)
+		}
+		var availableParties []types.Party
+		var reqParties []types.Party
+		if existing != nil {
+			if err = validateRolesPresent(proposed.Parties, contractSpec.PartiesInvolved); err != nil {
+				return err
+			}
+			availableParties = existing.Parties
+			reqParties = append(reqParties, existing.Parties...)
+		} else {
+			// We don't call validateRolesPresent here because proposed.Parties is being provided to ValidateSignersWithParties.
+			availableParties = proposed.Parties
+			reqParties = append(reqParties, proposed.Parties...)
+		}
+		reqParties = append(reqParties, scope.Owners...)
+		if _, err = k.ValidateSignersWithParties(ctx, reqParties, availableParties, contractSpec.PartiesInvolved, msg); err != nil {
+			return err
+		}
 	}
 
 	if existing != nil {

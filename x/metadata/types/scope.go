@@ -127,17 +127,6 @@ func (s *Scope) AddDataAccess(addresses []string) {
 	}
 }
 
-// GetOwnerIndexWithAddress gets the index of this scope's owners list that has the provided address,
-// and a boolean for whether it's found.
-func (s *Scope) GetOwnerIndexWithAddress(address string) (int, bool) {
-	for i, owner := range s.Owners {
-		if owner.Address == address {
-			return i, true
-		}
-	}
-	return -1, false
-}
-
 // AddOwners will add new owners to this scope.
 // If an owner already exists that's equal to a provided owner, an error is returned.
 func (s *Scope) AddOwners(owners []Party) error {
@@ -161,26 +150,40 @@ func (s *Scope) RemoveOwners(addressesToRemove []string) error {
 	if len(addressesToRemove) == 0 {
 		return nil
 	}
+addressesToRemoveLoop:
 	for _, addr := range addressesToRemove {
-		if _, found := s.GetOwnerIndexWithAddress(addr); !found {
-			return fmt.Errorf("address does not exist in scope owners: %s", addr)
-		}
-	}
-	ownersLeft := []Party{}
-	for _, existingOwner := range s.Owners {
-		keep := true
-		for _, addr := range addressesToRemove {
-			if existingOwner.Address == addr {
-				keep = false
-				break
+		for _, party := range s.Owners {
+			if addr == party.Address {
+				continue addressesToRemoveLoop
 			}
 		}
-		if keep {
-			ownersLeft = append(ownersLeft, existingOwner)
+		return fmt.Errorf("address does not exist in scope owners: %s", addr)
+	}
+	newOwners := make([]Party, 0, len(s.Owners))
+ownersLoop:
+	for _, owner := range s.Owners {
+		for _, addr := range addressesToRemove {
+			if owner.Address == addr {
+				continue ownersLoop
+			}
+		}
+		newOwners = append(newOwners, owner)
+	}
+	s.Owners = newOwners
+	return nil
+}
+
+// GetAllOwnerAddresses gets the addresses of all of the owners. Each address can only appear once in the return value.
+func (s Scope) GetAllOwnerAddresses() []string {
+	var rv []string
+	have := make(map[string]bool)
+	for _, party := range s.Owners {
+		if !party.Optional && !have[party.Address] {
+			rv = append(rv, party.Address)
+			have[party.Address] = true
 		}
 	}
-	s.Owners = ownersLeft
-	return nil
+	return rv
 }
 
 // GetID get this scope's metadata address. Satisfies the MetadataAddressable interface.
