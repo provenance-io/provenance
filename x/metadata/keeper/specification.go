@@ -136,13 +136,9 @@ func (k Keeper) RemoveRecordSpecification(ctx sdk.Context, recordSpecID types.Me
 	return nil
 }
 
-// ValidateWriteRecordSpecification full validation of a proposed record spec possibly against an existing one.
+// ValidateWriteRecordSpecification compare the proposed contract spec with the existing to make sure the proposed
+// is valid. This assumes that proposed.ValidateBasic() has been run and did not return an error.
 func (k Keeper) ValidateWriteRecordSpecification(ctx sdk.Context, existing *types.RecordSpecification, proposed types.RecordSpecification) error {
-	// Must pass basic validation.
-	if err := proposed.ValidateBasic(); err != nil {
-		return err
-	}
-
 	if existing != nil {
 		// IDs must match
 		if !proposed.SpecificationId.Equals(existing.SpecificationId) {
@@ -155,8 +151,6 @@ func (k Keeper) ValidateWriteRecordSpecification(ctx sdk.Context, existing *type
 				existing.Name, proposed.Name)
 		}
 	}
-
-	// TODO[1438]: Ensure all record spec roles are present in its contract spec
 
 	return nil
 }
@@ -362,17 +356,13 @@ func (k Keeper) isContractSpecUsed(ctx sdk.Context, contractSpecID types.Metadat
 	return itRecSpecErr != nil || hasUsedRecordSpec
 }
 
-// ValidateWriteContractSpecification full validation of a proposed contract spec possibly against an existing one.
+// ValidateWriteContractSpecification compare the proposed contract spec with the existing to make sure the proposed
+// is valid. This assumes that proposed.ValidateBasic() has been run and did not return an error.
 func (k Keeper) ValidateWriteContractSpecification(ctx sdk.Context, existing *types.ContractSpecification, proposed types.ContractSpecification) error {
 	// IDS must match if there's an existing entry
 	if existing != nil && !proposed.SpecificationId.Equals(existing.SpecificationId) {
 		return fmt.Errorf("cannot update contract spec identifier. expected %s, got %s",
 			existing.SpecificationId, proposed.SpecificationId)
-	}
-
-	// Must pass basic validation.
-	if err := proposed.ValidateBasic(); err != nil {
-		return err
 	}
 
 	return nil
@@ -604,17 +594,13 @@ func (k Keeper) isScopeSpecUsed(ctx sdk.Context, scopeSpecID types.MetadataAddre
 	return err != nil || scopeSpecReferenceFound
 }
 
-// ValidateWriteScopeSpecification - full validation of a scope specification.
+// ValidateWriteScopeSpecification compare the proposed scope spec with the existing to make sure the proposed
+// is valid. This assumes that proposed.ValidateBasic() has been run and did not return an error.
 func (k Keeper) ValidateWriteScopeSpecification(ctx sdk.Context, existing *types.ScopeSpecification, proposed types.ScopeSpecification) error {
 	// IDS must match if there's an existing entry
 	if existing != nil && !proposed.SpecificationId.Equals(existing.SpecificationId) {
 		return fmt.Errorf("cannot update scope spec identifier. expected %s, got %s",
 			existing.SpecificationId, proposed.SpecificationId)
-	}
-
-	// Must pass basic validation.
-	if err := proposed.ValidateBasic(); err != nil {
-		return err
 	}
 
 	// Make sure newly added contract spec ids exist.
