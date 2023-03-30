@@ -3121,9 +3121,9 @@ If true: * In order to write this scope: - All roles required by the scope spec 
 
 If false: * In order to write this scope: - All roles required by the scope spec must have a party in the owners. - If being updated, all existing owners must sign.
 
-* In order to write sessions in this scope: - All scope owners must sign.
+* In order to write sessions in this scope: - All roles required by the contract spec must have a party in the session parties. - All scope owners must sign.
 
-* In order to write records in this scope: - All session parties must sign. - If the record is being updated to a new session, all previous session parties must sign. |
+* In order to write records in this scope: - All roles required by the record spec must have a party in the session parties. - All session parties must sign. - If the record is being updated to a new session, all previous session parties must sign. |
 
 
 
