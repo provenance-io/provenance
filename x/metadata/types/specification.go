@@ -86,7 +86,6 @@ func (s ScopeSpecification) ValidateBasic() error {
 			return fmt.Errorf("invalid owner address at index %d on ScopeSpecification: %w", i, err)
 		}
 	}
-	// TODO[1438]: Evaluate if a scope spec needs to have at least one party involved.
 	if len(s.PartiesInvolved) == 0 {
 		return errors.New("the ScopeSpecification must have at least one party involved")
 	}
