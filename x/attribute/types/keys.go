@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
@@ -24,8 +25,9 @@ const (
 
 var (
 	// Legacy amino encoded objects use this key prefix
-	AttributeKeyPrefixAmino = []byte{0x00}
-	AttributeKeyPrefix      = []byte{0x02}
+	AttributeKeyPrefixAmino      = []byte{0x00}
+	AttributeKeyPrefix           = []byte{0x02}
+	AttributeKeyPrefixAddrLookup = []byte{0x03}
 )
 
 // AddrAttributeKey creates a key for an account attribute
@@ -56,6 +58,29 @@ func AddrAttributesNameKeyPrefix(addr []byte, attributeName string) []byte {
 // AddrStrAttributesNameKeyPrefix is the same as AddrAttributesNameKeyPrefix but takes in the address as a string.
 func AddrStrAttributesNameKeyPrefix(addr string, attributeName string) []byte {
 	return AddrAttributesNameKeyPrefix(GetAttributeAddressBytes(addr), attributeName)
+}
+
+// AttributeNameKeyPrefix returns a prefix key for all addresses with attribute name
+func AttributeNameKeyPrefix(attributeName string) []byte {
+	key := AttributeKeyPrefixAddrLookup
+	return append(key, GetNameKeyBytes(attributeName)...)
+}
+
+// AttributeNameAddrKeyPrefix returns a prefix key for attribute and address
+func AttributeNameAddrKeyPrefix(attributeName string, addr []byte) []byte {
+	key := AttributeKeyPrefixAddrLookup
+	key = append(key, GetNameKeyBytes(attributeName)...)
+	return append(key, address.MustLengthPrefix(addr)...)
+}
+
+// GetAddressFromKey returns the AccAddress from full attribute address key ([prefix][name hash][length + AccAddress bytes][attribute hash])
+func GetAddressFromKey(nameAddrKey []byte) (sdk.AccAddress, error) {
+	// start index of slice is [prefix (1)] + [name hash (32)] + [address len prefix (1)]
+	addressBytes := nameAddrKey[34:]
+	if err := sdk.VerifyAddressFormat(addressBytes); err != nil {
+		return nil, err
+	}
+	return addressBytes, nil
 }
 
 // GetNameKeyBytes returns a set of bytes that uniquely identifies the given name
