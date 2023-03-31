@@ -136,6 +136,7 @@ func (s *Scope) AddOwners(owners []Party) error {
 	}
 	for _, newOwner := range owners {
 		for _, scopeOwner := range s.Owners {
+			//nolint:gosec // G601: Implicit memory aliasing okay here since we're not storing the reference anywhere.
 			if newOwner.IsSameAs(&scopeOwner) {
 				return fmt.Errorf("party already exists with address %s and role %s", newOwner.Address, newOwner.Role)
 			}
@@ -572,6 +573,7 @@ func EqualParties(p1, p2 []Party) bool {
 p1Loop:
 	for _, p1p := range p1 {
 		for _, p2p := range p2 {
+			//nolint:gosec // G601: Implicit memory aliasing okay here since we're not storing the reference anywhere.
 			if p1p.Equals(&p2p) {
 				continue p1Loop
 			}

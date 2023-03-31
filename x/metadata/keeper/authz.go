@@ -62,7 +62,7 @@ reqPartiesLoop:
 	for _, reqParty := range reqParties {
 		if !reqParty.Optional {
 			for _, party := range details {
-				if party.IsSameAs(&reqParty) {
+				if reqParty.IsSameAs(party) {
 					party.MakeRequired()
 					continue reqPartiesLoop
 				}
