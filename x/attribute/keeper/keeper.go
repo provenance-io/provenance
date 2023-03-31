@@ -152,7 +152,7 @@ func (k Keeper) SetAttribute(
 
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
-	k.IncAddNameAddressLookup(ctx, attr)
+	k.IncAttrNameAddressLookup(ctx, attr)
 
 	attributeAddEvent := types.NewEventAttributeAdd(attr, owner.String())
 	if err := ctx.EventManager().EmitTypedEvent(attributeAddEvent); err != nil {
@@ -162,8 +162,8 @@ func (k Keeper) SetAttribute(
 	return nil
 }
 
-// IncAddNameAddressLookup increments the count of name to address lookups
-func (k Keeper) IncAddNameAddressLookup(ctx sdk.Context, attr types.Attribute) {
+// IncAttrNameAddressLookup increments the count of name to address lookups
+func (k Keeper) IncAttrNameAddressLookup(ctx sdk.Context, attr types.Attribute) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.AttributeNameAddrKeyPrefix(attr.Name, attr.GetAddressBytes())
 	bz := store.Get(key)
@@ -175,8 +175,8 @@ func (k Keeper) IncAddNameAddressLookup(ctx sdk.Context, attr types.Attribute) {
 	store.Set(key, bz)
 }
 
-// DecAddNameAddressLookup decrements the name to account lookups and removes value if decremented to 0
-func (k Keeper) DecAddNameAddressLookup(ctx sdk.Context, attr types.Attribute) {
+// DecAttrNameAddressLookup decrements the name to account lookups and removes value if decremented to 0
+func (k Keeper) DecAttrNameAddressLookup(ctx sdk.Context, attr types.Attribute) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.AttributeNameAddrKeyPrefix(attr.Name, attr.GetAddressBytes())
 	bz := store.Get(key)
@@ -247,7 +247,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 		if attr.Name == updateAttribute.Name && bytes.Equal(attr.Value, originalAttribute.Value) && attr.AttributeType == originalAttribute.AttributeType {
 			found = true
 			store.Delete(it.Key())
-			k.DecAddNameAddressLookup(ctx, attr)
+			k.DecAttrNameAddressLookup(ctx, attr)
 
 			bz, err := k.cdc.Marshal(&updateAttribute)
 			if err != nil {
@@ -255,7 +255,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			}
 			updatedKey := types.AddrAttributeKey(addrBz, updateAttribute)
 			store.Set(updatedKey, bz)
-			k.IncAddNameAddressLookup(ctx, updateAttribute)
+			k.IncAttrNameAddressLookup(ctx, updateAttribute)
 
 			attributeUpdateEvent := types.NewEventAttributeUpdate(originalAttribute, updateAttribute, owner.String())
 			if err := ctx.EventManager().EmitTypedEvent(attributeUpdateEvent); err != nil {
@@ -319,7 +319,7 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 		if attr.Name == name && (!deleteDistinct || bytes.Equal(*value, attr.Value)) {
 			count++
 			store.Delete(it.Key())
-			k.DecAddNameAddressLookup(ctx, attr)
+			k.DecAttrNameAddressLookup(ctx, attr)
 			if !deleteDistinct {
 				deleteEvent := types.NewEventAttributeDelete(name, addr, owner.String())
 				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
@@ -383,7 +383,7 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	key := types.AddrAttributeKey(attr.GetAddressBytes(), attr)
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
-	k.IncAddNameAddressLookup(ctx, attr)
+	k.IncAttrNameAddressLookup(ctx, attr)
 	return nil
 }
 
@@ -397,6 +397,6 @@ func (k Keeper) PopulateAddressAttributeNameTable(ctx sdk.Context) {
 		if err := k.cdc.Unmarshal(it.Value(), &attr); err != nil {
 			return
 		}
-		k.IncAddNameAddressLookup(ctx, attr)
+		k.IncAttrNameAddressLookup(ctx, attr)
 	}
 }
