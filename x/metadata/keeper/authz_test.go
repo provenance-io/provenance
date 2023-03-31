@@ -127,32 +127,1631 @@ func newStringSameCs(strs []string) []stringSameC {
 	return rv
 }
 
-// TODO[1438]: func TestWrapRequiredParty(t *testing.T) {}
-// TODO[1438]: func TestWrapAvailableParty(t *testing.T) {}
-// TODO[1438]: func TestBuildPartyDetails(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_SetAddress(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_GetAddress(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_SetAcc(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_GetAcc(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_SetRole(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_GetRole(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_SetOptional(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_MakeRequired(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_GetOptional(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_IsRequired(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_SetSigner(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_GetSigner(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_SetSignerAcc(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_GetSignerAcc(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_HasSigner(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_CanBeUsed(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_MarkAsUsed(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_IsUsed(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_IsStillUsableAs(t *testing.T) {}
-// TODO[1438]: func TestPartyDetails_IsSameAs(t *testing.T) {}
+func TestWrapRequiredParty(t *testing.T) {
+	addr := sdk.AccAddress("just_a_test_address_").String()
+	tests := []struct {
+		name  string
+		party types.Party
+		exp   *keeper.PartyDetails
+	}{
+		{
+			name: "control",
+			party: types.Party{
+				Address:  addr,
+				Role:     types.PartyType_PARTY_TYPE_OWNER,
+				Optional: true,
+			},
+			exp: keeper.TestablePartyDetails{
+				Address:  addr,
+				Role:     types.PartyType_PARTY_TYPE_OWNER,
+				Optional: true,
+			}.Real(),
+		},
+		{
+			name:  "zero",
+			party: types.Party{},
+			exp:   keeper.TestablePartyDetails{}.Real(),
+		},
+		{
+			name:  "address only",
+			party: types.Party{Address: addr},
+			exp:   keeper.TestablePartyDetails{Address: addr}.Real(),
+		},
+		{
+			name:  "role only",
+			party: types.Party{Role: types.PartyType_PARTY_TYPE_INVESTOR},
+			exp:   keeper.TestablePartyDetails{Role: types.PartyType_PARTY_TYPE_INVESTOR}.Real(),
+		},
+		{
+			name:  "optional only",
+			party: types.Party{Optional: true},
+			exp:   keeper.TestablePartyDetails{Optional: true}.Real(),
+		},
+	}
 
-// TODO[1438]: func TestSignersWrapper_Strings(t *testing.T) {}
-// TODO[1438]: func TestSignersWrapper_Accs(t *testing.T) {}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := keeper.WrapRequiredParty(tc.party)
+			assert.Equal(t, tc.exp, actual, "WrapRequiredParty")
+		})
+	}
+}
+
+func TestWrapAvailableParty(t *testing.T) {
+	addr := sdk.AccAddress("just_a_test_address_").String()
+	tests := []struct {
+		name  string
+		party types.Party
+		exp   *keeper.PartyDetails
+	}{
+		{
+			name: "control",
+			party: types.Party{
+				Address:  addr,
+				Role:     types.PartyType_PARTY_TYPE_OWNER,
+				Optional: true,
+			},
+			exp: keeper.TestablePartyDetails{
+				Address:         addr,
+				Role:            types.PartyType_PARTY_TYPE_OWNER,
+				Optional:        true,
+				CanBeUsedBySpec: true,
+			}.Real(),
+		},
+		{
+			name:  "zero",
+			party: types.Party{},
+			exp: keeper.TestablePartyDetails{
+				Optional:        true,
+				CanBeUsedBySpec: true,
+			}.Real(),
+		},
+		{
+			name:  "address only",
+			party: types.Party{Address: addr},
+			exp: keeper.TestablePartyDetails{
+				Address:         addr,
+				Optional:        true,
+				CanBeUsedBySpec: true,
+			}.Real(),
+		},
+		{
+			name:  "role only",
+			party: types.Party{Role: types.PartyType_PARTY_TYPE_INVESTOR},
+			exp: keeper.TestablePartyDetails{
+				Role:            types.PartyType_PARTY_TYPE_INVESTOR,
+				Optional:        true,
+				CanBeUsedBySpec: true,
+			}.Real(),
+		},
+		{
+			name:  "optional only",
+			party: types.Party{Optional: true},
+			exp: keeper.TestablePartyDetails{
+				Optional:        true,
+				CanBeUsedBySpec: true,
+			}.Real(),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := keeper.WrapAvailableParty(tc.party)
+			assert.Equal(t, tc.exp, actual, "WrapAvailableParty")
+		})
+	}
+}
+
+func TestBuildPartyDetails(t *testing.T) {
+	addr1 := sdk.AccAddress("this_is_address_1___").String()
+	addr2 := sdk.AccAddress("this_is_address_2___").String()
+	addr3 := sdk.AccAddress("this_is_address_3___").String()
+
+	// pz is a short way to create a slice of parties.
+	pz := func(parties ...types.Party) []types.Party {
+		rv := make([]types.Party, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+	// dz is a short way to create a slice of PartyDetails
+	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
+		rv := make([]*keeper.PartyDetails, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+	tests := []struct {
+		name             string
+		reqParties       []types.Party
+		availableParties []types.Party
+		exp              []*keeper.PartyDetails
+	}{
+		{
+			name:             "nil nil",
+			reqParties:       nil,
+			availableParties: nil,
+			exp:              pdz(),
+		},
+		{
+			name:             "nil empty",
+			reqParties:       nil,
+			availableParties: pz(),
+			exp:              pdz(),
+		},
+		{
+			name:             "nil one",
+			reqParties:       nil,
+			availableParties: pz(types.Party{Address: addr1, Role: 3, Optional: false}),
+			exp: pdz(keeper.TestablePartyDetails{
+				Address:         addr1,
+				Role:            3,
+				Optional:        true,
+				CanBeUsedBySpec: true,
+			}.Real()),
+		},
+		{
+			name:             "empty nil",
+			reqParties:       pz(),
+			availableParties: nil,
+			exp:              pdz(),
+		},
+		{
+			name:             "empty empty",
+			reqParties:       pz(),
+			availableParties: pz(),
+			exp:              pdz(),
+		},
+		{
+			name:             "empty one",
+			reqParties:       pz(),
+			availableParties: pz(types.Party{Address: addr1, Role: 3, Optional: false}),
+			exp: pdz(keeper.TestablePartyDetails{
+				Address:         addr1,
+				Role:            3,
+				Optional:        true,
+				CanBeUsedBySpec: true,
+			}.Real()),
+		},
+		{
+			name:             "one nil",
+			reqParties:       pz(types.Party{Address: addr1, Role: 5, Optional: false}),
+			availableParties: nil,
+			exp: pdz(keeper.TestablePartyDetails{
+				Address:  addr1,
+				Role:     5,
+				Optional: false,
+			}.Real()),
+		},
+		{
+			name:             "one empty",
+			reqParties:       pz(types.Party{Address: addr1, Role: 5, Optional: false}),
+			availableParties: pz(),
+			exp: pdz(keeper.TestablePartyDetails{
+				Address:  addr1,
+				Role:     5,
+				Optional: false,
+			}.Real()),
+		},
+		{
+			name:             "one one different role and address",
+			reqParties:       pz(types.Party{Address: addr1, Role: 5, Optional: false}),
+			availableParties: pz(types.Party{Address: addr2, Role: 4, Optional: false}),
+			exp: pdz(
+				keeper.TestablePartyDetails{
+					Address:         addr2,
+					Role:            4,
+					Optional:        true,
+					CanBeUsedBySpec: true,
+				}.Real(),
+				keeper.TestablePartyDetails{
+					Address:  addr1,
+					Role:     5,
+					Optional: false,
+				}.Real(),
+			),
+		},
+		{
+			name:             "one one different role same address",
+			reqParties:       pz(types.Party{Address: addr1, Role: 5, Optional: false}),
+			availableParties: pz(types.Party{Address: addr1, Role: 4, Optional: false}),
+			exp: pdz(
+				keeper.TestablePartyDetails{
+					Address:         addr1,
+					Role:            4,
+					Optional:        true,
+					CanBeUsedBySpec: true,
+				}.Real(),
+				keeper.TestablePartyDetails{
+					Address:  addr1,
+					Role:     5,
+					Optional: false,
+				}.Real(),
+			),
+		},
+		{
+			name:             "one one different address same role",
+			reqParties:       pz(types.Party{Address: addr1, Role: 5, Optional: false}),
+			availableParties: pz(types.Party{Address: addr2, Role: 5, Optional: false}),
+			exp: pdz(
+				keeper.TestablePartyDetails{
+					Address:         addr2,
+					Role:            5,
+					Optional:        true,
+					CanBeUsedBySpec: true,
+				}.Real(),
+				keeper.TestablePartyDetails{
+					Address:  addr1,
+					Role:     5,
+					Optional: false,
+				}.Real(),
+			),
+		},
+		{
+			name:             "one one same address and role",
+			reqParties:       pz(types.Party{Address: addr1, Role: 5, Optional: false}),
+			availableParties: pz(types.Party{Address: addr1, Role: 5, Optional: true}),
+			exp: pdz(keeper.TestablePartyDetails{
+				Address:         addr1,
+				Role:            5,
+				Optional:        false,
+				CanBeUsedBySpec: true,
+			}.Real()),
+		},
+		{
+			name: "two two with one same",
+			reqParties: pz(
+				types.Party{Address: addr3, Role: 1, Optional: false},
+				types.Party{Address: addr2, Role: 7, Optional: false},
+			),
+			availableParties: pz(
+				types.Party{Address: addr1, Role: 5, Optional: true},
+				types.Party{Address: addr2, Role: 7, Optional: true},
+			),
+			exp: pdz(
+				keeper.TestablePartyDetails{
+					Address:         addr1,
+					Role:            5,
+					Optional:        true,
+					CanBeUsedBySpec: true,
+				}.Real(),
+				keeper.TestablePartyDetails{
+					Address:         addr2,
+					Role:            7,
+					Optional:        false,
+					CanBeUsedBySpec: true,
+				}.Real(),
+				keeper.TestablePartyDetails{
+					Address:  addr3,
+					Role:     1,
+					Optional: false,
+				}.Real(),
+			),
+		},
+		{
+			name: "duplicate req parties",
+			reqParties: pz(
+				types.Party{Address: addr1, Role: 2, Optional: false},
+				types.Party{Address: addr1, Role: 2, Optional: false},
+			),
+			availableParties: nil,
+			exp: pdz(keeper.TestablePartyDetails{
+				Address:  addr1,
+				Role:     2,
+				Optional: false,
+			}.Real()),
+		},
+		{
+			name:       "duplicate available parties",
+			reqParties: nil,
+			availableParties: pz(
+				types.Party{Address: addr1, Role: 3, Optional: false},
+				types.Party{Address: addr1, Role: 3, Optional: false},
+			),
+			exp: pdz(keeper.TestablePartyDetails{
+				Address:         addr1,
+				Role:            3,
+				Optional:        true,
+				CanBeUsedBySpec: true,
+			}.Real()),
+		},
+		{
+			name: "two req parties one optional",
+			reqParties: pz(
+				types.Party{Address: addr1, Role: 2, Optional: false},
+				types.Party{Address: addr2, Role: 3, Optional: true},
+			),
+			availableParties: nil,
+			exp: pdz(keeper.TestablePartyDetails{
+				Address:  addr1,
+				Role:     2,
+				Optional: false,
+			}.Real()),
+		},
+		{
+			name: "two req parties one optional also in available",
+			reqParties: pz(
+				types.Party{Address: addr1, Role: 2, Optional: false},
+				types.Party{Address: addr2, Role: 3, Optional: true},
+			),
+			availableParties: pz(types.Party{Address: addr2, Role: 3, Optional: false}),
+			exp: pdz(
+				keeper.TestablePartyDetails{
+					Address:         addr2,
+					Role:            3,
+					Optional:        true,
+					CanBeUsedBySpec: true,
+				}.Real(),
+				keeper.TestablePartyDetails{
+					Address:  addr1,
+					Role:     2,
+					Optional: false,
+				}.Real(),
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := keeper.BuildPartyDetails(tc.reqParties, tc.availableParties)
+			assert.Equal(t, tc.exp, actual, "BuildPartyDetails")
+		})
+	}
+}
+
+func TestPartyDetails_SetAddress(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(address string, acc sdk.AccAddress) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Address: address,
+			Acc:     acc,
+		}.Real()
+	}
+
+	addrAcc := sdk.AccAddress("settable_tst_address")
+	addr := addrAcc.String()
+
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		addr     string
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name:     "unset to set",
+			party:    pd("", nil),
+			addr:     addr,
+			expParty: pd(addr, nil),
+		},
+		{
+			name:     "set to unset",
+			party:    pd(addr, addrAcc),
+			addr:     "",
+			expParty: pd("", nil),
+		},
+		{
+			name:     "changing to non-acc",
+			party:    pd(addr, addrAcc),
+			addr:     "new-address",
+			expParty: pd("new-address", nil),
+		},
+		{
+			name:     "changing from non-acc",
+			party:    pd("not-an-acc", addrAcc),
+			addr:     addr,
+			expParty: pd(addr, nil),
+		},
+		{
+			name:     "not changing",
+			party:    pd(addr, sdk.AccAddress("something else")),
+			addr:     addr,
+			expParty: pd(addr, sdk.AccAddress("something else")),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.party.SetAddress(tc.addr)
+			assert.Equal(t, tc.expParty, tc.party, "party after SetAddress")
+		})
+	}
+}
+
+func TestPartyDetails_GetAddress(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(address string, acc sdk.AccAddress) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Address: address,
+			Acc:     acc,
+		}.Real()
+	}
+
+	addrAcc := sdk.AccAddress("settable_tst_address")
+	addr := addrAcc.String()
+
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		exp      string
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name:     "no address no acc",
+			party:    pd("", nil),
+			exp:      "",
+			expParty: pd("", nil),
+		},
+		{
+			name:     "address without acc",
+			party:    pd(addr, nil),
+			exp:      addr,
+			expParty: pd(addr, nil),
+		},
+		{
+			name:     "invalid address without acc",
+			party:    pd("invalid", nil),
+			exp:      "invalid",
+			expParty: pd("invalid", nil),
+		},
+		{
+			name:     "invalid address with acc",
+			party:    pd("invalid", addrAcc),
+			exp:      "invalid",
+			expParty: pd("invalid", addrAcc),
+		},
+		{
+			name:     "acc without address",
+			party:    pd("", addrAcc),
+			exp:      addr,
+			expParty: pd(addr, addrAcc),
+		},
+		{
+			name:     "address with different acc",
+			party:    pd(addr, sdk.AccAddress("different_acc_______")),
+			exp:      addr,
+			expParty: pd(addr, sdk.AccAddress("different_acc_______")),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := tc.party.GetAddress()
+			assert.Equal(t, tc.exp, actual, "GetAddress")
+			assert.Equal(t, tc.expParty, tc.party, "party after GetAddress")
+		})
+	}
+}
+
+func TestPartyDetails_SetAcc(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(address string, acc sdk.AccAddress) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Address: address,
+			Acc:     acc,
+		}.Real()
+	}
+
+	addrAcc := sdk.AccAddress("settable_tst_address")
+	addr := addrAcc.String()
+
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		addr     sdk.AccAddress
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name:     "unset to set",
+			party:    pd("", nil),
+			addr:     addrAcc,
+			expParty: pd("", addrAcc),
+		},
+		{
+			name:     "set to unset",
+			party:    pd(addr, addrAcc),
+			addr:     nil,
+			expParty: pd("", nil),
+		},
+		{
+			name:     "changing no address",
+			party:    pd("", addrAcc),
+			addr:     sdk.AccAddress("new_address_________"),
+			expParty: pd("", sdk.AccAddress("new_address_________")),
+		},
+		{
+			name:     "changing have address",
+			party:    pd(addr, addrAcc),
+			addr:     sdk.AccAddress("new_address_________"),
+			expParty: pd("", sdk.AccAddress("new_address_________")),
+		},
+		{
+			name:     "not changing",
+			party:    pd("something else", addrAcc),
+			addr:     addrAcc,
+			expParty: pd("something else", addrAcc),
+		},
+		{
+			name:     "nil to empty",
+			party:    pd("foo", nil),
+			addr:     sdk.AccAddress{},
+			expParty: pd("foo", sdk.AccAddress{}),
+		},
+		{
+			name:     "empty to nil",
+			party:    pd("foo", sdk.AccAddress{}),
+			addr:     nil,
+			expParty: pd("foo", nil),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.party.SetAcc(tc.addr)
+			assert.Equal(t, tc.expParty, tc.party, "party after SetAcc")
+		})
+	}
+}
+
+func TestPartyDetails_GetAcc(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(address string, acc sdk.AccAddress) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Address: address,
+			Acc:     acc,
+		}.Real()
+	}
+
+	addrAcc := sdk.AccAddress("settable_tst_address")
+	addr := addrAcc.String()
+
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		exp      sdk.AccAddress
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name:     "no address nil acc",
+			party:    pd("", nil),
+			exp:      nil,
+			expParty: pd("", nil),
+		},
+		{
+			name:     "no address empty acc",
+			party:    pd("", sdk.AccAddress{}),
+			exp:      sdk.AccAddress{},
+			expParty: pd("", sdk.AccAddress{}),
+		},
+		{
+			name:     "address without acc",
+			party:    pd(addr, nil),
+			exp:      addrAcc,
+			expParty: pd(addr, addrAcc),
+		},
+		{
+			name:     "invalid address without acc",
+			party:    pd("invalid", nil),
+			exp:      nil,
+			expParty: pd("invalid", nil),
+		},
+		{
+			name:     "invalid address with acc",
+			party:    pd("invalid", addrAcc),
+			exp:      addrAcc,
+			expParty: pd("invalid", addrAcc),
+		},
+		{
+			name:     "acc without address",
+			party:    pd("", addrAcc),
+			exp:      addrAcc,
+			expParty: pd("", addrAcc),
+		},
+		{
+			name:     "address with different acc",
+			party:    pd(addr, sdk.AccAddress("different_acc_______")),
+			exp:      sdk.AccAddress("different_acc_______"),
+			expParty: pd(addr, sdk.AccAddress("different_acc_______")),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := tc.party.GetAcc()
+			assert.Equal(t, tc.exp, actual, "GetAcc")
+			assert.Equal(t, tc.expParty, tc.party, "party after GetAcc")
+		})
+	}
+}
+
+func TestPartyDetails_SetRole(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(role types.PartyType) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{Role: role}.Real()
+	}
+
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		role     types.PartyType
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name:     "unset to set",
+			party:    pd(0),
+			role:     1,
+			expParty: pd(1),
+		},
+		{
+			name:     "set to unset",
+			party:    pd(2),
+			role:     0,
+			expParty: pd(0),
+		},
+		{
+			name:     "changing",
+			party:    pd(3),
+			role:     8,
+			expParty: pd(8),
+		},
+		{
+			name:     "not changing",
+			party:    pd(4),
+			role:     4,
+			expParty: pd(4),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.party.SetRole(tc.role)
+			assert.Equal(t, tc.expParty, tc.party, "party after SetRole")
+		})
+	}
+}
+
+func TestPartyDetails_GetRole(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(role types.PartyType) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{Role: role}.Real()
+	}
+
+	type testCase struct {
+		name  string
+		party *keeper.PartyDetails
+		exp   types.PartyType
+	}
+
+	var tests []testCase
+	for _, role := range types.GetAllPartyTypes() {
+		tests = append(tests, testCase{
+			name:  role.SimpleString(),
+			party: pd(role),
+			exp:   role,
+		})
+	}
+	tests = append(tests, testCase{
+		name:  "invalid role",
+		party: pd(-8),
+		exp:   -8,
+	})
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := tc.party.GetRole()
+			assert.Equal(t, tc.exp.SimpleString(), actual.SimpleString(), "GetRole")
+		})
+	}
+}
+
+func TestPartyDetails_SetOptional(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(optional bool) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{Optional: optional}.Real()
+	}
+
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		optional bool
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name:     "true to true",
+			party:    pd(true),
+			optional: true,
+			expParty: pd(true),
+		},
+		{
+			name:     "true to false",
+			party:    pd(true),
+			optional: false,
+			expParty: pd(false),
+		},
+		{
+			name:     "false to true",
+			party:    pd(false),
+			optional: true,
+			expParty: pd(true),
+		},
+		{
+			name:     "false to false",
+			party:    pd(false),
+			optional: false,
+			expParty: pd(false),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.party.SetOptional(tc.optional)
+			assert.Equal(t, tc.expParty, tc.party, "party after SetOptional")
+		})
+	}
+}
+
+func TestPartyDetails_MakeRequired(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(optional bool) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{Optional: optional}.Real()
+	}
+
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name:     "from optional",
+			party:    pd(true),
+			expParty: pd(false),
+		},
+		{
+			name:     "from required",
+			party:    pd(false),
+			expParty: pd(false),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.party.MakeRequired()
+			assert.Equal(t, tc.expParty, tc.party, "party after MakeRequired")
+		})
+	}
+}
+
+func TestPartyDetails_GetOptional(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(optional bool) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{Optional: optional}.Real()
+	}
+
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		exp      bool
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name:     "optional",
+			party:    pd(true),
+			exp:      true,
+			expParty: pd(true),
+		},
+		{
+			name:     "required",
+			party:    pd(false),
+			exp:      false,
+			expParty: pd(false),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := tc.party.GetOptional()
+			assert.Equal(t, tc.exp, actual, "GetOptional")
+			assert.Equal(t, tc.expParty, tc.party, "party after GetOptional")
+		})
+	}
+}
+
+func TestPartyDetails_IsRequired(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(optional bool) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{Optional: optional}.Real()
+	}
+
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		exp      bool
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name:     "optional",
+			party:    pd(true),
+			exp:      false,
+			expParty: pd(true),
+		},
+		{
+			name:     "required",
+			party:    pd(false),
+			exp:      true,
+			expParty: pd(false),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := tc.party.IsRequired()
+			assert.Equal(t, tc.exp, actual, "IsRequired")
+			assert.Equal(t, tc.expParty, tc.party, "party after IsRequired")
+		})
+	}
+}
+
+func TestPartyDetails_SetSigner(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(signer string, signerAcc sdk.AccAddress) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Signer:    signer,
+			SignerAcc: signerAcc,
+		}.Real()
+	}
+
+	addrAcc := sdk.AccAddress("settable_tst_address")
+	addr := addrAcc.String()
+
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		signer   string
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name:     "unset to set",
+			party:    pd("", nil),
+			signer:   addr,
+			expParty: pd(addr, nil),
+		},
+		{
+			name:     "set to unset",
+			party:    pd(addr, addrAcc),
+			signer:   "",
+			expParty: pd("", nil),
+		},
+		{
+			name:     "changing to non-acc",
+			party:    pd(addr, addrAcc),
+			signer:   "new-address",
+			expParty: pd("new-address", nil),
+		},
+		{
+			name:     "changing from non-acc",
+			party:    pd("not-an-acc", addrAcc),
+			signer:   addr,
+			expParty: pd(addr, nil),
+		},
+		{
+			name:     "not changing",
+			party:    pd(addr, sdk.AccAddress("something else")),
+			signer:   addr,
+			expParty: pd(addr, sdk.AccAddress("something else")),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.party.SetSigner(tc.signer)
+			assert.Equal(t, tc.expParty, tc.party, "party after SetSigner")
+		})
+	}
+}
+
+func TestPartyDetails_GetSigner(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(signer string, signerAcc sdk.AccAddress) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Signer:    signer,
+			SignerAcc: signerAcc,
+		}.Real()
+	}
+
+	addrAcc := sdk.AccAddress("settable_tst_address")
+	addr := addrAcc.String()
+
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		exp      string
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name:     "no address no acc",
+			party:    pd("", nil),
+			exp:      "",
+			expParty: pd("", nil),
+		},
+		{
+			name:     "address without acc",
+			party:    pd(addr, nil),
+			exp:      addr,
+			expParty: pd(addr, nil),
+		},
+		{
+			name:     "invalid address without acc",
+			party:    pd("invalid", nil),
+			exp:      "invalid",
+			expParty: pd("invalid", nil),
+		},
+		{
+			name:     "invalid address with acc",
+			party:    pd("invalid", addrAcc),
+			exp:      "invalid",
+			expParty: pd("invalid", addrAcc),
+		},
+		{
+			name:     "acc without address",
+			party:    pd("", addrAcc),
+			exp:      addr,
+			expParty: pd(addr, addrAcc),
+		},
+		{
+			name:     "address with different acc",
+			party:    pd(addr, sdk.AccAddress("different_acc_______")),
+			exp:      addr,
+			expParty: pd(addr, sdk.AccAddress("different_acc_______")),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := tc.party.GetSigner()
+			assert.Equal(t, tc.exp, actual, "GetSigner")
+			assert.Equal(t, tc.expParty, tc.party, "party after GetSigner")
+		})
+	}
+}
+
+func TestPartyDetails_SetSignerAcc(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(signer string, signerAcc sdk.AccAddress) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Signer:    signer,
+			SignerAcc: signerAcc,
+		}.Real()
+	}
+
+	addrAcc := sdk.AccAddress("settable_tst_address")
+	addr := addrAcc.String()
+
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		signer   sdk.AccAddress
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name:     "unset to set",
+			party:    pd("", nil),
+			signer:   addrAcc,
+			expParty: pd("", addrAcc),
+		},
+		{
+			name:     "set to unset",
+			party:    pd(addr, addrAcc),
+			signer:   nil,
+			expParty: pd("", nil),
+		},
+		{
+			name:     "changing no address",
+			party:    pd("", addrAcc),
+			signer:   sdk.AccAddress("new_address_________"),
+			expParty: pd("", sdk.AccAddress("new_address_________")),
+		},
+		{
+			name:     "changing have address",
+			party:    pd(addr, addrAcc),
+			signer:   sdk.AccAddress("new_address_________"),
+			expParty: pd("", sdk.AccAddress("new_address_________")),
+		},
+		{
+			name:     "not changing",
+			party:    pd("something else", addrAcc),
+			signer:   addrAcc,
+			expParty: pd("something else", addrAcc),
+		},
+		{
+			name:     "nil to empty",
+			party:    pd("foo", nil),
+			signer:   sdk.AccAddress{},
+			expParty: pd("foo", sdk.AccAddress{}),
+		},
+		{
+			name:     "empty to nil",
+			party:    pd("foo", sdk.AccAddress{}),
+			signer:   nil,
+			expParty: pd("foo", nil),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.party.SetSignerAcc(tc.signer)
+			assert.Equal(t, tc.expParty, tc.party, "party after SetSignerAcc")
+		})
+	}
+}
+
+func TestPartyDetails_GetSignerAcc(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(signer string, signerAcc sdk.AccAddress) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Signer:    signer,
+			SignerAcc: signerAcc,
+		}.Real()
+	}
+
+	addrAcc := sdk.AccAddress("settable_tst_address")
+	addr := addrAcc.String()
+
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		exp      sdk.AccAddress
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name:     "no address nil acc",
+			party:    pd("", nil),
+			exp:      nil,
+			expParty: pd("", nil),
+		},
+		{
+			name:     "no address empty acc",
+			party:    pd("", sdk.AccAddress{}),
+			exp:      sdk.AccAddress{},
+			expParty: pd("", sdk.AccAddress{}),
+		},
+		{
+			name:     "address without acc",
+			party:    pd(addr, nil),
+			exp:      addrAcc,
+			expParty: pd(addr, addrAcc),
+		},
+		{
+			name:     "invalid address without acc",
+			party:    pd("invalid", nil),
+			exp:      nil,
+			expParty: pd("invalid", nil),
+		},
+		{
+			name:     "invalid address with acc",
+			party:    pd("invalid", addrAcc),
+			exp:      addrAcc,
+			expParty: pd("invalid", addrAcc),
+		},
+		{
+			name:     "acc without address",
+			party:    pd("", addrAcc),
+			exp:      addrAcc,
+			expParty: pd("", addrAcc),
+		},
+		{
+			name:     "address with different acc",
+			party:    pd(addr, sdk.AccAddress("different_acc_______")),
+			exp:      sdk.AccAddress("different_acc_______"),
+			expParty: pd(addr, sdk.AccAddress("different_acc_______")),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := tc.party.GetSignerAcc()
+			assert.Equal(t, tc.exp, actual, "GetSignerAcc")
+			assert.Equal(t, tc.expParty, tc.party, "party after GetSignerAcc")
+		})
+	}
+}
+
+func TestPartyDetails_HasSigner(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(signer string, signerAcc sdk.AccAddress) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Signer:    signer,
+			SignerAcc: signerAcc,
+		}.Real()
+	}
+
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		exp      bool
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name:     "no string or acc",
+			party:    pd("", nil),
+			exp:      false,
+			expParty: pd("", nil),
+		},
+		{
+			name:     "string no acc",
+			party:    pd("a", nil),
+			exp:      true,
+			expParty: pd("a", nil),
+		},
+		{
+			name:     "acc no string",
+			party:    pd("", sdk.AccAddress("b")),
+			exp:      true,
+			expParty: pd("", sdk.AccAddress("b")),
+		},
+		{
+			name:     "string and acc",
+			party:    pd("a", sdk.AccAddress("b")),
+			exp:      true,
+			expParty: pd("a", sdk.AccAddress("b")),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := tc.party.HasSigner()
+			assert.Equal(t, tc.exp, actual, "HasSigner")
+			assert.Equal(t, tc.expParty, tc.party, "party after HasSigner")
+		})
+	}
+}
+
+func TestPartyDetails_CanBeUsed(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(canBeUsedBySpec bool) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{CanBeUsedBySpec: canBeUsedBySpec}.Real()
+	}
+
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		exp      bool
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name:     "can be used",
+			party:    pd(true),
+			exp:      true,
+			expParty: pd(true),
+		},
+		{
+			name:     "cannot be used",
+			party:    pd(false),
+			exp:      false,
+			expParty: pd(false),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := tc.party.CanBeUsed()
+			assert.Equal(t, tc.exp, actual, "CanBeUsed")
+			assert.Equal(t, tc.expParty, tc.party, "party after CanBeUsed")
+		})
+	}
+}
+
+func TestPartyDetails_MarkAsUsed(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(usedBySpec bool) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{UsedBySpec: usedBySpec}.Real()
+	}
+
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name:     "from not used",
+			party:    pd(false),
+			expParty: pd(true),
+		},
+		{
+			name:     "from used",
+			party:    pd(true),
+			expParty: pd(true),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.party.MarkAsUsed()
+			assert.Equal(t, tc.expParty, tc.party, "party after MarkAsUsed")
+		})
+	}
+}
+
+func TestPartyDetails_IsUsed(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(usedBySpec bool) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{UsedBySpec: usedBySpec}.Real()
+	}
+
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		exp      bool
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name:     "used",
+			party:    pd(true),
+			exp:      true,
+			expParty: pd(true),
+		},
+		{
+			name:     "not used",
+			party:    pd(false),
+			exp:      false,
+			expParty: pd(false),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := tc.party.IsUsed()
+			assert.Equal(t, tc.exp, actual, "IsUsed")
+			assert.Equal(t, tc.expParty, tc.party, "party after IsUsed")
+		})
+	}
+}
+
+func TestPartyDetails_IsStillUsableAs(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(role types.PartyType, canBeUsedBySpec, usedBySpec bool) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Role:            role,
+			CanBeUsedBySpec: canBeUsedBySpec,
+			UsedBySpec:      usedBySpec,
+		}.Real()
+	}
+
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		role     types.PartyType
+		exp      bool
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name:     "same role can be used is not used",
+			party:    pd(1, true, false),
+			role:     1,
+			exp:      true,
+			expParty: pd(1, true, false),
+		},
+		{
+			name:     "same role can be used is used",
+			party:    pd(1, true, true),
+			role:     1,
+			exp:      false,
+			expParty: pd(1, true, true),
+		},
+		{
+			name:     "same role cannot be used is not used",
+			party:    pd(1, false, false),
+			role:     1,
+			exp:      false,
+			expParty: pd(1, false, false),
+		},
+		{
+			name:     "same role cannot be used is used",
+			party:    pd(1, false, true),
+			role:     1,
+			exp:      false,
+			expParty: pd(1, false, true),
+		},
+		{
+			name:     "diff role can be used is not used",
+			party:    pd(1, true, false),
+			role:     2,
+			exp:      false,
+			expParty: pd(1, true, false),
+		},
+		{
+			name:     "diff role can be used is used",
+			party:    pd(1, true, true),
+			role:     2,
+			exp:      false,
+			expParty: pd(1, true, true),
+		},
+		{
+			name:     "diff role cannot be used is not used",
+			party:    pd(1, false, false),
+			role:     2,
+			exp:      false,
+			expParty: pd(1, false, false),
+		},
+		{
+			name:     "diff role cannot be used is used",
+			party:    pd(1, false, true),
+			role:     2,
+			exp:      false,
+			expParty: pd(1, false, true),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := tc.party.IsStillUsableAs(tc.role)
+			assert.Equal(t, tc.exp, actual, "IsStillUsableAs(%s)", tc.role.SimpleString())
+			assert.Equal(t, tc.expParty, tc.party, "party after IsStillUsableAs")
+		})
+	}
+}
+
+func TestPartyDetails_IsSameAs(t *testing.T) {
+	tests := []struct {
+		name     string
+		party    *keeper.PartyDetails
+		p2       types.Partier
+		exp      bool
+		expParty *keeper.PartyDetails
+	}{
+		{
+			name: "party details same addr and role all others different",
+			party: keeper.TestablePartyDetails{
+				Address:         "same",
+				Role:            1,
+				Optional:        false,
+				Acc:             sdk.AccAddress("one_________________"),
+				Signer:          "signer1",
+				SignerAcc:       sdk.AccAddress("signer1_____________"),
+				CanBeUsedBySpec: false,
+				UsedBySpec:      false,
+			}.Real(),
+			p2: keeper.TestablePartyDetails{
+				Address:         "same",
+				Role:            1,
+				Optional:        true,
+				Acc:             sdk.AccAddress("two_________________"),
+				Signer:          "signer2",
+				SignerAcc:       sdk.AccAddress("signer2_____________"),
+				CanBeUsedBySpec: true,
+				UsedBySpec:      true,
+			}.Real(),
+			exp: true,
+			expParty: keeper.TestablePartyDetails{
+				Address:         "same",
+				Role:            1,
+				Optional:        false,
+				Acc:             sdk.AccAddress("one_________________"),
+				Signer:          "signer1",
+				SignerAcc:       sdk.AccAddress("signer1_____________"),
+				CanBeUsedBySpec: false,
+				UsedBySpec:      false,
+			}.Real(),
+		},
+		{
+			name: "party same addr and role different optional",
+			party: keeper.TestablePartyDetails{
+				Address:  "same",
+				Role:     1,
+				Optional: false,
+			}.Real(),
+			p2: &types.Party{
+				Address:  "same",
+				Role:     1,
+				Optional: true,
+			},
+			exp: true,
+			expParty: keeper.TestablePartyDetails{
+				Address:  "same",
+				Role:     1,
+				Optional: false,
+			}.Real(),
+		},
+		{
+			name: "same but only have acc",
+			party: keeper.TestablePartyDetails{
+				Acc:      sdk.AccAddress("same_acc_address____"),
+				Role:     1,
+				Optional: false,
+			}.Real(),
+			p2: &types.Party{
+				Address:  sdk.AccAddress("same_acc_address____").String(),
+				Role:     1,
+				Optional: true,
+			},
+			exp: true,
+			expParty: keeper.TestablePartyDetails{
+				Address:  sdk.AccAddress("same_acc_address____").String(),
+				Acc:      sdk.AccAddress("same_acc_address____"),
+				Role:     1,
+				Optional: false,
+			}.Real(),
+		},
+		{
+			name: "same but both only have acc",
+			party: keeper.TestablePartyDetails{
+				Acc:      sdk.AccAddress("same_acc_address____"),
+				Role:     1,
+				Optional: false,
+			}.Real(),
+			p2: keeper.TestablePartyDetails{
+				Acc:      sdk.AccAddress("same_acc_address____"),
+				Role:     1,
+				Optional: false,
+			}.Real(),
+			exp: true,
+			expParty: keeper.TestablePartyDetails{
+				Address:  sdk.AccAddress("same_acc_address____").String(),
+				Acc:      sdk.AccAddress("same_acc_address____"),
+				Role:     1,
+				Optional: false,
+			}.Real(),
+		},
+		{
+			name: "party details different address",
+			party: keeper.TestablePartyDetails{
+				Address:  "same",
+				Role:     1,
+				Optional: false,
+			}.Real(),
+			p2: keeper.TestablePartyDetails{
+				Address:  "not same",
+				Role:     1,
+				Optional: true,
+			}.Real(),
+			exp: false,
+			expParty: keeper.TestablePartyDetails{
+				Address:  "same",
+				Role:     1,
+				Optional: false,
+			}.Real(),
+		},
+		{
+			name: "party details different role",
+			party: keeper.TestablePartyDetails{
+				Address:  "same",
+				Role:     1,
+				Optional: false,
+			}.Real(),
+			p2: keeper.TestablePartyDetails{
+				Address:  "same",
+				Role:     2,
+				Optional: true,
+			}.Real(),
+			exp: false,
+			expParty: keeper.TestablePartyDetails{
+				Address:  "same",
+				Role:     1,
+				Optional: false,
+			}.Real(),
+		},
+		{
+			name: "party different address",
+			party: keeper.TestablePartyDetails{
+				Address:  "same",
+				Role:     1,
+				Optional: false,
+			}.Real(),
+			p2: &types.Party{
+				Address:  "not same",
+				Role:     1,
+				Optional: true,
+			},
+			exp: false,
+			expParty: keeper.TestablePartyDetails{
+				Address:  "same",
+				Role:     1,
+				Optional: false,
+			}.Real(),
+		},
+		{
+			name: "party different role",
+			party: keeper.TestablePartyDetails{
+				Address:  "same",
+				Role:     1,
+				Optional: false,
+			}.Real(),
+			p2: &types.Party{
+				Address:  "same",
+				Role:     2,
+				Optional: true,
+			},
+			exp: false,
+			expParty: keeper.TestablePartyDetails{
+				Address:  "same",
+				Role:     1,
+				Optional: false,
+			}.Real(),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := tc.party.IsSameAs(tc.p2)
+			assert.Equal(t, tc.exp, actual, "IsSameAs")
+			assert.Equal(t, tc.expParty, tc.party, "party after IsSameAs")
+		})
+	}
+}
+
+func TestSignersWrapper(t *testing.T) {
+	addr1Acc := sdk.AccAddress("address_one_________")
+	addr2Acc := sdk.AccAddress("address_one_________")
+	addr1 := addr1Acc.String()
+	addr2 := addr2Acc.String()
+
+	strz := func(strings ...string) []string {
+		rv := make([]string, 0, len(strings))
+		rv = append(rv, strings...)
+		return rv
+	}
+	accz := func(accs ...sdk.AccAddress) []sdk.AccAddress {
+		rv := make([]sdk.AccAddress, 0, len(accs))
+		rv = append(rv, accs...)
+		return rv
+	}
+
+	tests := []struct {
+		name       string
+		wrapper    *keeper.SignersWrapper
+		expStrings []string
+		expAccs    []sdk.AccAddress
+	}{
+		{
+			name:       "nil strings",
+			wrapper:    keeper.NewSignersWrapper(nil),
+			expStrings: nil,
+			expAccs:    accz(),
+		},
+		{
+			name:       "empty strings",
+			wrapper:    keeper.NewSignersWrapper(strz()),
+			expStrings: strz(),
+			expAccs:    accz(),
+		},
+		{
+			name:       "two valid address",
+			wrapper:    keeper.NewSignersWrapper(strz(addr1, addr2)),
+			expStrings: strz(addr1, addr2),
+			expAccs:    accz(addr1Acc, addr2Acc),
+		},
+		{
+			name:       "two invalid addresses",
+			wrapper:    keeper.NewSignersWrapper(strz("bad1", "bad2")),
+			expStrings: strz("bad1", "bad2"),
+			expAccs:    accz(),
+		},
+		{
+			name:       "three addresses first invalid",
+			wrapper:    keeper.NewSignersWrapper(strz("bad1", addr1, addr2)),
+			expStrings: strz("bad1", addr1, addr2),
+			expAccs:    accz(addr1Acc, addr2Acc),
+		},
+		{
+			name:       "three addresses second invalid",
+			wrapper:    keeper.NewSignersWrapper(strz(addr1, "bad2", addr2)),
+			expStrings: strz(addr1, "bad2", addr2),
+			expAccs:    accz(addr1Acc, addr2Acc),
+		},
+		{
+			name:       "three addresses third invalid",
+			wrapper:    keeper.NewSignersWrapper(strz(addr1, addr2, "bad3")),
+			expStrings: strz(addr1, addr2, "bad3"),
+			expAccs:    accz(addr1Acc, addr2Acc),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actualStrings := tc.wrapper.Strings()
+			assert.Equal(t, tc.expStrings, actualStrings, ".String()")
+			actualAccs := tc.wrapper.Accs()
+			assert.Equal(t, tc.expAccs, actualAccs, ".Accs()")
+
+		})
+	}
+}
 
 // TODO[1438]: func (s *AuthzTestSuite) TestValidateSignersWithParties() {}
 // TODO[1438]: func TestAssociateSigners(t *testing.T) {}
