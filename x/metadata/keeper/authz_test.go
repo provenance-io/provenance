@@ -227,10 +227,44 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
 	randAddr2 := sdk.AccAddress("random_address_2____").String()
 	randAddr3 := sdk.AccAddress("random_address_3____").String()
 
+	// expFoundSigner creates a PartyDetails for a party found as a signer.
+	expFoundSigner := func(addr string) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Address:         addr,
+			Role:            types.PartyType_PARTY_TYPE_UNSPECIFIED,
+			Optional:        false,
+			Acc:             nil,
+			Signer:          addr,
+			SignerAcc:       nil,
+			CanBeUsedBySpec: false,
+			UsedBySpec:      false,
+		}.Real()
+	}
+	// expFoundAuthz creates a PartyDetails for a party found via authz.
+	expFoundAuthz := func(addr string, signer sdk.AccAddress) *keeper.PartyDetails {
+		rv := keeper.TestablePartyDetails{
+			Address:         addr,
+			Role:            types.PartyType_PARTY_TYPE_UNSPECIFIED,
+			Optional:        false,
+			Acc:             nil,
+			Signer:          "",
+			SignerAcc:       signer,
+			CanBeUsedBySpec: false,
+			UsedBySpec:      false,
+		}.Real()
+		rv.GetAcc() // need the acc of the provided addr to be set.
+		return rv
+	}
+	// pdz is just a shorter way of creating a slice of PartyDetails.
+	pdz := func(details ...*keeper.PartyDetails) []*keeper.PartyDetails {
+		return details
+	}
+
 	tests := []struct {
 		name     string
 		owners   []string
 		msg      types.MetadataMsg
+		exp      []*keeper.PartyDetails
 		errorMsg string
 	}{
 		{
@@ -249,12 +283,14 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
 			name:     "1 owner in signers list with non-owners",
 			owners:   []string{s.user1},
 			msg:      &types.MsgWriteSessionRequest{Signers: []string{randAddr1, s.user1, randAddr2}},
+			exp:      pdz(expFoundSigner(s.user1)),
 			errorMsg: "",
 		},
 		{
 			name:     "1 owner only signer in list",
 			owners:   []string{s.user1},
 			msg:      &types.MsgWriteSessionRequest{Signers: []string{s.user1}},
+			exp:      pdz(expFoundSigner(s.user1)),
 			errorMsg: "",
 		},
 		{
@@ -285,18 +321,21 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
 			name:     "2 owners - both in signers list with non-owners",
 			owners:   []string{s.user1, s.user2},
 			msg:      &types.MsgWriteSessionRequest{Signers: []string{randAddr1, s.user2, randAddr2, s.user1, randAddr3}},
+			exp:      pdz(expFoundSigner(s.user1), expFoundSigner(s.user2)),
 			errorMsg: "",
 		},
 		{
 			name:     "2 owners - both in signers list",
 			owners:   []string{s.user1, s.user2},
 			msg:      &types.MsgWriteSessionRequest{Signers: []string{s.user1, s.user2}},
+			exp:      pdz(expFoundSigner(s.user1), expFoundSigner(s.user2)),
 			errorMsg: "",
 		},
 		{
 			name:     "2 owners - both in signers list, opposite order",
 			owners:   []string{s.user1, s.user2},
 			msg:      &types.MsgWriteSessionRequest{Signers: []string{s.user2, s.user1}},
+			exp:      pdz(expFoundSigner(s.user1), expFoundSigner(s.user2)),
 			errorMsg: "",
 		},
 		// authz test cases
@@ -305,6 +344,7 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
 			// User3 can sign for User2 on MsgAddScopeDataAccessRequest.
 			owners:   []string{s.user2, s.user3},
 			msg:      &types.MsgAddScopeDataAccessRequest{Signers: []string{s.user2, s.user3}},
+			exp:      pdz(expFoundSigner(s.user2), expFoundSigner(s.user3)),
 			errorMsg: "",
 		},
 		{
@@ -333,6 +373,7 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
 			// User3 can sign for User2 on MsgAddScopeDataAccessRequest.
 			owners:   []string{s.user2, s.user3},
 			msg:      &types.MsgAddScopeDataAccessRequest{Signers: []string{s.user3}},
+			exp:      pdz(expFoundAuthz(s.user2, s.user3Addr), expFoundSigner(s.user3)),
 			errorMsg: "",
 		},
 		{
@@ -340,6 +381,7 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
 			// User3 can sign for User2 on MsgAddScopeDataAccessRequest.
 			owners:   []string{s.user1, s.user2, s.user3},
 			msg:      &types.MsgAddScopeDataAccessRequest{Signers: []string{s.user1, s.user3}},
+			exp:      pdz(expFoundSigner(s.user1), expFoundAuthz(s.user2, s.user3Addr), expFoundSigner(s.user3)),
 			errorMsg: "",
 		},
 		{
@@ -347,6 +389,7 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
 			// User3 can sign for User2 on MsgWriteScopeSpecificationRequest.
 			owners:   []string{s.user1, s.user2, s.user3},
 			msg:      &types.MsgDeleteContractSpecFromScopeSpecRequest{Signers: []string{s.user1, s.user3}},
+			exp:      pdz(expFoundSigner(s.user1), expFoundAuthz(s.user2, s.user3Addr), expFoundSigner(s.user3)),
 			errorMsg: "",
 		},
 		{
@@ -355,6 +398,7 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
 			// User3 can sign for User2 on MsgWriteScopeSpecificationRequest.
 			owners:   []string{s.user1, s.user2, s.user3},
 			msg:      &types.MsgDeleteContractSpecFromScopeSpecRequest{Signers: []string{s.user3}},
+			exp:      pdz(expFoundAuthz(s.user1, s.user3Addr), expFoundAuthz(s.user2, s.user3Addr), expFoundSigner(s.user3)),
 			errorMsg: "",
 		},
 		{
@@ -368,12 +412,13 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateSignersWithoutParties(s.ctx, tc.owners, tc.msg)
+			actual, err := s.app.MetadataKeeper.ValidateSignersWithoutParties(s.ctx, tc.owners, tc.msg)
 			if len(tc.errorMsg) == 0 {
 				assert.NoError(t, err, "ValidateSignersWithoutParties unexpected error")
 			} else {
 				assert.EqualError(t, err, tc.errorMsg, "ValidateSignersWithoutParties error")
 			}
+			assert.Equal(t, tc.exp, actual, "ValidateSignersWithoutParties validated parties")
 		})
 	}
 }
@@ -450,7 +495,7 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutPartiesWithCountAuthorization
 				s.Require().NoError(err, "SaveGrant")
 			}
 
-			err := s.app.MetadataKeeper.ValidateSignersWithoutParties(s.ctx, tc.owners, tc.msg)
+			_, err := s.app.MetadataKeeper.ValidateSignersWithoutParties(s.ctx, tc.owners, tc.msg)
 			if len(tc.errorMsg) == 0 {
 				s.Assert().NoError(err, "ValidateSignersWithoutParties error")
 			} else {
@@ -498,7 +543,7 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutPartiesWithCountAuthorization
 		msg.Signers = []string{s.user3}
 
 		// Validate signatures. This should also use both count authorizations.
-		err = s.app.MetadataKeeper.ValidateSignersWithoutParties(s.ctx, owners, msg)
+		_, err = s.app.MetadataKeeper.ValidateSignersWithoutParties(s.ctx, owners, msg)
 		s.Assert().NoError(err, "ValidateSignersWithoutParties")
 
 		// first grant should be deleted because it used its last use.
