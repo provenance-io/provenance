@@ -660,42 +660,47 @@ func (k Keeper) TODELETEcheckAuthzForMissing(
 // ValidateSignersWithoutParties makes sure that each entry in the required list are either signers of the msg,
 // or have granted an authz authorization to one of the signers.
 //
+// Party details are returned containing information on which addresses had signers.
+// All roles in these details are UNSPECIFIED.
+//
 // When parties (and/or roles) are involved, use ValidateSignersWithParties.
 func (k Keeper) ValidateSignersWithoutParties(
 	ctx sdk.Context,
 	required []string,
 	msg types.MetadataMsg,
-) error {
-	signers := msg.GetSignerStrs()
-	missing := findMissing(required, signers)
-
-	// Check authz for any authorizations on missing signers.
-	// If there isn't a message, skip this check (should only happen in unit tests).
-	if len(missing) > 0 && msg != nil {
-		var err error
-		var granter, grantee sdk.AccAddress
-		possibleGrantees := safeBech32ToAccAddresses(signers)
-		var stillMissing []string
-		for _, addr := range missing {
-			granter, err = sdk.AccAddressFromBech32(addr)
-			if err == nil {
-				grantee, err = k.findAuthzGrantee(ctx, granter, possibleGrantees, msg)
-				if err != nil {
-					return fmt.Errorf("error validating signers: %w", err)
-				}
-				if len(grantee) == 0 {
-					stillMissing = append(stillMissing, addr)
-				}
-			}
+) ([]*PartyDetails, error) {
+	details := make([]*PartyDetails, len(required))
+	for i, addr := range required {
+		details[i] = &PartyDetails{
+			address:  addr,
+			role:     types.PartyType_PARTY_TYPE_UNSPECIFIED,
+			optional: false,
 		}
-		missing = stillMissing
 	}
 
-	if len(missing) > 0 {
-		return fmt.Errorf("missing signature%s: %s", pluralEnding(len(missing)), strings.Join(missing, ", "))
+	signers := NewSignersWrapper(msg.GetSignerStrs())
+
+	// First pass: without authz.
+	associateSigners(details, signers)
+	missingReqParties := findUnsignedRequired(details)
+
+	// Second pass: Check authz for any authorizations on missing signers.
+	if len(missingReqParties) > 0 {
+		if err := k.associateAuthorizations(ctx, missingReqParties, signers, msg, nil); err != nil {
+			return nil, err
+		}
+		missingReqParties = findUnsignedRequired(details)
 	}
 
-	return nil
+	if len(missingReqParties) > 0 {
+		missing := make([]string, len(missingReqParties))
+		for i, party := range missingReqParties {
+			missing[i] = party.GetAddress()
+		}
+		return nil, fmt.Errorf("missing signature%s: %s", pluralEnding(len(missing)), strings.Join(missing, ", "))
+	}
+
+	return details, nil
 }
 
 // validateRolesPresent returns an error if one or more required roles are not present in the parties.

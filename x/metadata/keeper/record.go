@@ -191,7 +191,7 @@ func (k Keeper) ValidateWriteRecord(
 		if oldSession != nil {
 			reqSigs = append(reqSigs, oldSession.GetAllPartyAddresses()...)
 		}
-		if err = k.ValidateSignersWithoutParties(ctx, reqSigs, msg); err != nil {
+		if _, err = k.ValidateSignersWithoutParties(ctx, reqSigs, msg); err != nil {
 			return err
 		}
 	} else {
@@ -337,7 +337,7 @@ func (k Keeper) ValidateDeleteRecord(ctx sdk.Context, proposedID types.MetadataA
 		// Since we're deleting it, the only one that makes sense to do, is check the session party signers.
 		// And if the session doesn't exist, just let the record get deleted.
 		if session != nil {
-			if err := k.ValidateSignersWithoutParties(ctx, session.GetAllPartyAddresses(), msg); err != nil {
+			if _, err := k.ValidateSignersWithoutParties(ctx, session.GetAllPartyAddresses(), msg); err != nil {
 				return err
 			}
 		}
@@ -365,7 +365,7 @@ func (k Keeper) ValidateDeleteRecord(ctx sdk.Context, proposedID types.MetadataA
 		// If the record spec doesn't exist, ignore the role/signer requirement.
 		reqSpec, found := k.GetRecordSpecification(ctx, record.SpecificationId)
 		if !found {
-			if err := k.ValidateSignersWithoutParties(ctx, types.GetRequiredPartyAddresses(reqParties), msg); err != nil {
+			if _, err := k.ValidateSignersWithoutParties(ctx, types.GetRequiredPartyAddresses(reqParties), msg); err != nil {
 				return err
 			}
 		} else {
