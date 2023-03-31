@@ -44,7 +44,8 @@ func (s Scope) Equals(t Scope) bool {
 		s.SpecificationId.Equals(t.SpecificationId) &&
 		EqualParties(s.Owners, t.Owners) &&
 		equivalentDataAssessors(s.DataAccess, t.DataAccess) &&
-		s.ValueOwnerAddress == t.ValueOwnerAddress
+		s.ValueOwnerAddress == t.ValueOwnerAddress &&
+		s.RequirePartyRollup == t.RequirePartyRollup
 }
 
 // ValidateBasic performs basic format checking of data within a scope
