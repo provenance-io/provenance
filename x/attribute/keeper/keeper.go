@@ -386,3 +386,18 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	k.IncAddNameAddressLookup(ctx, attr)
 	return nil
 }
+
+// PopulateAddressAttributeNameTable retrieves all attributes and populates address by attribute name lookup table
+// TODO: remove after v1.15.0 upgrade handler is removed
+func (k Keeper) PopulateAddressAttributeNameTable(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	it := sdk.KVStorePrefixIterator(store, types.AttributeKeyPrefix)
+	for ; it.Valid(); it.Next() {
+		attr := types.Attribute{}
+		if err := k.cdc.Unmarshal(it.Value(), &attr); err != nil {
+			return
+		}
+		k.IncAddNameAddressLookup(ctx, attr)
+	}
+	return
+}
