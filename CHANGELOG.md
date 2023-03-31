@@ -51,6 +51,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Disable `cleveldb` and `badgerdb` by default [#1411](https://github.com/provenance-io/provenance/issues/1411).
   Official builds still have `cleveldb` support though.
 * Expand the `additional_bindings` gRPC tag to use object form to allow for Typescript transpiling [#1405](https://github.com/provenance-io/provenance/issues/1405).
+* Add attribute cli command to query account addresses by attribute name [#1451](https://github.com/provenance-io/provenance/issues/1451).
 
 ### Bug Fixes
 
