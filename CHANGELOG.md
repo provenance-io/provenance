@@ -42,6 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add support for tokens restricted marker sends with required attributes [#1256](https://github.com/provenance-io/provenance/issues/1256))
 * Allow markers to be configured to allow forced transfers [#1368](https://github.com/provenance-io/provenance/issues/1368).
 * Publish Provenance Protobuf API as a NPM module [#1449](https://github.com/provenance-io/provenance/issues/1449).
+* Add support for account addresses by attribute name lookup [#1447](https://github.com/provenance-io/provenance/issues/1447).
 
 ### Improvements
 
