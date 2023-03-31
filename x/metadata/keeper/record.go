@@ -326,7 +326,10 @@ func (k Keeper) ValidateDeleteRecord(ctx sdk.Context, proposedID types.MetadataA
 	}
 
 	// Make sure everyone has signed.
-	if scope != nil && !scope.GetRequirePartyRollup() {
+	switch {
+	case scope == nil && session == nil:
+		// nothing to validate signers against. Just let the record get deleted too.
+	case scope != nil && !scope.GetRequirePartyRollup():
 		// Old:
 		//   - All roles required by the record spec must have a party in the session parties.
 		//   - All session parties must sign.
@@ -338,19 +341,27 @@ func (k Keeper) ValidateDeleteRecord(ctx sdk.Context, proposedID types.MetadataA
 				return err
 			}
 		}
-	} else {
+	default:
 		// New:
 		//   - All roles required by the record spec must have a signer and associated party in the session.
 		//   - All optional=false parties in the scope owners and session parties must be signers.
 		//   - If the record is changing sessions, all optional=false parties in the previous session must be signers.
 		// We don't need to worry about that last part.
+
+		// Required parties come from both the session and scope since they might have different optional values.
 		var reqParties []types.Party
+		// available parties come from the session if it exists, otherwise the scope.
+		var availableParties []types.Party
 		if scope != nil {
 			reqParties = append(reqParties, scope.Owners...)
 		}
 		if session != nil {
 			reqParties = append(reqParties, session.Parties...)
+			availableParties = append(availableParties, session.Parties...)
+		} else {
+			availableParties = append(availableParties, scope.Owners...)
 		}
+
 		// If the record spec doesn't exist, ignore the role/signer requirement.
 		reqSpec, found := k.GetRecordSpecification(ctx, record.SpecificationId)
 		if !found {
@@ -358,7 +369,7 @@ func (k Keeper) ValidateDeleteRecord(ctx sdk.Context, proposedID types.MetadataA
 				return err
 			}
 		} else {
-			if _, err := k.ValidateSignersWithParties(ctx, reqParties, session.Parties, reqSpec.ResponsibleParties, msg); err != nil {
+			if _, err := k.ValidateSignersWithParties(ctx, reqParties, availableParties, reqSpec.ResponsibleParties, msg); err != nil {
 				return err
 			}
 		}
