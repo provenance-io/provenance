@@ -429,11 +429,6 @@ func (k Keeper) ValidateAddScopeDataAccess(
 		}
 	}
 
-	// Since the owners aren't changing, assume all spec roles are fulfilled.
-	if _, err := k.ValidateSignersWithParties(ctx, existing.Owners, nil, nil, msg); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -446,36 +441,40 @@ func (k Keeper) ValidateDeleteScopeDataAccess(
 	if len(msg.DataAccess) < 1 {
 		return fmt.Errorf("data access list cannot be empty")
 	}
+
+dataAccessLoop:
 	for _, da := range msg.DataAccess {
-		_, err := sdk.AccAddressFromBech32(da)
-		if err != nil {
-			return fmt.Errorf("failed to decode data access address %s : %w", da, err)
-		}
-		found := false
-		for _, pda := range existing.DataAccess {
-			if da == pda {
-				found = true
-				break
+		for _, eda := range existing.DataAccess {
+			if da == eda {
+				continue dataAccessLoop
 			}
 		}
-		if !found {
-			return fmt.Errorf("address does not exist in scope data access: %s", da)
-		}
+		return fmt.Errorf("address does not exist in scope data access: %s", da)
 	}
 
-	// TODO[1438]: Update to handle both new and old ways.
-	// Old:
-	//   - All roles required by the scope spec must have a party in the owners.
-	//   - If being updated, all existing owners must sign.
-	// New:
-	//   - All roles required by the scope spec must have a party in the owners.
-	//   - All required=false owners must be signers.
-	//   - If the scope is being updated, all roles required by the scope spec must have a signer and associated party
-	//   - If the scope is being updated, all roles required by the scope spec must have a signer and associated party
-	//     from the existing scope.
-
-	if _, err := k.ValidateSignersWithParties(ctx, existing.Owners, nil, nil, msg); err != nil {
-		return err
+	// Make sure everyone has signed.
+	if !existing.RequirePartyRollup {
+		// Old:
+		//   - All roles required by the scope spec must have a party in the owners.
+		//   - If being updated, all existing owners must sign.
+		// We don't care about the first one here since owners aren't changing.
+		if _, err := k.ValidateSignersWithoutParties(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
+			return err
+		}
+	} else {
+		// New:
+		//   - All roles required by the scope spec must have a party in the owners.
+		//   - All required=false owners must be signers.
+		//   - If the scope is being updated, all roles required by the scope spec must have a signer and associated party
+		//     from the existing scope.
+		// We don't care about the first one here since owners aren't changing.
+		scopeSpec, found := k.GetScopeSpecification(ctx, existing.SpecificationId)
+		if !found {
+			return fmt.Errorf("scope specification %s not found", existing.SpecificationId)
+		}
+		if _, err := k.ValidateSignersWithParties(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
+			return err
+		}
 	}
 
 	return nil
