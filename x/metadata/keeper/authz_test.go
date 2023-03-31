@@ -68,6 +68,65 @@ func TestAuthzTestSuite(t *testing.T) {
 	suite.Run(t, new(AuthzTestSuite))
 }
 
+// stringSame is a string with an IsSameAs(stringSame) function.
+type stringSame string
+
+// IsSameAs satisfies the sameable interface.
+func (s stringSame) IsSameAs(c stringSame) bool {
+	return string(s) == string(c)
+}
+
+// newStringSames converts a slice of strings to a slice of stringEqs.
+// nil in => nil out. empty in => empty out.
+func newStringSames(strs []string) []stringSame {
+	if strs == nil {
+		return nil
+	}
+	rv := make([]stringSame, len(strs), cap(strs))
+	for i, str := range strs {
+		rv[i] = stringSame(str)
+	}
+	return rv
+}
+
+// stringSameR is a string with an Equals(stringSameC) function that satisfies the sameable interface using
+// different types for the receiver and argument.
+type stringSameR string
+
+// stringSameC is a string that can be provided to the stringSameR IsSameAs function.
+type stringSameC string
+
+// IsSameAs satisfies the sameable interface.
+func (s stringSameR) IsSameAs(c stringSameC) bool {
+	return string(s) == string(c)
+}
+
+// newStringSameRs converts a slice of strings to a slice of stringEqRs.
+// nil in => nil out. empty in => empty out.
+func newStringSameRs(strs []string) []stringSameR {
+	if strs == nil {
+		return nil
+	}
+	rv := make([]stringSameR, len(strs), cap(strs))
+	for i, str := range strs {
+		rv[i] = stringSameR(str)
+	}
+	return rv
+}
+
+// newStringSameCs converts a slice of strings to a slice of stringEqCs.
+// nil in => nil out. empty in => empty out.
+func newStringSameCs(strs []string) []stringSameC {
+	if strs == nil {
+		return nil
+	}
+	rv := make([]stringSameC, len(strs), cap(strs))
+	for i, str := range strs {
+		rv[i] = stringSameC(str)
+	}
+	return rv
+}
+
 // TODO[1438]: func TestWrapRequiredParty(t *testing.T) {}
 // TODO[1438]: func TestWrapAvailableParty(t *testing.T) {}
 // TODO[1438]: func TestBuildPartyDetails(t *testing.T) {}
@@ -559,6 +618,7 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutPartiesWithCountAuthorization
 }
 
 // TODO[1438]: func TestValidateRolesPresent(t *testing.T) {}
+// TODO[1438]: func TestValidatePartiesArePresent(t *testing.T) {}
 
 func (s *AuthzTestSuite) TestTODELETEValidateAllPartiesAreSignersWithAuthz() {
 	// A missing signature with an authz grant on MsgAddScopeOwnerRequest
@@ -1305,65 +1365,6 @@ func TestFindMissingParties(t *testing.T) {
 			assert.Equal(t, tc.expected, actual, "FindMissingParties")
 		})
 	}
-}
-
-// stringSame is a string with an IsSameAs(stringSame) function.
-type stringSame string
-
-// IsSameAs satisfies the sameable interface.
-func (s stringSame) IsSameAs(c stringSame) bool {
-	return string(s) == string(c)
-}
-
-// newStringSames converts a slice of strings to a slice of stringEqs.
-// nil in => nil out. empty in => empty out.
-func newStringSames(strs []string) []stringSame {
-	if strs == nil {
-		return nil
-	}
-	rv := make([]stringSame, len(strs), cap(strs))
-	for i, str := range strs {
-		rv[i] = stringSame(str)
-	}
-	return rv
-}
-
-// stringSameR is a string with an Equals(stringSameC) function that satisfies the sameable interface using
-// different types for the receiver and argument.
-type stringSameR string
-
-// stringSameC is a string that can be provided to the stringSameR IsSameAs function.
-type stringSameC string
-
-// IsSameAs satisfies the sameable interface.
-func (s stringSameR) IsSameAs(c stringSameC) bool {
-	return string(s) == string(c)
-}
-
-// newStringSameRs converts a slice of strings to a slice of stringEqRs.
-// nil in => nil out. empty in => empty out.
-func newStringSameRs(strs []string) []stringSameR {
-	if strs == nil {
-		return nil
-	}
-	rv := make([]stringSameR, len(strs), cap(strs))
-	for i, str := range strs {
-		rv[i] = stringSameR(str)
-	}
-	return rv
-}
-
-// newStringSameCs converts a slice of strings to a slice of stringEqCs.
-// nil in => nil out. empty in => empty out.
-func newStringSameCs(strs []string) []stringSameC {
-	if strs == nil {
-		return nil
-	}
-	rv := make([]stringSameC, len(strs), cap(strs))
-	for i, str := range strs {
-		rv[i] = stringSameC(str)
-	}
-	return rv
 }
 
 func TestFindMissingComp(t *testing.T) {

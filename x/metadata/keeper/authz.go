@@ -725,6 +725,7 @@ reqRolesLoop:
 	return nil
 }
 
+// validatePartiesArePresent returns an error if there are any parties in required that are not in available.
 func validatePartiesArePresent(required, available []types.Party) error {
 	missing := findMissingParties(required, available)
 	if len(missing) == 0 {

@@ -95,6 +95,8 @@ func (k Keeper) ValidateProvenanceRole(ctx sdk.Context, parties []*PartyDetails)
 var (
 	// ValidateRolesPresent is a TEST ONLY exposure of validateRolesPresent.
 	ValidateRolesPresent = validateRolesPresent
+	// ValidatePartiesArePresent is a TEST ONLY exposure of validatePartiesArePresent.
+	ValidatePartiesArePresent = validatePartiesArePresent
 	// FindMissing is a TEST ONLY exposure of findMissing.
 	FindMissing = findMissing
 	// FindMissingParties is a TEST ONLY exposure of findMissingParties.
