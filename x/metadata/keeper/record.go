@@ -358,9 +358,9 @@ func (k Keeper) ValidateDeleteRecord(ctx sdk.Context, proposedID types.MetadataA
 		}
 		if session != nil {
 			reqParties = append(reqParties, session.Parties...)
-			availableParties = append(availableParties, session.Parties...)
+			availableParties = session.Parties
 		} else {
-			availableParties = append(availableParties, scope.Owners...)
+			availableParties = scope.Owners
 		}
 
 		// If the record spec doesn't exist, ignore the role/signer requirement.
