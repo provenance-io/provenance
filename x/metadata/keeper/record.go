@@ -312,57 +312,57 @@ func (k Keeper) ValidateDeleteRecord(ctx sdk.Context, proposedID types.MetadataA
 	if !found {
 		return fmt.Errorf("record does not exist to delete: %s", proposedID)
 	}
-	var reqParties []types.Party
-	var sessionParties []types.Party
-	var reqRoles []types.PartyType
-	// Ignoring the error from AsScopeAddress because we know it'll be nil
-	// because GetRecord found a record, so it's a record address.
+
+	// GetRecord found a record, so we know proposedID is good and will have a scope id.
+	// That's why we can ignore the error from AsScopeAddress().
 	scopeID, _ := proposedID.AsScopeAddress()
-	if scope, found := k.GetScope(ctx, scopeID); found {
-		reqParties = append(reqParties, scope.Owners...)
+	var scope *types.Scope
+	if s, found := k.GetScope(ctx, scopeID); found {
+		scope = &s
 	}
-	if session, found := k.GetSession(ctx, record.SessionId); found {
-		sessionParties = session.Parties
-		reqParties = append(reqParties, session.Parties...)
+	var session *types.Session
+	if s, found := k.GetSession(ctx, record.SessionId); found {
+		session = &s
 	}
-	if len(sessionParties) > 0 {
-		// If there aren't any session parties, there's nothing to compare roles with.
-		// Assume things have gone wrong somewhere else and let the delete happen
-		// without checking the spec's required roles.
-		recordSpec, found := k.GetRecordSpecification(ctx, record.SpecificationId)
-		if found {
-			reqRoles = recordSpec.ResponsibleParties
+
+	// Make sure everyone has signed.
+	if scope != nil && !scope.GetRequirePartyRollup() {
+		// Old:
+		//   - All roles required by the record spec must have a party in the session parties.
+		//   - All session parties must sign.
+		//   - If the record is being updated to a new session, all previous session parties must sign.
+		// Since we're deleting it, the only one that makes sense to do, is check the session party signers.
+		// And if the session doesn't exist, just let the record get deleted.
+		if session != nil {
+			if err := k.ValidateSignersWithoutParties(ctx, session.GetAllPartyAddresses(), msg); err != nil {
+				return err
+			}
+		}
+	} else {
+		// New:
+		//   - All roles required by the record spec must have a signer and associated party in the session.
+		//   - All optional=false parties in the scope owners and session parties must be signers.
+		//   - If the record is changing sessions, all optional=false parties in the previous session must be signers.
+		// We don't need to worry about that last part.
+		var reqParties []types.Party
+		if scope != nil {
+			reqParties = append(reqParties, scope.Owners...)
+		}
+		if session != nil {
+			reqParties = append(reqParties, session.Parties...)
+		}
+		// If the record spec doesn't exist, ignore the role/signer requirement.
+		reqSpec, found := k.GetRecordSpecification(ctx, record.SpecificationId)
+		if !found {
+			if err := k.ValidateSignersWithoutParties(ctx, types.GetRequiredPartyAddresses(reqParties), msg); err != nil {
+				return err
+			}
+		} else {
+			if _, err := k.ValidateSignersWithParties(ctx, reqParties, session.Parties, reqSpec.ResponsibleParties, msg); err != nil {
+				return err
+			}
 		}
 	}
 
-	// TODO[1438]: Update to handle both new and old ways.
-	// Old:
-	//   on initial write:
-	//     All session parties must sign.
-	//   on update:
-	//     if changing to new session:
-	//       all previous session owners must sign
-	//       all session owners must sign
-	//     if staying in same session:
-	//       all session owners must sign
-	// New:
-	//   on initial write:
-	//     There must be a signer for each role required by the record spec in the session parties.
-	//     All optional=false scope owners must sign.
-	//     All optional=false session parties must sign.
-	//   on update:
-	//     if changing to a new session:
-	//       There must be a signer for each role required by the record spec in the new session parties.
-	//       All optional=false scope owners must sign.
-	//       All optional=false previous session parties must sign.
-	//       All optional=false new session parties must sign.
-	//     if staying in the same session:
-	//       There must be a signer for each role required by the record spec in the session parties.
-	//       All optional=false scope owners must sign.
-	//       All optional=false session parties must sign.
-
-	if _, err := k.ValidateSignersWithParties(ctx, reqParties, sessionParties, reqRoles, msg); err != nil {
-		return err
-	}
 	return nil
 }

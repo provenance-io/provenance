@@ -593,6 +593,18 @@ func GetPartyAddresses(parties []Party) []string {
 	return rv
 }
 
+// GetRequiredPartyAddresses gets the addresses of all the required parties.
+// Each address can only appear once in the return value.
+func GetRequiredPartyAddresses(parties []Party) []string {
+	var req []Party
+	for _, party := range parties {
+		if !party.Optional {
+			req = append(req, party)
+		}
+	}
+	return GetPartyAddresses(req)
+}
+
 // equivalentDataAssessors returns true if all the entries in s1 are in s2, and vice versa.
 func equivalentDataAssessors(s1, s2 []string) bool {
 s1Loop:
