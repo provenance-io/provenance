@@ -399,5 +399,4 @@ func (k Keeper) PopulateAddressAttributeNameTable(ctx sdk.Context) {
 		}
 		k.IncAddNameAddressLookup(ctx, attr)
 	}
-	return
 }
