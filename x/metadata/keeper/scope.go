@@ -6,6 +6,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -317,6 +318,7 @@ func (k Keeper) ValidateWriteScope(
 			if err = validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 				return err
 			}
+			// Note: This means that a scope can be initially written without consideration for signers and roles.
 			if existing != nil {
 				if validatedParties, err = k.ValidateSignersWithParties(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
 					return err
@@ -492,7 +494,7 @@ func (k Keeper) ValidateUpdateScopeOwners(
 		return fmt.Errorf("scope specification %s not found", proposed.SpecificationId)
 	}
 
-	// TODO[1438]: Update to handle both new and old ways.
+	// Make sure everyone has signed.
 	if !existing.RequirePartyRollup {
 		// Old:
 		//   - All roles required by the scope spec must have a party in the owners.
