@@ -48,11 +48,17 @@ func WrapAvailableParty(party types.Party) *PartyDetails {
 
 // BuildPartyDetails creates the list of PartyDetails to be used in party/signer/role validation.
 func BuildPartyDetails(reqParties, availableParties []types.Party) []*PartyDetails {
-	details := make([]*PartyDetails, len(availableParties))
+	details := make([]*PartyDetails, 0, len(availableParties))
 
 	// Start with creating details for each available party.
-	for i, party := range availableParties {
-		details[i] = WrapAvailableParty(party)
+availablePartiesLoop:
+	for _, party := range availableParties {
+		for _, known := range details {
+			if party.IsSameAs(known) {
+				continue availablePartiesLoop
+			}
+		}
+		details = append(details, WrapAvailableParty(party))
 	}
 
 	// Now update the details to include optional=false required parties.
