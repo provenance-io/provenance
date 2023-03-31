@@ -179,7 +179,7 @@ func (k Keeper) ValidateWriteRecord(
 	}
 
 	// Make sure everyone has signed.
-	if !scope.GetRequirePartyRollup() {
+	if !scope.RequirePartyRollup {
 		// Old:
 		//   - All roles required by the record spec must have a party in the session parties.
 		//   - All session parties must sign.
@@ -329,7 +329,7 @@ func (k Keeper) ValidateDeleteRecord(ctx sdk.Context, proposedID types.MetadataA
 	switch {
 	case scope == nil && session == nil:
 		// nothing to validate signers against. Just let the record get deleted too.
-	case scope != nil && !scope.GetRequirePartyRollup():
+	case scope != nil && !scope.RequirePartyRollup:
 		// Old:
 		//   - All roles required by the record spec must have a party in the session parties.
 		//   - All session parties must sign.

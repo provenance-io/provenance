@@ -156,7 +156,7 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 	}
 
 	// Make sure everyone has signed.
-	if !scope.GetRequirePartyRollup() {
+	if !scope.RequirePartyRollup {
 		// Old:
 		//   - All roles required by the contract spec must have a party in the session parties.
 		//   - All scope owners must sign.
