@@ -2216,8 +2216,267 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutPartiesWithCountAuthorization
 	})
 }
 
-// TODO[1438]: func TestValidateRolesPresent(t *testing.T) {}
-// TODO[1438]: func TestValidatePartiesArePresent(t *testing.T) {}
+func TestValidateRolesPresent(t *testing.T) {
+	// p is a short way to create a Party.
+	p := func(addr string, role types.PartyType) types.Party {
+		return types.Party{
+			Address:  addr,
+			Role:     role,
+			Optional: false,
+		}
+	}
+
+	// pz is a short way to create a slice of Parties.
+	pz := func(parties ...types.Party) []types.Party {
+		rv := make([]types.Party, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+
+	// ptz is a short way to create a slice of PartyTypes.
+	ptz := func(roles ...types.PartyType) []types.PartyType {
+		rv := make([]types.PartyType, 0, len(roles))
+		rv = append(rv, roles...)
+		return rv
+	}
+
+	tests := []struct {
+		name     string
+		parties  []types.Party
+		reqRoles []types.PartyType
+		exp      string
+	}{
+		{
+			name:     "nil nil",
+			parties:  nil,
+			reqRoles: nil,
+			exp:      "",
+		},
+		{
+			name:     "nil empty",
+			parties:  nil,
+			reqRoles: ptz(),
+			exp:      "",
+		},
+		{
+			name:     "empty nil",
+			parties:  pz(),
+			reqRoles: nil,
+			exp:      "",
+		},
+		{
+			name:     "empty empty",
+			parties:  pz(),
+			reqRoles: ptz(),
+			exp:      "",
+		},
+		{
+			name:     "one req two parties present in both",
+			parties:  pz(p("addr1", 1), p("addr2", 1)),
+			reqRoles: ptz(1),
+			exp:      "",
+		},
+		{
+			name:     "one req two parties present in first",
+			parties:  pz(p("addr1", 1), p("addr2", 2)),
+			reqRoles: ptz(1),
+			exp:      "",
+		},
+		{
+			name:     "one req two parties present in second",
+			parties:  pz(p("addr1", 1), p("addr2", 2)),
+			reqRoles: ptz(2),
+			exp:      "",
+		},
+		{
+			name:     "one req two parties not present",
+			parties:  pz(p("addr1", 1), p("addr2", 2)),
+			reqRoles: ptz(3),
+			exp:      "missing roles required by spec: INVESTOR need 1 have 0",
+		},
+		{
+			name:     "two diff req two parties present",
+			parties:  pz(p("addr1", 1), p("addr2", 2)),
+			reqRoles: ptz(2, 1),
+			exp:      "",
+		},
+		{
+			name:     "two diff req two parties first not present",
+			parties:  pz(p("addr1", 1), p("addr2", 2)),
+			reqRoles: ptz(3, 1),
+			exp:      "missing roles required by spec: INVESTOR need 1 have 0",
+		},
+		{
+			name:     "two diff req two parties second not present",
+			parties:  pz(p("addr1", 1), p("addr2", 2)),
+			reqRoles: ptz(2, 3),
+			exp:      "missing roles required by spec: INVESTOR need 1 have 0",
+		},
+		{
+			name:     "two diff req two parties neither present",
+			parties:  pz(p("addr1", 1), p("addr2", 2)),
+			reqRoles: ptz(3, 4),
+			exp:      "missing roles required by spec: INVESTOR need 1 have 0, CUSTODIAN need 1 have 0",
+		},
+		{
+			name:     "two same req two parties present",
+			parties:  pz(p("addr1", 1), p("addr2", 1)),
+			reqRoles: ptz(1, 1),
+			exp:      "",
+		},
+		{
+			name:     "two same req two parties only one",
+			parties:  pz(p("addr1", 1), p("addr2", 2)),
+			reqRoles: ptz(1, 1),
+			exp:      "missing roles required by spec: ORIGINATOR need 2 have 1",
+		},
+		{
+			name:     "two same req two parties none",
+			parties:  pz(p("addr1", 1), p("addr2", 2)),
+			reqRoles: ptz(3, 3),
+			exp:      "missing roles required by spec: INVESTOR need 2 have 0",
+		},
+		{
+			name: "crazy but ok",
+			parties: pz(
+				p("addr1", 1), p("addr1", 2), p("addr1", 3), p("addr1", 4),
+				p("addr2", 1), p("addr2", 2), p("addr2", 3), p("addr2", 4),
+				p("addr3", 1), p("addr3", 2), p("addr3", 3), p("addr3", 4),
+				p("addr4", 1), p("addr4", 2), p("addr4", 3), p("addr4", 4),
+			),
+			reqRoles: ptz(1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4),
+			exp:      "",
+		},
+		{
+			name: "crazy not okay",
+			parties: pz(
+				p("addr1", 1), p("addr1", 2), p("addr1", 3), p("addr1", 4),
+				p("addr2", 1), p("addr2", 2), p("addr2", 3), p("addr2", 4),
+				p("addr3", 1), p("addr3", 2), p("addr3", 3), p("addr3", 4),
+				p("addr4", 1), p("addr4", 2), p("addr4", 3), p("addr4", 4),
+				p("addr5", 11),
+			),
+			reqRoles: ptz(1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 3, 5, 5, 5, 11, 11),
+			exp:      "missing roles required by spec: SERVICER need 7 have 4, OWNER need 3 have 0, VALIDATOR need 2 have 1",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := keeper.ValidateRolesPresent(tc.parties, tc.reqRoles)
+			if len(tc.exp) > 0 {
+				assert.EqualError(t, err, tc.exp, "ValidateRolesPresent")
+			} else {
+				assert.NoError(t, err, "ValidateRolesPresent")
+			}
+		})
+	}
+}
+
+func TestValidatePartiesArePresent(t *testing.T) {
+	// p is a short way to create a Party.
+	p := func(addr string, role types.PartyType, optional bool) types.Party {
+		return types.Party{
+			Address:  addr,
+			Role:     role,
+			Optional: optional,
+		}
+	}
+
+	// pz is a short way to create a slice of parties.
+	pz := func(parties ...types.Party) []types.Party {
+		rv := make([]types.Party, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+
+	tests := []struct {
+		name      string
+		required  []types.Party
+		available []types.Party
+		exp       string
+	}{
+		{
+			name:      "nil nil",
+			required:  nil,
+			available: nil,
+			exp:       "",
+		},
+		{
+			name:      "empty nil",
+			required:  pz(),
+			available: nil,
+			exp:       "",
+		},
+		{
+			name:      "nil empty",
+			required:  nil,
+			available: pz(),
+			exp:       "",
+		},
+		{
+			name:      "empty empty",
+			required:  pz(),
+			available: pz(),
+			exp:       "",
+		},
+		{
+			name:      "no req some available",
+			required:  pz(),
+			available: pz(p("a", 1, false)),
+			exp:       "",
+		},
+		{
+			name:      "one req is available same optional",
+			required:  pz(p("a", 1, false)),
+			available: pz(p("a", 1, false)),
+			exp:       "",
+		},
+		{
+			name:      "one req one available diff optional",
+			required:  pz(p("a", 1, false)),
+			available: pz(p("a", 1, false)),
+			exp:       "",
+		},
+		{
+			name:      "one req one avail diff addr",
+			required:  pz(p("addr1", 1, false)),
+			available: pz(p("b", 1, false)),
+			exp:       "missing party: addr1 (ORIGINATOR)",
+		},
+		{
+			name:      "one req one avail diff role",
+			required:  pz(p("addr1", 1, false)),
+			available: pz(p("addr1", 2, false)),
+			exp:       "missing party: addr1 (ORIGINATOR)",
+		},
+		{
+			name:     "three req five avail all present",
+			required: pz(p("addr1", 1, false), p("addr2", 2, true), p("addr3", 3, false)),
+			available: pz(p("addr2", 2, false), p("addr3", 3, true), p("addrX", 8, true),
+				p("addrY", 9, false), p("addr1", 1, true)),
+			exp: "",
+		},
+		{
+			name:     "three req five avail none present",
+			required: pz(p("addr1", 1, false), p("addr2", 2, true), p("addr3", 3, false)),
+			available: pz(p("addrV", 4, false), p("addrW", 5, false),
+				p("addrX", 6, false), p("addrY", 7, false), p("addrZ", 8, false)),
+			exp: "missing parties: addr1 (ORIGINATOR), addr2 (SERVICER), addr3 (INVESTOR)",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := keeper.ValidatePartiesArePresent(tc.required, tc.available)
+			if len(tc.exp) > 0 {
+				assert.EqualError(t, err, tc.exp, "ValidatePartiesArePresent")
+			} else {
+				assert.NoError(t, err, "ValidatePartiesArePresent")
+			}
+		})
+	}
+}
 
 func (s *AuthzTestSuite) TestTODELETEValidateAllPartiesAreSignersWithAuthz() {
 	// A missing signature with an authz grant on MsgAddScopeOwnerRequest
