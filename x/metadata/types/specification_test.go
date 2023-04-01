@@ -1314,3 +1314,23 @@ icon_url: https://provenance.io/ico.png
 	// fmt.Printf("Actual:\n%s\n-----\n", actual)
 	require.Equal(s.T(), expected, actual)
 }
+
+func (s *SpecificationTestSuite) TestGetAllPartyTypes() {
+	expected := []PartyType{
+		PartyType_PARTY_TYPE_UNSPECIFIED,
+		PartyType_PARTY_TYPE_ORIGINATOR,
+		PartyType_PARTY_TYPE_SERVICER,
+		PartyType_PARTY_TYPE_INVESTOR,
+		PartyType_PARTY_TYPE_CUSTODIAN,
+		PartyType_PARTY_TYPE_OWNER,
+		PartyType_PARTY_TYPE_AFFILIATE,
+		PartyType_PARTY_TYPE_OMNIBUS,
+		PartyType_PARTY_TYPE_PROVENANCE,
+		PartyType_PARTY_TYPE_CONTROLLER,
+		PartyType_PARTY_TYPE_VALIDATOR,
+	}
+
+	actual := GetAllPartyTypes()
+	s.Assert().Equal(expected, actual, "GetAllPartyTypes")
+	s.Assert().Len(actual, len(PartyType_name), "GetAllPartyTypes count compared to entries in PartyType_name")
+}
