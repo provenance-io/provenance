@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add support for tokens restricted marker sends with required attributes [#1256](https://github.com/provenance-io/provenance/issues/1256))
 * Allow markers to be configured to allow forced transfers [#1368](https://github.com/provenance-io/provenance/issues/1368).
+* Add support for account addresses by attribute name lookup [#1447](https://github.com/provenance-io/provenance/issues/1447).
 
 ### Improvements
 
@@ -49,12 +50,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Disable `cleveldb` and `badgerdb` by default [#1411](https://github.com/provenance-io/provenance/issues/1411).
   Official builds still have `cleveldb` support though.
 * Expand the `additional_bindings` gRPC tag to use object form to allow for Typescript transpiling [#1405](https://github.com/provenance-io/provenance/issues/1405).
+* Add attribute cli command to query account addresses by attribute name [#1451](https://github.com/provenance-io/provenance/issues/1451).
 
 ### Bug Fixes
 
 * Fix third party Protobuf workflow checks on Provenance release steps [#1339](https://github.com/provenance-io/provenance/issues/1339)
 * Fix committer email format in third party Protobuf workflow (for [#1339](https://github.com/provenance-io/provenance/issues/1339)) [PR 1385](https://github.com/provenance-io/provenance/pull/1385)
-* Fix `start` using default home directory [PR 1393](https://github.com/provenance-io/provenance/pull/1393).
 * Fix `make proto-gen` [PR 1404](https://github.com/provenance-io/provenance/pull/1404).
 
 ### Client Breaking
@@ -66,6 +67,25 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### API Breaking
 
 * Removed the `WriteP8eContractSpec` and `P8eMemorializeContract` endpoints [#1402](https://github.com/provenance-io/provenance/issues/1402).
+
+---
+
+## [v1.14.1](https://github.com/provenance-io/provenance/releases/tag/v1.14.1) - 2023-02-28
+
+### Improvements
+
+* Bump Cosmos-SDK to `v0.46.10-pio-2` (from `v0.46.10-pio-1`). [PR 1396](https://github.com/provenance-io/provenance/pull/1396). \
+  See the following `RELEASE_NOTES.md` for details: \
+  [v0.46.10-pio-2](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.10-pio-2/RELEASE_NOTES.md). \
+  Full Commit History: https://github.com/provenance-io/cosmos-sdk/compare/v0.46.10-pio-1...v0.46.10-pio-2
+
+### Bug Fixes
+
+* Fix `start` using default home directory [PR 1393](https://github.com/provenance-io/provenance/pull/1393).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.14.0...v1.14.1
 
 ---
 
