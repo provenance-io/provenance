@@ -133,6 +133,7 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
+	// Remove all attributes from assigned accounts
 	accts, err := s.Keeper.attrKeeper.AccountsByAttribute(ctx, name)
 	if err != nil {
 		return nil, err
