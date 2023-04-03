@@ -15,7 +15,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/name/types"
 )
 
@@ -68,7 +67,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // SetAttributeKeeper sets the attribute keeper
-func (k Keeper) SetAttributeKeeper(ak attrtypes.AttributeKeeper) {
+func (k *Keeper) SetAttributeKeeper(ak types.AttributeKeeper) {
 	if k.attrKeeper != nil && ak != nil && k.attrKeeper != ak {
 		panic("the attribute keeper has already been set")
 	}

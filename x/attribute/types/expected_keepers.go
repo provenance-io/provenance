@@ -18,10 +18,5 @@ type NameKeeper interface {
 	Normalize(ctx sdk.Context, name string) (string, error)
 	GetRecordByName(ctx sdk.Context, name string) (record *nametypes.NameRecord, err error)
 	NameExists(ctx sdk.Context, name string) bool
-	SetAttributeKeeper(attrKeeper AttributeKeeper)
-}
-
-// AttributeKeeper defines the expected attribute keeper interface(noalias)
-type AttributeKeeper interface {
-	DeleteAttribute(ctx sdk.Context, addr string, name string, value *[]byte, owner sdk.AccAddress) error
+	SetAttributeKeeper(attrKeeper nametypes.AttributeKeeper)
 }

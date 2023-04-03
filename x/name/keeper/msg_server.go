@@ -133,6 +133,17 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
+	accts, err := s.Keeper.attrKeeper.AccountsByAttribute(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, acct := range accts {
+		if err = s.Keeper.attrKeeper.DeleteAttribute(ctx, acct.String(), name, nil, address); err != nil {
+			return nil, err
+		}
+	}
+
 	// key: modulename+name+unbind
 	defer func() {
 		telemetry.IncrCounterWithLabels(
