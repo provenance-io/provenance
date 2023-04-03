@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -333,11 +334,13 @@ reqRolesLoop:
 // missingRolesString generates and returns an error message indicating that
 // some required roles don't have signers.
 func missingRolesString(parties []*PartyDetails, reqRoles []types.PartyType) string {
+	// Get a count for each required role
 	reqCountByRole := make(map[types.PartyType]int)
 	for _, role := range reqRoles {
 		reqCountByRole[role]++
 	}
 
+	// Get a count of each used party for each role.
 	haveCountByRole := make(map[types.PartyType]int)
 	for _, party := range parties {
 		if party.IsUsed() {
@@ -345,12 +348,25 @@ func missingRolesString(parties []*PartyDetails, reqRoles []types.PartyType) str
 		}
 	}
 
-	var missing []string
-	for _, role := range types.GetAllPartyTypes() {
-		if reqCountByRole[role] > haveCountByRole[role] {
-			missing = append(missing, fmt.Sprintf("%s need %d have %d",
-				role.SimpleString(), reqCountByRole[role], haveCountByRole[role]))
+	// Generate the message strings for each role that is short.
+	messageByRole := make(map[types.PartyType]string)
+	var missingRoles []types.PartyType
+	for role, reqCount := range reqCountByRole {
+		if reqCount > haveCountByRole[role] {
+			messageByRole[role] = fmt.Sprintf("%s need %d have %d",
+				role.SimpleString(), reqCountByRole[role], haveCountByRole[role])
+			missingRoles = append(missingRoles, role)
 		}
+	}
+	// Sort the missing roles so that this result can be deterministic.
+	sort.Slice(missingRoles, func(i, j int) bool {
+		return missingRoles[i] < missingRoles[j]
+	})
+
+	// Order the messages for each of the missing roles.
+	missing := make([]string, len(missingRoles))
+	for i, role := range missingRoles {
+		missing[i] = messageByRole[role]
 	}
 
 	return strings.Join(missing, ", ")

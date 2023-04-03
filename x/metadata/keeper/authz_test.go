@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"fmt"
+	"math/rand"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -820,13 +822,17 @@ func TestPartyDetails_GetRole(t *testing.T) {
 	}
 
 	var tests []testCase
-	for _, role := range types.GetAllPartyTypes() {
+	for r := range types.PartyType_name {
+		role := types.PartyType(r)
 		tests = append(tests, testCase{
 			name:  role.SimpleString(),
 			party: pd(role),
 			exp:   role,
 		})
 	}
+	sort.Slice(tests, func(i, j int) bool {
+		return tests[i].party.GetRole() < tests[j].party.GetRole()
+	})
 	tests = append(tests, testCase{
 		name:  "invalid role",
 		party: pd(-8),
@@ -1757,7 +1763,533 @@ func TestSignersWrapper(t *testing.T) {
 // TODO[1438]: func TestAssociateSigners(t *testing.T) {}
 // TODO[1438]: func TestFindUnsignedRequired(t *testing.T) {}
 // TODO[1438]: func TestAssociateRequiredRoles(t *testing.T) {}
-// TODO[1438]: func TestMissingRolesString(t *testing.T) {}
+
+func TestMissingRolesString(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(role types.PartyType, used bool) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Role:       role,
+			UsedBySpec: used,
+		}.Real()
+	}
+	// pdz is just a shorter way to define a []*keeper.PartyDetails
+	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
+		rv := make([]*keeper.PartyDetails, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+	// rv is just a shorter way to define a []types.PartyType
+	rz := func(roles ...types.PartyType) []types.PartyType {
+		rv := make([]types.PartyType, 0, len(roles))
+		rv = append(rv, roles...)
+		return rv
+	}
+	// Create some aliases that are shorter than their full names.
+	unspecified := types.PartyType_PARTY_TYPE_UNSPECIFIED
+	originator := types.PartyType_PARTY_TYPE_ORIGINATOR
+	servicer := types.PartyType_PARTY_TYPE_SERVICER
+	investor := types.PartyType_PARTY_TYPE_INVESTOR
+	custodian := types.PartyType_PARTY_TYPE_CUSTODIAN
+	owner := types.PartyType_PARTY_TYPE_OWNER
+	affiliate := types.PartyType_PARTY_TYPE_AFFILIATE
+	omnibus := types.PartyType_PARTY_TYPE_OMNIBUS
+	provenance := types.PartyType_PARTY_TYPE_PROVENANCE
+	controller := types.PartyType_PARTY_TYPE_CONTROLLER
+	validator := types.PartyType_PARTY_TYPE_VALIDATOR
+
+	// rolesForDeterministismTests returns two of each PartyType in a random order.
+	rolesForDeterministismTests := func() []types.PartyType {
+		rv := make([]types.PartyType, 0, 2*len(types.PartyType_name))
+		for i := range types.PartyType_name {
+			rv = append(rv, types.PartyType(i), types.PartyType(i))
+		}
+		rand.Shuffle(len(rv), func(i, j int) {
+			rv[i], rv[j] = rv[j], rv[i]
+		})
+		return rv
+	}
+	// partiesForDeterministismTests returns two parties for each role (1 used, 1 not) in a random order.
+	partiesForDeterministismTests := func() []*keeper.PartyDetails {
+		var rv []*keeper.PartyDetails
+		for i := range types.PartyType_name {
+			role := types.PartyType(i)
+			rv = append(rv, pd(role, true), pd(role, false))
+		}
+		rand.Shuffle(len(rv), func(i, j int) {
+			rv[i], rv[j] = rv[j], rv[i]
+		})
+		return rv
+	}
+	// resultForDeterministismTests is the expected result for all the determinism tests.
+	resultForDeterministismTests := "UNSPECIFIED need 2 have 1, ORIGINATOR need 2 have 1, SERVICER need 2 have 1, " +
+		"INVESTOR need 2 have 1, CUSTODIAN need 2 have 1, OWNER need 2 have 1, AFFILIATE need 2 have 1, " +
+		"OMNIBUS need 2 have 1, PROVENANCE need 2 have 1, CONTROLLER need 2 have 1, VALIDATOR need 2 have 1"
+
+	// roleStr gets a string of the variable name (or value) used in these tests for the roles.
+	roleStr := func(role types.PartyType) string {
+		return strings.ToLower(role.SimpleString())
+	}
+	// partyStr gets a string of the golang code that would make the provided party for these tests.
+	partyStr := func(party *keeper.PartyDetails) string {
+		return fmt.Sprintf("pd(%s, %t)", roleStr(party.GetRole()), party.IsUsed())
+	}
+
+	reversedRoles := func(roles []types.PartyType) []types.PartyType {
+		if roles == nil {
+			return nil
+		}
+		rv := make([]types.PartyType, len(roles))
+		for i, role := range roles {
+			rv[len(rv)-i-1] = role
+		}
+		return rv
+	}
+	reversedParties := func(parties []*keeper.PartyDetails) []*keeper.PartyDetails {
+		if parties == nil {
+			return nil
+		}
+		rv := make([]*keeper.PartyDetails, len(parties))
+		for i, party := range parties {
+			rv[len(rv)-i-1] = party
+		}
+		return rv
+	}
+	shuffledRoles := func(r *rand.Rand, roles []types.PartyType) []types.PartyType {
+		if roles == nil {
+			return nil
+		}
+		rv := make([]types.PartyType, 0, len(roles))
+		rv = append(rv, roles...)
+		r.Shuffle(len(rv), func(i, j int) {
+			rv[i], rv[j] = rv[j], rv[i]
+		})
+		return rv
+	}
+	shuffledParties := func(r *rand.Rand, parties []*keeper.PartyDetails) []*keeper.PartyDetails {
+		if parties == nil {
+			return nil
+		}
+		rv := make([]*keeper.PartyDetails, 0, len(parties))
+		rv = append(rv, parties...)
+		r.Shuffle(len(rv), func(i, j int) {
+			rv[i], rv[j] = rv[j], rv[i]
+		})
+		return rv
+	}
+
+	type testCase struct {
+		name     string
+		parties  []*keeper.PartyDetails
+		reqRoles []types.PartyType
+		exp      string
+	}
+
+	tests := []testCase{
+		// Negative tests for each role.
+		{
+			name:     "nil parties 2 required unspecified",
+			parties:  nil,
+			reqRoles: rz(unspecified, unspecified),
+			exp:      "UNSPECIFIED need 2 have 0",
+		},
+		{
+			name:     "nil parties 2 required originator",
+			parties:  nil,
+			reqRoles: rz(originator, originator),
+			exp:      "ORIGINATOR need 2 have 0",
+		},
+		{
+			name:     "nil parties 2 required servicer",
+			parties:  nil,
+			reqRoles: rz(servicer, servicer),
+			exp:      "SERVICER need 2 have 0",
+		},
+		{
+			name:     "nil parties 2 required investor",
+			parties:  nil,
+			reqRoles: rz(investor, investor),
+			exp:      "INVESTOR need 2 have 0",
+		},
+		{
+			name:     "nil parties 2 required custodian",
+			parties:  nil,
+			reqRoles: rz(custodian, custodian),
+			exp:      "CUSTODIAN need 2 have 0",
+		},
+		{
+			name:     "nil parties 2 required owner",
+			parties:  nil,
+			reqRoles: rz(owner, owner),
+			exp:      "OWNER need 2 have 0",
+		},
+		{
+			name:     "nil parties 2 required affiliate",
+			parties:  nil,
+			reqRoles: rz(affiliate, affiliate),
+			exp:      "AFFILIATE need 2 have 0",
+		},
+		{
+			name:     "nil parties 2 required omnibus",
+			parties:  nil,
+			reqRoles: rz(omnibus, omnibus),
+			exp:      "OMNIBUS need 2 have 0",
+		},
+		{
+			name:     "nil parties 2 required provenance",
+			parties:  nil,
+			reqRoles: rz(provenance, provenance),
+			exp:      "PROVENANCE need 2 have 0",
+		},
+		{
+			name:     "nil parties 2 required controller",
+			parties:  nil,
+			reqRoles: rz(controller, controller),
+			exp:      "CONTROLLER need 2 have 0",
+		},
+		{
+			name:     "nil parties 2 required validator",
+			parties:  nil,
+			reqRoles: rz(validator, validator),
+			exp:      "VALIDATOR need 2 have 0",
+		},
+
+		// Positive tests for each role
+		{
+			name:     "2 required unspecified satisfied",
+			parties:  pdz(pd(unspecified, true), pd(unspecified, true), pd(unspecified, true)),
+			reqRoles: rz(unspecified, unspecified),
+			exp:      "",
+		},
+		{
+			name:     "2 required originator satisfied",
+			parties:  pdz(pd(originator, true), pd(originator, true), pd(originator, true)),
+			reqRoles: rz(originator, originator),
+			exp:      "",
+		},
+		{
+			name:     "2 required servicer satisfied",
+			parties:  pdz(pd(servicer, true), pd(servicer, true), pd(servicer, true)),
+			reqRoles: rz(servicer, servicer),
+			exp:      "",
+		},
+		{
+			name:     "2 required investor satisfied",
+			parties:  pdz(pd(investor, true), pd(investor, true), pd(investor, true)),
+			reqRoles: rz(investor, investor),
+			exp:      "",
+		},
+		{
+			name:     "2 required custodian satisfied",
+			parties:  pdz(pd(custodian, true), pd(custodian, true), pd(custodian, true)),
+			reqRoles: rz(custodian, custodian),
+			exp:      "",
+		},
+		{
+			name:     "2 required owner satisfied",
+			parties:  pdz(pd(owner, true), pd(owner, true), pd(owner, true)),
+			reqRoles: rz(owner, owner),
+			exp:      "",
+		},
+		{
+			name:     "2 required affiliate satisfied",
+			parties:  pdz(pd(affiliate, true), pd(affiliate, true), pd(affiliate, true)),
+			reqRoles: rz(affiliate, affiliate),
+			exp:      "",
+		},
+		{
+			name:     "2 required omnibus satisfied",
+			parties:  pdz(pd(omnibus, true), pd(omnibus, true), pd(omnibus, true)),
+			reqRoles: rz(omnibus, omnibus),
+			exp:      "",
+		},
+		{
+			name:     "2 required provenance satisfied",
+			parties:  pdz(pd(provenance, true), pd(provenance, true), pd(provenance, true)),
+			reqRoles: rz(provenance, provenance),
+			exp:      "",
+		},
+		{
+			name:     "2 required controller satisfied",
+			parties:  pdz(pd(controller, true), pd(controller, true), pd(controller, true)),
+			reqRoles: rz(controller, controller),
+			exp:      "",
+		},
+		{
+			name:     "2 required validator satisfied",
+			parties:  pdz(pd(validator, true), pd(validator, true), pd(validator, true)),
+			reqRoles: rz(validator, validator),
+			exp:      "",
+		},
+
+		// nil/empty handling tests
+		{
+			name:     "nil nil",
+			parties:  nil,
+			reqRoles: nil,
+			exp:      "",
+		},
+		{
+			name:     "empty nil",
+			parties:  pdz(),
+			reqRoles: nil,
+			exp:      "",
+		},
+		{
+			name:     "nil empty",
+			parties:  nil,
+			reqRoles: rz(),
+			exp:      "",
+		},
+		{
+			name:     "empty empty",
+			parties:  pdz(),
+			reqRoles: rz(),
+			exp:      "",
+		},
+
+		// unknown value tests
+		{
+			name:     "unknown role twice no such parties",
+			parties:  pdz(pd(servicer, true), pd(owner, true)),
+			reqRoles: rz(owner, 100, servicer, 100),
+			exp:      "100 need 2 have 0",
+		},
+		{
+			name:     "unknown role twice 1 such party unused",
+			parties:  pdz(pd(100, false), pd(servicer, true), pd(owner, true)),
+			reqRoles: rz(owner, 100, servicer, 100),
+			exp:      "100 need 2 have 0",
+		},
+		{
+			name:     "unknown role twice 1 such party used",
+			parties:  pdz(pd(100, true), pd(servicer, true), pd(owner, true)),
+			reqRoles: rz(owner, 100, servicer, 100),
+			exp:      "100 need 2 have 1",
+		},
+		{
+			name:     "unknown role twice 2 such parties both unused",
+			parties:  pdz(pd(100, false), pd(servicer, true), pd(owner, true), pd(100, false)),
+			reqRoles: rz(owner, 100, servicer, 100),
+			exp:      "100 need 2 have 0",
+		},
+		{
+			name:     "unknown role twice 2 such parties first unused",
+			parties:  pdz(pd(100, false), pd(servicer, true), pd(owner, true), pd(100, true)),
+			reqRoles: rz(owner, 100, servicer, 100),
+			exp:      "100 need 2 have 1",
+		},
+		{
+			name:     "unknown role twice 2 such parties second unused",
+			parties:  pdz(pd(100, true), pd(servicer, true), pd(owner, true), pd(100, false)),
+			reqRoles: rz(owner, 100, servicer, 100),
+			exp:      "100 need 2 have 1",
+		},
+		{
+			name:     "unknown role twice 2 such parties both used",
+			parties:  pdz(pd(100, true), pd(servicer, true), pd(owner, true), pd(100, true)),
+			reqRoles: rz(owner, 100, servicer, 100),
+			exp:      "",
+		},
+		{
+			name:     "parties with unknown roles",
+			parties:  pdz(pd(-55, true), pd(-56, false), pd(9, true), pd(57, true), pd(58, false)),
+			reqRoles: rz(owner),
+			exp:      "OWNER need 1 have 0",
+		},
+
+		// complex tests
+		{
+			name:     "2 same req have 2 both unused",
+			parties:  pdz(pd(owner, false), pd(owner, false)),
+			reqRoles: rz(owner, owner),
+			exp:      "OWNER need 2 have 0",
+		},
+		{
+			name:     "2 same req have 2 first unused",
+			parties:  pdz(pd(owner, false), pd(owner, true)),
+			reqRoles: rz(owner, owner),
+			exp:      "OWNER need 2 have 1",
+		},
+		{
+			name:     "2 same req have 2 second unused",
+			parties:  pdz(pd(owner, true), pd(owner, false)),
+			reqRoles: rz(owner, owner),
+			exp:      "OWNER need 2 have 1",
+		},
+		{
+			name:     "2 same req have 2 both used",
+			parties:  pdz(pd(owner, true), pd(owner, true)),
+			reqRoles: rz(owner, owner),
+			exp:      "",
+		},
+		{
+			name:     "2 diff req have 2 both unused",
+			parties:  pdz(pd(servicer, false), pd(investor, false)),
+			reqRoles: rz(servicer, investor),
+			exp:      "SERVICER need 1 have 0, INVESTOR need 1 have 0",
+		},
+		{
+			name:     "2 diff req have 2 first unused",
+			parties:  pdz(pd(servicer, false), pd(investor, true)),
+			reqRoles: rz(servicer, investor),
+			exp:      "SERVICER need 1 have 0",
+		},
+		{
+			name:     "2 diff req have 2 second unused",
+			parties:  pdz(pd(servicer, true), pd(investor, false)),
+			reqRoles: rz(servicer, investor),
+			exp:      "INVESTOR need 1 have 0",
+		},
+		{
+			name:     "2 diff req have 2 both used",
+			parties:  pdz(pd(servicer, true), pd(investor, true)),
+			reqRoles: rz(servicer, investor),
+			exp:      "",
+		},
+		{
+			name: "4 req none 7 used parties of other roles plus 1 unused of a req role",
+			parties: pdz(
+				pd(unspecified, true),
+				pd(servicer, true),
+				pd(investor, true),
+				pd(owner, true),
+				pd(affiliate, true),
+				pd(omnibus, false),
+				pd(controller, true),
+				pd(validator, true),
+			),
+			reqRoles: rz(originator, custodian, omnibus, provenance),
+			exp:      "ORIGINATOR need 1 have 0, CUSTODIAN need 1 have 0, OMNIBUS need 1 have 0, PROVENANCE need 1 have 0",
+		},
+		{
+			// For this one, 3 different role types required in amounts of 3, 2, and 1 (6 total required roles).
+			// The one with 3 will have 2 used and 1 unused.
+			// The one with 2 will have 3 unused.
+			// The one with 1 will have 2 used and 1 unused.
+			// There will also be parties a 4th role with 1 used and 1 unused.
+			name: "10 parties 6 req not all fulfilled",
+			parties: pdz(
+				pd(custodian, true),
+				pd(custodian, true),
+				pd(custodian, false),
+				pd(owner, false),
+				pd(owner, false),
+				pd(owner, false),
+				pd(controller, true),
+				pd(controller, false),
+				pd(validator, true),
+				pd(validator, true),
+				pd(validator, false),
+			),
+			reqRoles: rz(custodian, custodian, custodian, owner, owner, validator),
+			exp:      "CUSTODIAN need 3 have 2, OWNER need 2 have 0",
+		},
+
+		// result determinism tests.
+		// Three tests that look the same, but end up having different orderings
+		// for parties and reqRoles. Three times should be enough to get a nice
+		// spread of orderings for the two inputs that sufficiently demonstrates
+		// that the result is consistent and deterministic.
+		// If a new PartyType is added, these should fail. If that happens, update
+		// the resultForDeterministismTests to include the new type.
+		{
+			name:     "deterministic ordering 1",
+			parties:  partiesForDeterministismTests(),
+			reqRoles: rolesForDeterministismTests(),
+			exp:      resultForDeterministismTests,
+		},
+		{
+			name:     "deterministic ordering 2",
+			parties:  partiesForDeterministismTests(),
+			reqRoles: rolesForDeterministismTests(),
+			exp:      resultForDeterministismTests,
+		},
+		{
+			name:     "deterministic ordering 3",
+			parties:  partiesForDeterministismTests(),
+			reqRoles: rolesForDeterministismTests(),
+			exp:      resultForDeterministismTests,
+		},
+	}
+
+	// Add three result determinism tests.
+	// They all technically have the same inputs and expected result but the input
+	// orderings are different for each. Three tests combined with the four extra
+	// test variations (added below these) should sufficiently demonstrate that
+	// the result is consistent and deterministic.
+	// If a new PartyType is added, these should fail. If that happens, update
+	// the resultForDeterministismTests to include the new type.
+	for i := 1; i <= 3; i++ {
+		tests = append(tests, testCase{
+			name:     fmt.Sprintf("deterministic ordering %d", i),
+			parties:  partiesForDeterministismTests(),
+			reqRoles: rolesForDeterministismTests(),
+			exp:      resultForDeterministismTests,
+		})
+	}
+
+	// Copy all tests four times.
+	// Once with reversed parties. Once with reversed req roles.
+	// Once with both reversed. And once with both shuffled.
+	revPartiesTests := make([]testCase, len(tests))
+	revRolesTests := make([]testCase, len(tests))
+	revBothTests := make([]testCase, len(tests))
+	shuffledTests := make([]testCase, len(tests))
+
+	for i, tc := range tests {
+		revPartiesTests[i] = testCase{
+			name:     "rev parties " + tc.name,
+			parties:  reversedParties(tc.parties),
+			reqRoles: tc.reqRoles,
+			exp:      tc.exp,
+		}
+		revRolesTests[i] = testCase{
+			name:     "rev roles " + tc.name,
+			parties:  tc.parties,
+			reqRoles: reversedRoles(tc.reqRoles),
+			exp:      tc.exp,
+		}
+		revBothTests[i] = testCase{
+			name:     "rev both " + tc.name,
+			parties:  reversedParties(tc.parties),
+			reqRoles: reversedRoles(tc.reqRoles),
+			exp:      tc.exp,
+		}
+		// Using a hard-coded (randomly chosen) seed value here to make life easier if one of these fails.
+		// The purpose is to just have them in an order other than as defined (hopefully).
+		r := rand.New(rand.NewSource(int64(86530 * i)))
+		shuffledTests[i] = testCase{
+			name:     "shuffled " + tc.name,
+			parties:  shuffledParties(r, tc.parties),
+			reqRoles: shuffledRoles(r, tc.reqRoles),
+			exp:      tc.exp,
+		}
+	}
+	tests = append(tests, revPartiesTests...)
+	tests = append(tests, revRolesTests...)
+	tests = append(tests, revBothTests...)
+	tests = append(tests, shuffledTests...)
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := keeper.MissingRolesString(tc.parties, tc.reqRoles)
+			if !assert.Equal(t, tc.exp, actual, "MissingRolesString") {
+				// The test failed. The expected and actual are in the output.
+				// Now, be helpful and output the inputs too.
+				partiesStr := make([]string, len(tc.parties))
+				for i, party := range tc.parties {
+					partiesStr[i] = partyStr(party)
+				}
+				rolesStr := make([]string, len(tc.reqRoles))
+				for i, role := range tc.reqRoles {
+					rolesStr[i] = roleStr(role)
+				}
+				t.Logf("parties: pdz(%s),", strings.Join(partiesStr, ", "))
+				t.Logf("reqRoles: rz(%s),", strings.Join(rolesStr, ", "))
+			}
+		})
+	}
+}
 
 func TestGetAuthzMessageTypeURLs(t *testing.T) {
 	type testCase struct {
@@ -2756,15 +3288,15 @@ func (s *AuthzTestSuite) TestTODELETEValidateAllPartiesAreSignersWithAuthzWithCo
 	})
 }
 
-type CaseFindMissing struct {
+type testCaseFindMissing struct {
 	name     string
 	required []string
 	toCheck  []string
 	expected []string
 }
 
-func CasesForFindMissing() []CaseFindMissing {
-	return []CaseFindMissing{
+func testCasesForFindMissing() []testCaseFindMissing {
+	return []testCaseFindMissing{
 		{
 			name:     "nil required - nil toCheck - nil out",
 			required: nil,
@@ -3022,7 +3554,7 @@ func CasesForFindMissing() []CaseFindMissing {
 }
 
 func TestFindMissing(t *testing.T) {
-	for _, tc := range CasesForFindMissing() {
+	for _, tc := range testCasesForFindMissing() {
 		t.Run(tc.name, func(t *testing.T) {
 			actual := keeper.FindMissing(tc.required, tc.toCheck)
 			assert.Equal(t, tc.expected, actual)
@@ -3031,8 +3563,8 @@ func TestFindMissing(t *testing.T) {
 }
 
 func TestFindMissingParties(t *testing.T) {
-	// ps is just a shorter way to define a []types.Party
-	ps := func(parties ...types.Party) []types.Party {
+	// pz is just a shorter way to define a []types.Party
+	pz := func(parties ...types.Party) []types.Party {
 		return parties
 	}
 
@@ -3061,159 +3593,159 @@ func TestFindMissingParties(t *testing.T) {
 		},
 		{
 			name:     "empty nil",
-			required: ps(),
+			required: pz(),
 			toCheck:  nil,
 			expected: nil,
 		},
 		{
 			name:     "nil empty",
 			required: nil,
-			toCheck:  ps(),
+			toCheck:  pz(),
 			expected: nil,
 		},
 		{
 			name:     "empty empty",
-			required: ps(),
-			toCheck:  ps(),
+			required: pz(),
+			toCheck:  pz(),
 			expected: nil,
 		},
 
 		{
 			name:     "nil VS one3",
 			required: nil,
-			toCheck:  ps(pOne3Req),
+			toCheck:  pz(pOne3Req),
 			expected: nil,
 		},
 		{
 			name:     "empty VS one3",
-			required: ps(),
-			toCheck:  ps(pOne3Req),
+			required: pz(),
+			toCheck:  pz(pOne3Req),
 			expected: nil,
 		},
 
 		{
 			name:     "one3req VS one3req",
-			required: ps(pOne3Req),
-			toCheck:  ps(pOne3Req),
+			required: pz(pOne3Req),
+			toCheck:  pz(pOne3Req),
 			expected: nil,
 		},
 		{
 			name:     "one3req VS one3opt",
-			required: ps(pOne3Req),
-			toCheck:  ps(pOne3Opt),
+			required: pz(pOne3Req),
+			toCheck:  pz(pOne3Opt),
 			expected: nil,
 		},
 		{
 			name:     "one3opt VS one3req",
-			required: ps(pOne3Opt),
-			toCheck:  ps(pOne3Req),
+			required: pz(pOne3Opt),
+			toCheck:  pz(pOne3Req),
 			expected: nil,
 		},
 		{
 			name:     "one3opt VS one3opt",
-			required: ps(pOne3Opt),
-			toCheck:  ps(pOne3Opt),
+			required: pz(pOne3Opt),
+			toCheck:  pz(pOne3Opt),
 			expected: nil,
 		},
 
 		{
 			name:     "one3 one4 two3 two4 req VS one4 one3 two4 two3 req",
-			required: ps(pOne3Req, pOne4Req, pTwo3Req, pTwo4Req),
-			toCheck:  ps(pOne4Req, pOne3Req, pTwo4Req, pTwo3Req),
+			required: pz(pOne3Req, pOne4Req, pTwo3Req, pTwo4Req),
+			toCheck:  pz(pOne4Req, pOne3Req, pTwo4Req, pTwo3Req),
 			expected: nil,
 		},
 		{
 			name:     "one3 one4 two3 two4 req VS one4 one3 two4 two3 opt",
-			required: ps(pOne3Req, pOne4Req, pTwo3Req, pTwo4Req),
-			toCheck:  ps(pOne4Opt, pOne3Opt, pTwo4Opt, pTwo3Opt),
+			required: pz(pOne3Req, pOne4Req, pTwo3Req, pTwo4Req),
+			toCheck:  pz(pOne4Opt, pOne3Opt, pTwo4Opt, pTwo3Opt),
 			expected: nil,
 		},
 		{
 			name:     "one3 one4 two3 two4 opt vs one4 one3 two4 two3 req",
-			required: ps(pOne3Opt, pOne4Opt, pTwo3Opt, pTwo4Opt),
-			toCheck:  ps(pOne4Req, pOne3Req, pTwo4Req, pTwo3Req),
+			required: pz(pOne3Opt, pOne4Opt, pTwo3Opt, pTwo4Opt),
+			toCheck:  pz(pOne4Req, pOne3Req, pTwo4Req, pTwo3Req),
 			expected: nil,
 		},
 		{
 			name:     "one3 one4 two3 two4 opt vs one4 one3 two4 two3 opt",
-			required: ps(pOne3Opt, pOne4Opt, pTwo3Opt, pTwo4Opt),
-			toCheck:  ps(pOne4Opt, pOne3Opt, pTwo4Opt, pTwo3Opt),
+			required: pz(pOne3Opt, pOne4Opt, pTwo3Opt, pTwo4Opt),
+			toCheck:  pz(pOne4Opt, pOne3Opt, pTwo4Opt, pTwo3Opt),
 			expected: nil,
 		},
 
 		{
 			name:     "one3 two4 VS nil",
-			required: ps(pOne3Opt, pTwo4Req),
+			required: pz(pOne3Opt, pTwo4Req),
 			toCheck:  nil,
-			expected: ps(pOne3Opt, pTwo4Req),
+			expected: pz(pOne3Opt, pTwo4Req),
 		},
 		{
 			name:     "one3 two4 VS empty",
-			required: ps(pOne3Opt, pTwo4Req),
-			toCheck:  ps(),
-			expected: ps(pOne3Opt, pTwo4Req),
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  pz(),
+			expected: pz(pOne3Opt, pTwo4Req),
 		},
 		{
 			name:     "one3 two4 VS one3",
-			required: ps(pOne3Opt, pTwo4Req),
-			toCheck:  ps(pOne3Req),
-			expected: ps(pTwo4Req),
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  pz(pOne3Req),
+			expected: pz(pTwo4Req),
 		},
 		{
 			name:     "one3 two4 VS one4",
-			required: ps(pOne3Opt, pTwo4Req),
-			toCheck:  ps(pOne4Opt),
-			expected: ps(pOne3Opt, pTwo4Req),
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  pz(pOne4Opt),
+			expected: pz(pOne3Opt, pTwo4Req),
 		},
 		{
 			name:     "one3 two4 VS two3",
-			required: ps(pOne3Opt, pTwo4Req),
-			toCheck:  ps(pTwo3Opt),
-			expected: ps(pOne3Opt, pTwo4Req),
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  pz(pTwo3Opt),
+			expected: pz(pOne3Opt, pTwo4Req),
 		},
 		{
 			name:     "one3 two4 VS two4",
-			required: ps(pOne3Opt, pTwo4Req),
-			toCheck:  ps(pTwo4Opt),
-			expected: ps(pOne3Opt),
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  pz(pTwo4Opt),
+			expected: pz(pOne3Opt),
 		},
 
 		{
 			name:     "one3req two4opt VS two4req one3opt",
-			required: ps(pOne3Req, pTwo4Opt),
-			toCheck:  ps(pTwo4Req, pOne3Opt),
+			required: pz(pOne3Req, pTwo4Opt),
+			toCheck:  pz(pTwo4Req, pOne3Opt),
 			expected: nil,
 		},
 		{
 			name:     "one3opt two4req VS two4opt one3req",
-			required: ps(pOne3Opt, pTwo4Req),
-			toCheck:  ps(pTwo4Opt, pOne3Req),
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  pz(pTwo4Opt, pOne3Req),
 			expected: nil,
 		},
 
 		{
 			name:     "one3opt VS all others req",
-			required: ps(pOne3Opt),
-			toCheck:  ps(pOne3Req, pOne4Req, pTwo3Req, pTwo4Req),
+			required: pz(pOne3Opt),
+			toCheck:  pz(pOne3Req, pOne4Req, pTwo3Req, pTwo4Req),
 			expected: nil,
 		},
 		{
 			name:     "one3req VS all others opt",
-			required: ps(pOne3Req),
-			toCheck:  ps(pOne3Opt, pOne4Opt, pTwo3Opt, pTwo4Opt),
+			required: pz(pOne3Req),
+			toCheck:  pz(pOne3Opt, pOne4Opt, pTwo3Opt, pTwo4Opt),
 			expected: nil,
 		},
 		{
 			name:     "all req VS two3Opt",
-			required: ps(pOne4Req, pTwo3Req, pOne3Req, pTwo4Req),
-			toCheck:  ps(pTwo3Opt),
-			expected: ps(pOne4Req, pOne3Req, pTwo4Req),
+			required: pz(pOne4Req, pTwo3Req, pOne3Req, pTwo4Req),
+			toCheck:  pz(pTwo3Opt),
+			expected: pz(pOne4Req, pOne3Req, pTwo4Req),
 		},
 		{
 			name:     "all opt VS two3Req",
-			required: ps(pOne4Opt, pOne3Opt, pTwo3Opt, pTwo4Opt),
-			toCheck:  ps(pTwo3Req),
-			expected: ps(pOne4Opt, pOne3Opt, pTwo4Opt),
+			required: pz(pOne4Opt, pOne3Opt, pTwo3Opt, pTwo4Opt),
+			toCheck:  pz(pTwo3Req),
+			expected: pz(pOne4Opt, pOne3Opt, pTwo4Opt),
 		},
 	}
 
@@ -3230,7 +3762,7 @@ func TestFindMissingComp(t *testing.T) {
 		comp := func(r, c string) bool {
 			return r == c
 		}
-		for _, tc := range CasesForFindMissing() {
+		for _, tc := range testCasesForFindMissing() {
 			t.Run(tc.name, func(t *testing.T) {
 				actual := keeper.FindMissingComp(tc.required, tc.toCheck, comp)
 				assert.Equal(t, tc.expected, actual, "FindMissingComp")
@@ -3242,7 +3774,7 @@ func TestFindMissingComp(t *testing.T) {
 		comp := func(r, c stringSame) bool {
 			return r.IsSameAs(c)
 		}
-		for _, tc := range CasesForFindMissing() {
+		for _, tc := range testCasesForFindMissing() {
 			t.Run(tc.name, func(t *testing.T) {
 				required := newStringSames(tc.required)
 				toCheck := newStringSames(tc.toCheck)
@@ -3257,7 +3789,7 @@ func TestFindMissingComp(t *testing.T) {
 		comp := func(r stringSameR, c stringSameC) bool {
 			return r.IsSameAs(c)
 		}
-		for _, tc := range CasesForFindMissing() {
+		for _, tc := range testCasesForFindMissing() {
 			t.Run(tc.name, func(t *testing.T) {
 				required := newStringSameRs(tc.required)
 				toCheck := newStringSameCs(tc.toCheck)
@@ -3322,7 +3854,7 @@ func TestFindMissingComp(t *testing.T) {
 		comp := func(r, c string) bool {
 			return true
 		}
-		for _, tc := range CasesForFindMissing() {
+		for _, tc := range testCasesForFindMissing() {
 			t.Run(tc.name, func(t *testing.T) {
 				var expected []string
 				// required entries are only marked as found after being compared to something.
@@ -3342,7 +3874,7 @@ func TestFindMissingComp(t *testing.T) {
 		comp := func(r, c string) bool {
 			return false
 		}
-		for _, tc := range CasesForFindMissing() {
+		for _, tc := range testCasesForFindMissing() {
 			t.Run(tc.name, func(t *testing.T) {
 				// If tc.required is nil, or an empty slice, we expect nil, otherwise, we always expect tc.required back.
 				var expected []string

@@ -420,22 +420,6 @@ func (x PartyType) SimpleString() string {
 	return strings.TrimPrefix(x.String(), "PARTY_TYPE_")
 }
 
-func GetAllPartyTypes() []PartyType {
-	return []PartyType{
-		PartyType_PARTY_TYPE_UNSPECIFIED,
-		PartyType_PARTY_TYPE_ORIGINATOR,
-		PartyType_PARTY_TYPE_SERVICER,
-		PartyType_PARTY_TYPE_INVESTOR,
-		PartyType_PARTY_TYPE_CUSTODIAN,
-		PartyType_PARTY_TYPE_OWNER,
-		PartyType_PARTY_TYPE_AFFILIATE,
-		PartyType_PARTY_TYPE_OMNIBUS,
-		PartyType_PARTY_TYPE_PROVENANCE,
-		PartyType_PARTY_TYPE_CONTROLLER,
-		PartyType_PARTY_TYPE_VALIDATOR,
-	}
-}
-
 // validateURLBasic - Helper function to check if a url string is superficially valid.
 // The path and fieldName parameters are combined using makeFieldString for error messages.
 func validateURLBasic(url string, required bool, path string, fieldName string) error {
