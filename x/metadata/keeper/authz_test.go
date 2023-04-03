@@ -1761,8 +1761,635 @@ func TestSignersWrapper(t *testing.T) {
 
 // TODO[1438]: func (s *AuthzTestSuite) TestValidateSignersWithParties() {}
 // TODO[1438]: func TestAssociateSigners(t *testing.T) {}
-// TODO[1438]: func TestFindUnsignedRequired(t *testing.T) {}
-// TODO[1438]: func TestAssociateRequiredRoles(t *testing.T) {}
+
+func TestFindUnsignedRequired(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(address string, optional bool, signer string, signerAcc sdk.AccAddress) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Address:   address,
+			Optional:  optional,
+			Signer:    signer,
+			SignerAcc: signerAcc,
+		}.Real()
+	}
+	// pdz is just a shorter way to define a []*keeper.PartyDetails
+	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
+		rv := make([]*keeper.PartyDetails, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+
+	addrAcc := sdk.AccAddress("a_signer_address____")
+	addr := addrAcc.String()
+
+	tests := []struct {
+		name    string
+		parties []*keeper.PartyDetails
+		exp     []*keeper.PartyDetails
+	}{
+		{
+			name:    "nil",
+			parties: nil,
+			exp:     nil,
+		},
+		{
+			name:    "empty",
+			parties: pdz(),
+			exp:     nil,
+		},
+		{
+			name:    "1 party not required not signed",
+			parties: pdz(pd("one", true, "", nil)),
+			exp:     nil,
+		},
+		{
+			name:    "1 party not required signer only string",
+			parties: pdz(pd("one", true, addr, nil)),
+			exp:     nil,
+		},
+		{
+			name:    "1 party not required signer only acc",
+			parties: pdz(pd("one", true, "", addrAcc)),
+			exp:     nil,
+		},
+		{
+			name:    "1 party not required signer both",
+			parties: pdz(pd("one", true, addr, addrAcc)),
+			exp:     nil,
+		},
+		{
+			name:    "1 party required not signed",
+			parties: pdz(pd("one", false, "", nil)),
+			exp:     pdz(pd("one", false, "", nil)),
+		},
+		{
+			name:    "1 party required signer only string",
+			parties: pdz(pd("one", false, addr, nil)),
+			exp:     nil,
+		},
+		{
+			name:    "1 party required signer only acc",
+			parties: pdz(pd("one", false, "", addrAcc)),
+			exp:     nil,
+		},
+		{
+			name:    "1 party required signer both",
+			parties: pdz(pd("one", false, addr, addrAcc)),
+			exp:     nil,
+		},
+
+		{
+			name: "5 parties 2 are req and signed",
+			parties: pdz(
+				pd("one", true, addr, nil),
+				pd("two", false, addr, nil),
+				pd("three", true, addr, nil),
+				pd("four", true, "", nil),
+				pd("five", false, addr, nil),
+			),
+			exp: nil,
+		},
+		{
+			name: "5 parties 2 are req only first signed",
+			parties: pdz(
+				pd("one", true, addr, nil),
+				pd("two", false, addr, nil),
+				pd("three", true, addr, nil),
+				pd("four", true, "", nil),
+				pd("five", false, "", nil),
+			),
+			exp: pdz(pd("five", false, "", nil)),
+		},
+		{
+			name: "5 parties 2 are req only second signed",
+			parties: pdz(
+				pd("one", true, addr, nil),
+				pd("two", false, "", nil),
+				pd("three", true, addr, nil),
+				pd("four", true, "", nil),
+				pd("five", false, addr, nil),
+			),
+			exp: pdz(pd("two", false, "", nil)),
+		},
+		{
+			name: "5 parties 2 are req neither signed",
+			parties: pdz(
+				pd("one", true, addr, nil),
+				pd("two", false, "", nil),
+				pd("three", true, addr, nil),
+				pd("four", true, "", nil),
+				pd("five", false, "", nil),
+			),
+			exp: pdz(
+				pd("two", false, "", nil),
+				pd("five", false, "", nil),
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := keeper.FindUnsignedRequired(tc.parties)
+			assert.Equal(t, tc.exp, actual, "FindUnsignedRequired")
+		})
+	}
+
+	t.Run("same references are returned", func(t *testing.T) {
+		pd1 := pd("one", false, addr, addrAcc)
+		pd2 := pd("two", false, "", nil)
+		pd3 := pd("three", false, addr, nil)
+		pd4 := pd("four", false, "", nil)
+		pd5 := pd("five", false, "", nil)
+		pd6 := pd("six", false, "", addrAcc)
+		parties := pdz(pd1, pd2, pd3, pd4, pd5, pd6)
+		exp := pdz(pd2, pd4, pd5)
+		actual := keeper.FindUnsignedRequired(parties)
+		if assert.Len(t, actual, len(exp), "FindUnsignedRequired returned parties") {
+			for i := range exp {
+				assert.Same(t, exp[i], actual[i], "FindUnsignedRequired returned party [%d]", i)
+			}
+		}
+	})
+}
+
+func TestAssociateRequiredRoles(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(role types.PartyType, canBeUsed, isUsed bool, signer string, signerAcc sdk.AccAddress) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Role:            role,
+			Signer:          signer,
+			SignerAcc:       signerAcc,
+			CanBeUsedBySpec: canBeUsed,
+			UsedBySpec:      isUsed,
+		}.Real()
+	}
+	// pdz is just a shorter way to define a []*keeper.PartyDetails
+	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
+		rv := make([]*keeper.PartyDetails, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+	// rv is just a shorter way to define a []types.PartyType
+	rz := func(roles ...types.PartyType) []types.PartyType {
+		rv := make([]types.PartyType, 0, len(roles))
+		rv = append(rv, roles...)
+		return rv
+	}
+
+	// Create some aliases that are shorter than their full names.
+	unspecified := types.PartyType_PARTY_TYPE_UNSPECIFIED
+	originator := types.PartyType_PARTY_TYPE_ORIGINATOR
+	servicer := types.PartyType_PARTY_TYPE_SERVICER
+	investor := types.PartyType_PARTY_TYPE_INVESTOR
+	custodian := types.PartyType_PARTY_TYPE_CUSTODIAN
+	owner := types.PartyType_PARTY_TYPE_OWNER
+	affiliate := types.PartyType_PARTY_TYPE_AFFILIATE
+	omnibus := types.PartyType_PARTY_TYPE_OMNIBUS
+	provenance := types.PartyType_PARTY_TYPE_PROVENANCE
+	controller := types.PartyType_PARTY_TYPE_CONTROLLER
+	validator := types.PartyType_PARTY_TYPE_VALIDATOR
+
+	allRoles := rz(
+		unspecified, originator, servicer, investor, custodian, owner,
+		affiliate, omnibus, provenance, controller, validator,
+	)
+
+	addrAcc := sdk.AccAddress("simple_test_address_")
+	addr := addrAcc.String()
+
+	type testCase struct {
+		name       string
+		parties    []*keeper.PartyDetails
+		reqRoles   []types.PartyType
+		exp        []types.PartyType
+		expParties []*keeper.PartyDetails
+	}
+
+	tests := []testCase{
+		{
+			name:       "nil nil",
+			parties:    nil,
+			reqRoles:   nil,
+			exp:        nil,
+			expParties: nil,
+		},
+		{
+			name:       "empty nil",
+			parties:    []*keeper.PartyDetails{},
+			reqRoles:   nil,
+			exp:        nil,
+			expParties: []*keeper.PartyDetails{},
+		},
+		{
+			name:       "nil empty",
+			parties:    nil,
+			reqRoles:   []types.PartyType{},
+			exp:        nil,
+			expParties: nil,
+		},
+		{
+			name:       "empty empty",
+			parties:    []*keeper.PartyDetails{},
+			reqRoles:   []types.PartyType{},
+			exp:        nil,
+			expParties: []*keeper.PartyDetails{},
+		},
+		{
+			name:       "2 req nil parties",
+			parties:    nil,
+			reqRoles:   rz(validator, investor),
+			exp:        rz(validator, investor),
+			expParties: nil,
+		},
+		{
+			name:       "2 req empty parties",
+			parties:    pdz(),
+			reqRoles:   rz(validator, investor),
+			exp:        rz(validator, investor),
+			expParties: pdz(),
+		},
+		{
+			name:       "2 parties nil req",
+			parties:    pdz(pd(owner, true, false, addr, addrAcc), pd(provenance, true, false, addr, addrAcc)),
+			reqRoles:   nil,
+			exp:        nil,
+			expParties: pdz(pd(owner, true, false, addr, addrAcc), pd(provenance, true, false, addr, addrAcc)),
+		},
+		{
+			name:       "2 parties empty req",
+			parties:    pdz(pd(owner, true, false, addr, addrAcc), pd(provenance, true, false, addr, addrAcc)),
+			reqRoles:   rz(),
+			exp:        nil,
+			expParties: pdz(pd(owner, true, false, addr, addrAcc), pd(provenance, true, false, addr, addrAcc)),
+		},
+
+		// all single req/party combos of usable/unusable, not/already used, right/wrong role,
+		// and both signer fields/only string/only acc/neither.
+		{
+			name:       "usable, not used, right role, both signer string and acc",
+			parties:    pdz(pd(originator, true, false, addr, addrAcc)),
+			reqRoles:   rz(originator),
+			exp:        nil,
+			expParties: pdz(pd(originator, true, true, addr, addrAcc)),
+		},
+		{
+			name:       "usable, not used, right role, only signer string",
+			parties:    pdz(pd(originator, true, false, addr, nil)),
+			reqRoles:   rz(originator),
+			exp:        nil,
+			expParties: pdz(pd(originator, true, true, addr, nil)),
+		},
+		{
+			name:       "usable, not used, right role, only signer acc",
+			parties:    pdz(pd(originator, true, false, "", addrAcc)),
+			reqRoles:   rz(originator),
+			exp:        nil,
+			expParties: pdz(pd(originator, true, true, "", addrAcc)),
+		},
+		{
+			name:       "usable, not used, right role, no signer",
+			parties:    pdz(pd(originator, true, false, "", nil)),
+			reqRoles:   rz(originator),
+			exp:        rz(originator),
+			expParties: pdz(pd(originator, true, false, "", nil)),
+		},
+		{
+			name:       "usable, not used, wrong role, both signer string and acc",
+			parties:    pdz(pd(originator, true, false, addr, addrAcc)),
+			reqRoles:   rz(servicer),
+			exp:        rz(servicer),
+			expParties: pdz(pd(originator, true, false, addr, addrAcc)),
+		},
+		{
+			name:       "usable, not used, wrong role, only signer string",
+			parties:    pdz(pd(originator, true, false, addr, nil)),
+			reqRoles:   rz(servicer),
+			exp:        rz(servicer),
+			expParties: pdz(pd(originator, true, false, addr, nil)),
+		},
+		{
+			name:       "usable, not used, wrong role, only signer acc",
+			parties:    pdz(pd(originator, true, false, "", addrAcc)),
+			reqRoles:   rz(servicer),
+			exp:        rz(servicer),
+			expParties: pdz(pd(originator, true, false, "", addrAcc)),
+		},
+		{
+			name:       "usable, not used, wrong role, no signer",
+			parties:    pdz(pd(originator, true, false, "", nil)),
+			reqRoles:   rz(servicer),
+			exp:        rz(servicer),
+			expParties: pdz(pd(originator, true, false, "", nil)),
+		},
+		{
+			name:       "usable, already used, right role, both signer string and acc",
+			parties:    pdz(pd(investor, true, true, addr, addrAcc)),
+			reqRoles:   rz(investor),
+			exp:        rz(investor),
+			expParties: pdz(pd(investor, true, true, addr, addrAcc)),
+		},
+		{
+			name:       "usable, already used, right role, only signer string",
+			parties:    pdz(pd(investor, true, true, addr, nil)),
+			reqRoles:   rz(investor),
+			exp:        rz(investor),
+			expParties: pdz(pd(investor, true, true, addr, nil)),
+		},
+		{
+			name:       "usable, already used, right role, only signer acc",
+			parties:    pdz(pd(investor, true, true, "", addrAcc)),
+			reqRoles:   rz(investor),
+			exp:        rz(investor),
+			expParties: pdz(pd(investor, true, true, "", addrAcc)),
+		},
+		{
+			name:       "usable, already used, right role, no signer",
+			parties:    pdz(pd(investor, true, true, "", nil)),
+			reqRoles:   rz(investor),
+			exp:        rz(investor),
+			expParties: pdz(pd(investor, true, true, "", nil)),
+		},
+		{
+			name:       "usable, already used, wrong role, both signer string and acc",
+			parties:    pdz(pd(investor, true, true, addr, addrAcc)),
+			reqRoles:   rz(omnibus),
+			exp:        rz(omnibus),
+			expParties: pdz(pd(investor, true, true, addr, addrAcc)),
+		},
+		{
+			name:       "usable, already used, wrong role, only signer string",
+			parties:    pdz(pd(investor, true, true, addr, nil)),
+			reqRoles:   rz(omnibus),
+			exp:        rz(omnibus),
+			expParties: pdz(pd(investor, true, true, addr, nil)),
+		},
+		{
+			name:       "usable, already used, wrong role, only signer acc",
+			parties:    pdz(pd(investor, true, true, "", addrAcc)),
+			reqRoles:   rz(omnibus),
+			exp:        rz(omnibus),
+			expParties: pdz(pd(investor, true, true, "", addrAcc)),
+		},
+		{
+			name:       "usable, already used, wrong role, no signer",
+			parties:    pdz(pd(investor, true, true, "", nil)),
+			reqRoles:   rz(omnibus),
+			exp:        rz(omnibus),
+			expParties: pdz(pd(investor, true, true, "", nil)),
+		},
+		{
+			name:       "unusable, not used, right role, both signer string and acc",
+			parties:    pdz(pd(originator, false, false, addr, addrAcc)),
+			reqRoles:   rz(originator),
+			exp:        rz(originator),
+			expParties: pdz(pd(originator, false, false, addr, addrAcc)),
+		},
+		{
+			name:       "unusable, not used, right role, only signer string",
+			parties:    pdz(pd(originator, false, false, addr, nil)),
+			reqRoles:   rz(originator),
+			exp:        rz(originator),
+			expParties: pdz(pd(originator, false, false, addr, nil)),
+		},
+		{
+			name:       "unusable, not used, right role, only signer acc",
+			parties:    pdz(pd(originator, false, false, "", addrAcc)),
+			reqRoles:   rz(originator),
+			exp:        rz(originator),
+			expParties: pdz(pd(originator, false, false, "", addrAcc)),
+		},
+		{
+			name:       "unusable, not used, right role, no signer",
+			parties:    pdz(pd(originator, false, false, "", nil)),
+			reqRoles:   rz(originator),
+			exp:        rz(originator),
+			expParties: pdz(pd(originator, false, false, "", nil)),
+		},
+		{
+			name:       "unusable, not used, wrong role, both signer string and acc",
+			parties:    pdz(pd(originator, false, false, addr, addrAcc)),
+			reqRoles:   rz(servicer),
+			exp:        rz(servicer),
+			expParties: pdz(pd(originator, false, false, addr, addrAcc)),
+		},
+		{
+			name:       "unusable, not used, wrong role, only signer string",
+			parties:    pdz(pd(originator, false, false, addr, nil)),
+			reqRoles:   rz(servicer),
+			exp:        rz(servicer),
+			expParties: pdz(pd(originator, false, false, addr, nil)),
+		},
+		{
+			name:       "unusable, not used, wrong role, only signer acc",
+			parties:    pdz(pd(originator, false, false, "", addrAcc)),
+			reqRoles:   rz(servicer),
+			exp:        rz(servicer),
+			expParties: pdz(pd(originator, false, false, "", addrAcc)),
+		},
+		{
+			name:       "unusable, not used, wrong role, no signer",
+			parties:    pdz(pd(originator, false, false, "", nil)),
+			reqRoles:   rz(servicer),
+			exp:        rz(servicer),
+			expParties: pdz(pd(originator, false, false, "", nil)),
+		},
+		{
+			name:       "unusable, already used, right role, both signer string and acc",
+			parties:    pdz(pd(investor, false, true, addr, addrAcc)),
+			reqRoles:   rz(investor),
+			exp:        rz(investor),
+			expParties: pdz(pd(investor, false, true, addr, addrAcc)),
+		},
+		{
+			name:       "unusable, already used, right role, only signer string",
+			parties:    pdz(pd(investor, false, true, addr, nil)),
+			reqRoles:   rz(investor),
+			exp:        rz(investor),
+			expParties: pdz(pd(investor, false, true, addr, nil)),
+		},
+		{
+			name:       "unusable, already used, right role, only signer acc",
+			parties:    pdz(pd(investor, false, true, "", addrAcc)),
+			reqRoles:   rz(investor),
+			exp:        rz(investor),
+			expParties: pdz(pd(investor, false, true, "", addrAcc)),
+		},
+		{
+			name:       "unusable, already used, right role, no signer",
+			parties:    pdz(pd(investor, false, true, "", nil)),
+			reqRoles:   rz(investor),
+			exp:        rz(investor),
+			expParties: pdz(pd(investor, false, true, "", nil)),
+		},
+		{
+			name:       "unusable, already used, wrong role, both signer string and acc",
+			parties:    pdz(pd(investor, false, true, addr, addrAcc)),
+			reqRoles:   rz(omnibus),
+			exp:        rz(omnibus),
+			expParties: pdz(pd(investor, false, true, addr, addrAcc)),
+		},
+		{
+			name:       "unusable, already used, wrong role, only signer string",
+			parties:    pdz(pd(investor, false, true, addr, nil)),
+			reqRoles:   rz(omnibus),
+			exp:        rz(omnibus),
+			expParties: pdz(pd(investor, false, true, addr, nil)),
+		},
+		{
+			name:       "unusable, already used, wrong role, only signer acc",
+			parties:    pdz(pd(investor, false, true, "", addrAcc)),
+			reqRoles:   rz(omnibus),
+			exp:        rz(omnibus),
+			expParties: pdz(pd(investor, false, true, "", addrAcc)),
+		},
+		{
+			name:       "unusable, already used, wrong role, no signer",
+			parties:    pdz(pd(investor, false, true, "", nil)),
+			reqRoles:   rz(omnibus),
+			exp:        rz(omnibus),
+			expParties: pdz(pd(investor, false, true, "", nil)),
+		},
+	}
+
+	// make sure each role can be associated when there's only a singer string.
+	for _, role := range allRoles {
+		tests = append(tests, testCase{
+			name:       fmt.Sprintf("%s can be associated signer string", strings.ToLower(role.SimpleString())),
+			parties:    pdz(pd(role, true, false, addr, nil)),
+			reqRoles:   rz(role),
+			exp:        nil,
+			expParties: pdz(pd(role, true, true, addr, nil)),
+		})
+	}
+	// make sure each role can be associated when there's only a singer acc.
+	for _, role := range allRoles {
+		tests = append(tests, testCase{
+			name:       fmt.Sprintf("%s can be associated signer acc", strings.ToLower(role.SimpleString())),
+			parties:    pdz(pd(role, true, false, "", addrAcc)),
+			reqRoles:   rz(role),
+			exp:        nil,
+			expParties: pdz(pd(role, true, true, "", addrAcc)),
+		})
+	}
+	// make sure all roles can come up missing.
+	for _, role := range allRoles {
+		tests = append(tests, testCase{
+			name:       fmt.Sprintf("%s can be be missing", strings.ToLower(role.SimpleString())),
+			parties:    nil,
+			reqRoles:   rz(role),
+			exp:        rz(role),
+			expParties: nil,
+		})
+	}
+
+	tests = append(tests, []testCase{
+		{
+			name:       "missing ordered by req",
+			parties:    pdz(pd(validator, true, false, addr, nil)),
+			reqRoles:   rz(validator, owner, validator, originator, owner),
+			exp:        rz(owner, validator, originator, owner),
+			expParties: pdz(pd(validator, true, true, addr, nil)),
+		},
+		{
+			name: "3 parties 2 req",
+			parties: pdz(
+				pd(validator, true, false, addr, nil),
+				pd(validator, true, false, addr, nil),
+				pd(validator, true, false, addr, nil),
+			),
+			reqRoles: rz(validator, validator),
+			exp:      nil,
+			expParties: pdz(
+				pd(validator, true, true, addr, nil),
+				pd(validator, true, true, addr, nil),
+				pd(validator, true, false, addr, nil),
+			),
+		},
+		{
+			name: "3 parties diff roles all 3 req",
+			parties: pdz(
+				pd(servicer, true, false, addr, addrAcc),
+				pd(owner, true, false, addr, addrAcc),
+				pd(validator, true, false, addr, addrAcc),
+			),
+			reqRoles: rz(validator, servicer, owner),
+			exp:      nil,
+			expParties: pdz(
+				pd(servicer, true, true, addr, addrAcc),
+				pd(owner, true, true, addr, addrAcc),
+				pd(validator, true, true, addr, addrAcc),
+			),
+		},
+		{
+			name: "3 parties diff roles 4 req only 1 filled",
+			parties: pdz(
+				pd(servicer, true, false, addr, addrAcc),
+				pd(owner, true, false, addr, addrAcc),
+				pd(validator, true, false, addr, addrAcc),
+			),
+			reqRoles: rz(originator, affiliate, custodian, owner),
+			exp:      rz(originator, affiliate, custodian),
+			expParties: pdz(
+				pd(servicer, true, false, addr, addrAcc),
+				pd(owner, true, true, addr, addrAcc),
+				pd(validator, true, false, addr, addrAcc),
+			),
+		},
+		{
+			name: "one of each req all there",
+			parties: pdz(
+				pd(unspecified, true, false, addr, nil),
+				pd(originator, true, false, addr, nil),
+				pd(servicer, true, false, addr, nil),
+				pd(investor, true, false, addr, nil),
+				pd(custodian, true, false, addr, nil),
+				pd(owner, true, false, addr, nil),
+				pd(affiliate, true, false, addr, nil),
+				pd(omnibus, true, false, addr, nil),
+				pd(provenance, true, false, addr, nil),
+				pd(controller, true, false, addr, nil),
+				pd(validator, true, false, addr, nil),
+			),
+			reqRoles: allRoles,
+			exp:      nil,
+			expParties: pdz(
+				pd(unspecified, true, true, addr, nil),
+				pd(originator, true, true, addr, nil),
+				pd(servicer, true, true, addr, nil),
+				pd(investor, true, true, addr, nil),
+				pd(custodian, true, true, addr, nil),
+				pd(owner, true, true, addr, nil),
+				pd(affiliate, true, true, addr, nil),
+				pd(omnibus, true, true, addr, nil),
+				pd(provenance, true, true, addr, nil),
+				pd(controller, true, true, addr, nil),
+				pd(validator, true, true, addr, nil),
+			),
+		},
+		{
+			name:       "unknown role can be fulfilled",
+			parties:    pdz(pd(333, true, false, addr, addrAcc)),
+			reqRoles:   rz(333),
+			exp:        nil,
+			expParties: pdz(pd(333, true, true, addr, addrAcc)),
+		},
+		{
+			name:       "unknown role can be missed",
+			parties:    nil,
+			reqRoles:   rz(333),
+			exp:        rz(333),
+			expParties: nil,
+		},
+	}...)
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := keeper.AssociateRequiredRoles(tc.parties, tc.reqRoles)
+			assert.Equal(t, tc.exp, actual, "AssociateRequiredRoles returned roles")
+			assert.Equal(t, tc.expParties, tc.parties, "parties after AssociateRequiredRoles")
+		})
+	}
+}
 
 func TestMissingRolesString(t *testing.T) {
 	// pd is a short way to create a PartyDetails with only what we care about in this test.
