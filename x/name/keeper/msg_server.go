@@ -128,7 +128,8 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 		return nil, sdkerrors.ErrUnauthorized.Wrap("msg sender cannot delete name")
 	}
 	// Delete
-	if err := s.Keeper.DeleteRecord(ctx, name); err != nil {
+	err = s.Keeper.DeleteRecord(ctx, name)
+	if err != nil {
 		ctx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -138,7 +139,6 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 	if err != nil {
 		return nil, err
 	}
-
 	for _, acct := range accts {
 		if err = s.Keeper.attrKeeper.DeleteAttribute(ctx, acct.String(), name, nil, address); err != nil {
 			return nil, err
