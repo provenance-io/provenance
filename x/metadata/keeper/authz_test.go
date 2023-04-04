@@ -129,6 +129,32 @@ func newStringSameCs(strs []string) []stringSameC {
 	return rv
 }
 
+// partiesCopy creates a new []*keeper.PartyDetails with copies of each provided entry.
+// Nil in = nil out.
+func partiesCopy(parties []*keeper.PartyDetails) []*keeper.PartyDetails {
+	if parties == nil {
+		return nil
+	}
+	rv := make([]*keeper.PartyDetails, len(parties))
+	for i, party := range parties {
+		rv[i] = party.Copy()
+	}
+	return rv
+}
+
+// partiesReversed creates a new []*keeper.PartyDetails with copies of each provided entry
+// in the opposite order as provided. Nil in = nil out.
+func partiesReversed(parties []*keeper.PartyDetails) []*keeper.PartyDetails {
+	if parties == nil {
+		return nil
+	}
+	rv := make([]*keeper.PartyDetails, len(parties))
+	for i, party := range parties {
+		rv[len(rv)-i-1] = party.Copy()
+	}
+	return rv
+}
+
 func TestWrapRequiredParty(t *testing.T) {
 	addr := sdk.AccAddress("just_a_test_address_").String()
 	tests := []struct {
@@ -1760,7 +1786,466 @@ func TestSignersWrapper(t *testing.T) {
 }
 
 // TODO[1438]: func (s *AuthzTestSuite) TestValidateSignersWithParties() {}
-// TODO[1438]: func TestAssociateSigners(t *testing.T) {}
+
+func TestAssociateSigners(t *testing.T) {
+	// pd is a short way to create a PartyDetails with only what we care about in this test.
+	pd := func(address string, acc sdk.AccAddress, signer string, signerAcc sdk.AccAddress) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Address:   address,
+			Acc:       acc,
+			Signer:    signer,
+			SignerAcc: signerAcc,
+		}.Real()
+	}
+	// pdz is a shorter varargs way to define a []*keeper.PartyDetails.
+	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
+		rv := make([]*keeper.PartyDetails, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+	// sw is a shorter varargs way to define a *keeper.SignersWrapper.
+	sw := func(addrs ...string) *keeper.SignersWrapper {
+		return keeper.NewSignersWrapper(addrs)
+	}
+	signersWrapperCopy := func(signers *keeper.SignersWrapper) *keeper.SignersWrapper {
+		if signers == nil {
+			return nil
+		}
+		return keeper.NewSignersWrapper(signers.Strings())
+	}
+	// acc is a shorter way to cast a string to an AccAddress.
+	acc := func(acc string) sdk.AccAddress {
+		return sdk.AccAddress(acc)
+	}
+	// accStr is a shorter way to cast a string to an AccAddress and get it's bech32.
+	accStr := func(acc string) string {
+		return sdk.AccAddress(acc).String()
+	}
+
+	// partyStr gets a string of the golang code that would make the provided party for these tests.
+	partyStr := func(p *keeper.PartyDetails) string {
+		if p == nil {
+			return "nil"
+		}
+		party := p.Testable()
+		var addrVal string
+		addrAcc, err := sdk.AccAddressFromBech32(party.Address)
+		if err == nil {
+			addrVal = fmt.Sprintf("accStr(%q)", string(addrAcc))
+		} else {
+			addrVal = fmt.Sprintf("%q", party.Address)
+		}
+		accVal := "nil"
+		if party.Acc != nil {
+			accVal = fmt.Sprintf("acc(%q)", string(party.Acc))
+		}
+		var sigVal string
+		sigAcc, err := sdk.AccAddressFromBech32(party.Signer)
+		if err == nil {
+			sigVal = fmt.Sprintf("accStr(%q)", string(sigAcc))
+		} else {
+			sigVal = fmt.Sprintf("%q", party.Signer)
+		}
+		sigAccVal := "nil"
+		if party.SignerAcc != nil {
+			sigAccVal = fmt.Sprintf("acc(%q)", string(party.SignerAcc))
+		}
+		return fmt.Sprintf("pd(%s, %s, %s, %s)", addrVal, accVal, sigVal, sigAccVal)
+	}
+	// partiesStr gets a string of the golang code that would make the provided parties for these tests.
+	partiesStr := func(parties []*keeper.PartyDetails) string {
+		if parties == nil {
+			return "nil"
+		}
+		strs := make([]string, len(parties))
+		for i, party := range parties {
+			strs[i] = partyStr(party)
+		}
+		if len(strs) <= 2 {
+			return fmt.Sprintf("pdz(%s)", strings.Join(strs, ", "))
+		}
+		return fmt.Sprintf("pdz(\n\t\t%s,\n\t)", strings.Join(strs, ",\n\t\t"))
+	}
+	// signersStr gets a string of the golang code that would make the provided SignersWrapper for these tests.
+	signersStr := func(sw *keeper.SignersWrapper) string {
+		if sw == nil {
+			return "nil"
+		}
+		sigs := sw.Strings()
+		strs := make([]string, len(sigs))
+		for i, sig := range sigs {
+			strs[i] = fmt.Sprintf("%q", sig)
+		}
+		return fmt.Sprintf("sw(%s)", strings.Join(strs, ", "))
+	}
+
+	// signersReversed creates a copy of the provided SignersWrapper in reversed order. Nil in = nil out.
+	signersReversed := func(signers *keeper.SignersWrapper) *keeper.SignersWrapper {
+		if signers == nil {
+			return nil
+		}
+		sigs := signers.Strings()
+		revSigs := make([]string, len(sigs))
+		for i, sig := range sigs {
+			revSigs[len(revSigs)-i-1] = sig
+		}
+		return keeper.NewSignersWrapper(revSigs)
+	}
+	// signersShuffled creates a copy of the provided SignersWrapper and shuffles the entries. Nil in = nil out.
+	signersShuffled := func(r *rand.Rand, signers *keeper.SignersWrapper) *keeper.SignersWrapper {
+		if signers == nil {
+			return nil
+		}
+		sigs := signers.Strings()
+		shufSigs := make([]string, len(sigs))
+		shufSigs = append(shufSigs, sigs...)
+		r.Shuffle(len(shufSigs), func(i, j int) {
+			shufSigs[i], shufSigs[j] = shufSigs[j], shufSigs[i]
+		})
+		return keeper.NewSignersWrapper(shufSigs)
+	}
+	// partiesShuffled creates a copy of the provided party slices and shuffles the entries.
+	// Both parties and expParties must have the same length and if one is nil, the other must be too.
+	// The entries are shuffled in tandem. E.g. if parties becomes [1, 0, 2] then expParties will also have the order [1, 0, 2].
+	// Nil in = nil out.
+	partiesShuffled := func(r *rand.Rand, parties, expParties []*keeper.PartyDetails) ([]*keeper.PartyDetails, []*keeper.PartyDetails) {
+		if (parties == nil && expParties != nil) || (parties != nil && expParties == nil) || (len(parties) != len(expParties)) {
+			panic("test definition failure: parties and expParties should always have the same number of entries")
+		}
+		if parties == nil {
+			return nil, nil
+		}
+		rvp := make([]*keeper.PartyDetails, 0, len(parties))
+		rvp = append(rvp, parties...)
+		rve := make([]*keeper.PartyDetails, 0, len(expParties))
+		rve = append(rve, expParties...)
+		r.Shuffle(len(rve), func(i, j int) {
+			rve[i], rve[j] = rve[j], rve[i]
+			rvp[i], rvp[j] = rvp[j], rvp[i]
+		})
+		return rvp, rve
+	}
+
+	type testCase struct {
+		name       string
+		parties    []*keeper.PartyDetails
+		signers    *keeper.SignersWrapper
+		expParties []*keeper.PartyDetails
+	}
+
+	tests := []testCase{
+		{
+			name:       "nil nil",
+			parties:    nil,
+			signers:    nil,
+			expParties: nil,
+		},
+		{
+			name:       "empty nil",
+			parties:    pdz(),
+			signers:    nil,
+			expParties: pdz(),
+		},
+		{
+			name:       "nil empty",
+			parties:    nil,
+			signers:    sw(),
+			expParties: nil,
+		},
+		{
+			name:       "empty empty",
+			parties:    pdz(),
+			signers:    sw(),
+			expParties: pdz(),
+		},
+		{
+			name:       "3 parties nil signers",
+			parties:    pdz(pd("addr1", nil, "", nil), pd("addr2", nil, "", nil), pd("addr3", nil, "", nil)),
+			signers:    nil,
+			expParties: pdz(pd("addr1", nil, "", nil), pd("addr2", nil, "", nil), pd("addr3", nil, "", nil)),
+		},
+		{
+			name:       "3 parties empty signers",
+			parties:    pdz(pd("addr1", nil, "", nil), pd("addr2", nil, "", nil), pd("addr3", nil, "", nil)),
+			signers:    sw(),
+			expParties: pdz(pd("addr1", nil, "", nil), pd("addr2", nil, "", nil), pd("addr3", nil, "", nil)),
+		},
+		{
+			name:       "nil parties 3 signers",
+			parties:    nil,
+			signers:    sw("addr1", "addr2", "addr3"),
+			expParties: nil,
+		},
+		{
+			name:       "empty parties 3 signers",
+			parties:    pdz(),
+			signers:    sw("addr1", "addr2", "addr3"),
+			expParties: pdz(),
+		},
+		{
+			name:       "1 party only string is 1 signer",
+			parties:    pdz(pd("match", nil, "", acc("stomped"))),
+			signers:    sw("match"),
+			expParties: pdz(pd("match", nil, "match", nil)),
+		},
+		{
+			name:       "1 party only acc is 1 signer o",
+			parties:    pdz(pd("", acc("acc_match"), "", acc("stomped"))),
+			signers:    sw(accStr("acc_match")),
+			expParties: pdz(pd(accStr("acc_match"), acc("acc_match"), accStr("acc_match"), nil)),
+		},
+		{
+			name:       "1 party conflicting string acc is 1 signer ",
+			parties:    pdz(pd("match", acc("acc_match"), "", acc("stomped"))),
+			signers:    sw("match"),
+			expParties: pdz(pd("match", acc("acc_match"), "match", nil)),
+		},
+		{
+			name:       "1 party conflicting string acc signer matches acc but not string",
+			parties:    pdz(pd("match", acc("acc_match"), "", acc("not-stomped"))),
+			signers:    sw("acc_match"),
+			expParties: pdz(pd("match", acc("acc_match"), "", acc("not-stomped"))),
+		},
+		{
+			name:       "1 party is in 10 signers",
+			parties:    pdz(pd("addr6", nil, "", nil)),
+			signers:    sw("addr1", "addr2", "addr3", "addr4", "addr5", "addr6", "addr7", "addr8", "addr9", "addr10"),
+			expParties: pdz(pd("addr6", nil, "addr6", nil)),
+		},
+		{
+			name:       "1 party is not in 10 signers",
+			parties:    pdz(pd("no-match", nil, "", nil)),
+			signers:    sw("addr1", "addr2", "addr3", "addr4", "addr5", "addr6", "addr7", "addr8", "addr9", "addr10"),
+			expParties: pdz(pd("no-match", nil, "", nil)),
+		},
+		{
+			name:       "1 party already has signer is in signers differently",
+			parties:    pdz(pd(accStr("my-addr"), acc("my-other-addr"), accStr("change-me"), acc("don't-change-me-bro"))),
+			signers:    sw(accStr("my-addr")),
+			expParties: pdz(pd(accStr("my-addr"), acc("my-other-addr"), accStr("my-addr"), nil)),
+		},
+		{
+			name:       "2 parties both in 2 signers same order",
+			parties:    pdz(pd("match-1", nil, "", nil), pd("match-2", nil, "", nil)),
+			signers:    sw("match-1", "match-2"),
+			expParties: pdz(pd("match-1", nil, "match-1", nil), pd("match-2", nil, "match-2", nil)),
+		},
+		{
+			name:       "2 parties both in 2 signers diff order",
+			parties:    pdz(pd("match-1", nil, "", nil), pd("match-2", nil, "", nil)),
+			signers:    sw("match-2", "match-1"),
+			expParties: pdz(pd("match-1", nil, "match-1", nil), pd("match-2", nil, "match-2", nil)),
+		},
+		{
+			name:       "2 parties first is first of 2 signers",
+			parties:    pdz(pd("addr1", nil, "", nil), pd("addr2", nil, "", nil)),
+			signers:    sw("addr1", "addr3"),
+			expParties: pdz(pd("addr1", nil, "addr1", nil), pd("addr2", nil, "", nil)),
+		},
+		{
+			name:       "2 parties first is second of 2 signers",
+			parties:    pdz(pd("addr1", nil, "", nil), pd("addr2", nil, "", nil)),
+			signers:    sw("addr3", "addr1"),
+			expParties: pdz(pd("addr1", nil, "addr1", nil), pd("addr2", nil, "", nil)),
+		},
+		{
+			name:       "2 parties second is first of 2 signers",
+			parties:    pdz(pd("addr1", nil, "", nil), pd("addr2", nil, "", nil)),
+			signers:    sw("addr2", "addr3"),
+			expParties: pdz(pd("addr1", nil, "", nil), pd("addr2", nil, "addr2", nil)),
+		},
+		{
+			name:       "2 parties second is first of 2 signers",
+			parties:    pdz(pd("addr1", nil, "", nil), pd("addr2", nil, "", nil)),
+			signers:    sw("addr3", "addr2"),
+			expParties: pdz(pd("addr1", nil, "", nil), pd("addr2", nil, "addr2", nil)),
+		},
+		{
+			name:       "3 parties all in 10 signers",
+			parties:    pdz(pd("addr6", nil, "", nil), pd("addr8", nil, "", nil), pd("addr2", nil, "", nil)),
+			signers:    sw("addr1", "addr2", "addr3", "addr4", "addr5", "addr6", "addr7", "addr8", "addr9", "addr10"),
+			expParties: pdz(pd("addr6", nil, "addr6", nil), pd("addr8", nil, "addr8", nil), pd("addr2", nil, "addr2", nil)),
+		},
+		{
+			name: "3 parties only accs all in 10 signers",
+			parties: pdz(
+				pd("", acc("addr6"), "", nil),
+				pd("", acc("addr2"), "", nil),
+				pd("", acc("addr8"), "", nil),
+			),
+			signers: sw(
+				accStr("addr1"), accStr("addr2"), accStr("addr3"), accStr("addr4"), accStr("addr5"),
+				accStr("addr6"), accStr("addr7"), accStr("addr8"), accStr("addr9"), accStr("addr10"),
+			),
+			expParties: pdz(
+				pd(accStr("addr6"), acc("addr6"), accStr("addr6"), nil),
+				pd(accStr("addr2"), acc("addr2"), accStr("addr2"), nil),
+				pd(accStr("addr8"), acc("addr8"), accStr("addr8"), nil),
+			),
+		},
+		{
+			name:       "3 parties first not in 10 signers",
+			parties:    pdz(pd("addr6x", nil, "", nil), pd("addr8", nil, "", nil), pd("addr2", nil, "", nil)),
+			signers:    sw("addr1", "addr2", "addr3", "addr4", "addr5", "addr6", "addr7", "addr8", "addr9", "addr10"),
+			expParties: pdz(pd("addr6x", nil, "", nil), pd("addr8", nil, "addr8", nil), pd("addr2", nil, "addr2", nil)),
+		},
+		{
+			name:       "3 parties second not in 10 signers",
+			parties:    pdz(pd("addr6", nil, "", nil), pd("addr8x", nil, "", nil), pd("addr2", nil, "", nil)),
+			signers:    sw("addr1", "addr2", "addr3", "addr4", "addr5", "addr6", "addr7", "addr8", "addr9", "addr10"),
+			expParties: pdz(pd("addr6", nil, "addr6", nil), pd("addr8x", nil, "", nil), pd("addr2", nil, "addr2", nil)),
+		},
+		{
+			name:       "3 parties third not in 10 signers",
+			parties:    pdz(pd("addr6", nil, "", nil), pd("addr8", nil, "", nil), pd("addr2x", nil, "", nil)),
+			signers:    sw("addr1", "addr2", "addr3", "addr4", "addr5", "addr6", "addr7", "addr8", "addr9", "addr10"),
+			expParties: pdz(pd("addr6", nil, "addr6", nil), pd("addr8", nil, "addr8", nil), pd("addr2x", nil, "", nil)),
+		},
+		{
+			name:       "3 parties only first in 10 signers",
+			parties:    pdz(pd("addr6", nil, "", nil), pd("addr8x", nil, "", nil), pd("addr2x", nil, "", nil)),
+			signers:    sw("addr1", "addr2", "addr3", "addr4", "addr5", "addr6", "addr7", "addr8", "addr9", "addr10"),
+			expParties: pdz(pd("addr6", nil, "addr6", nil), pd("addr8x", nil, "", nil), pd("addr2x", nil, "", nil)),
+		},
+		{
+			name:       "3 parties only second in 10 signers",
+			parties:    pdz(pd("addr6x", nil, "", nil), pd("addr8", nil, "", nil), pd("addr2x", nil, "", nil)),
+			signers:    sw("addr1", "addr2", "addr3", "addr4", "addr5", "addr6", "addr7", "addr8", "addr9", "addr10"),
+			expParties: pdz(pd("addr6x", nil, "", nil), pd("addr8", nil, "addr8", nil), pd("addr2x", nil, "", nil)),
+		},
+		{
+			name:       "3 parties only third in 10 signers",
+			parties:    pdz(pd("addr6x", nil, "", nil), pd("addr8x", nil, "", nil), pd("addr2", nil, "", nil)),
+			signers:    sw("addr1", "addr2", "addr3", "addr4", "addr5", "addr6", "addr7", "addr8", "addr9", "addr10"),
+			expParties: pdz(pd("addr6x", nil, "", nil), pd("addr8x", nil, "", nil), pd("addr2", nil, "addr2", nil)),
+		},
+		{
+			name:       "3 parties none in 10 signers",
+			parties:    pdz(pd("addr6x", nil, "", nil), pd("addr8x", nil, "", nil), pd("addr2x", nil, "", nil)),
+			signers:    sw("addr1", "addr2", "addr3", "addr4", "addr5", "addr6", "addr7", "addr8", "addr9", "addr10"),
+			expParties: pdz(pd("addr6x", nil, "", nil), pd("addr8x", nil, "", nil), pd("addr2x", nil, "", nil)),
+		},
+		{
+			name: "3 same parties 1 other 1 signer for the 3",
+			parties: pdz(
+				// Since the string versions exist, the acc should be ignored, so I'm using that field as a differentiator.
+				pd("addr1", acc("one"), "", nil),
+				pd("addr1", acc("two"), "", nil),
+				pd("addr2", nil, "", nil),
+				pd("addr1", acc("three"), "", nil),
+			),
+			signers: sw("addr1"),
+			expParties: pdz(
+				pd("addr1", acc("one"), "addr1", nil),
+				pd("addr1", acc("two"), "addr1", nil),
+				pd("addr2", nil, "", nil),
+				pd("addr1", acc("three"), "addr1", nil),
+			),
+		},
+		{
+			name: "3 same parties 1 other both signers",
+			parties: pdz(
+				// Since the string versions exist, the acc should be ignored, so I'm using that field as a differentiator.
+				pd("addr1", acc("one"), "", nil),
+				pd("addr1", acc("two"), "", nil),
+				pd("addr2", nil, "", nil),
+				pd("addr1", acc("three"), "", nil),
+			),
+			signers: sw("addr1", "addr2"),
+			expParties: pdz(
+				pd("addr1", acc("one"), "addr1", nil),
+				pd("addr1", acc("two"), "addr1", nil),
+				pd("addr2", nil, "addr2", nil),
+				pd("addr1", acc("three"), "addr1", nil),
+			),
+		},
+		{
+			name: "10 parties 8 covered by 3 signers",
+			parties: pdz(
+				pd("addr1", acc("addr1-one"), "", nil),
+				pd("addr1", acc("addr1-two"), "", nil),
+				pd("addr1", acc("addr1-three"), "", nil),
+				pd("addr1", acc("addr1-four"), "", nil),
+				pd("addr2", acc("addr2-one"), "", nil),
+				pd("addr2", acc("addr2-two"), "", nil),
+				pd("addr2", acc("addr2-three"), "", nil),
+				pd("addr3", acc("addr3-one"), "", nil),
+				pd("addr4", acc("addr4-one"), "", nil),
+				pd("addr5", acc("addr5-one"), "", nil),
+			),
+			signers: sw("addr1", "addr2", "addr4"),
+			expParties: pdz(
+				pd("addr1", acc("addr1-one"), "addr1", nil),
+				pd("addr1", acc("addr1-two"), "addr1", nil),
+				pd("addr1", acc("addr1-three"), "addr1", nil),
+				pd("addr1", acc("addr1-four"), "addr1", nil),
+				pd("addr2", acc("addr2-one"), "addr2", nil),
+				pd("addr2", acc("addr2-two"), "addr2", nil),
+				pd("addr2", acc("addr2-three"), "addr2", nil),
+				pd("addr3", acc("addr3-one"), "", nil),
+				pd("addr4", acc("addr4-one"), "addr4", nil),
+				pd("addr5", acc("addr5-one"), "", nil),
+			),
+		},
+	}
+
+	// Copy all tests four times.
+	// Once with reversed parties. Once with reversed signers.
+	// Once with both reversed. And once with both shuffled.
+	revPartiesTests := make([]testCase, len(tests))
+	revSigsTests := make([]testCase, len(tests))
+	revBothTests := make([]testCase, len(tests))
+	shuffledTests := make([]testCase, len(tests))
+
+	for i, tc := range tests {
+		revPartiesTests[i] = testCase{
+			name:       "rev parties " + tc.name,
+			parties:    partiesReversed(tc.parties),
+			signers:    signersWrapperCopy(tc.signers),
+			expParties: partiesReversed(tc.expParties),
+		}
+		revSigsTests[i] = testCase{
+			name:       "rev sigs " + tc.name,
+			parties:    partiesCopy(tc.parties),
+			signers:    signersReversed(tc.signers),
+			expParties: partiesCopy(tc.expParties),
+		}
+		revBothTests[i] = testCase{
+			name:       "rev both " + tc.name,
+			parties:    partiesReversed(tc.parties),
+			signers:    signersReversed(tc.signers),
+			expParties: partiesReversed(tc.expParties),
+		}
+		// Using a hard-coded (randomly chosen) seed value here to make life easier if one of these fails.
+		// The purpose is to just have them in an order other than as defined (hopefully).
+		r := rand.New(rand.NewSource(int64(58720 * i)))
+		shufP, shufE := partiesShuffled(r, tc.parties, tc.expParties)
+		shuffledTests[i] = testCase{
+			name:       "shuffled " + tc.name,
+			parties:    shufP,
+			signers:    signersShuffled(r, tc.signers),
+			expParties: shufE,
+		}
+	}
+
+	tests = append(tests, revPartiesTests...)
+	tests = append(tests, revSigsTests...)
+	tests = append(tests, revBothTests...)
+	tests = append(tests, shuffledTests...)
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			orig := partiesCopy(tc.parties)
+			keeper.AssociateSigners(tc.parties, tc.signers)
+			if !assert.Equal(t, tc.expParties, tc.parties, "parties after AssociateSigners") {
+				// If the assertion failed, the output will contain the differences.
+				// Since some input might not be obvious though, include them now.
+				t.Logf("tests = append(tests, {\n\tname: %q,\n\tparties: %s,\n\tsigners: %s,\n\texpParties: %s,\n})",
+					tc.name, partiesStr(orig), signersStr(tc.signers), partiesStr(tc.expParties))
+			}
+		})
+	}
+}
 
 func TestFindUnsignedRequired(t *testing.T) {
 	// pd is a short way to create a PartyDetails with only what we care about in this test.
@@ -2411,6 +2896,14 @@ func TestMissingRolesString(t *testing.T) {
 		rv = append(rv, roles...)
 		return rv
 	}
+	// rolesCopy returns a copy of the provided slice. Nil in = nil out.
+	rolesCopy := func(roles []types.PartyType) []types.PartyType {
+		if roles == nil {
+			return nil
+		}
+		return rz(roles...)
+	}
+
 	// Create some aliases that are shorter than their full names.
 	unspecified := types.PartyType_PARTY_TYPE_UNSPECIFIED
 	originator := types.PartyType_PARTY_TYPE_ORIGINATOR
@@ -2456,12 +2949,37 @@ func TestMissingRolesString(t *testing.T) {
 	roleStr := func(role types.PartyType) string {
 		return strings.ToLower(role.SimpleString())
 	}
+	rolesStr := func(roles []types.PartyType) string {
+		if roles == nil {
+			return "nil"
+		}
+		strs := make([]string, len(roles))
+		for i, role := range roles {
+			strs[i] = roleStr(role)
+		}
+		return fmt.Sprintf("rz(%s)", strings.Join(strs, ", "))
+	}
 	// partyStr gets a string of the golang code that would make the provided party for these tests.
 	partyStr := func(party *keeper.PartyDetails) string {
 		return fmt.Sprintf("pd(%s, %t)", roleStr(party.GetRole()), party.IsUsed())
 	}
+	// partiesStr gets a string of the golang code that would make the provided parties for these tests.
+	partiesStr := func(parties []*keeper.PartyDetails) string {
+		if parties == nil {
+			return "nil"
+		}
+		strs := make([]string, len(parties))
+		for i, party := range parties {
+			strs[i] = partyStr(party)
+		}
+		if len(strs) <= 4 {
+			return fmt.Sprintf("pdz(%s)", strings.Join(strs, ", "))
+		}
+		return fmt.Sprintf("pdz(\n\t\t%s,\n\t)", strings.Join(strs, ",\n\t\t"))
+	}
 
-	reversedRoles := func(roles []types.PartyType) []types.PartyType {
+	// rolesReversed copies the roles slice, reversing it. Nil in = nil out.
+	rolesReversed := func(roles []types.PartyType) []types.PartyType {
 		if roles == nil {
 			return nil
 		}
@@ -2471,17 +2989,8 @@ func TestMissingRolesString(t *testing.T) {
 		}
 		return rv
 	}
-	reversedParties := func(parties []*keeper.PartyDetails) []*keeper.PartyDetails {
-		if parties == nil {
-			return nil
-		}
-		rv := make([]*keeper.PartyDetails, len(parties))
-		for i, party := range parties {
-			rv[len(rv)-i-1] = party
-		}
-		return rv
-	}
-	shuffledRoles := func(r *rand.Rand, roles []types.PartyType) []types.PartyType {
+	// rolesShuffled copies the roles slice and shuffles the entries. Nil in = nil out.
+	rolesShuffled := func(r *rand.Rand, roles []types.PartyType) []types.PartyType {
 		if roles == nil {
 			return nil
 		}
@@ -2492,7 +3001,8 @@ func TestMissingRolesString(t *testing.T) {
 		})
 		return rv
 	}
-	shuffledParties := func(r *rand.Rand, parties []*keeper.PartyDetails) []*keeper.PartyDetails {
+	// partiesShuffled copies each of the provided party and returns them in a random order. Nil in = nil out.
+	partiesShuffled := func(r *rand.Rand, parties []*keeper.PartyDetails) []*keeper.PartyDetails {
 		if parties == nil {
 			return nil
 		}
@@ -2866,20 +3376,20 @@ func TestMissingRolesString(t *testing.T) {
 	for i, tc := range tests {
 		revPartiesTests[i] = testCase{
 			name:     "rev parties " + tc.name,
-			parties:  reversedParties(tc.parties),
-			reqRoles: tc.reqRoles,
+			parties:  partiesReversed(tc.parties),
+			reqRoles: rolesCopy(tc.reqRoles),
 			exp:      tc.exp,
 		}
 		revRolesTests[i] = testCase{
 			name:     "rev roles " + tc.name,
-			parties:  tc.parties,
-			reqRoles: reversedRoles(tc.reqRoles),
+			parties:  partiesCopy(tc.parties),
+			reqRoles: rolesReversed(tc.reqRoles),
 			exp:      tc.exp,
 		}
 		revBothTests[i] = testCase{
 			name:     "rev both " + tc.name,
-			parties:  reversedParties(tc.parties),
-			reqRoles: reversedRoles(tc.reqRoles),
+			parties:  partiesReversed(tc.parties),
+			reqRoles: rolesReversed(tc.reqRoles),
 			exp:      tc.exp,
 		}
 		// Using a hard-coded (randomly chosen) seed value here to make life easier if one of these fails.
@@ -2887,8 +3397,8 @@ func TestMissingRolesString(t *testing.T) {
 		r := rand.New(rand.NewSource(int64(86530 * i)))
 		shuffledTests[i] = testCase{
 			name:     "shuffled " + tc.name,
-			parties:  shuffledParties(r, tc.parties),
-			reqRoles: shuffledRoles(r, tc.reqRoles),
+			parties:  partiesShuffled(r, tc.parties),
+			reqRoles: rolesShuffled(r, tc.reqRoles),
 			exp:      tc.exp,
 		}
 	}
@@ -2900,19 +3410,11 @@ func TestMissingRolesString(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			actual := keeper.MissingRolesString(tc.parties, tc.reqRoles)
-			if !assert.Equal(t, tc.exp, actual, "MissingRolesString") {
+			if !assert.Equal(t, tc.exp, actual, "MissingRolesString") || true {
 				// The test failed. The expected and actual are in the output.
 				// Now, be helpful and output the inputs too.
-				partiesStr := make([]string, len(tc.parties))
-				for i, party := range tc.parties {
-					partiesStr[i] = partyStr(party)
-				}
-				rolesStr := make([]string, len(tc.reqRoles))
-				for i, role := range tc.reqRoles {
-					rolesStr[i] = roleStr(role)
-				}
-				t.Logf("parties: pdz(%s),", strings.Join(partiesStr, ", "))
-				t.Logf("reqRoles: rz(%s),", strings.Join(rolesStr, ", "))
+				t.Logf("tests = append(tests, {\n\tname: %q,\n\tparties: %s,\n\treqRoles: %s,\n\texp: %q\n})",
+					tc.name, partiesStr(tc.parties), rolesStr(tc.reqRoles), tc.exp)
 			}
 		})
 	}

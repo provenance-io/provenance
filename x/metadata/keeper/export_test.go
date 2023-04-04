@@ -42,6 +42,45 @@ func (p TestablePartyDetails) Real() *PartyDetails {
 	}
 }
 
+func (p *PartyDetails) Testable() TestablePartyDetails {
+	return TestablePartyDetails{
+		Address:         p.address,
+		Role:            p.role,
+		Optional:        p.optional,
+		Acc:             p.acc,
+		Signer:          p.signer,
+		SignerAcc:       p.signerAcc,
+		CanBeUsedBySpec: p.canBeUsedBySpec,
+		UsedBySpec:      p.usedBySpec,
+	}
+}
+
+// Copy is a unit-test only function that copies a PartyDetails.
+func (p *PartyDetails) Copy() *PartyDetails {
+	if p == nil {
+		return nil
+	}
+	rv := &PartyDetails{
+		address:         p.address,
+		role:            p.role,
+		optional:        p.optional,
+		acc:             nil,
+		signer:          p.signer,
+		signerAcc:       nil,
+		canBeUsedBySpec: p.canBeUsedBySpec,
+		usedBySpec:      p.usedBySpec,
+	}
+	if p.acc != nil {
+		rv.acc = make(sdk.AccAddress, len(p.acc))
+		copy(rv.acc, p.acc)
+	}
+	if p.signerAcc != nil {
+		rv.signerAcc = make(sdk.AccAddress, len(p.signerAcc))
+		copy(rv.signerAcc, p.signerAcc)
+	}
+	return rv
+}
+
 var (
 	// AssociateSigners is a TEST ONLY exposure of associateSigners.
 	AssociateSigners = associateSigners
