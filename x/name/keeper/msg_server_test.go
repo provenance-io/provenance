@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"encoding/binary"
+	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -48,9 +49,67 @@ func (s *MsgServerTestSuite) SetupTest() {
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
 }
 
+func TestMsgServerTestSuite(t *testing.T) {
+	suite.Run(t, new(MsgServerTestSuite))
+}
+
+func (s *MsgServerTestSuite) TestDeleteNameRequest() {
+	name := "jackthecat.io"
+	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, name, s.owner1Addr, false))
+	tests := []struct {
+		name     string
+		msg      types.MsgDeleteNameRequest
+		errorMsg string
+	}{
+		{
+			name:     "Should fail to validatebasic on msg",
+			msg:      *types.NewMsgDeleteNameRequest(types.NewNameRecord("", sdk.AccAddress{}, false)),
+			errorMsg: "name cannot be empty: invalid request",
+		},
+		{
+			name:     "Should fail to normalize name",
+			msg:      *types.NewMsgDeleteNameRequest(types.NewNameRecord("i", s.owner1Addr, false)),
+			errorMsg: "segment of name is too short: invalid request",
+		},
+		{
+			name:     "Should fail to parse address",
+			msg:      *types.NewMsgDeleteNameRequest(types.NameRecord{Name: "provenance.io", Address: "s.owner1Addr", Restricted: false}),
+			errorMsg: "decoding bech32 failed: string not all lowercase or all uppercase: invalid request",
+		},
+		{
+			name:     "Should fail to name does not exist",
+			msg:      *types.NewMsgDeleteNameRequest(types.NewNameRecord("provenance.io", s.owner1Addr, false)),
+			errorMsg: "name does not exist: invalid request",
+		},
+		{
+			name:     "Should fail name does not resolve to owner",
+			msg:      *types.NewMsgDeleteNameRequest(types.NewNameRecord(name, sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()), false)),
+			errorMsg: "msg sender cannot delete name: unauthorized",
+		},
+		{
+			name:     "Should succeed to delete",
+			msg:      *types.NewMsgDeleteNameRequest(types.NewNameRecord(name, s.owner1Addr, false)),
+			errorMsg: "",
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			response, err := s.msgServer.DeleteName(s.ctx, &tt.msg)
+			if len(tt.errorMsg) > 0 {
+				s.Assert().Error(err)
+				s.Assert().Equal(tt.errorMsg, err.Error())
+				s.Assert().Nil(response)
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().NotNil(response)
+			}
+		})
+	}
+}
+
 func (s *MsgServerTestSuite) TestDeleteNameRemovingAttributeAccounts() {
-	name := "test.io"
-	s.Require().Error(s.app.NameKeeper.SetNameRecord(s.ctx, name, s.owner1Addr, false))
+	name := "jackthecat.io"
+	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, name, s.owner1Addr, false))
 	attrAccounts := make([]sdk.AccAddress, 10)
 	for i := 0; i < 10; i++ {
 		attrAccounts[i] = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
@@ -67,7 +126,7 @@ func (s *MsgServerTestSuite) TestDeleteNameRemovingAttributeAccounts() {
 	s.Assert().NoError(err)
 	s.Assert().ElementsMatch(attrAccounts, attrAddresses)
 
-	result, err := s.msgServer.DeleteName(s.ctx, types.NewMsgDeleteNameRequest(types.NewNameRecord("test.io", s.owner1Addr, false)))
+	result, err := s.msgServer.DeleteName(s.ctx, types.NewMsgDeleteNameRequest(types.NewNameRecord(name, s.owner1Addr, false)))
 	s.Assert().NotNil(result)
 	s.Assert().NoError(err)
 
