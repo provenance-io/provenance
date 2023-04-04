@@ -288,6 +288,9 @@ func (k Keeper) ValidateSignersWithParties(
 // associateSigners updates each PartyDetails to indicate there's a signer if its
 // address is in the signers list.
 func associateSigners(parties []*PartyDetails, signers *SignersWrapper) {
+	if signers == nil {
+		return
+	}
 	for _, party := range parties {
 		partyAddress := party.GetAddress()
 		for _, signer := range signers.Strings() {
