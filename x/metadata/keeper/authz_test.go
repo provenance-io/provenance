@@ -2257,7 +2257,7 @@ func TestAssociateSigners(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			orig := partiesCopy(tc.parties)
 			keeper.AssociateSigners(tc.parties, tc.signers)
-			if !assert.Equal(t, tc.expParties, tc.parties, "parties after AssociateSigners") {
+			if !assert.Equal(t, tc.expParties, tc.parties, "parties after associateSigners") {
 				// If the assertion failed, the output will contain the differences.
 				// Since some input might not be obvious though, include them now.
 				t.Logf("tests = append(tests, {\n\tname: %q,\n\tparties: %s,\n\tsigners: %s,\n\texpParties: %s,\n})",
@@ -2395,7 +2395,7 @@ func TestFindUnsignedRequired(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			actual := keeper.FindUnsignedRequired(tc.parties)
-			assert.Equal(t, tc.exp, actual, "FindUnsignedRequired")
+			assert.Equal(t, tc.exp, actual, "findUnsignedRequired")
 		})
 	}
 
@@ -2409,9 +2409,9 @@ func TestFindUnsignedRequired(t *testing.T) {
 		parties := pdz(pd1, pd2, pd3, pd4, pd5, pd6)
 		exp := pdz(pd2, pd4, pd5)
 		actual := keeper.FindUnsignedRequired(parties)
-		if assert.Len(t, actual, len(exp), "FindUnsignedRequired returned parties") {
+		if assert.Len(t, actual, len(exp), "findUnsignedRequired returned parties") {
 			for i := range exp {
-				assert.Same(t, exp[i], actual[i], "FindUnsignedRequired returned party [%d]", i)
+				assert.Same(t, exp[i], actual[i], "findUnsignedRequired returned party [%d]", i)
 			}
 		}
 	})
@@ -2890,8 +2890,8 @@ func TestAssociateRequiredRoles(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			actual := keeper.AssociateRequiredRoles(tc.parties, tc.reqRoles)
-			assert.Equal(t, tc.exp, actual, "AssociateRequiredRoles returned roles")
-			assert.Equal(t, tc.expParties, tc.parties, "parties after AssociateRequiredRoles")
+			assert.Equal(t, tc.exp, actual, "associateRequiredRoles returned roles")
+			assert.Equal(t, tc.expParties, tc.parties, "parties after associateRequiredRoles")
 		})
 	}
 }
@@ -3430,7 +3430,7 @@ func TestMissingRolesString(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			actual := keeper.MissingRolesString(tc.parties, tc.reqRoles)
-			if !assert.Equal(t, tc.exp, actual, "MissingRolesString") || true {
+			if !assert.Equal(t, tc.exp, actual, "missingRolesString") {
 				// The test failed. The expected and actual are in the output.
 				// Now, be helpful and output the inputs too.
 				t.Logf("tests = append(tests, {\n\tname: %q,\n\tparties: %s,\n\treqRoles: %s,\n\texp: %q\n})",
@@ -4067,8 +4067,8 @@ func (s *AuthzTestSuite) TestFindAuthzGrantee() {
 			defer k.SetAuthzKeeper(origAuthzKeeper)
 
 			grantee, err := k.FindAuthzGrantee(s.ctx, tc.granter, tc.grantees, tc.msg)
-			s.AssertErrorValue(err, tc.expErr, "FindAuthzGrantee error")
-			s.Assert().Equal(tc.expGrantee, grantee, "FindAuthzGrantee grantee")
+			s.AssertErrorValue(err, tc.expErr, "findAuthzGrantee error")
+			s.Assert().Equal(tc.expGrantee, grantee, "findAuthzGrantee grantee")
 
 			getAuthorizationCalls := tc.authzKeeper.GetAuthorizationCalls
 			s.Assert().Equal(tc.expGetAuth, getAuthorizationCalls, "calls to GetAuthorization")
@@ -5155,8 +5155,9 @@ func (s *AuthzTestSuite) TestAssociateAuthorizationsForRoles() {
 			defer k.SetAuthzKeeper(origAuthzK)
 
 			missing, err := k.AssociateAuthorizationsForRoles(s.ctx, tc.roles, tc.parties, tc.signers, theMsg)
-			s.AssertErrorValue(err, tc.expErr, "AssociateAuthorizationsForRoles error")
-			s.Assert().Equal(tc.expMissing, missing, "AssociateAuthorizationsForRoles missing roles bool")
+			s.AssertErrorValue(err, tc.expErr, "associateAuthorizationsForRoles error")
+			s.Assert().Equal(tc.expMissing, missing, "associateAuthorizationsForRoles missing roles bool")
+			s.Assert().Equal(tc.expParties, tc.parties, "parties after associateAuthorizationsForRoles")
 
 			getAuthCalls := tc.authzKeeper.GetAuthorizationCalls
 			s.Assert().Equal(tc.expGetAuth, getAuthCalls, "calls made to GetAuthorization")
@@ -5513,7 +5514,7 @@ func (s *AuthzTestSuite) TestValidateProvenanceRole() {
 			defer k.SetAuthKeeper(origAuthKeeper)
 
 			err := k.ValidateProvenanceRole(s.ctx, tc.parties)
-			s.AssertErrorValue(err, tc.expErr, "ValidateProvenanceRole")
+			s.AssertErrorValue(err, tc.expErr, "validateProvenanceRole")
 
 			getAccountCalls := tc.authKeeper.GetAccountCalls
 			s.Assert().Equal(tc.expGetAcc, getAccountCalls, "calls made to GetAccount")
@@ -6737,7 +6738,7 @@ func TestValidateRolesPresent(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := keeper.ValidateRolesPresent(tc.parties, tc.reqRoles)
-			AssertErrorValue(t, err, tc.exp, "ValidateRolesPresent")
+			AssertErrorValue(t, err, tc.exp, "validateRolesPresent")
 		})
 	}
 }
@@ -6838,7 +6839,7 @@ func TestValidatePartiesArePresent(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := keeper.ValidatePartiesArePresent(tc.required, tc.available)
-			AssertErrorValue(t, err, tc.exp, "ValidatePartiesArePresent")
+			AssertErrorValue(t, err, tc.exp, "validatePartiesArePresent")
 		})
 	}
 }
@@ -7382,7 +7383,7 @@ func TestFindMissing(t *testing.T) {
 	for _, tc := range testCasesForFindMissing() {
 		t.Run(tc.name, func(t *testing.T) {
 			actual := keeper.FindMissing(tc.required, tc.toCheck)
-			assert.Equal(t, tc.expected, actual)
+			assert.Equal(t, tc.expected, actual, "findMissing")
 		})
 	}
 }
@@ -7577,7 +7578,7 @@ func TestFindMissingParties(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			actual := keeper.FindMissingParties(tc.required, tc.toCheck)
-			assert.Equal(t, tc.expected, actual, "FindMissingParties")
+			assert.Equal(t, tc.expected, actual, "findMissingParties")
 		})
 	}
 }
@@ -7590,7 +7591,7 @@ func TestFindMissingComp(t *testing.T) {
 		for _, tc := range testCasesForFindMissing() {
 			t.Run(tc.name, func(t *testing.T) {
 				actual := keeper.FindMissingComp(tc.required, tc.toCheck, comp)
-				assert.Equal(t, tc.expected, actual, "FindMissingComp")
+				assert.Equal(t, tc.expected, actual, "findMissingComp")
 			})
 		}
 	})
@@ -7605,7 +7606,7 @@ func TestFindMissingComp(t *testing.T) {
 				toCheck := newStringSames(tc.toCheck)
 				expected := newStringSames(tc.expected)
 				actual := keeper.FindMissingComp(required, toCheck, comp)
-				assert.Equal(t, expected, actual, "FindMissingComp")
+				assert.Equal(t, expected, actual, "findMissingComp")
 			})
 		}
 	})
@@ -7620,7 +7621,7 @@ func TestFindMissingComp(t *testing.T) {
 				toCheck := newStringSameCs(tc.toCheck)
 				expected := newStringSameRs(tc.expected)
 				actual := keeper.FindMissingComp(required, toCheck, comp)
-				assert.Equal(t, expected, actual, "FindMissingComp")
+				assert.Equal(t, expected, actual, "findMissingComp")
 			})
 		}
 	})
@@ -7646,7 +7647,7 @@ func TestFindMissingComp(t *testing.T) {
 		for _, tc := range checks {
 			t.Run(tc.name, func(t *testing.T) {
 				actual := keeper.FindMissingComp(req, tc.toCheck, comp)
-				assert.Equal(t, tc.expected, actual, "FindMissingComp")
+				assert.Equal(t, tc.expected, actual, "findMissingComp")
 			})
 		}
 	})
@@ -7670,7 +7671,7 @@ func TestFindMissingComp(t *testing.T) {
 		for _, tc := range checks {
 			t.Run(tc.name, func(t *testing.T) {
 				actual := keeper.FindMissingComp(req, tc.toCheck, comp)
-				assert.Equal(t, tc.expected, actual, "FindMissingComp")
+				assert.Equal(t, tc.expected, actual, "findMissingComp")
 			})
 		}
 	})
@@ -7690,7 +7691,7 @@ func TestFindMissingComp(t *testing.T) {
 					expected = tc.required
 				}
 				actual := keeper.FindMissingComp(tc.required, tc.toCheck, comp)
-				assert.Equal(t, expected, actual, "FindMissingComp comp always returns true")
+				assert.Equal(t, expected, actual, "findMissingComp comp always returns true")
 			})
 		}
 	})
@@ -7707,7 +7708,7 @@ func TestFindMissingComp(t *testing.T) {
 					expected = tc.required
 				}
 				actual := keeper.FindMissingComp(tc.required, tc.toCheck, comp)
-				assert.Equal(t, expected, actual, "FindMissingComp comp always returns false")
+				assert.Equal(t, expected, actual, "findMissingComp comp always returns false")
 			})
 		}
 	})
@@ -7889,7 +7890,7 @@ func TestPluralEnding(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(fmt.Sprintf("%d", tc.i), func(t *testing.T) {
 			actual := keeper.PluralEnding(tc.i)
-			assert.Equal(t, tc.exp, actual, "PluralEnding(%d)", tc.i)
+			assert.Equal(t, tc.exp, actual, "pluralEnding(%d)", tc.i)
 		})
 	}
 }
@@ -7979,7 +7980,7 @@ func TestSafeBech32ToAccAddresses(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			actual := keeper.SafeBech32ToAccAddresses(tc.bech32s)
-			assert.Equal(t, tc.exp, actual, "SafeBech32ToAccAddresses")
+			assert.Equal(t, tc.exp, actual, "safeBech32ToAccAddresses")
 		})
 	}
 }
