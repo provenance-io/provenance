@@ -4049,7 +4049,367 @@ func (s *AuthzTestSuite) TestFindAuthzGrantee() {
 
 // TODO[1438]: func (s *AuthzTestSuite) TestAssociateAuthorizations() {}
 // TODO[1438]: func (s *AuthzTestSuite) TestAssociateAuthorizationsForRoles() {}
-// TODO[1438]: func (s *AuthzTestSuite) TestValidateProvenanceRole() {}
+
+func (s *AuthzTestSuite) TestValidateProvenanceRole() {
+	acc := func(addr string) sdk.AccAddress {
+		return sdk.AccAddress(addr)
+	}
+	accStr := func(addr string) string {
+		return acc(addr).String()
+	}
+	pd := func(canBeUsed bool, role types.PartyType, address string) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			CanBeUsedBySpec: canBeUsed,
+			Role:            role,
+			Address:         address,
+		}.Real()
+	}
+	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
+		rv := make([]*keeper.PartyDetails, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+
+	unspecified := types.PartyType_PARTY_TYPE_UNSPECIFIED
+	originator := types.PartyType_PARTY_TYPE_ORIGINATOR
+	servicer := types.PartyType_PARTY_TYPE_SERVICER
+	investor := types.PartyType_PARTY_TYPE_INVESTOR
+	custodian := types.PartyType_PARTY_TYPE_CUSTODIAN
+	owner := types.PartyType_PARTY_TYPE_OWNER
+	affiliate := types.PartyType_PARTY_TYPE_AFFILIATE
+	omnibus := types.PartyType_PARTY_TYPE_OMNIBUS
+	provenance := types.PartyType_PARTY_TYPE_PROVENANCE
+	controller := types.PartyType_PARTY_TYPE_CONTROLLER
+	validator := types.PartyType_PARTY_TYPE_VALIDATOR
+
+	errNotSC := func(addr string) string {
+		return fmt.Sprintf("account %q has role PROVENANCE but is not a smart contract", accStr(addr))
+	}
+	errNotProv := func(addr string) string {
+		return fmt.Sprintf("account %q is a smart contract but does not have the PROVENANCE role", accStr(addr))
+	}
+
+	baNoKey := func(addr string, sequence uint64) *authtypes.BaseAccount {
+		return &authtypes.BaseAccount{
+			Address:       accStr(addr),
+			PubKey:        nil,
+			AccountNumber: 0,
+			Sequence:      sequence,
+		}
+	}
+	pubKey := secp256k1.GenPrivKey().PubKey()
+	baWithKey := func(addr string, sequence uint64) *authtypes.BaseAccount {
+		rv := baNoKey(addr, sequence)
+		s.Require().NoError(rv.SetPubKey(pubKey), "SetPubKey for addr %s", addr)
+		return rv
+	}
+	scCall := func(addr string) *GetAccountCall {
+		return NewGetAccountCall(acc(addr), baNoKey(addr, 0))
+	}
+	nonSCCall := func(addr string) *GetAccountCall {
+		return NewGetAccountCall(acc(addr), baWithKey(addr, 1))
+	}
+	nilCall := func(addr string) *GetAccountCall {
+		return NewGetAccountCall(acc(addr), nil)
+	}
+
+	tests := []struct {
+		name       string
+		parties    []*keeper.PartyDetails
+		authKeeper *MockAuthKeeper
+		expErr     string
+		expGetAcc  []*GetAccountCall
+	}{
+		{
+			name:       "nil parties",
+			parties:    nil,
+			authKeeper: NewMockAuthKeeper(),
+			expErr:     "",
+			expGetAcc:  nil,
+		},
+		{
+			name:       "empty parties",
+			parties:    pdz(),
+			authKeeper: NewMockAuthKeeper(),
+			expErr:     "",
+			expGetAcc:  nil,
+		},
+		{
+			name:       "one party provenance not usable",
+			parties:    pdz(pd(false, provenance, accStr("addr"))),
+			authKeeper: NewMockAuthKeeper(),
+			expErr:     "",
+			expGetAcc:  nil,
+		},
+		{
+			name:       "one party provenance not bech32",
+			parties:    pdz(pd(true, provenance, "not_an_address")),
+			authKeeper: NewMockAuthKeeper(),
+			expErr:     "",
+			expGetAcc:  nil,
+		},
+		{
+			name:       "one party provenance no account",
+			parties:    pdz(pd(true, provenance, accStr("no_account"))),
+			authKeeper: NewMockAuthKeeper(),
+			expErr:     errNotSC("no_account"),
+			expGetAcc:  []*GetAccountCall{NewGetAccountCall(acc("no_account"), nil)},
+		},
+		{
+			name:    "one party provenance not base account",
+			parties: pdz(pd(true, provenance, accStr("marker_account"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(
+				&GetAccountCall{
+					Addr:   acc("marker_account"),
+					Result: &markertypes.MarkerAccount{BaseAccount: baNoKey("marker_account", 0)},
+				}),
+			expErr: errNotSC("marker_account"),
+			expGetAcc: []*GetAccountCall{
+				{
+					Addr:   acc("marker_account"),
+					Result: &markertypes.MarkerAccount{BaseAccount: baNoKey("marker_account", 0)},
+				},
+			},
+		},
+		{
+			name:    "one party provenance sequence 1",
+			parties: pdz(pd(true, provenance, accStr("account_with_seq____"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(
+				&GetAccountCall{
+					Addr:   acc("account_with_seq____"),
+					Result: baNoKey("account_with_seq____", 1),
+				}),
+			expErr: errNotSC("account_with_seq____"),
+			expGetAcc: []*GetAccountCall{
+				{
+					Addr:   acc("account_with_seq____"),
+					Result: baNoKey("account_with_seq____", 1),
+				},
+			},
+		},
+		{
+			name:    "one party provenance has pub key",
+			parties: pdz(pd(true, provenance, accStr("account_with_key____"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(
+				&GetAccountCall{
+					Addr:   acc("account_with_key____"),
+					Result: baWithKey("account_with_key____", 0),
+				}),
+			expErr: errNotSC("account_with_key____"),
+			expGetAcc: []*GetAccountCall{
+				{
+					Addr:   acc("account_with_key____"),
+					Result: baWithKey("account_with_key____", 0),
+				},
+			},
+		},
+		{
+			name:       "one party provenance is smart contract",
+			parties:    pdz(pd(true, provenance, accStr("smart_______contract"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(scCall("smart_______contract")),
+			expErr:     "",
+			expGetAcc:  []*GetAccountCall{scCall("smart_______contract")},
+		},
+		{
+			name:       "one party unusable not provenance is smart contract",
+			parties:    pdz(pd(false, owner, accStr("smart_______contract"))),
+			authKeeper: NewMockAuthKeeper(),
+			expErr:     "",
+			expGetAcc:  nil,
+		},
+
+		{
+			name:       "smart contract account unspecified",
+			parties:    pdz(pd(true, unspecified, accStr("unspecified"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(scCall("unspecified")),
+			expErr:     errNotProv("unspecified"),
+			expGetAcc:  []*GetAccountCall{scCall("unspecified")},
+		},
+		{
+			name:       "smart contract account originator",
+			parties:    pdz(pd(true, originator, accStr("originator"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(scCall("originator")),
+			expErr:     errNotProv("originator"),
+			expGetAcc:  []*GetAccountCall{scCall("originator")},
+		},
+		{
+			name:       "smart contract account servicer",
+			parties:    pdz(pd(true, servicer, accStr("servicer"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(scCall("servicer")),
+			expErr:     errNotProv("servicer"),
+			expGetAcc:  []*GetAccountCall{scCall("servicer")},
+		},
+		{
+			name:       "smart contract account investor",
+			parties:    pdz(pd(true, investor, accStr("investor"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(scCall("investor")),
+			expErr:     errNotProv("investor"),
+			expGetAcc:  []*GetAccountCall{scCall("investor")},
+		},
+		{
+			name:       "smart contract account custodian",
+			parties:    pdz(pd(true, custodian, accStr("custodian"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(scCall("custodian")),
+			expErr:     errNotProv("custodian"),
+			expGetAcc:  []*GetAccountCall{scCall("custodian")},
+		},
+		{
+			name:       "smart contract account owner",
+			parties:    pdz(pd(true, owner, accStr("owner"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(scCall("owner")),
+			expErr:     errNotProv("owner"),
+			expGetAcc:  []*GetAccountCall{scCall("owner")},
+		},
+		{
+			name:       "smart contract account affiliate",
+			parties:    pdz(pd(true, affiliate, accStr("affiliate"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(scCall("affiliate")),
+			expErr:     errNotProv("affiliate"),
+			expGetAcc:  []*GetAccountCall{scCall("affiliate")},
+		},
+		{
+			name:       "smart contract account omnibus",
+			parties:    pdz(pd(true, omnibus, accStr("omnibus"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(scCall("omnibus")),
+			expErr:     errNotProv("omnibus"),
+			expGetAcc:  []*GetAccountCall{scCall("omnibus")},
+		},
+		{
+			name:       "smart contract account controller",
+			parties:    pdz(pd(true, controller, accStr("controller"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(scCall("controller")),
+			expErr:     errNotProv("controller"),
+			expGetAcc:  []*GetAccountCall{scCall("controller")},
+		},
+		{
+			name:       "smart contract account validator",
+			parties:    pdz(pd(true, validator, accStr("validator"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(scCall("validator")),
+			expErr:     errNotProv("validator"),
+			expGetAcc:  []*GetAccountCall{scCall("validator")},
+		},
+
+		{
+			name:       "normal account unspecified",
+			parties:    pdz(pd(true, unspecified, accStr("unspecified"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(nonSCCall("unspecified")),
+			expErr:     "",
+			expGetAcc:  []*GetAccountCall{nonSCCall("unspecified")},
+		},
+		{
+			name:       "normal account originator",
+			parties:    pdz(pd(true, originator, accStr("originator"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(nonSCCall("originator")),
+			expErr:     "",
+			expGetAcc:  []*GetAccountCall{nonSCCall("originator")},
+		},
+		{
+			name:       "normal account servicer",
+			parties:    pdz(pd(true, servicer, accStr("servicer"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(nonSCCall("servicer")),
+			expErr:     "",
+			expGetAcc:  []*GetAccountCall{nonSCCall("servicer")},
+		},
+		{
+			name:       "normal account investor",
+			parties:    pdz(pd(true, investor, accStr("investor"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(nonSCCall("investor")),
+			expErr:     "",
+			expGetAcc:  []*GetAccountCall{nonSCCall("investor")},
+		},
+		{
+			name:       "normal account custodian",
+			parties:    pdz(pd(true, custodian, accStr("custodian"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(nonSCCall("custodian")),
+			expErr:     "",
+			expGetAcc:  []*GetAccountCall{nonSCCall("custodian")},
+		},
+		{
+			name:       "normal account owner",
+			parties:    pdz(pd(true, owner, accStr("owner"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(nonSCCall("owner")),
+			expErr:     "",
+			expGetAcc:  []*GetAccountCall{nonSCCall("owner")},
+		},
+		{
+			name:       "normal account affiliate",
+			parties:    pdz(pd(true, affiliate, accStr("affiliate"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(nonSCCall("affiliate")),
+			expErr:     "",
+			expGetAcc:  []*GetAccountCall{nonSCCall("affiliate")},
+		},
+		{
+			name:       "normal account omnibus",
+			parties:    pdz(pd(true, omnibus, accStr("omnibus"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(nonSCCall("omnibus")),
+			expErr:     "",
+			expGetAcc:  []*GetAccountCall{nonSCCall("omnibus")},
+		},
+		{
+			name:       "normal account controller",
+			parties:    pdz(pd(true, controller, accStr("controller"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(nonSCCall("controller")),
+			expErr:     "",
+			expGetAcc:  []*GetAccountCall{nonSCCall("controller")},
+		},
+		{
+			name:       "normal account validator",
+			parties:    pdz(pd(true, validator, accStr("validator"))),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(nonSCCall("validator")),
+			expErr:     "",
+			expGetAcc:  []*GetAccountCall{nonSCCall("validator")},
+		},
+		{
+			name: "one of each role no accounts except smart contract",
+			parties: pdz(
+				pd(true, servicer, accStr("servicer")),
+				pd(true, omnibus, accStr("omnibus")),
+				pd(true, unspecified, accStr("unspecified")),
+				pd(true, custodian, accStr("custodian")),
+				pd(true, validator, accStr("validator")),
+				pd(true, controller, accStr("controller")),
+				pd(true, owner, accStr("owner")),
+				pd(true, originator, accStr("originator")),
+				pd(true, affiliate, accStr("affiliate")),
+				pd(true, provenance, accStr("provenance")),
+				pd(true, investor, accStr("investor")),
+			),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(scCall("provenance")),
+			expErr:     "",
+			expGetAcc: []*GetAccountCall{
+				nilCall("servicer"),
+				nilCall("omnibus"),
+				nilCall("unspecified"),
+				nilCall("custodian"),
+				nilCall("validator"),
+				nilCall("controller"),
+				nilCall("owner"),
+				nilCall("originator"),
+				nilCall("affiliate"),
+				scCall("provenance"),
+				nilCall("investor"),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			k := s.app.MetadataKeeper
+			origAuthKeeper := k.SetAuthKeeper(tc.authKeeper)
+			defer k.SetAuthKeeper(origAuthKeeper)
+
+			err := k.ValidateProvenanceRole(s.ctx, tc.parties)
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "ValidateProvenanceRole")
+			} else {
+				s.Assert().NoError(err, "ValidateProvenanceRole")
+			}
+
+			getAccountCalls := tc.authKeeper.GetAccountCalls
+			s.Assert().Equal(tc.expGetAcc, getAccountCalls, "calls made to GetAccount")
+		})
+	}
+}
 
 func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 	acc := func(addr string) sdk.AccAddress {
