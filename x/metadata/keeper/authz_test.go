@@ -2121,6 +2121,111 @@ func (s *AuthzTestSuite) TestValidateSignersWithParties() {
 	}
 }
 
+func (s *AuthzTestSuite) TestValidateSignersWithParties_CountAuthorizations() {
+	// Two addrs in three parties (1, 1, and 2), and one signer (A),
+	// Two authz count authorizations:
+	//  - granter 1, grantee A, count: 1
+	//  - granter 2, grantee A, count: 2
+	// Ensure first auth works for both then gets deleted.
+	// Ensure second auth is updated.
+	// One of the parties for 1 is required.
+	// The other has available and has a required role.
+
+	acc := func(addr string) sdk.AccAddress {
+		if len(addr) == 0 {
+			return nil
+		}
+		return sdk.AccAddress(addr)
+	}
+	accStr := func(addr string) string {
+		if len(addr) == 0 {
+			return ""
+		}
+		return acc(addr).String()
+	}
+
+	party1 := "party1"
+	party2 := "party2"
+	signer := "signer"
+	reqParties := []types.Party{
+		{
+			Address:  accStr(party1),
+			Role:     types.PartyType_PARTY_TYPE_OWNER,
+			Optional: false,
+		},
+		{
+			Address:  accStr(party2),
+			Role:     types.PartyType_PARTY_TYPE_SERVICER,
+			Optional: false,
+		},
+	}
+	availableParties := []types.Party{
+		{
+			Address:  accStr(party1),
+			Role:     types.PartyType_PARTY_TYPE_VALIDATOR,
+			Optional: false,
+		},
+	}
+	reqRoles := []types.PartyType{types.PartyType_PARTY_TYPE_VALIDATOR}
+	expDetails := []*keeper.PartyDetails{
+		keeper.TestablePartyDetails{
+			Address:         accStr(party1),
+			Role:            types.PartyType_PARTY_TYPE_OWNER,
+			Optional:        false,
+			Acc:             acc(party1),
+			Signer:          "",
+			SignerAcc:       acc(signer),
+			CanBeUsedBySpec: false,
+			UsedBySpec:      false,
+		}.Real(),
+		keeper.TestablePartyDetails{
+			Address:         accStr(party2),
+			Role:            types.PartyType_PARTY_TYPE_SERVICER,
+			Optional:        false,
+			Acc:             acc(party2),
+			Signer:          "",
+			SignerAcc:       acc(signer),
+			CanBeUsedBySpec: false,
+			UsedBySpec:      false,
+		}.Real(),
+		keeper.TestablePartyDetails{
+			Address:         accStr(party1),
+			Role:            types.PartyType_PARTY_TYPE_VALIDATOR,
+			Optional:        true,
+			Acc:             acc(party1),
+			Signer:          "",
+			SignerAcc:       acc(signer),
+			CanBeUsedBySpec: true,
+			UsedBySpec:      true,
+		}.Real(),
+	}
+
+	msg := &types.MsgDeleteScopeRequest{Signers: []string{accStr(signer)}}
+	msgTypeURL := types.TypeURLMsgDeleteScopeRequest
+
+	// first grant: signer can sign for party1 one time.
+	auth1 := authz.NewCountAuthorization(msgTypeURL, 1)
+	err := s.app.AuthzKeeper.SaveGrant(s.ctx, acc(signer), acc(party1), auth1, nil)
+	s.Require().NoError(err, "SaveGrant signer can sign for party1: 1 use")
+
+	// second grant: signer can sign for party2 two times.
+	auth2 := authz.NewCountAuthorization(msgTypeURL, 2)
+	err = s.app.AuthzKeeper.SaveGrant(s.ctx, acc(signer), acc(party2), auth2, nil)
+	s.Require().NoError(err, "SaveGrant signer can sign for party2: 2 uses")
+
+	details, err := s.app.MetadataKeeper.ValidateSignersWithParties(s.ctx, reqParties, availableParties, reqRoles, msg)
+	s.Require().NoError(err, "ValidateSignersWithParties error")
+	s.Assert().Equal(expDetails, details, "ValidateSignersWithParties party details")
+
+	auth1Final, _ := s.app.AuthzKeeper.GetAuthorization(s.ctx, acc(signer), acc(party1), msgTypeURL)
+	s.Assert().Nil(auth1Final, "GetAuthorization after only allowed use")
+
+	auth2Final, _ := s.app.AuthzKeeper.GetAuthorization(s.ctx, acc(signer), acc(party2), msgTypeURL)
+	s.Assert().NotNil(auth2Final, "GetAuthorization after first of two uses")
+	actual := auth2Final.(*authz.CountAuthorization).AllowedAuthorizations
+	s.Assert().Equal(1, int(actual), "number of uses left after first of two uses")
+}
+
 func TestAssociateSigners(t *testing.T) {
 	// pd is a short way to create a PartyDetails with only what we care about in this test.
 	pd := func(address string, acc sdk.AccAddress, signer string, signerAcc sdk.AccAddress) *keeper.PartyDetails {
@@ -7156,276 +7261,6 @@ func TestValidatePartiesArePresent(t *testing.T) {
 			AssertErrorValue(t, err, tc.exp, "validatePartiesArePresent")
 		})
 	}
-}
-
-func (s *AuthzTestSuite) TestTODELETEValidateAllPartiesAreSignersWithAuthz() {
-	// A missing signature with an authz grant on MsgAddScopeOwnerRequest
-	a := authz.NewGenericAuthorization(types.TypeURLMsgWriteScopeRequest)
-	err := s.app.AuthzKeeper.SaveGrant(s.ctx, s.user3Addr, s.user1Addr, a, nil)
-	s.Require().NoError(err)
-
-	// A missing signature on a special case message type with an authz grant on that type.
-	// Add (a child msg type) TypeURLMsgAddScopeDataAccessRequest  (of a parent) TypeURLMsgWriteScopeRequest
-	a = authz.NewGenericAuthorization(types.TypeURLMsgAddScopeDataAccessRequest)
-	err = s.app.AuthzKeeper.SaveGrant(s.ctx, s.user3Addr, s.user2Addr, a, nil)
-	s.Require().NoError(err)
-
-	// A missing signature on a special case message type with an authz grant on its parent type.
-	// Add grant on the parent type of TypeURLMsgAddContractSpecToScopeSpecRequest.
-	a = authz.NewGenericAuthorization(types.TypeURLMsgWriteScopeSpecificationRequest)
-	err = s.app.AuthzKeeper.SaveGrant(s.ctx, s.user3Addr, s.user2Addr, a, nil)
-	s.Require().NoError(err)
-
-	cases := []struct {
-		name     string
-		owners   []types.Party
-		msg      types.MetadataMsg
-		errorMsg string
-	}{
-		{
-			name:     "no owners - no signers",
-			owners:   []types.Party{},
-			msg:      &types.MsgDeleteRecordRequest{Signers: []string{}},
-			errorMsg: "",
-		},
-		{
-			name:     "one owner - is signer",
-			owners:   []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
-			msg:      &types.MsgDeleteRecordRequest{Signers: []string{"signer1"}},
-			errorMsg: "",
-		},
-		{
-			name:     "one owner - is one of two signers",
-			owners:   []types.Party{{Address: "signer1", Role: types.PartyType_PARTY_TYPE_OWNER}},
-			msg:      &types.MsgDeleteRecordRequest{Signers: []string{"signer1", "signer2"}},
-			errorMsg: "",
-		},
-		{
-			name:     "one owner - is not one of two signers",
-			owners:   []types.Party{{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
-			msg:      &types.MsgDeleteRecordRequest{Signers: []string{"signer1", "signer2"}},
-			errorMsg: "missing signature from [missingowner (PARTY_TYPE_OWNER)]",
-		},
-		{
-			name: "two owners - both are signers",
-			owners: []types.Party{
-				{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: "owner2", Role: types.PartyType_PARTY_TYPE_OWNER}},
-			msg:      &types.MsgDeleteRecordRequest{Signers: []string{"owner2", "owner1"}},
-			errorMsg: "",
-		},
-		{
-			name: "two owners - only one is signer",
-			owners: []types.Party{
-				{Address: "owner1", Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: "missingowner", Role: types.PartyType_PARTY_TYPE_OWNER}},
-			msg:      &types.MsgDeleteRecordRequest{Signers: []string{"owner2", "owner1"}},
-			errorMsg: "missing signature from [missingowner (PARTY_TYPE_OWNER)]",
-		},
-		{
-			name: "two parties - one owner one other - only owner is signer",
-			owners: []types.Party{
-				{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
-			msg:      &types.MsgDeleteRecordRequest{Signers: []string{"owner"}},
-			errorMsg: "missing signature from [affiliate (PARTY_TYPE_AFFILIATE)]",
-		},
-		{
-			name: "two parties - one owner one other - only other is signer",
-			owners: []types.Party{
-				{Address: "owner", Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: "affiliate", Role: types.PartyType_PARTY_TYPE_AFFILIATE}},
-			msg:      &types.MsgDeleteRecordRequest{Signers: []string{"affiliate"}},
-			errorMsg: "missing signature from [owner (PARTY_TYPE_OWNER)]",
-		},
-		// authz test cases
-		{
-			name: "two parties - one missing signature with authz grant - two signers",
-			owners: []types.Party{
-				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}}, // grantee of singer 1
-			msg:      &types.MsgWriteScopeRequest{Signers: []string{s.user2, s.user3}},
-			errorMsg: "",
-		},
-		{
-			name: "two parties - one missing signature without authz grant - one signer",
-			owners: []types.Party{
-				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}},
-			msg:      &types.MsgWriteScopeRequest{Signers: []string{s.user2}},
-			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user3),
-		},
-		{
-			name: "two parties - one missing signature with a special case message type - authz grant - two signers",
-			owners: []types.Party{
-				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}}, // grantee of singer 2
-			msg:      &types.MsgAddScopeDataAccessRequest{Signers: []string{s.user1, s.user3}},
-			errorMsg: "",
-		},
-		{
-			name: "two parties - one missing signature with a special case message type - authz grant on parent message type - two signers",
-			owners: []types.Party{
-				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}}, // grantee of singer 2
-			msg:      &types.MsgAddContractSpecToScopeSpecRequest{Signers: []string{s.user1, s.user3}},
-			errorMsg: "",
-		},
-		{
-			name: "two parties - one missing signature with a special case message type without authz grant - one signer",
-			owners: []types.Party{
-				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}},
-			msg:      &types.MsgDeleteRecordRequest{Signers: []string{s.user3}},
-			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user2),
-		},
-	}
-
-	// Test cases
-	for _, tc := range cases {
-		s.Run(tc.name, func() {
-			err = s.app.MetadataKeeper.TODELETEValidateAllPartiesAreSignersWithAuthz(s.ctx, tc.owners, tc.msg)
-			s.AssertErrorValue(err, tc.errorMsg, "ValidateAllPartiesAreSignersWithAuthz")
-		})
-	}
-}
-
-func (s *AuthzTestSuite) TestTODELETEValidateAllPartiesAreSignersWithAuthzWithCountAuthorization() {
-
-	oneAllowedAuthorizations := int32(1)
-	manyAllowedAuthorizations := int32(10)
-
-	cases := []struct {
-		name     string
-		owners   []types.Party
-		msg      types.MetadataMsg
-		count    int32
-		granter  sdk.AccAddress
-		grantee  sdk.AccAddress
-		errorMsg string
-	}{
-		// count authorization test cases
-		{
-			name: "three parties - one missing signature with one authz grant - two signers",
-			owners: []types.Party{
-				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}}, // grantee of singer 1
-			msg:      &types.MsgWriteScopeRequest{Signers: []string{s.user2, s.user3}},
-			count:    oneAllowedAuthorizations,
-			granter:  s.user1Addr,
-			grantee:  s.user3Addr,
-			errorMsg: "",
-		},
-		{
-			name: "three parties - one missing signature with a special case message type - authz grant - two signers",
-			owners: []types.Party{
-				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}}, // grantee of singer 2
-			msg:      &types.MsgAddScopeDataAccessRequest{Signers: []string{s.user1, s.user3}},
-			count:    manyAllowedAuthorizations,
-			granter:  s.user2Addr,
-			grantee:  s.user3Addr,
-			errorMsg: "",
-		},
-		{
-			name: "three parties - one missing signature with a special case message type - authz grant on parent message type - two signers",
-			owners: []types.Party{
-				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}}, // grantee of singer 2
-			msg:      &types.MsgAddContractSpecToScopeSpecRequest{Signers: []string{s.user1, s.user3}},
-			count:    manyAllowedAuthorizations,
-			granter:  s.user2Addr,
-			grantee:  s.user3Addr,
-			errorMsg: "",
-		},
-		{
-			name: "two parties - one missing signature with a special case message type without authz grant - one signer",
-			owners: []types.Party{
-				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER},
-				{Address: s.user3, Role: types.PartyType_PARTY_TYPE_OWNER}},
-			msg:      &types.MsgDeleteRecordRequest{Signers: []string{s.user3}},
-			count:    manyAllowedAuthorizations,
-			granter:  nil,
-			grantee:  nil,
-			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user2),
-		},
-	}
-
-	// Test cases
-	for _, tc := range cases {
-		s.Run(tc.name, func() {
-			msgTypeURL := sdk.MsgTypeURL(tc.msg)
-			if tc.grantee != nil && tc.granter != nil {
-				a := authz.NewCountAuthorization(msgTypeURL, tc.count)
-				err := s.app.AuthzKeeper.SaveGrant(s.ctx, tc.grantee, tc.granter, a, nil)
-				s.Require().NoError(err, "SaveGrant")
-			}
-
-			err := s.app.MetadataKeeper.TODELETEValidateAllPartiesAreSignersWithAuthz(s.ctx, tc.owners, tc.msg)
-			s.AssertErrorValue(err, tc.errorMsg, "ValidateAllPartiesAreSignersWithAuthz error")
-
-			// validate allowedAuthorizations
-			if err == nil {
-				auth, _ := s.app.AuthzKeeper.GetAuthorization(s.ctx, tc.grantee, tc.granter, msgTypeURL)
-				if tc.count == 1 {
-					// authorization is deleted after one use
-					s.Assert().Nil(auth, "GetAuthorization after only allowed use")
-				} else {
-					actual := auth.(*authz.CountAuthorization).AllowedAuthorizations
-					s.Assert().Equal(tc.count-1, actual, "uses left on authorization")
-				}
-			}
-		})
-	}
-
-	s.Run("ensure authorizations are updated", func() {
-		// Two owners (1 & 2), and one signer (3),
-		// Two authz count authorization
-		//	- count grants:
-		//		granter: 1, grantee: 3, count: 1
-		//		granter: 2, grantee: 3, count: 2
-		// Require signatures from 1 and 2, but sign with 3.
-		// Ensure both authorizations are applied and updated.
-
-		msg := &types.MsgDeleteScopeRequest{}
-		msgTypeUrl := sdk.MsgTypeURL(msg)
-
-		// first grant: 3 can sign for 1 one time.
-		a := authz.NewCountAuthorization(msgTypeUrl, 1)
-		err := s.app.AuthzKeeper.SaveGrant(s.ctx, s.user3Addr, s.user1Addr, a, nil)
-		s.Require().NoError(err, "SaveGrant 1 -> 3, 1 use")
-
-		// second grant: 3 can sign for 2 two times.
-		a = authz.NewCountAuthorization(msgTypeUrl, 2)
-		err = s.app.AuthzKeeper.SaveGrant(s.ctx, s.user3Addr, s.user2Addr, a, nil)
-		s.Require().NoError(err, "SaveGrant 2 -> 3, 2 uses")
-
-		// two parties (1 & 2), and one signer (3)
-		parties := []types.Party{
-			{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER},
-			{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER}}
-		msg.Signers = []string{s.user3}
-
-		// validate signatures
-		err = s.app.MetadataKeeper.TODELETEValidateAllPartiesAreSignersWithAuthz(s.ctx, parties, msg)
-		s.Assert().NoError(err, "ValidateAllPartiesAreSigners")
-
-		// first grant should be deleted because it used its last use.
-		auth, _ := s.app.AuthzKeeper.GetAuthorization(s.ctx, s.user3Addr, s.user1Addr, msgTypeUrl)
-		s.Assert().Nil(auth, "GetAuthorization 1 -> 3 after only allowed use")
-
-		// second grant should still exist, but only have one use left.
-		auth, _ = s.app.AuthzKeeper.GetAuthorization(s.ctx, s.user3Addr, s.user2Addr, msgTypeUrl)
-		s.Assert().NotNil(auth, "GetAuthorization 2 -> 3 after one use")
-		actual := auth.(*authz.CountAuthorization).AllowedAuthorizations
-		s.Assert().Equal(1, int(actual), "number of uses left on 2 -> 3 authorization")
-	})
 }
 
 type testCaseFindMissing struct {
