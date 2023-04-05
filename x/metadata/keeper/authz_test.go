@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"sort"
@@ -3515,7 +3516,537 @@ func TestGetAuthzMessageTypeURLs(t *testing.T) {
 	}
 }
 
-// TODO[1438]: func (s *AuthzTestSuite) TestFindAuthzGrantee() {}
+func (s *AuthzTestSuite) TestFindAuthzGrantee() {
+	acc := func(addr string) sdk.AccAddress {
+		return sdk.AccAddress(addr)
+	}
+	accz := func(addrs ...string) []sdk.AccAddress {
+		rv := make([]sdk.AccAddress, len(addrs))
+		for i, addr := range addrs {
+			rv[i] = acc(addr)
+		}
+		return rv
+	}
+	gi := func(grantee, granter, msgType string) GrantInfo {
+		return GrantInfo{
+			Grantee: acc(grantee),
+			Granter: acc(granter),
+			MsgType: msgType,
+		}
+	}
+	newErr := func(msg string) error {
+		if len(msg) == 0 {
+			return nil
+		}
+		return errors.New(msg)
+	}
+
+	normalMsg := &types.MsgWriteScopeRequest{}
+	normalMsgType := types.TypeURLMsgWriteScopeRequest
+	specialMsg := &types.MsgAddScopeDataAccessRequest{}
+	specialMsgType1 := types.TypeURLMsgAddScopeDataAccessRequest
+	specialMsgType2 := types.TypeURLMsgWriteScopeRequest
+
+	sometimeVal := time.Unix(1234567, 0)
+	sometime := &sometimeVal
+
+	tests := []struct {
+		name         string
+		granter      sdk.AccAddress
+		grantees     []sdk.AccAddress
+		msg          types.MetadataMsg
+		authzKeeper  *MockAuthzKeeper
+		expGrantee   sdk.AccAddress
+		expErr       string
+		expGetAuth   []*GetAuthorizationCall
+		expDelGrant  []*DeleteGrantCall
+		expSaveGrant []*SaveGrantCall
+	}{
+		{
+			name:        "nil grantees",
+			granter:     acc("granter_addr________"),
+			grantees:    nil,
+			msg:         normalMsg,
+			authzKeeper: NewMockAuthzKeeper(),
+			expGrantee:  nil,
+			expErr:      "",
+		},
+		{
+			name:        "empty grantees",
+			granter:     acc("granter_addr________"),
+			grantees:    accz(),
+			msg:         normalMsg,
+			authzKeeper: NewMockAuthzKeeper(),
+			expGrantee:  nil,
+			expErr:      "",
+		},
+		{
+			name:        "one grantee no auth",
+			granter:     acc("granter_addr________"),
+			grantees:    accz("grantee_________addr"),
+			msg:         normalMsg,
+			authzKeeper: NewMockAuthzKeeper(),
+			expGrantee:  nil,
+			expErr:      "",
+			expGetAuth: []*GetAuthorizationCall{{
+				GrantInfo: gi("grantee_________addr", "granter_addr________", normalMsgType),
+				Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+			}},
+		},
+		{
+			name:        "one grantee no auth special msg type",
+			granter:     acc("granter_addr________"),
+			grantees:    accz("grantee_________addr"),
+			msg:         specialMsg,
+			authzKeeper: NewMockAuthzKeeper(),
+			expGrantee:  nil,
+			expErr:      "",
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: gi("grantee_________addr", "granter_addr________", specialMsgType1),
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+				{
+					GrantInfo: gi("grantee_________addr", "granter_addr________", specialMsgType2),
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+			},
+		},
+		{
+			name:        "two grantees no auths",
+			granter:     acc("granter_addr________"),
+			grantees:    accz("grantee_1_______addr", "grantee_2_______addr"),
+			msg:         normalMsg,
+			authzKeeper: NewMockAuthzKeeper(),
+			expGrantee:  nil,
+			expErr:      "",
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", normalMsgType),
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+				{
+					GrantInfo: gi("grantee_2_______addr", "granter_addr________", normalMsgType),
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+			},
+		},
+		{
+			name:        "two grantees no auths special msg type",
+			granter:     acc("granter_addr________"),
+			grantees:    accz("grantee_1_______addr", "grantee_2_______addr"),
+			msg:         specialMsg,
+			authzKeeper: NewMockAuthzKeeper(),
+			expGrantee:  nil,
+			expErr:      "",
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", specialMsgType1),
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+				{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", specialMsgType2),
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+				{
+					GrantInfo: gi("grantee_2_______addr", "granter_addr________", specialMsgType1),
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+				{
+					GrantInfo: gi("grantee_2_______addr", "granter_addr________", specialMsgType2),
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+			},
+		},
+		{
+			name:     "two grantees first with acceptable auth",
+			granter:  acc("granter_addr________"),
+			grantees: accz("grantee_1_______addr", "grantee_2_______addr"),
+			msg:      normalMsg,
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", normalMsgType),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, nil),
+						Exp:  nil},
+				},
+			),
+			expGrantee: acc("grantee_1_______addr"),
+			expErr:     "",
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", normalMsgType),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, nil).WithAcceptCalls(normalMsg),
+						Exp:  nil},
+				},
+			},
+		},
+		{
+			name:     "two grantees second with acceptable auth",
+			granter:  acc("granter_addr________"),
+			grantees: accz("grantee_1_______addr", "grantee_2_______addr"),
+			msg:      normalMsg,
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("grantee_2_______addr", "granter_addr________", normalMsgType),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("two", authz.AcceptResponse{Accept: true}, nil),
+						Exp:  nil},
+				},
+			),
+			expGrantee: acc("grantee_2_______addr"),
+			expErr:     "",
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", normalMsgType),
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+				{
+					GrantInfo: gi("grantee_2_______addr", "granter_addr________", normalMsgType),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("two", authz.AcceptResponse{Accept: true}, nil).WithAcceptCalls(normalMsg),
+						Exp:  nil},
+				},
+			},
+		},
+		{
+			name:     "two grantees special msg first with acceptable auth on first type",
+			granter:  acc("granter_addr________"),
+			grantees: accz("grantee_1_______addr", "grantee_2_______addr"),
+			msg:      specialMsg,
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", specialMsgType1),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, nil),
+						Exp:  nil},
+				},
+			),
+			expGrantee: acc("grantee_1_______addr"),
+			expErr:     "",
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", specialMsgType1),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, nil).WithAcceptCalls(specialMsg),
+						Exp:  nil},
+				},
+			},
+		},
+		{
+			name:     "two grantees special msg first with acceptable auth on second type",
+			granter:  acc("granter_addr________"),
+			grantees: accz("grantee_1_______addr", "grantee_2_______addr"),
+			msg:      specialMsg,
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", specialMsgType2),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, nil),
+						Exp:  nil},
+				},
+			),
+			expGrantee: acc("grantee_1_______addr"),
+			expErr:     "",
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", specialMsgType1),
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+				{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", specialMsgType2),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, nil).WithAcceptCalls(specialMsg),
+						Exp:  nil},
+				},
+			},
+		},
+		{
+			name:     "two grantees special msg second with acceptable auth on first type",
+			granter:  acc("granter_addr________"),
+			grantees: accz("grantee_1_______addr", "grantee_2_______addr"),
+			msg:      specialMsg,
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("grantee_2_______addr", "granter_addr________", specialMsgType1),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, nil),
+						Exp:  nil},
+				},
+			),
+			expGrantee: acc("grantee_2_______addr"),
+			expErr:     "",
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", specialMsgType1),
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+				{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", specialMsgType2),
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+				{
+					GrantInfo: gi("grantee_2_______addr", "granter_addr________", specialMsgType1),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, nil).WithAcceptCalls(specialMsg),
+						Exp:  nil},
+				},
+			},
+		},
+		{
+			name:     "two grantees special msg second with acceptable auth on second type",
+			granter:  acc("granter_addr________"),
+			grantees: accz("grantee_1_______addr", "grantee_2_______addr"),
+			msg:      specialMsg,
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("grantee_2_______addr", "granter_addr________", specialMsgType2),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, nil),
+						Exp:  nil},
+				},
+			),
+			expGrantee: acc("grantee_2_______addr"),
+			expErr:     "",
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", specialMsgType1),
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+				{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", specialMsgType2),
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+				{
+					GrantInfo: gi("grantee_2_______addr", "granter_addr________", specialMsgType1),
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+				{
+					GrantInfo: gi("grantee_2_______addr", "granter_addr________", specialMsgType2),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, nil).WithAcceptCalls(specialMsg),
+						Exp:  nil},
+				},
+			},
+		},
+		{
+			name:     "two grantees special message first get auth errors on accept second is acceptable",
+			granter:  acc("granter_addr________"),
+			grantees: accz("grantee_1_______addr", "grantee_2_______addr"),
+			msg:      specialMsg,
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", specialMsgType1),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, newErr("error from one")),
+						Exp:  nil},
+				},
+				GetAuthorizationCall{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", specialMsgType2),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("two", authz.AcceptResponse{Accept: true}, nil),
+						Exp:  nil},
+				},
+			),
+			expGrantee: acc("grantee_1_______addr"),
+			expErr:     "",
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", specialMsgType1),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, newErr("error from one")).WithAcceptCalls(specialMsg),
+						Exp:  nil},
+				},
+				{
+					GrantInfo: gi("grantee_1_______addr", "granter_addr________", specialMsgType2),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("two", authz.AcceptResponse{Accept: true}, nil).WithAcceptCalls(specialMsg),
+						Exp:  nil},
+				},
+			},
+		},
+		{
+			name:     "authorization should be deleted",
+			granter:  acc("granter_addr________"),
+			grantees: accz("grantee_________addr"),
+			msg:      normalMsg,
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("grantee_________addr", "granter_addr________", normalMsgType),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true, Delete: true}, nil),
+						Exp:  nil},
+				},
+			),
+			expGrantee: acc("grantee_________addr"),
+			expErr:     "",
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: gi("grantee_________addr", "granter_addr________", normalMsgType),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true, Delete: true}, nil).WithAcceptCalls(normalMsg),
+						Exp:  nil},
+				},
+			},
+			expDelGrant: []*DeleteGrantCall{
+				{
+					GrantInfo: gi("grantee_________addr", "granter_addr________", normalMsgType),
+					Result:    nil,
+				},
+			},
+		},
+		{
+			name:     "error deleting authorization",
+			granter:  acc("granter_addr________"),
+			grantees: accz("grantee_________addr"),
+			msg:      normalMsg,
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("grantee_________addr", "granter_addr________", normalMsgType),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true, Delete: true}, nil),
+						Exp:  nil},
+				},
+			).WithDeleteGrantResults(
+				DeleteGrantCall{
+					GrantInfo: gi("grantee_________addr", "granter_addr________", normalMsgType),
+					Result:    newErr("test delete error"),
+				},
+			),
+			expGrantee: nil,
+			expErr:     "test delete error",
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: gi("grantee_________addr", "granter_addr________", normalMsgType),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true, Delete: true}, nil).WithAcceptCalls(normalMsg),
+						Exp:  nil},
+				},
+			},
+			expDelGrant: []*DeleteGrantCall{
+				{
+					GrantInfo: gi("grantee_________addr", "granter_addr________", normalMsgType),
+					Result:    newErr("test delete error"),
+				},
+			},
+		},
+		{
+			name:     "authorization should be saved",
+			granter:  acc("granter_addr________"),
+			grantees: accz("grantee_________addr"),
+			msg:      normalMsg,
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("grantee_________addr", "granter_addr________", normalMsgType),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one",
+							authz.AcceptResponse{
+								Accept:  true,
+								Updated: NewMockAuthorization("two", authz.AcceptResponse{}, nil),
+							}, nil),
+						Exp: sometime},
+				},
+			),
+			expGrantee: acc("grantee_________addr"),
+			expErr:     "",
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: gi("grantee_________addr", "granter_addr________", normalMsgType),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one",
+							authz.AcceptResponse{
+								Accept:  true,
+								Updated: NewMockAuthorization("two", authz.AcceptResponse{}, nil),
+							}, nil).WithAcceptCalls(normalMsg),
+						Exp: sometime},
+				},
+			},
+			expSaveGrant: []*SaveGrantCall{
+				{
+					Grantee: acc("grantee_________addr"),
+					Granter: acc("granter_addr________"),
+					Auth:    NewMockAuthorization("two", authz.AcceptResponse{}, nil),
+					Exp:     sometime,
+					Result:  nil,
+				},
+			},
+		},
+		{
+			name:     "error saving authorization",
+			granter:  acc("granter_addr________"),
+			grantees: accz("grantee_________addr"),
+			msg:      normalMsg,
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("grantee_________addr", "granter_addr________", normalMsgType),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one",
+							authz.AcceptResponse{
+								Accept:  true,
+								Updated: NewMockAuthorization("two", authz.AcceptResponse{}, nil),
+							}, nil),
+						Exp: sometime},
+				},
+			).WithSaveGrantResults(
+				SaveGrantCall{
+					Grantee: acc("grantee_________addr"),
+					Granter: acc("granter_addr________"),
+					Auth:    NewMockAuthorization("two", authz.AcceptResponse{}, nil),
+					Exp:     sometime,
+					Result:  newErr("test update error message"),
+				},
+			),
+			expGrantee: nil,
+			expErr:     "test update error message",
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: gi("grantee_________addr", "granter_addr________", normalMsgType),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one",
+							authz.AcceptResponse{
+								Accept:  true,
+								Updated: NewMockAuthorization("two", authz.AcceptResponse{}, nil),
+							}, nil).WithAcceptCalls(normalMsg),
+						Exp: sometime},
+				},
+			},
+			expSaveGrant: []*SaveGrantCall{
+				{
+					Grantee: acc("grantee_________addr"),
+					Granter: acc("granter_addr________"),
+					Auth:    NewMockAuthorization("two", authz.AcceptResponse{}, nil),
+					Exp:     sometime,
+					Result:  newErr("test update error message"),
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			k := s.app.MetadataKeeper
+			origAuthzKeeper := k.SetAuthzKeeper(tc.authzKeeper)
+			defer k.SetAuthzKeeper(origAuthzKeeper)
+
+			grantee, err := k.FindAuthzGrantee(s.ctx, tc.granter, tc.grantees, tc.msg)
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "FindAuthzGrantee error")
+			} else {
+				s.Assert().NoError(err, "FindAuthzGrantee error")
+			}
+			s.Assert().Equal(tc.expGrantee, grantee, "FindAuthzGrantee grantee")
+
+			getAuthorizationCalls := tc.authzKeeper.GetAuthorizationCalls
+			s.Assert().Equal(tc.expGetAuth, getAuthorizationCalls, "calls to GetAuthorization")
+			deleteGrantCalls := tc.authzKeeper.DeleteGrantCalls
+			s.Assert().Equal(tc.expDelGrant, deleteGrantCalls, "calls to DeleteGrant")
+			saveGrantCalls := tc.authzKeeper.SaveGrantCalls
+			s.Assert().Equal(tc.expSaveGrant, saveGrantCalls, "calls to SaveGrant")
+		})
+	}
+}
+
 // TODO[1438]: func (s *AuthzTestSuite) TestAssociateAuthorizations() {}
 // TODO[1438]: func (s *AuthzTestSuite) TestAssociateAuthorizationsForRoles() {}
 // TODO[1438]: func (s *AuthzTestSuite) TestValidateProvenanceRole() {}
