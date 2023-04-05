@@ -620,82 +620,6 @@ func (k Keeper) ValidateScopeValueOwnerUpdate(
 	return nil
 }
 
-// TODELETEcheckAuthzForMissing returns any of the provided addrs that have not been granted an authz authorization by one of the msg signers.
-// An error is returned if there was a problem updating an authorization.
-// This is replaced by findAuthzGrantee.
-// It hasn't been deleted yet because I wanted test cases for the new func.
-// TODO[1438]: Delete TODELETEcheckAuthzForMissing
-func (k Keeper) TODELETEcheckAuthzForMissing(
-	ctx sdk.Context,
-	addrs []string,
-	msg types.MetadataMsg,
-) ([]string, error) {
-	stillMissing := []string{}
-	if len(addrs) == 0 {
-		return stillMissing, nil
-	}
-
-	signers := msg.GetSignerStrs()
-	signerAddrs := make([]sdk.AccAddress, 0, len(signers))
-	for _, signer := range signers {
-		signerAddr, err := sdk.AccAddressFromBech32(signer)
-		// If it's not an address, there's no way there's an authorization for them.
-		// This is mostly allowed for unit tests.
-		// In actual usage, there's very little chance of it not being an address here.
-		if err == nil {
-			signerAddrs = append(signerAddrs, signerAddr)
-		}
-	}
-
-	// return as a list this message type and its parent
-	// type if it is a message belonging to a hierarchy
-	msgTypeURLs := getAuthzMessageTypeURLs(sdk.MsgTypeURL(msg))
-
-	for _, addr := range addrs {
-		granter, addrErr := sdk.AccAddressFromBech32(addr)
-		found := false
-
-		// if the addr wasn't an AccAddress, authz isn't going to help.
-		// This is mostly allowed for unit tests.
-		// In actual usage, there's very little chance of it not being an address here.
-		if addrErr == nil {
-			// loop through all the signers
-			for _, grantee := range signerAddrs {
-				for _, msgType := range msgTypeURLs {
-					authorization, exp := k.authzKeeper.GetAuthorization(ctx, grantee, granter, msgType)
-					if authorization != nil {
-						resp, err := authorization.Accept(ctx, msg)
-						if err == nil && resp.Accept {
-							switch {
-							case resp.Delete:
-								err = k.authzKeeper.DeleteGrant(ctx, grantee, granter, msgType)
-								if err != nil {
-									return stillMissing, err
-								}
-							case resp.Updated != nil:
-								if err = k.authzKeeper.SaveGrant(ctx, grantee, granter, resp.Updated, exp); err != nil {
-									return stillMissing, err
-								}
-							}
-							found = true
-							break
-						}
-					}
-				}
-				if found {
-					break
-				}
-			}
-		}
-
-		if !found {
-			stillMissing = append(stillMissing, addr)
-		}
-	}
-
-	return stillMissing, nil
-}
-
 // ValidateSignersWithoutParties makes sure that each entry in the required list are either signers of the msg,
 // or have granted an authz authorization to one of the signers.
 //
@@ -779,44 +703,6 @@ func validatePartiesArePresent(required, available []types.Party) error {
 		word = "parties"
 	}
 	return fmt.Errorf("missing %s: %s", word, strings.Join(parts, ", "))
-}
-
-// TODELETEValidateAllPartiesAreSignersWithAuthz validate all parties are signers with authz module
-// This is replaced by ValidateSignersWithParties.
-// It hasn't been deleted yet because I wanted the test cases for the new func.
-// TODO[1438]: Delete TODELETEValidateAllPartiesAreSignersWithAuthz
-func (k Keeper) TODELETEValidateAllPartiesAreSignersWithAuthz(ctx sdk.Context, parties []types.Party, msg types.MetadataMsg) error {
-	addresses := make([]string, len(parties))
-	for i, party := range parties {
-		addresses[i] = party.Address
-	}
-	signers := msg.GetSignerStrs()
-	missing := findMissing(addresses, signers)
-	stillMissing := missing
-	var err error
-	// Authz grants rights to address on specific message types.
-	// If no message is provided, skip the Authz check.
-	if msg != nil {
-		stillMissing, err = k.TODELETEcheckAuthzForMissing(ctx, missing, msg)
-		if err != nil {
-			return fmt.Errorf("error validating signers: %w", err)
-		}
-	}
-
-	if len(stillMissing) > 0 {
-		missingWithRoles := make([]string, len(missing))
-		for i, addr := range stillMissing {
-			for _, party := range parties {
-				if addr == party.Address {
-					missingWithRoles[i] = fmt.Sprintf("%s (%s)", addr, party.Role.String())
-					break
-				}
-			}
-		}
-		return fmt.Errorf("missing signature%s from %v", pluralEnding(len(missing)), missingWithRoles)
-	}
-
-	return nil
 }
 
 // findMissing returns all elements of the required list that are not found in the entries list.
