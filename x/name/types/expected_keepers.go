@@ -12,6 +12,6 @@ type ParamSubspace interface {
 
 // AttributeKeeper defines the expected attribute keeper interface (noalias)
 type AttributeKeeper interface {
-	DeleteAttribute(ctx sdk.Context, addr string, name string, value *[]byte, owner sdk.AccAddress) error
+	PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddress) error
 	AccountsByAttribute(ctx sdk.Context, name string) (addresses []sdk.AccAddress, err error)
 }

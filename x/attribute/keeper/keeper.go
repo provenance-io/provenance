@@ -154,7 +154,7 @@ func (k Keeper) SetAttribute(
 
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
-	k.IncAttrNameAddressLookup(ctx, attr)
+	k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
 
 	attributeAddEvent := types.NewEventAttributeAdd(attr, owner.String())
 	if err := ctx.EventManager().EmitTypedEvent(attributeAddEvent); err != nil {
@@ -165,9 +165,9 @@ func (k Keeper) SetAttribute(
 }
 
 // IncAttrNameAddressLookup increments the count of name to address lookups
-func (k Keeper) IncAttrNameAddressLookup(ctx sdk.Context, attr types.Attribute) {
+func (k Keeper) IncAttrNameAddressLookup(ctx sdk.Context, name string, addrBytes []byte) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.AttributeNameAddrKeyPrefix(attr.Name, attr.GetAddressBytes())
+	key := types.AttributeNameAddrKeyPrefix(name, addrBytes)
 	bz := store.Get(key)
 	id := uint64(0)
 	if bz != nil {
@@ -178,9 +178,9 @@ func (k Keeper) IncAttrNameAddressLookup(ctx sdk.Context, attr types.Attribute) 
 }
 
 // DecAttrNameAddressLookup decrements the name to account lookups and removes value if decremented to 0
-func (k Keeper) DecAttrNameAddressLookup(ctx sdk.Context, attr types.Attribute) {
+func (k Keeper) DecAttrNameAddressLookup(ctx sdk.Context, name string, addrBytes []byte) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.AttributeNameAddrKeyPrefix(attr.Name, attr.GetAddressBytes())
+	key := types.AttributeNameAddrKeyPrefix(name, addrBytes)
 	bz := store.Get(key)
 	if bz != nil {
 		value := binary.BigEndian.Uint64(bz)
@@ -249,7 +249,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 		if attr.Name == updateAttribute.Name && bytes.Equal(attr.Value, originalAttribute.Value) && attr.AttributeType == originalAttribute.AttributeType {
 			found = true
 			store.Delete(it.Key())
-			k.DecAttrNameAddressLookup(ctx, attr)
+			k.DecAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
 
 			bz, err := k.cdc.Marshal(&updateAttribute)
 			if err != nil {
@@ -257,7 +257,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			}
 			updatedKey := types.AddrAttributeKey(addrBz, updateAttribute)
 			store.Set(updatedKey, bz)
-			k.IncAttrNameAddressLookup(ctx, updateAttribute)
+			k.IncAttrNameAddressLookup(ctx, updateAttribute.Name, updateAttribute.GetAddressBytes())
 
 			attributeUpdateEvent := types.NewEventAttributeUpdate(originalAttribute, updateAttribute, owner.String())
 			if err := ctx.EventManager().EmitTypedEvent(attributeUpdateEvent); err != nil {
@@ -321,7 +321,7 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 		if attr.Name == name && (!deleteDistinct || bytes.Equal(*value, attr.Value)) {
 			count++
 			store.Delete(it.Key())
-			k.DecAttrNameAddressLookup(ctx, attr)
+			k.DecAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
 			if !deleteDistinct {
 				deleteEvent := types.NewEventAttributeDelete(name, addr, owner.String())
 				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
@@ -342,6 +342,34 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 	} else if count == 0 && !deleteDistinct {
 		ctx.Logger().Error(errm, "name", name)
 		return fmt.Errorf("%s with name %s", errm, name)
+	}
+	return nil
+}
+
+// PurgeAttribute removes attributes under the given account from the state store.
+func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddress) error {
+	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
+		return fmt.Errorf("no account found for owner address \"%s\"", owner.String())
+	}
+
+	if !k.nameKeeper.ResolvesTo(ctx, name, owner) {
+		if k.nameKeeper.NameExists(ctx, name) {
+			return fmt.Errorf("\"%s\" does not resolve to address \"%s\"", name, owner.String())
+		}
+		// else name does not exist (anymore) so we can't enforce permission check on delete here, proceed.
+	}
+
+	accts, err := k.AccountsByAttribute(ctx, name)
+	if err != nil {
+		return err
+	}
+	for _, acct := range accts {
+		store := ctx.KVStore(k.storeKey)
+		it := sdk.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(acct, name))
+		for ; it.Valid(); it.Next() {
+			store.Delete(it.Key())
+			k.DecAttrNameAddressLookup(ctx, name, acct)
+		}
 	}
 	return nil
 }
@@ -385,7 +413,7 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	key := types.AddrAttributeKey(attr.GetAddressBytes(), attr)
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
-	k.IncAttrNameAddressLookup(ctx, attr)
+	k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
 	return nil
 }
 
@@ -399,6 +427,6 @@ func (k Keeper) PopulateAddressAttributeNameTable(ctx sdk.Context) {
 		if err := k.cdc.Unmarshal(it.Value(), &attr); err != nil {
 			return
 		}
-		k.IncAttrNameAddressLookup(ctx, attr)
+		k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
 	}
 }

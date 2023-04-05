@@ -621,7 +621,7 @@ func (s *KeeperTestSuite) TestIncAndDecAddNameAddressLookup() {
 	s.Assert().Nil(bz)
 
 	for i := 1; i <= 100; i++ {
-		s.app.AttributeKeeper.IncAttrNameAddressLookup(s.ctx, attr)
+		s.app.AttributeKeeper.IncAttrNameAddressLookup(s.ctx, attr.Name, attr.GetAddressBytes())
 		bz := store.Get(lookupKey)
 		s.Assert().NotNil(bz)
 		s.Assert().Equal(uint64(i), binary.BigEndian.Uint64(bz))
@@ -634,7 +634,7 @@ func (s *KeeperTestSuite) TestIncAndDecAddNameAddressLookup() {
 		bz := store.Get(lookupKey)
 		s.Assert().NotNil(bz)
 		s.Assert().Equal(uint64(i), binary.BigEndian.Uint64(bz))
-		s.app.AttributeKeeper.DecAttrNameAddressLookup(s.ctx, attr)
+		s.app.AttributeKeeper.DecAttrNameAddressLookup(s.ctx, attr.Name, attr.GetAddressBytes())
 	}
 
 	store = s.ctx.KVStore(s.app.GetKey(types.StoreKey))
