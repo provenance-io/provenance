@@ -348,6 +348,7 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 
 // PurgeAttribute removes attributes under the given account from the state store.
 func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddress) error {
+	var found bool
 	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
 		return fmt.Errorf("no account found for owner address \"%s\"", owner.String())
 	}
@@ -364,12 +365,16 @@ func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddres
 		return err
 	}
 	for _, acct := range accts {
+		found = true
 		store := ctx.KVStore(k.storeKey)
 		it := sdk.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(acct, name))
 		for ; it.Valid(); it.Next() {
 			store.Delete(it.Key())
 			k.DecAttrNameAddressLookup(ctx, name, acct)
 		}
+	}
+	if !found {
+		return fmt.Errorf("no keys deleted with name %s", name)
 	}
 	return nil
 }
