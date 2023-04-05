@@ -843,7 +843,7 @@ func (s *KeeperTestSuite) TestPurgeAttributes() {
 			name:      "no keys will be deleted with unknown name",
 			attrName:  "dne",
 			ownerAddr: s.user1Addr,
-			errorMsg:  "no keys deleted with name dne",
+			errorMsg:  "",
 		},
 		{
 			name:        "attribute will be removed without error when name has been removed",
