@@ -411,6 +411,9 @@ func (k Keeper) findAuthzGrantee(
 	grantees []sdk.AccAddress,
 	msg types.MetadataMsg,
 ) (sdk.AccAddress, error) {
+	if len(granter) == 0 || len(grantees) == 0 {
+		return nil, nil
+	}
 	msgTypes := getAuthzMessageTypeURLs(sdk.MsgTypeURL(msg))
 	for _, grantee := range grantees {
 		for _, msgType := range msgTypes {
@@ -473,6 +476,10 @@ func (k Keeper) associateAuthorizations(
 // An error is returned if one is encountered while updating an authorization.
 // True is returned if no usable party is found for one or more roles
 // False is returned if all roles have been fulfilled.
+//
+// This assumes:
+//  - Only roles that haven't yet been fulfilled are provided (e.g. roles = the result of associateRequiredRoles).
+//  - If a party has a signer, it's already been considered (e.g. parties have been run through associateRequiredRoles).
 func (k Keeper) associateAuthorizationsForRoles(
 	ctx sdk.Context,
 	roles []types.PartyType,
