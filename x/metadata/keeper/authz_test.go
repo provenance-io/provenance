@@ -1805,7 +1805,321 @@ func TestSignersWrapper(t *testing.T) {
 	}
 }
 
-// TODO[1438]: func (s *AuthzTestSuite) TestValidateSignersWithParties() {}
+func (s *AuthzTestSuite) TestValidateSignersWithParties() {
+	acc := func(addr string) sdk.AccAddress {
+		if len(addr) == 0 {
+			return nil
+		}
+		return sdk.AccAddress(addr)
+	}
+	accStr := func(addr string) string {
+		if len(addr) == 0 {
+			return ""
+		}
+		return acc(addr).String()
+	}
+
+	pt := func(addr string, role types.PartyType, optional bool) types.Party {
+		return types.Party{
+			Address:  accStr(addr),
+			Role:     role,
+			Optional: optional,
+		}
+	}
+	ptz := func(parties ...types.Party) []types.Party {
+		rv := make([]types.Party, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+	// rv is just a shorter way to define a []types.PartyType
+	rz := func(roles ...types.PartyType) []types.PartyType {
+		rv := make([]types.PartyType, 0, len(roles))
+		rv = append(rv, roles...)
+		return rv
+	}
+
+	scAcct := func(addr string) *authtypes.BaseAccount {
+		return authtypes.NewBaseAccount(acc(addr), nil, 0, 0)
+	}
+
+	newMsg := func(signers ...string) types.MetadataMsg {
+		rv := &types.MsgWriteScopeRequest{Signers: make([]string, len(signers))}
+		for i, signer := range signers {
+			rv.Signers[i] = accStr(signer)
+		}
+		return rv
+	}
+	newMsgType := types.TypeURLMsgWriteScopeRequest
+
+	gi := func(grantee, granter string) GrantInfo {
+		return GrantInfo{
+			Grantee: acc(grantee),
+			Granter: acc(granter),
+			MsgType: newMsgType,
+		}
+	}
+	delGetAuthCall := func(grantee, granter, name string) GetAuthorizationCall {
+		return GetAuthorizationCall{
+			GrantInfo: gi(grantee, granter),
+			Result: GetAuthorizationResult{
+				Auth: NewMockAuthorization(name, authz.AcceptResponse{Accept: true, Delete: true}, nil),
+				Exp:  nil,
+			},
+		}
+	}
+	delGrantCall := func(grantee, granter, err string) DeleteGrantCall {
+		rv := DeleteGrantCall{
+			GrantInfo: gi(grantee, granter),
+			Result:    nil,
+		}
+		if len(err) > 0 {
+			rv.Result = errors.New(err)
+		}
+		return rv
+	}
+
+	originator := types.PartyType_PARTY_TYPE_ORIGINATOR
+	servicer := types.PartyType_PARTY_TYPE_SERVICER
+	investor := types.PartyType_PARTY_TYPE_INVESTOR
+	custodian := types.PartyType_PARTY_TYPE_CUSTODIAN
+	owner := types.PartyType_PARTY_TYPE_OWNER
+	affiliate := types.PartyType_PARTY_TYPE_AFFILIATE
+	omnibus := types.PartyType_PARTY_TYPE_OMNIBUS
+	provenance := types.PartyType_PARTY_TYPE_PROVENANCE
+	controller := types.PartyType_PARTY_TYPE_CONTROLLER
+	validator := types.PartyType_PARTY_TYPE_VALIDATOR
+
+	tests := []struct {
+		name             string
+		reqParties       []types.Party
+		availableParties []types.Party
+		reqRoles         []types.PartyType
+		msg              types.MetadataMsg
+		authKeeper       *MockAuthKeeper
+		authzKeeper      *MockAuthzKeeper
+		expParties       []*keeper.PartyDetails
+		expErr           string
+	}{
+		{
+			name:             "nil parties and roles",
+			reqParties:       nil,
+			availableParties: nil,
+			reqRoles:         nil,
+			msg:              newMsg("signer1"),
+			authKeeper:       NewMockAuthKeeper(),
+			authzKeeper:      NewMockAuthzKeeper(),
+			expParties:       []*keeper.PartyDetails{},
+			expErr:           "",
+		},
+		{
+			name:             "err from associateAuthorizations",
+			reqParties:       ptz(pt("party1", originator, false)),
+			availableParties: nil,
+			reqRoles:         nil,
+			msg:              newMsg("signer1"),
+			authKeeper:       NewMockAuthKeeper(),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				delGetAuthCall("signer1", "party1", "one"),
+			).WithDeleteGrantResults(
+				delGrantCall("signer1", "party1", "test_error_from_DeleteGrant"),
+			),
+			expParties: nil,
+			expErr:     "test_error_from_DeleteGrant",
+		},
+		{
+			name:             "required party missing signatures",
+			reqParties:       ptz(pt("party1", servicer, false), pt("party2", investor, false)),
+			availableParties: nil,
+			reqRoles:         rz(owner),
+			msg:              newMsg("signer1"),
+			authKeeper:       NewMockAuthKeeper(),
+			authzKeeper:      NewMockAuthzKeeper(),
+			expParties:       nil,
+			expErr: fmt.Sprintf("missing required signatures: %s (SERVICER), %s (INVESTOR)",
+				accStr("party1"), accStr("party2")),
+		},
+		{
+			name: "associateAuthorizations not called on signed required or optional",
+			// This test will have 3 parties and 2 signers.
+			// One party will be a signer and the other signer will be an outside address.
+			// The second party won't be required.
+			// The third party will be required but won't have a signer or authorizations.
+			// Other authorizations will be set up to cause an error in order to
+			// demonstrate that they are not being looked up/used.
+			reqParties: ptz(
+				pt("party1", custodian, false),
+				pt("party2", owner, true),
+				pt("party3", affiliate, false)),
+			availableParties: nil,
+			reqRoles:         nil,
+			msg:              newMsg("party1", "other_signer"),
+			authKeeper:       NewMockAuthKeeper(),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				delGetAuthCall("party1", "party2", "one-two"),
+				delGetAuthCall("other_signer", "party1", "other-one"),
+				delGetAuthCall("other_signer", "party2", "other-two"),
+			).WithDeleteGrantResults(
+				delGrantCall("party1", "party2", "test_error: delete called for party1 party2"),
+				delGrantCall("other_signer", "party1", "test_error: delete called for other_signer party1"),
+				delGrantCall("other_signer", "party2", "test_error: delete called for other_signer party2"),
+			),
+			expParties: nil,
+			expErr:     fmt.Sprintf("missing required signature: %s (AFFILIATE)", accStr("party3")),
+		},
+
+		{
+			name:             "err from associateAuthorizationsForRoles",
+			reqParties:       nil,
+			availableParties: ptz(pt("party1", omnibus, false), pt("party2", controller, false)),
+			reqRoles:         rz(omnibus, controller),
+			msg:              newMsg("signer1"),
+			authKeeper:       NewMockAuthKeeper(),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				delGetAuthCall("signer1", "party2", "one"),
+			).WithDeleteGrantResults(
+				delGrantCall("signer1", "party2", "test_error_deleting_grant"),
+			),
+			expParties: nil,
+			expErr:     "test_error_deleting_grant",
+		},
+		{
+			name:             "required roles missing signed parties",
+			reqParties:       nil,
+			availableParties: ptz(pt("party1", validator, false)),
+			reqRoles:         rz(originator, provenance, validator, originator),
+			msg:              newMsg("party1"),
+			authKeeper:       NewMockAuthKeeper(),
+			authzKeeper:      NewMockAuthzKeeper(),
+			expParties:       nil,
+			expErr:           "missing signers for roles required by spec: ORIGINATOR need 2 have 0, PROVENANCE need 1 have 0",
+		},
+		{
+			name: "associateAuthorizationsForRoles only called as needed",
+			// This test will have 3 parties each with unique roles.
+			// Only two of the roles will be required.
+			// One required role will be signed for directly.
+			// The other will end up not having a signer.
+			// Authorizations will be set up to error if looked up/used for pairs that shouldn't be.
+			reqParties: nil,
+			availableParties: ptz(
+				pt("party1", owner, true),
+				pt("party2", investor, true),
+				pt("party3", omnibus, true)),
+			reqRoles:   rz(owner, investor),
+			msg:        newMsg("party1", "other_signer"),
+			authKeeper: NewMockAuthKeeper(),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				delGetAuthCall("party1", "party3", "one-three"),
+				delGetAuthCall("other_signer", "party1", "other-one"),
+				delGetAuthCall("other_signer", "party3", "other-three"),
+			).WithDeleteGrantResults(
+				delGrantCall("party1", "party3", "test_error_deleting_grant: party1 party3"),
+				delGrantCall("other_signer", "party1", "test_error_deleting_grant: other_signer party1"),
+				delGrantCall("other_signer", "party3", "test_error_deleting_grant: other_signer party3"),
+			),
+			expParties: nil,
+			expErr:     "missing signers for roles required by spec: INVESTOR need 1 have 0",
+		},
+		{
+			name:             "required role fulfillment cannot come from reqParties",
+			reqParties:       ptz(pt("party1", owner, false)),
+			availableParties: nil,
+			reqRoles:         rz(owner),
+			msg:              newMsg("party1"),
+			authKeeper:       NewMockAuthKeeper(),
+			authzKeeper:      NewMockAuthzKeeper(),
+			expParties:       nil,
+			expErr:           "missing signers for roles required by spec: OWNER need 1 have 0",
+		},
+
+		{
+			name:             "provenance non-smart-contract party ignored in reqParties",
+			reqParties:       ptz(pt("party1", provenance, false)),
+			availableParties: nil,
+			reqRoles:         nil,
+			msg:              newMsg("party1"),
+			authKeeper:       NewMockAuthKeeper(),
+			authzKeeper:      NewMockAuthzKeeper(),
+			expParties: []*keeper.PartyDetails{
+				keeper.TestablePartyDetails{
+					Address:         accStr("party1"),
+					Role:            provenance,
+					Optional:        false,
+					Acc:             nil,
+					Signer:          accStr("party1"),
+					SignerAcc:       nil,
+					CanBeUsedBySpec: false,
+					UsedBySpec:      false,
+				}.Real(),
+			},
+			expErr: "",
+		},
+		{
+			name:             "provenance party not smart contract",
+			reqParties:       nil,
+			availableParties: ptz(pt("party1", provenance, false)),
+			reqRoles:         rz(provenance),
+			msg:              newMsg("party1"),
+			authKeeper:       NewMockAuthKeeper(), // will return nil by default, so no need to mock it specifically.
+			authzKeeper:      NewMockAuthzKeeper(),
+			expParties:       nil,
+			expErr:           fmt.Sprintf("account %q has role PROVENANCE but is not a smart contract", accStr("party1")),
+		},
+		{
+			name:             "non-provenance smart contract account in reqParties ignored",
+			reqParties:       ptz(pt("party1", owner, false)),
+			availableParties: nil,
+			reqRoles:         nil,
+			msg:              newMsg("party1"),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(
+				NewGetAccountCall(acc("party1"), scAcct("party1")),
+			),
+			authzKeeper: NewMockAuthzKeeper(),
+			expParties: []*keeper.PartyDetails{
+				keeper.TestablePartyDetails{
+					Address:         accStr("party1"),
+					Role:            owner,
+					Optional:        false,
+					Acc:             nil,
+					Signer:          accStr("party1"),
+					SignerAcc:       nil,
+					CanBeUsedBySpec: false,
+					UsedBySpec:      false,
+				}.Real(),
+			},
+			expErr: "",
+		},
+		{
+			name:             "smart contract not provenance party",
+			reqParties:       nil,
+			availableParties: ptz(pt("party1", owner, false)),
+			reqRoles:         rz(owner),
+			msg:              newMsg("party1"),
+			authKeeper: NewMockAuthKeeper().WithGetAccountResults(
+				NewGetAccountCall(acc("party1"), scAcct("party1")),
+			),
+			authzKeeper: NewMockAuthzKeeper(),
+			expParties:  nil,
+			expErr:      fmt.Sprintf("account %q is a smart contract but does not have the PROVENANCE role", accStr("party1")),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			k := s.app.MetadataKeeper
+			origAuthKeeper := k.SetAuthKeeper(tc.authKeeper)
+			origAuthzKeeper := k.SetAuthzKeeper(tc.authzKeeper)
+			defer func() {
+				k.SetAuthKeeper(origAuthKeeper)
+				k.SetAuthzKeeper(origAuthzKeeper)
+			}()
+
+			parties, err := k.ValidateSignersWithParties(s.ctx, tc.reqParties, tc.availableParties, tc.reqRoles, tc.msg)
+			s.AssertErrorValue(err, tc.expErr, "ValidateSignersWithParties error")
+			s.Assert().Equal(tc.expParties, parties, "ValidateSignersWithParties parties")
+		})
+	}
+}
 
 func TestAssociateSigners(t *testing.T) {
 	// pd is a short way to create a PartyDetails with only what we care about in this test.
