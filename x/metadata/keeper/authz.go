@@ -611,6 +611,9 @@ func (k Keeper) ValidateScopeValueOwnerUpdate(
 
 // TODELETEcheckAuthzForMissing returns any of the provided addrs that have not been granted an authz authorization by one of the msg signers.
 // An error is returned if there was a problem updating an authorization.
+// This is replaced by findAuthzGrantee.
+// It hasn't been deleted yet because I wanted test cases for the new func.
+// TODO[1438]: Delete TODELETEcheckAuthzForMissing
 func (k Keeper) TODELETEcheckAuthzForMissing(
 	ctx sdk.Context,
 	addrs []string,
@@ -768,6 +771,9 @@ func validatePartiesArePresent(required, available []types.Party) error {
 }
 
 // TODELETEValidateAllPartiesAreSignersWithAuthz validate all parties are signers with authz module
+// This is replaced by ValidateSignersWithParties.
+// It hasn't been deleted yet because I wanted the test cases for the new func.
+// TODO[1438]: Delete TODELETEValidateAllPartiesAreSignersWithAuthz
 func (k Keeper) TODELETEValidateAllPartiesAreSignersWithAuthz(ctx sdk.Context, parties []types.Party, msg types.MetadataMsg) error {
 	addresses := make([]string, len(parties))
 	for i, party := range parties {
