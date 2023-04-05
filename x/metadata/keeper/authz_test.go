@@ -71,6 +71,25 @@ func TestAuthzTestSuite(t *testing.T) {
 	suite.Run(t, new(AuthzTestSuite))
 }
 
+// AssertErrorValue asserts that:
+//  - If errorString is empty, theError must be nil
+//  - If errorString is not empty, theError must equal the errorString.
+func AssertErrorValue(t *testing.T, theError error, errorString string, msgAndArgs ...interface{}) bool {
+	t.Helper()
+	if len(errorString) > 0 {
+		return assert.EqualError(t, theError, errorString, msgAndArgs...)
+	}
+	return assert.NoError(t, theError, msgAndArgs...)
+}
+
+// AssertErrorValue asserts that:
+//  - If errorString is empty, theError must be nil
+//  - If errorString is not empty, theError must equal the errorString.
+func (s *AuthzTestSuite) AssertErrorValue(theError error, errorString string, msgAndArgs ...interface{}) bool {
+	s.T().Helper()
+	return AssertErrorValue(s.T(), theError, errorString, msgAndArgs...)
+}
+
 // stringSame is a string with an IsSameAs(stringSame) function.
 type stringSame string
 
@@ -3563,6 +3582,24 @@ func (s *AuthzTestSuite) TestFindAuthzGrantee() {
 		expSaveGrant []*SaveGrantCall
 	}{
 		{
+			name:        "nil granter",
+			granter:     nil,
+			grantees:    accz("grantee_________addr"),
+			msg:         normalMsg,
+			authzKeeper: NewMockAuthzKeeper(),
+			expGrantee:  nil,
+			expErr:      "",
+		},
+		{
+			name:        "empty granter",
+			granter:     sdk.AccAddress{},
+			grantees:    accz("grantee_________addr"),
+			msg:         normalMsg,
+			authzKeeper: NewMockAuthzKeeper(),
+			expGrantee:  nil,
+			expErr:      "",
+		},
+		{
 			name:        "nil grantees",
 			granter:     acc("granter_addr________"),
 			grantees:    nil,
@@ -4030,11 +4067,7 @@ func (s *AuthzTestSuite) TestFindAuthzGrantee() {
 			defer k.SetAuthzKeeper(origAuthzKeeper)
 
 			grantee, err := k.FindAuthzGrantee(s.ctx, tc.granter, tc.grantees, tc.msg)
-			if len(tc.expErr) > 0 {
-				s.Assert().EqualError(err, tc.expErr, "FindAuthzGrantee error")
-			} else {
-				s.Assert().NoError(err, "FindAuthzGrantee error")
-			}
+			s.AssertErrorValue(err, tc.expErr, "FindAuthzGrantee error")
 			s.Assert().Equal(tc.expGrantee, grantee, "FindAuthzGrantee grantee")
 
 			getAuthorizationCalls := tc.authzKeeper.GetAuthorizationCalls
@@ -4047,8 +4080,1089 @@ func (s *AuthzTestSuite) TestFindAuthzGrantee() {
 	}
 }
 
-// TODO[1438]: func (s *AuthzTestSuite) TestAssociateAuthorizations() {}
-// TODO[1438]: func (s *AuthzTestSuite) TestAssociateAuthorizationsForRoles() {}
+func (s *AuthzTestSuite) TestAssociateAuthorizations() {
+	acc := func(addr string) sdk.AccAddress {
+		if len(addr) == 0 {
+			return nil
+		}
+		return sdk.AccAddress(addr)
+	}
+	accStr := func(addr string) string {
+		if len(addr) == 0 {
+			return ""
+		}
+		return acc(addr).String()
+	}
+	sw := func(addrs ...string) *keeper.SignersWrapper {
+		accs := make([]string, len(addrs))
+		for i, addr := range addrs {
+			accs[i] = accStr(addr)
+		}
+		return keeper.NewSignersWrapper(accs)
+	}
+	// pd is a short way to create a *keeper.PartyDetails with the info needed in these tests.
+	// The provided strings are passed through accStr.
+	pd := func(address, signer string) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Address: accStr(address),
+			Signer:  accStr(signer),
+		}.Real()
+	}
+	// pde is pd "expected". It allows setting the addrAcc and signerAcc values too.
+	pde := func(address, addrAcc, signer, signerAcc string) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Address:   accStr(address),
+			Acc:       acc(addrAcc),
+			Signer:    accStr(signer),
+			SignerAcc: acc(signerAcc),
+		}.Real()
+	}
+	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
+		rv := make([]*keeper.PartyDetails, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+
+	theMsg := &types.MsgWriteScopeRequest{}
+	theMsgType := types.TypeURLMsgWriteScopeRequest
+	authzAccept := authz.AcceptResponse{Accept: true}
+
+	gi := func(grantee, granter string) GrantInfo {
+		return GrantInfo{
+			Grantee: acc(grantee),
+			Granter: acc(granter),
+			MsgType: theMsgType,
+		}
+	}
+	noResCall := func(grantee, granter string) *GetAuthorizationCall {
+		return &GetAuthorizationCall{
+			GrantInfo: gi(grantee, granter),
+			Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+		}
+	}
+
+	sometimeVal := time.Unix(1324576, 0)
+	sometime := &sometimeVal
+
+	tests := []struct {
+		name        string
+		parties     []*keeper.PartyDetails
+		signers     *keeper.SignersWrapper
+		authzKeeper *MockAuthzKeeper
+		expErr      string
+		expParties  []*keeper.PartyDetails
+		expGetAuth  []*GetAuthorizationCall
+	}{
+		{
+			name:        "nil parties",
+			parties:     nil,
+			signers:     sw("ignored"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expErr:      "",
+			expParties:  nil,
+		},
+		{
+			name:        "empty parties",
+			parties:     pdz(),
+			signers:     sw("ignored"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expErr:      "",
+			expParties:  pdz(),
+			expGetAuth:  nil,
+		},
+		{
+			name:        "no signers",
+			parties:     pdz(pd("party1", "")),
+			signers:     sw(),
+			authzKeeper: NewMockAuthzKeeper(),
+			expErr:      "",
+			expParties:  pdz(pde("party1", "party1", "", "")),
+			expGetAuth:  nil,
+		},
+		{
+			name:        "1 party not bech32",
+			parties:     pdz(keeper.TestablePartyDetails{Address: "not-correct"}.Real()),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expErr:      "",
+			expParties:  pdz(keeper.TestablePartyDetails{Address: "not-correct"}.Real()),
+			expGetAuth:  nil,
+		},
+		{
+			name:        "1 party already has signer",
+			parties:     pdz(pd("party1", "some_signer")),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expErr:      "",
+			expParties:  pdz(pd("party1", "some_signer")),
+			expGetAuth:  nil,
+		},
+		{
+			name:        "1 party 2 signers no authorizations",
+			parties:     pdz(pd("party1", "")),
+			signers:     sw("signer1", "signer2"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expErr:      "",
+			expParties:  pdz(pde("party1", "party1", "", "")),
+			expGetAuth:  []*GetAuthorizationCall{noResCall("signer1", "party1"), noResCall("signer2", "party1")},
+		},
+		{
+			name:    "1 party 2 signers auth from first",
+			parties: pdz(pd("party1", "")),
+			signers: sw("signer1", "signer2"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("signer1", "party1"),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authzAccept, nil),
+						Exp:  sometime,
+					},
+				},
+			),
+			expErr:     "",
+			expParties: pdz(pde("party1", "party1", "", "signer1")),
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: gi("signer1", "party1"),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authzAccept, nil).WithAcceptCalls(theMsg),
+						Exp:  sometime,
+					},
+				},
+			},
+		},
+		{
+			name:    "1 party 2 signers auth from second",
+			parties: pdz(pd("party1", "")),
+			signers: sw("signer1", "signer2"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("signer2", "party1"),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("two", authzAccept, nil),
+						Exp:  sometime,
+					},
+				},
+			),
+			expErr:     "",
+			expParties: pdz(pde("party1", "party1", "", "signer2")),
+			expGetAuth: []*GetAuthorizationCall{
+				noResCall("signer1", "party1"),
+				{
+					GrantInfo: gi("signer2", "party1"),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("two", authzAccept, nil).WithAcceptCalls(theMsg),
+						Exp:  sometime,
+					},
+				},
+			},
+		},
+		{
+			name:    "1 party 2 signers auth from both",
+			parties: pdz(pd("party1", "")),
+			signers: sw("signer1", "signer2"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("signer1", "party1"),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authzAccept, nil),
+						Exp:  sometime,
+					},
+				},
+				GetAuthorizationCall{
+					GrantInfo: gi("signer2", "party1"),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("two", authzAccept, nil),
+						Exp:  sometime,
+					},
+				},
+			),
+			expErr:     "",
+			expParties: pdz(pde("party1", "party1", "", "signer1")),
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: gi("signer1", "party1"),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authzAccept, nil).WithAcceptCalls(theMsg),
+						Exp:  sometime,
+					},
+				},
+			},
+		},
+		{
+			name:    "1 party 1 signer with authorization but save grant errors",
+			parties: pdz(pd("party1", "")),
+			signers: sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("signer1", "party1"),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one",
+							authz.AcceptResponse{
+								Accept:  true,
+								Updated: NewMockAuthorization("two", authzAccept, nil),
+							}, nil),
+						Exp: sometime,
+					},
+				},
+			).WithSaveGrantResults(
+				SaveGrantCall{
+					Grantee: acc("signer1"),
+					Granter: acc("party1"),
+					Auth:    NewMockAuthorization("two", authzAccept, nil),
+					Exp:     sometime,
+					Result:  errors.New("just_some_test_error_from_SaveGrant"),
+				},
+			),
+			expErr:     "just_some_test_error_from_SaveGrant",
+			expParties: pdz(pde("party1", "party1", "", "")),
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: gi("signer1", "party1"),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one",
+							authz.AcceptResponse{
+								Accept:  true,
+								Updated: NewMockAuthorization("two", authzAccept, nil),
+							}, nil).WithAcceptCalls(theMsg),
+						Exp: sometime,
+					},
+				},
+			},
+		},
+		{
+			name: "4 parties 9 signers 3 parties already signed 4th no auth",
+			parties: pdz(
+				pd("party1", "party1"), pd("party2", "party2"),
+				pd("party3", ""), pd("party4", "party4"),
+			),
+			signers: sw("signer1", "signer2", "signer3", "signer4",
+				"signer5", "signer6", "signer7", "signer8", "signer9"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expErr:      "",
+			expParties: pdz(
+				pd("party1", "party1"), pd("party2", "party2"),
+				pde("party3", "party3", "", ""), pd("party4", "party4"),
+			),
+			expGetAuth: []*GetAuthorizationCall{
+				noResCall("signer1", "party3"), noResCall("signer2", "party3"), noResCall("signer3", "party3"),
+				noResCall("signer4", "party3"), noResCall("signer5", "party3"), noResCall("signer6", "party3"),
+				noResCall("signer7", "party3"), noResCall("signer8", "party3"), noResCall("signer9", "party3"),
+			},
+		},
+		{
+			name: "4 parties 9 signers 3 parties already signed 4th with auth",
+			parties: pdz(
+				pd("party1", "party1"), pd("party2", "party2"),
+				pd("party3", ""), pd("party4", "party4"),
+			),
+			signers: sw("signer1", "signer2", "signer3", "signer4",
+				"signer5", "signer6", "signer7", "signer8", "signer9"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("signer5", "party3"),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("three_five", authzAccept, nil),
+						Exp:  sometime,
+					},
+				},
+			),
+			expErr: "",
+			expParties: pdz(
+				pd("party1", "party1"), pd("party2", "party2"),
+				pde("party3", "party3", "", "signer5"), pd("party4", "party4"),
+			),
+			expGetAuth: []*GetAuthorizationCall{
+				noResCall("signer1", "party3"), noResCall("signer2", "party3"),
+				noResCall("signer3", "party3"), noResCall("signer4", "party3"),
+				{
+					GrantInfo: gi("signer5", "party3"),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("three_five", authzAccept, nil).WithAcceptCalls(theMsg),
+						Exp:  sometime,
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			k := s.app.MetadataKeeper
+			origAuthzKeeper := k.SetAuthzKeeper(tc.authzKeeper)
+			defer k.SetAuthzKeeper(origAuthzKeeper)
+
+			err := k.AssociateAuthorizations(s.ctx, tc.parties, tc.signers, theMsg, nil)
+			s.AssertErrorValue(err, tc.expErr, "associateAuthorizations")
+			s.Assert().Equal(tc.expParties, tc.parties, "parties after associateAuthorizations")
+
+			getAuthCalls := tc.authzKeeper.GetAuthorizationCalls
+			s.Assert().Equal(tc.expGetAuth, getAuthCalls, "calls made to GetAuthorization")
+		})
+	}
+
+	s.Run("onAssociation with counter", func() {
+		counter := 0
+		var partiesAssociated []*keeper.PartyDetails
+		onAssoc := func(party *keeper.PartyDetails) bool {
+			counter++
+			partiesAssociated = append(partiesAssociated, party)
+			return false
+		}
+
+		parties := pdz(
+			pd("party_with_signer_1", "party_with_signer_1"),
+			pd("party_without_signer_or_auth_1", ""),
+			pd("party_with_auth_1", ""),
+			pd("party_with_signer_2", "party_with_signer_2"),
+			pd("party_with_auth_2", ""),
+			pd("party_without_signer_or_auth_2", ""),
+		)
+
+		signers := sw("signer")
+
+		expCounter := 2
+		expPartiesAssociated := pdz(
+			pde("party_with_auth_1", "party_with_auth_1", "", "signer"),
+			pde("party_with_auth_2", "party_with_auth_2", "", "signer"),
+		)
+		expParties := pdz(
+			pd("party_with_signer_1", "party_with_signer_1"),
+			pde("party_without_signer_or_auth_1", "party_without_signer_or_auth_1", "", ""),
+			pde("party_with_auth_1", "party_with_auth_1", "", "signer"),
+			pd("party_with_signer_2", "party_with_signer_2"),
+			pde("party_with_auth_2", "party_with_auth_2", "", "signer"),
+			pde("party_without_signer_or_auth_2", "party_without_signer_or_auth_2", "", ""),
+		)
+
+		authzK := NewMockAuthzKeeper().WithGetAuthorizationResults(
+			GetAuthorizationCall{
+				GrantInfo: gi("signer", "party_with_auth_1"),
+				Result: GetAuthorizationResult{
+					Auth: NewMockAuthorization("one", authzAccept, nil),
+					Exp:  sometime,
+				},
+			},
+			GetAuthorizationCall{
+				GrantInfo: gi("signer", "party_with_auth_2"),
+				Result: GetAuthorizationResult{
+					Auth: NewMockAuthorization("two", authzAccept, nil),
+					Exp:  sometime,
+				},
+			},
+		)
+
+		k := s.app.MetadataKeeper
+		origAuthzK := k.SetAuthzKeeper(authzK)
+		defer k.SetAuthzKeeper(origAuthzK)
+
+		err := k.AssociateAuthorizations(s.ctx, parties, signers, theMsg, onAssoc)
+		s.Require().NoError(err, "associateAuthorizations")
+
+		s.Assert().Equal(expCounter, counter, "number of times onAssociation was called")
+		s.Assert().Equal(expPartiesAssociated, partiesAssociated, "parties provided to onAssociation")
+		s.Assert().Equal(expParties, parties, "parties after associateAuthorizations")
+	})
+
+	s.Run("onAssociation stop early", func() {
+		counter := 0
+		stopAt := 3
+		var partiesAssociated []*keeper.PartyDetails
+		onAssoc := func(party *keeper.PartyDetails) bool {
+			counter++
+			partiesAssociated = append(partiesAssociated, party)
+			return counter >= stopAt
+		}
+
+		parties := pdz(
+			pd("party1", ""), pd("party2", ""), pd("party3", ""),
+			pd("party4", ""), pd("party5", ""), pd("party6", ""),
+		)
+
+		signers := sw("signer")
+
+		expCounter := stopAt
+		expPartiesAssociated := pdz(
+			pde("party1", "party1", "", "signer"),
+			pde("party2", "party2", "", "signer"),
+			pde("party3", "party3", "", "signer"),
+		)
+		expParties := pdz(
+			pde("party1", "party1", "", "signer"),
+			pde("party2", "party2", "", "signer"),
+			pde("party3", "party3", "", "signer"),
+			pd("party4", ""), pd("party5", ""), pd("party6", ""),
+		)
+
+		mockAuthzK := NewMockAuthzKeeper()
+		for _, party := range parties {
+			mockAuthzK.WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: GrantInfo{
+						Grantee: acc("signer"),
+						Granter: sdk.MustAccAddressFromBech32(party.Testable().Address),
+						MsgType: theMsgType,
+					},
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization(party.GetAddress(), authzAccept, nil),
+						Exp:  sometime,
+					},
+				},
+			)
+		}
+
+		k := s.app.MetadataKeeper
+		origAuthzK := k.SetAuthzKeeper(mockAuthzK)
+		defer k.SetAuthzKeeper(origAuthzK)
+
+		err := k.AssociateAuthorizations(s.ctx, parties, signers, theMsg, onAssoc)
+		s.Require().NoError(err, "associateAuthorizations")
+
+		s.Assert().Equal(expCounter, counter, "number of times onAssociation was called")
+		s.Assert().Equal(expPartiesAssociated, partiesAssociated, "parties provided to onAssociation")
+		s.Assert().Equal(expParties, parties, "parties after associateAuthorizations")
+	})
+}
+
+func (s *AuthzTestSuite) TestAssociateAuthorizationsForRoles() {
+	acc := func(addr string) sdk.AccAddress {
+		if len(addr) == 0 {
+			return nil
+		}
+		return sdk.AccAddress(addr)
+	}
+	accStr := func(addr string) string {
+		if len(addr) == 0 {
+			return ""
+		}
+		return acc(addr).String()
+	}
+	sw := func(addrs ...string) *keeper.SignersWrapper {
+		accs := make([]string, len(addrs))
+		for i, addr := range addrs {
+			accs[i] = accStr(addr)
+		}
+		return keeper.NewSignersWrapper(accs)
+	}
+	// pdu creates a usable, unsigned *keeper.PartyDetails.
+	// The provided strings are passed through accStr.
+	pdu := func(address string, role types.PartyType) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Address:         accStr(address),
+			Acc:             acc(address),
+			Role:            role,
+			CanBeUsedBySpec: true,
+			UsedBySpec:      false,
+		}.Real()
+	}
+	// pdx creates a *keeper.PartyDetails that isn't usable.
+	pdx := func(address string, role types.PartyType) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Address:         accStr(address),
+			Acc:             acc(address),
+			Role:            role,
+			CanBeUsedBySpec: false,
+			UsedBySpec:      false,
+		}.Real()
+	}
+	// pdus creates a *keeper.PartyDetails that was usable but now has a signer and is used.
+	pdus := func(address string, role types.PartyType, signer string) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Address:         accStr(address),
+			Acc:             acc(address),
+			Role:            role,
+			CanBeUsedBySpec: true,
+			UsedBySpec:      true,
+			SignerAcc:       acc(signer),
+		}.Real()
+	}
+	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
+		rv := make([]*keeper.PartyDetails, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+	rz := func(roles ...types.PartyType) []types.PartyType {
+		rv := make([]types.PartyType, 0, len(roles))
+		rv = append(rv, roles...)
+		return rv
+	}
+
+	theMsg := &types.MsgWriteScopeRequest{}
+	theMsgType := types.TypeURLMsgWriteScopeRequest
+	authzAccept := authz.AcceptResponse{Accept: true}
+
+	sometimeVal := time.Unix(2134567, 0)
+	sometime := &sometimeVal
+
+	gi := func(grantee, granter string) GrantInfo {
+		return GrantInfo{
+			Grantee: acc(grantee),
+			Granter: acc(granter),
+			MsgType: theMsgType,
+		}
+	}
+	noResCall := func(grantee, granter string) *GetAuthorizationCall {
+		return &GetAuthorizationCall{
+			GrantInfo: gi(grantee, granter),
+			Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+		}
+	}
+	// getAuthCall creates a acceptable GetAuthorizationCall.
+	getAuthCall := func(grantee, granter, name string) GetAuthorizationCall {
+		return GetAuthorizationCall{
+			GrantInfo: gi(grantee, granter),
+			Result: GetAuthorizationResult{
+				Auth: NewMockAuthorization(name, authzAccept, nil),
+				Exp:  sometime,
+			},
+		}
+	}
+	// getAuthCallExp creates a acceptable GetAuthorizationCall with an AcceptCall expected.
+	// This is the "expected" entry from the same args provided to getAuthCall.
+	getAuthCallExp := func(grantee, granter, name string) *GetAuthorizationCall {
+		return &GetAuthorizationCall{
+			GrantInfo: gi(grantee, granter),
+			Result: GetAuthorizationResult{
+				Auth: NewMockAuthorization(name, authzAccept, nil).WithAcceptCalls(theMsg),
+				Exp:  sometime,
+			},
+		}
+	}
+
+	unspecified := types.PartyType_PARTY_TYPE_UNSPECIFIED
+	originator := types.PartyType_PARTY_TYPE_ORIGINATOR
+	servicer := types.PartyType_PARTY_TYPE_SERVICER
+	investor := types.PartyType_PARTY_TYPE_INVESTOR
+	custodian := types.PartyType_PARTY_TYPE_CUSTODIAN
+	owner := types.PartyType_PARTY_TYPE_OWNER
+	affiliate := types.PartyType_PARTY_TYPE_AFFILIATE
+	omnibus := types.PartyType_PARTY_TYPE_OMNIBUS
+	provenance := types.PartyType_PARTY_TYPE_PROVENANCE
+	controller := types.PartyType_PARTY_TYPE_CONTROLLER
+	validator := types.PartyType_PARTY_TYPE_VALIDATOR
+
+	tests := []struct {
+		name        string
+		roles       []types.PartyType
+		parties     []*keeper.PartyDetails
+		signers     *keeper.SignersWrapper
+		authzKeeper *MockAuthzKeeper
+		expMissing  bool
+		expErr      string
+		expParties  []*keeper.PartyDetails
+		expGetAuth  []*GetAuthorizationCall
+	}{
+		{
+			name:        "nil roles",
+			roles:       nil,
+			parties:     pdz(pdu("party1", owner)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  false,
+			expErr:      "",
+			expParties:  pdz(pdu("party1", owner)),
+			expGetAuth:  nil,
+		},
+		{
+			name:        "empty roles",
+			roles:       rz(),
+			parties:     pdz(pdu("party1", owner)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  false,
+			expErr:      "",
+			expParties:  pdz(pdu("party1", owner)),
+			expGetAuth:  nil,
+		},
+		{
+			name:        "1 role nil parties",
+			roles:       rz(owner),
+			parties:     nil,
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  nil,
+			expGetAuth:  nil,
+		},
+		{
+			name:        "1 role empty parties",
+			roles:       rz(owner),
+			parties:     pdz(),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  pdz(),
+			expGetAuth:  nil,
+		},
+		{
+			name:        "empty signers",
+			roles:       rz(originator),
+			parties:     pdz(pdu("part1", originator)),
+			signers:     sw(),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  pdz(pdu("part1", originator)),
+			expGetAuth:  nil,
+		},
+
+		{
+			name:        "1 role unspecified with auth",
+			roles:       rz(unspecified),
+			parties:     pdz(pdu("party1", unspecified)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(getAuthCall("signer1", "party1", "one")),
+			expMissing:  false,
+			expErr:      "",
+			expParties:  pdz(pdus("party1", unspecified, "signer1")),
+			expGetAuth:  []*GetAuthorizationCall{getAuthCallExp("signer1", "party1", "one")},
+		},
+		{
+			name:        "1 role unspecified no auth",
+			roles:       rz(unspecified),
+			parties:     pdz(pdu("party1", unspecified)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  pdz(pdu("party1", unspecified)),
+			expGetAuth:  []*GetAuthorizationCall{noResCall("signer1", "party1")},
+		},
+		{
+			name:        "1 role originator with auth",
+			roles:       rz(originator),
+			parties:     pdz(pdu("party1", originator)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(getAuthCall("signer1", "party1", "one")),
+			expMissing:  false,
+			expErr:      "",
+			expParties:  pdz(pdus("party1", originator, "signer1")),
+			expGetAuth:  []*GetAuthorizationCall{getAuthCallExp("signer1", "party1", "one")},
+		},
+		{
+			name:        "1 role originator no auth",
+			roles:       rz(originator),
+			parties:     pdz(pdu("party1", originator)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  pdz(pdu("party1", originator)),
+			expGetAuth:  []*GetAuthorizationCall{noResCall("signer1", "party1")},
+		},
+		{
+			name:        "1 role servicer with auth",
+			roles:       rz(servicer),
+			parties:     pdz(pdu("party1", servicer)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(getAuthCall("signer1", "party1", "one")),
+			expMissing:  false,
+			expErr:      "",
+			expParties:  pdz(pdus("party1", servicer, "signer1")),
+			expGetAuth:  []*GetAuthorizationCall{getAuthCallExp("signer1", "party1", "one")},
+		},
+		{
+			name:        "1 role servicer no auth",
+			roles:       rz(servicer),
+			parties:     pdz(pdu("party1", servicer)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  pdz(pdu("party1", servicer)),
+			expGetAuth:  []*GetAuthorizationCall{noResCall("signer1", "party1")},
+		},
+		{
+			name:        "1 role investor with auth",
+			roles:       rz(investor),
+			parties:     pdz(pdu("party1", investor)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(getAuthCall("signer1", "party1", "one")),
+			expMissing:  false,
+			expErr:      "",
+			expParties:  pdz(pdus("party1", investor, "signer1")),
+			expGetAuth:  []*GetAuthorizationCall{getAuthCallExp("signer1", "party1", "one")},
+		},
+		{
+			name:        "1 role investor no auth",
+			roles:       rz(investor),
+			parties:     pdz(pdu("party1", investor)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  pdz(pdu("party1", investor)),
+			expGetAuth:  []*GetAuthorizationCall{noResCall("signer1", "party1")},
+		},
+		{
+			name:        "1 role custodian with auth",
+			roles:       rz(custodian),
+			parties:     pdz(pdu("party1", custodian)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(getAuthCall("signer1", "party1", "one")),
+			expMissing:  false,
+			expErr:      "",
+			expParties:  pdz(pdus("party1", custodian, "signer1")),
+			expGetAuth:  []*GetAuthorizationCall{getAuthCallExp("signer1", "party1", "one")},
+		},
+		{
+			name:        "1 role custodian no auth",
+			roles:       rz(custodian),
+			parties:     pdz(pdu("party1", custodian)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  pdz(pdu("party1", custodian)),
+			expGetAuth:  []*GetAuthorizationCall{noResCall("signer1", "party1")},
+		},
+		{
+			name:        "1 role owner with auth",
+			roles:       rz(owner),
+			parties:     pdz(pdu("party1", owner)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(getAuthCall("signer1", "party1", "one")),
+			expMissing:  false,
+			expErr:      "",
+			expParties:  pdz(pdus("party1", owner, "signer1")),
+			expGetAuth:  []*GetAuthorizationCall{getAuthCallExp("signer1", "party1", "one")},
+		},
+		{
+			name:        "1 role owner no auth",
+			roles:       rz(owner),
+			parties:     pdz(pdu("party1", owner)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  pdz(pdu("party1", owner)),
+			expGetAuth:  []*GetAuthorizationCall{noResCall("signer1", "party1")},
+		},
+		{
+			name:        "1 role affiliate with auth",
+			roles:       rz(affiliate),
+			parties:     pdz(pdu("party1", affiliate)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(getAuthCall("signer1", "party1", "one")),
+			expMissing:  false,
+			expErr:      "",
+			expParties:  pdz(pdus("party1", affiliate, "signer1")),
+			expGetAuth:  []*GetAuthorizationCall{getAuthCallExp("signer1", "party1", "one")},
+		},
+		{
+			name:        "1 role affiliate no auth",
+			roles:       rz(affiliate),
+			parties:     pdz(pdu("party1", affiliate)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  pdz(pdu("party1", affiliate)),
+			expGetAuth:  []*GetAuthorizationCall{noResCall("signer1", "party1")},
+		},
+		{
+			name:        "1 role omnibus with auth",
+			roles:       rz(omnibus),
+			parties:     pdz(pdu("party1", omnibus)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(getAuthCall("signer1", "party1", "one")),
+			expMissing:  false,
+			expErr:      "",
+			expParties:  pdz(pdus("party1", omnibus, "signer1")),
+			expGetAuth:  []*GetAuthorizationCall{getAuthCallExp("signer1", "party1", "one")},
+		},
+		{
+			name:        "1 role omnibus no auth",
+			roles:       rz(omnibus),
+			parties:     pdz(pdu("party1", omnibus)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  pdz(pdu("party1", omnibus)),
+			expGetAuth:  []*GetAuthorizationCall{noResCall("signer1", "party1")},
+		},
+		{
+			name:        "1 role provenance with auth",
+			roles:       rz(provenance),
+			parties:     pdz(pdu("party1", provenance)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(getAuthCall("signer1", "party1", "one")),
+			expMissing:  false,
+			expErr:      "",
+			expParties:  pdz(pdus("party1", provenance, "signer1")),
+			expGetAuth:  []*GetAuthorizationCall{getAuthCallExp("signer1", "party1", "one")},
+		},
+		{
+			name:        "1 role provenance no auth",
+			roles:       rz(provenance),
+			parties:     pdz(pdu("party1", provenance)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  pdz(pdu("party1", provenance)),
+			expGetAuth:  []*GetAuthorizationCall{noResCall("signer1", "party1")},
+		},
+		{
+			name:        "1 role controller with auth",
+			roles:       rz(controller),
+			parties:     pdz(pdu("party1", controller)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(getAuthCall("signer1", "party1", "one")),
+			expMissing:  false,
+			expErr:      "",
+			expParties:  pdz(pdus("party1", controller, "signer1")),
+			expGetAuth:  []*GetAuthorizationCall{getAuthCallExp("signer1", "party1", "one")},
+		},
+		{
+			name:        "1 role controller no auth",
+			roles:       rz(controller),
+			parties:     pdz(pdu("party1", controller)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  pdz(pdu("party1", controller)),
+			expGetAuth:  []*GetAuthorizationCall{noResCall("signer1", "party1")},
+		},
+		{
+			name:        "1 role validator with auth",
+			roles:       rz(validator),
+			parties:     pdz(pdu("party1", validator)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(getAuthCall("signer1", "party1", "one")),
+			expMissing:  false,
+			expErr:      "",
+			expParties:  pdz(pdus("party1", validator, "signer1")),
+			expGetAuth:  []*GetAuthorizationCall{getAuthCallExp("signer1", "party1", "one")},
+		},
+		{
+			name:        "1 role validator no auth",
+			roles:       rz(validator),
+			parties:     pdz(pdu("party1", validator)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  pdz(pdu("party1", validator)),
+			expGetAuth:  []*GetAuthorizationCall{noResCall("signer1", "party1")},
+		},
+
+		{
+			name:        "1 role 3 parties none with role",
+			roles:       rz(validator),
+			parties:     pdz(pdu("party1", owner), pdu("party2", servicer), pdu("party3", omnibus)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  pdz(pdu("party1", owner), pdu("party2", servicer), pdu("party3", omnibus)),
+			expGetAuth:  nil,
+		},
+		{
+			name:        "1 role 3 parties all unusable",
+			roles:       rz(investor),
+			parties:     pdz(pdx("party1", investor), pdx("party2", investor), pdx("party3", investor)),
+			signers:     sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  pdz(pdx("party1", investor), pdx("party2", investor), pdx("party3", investor)),
+			expGetAuth:  nil,
+		},
+		{
+			name:    "2 same roles 3 same parties all authed",
+			roles:   rz(custodian, custodian),
+			parties: pdz(pdu("party1", custodian), pdu("party2", custodian), pdu("party3", custodian)),
+			signers: sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				getAuthCall("signer1", "party1", "one"),
+				getAuthCall("signer1", "party2", "two"),
+				getAuthCall("signer1", "party3", "three"),
+			),
+			expMissing: false,
+			expErr:     "",
+			expParties: pdz(
+				pdus("party1", custodian, "signer1"),
+				pdus("party2", custodian, "signer1"),
+				pdu("party3", custodian)),
+			expGetAuth: []*GetAuthorizationCall{
+				getAuthCallExp("signer1", "party1", "one"),
+				getAuthCallExp("signer1", "party2", "two"),
+			},
+		},
+		{
+			name:    "3 same roles 3 same parties all authed diff signers",
+			roles:   rz(affiliate, affiliate, affiliate),
+			parties: pdz(pdu("party1", affiliate), pdu("party2", affiliate), pdu("party3", affiliate)),
+			signers: sw("signer1", "signer2", "signer3"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				getAuthCall("signer1", "party1", "one"),
+				getAuthCall("signer2", "party2", "two"),
+				getAuthCall("signer3", "party3", "three"),
+			),
+			expMissing: false,
+			expErr:     "",
+			expParties: pdz(
+				pdus("party1", affiliate, "signer1"),
+				pdus("party2", affiliate, "signer2"),
+				pdus("party3", affiliate, "signer3")),
+			expGetAuth: []*GetAuthorizationCall{
+				getAuthCallExp("signer1", "party1", "one"),
+				noResCall("signer1", "party2"),
+				getAuthCallExp("signer2", "party2", "two"),
+				noResCall("signer1", "party3"),
+				noResCall("signer2", "party3"),
+				getAuthCallExp("signer3", "party3", "three"),
+			},
+		},
+		{
+			name:    "4 same roles 3 same parties all authed diff signers",
+			roles:   rz(affiliate, affiliate, affiliate, affiliate),
+			parties: pdz(pdu("party1", affiliate), pdu("party2", affiliate), pdu("party3", affiliate)),
+			signers: sw("signer1", "signer2", "signer3"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				getAuthCall("signer1", "party1", "one"),
+				getAuthCall("signer2", "party2", "two"),
+				getAuthCall("signer3", "party3", "three"),
+			),
+			expMissing: true,
+			expErr:     "",
+			expParties: pdz(
+				pdus("party1", affiliate, "signer1"),
+				pdus("party2", affiliate, "signer2"),
+				pdus("party3", affiliate, "signer3")),
+			expGetAuth: []*GetAuthorizationCall{
+				getAuthCallExp("signer1", "party1", "one"),
+				noResCall("signer1", "party2"),
+				getAuthCallExp("signer2", "party2", "two"),
+				noResCall("signer1", "party3"),
+				noResCall("signer2", "party3"),
+				getAuthCallExp("signer3", "party3", "three"),
+			},
+		},
+		{
+			name:    "error from associateAuthorizations",
+			roles:   rz(controller),
+			parties: pdz(pdu("party1", controller)),
+			signers: sw("signer1"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("signer1", "party1"),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{
+							Accept: true,
+							Delete: true,
+						}, nil),
+						Exp: nil,
+					},
+				},
+			).WithDeleteGrantResults(DeleteGrantCall{
+				GrantInfo: gi("signer1", "party1"),
+				Result:    errors.New("test_error_from_DeleteGrant"),
+			}),
+			expMissing: true,
+			expErr:     "test_error_from_DeleteGrant",
+			expParties: pdz(pdu("party1", controller)),
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: gi("signer1", "party1"),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{
+							Accept: true,
+							Delete: true,
+						}, nil).WithAcceptCalls(theMsg),
+						Exp: nil,
+					},
+				},
+			},
+		},
+
+		{
+			name:        "2 roles both missing",
+			roles:       rz(omnibus, provenance),
+			parties:     pdz(pdu("party1", omnibus), pdu("party2", provenance)),
+			signers:     sw("signer1", "signer2"),
+			authzKeeper: NewMockAuthzKeeper(),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  pdz(pdu("party1", omnibus), pdu("party2", provenance)),
+			expGetAuth: []*GetAuthorizationCall{
+				noResCall("signer1", "party1"),
+				noResCall("signer2", "party1"),
+				noResCall("signer1", "party2"),
+				noResCall("signer2", "party2"),
+			},
+		},
+		{
+			name:        "2 roles missing first",
+			roles:       rz(servicer, controller),
+			parties:     pdz(pdu("party1", servicer), pdu("party2", controller)),
+			signers:     sw("signer1", "signer2"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(getAuthCall("signer2", "party1", "one")),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  pdz(pdus("party1", servicer, "signer2"), pdu("party2", controller)),
+			expGetAuth: []*GetAuthorizationCall{
+				noResCall("signer1", "party1"),
+				getAuthCallExp("signer2", "party1", "one"),
+				noResCall("signer1", "party2"),
+				noResCall("signer2", "party2"),
+			},
+		},
+		{
+			name:        "2 roles missing second",
+			roles:       rz(servicer, controller),
+			parties:     pdz(pdu("party1", servicer), pdu("party2", controller)),
+			signers:     sw("signer1", "signer2"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(getAuthCall("signer1", "party2", "one")),
+			expMissing:  true,
+			expErr:      "",
+			expParties:  pdz(pdu("party1", servicer), pdus("party2", controller, "signer1")),
+			expGetAuth: []*GetAuthorizationCall{
+				noResCall("signer1", "party1"),
+				noResCall("signer2", "party1"),
+				getAuthCallExp("signer1", "party2", "one"),
+			},
+		},
+		{
+			name:    "2 roles both authed",
+			roles:   rz(owner, servicer),
+			parties: pdz(pdu("party1", servicer), pdu("party2", owner)),
+			signers: sw("signer1", "signer2"),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				getAuthCall("signer1", "party1", "one"),
+				getAuthCall("signer2", "party2", "two"),
+			),
+			expMissing: false,
+			expErr:     "",
+			expParties: pdz(pdus("party1", servicer, "signer1"), pdus("party2", owner, "signer2")),
+			expGetAuth: []*GetAuthorizationCall{
+				noResCall("signer1", "party2"),
+				getAuthCallExp("signer2", "party2", "two"),
+				getAuthCallExp("signer1", "party1", "one"),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			k := s.app.MetadataKeeper
+			origAuthzK := k.SetAuthzKeeper(tc.authzKeeper)
+			defer k.SetAuthzKeeper(origAuthzK)
+
+			missing, err := k.AssociateAuthorizationsForRoles(s.ctx, tc.roles, tc.parties, tc.signers, theMsg)
+			s.AssertErrorValue(err, tc.expErr, "AssociateAuthorizationsForRoles error")
+			s.Assert().Equal(tc.expMissing, missing, "AssociateAuthorizationsForRoles missing roles bool")
+
+			getAuthCalls := tc.authzKeeper.GetAuthorizationCalls
+			s.Assert().Equal(tc.expGetAuth, getAuthCalls, "calls made to GetAuthorization")
+		})
+	}
+}
 
 func (s *AuthzTestSuite) TestValidateProvenanceRole() {
 	acc := func(addr string) sdk.AccAddress {
@@ -4399,11 +5513,7 @@ func (s *AuthzTestSuite) TestValidateProvenanceRole() {
 			defer k.SetAuthKeeper(origAuthKeeper)
 
 			err := k.ValidateProvenanceRole(s.ctx, tc.parties)
-			if len(tc.expErr) > 0 {
-				s.Assert().EqualError(err, tc.expErr, "ValidateProvenanceRole")
-			} else {
-				s.Assert().NoError(err, "ValidateProvenanceRole")
-			}
+			s.AssertErrorValue(err, tc.expErr, "ValidateProvenanceRole")
 
 			getAccountCalls := tc.authKeeper.GetAccountCalls
 			s.Assert().Equal(tc.expGetAcc, getAccountCalls, "calls made to GetAccount")
@@ -5117,11 +6227,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			}
 
 			err := k.ValidateScopeValueOwnerUpdate(s.ctx, tc.existing, tc.proposed, tc.validatedParties, tc.msg)
-			if len(tc.expErr) > 0 {
-				s.Assert().EqualError(err, tc.expErr, "ValidateScopeValueOwnerUpdate")
-			} else {
-				s.Assert().NoError(err, "ValidateScopeValueOwnerUpdate")
-			}
+			s.AssertErrorValue(err, tc.expErr, "ValidateScopeValueOwnerUpdate")
 
 			if tc.expGetAccount != nil {
 				getAccountCalls := tc.authKeeper.GetAccountCalls
@@ -5346,11 +6452,7 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
 			actual, err := s.app.MetadataKeeper.ValidateSignersWithoutParties(s.ctx, tc.owners, tc.msg)
-			if len(tc.errorMsg) == 0 {
-				assert.NoError(t, err, "ValidateSignersWithoutParties unexpected error")
-			} else {
-				assert.EqualError(t, err, tc.errorMsg, "ValidateSignersWithoutParties error")
-			}
+			AssertErrorValue(t, err, tc.errorMsg, "ValidateSignersWithoutParties unexpected error")
 			assert.Equal(t, tc.exp, actual, "ValidateSignersWithoutParties validated parties")
 		})
 	}
@@ -5429,11 +6531,7 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutPartiesWithCountAuthorization
 			}
 
 			_, err := s.app.MetadataKeeper.ValidateSignersWithoutParties(s.ctx, tc.owners, tc.msg)
-			if len(tc.errorMsg) == 0 {
-				s.Assert().NoError(err, "ValidateSignersWithoutParties error")
-			} else {
-				s.Assert().EqualError(err, tc.errorMsg, "ValidateSignersWithoutParties error")
-			}
+			s.AssertErrorValue(err, tc.errorMsg, "ValidateSignersWithoutParties error")
 
 			// validate allowedAuthorizations
 			if err == nil {
@@ -5639,11 +6737,7 @@ func TestValidateRolesPresent(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := keeper.ValidateRolesPresent(tc.parties, tc.reqRoles)
-			if len(tc.exp) > 0 {
-				assert.EqualError(t, err, tc.exp, "ValidateRolesPresent")
-			} else {
-				assert.NoError(t, err, "ValidateRolesPresent")
-			}
+			AssertErrorValue(t, err, tc.exp, "ValidateRolesPresent")
 		})
 	}
 }
@@ -5744,11 +6838,7 @@ func TestValidatePartiesArePresent(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := keeper.ValidatePartiesArePresent(tc.required, tc.available)
-			if len(tc.exp) > 0 {
-				assert.EqualError(t, err, tc.exp, "ValidatePartiesArePresent")
-			} else {
-				assert.NoError(t, err, "ValidatePartiesArePresent")
-			}
+			AssertErrorValue(t, err, tc.exp, "ValidatePartiesArePresent")
 		})
 	}
 }
@@ -5883,11 +6973,7 @@ func (s *AuthzTestSuite) TestTODELETEValidateAllPartiesAreSignersWithAuthz() {
 	for _, tc := range cases {
 		s.Run(tc.name, func() {
 			err = s.app.MetadataKeeper.TODELETEValidateAllPartiesAreSignersWithAuthz(s.ctx, tc.owners, tc.msg)
-			if len(tc.errorMsg) == 0 {
-				s.Assert().NoError(err, "ValidateAllPartiesAreSignersWithAuthz")
-			} else {
-				s.Assert().EqualError(err, tc.errorMsg, "ValidateAllPartiesAreSignersWithAuthz")
-			}
+			s.AssertErrorValue(err, tc.errorMsg, "ValidateAllPartiesAreSignersWithAuthz")
 		})
 	}
 }
@@ -5967,11 +7053,7 @@ func (s *AuthzTestSuite) TestTODELETEValidateAllPartiesAreSignersWithAuthzWithCo
 			}
 
 			err := s.app.MetadataKeeper.TODELETEValidateAllPartiesAreSignersWithAuthz(s.ctx, tc.owners, tc.msg)
-			if len(tc.errorMsg) == 0 {
-				s.Assert().NoError(err, "ValidateAllPartiesAreSignersWithAuthz error")
-			} else {
-				s.Assert().EqualError(err, tc.errorMsg, "ValidateAllPartiesAreSignersWithAuthz error")
-			}
+			s.AssertErrorValue(err, tc.errorMsg, "ValidateAllPartiesAreSignersWithAuthz error")
 
 			// validate allowedAuthorizations
 			if err == nil {
