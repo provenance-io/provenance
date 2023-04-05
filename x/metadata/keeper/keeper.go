@@ -8,12 +8,9 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	authzKeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -117,17 +114,17 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 
 	// To check if accounts exist and set public keys.
-	authKeeper authkeeper.AccountKeeper
+	authKeeper AuthKeeper
 
 	// To check granter grantee authorization of messages.
-	authzKeeper authzKeeper.Keeper
+	authzKeeper AuthzKeeper
 }
 
 // NewKeeper creates new instances of the metadata Keeper.
 func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace paramtypes.Subspace,
-	authKeeper authkeeper.AccountKeeper,
-	authzKeeper authzKeeper.Keeper,
+	authKeeper AuthKeeper,
+	authzKeeper AuthzKeeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
@@ -152,18 +149,6 @@ var _ MetadataKeeperI = &Keeper{}
 // GetAccount looks up an account by address
 func (k Keeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI {
 	return k.authKeeper.GetAccount(ctx, addr)
-}
-
-// CreateAccountForKey creates a new account for the given address with a public key set if given.
-func (k Keeper) CreateAccountForKey(ctx sdk.Context, addr sdk.AccAddress, pubKey cryptotypes.PubKey) error {
-	account := k.authKeeper.NewAccountWithAddress(ctx, addr)
-	if pubKey != nil {
-		if err := account.SetPubKey(pubKey); err != nil {
-			return err
-		}
-	}
-	k.authKeeper.SetAccount(ctx, account)
-	return nil
 }
 
 // VerifyCorrectOwner to determines whether the signer resolves to the owner of the OSLocator record.
