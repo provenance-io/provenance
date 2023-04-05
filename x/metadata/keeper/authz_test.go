@@ -4050,7 +4050,730 @@ func (s *AuthzTestSuite) TestFindAuthzGrantee() {
 // TODO[1438]: func (s *AuthzTestSuite) TestAssociateAuthorizations() {}
 // TODO[1438]: func (s *AuthzTestSuite) TestAssociateAuthorizationsForRoles() {}
 // TODO[1438]: func (s *AuthzTestSuite) TestValidateProvenanceRole() {}
-// TODO[1438]: func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {}
+
+func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
+	acc := func(addr string) sdk.AccAddress {
+		return sdk.AccAddress(addr)
+	}
+	accStr := func(addr string) string {
+		return acc(addr).String()
+	}
+	pd := func(address string, acc sdk.AccAddress, signer string, signerAcc sdk.AccAddress) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Address:   address,
+			Acc:       acc,
+			Signer:    signer,
+			SignerAcc: signerAcc,
+		}.Real()
+	}
+
+	withdrawAddrAcc := acc("withdraw_address____")
+	noWithdrawAddrAcc := acc("no_withdraw_address_")
+	depositAddrAcc := acc("deposit_address_____")
+	noDepositAddrAcc := acc("no_deposit_address__")
+	allAddrAcc := acc("all_address_________")
+	noneAddrAcc := acc("none_address________")
+
+	withdrawAddr := withdrawAddrAcc.String()
+	noWithdrawAddr := noWithdrawAddrAcc.String()
+	depositAddr := depositAddrAcc.String()
+	noDepositAddr := noDepositAddrAcc.String()
+	allAddr := allAddrAcc.String()
+	noneAddr := noneAddrAcc.String()
+
+	marker1 := &markertypes.MarkerAccount{
+		BaseAccount: &authtypes.BaseAccount{},
+		Manager:     "",
+		AccessControl: []markertypes.AccessGrant{
+			{Address: withdrawAddr, Permissions: markertypes.AccessList{markertypes.Access_Withdraw}},
+			{
+				Address: noWithdrawAddr,
+				Permissions: markertypes.AccessList{
+					markertypes.Access_Mint, markertypes.Access_Burn,
+					markertypes.Access_Deposit,
+					markertypes.Access_Delete, markertypes.Access_Admin, markertypes.Access_Transfer,
+				},
+			},
+			{Address: depositAddr, Permissions: markertypes.AccessList{markertypes.Access_Deposit}},
+			{
+				Address: noDepositAddr,
+				Permissions: markertypes.AccessList{
+					markertypes.Access_Mint, markertypes.Access_Burn,
+					markertypes.Access_Withdraw,
+					markertypes.Access_Delete, markertypes.Access_Admin, markertypes.Access_Transfer,
+				},
+			},
+			{
+				Address: allAddr,
+				Permissions: markertypes.AccessList{
+					markertypes.Access_Mint, markertypes.Access_Burn,
+					markertypes.Access_Deposit, markertypes.Access_Withdraw,
+					markertypes.Access_Delete, markertypes.Access_Admin, markertypes.Access_Transfer,
+				},
+			},
+		},
+		Status:     markertypes.StatusActive,
+		Denom:      "onecoin",
+		Supply:     sdk.OneInt(),
+		MarkerType: markertypes.MarkerType_RestrictedCoin,
+	}
+	marker1AddrAcc, marker1AddrErr := markertypes.MarkerAddress(marker1.Denom)
+	s.Require().NoError(marker1AddrErr, "MarkerAddress(%q)", marker1.Denom)
+	marker1.BaseAccount.Address = marker1AddrAcc.String()
+	marker1Addr := marker1AddrAcc.String()
+
+	marker2 := &markertypes.MarkerAccount{
+		BaseAccount:   &authtypes.BaseAccount{},
+		Manager:       "",
+		AccessControl: marker1.AccessControl,
+		Status:        markertypes.StatusActive,
+		Denom:         "twocoin",
+		Supply:        sdk.OneInt(),
+		MarkerType:    markertypes.MarkerType_RestrictedCoin,
+	}
+	marker2AddrAcc, marker2AddrErr := markertypes.MarkerAddress(marker2.Denom)
+	s.Require().NoError(marker2AddrErr, "MarkerAddress(%q)", marker2.Denom)
+	marker2.BaseAccount.Address = marker2AddrAcc.String()
+	marker2Addr := marker2AddrAcc.String()
+
+	mockAuthWithMarkers := func() *MockAuthKeeper {
+		return NewMockAuthKeeper().WithGetAccountResults(
+			NewGetAccountCall(marker1AddrAcc, marker1),
+			NewGetAccountCall(marker2AddrAcc, marker2),
+		)
+	}
+
+	normalMsg := func(signers ...string) types.MetadataMsg {
+		rv := &types.MsgWriteScopeRequest{
+			Signers: make([]string, 0, len(signers)),
+		}
+		rv.Signers = append(rv.Signers, signers...)
+		return rv
+	}
+	normalMsgType := types.TypeURLMsgWriteScopeRequest
+
+	errMissingSigRem := func(marker *markertypes.MarkerAccount) string {
+		return fmt.Sprintf("missing signature for %s (%s) with authority to withdraw/remove it as scope value owner", marker.Address, marker.Denom)
+	}
+	errMissingSigAdd := func(marker *markertypes.MarkerAccount) string {
+		return fmt.Sprintf("missing signature for %s (%s) with authority to deposit/add it as scope value owner", marker.Address, marker.Denom)
+	}
+	errMissingSig := func(addr string) string {
+		return fmt.Sprintf("missing signature from existing value owner %s", addr)
+	}
+
+	tests := []struct {
+		name             string
+		existing         string
+		proposed         string
+		validatedParties []*keeper.PartyDetails
+		msg              types.MetadataMsg
+		authKeeper       *MockAuthKeeper
+		authzKeeper      *MockAuthzKeeper
+		expErr           string
+		expGetAccount    []*GetAccountCall
+		expGetAuth       []*GetAuthorizationCall
+	}{
+		{
+			name:     "both empty",
+			existing: "",
+			proposed: "",
+			expErr:   "",
+		},
+		{
+			name:     "existing equals proposed",
+			existing: "same",
+			proposed: "same",
+			expErr:   "",
+		},
+		{
+			name:          "empty to non-marker",
+			existing:      "",
+			proposed:      accStr("new-proposed"),
+			msg:           normalMsg(),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        "",
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("new-proposed"), nil)},
+		},
+		{
+			name:          "empty to non-bech32",
+			existing:      "",
+			proposed:      "proposed value owner string",
+			msg:           normalMsg(),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        "",
+			expGetAccount: []*GetAccountCall{},
+		},
+		{
+			name:          "empty to marker no signers",
+			existing:      "",
+			proposed:      marker2Addr,
+			msg:           normalMsg(),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        errMissingSigAdd(marker2),
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
+		},
+		{
+			name:          "empty to marker 1 signer only withdraw permission",
+			existing:      "",
+			proposed:      marker2Addr,
+			msg:           normalMsg(withdrawAddr),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        errMissingSigAdd(marker2),
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
+		},
+		{
+			name:          "empty to marker 1 signer only deposit permission",
+			existing:      "",
+			proposed:      marker2Addr,
+			msg:           normalMsg(depositAddr),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        "",
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
+		},
+		{
+			name:          "empty to marker 1 signer all permissions except deposit",
+			existing:      "",
+			proposed:      marker2Addr,
+			msg:           normalMsg(noDepositAddr),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        errMissingSigAdd(marker2),
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
+		},
+		{
+			name:          "empty to marker 1 signer all permissions",
+			existing:      "",
+			proposed:      marker2Addr,
+			msg:           normalMsg(allAddr),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        "",
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
+		},
+		{
+			name:          "empty to marker three signers none with deposit",
+			existing:      "",
+			proposed:      marker2Addr,
+			msg:           normalMsg(noneAddr, accStr("some_other_addr"), noDepositAddr),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        errMissingSigAdd(marker2),
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
+		},
+		{
+			name:          "empty to marker three signers one with deposit",
+			existing:      "",
+			proposed:      marker2Addr,
+			msg:           normalMsg(noneAddr, noDepositAddr, depositAddr),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        "",
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
+		},
+		{
+			name:          "marker to empty no signers",
+			existing:      marker1Addr,
+			proposed:      "",
+			msg:           normalMsg(),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        errMissingSigRem(marker1),
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
+		},
+		{
+			name:          "marker to empty 1 signer only withdraw permission",
+			existing:      marker1Addr,
+			proposed:      "",
+			msg:           normalMsg(withdrawAddr),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        "",
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
+		},
+		{
+			name:          "marker to empty 1 signer only deposit permission",
+			existing:      marker1Addr,
+			proposed:      "",
+			msg:           normalMsg(depositAddr),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        errMissingSigRem(marker1),
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
+		},
+		{
+			name:          "marker to empty 1 signer all permissions except withdraw",
+			existing:      marker1Addr,
+			proposed:      "",
+			msg:           normalMsg(noWithdrawAddr),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        errMissingSigRem(marker1),
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
+		},
+		{
+			name:          "marker to empty 1 signer all permissions",
+			existing:      marker1Addr,
+			proposed:      "",
+			msg:           normalMsg(allAddr),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        "",
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
+		},
+		{
+			name:          "marker to empty three signers none with withdraw",
+			existing:      marker1Addr,
+			proposed:      "",
+			msg:           normalMsg(noneAddr, accStr("some_other_addr"), noWithdrawAddr),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        errMissingSigRem(marker1),
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
+		},
+		{
+			name:          "marker to empty three signers one with withdraw",
+			existing:      marker1Addr,
+			proposed:      "",
+			msg:           normalMsg(noneAddr, noWithdrawAddr, withdrawAddr),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        "",
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
+		},
+		{
+			name:          "marker to marker no signers",
+			existing:      marker1Addr,
+			proposed:      marker2Addr,
+			msg:           normalMsg(),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        errMissingSigRem(marker1),
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
+		},
+		{
+			name:          "marker to marker 1 signer no permissions",
+			existing:      marker1Addr,
+			proposed:      marker2Addr,
+			msg:           normalMsg(noneAddr),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        errMissingSigRem(marker1),
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
+		},
+		{
+			name:          "marker to marker 1 signer only deposit permission",
+			existing:      marker1Addr,
+			proposed:      marker2Addr,
+			msg:           normalMsg(depositAddr),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        errMissingSigRem(marker1),
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
+		},
+		{
+			name:       "marker to marker 1 signer only withdraw permission",
+			existing:   marker1Addr,
+			proposed:   marker2Addr,
+			msg:        normalMsg(withdrawAddr),
+			authKeeper: mockAuthWithMarkers(),
+			expErr:     errMissingSigAdd(marker2),
+			expGetAccount: []*GetAccountCall{
+				NewGetAccountCall(marker1AddrAcc, marker1),
+				NewGetAccountCall(marker2AddrAcc, marker2),
+			},
+		},
+		{
+			name:       "marker to marker 1 signer all permissions",
+			existing:   marker1Addr,
+			proposed:   marker2Addr,
+			msg:        normalMsg(allAddr),
+			authKeeper: mockAuthWithMarkers(),
+			expErr:     "",
+			expGetAccount: []*GetAccountCall{
+				NewGetAccountCall(marker1AddrAcc, marker1),
+				NewGetAccountCall(marker2AddrAcc, marker2),
+			},
+		},
+		{
+			name:       "marker to marker 2 signers only deposit then only withdraw",
+			existing:   marker1Addr,
+			proposed:   marker2Addr,
+			msg:        normalMsg(depositAddr, withdrawAddr),
+			authKeeper: mockAuthWithMarkers(),
+			expErr:     "",
+			expGetAccount: []*GetAccountCall{
+				NewGetAccountCall(marker1AddrAcc, marker1),
+				NewGetAccountCall(marker2AddrAcc, marker2),
+			},
+		},
+		{
+			name:       "marker to marker 2 signers only withdraw then only deposit",
+			existing:   marker1Addr,
+			proposed:   marker2Addr,
+			msg:        normalMsg(withdrawAddr, depositAddr),
+			authKeeper: mockAuthWithMarkers(),
+			expErr:     "",
+			expGetAccount: []*GetAccountCall{
+				NewGetAccountCall(marker1AddrAcc, marker1),
+				NewGetAccountCall(marker2AddrAcc, marker2),
+			},
+		},
+		{
+			name:       "marker to marker 3 signers one with withdraw one with deposit one with nothing",
+			existing:   marker1Addr,
+			proposed:   marker2Addr,
+			msg:        normalMsg(withdrawAddr, noneAddr, depositAddr),
+			authKeeper: mockAuthWithMarkers(),
+			expErr:     "",
+			expGetAccount: []*GetAccountCall{
+				NewGetAccountCall(marker1AddrAcc, marker1),
+				NewGetAccountCall(marker2AddrAcc, marker2),
+			},
+		},
+		{
+			name:       "marker to non-marker 1 signer only withdraw",
+			existing:   marker2Addr,
+			proposed:   accStr("something_else"),
+			msg:        normalMsg(withdrawAddr),
+			authKeeper: mockAuthWithMarkers(),
+			expErr:     "",
+			expGetAccount: []*GetAccountCall{
+				NewGetAccountCall(marker2AddrAcc, marker2),
+				NewGetAccountCall(acc("something_else"), nil),
+			},
+		},
+		{
+			name:          "marker to non-marker 1 signer no withdraw",
+			existing:      marker2Addr,
+			proposed:      accStr("something_else"),
+			msg:           normalMsg(noWithdrawAddr),
+			authKeeper:    mockAuthWithMarkers(),
+			expErr:        errMissingSigRem(marker2),
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
+		},
+		{
+			name:          "non-bech32 to empty in signers somehow",
+			existing:      "existing_value_owner_string",
+			proposed:      "",
+			msg:           normalMsg(noneAddr, allAddr, "existing_value_owner_string", depositAddr),
+			authKeeper:    NewMockAuthKeeper(),
+			expErr:        "",
+			expGetAccount: []*GetAccountCall{},
+		},
+		{
+			name:     "non-bech32 to empty in validated parties string somehow",
+			existing: "existing_value_owner_string",
+			proposed: "",
+			msg:      normalMsg(noneAddr, allAddr, depositAddr),
+			validatedParties: []*keeper.PartyDetails{
+				pd("existing_value_owner_string", nil, "existing_value_owner_string", nil),
+			},
+			authKeeper:    NewMockAuthKeeper(),
+			expErr:        "",
+			expGetAccount: []*GetAccountCall{},
+		},
+		{
+			name:     "non-bech32 to empty not in signers or validated parties",
+			existing: "existing_value_owner_string",
+			proposed: "",
+			validatedParties: []*keeper.PartyDetails{
+				pd(noneAddr, nil, noneAddr, nil),
+				pd("", allAddrAcc, "", noneAddrAcc),
+				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
+			},
+			msg:           normalMsg(noneAddr, allAddr, depositAddr),
+			authKeeper:    NewMockAuthKeeper(),
+			authzKeeper:   NewMockAuthzKeeper(),
+			expErr:        errMissingSig("existing_value_owner_string"),
+			expGetAccount: []*GetAccountCall{},
+			expGetAuth:    []*GetAuthorizationCall{},
+		},
+		{
+			name:          "addr to empty in signers",
+			existing:      accStr("existing"),
+			proposed:      "",
+			msg:           normalMsg(accStr("existing")),
+			authKeeper:    NewMockAuthKeeper(),
+			authzKeeper:   NewMockAuthzKeeper(),
+			expErr:        "",
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
+			expGetAuth:    []*GetAuthorizationCall{},
+		},
+		{
+			name:        "addr to other in signers",
+			existing:    accStr("existing"),
+			proposed:    accStr("proposed"),
+			msg:         normalMsg(accStr("existing")),
+			authKeeper:  NewMockAuthKeeper(),
+			authzKeeper: NewMockAuthzKeeper(),
+			expErr:      "",
+			expGetAccount: []*GetAccountCall{
+				NewGetAccountCall(acc("existing"), nil),
+				NewGetAccountCall(acc("proposed"), nil),
+			},
+			expGetAuth: []*GetAuthorizationCall{},
+		},
+		{
+			name:     "addr to empty in validated parties string string",
+			existing: accStr("existing"),
+			proposed: "",
+			validatedParties: []*keeper.PartyDetails{
+				pd(noneAddr, nil, noneAddr, nil),
+				pd("", allAddrAcc, "", noneAddrAcc),
+				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
+				pd(accStr("existing"), nil, accStr("existing"), nil),
+			},
+			msg:           normalMsg(noneAddr, allAddr, depositAddr),
+			authKeeper:    NewMockAuthKeeper(),
+			authzKeeper:   NewMockAuthzKeeper(),
+			expErr:        "",
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
+			expGetAuth:    []*GetAuthorizationCall{},
+		},
+		{
+			name:     "addr to empty in validated parties string acc",
+			existing: accStr("existing"),
+			proposed: "",
+			validatedParties: []*keeper.PartyDetails{
+				pd(noneAddr, nil, noneAddr, nil),
+				pd("", allAddrAcc, "", noneAddrAcc),
+				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
+				pd(accStr("existing"), nil, "", acc("existing")),
+			},
+			msg:           normalMsg(noneAddr, allAddr, depositAddr),
+			authKeeper:    NewMockAuthKeeper(),
+			authzKeeper:   NewMockAuthzKeeper(),
+			expErr:        "",
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
+			expGetAuth:    []*GetAuthorizationCall{},
+		},
+		{
+			name:     "addr to empty in validated parties acc string",
+			existing: accStr("existing"),
+			proposed: "",
+			validatedParties: []*keeper.PartyDetails{
+				pd(noneAddr, nil, noneAddr, nil),
+				pd("", allAddrAcc, "", noneAddrAcc),
+				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
+				pd("", acc("existing"), accStr("existing"), nil),
+			},
+			msg:           normalMsg(noneAddr, allAddr, depositAddr),
+			authKeeper:    NewMockAuthKeeper(),
+			authzKeeper:   NewMockAuthzKeeper(),
+			expErr:        "",
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
+			expGetAuth:    []*GetAuthorizationCall{},
+		},
+		{
+			name:     "addr to empty in validated parties acc acc",
+			existing: accStr("existing"),
+			proposed: "",
+			validatedParties: []*keeper.PartyDetails{
+				pd(noneAddr, nil, noneAddr, nil),
+				pd("", allAddrAcc, "", noneAddrAcc),
+				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
+				pd("", acc("existing"), "", acc("existing")),
+			},
+			msg:           normalMsg(noneAddr, allAddr, depositAddr),
+			authKeeper:    NewMockAuthKeeper(),
+			authzKeeper:   NewMockAuthzKeeper(),
+			expErr:        "",
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
+			expGetAuth:    []*GetAuthorizationCall{},
+		},
+		{
+			name:     "addr to empty in validated parties other signer string",
+			existing: accStr("existing"),
+			proposed: "",
+			validatedParties: []*keeper.PartyDetails{
+				pd(noneAddr, nil, noneAddr, nil),
+				pd("", allAddrAcc, "", noneAddrAcc),
+				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
+				pd(accStr("existing"), nil, accStr("other"), nil),
+			},
+			msg:           normalMsg(noneAddr, allAddr, depositAddr),
+			authKeeper:    NewMockAuthKeeper(),
+			authzKeeper:   NewMockAuthzKeeper(),
+			expErr:        "",
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
+			expGetAuth:    []*GetAuthorizationCall{},
+		},
+		{
+			name:     "addr to empty in validated parties other signer acc",
+			existing: accStr("existing"),
+			proposed: "",
+			validatedParties: []*keeper.PartyDetails{
+				pd(noneAddr, nil, noneAddr, nil),
+				pd("", allAddrAcc, "", noneAddrAcc),
+				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
+				pd(accStr("existing"), nil, "", acc("other")),
+			},
+			msg:           normalMsg(noneAddr, allAddr, depositAddr),
+			authKeeper:    NewMockAuthKeeper(),
+			authzKeeper:   NewMockAuthzKeeper(),
+			expErr:        "",
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
+			expGetAuth:    []*GetAuthorizationCall{},
+		},
+		{
+			name:     "addr to other in validated parties",
+			existing: accStr("existing"),
+			proposed: accStr("proposed"),
+			validatedParties: []*keeper.PartyDetails{
+				pd(noneAddr, nil, noneAddr, nil),
+				pd("", allAddrAcc, "", noneAddrAcc),
+				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
+				pd(accStr("existing"), nil, accStr("other"), nil),
+			},
+			msg:         normalMsg(noneAddr, allAddr, depositAddr),
+			authKeeper:  NewMockAuthKeeper(),
+			authzKeeper: NewMockAuthzKeeper(),
+			expErr:      "",
+			expGetAccount: []*GetAccountCall{
+				NewGetAccountCall(acc("existing"), nil),
+				NewGetAccountCall(acc("proposed"), nil),
+			},
+			expGetAuth: []*GetAuthorizationCall{},
+		},
+		{
+			name:     "addr to empty with authz",
+			existing: accStr("existing"),
+			proposed: "",
+			validatedParties: []*keeper.PartyDetails{
+				pd(noneAddr, nil, noneAddr, nil),
+				pd("", allAddrAcc, "", noneAddrAcc),
+				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
+				pd(accStr("existing"), nil, "", nil),
+			},
+			msg:        normalMsg(allAddr, noneAddr, depositAddr),
+			authKeeper: NewMockAuthKeeper(),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: GrantInfo{Grantee: noneAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, nil),
+						Exp:  nil,
+					},
+				},
+			),
+			expErr:        "",
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: GrantInfo{Grantee: allAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+				{
+					GrantInfo: GrantInfo{Grantee: noneAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one",
+							authz.AcceptResponse{Accept: true},
+							nil).WithAcceptCalls(normalMsg(allAddr, noneAddr, depositAddr)),
+						Exp: nil,
+					},
+				},
+			},
+		},
+		{
+			name:     "addr to empty not authorized",
+			existing: accStr("existing"),
+			proposed: "",
+			validatedParties: []*keeper.PartyDetails{
+				pd(noneAddr, nil, noneAddr, nil),
+				pd("", allAddrAcc, "", noneAddrAcc),
+				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
+				pd(accStr("existing"), nil, "", nil),
+			},
+			msg:           normalMsg(allAddr, withdrawAddr, depositAddr),
+			authKeeper:    NewMockAuthKeeper(),
+			authzKeeper:   NewMockAuthzKeeper(),
+			expErr:        errMissingSig(accStr("existing")),
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: GrantInfo{Grantee: allAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+				{
+					GrantInfo: GrantInfo{Grantee: withdrawAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+				{
+					GrantInfo: GrantInfo{Grantee: depositAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
+					Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+				},
+			},
+		},
+		{
+			name:       "addr to empty authz error",
+			existing:   accStr("existing"),
+			proposed:   "",
+			msg:        normalMsg(noneAddr),
+			authKeeper: NewMockAuthKeeper(),
+			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: GrantInfo{Grantee: noneAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one",
+							authz.AcceptResponse{
+								Accept:  true,
+								Updated: NewMockAuthorization("two", authz.AcceptResponse{}, nil),
+							},
+							nil),
+						Exp: nil,
+					},
+				},
+			).WithSaveGrantResults(
+				SaveGrantCall{
+					Grantee: noneAddrAcc,
+					Granter: acc("existing"),
+					Auth:    NewMockAuthorization("two", authz.AcceptResponse{}, nil),
+					Exp:     nil,
+					Result:  errors.New("test error from SaveGrant"),
+				},
+			),
+			expErr:        fmt.Sprintf("authz error with existing value owner %q: %s", accStr("existing"), "test error from SaveGrant"),
+			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
+			expGetAuth: []*GetAuthorizationCall{
+				{
+					GrantInfo: GrantInfo{Grantee: noneAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one",
+							authz.AcceptResponse{
+								Accept:  true,
+								Updated: NewMockAuthorization("two", authz.AcceptResponse{}, nil),
+							},
+							nil).WithAcceptCalls(normalMsg(noneAddr)),
+						Exp: nil,
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			k := s.app.MetadataKeeper
+			origAuthKeeper := k.SetAuthKeeper(tc.authKeeper)
+			origAuthzKeeper := k.SetAuthzKeeper(tc.authzKeeper)
+			defer func() {
+				k.SetAuthKeeper(origAuthKeeper)
+				k.SetAuthzKeeper(origAuthzKeeper)
+			}()
+			if tc.expGetAccount != nil {
+				s.Require().NotNil(tc.authKeeper, "expGetAccount defined but test case does not have an authKeeper defined")
+				tc.authKeeper.GetAccountCalls = make([]*GetAccountCall, 0, len(tc.expGetAccount))
+			}
+			if tc.expGetAuth != nil {
+				s.Require().NotNil(tc.authzKeeper, "expGetAuth defined but test case does not have an authzKeeper defined")
+				tc.authzKeeper.GetAuthorizationCalls = make([]*GetAuthorizationCall, 0, len(tc.expGetAuth))
+			}
+
+			err := k.ValidateScopeValueOwnerUpdate(s.ctx, tc.existing, tc.proposed, tc.validatedParties, tc.msg)
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "ValidateScopeValueOwnerUpdate")
+			} else {
+				s.Assert().NoError(err, "ValidateScopeValueOwnerUpdate")
+			}
+
+			if tc.expGetAccount != nil {
+				getAccountCalls := tc.authKeeper.GetAccountCalls
+				s.Assert().Equal(tc.expGetAccount, getAccountCalls, "calls made to GetAccount")
+			}
+			if tc.expGetAuth != nil {
+				getAuthCalls := tc.authzKeeper.GetAuthorizationCalls
+				s.Assert().Equal(tc.expGetAuth, getAuthCalls, "calls made to GetAuthorization")
+			}
+		})
+	}
+}
 
 func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
 	// Add a few authorizations

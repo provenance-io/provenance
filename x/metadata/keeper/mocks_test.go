@@ -82,13 +82,6 @@ type GetAuthorizationResult struct {
 	Exp  *time.Time
 }
 
-func NewGetAuthorizationResult(auth authz.Authorization, exp *time.Time) *GetAuthorizationResult {
-	return &GetAuthorizationResult{
-		Auth: auth,
-		Exp:  exp,
-	}
-}
-
 // GetAuthorizationCall has the inputs of GetAuthorization and the result associated with that input.
 type GetAuthorizationCall struct {
 	GrantInfo
