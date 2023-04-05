@@ -9,6 +9,22 @@ import (
 // This file is available only to unit tests and exposes private things
 // so that they can be used in unit tests.
 
+// SetAuthKeeper is a TEST ONLY setter for the keeper's authKeeper.
+// It returns the previously defined AuthKeeper
+func (k *Keeper) SetAuthKeeper(authKeeper AuthKeeper) AuthKeeper {
+	rv := k.authKeeper
+	k.authKeeper = authKeeper
+	return rv
+}
+
+// SetAuthzKeeper is a TEST ONLY setter for the keeper's authzKeeper.
+// It returns the previously defined AuthzKeeper
+func (k *Keeper) SetAuthzKeeper(authzKeeper AuthzKeeper) AuthzKeeper {
+	rv := k.authzKeeper
+	k.authzKeeper = authzKeeper
+	return rv
+}
+
 // TestablePartyDetails is the same as PartyDetails, but with
 // public fields so that they can be created in unit tests as needed.
 // Use the Real() method to convert it to a PartyDetails.
@@ -42,6 +58,7 @@ func (p TestablePartyDetails) Real() *PartyDetails {
 	}
 }
 
+// Testable is a TEST ONLY function that converts a PartyDetails into a TestablePartyDetails.
 func (p *PartyDetails) Testable() TestablePartyDetails {
 	return TestablePartyDetails{
 		Address:         p.address,
@@ -55,7 +72,7 @@ func (p *PartyDetails) Testable() TestablePartyDetails {
 	}
 }
 
-// Copy is a unit-test only function that copies a PartyDetails.
+// Copy is a TEST ONLY function that copies a PartyDetails.
 func (p *PartyDetails) Copy() *PartyDetails {
 	if p == nil {
 		return nil
