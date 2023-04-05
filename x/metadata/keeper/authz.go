@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -513,14 +514,17 @@ func (k Keeper) validateProvenanceRole(ctx sdk.Context, parties []*PartyDetails)
 		if party.CanBeUsed() {
 			// Using the party address here (instead of the signer) because it's
 			// that address that needs to be the smart contract.
-			account := k.GetAccount(ctx, party.GetAcc())
-			isWasmAcct := account != nil && account.GetSequence() == uint64(0) && account.GetPubKey() == nil
-			isProvRole := party.role == types.PartyType_PARTY_TYPE_PROVENANCE
-			if isWasmAcct && !isProvRole {
-				return fmt.Errorf("account %q is a smart contract but does not have the PROVENANCE role", party.GetAddress())
-			}
-			if !isWasmAcct && isProvRole {
-				return fmt.Errorf("account %q has role PROVENANCE but is not a smart contract", party.GetAddress())
+			addr := party.GetAcc()
+			if len(addr) > 0 {
+				account, isBaseAccount := k.GetAccount(ctx, party.GetAcc()).(*authtypes.BaseAccount)
+				isWasmAcct := account != nil && isBaseAccount && account.GetSequence() == uint64(0) && account.GetPubKey() == nil
+				isProvRole := party.GetRole() == types.PartyType_PARTY_TYPE_PROVENANCE
+				if isWasmAcct && !isProvRole {
+					return fmt.Errorf("account %q is a smart contract but does not have the PROVENANCE role", party.GetAddress())
+				}
+				if !isWasmAcct && isProvRole {
+					return fmt.Errorf("account %q has role PROVENANCE but is not a smart contract", party.GetAddress())
+				}
 			}
 		}
 	}
