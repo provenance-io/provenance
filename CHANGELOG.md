@@ -58,6 +58,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix third party Protobuf workflow checks on Provenance release steps [#1339](https://github.com/provenance-io/provenance/issues/1339)
 * Fix committer email format in third party Protobuf workflow (for [#1339](https://github.com/provenance-io/provenance/issues/1339)) [PR 1385](https://github.com/provenance-io/provenance/pull/1385)
 * Fix `make proto-gen` [PR 1404](https://github.com/provenance-io/provenance/pull/1404).
+* Fix wasmd transactions that are run by gov module [#1414](https://github.com/provenance-io/provenance/issues/1414)
 
 ### Client Breaking
 
