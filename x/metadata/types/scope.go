@@ -79,7 +79,7 @@ func (s Scope) ValidateBasic() error {
 			return fmt.Errorf("invalid value owner address on scope: %w", err)
 		}
 	}
-	if s.RequirePartyRollup {
+	if !s.RequirePartyRollup {
 		for _, party := range s.Owners {
 			if party.Optional {
 				return fmt.Errorf("parties can only be optional when require_party_rollup = true")
