@@ -779,7 +779,7 @@ func (s *SpecKeeperTestSuite) TestGetRecordSpecificationsForContractSpecificatio
 	s.Equal(0, len(unknownContractSpecIDActual), "unknown contract spec id: count")
 }
 
-func (s *SpecKeeperTestSuite) TestValidateRecordSpecUpdate() {
+func (s *SpecKeeperTestSuite) TestValidateWriteRecordSpecification() {
 	contractSpecUUIDOther := uuid.New()
 	tests := []struct {
 		name     string
@@ -788,7 +788,7 @@ func (s *SpecKeeperTestSuite) TestValidateRecordSpecUpdate() {
 		want     string
 	}{
 		{
-			"validate basic called on proposed",
+			"validate basic not called on proposed",
 			nil,
 			types.NewRecordSpecification(
 				types.RecordSpecMetadataAddress(s.contractSpecUUID1, "name"),
@@ -798,7 +798,8 @@ func (s *SpecKeeperTestSuite) TestValidateRecordSpecUpdate() {
 				types.DefinitionType_DEFINITION_TYPE_RECORD,
 				[]types.PartyType{types.PartyType_PARTY_TYPE_SERVICER},
 			),
-			"record specification type name cannot be empty",
+			// ValidateBasic isn't called in ValidateWriteRecordSpecification, so this shouldn't be a problem.
+			"",
 		},
 		{
 			"validate basic not called on existing",
@@ -1082,7 +1083,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForOwner() {
 	s.Equal(2, countStop, "stop bool: iteration count")
 }
 
-func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
+func (s *SpecKeeperTestSuite) TestValidateWriteContractSpecification() {
 	otherContractSpecID := types.ContractSpecMetadataAddress(uuid.New())
 	tests := []struct {
 		name     string
@@ -1149,7 +1150,8 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 				types.NewContractSpecificationSourceHash("somehash"),
 				"someclass",
 			),
-			"invalid owner addresses count (expected > 0 got: 0)",
+			// ValidateBasic isn't called in ValidateWriteContractSpecification, so this shouldn't be a problem.
+			"",
 		},
 		{
 			"basic validation not done on existing",
@@ -1622,7 +1624,7 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForContractSpec() {
 	s.Equal(2, countStop, "stop bool: iteration count")
 }
 
-func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
+func (s *SpecKeeperTestSuite) TestValidateWriteScopeSpecification() {
 	ctx := s.FreshCtx()
 	// Trick the store into thinking that s.contractSpecID1 and s.contractSpecID2 exists.
 	metadataStoreKey := s.app.GetKey(types.StoreKey)
@@ -1673,7 +1675,8 @@ func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 				[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 				[]types.MetadataAddress{s.contractSpecID1},
 			),
-			"the ScopeSpecification must have at least one owner",
+			// ValidateBasic isn't called in ValidateWriteScopeSpecification, so this shouldn't be a problem.
+			"",
 		},
 		{
 			"basic validation not done on existing",
@@ -1749,14 +1752,13 @@ func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 		},
 	}
 
-	for _, tt := range tests {
-		tt := tt
-		s.T().Run(tt.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateWriteScopeSpecification(s.FreshCtx(), tt.existing, *tt.proposed)
-			if err != nil {
-				require.Equal(t, tt.want, err.Error(), "ScopeSpec Keeper ValidateWriteScopeSpecification error")
-			} else if len(tt.want) > 0 {
-				t.Errorf("ScopeSpec Keeper ValidateWriteScopeSpecification error = nil, expected: %s", tt.want)
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			err := s.app.MetadataKeeper.ValidateWriteScopeSpecification(s.FreshCtx(), tc.existing, *tc.proposed)
+			if len(tc.want) > 0 {
+				assert.EqualError(t, err, tc.want, "ValidateWriteScopeSpecification")
+			} else {
+				assert.NoError(t, err, "ValidateWriteScopeSpecification")
 			}
 		})
 	}
