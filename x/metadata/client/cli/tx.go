@@ -411,11 +411,16 @@ func WriteScopeSpecificationCmd() *cobra.Command {
 				return err
 			}
 
+			partyTypes, err := parsePartyTypes(args[2])
+			if err != nil {
+				return err
+			}
+
 			scopeSpec := types.ScopeSpecification{
 				SpecificationId: specificationID,
 				OwnerAddresses:  strings.Split(args[1], ","),
 				Description:     parseDescription(args[4:]),
-				PartiesInvolved: parsePartyTypes(args[2]),
+				PartiesInvolved: partyTypes,
 				ContractSpecIds: contractSpecIds,
 			}
 
@@ -462,7 +467,10 @@ icon-url           - address to a image to be used as an icon (optional, can onl
 				return err
 			}
 
-			partiesInvolved := parsePartyTypes(args[2])
+			partiesInvolved, err := parsePartyTypes(args[2])
+			if err != nil {
+				return err
+			}
 			description := parseDescription(args[5:])
 			contractSpecification := types.ContractSpecification{SpecificationId: specificationID,
 				Description:     description,
@@ -921,7 +929,10 @@ owner,originator`, version.AppName),
 			}
 
 			resultType := types.DefinitionType(types.DefinitionType_value[fmt.Sprintf("DEFINITION_TYPE_%s", strings.ToUpper(args[4]))])
-			partyTypes := parsePartyTypes(args[5])
+			partyTypes, err := parsePartyTypes(args[5])
+			if err != nil {
+				return err
+			}
 			signers, err := parseSigners(cmd, &clientCtx)
 			if err != nil {
 				return err
@@ -998,14 +1009,17 @@ func parseSigners(cmd *cobra.Command, client *client.Context) ([]string, error) 
 	return []string{client.GetFromAddress().String()}, nil
 }
 
-func parsePartyTypes(delimitedPartyTypes string) []types.PartyType {
+func parsePartyTypes(delimitedPartyTypes string) ([]types.PartyType, error) {
 	parties := strings.Split(delimitedPartyTypes, ",")
 	partyTypes := make([]types.PartyType, len(parties))
 	for i, party := range parties {
 		partyValue := types.PartyType_value[fmt.Sprintf("PARTY_TYPE_%s", strings.ToUpper(party))]
+		if partyValue == 0 {
+			return nil, fmt.Errorf("unknown party type: %q", party)
+		}
 		partyTypes[i] = types.PartyType(partyValue)
 	}
-	return partyTypes
+	return partyTypes, nil
 }
 
 // parseDescription hydrates Description from a sorted array name,description,website,icon-url
