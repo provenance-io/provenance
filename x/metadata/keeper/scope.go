@@ -300,7 +300,8 @@ func (k Keeper) ValidateWriteScope(
 		if (existing != nil && !existing.RequirePartyRollup) || (existing == nil && !proposed.RequirePartyRollup) {
 			// Old:
 			//   - All roles required by the scope spec must have a party in the owners.
-			//   - If being updated, all existing owners must sign.
+			//   - If not new, all existing owners must sign.
+			//   - Value owner signer restrictions are applied.
 			if err = validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 				return err
 			}
@@ -312,9 +313,10 @@ func (k Keeper) ValidateWriteScope(
 		} else {
 			// New:
 			//   - All roles required by the scope spec must have a party in the owners.
-			//   - If the scope is being updated, all required=false existing owners must be signers.
-			//   - If the scope is being updated, all roles required by the scope spec must have a signer and associated party
-			//     from the existing scope.
+			//   - If not new, all required=false existing owners must be signers.
+			//   - If not new, all roles required by the scope spec must have a signer and
+			//     associated party from the existing scope.
+			//   - Value owner signer restrictions are applied.
 			if err = validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 				return err
 			}
@@ -349,18 +351,20 @@ func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRe
 	if !scope.RequirePartyRollup {
 		// Old:
 		//   - All roles required by the scope spec must have a party in the owners.
-		//   - If being updated, all existing owners must sign.
-		// All we care about here is that last one.
+		//   - If not new, all existing owners must sign.
+		//   - Value owner signer restrictions are applied.
+		// We don't care about the first one here.
 		if validatedParties, err = k.ValidateSignersWithoutParties(ctx, scope.GetAllOwnerAddresses(), msg); err != nil {
 			return err
 		}
 	} else {
 		// New:
 		//   - All roles required by the scope spec must have a party in the owners.
-		//   - If the scope is being updated, all required=false existing owners must be signers.
-		//   - If the scope is being updated, all roles required by the scope spec must have a signer and associated party
-		//     from the existing scope.
-		// We don't care about that first one, and only care about the last one if the spec exists.
+		//   - If not new, all required=false existing owners must be signers.
+		//   - If not new, all roles required by the scope spec must have a signer and
+		//     associated party from the existing scope.
+		//   - Value owner signer restrictions are applied.
+		// We don't care about that first one, and only care about the roles one if the spec exists.
 		scopeSpec, found := k.GetScopeSpecification(ctx, scope.SpecificationId)
 		if !found {
 			if validatedParties, err = k.ValidateSignersWithoutParties(ctx, types.GetRequiredPartyAddresses(scope.Owners), msg); err != nil {
@@ -406,18 +410,22 @@ func (k Keeper) ValidateAddScopeDataAccess(
 	if !existing.RequirePartyRollup {
 		// Old:
 		//   - All roles required by the scope spec must have a party in the owners.
-		//   - If being updated, all existing owners must sign.
+		//   - If not new, all existing owners must sign.
+		//   - Value owner signer restrictions are applied.
 		// We don't care about the first one here since owners aren't changing.
+		// We don't care about the value owner check either since it's not changing.
 		if _, err := k.ValidateSignersWithoutParties(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
 			return err
 		}
 	} else {
 		// New:
 		//   - All roles required by the scope spec must have a party in the owners.
-		//   - If the scope is being updated, all required=false existing owners must be signers.
-		//   - If the scope is being updated, all roles required by the scope spec must have a signer and associated party
-		//     from the existing scope.
+		//   - If not new, all required=false existing owners must be signers.
+		//   - If not new, all roles required by the scope spec must have a signer and
+		//     associated party from the existing scope.
+		//   - Value owner signer restrictions are applied.
 		// We don't care about the first one here since owners aren't changing.
+		// We don't care about the value owner check either since it's not changing.
 		scopeSpec, found := k.GetScopeSpecification(ctx, existing.SpecificationId)
 		if !found {
 			return fmt.Errorf("scope specification %s not found", existing.SpecificationId)
@@ -454,18 +462,22 @@ dataAccessLoop:
 	if !existing.RequirePartyRollup {
 		// Old:
 		//   - All roles required by the scope spec must have a party in the owners.
-		//   - If being updated, all existing owners must sign.
+		//   - If not new, all existing owners must sign.
+		//   - Value owner signer restrictions are applied.
 		// We don't care about the first one here since owners aren't changing.
+		// We don't care about the value owner check either since it's not changing.
 		if _, err := k.ValidateSignersWithoutParties(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
 			return err
 		}
 	} else {
 		// New:
 		//   - All roles required by the scope spec must have a party in the owners.
-		//   - If the scope is being updated, all required=false existing owners must be signers.
-		//   - If the scope is being updated, all roles required by the scope spec must have a signer and associated party
-		//     from the existing scope.
+		//   - If not new, all required=false existing owners must be signers.
+		//   - If not new, all roles required by the scope spec must have a signer and
+		//     associated party from the existing scope.
+		//   - Value owner signer restrictions are applied.
 		// We don't care about the first one here since owners aren't changing.
+		// We don't care about the value owner check either since it's not changing.
 		scopeSpec, found := k.GetScopeSpecification(ctx, existing.SpecificationId)
 		if !found {
 			return fmt.Errorf("scope specification %s not found", existing.SpecificationId)
@@ -498,7 +510,9 @@ func (k Keeper) ValidateUpdateScopeOwners(
 	if !existing.RequirePartyRollup {
 		// Old:
 		//   - All roles required by the scope spec must have a party in the owners.
-		//   - If being updated, all existing owners must sign.
+		//   - If not new, all existing owners must sign.
+		//   - Value owner signer restrictions are applied.
+		// The value owner isn't changing so we don't care about that one.
 		if err := validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 			return err
 		}
@@ -508,9 +522,11 @@ func (k Keeper) ValidateUpdateScopeOwners(
 	} else {
 		// New:
 		//   - All roles required by the scope spec must have a party in the owners.
-		//   - If the scope is being updated, all required=false existing owners must be signers.
-		//   - If the scope is being updated, all roles required by the scope spec must have a signer and associated party
-		//     from the existing scope.
+		//   - If not new, all required=false existing owners must be signers.
+		//   - If not new, all roles required by the scope spec must have a signer and
+		//     associated party from the existing scope.
+		//   - Value owner signer restrictions are applied.
+		// The value owner isn't changing so we don't care about that one.
 		if err := validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 			return err
 		}

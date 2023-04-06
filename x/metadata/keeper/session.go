@@ -168,11 +168,13 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 		}
 	} else {
 		// New:
-		//   - All session parties must be present in this scope's owners.
-		//   - All roles required by the contract spec must have a signer and associated party in the session.
-		//   - All optional=false parties in the scope owners must be signers.
-		//   - If the session is being updated, existing parties are used for role/signer fulfillment, but all required roles
-		//     must still have a party in the proposed session.
+		//   - All proposed session parties must be present in this scope's owners.
+		//   - All optional=false scope owners must be signers.
+		//   - If new, all roles required by the contract spec must have a signer and
+		//     associated party in the proposed session.
+		//   - If not new, all roles required by the contract spec must have a signer
+		//     and associated party in the existing session.
+		//   - If not new, all optional=false existing parties must also be signers.
 		if err = validatePartiesArePresent(proposed.Parties, scope.Owners); err != nil {
 			return fmt.Errorf("not all session parties in scope owners: %w", err)
 		}
@@ -187,7 +189,6 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 		} else {
 			// We don't call validateRolesPresent here because proposed.Parties is being provided to ValidateSignersWithParties.
 			availableParties = proposed.Parties
-			reqParties = append(reqParties, proposed.Parties...)
 		}
 		reqParties = append(reqParties, scope.Owners...)
 		if _, err = k.ValidateSignersWithParties(ctx, reqParties, availableParties, contractSpec.PartiesInvolved, msg); err != nil {
