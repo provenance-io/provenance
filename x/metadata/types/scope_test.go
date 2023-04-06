@@ -37,58 +37,49 @@ func (s *ScopeTestSuite) SetupSuite() {
 
 func (s *ScopeTestSuite) TestScopeValidateBasic() {
 	tests := []struct {
-		name    string
-		scope   *Scope
-		want    string
-		wantErr bool
+		name  string
+		scope *Scope
+		want  string
 	}{
 		{
 			"valid scope one owner",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{}, ""),
 			"",
-			false,
 		},
 		{
 			"valid scope one owner, one data access",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{s.Addr}, ""),
 			"",
-			false,
 		},
 		{
 			"no owners",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
 			"invalid scope owners: at least one party is required",
-			true,
 		},
 		{
 			"no owners, data access",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{s.Addr}, ""),
 			"invalid scope owners: at least one party is required",
-			true,
 		},
 		{
 			"invalid scope id",
 			NewScope(ScopeSpecMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
 			"invalid scope identifier (expected: scope, got scopespec)",
-			true,
 		},
 		{
 			"invalid scope id - wrong address type",
 			NewScope(MetadataAddress{0x85}, ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
 			"invalid metadata address type: 133",
-			true,
 		},
 		{
 			"invalid spec id",
 			NewScope(ScopeMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
 			"invalid scope specification identifier (expected: scopespec, got scope)",
-			true,
 		},
 		{
 			"invalid spec id - wrong address type",
 			NewScope(ScopeMetadataAddress(uuid.New()), MetadataAddress{0x85}, []Party{}, []string{}, ""),
 			"invalid metadata address type: 133",
-			true,
 		},
 		{
 			"invalid owner on scope",
@@ -100,20 +91,34 @@ func (s *ScopeTestSuite) TestScopeValidateBasic() {
 				"",
 			),
 			"invalid scope owners: invalid party address [:invalid]: decoding bech32 failed: invalid separator index -1",
-			true,
+		},
+		{
+			name: "not rollup with optional party",
+			scope: &Scope{
+				ScopeId:         ScopeMetadataAddress(uuid.New()),
+				SpecificationId: ScopeSpecMetadataAddress(uuid.New()),
+				Owners: []Party{
+					{
+						Address:  sdk.AccAddress("just_a_test_________").String(),
+						Role:     PartyType_PARTY_TYPE_SERVICER,
+						Optional: true,
+					},
+				},
+				DataAccess:         nil,
+				ValueOwnerAddress:  "",
+				RequirePartyRollup: false,
+			},
+			want: "parties can only be optional when require_party_rollup = true",
 		},
 	}
 
-	for _, tt := range tests {
-		tt := tt
-		s.T().Run(tt.name, func(t *testing.T) {
-			err := tt.scope.ValidateBasic()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Scope ValidateBasic error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if tt.wantErr {
-				require.Equal(t, tt.want, err.Error())
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			err := tc.scope.ValidateBasic()
+			if len(tc.want) > 0 {
+				s.Assert().EqualError(err, tc.want, "ValidateBasic")
+			} else {
+				s.Assert().NoError(err, "ValidateBasic")
 			}
 		})
 	}
