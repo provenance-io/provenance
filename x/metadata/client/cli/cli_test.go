@@ -3472,6 +3472,24 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 			&sdk.TxResponse{},
 			0,
 		},
+		{
+			name: "invalid party type",
+			cmd:  cmd,
+			args: []string{
+				metadatatypes.SessionMetadataAddress(scopeUUID, uuid.New()).String(),
+				s.contractSpecID.String(),
+				fmt.Sprintf("%s,badpartytype", owner),
+				"somename",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    true,
+			expectErrMsg: `unknown party type: "badpartytype"`,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
 	}
 
 	runTxCmdTestCases(s, testCases)

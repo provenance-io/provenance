@@ -842,9 +842,13 @@ func parsePartiesInvolved(cliDelimitedValue string) ([]types.Party, error) {
 		if len(values) != 2 {
 			return nil, fmt.Errorf("invalid number of values for parties: %v", len(values))
 		}
+		partyType, err := parsePartyType(values[1])
+		if err != nil {
+			return nil, err
+		}
 		parties[i] = types.Party{
 			Address: values[0],
-			Role:    types.PartyType(types.PartyType_value[fmt.Sprintf("PARTY_TYPE_%s", strings.ToUpper(values[1]))]),
+			Role:    partyType,
 		}
 	}
 	return parties, nil
@@ -1013,13 +1017,21 @@ func parsePartyTypes(delimitedPartyTypes string) ([]types.PartyType, error) {
 	parties := strings.Split(delimitedPartyTypes, ",")
 	partyTypes := make([]types.PartyType, len(parties))
 	for i, party := range parties {
-		partyValue := types.PartyType_value[fmt.Sprintf("PARTY_TYPE_%s", strings.ToUpper(party))]
-		if partyValue == 0 {
-			return nil, fmt.Errorf("unknown party type: %q", party)
+		partyValue, err := parsePartyType(party)
+		if err != nil {
+			return nil, err
 		}
-		partyTypes[i] = types.PartyType(partyValue)
+		partyTypes[i] = partyValue
 	}
 	return partyTypes, nil
+}
+
+func parsePartyType(partyType string) (types.PartyType, error) {
+	rv := types.PartyType_value[fmt.Sprintf("PARTY_TYPE_%s", strings.ToUpper(partyType))]
+	if rv == 0 {
+		return 0, fmt.Errorf("unknown party type: %q", partyType)
+	}
+	return types.PartyType(rv), nil
 }
 
 // parseDescription hydrates Description from a sorted array name,description,website,icon-url
