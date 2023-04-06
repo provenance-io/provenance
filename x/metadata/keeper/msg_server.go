@@ -30,7 +30,7 @@ func (k msgServer) WriteScope(
 	msg *types.MsgWriteScopeRequest,
 ) (*types.MsgWriteScopeResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteScope")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
@@ -54,7 +54,7 @@ func (k msgServer) DeleteScope(
 	msg *types.MsgDeleteScopeRequest,
 ) (*types.MsgDeleteScopeResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScope")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	if err := k.ValidateDeleteScope(ctx, msg); err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func (k msgServer) AddScopeDataAccess(
 	msg *types.MsgAddScopeDataAccessRequest,
 ) (*types.MsgAddScopeDataAccessResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "AddScopeDataAccess")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	existing, found := k.GetScope(ctx, msg.ScopeId)
 	if !found {
@@ -95,7 +95,7 @@ func (k msgServer) DeleteScopeDataAccess(
 	msg *types.MsgDeleteScopeDataAccessRequest,
 ) (*types.MsgDeleteScopeDataAccessResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScopeDataAccess")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	existing, found := k.GetScope(ctx, msg.ScopeId)
 	if !found {
@@ -119,7 +119,7 @@ func (k msgServer) AddScopeOwner(
 	msg *types.MsgAddScopeOwnerRequest,
 ) (*types.MsgAddScopeOwnerResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "AddScopeOwner")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
@@ -151,7 +151,7 @@ func (k msgServer) DeleteScopeOwner(
 	msg *types.MsgDeleteScopeOwnerRequest,
 ) (*types.MsgDeleteScopeOwnerResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScopeOwner")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
@@ -183,7 +183,7 @@ func (k msgServer) WriteSession(
 	msg *types.MsgWriteSessionRequest,
 ) (*types.MsgWriteSessionResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteSession")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
@@ -211,7 +211,7 @@ func (k msgServer) WriteRecord(
 	msg *types.MsgWriteRecordRequest,
 ) (*types.MsgWriteRecordResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteRecord")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
@@ -248,7 +248,7 @@ func (k msgServer) DeleteRecord(
 	msg *types.MsgDeleteRecordRequest,
 ) (*types.MsgDeleteRecordResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteRecord")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	if err := k.ValidateDeleteRecord(ctx, msg.RecordId, msg); err != nil {
 		return nil, err
@@ -265,7 +265,7 @@ func (k msgServer) WriteScopeSpecification(
 	msg *types.MsgWriteScopeSpecificationRequest,
 ) (*types.MsgWriteScopeSpecificationResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteScopeSpecification")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
@@ -292,7 +292,7 @@ func (k msgServer) DeleteScopeSpecification(
 	msg *types.MsgDeleteScopeSpecificationRequest,
 ) (*types.MsgDeleteScopeSpecificationResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScopeSpecification")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	existing, found := k.GetScopeSpecification(ctx, msg.SpecificationId)
 	if !found {
@@ -315,7 +315,7 @@ func (k msgServer) WriteContractSpecification(
 	msg *types.MsgWriteContractSpecificationRequest,
 ) (*types.MsgWriteContractSpecificationResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteContractSpecification")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
@@ -342,7 +342,7 @@ func (k msgServer) DeleteContractSpecification(
 	msg *types.MsgDeleteContractSpecificationRequest,
 ) (*types.MsgDeleteContractSpecificationResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteContractSpecification")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	existing, found := k.GetContractSpecification(ctx, msg.SpecificationId)
 	if !found {
@@ -390,7 +390,7 @@ func (k msgServer) AddContractSpecToScopeSpec(
 	msg *types.MsgAddContractSpecToScopeSpecRequest,
 ) (*types.MsgAddContractSpecToScopeSpecResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "AddContractSpecToScopeSpec")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 	_, found := k.GetContractSpecification(ctx, msg.ContractSpecificationId)
 	if !found {
 		return nil, fmt.Errorf("contract specification not found with id %s", msg.ContractSpecificationId)
@@ -422,7 +422,7 @@ func (k msgServer) DeleteContractSpecFromScopeSpec(
 	msg *types.MsgDeleteContractSpecFromScopeSpecRequest,
 ) (*types.MsgDeleteContractSpecFromScopeSpecResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteContractSpecFromScopeSpec")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 	scopeSpec, found := k.GetScopeSpecification(ctx, msg.ScopeSpecificationId)
 	if !found {
 		return nil, fmt.Errorf("scope specification not found with id %s", msg.ScopeSpecificationId)
@@ -457,7 +457,7 @@ func (k msgServer) WriteRecordSpecification(
 	msg *types.MsgWriteRecordSpecificationRequest,
 ) (*types.MsgWriteRecordSpecificationResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteRecordSpecification")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
@@ -495,7 +495,7 @@ func (k msgServer) DeleteRecordSpecification(
 	msg *types.MsgDeleteRecordSpecificationRequest,
 ) (*types.MsgDeleteRecordSpecificationResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteRecordSpecification")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	_, found := k.GetRecordSpecification(ctx, msg.SpecificationId)
 	if !found {
@@ -527,7 +527,7 @@ func (k msgServer) BindOSLocator(
 	msg *types.MsgBindOSLocatorRequest,
 ) (*types.MsgBindOSLocatorResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "BindOSLocator")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
 		ctx.Logger().Error("unable to validate message", "err", err)
@@ -560,7 +560,7 @@ func (k msgServer) DeleteOSLocator(
 	msg *types.MsgDeleteOSLocatorRequest,
 ) (*types.MsgDeleteOSLocatorResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteOSLocator")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
 		ctx.Logger().Error("unable to validate message", "err", err)
@@ -595,7 +595,7 @@ func (k msgServer) ModifyOSLocator(
 	msg *types.MsgModifyOSLocatorRequest,
 ) (*types.MsgModifyOSLocatorResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "ModifyOSLocator")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
 		ctx.Logger().Error("unable to validate message", "err", err)

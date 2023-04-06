@@ -2,12 +2,14 @@ package keeper
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"sort"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -216,6 +218,84 @@ func (s *SignersWrapper) Accs() []sdk.AccAddress {
 		s.converted = true
 	}
 	return s.signerAccs
+}
+
+// authzCacheAcceptableKey creates the key string used in the AuthzCache.acceptable map.
+func authzCacheAcceptableKey(grantee, granter sdk.AccAddress, msgTypeURL string) string {
+	return string(grantee) + "-" + string(granter) + "-" + msgTypeURL
+}
+
+// AuthzCache is a struct that houses a map of authz authorizations that are known to have a passed Accept (and been handled).
+type AuthzCache struct {
+	acceptable map[string]authz.Authorization
+}
+
+// NewAuthzCache creates a new AuthzCache.
+func NewAuthzCache() *AuthzCache {
+	return &AuthzCache{acceptable: make(map[string]authz.Authorization)}
+}
+
+// Clear deletes all entries from this AuthzCache.
+func (c *AuthzCache) Clear() {
+	for k := range c.acceptable {
+		delete(c.acceptable, k)
+	}
+}
+
+// SetAcceptable sets an authorization in this cache as acceptable.
+func (c *AuthzCache) SetAcceptable(grantee, granter sdk.AccAddress, msgTypeURL string, authorization authz.Authorization) {
+	c.acceptable[authzCacheAcceptableKey(grantee, granter, msgTypeURL)] = authorization
+}
+
+// GetAcceptable gets a previously set acceptable authorization.
+// Returns nil if no such authorization exists.
+func (c *AuthzCache) GetAcceptable(grantee, granter sdk.AccAddress, msgTypeURL string) authz.Authorization {
+	return c.acceptable[authzCacheAcceptableKey(grantee, granter, msgTypeURL)]
+}
+
+// authzCacheContextKey is the key used in an sdk.Context to set/get the AuthzCache.
+const authzCacheContextKey = "authzCacheContextKey"
+
+// AddAuthzCacheToContext either returns a new sdk.Context with the addition of an AuthzCache,
+// or clears out the AuthzCache if it already exists in the context.
+// It panics if the AuthzCache key exists in the context but isn't an AuthzCache.
+func AddAuthzCacheToContext(ctx sdk.Context) sdk.Context {
+	// If it's already got one, leave it there but clear it out.
+	// Otherwise, we'll add a new one.
+	if cacheV := ctx.Value(authzCacheContextKey); cacheV != nil {
+		if cache, ok := cacheV.(*AuthzCache); ok {
+			cache.Clear()
+			return ctx
+		}
+		// If the key was there, but not an AuthzCache, things are very wrong. Panic.
+		panic(fmt.Errorf("context value %q is a %T, expected %T",
+			authzCacheContextKey, cacheV, NewAuthzCache()))
+	}
+	return ctx.WithValue(authzCacheContextKey, NewAuthzCache())
+}
+
+// GetAuthzCache gets the AuthzCache from the context or panics.
+func GetAuthzCache(ctx sdk.Context) *AuthzCache {
+	cacheV := ctx.Value(authzCacheContextKey)
+	if cacheV == nil {
+		panic(fmt.Errorf("context does not contain a %q value", authzCacheContextKey))
+	}
+	cache, ok := cacheV.(*AuthzCache)
+	if !ok {
+		panic(fmt.Errorf("context value %q is a %T, expected %T",
+			authzCacheContextKey, cacheV, NewAuthzCache()))
+	}
+	return cache
+}
+
+// UnwrapMetadataContext retrieves a Context from a context.Context instance attached with WrapSDKContext.
+// It then adds an AuthzCache to it.
+// It panics if a Context was not properly attached, or if the AuthzCache can't be added.
+//
+// This should be used for all Metadata msg server endpoints instead of sdk.UnwrapSDKContext.
+// This should not be used outside of the Metadata module.
+func UnwrapMetadataContext(goCtx context.Context) sdk.Context {
+	return AddAuthzCacheToContext(sdk.UnwrapSDKContext(goCtx))
 }
 
 // ValidateSignersWithParties ensures the following:
