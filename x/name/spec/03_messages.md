@@ -29,11 +29,12 @@ This message is expected to fail if:
 If successful a name record will be created as described and an address index record will be created for the address associated with the name.
 ## MsgDeleteNameRequest
 
-The delete name request method allows a name record that does not contain any children records to be removed from the system.
+The delete name request method allows a name record that does not contain any children records to be removed from the system.  All 
+associated attributes on account addresses will be deleted.
 
 ```proto
 // MsgDeleteNameRequest defines an sdk.Msg type that is used to remove an existing address/name binding.  The binding
-// may not have any child names currently bound for this request to be successful.
+// may not have any child names currently bound for this request to be successful. All associated attributes on account addresses will be deleted.
 message MsgDeleteNameRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
