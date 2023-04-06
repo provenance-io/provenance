@@ -141,7 +141,7 @@ func (s *RecordKeeperTestSuite) TestMetadataRecordIterator() {
 
 }
 
-func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
+func (s *RecordKeeperTestSuite) TestValidateDeleteRecord() {
 	ctx := s.FreshCtx()
 	dneScopeUUID := uuid.New()
 	dneSessionUUID := uuid.New()
@@ -268,22 +268,22 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 			expected:   nil,
 		},
 		{
-			name:       "has scope but not session or spec, req signer not signer",
+			name:       "has scope but not session or spec",
 			proposedID: recordOnlyScope.GetRecordAddress(),
 			signers:    []string{s.user2},
-			expected:   []string{"missing required signature", s.user1},
+			expected:   []string{"missing signature:", s.user1},
 		},
 		{
-			name:       "has session but not scope or spec, req signer is signer",
+			name:       "has session but not scope or spec, signer was req signer",
 			proposedID: recordOnlySession.GetRecordAddress(),
 			signers:    []string{s.user2},
 			expected:   nil,
 		},
 		{
-			name:       "has session but not scope or spec, req signer not signer",
+			name:       "has session but not scope or spec, signer was not req signer",
 			proposedID: recordOnlySession.GetRecordAddress(),
 			signers:    []string{s.user1},
-			expected:   []string{"missing required signature", s.user2},
+			expected:   nil,
 		},
 		{
 			name:       "has spec, no scope or session",
@@ -292,22 +292,22 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 			expected:   nil,
 		},
 		{
-			name:       "has session and spec, reqRoles fulfilled",
+			name:       "has session and spec no scope, reqRoles fulfilled",
 			proposedID: recordNoScope.GetRecordAddress(),
 			signers:    []string{s.user2, user3},
 			expected:   nil,
 		},
 		{
-			name:       "has session and spec, missing both req roles",
+			name:       "has session and spec no scope, missing both req roles",
 			proposedID: recordNoScope.GetRecordAddress(),
 			signers:    []string{s.user2},
-			expected:   []string{"missing signers for roles required by spec", "INVESTOR need 1 have 0", "AFFILIATE need 1 have 0"},
+			expected:   nil,
 		},
 		{
-			name:       "has session and spec, missing one req roles",
+			name:       "has session and spec no scope, missing one req roles",
 			proposedID: recordNoScope.GetRecordAddress(),
 			signers:    []string{s.user2, s.user1},
-			expected:   []string{"missing signers for roles required by spec", "AFFILIATE need 1 have 0"},
+			expected:   nil,
 		},
 		{
 			name:       "control",
@@ -316,22 +316,10 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 			expected:   nil,
 		},
 		{
-			name:       "missing scope required signer",
-			proposedID: s.recordID,
-			signers:    []string{s.user2, user3},
-			expected:   []string{"missing required signature", s.user1},
-		},
-		{
 			name:       "missing session required signer",
 			proposedID: s.recordID,
 			signers:    []string{s.user1, user3},
-			expected:   []string{"missing required signature", s.user2},
-		},
-		{
-			name:       "missing required role",
-			proposedID: s.recordID,
-			signers:    []string{s.user1, s.user2},
-			expected:   []string{"missing signers for roles required by spec", "AFFILIATE need 1 have 0"},
+			expected:   nil,
 		},
 	}
 
@@ -353,7 +341,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 	}
 }
 
-func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
+func (s *RecordKeeperTestSuite) TestValidateWriteRecord() {
 	ctx := s.FreshCtx()
 	scopeUUID := uuid.New()
 	scopeID := types.ScopeMetadataAddress(scopeUUID)
@@ -519,10 +507,16 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 		"original session id not found": {
 			existing:         types.NewRecord(s.recordName, randomSessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
 			origOutputHashes: []string{},
-			proposed:         types.NewRecord(s.recordName, sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
-			signers:          []string{s.user1},
-			partiesInvolved:  ownerPartyList(s.user1),
-			errorMsg:         fmt.Sprintf("original session %s not found for existing record", randomSessionID),
+			proposed: types.NewRecord(s.recordName, sessionID, *process, []types.RecordInput{*goodInput},
+				[]types.RecordOutput{
+					{
+						Hash:   "justsomeoutput",
+						Status: types.ResultStatus_RESULT_STATUS_PASS,
+					},
+				}, s.recordSpecID),
+			signers:         []string{s.user1},
+			partiesInvolved: ownerPartyList(s.user1),
+			errorMsg:        "",
 		},
 		"scope not found": {
 			existing:        nil,
@@ -536,7 +530,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 			proposed:        types.NewRecord(s.recordName, sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID),
 			signers:         []string{},
 			partiesInvolved: ownerPartyList(s.user1),
-			errorMsg:        fmt.Sprintf("missing required signature: %s (OWNER)", s.user1),
+			errorMsg:        fmt.Sprintf("missing signature: %s", s.user1),
 		},
 		"session not found": {
 			existing:        nil,

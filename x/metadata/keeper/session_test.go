@@ -155,7 +155,7 @@ func (s *SessionKeeperTestSuite) TestSessionIterator() {
 	s.Equal(10, count, "iterator should return a full list of sessions")
 }
 
-func (s *SessionKeeperTestSuite) TestValidateSessionUpdate() {
+func (s *SessionKeeperTestSuite) TestValidateWriteSession() {
 	ctx := s.FreshCtx()
 	scope := types.NewScope(s.scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
 	s.app.MetadataKeeper.SetScope(ctx, *scope)
@@ -253,14 +253,14 @@ func (s *SessionKeeperTestSuite) TestValidateSessionUpdate() {
 			proposed: invalidPartiesSession,
 			signers:  []string{s.user1},
 			wantErr:  true,
-			errorMsg: "missing required party type [PARTY_TYPE_AFFILIATE] from parties",
+			errorMsg: "missing roles required by spec: AFFILIATE need 1 have 0",
 		},
 		"invalid session update, missing required signers": {
 			existing: validSession,
 			proposed: validSession,
 			signers:  []string{},
 			wantErr:  true,
-			errorMsg: fmt.Sprintf("missing signature from [%s (PARTY_TYPE_OWNER)]", s.user1),
+			errorMsg: fmt.Sprintf("missing signature: %s", s.user1),
 		},
 		"invalid session update, invalid proposed name of empty to existing session": {
 			existing: validSessionWithAudit,
