@@ -494,9 +494,14 @@ func (k Keeper) findAuthzGrantee(
 	if len(granter) == 0 || len(grantees) == 0 {
 		return nil, nil
 	}
+	cache := GetAuthzCache(ctx)
 	msgTypes := getAuthzMessageTypeURLs(sdk.MsgTypeURL(msg))
 	for _, grantee := range grantees {
 		for _, msgType := range msgTypes {
+			prevAuth := cache.GetAcceptable(grantee, granter, msgType)
+			if prevAuth != nil {
+				return grantee, nil
+			}
 			authorization, exp := k.authzKeeper.GetAuthorization(ctx, grantee, granter, msgType)
 			if authorization != nil {
 				// If Accept returns an error, we just ignore this authorization
@@ -514,6 +519,7 @@ func (k Keeper) findAuthzGrantee(
 							return nil, err
 						}
 					}
+					cache.SetAcceptable(grantee, granter, msgType, authorization)
 					return grantee, nil
 				}
 			}
