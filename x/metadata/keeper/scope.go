@@ -282,14 +282,12 @@ func (k Keeper) ValidateWriteScope(
 	existingValueOwner := ""
 	onlyChangeIsValueOwner := false
 	if existing != nil && len(existing.ValueOwnerAddress) > 0 {
+		existingValueOwner = existing.ValueOwnerAddress
 		// Make a copy of proposed scope and set its value owner to the existing one. If it then
 		// equals the existing scope, then the only change in proposed is to the value owner field.
 		proposedCopy := proposed
 		proposedCopy.ValueOwnerAddress = existing.ValueOwnerAddress
-		if !existing.Equals(proposedCopy) {
-			onlyChangeIsValueOwner = true
-		}
-		existingValueOwner = existing.ValueOwnerAddress
+		onlyChangeIsValueOwner = existing.Equals(proposedCopy)
 	}
 
 	var err error
@@ -305,7 +303,7 @@ func (k Keeper) ValidateWriteScope(
 			if err = validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 				return err
 			}
-			if existing != nil {
+			if existing != nil && !existing.Equals(proposed) {
 				if validatedParties, err = k.ValidateSignersWithoutParties(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
 					return err
 				}
