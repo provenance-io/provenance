@@ -138,7 +138,7 @@ message Scope {
   //
   // In order to delete a record from this scope:
   //   - All scope owners must sign.
-  bool require_party_rollup = 6;
+  bool require_party_rollup = 6 [(gogoproto.moretags) = "yaml:\"require_party_rollup\""];
 }
 
 /*
