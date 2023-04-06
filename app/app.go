@@ -468,7 +468,7 @@ func New(
 	)
 
 	app.AttributeKeeper = attributekeeper.NewKeeper(
-		appCodec, keys[attributetypes.StoreKey], app.GetSubspace(attributetypes.ModuleName), app.AccountKeeper, app.NameKeeper,
+		appCodec, keys[attributetypes.StoreKey], app.GetSubspace(attributetypes.ModuleName), app.AccountKeeper, &app.NameKeeper,
 	)
 
 	app.MarkerKeeper = markerkeeper.NewKeeper(
@@ -535,6 +535,7 @@ func New(
 		wasmDir,
 		wasmConfig,
 		supportedFeatures,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		wasmkeeper.WithQueryPlugins(provwasm.QueryPlugins(querierRegistry)),
 		wasmkeeper.WithMessageEncoders(provwasm.MessageEncoders(encoderRegistry, logger)),
 	)

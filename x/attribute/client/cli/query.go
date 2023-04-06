@@ -31,6 +31,7 @@ func GetQueryCmd() *cobra.Command {
 		GetAccountAttributeCmd(),
 		ListAccountAttributesCmd(),
 		ScanAccountAttributesCmd(),
+		GetAttributeAccountsCmd(),
 	)
 
 	return queryCmd
@@ -211,4 +212,48 @@ func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
 	}
 	_ = flagSet.Set(flags.FlagPageKey, string(raw))
 	return flagSet
+}
+
+// GetAttributeAccountsCmd gets account addresses with attribute name
+func GetAttributeAccountsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "accounts [name]",
+		Short: "List account addresses that have attributes with name",
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`
+				$ %[1]s query attribute accounts example.provenance.io 
+				$ %[1]s query attribute accounts example.provenance.io --page=2 --limit=100
+				`,
+				version.AppName,
+			)),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+			if err != nil {
+				return err
+			}
+			attributeName := strings.ToLower(strings.TrimSpace(args[0]))
+
+			var response *types.QueryAttributeAccountsResponse
+			if response, err = queryClient.AttributeAccounts(
+				context.Background(),
+				&types.QueryAttributeAccountsRequest{AttributeName: attributeName, Pagination: pageReq},
+			); err != nil {
+				fmt.Printf("failed to query attribute name \"%s\" : %v\n", attributeName, err)
+				return nil
+			}
+			return clientCtx.PrintProto(response)
+		},
+	}
+
+	flags.AddPaginationFlagsToCmd(cmd, "accounts")
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }

@@ -18,6 +18,8 @@
     - [GenesisState](#provenance.attribute.v1.GenesisState)
   
 - [provenance/attribute/v1/query.proto](#provenance/attribute/v1/query.proto)
+    - [QueryAttributeAccountsRequest](#provenance.attribute.v1.QueryAttributeAccountsRequest)
+    - [QueryAttributeAccountsResponse](#provenance.attribute.v1.QueryAttributeAccountsResponse)
     - [QueryAttributeRequest](#provenance.attribute.v1.QueryAttributeRequest)
     - [QueryAttributeResponse](#provenance.attribute.v1.QueryAttributeResponse)
     - [QueryAttributesRequest](#provenance.attribute.v1.QueryAttributesRequest)
@@ -603,6 +605,38 @@ GenesisState defines the attribute module's genesis state.
 
 
 
+<a name="provenance.attribute.v1.QueryAttributeAccountsRequest"></a>
+
+### QueryAttributeAccountsRequest
+QueryAttributeAccountsRequest is the response type for the Query/AccountsByAttribute method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `attribute_name` | [string](#string) |  | name is the attribute name to query for |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.QueryAttributeAccountsResponse"></a>
+
+### QueryAttributeAccountsResponse
+QueryAttributeAccountsResponse is the response type for the Query/AccountsByAttribute method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `accounts` | [string](#string) | repeated | list of account addresses that have attributes of request name |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
 <a name="provenance.attribute.v1.QueryAttributeRequest"></a>
 
 ### QueryAttributeRequest
@@ -746,6 +780,7 @@ Query defines the gRPC querier service for attribute module.
 | `Attribute` | [QueryAttributeRequest](#provenance.attribute.v1.QueryAttributeRequest) | [QueryAttributeResponse](#provenance.attribute.v1.QueryAttributeResponse) | Attribute queries attributes on a given account (address) for one (or more) with the given name | GET|/provenance/attribute/v1/attribute/{account}/{name}|
 | `Attributes` | [QueryAttributesRequest](#provenance.attribute.v1.QueryAttributesRequest) | [QueryAttributesResponse](#provenance.attribute.v1.QueryAttributesResponse) | Attributes queries attributes on a given account (address) for any defined attributes | GET|/provenance/attribute/v1/attributes/{account}|
 | `Scan` | [QueryScanRequest](#provenance.attribute.v1.QueryScanRequest) | [QueryScanResponse](#provenance.attribute.v1.QueryScanResponse) | Scan queries attributes on a given account (address) for any that match the provided suffix | GET|/provenance/attribute/v1/attribute/{account}/scan/{suffix}|
+| `AttributeAccounts` | [QueryAttributeAccountsRequest](#provenance.attribute.v1.QueryAttributeAccountsRequest) | [QueryAttributeAccountsResponse](#provenance.attribute.v1.QueryAttributeAccountsResponse) | AttributeAccounts queries accounts on a given attribute name | GET|/provenance/attribute/v1/accounts/{attribute_name}|
 
  <!-- end services -->
 
@@ -5530,7 +5565,8 @@ MsgCreateRootNameResponse defines Msg/CreateRootName response type.
 
 ### MsgDeleteNameRequest
 MsgDeleteNameRequest defines an sdk.Msg type that is used to remove an existing address/name binding.  The binding
-may not have any child names currently bound for this request to be successful.
+may not have any child names currently bound for this request to be successful. All associated attributes on account
+addresses will be deleted.
 
 
 | Field | Type | Label | Description |

@@ -32,6 +32,11 @@ service Query {
   rpc Scan(QueryScanRequest) returns (QueryScanResponse) {
     option (google.api.http).get = "/provenance/attribute/v1/attribute/{account}/scan/{suffix}";
   }
+
+  // AttributeAccounts queries accounts on a given attribute name
+  rpc AttributeAccounts(QueryAttributeAccountsRequest) returns (QueryAttributeAccountsResponse) {
+    option (google.api.http).get = "/provenance/attribute/v1/accounts/{attribute_name}";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -112,4 +117,22 @@ message QueryScanResponse {
   repeated Attribute attributes = 2 [(gogoproto.nullable) = false];
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
+}
+
+// QueryAttributeAccountsRequest is the response type for the Query/AccountsByAttribute method.
+message QueryAttributeAccountsRequest {
+  // name is the attribute name to query for
+  string attribute_name = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryAttributeAccountsResponse is the response type for the Query/AccountsByAttribute method.
+message QueryAttributeAccountsResponse {
+  // list of account addresses that have attributes of request name
+  repeated string accounts = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
