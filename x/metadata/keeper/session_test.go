@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -23,7 +24,6 @@ type SessionKeeperTestSuite struct {
 	suite.Suite
 
 	app         *simapp.App
-	ctx         sdk.Context
 	queryClient types.QueryClient
 
 	pubkey1   cryptotypes.PubKey
@@ -53,15 +53,15 @@ type SessionKeeperTestSuite struct {
 
 func (s *SessionKeeperTestSuite) SetupTest() {
 	s.app = simapp.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
-	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
+	ctx := s.FreshCtx()
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.app.MetadataKeeper)
 	s.queryClient = types.NewQueryClient(queryHelper)
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
-	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+	s.app.AccountKeeper.SetAccount(ctx, s.app.AccountKeeper.NewAccountWithAddress(ctx, s.user1Addr))
 
 	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
@@ -84,6 +84,10 @@ func (s *SessionKeeperTestSuite) SetupTest() {
 	s.recordSpecID = types.RecordSpecMetadataAddress(s.contractSpecUUID, s.recordName)
 }
 
+func (s *SessionKeeperTestSuite) FreshCtx() sdk.Context {
+	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, tmproto.Header{}))
+}
+
 func TestSessionKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(SessionKeeperTestSuite))
 }
@@ -91,8 +95,8 @@ func TestSessionKeeperTestSuite(t *testing.T) {
 // func ownerPartyList defined in keeper_test.go
 
 func (s *SessionKeeperTestSuite) TestSessionGetSetRemove() {
-
-	r, found := s.app.MetadataKeeper.GetSession(s.ctx, s.sessionID)
+	ctx := s.FreshCtx()
+	r, found := s.app.MetadataKeeper.GetSession(ctx, s.sessionID)
 	s.Empty(r)
 	s.False(found)
 
@@ -104,33 +108,34 @@ func (s *SessionKeeperTestSuite) TestSessionGetSetRemove() {
 		})
 
 	s.NotNil(session)
-	s.app.MetadataKeeper.SetSession(s.ctx, *session)
+	s.app.MetadataKeeper.SetSession(ctx, *session)
 
-	sess, found := s.app.MetadataKeeper.GetSession(s.ctx, s.sessionID)
+	sess, found := s.app.MetadataKeeper.GetSession(ctx, s.sessionID)
 	s.True(found)
 	s.NotEmpty(sess)
 
-	s.app.MetadataKeeper.RemoveSession(s.ctx, s.sessionID)
-	sess, found = s.app.MetadataKeeper.GetSession(s.ctx, s.sessionID)
+	s.app.MetadataKeeper.RemoveSession(ctx, s.sessionID)
+	sess, found = s.app.MetadataKeeper.GetSession(ctx, s.sessionID)
 	s.False(found)
 	s.Empty(sess)
 
 	process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
 	record := types.NewRecord(s.recordName, s.sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID)
-	s.app.MetadataKeeper.SetRecord(s.ctx, *record)
-	s.app.MetadataKeeper.SetSession(s.ctx, *session)
+	s.app.MetadataKeeper.SetRecord(ctx, *record)
+	s.app.MetadataKeeper.SetSession(ctx, *session)
 
-	sess, found = s.app.MetadataKeeper.GetSession(s.ctx, s.sessionID)
+	sess, found = s.app.MetadataKeeper.GetSession(ctx, s.sessionID)
 	s.True(found)
 	s.NotEmpty(sess)
 
-	s.app.MetadataKeeper.RemoveSession(s.ctx, s.sessionID)
-	sess, found = s.app.MetadataKeeper.GetSession(s.ctx, s.sessionID)
+	s.app.MetadataKeeper.RemoveSession(ctx, s.sessionID)
+	sess, found = s.app.MetadataKeeper.GetSession(ctx, s.sessionID)
 	s.True(found)
 	s.NotEmpty(sess)
 }
 
 func (s *SessionKeeperTestSuite) TestSessionIterator() {
+	ctx := s.FreshCtx()
 	for i := 1; i <= 10; i++ {
 		sessionID := types.SessionMetadataAddress(s.scopeUUID, uuid.New())
 		session := types.NewSession("name", sessionID, s.contractSpecID, []types.Party{
@@ -139,10 +144,10 @@ func (s *SessionKeeperTestSuite) TestSessionIterator() {
 				UpdatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", UpdatedDate: time.Now(),
 				Message: "message",
 			})
-		s.app.MetadataKeeper.SetSession(s.ctx, *session)
+		s.app.MetadataKeeper.SetSession(ctx, *session)
 	}
 	count := 0
-	err := s.app.MetadataKeeper.IterateSessions(s.ctx, s.scopeID, func(s types.Session) (stop bool) {
+	err := s.app.MetadataKeeper.IterateSessions(ctx, s.scopeID, func(s types.Session) (stop bool) {
 		count++
 		return false
 	})
@@ -151,8 +156,9 @@ func (s *SessionKeeperTestSuite) TestSessionIterator() {
 }
 
 func (s *SessionKeeperTestSuite) TestValidateSessionUpdate() {
+	ctx := s.FreshCtx()
 	scope := types.NewScope(s.scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
-	s.app.MetadataKeeper.SetScope(s.ctx, *scope)
+	s.app.MetadataKeeper.SetScope(ctx, *scope)
 
 	auditTime := time.Now()
 
@@ -167,9 +173,9 @@ func (s *SessionKeeperTestSuite) TestValidateSessionUpdate() {
 
 	partiesInvolved := []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE}
 	contractSpec := types.NewContractSpecification(s.contractSpecID, types.NewDescription("name", "desc", "url", "icon"), []string{s.user1}, partiesInvolved, &types.ContractSpecification_Hash{"hash"}, "processname")
-	s.app.MetadataKeeper.SetContractSpecification(s.ctx, *contractSpec)
+	s.app.MetadataKeeper.SetContractSpecification(ctx, *contractSpec)
 	scopeSpec := types.NewScopeSpecification(s.scopeSpecID, nil, []string{s.user1}, partiesInvolved, []types.MetadataAddress{s.contractSpecID})
-	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, *scopeSpec)
+	s.app.MetadataKeeper.SetScopeSpecification(ctx, *scopeSpec)
 
 	cases := map[string]struct {
 		existing *types.Session
@@ -313,7 +319,7 @@ func (s *SessionKeeperTestSuite) TestValidateSessionUpdate() {
 				Session: *tc.proposed,
 				Signers: tc.signers,
 			}
-			err := s.app.MetadataKeeper.ValidateWriteSession(s.ctx, tc.existing, msg)
+			err := s.app.MetadataKeeper.ValidateWriteSession(s.FreshCtx(), tc.existing, msg)
 			if tc.wantErr {
 				s.Assert().EqualError(err, tc.errorMsg, "ValidateWriteSession")
 			} else {

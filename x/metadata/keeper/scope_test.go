@@ -11,6 +11,7 @@ import (
 
 	simapp "github.com/provenance-io/provenance/app"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -26,7 +27,6 @@ type ScopeKeeperTestSuite struct {
 	suite.Suite
 
 	app         *simapp.App
-	ctx         sdk.Context
 	queryClient types.QueryClient
 
 	pubkey1   cryptotypes.PubKey
@@ -50,17 +50,17 @@ type ScopeKeeperTestSuite struct {
 
 func (s *ScopeKeeperTestSuite) SetupTest() {
 	s.app = simapp.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
-	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
+	ctx := s.FreshCtx()
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.app.MetadataKeeper)
 	s.queryClient = types.NewQueryClient(queryHelper)
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
-	user1Acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr)
+	user1Acc := s.app.AccountKeeper.NewAccountWithAddress(ctx, s.user1Addr)
 	s.Require().NoError(user1Acc.SetPubKey(s.pubkey1), "SetPubKey user1")
-	s.app.AccountKeeper.SetAccount(s.ctx, user1Acc)
+	s.app.AccountKeeper.SetAccount(ctx, user1Acc)
 
 	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
@@ -75,6 +75,10 @@ func (s *ScopeKeeperTestSuite) SetupTest() {
 
 	s.scopeSpecUUID = uuid.New()
 	s.scopeSpecID = types.ScopeSpecMetadataAddress(s.scopeSpecUUID)
+}
+
+func (s *ScopeKeeperTestSuite) FreshCtx() sdk.Context {
+	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, tmproto.Header{}))
 }
 
 func TestScopeKeeperTestSuite(t *testing.T) {
@@ -100,35 +104,37 @@ func randomUser() testUser {
 }
 
 func (s *ScopeKeeperTestSuite) TestMetadataScopeGetSet() {
-	scope, found := s.app.MetadataKeeper.GetScope(s.ctx, s.scopeID)
+	ctx := s.FreshCtx()
+	scope, found := s.app.MetadataKeeper.GetScope(ctx, s.scopeID)
 	s.Assert().NotNil(scope)
 	s.False(found)
 
 	ns := *types.NewScope(s.scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
 	s.Assert().NotNil(ns)
-	s.app.MetadataKeeper.SetScope(s.ctx, ns)
+	s.app.MetadataKeeper.SetScope(ctx, ns)
 
-	scope, found = s.app.MetadataKeeper.GetScope(s.ctx, s.scopeID)
+	scope, found = s.app.MetadataKeeper.GetScope(ctx, s.scopeID)
 	s.Assert().True(found)
 	s.Assert().NotNil(scope)
 
-	s.app.MetadataKeeper.RemoveScope(s.ctx, ns.ScopeId)
-	scope, found = s.app.MetadataKeeper.GetScope(s.ctx, s.scopeID)
+	s.app.MetadataKeeper.RemoveScope(ctx, ns.ScopeId)
+	scope, found = s.app.MetadataKeeper.GetScope(ctx, s.scopeID)
 	s.Assert().False(found)
 	s.Assert().NotNil(scope)
 }
 
 func (s *ScopeKeeperTestSuite) TestMetadataScopeIterator() {
+	ctx := s.FreshCtx()
 	for i := 1; i <= 10; i++ {
 		valueOwner := ""
 		if i == 5 {
 			valueOwner = s.user2
 		}
 		ns := types.NewScope(types.ScopeMetadataAddress(uuid.New()), nil, ownerPartyList(s.user1), []string{s.user1}, valueOwner)
-		s.app.MetadataKeeper.SetScope(s.ctx, *ns)
+		s.app.MetadataKeeper.SetScope(ctx, *ns)
 	}
 	count := 0
-	err := s.app.MetadataKeeper.IterateScopes(s.ctx, func(s types.Scope) (stop bool) {
+	err := s.app.MetadataKeeper.IterateScopes(ctx, func(s types.Scope) (stop bool) {
 		count++
 		return false
 	})
@@ -136,7 +142,7 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeIterator() {
 	s.Assert().Equal(10, count, "number of scopes iterated")
 
 	count = 0
-	err = s.app.MetadataKeeper.IterateScopesForAddress(s.ctx, s.user1Addr, func(scopeID types.MetadataAddress) (stop bool) {
+	err = s.app.MetadataKeeper.IterateScopesForAddress(ctx, s.user1Addr, func(scopeID types.MetadataAddress) (stop bool) {
 		count++
 		s.True(scopeID.IsScopeAddress())
 		return false
@@ -145,7 +151,7 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeIterator() {
 	s.Assert().Equal(10, count, "number of scope ids iterated for user1")
 
 	count = 0
-	err = s.app.MetadataKeeper.IterateScopesForAddress(s.ctx, s.user2Addr, func(scopeID types.MetadataAddress) (stop bool) {
+	err = s.app.MetadataKeeper.IterateScopesForAddress(ctx, s.user2Addr, func(scopeID types.MetadataAddress) (stop bool) {
 		count++
 		s.True(scopeID.IsScopeAddress())
 		return false
@@ -154,7 +160,7 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeIterator() {
 	s.Assert().Equal(1, count, "number of scope ids iterated for user2")
 
 	count = 0
-	err = s.app.MetadataKeeper.IterateScopes(s.ctx, func(s types.Scope) (stop bool) {
+	err = s.app.MetadataKeeper.IterateScopes(ctx, func(s types.Scope) (stop bool) {
 		count++
 		return count >= 5
 	})
@@ -163,8 +169,9 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeIterator() {
 }
 
 func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
+	ctx := s.FreshCtx()
 	markerAddr := markertypes.MustGetMarkerAddress("testcoin").String()
-	err := s.app.MarkerKeeper.AddMarkerAccount(s.ctx, &markertypes.MarkerAccount{
+	err := s.app.MarkerKeeper.AddMarkerAccount(ctx, &markertypes.MarkerAccount{
 		BaseAccount: &authtypes.BaseAccount{
 			Address:       markerAddr,
 			AccountNumber: 23,
@@ -184,14 +191,14 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
 	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
-	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, *scopeSpec)
+	s.app.MetadataKeeper.SetScopeSpecification(ctx, *scopeSpec)
 
 	scopeID := types.ScopeMetadataAddress(uuid.New())
 	scopeID2 := types.ScopeMetadataAddress(uuid.New())
 
 	// Give user 3 authority to sign for user 1 for scope updates.
 	a := authz.NewGenericAuthorization(types.TypeURLMsgWriteScopeRequest)
-	s.Require().NoError(s.app.AuthzKeeper.SaveGrant(s.ctx, s.user3Addr, s.user1Addr, a, nil), "authz SaveGrant user1 to user3")
+	s.Require().NoError(s.app.AuthzKeeper.SaveGrant(ctx, s.user3Addr, s.user1Addr, a, nil), "authz SaveGrant user1 to user3")
 
 	cases := []struct {
 		name     string
@@ -390,7 +397,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 				Scope:   tc.proposed,
 				Signers: tc.signers,
 			}
-			err = s.app.MetadataKeeper.ValidateWriteScope(s.ctx, tc.existing, msg)
+			err = s.app.MetadataKeeper.ValidateWriteScope(s.FreshCtx(), tc.existing, msg)
 			if len(tc.errorMsg) > 0 {
 				s.Assert().EqualError(err, tc.errorMsg, "ValidateWriteScope expected error")
 			} else {
@@ -401,9 +408,10 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdate() {
 }
 
 func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
+	ctx := s.FreshCtx()
 	markerDenom := "testcoins2"
 	markerAddr := markertypes.MustGetMarkerAddress(markerDenom).String()
-	err := s.app.MarkerKeeper.AddMarkerAccount(s.ctx, &markertypes.MarkerAccount{
+	err := s.app.MarkerKeeper.AddMarkerAccount(ctx, &markertypes.MarkerAccount{
 		BaseAccount: &authtypes.BaseAccount{
 			Address:       markerAddr,
 			AccountNumber: 24,
@@ -428,7 +436,7 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 		DataAccess:        nil,
 		ValueOwnerAddress: "",
 	}
-	s.app.MetadataKeeper.SetScope(s.ctx, scopeNoValueOwner)
+	s.app.MetadataKeeper.SetScope(ctx, scopeNoValueOwner)
 
 	scopeMarkerValueOwner := types.Scope{
 		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
@@ -437,7 +445,7 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 		DataAccess:        nil,
 		ValueOwnerAddress: markerAddr,
 	}
-	s.app.MetadataKeeper.SetScope(s.ctx, scopeMarkerValueOwner)
+	s.app.MetadataKeeper.SetScope(ctx, scopeMarkerValueOwner)
 
 	scopeUserValueOwner := types.Scope{
 		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
@@ -446,7 +454,7 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 		DataAccess:        nil,
 		ValueOwnerAddress: s.user1,
 	}
-	s.app.MetadataKeeper.SetScope(s.ctx, scopeUserValueOwner)
+	s.app.MetadataKeeper.SetScope(ctx, scopeUserValueOwner)
 
 	dneScopeID := types.ScopeMetadataAddress(uuid.New())
 
@@ -568,7 +576,7 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 				ScopeId: tc.scope.ScopeId,
 				Signers: tc.signers,
 			}
-			actual := s.app.MetadataKeeper.ValidateDeleteScope(s.ctx, msg)
+			actual := s.app.MetadataKeeper.ValidateDeleteScope(s.FreshCtx(), msg)
 			if len(tc.expected) > 0 {
 				require.EqualError(t, actual, tc.expected)
 			} else {
@@ -637,7 +645,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeAddDataAccess() {
 				DataAccess: tc.dataAccessAddrs,
 				Signers:    tc.signers,
 			}
-			err := s.app.MetadataKeeper.ValidateAddScopeDataAccess(s.ctx, tc.existing, msg)
+			err := s.app.MetadataKeeper.ValidateAddScopeDataAccess(s.FreshCtx(), tc.existing, msg)
 			if tc.wantErr {
 				s.Assert().Error(err)
 				s.Assert().Equal(tc.errorMsg, err.Error())
@@ -707,7 +715,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeDeleteDataAccess() {
 				DataAccess: tc.dataAccessAddrs,
 				Signers:    tc.signers,
 			}
-			err := s.app.MetadataKeeper.ValidateDeleteScopeDataAccess(s.ctx, tc.existing, msg)
+			err := s.app.MetadataKeeper.ValidateDeleteScopeDataAccess(s.FreshCtx(), tc.existing, msg)
 			if tc.wantErr {
 				s.Assert().Error(err)
 				s.Assert().Equal(tc.errorMsg, err.Error())
@@ -719,9 +727,10 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeDeleteDataAccess() {
 }
 
 func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
+	ctx := s.FreshCtx()
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
 	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
-	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, *scopeSpec)
+	s.app.MetadataKeeper.SetScopeSpecification(ctx, *scopeSpec)
 
 	scopeWithOwners := func(owners []types.Party) types.Scope {
 		return *types.NewScope(s.scopeID, scopeSpecID, owners, []string{s.user1}, s.user1)
@@ -811,7 +820,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
 			} else {
 				msg = &types.MsgDeleteScopeOwnerRequest{Signers: tc.signers}
 			}
-			err := s.app.MetadataKeeper.ValidateUpdateScopeOwners(s.ctx, tc.existing, tc.proposed, msg)
+			err := s.app.MetadataKeeper.ValidateUpdateScopeOwners(s.FreshCtx(), tc.existing, tc.proposed, msg)
 			if len(tc.errorMsg) > 0 {
 				assert.EqualError(t, err, tc.errorMsg, "ValidateUpdateScopeOwners expected error")
 			} else {
@@ -848,7 +857,8 @@ func (s *ScopeKeeperTestSuite) TestScopeIndexing() {
 		ValueOwnerAddress: valueOwnerNew.Bech32,
 	}
 
-	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
+	ctx := s.FreshCtx()
+	store := ctx.KVStore(s.app.GetKey(types.ModuleName))
 
 	s.T().Run("1 write new scope", func(t *testing.T) {
 		expectedIndexes := []struct {
@@ -864,7 +874,7 @@ func (s *ScopeKeeperTestSuite) TestScopeIndexing() {
 			{types.GetScopeSpecScopeCacheKey(specIDOrig, scopeID), "specIDOrig spec index"},
 		}
 
-		s.app.MetadataKeeper.SetScope(s.ctx, scopeV1)
+		s.app.MetadataKeeper.SetScope(ctx, scopeV1)
 
 		for _, expected := range expectedIndexes {
 			assert.True(t, store.Has(expected.key), expected.name)
@@ -896,7 +906,7 @@ func (s *ScopeKeeperTestSuite) TestScopeIndexing() {
 			{types.GetScopeSpecScopeCacheKey(specIDOrig, scopeID), "specIDOrig spec index"},
 		}
 
-		s.app.MetadataKeeper.SetScope(s.ctx, scopeV2)
+		s.app.MetadataKeeper.SetScope(ctx, scopeV2)
 
 		for _, expected := range expectedIndexes {
 			assert.True(t, store.Has(expected.key), expected.name)
@@ -924,7 +934,7 @@ func (s *ScopeKeeperTestSuite) TestScopeIndexing() {
 			{types.GetScopeSpecScopeCacheKey(specIDNew, scopeID), "specIDNew spec index"},
 		}
 
-		s.app.MetadataKeeper.RemoveScope(s.ctx, scopeID)
+		s.app.MetadataKeeper.RemoveScope(ctx, scopeID)
 
 		for _, unexpected := range unexpectedIndexes {
 			assert.False(t, store.Has(unexpected.key), unexpected.name)

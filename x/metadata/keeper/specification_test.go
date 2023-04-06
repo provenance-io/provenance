@@ -25,7 +25,6 @@ type SpecKeeperTestSuite struct {
 	suite.Suite
 
 	app         *simapp.App
-	ctx         sdk.Context
 	queryClient types.QueryClient
 
 	pubkey1   cryptotypes.PubKey
@@ -49,8 +48,8 @@ func TestSpecKeeperTestSuite(t *testing.T) {
 }
 
 func (s *SpecKeeperTestSuite) SetupTest() {
-	testApp := simapp.Setup(s.T())
-	ctx := testApp.BaseApp.NewContext(false, tmproto.Header{})
+	s.app = simapp.Setup(s.T())
+	ctx := s.FreshCtx()
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
@@ -67,14 +66,15 @@ func (s *SpecKeeperTestSuite) SetupTest() {
 	s.contractSpecID1 = types.ContractSpecMetadataAddress(s.contractSpecUUID1)
 	s.contractSpecID2 = types.ContractSpecMetadataAddress(uuid.New())
 
-	s.app = testApp
-	s.ctx = ctx
+	s.app.AccountKeeper.SetAccount(ctx, s.app.AccountKeeper.NewAccountWithAddress(ctx, s.user1Addr))
 
-	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, testApp.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, testApp.MetadataKeeper)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, s.app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, s.app.MetadataKeeper)
 	s.queryClient = types.NewQueryClient(queryHelper)
+}
+
+func (s *SpecKeeperTestSuite) FreshCtx() sdk.Context {
+	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, tmproto.Header{}))
 }
 
 func containsMetadataAddress(arr []types.MetadataAddress, newVal types.MetadataAddress) bool {
@@ -132,6 +132,7 @@ func asRecSpecAddrOrPanic(ma types.MetadataAddress, name string) types.MetadataA
 }
 
 func (s *SpecKeeperTestSuite) TestGetSetRemoveRecordSpecification() {
+	ctx := s.FreshCtx()
 	recordName := "record name"
 	recSpecID := types.RecordSpecMetadataAddress(s.contractSpecUUID1, recordName)
 	newSpec := types.NewRecordSpecification(
@@ -153,33 +154,33 @@ func (s *SpecKeeperTestSuite) TestGetSetRemoveRecordSpecification() {
 	)
 	require.NotNil(s.T(), newSpec, "test setup failure: NewRecordSpecification should not return nil")
 
-	spec1, found1 := s.app.MetadataKeeper.GetRecordSpecification(s.ctx, recSpecID)
+	spec1, found1 := s.app.MetadataKeeper.GetRecordSpecification(ctx, recSpecID)
 	s.False(found1, "1: get record spec should return false before it has been saved")
 	s.NotNil(spec1, "1: get record spec should always return a non-nil record spec")
 
-	s.app.MetadataKeeper.SetRecordSpecification(s.ctx, *newSpec)
+	s.app.MetadataKeeper.SetRecordSpecification(ctx, *newSpec)
 
-	spec2, found2 := s.app.MetadataKeeper.GetRecordSpecification(s.ctx, recSpecID)
+	spec2, found2 := s.app.MetadataKeeper.GetRecordSpecification(ctx, recSpecID)
 	s.True(found2, "get record spec should return true after it has been saved")
 	s.NotNil(spec2, "get record spec should always return a non-nil record spec")
 	s.Equal(recSpecID, spec2.SpecificationId, "2: get record spec should return a spec containing id provided")
 
-	spec3, found3 := s.app.MetadataKeeper.GetRecordSpecification(s.ctx, types.RecordSpecMetadataAddress(s.contractSpecUUID1, "nope"))
+	spec3, found3 := s.app.MetadataKeeper.GetRecordSpecification(ctx, types.RecordSpecMetadataAddress(s.contractSpecUUID1, "nope"))
 	s.False(found3, "3: get record spec should return false for an unknown address")
 	s.NotNil(spec3, "3: get record spec should always return a non-nil record spec")
 
-	spec4, found4 := s.app.MetadataKeeper.GetRecordSpecification(s.ctx, types.RecordSpecMetadataAddress(uuid.New(), recordName))
+	spec4, found4 := s.app.MetadataKeeper.GetRecordSpecification(ctx, types.RecordSpecMetadataAddress(uuid.New(), recordName))
 	s.False(found4, "4: get record spec should return false for an unknown address")
 	s.NotNil(spec4, "4: get record spec should always return a non-nil record spec")
 
-	remErr1 := s.app.MetadataKeeper.RemoveRecordSpecification(s.ctx, newSpec.SpecificationId)
+	remErr1 := s.app.MetadataKeeper.RemoveRecordSpecification(ctx, newSpec.SpecificationId)
 	s.Nil(remErr1, "5: remove should not return any error")
 
-	spec6, found6 := s.app.MetadataKeeper.GetRecordSpecification(s.ctx, recSpecID)
+	spec6, found6 := s.app.MetadataKeeper.GetRecordSpecification(ctx, recSpecID)
 	s.False(found6, "6: get record spec should return false after it has been removed")
 	s.NotNil(spec6, "6: get record spec should always return a non-nil record spec")
 
-	remErr2 := s.app.MetadataKeeper.RemoveRecordSpecification(s.ctx, recSpecID)
+	remErr2 := s.app.MetadataKeeper.RemoveRecordSpecification(ctx, recSpecID)
 	s.Equal(
 		fmt.Errorf("record specification with id %s not found", recSpecID),
 		remErr2,
@@ -188,6 +189,7 @@ func (s *SpecKeeperTestSuite) TestGetSetRemoveRecordSpecification() {
 }
 
 func (s *SpecKeeperTestSuite) TestIterateRecordSpecs() {
+	ctx := s.FreshCtx()
 	size := 10
 	specs := make([]*types.RecordSpecification, size)
 	for i := 0; i < size; i++ {
@@ -217,12 +219,12 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecs() {
 			types.DefinitionType_DEFINITION_TYPE_RECORD,
 			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 		)
-		s.app.MetadataKeeper.SetRecordSpecification(s.ctx, *specs[i])
+		s.app.MetadataKeeper.SetRecordSpecification(ctx, *specs[i])
 	}
 
 	visitedRecordSpecIDs := make([]types.MetadataAddress, size)
 	count := 0
-	err1 := s.app.MetadataKeeper.IterateRecordSpecs(s.ctx, func(spec types.RecordSpecification) (stop bool) {
+	err1 := s.app.MetadataKeeper.IterateRecordSpecs(ctx, func(spec types.RecordSpecification) (stop bool) {
 		if containsMetadataAddress(visitedRecordSpecIDs, spec.SpecificationId) {
 			s.Fail("function IterateRecordSpecs visited the same record specification twice: %s", spec.SpecificationId.String())
 		}
@@ -234,7 +236,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecs() {
 	s.Equal(size, count, "number of record specs iterated through")
 
 	shortCount := 0
-	err2 := s.app.MetadataKeeper.IterateRecordSpecs(s.ctx, func(spec types.RecordSpecification) (stop bool) {
+	err2 := s.app.MetadataKeeper.IterateRecordSpecs(ctx, func(spec types.RecordSpecification) (stop bool) {
 		shortCount++
 		if shortCount == 5 {
 			return true
@@ -246,6 +248,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecs() {
 }
 
 func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
+	ctx := s.FreshCtx()
 	// Create 3 contract specs. One owned by user1, One owned by user2, and One owned by both user1 and user2.
 	contractSpecs := []*types.ContractSpecification{
 		types.NewContractSpecification(
@@ -289,7 +292,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
 		),
 	}
 	for _, spec := range contractSpecs {
-		s.app.MetadataKeeper.SetContractSpecification(s.ctx, *spec)
+		s.app.MetadataKeeper.SetContractSpecification(ctx, *spec)
 	}
 
 	// Create 2 record specifications for each contract specification
@@ -376,7 +379,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
 		),
 	}
 	for _, spec := range recordSpecs {
-		s.app.MetadataKeeper.SetRecordSpecification(s.ctx, *spec)
+		s.app.MetadataKeeper.SetRecordSpecification(ctx, *spec)
 	}
 
 	user1SpecIDs := []types.MetadataAddress{
@@ -390,7 +393,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
 
 	// Make sure all user1 record specs are iterated over
 	user1SpecIDsIterated := []types.MetadataAddress{}
-	errUser1 := s.app.MetadataKeeper.IterateRecordSpecsForOwner(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
+	errUser1 := s.app.MetadataKeeper.IterateRecordSpecsForOwner(ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
 		user1SpecIDsIterated = append(user1SpecIDsIterated, specID)
 		return false
 	})
@@ -402,7 +405,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
 
 	// Make sure all user2 record specs are iterated over
 	user2SpecIDsIterated := []types.MetadataAddress{}
-	errUser2 := s.app.MetadataKeeper.IterateRecordSpecsForOwner(s.ctx, s.user2Addr, func(specID types.MetadataAddress) (stop bool) {
+	errUser2 := s.app.MetadataKeeper.IterateRecordSpecsForOwner(ctx, s.user2Addr, func(specID types.MetadataAddress) (stop bool) {
 		user2SpecIDsIterated = append(user2SpecIDsIterated, specID)
 		return false
 	})
@@ -415,7 +418,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
 	// Make sure an unknown user address results in zero iterations.
 	user3Addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	user3Count := 0
-	errUser3 := s.app.MetadataKeeper.IterateRecordSpecsForOwner(s.ctx, user3Addr, func(specID types.MetadataAddress) (stop bool) {
+	errUser3 := s.app.MetadataKeeper.IterateRecordSpecsForOwner(ctx, user3Addr, func(specID types.MetadataAddress) (stop bool) {
 		user3Count++
 		return false
 	})
@@ -424,7 +427,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
 
 	// Make sure the stop bool is being recognized.
 	countStop := 0
-	errStop := s.app.MetadataKeeper.IterateRecordSpecsForOwner(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
+	errStop := s.app.MetadataKeeper.IterateRecordSpecsForOwner(ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
 		countStop++
 		if countStop == 2 {
 			return true
@@ -436,6 +439,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForOwner() {
 }
 
 func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForContractSpec() {
+	ctx := s.FreshCtx()
 	// Create 3 contract specs.
 	contractSpecs := []*types.ContractSpecification{
 		types.NewContractSpecification(
@@ -479,7 +483,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForContractSpec() {
 		),
 	}
 	for _, spec := range contractSpecs {
-		s.app.MetadataKeeper.SetContractSpecification(s.ctx, *spec)
+		s.app.MetadataKeeper.SetContractSpecification(ctx, *spec)
 	}
 
 	// Create 3 record specs for the 1st contract spec, 2 for the 2nd, and none for the 3rd.
@@ -552,7 +556,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForContractSpec() {
 		),
 	}
 	for _, spec := range recordSpecs {
-		s.app.MetadataKeeper.SetRecordSpecification(s.ctx, *spec)
+		s.app.MetadataKeeper.SetRecordSpecification(ctx, *spec)
 	}
 
 	contractSpec0RecSpecIDs := []types.MetadataAddress{
@@ -565,7 +569,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForContractSpec() {
 
 	// Make sure all contract spec 0 record specs are iterated over
 	contractSpec0SpecIDsIterated := []types.MetadataAddress{}
-	errContractSpec0 := s.app.MetadataKeeper.IterateRecordSpecsForContractSpec(s.ctx, contractSpecs[0].SpecificationId, func(specID types.MetadataAddress) (stop bool) {
+	errContractSpec0 := s.app.MetadataKeeper.IterateRecordSpecsForContractSpec(ctx, contractSpecs[0].SpecificationId, func(specID types.MetadataAddress) (stop bool) {
 		contractSpec0SpecIDsIterated = append(contractSpec0SpecIDsIterated, specID)
 		return false
 	})
@@ -577,7 +581,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForContractSpec() {
 
 	// Make sure all contract spec 1 record specs are iterated over
 	contractSpec1SpecIDsIterated := []types.MetadataAddress{}
-	errContractSpec1 := s.app.MetadataKeeper.IterateRecordSpecsForContractSpec(s.ctx, contractSpecs[1].SpecificationId, func(specID types.MetadataAddress) (stop bool) {
+	errContractSpec1 := s.app.MetadataKeeper.IterateRecordSpecsForContractSpec(ctx, contractSpecs[1].SpecificationId, func(specID types.MetadataAddress) (stop bool) {
 		contractSpec1SpecIDsIterated = append(contractSpec1SpecIDsIterated, specID)
 		return false
 	})
@@ -589,7 +593,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForContractSpec() {
 
 	// Make sure no contract spec 2 record specs are iterated over
 	contractSpec2SpecIDsIterated := []types.MetadataAddress{}
-	errContractSpec2 := s.app.MetadataKeeper.IterateRecordSpecsForContractSpec(s.ctx, contractSpecs[2].SpecificationId, func(specID types.MetadataAddress) (stop bool) {
+	errContractSpec2 := s.app.MetadataKeeper.IterateRecordSpecsForContractSpec(ctx, contractSpecs[2].SpecificationId, func(specID types.MetadataAddress) (stop bool) {
 		contractSpec2SpecIDsIterated = append(contractSpec2SpecIDsIterated, specID)
 		return false
 	})
@@ -602,7 +606,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForContractSpec() {
 	// Make sure an unknown contract spec results in zero iterations.
 	unknownContractSpecID := types.ContractSpecMetadataAddress(uuid.New())
 	unknownContractSpecIDCount := 0
-	errUnknownContractSpecID := s.app.MetadataKeeper.IterateRecordSpecsForContractSpec(s.ctx, unknownContractSpecID, func(specID types.MetadataAddress) (stop bool) {
+	errUnknownContractSpecID := s.app.MetadataKeeper.IterateRecordSpecsForContractSpec(ctx, unknownContractSpecID, func(specID types.MetadataAddress) (stop bool) {
 		unknownContractSpecIDCount++
 		return false
 	})
@@ -611,7 +615,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForContractSpec() {
 
 	// Make sure the stop bool is being recognized.
 	countStop := 0
-	errStop := s.app.MetadataKeeper.IterateRecordSpecsForContractSpec(s.ctx, contractSpecs[0].SpecificationId, func(specID types.MetadataAddress) (stop bool) {
+	errStop := s.app.MetadataKeeper.IterateRecordSpecsForContractSpec(ctx, contractSpecs[0].SpecificationId, func(specID types.MetadataAddress) (stop bool) {
 		countStop++
 		if countStop == 2 {
 			return true
@@ -623,6 +627,7 @@ func (s *SpecKeeperTestSuite) TestIterateRecordSpecsForContractSpec() {
 }
 
 func (s *SpecKeeperTestSuite) TestGetRecordSpecificationsForContractSpecificationID() {
+	ctx := s.FreshCtx()
 	// Create 3 contract specs.
 	contractSpecs := []*types.ContractSpecification{
 		types.NewContractSpecification(
@@ -666,7 +671,7 @@ func (s *SpecKeeperTestSuite) TestGetRecordSpecificationsForContractSpecificatio
 		),
 	}
 	for _, spec := range contractSpecs {
-		s.app.MetadataKeeper.SetContractSpecification(s.ctx, *spec)
+		s.app.MetadataKeeper.SetContractSpecification(ctx, *spec)
 	}
 
 	// Create 3 record specs for the 1st contract spec, 2 for the 2nd, and none for the 3rd.
@@ -739,7 +744,7 @@ func (s *SpecKeeperTestSuite) TestGetRecordSpecificationsForContractSpecificatio
 		),
 	}
 	for _, spec := range recordSpecs {
-		s.app.MetadataKeeper.SetRecordSpecification(s.ctx, *spec)
+		s.app.MetadataKeeper.SetRecordSpecification(ctx, *spec)
 	}
 
 	contractSpec0Expected := recordSpecs[0:3]
@@ -747,21 +752,21 @@ func (s *SpecKeeperTestSuite) TestGetRecordSpecificationsForContractSpecificatio
 	contractSpec2Expected := []*types.RecordSpecification{}
 
 	// Make sure all contract spec 0 record specs are returned
-	contractSpecs0Actual, contractSpecs0ActualErr := s.app.MetadataKeeper.GetRecordSpecificationsForContractSpecificationID(s.ctx, contractSpecs[0].SpecificationId)
+	contractSpecs0Actual, contractSpecs0ActualErr := s.app.MetadataKeeper.GetRecordSpecificationsForContractSpecificationID(ctx, contractSpecs[0].SpecificationId)
 	s.Nil(contractSpecs0ActualErr, "contract spec 0: should not have returned an error")
 	s.True(areEquivalentSetsOfRecSpecs(contractSpec0Expected, contractSpecs0Actual),
 		"contract spec 0: unexpected record specs:\n  expected: %v\n    actual: %v\n",
 		contractSpec0Expected, contractSpecs0Actual)
 
 	// Make sure all contract spec 1 record specs are returned
-	contractSpecs1Actual, contractSpecs1ActualErr := s.app.MetadataKeeper.GetRecordSpecificationsForContractSpecificationID(s.ctx, contractSpecs[1].SpecificationId)
+	contractSpecs1Actual, contractSpecs1ActualErr := s.app.MetadataKeeper.GetRecordSpecificationsForContractSpecificationID(ctx, contractSpecs[1].SpecificationId)
 	s.Nil(contractSpecs1ActualErr, "contract spec 1: should not have returned an error")
 	s.True(areEquivalentSetsOfRecSpecs(contractSpec1Expected, contractSpecs1Actual),
 		"contract spec 1: unexpected record specs:\n  expected: %v\n    actual: %v\n",
 		contractSpec1Expected, contractSpecs1Actual)
 
 	// Make sure all contract spec 2 record specs are returned (none)
-	contractSpecs2Actual, contractSpecs2ActualErr := s.app.MetadataKeeper.GetRecordSpecificationsForContractSpecificationID(s.ctx, contractSpecs[2].SpecificationId)
+	contractSpecs2Actual, contractSpecs2ActualErr := s.app.MetadataKeeper.GetRecordSpecificationsForContractSpecificationID(ctx, contractSpecs[2].SpecificationId)
 	s.Nil(contractSpecs2ActualErr, "contract spec 2: should not have returned an error")
 	s.True(areEquivalentSetsOfRecSpecs(contractSpec2Expected, contractSpecs2Actual),
 		"contract spec 2: unexpected record specs:\n  expected: %v\n    actual: %v\n",
@@ -769,7 +774,7 @@ func (s *SpecKeeperTestSuite) TestGetRecordSpecificationsForContractSpecificatio
 
 	// Make sure an unknown contract spec returns empty.
 	unknownContractSpecID := types.ContractSpecMetadataAddress(uuid.New())
-	unknownContractSpecIDActual, unknownContractSpecIDActualErr := s.app.MetadataKeeper.GetRecordSpecificationsForContractSpecificationID(s.ctx, unknownContractSpecID)
+	unknownContractSpecIDActual, unknownContractSpecIDActualErr := s.app.MetadataKeeper.GetRecordSpecificationsForContractSpecificationID(ctx, unknownContractSpecID)
 	s.Nil(unknownContractSpecIDActualErr, "unknown contract spec id: should not have returned an error")
 	s.Equal(0, len(unknownContractSpecIDActual), "unknown contract spec id: count")
 }
@@ -845,7 +850,7 @@ func (s *SpecKeeperTestSuite) TestValidateRecordSpecUpdate() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateWriteRecordSpecification(s.ctx, tt.existing, *tt.proposed)
+			err := s.app.MetadataKeeper.ValidateWriteRecordSpecification(s.FreshCtx(), tt.existing, *tt.proposed)
 			if err != nil {
 				require.Equal(t, tt.want, err.Error(), "RecordSpec Keeper ValidateWriteRecordSpecification error")
 			} else if len(tt.want) > 0 {
@@ -856,6 +861,7 @@ func (s *SpecKeeperTestSuite) TestValidateRecordSpecUpdate() {
 }
 
 func (s *SpecKeeperTestSuite) TestGetSetRemoveContractSpecification() {
+	ctx := s.FreshCtx()
 	newSpec := types.NewContractSpecification(
 		s.contractSpecID1,
 		types.NewDescription(
@@ -871,29 +877,29 @@ func (s *SpecKeeperTestSuite) TestGetSetRemoveContractSpecification() {
 	)
 	require.NotNil(s.T(), newSpec, "test setup failure: NewContractSpecification should not return nil")
 
-	spec1, found1 := s.app.MetadataKeeper.GetContractSpecification(s.ctx, s.contractSpecID1)
+	spec1, found1 := s.app.MetadataKeeper.GetContractSpecification(ctx, s.contractSpecID1)
 	s.False(found1, "1: get contract spec should return false before it has been saved")
 	s.NotNil(spec1, "1: get contract spec should always return a non-nil contract spec")
 
-	s.app.MetadataKeeper.SetContractSpecification(s.ctx, *newSpec)
+	s.app.MetadataKeeper.SetContractSpecification(ctx, *newSpec)
 
-	spec2, found2 := s.app.MetadataKeeper.GetContractSpecification(s.ctx, s.contractSpecID1)
+	spec2, found2 := s.app.MetadataKeeper.GetContractSpecification(ctx, s.contractSpecID1)
 	s.True(found2, "get contract spec should return true after it has been saved")
 	s.NotNil(spec2, "get contract spec should always return a non-nil contract spec")
 	s.Equal(s.contractSpecID1, spec2.SpecificationId, "2: get contract spec should return a spec containing id provided")
 
-	spec3, found3 := s.app.MetadataKeeper.GetContractSpecification(s.ctx, types.ContractSpecMetadataAddress(uuid.New()))
+	spec3, found3 := s.app.MetadataKeeper.GetContractSpecification(ctx, types.ContractSpecMetadataAddress(uuid.New()))
 	s.False(found3, "3: get contract spec should return false for an unknown address")
 	s.NotNil(spec3, "3: get contract spec should always return a non-nil contract spec")
 
-	remErr := s.app.MetadataKeeper.RemoveContractSpecification(s.ctx, newSpec.SpecificationId)
+	remErr := s.app.MetadataKeeper.RemoveContractSpecification(ctx, newSpec.SpecificationId)
 	s.Nil(remErr, "4: remove should not return any error")
 
-	spec5, found5 := s.app.MetadataKeeper.GetContractSpecification(s.ctx, s.contractSpecID1)
+	spec5, found5 := s.app.MetadataKeeper.GetContractSpecification(ctx, s.contractSpecID1)
 	s.False(found5, "5: get contract spec should return false after it has been removed")
 	s.NotNil(spec5, "5: get contract spec should always return a non-nil contract spec")
 
-	remErr2 := s.app.MetadataKeeper.RemoveContractSpecification(s.ctx, s.contractSpecID1)
+	remErr2 := s.app.MetadataKeeper.RemoveContractSpecification(ctx, s.contractSpecID1)
 	s.Equal(
 		fmt.Errorf("contract specification with id %s not found", s.contractSpecID1),
 		remErr2,
@@ -902,6 +908,7 @@ func (s *SpecKeeperTestSuite) TestGetSetRemoveContractSpecification() {
 }
 
 func (s *SpecKeeperTestSuite) TestIterateContractSpecs() {
+	ctx := s.FreshCtx()
 	size := 10
 	specs := make([]*types.ContractSpecification, size)
 	for i := 0; i < size; i++ {
@@ -918,12 +925,12 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecs() {
 			types.NewContractSpecificationSourceHash(fmt.Sprintf("somehash%d", i)),
 			fmt.Sprintf("someclass_%d", i),
 		)
-		s.app.MetadataKeeper.SetContractSpecification(s.ctx, *specs[i])
+		s.app.MetadataKeeper.SetContractSpecification(ctx, *specs[i])
 	}
 
 	visitedContractSpecIDs := make([]types.MetadataAddress, size)
 	count := 0
-	err1 := s.app.MetadataKeeper.IterateContractSpecs(s.ctx, func(spec types.ContractSpecification) (stop bool) {
+	err1 := s.app.MetadataKeeper.IterateContractSpecs(ctx, func(spec types.ContractSpecification) (stop bool) {
 		if containsMetadataAddress(visitedContractSpecIDs, spec.SpecificationId) {
 			s.Fail("function IterateContractSpecs visited the same contract specification twice: %s", spec.SpecificationId.String())
 		}
@@ -935,7 +942,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecs() {
 	s.Equal(size, count, "number of contract specs iterated through")
 
 	shortCount := 0
-	err2 := s.app.MetadataKeeper.IterateContractSpecs(s.ctx, func(spec types.ContractSpecification) (stop bool) {
+	err2 := s.app.MetadataKeeper.IterateContractSpecs(ctx, func(spec types.ContractSpecification) (stop bool) {
 		shortCount++
 		if shortCount == 5 {
 			return true
@@ -1023,13 +1030,14 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForOwner() {
 	user1SpecIDs[2] = specs[4].SpecificationId
 	user2SpecIDs[2] = specs[4].SpecificationId
 
+	ctx := s.FreshCtx()
 	for _, spec := range specs {
-		s.app.MetadataKeeper.SetContractSpecification(s.ctx, *spec)
+		s.app.MetadataKeeper.SetContractSpecification(ctx, *spec)
 	}
 
 	// Make sure all user1 contract specs are iterated over
 	user1SpecIDsIterated := []types.MetadataAddress{}
-	errUser1 := s.app.MetadataKeeper.IterateContractSpecsForOwner(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
+	errUser1 := s.app.MetadataKeeper.IterateContractSpecsForOwner(ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
 		user1SpecIDsIterated = append(user1SpecIDsIterated, specID)
 		return false
 	})
@@ -1041,7 +1049,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForOwner() {
 
 	// Make sure all user2 contract specs are iterated over
 	user2SpecIDsIterated := []types.MetadataAddress{}
-	errUser2 := s.app.MetadataKeeper.IterateContractSpecsForOwner(s.ctx, s.user2Addr, func(specID types.MetadataAddress) (stop bool) {
+	errUser2 := s.app.MetadataKeeper.IterateContractSpecsForOwner(ctx, s.user2Addr, func(specID types.MetadataAddress) (stop bool) {
 		user2SpecIDsIterated = append(user2SpecIDsIterated, specID)
 		return false
 	})
@@ -1054,7 +1062,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForOwner() {
 	// Make sure an unknown user address results in zero iterations.
 	user3Addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	user3Count := 0
-	errUser3 := s.app.MetadataKeeper.IterateContractSpecsForOwner(s.ctx, user3Addr, func(specID types.MetadataAddress) (stop bool) {
+	errUser3 := s.app.MetadataKeeper.IterateContractSpecsForOwner(ctx, user3Addr, func(specID types.MetadataAddress) (stop bool) {
 		user3Count++
 		return false
 	})
@@ -1063,7 +1071,7 @@ func (s *SpecKeeperTestSuite) TestIterateContractSpecsForOwner() {
 
 	// Make sure the stop bool is being recognized.
 	countStop := 0
-	errStop := s.app.MetadataKeeper.IterateContractSpecsForOwner(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
+	errStop := s.app.MetadataKeeper.IterateContractSpecsForOwner(ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
 		countStop++
 		if countStop == 2 {
 			return true
@@ -1178,7 +1186,7 @@ func (s *SpecKeeperTestSuite) TestValidateContractSpecUpdate() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateWriteContractSpecification(s.ctx, tt.existing, *tt.proposed)
+			err := s.app.MetadataKeeper.ValidateWriteContractSpecification(s.FreshCtx(), tt.existing, *tt.proposed)
 			if err != nil {
 				require.Equal(t, tt.want, err.Error(), "ContractSpec Keeper ValidateWriteContractSpecification error")
 			} else if len(tt.want) > 0 {
@@ -1213,7 +1221,8 @@ func (s *SpecKeeperTestSuite) TestContractSpecIndexing() {
 		ClassName:       "",
 	}
 
-	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
+	ctx := s.FreshCtx()
+	store := ctx.KVStore(s.app.GetKey(types.ModuleName))
 
 	s.T().Run("1 write new contract specification", func(t *testing.T) {
 		expectedIndexes := []struct {
@@ -1224,7 +1233,7 @@ func (s *SpecKeeperTestSuite) TestContractSpecIndexing() {
 			{types.GetAddressContractSpecCacheKey(ownerToRemove.Addr, specID), "ownerToRemove address index"},
 		}
 
-		s.app.MetadataKeeper.SetContractSpecification(s.ctx, specV1)
+		s.app.MetadataKeeper.SetContractSpecification(ctx, specV1)
 
 		for _, expected := range expectedIndexes {
 			assert.True(t, store.Has(expected.key), expected.name)
@@ -1246,7 +1255,7 @@ func (s *SpecKeeperTestSuite) TestContractSpecIndexing() {
 			{types.GetAddressContractSpecCacheKey(ownerToRemove.Addr, specID), "ownerToRemove address index"},
 		}
 
-		s.app.MetadataKeeper.SetContractSpecification(s.ctx, specV2)
+		s.app.MetadataKeeper.SetContractSpecification(ctx, specV2)
 
 		for _, expected := range expectedIndexes {
 			assert.True(t, store.Has(expected.key), expected.name)
@@ -1266,7 +1275,7 @@ func (s *SpecKeeperTestSuite) TestContractSpecIndexing() {
 			{types.GetAddressContractSpecCacheKey(ownerToRemove.Addr, specID), "ownerToRemove address index"},
 		}
 
-		assert.NoError(t, s.app.MetadataKeeper.RemoveContractSpecification(s.ctx, specID), "removing contract spec")
+		assert.NoError(t, s.app.MetadataKeeper.RemoveContractSpecification(ctx, specID), "removing contract spec")
 
 		for _, unexpected := range unexpectedIndexes {
 			assert.False(t, store.Has(unexpected.key), unexpected.name)
@@ -1275,6 +1284,7 @@ func (s *SpecKeeperTestSuite) TestContractSpecIndexing() {
 }
 
 func (s *SpecKeeperTestSuite) TestGetSetRemoveScopeSpecification() {
+	ctx := s.FreshCtx()
 	newSpec := types.NewScopeSpecification(
 		s.scopeSpecID,
 		types.NewDescription(
@@ -1289,29 +1299,29 @@ func (s *SpecKeeperTestSuite) TestGetSetRemoveScopeSpecification() {
 	)
 	require.NotNil(s.T(), newSpec, "test setup failure: NewScopeSpecification should not return nil")
 
-	spec1, found1 := s.app.MetadataKeeper.GetScopeSpecification(s.ctx, s.scopeSpecID)
+	spec1, found1 := s.app.MetadataKeeper.GetScopeSpecification(ctx, s.scopeSpecID)
 	s.False(found1, "1: get scope spec should return false before it has been saved")
 	s.NotNil(spec1, "1: get scope spec should always return a non-nil scope spec")
 
-	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, *newSpec)
+	s.app.MetadataKeeper.SetScopeSpecification(ctx, *newSpec)
 
-	spec2, found2 := s.app.MetadataKeeper.GetScopeSpecification(s.ctx, s.scopeSpecID)
+	spec2, found2 := s.app.MetadataKeeper.GetScopeSpecification(ctx, s.scopeSpecID)
 	s.True(found2, "get scope spec should return true after it has been saved")
 	s.NotNil(spec2, "get scope spec should always return a non-nil scope spec")
 	s.Equal(s.scopeSpecID, spec2.SpecificationId, "2: get scope spec should return a spec containing id provided")
 
-	spec3, found3 := s.app.MetadataKeeper.GetScopeSpecification(s.ctx, types.ScopeSpecMetadataAddress(uuid.New()))
+	spec3, found3 := s.app.MetadataKeeper.GetScopeSpecification(ctx, types.ScopeSpecMetadataAddress(uuid.New()))
 	s.False(found3, "3: get scope spec should return false for an unknown address")
 	s.NotNil(spec3, "3: get scope spec should always return a non-nil scope spec")
 
-	remErr := s.app.MetadataKeeper.RemoveScopeSpecification(s.ctx, newSpec.SpecificationId)
+	remErr := s.app.MetadataKeeper.RemoveScopeSpecification(ctx, newSpec.SpecificationId)
 	s.Nil(remErr, "4: remove should not return any error")
 
-	spec5, found5 := s.app.MetadataKeeper.GetScopeSpecification(s.ctx, s.scopeSpecID)
+	spec5, found5 := s.app.MetadataKeeper.GetScopeSpecification(ctx, s.scopeSpecID)
 	s.False(found5, "5: get scope spec should return false after it has been removed")
 	s.NotNil(spec5, "5: get scope spec should always return a non-nil scope spec")
 
-	remErr2 := s.app.MetadataKeeper.RemoveScopeSpecification(s.ctx, s.scopeSpecID)
+	remErr2 := s.app.MetadataKeeper.RemoveScopeSpecification(ctx, s.scopeSpecID)
 	s.Equal(
 		fmt.Errorf("scope specification with id %s not found", s.scopeSpecID),
 		remErr2,
@@ -1320,6 +1330,7 @@ func (s *SpecKeeperTestSuite) TestGetSetRemoveScopeSpecification() {
 }
 
 func (s *SpecKeeperTestSuite) TestIterateScopeSpecs() {
+	ctx := s.FreshCtx()
 	size := 10
 	scopeSpecs := make([]*types.ScopeSpecification, size)
 	for i := 0; i < size; i++ {
@@ -1335,12 +1346,12 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecs() {
 			[]types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 			[]types.MetadataAddress{s.contractSpecID1},
 		)
-		s.app.MetadataKeeper.SetScopeSpecification(s.ctx, *scopeSpecs[i])
+		s.app.MetadataKeeper.SetScopeSpecification(ctx, *scopeSpecs[i])
 	}
 
 	visitedScopeSpecAddresses := make([]types.MetadataAddress, size)
 	count := 0
-	err1 := s.app.MetadataKeeper.IterateScopeSpecs(s.ctx, func(spec types.ScopeSpecification) (stop bool) {
+	err1 := s.app.MetadataKeeper.IterateScopeSpecs(ctx, func(spec types.ScopeSpecification) (stop bool) {
 		if containsMetadataAddress(visitedScopeSpecAddresses, spec.SpecificationId) {
 			s.Fail("function IterateScopeSpecs visited the same scope specification twice: %s", spec.SpecificationId.String())
 		}
@@ -1352,7 +1363,7 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecs() {
 	s.Equal(size, count, "number of scope specs iterated through")
 
 	shortCount := 0
-	err2 := s.app.MetadataKeeper.IterateScopeSpecs(s.ctx, func(spec types.ScopeSpecification) (stop bool) {
+	err2 := s.app.MetadataKeeper.IterateScopeSpecs(ctx, func(spec types.ScopeSpecification) (stop bool) {
 		shortCount++
 		if shortCount == 5 {
 			return true
@@ -1435,13 +1446,14 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForOwner() {
 	user1ScopeSpecIDs[2] = scopeSpecs[4].SpecificationId
 	user2ScopeSpecIDs[2] = scopeSpecs[4].SpecificationId
 
+	ctx := s.FreshCtx()
 	for _, spec := range scopeSpecs {
-		s.app.MetadataKeeper.SetScopeSpecification(s.ctx, *spec)
+		s.app.MetadataKeeper.SetScopeSpecification(ctx, *spec)
 	}
 
 	// Make sure all user1 scope specs are iterated over
 	user1ScopeSpecIDsIterated := []types.MetadataAddress{}
-	errUser1 := s.app.MetadataKeeper.IterateScopeSpecsForOwner(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
+	errUser1 := s.app.MetadataKeeper.IterateScopeSpecsForOwner(ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
 		user1ScopeSpecIDsIterated = append(user1ScopeSpecIDsIterated, specID)
 		return false
 	})
@@ -1453,7 +1465,7 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForOwner() {
 
 	// Make sure all user2 scope specs are iterated over
 	user2ScopeSpecIDsIterated := []types.MetadataAddress{}
-	errUser2 := s.app.MetadataKeeper.IterateScopeSpecsForOwner(s.ctx, s.user2Addr, func(specID types.MetadataAddress) (stop bool) {
+	errUser2 := s.app.MetadataKeeper.IterateScopeSpecsForOwner(ctx, s.user2Addr, func(specID types.MetadataAddress) (stop bool) {
 		user2ScopeSpecIDsIterated = append(user2ScopeSpecIDsIterated, specID)
 		return false
 	})
@@ -1466,7 +1478,7 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForOwner() {
 	// Make sure an unknown user address results in zero iterations.
 	user3Addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	user3Count := 0
-	errUser3 := s.app.MetadataKeeper.IterateScopeSpecsForOwner(s.ctx, user3Addr, func(specID types.MetadataAddress) (stop bool) {
+	errUser3 := s.app.MetadataKeeper.IterateScopeSpecsForOwner(ctx, user3Addr, func(specID types.MetadataAddress) (stop bool) {
 		user3Count++
 		return false
 	})
@@ -1475,7 +1487,7 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForOwner() {
 
 	// Make sure the stop bool is being recognized.
 	countStop := 0
-	errStop := s.app.MetadataKeeper.IterateScopeSpecsForOwner(s.ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
+	errStop := s.app.MetadataKeeper.IterateScopeSpecsForOwner(ctx, s.user1Addr, func(specID types.MetadataAddress) (stop bool) {
 		countStop++
 		if countStop == 2 {
 			return true
@@ -1558,13 +1570,14 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForContractSpec() {
 	contractSpec1ScopeSpecIDs[2] = scopeSpecs[4].SpecificationId
 	contractSpec2ScopeSpecIDs[2] = scopeSpecs[4].SpecificationId
 
+	ctx := s.FreshCtx()
 	for _, spec := range scopeSpecs {
-		s.app.MetadataKeeper.SetScopeSpecification(s.ctx, *spec)
+		s.app.MetadataKeeper.SetScopeSpecification(ctx, *spec)
 	}
 
 	// Make sure all contract spec 1 scope specs are iterated over
 	contractSpec1ScopeSpecIDsIterated := []types.MetadataAddress{}
-	errContractSpec1 := s.app.MetadataKeeper.IterateScopeSpecsForContractSpec(s.ctx, s.contractSpecID1, func(specID types.MetadataAddress) (stop bool) {
+	errContractSpec1 := s.app.MetadataKeeper.IterateScopeSpecsForContractSpec(ctx, s.contractSpecID1, func(specID types.MetadataAddress) (stop bool) {
 		contractSpec1ScopeSpecIDsIterated = append(contractSpec1ScopeSpecIDsIterated, specID)
 		return false
 	})
@@ -1576,7 +1589,7 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForContractSpec() {
 
 	// Make sure all contract spec 2 scope specs are iterated over
 	contractSpec2ScopeSpecIDsIterated := []types.MetadataAddress{}
-	errContractSpec2 := s.app.MetadataKeeper.IterateScopeSpecsForContractSpec(s.ctx, s.contractSpecID2, func(specID types.MetadataAddress) (stop bool) {
+	errContractSpec2 := s.app.MetadataKeeper.IterateScopeSpecsForContractSpec(ctx, s.contractSpecID2, func(specID types.MetadataAddress) (stop bool) {
 		contractSpec2ScopeSpecIDsIterated = append(contractSpec2ScopeSpecIDsIterated, specID)
 		return false
 	})
@@ -1589,7 +1602,7 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForContractSpec() {
 	// Make sure an unknown contract spec results in zero iterations.
 	contractSpecID3 := types.ContractSpecMetadataAddress(uuid.New())
 	contractSpec3Count := 0
-	errContractSpec3 := s.app.MetadataKeeper.IterateScopeSpecsForContractSpec(s.ctx, contractSpecID3, func(specID types.MetadataAddress) (stop bool) {
+	errContractSpec3 := s.app.MetadataKeeper.IterateScopeSpecsForContractSpec(ctx, contractSpecID3, func(specID types.MetadataAddress) (stop bool) {
 		contractSpec3Count++
 		return false
 	})
@@ -1598,7 +1611,7 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForContractSpec() {
 
 	// Make sure the stop bool is being recognized.
 	countStop := 0
-	errStop := s.app.MetadataKeeper.IterateScopeSpecsForContractSpec(s.ctx, s.contractSpecID1, func(specID types.MetadataAddress) (stop bool) {
+	errStop := s.app.MetadataKeeper.IterateScopeSpecsForContractSpec(ctx, s.contractSpecID1, func(specID types.MetadataAddress) (stop bool) {
 		countStop++
 		if countStop == 2 {
 			return true
@@ -1610,9 +1623,10 @@ func (s *SpecKeeperTestSuite) TestIterateScopeSpecsForContractSpec() {
 }
 
 func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
+	ctx := s.FreshCtx()
 	// Trick the store into thinking that s.contractSpecID1 and s.contractSpecID2 exists.
 	metadataStoreKey := s.app.GetKey(types.StoreKey)
-	store := s.ctx.KVStore(metadataStoreKey)
+	store := ctx.KVStore(metadataStoreKey)
 	store.Set(s.contractSpecID1, []byte{0x01})
 	store.Set(s.contractSpecID2, []byte{0x01})
 
@@ -1738,7 +1752,7 @@ func (s *SpecKeeperTestSuite) TestValidateScopeSpecUpdate() {
 	for _, tt := range tests {
 		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
-			err := s.app.MetadataKeeper.ValidateWriteScopeSpecification(s.ctx, tt.existing, *tt.proposed)
+			err := s.app.MetadataKeeper.ValidateWriteScopeSpecification(s.FreshCtx(), tt.existing, *tt.proposed)
 			if err != nil {
 				require.Equal(t, tt.want, err.Error(), "ScopeSpec Keeper ValidateWriteScopeSpecification error")
 			} else if len(tt.want) > 0 {
@@ -1780,7 +1794,8 @@ func (s *SpecKeeperTestSuite) TestScopeSpecIndexing() {
 		ContractSpecIds: []types.MetadataAddress{cSpecIDConstant, cSpecIDToAdd},
 	}
 
-	store := s.ctx.KVStore(s.app.GetKey(types.ModuleName))
+	ctx := s.FreshCtx()
+	store := ctx.KVStore(s.app.GetKey(types.ModuleName))
 
 	s.T().Run("1 write new scope specification", func(t *testing.T) {
 		expectedIndexes := []struct {
@@ -1794,7 +1809,7 @@ func (s *SpecKeeperTestSuite) TestScopeSpecIndexing() {
 			{types.GetContractSpecScopeSpecCacheKey(cSpecIDToRemove, specID), "cSpecIDToRemove contract spec index"},
 		}
 
-		s.app.MetadataKeeper.SetScopeSpecification(s.ctx, specV1)
+		s.app.MetadataKeeper.SetScopeSpecification(ctx, specV1)
 
 		for _, expected := range expectedIndexes {
 			assert.True(t, store.Has(expected.key), expected.name)
@@ -1821,7 +1836,7 @@ func (s *SpecKeeperTestSuite) TestScopeSpecIndexing() {
 			{types.GetContractSpecScopeSpecCacheKey(cSpecIDToRemove, specID), "cSpecIDToRemove contract spec index"},
 		}
 
-		s.app.MetadataKeeper.SetScopeSpecification(s.ctx, specV2)
+		s.app.MetadataKeeper.SetScopeSpecification(ctx, specV2)
 
 		for _, expected := range expectedIndexes {
 			assert.True(t, store.Has(expected.key), expected.name)
@@ -1845,7 +1860,7 @@ func (s *SpecKeeperTestSuite) TestScopeSpecIndexing() {
 			{types.GetContractSpecScopeSpecCacheKey(cSpecIDToRemove, specID), "cSpecIDToRemove contract spec index"},
 		}
 
-		assert.NoError(t, s.app.MetadataKeeper.RemoveScopeSpecification(s.ctx, specID), "removing scope spec")
+		assert.NoError(t, s.app.MetadataKeeper.RemoveScopeSpecification(ctx, specID), "removing scope spec")
 
 		for _, unexpected := range unexpectedIndexes {
 			assert.False(t, store.Has(unexpected.key), unexpected.name)

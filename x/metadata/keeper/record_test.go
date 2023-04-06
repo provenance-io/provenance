@@ -9,6 +9,7 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -24,7 +25,6 @@ type RecordKeeperTestSuite struct {
 	suite.Suite
 
 	app         *app.App
-	ctx         sdk.Context
 	queryClient types.QueryClient
 
 	pubkey1   cryptotypes.PubKey
@@ -56,17 +56,17 @@ type RecordKeeperTestSuite struct {
 
 func (s *RecordKeeperTestSuite) SetupTest() {
 	s.app = simapp.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
-	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
+	ctx := s.FreshCtx()
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.app.MetadataKeeper)
 	s.queryClient = types.NewQueryClient(queryHelper)
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
-	user1Acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr)
+	user1Acc := s.app.AccountKeeper.NewAccountWithAddress(ctx, s.user1Addr)
 	s.Require().NoError(user1Acc.SetPubKey(s.pubkey1), "SetPubKey user1")
-	s.app.AccountKeeper.SetAccount(s.ctx, user1Acc)
+	s.app.AccountKeeper.SetAccount(ctx, user1Acc)
 
 	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
@@ -91,6 +91,10 @@ func (s *RecordKeeperTestSuite) SetupTest() {
 	s.recordSpecID = types.RecordSpecMetadataAddress(s.contractSpecUUID, s.recordName)
 }
 
+func (s *RecordKeeperTestSuite) FreshCtx() sdk.Context {
+	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, tmproto.Header{}))
+}
+
 func TestRecordKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(RecordKeeperTestSuite))
 }
@@ -98,8 +102,8 @@ func TestRecordKeeperTestSuite(t *testing.T) {
 // func ownerPartyList defined in keeper_test.go
 
 func (s *RecordKeeperTestSuite) TestMetadataRecordGetSetRemove() {
-
-	r, found := s.app.MetadataKeeper.GetRecord(s.ctx, s.recordID)
+	ctx := s.FreshCtx()
+	r, found := s.app.MetadataKeeper.GetRecord(ctx, s.recordID)
 	s.NotNil(r)
 	s.False(found)
 
@@ -107,27 +111,28 @@ func (s *RecordKeeperTestSuite) TestMetadataRecordGetSetRemove() {
 	record := types.NewRecord(s.recordName, s.sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID)
 
 	s.NotNil(record)
-	s.app.MetadataKeeper.SetRecord(s.ctx, *record)
+	s.app.MetadataKeeper.SetRecord(ctx, *record)
 
-	r, found = s.app.MetadataKeeper.GetRecord(s.ctx, s.recordID)
+	r, found = s.app.MetadataKeeper.GetRecord(ctx, s.recordID)
 	s.True(found)
 	s.NotNil(r)
 
-	s.app.MetadataKeeper.RemoveRecord(s.ctx, s.recordID)
-	r, found = s.app.MetadataKeeper.GetRecord(s.ctx, s.recordID)
+	s.app.MetadataKeeper.RemoveRecord(ctx, s.recordID)
+	r, found = s.app.MetadataKeeper.GetRecord(ctx, s.recordID)
 	s.False(found)
 	s.NotNil(r)
 }
 
 func (s *RecordKeeperTestSuite) TestMetadataRecordIterator() {
+	ctx := s.FreshCtx()
 	for i := 1; i <= 10; i++ {
 		process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
 		recordName := fmt.Sprintf("%s%v", s.recordName, i)
 		record := types.NewRecord(recordName, s.sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recordSpecID)
-		s.app.MetadataKeeper.SetRecord(s.ctx, *record)
+		s.app.MetadataKeeper.SetRecord(ctx, *record)
 	}
 	count := 0
-	err := s.app.MetadataKeeper.IterateRecords(s.ctx, s.scopeID, func(s types.Record) (stop bool) {
+	err := s.app.MetadataKeeper.IterateRecords(ctx, s.scopeID, func(s types.Record) (stop bool) {
 		count++
 		return false
 	})
@@ -137,6 +142,7 @@ func (s *RecordKeeperTestSuite) TestMetadataRecordIterator() {
 }
 
 func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
+	ctx := s.FreshCtx()
 	dneScopeUUID := uuid.New()
 	dneSessionUUID := uuid.New()
 	dneContractSpecUUID := uuid.New()
@@ -144,7 +150,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 	user3 := sdk.AccAddress("user_3______________").String()
 
 	scope := types.NewScope(s.scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
-	s.app.MetadataKeeper.SetScope(s.ctx, *scope)
+	s.app.MetadataKeeper.SetScope(ctx, *scope)
 
 	auditFields := &types.AuditFields{
 		CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", CreatedDate: time.Now(),
@@ -158,11 +164,11 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 		{Address: user3, Role: types.PartyType_PARTY_TYPE_INVESTOR, Optional: true},
 	}
 	session := types.NewSession(s.sessionName, s.sessionID, s.contractSpecID, sessionParties, auditFields)
-	s.app.MetadataKeeper.SetSession(s.ctx, *session)
+	s.app.MetadataKeeper.SetSession(ctx, *session)
 
 	sessionWOScopeID := types.SessionMetadataAddress(uuid.New(), s.sessionUUID)
 	sessionWOScope := types.NewSession(s.sessionName, sessionWOScopeID, s.contractSpecID, sessionParties, auditFields)
-	s.app.MetadataKeeper.SetSession(s.ctx, *sessionWOScope)
+	s.app.MetadataKeeper.SetSession(ctx, *sessionWOScope)
 
 	newRecord := func(name string, sessionID types.MetadataAddress, specID types.MetadataAddress) *types.Record {
 		return types.NewRecord(
@@ -179,19 +185,19 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 	recordLone := newRecord("so-alone",
 		types.SessionMetadataAddress(dneScopeUUID, dneSessionUUID),
 		types.RecordSpecMetadataAddress(dneContractSpecUUID, "so-alone"))
-	s.app.MetadataKeeper.SetRecord(s.ctx, *recordLone)
+	s.app.MetadataKeeper.SetRecord(ctx, *recordLone)
 
 	// record where scope exists, but session and spec do not.
 	recordOnlyScope := newRecord("scope-only",
 		types.SessionMetadataAddress(s.scopeUUID, dneSessionUUID),
 		types.RecordSpecMetadataAddress(dneContractSpecUUID, "scope-only"))
-	s.app.MetadataKeeper.SetRecord(s.ctx, *recordOnlyScope)
+	s.app.MetadataKeeper.SetRecord(ctx, *recordOnlyScope)
 
 	// record where session exists, but scope and spec do not.
 	recordOnlySession := newRecord("session-only",
 		sessionWOScopeID,
 		types.RecordSpecMetadataAddress(dneContractSpecUUID, "session-only"))
-	s.app.MetadataKeeper.SetRecord(s.ctx, *recordOnlySession)
+	s.app.MetadataKeeper.SetRecord(ctx, *recordOnlySession)
 
 	// record where spec exists, but scope and session do not.
 	reqRoles := []types.PartyType{types.PartyType_PARTY_TYPE_INVESTOR, types.PartyType_PARTY_TYPE_AFFILIATE}
@@ -203,11 +209,11 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 		types.DefinitionType_DEFINITION_TYPE_RECORD,
 		reqRoles,
 	)
-	s.app.MetadataKeeper.SetRecordSpecification(s.ctx, *recSpecOnly)
+	s.app.MetadataKeeper.SetRecordSpecification(ctx, *recSpecOnly)
 	recordOnlySpec := newRecord(recSpecOnly.Name,
 		types.SessionMetadataAddress(dneScopeUUID, dneSessionUUID),
 		recSpecOnly.SpecificationId)
-	s.app.MetadataKeeper.SetRecord(s.ctx, *recordOnlySpec)
+	s.app.MetadataKeeper.SetRecord(ctx, *recordOnlySpec)
 
 	// record where session and spec exist, but scope does not.
 	recSpecNoScope := types.NewRecordSpecification(
@@ -218,11 +224,11 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 		types.DefinitionType_DEFINITION_TYPE_RECORD,
 		reqRoles,
 	)
-	s.app.MetadataKeeper.SetRecordSpecification(s.ctx, *recSpecNoScope)
+	s.app.MetadataKeeper.SetRecordSpecification(ctx, *recSpecNoScope)
 	recordNoScope := newRecord(recSpecNoScope.Name,
 		sessionWOScopeID,
 		recSpecNoScope.SpecificationId)
-	s.app.MetadataKeeper.SetRecord(s.ctx, *recordNoScope)
+	s.app.MetadataKeeper.SetRecord(ctx, *recordNoScope)
 
 	// record where scope, session, and spec exist.
 	recSpec := types.NewRecordSpecification(
@@ -233,9 +239,9 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 		types.DefinitionType_DEFINITION_TYPE_RECORD,
 		reqRoles,
 	)
-	s.app.MetadataKeeper.SetRecordSpecification(s.ctx, *recSpec)
+	s.app.MetadataKeeper.SetRecordSpecification(ctx, *recSpec)
 	record := newRecord(s.recordName, s.sessionID, s.recordSpecID)
-	s.app.MetadataKeeper.SetRecord(s.ctx, *record)
+	s.app.MetadataKeeper.SetRecord(ctx, *record)
 
 	cases := []struct {
 		name       string
@@ -331,8 +337,9 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 
 	for _, tc := range cases {
 		s.Run(tc.name, func() {
+
 			msg := &types.MsgDeleteRecordRequest{Signers: tc.signers}
-			err := s.app.MetadataKeeper.ValidateDeleteRecord(s.ctx, tc.proposedID, msg)
+			err := s.app.MetadataKeeper.ValidateDeleteRecord(s.FreshCtx(), tc.proposedID, msg)
 			if len(tc.expected) > 0 {
 				if s.Assert().Error(err, "ValidateDeleteRecord") {
 					for _, exp := range tc.expected {
@@ -347,10 +354,11 @@ func (s *RecordKeeperTestSuite) TestValidateRecordRemove() {
 }
 
 func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
+	ctx := s.FreshCtx()
 	scopeUUID := uuid.New()
 	scopeID := types.ScopeMetadataAddress(scopeUUID)
 	scope := types.NewScope(scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
-	s.app.MetadataKeeper.SetScope(s.ctx, *scope)
+	s.app.MetadataKeeper.SetScope(ctx, *scope)
 
 	sessionUUID := uuid.New()
 	sessionID := types.SessionMetadataAddress(scopeUUID, sessionUUID)
@@ -368,7 +376,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 			Message:     "",
 		},
 	)
-	s.app.MetadataKeeper.SetSession(s.ctx, *session)
+	s.app.MetadataKeeper.SetSession(ctx, *session)
 
 	contractSpec := types.ContractSpecification{
 		SpecificationId: s.contractSpecID,
@@ -376,7 +384,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 		ClassName:       "classname",
 	}
-	s.app.MetadataKeeper.SetContractSpecification(s.ctx, contractSpec)
+	s.app.MetadataKeeper.SetContractSpecification(ctx, contractSpec)
 	recordSpecID := types.RecordSpecMetadataAddress(s.contractSpecUUID, s.recordName)
 	recordTypeName := "TestRecordTypeName"
 	recordSpec := types.NewRecordSpecification(
@@ -394,7 +402,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 		types.NewInputSpecificationSourceHash(inputSpecSourceHash),
 	)
 	recordSpec.Inputs = append(recordSpec.Inputs, inputSpec)
-	s.app.MetadataKeeper.SetRecordSpecification(s.ctx, *recordSpec)
+	s.app.MetadataKeeper.SetRecordSpecification(ctx, *recordSpec)
 
 	recordName2 := s.recordName + "2"
 	recordSpec2ID := types.RecordSpecMetadataAddress(s.contractSpecUUID, recordName2)
@@ -413,7 +421,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 		types.NewInputSpecificationSourceHash(inputSpec2SourceHash),
 	)
 	recordSpec2.Inputs = append(recordSpec2.Inputs, inputSpec2)
-	s.app.MetadataKeeper.SetRecordSpecification(s.ctx, *recordSpec2)
+	s.app.MetadataKeeper.SetRecordSpecification(ctx, *recordSpec2)
 
 	process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
 	goodInput := types.NewRecordInput(
@@ -446,7 +454,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 	anotherScopeUUID := uuid.New()
 	anotherScopeID := types.ScopeMetadataAddress(anotherScopeUUID)
 	anotherScope := types.NewScope(anotherScopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
-	s.app.MetadataKeeper.SetScope(s.ctx, *anotherScope)
+	s.app.MetadataKeeper.SetScope(ctx, *anotherScope)
 
 	anotherSessionUUID := uuid.New()
 	anotherSessionID := types.SessionMetadataAddress(anotherScopeUUID, anotherSessionUUID)
@@ -464,7 +472,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 			Message:     "",
 		},
 	)
-	s.app.MetadataKeeper.SetSession(s.ctx, *anotherSession)
+	s.app.MetadataKeeper.SetSession(ctx, *anotherSession)
 
 	anotherRecord := types.NewRecord(
 		// name string, sessionID MetadataAddress, process Process, inputs []RecordInput, outputs []RecordOutput, specificationID MetadataAddress
@@ -481,7 +489,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 		s.recordSpecID,
 	)
 	anotherRecordID := types.RecordMetadataAddress(anotherScopeUUID, anotherRecord.Name)
-	s.app.MetadataKeeper.SetRecord(s.ctx, *anotherRecord)
+	s.app.MetadataKeeper.SetRecord(ctx, *anotherRecord)
 
 	missingRecordID := types.RecordMetadataAddress(uuid.New(), anotherRecord.Name)
 
@@ -715,7 +723,7 @@ func (s *RecordKeeperTestSuite) TestValidateRecordUpdate() {
 				Signers: tc.signers,
 				Parties: tc.partiesInvolved,
 			}
-			err := s.app.MetadataKeeper.ValidateWriteRecord(s.ctx, tc.existing, msg)
+			err := s.app.MetadataKeeper.ValidateWriteRecord(s.FreshCtx(), tc.existing, msg)
 			if len(tc.errorMsg) != 0 {
 				s.Assert().EqualError(err, tc.errorMsg, "ValidateWriteRecord expected error")
 			} else {
