@@ -323,6 +323,7 @@ owners:
   optional: false
 data_access: []
 value_owner_address: ""
+require_party_rollup: false
 `,
 			scope.String())
 	})

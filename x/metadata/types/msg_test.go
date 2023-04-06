@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 
@@ -42,17 +43,18 @@ func TestWriteScopeRoute(t *testing.T) {
   data_access:
   - data_accessor
   value_owner_address: value_owner
+  require_party_rollup: false
 signers: []
 scope_uuid: ""
 spec_uuid: ""
 `
 	bz, err := yaml.Marshal(msg)
 	require.NoError(t, err, "yaml.Marshal(msg)")
-	require.Equal(t, expectedYaml, string(bz), "scope as yaml")
+	assert.Equal(t, expectedYaml, string(bz), "scope as yaml")
 
 	bz, err = ModuleCdc.MarshalJSON(msg)
 	require.NoError(t, err, "ModuleCdc.MarshalJSON(msg)")
-	require.Equal(t, "{\"scope\":{\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"owners\":[{\"address\":\"data_owner\",\"role\":\"PARTY_TYPE_OWNER\",\"optional\":false}],\"data_access\":[\"data_accessor\"],\"value_owner_address\":\"value_owner\"},\"signers\":[],\"scope_uuid\":\"\",\"spec_uuid\":\"\"}", string(bz))
+	assert.Equal(t, "{\"scope\":{\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"owners\":[{\"address\":\"data_owner\",\"role\":\"PARTY_TYPE_OWNER\",\"optional\":false}],\"data_access\":[\"data_accessor\"],\"value_owner_address\":\"value_owner\",\"require_party_rollup\":false},\"signers\":[],\"scope_uuid\":\"\",\"spec_uuid\":\"\"}", string(bz))
 }
 
 func TestWriteScopeValidation(t *testing.T) {
