@@ -441,7 +441,7 @@ func (k msgServer) DeleteContractSpecFromScopeSpec(
 		}
 	}
 	if !found {
-		return nil, fmt.Errorf("contract specification %s not found on scope specification id %s", msg.ContractSpecificationId, msg.ScopeSpecificationId)
+		return nil, fmt.Errorf("contract specification %s not found in scope specification %s", msg.ContractSpecificationId, msg.ScopeSpecificationId)
 	}
 
 	scopeSpec.ContractSpecIds = updateContractSpecIds

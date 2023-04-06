@@ -471,16 +471,16 @@ func (s *MetadataHandlerTestSuite) TestDeleteContractSpecFromScopeSpec() {
 		ClassName:       "someclass",
 	}
 	s.app.MetadataKeeper.SetContractSpecification(s.ctx, cSpec2)
+	cSpecDNE := types.ContractSpecMetadataAddress(uuid.New()) // Does Not Exist.
 	sSpec := types.ScopeSpecification{
 		SpecificationId: types.ScopeSpecMetadataAddress(uuid.New()),
 		Description:     nil,
 		OwnerAddresses:  []string{s.user1},
 		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-		ContractSpecIds: []types.MetadataAddress{cSpec.SpecificationId, cSpec2.SpecificationId},
+		ContractSpecIds: []types.MetadataAddress{cSpec.SpecificationId, cSpec2.SpecificationId, cSpecDNE},
 	}
 	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, sSpec)
 
-	unknownContractSpecId := types.ContractSpecMetadataAddress(uuid.New())
 	unknownScopeSpecId := types.ScopeSpecMetadataAddress(uuid.New())
 
 	cases := []struct {
@@ -491,11 +491,11 @@ func (s *MetadataHandlerTestSuite) TestDeleteContractSpecFromScopeSpec() {
 		errorMsg       string
 	}{
 		{
-			"fail to delete contract spec from scope spec, cannot find contract spec",
-			unknownContractSpecId,
+			"cannot find contract spec",
+			cSpecDNE,
 			sSpec.SpecificationId,
 			[]string{s.user1},
-			fmt.Sprintf("contract specification not found with id %s", unknownContractSpecId),
+			"",
 		},
 		{
 			"fail to delete contract spec from scope spec, cannot find scope spec",
@@ -516,7 +516,7 @@ func (s *MetadataHandlerTestSuite) TestDeleteContractSpecFromScopeSpec() {
 			cSpec2.SpecificationId,
 			sSpec.SpecificationId,
 			[]string{s.user1},
-			fmt.Sprintf("contract specification %s not found on scope specification id %s", cSpec2.SpecificationId, sSpec.SpecificationId),
+			fmt.Sprintf("contract specification %s not found in scope specification %s", cSpec2.SpecificationId, sSpec.SpecificationId),
 		},
 	}
 
