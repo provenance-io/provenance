@@ -157,6 +157,12 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 
 	// Make sure everyone has signed.
 	if !scope.RequirePartyRollup {
+		// optional parties are only allowed when the scope has rollup.
+		for _, party := range proposed.Parties {
+			if party.Optional {
+				return fmt.Errorf("parties can only be optional when the scope has require_party_rollup = true")
+			}
+		}
 		// Old:
 		//   - All roles required by the contract spec must have a party in the session parties.
 		//   - All scope owners must sign.

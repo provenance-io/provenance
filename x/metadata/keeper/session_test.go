@@ -181,63 +181,54 @@ func (s *SessionKeeperTestSuite) TestValidateWriteSession() {
 		existing *types.Session
 		proposed *types.Session
 		signers  []string
-		wantErr  bool
 		errorMsg string
 	}{
 		"invalid session update, existing record does not have scope": {
 			existing: nil,
 			proposed: &types.Session{},
 			signers:  []string{s.user1},
-			wantErr:  true,
 			errorMsg: "address is empty",
 		},
 		"valid session update, existing and proposed satisfy validation": {
 			existing: validSession,
 			proposed: validSession,
 			signers:  []string{s.user1},
-			wantErr:  false,
 			errorMsg: "",
 		},
 		"valid session update without audit, existing has audit": {
 			existing: validSessionWithAudit,
 			proposed: validSession,
 			signers:  []string{s.user1},
-			wantErr:  false,
 			errorMsg: "",
 		},
 		"invalid session update has audit, existing has no audit": {
 			existing: validSession,
 			proposed: validSessionWithAudit,
 			signers:  []string{s.user1},
-			wantErr:  true,
 			errorMsg: "attempt to modify audit fields, modification not allowed",
 		},
 		"valid session update existing and new have matching audits": {
 			existing: validSessionWithAudit,
 			proposed: validSessionWithAudit,
 			signers:  []string{s.user1},
-			wantErr:  false,
 			errorMsg: "",
 		},
 		"invalid session update, existing id does not match proposed": {
 			existing: validSession,
 			proposed: invalidIDSession,
 			signers:  []string{s.user1},
-			wantErr:  true,
 			errorMsg: fmt.Sprintf("cannot update session identifier. expected %s, got %s", validSession.SessionId, invalidIDSession.SessionId),
 		},
 		"invalid session update, scope does not exist": {
 			existing: invalidIDSession,
 			proposed: invalidIDSession,
 			signers:  []string{s.user1},
-			wantErr:  true,
 			errorMsg: fmt.Sprintf("scope not found for scope id %s", types.ScopeMetadataAddress(invalidScopeUUID)),
 		},
 		"invalid session update, cannot change contract spec": {
 			existing: validSession,
 			proposed: invalidContractID,
 			signers:  []string{s.user1},
-			wantErr:  true,
 			errorMsg: fmt.Sprintf("cannot update specification identifier. expected %s, got %s",
 				validSession.SpecificationId, invalidContractID.SpecificationId),
 		},
@@ -245,71 +236,80 @@ func (s *SessionKeeperTestSuite) TestValidateWriteSession() {
 			existing: nil,
 			proposed: invalidContractID,
 			signers:  []string{s.user1},
-			wantErr:  true,
 			errorMsg: fmt.Sprintf("cannot find contract specification %s", invalidContractID.SpecificationId),
 		},
 		"invalid session update, involved parties do not match": {
 			existing: validSession,
 			proposed: invalidPartiesSession,
 			signers:  []string{s.user1},
-			wantErr:  true,
 			errorMsg: "missing roles required by spec: AFFILIATE need 1 have 0",
 		},
 		"invalid session update, missing required signers": {
 			existing: validSession,
 			proposed: validSession,
 			signers:  []string{},
-			wantErr:  true,
 			errorMsg: fmt.Sprintf("missing signature: %s", s.user1),
 		},
 		"invalid session update, invalid proposed name of empty to existing session": {
 			existing: validSessionWithAudit,
 			proposed: types.NewSession("", s.sessionID, s.contractSpecID, parties, &types.AuditFields{CreatedDate: auditTime, CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Version: 1, Message: "fault"}),
 			signers:  []string{s.user1},
-			wantErr:  true,
 			errorMsg: "proposed name to existing session must not be empty",
 		},
 		"invalid session update, modified audit message": {
 			existing: validSessionWithAudit,
 			proposed: types.NewSession("processname", s.sessionID, s.contractSpecID, parties, &types.AuditFields{CreatedDate: auditTime, CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Version: 1, Message: "fault"}),
 			signers:  []string{s.user1},
-			wantErr:  true,
 			errorMsg: "attempt to modify message audit field, modification not allowed",
 		},
 		"invalid session update, modified audit version": {
 			existing: validSessionWithAudit,
 			proposed: types.NewSession("processname", s.sessionID, s.contractSpecID, parties, &types.AuditFields{CreatedDate: auditTime, CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Version: 2}),
 			signers:  []string{s.user1},
-			wantErr:  true,
 			errorMsg: "attempt to modify version audit field, modification not allowed",
 		},
 		"invalid session update, modified audit update date": {
 			existing: validSessionWithAudit,
 			proposed: types.NewSession("processname", s.sessionID, s.contractSpecID, parties, &types.AuditFields{CreatedDate: auditTime, CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Version: 1, UpdatedDate: time.Now()}),
 			signers:  []string{s.user1},
-			wantErr:  true,
 			errorMsg: "attempt to modify updated-date audit field, modification not allowed",
 		},
 		"invalid session update, modified audit update by": {
 			existing: validSessionWithAudit,
 			proposed: types.NewSession("processname", s.sessionID, s.contractSpecID, parties, &types.AuditFields{CreatedDate: auditTime, CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Version: 1, UpdatedBy: "fault"}),
 			signers:  []string{s.user1},
-			wantErr:  true,
 			errorMsg: "attempt to modify updated-by audit field, modification not allowed",
 		},
 		"invalid session update, modified audit created by": {
 			existing: validSessionWithAudit,
 			proposed: types.NewSession("processname", s.sessionID, s.contractSpecID, parties, &types.AuditFields{CreatedDate: auditTime, CreatedBy: "fault", Version: 1, UpdatedBy: "fault"}),
 			signers:  []string{s.user1},
-			wantErr:  true,
 			errorMsg: "attempt to modify created-by audit field, modification not allowed",
 		},
 		"invalid session update, modified audit created date": {
 			existing: validSessionWithAudit,
 			proposed: types.NewSession("processname", s.sessionID, s.contractSpecID, parties, &types.AuditFields{CreatedDate: time.Now(), CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Version: 1}),
 			signers:  []string{s.user1},
-			wantErr:  true,
 			errorMsg: "attempt to modify created-date audit field, modification not allowed",
+		},
+		"optional parties only allowed with rollup": {
+			existing: nil,
+			proposed: &types.Session{
+				SessionId:       s.sessionID,
+				SpecificationId: s.contractSpecID,
+				Parties: []types.Party{
+					{
+						Address:  sdk.AccAddress("just_some_address___").String(),
+						Role:     types.PartyType_PARTY_TYPE_CUSTODIAN,
+						Optional: true,
+					},
+				},
+				Name:    "some_name",
+				Context: nil,
+				Audit:   nil,
+			},
+			signers:  nil,
+			errorMsg: "parties can only be optional when the scope has require_party_rollup = true",
 		},
 	}
 
@@ -320,7 +320,7 @@ func (s *SessionKeeperTestSuite) TestValidateWriteSession() {
 				Signers: tc.signers,
 			}
 			err := s.app.MetadataKeeper.ValidateWriteSession(s.FreshCtx(), tc.existing, msg)
-			if tc.wantErr {
+			if len(tc.errorMsg) > 0 {
 				s.Assert().EqualError(err, tc.errorMsg, "ValidateWriteSession")
 			} else {
 				s.Assert().NoError(err, "ValidateWriteSession")
