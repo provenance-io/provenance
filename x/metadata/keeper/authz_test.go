@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -173,6 +175,10 @@ func partiesReversed(parties []*keeper.PartyDetails) []*keeper.PartyDetails {
 		rv[len(rv)-i-1] = party.Copy()
 	}
 	return rv
+}
+
+func emptySdkContext() sdk.Context {
+	return sdk.Context{}.WithContext(context.Background())
 }
 
 func TestWrapRequiredParty(t *testing.T) {
@@ -1803,6 +1809,236 @@ func TestSignersWrapper(t *testing.T) {
 
 		})
 	}
+}
+
+func TestAuthzCacheAcceptableKey(t *testing.T) {
+	grantee := sdk.AccAddress("y_grantee_z")
+	granter := sdk.AccAddress("Y_GRANTER_Z")
+	msgTypeURL := "1_msg_type_url_9"
+
+	firstChar := func(str string) string {
+		return str[0:1]
+	}
+	lastChar := func(str string) string {
+		return str[len(str)-1:]
+	}
+
+	tests := []struct {
+		name     string
+		subStr   string
+		contains bool
+	}{
+		{
+			name:     "grantee",
+			subStr:   string(grantee),
+			contains: true,
+		},
+		{
+			name:     "granter",
+			subStr:   string(granter),
+			contains: true,
+		},
+		{
+			name:     "msgTypeURL",
+			subStr:   msgTypeURL,
+			contains: true,
+		},
+		{
+			name:     "grantee last granter first",
+			subStr:   lastChar(string(grantee)) + firstChar(string(granter)),
+			contains: false,
+		},
+		{
+			name:     "granter last grantee first",
+			subStr:   lastChar(string(granter)) + firstChar(string(grantee)),
+			contains: false,
+		},
+		{
+			name:     "grantee last msgTypeURL first",
+			subStr:   lastChar(string(grantee)) + firstChar(msgTypeURL),
+			contains: false,
+		},
+		{
+			name:     "msgTypeURL last grantee first",
+			subStr:   lastChar(msgTypeURL) + firstChar(string(grantee)),
+			contains: false,
+		},
+		{
+			name:     "granter last msgTypeURL first",
+			subStr:   lastChar(string(granter)) + firstChar(msgTypeURL),
+			contains: false,
+		},
+		{
+			name:     "msgTypeURL last granter first",
+			subStr:   lastChar(msgTypeURL) + firstChar(string(granter)),
+			contains: false,
+		},
+	}
+
+	actual := keeper.AuthzCacheAcceptableKey(grantee, granter, msgTypeURL)
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.contains {
+				assert.Contains(t, actual, tc.subStr, "expected substring of authzCacheAcceptableKey result")
+			} else {
+				assert.NotContains(t, actual, tc.subStr, "unexpected substring of authzCacheAcceptableKey result")
+			}
+		})
+	}
+}
+
+func TestNewAuthzCache(t *testing.T) {
+	c1 := keeper.NewAuthzCache()
+	c1Type := fmt.Sprintf("%T", c1)
+	c2 := keeper.NewAuthzCache()
+	assert.NotNil(t, c1, "NewAuthzCache result")
+	assert.Empty(t, c1.AcceptableMap(), "acceptable map")
+	assert.Equal(t, "*keeper.AuthzCache", c1Type, "type returned by NewAuthzCache")
+	assert.NotSame(t, c1, c2, "NewAuthzCache twice")
+	assert.NotSame(t, c1.AcceptableMap(), c2.AcceptableMap(), "acceptable maps of two NewAuthzCache")
+}
+
+func TestAuthzCache_Clear(t *testing.T) {
+	c := keeper.NewAuthzCache()
+	c.AcceptableMap()["key1"] = &authz.CountAuthorization{}
+	c.AcceptableMap()["key2"] = &authz.GenericAuthorization{}
+	assert.NotEmpty(t, c.AcceptableMap(), "AuthzCache acceptable map before clear")
+	c.Clear()
+	assert.Empty(t, c.AcceptableMap(), "AuthzCache acceptable map after clear")
+}
+
+func TestAuthzCache_SetAcceptable(t *testing.T) {
+	c := keeper.NewAuthzCache()
+	grantee := sdk.AccAddress("grantee")
+	granter := sdk.AccAddress("granter")
+	msgTypeURL := "msgTypeURL"
+	authorization := &authz.CountAuthorization{
+		Msg:                   msgTypeURL,
+		AllowedAuthorizations: 77,
+	}
+
+	c.SetAcceptable(grantee, granter, msgTypeURL, authorization)
+	actual := c.AcceptableMap()[keeper.AuthzCacheAcceptableKey(grantee, granter, msgTypeURL)]
+	assert.Equal(t, authorization, actual, "the authorization stored by SetAcceptable")
+}
+
+func TestAuthzCache_GetAcceptable(t *testing.T) {
+	c := keeper.NewAuthzCache()
+	grantee := sdk.AccAddress("grantee")
+	granter := sdk.AccAddress("granter")
+	msgTypeURL := "msgTypeURL"
+	key := keeper.AuthzCacheAcceptableKey(grantee, granter, msgTypeURL)
+	authorization := &authz.CountAuthorization{
+		Msg:                   msgTypeURL,
+		AllowedAuthorizations: 8,
+	}
+	c.AcceptableMap()[key] = authorization
+
+	actual := c.GetAcceptable(grantee, granter, msgTypeURL)
+	assert.Equal(t, authorization, actual, "GetAcceptable result")
+
+	notThere := c.GetAcceptable(granter, grantee, msgTypeURL)
+	assert.Nil(t, notThere, "GetAcceptable on an entry that should not exist")
+}
+
+func TestAddAuthzCacheToContext(t *testing.T) {
+	t.Run("context does not already have the key", func(t *testing.T) {
+		origCtx := emptySdkContext()
+		newCtx := keeper.AddAuthzCacheToContext(origCtx)
+
+		cacheOrig := origCtx.Value(keeper.AuthzCacheContextKey)
+		assert.Nil(t, cacheOrig, "original context %q value", keeper.AuthzCacheContextKey)
+
+		cacheV := newCtx.Value(keeper.AuthzCacheContextKey)
+		require.NotNil(t, cacheV, "new context %q value", keeper.AuthzCacheContextKey)
+		cache, ok := cacheV.(*keeper.AuthzCache)
+		require.True(t, ok, "can cast %q value to *keeper.AuthzCache", keeper.AuthzCacheContextKey)
+		require.NotNil(t, cache, "the %q value cast to a *keeper.AuthzCache", keeper.AuthzCacheContextKey)
+		assert.Empty(t, cache.AcceptableMap(), "the acceptable map of the newly added *keeper.AuthzCache")
+	})
+
+	t.Run("context already has an AuthzCache", func(t *testing.T) {
+		grantee := sdk.AccAddress("grantee")
+		granter := sdk.AccAddress("granter")
+		msgTypeURL := "msgTypeURL"
+		authorization := &authz.CountAuthorization{
+			Msg:                   msgTypeURL,
+			AllowedAuthorizations: 8,
+		}
+		origCache := keeper.NewAuthzCache()
+		origCache.SetAcceptable(grantee, granter, msgTypeURL, authorization)
+
+		origCtx := emptySdkContext().WithValue(keeper.AuthzCacheContextKey, origCache)
+		newCtx := keeper.AddAuthzCacheToContext(origCtx)
+
+		var newCache *keeper.AuthzCache
+		testFunc := func() {
+			newCache = keeper.GetAuthzCache(newCtx)
+		}
+		require.NotPanics(t, testFunc, "GetAuthzCache")
+		assert.Same(t, origCache, newCache, "cache from new context")
+		assert.Empty(t, newCache.AcceptableMap(), "cache acceptable map")
+	})
+
+	t.Run("context has something else", func(t *testing.T) {
+		origCtx := emptySdkContext().WithValue(keeper.AuthzCacheContextKey, "something else")
+
+		expErr := "context value \"authzCacheContextKey\" is a string, expected *keeper.AuthzCache"
+		testFunc := func() {
+			_ = keeper.AddAuthzCacheToContext(origCtx)
+		}
+		require.PanicsWithError(t, expErr, testFunc, "AddAuthzCacheToContext")
+	})
+}
+
+func TestGetAuthzCache(t *testing.T) {
+	t.Run("context does not have it", func(t *testing.T) {
+		ctx := emptySdkContext()
+		expErr := "context does not contain a \"authzCacheContextKey\" value"
+		testFunc := func() {
+			_ = keeper.GetAuthzCache(ctx)
+		}
+		require.PanicsWithError(t, expErr, testFunc, "GetAuthzCache")
+	})
+
+	t.Run("context has something else", func(t *testing.T) {
+		ctx := emptySdkContext().WithValue(keeper.AuthzCacheContextKey, "something else")
+		expErr := "context value \"authzCacheContextKey\" is a string, expected *keeper.AuthzCache"
+		testFunc := func() {
+			_ = keeper.GetAuthzCache(ctx)
+		}
+		require.PanicsWithError(t, expErr, testFunc, "GetAuthzCache")
+	})
+
+	t.Run("context has it", func(t *testing.T) {
+		origCache := keeper.NewAuthzCache()
+		origCache.AcceptableMap()["key1"] = &authz.GenericAuthorization{Msg: "msg"}
+		ctx := emptySdkContext().WithValue(keeper.AuthzCacheContextKey, origCache)
+		var cache *keeper.AuthzCache
+		testFunc := func() {
+			cache = keeper.GetAuthzCache(ctx)
+		}
+		require.NotPanics(t, testFunc, "GetAuthzCache")
+		assert.Same(t, origCache, cache, "cache returned by GetAuthzCache")
+	})
+}
+
+func TestUnwrapMetadataContext(t *testing.T) {
+	origCtx := emptySdkContext()
+	goCtx := sdk.WrapSDKContext(origCtx)
+	var ctx sdk.Context
+	testUnwrap := func() {
+		ctx = keeper.UnwrapMetadataContext(goCtx)
+	}
+	require.NotPanics(t, testUnwrap, "UnwrapMetadataContext")
+	var cache *keeper.AuthzCache
+	testGet := func() {
+		cache = keeper.GetAuthzCache(ctx)
+	}
+	require.NotPanics(t, testGet, "GetAuthzCache")
+	assert.NotNil(t, cache, "cache returned by GetAuthzCache")
+	assert.Empty(t, cache.AcceptableMap(), "cache acceptable map")
 }
 
 func (s *AuthzTestSuite) TestValidateSignersWithParties() {

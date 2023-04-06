@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -96,6 +97,18 @@ func (p *PartyDetails) Copy() *PartyDetails {
 		copy(rv.signerAcc, p.signerAcc)
 	}
 	return rv
+}
+
+var (
+	// AuthzCacheAcceptableKey is a TEST ONLY exposure of authzCacheAcceptableKey.
+	AuthzCacheAcceptableKey = authzCacheAcceptableKey
+	// AuthzCacheContextKey is a TEST ONLY exposure of authzCacheContextKey.
+	AuthzCacheContextKey = authzCacheContextKey
+)
+
+// AcceptableMap is a TEST ONLY exposure of the AuthzCache.acceptable map.
+func (c *AuthzCache) AcceptableMap() map[string]authz.Authorization {
+	return c.acceptable
 }
 
 var (
