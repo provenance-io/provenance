@@ -364,7 +364,6 @@ func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddres
 		return err
 	}
 	for _, acct := range accts {
-		found = true
 		store := ctx.KVStore(k.storeKey)
 		it := sdk.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(acct, name))
 		for ; it.Valid(); it.Next() {

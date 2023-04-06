@@ -840,10 +840,11 @@ func (s *KeeperTestSuite) TestPurgeAttributes() {
 			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
 		},
 		{
-			name:      "no keys will be deleted with unknown name",
-			attrName:  "dne",
-			ownerAddr: s.user1Addr,
-			errorMsg:  "",
+			name:        "attribute does not exist should no-op",
+			attrName:    "dne",
+			beforeCount: 0,
+			ownerAddr:   s.user1Addr,
+			errorMsg:    "",
 		},
 		{
 			name:        "attribute will be removed without error when name has been removed",
@@ -888,7 +889,9 @@ func (s *KeeperTestSuite) TestPurgeAttributes() {
 				s.Assert().Equal(tc.errorMsg, err.Error())
 			} else {
 				s.Assert().NoError(err)
-				s.Assert().False(attrStore.Has(tc.lookupKey), "should not have attribute key after deletion")
+				if len(tc.lookupKey) > 0 {
+					s.Assert().False(attrStore.Has(tc.lookupKey), "should not have attribute key after deletion")
+				}
 			}
 		})
 	}
