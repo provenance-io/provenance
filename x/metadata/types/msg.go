@@ -65,24 +65,6 @@ var (
 	_ MetadataMsg = (*MsgBindOSLocatorRequest)(nil)
 	_ MetadataMsg = (*MsgDeleteOSLocatorRequest)(nil)
 	_ MetadataMsg = (*MsgModifyOSLocatorRequest)(nil)
-
-	_ MetadataSpecAddressable = (*MsgWriteScopeRequest)(nil)
-	_ MetadataAddressable     = (*MsgDeleteScopeRequest)(nil)
-	_ MetadataAddressable     = (*MsgAddScopeDataAccessRequest)(nil)
-	_ MetadataAddressable     = (*MsgDeleteScopeDataAccessRequest)(nil)
-	_ MetadataAddressable     = (*MsgAddScopeOwnerRequest)(nil)
-	_ MetadataAddressable     = (*MsgDeleteScopeOwnerRequest)(nil)
-	_ MetadataSpecAddressable = (*MsgWriteSessionRequest)(nil)
-	_ MetadataSpecAddressable = (*MsgWriteRecordRequest)(nil)
-	_ MetadataAddressable     = (*MsgDeleteRecordRequest)(nil)
-	_ MetadataSpecAddressable = (*MsgWriteScopeSpecificationRequest)(nil)
-	_ MetadataSpecAddressable = (*MsgDeleteScopeSpecificationRequest)(nil)
-	_ MetadataSpecAddressable = (*MsgWriteContractSpecificationRequest)(nil)
-	_ MetadataSpecAddressable = (*MsgDeleteContractSpecificationRequest)(nil)
-	_ MetadataSpecAddressable = (*MsgAddContractSpecToScopeSpecRequest)(nil)
-	_ MetadataSpecAddressable = (*MsgDeleteContractSpecFromScopeSpecRequest)(nil)
-	_ MetadataSpecAddressable = (*MsgWriteRecordSpecificationRequest)(nil)
-	_ MetadataSpecAddressable = (*MsgDeleteRecordSpecificationRequest)(nil)
 )
 
 // stringsToAccAddresses converts an array of strings into an array of Acc Addresses.
@@ -133,10 +115,11 @@ func (msg MsgWriteScopeRequest) ValidateBasic() error {
 // Once used, those uuid fields will be set to empty strings so that calling this again has no effect.
 func (msg *MsgWriteScopeRequest) ConvertOptionalFields() error {
 	if len(msg.ScopeUuid) > 0 {
-		scopeAddr, err := msg.getIDFromOptionalUUID()
+		uid, err := uuid.Parse(msg.ScopeUuid)
 		if err != nil {
-			return err
+			return fmt.Errorf("invalid scope uuid: %w", err)
 		}
+		scopeAddr := ScopeMetadataAddress(uid)
 		if !msg.Scope.ScopeId.Empty() && !msg.Scope.ScopeId.Equals(scopeAddr) {
 			return fmt.Errorf("msg.Scope.ScopeId [%s] is different from the one created from msg.ScopeUuid [%s]",
 				msg.Scope.ScopeId, msg.ScopeUuid)
@@ -145,10 +128,11 @@ func (msg *MsgWriteScopeRequest) ConvertOptionalFields() error {
 		msg.ScopeUuid = ""
 	}
 	if len(msg.SpecUuid) > 0 {
-		specAddr, err := msg.getSpecIDFromOptionalSpecUUID()
+		uid, err := uuid.Parse(msg.SpecUuid)
 		if err != nil {
-			return err
+			return fmt.Errorf("invalid spec uuid: %w", err)
 		}
+		specAddr := ScopeSpecMetadataAddress(uid)
 		if !msg.Scope.SpecificationId.Empty() && !msg.Scope.SpecificationId.Equals(specAddr) {
 			return fmt.Errorf("msg.Scope.SpecificationId [%s] is different from the one created from msg.SpecUuid [%s]",
 				msg.Scope.SpecificationId, msg.SpecUuid)
@@ -157,54 +141,6 @@ func (msg *MsgWriteScopeRequest) ConvertOptionalFields() error {
 		msg.SpecUuid = ""
 	}
 	return nil
-}
-
-// getIDFromOptionalUUID gets the scope metadata address from the optional scope uuid.
-// returns nil, nil if this doesn't have an optional scope uuid.
-func (msg *MsgWriteScopeRequest) getIDFromOptionalUUID() (MetadataAddress, error) {
-	if len(msg.ScopeUuid) > 0 {
-		uid, err := uuid.Parse(msg.ScopeUuid)
-		if err != nil {
-			return nil, fmt.Errorf("invalid scope uuid: %w", err)
-		}
-		return ScopeMetadataAddress(uid), nil
-	}
-	return nil, nil
-}
-
-// getSpecIDFromOptionalSpecUUID gets the scope spec metadata address from the optional spec uuid.
-// returns nil, nil if this doesn't have an optional spec uuid.
-func (msg *MsgWriteScopeRequest) getSpecIDFromOptionalSpecUUID() (MetadataAddress, error) {
-	if len(msg.SpecUuid) > 0 {
-		uid, err := uuid.Parse(msg.SpecUuid)
-		if err != nil {
-			return nil, fmt.Errorf("invalid spec uuid: %w", err)
-		}
-		return ScopeSpecMetadataAddress(uid), nil
-	}
-	return nil, nil
-}
-
-// GetID gets the scope's id. Implements MetadataAddressable interface.
-func (msg MsgWriteScopeRequest) GetID() MetadataAddress {
-	rv := msg.Scope.GetID()
-	if len(rv) == 0 {
-		// No id yet, try to get it from the uuid.
-		// If it errors, we don't care in here, just return the empty address.
-		rv, _ = msg.getIDFromOptionalUUID()
-	}
-	return rv
-}
-
-// GetSpecID gets the scope's spec id. Implements MetadataSpecAddressable interface.
-func (msg MsgWriteScopeRequest) GetSpecID() MetadataAddress {
-	rv := msg.Scope.GetSpecID()
-	if len(rv) == 0 {
-		// No id yet, try to get it from the uuid.
-		// If it errors, we don't care in here, just return the empty address.
-		rv, _ = msg.getSpecIDFromOptionalSpecUUID()
-	}
-	return rv
 }
 
 // ------------------  NewMsgDeleteScopeRequest  ------------------
@@ -236,11 +172,6 @@ func (msg MsgDeleteScopeRequest) ValidateBasic() error {
 		return fmt.Errorf("invalid scope address")
 	}
 	return nil
-}
-
-// GetID gets the scope's id. Implements MetadataAddressable interface.
-func (msg MsgDeleteScopeRequest) GetID() MetadataAddress {
-	return msg.ScopeId
 }
 
 // ------------------  MsgAddScopeDataAccessRequest  ------------------
@@ -284,11 +215,6 @@ func (msg MsgAddScopeDataAccessRequest) ValidateBasic() error {
 	return nil
 }
 
-// GetID gets the scope's id. Implements MetadataAddressable interface.
-func (msg MsgAddScopeDataAccessRequest) GetID() MetadataAddress {
-	return msg.ScopeId
-}
-
 // ------------------  MsgDeleteScopeDataAccessRequest  ------------------
 
 // NewMsgDeleteScopeDataAccessRequest creates a new msg instance
@@ -330,11 +256,6 @@ func (msg MsgDeleteScopeDataAccessRequest) ValidateBasic() error {
 	return nil
 }
 
-// GetID gets the scope's id. Implements MetadataAddressable interface.
-func (msg MsgDeleteScopeDataAccessRequest) GetID() MetadataAddress {
-	return msg.ScopeId
-}
-
 // ------------------  MsgAddScopeOwnerRequest  ------------------
 
 // NewMsgAddScopeOwnerRequest creates a new msg instance
@@ -368,11 +289,6 @@ func (msg MsgAddScopeOwnerRequest) ValidateBasic() error {
 		return fmt.Errorf("at least one signer is required")
 	}
 	return nil
-}
-
-// GetID gets the scope's id. Implements MetadataAddressable interface.
-func (msg MsgAddScopeOwnerRequest) GetID() MetadataAddress {
-	return msg.ScopeId
 }
 
 // ------------------  MsgDeleteScopeOwnerRequest  ------------------
@@ -414,11 +330,6 @@ func (msg MsgDeleteScopeOwnerRequest) ValidateBasic() error {
 		return fmt.Errorf("at least one signer is required")
 	}
 	return nil
-}
-
-// GetID gets the scope's id. Implements MetadataAddressable interface.
-func (msg MsgDeleteScopeOwnerRequest) GetID() MetadataAddress {
-	return msg.ScopeId
 }
 
 // ------------------  MsgWriteSessionRequest  ------------------
@@ -468,10 +379,11 @@ func (msg *MsgWriteSessionRequest) ConvertOptionalFields() error {
 		msg.SessionIdComponents = nil
 	}
 	if len(msg.SpecUuid) > 0 {
-		specAddr, err := msg.getSpecIDFromOptionalSpecUUID()
+		uid, err := uuid.Parse(msg.SpecUuid)
 		if err != nil {
-			return err
+			return fmt.Errorf("invalid spec uuid: %w", err)
 		}
+		specAddr := ContractSpecMetadataAddress(uid)
 		if !msg.Session.SpecificationId.Empty() && !msg.Session.SpecificationId.Equals(specAddr) {
 			return fmt.Errorf("msg.Session.SpecificationId [%s] is different from the one created from msg.SpecUuid [%s]",
 				msg.Session.SpecificationId, msg.SpecUuid)
@@ -480,41 +392,6 @@ func (msg *MsgWriteSessionRequest) ConvertOptionalFields() error {
 		msg.SpecUuid = ""
 	}
 	return nil
-}
-
-// getSpecIDFromOptionalSpecUUID gets the contract spec metadata address from the optional spec uuid.
-// returns nil, nil if this doesn't have an optional spec uuid.
-func (msg MsgWriteSessionRequest) getSpecIDFromOptionalSpecUUID() (MetadataAddress, error) {
-	if len(msg.SpecUuid) > 0 {
-		uid, err := uuid.Parse(msg.SpecUuid)
-		if err != nil {
-			return nil, fmt.Errorf("invalid spec uuid: %w", err)
-		}
-		return ContractSpecMetadataAddress(uid), nil
-	}
-	return nil, nil
-}
-
-// GetID gets the session's id. Implements MetadataAddressable interface.
-func (msg MsgWriteSessionRequest) GetID() MetadataAddress {
-	rv := msg.Session.GetID()
-	if len(rv) == 0 && msg.SessionIdComponents != nil {
-		// No id yet, try to get it from the uuid.
-		// If it errors, we don't care in here, just return the empty address.
-		rv, _ = msg.SessionIdComponents.GetSessionAddr()
-	}
-	return rv
-}
-
-// GetSpecID gets the session's contract spec id. Implements MetadataSpecAddressable interface.
-func (msg MsgWriteSessionRequest) GetSpecID() MetadataAddress {
-	rv := msg.Session.GetSpecID()
-	if len(rv) == 0 {
-		// No id yet, try to get it from the uuid.
-		// If it errors, we don't care in here, just return the empty address.
-		rv, _ = msg.getSpecIDFromOptionalSpecUUID()
-	}
-	return rv
 }
 
 // ------------------  MsgWriteRecordRequest  ------------------
@@ -564,10 +441,14 @@ func (msg *MsgWriteRecordRequest) ConvertOptionalFields() error {
 		}
 	}
 	if len(msg.ContractSpecUuid) > 0 {
-		specAddr, err := msg.getSpecIDFromOptionalSpecUUID()
+		uid, err := uuid.Parse(msg.ContractSpecUuid)
 		if err != nil {
-			return err
+			return fmt.Errorf("invalid contract spec uuid: %w", err)
 		}
+		if len(strings.TrimSpace(msg.Record.Name)) == 0 {
+			return errors.New("empty record name")
+		}
+		specAddr := RecordSpecMetadataAddress(uid, msg.Record.Name)
 		if !msg.Record.SpecificationId.Empty() && !msg.Record.SpecificationId.Equals(specAddr) {
 			return fmt.Errorf("msg.Record.SpecificationId [%s] is different from the one created from msg.ContractSpecUuid [%s] and msg.Record.Name [%s]",
 				msg.Record.SpecificationId, msg.ContractSpecUuid, msg.Record.Name)
@@ -576,47 +457,6 @@ func (msg *MsgWriteRecordRequest) ConvertOptionalFields() error {
 		msg.ContractSpecUuid = ""
 	}
 	return nil
-}
-
-// getSpecIDFromOptionalSpecUUID gets the record spec metadata address from the optional contract spec uuid and record name.
-// returns nil, nil if this doesn't have an optional contract spec uuid.
-func (msg MsgWriteRecordRequest) getSpecIDFromOptionalSpecUUID() (MetadataAddress, error) {
-	if len(msg.ContractSpecUuid) > 0 {
-		uid, err := uuid.Parse(msg.ContractSpecUuid)
-		if err != nil {
-			return nil, fmt.Errorf("invalid contract spec uuid: %w", err)
-		}
-		if len(strings.TrimSpace(msg.Record.Name)) == 0 {
-			return nil, errors.New("empty record name")
-		}
-		return RecordSpecMetadataAddress(uid, msg.Record.Name), nil
-	}
-	return nil, nil
-}
-
-// GetID gets the record's id. Implements MetadataAddressable interface.
-func (msg MsgWriteRecordRequest) GetID() MetadataAddress {
-	rv := msg.Record.GetID()
-	if len(rv) == 0 && msg.SessionIdComponents != nil {
-		// No id yet, try to get it from the uuid.
-		// If it errors, we don't care in here, just return the empty address.
-		sessionAddr, _ := msg.SessionIdComponents.GetSessionAddr()
-		if len(sessionAddr) > 0 && len(strings.TrimSpace(msg.Record.Name)) > 0 {
-			rv, _ = sessionAddr.AsRecordAddress(msg.Record.Name)
-		}
-	}
-	return rv
-}
-
-// GetSpecID gets the record's spec id. Implements MetadataSpecAddressable interface.
-func (msg MsgWriteRecordRequest) GetSpecID() MetadataAddress {
-	rv := msg.Record.GetSpecID()
-	if len(rv) == 0 {
-		// No spec id yet, try to get it from the uuid.
-		// If it errors, we don't care in here, just return the empty address.
-		rv, _ = msg.getSpecIDFromOptionalSpecUUID()
-	}
-	return rv
 }
 
 // ------------------  MsgDeleteRecordRequest  ------------------
@@ -642,11 +482,6 @@ func (msg MsgDeleteRecordRequest) ValidateBasic() error {
 		return fmt.Errorf("at least one signer is required")
 	}
 	return nil
-}
-
-// GetID gets the record's id. Implements MetadataAddressable interface.
-func (msg MsgDeleteRecordRequest) GetID() MetadataAddress {
-	return msg.RecordId
 }
 
 // ------------------  MsgWriteScopeSpecificationRequest  ------------------
@@ -682,10 +517,11 @@ func (msg MsgWriteScopeSpecificationRequest) ValidateBasic() error {
 // Once used, it will be emptied so that calling this again has no effect.
 func (msg *MsgWriteScopeSpecificationRequest) ConvertOptionalFields() error {
 	if len(msg.SpecUuid) > 0 {
-		specAddr, err := msg.getSpecIDFromOptionalSpecUUID()
+		uid, err := uuid.Parse(msg.SpecUuid)
 		if err != nil {
-			return err
+			return fmt.Errorf("invalid spec uuid: %w", err)
 		}
+		specAddr := ScopeSpecMetadataAddress(uid)
 		if !msg.Specification.SpecificationId.Empty() && !msg.Specification.SpecificationId.Equals(specAddr) {
 			return fmt.Errorf("msg.Specification.SpecificationId [%s] is different from the one created from msg.SpecUuid [%s]",
 				msg.Specification.SpecificationId, msg.SpecUuid)
@@ -694,35 +530,6 @@ func (msg *MsgWriteScopeSpecificationRequest) ConvertOptionalFields() error {
 		msg.SpecUuid = ""
 	}
 	return nil
-}
-
-// getSpecIDFromOptionalSpecUUID gets the scope spec metadata address from the optional spec uuid.
-// returns nil, nil if this doesn't have an optional spec uuid.
-func (msg MsgWriteScopeSpecificationRequest) getSpecIDFromOptionalSpecUUID() (MetadataAddress, error) {
-	if len(msg.SpecUuid) > 0 {
-		uid, err := uuid.Parse(msg.SpecUuid)
-		if err != nil {
-			return nil, fmt.Errorf("invalid spec uuid: %w", err)
-		}
-		return ScopeSpecMetadataAddress(uid), nil
-	}
-	return nil, nil
-}
-
-// GetID gets the scope spec's id. Implements MetadataAddressable interface.
-func (msg MsgWriteScopeSpecificationRequest) GetID() MetadataAddress {
-	return msg.GetSpecID()
-}
-
-// GetSpecID gets the scope spec's id. Implements MetadataSpecAddressable interface.
-func (msg MsgWriteScopeSpecificationRequest) GetSpecID() MetadataAddress {
-	rv := msg.Specification.GetID()
-	if len(rv) == 0 {
-		// No id yet, try to get it from the uuid.
-		// If it errors, we don't care in here, just return the empty address.
-		rv, _ = msg.getSpecIDFromOptionalSpecUUID()
-	}
-	return rv
 }
 
 // ------------------  MsgDeleteScopeSpecificationRequest  ------------------
@@ -748,16 +555,6 @@ func (msg MsgDeleteScopeSpecificationRequest) ValidateBasic() error {
 		return fmt.Errorf("at least one signer is required")
 	}
 	return nil
-}
-
-// GetID gets the scope spec's id. Implements MetadataAddressable interface.
-func (msg MsgDeleteScopeSpecificationRequest) GetID() MetadataAddress {
-	return msg.GetSpecID()
-}
-
-// GetSpecID gets the scope spec's id. Implements MetadataSpecAddressable interface.
-func (msg MsgDeleteScopeSpecificationRequest) GetSpecID() MetadataAddress {
-	return msg.SpecificationId
 }
 
 // ------------------  MsgWriteContractSpecificationRequest  ------------------
@@ -793,10 +590,11 @@ func (msg MsgWriteContractSpecificationRequest) ValidateBasic() error {
 // Once used, it will be emptied so that calling this again has no effect.
 func (msg *MsgWriteContractSpecificationRequest) ConvertOptionalFields() error {
 	if len(msg.SpecUuid) > 0 {
-		specAddr, err := msg.getSpecIDFromOptionalSpecUUID()
+		uid, err := uuid.Parse(msg.SpecUuid)
 		if err != nil {
-			return err
+			return fmt.Errorf("invalid spec uuid: %w", err)
 		}
+		specAddr := ContractSpecMetadataAddress(uid)
 		if !msg.Specification.SpecificationId.Empty() && !msg.Specification.SpecificationId.Equals(specAddr) {
 			return fmt.Errorf("msg.Specification.SpecificationId [%s] is different from the one created from msg.SpecUuid [%s]",
 				msg.Specification.SpecificationId, msg.SpecUuid)
@@ -805,35 +603,6 @@ func (msg *MsgWriteContractSpecificationRequest) ConvertOptionalFields() error {
 		msg.SpecUuid = ""
 	}
 	return nil
-}
-
-// getSpecIDFromOptionalSpecUUID gets the contract spec metadata address from the optional spec uuid.
-// returns nil, nil if this doesn't have an optional spec uuid.
-func (msg MsgWriteContractSpecificationRequest) getSpecIDFromOptionalSpecUUID() (MetadataAddress, error) {
-	if len(msg.SpecUuid) > 0 {
-		uid, err := uuid.Parse(msg.SpecUuid)
-		if err != nil {
-			return nil, fmt.Errorf("invalid spec uuid: %w", err)
-		}
-		return ContractSpecMetadataAddress(uid), nil
-	}
-	return nil, nil
-}
-
-// GetID gets the contract spec's id. Implements MetadataAddressable interface.
-func (msg MsgWriteContractSpecificationRequest) GetID() MetadataAddress {
-	return msg.GetSpecID()
-}
-
-// GetSpecID gets the contract spec's id. Implements MetadataSpecAddressable interface.
-func (msg MsgWriteContractSpecificationRequest) GetSpecID() MetadataAddress {
-	rv := msg.Specification.GetID()
-	if len(rv) == 0 {
-		// No id yet, try to get it from the uuid.
-		// If it errors, we don't care in here, just return the empty address.
-		rv, _ = msg.getSpecIDFromOptionalSpecUUID()
-	}
-	return rv
 }
 
 // ------------------  MsgDeleteContractSpecificationRequest  ------------------
@@ -859,16 +628,6 @@ func (msg MsgDeleteContractSpecificationRequest) ValidateBasic() error {
 		return fmt.Errorf("at least one signer is required")
 	}
 	return nil
-}
-
-// GetID gets the contract spec's id. Implements MetadataAddressable interface.
-func (msg MsgDeleteContractSpecificationRequest) GetID() MetadataAddress {
-	return msg.GetSpecID()
-}
-
-// GetSpecID gets the contract spec's id. Implements MetadataSpecAddressable interface.
-func (msg MsgDeleteContractSpecificationRequest) GetSpecID() MetadataAddress {
-	return msg.SpecificationId
 }
 
 // ------------------  MsgAddContractSpecToScopeSpecRequest  ------------------
@@ -902,16 +661,6 @@ func (msg MsgAddContractSpecToScopeSpecRequest) ValidateBasic() error {
 	return nil
 }
 
-// GetID gets the scope spec's id. Implements MetadataAddressable interface.
-func (msg MsgAddContractSpecToScopeSpecRequest) GetID() MetadataAddress {
-	return msg.GetSpecID()
-}
-
-// GetSpecID gets the scope spec's id. Implements MetadataSpecAddressable interface.
-func (msg MsgAddContractSpecToScopeSpecRequest) GetSpecID() MetadataAddress {
-	return msg.ScopeSpecificationId
-}
-
 // ------------------  MsgDeleteContractSpecFromScopeSpecRequest  ------------------
 
 // NewMsgDeleteContractSpecFromScopeSpecRequest creates a new msg instance
@@ -941,16 +690,6 @@ func (msg MsgDeleteContractSpecFromScopeSpecRequest) ValidateBasic() error {
 		return fmt.Errorf("at least one signer is required")
 	}
 	return nil
-}
-
-// GetID gets the scope spec's id. Implements MetadataAddressable interface.
-func (msg MsgDeleteContractSpecFromScopeSpecRequest) GetID() MetadataAddress {
-	return msg.GetSpecID()
-}
-
-// GetSpecID gets the scope spec's id. Implements MetadataSpecAddressable interface.
-func (msg MsgDeleteContractSpecFromScopeSpecRequest) GetSpecID() MetadataAddress {
-	return msg.ScopeSpecificationId
 }
 
 // ------------------  MsgWriteRecordSpecificationRequest  ------------------
@@ -986,10 +725,14 @@ func (msg MsgWriteRecordSpecificationRequest) ValidateBasic() error {
 // Once used, it will be emptied so that calling this again has no effect.
 func (msg *MsgWriteRecordSpecificationRequest) ConvertOptionalFields() error {
 	if len(msg.ContractSpecUuid) > 0 {
-		specAddr, err := msg.getSpecIDFromOptionalSpecUUID()
+		uid, err := uuid.Parse(msg.ContractSpecUuid)
 		if err != nil {
-			return err
+			return fmt.Errorf("invalid spec uuid: %w", err)
 		}
+		if len(strings.TrimSpace(msg.Specification.Name)) == 0 {
+			return errors.New("empty specification name")
+		}
+		specAddr := RecordSpecMetadataAddress(uid, msg.Specification.Name)
 		if !msg.Specification.SpecificationId.Empty() && !msg.Specification.SpecificationId.Equals(specAddr) {
 			return fmt.Errorf("msg.Specification.SpecificationId [%s] is different from the one created from msg.ContractSpecUuid [%s] and msg.Specification.Name [%s]",
 				msg.Specification.SpecificationId, msg.ContractSpecUuid, msg.Specification.Name)
@@ -998,38 +741,6 @@ func (msg *MsgWriteRecordSpecificationRequest) ConvertOptionalFields() error {
 		msg.ContractSpecUuid = ""
 	}
 	return nil
-}
-
-// getSpecIDFromOptionalSpecUUID gets the record spec metadata address from the optional contract spec uuid and record name.
-// returns nil, nil if this doesn't have an optional contract spec uuid.
-func (msg MsgWriteRecordSpecificationRequest) getSpecIDFromOptionalSpecUUID() (MetadataAddress, error) {
-	if len(msg.ContractSpecUuid) > 0 {
-		uid, err := uuid.Parse(msg.ContractSpecUuid)
-		if err != nil {
-			return nil, fmt.Errorf("invalid spec uuid: %w", err)
-		}
-		if len(strings.TrimSpace(msg.Specification.Name)) == 0 {
-			return nil, errors.New("empty specification name")
-		}
-		return RecordSpecMetadataAddress(uid, msg.Specification.Name), nil
-	}
-	return nil, nil
-}
-
-// GetID gets the record spec's id. Implements MetadataAddressable interface.
-func (msg MsgWriteRecordSpecificationRequest) GetID() MetadataAddress {
-	return msg.GetSpecID()
-}
-
-// GetSpecID gets the record spec's id. Implements MetadataSpecAddressable interface.
-func (msg MsgWriteRecordSpecificationRequest) GetSpecID() MetadataAddress {
-	rv := msg.Specification.GetID()
-	if len(rv) == 0 {
-		// No id yet, try to get it from the uuid.
-		// If it errors, we don't care in here, just return the empty address.
-		rv, _ = msg.getSpecIDFromOptionalSpecUUID()
-	}
-	return rv
 }
 
 // ------------------  MsgDeleteRecordSpecificationRequest  ------------------
@@ -1055,16 +766,6 @@ func (msg MsgDeleteRecordSpecificationRequest) ValidateBasic() error {
 		return fmt.Errorf("at least one signer is required")
 	}
 	return nil
-}
-
-// GetID gets the record spec's id. Implements MetadataAddressable interface.
-func (msg MsgDeleteRecordSpecificationRequest) GetID() MetadataAddress {
-	return msg.GetSpecID()
-}
-
-// GetSpecID gets the record spec's id. Implements MetadataSpecAddressable interface.
-func (msg MsgDeleteRecordSpecificationRequest) GetSpecID() MetadataAddress {
-	return msg.SpecificationId
 }
 
 // ------------------  MsgBindOSLocatorRequest  ------------------
@@ -1208,7 +909,6 @@ func (msg *SessionIdComponents) GetSessionAddr() (MetadataAddress, error) {
 		}
 		scopeUUID = &uid
 	}
-
 	if scopeUUID == nil && sessionUUID == nil {
 		return nil, nil
 	}

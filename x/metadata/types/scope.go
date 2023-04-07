@@ -16,12 +16,6 @@ const (
 	maxAuditMessageLength = 200
 )
 
-var (
-	_ MetadataSpecAddressable = (*Scope)(nil)
-	_ MetadataSpecAddressable = (*Session)(nil)
-	_ MetadataSpecAddressable = (*Record)(nil)
-)
-
 // NewScope creates a new instance.
 func NewScope(
 	scopeID,
@@ -187,16 +181,6 @@ func (s Scope) GetAllOwnerAddresses() []string {
 	return GetPartyAddresses(s.Owners)
 }
 
-// GetID get this scope's metadata address. Satisfies the MetadataAddressable interface.
-func (s Scope) GetID() MetadataAddress {
-	return s.ScopeId
-}
-
-// GetSpecID get this scope's specification address. Satisfies the MetadataSpecAddressable interface.
-func (s Scope) GetSpecID() MetadataAddress {
-	return s.SpecificationId
-}
-
 // UpdateAudit computes a set of changes to the audit fields based on the existing message.
 func (a *AuditFields) UpdateAudit(blocktime time.Time, signers, message string) *AuditFields {
 	if a == nil {
@@ -268,16 +252,6 @@ func (s Session) String() string {
 // GetAllPartyAddresses gets the addresses of all of the parties. Each address can only appear once in the return value.
 func (s Session) GetAllPartyAddresses() []string {
 	return GetPartyAddresses(s.Parties)
-}
-
-// GetID get this session's metadata address. Satisfies the MetadataAddressable interface.
-func (s Session) GetID() MetadataAddress {
-	return s.SessionId
-}
-
-// GetSpecID get this session's specification address. Satisfies the MetadataSpecAddressable interface.
-func (s Session) GetSpecID() MetadataAddress {
-	return s.SpecificationId
 }
 
 // NewRecord creates new instance of Record
@@ -356,16 +330,6 @@ func (r Record) GetRecordAddress() MetadataAddress {
 		return addr
 	}
 	return MetadataAddress{}
-}
-
-// GetID get this record's metadata address. Satisfies the MetadataAddressable interface.
-func (r Record) GetID() MetadataAddress {
-	return r.GetRecordAddress()
-}
-
-// GetSpecID get this record's specification address. Satisfies the MetadataSpecAddressable interface.
-func (r Record) GetSpecID() MetadataAddress {
-	return r.SpecificationId
 }
 
 // NewRecordInput creates new instance of RecordInput
@@ -499,7 +463,7 @@ func (p Party) ValidateBasic() error {
 	return nil
 }
 
-// ValidatePartiesAreUnique makes sure that no two provided parties are equal.
+// ValidatePartiesAreUnique makes sure that no two provided parties are the same.
 func ValidatePartiesAreUnique(parties []Party) error {
 	for i := 0; i < len(parties)-1; i++ {
 		for j := i + 1; j < len(parties); j++ {
