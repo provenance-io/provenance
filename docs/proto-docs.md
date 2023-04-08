@@ -3146,27 +3146,7 @@ Scope defines a root reference for a collection of records owned by one or more 
 | `owners` | [Party](#provenance.metadata.v1.Party) | repeated | These parties represent top level owners of the records within. These parties must sign any requests that modify the data within the scope. These addresses are in union with parties listed on the sessions. |
 | `data_access` | [string](#string) | repeated | Addresses in this list are authorized to receive off-chain data associated with this scope. |
 | `value_owner_address` | [string](#string) |  | An address that controls the value associated with this scope. Standard blockchain accounts and marker accounts are supported for this value. This attribute may only be changed by the entity indicated once it is set. |
-| `require_party_rollup` | [bool](#bool) |  | Whether all parties in this scope and its sessions must be present in this scope's owners field. This also enables use of optional=true scope owners and session parties.
-
-If true:
-
-In order to write or delete this scope: - All roles required by the scope spec must have a party in the owners. - If not new, all required=false existing owners must be signers. - If not new, all roles required by the scope spec must have a signer and associated party from the existing scope. - Value owner signer restrictions are applied.
-
-In order to write sessions in this scope: - All proposed session parties must be present in this scope's owners. - All optional=false scope owners must be signers. - If new, all roles required by the contract spec must have a signer and associated party in the proposed session. - If not new, all roles required by the contract spec must have a signer and associated party in the existing session. - If not new, all optional=false existing parties must also be signers.
-
-In order to write records in this scope: - All roles required by the record spec must have a signer and associated party in the session. - All optional=false scope owners and session parties must be signers. - If the record is changing sessions, all optional=false previous session parties must be signers.
-
-In order to delete a record from this scope: - All roles required by the record spec must have a signer and associated party in the scope. - All optional=false scope owners must be signers.
-
-If false:
-
-In order to write or delete this scope: - All roles required by the scope spec must have a party in the owners. - If not new, all existing owners must sign. - Value owner signer restrictions are applied.
-
-In order to write sessions in this scope: - All roles required by the contract spec must have a party in the session parties. - All scope owners must sign.
-
-In order to write records in this scope: - All roles required by the record spec must have a party in the session parties. - All session parties must sign. - If the record is changing to a new session, all previous session parties must sign.
-
-In order to delete a record from this scope: - All scope owners must sign. |
+| `require_party_rollup` | [bool](#bool) |  | Whether all parties in this scope and its sessions must be present in this scope's owners field. This also enables use of optional=true scope owners and session parties. |
 
 
 

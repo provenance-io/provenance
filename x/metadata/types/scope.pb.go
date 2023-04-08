@@ -112,52 +112,6 @@ type Scope struct {
 	ValueOwnerAddress string `protobuf:"bytes,5,opt,name=value_owner_address,json=valueOwnerAddress,proto3" json:"value_owner_address,omitempty" yaml:"value_owner_address"`
 	// Whether all parties in this scope and its sessions must be present in this scope's owners field.
 	// This also enables use of optional=true scope owners and session parties.
-	//
-	// If true:
-	//
-	// In order to write or delete this scope:
-	//   - All roles required by the scope spec must have a party in the owners.
-	//   - If not new, all required=false existing owners must be signers.
-	//   - If not new, all roles required by the scope spec must have a signer and
-	//     associated party from the existing scope.
-	//   - Value owner signer restrictions are applied.
-	//
-	// In order to write sessions in this scope:
-	//   - All proposed session parties must be present in this scope's owners.
-	//   - All optional=false scope owners must be signers.
-	//   - If new, all roles required by the contract spec must have a signer and
-	//     associated party in the proposed session.
-	//   - If not new, all roles required by the contract spec must have a signer
-	//     and associated party in the existing session.
-	//   - If not new, all optional=false existing parties must also be signers.
-	//
-	// In order to write records in this scope:
-	//   - All roles required by the record spec must have a signer and associated party in the session.
-	//   - All optional=false scope owners and session parties must be signers.
-	//   - If the record is changing sessions, all optional=false previous session parties must be signers.
-	//
-	// In order to delete a record from this scope:
-	//   - All roles required by the record spec must have a signer and associated party in the scope.
-	//   - All optional=false scope owners must be signers.
-	//
-	// If false:
-	//
-	// In order to write or delete this scope:
-	//   - All roles required by the scope spec must have a party in the owners.
-	//   - If not new, all existing owners must sign.
-	//   - Value owner signer restrictions are applied.
-	//
-	// In order to write sessions in this scope:
-	//   - All roles required by the contract spec must have a party in the session parties.
-	//   - All scope owners must sign.
-	//
-	// In order to write records in this scope:
-	//   - All roles required by the record spec must have a party in the session parties.
-	//   - All session parties must sign.
-	//   - If the record is changing to a new session, all previous session parties must sign.
-	//
-	// In order to delete a record from this scope:
-	//   - All scope owners must sign.
 	RequirePartyRollup bool `protobuf:"varint,6,opt,name=require_party_rollup,json=requirePartyRollup,proto3" json:"require_party_rollup,omitempty" yaml:"require_party_rollup"`
 }
 
