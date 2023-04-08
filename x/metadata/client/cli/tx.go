@@ -635,7 +635,7 @@ ChFIRUxMTyBQUk9WRU5BTkNFIQ==`, version.AppName),
 			if err != nil {
 				return fmt.Errorf("invalid contract specification id [%s]: %w", argsLeft[0], err)
 			}
-			parties, err = parsePartiesInvolved(argsLeft[1])
+			parties, err = parseParties(argsLeft[1])
 			if err != nil {
 				return err
 			}
@@ -751,7 +751,7 @@ contractspec-name
 				return err
 			}
 
-			parties, err := parsePartiesInvolved(args[6])
+			parties, err := parseParties(args[6])
 			if err != nil {
 				return err
 			}
@@ -764,7 +764,7 @@ contractspec-name
 			record := types.Record{
 				Name:            name,
 				SpecificationId: recordSpecID,
-				Process:         *process,
+				Process:         process,
 				Inputs:          inputs,
 				Outputs:         outputs,
 			}
@@ -813,89 +813,6 @@ contractspec-name
 	return cmd
 }
 
-// parseProcess parses a comma separated structure of name, processid(hash or metaaddress), method.  name,hashvalue,methodnam;...
-func parseProcess(cliDelimitedValue string) (*types.Process, error) {
-	values := strings.Split(cliDelimitedValue, ",")
-	if len(values) != 3 {
-		return nil, fmt.Errorf("invalid number of values for process: %v", len(values))
-	}
-
-	process := types.Process{
-		Name:   values[0],
-		Method: values[2],
-	}
-	processID, err := types.MetadataAddressFromBech32(values[1])
-	if err != nil {
-		process.ProcessId = &types.Process_Address{Address: string(processID)}
-	} else {
-		process.ProcessId = &types.Process_Hash{Hash: values[0]}
-	}
-	return &process, nil
-}
-
-// parseRecordInputs parses a list of semicolon, comma delimited input structure name,soure-value(hash or metaaddress),typename,status(proposed,record);...
-func parsePartiesInvolved(cliDelimitedValue string) ([]types.Party, error) {
-	delimitedInputs := strings.Split(cliDelimitedValue, ";")
-	parties := make([]types.Party, len(delimitedInputs))
-	for i, delimitedInput := range delimitedInputs {
-		values := strings.Split(delimitedInput, ",")
-		if len(values) != 2 {
-			return nil, fmt.Errorf("invalid number of values for parties: %v", len(values))
-		}
-		partyType, err := parsePartyType(values[1])
-		if err != nil {
-			return nil, err
-		}
-		parties[i] = types.Party{
-			Address: values[0],
-			Role:    partyType,
-		}
-	}
-	return parties, nil
-}
-
-// parseRecordInputs parses a list of semicolon, comma delimited input structure name,soure-value(hash or metaaddress),typename,status(proposed,record);...
-func parseRecordInputs(cliDelimitedValue string) ([]types.RecordInput, error) {
-	delimitedInputs := strings.Split(cliDelimitedValue, ";")
-	inputs := make([]types.RecordInput, len(delimitedInputs))
-	for i, delimitedInput := range delimitedInputs {
-		values := strings.Split(delimitedInput, ",")
-		if len(values) != 4 {
-			return nil, fmt.Errorf("invalid number of values for record input: %v", len(values))
-		}
-		inputs[i] = types.RecordInput{
-			Name:     values[0],
-			TypeName: values[2],
-			Status:   types.RecordInputStatus(types.RecordInputStatus_value[fmt.Sprintf("RECORD_INPUT_STATUS_%s", strings.ToUpper(values[3]))]),
-		}
-		sourceValue := values[1]
-		recordID, err := types.MetadataAddressFromBech32(sourceValue)
-		if err != nil {
-			inputs[i].Source = &types.RecordInput_Hash{Hash: sourceValue}
-		} else {
-			inputs[i].Source = &types.RecordInput_RecordId{RecordId: recordID}
-		}
-	}
-	return inputs, nil
-}
-
-// parseRecordOutputs parses a list of semicolon, comma delimited output structures hash,status(pass,skip,fail);...
-func parseRecordOutputs(cliDelimitedValue string) ([]types.RecordOutput, error) {
-	delimitedOutputs := strings.Split(cliDelimitedValue, ";")
-	outputs := make([]types.RecordOutput, len(delimitedOutputs))
-	for i, delimitedOutput := range delimitedOutputs {
-		values := strings.Split(delimitedOutput, ",")
-		if len(values) != 2 {
-			return nil, fmt.Errorf("invalid number of values for record output: %v", len(values))
-		}
-		outputs[i] = types.RecordOutput{
-			Hash:   values[0],
-			Status: types.ResultStatus(types.ResultStatus_value[fmt.Sprintf("RESULT_STATUS_%s", strings.ToUpper(values[1]))]),
-		}
-	}
-	return outputs, nil
-}
-
 func WriteRecordSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "write-record-specification [specification-id] [name] [input-specifications] [type-name] [result-types] [responsible-parties]",
@@ -927,7 +844,7 @@ owner,originator`, version.AppName),
 
 			recordName := args[1]
 
-			inputs, err := parseInputSpecification(args[2])
+			inputs, err := parseInputSpecifications(args[2])
 			if err != nil {
 				return err
 			}
@@ -965,95 +882,6 @@ owner,originator`, version.AppName),
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
-}
-
-// parseInputSpecification converts cli delimited argument and converts it to InputSpecifications
-func parseInputSpecification(cliDelimitedValue string) ([]*types.InputSpecification, error) {
-	delimitedInputs := strings.Split(cliDelimitedValue, ";")
-	inputs := make([]*types.InputSpecification, len(delimitedInputs))
-	for i, delimitedInput := range delimitedInputs {
-		values := strings.Split(delimitedInput, ",")
-		if len(values) != 3 {
-			return nil, fmt.Errorf("invalid number of values for input specification: %v", len(values))
-		}
-		inputs[i] = &types.InputSpecification{
-			Name:     values[0],
-			TypeName: values[1],
-		}
-		sourceValue := values[2]
-		recordID, err := types.MetadataAddressFromBech32(sourceValue)
-		if err != nil {
-			inputs[i].Source = &types.InputSpecification_Hash{Hash: sourceValue}
-		} else {
-			inputs[i].Source = &types.InputSpecification_RecordId{RecordId: recordID}
-		}
-	}
-	return inputs, nil
-}
-
-func addSignerFlagCmd(cmd *cobra.Command) {
-	cmd.Flags().String(FlagSigners, "", "comma delimited list of bech32 addresses")
-}
-
-// parseSigners checks signers flag for signers, else uses the from address
-func parseSigners(cmd *cobra.Command, client *client.Context) ([]string, error) {
-	flagSet := cmd.Flags()
-	if flagSet.Changed(FlagSigners) {
-		signerList, _ := flagSet.GetString(FlagSigners)
-		signers := strings.Split(signerList, ",")
-		for _, signer := range signers {
-			_, err := sdk.AccAddressFromBech32(signer)
-			if err != nil {
-				fmt.Printf("signer address must be a Bech32 string: %v", err)
-				return nil, err
-			}
-		}
-		return signers, nil
-	}
-	return []string{client.GetFromAddress().String()}, nil
-}
-
-func parsePartyTypes(delimitedPartyTypes string) ([]types.PartyType, error) {
-	parties := strings.Split(delimitedPartyTypes, ",")
-	partyTypes := make([]types.PartyType, len(parties))
-	for i, party := range parties {
-		partyValue, err := parsePartyType(party)
-		if err != nil {
-			return nil, err
-		}
-		partyTypes[i] = partyValue
-	}
-	return partyTypes, nil
-}
-
-func parsePartyType(partyType string) (types.PartyType, error) {
-	rv := types.PartyType_value[fmt.Sprintf("PARTY_TYPE_%s", strings.ToUpper(partyType))]
-	if rv == 0 {
-		return 0, fmt.Errorf("unknown party type: %q", partyType)
-	}
-	return types.PartyType(rv), nil
-}
-
-// parseDescription hydrates Description from a sorted array name,description,website,icon-url
-func parseDescription(cliArgs []string) *types.Description {
-	if len(cliArgs) == 0 {
-		return nil
-	}
-
-	description := types.Description{}
-	if len(cliArgs) >= 1 {
-		description.Name = cliArgs[0]
-	}
-	if len(cliArgs) >= 2 {
-		description.Description = cliArgs[1]
-	}
-	if len(cliArgs) >= 3 {
-		description.WebsiteUrl = cliArgs[2]
-	}
-	if len(cliArgs) >= 4 {
-		description.IconUrl = cliArgs[3]
-	}
-	return &description
 }
 
 // RemoveScopeSpecificationCmd creates a command to remove scope specification
@@ -1246,4 +1074,26 @@ func RemoveRecordSpecificationCmd() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
+}
+
+func addSignerFlagCmd(cmd *cobra.Command) {
+	cmd.Flags().String(FlagSigners, "", "comma delimited list of bech32 addresses")
+}
+
+// parseSigners checks signers flag for signers, else uses the from address
+func parseSigners(cmd *cobra.Command, client *client.Context) ([]string, error) {
+	flagSet := cmd.Flags()
+	if flagSet.Changed(FlagSigners) {
+		signerList, _ := flagSet.GetString(FlagSigners)
+		signers := strings.Split(signerList, ",")
+		for _, signer := range signers {
+			_, err := sdk.AccAddressFromBech32(signer)
+			if err != nil {
+				fmt.Printf("signer address must be a Bech32 string: %v", err)
+				return nil, err
+			}
+		}
+		return signers, nil
+	}
+	return []string{client.GetFromAddress().String()}, nil
 }
