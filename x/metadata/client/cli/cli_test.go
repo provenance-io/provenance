@@ -1999,6 +1999,23 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			false, "", &sdk.TxResponse{}, 0,
 		},
 		{
+			"should successfully add metadata scope with party rollup",
+			cli.WriteScopeCmd(),
+			[]string{
+				scopeID,
+				scopeSpecID,
+				s.accountAddrStr,
+				s.accountAddrStr,
+				s.accountAddrStr,
+				fmt.Sprintf("--%s", cli.FlagRequirePartyRollup),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, "", &sdk.TxResponse{}, 0,
+		},
+		{
 			"should fail to add metadata scope, incorrect scope id",
 			cli.WriteScopeCmd(),
 			[]string{
