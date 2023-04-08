@@ -23,13 +23,13 @@ func ownerPartyList(addresses ...string) []Party {
 }
 
 func TestWriteScopeRoute(t *testing.T) {
-	var scope = NewScope(
-		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
-		ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
-		ownerPartyList("data_owner"),
-		[]string{"data_accessor"},
-		"value_owner",
-	)
+	var scope = &Scope{
+		ScopeId:           ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
+		SpecificationId:   ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
+		Owners:            ownerPartyList("data_owner"),
+		DataAccess:        []string{"data_accessor"},
+		ValueOwnerAddress: "value_owner",
+	}
 	var msg = NewMsgWriteScopeRequest(*scope, []string{})
 
 	require.Equal(t, sdk.MsgTypeURL(msg), "/provenance.metadata.v1.MsgWriteScopeRequest")
@@ -58,13 +58,13 @@ spec_uuid: ""
 }
 
 func TestWriteScopeValidation(t *testing.T) {
-	var scope = NewScope(
-		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
-		ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
-		ownerPartyList("data_owner"),
-		[]string{"data_accessor"},
-		"value_owner",
-	)
+	var scope = &Scope{
+		ScopeId:           ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
+		SpecificationId:   ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
+		Owners:            ownerPartyList("data_owner"),
+		DataAccess:        []string{"data_accessor"},
+		ValueOwnerAddress: "value_owner",
+	}
 	var msg = NewMsgWriteScopeRequest(*scope, []string{"invalid"})
 	err := msg.ValidateBasic()
 	require.EqualError(t, err, "invalid scope owners: invalid party address [data_owner]: decoding bech32 failed: invalid separator index -1")
@@ -74,24 +74,22 @@ func TestWriteScopeValidation(t *testing.T) {
 	require.Error(t, err, "invalid addresses")
 	require.Equal(t, "invalid scope owners: invalid party address [data_owner]: decoding bech32 failed: invalid separator index -1", err.Error())
 
-	msg.Scope = *NewScope(
-		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
-		ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
-		[]Party{},
-		[]string{},
-		"",
-	)
+	msg.Scope = Scope{
+		ScopeId:         ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
+		SpecificationId: ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
+		Owners:          []Party{},
+		DataAccess:      []string{},
+	}
 	err = msg.Scope.ValidateBasic()
 	require.Error(t, err, "no owners")
 	require.Equal(t, "invalid scope owners: at least one party is required", err.Error())
 
-	msg.Scope = *NewScope(
-		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
-		ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
-		ownerPartyList("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"),
-		[]string{},
-		"",
-	)
+	msg.Scope = Scope{
+		ScopeId:         ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
+		SpecificationId: ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
+		Owners:          ownerPartyList("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"),
+		DataAccess:      []string{},
+	}
 	msg.Signers = []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}
 	err = msg.Scope.ValidateBasic()
 	require.NoError(t, err, "valid add scope request")

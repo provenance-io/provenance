@@ -213,13 +213,13 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.contractSpecID = metadatatypes.ContractSpecMetadataAddress(s.contractSpecUUID)
 	s.recordSpecID = metadatatypes.RecordSpecMetadataAddress(s.contractSpecUUID, s.recordName)
 
-	s.scope = *metadatatypes.NewScope(
-		s.scopeID,
-		s.scopeSpecID,
-		ownerPartyList(s.user1AddrStr),
-		[]string{s.user1AddrStr},
-		s.user2AddrStr,
-	)
+	s.scope = metadatatypes.Scope{
+		ScopeId:           s.scopeID,
+		SpecificationId:   s.scopeSpecID,
+		Owners:            ownerPartyList(s.user1AddrStr),
+		DataAccess:        []string{s.user1AddrStr},
+		ValueOwnerAddress: s.user2AddrStr,
+	}
 
 	s.session = *metadatatypes.NewSession(
 		"unit test session",

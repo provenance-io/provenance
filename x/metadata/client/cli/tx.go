@@ -125,8 +125,9 @@ func WriteScopeCmd() *cobra.Command {
 				specID,
 				owners,
 				dataAccess,
-				valueOwnerAddress)
-			scope.RequirePartyRollup = requirePartyRollup
+				valueOwnerAddress,
+				requirePartyRollup,
+			)
 
 			msg := types.NewMsgWriteScopeRequest(scope, signers)
 			err = msg.ValidateBasic()

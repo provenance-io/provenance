@@ -556,7 +556,7 @@ func (s *MetadataHandlerTestSuite) TestAddAndDeleteScopeOwners() {
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
 	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
 	scopeID := types.ScopeMetadataAddress(uuid.New())
-	scope := types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, "")
+	scope := types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, "", false)
 	dneScopeID := types.ScopeMetadataAddress(uuid.New())
 	user3 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
 
@@ -720,7 +720,7 @@ func (s *MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
 	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
 	scopeID := types.ScopeMetadataAddress(uuid.New())
-	scope := types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, "")
+	scope := types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, "", false)
 	dneScopeID := types.ScopeMetadataAddress(uuid.New())
 	user3 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
 

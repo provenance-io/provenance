@@ -23,13 +23,15 @@ func NewScope(
 	owners []Party,
 	dataAccess []string,
 	valueOwner string,
+	requirePartyRollup bool,
 ) *Scope {
 	return &Scope{
-		ScopeId:           scopeID,
-		SpecificationId:   scopeSpecification,
-		Owners:            owners,
-		DataAccess:        dataAccess,
-		ValueOwnerAddress: valueOwner,
+		ScopeId:            scopeID,
+		SpecificationId:    scopeSpecification,
+		Owners:             owners,
+		DataAccess:         dataAccess,
+		ValueOwnerAddress:  valueOwner,
+		RequirePartyRollup: requirePartyRollup,
 	}
 }
 

@@ -157,7 +157,7 @@ func (s *SessionKeeperTestSuite) TestSessionIterator() {
 
 func (s *SessionKeeperTestSuite) TestValidateWriteSession() {
 	ctx := s.FreshCtx()
-	scope := types.NewScope(s.scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
+	scope := types.NewScope(s.scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1, false)
 	s.app.MetadataKeeper.SetScope(ctx, *scope)
 
 	auditTime := time.Now()

@@ -36,6 +36,16 @@ func (s *ScopeTestSuite) SetupSuite() {
 }
 
 func (s *ScopeTestSuite) TestScopeValidateBasic() {
+	ns := func(scopeID, scopeSpecification MetadataAddress, owners []Party, dataAccess []string, valueOwner string) *Scope {
+		return &Scope{
+			ScopeId:            scopeID,
+			SpecificationId:    scopeSpecification,
+			Owners:             owners,
+			DataAccess:         dataAccess,
+			ValueOwnerAddress:  valueOwner,
+			RequirePartyRollup: false,
+		}
+	}
 	tests := []struct {
 		name  string
 		scope *Scope
@@ -43,53 +53,47 @@ func (s *ScopeTestSuite) TestScopeValidateBasic() {
 	}{
 		{
 			"valid scope one owner",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{}, ""),
 			"",
 		},
 		{
 			"valid scope one owner, one data access",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{s.Addr}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{s.Addr}, ""),
 			"",
 		},
 		{
 			"no owners",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
 			"invalid scope owners: at least one party is required",
 		},
 		{
 			"no owners, data access",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{s.Addr}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{s.Addr}, ""),
 			"invalid scope owners: at least one party is required",
 		},
 		{
 			"invalid scope id",
-			NewScope(ScopeSpecMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
+			ns(ScopeSpecMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
 			"invalid scope identifier (expected: scope, got scopespec)",
 		},
 		{
 			"invalid scope id - wrong address type",
-			NewScope(MetadataAddress{0x85}, ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
+			ns(MetadataAddress{0x85}, ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
 			"invalid metadata address type: 133",
 		},
 		{
 			"invalid spec id",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
 			"invalid scope specification identifier (expected: scopespec, got scope)",
 		},
 		{
 			"invalid spec id - wrong address type",
-			NewScope(ScopeMetadataAddress(uuid.New()), MetadataAddress{0x85}, []Party{}, []string{}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), MetadataAddress{0x85}, []Party{}, []string{}, ""),
 			"invalid metadata address type: 133",
 		},
 		{
 			"invalid owner on scope",
-			NewScope(ScopeMetadataAddress(
-				uuid.New()),
-				ScopeSpecMetadataAddress(uuid.New()),
-				ownerPartyList(":invalid"),
-				[]string{},
-				"",
-			),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(":invalid"), []string{}, ""),
 			"invalid scope owners: invalid party address [:invalid]: decoding bech32 failed: invalid separator index -1",
 		},
 		{
@@ -125,6 +129,17 @@ func (s *ScopeTestSuite) TestScopeValidateBasic() {
 }
 
 func (s *ScopeTestSuite) TestScopeAddAccess() {
+	ns := func(scopeID, scopeSpecification MetadataAddress, owners []Party, dataAccess []string, valueOwner string) *Scope {
+		return &Scope{
+			ScopeId:            scopeID,
+			SpecificationId:    scopeSpecification,
+			Owners:             owners,
+			DataAccess:         dataAccess,
+			ValueOwnerAddress:  valueOwner,
+			RequirePartyRollup: false,
+		}
+	}
+
 	tests := []struct {
 		name       string
 		scope      *Scope
@@ -133,25 +148,25 @@ func (s *ScopeTestSuite) TestScopeAddAccess() {
 	}{
 		{
 			"should successfully add new address to scope data access",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{}, ""),
 			[]string{"addr1"},
 			[]string{"addr1"},
 		},
 		{
 			"should successfully not add same address twice to data access",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
 			[]string{"addr1"},
 			[]string{"addr1"},
 		},
 		{
 			"should successfully add new address to data access",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
 			[]string{"addr2"},
 			[]string{"addr1", "addr2"},
 		},
 		{
 			"should successfully add new address only once to data access",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
 			[]string{"addr2", "addr2", "addr2"},
 			[]string{"addr1", "addr2"},
 		},
@@ -168,6 +183,17 @@ func (s *ScopeTestSuite) TestScopeAddAccess() {
 }
 
 func (s *ScopeTestSuite) TestScopeRemoveAccess() {
+	ns := func(scopeID, scopeSpecification MetadataAddress, owners []Party, dataAccess []string, valueOwner string) *Scope {
+		return &Scope{
+			ScopeId:            scopeID,
+			SpecificationId:    scopeSpecification,
+			Owners:             owners,
+			DataAccess:         dataAccess,
+			ValueOwnerAddress:  valueOwner,
+			RequirePartyRollup: false,
+		}
+	}
+
 	tests := []struct {
 		name       string
 		scope      *Scope
@@ -176,25 +202,25 @@ func (s *ScopeTestSuite) TestScopeRemoveAccess() {
 	}{
 		{
 			"should successfully remove address from scope data access",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
 			[]string{"addr1"},
 			[]string{},
 		},
 		{
 			"should successfully remove from a list more with more than one",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1", "addr2"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1", "addr2"}, ""),
 			[]string{"addr2"},
 			[]string{"addr1"},
 		},
 		{
 			"should successfully remove nothing",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{}, ""),
 			[]string{"addr2"},
 			[]string{},
 		},
 		{
 			"should successfully remove address even when repeated in list",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1", "addr2", "addr3"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1", "addr2", "addr3"}, ""),
 			[]string{"addr2", "addr2", "addr2"},
 			[]string{"addr1", "addr3"},
 		},
@@ -211,6 +237,17 @@ func (s *ScopeTestSuite) TestScopeRemoveAccess() {
 }
 
 func (s *ScopeTestSuite) TestScopeAddOwners() {
+	ns := func(scopeID, scopeSpecification MetadataAddress, owners []Party, dataAccess []string, valueOwner string) *Scope {
+		return &Scope{
+			ScopeId:            scopeID,
+			SpecificationId:    scopeSpecification,
+			Owners:             owners,
+			DataAccess:         dataAccess,
+			ValueOwnerAddress:  valueOwner,
+			RequirePartyRollup: false,
+		}
+	}
+
 	user1Owner := Party{Address: s.Addr, Role: PartyType_PARTY_TYPE_OWNER}
 	user1Investor := Party{Address: s.Addr, Role: PartyType_PARTY_TYPE_INVESTOR}
 	user2Affiliate := Party{Address: "addr2", Role: PartyType_PARTY_TYPE_AFFILIATE}
@@ -223,28 +260,28 @@ func (s *ScopeTestSuite) TestScopeAddOwners() {
 	}{
 		{
 			"should successfully update owner address with new role",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{}, ""),
 			[]Party{user1Investor},
 			[]Party{user1Owner, user1Investor},
 			"",
 		},
 		{
 			"should fail to add duplicate owner",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
 			[]Party{user1Owner},
 			[]Party{user1Owner},
 			"party already exists with address cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck and role PARTY_TYPE_OWNER",
 		},
 		{
 			"should successfully add new address to owners",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
 			[]Party{user2Affiliate},
 			[]Party{user1Owner, user2Affiliate},
 			"",
 		},
 		{
 			"should successfully not change the list",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
 			[]Party{},
 			[]Party{user1Owner},
 			"",
@@ -265,6 +302,17 @@ func (s *ScopeTestSuite) TestScopeAddOwners() {
 }
 
 func (s *ScopeTestSuite) TestScopeRemoveOwners() {
+	ns := func(scopeID, scopeSpecification MetadataAddress, owners []Party, dataAccess []string, valueOwner string) *Scope {
+		return &Scope{
+			ScopeId:            scopeID,
+			SpecificationId:    scopeSpecification,
+			Owners:             owners,
+			DataAccess:         dataAccess,
+			ValueOwnerAddress:  valueOwner,
+			RequirePartyRollup: false,
+		}
+	}
+
 	user1Owner := ownerPartyList(s.Addr)
 	user1Investor := Party{Address: s.Addr, Role: PartyType_PARTY_TYPE_INVESTOR}
 	user2Affiliate := Party{Address: "addr2", Role: PartyType_PARTY_TYPE_AFFILIATE}
@@ -277,21 +325,21 @@ func (s *ScopeTestSuite) TestScopeRemoveOwners() {
 	}{
 		{
 			"should successfully remove owner by address",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{}, ""),
 			[]string{user1Owner[0].Address},
 			[]Party{},
 			"",
 		},
 		{
 			"should fail to remove any non-existent owner",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{"addr1"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{"addr1"}, ""),
 			[]string{"notanowner"},
 			user1Owner,
 			"address does not exist in scope owners: notanowner",
 		},
 		{
 			"should successfully remove owner from list of multiple",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Investor, user2Affiliate}, []string{"addr1"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Investor, user2Affiliate}, []string{"addr1"}, ""),
 			[]string{user1Investor.Address},
 			[]Party{user2Affiliate},
 			"",
@@ -315,11 +363,12 @@ func (s *ScopeTestSuite) TestScopeString() {
 	s.T().Run("scope string", func(t *testing.T) {
 		scopeUUID := uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")
 		sessionUUID := uuid.MustParse("c25c7bd4-c639-4367-a842-f64fa5fccc19")
-		scope := NewScope(ScopeMetadataAddress(
-			scopeUUID), ScopeSpecMetadataAddress(sessionUUID),
-			ownerPartyList(s.Addr),
-			[]string{},
-			"")
+		scope := &Scope{
+			ScopeId:         ScopeMetadataAddress(scopeUUID),
+			SpecificationId: ScopeSpecMetadataAddress(sessionUUID),
+			Owners:          ownerPartyList(s.Addr),
+			DataAccess:      []string{},
+		}
 		require.Equal(t, `scope_id: scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp
 specification_id: scopespec1qnp9c775ccu5xeaggtmylf0uesvsqyrkq8
 owners:

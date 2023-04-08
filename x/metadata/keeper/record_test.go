@@ -149,7 +149,7 @@ func (s *RecordKeeperTestSuite) TestValidateDeleteRecord() {
 	dneRecordID := types.RecordMetadataAddress(s.scopeUUID, "does-not-exist")
 	user3 := sdk.AccAddress("user_3______________").String()
 
-	scope := types.NewScope(s.scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
+	scope := types.NewScope(s.scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1, false)
 	s.app.MetadataKeeper.SetScope(ctx, *scope)
 
 	auditFields := &types.AuditFields{
@@ -345,7 +345,7 @@ func (s *RecordKeeperTestSuite) TestValidateWriteRecord() {
 	ctx := s.FreshCtx()
 	scopeUUID := uuid.New()
 	scopeID := types.ScopeMetadataAddress(scopeUUID)
-	scope := types.NewScope(scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
+	scope := types.NewScope(scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1, false)
 	s.app.MetadataKeeper.SetScope(ctx, *scope)
 
 	sessionUUID := uuid.New()
@@ -441,7 +441,7 @@ func (s *RecordKeeperTestSuite) TestValidateWriteRecord() {
 
 	anotherScopeUUID := uuid.New()
 	anotherScopeID := types.ScopeMetadataAddress(anotherScopeUUID)
-	anotherScope := types.NewScope(anotherScopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
+	anotherScope := types.NewScope(anotherScopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1, false)
 	s.app.MetadataKeeper.SetScope(ctx, *anotherScope)
 
 	anotherSessionUUID := uuid.New()
