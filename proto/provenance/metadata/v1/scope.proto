@@ -95,13 +95,10 @@ message Scope {
   bool require_party_rollup = 6 [(gogoproto.moretags) = "yaml:\"require_party_rollup\""];
 }
 
-/*
-A Session is created for an execution context against a specific specification instance
-
-The context will have a specification and set of parties involved.  The Session may be updated several
-times so long as the parties listed are signers on the transaction.  NOTE: When there are no Records within a Scope
-that reference a Session it is removed.
-*/
+// Session defines an execution context against a specific specification instance.
+// The context will have a specification and set of parties involved.
+//
+// NOTE: When there are no more Records within a Scope that reference a Session, the Session is removed.
 message Session {
   option (gogoproto.goproto_stringer) = false;
 
