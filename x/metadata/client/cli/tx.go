@@ -69,19 +69,19 @@ func NewTxCmd() *cobra.Command {
 // WriteScopeCmd creates a command for adding or updating a metadata scope.
 func WriteScopeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "write-scope <scope-id> <spec-id> <owners> <data-access> <value-owner-address> [flags]",
+		Use:   "write-scope [scope-id] [spec-id] [owners] [data-access] [value-owner-address] [flags]",
 		Short: "Add/Update a metadata scope to the provenance blockchain",
 		Long: `Add/Update a metadata scope to the provenance blockchain
 
-<scope-id> is a scope metadata address.
-<spec-id> is a scope specification metadata address.
-<owners> is a semicolon delimited list of parties.
+[scope-id] is a scope metadata address.
+[spec-id] is a scope specification metadata address.
+[owners] is a semicolon delimited list of parties.
   Each party must have one of the following formats:
-    "<address>" or "<address>,<role>" or "<address>,<role>,opt"
+    "[address]" or "[address],[role]" or "[address],[role],opt"
     Default role is "owner".
-    Default optional is false.
-<data-access> - a comma delimited list of addresses.
-<value-owner-address> - an address.
+    "opt" indicates optional = true. Default optional is false.
+[data-access] - a comma delimited list of addresses.
+[value-owner-address] - an address.
 `,
 		Example: fmt.Sprintf(`$ %[1]s tx metadata write-scope scope1qzhpuff00wpy2yuf7xr0rp8aucqstsk0cn scopespec1qjpreurq8n7ylc4y5zw6gn255lkqle56sv pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42 pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42 pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42`, version.AppName),
 		Args:    cobra.ExactArgs(5),
