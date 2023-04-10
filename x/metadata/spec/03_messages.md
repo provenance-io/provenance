@@ -3,12 +3,16 @@
 In this section we describe the processing of the metadata messages and the corresponding updates to the state.
 All created/modified state objects specified by each message are defined within the [state](02_state.md) section.
 
-These endpoints, requests, and responses are defined in [tx.proto](https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto).
+These endpoints, requests, and responses are defined in [tx.proto](https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto).
 
 <!-- TOC -->
   - [Entries](#entries)
     - [Msg/WriteScope](#msg-writescope)
     - [Msg/DeleteScope](#msg-deletescope)
+    - [Msg/AddScopeDataAccess](#msg-addscopedataaccess)
+    - [Msg/DeleteScopeDataAccess](#msg-deletescopedataaccess)
+    - [Msg/AddScopeOwner](#msg-addscopeowner)
+    - [Msg/DeleteScopeOwner](#msg-deletescopeowner)
     - [Msg/WriteSession](#msg-writesession)
     - [Msg/WriteRecord](#msg-writerecord)
     - [Msg/DeleteRecord](#msg-deleterecord)
@@ -17,6 +21,8 @@ These endpoints, requests, and responses are defined in [tx.proto](https://githu
     - [Msg/DeleteScopeSpecification](#msg-deletescopespecification)
     - [Msg/WriteContractSpecification](#msg-writecontractspecification)
     - [Msg/DeleteContractSpecification](#msg-deletecontractspecification)
+    - [Msg/AddContractSpecToScopeSpec](#msg-addcontractspectoscopespec)
+    - [Msg/DeleteContractSpecFromScopeSpec](#msg-deletecontractspecfromscopespec)
     - [Msg/WriteRecordSpecification](#msg-writerecordspecification)
     - [Msg/DeleteRecordSpecification](#msg-deleterecordspecification)
   - [Object Store Locators](#object-store-locators)
@@ -38,7 +44,7 @@ Scopes are identified using their `scope_id`.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L74-L98
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L76-L99
 
 The `scope_uuid` field is optional.
 It should be a uuid formated as a string using the standard UUID format.
@@ -50,7 +56,7 @@ If supplied, it will be used to generate the appropriate scope specification id 
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L100-L104
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L101-L105
 
 #### Expected failures
 
@@ -61,10 +67,7 @@ This service message is expected to fail if:
 * Any of the owner `address` values aren't bech32 address strings.
 * Any of the `data_access` values aren't bech32 address strings.
 * A `value_owner_address` is provided that isn't a bech32 address string.
-* One or more `owners` are not `signers`.
-* The `value_owner` is changing, and the existing value owner is a marker, but none of the signers have `withdraw` access.
-* The `value_owner` is changing, and the existing value owner is not a marker, and is also not in `signers`.
-* The `value_owner` is changing, and the proposed value owner is a marker, but none of the signers have `deposit` access.
+* The `signers` do not have permission to write the scope.
 
 ---
 ### Msg/DeleteScope
@@ -73,17 +76,97 @@ A scope is deleted using the `DeleteScope` service method.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L106-L120
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L107-L120
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L122-L123
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L122-L123
 
 #### Expected failures
 
 This service message is expected to fail if:
 * No scope exists with the given `scope_id`.
-* One or more `owners` are not `signers`.
+* The `signers` do not have permission to delete the scope.
+
+---
+### Msg/AddScopeDataAccess
+
+Addresses can be added to a scope's data access list using the `AddScopeDataAccess` service method.
+
+#### Request
+
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L125-L142
+
+#### Response
+
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L144-L145
+
+#### Expected failures
+
+This service message is expected to fail if:
+* Any provided address is invalid.
+* Any provided address is already in the scope's data access list.
+* The `signers` do not have permission to update the scope.
+
+---
+### Msg/DeleteScopeDataAccess
+
+Addresses can be deleted from a scope's data access list using the `DeleteScopeDataAccess` service method.
+
+#### Request
+
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L147-L164
+
+#### Response
+
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L166-L167
+
+#### Expected failures
+
+This service message is expected to fail if:
+* Any provided address is invalid.
+* Any provided address is not already in the scope's data access list.
+* The `signers` do not have permission to update the scope.
+
+---
+### Msg/AddScopeOwner
+
+Scope owners can be added to a scope using the `AddScopeOwner` service method.
+
+#### Request
+
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L169-L186
+
+#### Response
+
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L188-L189
+
+#### Expected failures
+
+This service message is expected to fail if:
+* Any new party is invalid.
+* The `signers` do not have permission to update the scope.
+
+---
+### Msg/DeleteScopeOwner
+
+Scope owners can be deleted from a scope using the `DeleteScopeOwner` service method.
+All owner parties with any of the provided addresses will be removed from the scope.
+
+#### Request
+
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L191-L208
+
+#### Response
+
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L210-L211
+
+#### Expected failures
+
+This service message is expected to fail if:
+* Any provided `owners` (addresses) are not a party in the scope.
+* The `signers` do not have permission to update the scope.
+* The resulting scope owners do not meet scope specification requirements.
 
 ---
 ### Msg/WriteSession
@@ -94,7 +177,7 @@ Sessions are identified using their `session_id`.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L125-L151
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L213-L238
 
 The `session_id_components` field is optional.
 If supplied, it will be used to generate the appropriate session id for use in the `session.session_id` field.
@@ -105,7 +188,7 @@ If supplied, it will be used to generate the appropriate contract specification 
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L166-L170
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L253-L257
 
 #### Expected failures
 
@@ -120,8 +203,7 @@ This service message is expected to fail if:
 * The session is being updated, but no `name` is provided.
 * The session's scope cannot be found.
 * The session's contract specification does not exist.
-* A party type required by the contract specification is not in the `parties` list.
-* One or more of the `owners` are not `signers`.
+* The `signers` do not have permission to write the session.
 * The `audit` fields are changed.
 
 ---
@@ -133,7 +215,7 @@ Records are identified using their `name` and `session_id`.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L172-L200
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L260-L289
 
 The `session_id_components` field is optional.
 If supplied, it will be used to generate the appropriate session id for use in the `record.session_id` field.
@@ -144,7 +226,7 @@ If supplied, it will be used with `record.name` to generate the appropriate reco
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L202-L206
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L291-L295
 
 #### Expected failures
 
@@ -169,7 +251,6 @@ This service message is expected to fail if:
 * The record's session cannot be found.
 * The record's contract specification cannot be found.
 * The record's record specification cannot be found.
-* The `parties_involved` is missing an entry required by the contract specification.
 * There are duplicate `inputs` by `name`.
 * An entry in `inputs` exists that is not part of the record specification.
 * The `inputs` list does not contain one or more inputs defined in the record specification.
@@ -178,6 +259,7 @@ This service message is expected to fail if:
 * An entry in `inputs` has a `source` value that doesn't match the intput specification.
 * The record specification has a result type of `record` but there isn't exactly one entry in `outputs`.
 * The record specification has a result type of `record_list` but the `outputs` list is empty.
+* The `signers` do not have permission to write the record.
 
 ---
 ### Msg/DeleteRecord
@@ -186,18 +268,17 @@ A record is deleted using the `DeleteRecord` service method.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L208-L222
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L297-L310
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L224-L225
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L312-L313
 
 #### Expected failures
 
 This service message is expected to fail if:
 * No record exists with the given `record_id`.
-* The record's scope cannot be found.
-* One or more scope `owners` are not `signers`.
+* The `signers` do not have permission to delete the record.
 
 
 
@@ -212,7 +293,7 @@ Scope specifications are identified using their `specification_id`.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L227-L246
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L315-L333
 
 The `spec_uuid` field is optional.
 It should be a uuid formated as a string using the standard UUID format.
@@ -220,7 +301,7 @@ If supplied, it will be used to generate the appropriate scope specification id 
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L248-L252
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L335-L339
 
 #### Expected failures
 
@@ -244,11 +325,11 @@ A scope specification is deleted using the `DeleteScopeSpecification` service me
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L254-L268
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L341-L354
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L270-L271
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L356-L357
 
 #### Expected failures
 
@@ -265,7 +346,7 @@ Contract specifications are identified using their `specification_id`.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L273-L292
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L359-L377
 
 The `spec_uuid` field is optional.
 It should be a uuid formated as a string using the standard UUID format.
@@ -273,7 +354,7 @@ If supplied, it will be used to generate the appropriate contract specification 
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L294-L299
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L379-L384
 
 #### Expected failures
 
@@ -301,11 +382,11 @@ This will also delete all record specifications associated with this contract sp
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L301-L315
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L437-L450
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L317-L318
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L452-L453
 
 #### Expected failures
 
@@ -313,6 +394,48 @@ This service message is expected to fail if:
 * No contract specification exists with the given `specification_id`
 * One or more `owners` are not `signers`.
 * One of the record specifications associated with this contract specification cannot be deleted.
+
+---
+### Msg/AddContractSpecToScopeSpec
+
+#### Request
+
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L___-L___
+
+#### Response
+
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L___-L___
+
+#### Expected failures
+
+This service message is expected to fail if:
+* The `contract_specification_id` is missing or invalid.
+* The `scope_specification_id` is missing or invalid.
+* The contract specification does not exist.
+* The scope specification does not exist.
+* * The contract specification is already allowed in the provided scope specification.
+* One or more of the scope specification `owners` are not `signers`.
+
+---
+### Msg/DeleteContractSpecFromScopeSpec
+
+#### Request
+
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L___-L___
+
+#### Response
+
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L___-L___
+
+#### Expected failures
+
+This service message is expected to fail if:
+* The `contract_specification_id` is missing or invalid.
+* The `scope_specification_id` is missing or invalid.
+* The contract specification does not exist.
+* The scope specification does not exist.
+* The contract specification is not already allowed in the provided scope specification.
+* One or more of the scope specification `owners` are not `signers`.
 
 ---
 ### Msg/WriteRecordSpecification
@@ -323,7 +446,7 @@ Record specifications are identified using their `specification_id`.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L320-L339
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L455-L473
 
 The `contract_spec_uuid` field is optional.
 It should be a uuid formated as a string using the standard UUID format.
@@ -331,7 +454,7 @@ If supplied, it will be used with the `specification.name` to generate the appro
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L341-L346
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L475-L480
 
 #### Expected failures
 
@@ -358,11 +481,11 @@ A record specification is deleted using the `DeleteRecordSpecification` service 
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L348-L362
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L482-L495
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L364-L365 
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L497-L498 
 
 #### Expected failures
 
@@ -380,11 +503,11 @@ An Object Store Locator entry is created using the `BindOSLocator` service metho
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L422-L428
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L500-L506
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L430-L433
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L508-L511
 
 #### Expected failures
 
@@ -403,11 +526,11 @@ An Object Store Locator entry is deleted using the `DeleteOSLocator` service met
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L435-L442
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L513-L520
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L444-L447
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L522-L525
 
 #### Expected failures
 
@@ -428,11 +551,11 @@ Object Store Locators are identified by their `owner`.
 
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L449-L455
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L527-L533
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/b295b03b5584741041d8a4e19ef0a03f2300bd2f/proto/provenance/metadata/v1/tx.proto#L457-L460
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L535-L538
 
 #### Expected failures
 
